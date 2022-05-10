@@ -435,7 +435,7 @@ bool adiosDataSource::initMPI() {
 vislib::StringA adiosDataSource::getCommandLine(void) {
     vislib::StringA retval;
 
-#ifdef WIN32
+#ifdef _WIN32
     retval = ::GetCommandLineA();
 #else  /* _WIN32 */
     char* arg = nullptr;

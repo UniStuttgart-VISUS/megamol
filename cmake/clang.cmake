@@ -1,5 +1,5 @@
 if (MSVC)
-    set(CLANG_OS "-DWIN32")
+    set(CLANG_OS "")
 else()
     set(CLANG_OS "-DUNIX")
 endif()
