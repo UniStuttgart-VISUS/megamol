@@ -82,7 +82,7 @@ megamol::compositing::SSAO::SSAO()
         , ssbo_constants_(nullptr)
         , settings_()
         , ps_ssao_mode_("SSAO", "Specifices which SSAO technqiue should be used: naive SSAO or ASSAO")
-        , ps_radius_("Radius", "Specifies world (view) space size of the occlusion sphere")
+        , ps_radius_("Radius", "Specifies world (view) space size of the occlusion sphere. Most probably needs to be adjusted according to your scene")
         , ps_shadow_multiplier_("ShadowMultiplier", "Specifies effect strength linear multiplier")
         , ps_shadow_power_("ShadowPower", "Specifies the effect strength pow modifier")
         , ps_shadow_clamp_("ShadowClamp", "Specifies the effect max limit")
@@ -350,10 +350,10 @@ bool megamol::compositing::SSAO::create() {
             core::utility::make_glowl_shader("generate_q1", shader_options, "comp/assao/generate_q1.comp.glsl");
 
         generate_prgms_[2] =
-            core::utility::make_glowl_shader("generate_q2", shader_options, "comp/assao/generate_q1.comp.glsl");
+            core::utility::make_glowl_shader("generate_q2", shader_options, "comp/assao/generate_q2.comp.glsl");
 
         generate_prgms_[3] =
-            core::utility::make_glowl_shader("generate_q3", shader_options, "comp/assao/generate_q1.comp.glsl");
+            core::utility::make_glowl_shader("generate_q3", shader_options, "comp/assao/generate_q3.comp.glsl");
 
         smart_blur_prgm_ =
             core::utility::make_glowl_shader("smart_blur", shader_options, "comp/assao/smart_blur.comp.glsl");
