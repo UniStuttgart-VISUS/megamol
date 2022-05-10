@@ -31,13 +31,13 @@ typedef vislib::math::Cuboid<float> Cubef;
 typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
 typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
 
-#include "CUDAQuickSurf.h"
 #include "CudaDevArr.h"
 #include "DeformableGPUSurfaceMT.h"
 #include "HostArr.h"
 #include "gridParams.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/VTIDataCall.h"
+#include "quicksurf/CUDAQuickSurf.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
@@ -699,17 +699,15 @@ private:
 
     /* RMSD fitting */
 
-    HostArr<float> rmsPosVec1;    ///> Position vector #0 for rms fitting
-    HostArr<float> rmsPosVec2;    ///> Position vector #1 for rms fitting
-    HostArr<float> rmsWeights;    ///> Particle weights
-    HostArr<int> rmsMask;         ///> Mask for particles
-    float rmsValue;               ///> The calculated RMS value
-    Mat3f rmsRotation;            ///> Rotation matrix for the fitting
-    Mat4f rmsRotationMatrix;      ///> Rotation matrix for the fitting
-    Vec3f rmsTranslation;         ///> Translation vector for the fitting
-    Vec3f rmsCentroid;            ///> Centroid of the second data set
-    static const float maxRMSVal; ///> Maximum RMS value to enable fitting
-    HostArr<float> atomPosFitted; ///> The rotated/translated atom positions
+    std::vector<glm::vec3> rmsPosVec1; ///> Position vector #0 for rms fitting
+    std::vector<glm::vec3> rmsPosVec2; ///> Position vector #1 for rms fitting
+    float rmsValue;                    ///> The calculated RMS value
+    Mat3f rmsRotation;                 ///> Rotation matrix for the fitting
+    Mat4f rmsRotationMatrix;           ///> Rotation matrix for the fitting
+    Vec3f rmsTranslation;              ///> Translation vector for the fitting
+    Vec3f rmsCentroid;                 ///> Centroid of the second data set
+    static const float maxRMSVal;      ///> Maximum RMS value to enable fitting
+    HostArr<float> atomPosFitted;      ///> The rotated/translated atom positions
 
 
     /* Boolean flags */

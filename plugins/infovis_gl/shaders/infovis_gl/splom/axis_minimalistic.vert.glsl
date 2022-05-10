@@ -1,7 +1,7 @@
 #version 450
 
 #include "common/plots.inc.glsl"
-#include "../common/quad_vertices.inc.glsl"
+#include "mmstd_gl/common/quad_vertices.inc.glsl"
 
 uniform mat4 modelViewProjection;
 uniform uint numTicks;

@@ -4,4 +4,6 @@
 #
 
 megamol_plugin(protein_calls
-  BUILD_DEFAULT ON)
+  BUILD_DEFAULT ON
+  DEPENDS_EXTERNALS
+    Eigen)
