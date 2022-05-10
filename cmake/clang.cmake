@@ -1,12 +1,6 @@
-if (MSVC)
-    set(CLANG_OS "")
-else()
-    set(CLANG_OS "-DUNIX")
-endif()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -pedantic -std=c99 ${OpenMP_C_FLAGS}")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 ${CLANG_OS} -pedantic -std=c99 ${OpenMP_C_FLAGS}")
-
-set(COMMON_CXX_FLAGS "-Wall -Wno-narrowing -Wno-non-pod-varargs -pedantic ${CLANG_OS} -D_GNU_SOURCE -D_LIN${BITS} -fsized-deallocation ${OpenMP_CXX_FLAGS}")
+set(COMMON_CXX_FLAGS "-Wall -Wno-narrowing -Wno-non-pod-varargs -pedantic -D_GNU_SOURCE -D_LIN${BITS} -fsized-deallocation ${OpenMP_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${COMMON_CXX_FLAGS} -DDEBUG -D_DEBUG -g -ggdb")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${COMMON_CXX_FLAGS} -DNDEBUG -D_NDEBUG -O3 -g0")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${COMMON_CXX_FLAGS} -DNDEBUG -D_NDEBUG -O3 -g")

@@ -1,5 +1,5 @@
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -DUNIX -pedantic -std=c99 -ldl ${OpenMP_C_FLAGS}")
-set(COMMON_CXX_FLAGS "-Wall -pedantic -DUNIX -D_GNU_SOURCE -D_LIN${BITS} ${OpenMP_CXX_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -pedantic -std=c99 -ldl ${OpenMP_C_FLAGS}")
+set(COMMON_CXX_FLAGS "-Wall -pedantic -D_GNU_SOURCE -D_LIN${BITS} ${OpenMP_CXX_FLAGS}")
 if (DISABLE_WARINGS)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
   set(COMMON_CXX_FLAGS "${COMMON_CXX_FLAGS} -w")
