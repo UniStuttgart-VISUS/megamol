@@ -1,13 +1,6 @@
 # C++ standard
 set(CMAKE_CXX_STANDARD 17)
 
-# Word size
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  set(BITS 64)
-else()
-  set(BITS 32)
-endif()
-
 # Compiler flags (inspired by OSPRay build)
 option(DISABLE_WARNINGS "Disables all compiler warnings" ON)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

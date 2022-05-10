@@ -19,8 +19,17 @@ if(BUILD_VISLIB)
     PRIVATE ${CMAKE_THREAD_LIBS_INIT} 
     PUBLIC spdlog fmt)
 
+  # Word size
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(BITS 64)
+  else()
+    set(BITS 32)
+  endif()
+
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
-  target_compile_definitions(vislib PUBLIC SPDLOG_FMT_EXTERNAL WIN32_LEAN_AND_MEAN)
+  target_compile_definitions(vislib
+    PUBLIC SPDLOG_FMT_EXTERNAL WIN32_LEAN_AND_MEAN "_LIN${BITS}"
+    PRIVATE _GNU_SOURCE)
 
   if(UNIX)
     find_package(UUID REQUIRED)
