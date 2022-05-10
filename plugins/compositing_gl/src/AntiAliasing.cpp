@@ -609,7 +609,6 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
             }
 
 
-
             // perform smaa!
             edgeDetection(input_tx2D, depth_tx2D, edges_tx2D_, technique);
             blendingWeightCalculation(edges_tx2D_, area_tx2D_, search_tx2D_, blending_weights_tx2D_);
