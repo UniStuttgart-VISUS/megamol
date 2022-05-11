@@ -1,6 +1,23 @@
 # C++ standard
 set(CMAKE_CXX_STANDARD 17)
 
+# Warnings
+set(MEGAMOL_WARNING_LEVEL Default CACHE STRING "Define compiler warning level.")
+set_property(CACHE MEGAMOL_WARNING_LEVEL PROPERTY STRINGS "Off" "Default" "All")
+if ("${MEGAMOL_WARNING_LEVEL}" STREQUAL "Off")
+  if (MSVC)
+    set(COMMON_CXX_FLAGS "${COMMON_CXX_FLAGS} /W0")
+  else ()
+    set(COMMON_CXX_FLAGS "${COMMON_CXX_FLAGS} -w")
+  endif ()
+elseif ("${MEGAMOL_WARNING_LEVEL}" STREQUAL "All")
+  if (MSVC)
+    set(COMMON_CXX_FLAGS "${COMMON_CXX_FLAGS} /W4 /external:anglebrackets /external:W0")
+  else ()
+    set(COMMON_CXX_FLAGS "${COMMON_CXX_FLAGS} -Wall -Wextra -pedantic")
+  endif ()
+endif ()
+
 # Compiler flags (inspired by OSPRay build)
 option(DISABLE_WARNINGS "Disables all compiler warnings" ON)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
