@@ -351,7 +351,7 @@ bool RamachandranPlot::Render(core_gl::view::CallRender2DGL& call) {
     glUseProgram(0);
     glBindVertexArray(0);
 
-    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_DEPTH_TEST);
 
     return true;
 }
