@@ -188,10 +188,7 @@ public:
     /**
      * Set GUI visibility.
      */
-    inline void SetVisibility(bool visible) {
-        // In order to take immediate effect, the GUI visibility directly is set (and not indirectly via hotkey)
-        this->gui_state.gui_visible = visible;
-    }
+    void SetVisibility(bool visible);
 
     /**
      * Set GUI scale.
