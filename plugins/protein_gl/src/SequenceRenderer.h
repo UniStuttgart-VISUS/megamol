@@ -205,7 +205,6 @@ private:
     std::unique_ptr<glowl::GLSLProgram> passthrough_shader_;
     std::unique_ptr<glowl::BufferObject> position_buffer_;
     std::unique_ptr<glowl::BufferObject> color_buffer_;
-    std::unique_ptr<glowl::BufferObject> texposition_buffer_;
     GLuint pass_vao_;
     GLuint tex_vao_;
 

@@ -50,7 +50,6 @@ SequenceRenderer::SequenceRenderer(void)
         , passthrough_shader_(nullptr)
         , position_buffer_(nullptr)
         , color_buffer_(nullptr)
-        , texposition_buffer_(nullptr)
         , pass_vao_(0)
         , tex_vao_(0)
         , atomCount(0)
@@ -147,7 +146,6 @@ bool SequenceRenderer::create() {
 
     position_buffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
     color_buffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
-    texposition_buffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
 
     glGenVertexArrays(1, &pass_vao_);
     glBindVertexArray(pass_vao_);
@@ -166,15 +164,7 @@ bool SequenceRenderer::create() {
     glDisableVertexAttribArray(1);
 
     glGenVertexArrays(1, &tex_vao_);
-    glBindVertexArray(tex_vao_);
-
-    texposition_buffer_->bind();
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
-
     glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDisableVertexAttribArray(0);
 
     if (!font_.Initialise(GetCoreInstance())) {
         core::utility::log::Log::DefaultLog.WriteError(
@@ -265,7 +255,6 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
 
     std::vector<glm::vec2> positions;
     std::vector<glm::vec3> colors;
-    std::vector<glm::vec4> texture_data;
 
     font_.ClearBatchDrawCache();
     font_.SetSmoothMode(true);
@@ -320,26 +309,18 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
         }
 
         glDisable(GL_DEPTH_TEST);
-
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        glLoadMatrixf(glm::value_ptr(proj));
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
-        glLoadMatrixf(glm::value_ptr(view));
+        glEnable(GL_BLEND);
 
         // temporary variables and constants
         const float eps = 0.0f;
         // draw tiles for structure
         glEnable(GL_TEXTURE_2D);
-        glEnable(GL_BLEND);
         glActiveTexture(GL_TEXTURE0);
         for (unsigned int i = 0; i < this->resIndex.size(); i++) {
+            glm::vec3 input_color;
             marker_textures_[0]->bindTexture();
             if (this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_HELIX) {
-                glColor3f(1.0f, 0.0f, 0.0f);
+                input_color = glm::vec3(1.0f, 0.0f, 0.0f);
                 if (i > 0 && this->resSecStructType[i - 1] != this->resSecStructType[i]) {
                     marker_textures_[4]->bindTexture();
                 } else if ((i + 1) < this->resIndex.size() &&
@@ -349,37 +330,36 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
                     marker_textures_[5]->bindTexture();
                 }
             } else if (this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_SHEET) {
-                glColor3f(0.0f, 0.0f, 1.0f);
+                input_color = glm::vec3(0.0f, 0.0f, 1.0f);
                 if ((i + 1) < this->resIndex.size() && this->resSecStructType[i + 1] != this->resSecStructType[i]) {
                     marker_textures_[3]->bindTexture();
                 } else {
                     marker_textures_[2]->bindTexture();
                 }
             } else if (this->resSecStructType[i] == MolecularDataCall::SecStructure::TYPE_TURN) {
-                glColor3f(1.0f, 1.0f, 0.0f);
+                input_color = glm::vec3(1.0f, 1.0f, 0.0f);
                 marker_textures_[1]->bindTexture();
             } else { // TYPE_COIL
-                glColor3f(0.5f, 0.5f, 0.5f);
+                input_color = glm::vec3(0.5f, 0.5f, 0.5f);
                 marker_textures_[1]->bindTexture();
             }
-            glBegin(GL_QUADS);
-            glTexCoord2f(eps, eps);
-            glVertex2f(this->vertices[i].x, -this->vertices[i].y);
-            glTexCoord2f(eps, 1.0f - eps);
-            glVertex2f(this->vertices[i].x, -this->vertices[i].y - 1.0f);
-            glTexCoord2f(1.0f - eps, 1.0f - eps);
-            glVertex2f(this->vertices[i].x + 1.0f, -this->vertices[i].y - 1.0f);
-            glTexCoord2f(1.0f - eps, eps);
-            glVertex2f(this->vertices[i].x + 1.0f, -this->vertices[i].y);
-            glEnd();
+
+            glBindVertexArray(tex_vao_);
+            texture_shader_->use();
+            texture_shader_->setUniform("mvp", mvp);
+            texture_shader_->setUniform("lower_left", glm::vec2(this->vertices[i].x, -this->vertices[i].y - 1.0f));
+            texture_shader_->setUniform("upper_right", glm::vec2(this->vertices[i].x + 1.0f, -this->vertices[i].y));
+            texture_shader_->setUniform("bwtex", 0);
+            texture_shader_->setUniform("input_color", glm::vec4(input_color, 1.0));
+
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+
+            glUseProgram(0);
+            glBindVertexArray(0);
         }
+
         glDisable(GL_BLEND);
         glDisable(GL_TEXTURE_2D);
-
-        glMatrixMode(GL_MODELVIEW);
-        glPopMatrix();
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
 
         positions.clear();
         colors.clear();
