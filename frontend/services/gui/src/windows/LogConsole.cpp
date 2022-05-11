@@ -178,8 +178,16 @@ int megamol::gui::LogBuffer::sync() {
                     }
                 }
                 if (!extracted_new_message) {
-                    // Append to previous message
-                    this->messages.back().message.append(new_message);
+                    // Append new line of previous log message
+                    auto log_level = this->messages.back().level;
+                    this->messages.push_back({log_level, new_message});
+                    size_t msg_index = this->messages.size() - 1;
+                    if (log_level <= megamol::core::utility::log::Log::LEVEL_WARN) {
+                        this->warn_msg_indices.push_back(msg_index);
+                    } else if (log_level <= megamol::core::utility::log::Log::LEVEL_ERROR) {
+                        this->warn_msg_indices.push_back(msg_index);
+                        this->error_msg_indices.push_back(msg_index);
+                    }
                 }
                 message_str = message_str.substr(split_index + 1);
                 split_index = message_str.find('\n');
@@ -381,7 +389,7 @@ bool megamol::gui::LogConsole::Draw() {
 
     // Scroll - Requires 3 frames for being applied!
     if (this->scroll_down > 0) {
-        ImGui::SetScrollY(ImGui::GetScrollMaxY());
+        ImGui::SetScrollY(ImGui::GetScrollMaxY() + 2.0f*ImGui::GetTextLineHeight());
         this->scroll_down--;
     }
     if (this->scroll_up > 0) {
