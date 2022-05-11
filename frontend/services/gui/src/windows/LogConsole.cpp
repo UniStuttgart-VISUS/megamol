@@ -389,7 +389,8 @@ bool megamol::gui::LogConsole::Draw() {
 
     // Scroll - Requires 3 frames for being applied!
     if (this->scroll_down > 0) {
-        ImGui::SetScrollY(ImGui::GetScrollMaxY() + 2.0f*ImGui::GetTextLineHeight());
+        const auto max_offset = 3.0f*ImGui::GetTextLineHeight();
+        ImGui::SetScrollY(ImGui::GetScrollMaxY() + max_offset);
         this->scroll_down--;
     }
     if (this->scroll_up > 0) {
