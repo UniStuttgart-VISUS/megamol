@@ -658,7 +658,8 @@ function(require_external NAME)
       DEBUG_SUFFIX gd)
 
     set_target_properties(libzmq PROPERTIES
-      INTERFACE_COMPILE_DEFINITIONS "ZMQ_STATIC")
+      INTERFACE_COMPILE_DEFINITIONS "ZMQ_STATIC"
+      INTERFACE_LINK_LIBRARIES "-lpthread;-lrt")
 
     # TODO libzmq cmake does a lot more checks and options. This will probably work only in some configurations.
     if (WIN32)

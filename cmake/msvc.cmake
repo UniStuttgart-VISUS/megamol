@@ -1,6 +1,6 @@
 #message(WARNING "setting msvc compiler flags")
 
-set(COMMON_CXX_FLAGS "/DNOMINMAX /openmp /MP /GR /permissive- /Zc:twoPhase- /utf-8")
+set(COMMON_CXX_FLAGS "/DNOMINMAX /MP /GR /permissive- /Zc:twoPhase- /utf-8")
 
 set(CMAKE_CXX_FLAGS_DEBUG "${COMMON_CXX_FLAGS} /MDd /Od /DDEBUG /D_DEBUG /Zi" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_RELEASE "${COMMON_CXX_FLAGS} /MD /DNDEBUG /D_NDEBUG /Ob2 /Ox /Oi" CACHE STRING "" FORCE)

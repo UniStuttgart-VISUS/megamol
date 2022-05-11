@@ -18,6 +18,9 @@ elseif ("${MEGAMOL_WARNING_LEVEL}" STREQUAL "All")
   endif ()
 endif ()
 
+# OpenMP
+find_package(OpenMP REQUIRED)
+
 # Compiler flags (inspired by OSPRay build)
 option(DISABLE_WARNINGS "Disables all compiler warnings" ON)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -94,13 +97,4 @@ check_function_exists(pthread_create HAVE_PTHREAD)
 if(HAVE_PTHREAD)
   set(CMAKE_THREAD_PREFER_PTHREAD ON)
   find_package(Threads REQUIRED)
-endif()
-
-# OpenMP
-if(UNIX)
-  find_package(OpenMP REQUIRED)
-endif()
-if(OPENMP_FOUND OR WIN32)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()

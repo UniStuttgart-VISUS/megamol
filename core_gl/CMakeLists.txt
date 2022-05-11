@@ -23,7 +23,7 @@ if(BUILD_CORE)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC core vislib_gl glowl megamol-shader-factory frontend_resources  
+    PUBLIC core vislib_gl glowl megamol-shader-factory frontend_resources OpenMP::OpenMP_CXX
     PRIVATE abstract_frontend_service) # abstract render api used by MegaMolGraph
 
   # Install shaders
