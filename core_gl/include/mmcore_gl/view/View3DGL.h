@@ -7,7 +7,6 @@
 
 #pragma once
 #include "mmcore/view/BaseView.h"
-#include "vislib/graphics/Cursor2D.h"
 
 #include "mmcore/view/CameraControllers.h"
 #include "mmcore_gl/view/AbstractTileViewGL.h"
