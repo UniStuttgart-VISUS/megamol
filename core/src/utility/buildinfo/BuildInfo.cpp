@@ -56,21 +56,6 @@ std::string const& megamol::core::utility::buildinfo::MEGAMOL_VERSION() {
     return res;
 }
 
-uint64_t megamol::core::utility::buildinfo::MEGAMOL_BUILD_TIMESTAMP() {
-    static const uint64_t res = loadUInt64Resource("MEGAMOL_BUILD_TIMESTAMP");
-    return res;
-}
-
-std::string const& megamol::core::utility::buildinfo::MEGAMOL_BUILD_TIME() {
-    static const auto res = loadStringResource("MEGAMOL_BUILD_TIME");
-    return res;
-}
-
-bool megamol::core::utility::buildinfo::MEGAMOL_BUILD_TIME_IS_EXACT() {
-    static const bool res = static_cast<bool>(loadIntResource("MEGAMOL_BUILD_TIME_IS_EXACT"));
-    return res;
-}
-
 std::string const& megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH() {
     static const auto res = loadStringResource("MEGAMOL_GIT_HASH");
     return res;

@@ -79,23 +79,6 @@ execute_process(COMMAND
 write_file_if_changed(${INFO_RESOURCES_DIR}/MEGAMOL_GIT_DIFF "${GIT_DIFF}")
 write_file_if_changed(${INFO_RESOURCES_DIR}/MEGAMOL_GIT_IS_DIRTY "${GIT_IS_DIRTY}")
 
-# Time
-# The build time will always change, and may trigger unnecessary rebuilds. Therefore,
-# we only store the current hour unless the flag BUILD_INFO_EXACT_TIME is set.
-if (BUILD_INFO_EXACT_TIME)
-  string(TIMESTAMP BUILD_TIMESTAMP "%s" UTC)
-  string(TIMESTAMP BUILD_TIME "" UTC)
-  set(BUILD_TIME_IS_EXACT "1")
-else ()
-  string(TIMESTAMP BUILD_TIMESTAMP "%s" UTC)
-  math(EXPR BUILD_TIMESTAMP "${BUILD_TIMESTAMP} / 3600 * 3600") # Round to next hour. CMake uses integer math.
-  string(TIMESTAMP BUILD_TIME "%Y-%m-%dT%H:--:--Z" UTC)
-  set(BUILD_TIME_IS_EXACT "0")
-endif ()
-write_file_if_changed(${INFO_RESOURCES_DIR}/MEGAMOL_BUILD_TIMESTAMP "${BUILD_TIMESTAMP}")
-write_file_if_changed(${INFO_RESOURCES_DIR}/MEGAMOL_BUILD_TIME "${BUILD_TIME}")
-write_file_if_changed(${INFO_RESOURCES_DIR}/MEGAMOL_BUILD_TIME_IS_EXACT "${BUILD_TIME_IS_EXACT}")
-
 # License
 configure_file(${PROJECT_DIR}/LICENSE ${INFO_RESOURCES_DIR}/MEGAMOL_LICENSE COPYONLY)
 
