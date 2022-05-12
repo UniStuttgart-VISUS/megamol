@@ -420,14 +420,14 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
             for (unsigned int j = 0; j < (unsigned int)this->aminoAcidStrings[i].size(); j++) {
                 // draw the one-letter amino acid code
                 font_.DrawString(mvp, fgColor, static_cast<float>(j) + 0.5f,
-                    -(static_cast<float>(i) * this->rowHeight + 1.0f), 1.0f, false,
-                    this->aminoAcidStrings[i].substr(j, 1).c_str(), core::utility::SDFFont::ALIGN_CENTER_TOP);
+                    -(static_cast<float>(i) * this->rowHeight + 1.5f), 1.0f, false,
+                    this->aminoAcidStrings[i].substr(j, 1).c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
                 // draw the chain name and amino acid index
                 std::string str(1, this->aminoAcidIndexStrings[i][j].first);
                 str.append(" " + std::to_string(this->aminoAcidIndexStrings[i][j].second));
                 font_.DrawString(mvp, fgColor, static_cast<float>(j) + 0.5f,
-                    -(static_cast<float>(i) * this->rowHeight + 2.0f), 0.35f, false, str.c_str(),
-                    core::utility::SDFFont::ALIGN_CENTER_TOP);
+                    -(static_cast<float>(i) * this->rowHeight + 2.25f), 0.35f, false, str.c_str(),
+                    core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
             }
         }
 
