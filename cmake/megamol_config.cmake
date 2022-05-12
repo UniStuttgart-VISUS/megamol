@@ -35,8 +35,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   # nothing to do
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   add_compile_options("-fsized-deallocation") # TODO git history suggests this was required for cuda in 2019, still required?
+  add_compile_options("-Wno-narrowing" "-Wno-non-pod-varargs") # Prevent build fail.
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  add_compile_options("/MP /permissive- /Zc:twoPhase- /utf-8")
+  add_compile_options("/MP" "/permissive-" "/Zc:twoPhase-" "/utf-8")
   add_compile_definitions("NOMINMAX")
 else ()
   message(FATAL_ERROR "Unsupported compiler specified: '${CMAKE_CXX_COMPILER_ID}'")
