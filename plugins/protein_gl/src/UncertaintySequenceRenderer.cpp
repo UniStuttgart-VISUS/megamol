@@ -3665,8 +3665,9 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall* udc, BindingS
         // copy binding site names
         for (unsigned int i = 0; i < bs->GetBindingSiteCount(); i++) {
             this->bindingSiteDescription[i].Clear();
-            this->bindingSiteNames.Add(bs->GetBindingSiteName(i));
-            this->bsColors[i] = bs->GetBindingSiteColor(i);
+            this->bindingSiteNames.Add(bs->GetBindingSiteName(i).c_str());
+            this->bsColors[i] = vislib::math::Vector<float, 3>(
+                bs->GetBindingSiteColor(i).x, bs->GetBindingSiteColor(i).y, bs->GetBindingSiteColor(i).z);
         }
     }
 
@@ -3799,13 +3800,13 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall* udc, BindingS
 
         if (bs) {
             // try to match binding sites
-            vislib::Pair<char, unsigned int> bsRes;
+            std::pair<char, unsigned int> bsRes;
             unsigned int numBS = 0;
             bool skipIndexWithLetter;
 
             // loop over all binding sites
             for (unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++) {
-                for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count(); bsResCnt++) {
+                for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->size(); bsResCnt++) {
                     bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
                     skipIndexWithLetter = false;
 
@@ -3817,8 +3818,8 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall* udc, BindingS
                             skipIndexWithLetter = true;
                     }
 
-                    if ((!skipIndexWithLetter) && (udc->GetChainID(aa) == bsRes.First()) &&
-                        (std::atoi(tmpStr) == bsRes.Second())) {
+                    if ((!skipIndexWithLetter) && (udc->GetChainID(aa) == bsRes.first) &&
+                        (std::atoi(tmpStr) == bsRes.second)) {
                         this->bsVertices.Add(this->vertices[this->vertices.Count() - 2]);
                         this->bsVertices.Add(this->vertices[this->vertices.Count() - 1] +
                                              (2.0f + static_cast<float>(this->secStructRows)) + numBS * 0.5f);
@@ -3894,7 +3895,7 @@ bool UncertaintySequenceRenderer::PrepareData(UncertaintyDataCall* udc, BindingS
         // loop over all binding sites and add binding site descriptions
         for (unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++) {
             this->bindingSiteDescription[bsCnt].Prepend("\n");
-            this->bindingSiteDescription[bsCnt].Prepend(bs->GetBindingSiteDescription(bsCnt));
+            this->bindingSiteDescription[bsCnt].Prepend(bs->GetBindingSiteDescription(bsCnt).c_str());
         }
     }
 

@@ -46,8 +46,8 @@ inline vislib::math::Vector<float, 3> EstimateBindingSitePosition(
     if (bscount < 3 || !bsc->isEnzymeMode()) {
         fallbackMode = true;
     } else {
-        if (bsc->GetBindingSite(0)->Count() < 1 || bsc->GetBindingSite(1)->Count() < 1 ||
-            bsc->GetBindingSite(2)->Count() < 2) {
+        if (bsc->GetBindingSite(0)->size() < 1 || bsc->GetBindingSite(1)->size() < 1 ||
+            bsc->GetBindingSite(2)->size() < 2) {
             fallbackMode = true;
         }
     }
@@ -70,21 +70,21 @@ inline vislib::math::Vector<float, 3> EstimateBindingSitePosition(
                 auto bla = firstAtom;
                 for (uint32_t bsidx = 0; bsidx < bscount; bsidx++) {
                     auto bsRes = bsc->GetBindingSite(bsidx);
-                    for (uint32_t bsridx = 0; bsridx < bsRes->Count(); bsridx++) {
+                    for (uint32_t bsridx = 0; bsridx < bsRes->size(); bsridx++) {
 
                         auto cname = mdc->Chains()[cCnt].Name();
-                        auto bname = bsRes->operator[](bsridx).First();
+                        auto bname = bsRes->operator[](bsridx).first;
 
                         auto orgidx = mdc->Residues()[firstRes + rCnt]->OriginalResIndex();
-                        auto bsorgidx = bsRes->operator[](bsridx).Second();
+                        auto bsorgidx = bsRes->operator[](bsridx).second;
 
                         auto typn = mdc->ResidueTypeNames()[mdc->Residues()[firstRes + rCnt]->Type()];
                         auto typb = bsc->GetBindingSiteResNames(bsidx)->operator[](bsridx);
 
-                        if (mdc->Chains()[cCnt].Name() == bsRes->operator[](bsridx).First() &&
+                        if (mdc->Chains()[cCnt].Name() == bsRes->operator[](bsridx).first &&
                             mdc->Residues()[firstRes + rCnt]->OriginalResIndex() ==
-                                bsRes->operator[](bsridx).Second() &&
-                            mdc->ResidueTypeNames()[mdc->Residues()[firstRes + rCnt]->Type()] ==
+                                bsRes->operator[](bsridx).second &&
+                            mdc->ResidueTypeNames()[mdc->Residues()[firstRes + rCnt]->Type()].PeekBuffer() ==
                                 bsc->GetBindingSiteResNames(bsidx)->operator[](bsridx)) {
                             for (uint32_t aCnt = firstAtom;
                                  aCnt < firstAtom + mdc->Residues()[firstRes + rCnt]->AtomCount(); aCnt++) {

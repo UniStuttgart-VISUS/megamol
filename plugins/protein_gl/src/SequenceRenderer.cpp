@@ -447,7 +447,7 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
                     font_.DrawString(mvp, &this->bsColors[i].x, static_cast<float>(this->resCols) + 1.0f,
                         -(static_cast<float>(i) * 2.0f + 2.0f), fontSize, false, this->bindingSiteNames[i].c_str(),
                         core::utility::SDFFont::ALIGN_LEFT_TOP);
-                    font_.DrawString(view, proj, &this->bsColors[i].x, static_cast<float>(this->resCols) + 1.0f,
+                    font_.DrawString(mvp, &this->bsColors[i].x, static_cast<float>(this->resCols) + 1.0f,
                         -(static_cast<float>(i) * 2.0f + 3.0f), fontSize * 0.5f, false,
                         this->bindingSiteDescription[i].c_str(), core::utility::SDFFont::ALIGN_LEFT_TOP);
                 }
@@ -465,7 +465,7 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
                 mvp, fgColor, -0.5f, -2.75f, fontSize, false, "Chain", core::utility::SDFFont::ALIGN_RIGHT_MIDDLE);
             if (!this->bindingSiteNames.empty()) {
                 font_.DrawString(mvp, fgColor, -0.5f, -this->rowHeight, fontSize, false, "Binding Sites",
-                    core::utility::SDFFont::ALIGN_RIGHT_BOTTOM);
+                    core::utility::SDFFont::ALIGN_LEFT_MIDDLE);
             }
         }
 
@@ -682,8 +682,8 @@ bool SequenceRenderer::PrepareData(MolecularDataCall* mol, BindingSiteCall* bs) 
         // copy binding site names
         for (unsigned int i = 0; i < bs->GetBindingSiteCount(); i++) {
             this->bindingSiteDescription[i].clear();
-            this->bindingSiteNames.emplace_back(bs->GetBindingSiteName(i).PeekBuffer());
-            this->bsColors[i] = glm::make_vec3(bs->GetBindingSiteColor(i).PeekComponents());
+            this->bindingSiteNames.emplace_back(bs->GetBindingSiteName(i));
+            this->bsColors[i] = bs->GetBindingSiteColor(i);
         }
     }
     unsigned int currentRow = 0;
@@ -745,16 +745,16 @@ bool SequenceRenderer::PrepareData(MolecularDataCall* mol, BindingSiteCall* bs) 
 
                     // try to match binding sites
                     if (bs) {
-                        vislib::Pair<char, unsigned int> bsRes;
+                        std::pair<char, unsigned int> bsRes;
                         unsigned int numBS = 0;
                         // loop over all binding sites
                         for (unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++) {
-                            for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count(); bsResCnt++) {
+                            for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->size(); bsResCnt++) {
                                 bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
-                                if (mol->Chains()[cCnt].Name() == bsRes.First() &&
-                                    mol->Residues()[this->resIndex.back()]->OriginalResIndex() == bsRes.Second() &&
-                                    mol->ResidueTypeNames()[mol->Residues()[this->resIndex.back()]->Type()] ==
-                                        bs->GetBindingSiteResNames(bsCnt)->operator[](bsResCnt)) {
+                                if (mol->Chains()[cCnt].Name() == bsRes.first &&
+                                    mol->Residues()[this->resIndex.back()]->OriginalResIndex() == bsRes.second &&
+                                    mol->ResidueTypeNames()[mol->Residues()[this->resIndex.back()]->Type()]
+                                            .PeekBuffer() == bs->GetBindingSiteResNames(bsCnt)->operator[](bsResCnt)) {
                                     this->bsVertices.emplace_back(glm::vec2(this->vertices[this->vertices.size() - 1].x,
                                         this->vertices[this->vertices.size() - 1].y + 3.0f + numBS * 0.5f));
                                     this->bsIndices.emplace_back(bsCnt);
@@ -791,7 +791,7 @@ bool SequenceRenderer::PrepareData(MolecularDataCall* mol, BindingSiteCall* bs) 
         for (unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++) {
             this->bindingSiteDescription[bsCnt] = "\n" + this->bindingSiteDescription[bsCnt];
             this->bindingSiteDescription[bsCnt] =
-                bs->GetBindingSiteDescription(bsCnt).PeekBuffer() + this->bindingSiteDescription[bsCnt];
+                bs->GetBindingSiteDescription(bsCnt) + this->bindingSiteDescription[bsCnt];
         }
     }
 

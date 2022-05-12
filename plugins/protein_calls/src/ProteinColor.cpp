@@ -370,18 +370,17 @@ void ProteinColor::MakeColorTable(const megamol::protein_calls::MolecularDataCal
                     for (unsigned int res = 0; res < mdc.Molecules()[res].ResidueCount(); ++res) {
                         // loop over all binding sites
                         for (uint32_t bs = 0; bs < bsc->GetBindingSiteCount(); ++bs) {
-                            for (unsigned int bsResCnt = 0; bsResCnt < bsc->GetBindingSite(bs)->Count(); ++bsResCnt) {
-                                vislib::Pair<char, unsigned int> bsRes = bsc->GetBindingSite(bs)->operator[](bsResCnt);
-                                if (mdc.Chains()[chain].Name() == bsRes.First() &&
-                                    mdc.Residues()[firstRes + res]->OriginalResIndex() == bsRes.Second() &&
-                                    mdc.ResidueTypeNames()[mdc.Residues()[firstRes + res]->Type()] ==
+                            for (unsigned int bsResCnt = 0; bsResCnt < bsc->GetBindingSite(bs)->size(); ++bsResCnt) {
+                                std::pair<char, unsigned int> bsRes = bsc->GetBindingSite(bs)->operator[](bsResCnt);
+                                if (mdc.Chains()[chain].Name() == bsRes.first &&
+                                    mdc.Residues()[firstRes + res]->OriginalResIndex() == bsRes.second &&
+                                    mdc.ResidueTypeNames()[mdc.Residues()[firstRes + res]->Type()].PeekBuffer() ==
                                         bsc->GetBindingSiteResNames(bs)->operator[](bsResCnt)) {
                                     uint32_t firstAtom = mdc.Residues()[firstRes + res]->FirstAtomIndex();
                                     for (unsigned int aCnt = 0; aCnt < mdc.Residues()[firstRes + res]->AtomCount();
                                          aCnt++) {
                                         uint32_t atomIdx = firstAtom + aCnt;
-                                        OUT_colorTable[atomIdx] =
-                                            glm::make_vec3(bsc->GetBindingSiteColor(bs).PeekComponents());
+                                        OUT_colorTable[atomIdx] = bsc->GetBindingSiteColor(bs);
                                     }
                                 }
                             }
