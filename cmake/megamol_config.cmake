@@ -5,6 +5,7 @@ include(CMakeDependentOption)
 
 # C++ standard
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 99)
 
 # Warnings
 set(MEGAMOL_WARNING_LEVEL Default CACHE STRING "Define compiler warning level.")
@@ -23,21 +24,23 @@ elseif ("${MEGAMOL_WARNING_LEVEL}" STREQUAL "All")
   endif ()
 endif ()
 
+# Debug
+# Note: 'NDEBUG' is set by default from CMake if not in debug config.
+# TODO do we still need both or can we switch to one?
+add_compile_definitions("$<$<CONFIG:DEBUG>:DEBUG>")
+add_compile_definitions("$<$<CONFIG:DEBUG>:_DEBUG>")
 
-# Compiler flags (inspired by OSPRay build)
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  set(MEGAMOL_COMPILER_GCC TRUE)
-  include(gcc)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(MEGAMOL_COMPILER_CLANG TRUE)
-  include(clang)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  set(MEGAMOL_COMPILER_MSVC TRUE)
-  include(msvc)
-else()
-  message(FATAL_ERROR
-    "Unsupported compiler specified: '${CMAKE_CXX_COMPILER_ID}'")
-endif()
+# Compiler flags
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  # nothing to do
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  add_compile_options("-fsized-deallocation") # TODO git history suggests this was required for cuda in 2019, still required?
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  add_compile_options("/MP /permissive- /Zc:twoPhase- /utf-8")
+  add_compile_definitions("NOMINMAX")
+else ()
+  message(FATAL_ERROR "Unsupported compiler specified: '${CMAKE_CXX_COMPILER_ID}'")
+endif ()
 
 # Dependencies
 

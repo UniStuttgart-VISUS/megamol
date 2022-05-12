@@ -5,10 +5,11 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 # Policies
-cmake_policy(SET CMP0054 NEW)
-cmake_policy(SET CMP0079 NEW) # Needed for static build, requires CMake 3.13!
+cmake_policy(SET CMP0054 NEW) # if arguments
+cmake_policy(SET CMP0079 NEW) # use targets from other directories
+cmake_policy(SET CMP0091 NEW) # MSVC runtime
 if (POLICY CMP0104)
-  cmake_policy(SET CMP0104 NEW)
+  cmake_policy(SET CMP0104 NEW) # CUDA architectures
 endif ()
 
 # Disable in source build
