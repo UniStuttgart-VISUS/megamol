@@ -36,11 +36,11 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "default install p
 # Modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
+# MegaMol config
+include(megamol_config)
+
 # MegaMol build info library (version + config)
 include(megamol_build_info)
-
-# MegaMol options
-include(megamol_options)
 
 # Externals
 include("externals/CMakeExternals.cmake")
