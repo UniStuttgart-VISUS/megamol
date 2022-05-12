@@ -443,11 +443,12 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
                 font_.DrawString(mvp, fgColor, static_cast<float>(this->resCols) + 1.0f, -1.0f, fontSize, false,
                     "Binding Sites: ", core::utility::SDFFont::ALIGN_LEFT_TOP);
                 for (unsigned int i = 0; i < this->bindingSiteNames.size(); i++) {
+                    glm::vec4 col = glm::vec4(this->bsColors[i], 1.0);
                     // draw the binding site names
-                    font_.DrawString(mvp, &this->bsColors[i].x, static_cast<float>(this->resCols) + 1.0f,
+                    font_.DrawString(mvp, &col.x, static_cast<float>(this->resCols) + 1.0f,
                         -(static_cast<float>(i) * 2.0f + 2.0f), fontSize, false, this->bindingSiteNames[i].c_str(),
                         core::utility::SDFFont::ALIGN_LEFT_TOP);
-                    font_.DrawString(mvp, &this->bsColors[i].x, static_cast<float>(this->resCols) + 1.0f,
+                    font_.DrawString(mvp, &col.x, static_cast<float>(this->resCols) + 1.0f,
                         -(static_cast<float>(i) * 2.0f + 3.0f), fontSize * 0.5f, false,
                         this->bindingSiteDescription[i].c_str(), core::utility::SDFFont::ALIGN_LEFT_TOP);
                 }
@@ -464,8 +465,8 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
             font_.DrawString(
                 mvp, fgColor, -0.5f, -2.75f, fontSize, false, "Chain", core::utility::SDFFont::ALIGN_RIGHT_MIDDLE);
             if (!this->bindingSiteNames.empty()) {
-                font_.DrawString(mvp, fgColor, -0.5f, -this->rowHeight, fontSize, false, "Binding Sites",
-                    core::utility::SDFFont::ALIGN_LEFT_MIDDLE);
+                font_.DrawString(mvp, fgColor, -0.5f, -3.25f, fontSize, false, "Binding Sites",
+                    core::utility::SDFFont::ALIGN_RIGHT_MIDDLE);
             }
         }
 
@@ -589,7 +590,7 @@ bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
     world_x = world_x * 0.5 * cam_intrin.frustrum_height * cam_intrin.aspect + cam_pose.position.x;
     world_y = world_y * 0.5 * cam_intrin.frustrum_height + cam_pose.position.y;
 
-    this->mousePos = glm::vec2(floorf(world_x), fabsf(floorf(world_y / this->rowHeight)));
+    this->mousePos = glm::vec2(floorf(world_x), -floorf(world_y / this->rowHeight));
     this->mousePosResIdx = static_cast<int>(this->mousePos.x + (this->resCols * (this->mousePos.y - 1)));
     // do nothing else if mouse is outside bounding box
     if (this->mousePos.x < 0.0f || this->mousePos.x > this->resCols || this->mousePos.y < 0.0f ||
@@ -681,7 +682,7 @@ bool SequenceRenderer::PrepareData(MolecularDataCall* mol, BindingSiteCall* bs) 
         this->bsColors.resize(bs->GetBindingSiteCount());
         // copy binding site names
         for (unsigned int i = 0; i < bs->GetBindingSiteCount(); i++) {
-            this->bindingSiteDescription[i].clear();
+            this->bindingSiteDescription.emplace_back(bs->GetBindingSiteDescription(i));
             this->bindingSiteNames.emplace_back(bs->GetBindingSiteName(i));
             this->bsColors[i] = bs->GetBindingSiteColor(i);
         }
