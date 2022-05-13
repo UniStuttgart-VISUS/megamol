@@ -599,7 +599,7 @@ bool VoronoiChannelCalculator::create(void) {
 /*
  * VoronoiChannelCalculator::Render
  */
-bool VoronoiChannelCalculator::Render(view::CallRender3DGL& call, bool lighting) {
+bool VoronoiChannelCalculator::Render(core_gl::view::CallRender3DGL& call, bool lighting) {
     glLineWidth(1.0);
     glDisable(GL_LIGHTING);
     glBegin(GL_LINES);

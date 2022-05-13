@@ -10,7 +10,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <iostream>
-#include <vislib/graphics/gl/IncludeAllGL.h>
+#include <glad/gl.h>
 
 namespace megamol {
 namespace molecularmaps {

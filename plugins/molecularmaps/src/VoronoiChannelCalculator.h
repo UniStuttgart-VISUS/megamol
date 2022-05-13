@@ -18,6 +18,7 @@
 #include "vislib/math/Plane.h"
 #include "vislib/math/Vector.h"
 
+#include <mutex>
 #include <Eigen/Dense>
 
 namespace megamol {
@@ -39,7 +40,7 @@ public:
     /**
      * Invokes the rendering calls.
      */
-    virtual bool Render(core::view::CallRender3DGL& call, bool lighting = true);
+    virtual bool Render(core_gl::view::CallRender3DGL& call, bool lighting = true);
 
     /**
      * Update function for the local data to render.

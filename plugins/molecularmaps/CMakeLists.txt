@@ -9,6 +9,7 @@ megamol_plugin(molecularmaps
   DEPENDS_PLUGINS
     protein_calls
     geometry_calls
+    geometry_calls_gl
   DEPENDS_EXTERNALS
     Eigen)
 

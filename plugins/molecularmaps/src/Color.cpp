@@ -830,24 +830,25 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
                         firstRes = mol->Molecules()[mCnt].FirstResidueIndex();
                         for (unsigned int rCnt = 0; rCnt < mol->Molecules()[mCnt].ResidueCount(); rCnt++) {
                             // try to match binding sites
-                            vislib::Pair<char, unsigned int> bsRes;
+                            std::pair<char, unsigned int> bsRes;
                             // loop over all binding sites
                             for (unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++) {
-                                for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count();
+                                for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->size();
                                      bsResCnt++) {
                                     bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
-                                    if (mol->Chains()[cCnt].Name() == bsRes.First() &&
-                                        mol->Residues()[firstRes + rCnt]->OriginalResIndex() == bsRes.Second() &&
-                                        mol->ResidueTypeNames()[mol->Residues()[firstRes + rCnt]->Type()] ==
+                                    if (mol->Chains()[cCnt].Name() == bsRes.first &&
+                                        mol->Residues()[firstRes + rCnt]->OriginalResIndex() == bsRes.second &&
+                                        mol->ResidueTypeNames()[mol->Residues()[firstRes + rCnt]->Type()]
+                                                .PeekBuffer() ==
                                             bs->GetBindingSiteResNames(bsCnt)->operator[](bsResCnt)) {
                                         // TODO loop over all atoms and add the color
                                         firstAtom = mol->Residues()[firstRes + rCnt]->FirstAtomIndex();
                                         for (unsigned int aCnt = 0;
                                              aCnt < mol->Residues()[firstRes + rCnt]->AtomCount(); aCnt++) {
                                             atomIdx = firstAtom + aCnt;
-                                            atomColorTable[3 * atomIdx + 0] = bs->GetBindingSiteColor(bsCnt).X();
-                                            atomColorTable[3 * atomIdx + 1] = bs->GetBindingSiteColor(bsCnt).Y();
-                                            atomColorTable[3 * atomIdx + 2] = bs->GetBindingSiteColor(bsCnt).Z();
+                                            atomColorTable[3 * atomIdx + 0] = bs->GetBindingSiteColor(bsCnt).x;
+                                            atomColorTable[3 * atomIdx + 1] = bs->GetBindingSiteColor(bsCnt).y;
+                                            atomColorTable[3 * atomIdx + 2] = bs->GetBindingSiteColor(bsCnt).z;
                                         }
                                     }
                                 }

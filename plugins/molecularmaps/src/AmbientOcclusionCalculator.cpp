@@ -6,6 +6,7 @@
 
 #include "AmbientOcclusionCalculator.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "stdafx.h"
 #include "vislib/math/AbstractPolynomImpl.h"
 #include "vislib/math/ShallowVector.h"
@@ -404,9 +405,11 @@ bool AmbientOcclusionCalculator::initilialize(core::CoreInstance* instance, cons
  */
 bool AmbientOcclusionCalculator::loadShaders(core::CoreInstance* instance) {
     // load compute shader
-    instance->ShaderSourceFactory().LoadBTF("aocompute", true);
-    vislib::graphics::gl::ShaderSource compute;
-    if (!instance->ShaderSourceFactory().MakeShaderSource("aocompute::compute", compute)) {
+    auto ssf =
+        std::make_shared<megamol::core_gl::utility::ShaderSourceFactory>(instance->Configuration().ShaderDirectories());
+    ssf->LoadBTF("aocompute", true);
+    vislib_gl::graphics::gl::ShaderSource compute;
+    if (!ssf->MakeShaderSource("aocompute::compute", compute)) {
         return false;
     }
 
@@ -416,10 +419,10 @@ bool AmbientOcclusionCalculator::loadShaders(core::CoreInstance* instance) {
                 megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile aocompute shader: Unknown error\n");
             return false;
         }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile aocompute shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
