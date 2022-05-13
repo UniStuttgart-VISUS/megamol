@@ -12,9 +12,7 @@ ConnectionFactory::ConnectionFactory(std::string host) : host_(std::move(host)) 
         pre_socket_ = std::make_unique<zmq::socket_t>(*context_, ZMQ_REQ);
         pre_socket_->setsockopt(ZMQ_LINGER, 0);
         pre_socket_->connect(host_);
-    } catch (zmq::error_t const& ex) {
-        throw std::runtime_error("Error init zmq: " + std::string(ex.what()));
-    }
+    } catch (zmq::error_t const& ex) { throw std::runtime_error("Error init zmq: " + std::string(ex.what())); }
 }
 
 ConnectionFactory::~ConnectionFactory() {

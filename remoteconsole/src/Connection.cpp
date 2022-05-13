@@ -32,9 +32,7 @@ std::string Connection::sendCommand(const std::string& cmd) {
         } else {
             return "Reply timeout, probably MegaMol was closed. Please reconnect.";
         }
-    } catch (zmq::error_t const& ex) {
-        throw std::runtime_error("zmq send/recv error: " + std::string(ex.what()));
-    }
+    } catch (zmq::error_t const& ex) { throw std::runtime_error("zmq send/recv error: " + std::string(ex.what())); }
 }
 
 Connection::~Connection() {
