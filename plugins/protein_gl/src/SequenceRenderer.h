@@ -69,7 +69,7 @@ public:
     SequenceRenderer(void);
 
     /** dtor */
-    ~SequenceRenderer(void);
+    virtual ~SequenceRenderer(void) override;
 
 protected:
     /**
@@ -77,12 +77,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    virtual bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    virtual void release(void) override;
 
     /**
      * Callback for mouse events (move, press, and release)
@@ -116,7 +116,11 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call);
+    virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call) override;
+
+    bool GetExtentsSequence(megamol::core_gl::view::CallRender2DGL& call);
+
+    bool GetExtentsUncertainty(megamol::core_gl::view::CallRender2DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -124,7 +128,11 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender2DGL& call);
+    virtual bool Render(megamol::core_gl::view::CallRender2DGL& call) override;
+
+    bool RenderSequence(megamol::core_gl::view::CallRender2DGL& call);
+
+    bool RenderUncertainty(megamol::core_gl::view::CallRender2DGL& call);
 
     /**********************************************************************
      * variables
@@ -162,12 +170,6 @@ private:
     // the height of a row
     float rowHeight;
 
-    // font rendering
-#ifdef USE_SIMPLE_FONT
-    vislib_gl::graphics::gl::SimpleFont theFont;
-#else
-    vislib_gl::graphics::gl::OutlineFont theFont;
-#endif
     // font class
     core::utility::SDFFont font_;
     // the array of amino acid 1-letter codes

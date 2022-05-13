@@ -58,9 +58,6 @@ SequenceRenderer::SequenceRenderer(void)
         , resCols(0)
         , resRows(0)
         , rowHeight(3.0f)
-#ifndef USE_SIMPLE_FONT
-        , theFont(FontInfo_Verdana)
-#endif // USE_SIMPLE_FONT
         , font_(core::utility::SDFFont::PRESET_ROBOTO_SANS, utility::SDFFont::RENDERMODE_FILL)
         , marker_textures_{}
         , resSelectionCall(nullptr)
@@ -237,6 +234,13 @@ bool SequenceRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
     return true;
 }
 
+bool SequenceRenderer::GetExtentsSequence(megamol::core_gl::view::CallRender2DGL& call) {
+    return true;
+}
+
+bool SequenceRenderer::GetExtentsUncertainty(megamol::core_gl::view::CallRender2DGL& call) {
+    return true;
+}
 
 /*
  * SequenceRenderer::Render
@@ -573,6 +577,13 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
     return true;
 }
 
+bool SequenceRenderer::RenderSequence(megamol::core_gl::view::CallRender2DGL& call) {
+    return true;
+}
+
+bool SequenceRenderer::RenderUncertainty(megamol::core_gl::view::CallRender2DGL& call) {
+    return true;
+}
 
 /*
  * Callback for mouse events (move, press, and release)
