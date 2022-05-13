@@ -1,136 +1,149 @@
-// ConClient.cpp : Defines the entry point for the console application.
-//
+/**
+ * MegaMol
+ * Copyright (c) 2017, MegaMol Dev Team
+ * All rights reserved.
+ */
 
+#include <fstream>
 #include <iostream>
+#include <regex>
+#include <sstream>
 #include <string>
 #include <thread>
 
 #include <cxxopts.hpp>
-#include <zmq.hpp>
 
-#include "Console.h"
+#include "Connection.h"
+#include "ConnectionFactory.h"
+
+std::string setHammerIndex(std::string const& str, uint32_t idx) {
+    static const std::regex r("%%i%%");
+    return std::regex_replace(str, r, std::to_string(idx));
+}
+
+void execCommand(std::vector<std::unique_ptr<Connection>> const& connections, std::string const& cmd, uint32_t hammer) {
+    if (hammer == 0) {
+        std::cout << "Exec: " << cmd << std::endl;
+        std::cout << "Reply: " << connections[0]->sendCommand(cmd) << std::endl;
+    } else {
+        for (uint32_t i = 0; i < hammer; i++) {
+            const std::string cmd_i = setHammerIndex(cmd, i);
+            std::cout << "Exec: " << cmd_i << std::endl;
+            std::cout << "Reply [" << i << "]: " << connections[i]->sendCommand(cmd_i) << std::endl;
+        }
+    }
+}
 
 int main(int argc, char* argv[]) {
-    using std::cout;
-    using std::endl;
-
-    std::string host;
-    std::string file, script;
-    int hammerFactor = 1;
-    int timeOutSeconds = 0;
-    bool keepOpen = false;
-    bool singleSend = false;
-
     cxxopts::Options options("remoteconsole.exe", "MegaMol Remote Lua Console Client");
     // clang-format off
     options.add_options()
-        ("open", "open host", cxxopts::value<std::string>())
-        ("source", "source file", cxxopts::value<std::string>())
-        ("exec", "execute script", cxxopts::value<std::string>())
-        ("keep-open", "keep open")
-        ("hammer", "multi-connect, works only with exec or source. replaces %%i%% with index", cxxopts::value<int>())
-        ("timeout", "max seconds to wait until MegaMol replies (default 10)", cxxopts::value<int>()->default_value("10"))
-        ("single", "send whole file or script in one go")
-        ("help", "print help");
+        ("c,connect", "Remote host address.", cxxopts::value<std::string>())
+        ("e,exec", "Execute lua command.", cxxopts::value<std::string>())
+        ("s,script", "Execute lua script file.", cxxopts::value<std::string>())
+        ("scriptdelay", "Delay between lines in script (in ms).", cxxopts::value<int>())
+        ("timeout", "Time to wait for a MegaMol response (in ms, default 10000)", cxxopts::value<int>())
+        ("hammer", "Run with multiple connections. Replaces %%i%% with index.", cxxopts::value<int>())
+        ("h,help", "Print help.");
     // clang-format on
 
+    std::string host = "tcp://127.0.0.1:33333";
+    std::string exec;
+    std::string script;
+    uint32_t scriptDelay = 0;
+    uint32_t timeout = 10000;
+    uint32_t hammer = 0;
+
     try {
+        auto parseResult = options.parse(argc, argv);
 
-
-        auto parseRes = options.parse(argc, argv);
-
-        if (parseRes.count("help")) {
+        if (parseResult.count("help")) {
             std::cout << options.help({""}) << std::endl;
             exit(0);
         }
 
-        // greeting text
-        printGreeting();
-
-        if (parseRes.count("open"))
-            host = parseRes["open"].as<std::string>();
-        if (parseRes.count("source"))
-            file = parseRes["source"].as<std::string>();
-        if (parseRes.count("exec"))
-            script = parseRes["exec"].as<std::string>();
-        if (parseRes.count("keep-open"))
-            keepOpen = parseRes["keep-open"].as<bool>();
-        if (parseRes.count("hammer"))
-            hammerFactor = parseRes["hammer"].as<int>();
-        timeOutSeconds = parseRes["timeout"].as<int>();
-        if (parseRes.count("single"))
-            singleSend = parseRes["single"].as<bool>();
-
-        if (!parseRes.count("exec") && !parseRes.count("source")) {
-            hammerFactor = 1;
+        if (parseResult.count("connect")) {
+            host = parseResult["connect"].as<std::string>();
         }
-
-        //  Prepare our context and socket
-        zmq::context_t context(1);
-        zmq::socket_t pre_socket(context, ZMQ_REQ);
-        const int replyLength = 1024;
-        char portReply[replyLength];
-
-        std::vector<zmq::socket_t> sockets;
-        std::vector<Connection> connections;
-
-        //zmq::socket_t socket(context, ZMQ_PAIR);
-        //Connection conn(socket);
-
-        for (int i = 0; i < hammerFactor; ++i) {
-            sockets.emplace_back(context, ZMQ_PAIR);
-            connections.emplace_back(sockets.back(), timeOutSeconds);
+        if (parseResult.count("exec")) {
+            exec = parseResult["exec"].as<std::string>();
         }
-
-        if (!host.empty()) {
-            cout << "Connecting \"" << host << "\" ... ";
-            try {
-
-                pre_socket.connect(host);
-                for (int i = 0; i < hammerFactor; ++i) {
-                    pre_socket.send("ola", 3);
-                    pre_socket.recv(portReply, replyLength);
-
-                    int p2 = std::atoi(portReply);
-                    const auto portPos = host.find_last_of(":");
-                    const auto hostStr = host.substr(0, portPos);
-                    std::stringstream newHost;
-                    newHost << hostStr << ":" << p2;
-
-                    cout << "Connecting to pair socket: " << newHost.str() << " ...";
-
-                    connections[i].Connect(newHost.str());
-                    cout << endl << "\tConnected to " << p2 << endl << endl;
-                }
-            } catch (zmq::error_t& zmqex) {
-                cout << endl << "ERR Socket connection failed: " << zmqex.what() << endl << endl;
-            } catch (std::exception& ex) {
-                cout << endl << "ERR Socket connection failed: " << ex.what() << endl << endl;
-            } catch (...) { cout << endl << "ERR Socket connection failed: unknown exception" << endl << endl; }
-        }
-
-
-        if (!file.empty()) {
-            for (int i = 0; i < hammerFactor; ++i) {
-                runScript(connections[i], file, singleSend, i);
+        if (parseResult.count("script")) {
+            if (!exec.empty()) {
+                throw std::runtime_error("Cannot use exec and script option together!");
             }
+            script = parseResult["script"].as<std::string>();
+            if (parseResult.count("scriptdelay")) {
+                scriptDelay = static_cast<uint32_t>(
+                    std::clamp(parseResult["scriptdelay"].as<int>(), 0, std::numeric_limits<int>::max()));
+            }
+        }
+        if (parseResult.count("timeout")) {
+            timeout =
+                static_cast<uint32_t>(std::clamp(parseResult["timeout"].as<int>(), 0, std::numeric_limits<int>::max()));
+        }
+        if (parseResult.count("hammer")) {
+            hammer =
+                static_cast<uint32_t>(std::clamp(parseResult["hammer"].as<int>(), 0, std::numeric_limits<int>::max()));
+        }
+    } catch (std::exception const& ex) {
+        std::cerr << "Error parsing arguments: " << ex.what() << std::endl;
+        std::cout << options.help({""}) << std::endl;
+        exit(1);
+    } catch (...) {
+        std::cout << options.help({""}) << std::endl;
+        exit(1);
+    }
+
+    try {
+        std::cout << "MegaMol Remote Lua Console Client" << std::endl << std::endl;
+
+        ConnectionFactory factory(host);
+        std::vector<std::unique_ptr<Connection>> connections;
+
+        for (uint32_t i = 0; i < std::max(hammer, 1u); i++) {
+            connections.emplace_back(factory.createConnection(timeout));
+        }
+
+        if (!exec.empty()) {
+            execCommand(connections, exec, hammer);
         } else if (!script.empty()) {
-            for (int i = 0; i < hammerFactor; ++i) {
-                if (!execCommand(connections[i], script, i)) {
-                    cout << "\tFailed" << endl;
+            std::ifstream file(script);
+            if (scriptDelay == 0) {
+                std::stringstream buf;
+                buf << file.rdbuf();
+                execCommand(connections, buf.str(), hammer);
+            } else {
+                std::string line;
+                while (std::getline(file, line)) {
+                    if (!line.empty()) {
+                        execCommand(connections, line, hammer);
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(scriptDelay));
                 }
             }
         } else {
-            keepOpen = true;
+            bool running = true;
+            while (running) {
+                std::string cmd;
+                std::cout << "> ";
+                std::getline(std::cin, cmd);
+                if (cmd == "exit") {
+                    running = false;
+                } else {
+                    execCommand(connections, cmd, hammer);
+                }
+            }
         }
 
-        if (keepOpen) {
-            interactiveConsole(connections[0]);
-        }
-
+        // Cleanup sockets
+        connections.clear();
+    } catch (std::exception& ex) {
+        std::cerr << "Error: " << ex.what() << std::endl;
+        exit(1);
     } catch (...) {
-        std::cout << options.help({""}) << std::endl;
-        exit(0);
+        std::cerr << "Error: Unknown!" << std::endl;
+        exit(1);
     }
 
     return 0;

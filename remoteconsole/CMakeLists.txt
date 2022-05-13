@@ -12,7 +12,7 @@ if(BUILD_REMOTECONSOLE)
   require_external(libcppzmq)
   require_external(libcxxopts)
 
-  # Glob remote console files.
+  # Glob source files.
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
 
