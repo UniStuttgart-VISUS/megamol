@@ -135,7 +135,7 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     if (this->gui_state.gui_visible && valid_imgui_scope) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Nesting ImGui contexts is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        this->gui_state.gui_visible = false;
+        return false;
     }
 
     if (!this->render_backend.IsBackendInitialized()) {
@@ -385,23 +385,7 @@ bool GUIManager::PostDraw() {
 
     // Process hotkeys --------------------------------------------------------
     if (this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].is_pressed) {
-        if (this->gui_state.gui_visible) {
-            this->gui_state.gui_hide_next_frame = 3;
-        } else {
-            // Show GUI after it was hidden (before early exit!)
-            // Restore window 'open' state (Always restore at least HOTKEY_GUI_MENU)
-            this->gui_state.menu_visible = true;
-            const auto func = [&](AbstractWindow& wc) {
-                if (std::find(this->gui_state.gui_restore_hidden_windows.begin(),
-                        this->gui_state.gui_restore_hidden_windows.end(),
-                        wc.Name()) != this->gui_state.gui_restore_hidden_windows.end()) {
-                    wc.Config().show = true;
-                }
-            };
-            this->win_collection.EnumWindows(func);
-            this->gui_state.gui_restore_hidden_windows.clear();
-            this->gui_state.gui_visible = true;
-        }
+        this->SetVisibility(!this->gui_state.gui_visible);
     }
     if (this->gui_hotkeys[HOTKEY_GUI_EXIT_PROGRAM].is_pressed) {
         this->gui_state.shutdown_triggered = true;
@@ -427,8 +411,8 @@ bool GUIManager::PostDraw() {
     // Assume pending changes in scaling as applied  --------------------------
     megamol::gui::gui_scaling.ConsumePendingChange();
 
-    // Hide GUI if it is currently shown --------------------------------------
-    if (this->gui_state.gui_visible) {
+    // Apply hiding GUI if it is currently shown ------------------------------
+    if (this->gui_state.gui_visible && (this->gui_state.gui_hide_next_frame > 0)) {
         /// Disabling ImGui window focus required 3 frames (!?)
         if (this->gui_state.gui_hide_next_frame == 3) {
             // First frame
@@ -601,6 +585,27 @@ bool GUIManager::OnMouseScroll(double dx, double dy) {
     // Always consumed if any imgui windows is hovered.
     bool consumed = ImGui::IsWindowHovered(hoverFlags);
     return consumed;
+}
+
+
+void megamol::gui::GUIManager::SetVisibility(bool visible) {
+    if (this->gui_state.gui_visible && !visible) {
+        // Trigger GUI hiding
+        this->gui_state.gui_hide_next_frame = 3;
+    } else if (!this->gui_state.gui_visible && visible) {
+        // Show GUI after it was hidden
+        // Restore window 'open' state (Always restore at least HOTKEY_GUI_MENU)
+        const auto func = [&](AbstractWindow& wc) {
+            if (std::find(this->gui_state.gui_restore_hidden_windows.begin(),
+                    this->gui_state.gui_restore_hidden_windows.end(),
+                    wc.Name()) != this->gui_state.gui_restore_hidden_windows.end()) {
+                wc.Config().show = true;
+            }
+        };
+        this->win_collection.EnumWindows(func);
+        this->gui_state.gui_restore_hidden_windows.clear();
+        this->gui_state.gui_visible = true;
+    }
 }
 
 
