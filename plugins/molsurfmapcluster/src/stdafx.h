@@ -4,13 +4,8 @@
  * Alle Rechte vorbehalten.
  */
 
-<<<<<<<< HEAD:plugins/mmospray/src/stdafx.h
-#ifndef OSPRAY_STDAFX_H_INCLUDED
-#define OSPRAY_STDAFX_H_INCLUDED
-========
-#ifndef _STDAFX_H_INCLUDED
-#define _STDAFX_H_INCLUDED
->>>>>>>> private/mapcluster:plugins/imageviewer/src/stdafx.h
+#ifndef MOLSURFMAPCLUSTER_STDAFX_H_INCLUDED
+#define MOLSURFMAPCLUSTER_STDAFX_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -31,15 +26,11 @@
 #include <memory.h>
 
 #ifndef NULL
-#define NULL 0
+#   define NULL 0
 #endif
 
 #endif /* _WIN32 */
 
 #include "vislib/types.h"
 
-<<<<<<<< HEAD:plugins/mmospray/src/stdafx.h
-#endif /* OSPRAY_STDAFX_H_INCLUDED */
-========
-#endif /* _STDAFX_H_INCLUDED */
->>>>>>>> private/mapcluster:plugins/imageviewer/src/stdafx.h
+#endif /* MOLSURFMAPCLUSTER_STDAFX_H_INCLUDED */

@@ -32,10 +32,17 @@ using namespace megamol::core;
 namespace view_gl = megamol::core_gl::view;
 
 namespace megamol {
+<<<<<<<< HEAD:plugins/image_gl/src/ImageRenderer.h
 namespace image_gl {
 
 /**
  * Mesh-based renderer for bézier curve tubes
+========
+namespace imageviewer {
+
+/**
+ * Mesh-based renderer for b�zier curve tubes
+>>>>>>>> private/mapcluster:plugins/imageviewer/include/imageviewer/ImageRenderer.h
  */
 class ImageRenderer : public view_gl::Renderer3DModuleGL {
 public:
@@ -197,6 +204,9 @@ private:
     /** if only one image per pair is defined: where it should go */
     param::ParamSlot defaultEye;
 
+    /** Index of the shown image if the one from the call is taken */
+    param::ParamSlot shownImage;
+
     /** slot for MPIprovider */
     CallerSlot callRequestMpi;
 
@@ -229,7 +239,13 @@ private:
     /** The height of the image */
     unsigned int height;
 
+<<<<<<<< HEAD:plugins/image_gl/src/ImageRenderer.h
     std::unique_ptr<glowl::GLSLProgram> theShader;
+========
+    bool newImageNeeded;
+
+    vislib::graphics::gl::GLSLShader theShader;
+>>>>>>>> private/mapcluster:plugins/imageviewer/include/imageviewer/ImageRenderer.h
     GLuint theVertBuffer;
     GLuint theTexCoordBuffer;
     GLuint theVAO;
@@ -255,5 +271,9 @@ private:
     size_t datahash;
 };
 
+<<<<<<<< HEAD:plugins/image_gl/src/ImageRenderer.h
 } // namespace image_gl
+========
+} /* end namespace imageviewer */
+>>>>>>>> private/mapcluster:plugins/imageviewer/include/imageviewer/ImageRenderer.h
 } /* end namespace megamol */

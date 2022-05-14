@@ -174,7 +174,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
     uint32_t maxSteps = static_cast<uint32_t>(this->msmsMaxTryNumParam.Param<param::IntParam>()->Value());
 
     // load data on demand
-    if (this->filenameSlot.IsDirty()) {
+    if (this->filenameSlot.IsDirty() || this->reloadMolecule) {
         this->filenameSlot.ResetDirty();
 
         uint32_t genus = 1;
@@ -183,7 +183,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
             this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
                 probeRadius);
             this->isGenus0(0, &genus);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            core::utility::log::Log::DefaultLog.WriteInfo(
                 "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);
             probeRadius += stepSize;
             step++;
@@ -201,7 +201,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
         while (genus != 0 && step <= maxSteps) {
             this->load(vislib::StringA(""), probeRadius, ctmd->FrameID());
             this->isGenus0(ctmd->FrameID(), &genus);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            core::utility::log::Log::DefaultLog.WriteInfo(
                 "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);
             probeRadius += stepSize;
             step++;
@@ -219,6 +219,8 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
 
     // try to call molecular data and compute colors
     MolecularDataCall* mol = this->molDataSlot.CallAs<MolecularDataCall>();
+    glm::vec3 minCol, midCol, maxCol;
+    bool twoColors = false;
     if (mol) {
         // get pointer to BindingSiteCall
         BindingSiteCall* bs = this->bsDataSlot.CallAs<BindingSiteCall>();
@@ -229,13 +231,26 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
         mol->SetCalltime(float(ctmd->FrameID()));
         // set frame ID
         mol->SetFrameID(ctmd->FrameID());
+        auto minColText = minGradColorParam.Param<param::StringParam>()->Value();
+        auto midColText = midGradColorParam.Param<param::StringParam>()->Value();
+        auto maxColText = maxGradColorParam.Param<param::StringParam>()->Value();
+        float r, g, b;
+        utility::ColourParser::FromString(minColText, r, g, b);
+        minCol = glm::vec3(r, g, b);
+        utility::ColourParser::FromString(midColText, r, g, b);
+        midCol = glm::vec3(r, g, b);
+        utility::ColourParser::FromString(maxColText, r, g, b);
+        maxCol = glm::vec3(r, g, b);
+
         // try to call data
         if ((*mol)(MolecularDataCall::CallForGetData)) {
             // recompute color table, if necessary
             if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() ||
                 this->colorWeightParam.IsDirty() || this->minGradColorParam.IsDirty() ||
                 this->midGradColorParam.IsDirty() || this->maxGradColorParam.IsDirty() ||
-                this->prevTime != int(ctmd->FrameID())) {
+                this->prevTime != int(ctmd->FrameID()) || this->reloadMolecule) {
+
+                this->reloadMolecule = false;
 
                 ProteinColor::ColoringMode currentColoringMode0 = static_cast<ProteinColor::ColoringMode>(
                     this->coloringModeParam0.Param<param::EnumParam>()->Value());
@@ -255,11 +270,15 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                 protein_calls::ProteinColor::MakeColorTable(*mol, currentColoringMode1, atomColorTable2,
                     this->colorLookupTable, this->fileLookupTable, this->rainbowColors, bs, pa, true);
 
+                this->lowval = std::min(leftres.first, rightres.first);
+                this->highval = std::max(leftres.second, rightres.second);
+
                 // loop over atoms and compute color
                 float* vertex = new float[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];
                 float* normal = new float[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];
                 unsigned char* color = new unsigned char[this->obj[ctmd->FrameID()]->GetVertexCount() * 3];
                 unsigned int* atomIndex = new unsigned int[this->obj[ctmd->FrameID()]->GetVertexCount()];
+                float* values = new float[this->obj[ctmd->FrameID()]->GetVertexCount()];
 
                 // calculate centroid
                 float* centroid = new float[3];
@@ -277,6 +296,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
 
                 // calculate max distance
                 float max_dist = std::numeric_limits<float>::min();
+                float min_dist = std::numeric_limits<float>::max();
                 float dist, steps;
                 unsigned int anz_cols = 15;
                 for (unsigned int i = 0; i < this->obj[ctmd->FrameID()]->GetVertexCount(); i++) {
@@ -359,9 +379,17 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                         }
                     }
                 }
-                // add an attribute or set the existing one
-                if (atCnt == 0 || !found) {
-                    this->attIdx = this->obj[ctmd->FrameID()]->AddVertexAttribPointer(atomIndex);
+
+                // search for the correct attrib index for the value
+                found = false;
+                if (atCnt != 0) {
+                    for (this->valueAttIdx = 0; this->valueAttIdx < atCnt; this->valueAttIdx++) {
+                        if (this->obj[ctmd->FrameID()]->GetVertexAttribDataType(this->valueAttIdx) ==
+                            CallTriMeshData::Mesh::DataType::DT_FLOAT) {
+                            found = true;
+                            break;
+                        }
+                    }
                 }
 
                 // weighting factors
@@ -388,7 +416,30 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                     color[i * 3 + 0] = 0;
                     color[i * 3 + 1] = 0;
                     color[i * 3 + 2] = 0;
-                    atomIndex[i] = this->obj[ctmd->FrameID()]->GetVertexAttribPointerUInt32(attIdx)[i];
+                    atomIndex[i] = this->obj[ctmd->FrameID()]->GetVertexAttribPointerUInt32(this->idAttIdx)[i];
+
+                    Color::ColoringMode colmode;
+                    if (weight1 > weight0) { // take weight1
+                        colmode = currentColoringMode1;
+                    } else { // take weight0
+                        colmode = currentColoringMode0;
+                    }
+
+                    if (colmode == Color::BFACTOR) {
+                        values[i] = mol->AtomBFactors()[atomIndex[i]];
+                    } else if (colmode == Color::CHARGE) {
+                        values[i] = mol->AtomCharges()[atomIndex[i]];
+                    } else if (colmode == Color::OCCUPANCY) {
+                        values[i] = mol->AtomOccupancies()[atomIndex[i]];
+                    } else if (colmode == Color::HYDROPHOBICITY) {
+                        auto resIdx = mol->AtomResidueIndices()[atomIndex[i]];
+                        auto typeIdx = mol->Residues()[resIdx]->Type();
+                        values[i] = Color::GetHydrophibicityByResName(mol->ResidueTypeNames()[typeIdx]);
+                    } else if (colmode == Color::AMINOACID) {
+                        auto resIdx = mol->AtomResidueIndices()[atomIndex[i]];
+                        auto typeIdx = mol->Residues()[resIdx]->Type();
+                        values[i] = Color::GetAminoAcidPropertiesByResName(mol->ResidueTypeNames()[typeIdx]);
+                    }
 
                     // create hightmap colours or read per atom colours
                     if (currentColoringMode0 == ProteinColor::ColoringMode::HEIGHTMAP_COLOR ||
@@ -437,6 +488,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                         lower_bound = float(bin) * steps;
                         upper_bound = float(bin + 1) * steps;
                         alpha = (dist - lower_bound) / (upper_bound - lower_bound);
+                        values[i] = dist;
                         dist /= max_dist;
 
                         if (currentColoringMode1 == ProteinColor::ColoringMode::HEIGHTMAP_COLOR) {
@@ -451,6 +503,11 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                             col[0] = dist_uc;
                             col[1] = dist_uc;
                             col[2] = dist_uc;
+                            maxCol = glm::vec3(1.0f, 1.0f, 1.0f);
+                            minCol = glm::vec3(0.0f, 0.0f, 0.0f);
+                            twoColors = true;
+                            this->lowval = 0.0f; // TODO or min_dist?
+                            this->highval = max_dist;
                         }
                         color[i * 3 + 0] += static_cast<unsigned char>(weight1 * col[0]);
                         color[i * 3 + 1] += static_cast<unsigned char>(weight1 * col[1]);
@@ -466,7 +523,8 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                     this->obj[ctmd->FrameID()]->GetVertexCount(), vertex, normal, color, NULL, true);
                 // setVertexData clears all attributes, so we have to add a new one
                 this->obj[ctmd->FrameID()]->AddVertexAttribPointer(atomIndex);
-                this->datahash++;
+                this->obj[ctmd->FrameID()]->AddVertexAttribPointer(values);
+                this->hash_offset++;
 
                 this->coloringModeParam0.ResetDirty();
                 this->coloringModeParam1.ResetDirty();
@@ -479,8 +537,13 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
     }
 
     if (this->obj[ctmd->FrameID()]->GetVertexCount() > 0) {
-        ctmd->SetDataHash(this->datahash);
+        ctmd->SetDataHash(this->last_datahash + hash_offset);
         ctmd->SetObjects(1, this->obj[ctmd->FrameID()]);
+        if (!twoColors) {
+            ctmd->SetColorBounds(this->lowval, this->highval, minCol, midCol, maxCol);
+        } else {
+            ctmd->SetColorBounds(this->lowval, this->highval, minCol, maxCol);
+        }
         ctmd->SetUnlocker(NULL);
         this->prevTime = int(ctmd->FrameID());
         return true;
@@ -512,7 +575,7 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
             this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
                 probeRadius);
             this->isGenus0(0, &genus);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            core::utility::log::Log::DefaultLog.WriteInfo(
                 "Step %u: Mesh with radius %f has genus %u", step, probeRadius, genus);
             probeRadius += stepSize;
             step++;
@@ -529,9 +592,14 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
             if ((*mol)(MolecularDataCall::CallForGetExtent)) {
                 frameCnt = mol->FrameCount();
                 this->bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
+                if (this->last_datahash != mol->DataHash()) {
+                    this->last_datahash = mol->DataHash();
+                    this->reloadMolecule = true;
+                }
             }
         }
     }
+    ctmd->SetDataHash(this->last_datahash + hash_offset);
     ctmd->SetExtent(frameCnt, this->bbox.Left(), this->bbox.Bottom(), this->bbox.Back(), this->bbox.Right(),
         this->bbox.Top(), this->bbox.Front());
     if (this->obj.Count() != frameCnt) {
@@ -551,7 +619,7 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
  * MSMSGenus0Generator::load
  */
 bool MSMSGenus0Generator::load(const vislib::TString& filename, float probe_radius, unsigned int frameID) {
-    using megamol::core::utility::log::Log;
+    using core::utility::log::Log;
 
     vislib::StringA vertFilename(filename);
     vertFilename.Append(".vert");
@@ -701,7 +769,7 @@ bool MSMSGenus0Generator::load(const vislib::TString& filename, float probe_radi
             j++;
         }
 
-        this->datahash++;
+        this->hash_offset++;
         Log::DefaultLog.WriteInfo(
             "Finished loading MSMS files %s and %s.", vertFilename.PeekBuffer(), faceFilename.PeekBuffer());
 
@@ -759,7 +827,7 @@ bool MSMSGenus0Generator::load(const vislib::TString& filename, float probe_radi
         if (atCnt == 0 || !found) {
             this->obj[frameID]->AddVertexAttribPointer(atomIndex);
         } else {
-            this->obj[frameID]->SetVertexAttribData(atomIndex, attIdx);
+            this->obj[frameID]->SetVertexAttribData(atomIndex, this->idAttIdx);
         }
         return true;
     }
@@ -773,7 +841,7 @@ bool MSMSGenus0Generator::load(const vislib::TString& filename, float probe_radi
  */
 bool MSMSGenus0Generator::isGenus0(uint32_t frameID, uint32_t* out_genus) {
     if (this->obj.Count() < frameID) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
+        core::utility::log::Log::DefaultLog.WriteError(
             "Requested non-existing frame %u out of %u frames", frameID, static_cast<uint32_t>(this->obj.Count()));
         return false;
     }
