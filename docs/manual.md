@@ -91,7 +91,7 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 11. Afterwards, use the `INSTALL` target to create your MegaMol installation.
 12. The binary `megamol.exe` is located in the default installation path `../megamol/build/install/bin`.
 
-![CMake Windows](pics/cmake_windows.png)
+![CMake Windows](images/cmake_windows.png)
 *Screenshot of `cmake-gui` after generating build files.*
 
 <!-- ---------------------------------------------------------------------- -->
@@ -394,7 +394,7 @@ Alternatively, you can also open an empty MegaMol rendering window and load the 
 
 All available options provided via the graphical user interface are described separately in the readme file of the [GUI Service](../frontend/services/gui).
 
-![Test Project](pics/testspheres.png)
+![Test Project](images/testspheres.png)
 *Screenshot of MegaMol running the test spheres instance.*
 
 
@@ -423,7 +423,7 @@ Left-most module view of class `View3D_2` represents the rendering content of a 
 The center module renderer of class `BoundingBoxRenderer` and `SphererRenderer` are called subsequently by the window using the corresponding call of type `CallRenderer3D_2`. 
 The right modules provide data and additional information for the renderer, namely a color map transfer function and a clipping plane. 
 
-![Example Graph](pics/example_graph.png)  
+![Example Graph](images/example_graph.png)  
 
 *Example module call graph.*
 
@@ -611,7 +611,7 @@ The parameter file name specifies the path to the image file to be created.
 MegaMol only creates PNG files. 
 Hit the button trigger to have MegaMol create the requested screenshot.
 
-![ScreenShooter](pics/screenshooter.png)
+![ScreenShooter](images/screenshooter.png)
 
 
 <!-- ###################################################################### -->
