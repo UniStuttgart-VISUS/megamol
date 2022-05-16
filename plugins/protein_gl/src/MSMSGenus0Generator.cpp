@@ -16,10 +16,13 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/PerAtomFloatCall.h"
+#include "protein_calls/ProteinColor.h"
+#include "protein_calls/ProteinHelpers.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/assert.h"
@@ -38,7 +41,6 @@ using namespace megamol::protein_gl;
 MSMSGenus0Generator::MSMSGenus0Generator(void)
         : core::Module()
         , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
-        , datahash(0)
         , getDataSlot("getdata", "The slot publishing the loaded data")
         , molDataSlot("moldata", "The slot requesting molecular data")
         , bsDataSlot("getBindingSites", "The slot requesting binding site data")
@@ -235,11 +237,11 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
         auto midColText = midGradColorParam.Param<param::StringParam>()->Value();
         auto maxColText = maxGradColorParam.Param<param::StringParam>()->Value();
         float r, g, b;
-        utility::ColourParser::FromString(minColText, r, g, b);
+        utility::ColourParser::FromString(minColText.c_str(), r, g, b);
         minCol = glm::vec3(r, g, b);
-        utility::ColourParser::FromString(midColText, r, g, b);
+        utility::ColourParser::FromString(midColText.c_str(), r, g, b);
         midCol = glm::vec3(r, g, b);
-        utility::ColourParser::FromString(maxColText, r, g, b);
+        utility::ColourParser::FromString(maxColText.c_str(), r, g, b);
         maxCol = glm::vec3(r, g, b);
 
         // try to call data
@@ -264,10 +266,10 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                     glm::make_vec3(this->midGradColorParam.Param<param::ColorParam>()->Value().data()),
                     glm::make_vec3(this->maxGradColorParam.Param<param::ColorParam>()->Value().data())};
 
-                protein_calls::ProteinColor::MakeColorTable(*mol, currentColoringMode0, atomColorTable,
+                auto leftres = protein_calls::ProteinColor::MakeColorTable(*mol, currentColoringMode0, atomColorTable,
                     this->colorLookupTable, this->fileLookupTable, this->rainbowColors, bs, pa, true);
 
-                protein_calls::ProteinColor::MakeColorTable(*mol, currentColoringMode1, atomColorTable2,
+                auto rightres = protein_calls::ProteinColor::MakeColorTable(*mol, currentColoringMode1, atomColorTable2,
                     this->colorLookupTable, this->fileLookupTable, this->rainbowColors, bs, pa, true);
 
                 this->lowval = std::min(leftres.first, rightres.first);
@@ -371,7 +373,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                 auto atCnt = this->obj[ctmd->FrameID()]->GetVertexAttribCount();
                 bool found = false;
                 if (atCnt != 0) {
-                    for (attIdx = 0; attIdx < atCnt; attIdx++) {
+                    for (int attIdx = 0; attIdx < atCnt; attIdx++) {
                         if (this->obj[ctmd->FrameID()]->GetVertexAttribDataType(attIdx) ==
                             CallTriMeshDataGL::Mesh::DataType::DT_UINT32) {
                             found = true;
@@ -385,7 +387,7 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                 if (atCnt != 0) {
                     for (this->valueAttIdx = 0; this->valueAttIdx < atCnt; this->valueAttIdx++) {
                         if (this->obj[ctmd->FrameID()]->GetVertexAttribDataType(this->valueAttIdx) ==
-                            CallTriMeshData::Mesh::DataType::DT_FLOAT) {
+                            CallTriMeshDataGL::Mesh::DataType::DT_FLOAT) {
                             found = true;
                             break;
                         }
@@ -418,27 +420,27 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                     color[i * 3 + 2] = 0;
                     atomIndex[i] = this->obj[ctmd->FrameID()]->GetVertexAttribPointerUInt32(this->idAttIdx)[i];
 
-                    Color::ColoringMode colmode;
+                    ProteinColor::ColoringMode colmode;
                     if (weight1 > weight0) { // take weight1
                         colmode = currentColoringMode1;
                     } else { // take weight0
                         colmode = currentColoringMode0;
                     }
 
-                    if (colmode == Color::BFACTOR) {
+                    if (colmode == ProteinColor::ColoringMode::BFACTOR) {
                         values[i] = mol->AtomBFactors()[atomIndex[i]];
-                    } else if (colmode == Color::CHARGE) {
+                    } else if (colmode == ProteinColor::ColoringMode::CHARGE) {
                         values[i] = mol->AtomCharges()[atomIndex[i]];
-                    } else if (colmode == Color::OCCUPANCY) {
+                    } else if (colmode == ProteinColor::ColoringMode::OCCUPANCY) {
                         values[i] = mol->AtomOccupancies()[atomIndex[i]];
-                    } else if (colmode == Color::HYDROPHOBICITY) {
+                    } else if (colmode == ProteinColor::ColoringMode::HYDROPHOBICITY) {
                         auto resIdx = mol->AtomResidueIndices()[atomIndex[i]];
                         auto typeIdx = mol->Residues()[resIdx]->Type();
-                        values[i] = Color::GetHydrophibicityByResName(mol->ResidueTypeNames()[typeIdx]);
-                    } else if (colmode == Color::AMINOACID) {
+                        values[i] = GetHydrophibicityByResName(mol->ResidueTypeNames()[typeIdx].PeekBuffer());
+                    } else if (colmode == ProteinColor::ColoringMode::AMINOACID) {
                         auto resIdx = mol->AtomResidueIndices()[atomIndex[i]];
                         auto typeIdx = mol->Residues()[resIdx]->Type();
-                        values[i] = Color::GetAminoAcidPropertiesByResName(mol->ResidueTypeNames()[typeIdx]);
+                        values[i] = GetAminoAcidPropertiesByResName(mol->ResidueTypeNames()[typeIdx].PeekBuffer());
                     }
 
                     // create hightmap colours or read per atom colours
@@ -539,11 +541,11 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
     if (this->obj[ctmd->FrameID()]->GetVertexCount() > 0) {
         ctmd->SetDataHash(this->last_datahash + hash_offset);
         ctmd->SetObjects(1, this->obj[ctmd->FrameID()]);
-        if (!twoColors) {
+        /*if (!twoColors) {
             ctmd->SetColorBounds(this->lowval, this->highval, minCol, midCol, maxCol);
         } else {
             ctmd->SetColorBounds(this->lowval, this->highval, minCol, maxCol);
-        }
+        }*/
         ctmd->SetUnlocker(NULL);
         this->prevTime = int(ctmd->FrameID());
         return true;
@@ -584,7 +586,7 @@ bool MSMSGenus0Generator::getExtentCallback(core::Call& caller) {
             return false;
     }
 
-    ctmd->SetDataHash(this->datahash);
+    ctmd->SetDataHash(this->last_datahash + hash_offset);
     if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().empty()) {
         MolecularDataCall* mol = this->molDataSlot.CallAs<MolecularDataCall>();
         if (mol) {
@@ -815,7 +817,7 @@ bool MSMSGenus0Generator::load(const vislib::TString& filename, float probe_radi
         auto atCnt = this->obj[frameID]->GetVertexAttribCount();
         bool found = false;
         if (atCnt != 0) {
-            for (attIdx = 0; attIdx < atCnt; attIdx++) {
+            for (int attIdx = 0; attIdx < atCnt; attIdx++) {
                 if (this->obj[frameID]->GetVertexAttribDataType(attIdx) ==
                     CallTriMeshDataGL::Mesh::DataType::DT_UINT32) {
                     found = true;

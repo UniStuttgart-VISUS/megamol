@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="molsurfPassthrough">
+    <shader name="vertex">
+        <snippet type="version">430</snippet>
+        <snippet name="Main" type="file">molsurfmapcluster_gl/molsurfpassthrough_vert.glsl</snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">430</snippet>
+        <snippet name="Main" type="file">molsurfmapcluster_gl/molsurfpassthrough_frag.glsl</snippet>
+    </shader>
+</btf>

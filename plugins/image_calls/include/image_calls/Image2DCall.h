@@ -1,11 +1,11 @@
 #pragma once
 
+#include <map>
 #include <memory>
 #include <string>
-#include <map>
 
 #include "mmcore/AbstractGetDataCall.h"
-#include "mmcore/CallAutoDescription.h"
+#include "mmcore/factories/CallDescription.h"
 #include "mmcore/utility/graphics/BitmapCodecCollection.h"
 
 namespace megamol {
@@ -54,7 +54,7 @@ public:
      * @return The number of functions used for this call.
      */
     static unsigned int FunctionCount(void) {
-        return 1;
+        return 5;
     }
 
     /**
@@ -76,6 +76,8 @@ public:
             return "WaitForData";
         case 4:
             return "DeleteData";
+        default:
+            return nullptr;
         }
         return nullptr;
     }
@@ -118,7 +120,7 @@ public:
     /**
      * Sets the pointer to the wishlist, containing all indices of the desired images
      * When this is set to nullptr, all images are set as wished for.
-     * 
+     *
      * @param ptr Pointer to the vector containing all desired image indices
      */
     void SetWishlistPtr(const std::shared_ptr<std::vector<uint64_t>> ptr);
@@ -136,39 +138,6 @@ public:
     /** Dtor. */
     virtual ~Image2DCall() = default;
 
-    void* GetData() const {
-        return this->data_;
-    }
-
-    Encoding GetEncoding() const {
-        return this->enc_;
-    }
-
-    Format GetFormat() const {
-        return this->format_;
-    }
-
-    size_t GetWidth() const {
-        return this->width_;
-    }
-
-    size_t GetHeight() const {
-        return this->height_;
-    }
-
-    size_t GetFilesize() const {
-        return this->filesize_;
-    }
-
-    void SetData(Encoding const enc, Format const format, size_t width, size_t height, size_t filesize, void* data) {
-        this->enc_ = enc;
-        this->format_ = format;
-        this->width_ = width;
-        this->height_ = height;
-        this->filesize_ = filesize;
-        this->data_ = data;
-    }
-
 private:
     /** Pointer to the stored data */
     std::shared_ptr<ImageMap> imagePtr;
@@ -180,7 +149,7 @@ private:
     std::shared_ptr<std::vector<uint64_t>> wishlistPtr;
 };
 
-typedef megamol::core::CallAutoDescription<Image2DCall> Image2DCallDescription;
+typedef megamol::core::factories::CallAutoDescription<Image2DCall> Image2DCallDescription;
 
 } // namespace image_calls
 } // namespace megamol
