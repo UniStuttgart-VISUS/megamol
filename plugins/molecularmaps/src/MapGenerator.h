@@ -18,13 +18,13 @@
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
+#include "protein_calls/BindingSiteCall.h"
 
 #include "vislib_gl/graphics/gl/OutlineFont.h"
 #include "vislib_gl/graphics/gl/Verdana.inc"
 
 #include "AmbientOcclusionCalculator.h"
 #include "CUDAKernels.cuh"
-#include "Color.h"
 #include "Octree.h"
 #include "TriangleMeshRenderer.h"
 #include "VoronoiChannelCalculator.h"
@@ -706,7 +706,7 @@ private:
     core::param::ParamSlot cut_colour_param;
 
     /** The colour table for the cuts. */
-    vislib::Array<vec3f> cut_colour_table;
+    std::vector<glm::vec3> cut_colour_table;
 
     /** Determines what to render */
     core::param::ParamSlot display_param;
@@ -748,7 +748,7 @@ private:
     core::param::ParamSlot group_colour_param;
 
     /** The colour table for the groups. */
-    vislib::Array<vec3f> group_colour_table;
+    std::vector<glm::vec3> group_colour_table;
 
     /** The data hash of the recently loaded data */
     SIZE_T lastDataHash;

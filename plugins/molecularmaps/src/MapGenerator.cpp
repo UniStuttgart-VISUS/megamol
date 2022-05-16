@@ -19,6 +19,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
 
 #include <numeric>
 
@@ -808,7 +809,7 @@ Cut MapGenerator::createCut(const bool p_second_rebuild, const uint p_tunnel_id,
     new_cut.tunnel_id = p_tunnel_id;
 
     // Determine the center point of the triangle fan.
-    uint colour_table_size = static_cast<uint>(this->cut_colour_table.Count());
+    uint colour_table_size = static_cast<uint>(this->cut_colour_table.size());
     for (const auto id : p_vertex_ids) {
         vertex.Set(source_vertices_ptr[id * 3], source_vertices_ptr[id * 3 + 1], source_vertices_ptr[id * 3 + 2]);
         center_point += vertex;
@@ -821,14 +822,14 @@ Cut MapGenerator::createCut(const bool p_second_rebuild, const uint p_tunnel_id,
         new_cut.normals.push_back(source_normals_ptr[id * 3 + 1]);
         new_cut.normals.push_back(source_normals_ptr[id * 3 + 2]);
         // Add the colour to the cut.
-        new_cut.colours.push_back(this->cut_colour_table[p_tunnel_id % colour_table_size].GetX());
-        new_cut.colours.push_back(this->cut_colour_table[p_tunnel_id % colour_table_size].GetY());
-        new_cut.colours.push_back(this->cut_colour_table[p_tunnel_id % colour_table_size].GetZ());
+        new_cut.colours.push_back(this->cut_colour_table[p_tunnel_id % colour_table_size].x);
+        new_cut.colours.push_back(this->cut_colour_table[p_tunnel_id % colour_table_size].y);
+        new_cut.colours.push_back(this->cut_colour_table[p_tunnel_id % colour_table_size].z);
         // Add the colour to the cut colouring.
         if (!p_second_rebuild) {
-            this->vertexColors_cuts[id * 3] = this->cut_colour_table[p_tunnel_id % colour_table_size].GetX();
-            this->vertexColors_cuts[id * 3 + 1] = this->cut_colour_table[p_tunnel_id % colour_table_size].GetY();
-            this->vertexColors_cuts[id * 3 + 2] = this->cut_colour_table[p_tunnel_id % colour_table_size].GetZ();
+            this->vertexColors_cuts[id * 3] = this->cut_colour_table[p_tunnel_id % colour_table_size].x;
+            this->vertexColors_cuts[id * 3 + 1] = this->cut_colour_table[p_tunnel_id % colour_table_size].y;
+            this->vertexColors_cuts[id * 3 + 2] = this->cut_colour_table[p_tunnel_id % colour_table_size].z;
         }
     }
     center_point /= static_cast<float>(p_vertex_ids.size());
@@ -837,9 +838,9 @@ Cut MapGenerator::createCut(const bool p_second_rebuild, const uint p_tunnel_id,
     new_cut.vertices.push_back(center_point.GetY());
     new_cut.vertices.push_back(center_point.GetZ());
     // Add the colour.
-    new_cut.colours.push_back(this->cut_colour_table[p_tunnel_id % colour_table_size].GetX());
-    new_cut.colours.push_back(this->cut_colour_table[p_tunnel_id % colour_table_size].GetY());
-    new_cut.colours.push_back(this->cut_colour_table[p_tunnel_id % colour_table_size].GetZ());
+    new_cut.colours.push_back(this->cut_colour_table[p_tunnel_id % colour_table_size].x);
+    new_cut.colours.push_back(this->cut_colour_table[p_tunnel_id % colour_table_size].y);
+    new_cut.colours.push_back(this->cut_colour_table[p_tunnel_id % colour_table_size].z);
 
     // Add new faces and comput the sum of the face normals.
     center_normal.Set(0.0f, 0.0f, 0.0f);
@@ -967,7 +968,7 @@ void MapGenerator::createGeodesicLines(const GeodesicMode p_mode) {
     }
 
     // Determine the amount of colours we have for tunnels.
-    size_t colour_table_size = this->cut_colour_table.Count();
+    size_t colour_table_size = this->cut_colour_table.size();
 
     // Find the vertices that belong together.
     std::vector<size_t> tunnel_offset =
@@ -1063,9 +1064,9 @@ void MapGenerator::createGeodesicLines(const GeodesicMode p_mode) {
                         line.push_back(p_2.GetY());
                         line.push_back(p_2.GetZ());
 
-                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].GetX());
-                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].GetY());
-                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].GetZ());
+                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].x);
+                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].y);
+                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].z);
                     }
 
                     // Interpolate the line between the middle point and the end point.
@@ -1081,9 +1082,9 @@ void MapGenerator::createGeodesicLines(const GeodesicMode p_mode) {
                         line.push_back(p_2.GetY());
                         line.push_back(p_2.GetZ());
 
-                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].GetX());
-                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].GetY());
-                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].GetZ());
+                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].x);
+                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].y);
+                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].z);
                     }
 
                 } else {
@@ -1103,9 +1104,9 @@ void MapGenerator::createGeodesicLines(const GeodesicMode p_mode) {
                         line.push_back(p_2.GetY());
                         line.push_back(p_2.GetZ());
 
-                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].GetX());
-                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].GetY());
-                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].GetZ());
+                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].x);
+                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].y);
+                        line_colour.push_back(this->cut_colour_table[i % colour_table_size].z);
                     }
                 }
 
@@ -3396,7 +3397,7 @@ void MapGenerator::processTopologyOutput(std::vector<Cut>& p_cuts, uint& p_tunne
 
     // Add the colours to the voronoi colour vector and create the cuts.
     this->vertexColors_voronoi = std::vector<float>(this->vertexColors_rebuild.size(), 193.0f / 255.0f);
-    int colour_table_size = static_cast<int>(this->group_colour_table.Count());
+    int colour_table_size = static_cast<int>(this->group_colour_table.size());
     uint vertex_id = static_cast<uint>(this->vertices_rebuild.size() / 3);
     for (size_t i = 1; i < voronoi_groups.size(); i++) {
         // Colour the faces in the vertexColors_voronoi vector.
@@ -3404,23 +3405,23 @@ void MapGenerator::processTopologyOutput(std::vector<Cut>& p_cuts, uint& p_tunne
             // Determine the colour.
             uint face_id = it->second;
             this->vertexColors_voronoi[this->faces_rebuild[face_id * 3 + 0] * 3 + 0] =
-                this->group_colour_table[i % colour_table_size].GetX();
+                this->group_colour_table[i % colour_table_size].x;
             this->vertexColors_voronoi[this->faces_rebuild[face_id * 3 + 0] * 3 + 1] =
-                this->group_colour_table[i % colour_table_size].GetY();
+                this->group_colour_table[i % colour_table_size].y;
             this->vertexColors_voronoi[this->faces_rebuild[face_id * 3 + 0] * 3 + 2] =
-                this->group_colour_table[i % colour_table_size].GetZ();
+                this->group_colour_table[i % colour_table_size].z;
             this->vertexColors_voronoi[this->faces_rebuild[face_id * 3 + 1] * 3 + 0] =
-                this->group_colour_table[i % colour_table_size].GetX();
+                this->group_colour_table[i % colour_table_size].x;
             this->vertexColors_voronoi[this->faces_rebuild[face_id * 3 + 1] * 3 + 1] =
-                this->group_colour_table[i % colour_table_size].GetY();
+                this->group_colour_table[i % colour_table_size].y;
             this->vertexColors_voronoi[this->faces_rebuild[face_id * 3 + 1] * 3 + 2] =
-                this->group_colour_table[i % colour_table_size].GetZ();
+                this->group_colour_table[i % colour_table_size].z;
             this->vertexColors_voronoi[this->faces_rebuild[face_id * 3 + 2] * 3 + 0] =
-                this->group_colour_table[i % colour_table_size].GetX();
+                this->group_colour_table[i % colour_table_size].x;
             this->vertexColors_voronoi[this->faces_rebuild[face_id * 3 + 2] * 3 + 1] =
-                this->group_colour_table[i % colour_table_size].GetY();
+                this->group_colour_table[i % colour_table_size].y;
             this->vertexColors_voronoi[this->faces_rebuild[face_id * 3 + 2] * 3 + 2] =
-                this->group_colour_table[i % colour_table_size].GetZ();
+                this->group_colour_table[i % colour_table_size].z;
 
             // Mark the face as a tunnel face.
             p_tunnels[face_id] = true;
@@ -3829,16 +3830,12 @@ bool MapGenerator::Render(core_gl::view::CallRender3DGL& call) {
 
         // Get the colour tables.
         {
-            auto* wPath = cut_colour_param.Param<param::FilePathParam>()->Value().c_str();
-            vislib::StringA path;
-            path.Append(W2A(wPath));
-            Color::ReadColorTableFromFile(path, cut_colour_table);
+            auto wPath = cut_colour_param.Param<param::FilePathParam>()->Value();
+            ProteinColor::ReadColorTableFromFile(wPath, cut_colour_table);
         }
         {
-            auto* wPath = group_colour_param.Param<param::FilePathParam>()->Value().c_str();
-            vislib::StringA path;
-            path.Append(W2A(wPath));
-            Color::ReadColorTableFromFile(path, group_colour_table);
+            auto wPath = group_colour_param.Param<param::FilePathParam>()->Value();
+            ProteinColor::ReadColorTableFromFile(wPath, group_colour_table);
         }
 
         if (ctmd->Count() > 0 && ctmd->Objects()[0].GetVertexCount() > 0) {
