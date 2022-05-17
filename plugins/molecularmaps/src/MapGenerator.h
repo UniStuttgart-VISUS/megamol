@@ -615,7 +615,7 @@ private:
      * @param ctmd The call containing the relevant data to write.
      * @param input_image The image that has to be rewritten.
      */
-    void writeValueImage(const vislib::TString& path_to_image, const geocalls_gl::CallTriMeshDataGL& ctmd,
+    void writeValueImage(const std::filesystem::path& path_to_image, const geocalls_gl::CallTriMeshDataGL& ctmd,
         vislib::Array<unsigned char>& input_image);
 
     /** Turn the Ambient Occlusion on or off */

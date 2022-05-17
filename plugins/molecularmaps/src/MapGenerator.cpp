@@ -298,10 +298,10 @@ MapGenerator::MapGenerator(void)
     this->store_png_button.SetParameter(new param::ButtonParam(view::Key::KEY_S));
     this->MakeSlotAvailable(&this->store_png_button);
 
-    this->store_png_path.SetParameter(new param::FilePathParam(""));
+    this->store_png_path.SetParameter(new param::FilePathParam("", param::FilePathParam::Flag_Directory));
     this->MakeSlotAvailable(&this->store_png_path);
 
-    this->store_png_values_path.SetParameter(new param::FilePathParam(""));
+    this->store_png_values_path.SetParameter(new param::FilePathParam("", param::FilePathParam::Flag_Directory));
     this->MakeSlotAvailable(&this->store_png_values_path);
 
     this->tunnel_faces = std::vector<uint>(0);
@@ -4201,26 +4201,32 @@ bool MapGenerator::Render(core_gl::view::CallRender3DGL& call) {
         this->store_png_data.SetCount(this->store_png_fbo.GetWidth() * this->store_png_fbo.GetHeight() * 3);
         this->store_png_fbo.GetColourTexture(&this->store_png_data[0], 0, GL_RGB, GL_UNSIGNED_BYTE);
 
+        std::filesystem::path pdbfile = mdc->GetPDBFilename().PeekBuffer();
+        auto pdbname = pdbfile.stem();
+
         if (writeValues) {
-            auto* wPath = this->store_png_values_path.Param<param::FilePathParam>()->Value().c_str();
-            vislib::TString path;
-            path.Append(W2T(wPath));
+            auto path = this->store_png_values_path.Param<param::FilePathParam>()->Value();
+            path /= pdbname.string() + "_values";
+            path.replace_extension("dat");
             this->writeValueImage(path, *ctmd, this->store_png_data);
         }
 
+        auto path = this->store_png_path.Param<param::FilePathParam>()->Value();
+        path /= pdbname.string();
+        path.replace_extension("png");
+        
         this->store_png_image.Image() =
             new vislib::graphics::BitmapImage(this->store_png_fbo.GetWidth(), this->store_png_fbo.GetHeight(), 3U,
                 vislib::graphics::BitmapImage::CHANNELTYPE_BYTE, static_cast<const void*>(&this->store_png_data[0]));
         this->store_png_image.Image()->FlipVertical();
-        if (this->store_png_image.Save(this->store_png_path.Param<param::FilePathParam>()->Value().c_str())) {
+        if (this->store_png_image.Save(path.c_str())) {
             core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO,
                 "%s: Stored molecular surface map to file: %s", this->ClassName(),
-                T2A(this->store_png_path.Param<param::FilePathParam>()->Value()));
+                path.c_str());
 
         } else {
             core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
-                "%s: Could not store molecular surface map to file: %s", this->ClassName(),
-                T2A(this->store_png_path.Param<param::FilePathParam>()->Value()));
+                "%s: Could not store molecular surface map to file: %s", this->ClassName(), path.c_str());
         }
         delete this->store_png_image.Image();
         if (this->close_after_screen_store_param.Param<param::BoolParam>()->Value()) {
@@ -4789,7 +4795,7 @@ std::vector<std::string> MapGenerator::splitString(
 /*
  * MapGenerator::writeValueImage
  */
-void MapGenerator::writeValueImage(const vislib::TString& path_to_image, const geocalls_gl::CallTriMeshDataGL& ctmd,
+void MapGenerator::writeValueImage(const std::filesystem::path& path_to_image, const geocalls_gl::CallTriMeshDataGL& ctmd,
     vislib::Array<unsigned char>& input_image) {
 
     auto attribcnt = ctmd.Objects()[0].GetVertexAttribCount();
@@ -4831,7 +4837,7 @@ void MapGenerator::writeValueImage(const vislib::TString& path_to_image, const g
     std::copy(data, data + texture.size(), newvalues.begin());
     delete this->store_png_image.Image();
 
-    std::string path = T2A(path_to_image).PeekBuffer();
+    std::string path = path_to_image.string();
     std::ofstream file(path, std::ios::binary);
 
     if (file.is_open()) {
