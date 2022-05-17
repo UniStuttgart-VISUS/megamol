@@ -373,8 +373,8 @@ bool MSMSGenus0Generator::getDataCallback(core::Call& caller) {
                 auto atCnt = this->obj[ctmd->FrameID()]->GetVertexAttribCount();
                 bool found = false;
                 if (atCnt != 0) {
-                    for (int attIdx = 0; attIdx < atCnt; attIdx++) {
-                        if (this->obj[ctmd->FrameID()]->GetVertexAttribDataType(attIdx) ==
+                    for (this->idAttIdx = 0; this->idAttIdx < atCnt; this->idAttIdx++) {
+                        if (this->obj[ctmd->FrameID()]->GetVertexAttribDataType(this->idAttIdx) ==
                             CallTriMeshDataGL::Mesh::DataType::DT_UINT32) {
                             found = true;
                             break;
@@ -817,8 +817,8 @@ bool MSMSGenus0Generator::load(const vislib::TString& filename, float probe_radi
         auto atCnt = this->obj[frameID]->GetVertexAttribCount();
         bool found = false;
         if (atCnt != 0) {
-            for (int attIdx = 0; attIdx < atCnt; attIdx++) {
-                if (this->obj[frameID]->GetVertexAttribDataType(attIdx) ==
+            for (this->idAttIdx = 0; this->idAttIdx < atCnt; this->idAttIdx++) {
+                if (this->obj[frameID]->GetVertexAttribDataType(this->idAttIdx) ==
                     CallTriMeshDataGL::Mesh::DataType::DT_UINT32) {
                     found = true;
                     break;
