@@ -443,6 +443,9 @@ bool GUIManager::PostDraw() {
 
 bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
 
+    if (!this->gui_state.gui_visible)
+        return false;
+
     ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
@@ -515,6 +518,10 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
 
 
 bool GUIManager::OnChar(unsigned int codePoint) {
+
+    if (!this->gui_state.gui_visible)
+        return false;
+
     ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
@@ -528,6 +535,9 @@ bool GUIManager::OnChar(unsigned int codePoint) {
 
 
 bool GUIManager::OnMouseMove(double x, double y) {
+
+    if (!this->gui_state.gui_visible)
+        return false;
 
     ImGui::SetCurrentContext(this->imgui_context);
 
@@ -549,6 +559,9 @@ bool GUIManager::OnMouseMove(double x, double y) {
 
 bool GUIManager::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+
+    if (!this->gui_state.gui_visible)
+        return false;
 
     ImGui::SetCurrentContext(this->imgui_context);
 
@@ -572,6 +585,9 @@ bool GUIManager::OnMouseButton(
 
 
 bool GUIManager::OnMouseScroll(double dx, double dy) {
+
+    if (!this->gui_state.gui_visible)
+        return false;
 
     ImGui::SetCurrentContext(this->imgui_context);
 
