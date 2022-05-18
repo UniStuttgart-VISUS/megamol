@@ -175,7 +175,7 @@ bool megamol::compositing::TextureCombine::getDataCallback(core::Call& caller) {
         }
     }
 
-        lhs_tc->setData(m_output_texture, m_version);
+    lhs_tc->setData(m_output_texture, m_version);
 
     return true;
 }
