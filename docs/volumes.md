@@ -3,7 +3,7 @@
 Since there are many ways of considering volumetric data, this document shall define the generally valid way of treating a volume in MegaMol, be it in shaders or in software.
 
 Consider the following picture:
-![](volume.png "Left: linear volume addressing, right: half-voxel offset for reliable borders.")
+![](images/volume.png "Left: linear volume addressing, right: half-voxel offset for reliable borders.")
 
 On the left, the samples for each voxel cell all cover that same world space. Trilinear interpolation being what it is, this would require some border color or other strategy to give meaningful results for sampling (u,v) = (0,0). However, world space size of the volume bounding box is intuitively
 >`bbox_width = slice_distance * resolution`

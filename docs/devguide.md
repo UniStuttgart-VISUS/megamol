@@ -146,7 +146,7 @@ To properly track changes across several Modules, you need to follow the recipe.
 Split up the data flow for each direction, one call for reading only, one call for writing only.
 Keep in mind that the caller by definition is "left" in the module graph and the callee is "right". The callee is the end of a callback, but for this pattern this has nothing to do with the direction the data flows in, which results in the rules defined below.
 
-![bidir example](bidir.png)
+![bidir example](images/bidir.png)
 
 - set up a ```uint32_t version_DATA``` in the *owner*
 - Create a ```DATACallRead``` either instancing the ```core::GenericVersionedCall``` template, or making sure that the call can distinguish between the ```DATA``` version that was last **set** into the Call and that which was last **got** out of the Call
