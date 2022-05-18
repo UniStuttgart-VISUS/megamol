@@ -1,11 +1,11 @@
 #include "stdafx.h"
 #include "TriangleMeshRenderer3D.h"
 
+#include "mesh/MeshCalls.h"
 #include "mesh/MeshDataCall.h"
 #include "mesh/TriangleMeshCall.h"
 
-#include "mesh/GPUMeshCollection.h"
-#include "mesh/MeshCalls.h"
+#include "mesh_gl/GPUMeshCollection.h"
 
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/Call.h"
@@ -18,8 +18,6 @@
 #include "mmcore/utility/DataHash.h"
 #include "mmcore/view/CallClipPlane.h"
 
-#include "glad/glad.h"
-
 #include "glowl/VertexLayout.hpp"
 
 #include <memory>
@@ -29,7 +27,7 @@
 #include <vector>
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 
     TriangleMeshRenderer3D::TriangleMeshRenderer3D()
             : triangle_mesh_slot("get_triangle_mesh", "Triangle mesh input")
@@ -50,10 +48,10 @@ namespace mesh {
             , shader_changed(false) {
 
         // Connect input slots
-        this->triangle_mesh_slot.SetCompatibleCall<TriangleMeshCall::triangle_mesh_description>();
+        this->triangle_mesh_slot.SetCompatibleCall<mesh::TriangleMeshCall::triangle_mesh_description>();
         this->MakeSlotAvailable(&this->triangle_mesh_slot);
 
-        this->mesh_data_slot.SetCompatibleCall<MeshDataCall::mesh_data_description>();
+        this->mesh_data_slot.SetCompatibleCall<mesh::MeshDataCall::mesh_data_description>();
         this->MakeSlotAvailable(&this->mesh_data_slot);
 
         this->clip_plane_slot.SetCompatibleCall<core::view::CallClipPlaneDescription>();
@@ -87,7 +85,7 @@ namespace mesh {
     }
 
     bool TriangleMeshRenderer3D::create() {
-        mesh::AbstractGPURenderTaskDataSource::create();
+        AbstractGPURenderTaskDataSource::create();
 
         this->material_collection = std::make_shared<GPUMaterialCollection>();
         this->material_collection->addMaterial(this->instance(), "triangle_mesh", "triangle_mesh");
@@ -98,8 +96,8 @@ namespace mesh {
     void TriangleMeshRenderer3D::release() {}
 
     bool TriangleMeshRenderer3D::get_input_data() {
-        auto tmc_ptr = this->triangle_mesh_slot.CallAs<TriangleMeshCall>();
-        auto mdc_ptr = this->mesh_data_slot.CallAs<MeshDataCall>();
+        auto tmc_ptr = this->triangle_mesh_slot.CallAs<mesh::TriangleMeshCall>();
+        auto mdc_ptr = this->mesh_data_slot.CallAs<mesh::MeshDataCall>();
 
         if (tmc_ptr == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -195,7 +193,7 @@ namespace mesh {
             (this->data_set.Param<core::param::FlexEnumParam>()->Value().empty()
                 && (this->data_set.IsDirty() || this->default_color.IsDirty()))) {
 
-            this->render_data.values = std::make_shared<MeshDataCall::data_set>();
+            this->render_data.values = std::make_shared<mesh::MeshDataCall::data_set>();
 
             this->render_data.values->min_value = 0.0f;
             this->render_data.values->max_value = 1.0f;
@@ -224,8 +222,8 @@ namespace mesh {
     }
 
     bool TriangleMeshRenderer3D::get_input_extent() {
-        auto tmc_ptr = this->triangle_mesh_slot.CallAs<TriangleMeshCall>();
-        auto mdc_ptr = this->triangle_mesh_slot.CallAs<MeshDataCall>();
+        auto tmc_ptr = this->triangle_mesh_slot.CallAs<mesh::TriangleMeshCall>();
+        auto mdc_ptr = this->triangle_mesh_slot.CallAs<mesh::MeshDataCall>();
 
         if (tmc_ptr == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -248,7 +246,7 @@ namespace mesh {
             return false;
         }
 
-        if (tmc.get_dimension() != TriangleMeshCall::dimension_t::THREE) {
+        if (tmc.get_dimension() != mesh::TriangleMeshCall::dimension_t::THREE) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Input triangle mesh must be three-dimensional. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
@@ -261,14 +259,14 @@ namespace mesh {
     }
 
     bool TriangleMeshRenderer3D::getDataCallback(core::Call& call) {
-        auto& grtc = static_cast<mesh::CallGPURenderTaskData&>(call);
+        auto& grtc = static_cast<CallGPURenderTaskData&>(call);
 
         if (!get_input_data()) {
             return false;
         }
 
         // Get render task from rhs
-        CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
+        auto rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
 
         std::vector<std::shared_ptr<GPURenderTaskCollection>> rt_collections;
 
@@ -292,7 +290,7 @@ namespace mesh {
             clearRenderTaskCollection();
 
             // Create mesh
-            this->render_data.mesh = std::make_shared<mesh::GPUMeshCollection>();
+            this->render_data.mesh = std::make_shared<GPUMeshCollection>();
 
             using vbi_t = typename std::vector<GLfloat>::iterator;
             using ibi_t = typename std::vector<GLuint>::iterator;
@@ -421,7 +419,7 @@ namespace mesh {
     }
 
     bool TriangleMeshRenderer3D::getMetaDataCallback(core::Call& call) {
-        auto& grtc = static_cast<mesh::CallGPURenderTaskData&>(call);
+        auto& grtc = static_cast<CallGPURenderTaskData&>(call);
 
         if (!get_input_extent()) {
             return false;

@@ -13,6 +13,9 @@
 #include "Render3DUI.h"
 #include "RenderMDIMesh.h"
 #include "SimpleGPUMtlDataSource.h"
+#include "STLDataSource.h"
+#include "TriangleMeshRenderer2D.h"
+#include "TriangleMeshRenderer3D.h"
 #include "gltf/glTFRenderTasksDataSource.h"
 #include "mesh_gl/MeshCalls_gl.h"
 
@@ -36,7 +39,10 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::SimpleGPUMtlDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::MeshViewerRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::Render3DUI>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::STLDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::TriangleMeshRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::TriangleMeshRenderer3D>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::mesh_gl::CallGPUMeshData>();

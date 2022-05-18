@@ -33,7 +33,6 @@
 #include "mmcore/view/light/QuadLight.h"
 #include "mmcore/view/light/SpotLight.h"
 #include "mmcore/view/light/TriDirectionalLighting.h"
-#include "mmcore/view/PlaneRenderer.h"
 
 
 using namespace megamol::core;
@@ -71,5 +70,4 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<param::FloatParamModule>();
     instance.RegisterAutoDescription<param::IntParamModule>();
     instance.RegisterAutoDescription<view::TransferFunction>();
-    instance.RegisterAutoDescription<view::PlaneRenderer>();
 }

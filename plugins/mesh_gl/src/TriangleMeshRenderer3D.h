@@ -8,9 +8,9 @@
 
 #include "mesh/MeshDataCall.h"
 
-#include "mesh/AbstractGPURenderTaskDataSource.h"
-#include "mesh/GPUMaterialCollection.h"
-#include "mesh/GPUMeshCollection.h"
+#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/GPUMaterialCollection.h"
+#include "mesh_gl/GPUMeshCollection.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
@@ -18,21 +18,19 @@
 
 #include "vislib/math/Cuboid.h"
 
-#include "glad/glad.h"
-
 #include <array>
 #include <memory>
 #include <type_traits>
 #include <vector>
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
     /**
      * Module for uploading a 3D triangle mesh to the GPU.
      *
      * @author Alexander Straub
      */
-    class TriangleMeshRenderer3D : public mesh::AbstractGPURenderTaskDataSource {
+    class TriangleMeshRenderer3D : public AbstractGPURenderTaskDataSource {
         static_assert(std::is_same<GLfloat, float>::value, "'GLfloat' and 'float' must be the same type!");
         static_assert(std::is_same<GLuint, unsigned int>::value, "'GLuint' and 'unsigned int' must be the same type!");
 
@@ -166,9 +164,9 @@ namespace mesh {
             std::shared_ptr<std::vector<GLfloat>> normals;
             std::shared_ptr<std::vector<GLuint>> indices;
 
-            std::shared_ptr<MeshDataCall::data_set> values;
+            std::shared_ptr<mesh::MeshDataCall::data_set> values;
 
-            std::shared_ptr<mesh::GPUMeshCollection> mesh;
+            std::shared_ptr<GPUMeshCollection> mesh;
 
             std::array<uint8_t, per_draw_data_t::size> per_draw_data;
 

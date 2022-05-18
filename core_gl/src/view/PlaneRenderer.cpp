@@ -1,11 +1,12 @@
 #include "stdafx.h"
-#include "mmcore/view/PlaneRenderer.h"
+#include "mmcore_gl/view/PlaneRenderer.h"
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Camera_2.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/view/Camera.h"
+
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 #include "glowl/GLSLProgram.hpp"
 
@@ -19,13 +20,13 @@
 #include <utility>
 
 namespace megamol {
-namespace core {
+namespace core_gl {
     namespace view {
 
         PlaneRenderer::PlaneRenderer()
                 : input_plane_slot("input_plane", "Input (clip) plane to render"), initialized(false) {
 
-            this->input_plane_slot.SetCompatibleCall<CallClipPlaneDescription>();
+            this->input_plane_slot.SetCompatibleCall<core::view::CallClipPlaneDescription>();
             this->MakeSlotAvailable(&this->input_plane_slot);
         }
 
@@ -41,7 +42,7 @@ namespace core {
 
         bool PlaneRenderer::Render(CallRender3DGL& call) {
             // Get plane
-            auto cp = this->input_plane_slot.CallAs<CallClipPlane>();
+            auto cp = this->input_plane_slot.CallAs<core::view::CallClipPlane>();
 
             if (cp == nullptr || !(*cp)(0)) {
                 return false;
@@ -57,11 +58,11 @@ namespace core {
             this->color[3] = cp->GetColour()[3] / 255.0f;
 
             // Get camera
-            core::view::Camera_2 cam;
+            core::view::Camera cam;
             call.GetCamera(cam);
 
-            cam_type::matrix_type view, proj;
-            cam.calc_matrices(view, proj);
+            const auto view = cam.getViewMatrix();
+            const auto proj = cam.getProjectionMatrix();
 
             // On first execution, compile shader
             if (!this->initialized) {

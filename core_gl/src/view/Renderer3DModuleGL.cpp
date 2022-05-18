@@ -64,33 +64,17 @@ bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
         auto mycb = call.AccessBoundingBoxes().ClipBox();
         auto othercb = chainedCall->AccessBoundingBoxes().ClipBox();
 
-        if (call.AccessBoundingBoxes().IsBoundingBoxValid() &&
-            chainedCall->AccessBoundingBoxes().IsBoundingBoxValid()) {
+        if (call.GetBoundingBoxes().IsBoundingBoxValid() && chainedCall->GetBoundingBoxes().IsBoundingBoxValid()) {
             mybb.Union(otherbb);
-        } else if (chainedCall->AccessBoundingBoxes().IsBoundingBoxValid()) {
+        } else if (chainedCall->GetBoundingBoxes().IsBoundingBoxValid()) {
             mybb = otherbb; // just override for the call
         }                   // we ignore the other two cases as they both lead to usage of the already set mybb
 
-        if (call.AccessBoundingBoxes().IsClipBoxValid() && chainedCall->AccessBoundingBoxes().IsClipBoxValid()) {
+        if (call.GetBoundingBoxes().IsClipBoxValid() && chainedCall->GetBoundingBoxes().IsClipBoxValid()) {
             mycb.Union(othercb);
-        } else if (chainedCall->AccessBoundingBoxes().IsClipBoxValid()) {
+        } else if (chainedCall->GetBoundingBoxes().IsClipBoxValid()) {
             mycb = othercb; // just override for the call
         }                   // we ignore the other two cases as they both lead to usage of the already set mycb
-
-            call.AccessBoundingBoxes().SetBoundingBox(mybb);
-        } else if (chainedCall->GetBoundingBoxes().IsBoundingBoxValid()) {
-            auto mybb = chainedCall->GetBoundingBoxes().BoundingBox();
-            call.AccessBoundingBoxes().SetBoundingBox(mybb);
-        }
-
-        if (call.GetBoundingBoxes().IsClipBoxValid() && chainedCall->GetBoundingBoxes().IsClipBoxValid()) {
-            auto mycb = call.GetBoundingBoxes().ClipBox();
-            mycb.Union(chainedCall->GetBoundingBoxes().ClipBox());
-            call.AccessBoundingBoxes().SetClipBox(mycb);
-        } else if (chainedCall->GetBoundingBoxes().IsClipBoxValid()) {
-            auto mycb = chainedCall->GetBoundingBoxes().ClipBox();
-            call.AccessBoundingBoxes().SetClipBox(mycb);
-        }
 
         // TODO machs richtig
         call.SetTimeFramesCount(chainedCall->TimeFramesCount());

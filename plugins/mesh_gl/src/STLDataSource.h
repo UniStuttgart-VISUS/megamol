@@ -8,12 +8,12 @@
 
 #include "mmcore/Call.h"
 
-#include "mmstd_datatools/STLDataSource.h"
+#include "datatools_gl/io/STLDataSource.h"
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
 
-    class STLDataSource : public stdplugin::datatools::io::STLDataSource {
+    class STLDataSource : public datatools_gl::io::STLDataSource {
     public:
         /// <summary>
         /// Answer the name of this module

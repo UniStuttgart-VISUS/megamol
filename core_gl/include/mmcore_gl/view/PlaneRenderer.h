@@ -7,8 +7,9 @@
 #pragma once
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 #include "glowl/GLSLProgram.hpp"
 
@@ -18,15 +19,15 @@
 #include <memory>
 
 namespace megamol {
-namespace core {
-    namespace view {
+namespace core_gl {
+namespace view {
 
         /**
          * Module for rendering (clip) plane.
          *
          * @author Alexander Straub
          */
-        class PlaneRenderer : public view::Renderer3DModuleGL {
+        class PlaneRenderer : public Renderer3DModuleGL {
         public:
             /**
              * Answer the name of this module.

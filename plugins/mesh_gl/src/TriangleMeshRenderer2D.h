@@ -10,15 +10,14 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/MouseFlags.h"
-#include "mmcore/view/Renderer2DModule.h"
 
-#include "mesh/GPUMaterialCollection.h"
+#include "mmcore_gl/view/CallRender2DGL.h"
+#include "mmcore_gl/view/Renderer2DModuleGL.h"
+
+#include "mesh_gl/GPUMaterialCollection.h"
 
 #include "vislib/math/Rectangle.h"
-
-#include "glad/glad.h"
 
 #include <array>
 #include <memory>
@@ -27,13 +26,13 @@
 #include <vector>
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
     /**
      * Module for rendering a 2D triangle mesh.
      *
      * @author Alexander Straub
      */
-    class TriangleMeshRenderer2D : public core::view::Renderer2DModule {
+    class TriangleMeshRenderer2D : public core_gl::view::Renderer2DModuleGL {
         static_assert(std::is_same<GLfloat, float>::value, "'GLfloat' and 'float' must be the same type!");
         static_assert(std::is_same<GLuint, unsigned int>::value, "'GLuint' and 'unsigned int' must be the same type!");
 
@@ -95,7 +94,7 @@ namespace mesh {
          *
          * @return 'true' on success, 'false' otherwise.
          */
-        virtual bool Render(core::view::CallRender2DGL& call) override;
+        virtual bool Render(core_gl::view::CallRender2DGL& call) override;
 
         /**
          * The extent callback.
@@ -104,7 +103,7 @@ namespace mesh {
          *
          * @return 'true' on success, 'false' otherwise.
          */
-        virtual bool GetExtents(core::view::CallRender2DGL& call) override;
+        virtual bool GetExtents(core_gl::view::CallRender2DGL& call) override;
 
         /**
          * Forwards key events.
@@ -172,7 +171,7 @@ namespace mesh {
             std::shared_ptr<std::vector<GLfloat>> vertices;
             std::shared_ptr<std::vector<GLuint>> indices;
 
-            std::shared_ptr<MeshDataCall::data_set> values;
+            std::shared_ptr<mesh::MeshDataCall::data_set> values;
 
             std::shared_ptr<std::vector<GLfloat>> mask;
 

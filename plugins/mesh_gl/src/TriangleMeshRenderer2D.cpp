@@ -8,10 +8,9 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
-#include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/MouseFlags.h"
 
-#include "glad/glad.h"
+#include "mmcore_gl/view/CallRender2DGL.h"
 
 #include <exception>
 #include <memory>
@@ -21,7 +20,7 @@
 #include <vector>
 
 namespace megamol {
-namespace mesh {
+namespace mesh_gl {
     TriangleMeshRenderer2D::TriangleMeshRenderer2D()
             : render_input_slot("render_input_slot", "Render input slot")
             , triangle_mesh_slot("get_triangle_mesh", "Triangle mesh input")
@@ -34,13 +33,13 @@ namespace mesh {
             , default_color("default_color", "Default color if no dataset is selected")
             , wireframe("wireframe", "Render as wireframe instead of filling the triangles") {
         // Connect input slots
-        this->render_input_slot.SetCompatibleCall<core::view::CallRender2DGLDescription>();
+        this->render_input_slot.SetCompatibleCall<core_gl::view::CallRender2DGLDescription>();
         this->MakeSlotAvailable(&this->render_input_slot);
 
-        this->triangle_mesh_slot.SetCompatibleCall<TriangleMeshCall::triangle_mesh_description>();
+        this->triangle_mesh_slot.SetCompatibleCall<mesh::TriangleMeshCall::triangle_mesh_description>();
         this->MakeSlotAvailable(&this->triangle_mesh_slot);
 
-        this->mesh_data_slot.SetCompatibleCall<MeshDataCall::mesh_data_description>();
+        this->mesh_data_slot.SetCompatibleCall<mesh::MeshDataCall::mesh_data_description>();
         this->MakeSlotAvailable(&this->mesh_data_slot);
 
         // Connect parameter slots
@@ -88,9 +87,9 @@ namespace mesh {
         return;
     }
 
-    bool TriangleMeshRenderer2D::Render(core::view::CallRender2DGL& call) {
+    bool TriangleMeshRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
         // Call input renderer, if connected
-        auto* input_renderer = this->render_input_slot.CallAs<core::view::CallRender2DGL>();
+        auto* input_renderer = this->render_input_slot.CallAs<core_gl::view::CallRender2DGL>();
 
         if (input_renderer != nullptr && (*input_renderer)(core::view::AbstractCallRender::FnRender)) {
             (*input_renderer) = call;
@@ -116,7 +115,7 @@ namespace mesh {
         glGetFloatv(GL_PROJECTION_MATRIX, this->camera.projection.data());
 
         // Update triangles (connection mandatory)
-        auto get_triangles = this->triangle_mesh_slot.CallAs<TriangleMeshCall>();
+        auto get_triangles = this->triangle_mesh_slot.CallAs<mesh::TriangleMeshCall>();
 
         if (get_triangles == nullptr || !(*get_triangles)(0))
             return false;
@@ -150,7 +149,7 @@ namespace mesh {
 
         // Update data (connection optional)
         if (this->render_data.vertices != nullptr && this->render_data.indices != nullptr) {
-            auto get_data = this->mesh_data_slot.CallAs<MeshDataCall>();
+            auto get_data = this->mesh_data_slot.CallAs<mesh::MeshDataCall>();
 
             bool new_data = false;
             bool new_mask = false;
@@ -180,7 +179,7 @@ namespace mesh {
             }
 
             if (this->render_data.values == nullptr) {
-                this->render_data.values = std::make_shared<MeshDataCall::data_set>();
+                this->render_data.values = std::make_shared<mesh::MeshDataCall::data_set>();
 
                 const auto color = this->default_color.Param<core::param::ColorParam>()->Value();
 
@@ -312,14 +311,14 @@ namespace mesh {
         return true;
     }
 
-    bool TriangleMeshRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
+    bool TriangleMeshRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
         // Get and set bounding rectangle (connection mandatory)
-        auto get_triangles = this->triangle_mesh_slot.CallAs<TriangleMeshCall>();
+        auto get_triangles = this->triangle_mesh_slot.CallAs<mesh::TriangleMeshCall>();
 
         if (get_triangles == nullptr || !(*get_triangles)(1))
             return false;
 
-        if (get_triangles->get_dimension() != TriangleMeshCall::dimension_t::TWO) {
+        if (get_triangles->get_dimension() != mesh::TriangleMeshCall::dimension_t::TWO) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "The dimension of the data does not fit the renderer. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);
@@ -330,7 +329,7 @@ namespace mesh {
         this->bounds = get_triangles->get_bounding_rectangle();
 
         // Get bounding rectangle of input renderer, if available
-        auto* input_renderer = this->render_input_slot.CallAs<core::view::CallRender2DGL>();
+        auto* input_renderer = this->render_input_slot.CallAs<core_gl::view::CallRender2DGL>();
 
         if (input_renderer != nullptr && (*input_renderer)(core::view::AbstractCallRender::FnGetExtents)) {
             this->bounds.SetLeft(
@@ -346,7 +345,7 @@ namespace mesh {
             this->bounds.GetLeft(), this->bounds.GetBottom(), this->bounds.GetRight(), this->bounds.GetTop());
 
         // Get data sets (connection optional)
-        auto get_data = this->mesh_data_slot.CallAs<MeshDataCall>();
+        auto get_data = this->mesh_data_slot.CallAs<mesh::MeshDataCall>();
 
         if (get_data != nullptr && (*get_data)(1) && get_data->DataHash() != this->mesh_data_hash) {
             // Get available data sets
@@ -390,7 +389,7 @@ namespace mesh {
     }
 
     bool TriangleMeshRenderer2D::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
-        auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2DGL>();
+        auto* input_renderer = this->render_input_slot.template CallAs<core_gl::view::CallRender2DGL>();
         if (input_renderer == nullptr)
             return false;
 
@@ -405,7 +404,7 @@ namespace mesh {
     }
 
     bool TriangleMeshRenderer2D::OnChar(unsigned int codePoint) {
-        auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2DGL>();
+        auto* input_renderer = this->render_input_slot.template CallAs<core_gl::view::CallRender2DGL>();
         if (input_renderer == nullptr)
             return false;
 
@@ -419,7 +418,7 @@ namespace mesh {
 
     bool TriangleMeshRenderer2D::OnMouseButton(
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
-        auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2DGL>();
+        auto* input_renderer = this->render_input_slot.template CallAs<core_gl::view::CallRender2DGL>();
         if (input_renderer == nullptr)
             return false;
 
@@ -434,7 +433,7 @@ namespace mesh {
     }
 
     bool TriangleMeshRenderer2D::OnMouseMove(double x, double y) {
-        auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2DGL>();
+        auto* input_renderer = this->render_input_slot.template CallAs<core_gl::view::CallRender2DGL>();
         if (input_renderer == nullptr)
             return false;
 
@@ -448,7 +447,7 @@ namespace mesh {
     }
 
     bool TriangleMeshRenderer2D::OnMouseScroll(double dx, double dy) {
-        auto* input_renderer = this->render_input_slot.template CallAs<core::view::CallRender2DGL>();
+        auto* input_renderer = this->render_input_slot.template CallAs<core_gl::view::CallRender2DGL>();
         if (input_renderer == nullptr)
             return false;
 

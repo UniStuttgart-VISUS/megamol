@@ -15,9 +15,6 @@
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataCall.h"
 #include "mesh/TriangleMeshCall.h"
-#include "TriangleMeshRenderer2D.h"
-#include "TriangleMeshRenderer3D.h"
-#include "STLDataSource.h"
 #include "STLWriter.h"
 #include "SimplifyMesh.h"
 
