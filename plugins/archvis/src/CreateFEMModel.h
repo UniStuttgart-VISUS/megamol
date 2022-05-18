@@ -8,14 +8,15 @@
 #ifndef CREATE_FEM_MODEL_H_INCLUDED
 #define CREATE_FEM_MODEL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "FEMDataCall.h"
-#include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+
+#include "ArchVisCalls.h"
 
 namespace megamol {
 namespace archvis {
@@ -27,21 +28,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "CreateFEMModel"; }
+    static const char* ClassName(void) {
+        return "CreateFEMModel";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Create FEM model from float table input."; }
+    static const char* Description(void) {
+        return "Create FEM model from float table input.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     CreateFEMModel();
     ~CreateFEMModel();
@@ -69,6 +76,8 @@ protected:
     void release();
 
 private:
+    uint32_t m_version;
+
     std::shared_ptr<FEMModel> m_FEM_model;
 
     /** First FEM parameter */
@@ -94,8 +103,6 @@ private:
     uint64_t m_node_input_hash;
     uint64_t m_element_input_hash;
     uint64_t m_deform_input_hash;
-
-    uint64_t m_my_hash;
 };
 
 } // namespace archvis

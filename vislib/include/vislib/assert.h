@@ -22,7 +22,7 @@
 #if (defined(DEBUG) || defined(_DEBUG))
 #define ASSERT(exp) assert(exp)
 #else
-#define ASSERT(exp) ((void) 0)
+#define ASSERT(exp) ((void)0)
 #endif /* (defined(DEBUG) || defined(_DEBUG)) */
 #endif /* ASSERT */
 

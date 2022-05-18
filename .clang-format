@@ -11,6 +11,9 @@ Language: Cpp
 AccessModifierOffset: -4
 AlignAfterOpenBracket: DontAlign
 AlignEscapedNewlines: Left
+AllowAllArgumentsOnNextLine: true # 'false' has different behavior between clang-format 11 and 12, therefore use 'true'.
+AllowAllConstructorInitializersOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortBlocksOnASingleLine: Empty
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: Never
@@ -18,20 +21,14 @@ AllowShortLoopsOnASingleLine: false
 AlwaysBreakTemplateDeclarations: Yes
 BreakBeforeBraces: Attach
 BreakConstructorInitializers: BeforeComma
-ConstructorInitializerAllOnOneLineOrOnePerLine: true
+CommentPragmas: '^.*'
+ConstructorInitializerAllOnOneLineOrOnePerLine: true # Replace with "PackConstructorInitializers: Never", when switching to clang-format 14.
 ConstructorInitializerIndentWidth: 8
 DerivePointerAlignment: false
-IncludeCategories:
-  - Regex:           '^"stdafx'
-    Priority:        -1
-  - Regex:           '^<'
-    Priority:        1
-  - Regex:           '^"'
-    Priority:        2
 MaxEmptyLinesToKeep: 2
-NamespaceIndentation: Inner
+NamespaceIndentation: None
 PointerAlignment: Left
-SpaceAfterCStyleCast: true
+SpaceAfterCStyleCast: false # want true, but has issues with clang-format-12
 SpaceAfterTemplateKeyword: false
 Standard: c++17
 ...

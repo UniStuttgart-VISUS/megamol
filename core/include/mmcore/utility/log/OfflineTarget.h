@@ -14,7 +14,7 @@ namespace megamol::core::utility::log {
 /**
  * Target class storing message as long as the file is offline
  */
-class MEGAMOLCORE_API OfflineTarget : public Log::Target {
+class OfflineTarget : public Log::Target {
 public:
     /**
      * Ctor
@@ -34,7 +34,9 @@ public:
      * @return The number of offline message that will be stored in
      *         the offline buffer
      */
-    inline unsigned int BufferSize(void) const { return this->bufSize; }
+    inline unsigned int BufferSize(void) const {
+        return this->bufSize;
+    }
 
     /**
      * Writes a message to the log target
@@ -61,7 +63,9 @@ public:
      *
      * @return The number of omitted messages
      */
-    inline unsigned int OmittedMessagesCount(void) const { return omittedCnt; }
+    inline unsigned int OmittedMessagesCount(void) const {
+        return omittedCnt;
+    }
 
     /**
      * Echoes all stored offline messages to 'target' and optionally

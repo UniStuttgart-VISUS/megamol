@@ -13,9 +13,9 @@
 
 #include "ThreadWorker.h"
 
-#include <mutex>
 #include <atomic>
 #include <condition_variable>
+#include <mutex>
 
 struct megamol::frontend::Remote_Service::RenderNode {
     RenderNode() = default;
@@ -27,7 +27,8 @@ struct megamol::frontend::Remote_Service::RenderNode {
     bool await_message(megamol::remote::Message_t& result, unsigned int timeout_ms = 1000);
 
 private:
-    megamol::remote::FBOCommFabric receiver_comm_{std::make_unique<megamol::remote::ZMQCommFabric>(zmq::socket_type::pull)};
+    megamol::remote::FBOCommFabric receiver_comm_{
+        std::make_unique<megamol::remote::ZMQCommFabric>(zmq::socket_type::pull)};
     megamol::frontend_resources::ThreadWorker receiver_thread_;
 
     void receiver_thread_loop();
@@ -37,4 +38,3 @@ private:
     std::condition_variable data_received_cond_;
     std::atomic<bool> data_has_changed_ = false;
 };
-

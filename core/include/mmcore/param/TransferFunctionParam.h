@@ -7,13 +7,12 @@
 
 #pragma once
 
-#include <string>
 #include <cmath>
+#include <string>
 
 #include "AbstractParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/JSONHelper.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "vislib/String.h"
 
@@ -28,16 +27,12 @@ namespace param {
 /**
  * Class for parameter holding transfer function as JSON string.
  */
-class MEGAMOLCORE_API TransferFunctionParam : public AbstractParam {
+class TransferFunctionParam : public AbstractParam {
 public:
+    enum InterpolationMode { LINEAR = 0, GAUSS = 1 };
 
-    enum InterpolationMode { 
-        LINEAR = 0, 
-        GAUSS = 1 
-    };
-
-    typedef std::array<float, TFP_VAL_CNT>  NodeData_t;
-    typedef std::vector<NodeData_t>         NodeVector_t;
+    typedef std::array<float, TFP_VAL_CNT> NodeData_t;
+    typedef std::vector<NodeData_t> NodeVector_t;
 
     // ------------------------------------------------------------------------
 
@@ -56,11 +51,11 @@ public:
     //        ],
     //        [
     //            1.0,
-    //            1.0, 
     //            1.0,
-    //            1.0, 
-    //            1.0, 
-    //            0.05 
+    //            1.0,
+    //            1.0,
+    //            1.0,
+    //            0.05
     //        ]
     //    ],
     //    "TextureSize": 128,
@@ -71,15 +66,15 @@ public:
     //}
 
     /**
-    * Set transfer function data from JSON string.
-    *
-    * @param in_tfs                                 The transfer function input encoded as string in JSON format.
-    * @param out_nodes                              The transfer function node output.
-    * @param out_interpolmode                       The transfer function interpolation mode output.
-    * @param out_texsize                            The transfer function texture size output.
-    *
-    * @return True if JSON string was successfully converted into transfer function data, false otherwise.
-    */
+     * Set transfer function data from JSON string.
+     *
+     * @param in_tfs                                 The transfer function input encoded as string in JSON format.
+     * @param out_nodes                              The transfer function node output.
+     * @param out_interpolmode                       The transfer function interpolation mode output.
+     * @param out_texsize                            The transfer function texture size output.
+     *
+     * @return True if JSON string was successfully converted into transfer function data, false otherwise.
+     */
     static bool GetParsedTransferFunctionData(const std::string& in_tfs, NodeVector_t& out_nodes,
         InterpolationMode& out_interpolmode, unsigned int& out_texsize, std::array<float, 2>& out_range);
 
@@ -107,7 +102,8 @@ public:
      *
      * @return True if given data is valid, false otherwise.
      */
-    static bool CheckTransferFunctionData(const NodeVector_t &nodes, InterpolationMode interpolmode, unsigned int texsize, const std::array<float, 2>& range);
+    static bool CheckTransferFunctionData(const NodeVector_t& nodes, InterpolationMode interpolmode,
+        unsigned int texsize, const std::array<float, 2>& range);
 
     /**
      * Check given transfer function JSON string.
@@ -116,24 +112,24 @@ public:
      *
      * @return True if given data is valid, false otherwise.
      */
-    static bool CheckTransferFunctionString(const std::string &tfs);
+    static bool CheckTransferFunctionString(const std::string& tfs);
 
     /**
-    * Linear interpolation of transfer function data in range [0..texsize]
-    *
-    * @param out_texdata  The generated texture from the input transfer function.
-    * @param in_texsize   The transfer function texture size input.
-    * @param in_nodes    The transfer function node data input.
-    */
+     * Linear interpolation of transfer function data in range [0..texsize]
+     *
+     * @param out_texdata  The generated texture from the input transfer function.
+     * @param in_texsize   The transfer function texture size input.
+     * @param in_nodes    The transfer function node data input.
+     */
     static std::vector<float> LinearInterpolation(unsigned int in_texsize, const NodeVector_t& in_nodes);
 
     /**
-    * Gauss interpolation of transfer function data in range [0..texsize]
-    *
-    * @param out_texdata  The generated texture from the input transfer function.
-    * @param in_texsize   The transfer function texture size input.
-    * @param in_nodes    The transfer function node data input.
-    */
+     * Gauss interpolation of transfer function data in range [0..texsize]
+     *
+     * @param out_texdata  The generated texture from the input transfer function.
+     * @param in_texsize   The transfer function texture size input.
+     * @param in_nodes    The transfer function node data input.
+     */
     static std::vector<float> GaussInterpolation(unsigned int in_texsize, const NodeVector_t& in_nodes);
 
     /**
@@ -146,22 +142,23 @@ public:
      *
      * @return True on success, false otherwise.
      */
-    static bool GetTextureData(const std::string& in_tfs, std::vector<float>& out_tex_data, int& out_width, int& out_height);
+    static bool GetTextureData(
+        const std::string& in_tfs, std::vector<float>& out_tex_data, int& out_width, int& out_height);
 
     /**
      * Return flag 'IgnoreProjectRange'
      */
     static bool IgnoreProjectRange(const std::string& in_tfs);
 
-    /** Calculates gauss function value. 
-    *
-    * @param x  The current x position to calculate the gauss function value for.
-    * @param a  The scaling of the gauss function (bell) in direction of the y axis.
-    * @param b  The translation of the gauss function (bell) center in direction of the x axis.
-    * @param c  The width (= sigma) of the gauss function (bell).
-    * 
-    * @return The gauss funtion value.
-    */
+    /** Calculates gauss function value.
+     *
+     * @param x  The current x position to calculate the gauss function value for.
+     * @param a  The scaling of the gauss function (bell) in direction of the y axis.
+     * @param b  The translation of the gauss function (bell) center in direction of the x axis.
+     * @param c  The width (= sigma) of the gauss function (bell).
+     *
+     * @return The gauss funtion value.
+     */
     static inline float gauss(float x, float a, float b, float c) {
         return (a * expf(-1.0f * (x - b) * (x - b) / (2.0f * c * c)));
     }
@@ -174,7 +171,7 @@ public:
      * @param initVal The initial value
      */
     explicit TransferFunctionParam(const std::string& initVal = "");
-    explicit TransferFunctionParam(const char *initVal);
+    explicit TransferFunctionParam(const char* initVal);
     explicit TransferFunctionParam(const vislib::StringA& initVal);
 
     /**
@@ -188,7 +185,7 @@ public:
      * @param outDef A memory block to receive a machine-readable
      *               definition of the parameter.
      */
-    void Definition(vislib::RawStorage& outDef) const override;
+    std::string Definition() const override;
 
     /**
      * Tries to parse the given string as value for this parameter and
@@ -199,30 +196,30 @@ public:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool ParseValue(const vislib::TString& v) override;
+    bool ParseValue(std::string const& v) override;
 
     /**
-    * Sets the value of the parameter and optionally sets the dirty flag
-    * of the owning parameter slot.
-    *
-    * @param v the new value for the parameter
-    * @param setDirty If 'true' the dirty flag of the owning parameter
-    *                 slot is set and the update callback might be called.
-    */
+     * Sets the value of the parameter and optionally sets the dirty flag
+     * of the owning parameter slot.
+     *
+     * @param v the new value for the parameter
+     * @param setDirty If 'true' the dirty flag of the owning parameter
+     *                 slot is set and the update callback might be called.
+     */
     void SetValue(const std::string& v, bool setDirty = true);
 
     /**
-    * Returns the value of the parameter as string.
-    *
-    * @return The value of the parameter as string.
-    */
-    vislib::TString ValueString(void) const override;
+     * Returns the value of the parameter as string.
+     *
+     * @return The value of the parameter as string.
+     */
+    std::string ValueString(void) const override;
 
     /**
-    * Gets the value of the parameter
-    *
-    * @return The value of the parameter
-    */
+     * Gets the value of the parameter
+     *
+     * @return The value of the parameter
+     */
     inline const std::string& Value(void) const {
         return this->val;
     }
@@ -246,9 +243,8 @@ public:
     }
 
 private:
-
 #ifdef _WIN32
-#pragma warning (disable: 4251)
+#pragma warning(disable : 4251)
 #endif /* _WIN32 */
 
     /** The value of the parameter */
@@ -258,7 +254,7 @@ private:
     size_t hash;
 
 #ifdef _WIN32
-#pragma warning (disable: 4251)
+#pragma warning(disable : 4251)
 #endif /* _WIN32 */
 
 }; /* end class TransferFunctionParam */

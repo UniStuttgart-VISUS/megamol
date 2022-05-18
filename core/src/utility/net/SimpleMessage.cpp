@@ -27,8 +27,7 @@ vislib::net::SimpleMessage::SimpleMessage(const SIZE_T bodySize) : Super() {
 /*
  * vislib::net::SimpleMessage::SimpleMessage
  */
-vislib::net::SimpleMessage::SimpleMessage(
-    const AbstractSimpleMessageHeader& header, const void *body) : Super() {
+vislib::net::SimpleMessage::SimpleMessage(const AbstractSimpleMessageHeader& header, const void* body) : Super() {
 
     Super::assertStorage(header.GetBodySize());
     this->SetHeader(header);
@@ -50,8 +49,7 @@ vislib::net::SimpleMessage::SimpleMessage(const SimpleMessage& rhs) : Super() {
 /*
  * vislib::net::SimpleMessage::SimpleMessage
  */
-vislib::net::SimpleMessage::SimpleMessage(const AbstractSimpleMessage& rhs) 
-        : Super() {
+vislib::net::SimpleMessage::SimpleMessage(const AbstractSimpleMessage& rhs) : Super() {
     *this = rhs;
 }
 
@@ -59,8 +57,7 @@ vislib::net::SimpleMessage::SimpleMessage(const AbstractSimpleMessage& rhs)
 /*
  * vislib::net::SimpleMessage::~SimpleMessage
  */
-vislib::net::SimpleMessage::~SimpleMessage(void) {
-}
+vislib::net::SimpleMessage::~SimpleMessage(void) {}
 
 
 /*
@@ -74,9 +71,8 @@ void vislib::net::SimpleMessage::Trim(void) {
 /*
  * vislib::net::SimpleMessage::assertStorage
  */
-bool vislib::net::SimpleMessage::assertStorage(void *& outStorage, 
-        const SIZE_T size) {
+bool vislib::net::SimpleMessage::assertStorage(void*& outStorage, const SIZE_T size) {
     bool retval = this->storage.AssertSize(size, false);
-    outStorage = static_cast<void *>(this->storage);
+    outStorage = static_cast<void*>(this->storage);
     return retval;
 }

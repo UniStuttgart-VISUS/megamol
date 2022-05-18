@@ -10,14 +10,13 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/light/CallLight.h"
-#include "mmcore/api/MegaMolCore.std.h"
 
 namespace megamol {
 namespace core {
 namespace view {
 namespace light {
 
-class MEGAMOLCORE_API AbstractLight : public core::Module {
+class AbstractLight : public core::Module {
 protected:
     /** Ctor. */
     AbstractLight(void);
@@ -29,7 +28,9 @@ protected:
     virtual void release();
     bool getLightCallback(core::Call& call);
     bool getMetaDataCallback(core::Call& call);
-    virtual bool InterfaceIsDirty() { return false; };
+    virtual bool InterfaceIsDirty() {
+        return false;
+    };
     virtual void readParams(){};
     virtual void addLight(LightCollection& light_collection) = 0;
     bool AbstractIsDirty();

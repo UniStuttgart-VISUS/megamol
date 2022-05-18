@@ -1,7 +1,7 @@
 /*
  * ThreadPoolListener.cpp
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -35,7 +35,6 @@ vislib::sys::ThreadPoolListener::ThreadPoolListener(ThreadPoolListener& rhs) {
 /*
  * vislib::sys::ThreadPoolListener::operator =
  */
-vislib::sys::ThreadPoolListener& vislib::sys::ThreadPoolListener::operator =(
-        const ThreadPoolListener& rhs) {
+vislib::sys::ThreadPoolListener& vislib::sys::ThreadPoolListener::operator=(const ThreadPoolListener& rhs) {
     return *this;
 }

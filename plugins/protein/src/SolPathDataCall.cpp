@@ -4,8 +4,8 @@
  * Copyright (C) 2010 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
  */
+#include "protein/SolPathDataCall.h"
 #include "stdafx.h"
-#include "SolPathDataCall.h"
 
 using namespace megamol::protein;
 
@@ -13,9 +13,14 @@ using namespace megamol::protein;
 /*
  * SolPathDataCall::SolPathDataCall
  */
-SolPathDataCall::SolPathDataCall(void) : core::AbstractGetData3DCall(),
-        count(0), lines(NULL), minTime(0.0f), maxTime(0.0f), minSpeed(0.0f),
-        maxSpeed(0.0f) {
+SolPathDataCall::SolPathDataCall(void)
+        : core::AbstractGetData3DCall()
+        , count(0)
+        , lines(NULL)
+        , minTime(0.0f)
+        , maxTime(0.0f)
+        , minSpeed(0.0f)
+        , maxSpeed(0.0f) {
     // intentionally empty
 }
 

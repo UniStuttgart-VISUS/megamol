@@ -5,14 +5,14 @@
  */
 
 #include "ExtractMesh.h"
-#include <limits>
-#include "CallKDTree.h"
-#include "adios_plugin/CallADIOSData.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "normal_3d_omp.h"
+#include "probe/CallKDTree.h"
+#include <limits>
 
 
 namespace megamol {
@@ -20,20 +20,20 @@ namespace probe {
 
 
 ExtractMesh::ExtractMesh()
-    : Module()
-    , m_version(0)
-    , _getDataCall("getData", "")
-    , _deployMeshCall("deployMesh", "")
-    , _deployLineCall("deployCenterline", "")
-    , _deploySpheresCall("deploySpheres", "")
-    , _deployFullDataTree("deployFullDataTree", "")
-    , _algorithmSlot("algorithm", "")
-    , _xSlot("x", "")
-    , _ySlot("y", "")
-    , _zSlot("z", "")
-    , _xyzSlot("xyz", "")
-    , _formatSlot("format", "")
-    , _alphaSlot("alpha", "") {
+        : Module()
+        , m_version(0)
+        , _getDataCall("getData", "")
+        , _deployMeshCall("deployMesh", "")
+        , _deployLineCall("deployCenterline", "")
+        , _deploySpheresCall("deploySpheres", "")
+        , _deployFullDataTree("deployFullDataTree", "")
+        , _algorithmSlot("algorithm", "")
+        , _xSlot("x", "")
+        , _ySlot("y", "")
+        , _zSlot("z", "")
+        , _xyzSlot("xyz", "")
+        , _formatSlot("format", "")
+        , _alphaSlot("alpha", "") {
 
     this->_alphaSlot << new core::param::FloatParam(1.0f);
     this->_alphaSlot.SetUpdateCallback(&ExtractMesh::alphaChanged);
@@ -89,20 +89,26 @@ ExtractMesh::ExtractMesh()
     this->_getDataCall.SetCompatibleCall<adios::CallADIOSDataDescription>();
     this->MakeSlotAvailable(&this->_getDataCall);
 
-    this->_deploySpheresCall.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &ExtractMesh::getParticleData);
-    this->_deploySpheresCall.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &ExtractMesh::getParticleMetaData);
+    this->_deploySpheresCall.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &ExtractMesh::getParticleData);
+    this->_deploySpheresCall.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &ExtractMesh::getParticleMetaData);
     this->MakeSlotAvailable(&this->_deploySpheresCall);
 }
 
-ExtractMesh::~ExtractMesh() { this->Release(); }
+ExtractMesh::~ExtractMesh() {
+    this->Release();
+}
 
-bool ExtractMesh::create() { return true; }
+bool ExtractMesh::create() {
+    return true;
+}
 
 void ExtractMesh::release() {}
 
-bool ExtractMesh::InterfaceIsDirty() { return (this->_alphaSlot.IsDirty() || this->_formatSlot.IsDirty()); }
+bool ExtractMesh::InterfaceIsDirty() {
+    return (this->_alphaSlot.IsDirty() || this->_formatSlot.IsDirty());
+}
 
 bool ExtractMesh::flipNormalsWithCenterLine(pcl::PointCloud<pcl::PointNormal>& point_cloud) {
 
@@ -144,7 +150,8 @@ bool ExtractMesh::flipNormalsWithCenterLine_distanceBased(pcl::PointCloud<pcl::P
             //    vertex_accessor[vertex_step * i + 0] - centerline_accessor[centerline_step * j + 0],
             //    vertex_accessor[vertex_step * i + 1] - centerline_accessor[centerline_step * j + 1],
             //    vertex_accessor[vertex_step * i + 2] - centerline_accessor[centerline_step * j + 2]};
-            // distances[j] = std::sqrt(diffvec[0] * diffvec[0] + diffvec[1] * diffvec[1] + diffvec[2] * diffvec[2]);
+            // distances[j] = std::sqrt(diffvec[0] * diffvec[0] + diffvec[1] * diffvec[1] + diffvec[2] *
+            // diffvec[2]);
             std::array<float, 3> diff;
             diff[0] = point_cloud.points[i].x - _centerline[j][0];
             diff[1] = point_cloud.points[i].y - _centerline[j][1];
@@ -355,9 +362,11 @@ void ExtractMesh::calculateAlphaShape() {
 bool ExtractMesh::createPointCloud(std::vector<std::string>& vars) {
 
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
 
-    if (vars.empty()) return false;
+    if (vars.empty())
+        return false;
 
     const auto count = cd->getData(vars[0])->size();
 
@@ -385,7 +394,8 @@ bool ExtractMesh::createPointCloud(std::vector<std::string>& vars) {
             }
 
         } else {
-            // auto xyz = cd->getData(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()))
+            // auto xyz =
+            // cd->getData(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()))
             //               ->GetAsFloat();
             int coarse_factor = 30;
             auto xyz = cd->getData(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()))
@@ -468,10 +478,12 @@ bool ExtractMesh::getData(core::Call& call) {
     bool something_changed = _recalc;
 
     auto cm = dynamic_cast<mesh::CallMesh*>(&call);
-    if (cm == nullptr) return false;
+    if (cm == nullptr)
+        return false;
 
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
 
     std::vector<std::string> toInq;
     toInq.clear();
@@ -485,17 +497,20 @@ bool ExtractMesh::getData(core::Call& call) {
 
     // get data from adios
     for (auto var : toInq) {
-        if (!cd->inquire(var)) return false;
+        if (!cd->inquireVar(var))
+            return false;
     }
 
     if (cd->getDataHash() != _old_datahash) {
-        if (!(*cd)(0)) return false;
+        if (!(*cd)(0))
+            return false;
         something_changed = true;
     }
 
     if (something_changed) {
 
-        if (!this->createPointCloud(toInq)) return false;
+        if (!this->createPointCloud(toInq))
+            return false;
 
         this->calculateAlphaShape();
 
@@ -517,7 +532,8 @@ bool ExtractMesh::getData(core::Call& call) {
         // put data in mesh
         mesh::MeshDataAccessCollection mesh;
 
-        mesh.addMesh(_mesh_attribs, _mesh_indices);
+        std::string identifier = std::string(FullName()) + "_mesh";
+        mesh.addMesh(identifier, _mesh_attribs, _mesh_indices);
         cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)), m_version);
     }
 
@@ -530,16 +546,19 @@ bool ExtractMesh::getData(core::Call& call) {
 bool ExtractMesh::getMetaData(core::Call& call) {
 
     auto cm = dynamic_cast<mesh::CallMesh*>(&call);
-    if (cm == nullptr) return false;
+    if (cm == nullptr)
+        return false;
 
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
 
     auto meta_data = cm->getMetaData();
 
     // get metadata from adios
     cd->setFrameIDtoLoad(meta_data.m_frame_ID);
-    if (!(*cd)(1)) return false;
+    if (!(*cd)(1))
+        return false;
     auto vars = cd->getAvailableVars();
     for (auto var : vars) {
         this->_xSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
@@ -548,7 +567,8 @@ bool ExtractMesh::getMetaData(core::Call& call) {
         this->_xyzSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
     }
 
-    if (cd->getDataHash() == _old_datahash && !_recalc) return true;
+    if (cd->getDataHash() == _old_datahash && !_recalc)
+        return true;
 
     // put metadata in mesh call
     meta_data.m_frame_cnt = cd->getFrameCount();
@@ -558,11 +578,13 @@ bool ExtractMesh::getMetaData(core::Call& call) {
 }
 
 bool ExtractMesh::getParticleData(core::Call& call) {
-    auto cm = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
-    if (cm == nullptr) return false;
+    auto cm = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
+    if (cm == nullptr)
+        return false;
 
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
 
     // if (cd->getDataHash() == _old_datahash && cm->FrameID() == cd->getFrameIDtoLoad() && cm->DataHash() ==
     // _recalc_hash)
@@ -580,18 +602,22 @@ bool ExtractMesh::getParticleData(core::Call& call) {
 
     // get data from adios
     for (auto var : toInq) {
-        if (!cd->inquire(var)) return false;
+        if (!cd->inquireVar(var))
+            return false;
     }
     if (cd->getDataHash() != _old_datahash)
-        if (!(*cd)(0)) return false;
+        if (!(*cd)(0))
+            return false;
 
 
-    if (!this->createPointCloud(toInq)) return false;
+    if (!this->createPointCloud(toInq))
+        return false;
 
 
     cm->AccessBoundingBoxes().SetObjectSpaceBBox(_bbox.ObjectSpaceBBox());
 
-    if (cd->getDataHash() != _old_datahash || _recalc) this->calculateAlphaShape();
+    if (cd->getDataHash() != _old_datahash || _recalc)
+        this->calculateAlphaShape();
 
     // this->filterResult();
     // this->filterByIndex();
@@ -600,9 +626,9 @@ bool ExtractMesh::getParticleData(core::Call& call) {
     // cm->AccessParticles(0).SetGlobalRadius(0.02f);
     cm->AccessParticles(0).SetGlobalRadius(_bbox.ObjectSpaceBBox().LongestEdge() * 1e-3);
     cm->AccessParticles(0).SetCount(_alphaHullCloud->points.size());
-    cm->AccessParticles(0).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
+    cm->AccessParticles(0).SetVertexData(geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
         reinterpret_cast<uint8_t*>(&_resultNormalCloud->points[0].x), sizeof(pcl::PointNormal));
-    cm->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
+    cm->AccessParticles(0).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
         &_resultNormalCloud->points[0].normal_x, sizeof(pcl::PointNormal));
 
     _old_datahash = cd->getDataHash();
@@ -612,16 +638,20 @@ bool ExtractMesh::getParticleData(core::Call& call) {
 }
 
 bool ExtractMesh::getParticleMetaData(core::Call& call) {
-    auto cm = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&call);
-    if (cm == nullptr) return false;
+    auto cm = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
+    if (cm == nullptr)
+        return false;
 
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
 
-    if (cd->getDataHash() == _old_datahash && cm->FrameID() == cd->getFrameIDtoLoad()) return true;
+    if (cd->getDataHash() == _old_datahash && cm->FrameID() == cd->getFrameIDtoLoad())
+        return true;
 
     // get metadata from adios
-    if (!(*cd)(1)) return false;
+    if (!(*cd)(1))
+        return false;
     auto vars = cd->getAvailableVars();
     for (auto var : vars) {
         this->_xSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
@@ -640,10 +670,12 @@ bool ExtractMesh::getParticleMetaData(core::Call& call) {
 
 bool ExtractMesh::getCenterlineData(core::Call& call) {
     auto cm = dynamic_cast<mesh::CallMesh*>(&call);
-    if (cm == nullptr) return false;
+    if (cm == nullptr)
+        return false;
 
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
 
     // if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() &&
     //    meta_data.m_data_hash == _recalc_hash)
@@ -661,18 +693,21 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
 
     // get data from adios
     for (auto var : toInq) {
-        if (!cd->inquire(var)) return false;
+        if (!cd->inquireVar(var))
+            return false;
     }
 
     if (cd->getDataHash() != _old_datahash)
-        if (!(*cd)(0)) return false;
+        if (!(*cd)(0))
+            return false;
 
     bool something_has_changed = (cd->getDataHash() != _old_datahash);
 
     if (something_has_changed) {
         ++m_version;
 
-        if (!this->createPointCloud(toInq)) return false;
+        if (!this->createPointCloud(toInq))
+            return false;
 
         this->calculateAlphaShape();
     }
@@ -695,7 +730,8 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
 
         // put data in line
         mesh::MeshDataAccessCollection line;
-        line.addMesh(_line_attribs, _line_indices);
+        std::string identifier = std::string(FullName()) + "_line";
+        line.addMesh(identifier, _line_attribs, _line_indices);
         cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(line)), m_version);
 
         auto meta_data = cm->getMetaData();
@@ -712,18 +748,22 @@ bool ExtractMesh::getCenterlineData(core::Call& call) {
 bool ExtractMesh::getKDMetaData(core::Call& call) {
 
     auto cm = dynamic_cast<CallKDTree*>(&call);
-    if (cm == nullptr) return false;
+    if (cm == nullptr)
+        return false;
 
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
 
     auto meta_data = cm->getMetaData();
-    if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() && !_recalc) return true;
+    if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() && !_recalc)
+        return true;
 
     // get metadata from adios
 
     cd->setFrameIDtoLoad(meta_data.m_frame_ID);
-    if (!(*cd)(1)) return false;
+    if (!(*cd)(1))
+        return false;
     auto vars = cd->getAvailableVars();
     for (auto var : vars) {
         this->_xSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
@@ -742,12 +782,14 @@ bool ExtractMesh::getKDMetaData(core::Call& call) {
 bool ExtractMesh::getKDData(core::Call& call) {
 
     auto cm = dynamic_cast<CallKDTree*>(&call);
-    if (cm == nullptr) return false;
+    if (cm == nullptr)
+        return false;
 
     auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
-    if (cd == nullptr) return false;
+    if (cd == nullptr)
+        return false;
 
-    
+
     // if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() &&
     //    meta_data.m_data_hash == _recalc_hash)
     //    return true;
@@ -764,16 +806,19 @@ bool ExtractMesh::getKDData(core::Call& call) {
 
     // get data from adios
     for (auto var : toInq) {
-        if (!cd->inquire(var)) return false;
+        if (!cd->inquireVar(var))
+            return false;
     }
 
     if (cd->getDataHash() != _old_datahash)
-        if (!(*cd)(0)) return false;
+        if (!(*cd)(0))
+            return false;
 
     if (cd->getDataHash() != _old_datahash || _recalc) {
         ++m_version;
 
-        if (!this->createPointCloud(toInq)) return false;
+        if (!this->createPointCloud(toInq))
+            return false;
 
         this->calculateAlphaShape();
     }

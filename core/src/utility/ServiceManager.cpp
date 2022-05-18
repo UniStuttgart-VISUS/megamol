@@ -4,9 +4,9 @@
  * Copyright (C) 2016 by MegaMol Team (S. Grottel)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "utility/ServiceManager.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -55,14 +55,15 @@ unsigned int ServiceManager::InstallServiceObject(AbstractService* service, Serv
         } else {
             Log::DefaultLog.WriteError("Failed to auto-enable service \"%s\" [%u]", service->Name(), id);
         }
-
     }
 
     return id;
 }
 
 AbstractService* ServiceManager::GetInstalledService(unsigned int id) {
-    if (id == 0) return nullptr;
-    if (id > services.size()) return nullptr;
+    if (id == 0)
+        return nullptr;
+    if (id > services.size())
+        return nullptr;
     return services[id - 1].get();
 }

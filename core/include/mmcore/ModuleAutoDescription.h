@@ -18,18 +18,19 @@ namespace core {
 #define STRINGIZE_HELPER(x) #x
 #define STRINGIZE(x) STRINGIZE_HELPER(x)
 #endif
-#pragma message(__FILE__"("STRINGIZE(__LINE__)") : warning: Both '#include \"mmcore/ModuleAutoDescription.h\"' and '::megamol::core::ModuleAutoDescription' are deprecated! Update to '#include \"mmcore/factories/ModuleAutoDescription.h\"' and '::megamol::core::factories::ModuleAutoDescription'." )
+#pragma message(__FILE__ "(" STRINGIZE(__LINE__) ") : warning: Both '#include \"mmcore/ModuleAutoDescription.h\"' and '::megamol::core::ModuleAutoDescription' are deprecated! Update to '#include \"mmcore/factories/ModuleAutoDescription.h\"' and '::megamol::core::factories::ModuleAutoDescription'.")
 #else
-#pragma GCC warning "Both '#include \"mmcore/ModuleAutoDescription.h\"' and '::megamol::core::ModuleAutoDescription' are deprecated! Update to '#include \"mmcore/factories/ModuleAutoDescription.h\"' and '::megamol::core::factories::ModuleAutoDescription'."
+#pragma GCC warning \
+    "Both '#include \"mmcore/ModuleAutoDescription.h\"' and '::megamol::core::ModuleAutoDescription' are deprecated! Update to '#include \"mmcore/factories/ModuleAutoDescription.h\"' and '::megamol::core::factories::ModuleAutoDescription'."
 #endif
 
-    /*
-     * Some C++11 magic for the lazy asses
-     */
-    template <class T>
-    using ModuleAutoDescription = ::megamol::core::factories::ModuleAutoDescription<T>;
+/*
+ * Some C++11 magic for the lazy asses
+ */
+template<class T>
+using ModuleAutoDescription = ::megamol::core::factories::ModuleAutoDescription<T>;
 
-}
-}
+} // namespace core
+} // namespace megamol
 
 #endif /* MEGAMOLCORE_MODULEAUTODESCRIPTION_H_INCLUDED */

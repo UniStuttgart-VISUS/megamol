@@ -34,22 +34,22 @@ typedef std::pair<double, uint16_t> closestPair;
 
 namespace megamol {
 namespace molecularmaps {
-    struct Cell {
-        /**
-         * Initialises an empty instance.
-         */
-        Cell(void) {
-            this->atom_ids.reserve(10);
-        }
+struct Cell {
+    /**
+     * Initialises an empty instance.
+     */
+    Cell(void) {
+        this->atom_ids.reserve(10);
+    }
 
-        /**
-         * Initialises an empty instance.
-         */
-        Cell(const std::vector<uint>& p_atom_ids) : atom_ids(p_atom_ids) {}
+    /**
+     * Initialises an empty instance.
+     */
+    Cell(const std::vector<uint>& p_atom_ids) : atom_ids(p_atom_ids) {}
 
-        /** The atoms that are contained in the cell. */
-        std::vector<uint> atom_ids;
-    };
+    /** The atoms that are contained in the cell. */
+    std::vector<uint> atom_ids;
+};
 } // namespace molecularmaps
 } // namespace megamol
 
@@ -398,7 +398,12 @@ struct Edge {
      * Initialises an empty instance.
      */
     __host__ __device__ Edge(void)
-            : edge_id(0), face_id_0(-1), face_id_1(-1), opposite_edge_id(-1), vertex_id_0(0), vertex_id_1(0) {}
+            : edge_id(0)
+            , face_id_0(-1)
+            , face_id_1(-1)
+            , opposite_edge_id(-1)
+            , vertex_id_0(0)
+            , vertex_id_1(0) {}
 
     /**
      * Initialises an empty instance.
@@ -464,7 +469,10 @@ struct EndVertexParams {
      */
     EndVertexParams(const std::pair<vec4d, std::array<uint, 5>>& p_gate, const std::array<vec4d, 2>& p_gate_center,
         std::array<vec4d, 4>& p_gate_vector, const vec3d& p_pivot)
-            : gate(p_gate), gate_center(p_gate_center), gate_vector(p_gate_vector), pivot(p_pivot) {}
+            : gate(p_gate)
+            , gate_center(p_gate_center)
+            , gate_vector(p_gate_vector)
+            , pivot(p_pivot) {}
 
     /** The current gate that is processed. */
     const std::pair<vec4d, std::array<uint, 5>>& gate;
@@ -561,7 +569,8 @@ struct OctreeNode {
      * Initialises an empty instance.
      */
     OctreeNode(const BoundingBox& p_bounding_box, const uint p_cuda_idx, const std::vector<uint>& p_faces)
-            : bounding_box(p_bounding_box), cuda_idx(p_cuda_idx) {
+            : bounding_box(p_bounding_box)
+            , cuda_idx(p_cuda_idx) {
         this->children = std::vector<OctreeNode>(0);
         this->children.reserve(8);
         this->children.shrink_to_fit();
@@ -577,7 +586,8 @@ struct OctreeNode {
      * Initialises an empty instance.
      */
     OctreeNode(const BoundingBox& p_bounding_box, const uint p_cuda_idx, const size_t p_face_cnt)
-            : bounding_box(p_bounding_box), cuda_idx(p_cuda_idx) {
+            : bounding_box(p_bounding_box)
+            , cuda_idx(p_cuda_idx) {
         this->children = std::vector<OctreeNode>(0);
         this->children.reserve(8);
         this->children.shrink_to_fit();
@@ -683,7 +693,9 @@ struct VoronoiEdge {
      * Initialises an empty instance.
      */
     VoronoiEdge(const uint p_end_vertex, const vec4d& p_gate_sphere, const uint p_start_vertex)
-            : end_vertex(p_end_vertex), gate_sphere(p_gate_sphere), start_vertex(p_start_vertex) {}
+            : end_vertex(p_end_vertex)
+            , gate_sphere(p_gate_sphere)
+            , start_vertex(p_start_vertex) {}
 
     /**
      * Overloading of the smaller operator for fast sorting

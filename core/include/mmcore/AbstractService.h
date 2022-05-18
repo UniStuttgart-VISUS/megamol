@@ -8,130 +8,124 @@
 #define MEGAMOLCORE_ABSTRACTSERVICE_H_INCLUDED
 #pragma once
 
-#include "mmcore/api/MegaMolCore.std.h"
-
 namespace megamol {
 namespace core {
 
-    /** forward declaration */
-    class CoreInstance;
+/** forward declaration */
+class CoreInstance;
+
+/**
+ * Abstract base class for service objects
+ */
+class AbstractService {
+public:
+    /**
+     * dtor
+     *
+     * Deinitialize is ensured to be called before.
+     */
+    virtual ~AbstractService();
 
     /**
-     * Abstract base class for service objects
+     * Answer the name of the service.
+     *
+     * @return The name of the service
      */
-    class MEGAMOLCORE_API AbstractService {
-    public:
+    virtual const char* Name() const = 0;
 
-        /**
-        * dtor
-        *
-        * Deinitialize is ensured to be called before.
-        */
-        virtual ~AbstractService();
+    /**
+     * Initializes the service.
+     * The default implementation does nothing.
+     *
+     * @param autoEnable If true is returned the service is enabled shortly after
+     *
+     * @return True on success. In case of error, messages should be logged.
+     */
+    virtual bool Initalize(bool& autoEnable);
 
-        /**
-         * Answer the name of the service.
-         *
-         * @return The name of the service
-         */
-        virtual const char* Name() const = 0;
+    /**
+     * Deinitializes the service at program exit
+     * The default implementation disables the service, if it is still enabled.
+     *
+     * @return True on success. In case of error, messages should be logged.
+     */
+    virtual bool Deinitialize();
 
-        /**
-         * Initializes the service.
-         * The default implementation does nothing.
-         *
-         * @param autoEnable If true is returned the service is enabled shortly after
-         *
-         * @return True on success. In case of error, messages should be logged.
-         */
-        virtual bool Initalize(bool& autoEnable);
-
-        /**
-         * Deinitializes the service at program exit
-         * The default implementation disables the service, if it is still enabled.
-         *
-         * @return True on success. In case of error, messages should be logged.
-         */
-        virtual bool Deinitialize();
-
-        /**
-         * Enables this service
-         *
-         * @return True on success. In case of error, messages should be logged.
-         */
-        inline bool Enable() {
-            if (!enabled) {
-                if (enableImpl()) {
-                    enabled = true;
-                }
+    /**
+     * Enables this service
+     *
+     * @return True on success. In case of error, messages should be logged.
+     */
+    inline bool Enable() {
+        if (!enabled) {
+            if (enableImpl()) {
+                enabled = true;
             }
-            return enabled;
         }
+        return enabled;
+    }
 
-        /**
-         * Disables this service
-         *
-         * @return True on success. In case of error, messages should be logged.
-         */
-        inline bool Disable() {
-            if (enabled) {
-                if (disableImpl()) {
-                    enabled = false;
-                }
+    /**
+     * Disables this service
+     *
+     * @return True on success. In case of error, messages should be logged.
+     */
+    inline bool Disable() {
+        if (enabled) {
+            if (disableImpl()) {
+                enabled = false;
             }
-            return !enabled;
         }
+        return !enabled;
+    }
 
-        /**
-         * Answer whether this service enabled.
-         *
-         * @return true if this service is enabled.
-         */
-        inline bool IsEnabled() const {
-            return enabled;
-        }
+    /**
+     * Answer whether this service enabled.
+     *
+     * @return true if this service is enabled.
+     */
+    inline bool IsEnabled() const {
+        return enabled;
+    }
 
-    protected:
+protected:
+    /**
+     * Ctor
+     *
+     * @param core The owning core instance
+     */
+    AbstractService(CoreInstance& core);
 
-        /**
-         * Ctor
-         *
-         * @param core The owning core instance
-         */
-        AbstractService(CoreInstance& core);
+    /**
+     * Enables this service
+     *
+     * @return True on success. In case of error, messages should be logged.
+     */
+    virtual bool enableImpl() = 0;
 
-        /**
-         * Enables this service
-         *
-         * @return True on success. In case of error, messages should be logged.
-         */
-        virtual bool enableImpl() = 0;
+    /**
+     * Disables this service
+     *
+     * @return True on success. In case of error, messages should be logged.
+     */
+    virtual bool disableImpl() = 0;
 
-        /**
-         * Disables this service
-         *
-         * @return True on success. In case of error, messages should be logged.
-         */
-        virtual bool disableImpl() = 0;
+    /**
+     * Access the owning core instance
+     *
+     * @return The owning core instance
+     */
+    inline CoreInstance& GetCoreInstance(void) const {
+        return core;
+    }
 
-        /**
-         * Access the owning core instance
-         *
-         * @return The owning core instance
-         */
-        inline CoreInstance& GetCoreInstance(void) const {
-            return core;
-        }
+private:
+    /** The owning core instance */
+    CoreInstance& core;
 
-    private:
-
-        /** The owning core instance */
-        CoreInstance &core;
-
-        /** The enabled state of the service */
-        bool enabled;
-
-    };
+    /** The enabled state of the service */
+    bool enabled;
+};
 
 } /* end namespace core */
 } /* end namespace megamol */

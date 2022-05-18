@@ -12,14 +12,14 @@
 #include <cmath>
 #include <math.h>
 
-#ifndef M_PI 
-#define M_PI    3.14159265358979323846f 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846f
 #endif
 
 #include "CritPoints.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/math/Vector.h"
 #include "vislib/math/Cuboid.h"
+#include "vislib/math/Vector.h"
 
 #include "helper_math.h"
 
@@ -31,9 +31,8 @@ using namespace vislib::math;
 /*
  * protein:CritPoints::GetCritPoints
  */
-vislib::Array<float> protein_cuda::CritPoints::GetCritPoints(UniGrid3D<float3> &uniGrid,
-        vislib::math::Vector<float, 3> minCoord,
-        vislib::math::Vector<float, 3> maxCoord) {
+vislib::Array<float> protein_cuda::CritPoints::GetCritPoints(
+    UniGrid3D<float3>& uniGrid, vislib::math::Vector<float, 3> minCoord, vislib::math::Vector<float, 3> maxCoord) {
 
     using namespace vislib;
     using namespace vislib::math;
@@ -43,72 +42,57 @@ vislib::Array<float> protein_cuda::CritPoints::GetCritPoints(UniGrid3D<float3> &
     Array<float> critPoints;
     critPoints.SetCapacityIncrement(1000);
     UniGrid3D<bool> isCritPoint;
-    isCritPoint.Init(
-            uniGrid.GetGridDim(),
-            uniGrid.GetGridOrg(),
-            uniGrid.GetGridStepSize());
+    isCritPoint.Init(uniGrid.GetGridDim(), uniGrid.GetGridOrg(), uniGrid.GetGridStepSize());
 //#pragma omp parallel
 //{
 #pragma omp parallel for
-    for(int x = 0; x < static_cast<int>(uniGrid.GetGridDim().X())-1; x++) {
-        for(int y = 0; y < static_cast<int>(uniGrid.GetGridDim().Y())-1; y++) {
-            for(int z = 0; z < static_cast<int>(uniGrid.GetGridDim().Z())-1; z++) {
-                Vector<float, 3> minC(
-                        minCoord.X()+x*uniGrid.GetGridStepSize(),
-                        minCoord.Y()+y*uniGrid.GetGridStepSize(),
-                        minCoord.Z()+z*uniGrid.GetGridStepSize());
-                Vector<float, 3> maxC(
-                        minC.X() + uniGrid.GetGridStepSize(),
-                        minC.Y() + uniGrid.GetGridStepSize(),
-                        minC.Z() + uniGrid.GetGridStepSize());
+    for (int x = 0; x < static_cast<int>(uniGrid.GetGridDim().X()) - 1; x++) {
+        for (int y = 0; y < static_cast<int>(uniGrid.GetGridDim().Y()) - 1; y++) {
+            for (int z = 0; z < static_cast<int>(uniGrid.GetGridDim().Z()) - 1; z++) {
+                Vector<float, 3> minC(minCoord.X() + x * uniGrid.GetGridStepSize(),
+                    minCoord.Y() + y * uniGrid.GetGridStepSize(), minCoord.Z() + z * uniGrid.GetGridStepSize());
+                Vector<float, 3> maxC(minC.X() + uniGrid.GetGridStepSize(), minC.Y() + uniGrid.GetGridStepSize(),
+                    minC.Z() + uniGrid.GetGridStepSize());
                 int degree = CritPoints::calcDegreeOfCell(uniGrid, minC, maxC);
                 //printf("Degree %i\n", degree);
-                if((degree == 1)||(degree == -1)) {
+                if ((degree == 1) || (degree == -1)) {
                     isCritPoint.SetAt(x, y, z, true);
-                }
-                else {
+                } else {
                     isCritPoint.SetAt(x, y, z, false);
                 }
             }
         }
         printf("x-slice %i done\n", x);
     }
-//}
+    //}
 
-    for(int x = 1; x < static_cast<int>(uniGrid.GetGridDim().X())-2; x++) {
-        for(int y = 1; y < static_cast<int>(uniGrid.GetGridDim().Y())-2; y++) {
-            for(int z = 1; z < static_cast<int>(uniGrid.GetGridDim().Z())-2; z++) {
-                if(isCritPoint.GetAt(x,y,z)) {
-                    Vector<float, 3> minC(
-                            minCoord.X()+x*uniGrid.GetGridStepSize(),
-                            minCoord.Y()+y*uniGrid.GetGridStepSize(),
-                            minCoord.Z()+z*uniGrid.GetGridStepSize());
+    for (int x = 1; x < static_cast<int>(uniGrid.GetGridDim().X()) - 2; x++) {
+        for (int y = 1; y < static_cast<int>(uniGrid.GetGridDim().Y()) - 2; y++) {
+            for (int z = 1; z < static_cast<int>(uniGrid.GetGridDim().Z()) - 2; z++) {
+                if (isCritPoint.GetAt(x, y, z)) {
+                    Vector<float, 3> minC(minCoord.X() + x * uniGrid.GetGridStepSize(),
+                        minCoord.Y() + y * uniGrid.GetGridStepSize(), minCoord.Z() + z * uniGrid.GetGridStepSize());
                     /*Vector<float, 3> maxC(
                             minC.X() + uniGrid.GetGridStepSize(),
                             minC.Y() + uniGrid.GetGridStepSize(),
                             minC.Z() + uniGrid.GetGridStepSize());*/
-                    critPoints.Add(minC.X() + uniGrid.GetGridStepSize()*0.5f);
-                    critPoints.Add(minC.Y() + uniGrid.GetGridStepSize()*0.5f);
-                    critPoints.Add(minC.Z() + uniGrid.GetGridStepSize()*0.5f);
+                    critPoints.Add(minC.X() + uniGrid.GetGridStepSize() * 0.5f);
+                    critPoints.Add(minC.Y() + uniGrid.GetGridStepSize() * 0.5f);
+                    critPoints.Add(minC.Z() + uniGrid.GetGridStepSize() * 0.5f);
                 }
             }
         }
     }
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-            "Time for computing critical points %f",
-            (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Time for computing critical points %f",
+        (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
     return critPoints;
 }
 
 
-
-vislib::Array<float> protein_cuda::CritPoints::GetCritPointsGreene(
-        UniGrid3D<float3> &uniGrid,
-        vislib::math::Vector<float, 3> minGridCoord,
-        vislib::math::Vector<float, 3> maxGridCoord,
-        float cellSize) {
+vislib::Array<float> protein_cuda::CritPoints::GetCritPointsGreene(UniGrid3D<float3>& uniGrid,
+    vislib::math::Vector<float, 3> minGridCoord, vislib::math::Vector<float, 3> maxGridCoord, float cellSize) {
 
     using namespace vislib;
     using namespace vislib::math;
@@ -116,21 +100,19 @@ vislib::Array<float> protein_cuda::CritPoints::GetCritPointsGreene(
     Array<float> critPoints;
     critPoints.SetCapacityIncrement(1000);
 
-    for(float x = minGridCoord.X(); x <= maxGridCoord.X(); x += cellSize) {
-        for(float y = minGridCoord.Y(); y <= maxGridCoord.Y(); y += cellSize) {
-            for(float z = minGridCoord.Z(); z <= maxGridCoord.Z(); z += cellSize) {
+    for (float x = minGridCoord.X(); x <= maxGridCoord.X(); x += cellSize) {
+        for (float y = minGridCoord.Y(); y <= maxGridCoord.Y(); y += cellSize) {
+            for (float z = minGridCoord.Z(); z <= maxGridCoord.Z(); z += cellSize) {
                 Vector<float, 3> minC(x, y, z);
-                Vector<float, 3> maxC(x+cellSize, y+cellSize, z+cellSize);
+                Vector<float, 3> maxC(x + cellSize, y + cellSize, z + cellSize);
                 int degree = CritPoints::calcDegreeOfCell(uniGrid, minC, maxC);
                 //printf("Degree %i\n", degree);
-                if((degree == 1)||(degree == -1)) {
-                    if(cellSize <= uniGrid.GetGridStepSize()) {
-                        critPoints.Add(x + cellSize*0.5f);
-                        critPoints.Add(y + cellSize*0.5f);
-                        critPoints.Add(z + cellSize*0.5f);
-                    }
-                    else {
-
+                if ((degree == 1) || (degree == -1)) {
+                    if (cellSize <= uniGrid.GetGridStepSize()) {
+                        critPoints.Add(x + cellSize * 0.5f);
+                        critPoints.Add(y + cellSize * 0.5f);
+                        critPoints.Add(z + cellSize * 0.5f);
+                    } else {
                     }
                 }
             }
@@ -269,20 +251,19 @@ vislib::Array<float> protein_cuda::CritPoints::GetCritPointsGreene(
 /*
  * protein_cuda::CritPoints::calcDegreeOfCell
  */
-int protein_cuda::CritPoints::calcDegreeOfCell(UniGrid3D<float3> &uniGrid,
-        vislib::math::Vector<float, 3> minCoord,
-        vislib::math::Vector<float, 3> maxCoord) {
+int protein_cuda::CritPoints::calcDegreeOfCell(
+    UniGrid3D<float3>& uniGrid, vislib::math::Vector<float, 3> minCoord, vislib::math::Vector<float, 3> maxCoord) {
 
     float degree = 0.0f;
-    Array<Vector<float, 3> > triangle;
+    Array<Vector<float, 3>> triangle;
     triangle.SetCount(3);
 
-//#pragma omp parallel
+    //#pragma omp parallel
     //{
 
     //#pragma omp sections
     //{
-            // Bottom
+    // Bottom
     //#pragma omp section nowait
     //{
     // Triangle #0
@@ -324,7 +305,7 @@ int protein_cuda::CritPoints::calcDegreeOfCell(UniGrid3D<float3> &uniGrid,
     //printf("==== Curr degree (top) %f\n", degree); // DEBUG
     //}
 
-// Front
+    // Front
     //#pragma omp section nowait
     //{
     // Triangle #4
@@ -345,7 +326,7 @@ int protein_cuda::CritPoints::calcDegreeOfCell(UniGrid3D<float3> &uniGrid,
     //printf("==== Curr degree (front) %f\n", degree); // DEBUG
     //}
 
-// Back
+    // Back
     //#pragma omp section nowait
     //{
     // Triangle #6
@@ -366,7 +347,7 @@ int protein_cuda::CritPoints::calcDegreeOfCell(UniGrid3D<float3> &uniGrid,
     //printf("==== Curr degree (back) %f\n", degree); // DEBUG
     //}
 
-// Left
+    // Left
     //#pragma omp section nowait
     //{
     // Triangle #8
@@ -387,7 +368,7 @@ int protein_cuda::CritPoints::calcDegreeOfCell(UniGrid3D<float3> &uniGrid,
     //printf("==== Curr degree (left) %f\n", degree); // DEBUG
     //}
 
-// Right
+    // Right
     //#pragma omp section nowait
     //{
     // Triangle #10
@@ -410,9 +391,9 @@ int protein_cuda::CritPoints::calcDegreeOfCell(UniGrid3D<float3> &uniGrid,
     //}
     //}
 
-    degree /= (4.0f*M_PI);
+    degree /= (4.0f * M_PI);
 
-    if((degree > 10.0f)||(degree < -10.0f)) {
+    if ((degree > 10.0f) || (degree < -10.0f)) {
         degree = 0.0f;
     }
 
@@ -420,17 +401,16 @@ int protein_cuda::CritPoints::calcDegreeOfCell(UniGrid3D<float3> &uniGrid,
 }
 
 
-
 /*
  * protein_cuda::CritPoints::calcSolidAngleOfTriangle
  */
-float protein_cuda::CritPoints::calcSolidAngleOfTriangle(UniGrid3D<float3> &uniGrid,
-        vislib::Array<vislib::math::Vector<float, 3> > points) {
+float protein_cuda::CritPoints::calcSolidAngleOfTriangle(
+    UniGrid3D<float3>& uniGrid, vislib::Array<vislib::math::Vector<float, 3>> points) {
 
     float angleSolid = 0.0f, result;
     float theta0, theta1, theta2;
 
-    vislib::Array<vislib::math::Vector<float, 3> > triVecs;
+    vislib::Array<vislib::math::Vector<float, 3>> triVecs;
     triVecs.SetCount(3);
 
     float3 triVecs_f3_0 = uniGrid.SampleNearest(points[0].X(), points[0].Y(), points[0].Z());
@@ -458,16 +438,14 @@ float protein_cuda::CritPoints::calcSolidAngleOfTriangle(UniGrid3D<float3> &uniG
     //printf("theta2 %f\n", theta2);
 
     //if(triVecs[0].Length() == 0.0f)
-        //printf("Length 0 %f\n", triVecs[0].Length());
+    //printf("Length 0 %f\n", triVecs[0].Length());
     //if(triVecs[1].Length() == 0.0f)
-        //printf("Length 1 %f\n", triVecs[1].Length());
+    //printf("Length 1 %f\n", triVecs[1].Length());
     //if(triVecs[2].Length() == 0.0f)
-        //printf("Length 2 %f\n", triVecs[2].Length());
+    //printf("Length 2 %f\n", triVecs[2].Length());
 
-    result = tan(( theta0 + theta1 + theta2)/4.0f)
-            *tan(( theta0 + theta1 - theta2)/4.0f)
-            *tan((-theta0 + theta1 + theta2)/4.0f)
-            *tan(( theta0 - theta1 + theta2)/4.0f);
+    result = tan((theta0 + theta1 + theta2) / 4.0f) * tan((theta0 + theta1 - theta2) / 4.0f) *
+             tan((-theta0 + theta1 + theta2) / 4.0f) * tan((theta0 - theta1 + theta2) / 4.0f);
 
     //printf("result1 %f\n", result);
     result = fabs(result);
@@ -483,20 +461,19 @@ float protein_cuda::CritPoints::calcSolidAngleOfTriangle(UniGrid3D<float3> &uniG
     vislib::math::Vector<float, 3> crossPr = triVecs[1].Cross(triVecs[2]);
 
     if (triVecs[0].Dot(crossPr) < 0.0f) {
-        angleSolid = -result*4.0f;
-    }
-    else {
-        angleSolid = result*4.0f;
+        angleSolid = -result * 4.0f;
+    } else {
+        angleSolid = result * 4.0f;
     }
 
     return angleSolid;
 }
 
 
-float protein_cuda::CritPoints::calcSolidAngleOfTriangleAlt(UniGrid3D<float3> &uniGrid,
-        vislib::Array<vislib::math::Vector<float, 3> > points) {
+float protein_cuda::CritPoints::calcSolidAngleOfTriangleAlt(
+    UniGrid3D<float3>& uniGrid, vislib::Array<vislib::math::Vector<float, 3>> points) {
 
-    vislib::Array<vislib::math::Vector<float, 3> > triVecs;
+    vislib::Array<vislib::math::Vector<float, 3>> triVecs;
     triVecs.SetCount(3);
     /*triVecs[0] = CritPoints::sampleUniGridNearestNeighbour(uniGrid, points[0]);
     triVecs[1] = CritPoints::sampleUniGridNearestNeighbour(uniGrid, points[1]);
@@ -510,12 +487,10 @@ float protein_cuda::CritPoints::calcSolidAngleOfTriangleAlt(UniGrid3D<float3> &u
     //printf("==== vec1 %f, %f, %f (Alt)\n", triVecs[1].X(), triVecs[1].Y(), triVecs[1].Z());
     //printf("==== vec2 %f, %f, %f (Alt)\n", triVecs[2].X(), triVecs[2].Y(), triVecs[2].Z());
 
-    double determ =     triVecs[0].X()*triVecs[1].Y()*triVecs[2].Z()
-                      + triVecs[1].X()*triVecs[2].Y()*triVecs[0].Z()
-                      + triVecs[2].X()*triVecs[0].Y()*triVecs[1].Z()
-                      - triVecs[2].X()*triVecs[1].Y()*triVecs[0].Z()
-                      - triVecs[1].X()*triVecs[0].Y()*triVecs[2].Z()
-                      - triVecs[0].X()*triVecs[2].Y()*triVecs[1].Z();
+    double determ =
+        triVecs[0].X() * triVecs[1].Y() * triVecs[2].Z() + triVecs[1].X() * triVecs[2].Y() * triVecs[0].Z() +
+        triVecs[2].X() * triVecs[0].Y() * triVecs[1].Z() - triVecs[2].X() * triVecs[1].Y() * triVecs[0].Z() -
+        triVecs[1].X() * triVecs[0].Y() * triVecs[2].Z() - triVecs[0].X() * triVecs[2].Y() * triVecs[1].Z();
 
     //printf("Determ %e\n", determ);
 
@@ -528,15 +503,13 @@ float protein_cuda::CritPoints::calcSolidAngleOfTriangleAlt(UniGrid3D<float3> &u
     //printf("bl %e\n", length[1]);
     //printf("cl %e\n", length[2]);
 
-    float div = length[0]*length[1]*length[2] +
-            triVecs[0].Dot(triVecs[1])*length[2] +
-            triVecs[0].Dot(triVecs[2])*length[1] +
-            triVecs[1].Dot(triVecs[2])*length[0];
+    float div = length[0] * length[1] * length[2] + triVecs[0].Dot(triVecs[1]) * length[2] +
+                triVecs[0].Dot(triVecs[2]) * length[1] + triVecs[1].Dot(triVecs[2]) * length[0];
 
     //printf("Div %e\n",div );
 
     float at = static_cast<float>(atan2(determ, double(div)));
-    if(at < 0) {
+    if (at < 0) {
         at += M_PI; // If det > 0 and div < 0 arctan2 returns < 0, so add pi.
     }
 
@@ -551,8 +524,7 @@ float protein_cuda::CritPoints::calcSolidAngleOfTriangleAlt(UniGrid3D<float3> &u
  * protein_cuda::CritPoints::sampleUniGridNearestNeighbour
  */
 vislib::math::Vector<float, 3> protein_cuda::CritPoints::sampleUniGridNearestNeighbour(
-        UniGrid3D<float3> &uniGrid,
-        vislib::math::Vector<float, 3> pos) {
+    UniGrid3D<float3>& uniGrid, vislib::math::Vector<float, 3> pos) {
 
     /*printf("==== gridDim %u %u %u\n",
             uniGrid.GetGridDim().X(),
@@ -569,10 +541,9 @@ vislib::math::Vector<float, 3> protein_cuda::CritPoints::sampleUniGridNearestNei
             static_cast<unsigned int>(pos.Y() - uniGrid.GetGridOrg().Y()),
             static_cast<unsigned int>(pos.Z() - uniGrid.GetGridOrg().Z()));*/
 
-    float3 vecRes =  uniGrid.GetAt(
-            static_cast<unsigned int>(pos.X() - uniGrid.GetGridOrg().X()),
-            static_cast<unsigned int>(pos.Y() - uniGrid.GetGridOrg().Y()),
-            static_cast<unsigned int>(pos.Z() - uniGrid.GetGridOrg().Z()));
+    float3 vecRes = uniGrid.GetAt(static_cast<unsigned int>(pos.X() - uniGrid.GetGridOrg().X()),
+        static_cast<unsigned int>(pos.Y() - uniGrid.GetGridOrg().Y()),
+        static_cast<unsigned int>(pos.Z() - uniGrid.GetGridOrg().Z()));
 
     return vislib::math::Vector<float, 3>(vecRes.x, vecRes.y, vecRes.z);
 }

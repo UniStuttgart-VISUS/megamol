@@ -1,9 +1,8 @@
-#include "stdafx.h"
 #include "PCAProjection.h"
 
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmstd_datatools/table/TableDataCall.h"
 
 #include <Eigen/Dense>
 #include <Eigen/SVD>
@@ -26,13 +25,13 @@ PCAProjection::PCAProjection(void)
         , dataInHash(0)
         , columnInfos() {
 
-    this->dataInSlot.SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
+    this->dataInSlot.SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
-    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(0), &PCAProjection::getDataCallback);
-    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(1), &PCAProjection::getHashCallback);
+    this->dataOutSlot.SetCallback(megamol::datatools::table::TableDataCall::ClassName(),
+        megamol::datatools::table::TableDataCall::FunctionName(0), &PCAProjection::getDataCallback);
+    this->dataOutSlot.SetCallback(megamol::datatools::table::TableDataCall::ClassName(),
+        megamol::datatools::table::TableDataCall::FunctionName(1), &PCAProjection::getHashCallback);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     reduceToNSlot << new ::megamol::core::param::IntParam(2);
@@ -59,13 +58,12 @@ void PCAProjection::release(void) {}
 bool PCAProjection::getDataCallback(core::Call& c) {
 
     try {
-        megamol::stdplugin::datatools::table::TableDataCall* outCall =
-            dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
+        megamol::datatools::table::TableDataCall* outCall = dynamic_cast<megamol::datatools::table::TableDataCall*>(&c);
         if (outCall == NULL)
             return false;
 
-        megamol::stdplugin::datatools::table::TableDataCall* inCall =
-            this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+        megamol::datatools::table::TableDataCall* inCall =
+            this->dataInSlot.CallAs<megamol::datatools::table::TableDataCall>();
         if (inCall == NULL)
             return false;
 
@@ -99,13 +97,12 @@ bool PCAProjection::getDataCallback(core::Call& c) {
 
 bool PCAProjection::getHashCallback(core::Call& c) {
     try {
-        megamol::stdplugin::datatools::table::TableDataCall* outCall =
-            dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
+        megamol::datatools::table::TableDataCall* outCall = dynamic_cast<megamol::datatools::table::TableDataCall*>(&c);
         if (outCall == NULL)
             return false;
 
-        megamol::stdplugin::datatools::table::TableDataCall* inCall =
-            this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+        megamol::datatools::table::TableDataCall* inCall =
+            this->dataInSlot.CallAs<megamol::datatools::table::TableDataCall>();
         if (inCall == NULL)
             return false;
 
@@ -124,7 +121,7 @@ bool PCAProjection::getHashCallback(core::Call& c) {
     return true;
 }
 
-bool megamol::infovis::PCAProjection::project(megamol::stdplugin::datatools::table::TableDataCall* inCall) {
+bool megamol::infovis::PCAProjection::project(megamol::datatools::table::TableDataCall* inCall) {
 
     // check if inData has changed and if Slots have changed
     if (this->dataInHash == inCall->DataHash()) {
@@ -194,7 +191,7 @@ bool megamol::infovis::PCAProjection::project(megamol::stdplugin::datatools::tab
 
 
     covarianceMatrix = covarianceMatrix.transpose() * covarianceMatrix;
-    covarianceMatrix = covarianceMatrix / (float) (rowsCount - 1);
+    covarianceMatrix = covarianceMatrix / (float)(rowsCount - 1);
 
 
     // calculate Eigenvalues and Eigenvectors
@@ -243,7 +240,7 @@ bool megamol::infovis::PCAProjection::project(megamol::stdplugin::datatools::tab
     for (int indexX = 0; indexX < outputDimCount; indexX++) {
         columnInfos[indexX]
             .SetName("PC" + std::to_string(indexX))
-            .SetType(megamol::stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE)
+            .SetType(megamol::datatools::table::TableDataCall::ColumnType::QUANTITATIVE)
             .SetMinimumValue(result.col(indexX).minCoeff())
             .SetMaximumValue(result.col(indexX).maxCoeff());
     }

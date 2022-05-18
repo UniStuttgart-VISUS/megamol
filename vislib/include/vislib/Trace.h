@@ -23,225 +23,220 @@
 
 namespace vislib {
 
+/**
+ * This is a utility for tracing some debug output.
+ *
+ * @author Christoph Mueller
+ */
+class Trace {
+
+public:
     /**
-     * This is a utility for tracing some debug output.
+     * Answer the only instance of this class.
      *
-     * @author Christoph Mueller
+     * @return A reference to the only instance of this class.
      */
-    class Trace {
+    static Trace& GetInstance(void);
 
-    public:
+    /**
+     * Overrides the currently used 'main-and-most-of-the-time-only'
+     * instance with 'inst'. The memory ownership of the object 'inst'
+     * points to is not changed and the caller is responsible to keep it
+     * valid as long as it is used, as well as to delete it when it is
+     * no longer used.
+     *
+     * @param inst The new instance object. Must not be NULL
+     */
+    static void OverrideInstance(Trace* inst);
 
-        /**
-         * Answer the only instance of this class.
-         *
-         * @return A reference to the only instance of this class.
-         */
-        static Trace& GetInstance(void);
+    /**
+     * Set this level to display all tracing information. If you use this
+     * constant for tracing itself, the messages will only be output, if
+     * LEVEL_ALL is also set as current tracing level.
+     */
+    static const UINT LEVEL_ALL;
 
-        /**
-         * Overrides the currently used 'main-and-most-of-the-time-only'
-         * instance with 'inst'. The memory ownership of the object 'inst'
-         * points to is not changed and the caller is responsible to keep it
-         * valid as long as it is used, as well as to delete it when it is
-         * no longer used.
-         *
-         * @param inst The new instance object. Must not be NULL
-         */
-        static void OverrideInstance(Trace *inst);
+    /**
+     * Use this for logging errors. The value of this constant is 1, i. e.
+     * messages with LEVEL_ERROR will always be printed, if any logging is
+     * enabled.
+     */
+    static const UINT LEVEL_ERROR;
 
-        /** 
-         * Set this level to display all tracing information. If you use this
-         * constant for tracing itself, the messages will only be output, if
-         * LEVEL_ALL is also set as current tracing level.
-         */
-        static const UINT LEVEL_ALL;
+    /**
+     * Use this for informative messages. The value of this constant
+     * is 200.
+     */
+    static const UINT LEVEL_INFO;
 
-        /**
-         * Use this for logging errors. The value of this constant is 1, i. e.
-         * messages with LEVEL_ERROR will always be printed, if any logging is
-         * enabled.
-         */
-        static const UINT LEVEL_ERROR;
+    /**
+     * Use this for disabling tracing. The value is 0. It cannot be used
+     * for tracing itself, but only for the current tracing level.
+     */
+    static const UINT LEVEL_NONE;
 
-        /**
-         * Use this for informative messages. The value of this constant 
-         * is 200. 
-         */
-        static const UINT LEVEL_INFO;
+    /** Messages above this level are used for VISlib internal tracing. */
+    static const UINT LEVEL_VL;
 
-        /** 
-         * Use this for disabling tracing. The value is 0. It cannot be used
-         * for tracing itself, but only for the current tracing level.
-         */
-        static const UINT LEVEL_NONE;
+    /**
+     * Messages with this level are used for VISlib internal output of
+     * frequently recurring tasks.
+     */
+    static const UINT LEVEL_VL_ANNOYINGLY_VERBOSE;
 
-        /** Messages above this level are used for VISlib internal tracing. */
-        static const UINT LEVEL_VL;
+    /** Messages with this level represent a VISlib internal error. */
+    static const UINT LEVEL_VL_ERROR;
 
-        /**
-         * Messages with this level are used for VISlib internal output of
-         * frequently recurring tasks.
-         */
-        static const UINT LEVEL_VL_ANNOYINGLY_VERBOSE;
+    /** Messages with this level represent a VISlib internal message. */
+    static const UINT LEVEL_VL_INFO;
 
-        /** Messages with this level represent a VISlib internal error. */
-        static const UINT LEVEL_VL_ERROR;
+    /**
+     * Messages with this level represent a VISlib less important internal
+     * message.
+     */
+    static const UINT LEVEL_VL_VERBOSE;
 
-        /** Messages with this level represent a VISlib internal message. */
-        static const UINT LEVEL_VL_INFO;
+    /** Messages with this level represent a VISlib internal warning. */
+    static const UINT LEVEL_VL_WARN;
 
-        /** 
-        * Messages with this level represent a VISlib less important internal
-        * message.
-        */
-        static const UINT LEVEL_VL_VERBOSE;
+    /**
+     * Use this for warning messages. The value of this constant
+     * is 100.
+     */
+    static const UINT LEVEL_WARN;
 
-        /** Messages with this level represent a VISlib internal warning. */
-        static const UINT LEVEL_VL_WARN;
+    /** Dtor. */
+    ~Trace(void);
 
-        /**
-         * Use this for warning messages. The value of this constant 
-         * is 100. 
-         */
-        static const UINT LEVEL_WARN;
+    /**
+     * Enables the output of the tracer messages to the application or
+     * system debugger, i. e. to the Output window of Visual Studio.
+     *
+     * This setting has currently no effect on non-Windows systems.
+     *
+     * @param useDebugger true for enabling the debugger output, false for
+     *                    disabling it.
+     *
+     * @return true, if the debugger output was successfully enabled or
+     *         disabled, false otherwise.
+     */
+    bool EnableDebuggerOutput(const bool useDebugger);
 
-        /** Dtor. */
-        ~Trace(void);
+    /**
+     * Enables the output of the tracer messages to the file with the
+     * specified name.
+     *
+     * @param filename The name of the file. If NULL, file output is
+     *                 disabled.
+     *
+     * @return true, if the log file was successfully opened, false
+     *         otherwise. If ('filename' == NULL), return true always.
+     */
+    bool EnableFileOutput(const char* filename);
 
-        /**
-         * Enables the output of the tracer messages to the application or 
-         * system debugger, i. e. to the Output window of Visual Studio.
-         *
-         * This setting has currently no effect on non-Windows systems.
-         *
-         * @param useDebugger true for enabling the debugger output, false for
-         *                    disabling it.
-         *
-         * @return true, if the debugger output was successfully enabled or
-         *         disabled, false otherwise.
-         */
-        bool EnableDebuggerOutput(const bool useDebugger);
+    /**
+     * Answer the current tracing level. Messages above this level will be
+     * ignored.
+     *
+     * @return The current tracing level.
+     */
+    inline UINT GetLevel(void) const {
+        return this->level;
+    }
 
-        /**
-         * Enables the output of the tracer messages to the file with the 
-         * specified name. 
-         *
-         * @param filename The name of the file. If NULL, file output is 
-         *                 disabled.
-         *
-         * @return true, if the log file was successfully opened, false 
-         *         otherwise. If ('filename' == NULL), return true always.
-         */
-        bool EnableFileOutput(const char *filename);
+    /**
+     * Set a new tracing level. Messages above this level will be ignored.
+     *
+     * @param level The new tracing level.
+     */
+    inline void SetLevel(const UINT level) {
+        this->level = level;
+    }
 
-        /**
-         * Answer the current tracing level. Messages above this level will be
-         * ignored.
-         *
-         * @return The current tracing level.
-         */
-        inline UINT GetLevel(void) const {
-            return this->level;
-        }
+    /**
+     * Set the trace prefix for console output. If NULL, no prefix will be
+     * added.
+     *
+     * @param prefix The new prefix or NULL for disabling prefixing.
+     */
+    void SetPrefix(const char* prefix);
 
-        /**
-         * Set a new tracing level. Messages above this level will be ignored.
-         *
-         * @param level The new tracing level.
-         */
-        inline void SetLevel(const UINT level) {
-            this->level = level;
-        }
+    /**
+     * Trace the message 'fmt', if an appropriate tracing level was set.
+     *
+     * @param level The trace level for the message.
+     * @param fmt   The format string for the trace message.
+     */
+    void operator()(const UINT level, const char* fmt, ...) throw();
 
-        /**
-         * Set the trace prefix for console output. If NULL, no prefix will be 
-         * added.
-         *
-         * @param prefix The new prefix or NULL for disabling prefixing.
-         */
-        void SetPrefix(const char *prefix);
+    ///**
+    // * Trace the message 'fmt'.
+    // *
+    // * @param fmt The format string for the trace message.
+    // */
+    //void operator ()(const char *fmt, ...);
 
-        /**
-         * Trace the message 'fmt', if an appropriate tracing level was set.
-         *
-         * @param level The trace level for the message.
-         * @param fmt   The format string for the trace message.
-         */
-        void operator ()(const UINT level, const char *fmt, ...) throw();
+private:
+    /** The default prefix of the console output. */
+    static const char* DEFAULT_PREFIX;
 
-        ///**
-        // * Trace the message 'fmt'.
-        // *
-        // * @param fmt The format string for the trace message.
-        // */
-        //void operator ()(const char *fmt, ...);
+    /** The 'main' and most of the time 'only' instance of this class. */
+    static Trace* instance;
 
-    private:
+public: // TODO: Not good! Think of better solution!
+    /**
+     * Ctor.
+     */
+    Trace(void);
 
-        /** The default prefix of the console output. */
-        static const char *DEFAULT_PREFIX;
+private: // TODO: Not good! Think of better solution!
+    /**
+     * Forbidden copy ctor.
+     *
+     * @param rhs The object to be cloned.
+     *
+     * @throws UnsupportedOperationException Unconditionally.
+     */
+    Trace(const Trace& rhs);
 
-        /** The 'main' and most of the time 'only' instance of this class. */
-        static Trace *instance;
+    /**
+     * Does the actual tracing work.
+     *
+     * @param level The trace level for the message.
+     * @param fmt   The format string for the trace message.
+     * @param list  The variable argument list.
+     */
+    void trace(const UINT level, const char* fmt, va_list list) throw();
 
-    public: // TODO: Not good! Think of better solution!
+    /**
+     * Forbidden assignment.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     *
+     * @throws IllegalParamException If (this != &rhs).
+     */
+    Trace& operator=(const Trace& rhs);
 
-        /** 
-         * Ctor.
-         */
-        Trace(void);
+    /** Name of the output file. */
+    char* filename;
 
-    private: // TODO: Not good! Think of better solution!
+    /** Handle for file output of tracer. */
+    FILE* fp;
 
-        /**
-         * Forbidden copy ctor.
-         *
-         * @param rhs The object to be cloned.
-         *
-         * @throws UnsupportedOperationException Unconditionally.
-         */
-        Trace(const Trace& rhs);
+    /**
+     * The prefix of the console output. Prefixing is disabled, if this pointer
+     * is NULL.
+     */
+    char* prefix;
 
-        /**
-         * Does the actual tracing work.
-         *
-         * @param level The trace level for the message.
-         * @param fmt   The format string for the trace message.
-         * @param list  The variable argument list.
-         */
-        void trace(const UINT level, const char *fmt, va_list list) throw();
+    /** The current trace level. */
+    UINT level;
 
-        /**
-         * Forbidden assignment.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         *
-         * @throws IllegalParamException If (this != &rhs).
-         */
-        Trace& operator =(const Trace& rhs);
-
-        /** Name of the output file. */
-        char *filename;
-
-        /** Handle for file output of tracer. */
-        FILE *fp;
-
-        /** 
-         * The prefix of the console output. Prefixing is disabled, if this pointer
-         * is NULL.
-         */
-        char *prefix;
-
-        /** The current trace level. */
-        UINT level;
-
-        /** The the debugger API for writing strings. */
-        bool useDebugger;
-
-    };
+    /** The the debugger API for writing strings. */
+    bool useDebugger;
+};
 
 } /* end namespace vislib */
 

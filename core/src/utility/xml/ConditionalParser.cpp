@@ -1,19 +1,19 @@
 /*
  * ConditionalParser.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/utility/xml/ConditionalParser.h"
-#include "vislib/assert.h"
-#include "vislib/CharTraits.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/String.h"
 #include "mmcore/utility/sys/SystemInformation.h"
+#include "stdafx.h"
+#include "vislib/CharTraits.h"
+#include "vislib/String.h"
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
+#include "vislib/assert.h"
 
 //#define DO_SOME_BULB_TEXT 1
 
@@ -27,16 +27,13 @@ using namespace megamol::core::utility::xml;
 /*
  * ConditionalParser::ConditionalParser
  */
-ConditionalParser::ConditionalParser(void) : XmlParser(), 
-        ifCheckerVer(VERSION_1_0), conditions() {
-}
+ConditionalParser::ConditionalParser(void) : XmlParser(), ifCheckerVer(VERSION_1_0), conditions() {}
 
 
 /*
  * ConditionalParser::~ConditionalParser
  */
-ConditionalParser::~ConditionalParser(void) {
-}
+ConditionalParser::~ConditionalParser(void) {}
 
 
 /*
@@ -44,11 +41,13 @@ ConditionalParser::~ConditionalParser(void) {
  */
 void ConditionalParser::setConditionalParserVersion(int ver) {
     if (ver == 0) {
-        if (this->ifCheckerVer == VERSION_1_0) return;
+        if (this->ifCheckerVer == VERSION_1_0)
+            return;
         this->ifCheckerVer = VERSION_1_0;
 
     } else if (ver == 1) {
-        if (this->ifCheckerVer == VERSION_1_1) return;
+        if (this->ifCheckerVer == VERSION_1_1)
+            return;
         this->ifCheckerVer = VERSION_1_1;
         this->conditions.Clear();
 
@@ -62,81 +61,77 @@ void ConditionalParser::setConditionalParserVersion(int ver) {
 /*
  * ConditionalParser::StartTag
  */
-bool ConditionalParser::StartTag(unsigned int num, unsigned int level,
-        const XML_Char * name, const XML_Char ** attrib, XmlReader::ParserState state,
-        XmlReader::ParserState& outChildState,
-        XmlReader::ParserState& outEndTagState,
-        XmlReader::ParserState& outPostEndTagState) {
+bool ConditionalParser::StartTag(unsigned int num, unsigned int level, const XML_Char* name, const XML_Char** attrib,
+    XmlReader::ParserState state, XmlReader::ParserState& outChildState, XmlReader::ParserState& outEndTagState,
+    XmlReader::ParserState& outPostEndTagState) {
 
-    if (XmlParser::StartTag(num, level, name, attrib, state, outChildState,
-            outEndTagState, outPostEndTagState)) {
+    if (XmlParser::StartTag(num, level, name, attrib, state, outChildState, outEndTagState, outPostEndTagState)) {
         return true; // handled by base class
     }
 
     switch (this->ifCheckerVer) {
-        case VERSION_1_0:
-            if ((level > 0) && MMXML_STRING("IF").Equals(name, false)) {
-                if (!this->evaluateIf(attrib)) {
+    case VERSION_1_0:
+        if ((level > 0) && MMXML_STRING("IF").Equals(name, false)) {
+            if (!this->evaluateIf(attrib)) {
+                outChildState = XmlReader::STATE_IGNORE_SUBTREE;
+            }
+            return true;
+        }
+        break;
+    case VERSION_1_1:
+        if (level > 0) {
+            if (MMXML_STRING("if").Equals(name)) {
+                const XML_Char* cond = NULL;
+
+                for (int i = 0; attrib[i]; i += 2) {
+                    if (MMXML_STRING("cond").Equals(attrib[i])) {
+                        cond = attrib[i + 1];
+                    } else {
+                        this->WarnUnexpectedAttribut(name, attrib[i]);
+                    }
+                }
+
+                if (cond == NULL) {
+                    this->Error("Tag \"if\" without \"cond\" always results to false.");
                     outChildState = XmlReader::STATE_IGNORE_SUBTREE;
+                } else {
+                    if (!this->evaluateCondition(cond)) {
+                        outChildState = XmlReader::STATE_IGNORE_SUBTREE;
+                    }
                 }
                 return true;
             }
-            break;
-        case VERSION_1_1:
-            if (level > 0) {
-                if (MMXML_STRING("if").Equals(name)) {
-                    const XML_Char *cond = NULL;
 
-                    for (int i = 0; attrib[i]; i += 2) {
-                        if (MMXML_STRING("cond").Equals(attrib[i])) {
-                            cond = attrib[i + 1];
-                        } else {
-                            this->WarnUnexpectedAttribut(name, attrib[i]);
-                        }
-                    }
+            if (MMXML_STRING("cond").Equals(name)) {
+                const XML_Char* name = NULL;
+                const XML_Char* value = NULL;
 
-                    if (cond == NULL) {
-                        this->Error("Tag \"if\" without \"cond\" always results to false.");
-                        outChildState = XmlReader::STATE_IGNORE_SUBTREE;
+                for (int i = 0; attrib[i]; i += 2) {
+                    if (MMXML_STRING("name").Equals(attrib[i])) {
+                        name = attrib[i + 1];
+                    } else if (MMXML_STRING("value").Equals(attrib[i])) {
+                        value = attrib[i + 1];
                     } else {
-                        if (!this->evaluateCondition(cond)) {
-                            outChildState = XmlReader::STATE_IGNORE_SUBTREE;
-                        }
+                        this->WarnUnexpectedAttribut(name, attrib[i]);
                     }
-                    return true;
                 }
 
-                if (MMXML_STRING("cond").Equals(name)) {
-                    const XML_Char *name = NULL;
-                    const XML_Char *value = NULL;
-
-                    for (int i = 0; attrib[i]; i += 2) {
-                        if (MMXML_STRING("name").Equals(attrib[i])) {
-                            name = attrib[i + 1];
-                        } else if (MMXML_STRING("value").Equals(attrib[i])) {
-                            value = attrib[i + 1];
-                        } else {
-                            this->WarnUnexpectedAttribut(name, attrib[i]);
-                        }
-                    }
-
-                    if (name == NULL) {
-                        this->Error("Tag \"cond\" without \"name\" ignored.");
-                    } else if (value == NULL) {
-                        this->Error("Tag \"cond\" without \"value\" ignored.");
-                    } else {
-                        this->conditions[vislib::StringW(name)]
-                            = this->evaluateCondition(value);
-                    }
-                    outChildState = XmlReader::STATE_IGNORE_SUBTREE;
-                    return true;
+                if (name == NULL) {
+                    this->Error("Tag \"cond\" without \"name\" ignored.");
+                } else if (value == NULL) {
+                    this->Error("Tag \"cond\" without \"value\" ignored.");
+                } else {
+                    this->conditions[vislib::StringW(name)] = this->evaluateCondition(value);
                 }
+                outChildState = XmlReader::STATE_IGNORE_SUBTREE;
+                return true;
             }
-            break;
+        }
+        break;
 
-        default: // internal error
-            ASSERT(false);
-            break;
+    default: // internal error
+        ASSERT(false);
+        break;
     }
 
     return false; // unhandled.
@@ -146,28 +141,26 @@ bool ConditionalParser::StartTag(unsigned int num, unsigned int level,
 /*
  * ConditionalParser::EndTag
  */
-bool ConditionalParser::EndTag(unsigned int num, unsigned int level,
-        const XML_Char * name, XmlReader::ParserState state,
-        XmlReader::ParserState& outPostEndTagState) {
+bool ConditionalParser::EndTag(unsigned int num, unsigned int level, const XML_Char* name, XmlReader::ParserState state,
+    XmlReader::ParserState& outPostEndTagState) {
     if (XmlParser::EndTag(num, level, name, state, outPostEndTagState)) {
         return true; // handled by base class
     }
 
     switch (this->ifCheckerVer) {
-        case VERSION_1_0:
-            if ((level > 0) && MMXML_STRING("IF").Equals(name, false)) {
-                return true; // if tag
-            }
-            break;
-        case VERSION_1_1:
-            if ((level > 0) && (MMXML_STRING("if").Equals(name)
-                    || MMXML_STRING("cond").Equals(name))) {
-                return true;
-            }
-            break;
-        default: // internal error
-            ASSERT(false);
-            break;
+    case VERSION_1_0:
+        if ((level > 0) && MMXML_STRING("IF").Equals(name, false)) {
+            return true; // if tag
+        }
+        break;
+    case VERSION_1_1:
+        if ((level > 0) && (MMXML_STRING("if").Equals(name) || MMXML_STRING("cond").Equals(name))) {
+            return true;
+        }
+        break;
+    default: // internal error
+        ASSERT(false);
+        break;
     }
 
     return false; // unhandled.
@@ -186,22 +179,20 @@ bool ConditionalParser::evaluateIf(const XML_Char** attrib) const {
             int bitwidth;
             try {
                 bitwidth = vislib::CharTraits<XML_Char>::ParseInt(attrib[i + 1]);
-            } catch(...) { // format exception
+            } catch (...) { // format exception
                 this->Error("Cannot evaluate \"bitwidth\". Test failed.");
-                bitwidth = 0; 
+                bitwidth = 0;
             }
 
-            if (bitwidth 
-                    == int(vislib::sys::SystemInformation::SelfWordSize())) {
+            if (bitwidth == int(vislib::sys::SystemInformation::SelfWordSize())) {
                 oneTrue = true;
             } else {
                 allTrue = false;
-            } 
+            }
 
         } else if (MMXML_STRING("computer").Equals(attrib[i])) {
 
-            if (MMXML_STRING(vislib::sys::SystemInformation::ComputerNameW())
-                    .Equals(attrib[i + 1], false)) {
+            if (MMXML_STRING(vislib::sys::SystemInformation::ComputerNameW()).Equals(attrib[i + 1], false)) {
                 oneTrue = true;
             } else {
                 allTrue = false;
@@ -220,7 +211,7 @@ bool ConditionalParser::evaluateIf(const XML_Char** attrib) const {
                 } else {
                     allTrue = false;
                 }
-            } catch(...) {
+            } catch (...) {
                 this->Error("Cannot evaluate \"debug\". Test failed.");
                 allTrue = false;
             }
@@ -228,32 +219,29 @@ bool ConditionalParser::evaluateIf(const XML_Char** attrib) const {
         } else if (MMXML_STRING("os").Equals(attrib[i])) {
 
             switch (vislib::sys::SystemInformation::SystemType()) {
-                case vislib::sys::SystemInformation::OSTYPE_WINDOWS:
-                    if (MMXML_STRING("windows")
-                            .Equals(attrib[i + 1], false)) {
-                        oneTrue = true;
-                    } else {
-                        allTrue = false;
-                    }
-                    break;
-                case vislib::sys::SystemInformation::OSTYPE_LINUX:
-                    if (MMXML_STRING("linux")
-                            .Equals(attrib[i + 1], false)) {
-                        oneTrue = true;
-                    } else {
-                        allTrue = false;
-                    }
-                    break;
-                default: // unable to detect local system.
-                    this->Error("Cannot evaluate \"os\". Test failed.");
+            case vislib::sys::SystemInformation::OSTYPE_WINDOWS:
+                if (MMXML_STRING("windows").Equals(attrib[i + 1], false)) {
+                    oneTrue = true;
+                } else {
                     allTrue = false;
-                    break;
+                }
+                break;
+            case vislib::sys::SystemInformation::OSTYPE_LINUX:
+                if (MMXML_STRING("linux").Equals(attrib[i + 1], false)) {
+                    oneTrue = true;
+                } else {
+                    allTrue = false;
+                }
+                break;
+            default: // unable to detect local system.
+                this->Error("Cannot evaluate \"os\". Test failed.");
+                allTrue = false;
+                break;
             }
 
         } else {
             vislib::StringA msg;
-            msg.Format("Unknown test \"%s\" ignored.",
-                vislib::StringA(attrib[i]).PeekBuffer());
+            msg.Format("Unknown test \"%s\" ignored.", vislib::StringA(attrib[i]).PeekBuffer());
             this->Error(msg.PeekBuffer());
         }
     }
@@ -283,83 +271,147 @@ bool ConditionalParser::evaluateCondition(const XML_Char* expression) const {
     for (int pos = 0; pos < len; pos++) {
         error = false;
 
-        if (vislib::CharTraitsA::IsSpace(exp[pos])) { charcode = 0;
-        } else if (exp[pos] == '(') { charcode = 1;
-        } else if (exp[pos] == ')') { charcode = 2;
-        } else if (exp[pos] == '!') { charcode = 3;
-        } else if (exp[pos] == '=') { charcode = 4;
-        } else if (exp[pos] == '&') { charcode = 6;
-        } else if (exp[pos] == '|') { charcode = 7;
-        } else { charcode = 5; }
+        if (vislib::CharTraitsA::IsSpace(exp[pos])) {
+            charcode = 0;
+        } else if (exp[pos] == '(') {
+            charcode = 1;
+        } else if (exp[pos] == ')') {
+            charcode = 2;
+        } else if (exp[pos] == '!') {
+            charcode = 3;
+        } else if (exp[pos] == '=') {
+            charcode = 4;
+        } else if (exp[pos] == '&') {
+            charcode = 6;
+        } else if (exp[pos] == '|') {
+            charcode = 7;
+        } else {
+            charcode = 5;
+        }
 
         switch (state) {
-            case 0: // b4
-                switch (charcode) {
-                    case 0: break; // nothing to do
-                    case 1: tokenz.Add("("); break;
-                    case 2: tokenz.Add(")"); break;
-                    case 3: state = 3; break;
-                    case 4: state = 2; break;
-                    case 5: start = pos; state = 1; break;
-                    case 6: state = 4; break;
-                    case 7: state = 5; break;
-                }
+        case 0: // b4
+            switch (charcode) {
+            case 0:
+                break; // nothing to do
+            case 1:
+                tokenz.Add("(");
                 break;
-            case 1: // id
-                if (charcode == 5) break;
-                tokenz.Add(exp.Substring(start, pos - start));
-                switch (charcode) {
-                    case 0: state = 0; break;
-                    case 1: error = true; break;
-                    case 2: tokenz.Add(")"); state = 0; break;
-                    case 3: state = 3; break;
-                    case 4: state = 2; break;
-                    case 6: state = 4; break;
-                    case 7: state = 5; break;
-                }
+            case 2:
+                tokenz.Add(")");
                 break;
-            case 2: // 1=
-                if (charcode == 4) {
-                    tokenz.Add("==");
-                    state = 0;
-                } else {
-                    error = true;
-                }
+            case 3:
+                state = 3;
                 break;
-            case 3: // !
-                switch (charcode) {
-                    case 0: tokenz.Add("!"); state = 0; break;
-                    case 1: tokenz.Add("!"); tokenz.Add("("); state = 0; break;
-                    case 2: error = true; break;
-                    case 3: tokenz.Add("!"); break;
-                    case 4: tokenz.Add("!="); state = 0; break;
-                    case 5: tokenz.Add("!"); start = pos; state = 1; break;
-                    case 6: error = true; break;
-                    case 7: error = true; break;
-                }
+            case 4:
+                state = 2;
                 break;
-            case 4: // 1&
-                if (charcode == 6) {
-                    tokenz.Add("&&");
-                    state = 0;
-                } else {
-                    error = true;
-                }
+            case 5:
+                start = pos;
+                state = 1;
                 break;
-            case 5: // 1|
-                if (charcode == 7) {
-                    tokenz.Add("||");
-                    state = 0;
-                } else {
-                    error = true;
-                }
+            case 6:
+                state = 4;
                 break;
+            case 7:
+                state = 5;
+                break;
+            }
+            break;
+        case 1: // id
+            if (charcode == 5)
+                break;
+            tokenz.Add(exp.Substring(start, pos - start));
+            switch (charcode) {
+            case 0:
+                state = 0;
+                break;
+            case 1:
+                error = true;
+                break;
+            case 2:
+                tokenz.Add(")");
+                state = 0;
+                break;
+            case 3:
+                state = 3;
+                break;
+            case 4:
+                state = 2;
+                break;
+            case 6:
+                state = 4;
+                break;
+            case 7:
+                state = 5;
+                break;
+            }
+            break;
+        case 2: // 1=
+            if (charcode == 4) {
+                tokenz.Add("==");
+                state = 0;
+            } else {
+                error = true;
+            }
+            break;
+        case 3: // !
+            switch (charcode) {
+            case 0:
+                tokenz.Add("!");
+                state = 0;
+                break;
+            case 1:
+                tokenz.Add("!");
+                tokenz.Add("(");
+                state = 0;
+                break;
+            case 2:
+                error = true;
+                break;
+            case 3:
+                tokenz.Add("!");
+                break;
+            case 4:
+                tokenz.Add("!=");
+                state = 0;
+                break;
+            case 5:
+                tokenz.Add("!");
+                start = pos;
+                state = 1;
+                break;
+            case 6:
+                error = true;
+                break;
+            case 7:
+                error = true;
+                break;
+            }
+            break;
+        case 4: // 1&
+            if (charcode == 6) {
+                tokenz.Add("&&");
+                state = 0;
+            } else {
+                error = true;
+            }
+            break;
+        case 5: // 1|
+            if (charcode == 7) {
+                tokenz.Add("||");
+                state = 0;
+            } else {
+                error = true;
+            }
+            break;
         }
 
         if (error) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Syntax error while evaluating expression \"%s\" on position \"%d\"."
-                "Setting result to 'false'.\n", exp.PeekBuffer(), pos);
+                "Setting result to 'false'.\n",
+                exp.PeekBuffer(), pos);
             return false;
         }
     }
@@ -373,13 +425,11 @@ bool ConditionalParser::evaluateCondition(const XML_Char* expression) const {
         }
     }
 
-    bool rv = this->evaluateCondition(exp,
-        const_cast<vislib::StringA*>(tokenz.PeekElements()),
-        static_cast<unsigned int>(tokenz.Count()));
+    bool rv = this->evaluateCondition(
+        exp, const_cast<vislib::StringA*>(tokenz.PeekElements()), static_cast<unsigned int>(tokenz.Count()));
 
 #ifdef DO_SOME_BULB_TEXT
-    VLTRACE(VISLIB_TRCELVL_INFO, "Evaluated expression \"%s\" to %s\n",
-        exp.PeekBuffer(), rv ? "true" : "false");
+    VLTRACE(VISLIB_TRCELVL_INFO, "Evaluated expression \"%s\" to %s\n", exp.PeekBuffer(), rv ? "true" : "false");
 #endif /* DO_SOME_BULB_TEXT */
 
     return rv;
@@ -389,13 +439,12 @@ bool ConditionalParser::evaluateCondition(const XML_Char* expression) const {
 /*
  * ConditionalParser::evaluateCondition
  */
-bool ConditionalParser::evaluateCondition(const vislib::StringA& expression,
-        vislib::StringA *tokenz, unsigned int tokenCount) const {
+bool ConditionalParser::evaluateCondition(
+    const vislib::StringA& expression, vislib::StringA* tokenz, unsigned int tokenCount) const {
     using megamol::core::utility::log::Log;
 
     if (tokenCount == 0) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Error in expression \"%s\": internal error (empty token list)\n",
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error in expression \"%s\": internal error (empty token list)\n",
             expression.PeekBuffer());
         return false;
     }
@@ -409,16 +458,15 @@ bool ConditionalParser::evaluateCondition(const vislib::StringA& expression,
         } else if (tokenz[0].Equals("debug", false)) {
 #if defined(DEBUG) || defined(_DEBUG)
             return true;
-#else /* defined(DEBUG) || defined(_DEBUG) */
+#else  /* defined(DEBUG) || defined(_DEBUG) */
             return false;
 #endif /* defined(DEBUG) || defined(_DEBUG) */
         } else {
-            const bool *v = this->conditions.FindValue(tokenz[0]);
+            const bool* v = this->conditions.FindValue(tokenz[0]);
             if (v != NULL) {
                 return *v;
             } else {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "Error in expression \"%s\": unknown identifier \"%s\"\n",
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error in expression \"%s\": unknown identifier \"%s\"\n",
                     expression.PeekBuffer(), tokenz[0].PeekBuffer());
                 return false;
             }
@@ -430,12 +478,12 @@ bool ConditionalParser::evaluateCondition(const vislib::StringA& expression,
         if (tokenz[1].Equals("(")) {
             int cnt = 1;
             for (int i = 2; i < static_cast<int>(tokenCount); i++) {
-                if (tokenz[i].Equals("(")) cnt++;
+                if (tokenz[i].Equals("("))
+                    cnt++;
                 if (tokenz[i].Equals(")")) {
                     cnt--;
                     if (cnt == 0) {
-                        tokenz[i] = this->evaluateCondition(expression, tokenz + 2, i - 2)
-                            ? "false" : "true";
+                        tokenz[i] = this->evaluateCondition(expression, tokenz + 2, i - 2) ? "false" : "true";
                         return this->evaluateCondition(expression, tokenz + i, tokenCount - i);
                     }
                 }
@@ -459,8 +507,10 @@ bool ConditionalParser::evaluateCondition(const vislib::StringA& expression,
 #endif /* DO_SOME_BULB_TEXT */
         obc = cbc = 0;
         for (unsigned int i = 0; i < tokenCount; i++) {
-            if (tokenz[i].Equals("(")) obc++;
-            if (tokenz[i].Equals(")")) cbc++;
+            if (tokenz[i].Equals("("))
+                obc++;
+            if (tokenz[i].Equals(")"))
+                cbc++;
 #ifdef DO_SOME_BULB_TEXT
             blub.Append(" ");
             blub.Append(tokenz[i]);
@@ -468,9 +518,8 @@ bool ConditionalParser::evaluateCondition(const vislib::StringA& expression,
         }
 
         if (obc != cbc) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "Error in expression \"%s\": brackets mismatch\n",
-                expression.PeekBuffer());
+            Log::DefaultLog.WriteMsg(
+                Log::LEVEL_ERROR, "Error in expression \"%s\": brackets mismatch\n", expression.PeekBuffer());
             return false;
         }
 #ifdef DO_SOME_BULB_TEXT
@@ -502,7 +551,8 @@ bool ConditionalParser::evaluateCondition(const vislib::StringA& expression,
 
                         start = 0;
                         for (i = 0; i < tokenCount; i++) {
-                            if (tokenz[i].IsEmpty()) continue;
+                            if (tokenz[i].IsEmpty())
+                                continue;
                             tokenz[start] = tokenz[i];
                             start++;
                         }
@@ -514,7 +564,6 @@ bool ConditionalParser::evaluateCondition(const vislib::StringA& expression,
             }
             obc = 1;
         }
-
     }
 
     // solve basic expressions
@@ -539,66 +588,52 @@ bool ConditionalParser::evaluateCondition(const vislib::StringA& expression,
         }
         if (tokenz[0].Equals("bitwidth", false)) {
             try {
-                return vislib::CharTraitsA::ParseInt(tokenz[2])
-                    == int(vislib::sys::SystemInformation::SelfWordSize());
-            } catch(...) {
-                return false;
-            }
+                return vislib::CharTraitsA::ParseInt(tokenz[2]) == int(vislib::sys::SystemInformation::SelfWordSize());
+            } catch (...) { return false; }
         }
         if (tokenz[2].Equals("bitwidth", false)) {
             try {
-                return vislib::CharTraitsA::ParseInt(tokenz[0])
-                    == int(vislib::sys::SystemInformation::SelfWordSize());
-            } catch(...) {
-                return false;
-            }
+                return vislib::CharTraitsA::ParseInt(tokenz[0]) == int(vislib::sys::SystemInformation::SelfWordSize());
+            } catch (...) { return false; }
         }
         if (tokenz[0].Equals("computer", false)) {
-            return tokenz[2].Equals(
-                vislib::sys::SystemInformation::ComputerNameA(), false);
+            return tokenz[2].Equals(vislib::sys::SystemInformation::ComputerNameA(), false);
         }
         if (tokenz[2].Equals("computer", false)) {
-            return tokenz[0].Equals(
-                vislib::sys::SystemInformation::ComputerNameA(), false);
+            return tokenz[0].Equals(vislib::sys::SystemInformation::ComputerNameA(), false);
         }
         if (tokenz[0].Equals("os", false)) {
             switch (vislib::sys::SystemInformation::SystemType()) {
-                case vislib::sys::SystemInformation::OSTYPE_WINDOWS:
-                    return tokenz[2].Equals("windows", false);
-                case vislib::sys::SystemInformation::OSTYPE_LINUX:
-                    return tokenz[2].Equals("linux", false);
-                default: // unable to detect local system.
-                    return !tokenz[2].Equals("windows", false)
-                        && !tokenz[2].Equals("linux", false);
+            case vislib::sys::SystemInformation::OSTYPE_WINDOWS:
+                return tokenz[2].Equals("windows", false);
+            case vislib::sys::SystemInformation::OSTYPE_LINUX:
+                return tokenz[2].Equals("linux", false);
+            default: // unable to detect local system.
+                return !tokenz[2].Equals("windows", false) && !tokenz[2].Equals("linux", false);
             }
         }
         if (tokenz[2].Equals("os", false)) {
             switch (vislib::sys::SystemInformation::SystemType()) {
-                case vislib::sys::SystemInformation::OSTYPE_WINDOWS:
-                    return tokenz[0].Equals("windows", false);
-                case vislib::sys::SystemInformation::OSTYPE_LINUX:
-                    return tokenz[0].Equals("linux", false);
-                default: // unable to detect local system.
-                    return !tokenz[0].Equals("windows", false)
-                        && !tokenz[0].Equals("linux", false);
+            case vislib::sys::SystemInformation::OSTYPE_WINDOWS:
+                return tokenz[0].Equals("windows", false);
+            case vislib::sys::SystemInformation::OSTYPE_LINUX:
+                return tokenz[0].Equals("linux", false);
+            default: // unable to detect local system.
+                return !tokenz[0].Equals("windows", false) && !tokenz[0].Equals("linux", false);
             }
         }
 
-        return this->evaluateCondition(expression, tokenz, 1)
-            == this->evaluateCondition(expression, tokenz + 2, 1);
+        return this->evaluateCondition(expression, tokenz, 1) == this->evaluateCondition(expression, tokenz + 2, 1);
 
     } else if (tokenz[1].Equals("!=")) {
         tokenz[1] = "==";
         return !this->evaluateCondition(expression, tokenz, 3);
     } else if (tokenz[1].Equals("&&")) {
-        return this->evaluateCondition(expression, tokenz, 1)
-            && this->evaluateCondition(expression, tokenz + 2, 1);
+        return this->evaluateCondition(expression, tokenz, 1) && this->evaluateCondition(expression, tokenz + 2, 1);
     } else if (tokenz[1].Equals("||")) {
-        return this->evaluateCondition(expression, tokenz, 1)
-            || this->evaluateCondition(expression, tokenz + 2, 1);
+        return this->evaluateCondition(expression, tokenz, 1) || this->evaluateCondition(expression, tokenz + 2, 1);
     } else {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "Error in expression \"%s\": invalid binary operator %s\n",
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error in expression \"%s\": invalid binary operator %s\n",
             expression.PeekBuffer(), tokenz[1].PeekBuffer());
         return false;
     }

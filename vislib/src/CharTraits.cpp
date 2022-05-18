@@ -10,72 +10,64 @@
 #include <wchar.h>
 
 
-
 /*
  * vislib::CharTraitsA<char>::ParseBool
  */
-bool vislib::CharTraits<char>::ParseBool(const Char *str) {
+bool vislib::CharTraits<char>::ParseBool(const Char* str) {
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
 
     if (
 #ifdef _WIN32
-            (_stricmp("true", str) == 0) || (_stricmp("t", str) == 0) || 
-            (_stricmp("yes", str) == 0) || (_stricmp("y", str) == 0) || 
-            (_stricmp("on", str) == 0)
-#else /* _WIN32 */
-            (strcasecmp("true", str) == 0) || (strcasecmp("t", str) == 0) ||
-            (strcasecmp("yes", str) == 0) || (strcasecmp("y", str) == 0) || 
-            (strcasecmp("on", str) == 0)
+        (_stricmp("true", str) == 0) || (_stricmp("t", str) == 0) || (_stricmp("yes", str) == 0) ||
+        (_stricmp("y", str) == 0) || (_stricmp("on", str) == 0)
+#else  /* _WIN32 */
+        (strcasecmp("true", str) == 0) || (strcasecmp("t", str) == 0) || (strcasecmp("yes", str) == 0) ||
+        (strcasecmp("y", str) == 0) || (strcasecmp("on", str) == 0)
 #endif /* _WIN32 */
-            ) {
+    ) {
         return true;
     }
 
     if (
 #ifdef _WIN32
-            (_stricmp("false", str) == 0) || (_stricmp("f", str) == 0) || 
-            (_stricmp("no", str) == 0) || (_stricmp("n", str) == 0) || 
-            (_stricmp("off", str) == 0)
-#else /* _WIN32 */
-            (strcasecmp("false", str) == 0) || (strcasecmp("f", str) == 0) || 
-            (strcasecmp("no", str) == 0) || (strcasecmp("n", str) == 0) || 
-            (strcasecmp("off", str) == 0)
+        (_stricmp("false", str) == 0) || (_stricmp("f", str) == 0) || (_stricmp("no", str) == 0) ||
+        (_stricmp("n", str) == 0) || (_stricmp("off", str) == 0)
+#else  /* _WIN32 */
+        (strcasecmp("false", str) == 0) || (strcasecmp("f", str) == 0) || (strcasecmp("no", str) == 0) ||
+        (strcasecmp("n", str) == 0) || (strcasecmp("off", str) == 0)
 #endif /* _WIN32 */
-            ) {
+    ) {
         return false;
     }
 
     try {
         int i = ParseInt(str);
         return (i != 0);
-    } catch (...) {
-    }
+    } catch (...) {}
 
-    throw FormatException("Cannot convert String to Boolean", __FILE__, 
-        __LINE__);
+    throw FormatException("Cannot convert String to Boolean", __FILE__, __LINE__);
 }
 
 
 /*
  * vislib::CharTraits<char>::ParseDouble
  */
-double vislib::CharTraits<char>::ParseDouble(const Char *str) {
+double vislib::CharTraits<char>::ParseDouble(const Char* str) {
     double retval;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
-    
+
     if (
 #if (defined(_MSC_VER) && (_MSC_VER >= 1400))
-            sscanf_s
+        sscanf_s
 #else  /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
-            sscanf
+        sscanf
 #endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
-            (str, "%lf", &retval) != 1) {
-        throw FormatException("Cannot convert String to Double", __FILE__, 
-            __LINE__);
+        (str, "%lf", &retval) != 1) {
+        throw FormatException("Cannot convert String to Double", __FILE__, __LINE__);
     }
 
     return retval;
@@ -85,7 +77,7 @@ double vislib::CharTraits<char>::ParseDouble(const Char *str) {
 /*
  * vislib::CharTraits<char>::ParseInt
  */
-int vislib::CharTraits<char>::ParseInt(const Char *str) {
+int vislib::CharTraits<char>::ParseInt(const Char* str) {
     int retval;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
@@ -93,15 +85,14 @@ int vislib::CharTraits<char>::ParseInt(const Char *str) {
 
     if (
 #if (defined(_MSC_VER) && (_MSC_VER >= 1400))
-            sscanf_s
+        sscanf_s
 #else  /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
-            sscanf
+        sscanf
 #endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
-            (str, "%d", &retval) != 1) {
-        throw FormatException("Cannot convert String to Integer", __FILE__, 
-            __LINE__);
+        (str, "%d", &retval) != 1) {
+        throw FormatException("Cannot convert String to Integer", __FILE__, __LINE__);
     }
-    
+
     return retval;
 }
 
@@ -109,24 +100,23 @@ int vislib::CharTraits<char>::ParseInt(const Char *str) {
 /*
  * vislib::CharTraits<char>::ParseInt64
  */
-INT64 vislib::CharTraits<char>::ParseInt64(const Char *str) {
+INT64 vislib::CharTraits<char>::ParseInt64(const Char* str) {
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
-    Char *end = NULL;
+    Char* end = NULL;
     INT64 retval = 0;
 
 #ifdef _WIN32
     retval = ::_strtoi64(str, &end, 10);
-#else /* _WIN32 */
+#else  /* _WIN32 */
     retval = static_cast<INT64>(::strtoll(str, &end, 10));
 #endif /* _WIN32 */
 
     if (str < end) {
         return retval;
     } else {
-        throw FormatException("Cannot convert String to 64 bit integer",
-            __FILE__, __LINE__);
+        throw FormatException("Cannot convert String to 64 bit integer", __FILE__, __LINE__);
     }
 }
 
@@ -134,24 +124,23 @@ INT64 vislib::CharTraits<char>::ParseInt64(const Char *str) {
 /*
  * vislib::CharTraits<char>::ParseUInt64
  */
-UINT64 vislib::CharTraits<char>::ParseUInt64(const Char *str) {
+UINT64 vislib::CharTraits<char>::ParseUInt64(const Char* str) {
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
-    Char *end = NULL;
+    Char* end = NULL;
     UINT64 retval = 0;
 
 #ifdef _WIN32
     retval = ::_strtoui64(str, &end, 10);
-#else /* _WIN32 */
+#else  /* _WIN32 */
     retval = static_cast<UINT64>(::strtoull(str, &end, 10));
 #endif /* _WIN32 */
 
     if (str < end) {
         return retval;
     } else {
-        throw FormatException("Cannot convert String to 64 bit integer",
-            __FILE__, __LINE__);
+        throw FormatException("Cannot convert String to 64 bit integer", __FILE__, __LINE__);
     }
 }
 
@@ -159,8 +148,8 @@ UINT64 vislib::CharTraits<char>::ParseUInt64(const Char *str) {
 /*
  * vislib::CharTraits<char>::Format
  */
-vislib::CharTraits<char>::Size vislib::CharTraits<char>::Format(Char *dst,
-        const Size cnt, const Char *fmt, va_list argptr) {
+vislib::CharTraits<char>::Size vislib::CharTraits<char>::Format(
+    Char* dst, const Size cnt, const Char* fmt, va_list argptr) {
     int retval = -1;
 
 #ifdef _WIN32
@@ -171,18 +160,18 @@ vislib::CharTraits<char>::Size vislib::CharTraits<char>::Format(Char *dst,
     } else {
 #if (defined(_MSC_VER) && (_MSC_VER >= 1400))
         retval = ::_vsnprintf_s(dst, cnt, cnt, fmt, argptr);
-#else /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
+#else  /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
         retval = ::_vsnprintf(dst, cnt, fmt, argptr);
 #endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
-    } /* end if ((dst == NULL) || (cnt <= 0)) */
+    }  /* end if ((dst == NULL) || (cnt <= 0)) */
 
-#else /* _WIN32 */
+#else  /* _WIN32 */
     retval = ::vsnprintf(dst, cnt, fmt, argptr);
 
     if ((dst != NULL) && (cnt > 0) && (retval > cnt - 1)) {
         retval = -1;
     }
-#endif /* _WIN32 */ 
+#endif /* _WIN32 */
 
     /* Ensure string being terminated. */
     if ((dst != NULL) && (cnt > 0)) {
@@ -195,8 +184,7 @@ vislib::CharTraits<char>::Size vislib::CharTraits<char>::Format(Char *dst,
 /*
  * vislib::CharTraits<char>::ToLower
  */
-vislib::CharTraits<char>::Size vislib::CharTraits<char>::ToLower(
-        Char *dst, const Size cnt, const Char *str) {
+vislib::CharTraits<char>::Size vislib::CharTraits<char>::ToLower(Char* dst, const Size cnt, const Char* str) {
     // TODO: This implementation is a hack! Size might change if conversion
     // is performed correctly.
     ASSERT(str != NULL);
@@ -215,10 +203,11 @@ vislib::CharTraits<char>::Size vislib::CharTraits<char>::ToLower(
 #ifdef _WIN32
         ::strcpy(dst, str);
         ::_strlwr(dst);
-#else /* _WIN32 */
-        Char *d = dst;
-        const Char *s = str;
-        while ((*d++ = ToLower(*s++)) != static_cast<Char>(0));
+#else  /* _WIN32 */
+        Char* d = dst;
+        const Char* s = str;
+        while ((*d++ = ToLower(*s++)) != static_cast<Char>(0))
+            ;
 #endif /* _WIN32 */
     } else {
         retval = -1;
@@ -236,8 +225,7 @@ vislib::CharTraits<char>::Size vislib::CharTraits<char>::ToLower(
 /*
  * vislib::CharTraits<char>::ToUpper
  */
-vislib::CharTraitsA::Size vislib::CharTraits<char>::ToUpper(
-        Char *dst, const Size cnt, const Char *str) {
+vislib::CharTraitsA::Size vislib::CharTraits<char>::ToUpper(Char* dst, const Size cnt, const Char* str) {
     // TODO: This implementation is a hack! Size might change if conversion
     // is performed correctly.
     ASSERT(str != NULL);
@@ -256,10 +244,11 @@ vislib::CharTraitsA::Size vislib::CharTraits<char>::ToUpper(
 #ifdef _WIN32
         ::strcpy(dst, str);
         ::_strupr(dst);
-#else /* _WIN32 */
-        Char *d = dst;
-        const Char *s = str;
-        while ((*d++ = ToUpper(*s++)) != static_cast<Char>(0));
+#else  /* _WIN32 */
+        Char* d = dst;
+        const Char* s = str;
+        while ((*d++ = ToUpper(*s++)) != static_cast<Char>(0))
+            ;
 #endif /* _WIN32 */
     } else {
         retval = -1;
@@ -280,54 +269,48 @@ vislib::CharTraitsA::Size vislib::CharTraits<char>::ToUpper(
 /*
  * vislib::CharTraits<WCHAR>::ParseBool
  */
-bool vislib::CharTraits<WCHAR>::ParseBool(const Char *str) {
+bool vislib::CharTraits<WCHAR>::ParseBool(const Char* str) {
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
 
     if (
 #ifdef _WIN32
-            (_wcsicmp(L"true", str) == 0) || (_wcsicmp(L"t", str) == 0) || 
-            (_wcsicmp(L"yes", str) == 0) || (_wcsicmp(L"y", str) == 0) || 
-            (_wcsicmp(L"on", str) == 0)
-#else /* _WIN32 */
-            (wcscasecmp(L"true", str) == 0) || (wcscasecmp(L"t", str) == 0) || 
-            (wcscasecmp(L"yes", str) == 0) || (wcscasecmp(L"y", str) == 0) || 
-            (wcscasecmp(L"on", str) == 0)
+        (_wcsicmp(L"true", str) == 0) || (_wcsicmp(L"t", str) == 0) || (_wcsicmp(L"yes", str) == 0) ||
+        (_wcsicmp(L"y", str) == 0) || (_wcsicmp(L"on", str) == 0)
+#else  /* _WIN32 */
+        (wcscasecmp(L"true", str) == 0) || (wcscasecmp(L"t", str) == 0) || (wcscasecmp(L"yes", str) == 0) ||
+        (wcscasecmp(L"y", str) == 0) || (wcscasecmp(L"on", str) == 0)
 #endif /* _WIN32 */
-            ) {
+    ) {
         return true;
     }
 
     if (
 #ifdef _WIN32
-            (_wcsicmp(L"false", str) == 0) || (_wcsicmp(L"f", str) == 0) || 
-            (_wcsicmp(L"no", str) == 0) || (_wcsicmp(L"n", str) == 0) || 
-            (_wcsicmp(L"off", str) == 0)
-#else /* _WIN32 */
-            (wcscasecmp(L"false", str) == 0) || (wcscasecmp(L"f", str) == 0) || 
-            (wcscasecmp(L"no", str) == 0) || (wcscasecmp(L"n", str) == 0) || 
-            (wcscasecmp(L"off", str) == 0)
+        (_wcsicmp(L"false", str) == 0) || (_wcsicmp(L"f", str) == 0) || (_wcsicmp(L"no", str) == 0) ||
+        (_wcsicmp(L"n", str) == 0) || (_wcsicmp(L"off", str) == 0)
+#else  /* _WIN32 */
+        (wcscasecmp(L"false", str) == 0) || (wcscasecmp(L"f", str) == 0) || (wcscasecmp(L"no", str) == 0) ||
+        (wcscasecmp(L"n", str) == 0) || (wcscasecmp(L"off", str) == 0)
 #endif /* _WIN32 */
-            ) {
+    ) {
         return false;
-        }
-
-        try {
-            int i = ParseInt(str);
-            return (i != 0);
-        } catch (...) {
-        }
-
-        throw FormatException("Cannot convert String to Boolean", __FILE__, 
-            __LINE__);
     }
+
+    try {
+        int i = ParseInt(str);
+        return (i != 0);
+    } catch (...) {}
+
+    throw FormatException("Cannot convert String to Boolean", __FILE__, __LINE__);
+}
 
 
 /*
  * vislib::CharTraits<WCHAR>::ParseDouble
  */
-double vislib::CharTraits<WCHAR>::ParseDouble(const Char *str) {
+double vislib::CharTraits<WCHAR>::ParseDouble(const Char* str) {
     double retval;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
@@ -335,13 +318,12 @@ double vislib::CharTraits<WCHAR>::ParseDouble(const Char *str) {
 
     if (
 #if (defined(_MSC_VER) && (_MSC_VER >= 1400))
-            swscanf_s
+        swscanf_s
 #else  /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
-            swscanf
+        swscanf
 #endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
-            (str, L"%lf", &retval) != 1) {
-        throw FormatException("Cannot convert String to Double", __FILE__, 
-            __LINE__);
+        (str, L"%lf", &retval) != 1) {
+        throw FormatException("Cannot convert String to Double", __FILE__, __LINE__);
     }
 
     return retval;
@@ -351,7 +333,7 @@ double vislib::CharTraits<WCHAR>::ParseDouble(const Char *str) {
 /*
  * vislib::CharTraits<WCHAR>::ParseInt
  */
-int vislib::CharTraits<WCHAR>::ParseInt(const Char *str) {
+int vislib::CharTraits<WCHAR>::ParseInt(const Char* str) {
     int retval;
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
@@ -359,15 +341,14 @@ int vislib::CharTraits<WCHAR>::ParseInt(const Char *str) {
 
     if (
 #if (defined(_MSC_VER) && (_MSC_VER >= 1400))
-            swscanf_s
+        swscanf_s
 #else  /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
-            swscanf
+        swscanf
 #endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
-            (str, L"%d", &retval) != 1) {
-        throw FormatException("Cannot convert String to Integer", __FILE__, 
-            __LINE__);
+        (str, L"%d", &retval) != 1) {
+        throw FormatException("Cannot convert String to Integer", __FILE__, __LINE__);
     }
-    
+
     return retval;
 }
 
@@ -375,24 +356,23 @@ int vislib::CharTraits<WCHAR>::ParseInt(const Char *str) {
 /*
  * vislib::CharTraits<char>::ParseInt64
  */
-INT64 vislib::CharTraits<WCHAR>::ParseInt64(const Char *str) {
+INT64 vislib::CharTraits<WCHAR>::ParseInt64(const Char* str) {
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
-    Char *end = NULL;
+    Char* end = NULL;
     INT64 retval = 0;
 
 #ifdef _WIN32
     retval = ::_wcstoi64(str, &end, 10);
-#else /* _WIN32 */
+#else  /* _WIN32 */
     retval = static_cast<INT64>(::wcstoll(str, &end, 10));
 #endif /* _WIN32 */
 
     if (str < end) {
         return retval;
     } else {
-        throw FormatException("Cannot convert String to 64 bit integer",
-            __FILE__, __LINE__);
+        throw FormatException("Cannot convert String to 64 bit integer", __FILE__, __LINE__);
     }
 }
 
@@ -400,24 +380,23 @@ INT64 vislib::CharTraits<WCHAR>::ParseInt64(const Char *str) {
 /*
  * vislib::CharTraits<char>::ParseUInt64
  */
-UINT64 vislib::CharTraits<WCHAR>::ParseUInt64(const Char *str) {
+UINT64 vislib::CharTraits<WCHAR>::ParseUInt64(const Char* str) {
     if (str == NULL) {
         throw IllegalParamException("str", __FILE__, __LINE__);
     }
-    Char *end = NULL;
+    Char* end = NULL;
     UINT64 retval = 0;
 
 #ifdef _WIN32
     retval = ::_wcstoui64(str, &end, 10);
-#else /* _WIN32 */
+#else  /* _WIN32 */
     retval = static_cast<UINT64>(::wcstoull(str, &end, 10));
 #endif /* _WIN32 */
 
     if (str < end) {
         return retval;
     } else {
-        throw FormatException("Cannot convert String to 64 bit integer",
-            __FILE__, __LINE__);
+        throw FormatException("Cannot convert String to 64 bit integer", __FILE__, __LINE__);
     }
 }
 
@@ -426,7 +405,7 @@ UINT64 vislib::CharTraits<WCHAR>::ParseUInt64(const Char *str) {
  * vislib::CharTraits<WCHAR>::Format
  */
 vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::Format(
-        Char *dst, const Size cnt, const Char *fmt, va_list argptr) {
+    Char* dst, const Size cnt, const Char* fmt, va_list argptr) {
     int retval = -1;
 
 #ifdef _WIN32
@@ -437,28 +416,25 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::Format(
     } else {
 #if (defined(_MSC_VER) && (_MSC_VER >= 1400))
         retval = ::_vsnwprintf_s(dst, cnt, cnt, fmt, argptr);
-#else /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
+#else  /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
         retval = ::_vsnwprintf(dst, cnt, fmt, argptr);
 #endif /* (defined(_MSC_VER) && (_MSC_VER >= 1400)) */
-    } /* end if ((dst == NULL) || (cnt <= 0)) */
+    }  /* end if ((dst == NULL) || (cnt <= 0)) */
 
-#else /* _WIN32 */
+#else  /* _WIN32 */
     // Yes, you can trust your eyes: The char and wide char implementations
-    // under Linux have a completely different semantics. vswprintf cannot 
+    // under Linux have a completely different semantics. vswprintf cannot
     // be used for determining the required size as vsprintf can.
     SIZE_T bufferSize, bufferGrow;
-    Char *buffer = NULL;
+    Char* buffer = NULL;
 
     if ((dst == NULL) || (cnt <= 0)) {
         /* Just count. */
-        bufferSize = static_cast<SIZE_T>(1.1 * static_cast<float>(
-            ::wcslen(fmt)) + 1);
-        bufferGrow = static_cast<SIZE_T>(0.5 * static_cast<float>(
-            bufferSize));
+        bufferSize = static_cast<SIZE_T>(1.1 * static_cast<float>(::wcslen(fmt)) + 1);
+        bufferGrow = static_cast<SIZE_T>(0.5 * static_cast<float>(bufferSize));
         buffer = new Char[bufferSize];
 
-        while ((retval = ::vswprintf(buffer, bufferSize, fmt, argptr)) 
-                == -1) {
+        while ((retval = ::vswprintf(buffer, bufferSize, fmt, argptr)) == -1) {
             ARY_SAFE_DELETE(buffer);
             bufferSize += bufferGrow;
             buffer = new Char[bufferSize];
@@ -466,7 +442,7 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::Format(
 
         retval = ::wcslen(buffer);
         ARY_SAFE_DELETE(buffer);
-            
+
     } else {
         /* Format the string. */
         retval = ::vswprintf(dst, cnt, fmt, argptr);
@@ -482,10 +458,9 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::Format(
 
 
 /*
-* vislib::CharTraits<WCHAR>::ToLower
+ * vislib::CharTraits<WCHAR>::ToLower
  */
-vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToLower(
-        Char *dst, const Size cnt, const Char *str) {
+vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToLower(Char* dst, const Size cnt, const Char* str) {
     // TODO: This implementation is a hack! Size might change if conversion
     // is performed correctly.
     ASSERT(str != NULL);
@@ -504,10 +479,11 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToLower(
 #ifdef _WIN32
         ::wcscpy(dst, str);
         ::_wcslwr(dst);
-#else /* _WIN32 */
-        Char *d = dst;
-        const Char *s = str;
-        while ((*d++ = ToLower(*s++)) != static_cast<Char>(0));
+#else  /* _WIN32 */
+        Char* d = dst;
+        const Char* s = str;
+        while ((*d++ = ToLower(*s++)) != static_cast<Char>(0))
+            ;
 #endif /* _WIN32 */
     } else {
         retval = -1;
@@ -525,8 +501,7 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToLower(
 /*
  * vislib::CharTraits<WCHAR>::ToUpper
  */
-vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToUpper(
-        Char *dst, const Size cnt, const Char *str) {
+vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToUpper(Char* dst, const Size cnt, const Char* str) {
     // TODO: This implementation is a hack! Size might change if conversion
     // is performed correctly.
     ASSERT(str != NULL);
@@ -545,10 +520,11 @@ vislib::CharTraits<WCHAR>::Size vislib::CharTraits<WCHAR>::ToUpper(
 #ifdef _WIN32
         ::wcscpy(dst, str);
         ::_wcsupr(dst);
-#else /* _WIN32 */
-        Char *d = dst;
-        const Char *s = str;
-        while ((*d++ = ToUpper(*s++)) != static_cast<Char>(0));
+#else  /* _WIN32 */
+        Char* d = dst;
+        const Char* s = str;
+        while ((*d++ = ToUpper(*s++)) != static_cast<Char>(0))
+            ;
 #endif /* _WIN32 */
     } else {
         retval = -1;

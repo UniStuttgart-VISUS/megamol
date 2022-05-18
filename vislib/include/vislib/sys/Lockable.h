@@ -1,7 +1,7 @@
 /*
  * Lockable.h
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -19,70 +19,72 @@ namespace vislib {
 namespace sys {
 
 
+/**
+ * This class implements a 'Lockable' interface using a 'SyncObject' for
+ * locking. You may use any class derived from 'SyncObject' as template
+ * parameter 'T'.
+ */
+template<class T>
+class Lockable {
+public:
+    /** Ctor. */
+    Lockable(void);
+
+    /** Dtor. */
+    virtual ~Lockable(void);
+
     /**
-     * This class implements a 'Lockable' interface using a 'SyncObject' for
-     * locking. You may use any class derived from 'SyncObject' as template
-     * parameter 'T'.
+     * Aquires the lock of this lockable.
+     * Details on the behaviour depend on the 'SyncObject' used.
      */
-    template<class T> class Lockable {
-    public:
+    inline void Lock(void) const;
 
-        /** Ctor. */
-        Lockable(void);
-
-        /** Dtor. */
-        virtual ~Lockable(void);
-
-        /**
-         * Aquires the lock of this lockable.
-         * Details on the behaviour depend on the 'SyncObject' used.
-         */
-        inline void Lock(void) const;
-
-        /**
-         * Releases the lock of this lockable.
-         * Details on the behaviour depend on the 'SyncObject' used.
-         */
-        inline void Unlock(void) const;
-
-    private:
-
-        /** The syncObj used for locking */
-        mutable T syncObj;
-
-    };
-
-
-    /*
-     * Lockable::Lockable
+    /**
+     * Releases the lock of this lockable.
+     * Details on the behaviour depend on the 'SyncObject' used.
      */
-    template<class T> Lockable<T>::Lockable(void) : syncObj() {
-        // intentionally empty
-    }
+    inline void Unlock(void) const;
+
+private:
+    /** The syncObj used for locking */
+    mutable T syncObj;
+};
 
 
-    /*
-     * Lockable::~Lockable
-     */
-    template<class T> Lockable<T>::~Lockable(void) {
-        // intentionally empty
-    }
+/*
+ * Lockable::Lockable
+ */
+template<class T>
+Lockable<T>::Lockable(void) : syncObj() {
+    // intentionally empty
+}
 
 
-    /*
-     * Lockable::Lock
-     */
-    template<class T> void Lockable<T>::Lock(void) const {
-        this->syncObj.Lock();
-    }
+/*
+ * Lockable::~Lockable
+ */
+template<class T>
+Lockable<T>::~Lockable(void) {
+    // intentionally empty
+}
 
 
-    /*
-     * Lockable::Unlock
-     */
-    template<class T> void Lockable<T>::Unlock(void) const {
-        this->syncObj.Unlock();
-    }
+/*
+ * Lockable::Lock
+ */
+template<class T>
+void Lockable<T>::Lock(void) const {
+    this->syncObj.Lock();
+}
+
+
+/*
+ * Lockable::Unlock
+ */
+template<class T>
+void Lockable<T>::Unlock(void) const {
+    this->syncObj.Unlock();
+}
 
 
 } /* end namespace sys */

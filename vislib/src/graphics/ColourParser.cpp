@@ -6,18 +6,17 @@
  */
 
 #include "vislib/graphics/ColourParser.h"
-#include "vislib/assert.h"
-#include "vislib/math/mathfunctions.h"
-#include "vislib/graphics/NamedColours.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/assert.h"
+#include "vislib/graphics/NamedColours.h"
+#include "vislib/math/mathfunctions.h"
 
 
 /*
  * vislib::graphics::ColourParser::FromString
  */
-void vislib::graphics::ColourParser::FromString(const vislib::StringA& inStr,
-        unsigned char &outR, unsigned char &outG, unsigned char &outB,
-        unsigned char &outA, bool allowQuantization) {
+void vislib::graphics::ColourParser::FromString(const vislib::StringA& inStr, unsigned char& outR, unsigned char& outG,
+    unsigned char& outB, unsigned char& outA, bool allowQuantization) {
     vislib::StringA sb(inStr);
     sb.TrimSpaces();
     if (sb.IsEmpty()) {
@@ -32,8 +31,7 @@ void vislib::graphics::ColourParser::FromString(const vislib::StringA& inStr,
         outB = c.B();
         outA = c.A();
         return;
-    } catch(...) {
-    }
+    } catch (...) {}
 
     // try parse HTML colour
     if (sb[0] == '#') {
@@ -58,11 +56,11 @@ void vislib::graphics::ColourParser::FromString(const vislib::StringA& inStr,
         int ai = static_cast<int>(a + 0.5f);
         const float eps = 0.0001f;
 
-        if ((vislib::math::IsEqual(static_cast<float>(ri), r, eps)
-            && vislib::math::IsEqual(static_cast<float>(gi), g, eps)
-            && vislib::math::IsEqual(static_cast<float>(bi), b, eps)
-            && vislib::math::IsEqual(static_cast<float>(ai), a, eps))
-                || allowQuantization) {
+        if ((vislib::math::IsEqual(static_cast<float>(ri), r, eps) &&
+                vislib::math::IsEqual(static_cast<float>(gi), g, eps) &&
+                vislib::math::IsEqual(static_cast<float>(bi), b, eps) &&
+                vislib::math::IsEqual(static_cast<float>(ai), a, eps)) ||
+            allowQuantization) {
             outR = ri;
             outG = gi;
             outB = bi;
@@ -78,8 +76,8 @@ void vislib::graphics::ColourParser::FromString(const vislib::StringA& inStr,
 /*
  * vislib::graphics::ColourParser::FromString
  */
-void vislib::graphics::ColourParser::FromString(const vislib::StringA& inStr,
-        float &outR, float &outG, float &outB, float &outA) {
+void vislib::graphics::ColourParser::FromString(
+    const vislib::StringA& inStr, float& outR, float& outG, float& outB, float& outA) {
     vislib::StringA sb(inStr);
     sb.TrimSpaces();
     if (sb.IsEmpty()) {
@@ -94,8 +92,7 @@ void vislib::graphics::ColourParser::FromString(const vislib::StringA& inStr,
         outB = static_cast<float>(c.B()) / 255.0f;
         outA = static_cast<float>(c.A()) / 255.0f;
         return;
-    } catch(...) {
-    }
+    } catch (...) {}
 
     // try parse HTML colour
     if (sb[0] == '#') {
@@ -125,12 +122,10 @@ void vislib::graphics::ColourParser::FromString(const vislib::StringA& inStr,
  * vislib::graphics::ColourParser::ToString
  */
 vislib::StringA& vislib::graphics::ColourParser::ToString(
-        vislib::StringA& outStr, unsigned char inR, unsigned char inG,
-        unsigned char inB, unsigned char inA, int repType) {
+    vislib::StringA& outStr, unsigned char inR, unsigned char inG, unsigned char inB, unsigned char inA, int repType) {
 
     if ((repType & REPTYPE_NAMED) == REPTYPE_NAMED) {
-        const char *name = NamedColours::GetNameByColour(
-            ColourRGBAu8(inR, inG, inB, inA), false);
+        const char* name = NamedColours::GetNameByColour(ColourRGBAu8(inR, inG, inB, inA), false);
         if (name != NULL) {
             outStr = name;
             return outStr;
@@ -150,7 +145,7 @@ vislib::StringA& vislib::graphics::ColourParser::ToString(
         if (inA == 255) {
             outStr.Format("#%.2x%.2x%.2x", inR, inG, inB);
         } else {
-             // non-standard, but i don't care
+            // non-standard, but i don't care
             outStr.Format("#%.2x%.2x%.2x%.2x", inR, inG, inB, inA);
         }
         return outStr;
@@ -158,23 +153,16 @@ vislib::StringA& vislib::graphics::ColourParser::ToString(
 
     if ((repType & REPTYPE_FLOAT) == REPTYPE_FLOAT) {
         if (inA == 255) {
-            outStr.Format("(%f; %f; %f)",
-                static_cast<float>(inR) / 255.0f,
-                static_cast<float>(inG) / 255.0f,
+            outStr.Format("(%f; %f; %f)", static_cast<float>(inR) / 255.0f, static_cast<float>(inG) / 255.0f,
                 static_cast<float>(inB) / 255.0f);
         } else {
-            outStr.Format("(%f; %f; %f; %f)",
-                static_cast<float>(inR) / 255.0f,
-                static_cast<float>(inG) / 255.0f,
-                static_cast<float>(inB) / 255.0f,
-                static_cast<float>(inA) / 255.0f);
+            outStr.Format("(%f; %f; %f; %f)", static_cast<float>(inR) / 255.0f, static_cast<float>(inG) / 255.0f,
+                static_cast<float>(inB) / 255.0f, static_cast<float>(inA) / 255.0f);
         }
         return outStr;
     }
 
-    throw vislib::FormatException(
-        "Cannot generate string in requested representation type",
-        __FILE__, __LINE__);
+    throw vislib::FormatException("Cannot generate string in requested representation type", __FILE__, __LINE__);
     return outStr;
 }
 
@@ -183,23 +171,21 @@ vislib::StringA& vislib::graphics::ColourParser::ToString(
  * vislib::graphics::ColourParser::ToString
  */
 vislib::StringA& vislib::graphics::ColourParser::ToString(
-        vislib::StringA& outStr, float inR, float inG, float inB, float inA,
-        int repType) {
+    vislib::StringA& outStr, float inR, float inG, float inB, float inA, int repType) {
 
     const float eps = 0.0001f;
     int ri = static_cast<int>(inR * 255.0f + 0.5f);
     int gi = static_cast<int>(inG * 255.0f + 0.5f);
     int bi = static_cast<int>(inB * 255.0f + 0.5f);
     int ai = static_cast<int>(inA * 255.0f + 0.5f);
-    if ((vislib::math::IsEqual(static_cast<float>(ri) / 255.0f, inR, eps)
-        && vislib::math::IsEqual(static_cast<float>(gi) / 255.0f, inG, eps)
-        && vislib::math::IsEqual(static_cast<float>(bi) / 255.0f, inB, eps)
-        && vislib::math::IsEqual(static_cast<float>(ai) / 255.0f, inA, eps))
-            || ((repType & REPTYPE_QUANT) == REPTYPE_QUANT)) {
+    if ((vislib::math::IsEqual(static_cast<float>(ri) / 255.0f, inR, eps) &&
+            vislib::math::IsEqual(static_cast<float>(gi) / 255.0f, inG, eps) &&
+            vislib::math::IsEqual(static_cast<float>(bi) / 255.0f, inB, eps) &&
+            vislib::math::IsEqual(static_cast<float>(ai) / 255.0f, inA, eps)) ||
+        ((repType & REPTYPE_QUANT) == REPTYPE_QUANT)) {
 
         if ((repType & REPTYPE_NAMED) == REPTYPE_NAMED) {
-            const char *name = NamedColours::GetNameByColour(
-                ColourRGBAu8(ri, gi, bi, ai), false);
+            const char* name = NamedColours::GetNameByColour(ColourRGBAu8(ri, gi, bi, ai), false);
             if (name != NULL) {
                 outStr = name;
                 return outStr;
@@ -219,12 +205,11 @@ vislib::StringA& vislib::graphics::ColourParser::ToString(
             if (ai == 255) {
                 outStr.Format("#%.2x%.2x%.2x", ri, gi, bi);
             } else {
-                 // non-standard, but i don't care
+                // non-standard, but i don't care
                 outStr.Format("#%.2x%.2x%.2x%.2x", ri, gi, bi, ai);
             }
             return outStr;
         }
-
     }
 
     if ((repType & REPTYPE_FLOAT) == REPTYPE_FLOAT) {
@@ -236,9 +221,7 @@ vislib::StringA& vislib::graphics::ColourParser::ToString(
         return outStr;
     }
 
-    throw vislib::FormatException(
-        "Cannot generate string in requested representation type",
-        __FILE__, __LINE__);
+    throw vislib::FormatException("Cannot generate string in requested representation type", __FILE__, __LINE__);
     return outStr;
 }
 
@@ -247,9 +230,12 @@ vislib::StringA& vislib::graphics::ColourParser::ToString(
  * vislib::graphics::ColourParser::hexToNum
  */
 unsigned char vislib::graphics::ColourParser::hexToNum(const char& c) {
-    if ((c >= '0') && (c <= '9')) return c - '0';
-    if ((c >= 'a') && (c <= 'f')) return 10 + c - 'a';
-    if ((c >= 'A') && (c <= 'F')) return 10 + c - 'A';
+    if ((c >= '0') && (c <= '9'))
+        return c - '0';
+    if ((c >= 'a') && (c <= 'f'))
+        return 10 + c - 'a';
+    if ((c >= 'A') && (c <= 'F'))
+        return 10 + c - 'A';
     return 255;
 }
 
@@ -257,24 +243,22 @@ unsigned char vislib::graphics::ColourParser::hexToNum(const char& c) {
 /*
  * vislib::graphics::ColourParser::parseArray
  */
-bool vislib::graphics::ColourParser::parseArray(const vislib::StringA& inStr,
-        float &outR, float &outG, float &outB, float &outA) {
+bool vislib::graphics::ColourParser::parseArray(
+    const vislib::StringA& inStr, float& outR, float& outG, float& outB, float& outA) {
     ASSERT(!inStr.IsEmpty());
 
     // remove any parentheses
     if (inStr[0] == '(') {
         vislib::StringA::Size len = inStr.Length();
         if ((len > 2) && (inStr[len - 1] == ')')) {
-            return parseArray(inStr.Substring(1, len - 2),
-                outR, outG, outB, outA);
+            return parseArray(inStr.Substring(1, len - 2), outR, outG, outB, outA);
         } else {
             return false;
         }
     } else if (inStr[0] == '{') {
         vislib::StringA::Size len = inStr.Length();
         if ((len > 2) && (inStr[len - 1] == '}')) {
-            return parseArray(inStr.Substring(1, len - 2),
-                outR, outG, outB, outA);
+            return parseArray(inStr.Substring(1, len - 2), outR, outG, outB, outA);
         } else {
             return false;
         }
@@ -288,19 +272,22 @@ bool vislib::graphics::ColourParser::parseArray(const vislib::StringA& inStr,
     if ((scsc == 3) || (scsc == 2)) {
         // separated by semicolon
         vislib::StringA::Size p1 = inStr.Find(';');
-        if (p1 == vislib::StringA::INVALID_POS) return false;
+        if (p1 == vislib::StringA::INVALID_POS)
+            return false;
         rStr = inStr.Substring(0, p1);
         rStr.TrimSpaces();
         p1++;
         vislib::StringA::Size p2 = inStr.Find(';', p1);
-        if (p2 == vislib::StringA::INVALID_POS) return false;
+        if (p2 == vislib::StringA::INVALID_POS)
+            return false;
         gStr = inStr.Substring(p1, p2 - p1);
         gStr.TrimSpaces();
 
         if (scsc == 3) {
             p2++;
             p1 = inStr.Find(';', p2);
-            if (p1 == vislib::StringA::INVALID_POS) return false;
+            if (p1 == vislib::StringA::INVALID_POS)
+                return false;
             bStr = inStr.Substring(p2, p1 - p2);
             bStr.TrimSpaces();
             aStr = inStr.Substring(p1 + 1);
@@ -317,19 +304,22 @@ bool vislib::graphics::ColourParser::parseArray(const vislib::StringA& inStr,
         if ((csc == 3) || (csc == 2)) {
             // if float, they use dots (EN)
             vislib::StringA::Size p1 = inStr.Find(',');
-            if (p1 == vislib::StringA::INVALID_POS) return false;
+            if (p1 == vislib::StringA::INVALID_POS)
+                return false;
             rStr = inStr.Substring(0, p1);
             rStr.TrimSpaces();
             p1++;
             vislib::StringA::Size p2 = inStr.Find(',', p1);
-            if (p2 == vislib::StringA::INVALID_POS) return false;
+            if (p2 == vislib::StringA::INVALID_POS)
+                return false;
             gStr = inStr.Substring(p1, p2 - p1);
             gStr.TrimSpaces();
 
             if (scsc == 3) {
                 p2++;
                 p1 = inStr.Find(',', p2);
-                if (p1 == vislib::StringA::INVALID_POS) return false;
+                if (p1 == vislib::StringA::INVALID_POS)
+                    return false;
                 bStr = inStr.Substring(p2, p1 - p2);
                 bStr.TrimSpaces();
                 aStr = inStr.Substring(p1 + 1);
@@ -364,19 +354,24 @@ bool vislib::graphics::ColourParser::parseArray(const vislib::StringA& inStr,
                         bStr.TrimSpaces();
                         aStr.Clear();
                     }
-                } else p1 = vislib::StringA::INVALID_POS;
+                } else
+                    p1 = vislib::StringA::INVALID_POS;
             }
 
             if (p1 == vislib::StringA::INVALID_POS) {
                 if (csc == 5) {
                     vislib::StringA::Size p1 = inStr.Find(",");
-                    if (p1 == vislib::StringA::INVALID_POS) return false;
+                    if (p1 == vislib::StringA::INVALID_POS)
+                        return false;
                     p1 = inStr.Find(",", p1 + 1);
-                    if (p1 == vislib::StringA::INVALID_POS) return false;
+                    if (p1 == vislib::StringA::INVALID_POS)
+                        return false;
                     vislib::StringA::Size p2 = inStr.Find(",", p1 + 1);
-                    if (p2 == vislib::StringA::INVALID_POS) return false;
+                    if (p2 == vislib::StringA::INVALID_POS)
+                        return false;
                     p2 = inStr.Find(",", p2 + 1);
-                    if (p2 == vislib::StringA::INVALID_POS) return false;
+                    if (p2 == vislib::StringA::INVALID_POS)
+                        return false;
                     rStr = inStr.Substring(0, p1);
                     rStr.TrimSpaces();
                     gStr = inStr.Substring(p1 + 1, p2 - (p1 + 1));
@@ -387,17 +382,23 @@ bool vislib::graphics::ColourParser::parseArray(const vislib::StringA& inStr,
 
                 } else if (csc == 7) {
                     vislib::StringA::Size p1 = inStr.Find(",");
-                    if (p1 == vislib::StringA::INVALID_POS) return false;
+                    if (p1 == vislib::StringA::INVALID_POS)
+                        return false;
                     p1 = inStr.Find(",", p1 + 1);
-                    if (p1 == vislib::StringA::INVALID_POS) return false;
+                    if (p1 == vislib::StringA::INVALID_POS)
+                        return false;
                     vislib::StringA::Size p2 = inStr.Find(",", p1 + 1);
-                    if (p2 == vislib::StringA::INVALID_POS) return false;
+                    if (p2 == vislib::StringA::INVALID_POS)
+                        return false;
                     p2 = inStr.Find(",", p2 + 1);
-                    if (p2 == vislib::StringA::INVALID_POS) return false;
+                    if (p2 == vislib::StringA::INVALID_POS)
+                        return false;
                     vislib::StringA::Size p3 = inStr.Find(",", p2 + 1);
-                    if (p3 == vislib::StringA::INVALID_POS) return false;
+                    if (p3 == vislib::StringA::INVALID_POS)
+                        return false;
                     p3 = inStr.Find(",", p3 + 1);
-                    if (p3 == vislib::StringA::INVALID_POS) return false;
+                    if (p3 == vislib::StringA::INVALID_POS)
+                        return false;
                     rStr = inStr.Substring(0, p1);
                     rStr.TrimSpaces();
                     gStr = inStr.Substring(p1 + 1, p2 - (p1 + 1));
@@ -414,11 +415,13 @@ bool vislib::graphics::ColourParser::parseArray(const vislib::StringA& inStr,
         return false; // no separators at all
     }
 
-    if (rStr.IsEmpty() || gStr.IsEmpty() || bStr.IsEmpty()) return false;
+    if (rStr.IsEmpty() || gStr.IsEmpty() || bStr.IsEmpty())
+        return false;
 
     bool isFloat = false;
 
-    if ((rStr.Contains('.') || gStr.Contains('.') || bStr.Contains('.')) && (aStr.IsEmpty() || aStr.Contains('.'))) isFloat = true;
+    if ((rStr.Contains('.') || gStr.Contains('.') || bStr.Contains('.')) && (aStr.IsEmpty() || aStr.Contains('.')))
+        isFloat = true;
     if (rStr.Contains(',')) {
         rStr.Replace(',', '.');
         isFloat = true;
@@ -439,27 +442,19 @@ bool vislib::graphics::ColourParser::parseArray(const vislib::StringA& inStr,
     float r, g, b, a;
     try {
         r = static_cast<float>(vislib::CharTraitsA::ParseDouble(rStr));
-    } catch(...) {
-        return false;
-    }
+    } catch (...) { return false; }
     try {
         g = static_cast<float>(vislib::CharTraitsA::ParseDouble(gStr));
-    } catch(...) {
-        return false;
-    }
+    } catch (...) { return false; }
     try {
         b = static_cast<float>(vislib::CharTraitsA::ParseDouble(bStr));
-    } catch(...) {
-        return false;
-    }
+    } catch (...) { return false; }
     if (aStr.IsEmpty()) {
         a = isFloat ? 1.0f : 255.0f;
     } else {
         try {
             a = static_cast<float>(vislib::CharTraitsA::ParseDouble(aStr));
-        } catch(...) {
-            return false;
-        }
+        } catch (...) { return false; }
     }
 
     if (!isFloat) {
@@ -481,8 +476,7 @@ bool vislib::graphics::ColourParser::parseArray(const vislib::StringA& inStr,
 /*
  * vislib::graphics::ColourParser::parseHTML
  */
-vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(
-        const vislib::StringA& inStr) {
+vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(const vislib::StringA& inStr) {
     vislib::graphics::ColourRGBAu8 col;
     unsigned char c, b;
     ASSERT(!inStr.IsEmpty() && (inStr[0] == '#'));
@@ -515,7 +509,8 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(
         if (c < 16) {
             col.SetB(c * 16 + c);
             c = hexToNum(inStr[4]);
-            if (c > 15) c = 15;
+            if (c > 15)
+                c = 15;
             col.SetA(c * 16 + c);
         }
 
@@ -586,13 +581,11 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(
         }
 
     } else {
-        throw vislib::FormatException(
-            "Illegal length of HTML input", __FILE__, __LINE__);
+        throw vislib::FormatException("Illegal length of HTML input", __FILE__, __LINE__);
     }
 
     if (c > 15) {
-        throw vislib::FormatException(
-            "Illegal character in HTML input", __FILE__, __LINE__);
+        throw vislib::FormatException("Illegal character in HTML input", __FILE__, __LINE__);
     }
 
     return col;
@@ -603,8 +596,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(
  * vislib::graphics::ColourParser::ColourParser
  */
 vislib::graphics::ColourParser::ColourParser(void) {
-    throw vislib::UnsupportedOperationException("ColourParser::ctor",
-        __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("ColourParser::ctor", __FILE__, __LINE__);
 }
 
 
@@ -612,6 +604,5 @@ vislib::graphics::ColourParser::ColourParser(void) {
  * vislib::graphics::ColourParser::~ColourParser
  */
 vislib::graphics::ColourParser::~ColourParser(void) {
-    throw vislib::UnsupportedOperationException("ColourParser::dtor",
-        __FILE__, __LINE__);
+    throw vislib::UnsupportedOperationException("ColourParser::dtor", __FILE__, __LINE__);
 }

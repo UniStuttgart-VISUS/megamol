@@ -41,12 +41,16 @@ class Lua_Service_Wrapper final : public AbstractFrontendService {
 public:
     struct Config {
         std::string host_address;
-        megamol::core::LuaAPI* lua_api_ptr = nullptr; // lua api object that will be used/called by the service wrapper only one level deep
+        megamol::core::LuaAPI* lua_api_ptr =
+            nullptr; // lua api object that will be used/called by the service wrapper only one level deep
         bool retry_socket_port = false;
+        bool show_version_notification = true;
     };
 
     // sometimes somebody wants to know the name of the service
-    std::string serviceName() const override { return "Lua_Service_Wrapper"; }
+    std::string serviceName() const override {
+        return "Lua_Service_Wrapper";
+    }
 
     // constructor should not take arguments, actual object initialization deferred until init()
     Lua_Service_Wrapper();
@@ -90,7 +94,7 @@ private:
     std::list<megamol::frontend_resources::LuaCallbacksCollection> m_callbacks;
 
     megamol::frontend_resources::ScriptPaths m_scriptpath_resource;
-    std::function<std::tuple<bool,std::string>(std::string const&)> m_executeLuaScript_resource;
+    std::function<std::tuple<bool, std::string>(std::string const&)> m_executeLuaScript_resource;
     std::function<void(std::string const&)> m_setScriptPath_resource;
     std::function<void(megamol::frontend_resources::LuaCallbacksCollection const&)> m_registerLuaCallbacks_resource;
 

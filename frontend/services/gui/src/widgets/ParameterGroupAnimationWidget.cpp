@@ -18,7 +18,9 @@ using namespace megamol::gui;
 
 
 megamol::gui::ParameterGroupAnimationWidget::ParameterGroupAnimationWidget()
-        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID()), image_buttons(), tooltip() {
+        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
+        , image_buttons()
+        , tooltip() {
 
     this->InitPresentation(ParamType_t::GROUP_ANIMATION);
     this->name = "anim";
@@ -44,7 +46,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Check(bool only_check, ParamPt
 
 
 bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, const std::string& in_search,
-    megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
+    megamol::gui::Parameter::WidgetScope in_scope, core::utility::PickingBuffer* inout_picking_buffer,
+    ImGuiID in_override_header_state) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         log::Log::DefaultLog.WriteError(
@@ -79,7 +82,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
 
         if (in_scope == Parameter::WidgetScope::LOCAL) {
 
-            ParameterGroups::DrawGroupedParameters(this->name, params, in_search, in_scope, nullptr, GUI_INVALID_ID);
+            ParameterGroups::DrawGroupedParameters(
+                this->name, params, in_search, in_scope, nullptr, in_override_header_state);
             return true;
 
         } else if (in_scope == Parameter::WidgetScope::GLOBAL) {
@@ -103,20 +107,18 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         /// else if (in_scope == Parameter::WidgetScope::GLOBAL) {
 
         // Load button textures (once) --------------------------------------------
-        if (!this->image_buttons.play.IsLoaded()) {
-            this->image_buttons.play.LoadTextureFromFile(GUI_TRANSPORT_ICON_PLAY);
-        }
-        if (!this->image_buttons.pause.IsLoaded()) {
-            this->image_buttons.pause.LoadTextureFromFile(GUI_TRANSPORT_ICON_PAUSE);
+        if (!this->image_buttons.play_pause.IsLoaded()) {
+            this->image_buttons.play_pause.LoadTextureFromFile(
+                GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY, GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE);
         }
         if (!this->image_buttons.fastforward.IsLoaded()) {
-            this->image_buttons.fastforward.LoadTextureFromFile(GUI_TRANSPORT_ICON_FAST_FORWARD);
+            this->image_buttons.fastforward.LoadTextureFromFile(GUI_FILENAME_TEXTURE_TRANSPORT_ICON_FAST_FORWARD);
         }
         if (!this->image_buttons.fastrewind.IsLoaded()) {
-            this->image_buttons.fastrewind.LoadTextureFromFile(GUI_TRANSPORT_ICON_FAST_REWIND);
+            this->image_buttons.fastrewind.LoadTextureFromFile(GUI_FILENAME_TEXTURE_TRANSPORT_ICON_FAST_REWIND);
         }
-        if ((!this->image_buttons.play.IsLoaded()) || (!this->image_buttons.pause.IsLoaded()) ||
-            (!this->image_buttons.fastforward.IsLoaded()) || (!this->image_buttons.fastrewind.IsLoaded())) {
+        if ((!this->image_buttons.play_pause.IsLoaded()) || (!this->image_buttons.fastforward.IsLoaded()) ||
+            (!this->image_buttons.fastrewind.IsLoaded())) {
             utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Unable to load all required button textures for animation group widget. [%s, %s, line %d]\n",
                 __FILE__, __FUNCTION__, __LINE__);
@@ -156,15 +158,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         std::string button_label;
 
         /// PLAY - PAUSE
-        if (!play) {
-            if (this->image_buttons.play.Button("Play", button_size)) {
-                play = !play;
-            }
-        } else {
-            if (this->image_buttons.pause.Button("Pause", button_size)) {
-                play = !play;
-            }
-        }
+        this->image_buttons.play_pause.ToggleButton(play, "Play", "Pause", button_size);
         ImGui::SameLine();
 
         /// SLOWER
@@ -192,8 +186,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         float font_size = ImGui::CalcTextSize(label.c_str()).x;
         ImGui::SetCursorPosX(cursor_pos.x + (knob_size - font_size) / 2.0f);
         ImGui::TextUnformatted(label.c_str());
-        ButtonWidgets::KnobButton(
-            label, knob_size, time, param_time->GetMinValue<float>(), param_time->GetMaxValue<float>());
+        ButtonWidgets::KnobButton(label, knob_size, time, param_time->GetMinValue<float>(),
+            param_time->GetMaxValue<float>(), param_time->GetStepSize<float>());
         ImGui::Text(param_time->FloatFormat().c_str(), time);
         ImGui::EndGroup();
         ImGui::SameLine();
@@ -204,8 +198,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         font_size = ImGui::CalcTextSize(label.c_str()).x;
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (knob_size - font_size) / 2.0f);
         ImGui::TextUnformatted(label.c_str());
-        ButtonWidgets::KnobButton(
-            label, knob_size, speed, param_speed->GetMinValue<float>(), param_speed->GetMaxValue<float>());
+        ButtonWidgets::KnobButton(label, knob_size, speed, param_speed->GetMinValue<float>(),
+            param_speed->GetMaxValue<float>(), param_speed->GetStepSize<float>());
         ImGui::Text(param_speed->FloatFormat().c_str(), speed);
         ImGui::EndGroup();
 

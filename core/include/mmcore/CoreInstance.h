@@ -8,11 +8,10 @@
 #ifndef MEGAMOLCORE_COREINSTANCE_H_INCLUDED
 #define MEGAMOLCORE_COREINSTANCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractSlot.h"
-#include "mmcore/ApiHandle.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/JobDescription.h"
 #include "mmcore/JobInstance.h"
@@ -23,8 +22,6 @@
 #include "mmcore/ViewDescription.h"
 #include "mmcore/ViewInstance.h"
 #include "mmcore/ViewInstanceRequest.h"
-#include "mmcore/api/MegaMolCore.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/AbstractObjectFactoryInstance.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/CallDescriptionManager.h"
@@ -35,10 +32,9 @@
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamUpdateListener.h"
 #include "mmcore/utility/Configuration.h"
-#include "mmcore/utility/LogEchoTarget.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/plugins/PluginDescriptor.h"
 
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Array.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/Map.h"
@@ -51,13 +47,12 @@
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/DynamicLinkLibrary.h"
 #include "vislib/sys/Lockable.h"
-#include "mmcore/utility/log/Log.h"
 
+#include <filesystem>
 #include <functional>
 #include <memory>
-#include <unordered_map>
 #include <string>
-#include <filesystem>
+#include <unordered_map>
 
 #define GOES_INTO_GRAPH
 #define GOES_INTO_TRASH
@@ -79,19 +74,11 @@ class ServiceManager;
 /**
  * class of core instances.
  */
-class MEGAMOLCORE_API CoreInstance : public ApiHandle, public factories::AbstractObjectFactoryInstance {
+class CoreInstance : public factories::AbstractObjectFactoryInstance {
 public:
     friend class megamol::core::LuaState;
 
     typedef std::unordered_map<std::string, size_t> ParamHashMap_t;
-
-    /**
-     * Deallocator for view handles.
-     *
-     * @param data Must point to the CoreInstance which created this object.
-     * @param obj A view object.
-     */
-    static void ViewJobHandleDalloc(void* data, ApiHandle* obj);
 
     /** ctor */
     CoreInstance(void);
@@ -122,10 +109,14 @@ public:
     virtual const factories::ModuleDescriptionManager& GetModuleDescriptionManager(void) const;
 
     /** return the contained LuaState */
-    inline LuaState* GetLuaState(void) { return this->lua; }
+    inline LuaState* GetLuaState(void) {
+        return this->lua;
+    }
 
     /** return whether loaded project files are Lua-based or legacy */
-    inline bool IsLuaProject() const { return this->loadedLuaProjects.Count() > 0; }
+    inline bool IsLuaProject() const {
+        return this->loadedLuaProjects.Count() > 0;
+    }
 
     vislib::StringA GetMergedLuaProject() const;
 
@@ -135,7 +126,9 @@ public:
      * @return 'true' if this instance already is initialised, 'false'
      *         otherwise.
      */
-    inline bool IsInitialised(void) const { return (this->preInit == NULL); }
+    inline bool IsInitialised(void) const {
+        return (this->preInit == NULL);
+    }
 
     /**
      * Initialises the instance. This method must only be called once!
@@ -143,37 +136,16 @@ public:
      * @throws vislib::IllegalStateException if the instance already is
      *         initialised.
      */
-    void Initialise(bool mmconsole_frontend_compatible = true);
-
-    /**
-     * Sets an initialisation value.
-     *
-     * @param key Specifies which value to set.
-     * @param type Specifies the value type of 'value'.
-     * @param value The value to set the initialisation value to. The type
-     *              of the variable specified depends on 'type'.
-     *
-     * @return 'MMC_ERR_NO_ERROR' on success or an nonzero error code if
-     *         the function fails.
-     *
-     * @throw vislib::IllegalStateException if the instance already is
-     *        initialised.
-     */
-    mmcErrorCode SetInitValue(mmcInitValue key, mmcValueType type, const void* value);
+    void Initialise();
 
     /**
      * Returns the configuration object of this instance.
      *
      * @return The configuration object of this instance.
      */
-    inline const megamol::core::utility::Configuration& Configuration(void) const { return this->config; }
-
-    /**
-     * Returns the ShaderSourceFactory object of this inatcne.
-     *
-     * @return The ShaderSourceFactory object of this inatcne.
-     */
-    inline utility::ShaderSourceFactory& ShaderSourceFactory(void) { return this->shaderSourceFactory; }
+    inline const megamol::core::utility::Configuration& Configuration(void) const {
+        return this->config;
+    }
 
     /**
      * Searches for an view description object with the given name.
@@ -184,18 +156,6 @@ public:
      *         not found.
      */
     std::shared_ptr<const ViewDescription> FindViewDescription(const char* name);
-
-    /**
-     * Enumerates all view descriptions. The callback function is called for each
-     * view description.
-     *
-     * @param func The callback function.
-     * @param data The user specified pointer to be passed to the callback
-     *             function.
-     * @param getBuiltinToo true to also retreive the builtin view descriptions
-     *					    else false
-     */
-    void EnumViewDescriptions(mmcEnumStringAFunction func, void* data, bool getBuiltinToo = false);
 
     /**
      * Searches for an view description object with the given name.
@@ -246,7 +206,7 @@ public:
      * Request deletion of call connecting callerslot from
      * to calleeslot to.
      */
-#    ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestCallDeletion(const vislib::StringA& from, const vislib::StringA& to);
 #endif
 
@@ -254,7 +214,7 @@ public:
      * Request instantiation of a module of class className
      * with the name id.
      */
-#        ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestModuleInstantiation(const vislib::StringA& className, const vislib::StringA& id);
 #endif
 
@@ -262,7 +222,7 @@ public:
      * Request instantiation of a call of class className, connecting
      * Callerslot from to Calleeslot to.
      */
-#            ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestCallInstantiation(
         const vislib::StringA& className, const vislib::StringA& from, const vislib::StringA& to);
 #endif
@@ -271,7 +231,7 @@ public:
      * Request instantiation of a call at the end of a chain of calls of
      * type className. See Daisy-Chaining Paradigm.
      */
-#    ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestChainCallInstantiation(
         const vislib::StringA& className, const vislib::StringA& chainStart, const vislib::StringA& to);
 #endif
@@ -279,7 +239,7 @@ public:
     /**
      * Request setting the parameter id to the value.
      */
-#    ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestParamValue(const vislib::StringA& id, const vislib::StringA& value);
 
     bool GOES_INTO_GRAPH CreateParamGroup(const vislib::StringA& name, const int size);
@@ -321,9 +281,9 @@ public:
     inline GOES_INTO_GRAPH bool HasPendingRequests(void) {
         vislib::sys::AutoLock l(this->graphUpdateLock);
         return !this->pendingViewInstRequests.IsEmpty() || !this->pendingJobInstRequests.IsEmpty() ||
-            !this->pendingCallDelRequests.IsEmpty() || !this->pendingCallInstRequests.IsEmpty() ||
-            !this->pendingChainCallInstRequests.IsEmpty() || !this->pendingModuleDelRequests.IsEmpty() ||
-            !this->pendingModuleInstRequests.IsEmpty() || !this->pendingParamSetRequests.IsEmpty();
+               !this->pendingCallDelRequests.IsEmpty() || !this->pendingCallInstRequests.IsEmpty() ||
+               !this->pendingChainCallInstRequests.IsEmpty() || !this->pendingModuleDelRequests.IsEmpty() ||
+               !this->pendingModuleInstRequests.IsEmpty() || !this->pendingParamSetRequests.IsEmpty();
     }
 #endif
 
@@ -351,7 +311,7 @@ public:
      */
     JobInstance::ptr_type InstantiatePendingJob(void);
 
-#    ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     /**
      * Returns a pointer to the parameter with the given name.
      *
@@ -377,7 +337,8 @@ public:
      * @return The found parameter or NULL if no parameter with this name
      *         exists.
      */
-    vislib::SmartPtr<param::AbstractParam> GOES_INTO_TRASH FindParameterIndirect(const vislib::StringA& name, bool quiet = false);
+    vislib::SmartPtr<param::AbstractParam> GOES_INTO_TRASH FindParameterIndirect(
+        const vislib::StringA& name, bool quiet = false);
 
     /**
      * Returns a pointer to the parameter with the given name.
@@ -411,7 +372,7 @@ public:
      */
     void LoadProject(const vislib::StringW& filename);
 
-#    ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     /**
      * Serializes the current graph into lua commands.
      *
@@ -421,16 +382,6 @@ public:
      * @param serParams    The serialized parameters.
      */
     std::string SerializeGraph();
-
-    /**
-     * Enumerates all parameters. The callback function is called for each
-     * parameter slot.
-     *
-     * @param cb The callback function.
-     */
-    inline void GOES_INTO_GRAPH EnumParameters(std::function<void(const Module&, param::ParamSlot&)> cb) const {
-        this->enumParameters(this->namespaceRoot, cb);
-    }
 
     /**
      * Enumerates all modules of the graph, calling cb for each encountered module.
@@ -450,8 +401,7 @@ public:
             if (mod) {
                 success = true;
                 this->EnumModulesNoLock(mod, cb);
-            }
-            else if (ns) {
+            } else if (ns) {
                 success = true;
                 this->EnumModulesNoLock(ns, cb);
             }
@@ -482,7 +432,7 @@ public:
      *
      * @returns true, if the module is found and of type A, false otherwise.
      */
-    template <class A>
+    template<class A>
     typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type GOES_INTO_GRAPH FindModuleNoLock(
         std::string module_name, std::function<void(A*)> cb) {
         auto ano_container = AbstractNamedObjectContainer::dynamic_pointer_cast(this->namespaceRoot);
@@ -491,10 +441,9 @@ public:
         if (vi != nullptr) {
             cb(vi);
             return true;
-        }
-        else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Unable to find module \"%s\" for processing", module_name.c_str());
             return false;
         }
     }
@@ -507,9 +456,9 @@ public:
      *
      * @returns true, if the module is found and of type A, false otherwise.
      */
-    template <class A>
-    typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type GOES_INTO_GRAPH EnumerateParameterSlotsNoLock(
-        std::string module_name, std::function<void(param::ParamSlot&)> cb) {
+    template<class A>
+    typename std::enable_if<std::is_convertible<A*, Module*>::value, bool>::type GOES_INTO_GRAPH
+    EnumerateParameterSlotsNoLock(std::string module_name, std::function<void(param::ParamSlot&)> cb) {
         auto ano_container = AbstractNamedObjectContainer::dynamic_pointer_cast(this->namespaceRoot);
         auto ano = ano_container->FindNamedObject(module_name.c_str());
         auto vi = dynamic_cast<A*>(ano.get());
@@ -526,10 +475,9 @@ public:
                 megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to find a ParamSlot in module \"%s\" for processing", module_name.c_str());
             }
-        }
-        else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Unable to find module \"%s\" for processing", module_name.c_str());
         }
         return found;
     }
@@ -543,10 +491,10 @@ public:
      *
      * @returns true, if the module is found and of type A and has a Call of type C, false otherwise.
      */
-    template <class A, class C>
+    template<class A, class C>
     typename std::enable_if<std::is_convertible<A*, Module*>::value && std::is_convertible<C*, Call*>::value,
         bool>::type GOES_INTO_GRAPH
-        EnumerateCallerSlotsNoLock(std::string module_name, std::function<void(C&)> cb) {
+    EnumerateCallerSlotsNoLock(std::string module_name, std::function<void(C&)> cb) {
         auto ano_container = AbstractNamedObjectContainer::dynamic_pointer_cast(this->namespaceRoot);
         auto ano = ano_container->FindNamedObject(module_name.c_str());
         auto vi = dynamic_cast<A*>(ano.get());
@@ -566,31 +514,13 @@ public:
                 megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to find a CallerSlot in module \"%s\" for processing", module_name.c_str());
             }
-        }
-        else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "Unable to find module \"%s\" for processing", module_name.c_str());
         }
         return found;
     }
 
-    /**
-     * Enumerates all parameters. The callback function is called for each
-     * parameter name.
-     *
-     * @param func The callback function.
-     * @param data The user specified pointer to be passed to the callback
-     *             function.
-     */
-    inline void EnumParameters(mmcEnumStringAFunction func, void* data) const {
-        auto toStringFunction = [func, data](const Module& mod, const param::ParamSlot& slot) {
-            vislib::StringA name(mod.FullName());
-            name.Append("::");
-            name.Append(slot.Name());
-            func(name.PeekBuffer(), data);
-        };
-        this->enumParameters(this->namespaceRoot, toStringFunction);
-    }
 
     /**
      * Updates global parameter hash and returns it.
@@ -609,7 +539,8 @@ public:
      * @return The full name of the parameter, or an empty string if the
      *         parameter is not found
      */
-    inline vislib::StringA GOES_INTO_GRAPH FindParameterName(const vislib::SmartPtr<param::AbstractParam>& param) const {
+    inline vislib::StringA GOES_INTO_GRAPH FindParameterName(
+        const vislib::SmartPtr<param::AbstractParam>& param) const {
         return this->findParameterName(this->namespaceRoot, param);
     }
 #endif
@@ -631,7 +562,7 @@ public:
      */
     void OffsetInstanceTime(double offset);
 
-#    ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     /**
      * Removes all obsolete modules from the module graph
      */
@@ -644,14 +575,16 @@ public:
      *
      * @param obj The object to be removed from the module namespace.
      */
-    inline void CloseViewJob(ModuleNamespace::ptr_type obj) { this->closeViewJob(obj); }
+    inline void CloseViewJob(ModuleNamespace::ptr_type obj) {
+        this->closeViewJob(obj);
+    }
 
     /**
      * Shuts down the application by terminating all jobs and closing all views
      */
     void Shutdown(void);
 
-#    ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     /**
      * Sets up the module graph based on the serialized graph description
      * from the head node of the network rendering cluster.
@@ -681,7 +614,8 @@ public:
      *
      * @return The new module or 'NULL' in case of an error
      */
-    Module::ptr_type GOES_INTO_TRASH instantiateModule(const vislib::StringA path, factories::ModuleDescription::ptr desc);
+    Module::ptr_type GOES_INTO_TRASH instantiateModule(
+        const vislib::StringA path, factories::ModuleDescription::ptr desc);
 
     /**
      * Fired whenever a parameter updates it's value
@@ -723,7 +657,9 @@ public:
      *
      * @return The root object of the module graph
      */
-    inline RootModuleNamespace::const_ptr_type GOES_INTO_TRASH ModuleGraphRoot(void) const { return this->namespaceRoot; }
+    inline RootModuleNamespace::const_ptr_type GOES_INTO_TRASH ModuleGraphRoot(void) const {
+        return this->namespaceRoot;
+    }
 #endif
 
     /**
@@ -732,7 +668,7 @@ public:
      * @param outFilename The output file name.
      * @return 'True' on success, 'false' otherwise.
      */
-     // TODO: in the future, this is either not needed or JSON please
+    // TODO: in the future, this is either not needed or JSON please
     bool WriteStateToXML(const char* outFilename);
 
     /**
@@ -740,14 +676,16 @@ public:
      *
      * @return The plugin manager
      */
-    inline const std::vector<utility::plugins::AbstractPluginInstance::ptr_type>& GetPlugins() const { return plugins; }
+    inline const std::vector<utility::plugins::AbstractPluginInstance::ptr_type>& GetPlugins() const {
+        return plugins;
+    }
 
     /**
      * Callback to delete service objects
      *
      * @param The service to be deleted
      */
-    typedef void(*ServiceDeletor)(AbstractService*&);
+    typedef void (*ServiceDeletor)(AbstractService*&);
 
     /**
      * Installs a service object. The service object is initialized and potentially enabled
@@ -756,7 +694,8 @@ public:
      *
      * @return 0 in case of an error. Larger zero is the service ID.
      */
-    template <class Tp> inline unsigned int InstallService() {
+    template<class Tp>
+    inline unsigned int InstallService() {
         AbstractService* s = new Tp(*this);
         int retval = InstallServiceObject(s, [](AbstractService*& s) {
             delete s;
@@ -792,39 +731,39 @@ public:
     /**
      * sets the current ImGui context, i.e. the one that was last touched when traversing the graph
      */
-    inline void SetCurrentImGuiContext(void* ctx) { this->lastImGuiContext = ctx; }
+    inline void SetCurrentImGuiContext(void* ctx) {
+        this->lastImGuiContext = ctx;
+    }
 
     /**
      * gets the current ImGui context, i.e. the one that was last touched when traversing the graph
      */
-    inline void* GetCurrentImGuiContext() const { return this->lastImGuiContext; }
+    inline void* GetCurrentImGuiContext() const {
+        return this->lastImGuiContext;
+    }
 
     /**
      * get the number of the currently rendered frame
      */
-    inline uint32_t GetFrameID(void) { return this->frameID; }
+    inline uint32_t GetFrameID(void) {
+        return this->frameID;
+    }
 
     /**
      * Set the number of the currently rendered frame. Whatever you think you are doing, don't: it's wrong.
      * This method is for use by the frontend only.
      */
-    inline void SetFrameID(uint32_t frameID) { this->frameID = frameID; }
+    inline void SetFrameID(uint32_t frameID) {
+        this->frameID = frameID;
+    }
 
     /**
-     * Return flag indicating if current usage of core instance is compatible with mmconsole fronted.
+     * Getter for shader paths
      */
-    inline bool IsmmconsoleFrontendCompatible(void) const { return this->mmconsoleFrontendCompatible;  }
-
-    /**
-    * Getter for shader paths
-    */
     std::vector<std::filesystem::path> GetShaderPaths() const;
-    
-    inline void SetConfigurationPaths_Frontend3000Compatibility (
-        std::string app_dir,
-        std::vector<std::string> shader_dirs,
-        std::vector<std::string> resource_dirs)
-    {
+
+    inline void SetConfigurationPaths_Frontend3000Compatibility(
+        std::string app_dir, std::vector<std::string> shader_dirs, std::vector<std::string> resource_dirs) {
         this->config.SetApplicationDirectory(app_dir.c_str());
 
         for (auto& sd : shader_dirs) {
@@ -850,70 +789,90 @@ private:
          *
          * @return The config file to load.
          */
-        inline const vislib::StringW& GetConfigFile(void) const { return this->cfgFile; }
+        inline const vislib::StringW& GetConfigFile(void) const {
+            return this->cfgFile;
+        }
 
         /**
          * Answer the config file overrides.
          *
          * @return a '\b'-separated list of '\a'-separated key-value pairs
          */
-        inline const vislib::StringW& GetConfigFileOverrides(void) const { return this->cfgOverrides; }
+        inline const vislib::StringW& GetConfigFileOverrides(void) const {
+            return this->cfgOverrides;
+        }
 
         /**
          * Answer the log file to use.
          *
          * @return The log file to use.
          */
-        inline const std::string& GetLogFile(void) const { return this->logFile; }
+        inline const std::string& GetLogFile(void) const {
+            return this->logFile;
+        }
 
         /**
          * Answer the log level to use.
          *
          * @return The log level to use.
          */
-        inline const unsigned int GetLogLevel(void) const { return this->logLevel; }
+        inline const unsigned int GetLogLevel(void) const {
+            return this->logLevel;
+        }
 
         /**
          * Answer the log echo level to use.
          *
          * @return The log echo level to use.
          */
-        inline const unsigned int GetLogEchoLevel(void) const { return this->logEchoLevel; }
+        inline const unsigned int GetLogEchoLevel(void) const {
+            return this->logEchoLevel;
+        }
 
         /**
          * Answer whether the config file has been set.
          *
          * @return 'true' if the config file has been set.
          */
-        inline bool IsConfigFileSet(void) const { return this->cfgFileSet; }
+        inline bool IsConfigFileSet(void) const {
+            return this->cfgFileSet;
+        }
 
         /**
          * Answer whether the config file overrides have been set.
          *
          * @return 'true' if the config file overrides have been set.
          */
-        inline bool IsConfigOverrideSet(void) const { return this->cfgOverridesSet; }
+        inline bool IsConfigOverrideSet(void) const {
+            return this->cfgOverridesSet;
+        }
 
         /**
          * Answer whether the log file has been set.
          *
          * @return 'true' if the log file has been set.
          */
-        inline bool IsLogFileSet(void) const { return this->logFileSet; }
+        inline bool IsLogFileSet(void) const {
+            return this->logFileSet;
+        }
 
         /**
          * Answer whether the log level has been set.
          *
          * @return 'true' if the log level has been set.
          */
-        inline bool IsLogLevelSet(void) const { return this->logLevelSet; }
+        inline bool IsLogLevelSet(void) const {
+            return this->logLevelSet;
+        }
 
         /**
          * Answer whether the log echo level has been set.
          *
          * @return 'true' if the log echo level has been set.
          */
-        inline bool IsLogEchoLevelSet(void) const { return this->logEchoLevelSet; }
+        inline bool IsLogEchoLevelSet(void) const {
+            return this->logEchoLevelSet;
+        }
 
         /**
          * Sets the config file to load.
@@ -1050,7 +1009,7 @@ private:
      */
     void addProject(megamol::core::utility::xml::XmlReader& reader);
 
-    #    ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     /**
      * Enumerates all parameters to collect parameter hashes.
      *
@@ -1059,18 +1018,6 @@ private:
      *             and parameter hash
      */
     void GOES_INTO_GRAPH getGlobalParameterHash(ModuleNamespace::const_ptr_type path, ParamHashMap_t& map) const;
-
-    /**
-     * Enumerates all parameters. The callback function is called for each
-     * parameter name.
-     *
-     * @param path The current module namespace
-     * @param func The callback function.
-     * @param data The user specified pointer to be passed to the callback
-     *             function.
-     */
-    void GOES_INTO_TRASH enumParameters(
-        ModuleNamespace::const_ptr_type path, std::function<void(const Module&, param::ParamSlot&)> cb) const;
 
     /**
      * Answer the full name of the paramter 'param' if it is bound to a
@@ -1084,7 +1031,7 @@ private:
      */
     vislib::StringA GOES_INTO_TRASH findParameterName(
         ModuleNamespace::const_ptr_type path, const vislib::SmartPtr<param::AbstractParam>& param) const;
-    #endif
+#endif
 
     /**
      * Closes a view or job handle (the corresponding instance object will
@@ -1110,7 +1057,7 @@ private:
      */
     void loadPlugin(const std::shared_ptr<utility::plugins::AbstractPluginDescriptor>& plugin);
 
-    #    ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     /**
      * Compares two maps storing the association between
      * parameter names and hashes.
@@ -1121,7 +1068,7 @@ private:
      * @return      True, if map "one" and "other" are the same
      */
     bool GOES_INTO_GRAPH mapCompare(ParamHashMap_t& one, ParamHashMap_t& other);
-    #endif
+#endif
 
     /**
      * Auto-connects a view module graph from 'from' to 'to' upwards
@@ -1144,7 +1091,7 @@ private:
     void quickConnectUpStepInfo(factories::ModuleDescription::ptr from, vislib::Array<quickStepInfo>& step);
 
 
-    #    ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     /**
      * Updates flush index list after flush has been performed
      *
@@ -1170,26 +1117,23 @@ private:
      * @param list The flush index list to update
      */
     void GOES_INTO_GRAPH shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list);
-    #endif
+#endif
 
     /**
-    * Translates shader paths to include paths in the compiler options for the ShaderFactory.
-    * 
-    * @param config Configuration instance
-    */
+     * Translates shader paths to include paths in the compiler options for the ShaderFactory.
+     *
+     * @param config Configuration instance
+     */
     void translateShaderPaths(megamol::core::utility::Configuration const& config);
 
 #ifdef _WIN32
-#    pragma warning(disable : 4251)
+#pragma warning(disable : 4251)
 #endif /* _WIN32 */
     /** the pre initialisation values. */
     PreInit* preInit;
 
     /** the cores configuration */
     megamol::core::utility::Configuration config;
-
-    /** The shader source factory */
-    utility::ShaderSourceFactory shaderSourceFactory;
 
     /** The paths to the shaders */
     std::vector<std::filesystem::path> shaderPaths;
@@ -1226,13 +1170,13 @@ private:
     /** The list of pending jobs to be instantiated */
     vislib::SingleLinkedList<JobInstanceRequest> pendingJobInstRequests;
 
-    #    ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     /** the list of calls to be instantiated: (class,(from,to))* */
     vislib::SingleLinkedList<core::InstanceDescription::CallInstanceRequest> GOES_INTO_GRAPH pendingCallInstRequests;
 
     /** the list of calls to be instantiated: (class,(from == chainStart,to))* */
-    vislib::SingleLinkedList<core::InstanceDescription::CallInstanceRequest>
-        GOES_INTO_GRAPH pendingChainCallInstRequests;
+    vislib::SingleLinkedList<core::InstanceDescription::CallInstanceRequest> GOES_INTO_GRAPH
+        pendingChainCallInstRequests;
 
     /** the list of modules to be instantiated: (class, id)* */
     vislib::SingleLinkedList<core::InstanceDescription::ModuleInstanceRequest> GOES_INTO_GRAPH
@@ -1252,7 +1196,9 @@ private:
         vislib::StringA Name;
         vislib::Map<vislib::StringA, vislib::StringA> Requests;
 
-        bool operator==(const ParamGroup& other) const { return this->Name.Equals(other.Name); }
+        bool operator==(const ParamGroup& other) const {
+            return this->Name.Equals(other.Name);
+        }
     };
 
     vislib::Map<vislib::StringA, ParamGroup> GOES_INTO_GRAPH pendingGroupParamSetRequests;
@@ -1290,7 +1236,7 @@ private:
      * invoked from another thread (the LuaRemoteHost, for example).
      */
     mutable vislib::sys::CriticalSection GOES_INTO_GRAPH graphUpdateLock;
-    #endif
+#endif
 
     /** The module namespace root */
     RootModuleNamespace::ptr_type namespaceRoot;
@@ -1301,10 +1247,10 @@ private:
     /** the count of rendered frames */
     uint32_t frameID;
 
-    #    ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     /** List of registered param update listeners */
     vislib::SingleLinkedList<param::ParamUpdateListener*> GOES_INTO_GRAPH paramUpdateListeners;
-    #endif
+#endif
 
     /** Vector storing param updates per frame */
     param::ParamUpdateListener::param_updates_vec_t paramUpdates;
@@ -1315,19 +1261,16 @@ private:
     /** The manager of registered services */
     utility::ServiceManager* services;
 
-    #    ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     /** Map of all parameter hashes (as requested by GetFullParameterHash)*/
     ParamHashMap_t GOES_INTO_GRAPH lastParamMap;
 
     /** Global hash of all parameters (is increased if any parameter defintion changes) */
     size_t GOES_INTO_GRAPH parameterHash;
-    #endif
-
-    /** Flag indicates if usage of core instance is compatible with mmconsole frontend. */
-    bool mmconsoleFrontendCompatible;
+#endif
 
 #ifdef _WIN32
-#    pragma warning(default : 4251)
+#pragma warning(default : 4251)
 #endif /* _WIN32 */
 
     /**

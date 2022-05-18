@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="boundingbox">
+  <include file="common"/>
+  <shader name="vertex">
+    <snippet type="version">330</snippet>
+    <snippet type="string">
+<!--
+layout(location = 0) in vec3 in_position;
+
+uniform vec3 bbMin;
+uniform vec3 bbMax;
+uniform mat4 mvp;
+
+void main(void) {
+    float x = (in_position.x < 0.0) ? bbMin.x : bbMax.x;
+    float y = (in_position.y < 0.0) ? bbMin.y : bbMax.y;
+    float z = (in_position.z < 0.0) ? bbMin.z : bbMax.z;
+    gl_Position = mvp * vec4(x, y, z, 1.0);
+}
+-->
+    </snippet>
+  </shader>
+  <shader name="fragment">
+    <snippet type="version">330</snippet>
+    <snippet type="string">
+<!--
+layout(location = 0) out vec4 frag_color;
+
+uniform vec3 color = vec3(1.0);
+
+void main(void) {
+    frag_color = vec4(color, 1.0);
+}
+-->
+    </snippet>
+  </shader>
+</btf>

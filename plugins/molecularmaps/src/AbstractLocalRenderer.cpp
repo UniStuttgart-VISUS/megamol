@@ -4,8 +4,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "AbstractLocalRenderer.h"
+#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::molecularmaps;

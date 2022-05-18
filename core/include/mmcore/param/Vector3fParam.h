@@ -1,184 +1,86 @@
 /*
  * Vector3fParam.h
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_VECTOR3FPARAM_H_INCLUDED
-#define MEGAMOLCORE_VECTOR3FPARAM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
-#include "AbstractParam.h"
-#include "vislib/math/Vector.h"
 #include <array>
+#include <sstream>
+
+#include "GenericParam.h"
+#include "vislib/Array.h"
+#include "vislib/StringTokeniser.h"
+#include "vislib/math/Vector.h"
 
 
-namespace megamol {
-namespace core {
-namespace param {
+namespace megamol::core::param {
 
-    /**
-     * class for (float)vector parameter objects
-     * (delimiter for the float values is ';')
-     */
-    class MEGAMOLCORE_API Vector3fParam : public AbstractParam {
-    public:
+class Vector3fParam
+        : public GenericParam<vislib::math::Vector<float, 3>, AbstractParamPresentation::ParamType::VECTOR3F> {
+public:
+    Vector3fParam(vislib::math::Vector<float, 3> const& initVal) : Super(initVal) {}
 
-        /**
-         * Ctor.
-         *
-         * @param initVal The initial value
-         */
-        Vector3fParam(const vislib::math::Vector<float, 3> &initVal);
+    Vector3fParam(vislib::math::Vector<float, 3> const& initVal, vislib::math::Vector<float, 3> const& minVal)
+            : Super(initVal, minVal) {}
 
-        /**
-         * Ctor.
-         *
-         * @param initVal The initial value
-         * @param minVal The minimum value
-         */
-        Vector3fParam(const vislib::math::Vector<float, 3> &initVal,
-            const vislib::math::Vector<float, 3> &minVal);
+    Vector3fParam(vislib::math::Vector<float, 3> const& initVal, vislib::math::Vector<float, 3> const& minVal,
+        vislib::math::Vector<float, 3> const& maxVal)
+            : Super(initVal, minVal, maxVal) {}
 
-        /**
-         * Ctor.
-         *
-         * @param initVal The initial value
-         * @param minVal The minimum value
-         * @param maxVal The maximum value
-         */
-        Vector3fParam(const vislib::math::Vector<float, 3> &initVal,
-            const vislib::math::Vector<float, 3> &minVal,
-            const vislib::math::Vector<float, 3> &maxVal);
+    virtual ~Vector3fParam() = default;
 
-        /**
-         * Dtor.
-         */
-        virtual ~Vector3fParam(void);
+    std::array<float, 3> getArray() const {
+        return std::array<float, 3>({this->Value().GetX(), this->Value().GetY(), this->Value().GetZ()});
+    }
 
-        std::array<float, 3> getArray() const { 
-            return std::array<float, 3>({this->Value().GetX(), this->Value().GetY(), this->Value().GetZ()});
+    std::string Definition() const override {
+        std::string name = "MMVC3F";
+        std::string return_str;
+        return_str.resize(6 + 6 * sizeof(float));
+        std::copy(name.begin(), name.end(), return_str.begin());
+        for (int i = 0; i < 3; ++i) {
+            std::copy(reinterpret_cast<char const*>(&MinValue()[i]),
+                reinterpret_cast<char const*>(&MinValue()[i]) + sizeof(float),
+                return_str.begin() + name.size() + i * sizeof(float));
         }
-
-        /**
-         * Returns a machine-readable definition of the parameter.
-         *
-         * @param outDef A memory block to receive a machine-readable
-         *               definition of the parameter.
-         */
-        virtual void Definition(vislib::RawStorage& outDef) const;
-
-        /**
-         * Tries to parse the given string as value for this parameter and
-         * sets the new value if successful. This also triggers the update
-         * mechanism of the slot this parameter is assigned to.
-         *
-         * @param v The new value for the parameter as string.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool ParseValue(const vislib::TString& v);
-
-        /**
-         * Sets the value of the parameter and optionally sets the dirty flag
-         * of the owning parameter slot.
-         *
-         * @param v the new value for the parameter
-         * @param setDirty If 'true' the dirty flag of the owning parameter
-         *                 slot is set and the update callback might be called.
-         */
-        void SetValue(const vislib::math::Vector<float, 3>& v, bool setDirty = true);
-
-        /**
-         * Gets the value of the parameter
-         *
-         * @return The value of the parameter
-         */
-        inline const vislib::math::Vector<float,3>& Value(void) const {
-            return this->val;
+        for (int i = 0; i < 3; ++i) {
+            std::copy(reinterpret_cast<char const*>(&MaxValue()[i]),
+                reinterpret_cast<char const*>(&MaxValue()[i]) + sizeof(float),
+                return_str.begin() + name.size() + 3 * sizeof(float) + i * sizeof(float));
         }
-        /**
-         * Needed for RemoteControl - Manuel Gräber
-         * Gets the minimum value of the parameter
-         *
-         * @return The minimum value of the parameter
-         */
-        inline const vislib::math::Vector<float,3>& MinValue(void) const {
-            return this->minVal;
+        return return_str;
+    }
+
+    bool ParseValue(std::string const& v) override {
+        vislib::Array<vislib::TString> comps = vislib::TStringTokeniser::Split(v.c_str(), _T(";"), true);
+        if (comps.Count() == 3) {
+            try {
+                comps[0].TrimSpaces();
+                comps[1].TrimSpaces();
+                comps[2].TrimSpaces();
+                float x = static_cast<float>(vislib::TCharTraits::ParseDouble(comps[0]));
+                float y = static_cast<float>(vislib::TCharTraits::ParseDouble(comps[1]));
+                float z = static_cast<float>(vislib::TCharTraits::ParseDouble(comps[2]));
+
+                this->SetValue(vislib::math::Vector<float, 3>(x, y, z));
+                return true;
+            } catch (...) {}
         }
+        return false;
+    }
 
-        /**
-         * Needed for RemoteControl - Manuel Gräber
-         * Gets the maximum value of the parameter
-         *
-         * @return The maximum value of the parameter
-         */
-        inline const vislib::math::Vector<float,3>& MaxValue(void) const {
-            return this->maxVal;
-        }
-        /**
-         * Returns the value of the parameter as string.
-         *
-         * @return The value of the parameter as string.
-         */
-        virtual vislib::TString ValueString(void) const;
+    std::string ValueString() const override {
+        std::stringstream stream;
+        stream.precision(std::numeric_limits<float>::max_digits10);
+        stream << Value()[0] << ";" << Value()[1] << ";" << Value()[2];
+        return stream.str();
+    }
 
-        /**
-         * Gets the value of the parameter
-         *
-         * @return The value of the parameter
-         */
-        inline operator const vislib::math::Vector<float,3>&(void) const {
-            return this->val;
-        }
+private:
+    using Super = GenericParam<vislib::math::Vector<float, 3>, AbstractParamPresentation::ParamType::VECTOR3F>;
+};
 
-    private:
-
-        /**
-         * 'True' if vector A is less or equal than vector B.
-         *
-         * @param A The left hand side operand
-         * @param B The right hand side operand
-         *
-         * @ return 'True' if A <= B, 'false' otherwise.
-         */
-        bool isLessOrEqual(const vislib::math::Vector<float, 3> &A,
-            const vislib::math::Vector<float, 3> &B) const;
-
-        /**
-         * 'True' if vector A is greater or equal than vector B.
-         *
-         * @param A The left hand side operand
-         * @param B The right hand side operand
-         *
-         * @ return 'True' if A >= B, 'false' otherwise.
-         */
-        bool isGreaterOrEqual(const vislib::math::Vector<float, 3> &A,
-            const vislib::math::Vector<float, 3> &B) const;
-
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
-        /** The value of the parameter */
-        vislib::math::Vector<float, 3> val;
-
-        /** The minimum value for the parameter */
-        vislib::math::Vector<float, 3> minVal;
-
-        /** The maximum value for the parameter */
-        vislib::math::Vector<float, 3> maxVal;
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
-
-    };
-
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_VECTOR3FPARAM_H_INCLUDED */
+} // namespace megamol::core::param

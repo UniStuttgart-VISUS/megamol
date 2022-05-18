@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/param/AbstractParamSlot.h"
+#include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 
@@ -32,24 +32,20 @@ AbstractParamSlot::~AbstractParamSlot(void) {
 /*
  * AbstractParamSlot::SetParameter
  */
-void AbstractParamSlot::SetParameter(AbstractParam *param) {
+void AbstractParamSlot::SetParameter(AbstractParam* param) {
     if (param == NULL) {
         throw vislib::IllegalParamException("param", __FILE__, __LINE__);
     }
     if (this->isSlotAvailable()) {
         throw vislib::IllegalStateException(
-            "Slot must not be public when setting a parameter object.",
-            __FILE__, __LINE__);
+            "Slot must not be public when setting a parameter object.", __FILE__, __LINE__);
     }
     if (!this->param.IsNull()) {
         throw vislib::IllegalStateException(
-            "There already is an parameter object set for this slot.",
-            __FILE__, __LINE__);
+            "There already is an parameter object set for this slot.", __FILE__, __LINE__);
     }
     if (param->slot != NULL) {
-        throw vislib::IllegalParamException(
-            "Parameter object already assigned to a slot.",
-            __FILE__, __LINE__);
+        throw vislib::IllegalParamException("Parameter object already assigned to a slot.", __FILE__, __LINE__);
     }
 
     this->param = param;

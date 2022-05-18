@@ -22,7 +22,7 @@ megamol::gui::Configurator::Configurator(
         , selected_list_module_id(GUI_INVALID_ID)
         , add_project_graph_uid(GUI_INVALID_ID)
         , module_list_popup_hovered_group_uid(GUI_INVALID_ID)
-        , show_module_list_sidebar(true)
+        , show_module_list_sidebar(false)
         , show_module_list_popup(false)
         , module_list_popup_pos()
         , last_selected_callslot_uid(GUI_INVALID_ID)
@@ -35,18 +35,20 @@ megamol::gui::Configurator::Configurator(
     assert(this->win_tfeditor_ptr != nullptr);
 
     // init hotkeys
-    this->hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH] = {
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH] = {"_hotkey_gui_configurator_module_search",
         core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
-    this->hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH] = {
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH] = {"_hotkey_gui_configurator_param_search",
         core::view::KeyCode(core::view::Key::KEY_P, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
-    this->hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM] = {core::view::KeyCode(core::view::Key::KEY_DELETE), false};
-    this->hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT] = {
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM] = {
+        "_hotkey_gui_configurator_delete_graph_entry", core::view::KeyCode(core::view::Key::KEY_DELETE), false};
+    this->win_hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT] = {"_hotkey_gui_configurator_save_project",
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
         false};
 
     this->graph_state.graph_zoom_font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
     this->graph_state.graph_width = 0.0f;
     this->graph_state.show_parameter_sidebar = false;
+    this->graph_state.show_profiling_bar = false;
     this->graph_state.graph_selected_uid = GUI_INVALID_ID;
     this->graph_state.graph_delete = false;
     this->graph_state.configurator_graph_save = false;
@@ -71,7 +73,7 @@ bool Configurator::Update() {
                 std::string module_full_name = module_ptr->FullName();
                 for (auto& param : module_ptr->Parameters()) {
                     std::string param_full_name = param.FullNameProject();
-                    if (gui_utils::CaseInsensitiveStringCompare(tf_param_connect_request, param_full_name) &&
+                    if (gui_utils::CaseInsensitiveStringEqual(tf_param_connect_request, param_full_name) &&
                         (param.Type() == ParamType_t::TRANSFERFUNCTION)) {
                         win_tfeditor_ptr->SetConnectedParameter(&param, param_full_name);
                         param.TransferFunctionEditor_ConnectExternal(this->win_tfeditor_ptr, true);
@@ -104,7 +106,7 @@ bool megamol::gui::Configurator::Draw() {
     }
 
     // Update state -------------------------------------------------------
-    this->graph_state.hotkeys = this->hotkeys;
+    this->graph_state.hotkeys = this->win_hotkeys;
 
     // Process hotkeys
     /// HOTKEY_CONFIGURATOR_SAVE_PROJECT
@@ -138,8 +140,8 @@ bool megamol::gui::Configurator::Draw() {
     if (this->show_module_list_sidebar) {
         this->module_list_sidebar_width *= megamol::gui::gui_scaling.Get();
 
-        this->splitter_widget.Widget(
-            SplitterWidget::FixedSplitterSide::LEFT, this->module_list_sidebar_width, this->graph_state.graph_width);
+        this->splitter_widget.Widget("module_splitter", true, 0.0f, SplitterWidget::FixedSplitterSide::LEFT_TOP,
+            this->module_list_sidebar_width, this->graph_state.graph_width);
         this->draw_window_module_list(this->module_list_sidebar_width, 0.0f, this->show_module_list_popup);
 
         this->module_list_sidebar_width /= megamol::gui::gui_scaling.Get();
@@ -153,7 +155,7 @@ bool megamol::gui::Configurator::Draw() {
     // Only reset 'externally' processed hotkeys
     this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH].is_pressed = false;
     this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM].is_pressed = false;
-    this->hotkeys = this->graph_state.hotkeys;
+    this->win_hotkeys = this->graph_state.hotkeys;
 
     return true;
 }
@@ -170,7 +172,7 @@ void megamol::gui::Configurator::PopUps() {
     if (this->file_browser.PopUp_Load("Load Project", project_filename, this->open_popup_load, {"lua"},
             megamol::core::param::FilePathParam::Flag_File_RestrictExtension)) {
 
-        popup_failed = !this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename);
+        popup_failed = !this->graph_collection.LoadOrAddProjectFromFile(this->add_project_graph_uid, project_filename);
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
     PopUps::Minimal("Failed to Load Project", popup_failed, "See console log output for more information.", "Cancel");
@@ -180,12 +182,13 @@ void megamol::gui::Configurator::PopUps() {
 
         ImGuiID selected_callslot_uid = selected_graph_ptr->GetSelectedCallSlot();
         ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
+        bool is_any_module_hovered = selected_graph_ptr->IsModuleHovered();
 
         bool valid_double_click =
-            (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHoverd() &&
-                (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_popup));
+            (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHovered() &&
+                (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_popup) && (!is_any_module_hovered));
         bool valid_double_click_callslot =
-            (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHoverd() &&
+            (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected_graph_ptr->IsCanvasHovered() &&
                 (selected_callslot_uid != GUI_INVALID_ID) &&
                 ((!this->show_module_list_popup) || (this->last_selected_callslot_uid != selected_callslot_uid)));
 
@@ -255,6 +258,11 @@ void megamol::gui::Configurator::PopUps() {
 
 void megamol::gui::Configurator::draw_window_menu() {
 
+    bool is_running_graph_active = false;
+    if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
+        is_running_graph_active = graph_ptr->IsRunning();
+    }
+
     ImGui::PushID("Configurator::Menu");
     // Menu
     if (ImGui::BeginMenuBar()) {
@@ -279,11 +287,7 @@ void megamol::gui::Configurator::draw_window_menu() {
             if (ImGui::MenuItem("Save Project",
                     this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT].keycode.ToString().c_str(), false,
                     ((this->graph_state.graph_selected_uid != GUI_INVALID_ID)))) {
-                bool is_running_graph = false;
-                if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
-                    is_running_graph = graph_ptr->IsRunning();
-                }
-                if (is_running_graph) {
+                if (is_running_graph_active) {
                     this->graph_state.global_graph_save = true;
                 } else {
                     this->graph_state.configurator_graph_save = true;
@@ -291,6 +295,7 @@ void megamol::gui::Configurator::draw_window_menu() {
             }
             ImGui::EndMenu();
         }
+        ImGui::Separator();
 
         if (ImGui::BeginMenu("View")) {
             if (ImGui::MenuItem("Modules Sidebar", nullptr, this->show_module_list_sidebar)) {
@@ -300,10 +305,63 @@ void megamol::gui::Configurator::draw_window_menu() {
                     (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
                 this->graph_state.show_parameter_sidebar = !this->graph_state.show_parameter_sidebar;
             }
+#ifdef PROFILING
+            if (ImGui::MenuItem(
+                    "Profiling Bar", nullptr, this->graph_state.show_profiling_bar, is_running_graph_active)) {
+                this->graph_state.show_profiling_bar = !this->graph_state.show_profiling_bar;
+            }
+#endif // PROFILING
             ImGui::EndMenu();
         }
+        ImGui::Separator();
 
-        ImGui::SameLine();
+        if (ImGui::BeginMenu("Help")) {
+
+            ImGui::TextUnformatted("Graph Interactions:");
+            auto table_flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize;
+            if (ImGui::BeginTable("configurator_help_table", 2, table_flags)) {
+                ImGui::TableSetupColumn("Description", ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableSetupColumn("Action", ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableHeadersRow();
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted(
+                    "Spawn module selection pop-up (Only compatible modules when call slo tis clicked)");
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Double left-click");
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Show context menu of module/call/group");
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Right-click");
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted(
+                    "Drag call slot of module to other compatible call slot to create call between modules");
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Drag & drop");
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Zoom graph");
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Mouse wheel");
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Scroll graph");
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("Middle-click");
+
+                ImGui::EndTable();
+            }
+
+            ImGui::EndMenu();
+        }
+        ImGui::Separator();
 
         ImGui::EndMenuBar();
     }
@@ -415,15 +473,40 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                             selected_graph_ptr->AddModule(this->graph_collection.GetModulesStock(), mod.class_name)) {
 
                         // If there is a call slot selected, create call to compatible call slot of new module
-                        bool added_call = false;
-                        if (compat_filter && (selected_callslot_ptr != nullptr)) {
+                        bool add_call = compat_filter && (selected_callslot_ptr != nullptr);
+
+                        // If there is a group selected or hovered or the new call is connected to module which is part
+                        // of group, add module to this group
+                        if (!interfaceslot_selected) {
+                            ImGuiID connected_group = GUI_INVALID_ID;
+                            if (add_call && selected_callslot_ptr->IsParentModuleConnected()) {
+                                connected_group = selected_callslot_ptr->GetParentModule()->GroupUID();
+                            }
+                            ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
+                            ImGuiID group_uid = (connected_group != GUI_INVALID_ID)
+                                                    ? (connected_group)
+                                                    : ((selected_group_uid != GUI_INVALID_ID)
+                                                              ? (selected_group_uid)
+                                                              : (this->module_list_popup_hovered_group_uid));
+
+                            if (auto group_ptr = selected_graph_ptr->GetGroup(group_uid)) {
+                                Graph::QueueData queue_data;
+                                queue_data.name_id = module_ptr->FullName();
+                                selected_graph_ptr->ResetStatePointers();
+                                group_ptr->AddModule(module_ptr);
+                                queue_data.rename_id = module_ptr->FullName();
+                                selected_graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+                            }
+                        }
+
+                        // Add new call after module is created and after possible renaming due to group joining of module!
+                        if (add_call) {
                             // Get call slots of last added module
                             for (auto& callslot_map : module_ptr->CallSlots()) {
                                 for (auto& callslot_ptr : callslot_map.second) {
                                     if (callslot_ptr->Name() == compat_callslot_name) {
-                                        added_call = selected_graph_ptr->AddCall(this->graph_collection.GetCallsStock(),
-                                            selected_callslot_ptr, callslot_ptr);
-                                        if (added_call) {
+                                        if (selected_graph_ptr->AddCall(this->graph_collection.GetCallsStock(),
+                                                selected_callslot_ptr, callslot_ptr)) {
                                             module_ptr->SetSelectedSlotPosition();
                                         }
                                     }
@@ -433,35 +516,6 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                         // Place new module at mouse pos if added via separate module list child window.
                         else if (this->show_module_list_popup) {
                             module_ptr->SetScreenPosition(ImGui::GetMousePos());
-                        }
-
-                        // If there is a group selected or hoverd or the new call is connceted to module which is part
-                        // of group, add module to this group
-                        if (!interfaceslot_selected) {
-                            ImGuiID connceted_group = GUI_INVALID_ID;
-                            if (added_call && selected_callslot_ptr->IsParentModuleConnected()) {
-                                connceted_group = selected_callslot_ptr->GetParentModule()->GroupUID();
-                            }
-                            ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
-                            ImGuiID group_uid = (connceted_group != GUI_INVALID_ID)
-                                                    ? (connceted_group)
-                                                    : ((selected_group_uid != GUI_INVALID_ID)
-                                                              ? (selected_group_uid)
-                                                              : (this->module_list_popup_hovered_group_uid));
-
-                            if (group_uid != GUI_INVALID_ID) {
-                                for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
-                                    if (group_ptr->UID() == group_uid) {
-                                        Graph::QueueData queue_data;
-                                        queue_data.name_id = module_ptr->FullName();
-                                        selected_graph_ptr->ResetStatePointers();
-                                        group_ptr->AddModule(module_ptr);
-                                        queue_data.rename_id = module_ptr->FullName();
-                                        selected_graph_ptr->PushSyncQueue(
-                                            Graph::QueueAction::RENAME_MODULE, queue_data);
-                                    }
-                                }
-                            }
                         }
                     }
                     if (this->show_module_list_popup) {
@@ -510,13 +564,7 @@ void megamol::gui::Configurator::SpecificStateToJSON(nlohmann::json& inout_json)
         // Write GUI state of parameters (groups) of running graph
         if (auto graph_ptr = this->GetGraphCollection().GetRunningGraph()) {
             for (auto& module_ptr : graph_ptr->Modules()) {
-                std::string module_full_name = module_ptr->FullName();
-                // Parameter Groups
-                module_ptr->GUIParameterGroups().StateToJSON(inout_json, module_full_name);
-                // Parameters
-                for (auto& param : module_ptr->Parameters()) {
-                    param.StateToJSON(inout_json, param.FullNameProject());
-                }
+                module_ptr->StateToJSON(inout_json);
             }
         }
 
@@ -569,7 +617,7 @@ void megamol::gui::Configurator::SpecificStateFromJSON(const nlohmann::json& in_
                     std::string json_graph_id = graph_item.key();
                     if (json_graph_id != GUI_JSON_TAG_PROJECT) {
                         // Otherwise load additonal graph from given file name
-                        this->GetGraphCollection().LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
+                        this->GetGraphCollection().LoadOrAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
                     }
                 }
             }
@@ -578,14 +626,7 @@ void megamol::gui::Configurator::SpecificStateFromJSON(const nlohmann::json& in_
         // Read GUI state of parameters (groups) of running graph
         if (auto graph_ptr = this->GetGraphCollection().GetRunningGraph()) {
             for (auto& module_ptr : graph_ptr->Modules()) {
-                std::string module_full_name = module_ptr->FullName();
-                // Parameter Groups
-                module_ptr->GUIParameterGroups().StateFromJSON(in_json, module_full_name);
-                // Parameters
-                for (auto& param : module_ptr->Parameters()) {
-                    param.StateFromJSON(in_json, param.FullNameProject());
-                    param.ForceSetGUIStateDirty();
-                }
+                module_ptr->StateFromJSON(in_json);
             }
         }
 

@@ -8,11 +8,10 @@
 #ifndef MEGAMOLCORE_COLORPARAM_H_INCLUDED
 #define MEGAMOLCORE_COLORPARAM_H_INCLUDED
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
 
 #include <array>
-		
+
 
 namespace megamol {
 namespace core {
@@ -22,9 +21,8 @@ namespace param {
 /**
  * Class for 32bit RGBA color parameters with each channel between 0.0 and 1.0.
  */
-class MEGAMOLCORE_API ColorParam : public AbstractParam {
+class ColorParam : public AbstractParam {
 public:
-
     typedef std::array<float, 4> ColorType;
 
     /**
@@ -59,7 +57,7 @@ public:
      * @param outDef A memory block to receive a machine-readable
      *               definition of the parameter.
      */
-    virtual void Definition(vislib::RawStorage& outDef) const override;
+    std::string Definition() const override;
 
     /**
      * Tries to parse the given string as value for this parameter and
@@ -70,39 +68,39 @@ public:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool ParseValue(const vislib::TString& v) override;
+    bool ParseValue(std::string const& v) override;
 
     /**
-    * Returns the value of the parameter as string.
-    *
-    * @return The value of the parameter as string.
-    */
-    virtual vislib::TString ValueString(void) const override;
+     * Returns the value of the parameter as string.
+     *
+     * @return The value of the parameter as string.
+     */
+    std::string ValueString(void) const override;
 
     /**
-    * Sets the value of the parameter and optionally sets the dirty flag
-    * of the owning parameter slot.
-    *
-    * @param v the new value for the parameter
-    * @param setDirty If 'true' the dirty flag of the owning parameter
-    *                 slot is set and the update callback might be called.
-    */
+     * Sets the value of the parameter and optionally sets the dirty flag
+     * of the owning parameter slot.
+     *
+     * @param v the new value for the parameter
+     * @param setDirty If 'true' the dirty flag of the owning parameter
+     *                 slot is set and the update callback might be called.
+     */
     void SetValue(const ColorType& v, bool setDirty = true);
 
     /**
-    * Gets the value of the parameter
-    *
-    * @return The value of the parameter
-    */
+     * Gets the value of the parameter
+     *
+     * @return The value of the parameter
+     */
     inline const ColorType& Value(void) const {
         return this->val;
     }
 
     /**
-    * Gets the value of the parameter
-    *
-    * @return The value of the parameter
-    */
+     * Gets the value of the parameter
+     *
+     * @return The value of the parameter
+     */
     inline const void Value(float& outR, float& outG, float& outB, float& outA) const {
         outR = this->val[0];
         outG = this->val[1];
@@ -111,10 +109,19 @@ public:
     }
 
     /**
-    * Gets the value of the parameter
-    *
-    * @return The value of the parameter
-    */
+     * Gets the color array
+     *
+     * @return The array of values
+     */
+    inline const std::array<float, 4> GetArray() const {
+        return val;
+    }
+
+    /**
+     * Gets the value of the parameter
+     *
+     * @return The value of the parameter
+     */
     inline const void Value(float& outR, float& outG, float& outB) const {
         float a;
         this->Value(outR, outG, outB, a);
@@ -123,12 +130,11 @@ public:
     /**
      * Returns a 32bit RGBA color.
      */
-    inline operator const ColorType(void) const { 
+    inline operator const ColorType(void) const {
         return this->val;
     }
 
 private:
-
     /** The value of the parameter */
     ColorType val;
 

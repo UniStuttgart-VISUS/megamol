@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "FBOTransmitter2.h"
+#include "stdafx.h"
 
 #include <array>
 
@@ -17,46 +17,46 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "vislib/Trace.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 
 #ifdef __unix__
-#    include <limits.h>
-#    include <unistd.h>
+#include <limits.h>
+#include <unistd.h>
 #endif
 
 //#define _DEBUG 1
 
 megamol::remote::FBOTransmitter2::FBOTransmitter2()
-    : address_slot_{"port", "The port the transmitter should connect to"}
-    , commSelectSlot_{"communicator", "Select the communicator to use"}
-    , view_name_slot_{"view", "The name of the view instance to be used (required)"}
-    , trigger_button_slot_{"trigger", "Triggers transmission"}
-    , target_machine_slot_{"targetMachine", "Name of the target machine"}
-    , force_localhost_slot_{"force_localhost", "Enable to enforce localhost as hostname for handshake"}
-    , handshake_port_slot_{"handshakePort", "Port for zmq handshake"}
-    , reconnect_slot_{"reconnect", "Reconnect comm threads"}
-    , tiled_slot_("tiledDisplay", "True if rendering on a tiled display")
+        : address_slot_{"port", "The port the transmitter should connect to"}
+        , commSelectSlot_{"communicator", "Select the communicator to use"}
+        , view_name_slot_{"view", "The name of the view instance to be used (required)"}
+        , trigger_button_slot_{"trigger", "Triggers transmission"}
+        , target_machine_slot_{"targetMachine", "Name of the target machine"}
+        , force_localhost_slot_{"force_localhost", "Enable to enforce localhost as hostname for handshake"}
+        , handshake_port_slot_{"handshakePort", "Port for zmq handshake"}
+        , reconnect_slot_{"reconnect", "Reconnect comm threads"}
+        , tiled_slot_("tiledDisplay", "True if rendering on a tiled display")
 #ifdef WITH_MPI
-    , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
-    , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
-    , render_comp_img_slot_("renderCompImage", "Renders the complete composited image on the broadcast master")
+        , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
+        , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
+        , render_comp_img_slot_("renderCompImage", "Renders the complete composited image on the broadcast master")
 #endif // WITH_MPI
-    , aggregate_{false}
-    , frame_id_{0}
-    , thread_stop_{false}
-    , fbo_msg_read_{new fbo_msg_header_t}
-    , fbo_msg_send_{new fbo_msg_header_t}
-    , color_buf_read_{new std::vector<char>}
-    , depth_buf_read_{new std::vector<char>}
-    , color_buf_send_{new std::vector<char>}
-    , depth_buf_send_{new std::vector<char>}
-    , col_buf_el_size_{4}
-    , depth_buf_el_size_{4}
-    , connected_{false}
-    , validViewport(false) {
+        , aggregate_{false}
+        , frame_id_{0}
+        , thread_stop_{false}
+        , fbo_msg_read_{new fbo_msg_header_t}
+        , fbo_msg_send_{new fbo_msg_header_t}
+        , color_buf_read_{new std::vector<char>}
+        , depth_buf_read_{new std::vector<char>}
+        , color_buf_send_{new std::vector<char>}
+        , depth_buf_send_{new std::vector<char>}
+        , col_buf_el_size_{4}
+        , depth_buf_el_size_{4}
+        , connected_{false}
+        , validViewport(false) {
     this->address_slot_ << new megamol::core::param::StringParam{"34242"};
     this->MakeSlotAvailable(&this->address_slot_);
     this->handshake_port_slot_ << new megamol::core::param::IntParam(42000);
@@ -94,7 +94,9 @@ megamol::remote::FBOTransmitter2::FBOTransmitter2()
 }
 
 
-megamol::remote::FBOTransmitter2::~FBOTransmitter2() { this->Release(); }
+megamol::remote::FBOTransmitter2::~FBOTransmitter2() {
+    this->Release();
+}
 
 
 bool megamol::remote::FBOTransmitter2::create() {
@@ -105,7 +107,9 @@ bool megamol::remote::FBOTransmitter2::create() {
 }
 
 
-void megamol::remote::FBOTransmitter2::release() { shutdownThreads(); }
+void megamol::remote::FBOTransmitter2::release() {
+    shutdownThreads();
+}
 
 
 void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
@@ -113,9 +117,9 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
 #ifdef WITH_MPI
     if (!this->render_comp_img_slot_.Param<core::param::BoolParam>()->Value()) {
         initThreads();
-#    if _DEBUG
+#if _DEBUG
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: initThreads ... Done");
-#    endif
+#endif
     }
 #else
     initThreads();
@@ -183,30 +187,31 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
     IceTFloat* icet_depth_buf = reinterpret_cast<IceTFloat*>(depth_buf.data());
 
     if (aggregate_) {
-#    if _DEBUG
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Simple IceT commit at rank %d\n", mpiRank);
-#    endif
+#if _DEBUG
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "FBOTransmitter2: Simple IceT commit at rank %d\n", mpiRank);
+#endif
         std::array<float, 4> backgroundColor = {0.0f, 0.0f, 0.0f, 1.0f};
-        this->extractBkgndColor(backgroundColor);
+        this->extractBackgroundColor(backgroundColor);
 
         int tilevp[4] = {xoff, yoff, tile_width, tile_height}; // define current valid pixel viewport for icet
-#    if _DEBUG
+#if _DEBUG
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "IceT gets image with xoff: %d, yoff: %d, tile_width: %d, tile_height: %d\n", xoff, yoff, tile_width,
             tile_height);
-#    endif
+#endif
         auto const icet_comp_image = icetCompositeImage(col_buf.data(), depth_buf.data(), tilevp, nullptr, nullptr,
             static_cast<const IceTFloat*>(backgroundColor.data()));
-#    if _DEBUG
+#if _DEBUG
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - Composite Image Done\n");
-#    endif
+#endif
 
         if (mpiRank == 0) {
             icet_col_buf = icetImageGetColorub(icet_comp_image);
             icet_depth_buf = icetImageGetDepthf(icet_comp_image);
-#    if _DEBUG
+#if _DEBUG
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: IceT - ImageGet Done\n");
-#    endif
+#endif
             if (this->render_comp_img_slot_.Param<core::param::BoolParam>()->Value()) {
                 glDrawPixels(tile_width, tile_height, GL_RGBA, GL_UNSIGNED_BYTE, icet_col_buf);
             }
@@ -308,7 +313,8 @@ void megamol::remote::FBOTransmitter2::transmitterJob() {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "FBOTransmitter2: Exception during recv in 'transmitterJob': %s\n", e.what());
             } catch (...) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Exception during recv in 'transmitterJob'\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "FBOTransmitter2: Exception during recv in 'transmitterJob'\n");
             }
 
             // wait for request
@@ -391,9 +397,7 @@ void megamol::remote::FBOTransmitter2::transmitterJob() {
                 }
             }
         }
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: TransmitterJob died\n");
-    }
+    } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: TransmitterJob died\n"); }
 }
 
 
@@ -455,22 +459,20 @@ bool megamol::remote::FBOTransmitter2::extractMetaData(float bbox[6], float fram
         this->GetCoreInstance()
             ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3DGL>(
                 mvn, [cam_params](megamol::core::view::CallRender3DGL& cr3d) {
-                    core::view::Camera_2 cam;
-                    cr3d.GetCamera(cam);
-                    core::view::Camera_2::snapshot_type cam_snap;
-                    cam_snap = cam.take_snapshot(cam_snap, core::thecam::snapshot_content::all);
-                    auto pos = cam_snap.position;
-                    auto up = cam_snap.up_vector;
-                    auto view = cam_snap.view_vector;
-                    cam_params[0] = pos.x();
-                    cam_params[1] = pos.y();
-                    cam_params[2] = pos.z();
-                    cam_params[3] = up.x();
-                    cam_params[4] = up.y();
-                    cam_params[5] = up.z();
-                    cam_params[6] = view.x();
-                    cam_params[7] = view.y();
-                    cam_params[8] = view.z();
+                    core::view::Camera cam = cr3d.GetCamera();
+                    auto cam_pose = cam.get<core::view::Camera::Pose>();
+                    auto pos = cam_pose.position;
+                    auto up = cam_pose.up;
+                    auto view = cam_pose.direction;
+                    cam_params[0] = pos.x;
+                    cam_params[1] = pos.y;
+                    cam_params[2] = pos.z;
+                    cam_params[3] = up.x;
+                    cam_params[4] = up.y;
+                    cam_params[5] = up.z;
+                    cam_params[6] = view.x;
+                    cam_params[7] = view.y;
+                    cam_params[8] = view.z;
                 });
 
     if (!(retBbox && retTimes && retCam)) {
@@ -478,7 +480,8 @@ bool megamol::remote::FBOTransmitter2::extractMetaData(float bbox[6], float fram
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "FBOTransmitter2: Unable to find VIEW \"%s\" to extract meta data.\n");
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Could not find VIEW with empty name.\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: Could not find VIEW with empty name.\n");
         }
         success = false;
     }
@@ -516,7 +519,8 @@ bool megamol::remote::FBOTransmitter2::extractViewport(int vvpt[6]) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "FBOTransmitter2: Unable to find VIEW \"%s\" to extract viewport.\n");
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Could not find VIEW with empty name.\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: Could not find VIEW with empty name.\n");
         }
         success = false;
     }
@@ -526,7 +530,7 @@ bool megamol::remote::FBOTransmitter2::extractViewport(int vvpt[6]) {
 }
 
 
-bool megamol::remote::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& bkgnd_color) {
+bool megamol::remote::FBOTransmitter2::extractBackgroundColor(std::array<float, 4>& bg_color) {
     using megamol::core::utility::log::Log;
 
     bool success = true;
@@ -534,13 +538,13 @@ bool megamol::remote::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& b
 
     // this->ModuleGraphLock().LockExclusive();
     const auto ret = this->GetCoreInstance()->FindModuleNoLock<core::view::AbstractView>(
-        mvn, [&bkgnd_color](core::view::AbstractView* arv) {
-            auto bkgndCol = arv->BkgndColour();
-            if (bkgndCol != glm::vec4(0,0,0,0)) {
-                bkgnd_color[0] = bkgndCol[0];
-                bkgnd_color[1] = bkgndCol[1];
-                bkgnd_color[2] = bkgndCol[2];
-                bkgnd_color[3] = 1.0f;
+        mvn, [&bg_color](core::view::AbstractView* arv) {
+            auto bgCol = arv->BackgroundColor();
+            if (bgCol != glm::vec4(0, 0, 0, 0)) {
+                bg_color[0] = bgCol[0];
+                bg_color[1] = bgCol[1];
+                bg_color[2] = bgCol[2];
+                bg_color[3] = 1.0f;
             }
         });
 
@@ -549,7 +553,8 @@ bool megamol::remote::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& b
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "FBOTransmitter2: Unable to find VIEW \"%s\" to extract background color.\n");
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Could not find VIEW with empty name.\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "FBOTransmitter2: Could not find VIEW with empty name.\n");
         }
         success = false;
     }
@@ -571,19 +576,20 @@ bool megamol::remote::FBOTransmitter2::initMPI() {
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter: Got MPI communicator.");
                 this->mpi_comm_ = c->GetComm();
             } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(_T("FBOTransmitter: Could not ")
-                                                        _T("retrieve MPI communicator for the MPI-based view ")
-                                                        _T("from the registered provider module."));
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    _T("FBOTransmitter: Could not ")
+                    _T("retrieve MPI communicator for the MPI-based view ")
+                    _T("from the registered provider module."));
             }
         }
 
         if (this->mpi_comm_ != MPI_COMM_NULL) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("FBOTransmitter: MPI is ready, ")
-                                                   _T("retrieving communicator properties ..."));
+                                                                   _T("retrieving communicator properties ..."));
             ::MPI_Comm_rank(this->mpi_comm_, &this->mpiRank);
             ::MPI_Comm_size(this->mpi_comm_, &this->mpiSize);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("FBOTransmitter on %hs is %d ")
-                                                   _T("of %d."),
+                                                                   _T("of %d."),
                 vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
         } /* end if (this->comm != MPI_COMM_NULL) */
         VLTRACE(vislib::Trace::LEVEL_INFO, "FBOTransmitter2: MPI initialized: %s (%i)\n",
@@ -613,9 +619,9 @@ bool megamol::remote::FBOTransmitter2::initThreads() {
 #ifdef WITH_MPI
 
         if ((aggregate_ && mpiRank == 0) || !aggregate_) {
-#    ifdef _DEBUG
+#ifdef _DEBUG
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting rank %d\n", mpiRank);
-#    endif
+#endif
 #endif // WITH_MPI
             auto const address =
                 std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
@@ -629,7 +635,8 @@ bool megamol::remote::FBOTransmitter2::initThreads() {
             std::string const registerAddress = std::string("tcp://") + target + std::string(":") + handshake;
 
 #if _DEBUG
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "FBOTransmitter2: registerAddress: %s\n", registerAddress.c_str());
 #endif
             registerComm.Connect(registerAddress);
 
@@ -651,10 +658,12 @@ bool megamol::remote::FBOTransmitter2::initThreads() {
             std::vector<char> buf(name.begin(), name.end()); //<TODO there should be a better way
             try {
 #if _DEBUG
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sending client name %s\n", name.c_str());
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "FBOTransmitter2: Sending client name %s\n", name.c_str());
 #endif
                 if (!registerComm.Send(buf)) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Send on 'registerComm' failed\n");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "FBOTransmitter2: Send on 'registerComm' failed\n");
                 }
 #if _DEBUG
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Sent client name\n");
@@ -677,9 +686,11 @@ bool megamol::remote::FBOTransmitter2::initThreads() {
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting comm\n");
 #endif
             } catch (std::exception& e) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Register died: %s\n", e.what());
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "FBOTransmitter2: Register died: %s\n", e.what());
             } catch (vislib::Exception& e) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Register died: %s\n", e.GetMsgA());
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "FBOTransmitter2: Register died: %s\n", e.GetMsgA());
             } catch (...) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: Register died\n");
             }
@@ -720,7 +731,8 @@ bool megamol::remote::FBOTransmitter2::shutdownThreads() {
     this->thread_stop_ = true;
     // shutdown_ = true;
 
-    if (this->transmitter_thread_.joinable()) this->transmitter_thread_.join();
+    if (this->transmitter_thread_.joinable())
+        this->transmitter_thread_.join();
 
 #ifdef WITH_MPI
     if (useMpi) {
@@ -765,9 +777,10 @@ void megamol::remote::FBOTransmitter2::initIceT() {
     }
 
     if (aggregate_) {
-#    if _DEBUG
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
-#    endif
+#if _DEBUG
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "FBOTransmitter2: Initializing IceT at rank %d\n", mpiRank);
+#endif
         // icet setup
 
         icet_comm_ = icetCreateMPICommunicator(this->mpi_comm_);
@@ -802,21 +815,22 @@ void megamol::remote::FBOTransmitter2::initIceT() {
             }
         }
 
-#    ifdef _DEBUG
+#ifdef _DEBUG
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "FBOTransmitter2: IceT viewport for rank %d extracted from %s: (%d, %d, %d, %d, %d, %d).", this->mpiRank,
             ((this->validViewport) ? ("View") : ("OpenGL")), this->viewport[0], this->viewport[1], this->viewport[2],
             this->viewport[3], this->viewport[4], this->viewport[5]);
-#    endif
+#endif
 
         int displayRank = 0;
         icetPhysicalRenderSize(width, height);
         icetResetTiles();
         icetAddTile(0, 0, width, height, displayRank);
 
-#    ifdef _DEBUG
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
-#    endif
+#ifdef _DEBUG
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
+#endif
     }
 #endif // WITH_MPI
 }

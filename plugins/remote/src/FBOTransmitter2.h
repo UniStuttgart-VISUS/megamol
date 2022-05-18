@@ -31,28 +31,36 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "FBOTransmitter2"; }
+    static const char* ClassName(void) {
+        return "FBOTransmitter2";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "A simple job module used to transmit FBOs over TCP/IP"; }
+    static const char* Description(void) {
+        return "A simple job module used to transmit FBOs over TCP/IP";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /**
      * Disallow usage in quickstarts
      *
      * @return false
      */
-    static bool SupportQuickstart(void) { return false; }
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
     /**
      * Ctor
@@ -84,8 +92,8 @@ private:
     bool triggerButtonClicked(core::param::ParamSlot& slot);
 
     bool extractMetaData(float bbox[6], float frame_times[2], float cam_params[9]);
-        
-    bool extractBkgndColor(std::array<float, 4>& bkgnd_color);
+
+    bool extractBackgroundColor(std::array<float, 4>& bg_color);
 
     bool extractViewport(int vvpt[6]);
 
@@ -108,7 +116,7 @@ private:
     megamol::core::param::ParamSlot target_machine_slot_;
 
     megamol::core::param::ParamSlot force_localhost_slot_;
-    
+
     megamol::core::param::ParamSlot handshake_port_slot_;
 
     megamol::core::param::ParamSlot reconnect_slot_;
@@ -126,7 +134,6 @@ private:
     megamol::core::param::ParamSlot render_comp_img_slot_;
 
 
-
     bool useMpi = false;
     int mpiRank = -1, mpiSize = -1;
 
@@ -136,7 +143,7 @@ private:
 
     MPI_Comm mpi_comm_ = MPI_COMM_NULL;
 #endif // WITH_MPI
-    
+
     bool renderCompChanged(core::param::ParamSlot& slot);
 
     void initIceT();

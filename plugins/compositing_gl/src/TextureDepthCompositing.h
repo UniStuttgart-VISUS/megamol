@@ -10,12 +10,11 @@
 
 #include <memory>
 
-#include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/GLSLProgram.hpp"
 #include "glowl/Texture2D.hpp"
 
@@ -29,7 +28,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "TextureDepthCompositing"; }
+    static const char* ClassName() {
+        return "TextureDepthCompositing";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -45,7 +46,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable() { return true; }
+    static bool IsAvailable() {
+        return true;
+    }
 
     TextureDepthCompositing();
     ~TextureDepthCompositing();

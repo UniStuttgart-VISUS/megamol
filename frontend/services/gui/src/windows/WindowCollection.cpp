@@ -8,6 +8,7 @@
 
 #include "WindowCollection.h"
 #include "Configurator.h"
+#include "HotkeyEditor.h"
 #include "LogConsole.h"
 #include "ParameterList.h"
 #include "PerformanceMonitor.h"
@@ -20,6 +21,7 @@ using namespace megamol::gui;
 
 WindowCollection::WindowCollection() : windows() {
 
+    this->windows.emplace_back(std::make_shared<HotkeyEditor>("Hotkey Editor"));
     this->windows.emplace_back(std::make_shared<LogConsole>("Log Console"));
     this->windows.emplace_back(std::make_shared<TransferFunctionEditor>("Transfer Function Editor", true));
     this->windows.emplace_back(std::make_shared<PerformanceMonitor>("Performance Metrics"));
@@ -74,7 +76,8 @@ void WindowCollection::Draw(bool menu_visible) {
 
     const auto func = [&](AbstractWindow& wc) {
         if (wc.Config().show) {
-            ImGui::SetNextWindowBgAlpha(1.0f);
+
+            // Draw Window ----------------------------------------------------
             ImGui::SetNextWindowCollapsed(wc.Config().collapsed, ImGuiCond_Always);
 
             // Begin Window
@@ -106,18 +109,13 @@ void WindowCollection::Draw(bool menu_visible) {
             }
 
             ImGui::End();
+
+            // Draw Pop-ups ---------------------------------------------------
+            wc.PopUps();
         }
     };
 
     this->EnumWindows(func);
-}
-
-
-void WindowCollection::PopUps() {
-
-    for (auto& win : this->windows) {
-        win->PopUps();
-    }
 }
 
 

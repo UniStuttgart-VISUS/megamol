@@ -15,14 +15,14 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 //#include "vislib_vector_typedefs.h"
-#include "vislib/math/Vector.h"
 #include "vislib/math/Cuboid.h"
+#include "vislib/math/Vector.h"
 typedef vislib::math::Cuboid<unsigned int> Cubeu;
 typedef vislib::math::Vector<float, 3> Vec3f;
 
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
-#include "mmcore/utility/log/Log.h"
 
 typedef unsigned int uint;
 
@@ -32,12 +32,11 @@ namespace protein_calls {
 class VTKImageData {
 
 public:
-
     /// Enum representing the data formats
-    enum DataFormat {VTISOURCE_BINARY, VTISOURCE_ASCII, VTISOURCE_APPENDED};
+    enum DataFormat { VTISOURCE_BINARY, VTISOURCE_ASCII, VTISOURCE_APPENDED };
 
     /// Enum representing different byte orderings
-    enum ByteOrder {VTI_LITTLE_ENDIAN=0, VTI_BIG_ENDIAN=1};
+    enum ByteOrder { VTI_LITTLE_ENDIAN = 0, VTI_BIG_ENDIAN = 1 };
 
     /**
      * Nested class to represent a data array of a point data or cell data
@@ -45,24 +44,17 @@ public:
      */
     class DataArray {
     public:
-
         /// Enum representing the data types
-        enum DataType {VTI_UNKNOWN=0, VTI_INT, VTI_UINT, VTI_FLOAT, VTI_DOUBLE};
+        enum DataType { VTI_UNKNOWN = 0, VTI_INT, VTI_UINT, VTI_FLOAT, VTI_DOUBLE };
 
         /** CTor */
-        DataArray() :
-                type(VTI_UNKNOWN),
-                name(""),
-                nComponents(0),
-                data(NULL),
-                allocated(0) {
-			this->min = 0.0f;
-			this->max = 0.0f;
+        DataArray() : type(VTI_UNKNOWN), name(""), nComponents(0), data(NULL), allocated(0) {
+            this->min = 0.0f;
+            this->max = 0.0f;
         }
 
         /** DTor */
-        ~DataArray() {
-        }
+        ~DataArray() {}
 
         /**
          * Test for equality
@@ -71,13 +63,9 @@ public:
          * @return True if this and rhs are equal
          */
         bool operator==(const DataArray& rhs) const {
-            return (this->type == type)
-                && this->name.Equals(rhs.name)
-                && (this->nComponents == rhs.nComponents)
-                && (this->min == rhs.min)
-                && (this->max == rhs.max)
-                && (this->data == rhs.data)
-                && (this->allocated == rhs.allocated);
+            return (this->type == type) && this->name.Equals(rhs.name) && (this->nComponents == rhs.nComponents) &&
+                   (this->min == rhs.min) && (this->max == rhs.max) && (this->data == rhs.data) &&
+                   (this->allocated == rhs.allocated);
         }
 
         /**
@@ -88,13 +76,19 @@ public:
          * @return The number of bytes for the data type.
          */
         size_t GetByteCntPerDataType(DataType t) {
-            switch(t) {
-            case VTI_UNKNOWN : return 1;
-            case VTI_INT : return 4;
-            case VTI_UINT : return 4;
-            case VTI_FLOAT : return 4;
-            case VTI_DOUBLE : return 8;
-            default : return 1;
+            switch (t) {
+            case VTI_UNKNOWN:
+                return 1;
+            case VTI_INT:
+                return 4;
+            case VTI_UINT:
+                return 4;
+            case VTI_FLOAT:
+                return 4;
+            case VTI_DOUBLE:
+                return 8;
+            default:
+                return 1;
             }
         }
 
@@ -103,7 +97,7 @@ public:
          *
          * @return A pointer to the actual data chunk.
          */
-        inline char *PeekData() const {
+        inline char* PeekData() const {
             return this->data;
         }
 
@@ -117,11 +111,11 @@ public:
          * @param id          The name of the data array.
          * @param nComponents The number of components per data element.
          */
-        void UpdateData(const char *data, double min, double max,
-                DataArray::DataType t, vislib::StringA id, size_t nComponents) {
-//
-//            printf("Update data\n");
-//            printf("nComponents %u\n", nComponents);
+        void UpdateData(
+            const char* data, double min, double max, DataArray::DataType t, vislib::StringA id, size_t nComponents) {
+            //
+            //            printf("Update data\n");
+            //            printf("nComponents %u\n", nComponents);
 
 
             this->type = t;
@@ -130,27 +124,24 @@ public:
             this->max = max;
             this->nComponents = nComponents;
 
-            uint gridSize =
-                    (this->extent.Width()+1)*
-                    (this->extent.Depth()+1)*
-                    (this->extent.Height()+1);
+            uint gridSize = (this->extent.Width() + 1) * (this->extent.Depth() + 1) * (this->extent.Height() + 1);
 
-//            printf("nComponents %u\n", gridSize);
+            //            printf("nComponents %u\n", gridSize);
 
-            size_t nBytesPerElement = nComponents*this->GetByteCntPerDataType(t);
+            size_t nBytesPerElement = nComponents * this->GetByteCntPerDataType(t);
 
-//            printf("needed size %u\n", gridSize*nBytesPerElement);
-//            printf("allocated %u\n", allocated);
+            //            printf("needed size %u\n", gridSize*nBytesPerElement);
+            //            printf("allocated %u\n", allocated);
 
             // Check whether the memory needs to be (re-)allocated
-            if (this->allocated < gridSize*nBytesPerElement) {
-//                printf("allocate new\n");
+            if (this->allocated < gridSize * nBytesPerElement) {
+                //                printf("allocate new\n");
                 if (this->data != NULL) {
-//                    printf("delete old\n");
-                    delete [] this->data;
+                    //                    printf("delete old\n");
+                    delete[] this->data;
                 }
-                this->data = new char[gridSize*nBytesPerElement];
-                this->allocated = gridSize*nBytesPerElement;
+                this->data = new char[gridSize * nBytesPerElement];
+                this->allocated = gridSize * nBytesPerElement;
             }
 
             // Copy data
@@ -190,8 +181,7 @@ public:
          * @return The number of elements in the array.
          */
         inline size_t GetSize() const {
-            return (this->extent.Width()+1)*(this->extent.Height()+1)*
-                    (this->extent.Depth()+1);
+            return (this->extent.Width() + 1) * (this->extent.Height() + 1) * (this->extent.Depth() + 1);
         }
 
         /**
@@ -199,21 +189,25 @@ public:
          *
          * @return The name of the data array.
          */
-        inline vislib::StringA GetId() const { return this->name; }
+        inline vislib::StringA GetId() const {
+            return this->name;
+        }
 
         /**
          * Answers the type of the data array.
          *
          * @return The type of the data array.
          */
-        inline DataType GetType() const { return this->type; }
+        inline DataType GetType() const {
+            return this->type;
+        }
 
         /**
          * Deallocates memory and resets all parameters to their initial state.
          */
         inline void Release() {
             if (this->data != NULL) {
-                delete [] this->data;
+                delete[] this->data;
             }
             this->data = NULL;
             this->type = VTI_UNKNOWN;
@@ -235,15 +229,14 @@ public:
         }
 
     private:
-
-        DataType type;        ///> The data type used in this data array
-        vislib::StringA name; ///> The id of the data array
-        size_t nComponents;   ///> The number of components per data element
-        double min, max;      ///> The range of the data
+        DataType type;                     ///> The data type used in this data array
+        vislib::StringA name;              ///> The id of the data array
+        size_t nComponents;                ///> The number of components per data element
+        double min, max;                   ///> The range of the data
         vislib::math::Cuboid<uint> extent; ///> The piece's extent
 
-        char *data;           ///> The actual data
-        size_t allocated;     ///> The current ammount of allocated memory
+        char* data;       ///> The actual data
+        size_t allocated; ///> The current ammount of allocated memory
     };
 
     /**
@@ -252,7 +245,6 @@ public:
     class CellData {
 
     public:
-
         /** CTor */
         CellData() : extent(0, 0, 0, 0, 0, 0) {
             this->dataArrays.SetCount(0);
@@ -308,11 +300,10 @@ public:
          * @param idx The data arrays index.
          * @return The data requested array or NULL.
          */
-        const DataArray *GetDataArray(unsigned int idx) const {
+        const DataArray* GetDataArray(unsigned int idx) const {
             using namespace megamol::core::utility::log;
             if (idx >= this->dataArrays.Count()) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                        "CellData: Requested idx out of bound, returning NULL.");
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "CellData: Requested idx out of bound, returning NULL.");
                 return NULL;
             } else {
                 return this->dataArrays[idx];
@@ -325,7 +316,7 @@ public:
          * @param idx The data arrays index.
          * @return The data requested array or NULL.
          */
-        const DataArray *GetDataArray(vislib::StringA id) const {
+        const DataArray* GetDataArray(vislib::StringA id) const {
             using namespace megamol::core::utility::log;
 
             // Check whether the id is in use
@@ -341,9 +332,8 @@ public:
 
             // If the id is not in use: return null
             if (!isUsed) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                        "CellData: Requested id '%s' not in use, returning NULL.",
-                        id.PeekBuffer());
+                Log::DefaultLog.WriteMsg(
+                    Log::LEVEL_ERROR, "CellData: Requested id '%s' not in use, returning NULL.", id.PeekBuffer());
                 return NULL;
             } else { // else: return the data array
                 return this->dataArrays[idx];
@@ -360,8 +350,8 @@ public:
          * @param t           The data type.
          * @param nComponents The number of components per element.
          */
-        void UpdateDataArray(vislib::StringA id, const char *data, double min,
-                double max, DataArray::DataType t, size_t nComponents) {
+        void UpdateDataArray(
+            vislib::StringA id, const char* data, double min, double max, DataArray::DataType t, size_t nComponents) {
 
             // Check whether the id is already in use
             bool isUsed = false;
@@ -409,8 +399,7 @@ public:
          * @return True if this and rhs are equal
          */
         bool operator==(const CellData& rhs) const {
-            return (this->dataArrays == rhs.dataArrays)
-                && (this->extent == rhs.extent);
+            return (this->dataArrays == rhs.dataArrays) && (this->extent == rhs.extent);
         }
 
         /**
@@ -451,13 +440,11 @@ public:
         }
 
     private:
-
         /// The list of data arrays
         vislib::Array<DataArray*> dataArrays;
 
         /// The piece's extent
         vislib::math::Cuboid<uint> extent;
-
     };
 
     /**
@@ -465,7 +452,6 @@ public:
      */
     class PointData {
     public:
-
         /** CTor */
         PointData() : extent(0, 0, 0, 0, 0, 0) {
             this->dataArrays.SetCount(0);
@@ -512,12 +498,11 @@ public:
          * @param idx The data arrays index.
          * @return The data requested array or NULL.
          */
-        const DataArray *GetDataArray(unsigned int idx) const {
+        const DataArray* GetDataArray(unsigned int idx) const {
             using namespace megamol::core::utility::log;
 
             if (idx >= this->dataArrays.Count()) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                        "PointData: Requested idx out of bound, returning NULL.");
+                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "PointData: Requested idx out of bound, returning NULL.");
                 return NULL;
             } else {
                 return this->dataArrays[idx];
@@ -557,7 +542,7 @@ public:
          * @param idx The data arrays index.
          * @return The data requested array or NULL.
          */
-        const DataArray *GetDataArray(vislib::StringA id) const {
+        const DataArray* GetDataArray(vislib::StringA id) const {
             using namespace megamol::core::utility::log;
 
             // Check whether the id is in use
@@ -573,9 +558,8 @@ public:
 
             // If the id is not in use: return null
             if (!isUsed) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                        "PointData: Requested id '%s' not in use, returning NULL.",
-                        id.PeekBuffer());
+                Log::DefaultLog.WriteMsg(
+                    Log::LEVEL_ERROR, "PointData: Requested id '%s' not in use, returning NULL.", id.PeekBuffer());
                 return NULL;
             } else { // else: return the data array
                 return this->dataArrays[idx];
@@ -592,8 +576,8 @@ public:
          * @param t           The data type.
          * @param nComponents The number of components per element.
          */
-        void UpdateDataArray(vislib::StringA id, const char *data, double min,
-                double max, DataArray::DataType t, size_t nComponents) {
+        void UpdateDataArray(
+            vislib::StringA id, const char* data, double min, double max, DataArray::DataType t, size_t nComponents) {
 
             // Check whether the id is already in use
             bool isUsed = false;
@@ -643,8 +627,7 @@ public:
          * @return True if this and rhs are equal
          */
         bool operator==(const PointData& rhs) const {
-            return (this->dataArrays == rhs.dataArrays)
-                && (this->extent == rhs.extent);
+            return (this->dataArrays == rhs.dataArrays) && (this->extent == rhs.extent);
         }
 
         /**
@@ -658,7 +641,6 @@ public:
         }
 
     private:
-
         /// The list of data arrays
         vislib::Array<DataArray*> dataArrays;
 
@@ -671,7 +653,6 @@ public:
      */
     class Piece {
     public:
-
         /**
          * Answers the number of data arrays in the point data.
          *
@@ -771,12 +752,10 @@ public:
         }
 
         /** CTor */
-        Piece() : extent(0, 0, 0, 0, 0, 0) {
-        }
+        Piece() : extent(0, 0, 0, 0, 0, 0) {}
 
         /** Dtor */
-        ~Piece() {
-        }
+        ~Piece() {}
 
         /**
          * Adds a data array to the point data or updates a current one.
@@ -788,8 +767,8 @@ public:
          * @param id          The name of the data array (has to be unique).
          * @param nComponents The number of components for each element.
          */
-        void SetPointData(const char *data, double min, double max,
-                DataArray::DataType t, vislib::StringA id, size_t nComponents) {
+        void SetPointData(
+            const char* data, double min, double max, DataArray::DataType t, vislib::StringA id, size_t nComponents) {
             this->pointData.UpdateDataArray(id, data, min, max, t, nComponents);
         }
 
@@ -803,8 +782,8 @@ public:
          * @param id          The name of the data array (has to be unique).
          * @param nComponents The number of components for each element.
          */
-        void SetCellData(const char *data, double min, double max,
-                DataArray::DataType t, vislib::StringA id, size_t nComponents) {
+        void SetCellData(
+            const char* data, double min, double max, DataArray::DataType t, vislib::StringA id, size_t nComponents) {
             this->cellData.UpdateDataArray(id, data, min, max, t, nComponents);
         }
 
@@ -863,9 +842,8 @@ public:
          * @return True if this and rhs are equal
          */
         bool operator==(const Piece& rhs) const {
-            return (this->pointData == rhs.pointData)
-                && (this->cellData == rhs.cellData)
-                && (this->extent == rhs.extent);
+            return (this->pointData == rhs.pointData) && (this->cellData == rhs.cellData) &&
+                   (this->extent == rhs.extent);
         }
 
         /**
@@ -884,9 +862,8 @@ public:
          */
         inline void SetExtent(vislib::math::Cuboid<uint> extent) {
             this->extent = extent;
-            this->cellData.SetExtent(vislib::math::Cuboid<uint>(
-                    extent.Left(), extent.Bottom(), extent.Back(),
-                    extent.Right()-1, extent.Top()-1, extent.Front()-1));
+            this->cellData.SetExtent(vislib::math::Cuboid<uint>(extent.Left(), extent.Bottom(), extent.Back(),
+                extent.Right() - 1, extent.Top() - 1, extent.Front() - 1));
             this->pointData.SetExtent(extent);
         }
 
@@ -929,17 +906,13 @@ public:
         }
 
     private:
-
-        CellData cellData;     ///> The piece's cell data
-        PointData pointData;   ///> The piece's point data
+        CellData cellData;                 ///> The piece's cell data
+        PointData pointData;               ///> The piece's point data
         vislib::math::Cuboid<uint> extent; ///> The piece's extent
     };
 
     /** CTor */
-    VTKImageData() :
-        wholeExtent(0, 0, 0, 0, 0, 0),
-        origin(0.0f, 0.0f, 0.0f),
-        spacing(0.0f, 0.0f, 0.0f) {
+    VTKImageData() : wholeExtent(0, 0, 0, 0, 0, 0), origin(0.0f, 0.0f, 0.0f), spacing(0.0f, 0.0f, 0.0f) {
 
         this->pieces.SetCount(0);
     }
@@ -1083,13 +1056,12 @@ public:
      *
      * @param The number of pieces.
      */
-    void SetPieceExtent(unsigned int pieceIdx,
-            vislib::math::Cuboid<unsigned int> extent) {
+    void SetPieceExtent(unsigned int pieceIdx, vislib::math::Cuboid<unsigned int> extent) {
         using namespace megamol::core::utility::log;
         if (pieceIdx >= this->pieces.Count()) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "VTKImageData: Could not set extent of piece #%u (number of pieces is %u).",
-                    pieceIdx, this->pieces.Count());
+                "VTKImageData: Could not set extent of piece #%u (number of pieces is %u).", pieceIdx,
+                this->pieces.Count());
             return;
         }
         this->pieces[pieceIdx].SetExtent(extent);
@@ -1146,8 +1118,7 @@ public:
     const DataArray* PeekPointData(vislib::StringA id, unsigned int pieceIdx) const {
         using namespace megamol::core::utility::log;
         if (pieceIdx >= this->pieces.Count()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "VTKImageData: Piece index out of bounds, returning NULL.");
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "VTKImageData: Piece index out of bounds, returning NULL.");
         }
         return this->pieces[pieceIdx].PeekPointData(id);
     }
@@ -1163,8 +1134,7 @@ public:
     const DataArray* PeekPointData(unsigned int arrayIdx, unsigned int pieceIdx) const {
         using namespace megamol::core::utility::log;
         if (pieceIdx >= this->pieces.Count()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "VTKImageData: Piece index out of bounds, returning NULL.");
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "VTKImageData: Piece index out of bounds, returning NULL.");
         }
         return this->pieces[pieceIdx].PeekPointData(arrayIdx);
     }
@@ -1180,8 +1150,7 @@ public:
     const DataArray* PeekCellData(vislib::StringA id, unsigned int pieceIdx) const {
         using namespace megamol::core::utility::log;
         if (pieceIdx >= this->pieces.Count()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "VTKImageData: Piece index out of bounds, returning NULL.");
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "VTKImageData: Piece index out of bounds, returning NULL.");
         }
         return this->pieces[pieceIdx].PeekCellData(id);
     }
@@ -1197,8 +1166,7 @@ public:
     const DataArray* PeekCellData(unsigned int arrayIdx, unsigned int pieceIdx) const {
         using namespace megamol::core::utility::log;
         if (pieceIdx >= this->pieces.Count()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "VTKImageData: Piece index out of bounds, returning NULL.");
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "VTKImageData: Piece index out of bounds, returning NULL.");
         }
         return this->pieces[pieceIdx].PeekCellData(arrayIdx);
     }
@@ -1214,9 +1182,8 @@ public:
      * @param nComponents The number of components for each element.
      * @param pieceIdx    The index of the piece.
      */
-    void SetPointData(const char *data, double min, double max,
-            DataArray::DataType t, vislib::StringA id, size_t nComponents,
-            unsigned int pieceIdx) {
+    void SetPointData(const char* data, double min, double max, DataArray::DataType t, vislib::StringA id,
+        size_t nComponents, unsigned int pieceIdx) {
         this->pieces[pieceIdx].SetPointData(data, min, max, t, id, nComponents);
     }
 
@@ -1231,9 +1198,8 @@ public:
      * @param nComponents The number of components for each element.
      * @param pieceIdx    The index of the piece.
      */
-    void SetCellData(const char *data, double min, double max,
-            DataArray::DataType t, vislib::StringA id, size_t nComponents,
-            unsigned int pieceIdx) {
+    void SetCellData(const char* data, double min, double max, DataArray::DataType t, vislib::StringA id,
+        size_t nComponents, unsigned int pieceIdx) {
         this->pieces[pieceIdx].SetCellData(data, min, max, t, id, nComponents);
     }
 
@@ -1255,8 +1221,7 @@ public:
      * @param pieceIdx The piece's index.
      * @return The number of components of each element.
      */
-    inline size_t GetPointDataArrayNumberOfComponents(unsigned int dataIdx,
-            unsigned int pieceIdx) const {
+    inline size_t GetPointDataArrayNumberOfComponents(unsigned int dataIdx, unsigned int pieceIdx) const {
         return this->pieces[pieceIdx].GetPointDataArrayNumberOfComponents(dataIdx);
     }
 
@@ -1269,8 +1234,7 @@ public:
      * @param pieceIdx The piece's index.
      * @return The number of components of each element.
      */
-    inline size_t GetCellDataArrayNumberOfComponents(unsigned int dataIdx,
-            unsigned int pieceIdx) const {
+    inline size_t GetCellDataArrayNumberOfComponents(unsigned int dataIdx, unsigned int pieceIdx) const {
         return this->pieces[pieceIdx].GetCellDataArrayNumberOfComponents(dataIdx);
     }
 
@@ -1280,8 +1244,7 @@ public:
      *
      * @return The name of the cell data array.
      */
-    inline vislib::StringA GetCellDataArrayId(unsigned int dataIdx,
-            unsigned int pieceIdx) const {
+    inline vislib::StringA GetCellDataArrayId(unsigned int dataIdx, unsigned int pieceIdx) const {
         return this->pieces[pieceIdx].GetCellDataArrayId(dataIdx);
     }
 
@@ -1291,8 +1254,7 @@ public:
      *
      * @return The name of the point data array.
      */
-    inline vislib::StringA GetPointDataArrayId(unsigned int dataIdx,
-            unsigned int pieceIdx) const {
+    inline vislib::StringA GetPointDataArrayId(unsigned int dataIdx, unsigned int pieceIdx) const {
         return this->pieces[pieceIdx].GetPointDataArrayId(dataIdx);
     }
 
@@ -1302,8 +1264,7 @@ public:
      *
      * @return The type of the data array.
      */
-    inline DataArray::DataType GetPiecePointArrayType(unsigned int dataIdx,
-            unsigned int pieceIdx) const {
+    inline DataArray::DataType GetPiecePointArrayType(unsigned int dataIdx, unsigned int pieceIdx) const {
         return this->pieces[pieceIdx].GetPointArrayType(dataIdx);
     }
 
@@ -1313,15 +1274,12 @@ public:
      *
      * @return The type of the data array.
      */
-    inline DataArray::DataType GetPieceCellArrayType(unsigned int dataIdx,
-            unsigned int pieceIdx) const {
+    inline DataArray::DataType GetPieceCellArrayType(unsigned int dataIdx, unsigned int pieceIdx) const {
         return this->pieces[pieceIdx].GetCellArrayType(dataIdx);
     }
 
 protected:
-
 private:
-
     /// The data sets number of elements in each direction
     vislib::math::Cuboid<uint> wholeExtent;
 

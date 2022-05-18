@@ -13,10 +13,6 @@ if(BUILD_FRONTEND)
 
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-  # Check option dependencies: First list item is always the current build option,
-  # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
-
   # Collect source files
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -28,8 +24,9 @@ if(BUILD_FRONTEND)
   target_link_libraries(${BINARY_NAME} PRIVATE ${CMAKE_DL_LIBS})
 
   if(MSVC)
-    set_property(TARGET ${BINARY_NAME} APPEND PROPERTY LINK_FLAGS /STACK:8388608)
+    set_property(TARGET ${BINARY_NAME} APPEND_STRING PROPERTY LINK_FLAGS /STACK:8388608)
   endif()
+  set_property(TARGET ${BINARY_NAME} APPEND_STRING PROPERTY LINK_FLAGS ${EXTERNAL_EXE_LINKER_FLAGS})
 
   # Grouping in Visual Studio
   set_target_properties(${BINARY_NAME} PROPERTIES FOLDER base)
@@ -54,6 +51,11 @@ if(BUILD_FRONTEND)
 
 endif()
 
+if(ENABLE_GL)
+    set(CONFIG_GL_COMMENT "")
+else()
+    set(CONFIG_GL_COMMENT "--")
+endif()
 # Copy default configuration file
 configure_file(extra/megamol_config.lua.in ${CMAKE_BINARY_DIR}/megamol_config.lua)
 configure_file(extra/install_megamol_config_lua.cmake.in ${CMAKE_BINARY_DIR}/install_megamol_config_lua.cmake @ONLY)

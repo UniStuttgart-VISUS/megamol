@@ -8,19 +8,21 @@
 #ifndef PROBE_RENDER_TASK_H_INCLUDED
 #define PROBE_RENDER_TASK_H_INCLUDED
 
-#include "mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 
 namespace megamol {
 namespace probe_gl {
 
-class ProbeRenderTasks : public mesh::AbstractGPURenderTaskDataSource {
+class ProbeRenderTasks : public mesh_gl::AbstractGPURenderTaskDataSource {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ProbeRenderTasks"; }
+    static const char* ClassName(void) {
+        return "ProbeRenderTasks";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -36,12 +38,21 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     ProbeRenderTasks();
     ~ProbeRenderTasks();
 
 protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create();
+
     virtual bool getDataCallback(core::Call& caller);
 
     virtual bool getMetaDataCallback(core::Call& caller);
@@ -57,14 +68,23 @@ private:
 
     uint32_t m_version;
 
+    /** In-place material collection (initialized with probe btf) */
+    std::shared_ptr<mesh_gl::GPUMaterialCollection> m_material_collection;
+
+    std::vector<std::string> m_identifiers;
+
+    std::vector<glowl::DrawElementsCommand> m_draw_commands;
+
     std::vector<PerProbeDrawData> m_probe_draw_data;
+
+    bool m_show_probes;
 
     core::CallerSlot m_probes_slot;
 
-    core::CallerSlot m_probe_manipulation_slot;
+    core::CallerSlot m_event_slot;
 };
 
-} // namespace mesh
+} // namespace probe_gl
 } // namespace megamol
 
 

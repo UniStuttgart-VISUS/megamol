@@ -4,8 +4,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "VoronoiChannelCalculator.h"
+#include "stdafx.h"
 
 using namespace megamol::core;
 using namespace megamol::molecularmaps;

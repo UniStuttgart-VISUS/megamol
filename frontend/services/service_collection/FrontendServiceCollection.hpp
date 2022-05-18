@@ -17,7 +17,6 @@ namespace frontend {
 // provides abstraction to call AbstractFrontendService methods on a collection of services at once
 class FrontendServiceCollection {
 public:
-
     FrontendServiceCollection() = default;
     ~FrontendServiceCollection() = default;
 
@@ -28,7 +27,7 @@ public:
 
     bool assignRequestedResources();
     std::vector<FrontendResource>& getProvidedResources();
-    
+
     void updateProvidedResources();
     void digestChangedRequestedResources();
     void resetProvidedResources();
@@ -39,7 +38,6 @@ public:
     bool shouldShutdown() const;
 
 private:
-
     void sortServices();
     FrontendResource* findResource(std::string const& name);
 
@@ -47,8 +45,12 @@ private:
         AbstractFrontendService* service = nullptr;
         void* service_config = nullptr;
 
-         AbstractFrontendService const& get() const { return *service; }
-         AbstractFrontendService& get() { return *service; }
+        AbstractFrontendService const& get() const {
+            return *service;
+        }
+        AbstractFrontendService& get() {
+            return *service;
+        }
     };
 
     std::vector<ServiceEntry> m_services;

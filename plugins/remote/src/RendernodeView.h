@@ -13,7 +13,7 @@
 #include "mmcore/view/AbstractTileView.h"
 
 #ifdef WITH_MPI
-#    include "mpi.h"
+#include "mpi.h"
 #endif
 
 #include "DistributedProto.h"
@@ -30,14 +30,18 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "RendernodeView"; }
+    static const char* ClassName(void) {
+        return "RendernodeView";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Simple MPI-based render view."; }
+    static const char* Description(void) {
+        return "Simple MPI-based render view.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -57,7 +61,9 @@ public:
      *
      * @return false
      */
-    static bool SupportQuickstart(void) { return false; }
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
     /**
      * Initializes a new instance.
@@ -69,7 +75,7 @@ public:
      */
     virtual ~RendernodeView(void);
 
-    void Render(const mmcRenderViewContext& context, core::Call* call) override;
+    void Render(double time, double instanceTime) override;
 
     bool OnRenderView(core::Call& call) override;
 
@@ -139,7 +145,9 @@ private:
         return true;
     }
 
-    bool isBCastMaster() const { return rank_ == bcast_rank_; }
+    bool isBCastMaster() const {
+        return rank_ == bcast_rank_;
+    }
 
     bool initMPI();
 

@@ -4,11 +4,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/light/PointLight.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/ColorParam.h"
+#include "stdafx.h"
 
 using namespace megamol::core::view::light;
 
@@ -19,10 +19,7 @@ void megamol::core::view::light::PointLight::addLight(LightCollection& light_col
 /*
  * megamol::core::view::light::PointLight::PointLight
  */
-PointLight::PointLight(void)
-    : AbstractLight()
-    , position("Position", "")
-    , radius("Radius", "") {
+PointLight::PointLight(void) : AbstractLight(), position("Position", ""), radius("Radius", "") {
 
     // point light
     lightsource = std::make_shared<PointLightType>();
@@ -36,7 +33,9 @@ PointLight::PointLight(void)
 /*
  * megamol::core::view::light::PointLight::~PointLight
  */
-PointLight::~PointLight(void) { this->Release(); }
+PointLight::~PointLight(void) {
+    this->Release();
+}
 
 /*
  * megamol::core::view::light::PointLight::readParams
@@ -48,7 +47,7 @@ void PointLight::readParams() {
     light->intensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
 
     auto pl_pos = this->position.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    std::copy(pl_pos, pl_pos+3, light->position.begin());
+    std::copy(pl_pos, pl_pos + 3, light->position.begin());
     light->radius = this->radius.Param<core::param::FloatParam>()->Value();
 }
 

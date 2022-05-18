@@ -1,7 +1,7 @@
 /*
  * SimpleMessageHeader.h
  *
- * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart. 
+ * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
@@ -22,123 +22,117 @@ namespace vislib {
 namespace net {
 
 
+/**
+ * This class represents a message header consisting of
+ * SimpleMessageHeaderData.
+ */
+class SimpleMessageHeader : public AbstractSimpleMessageHeader {
+
+public:
+    /** Ctor. */
+    SimpleMessageHeader(void);
+
     /**
-     * This class represents a message header consisting of 
-     * SimpleMessageHeaderData.
+     * Clone 'rhs'.
+     *
+     * @param rhs The object to be cloned.
      */
-    class SimpleMessageHeader : public AbstractSimpleMessageHeader {
+    SimpleMessageHeader(const SimpleMessageHeader& rhs);
 
-    public:
+    /**
+     * Clone 'rhs'.
+     *
+     * @param rhs The object to be cloned.
+     */
+    SimpleMessageHeader(const AbstractSimpleMessageHeader& rhs);
 
-        /** Ctor. */
-        SimpleMessageHeader(void);
+    /**
+     * Assign the given header data to this message header.
+     *
+     * @param data The message header data.
+     */
+    SimpleMessageHeader(const SimpleMessageHeaderData& data);
 
-        /**
-         * Clone 'rhs'.
-         *
-         * @param rhs The object to be cloned. 
-         */
-        SimpleMessageHeader(const SimpleMessageHeader& rhs);
+    /**
+     * Assign the given header data to this message header.
+     *
+     * @param data Pointer to the message header data. This must not be
+     *             NULL.
+     */
+    explicit SimpleMessageHeader(const SimpleMessageHeaderData* data);
 
-        /**
-         * Clone 'rhs'.
-         *
-         * @param rhs The object to be cloned. 
-         */
-        SimpleMessageHeader(const AbstractSimpleMessageHeader& rhs);
+    /** Dtor. */
+    virtual ~SimpleMessageHeader(void);
 
-        /**
-         * Assign the given header data to this message header.
-         *
-         * @param data The message header data.
-         */
-        SimpleMessageHeader(const SimpleMessageHeaderData& data);
+    /**
+     * Provides direct access to the underlying SimpleMessageHeaderData.
+     *
+     * @return A pointer to the message header data.
+     */
+    virtual SimpleMessageHeaderData* PeekData(void);
 
-        /**
-         * Assign the given header data to this message header.
-         *
-         * @param data Pointer to the message header data. This must not be 
-         *             NULL.
-         */
-        explicit SimpleMessageHeader(const SimpleMessageHeaderData *data);
+    /**
+     * Provides direct access to the underlying SimpleMessageHeaderData.
+     *
+     * @return A pointer to the message header data.
+     */
+    virtual const SimpleMessageHeaderData* PeekData(void) const;
 
-        /** Dtor. */
-        virtual ~SimpleMessageHeader(void);
+    /**
+     * Assignment operator.
+     *
+     * @param The right hand side operand.
+     *
+     * @return *this
+     */
+    inline SimpleMessageHeader& operator=(const SimpleMessageHeader& rhs) {
+        Super::operator=(rhs);
+        return *this;
+    }
 
-        /**
-         * Provides direct access to the underlying SimpleMessageHeaderData.
-         *
-         * @return A pointer to the message header data.
-         */
-        virtual SimpleMessageHeaderData *PeekData(void);
+    /**
+     * Assignment operator.
+     *
+     * @param The right hand side operand.
+     *
+     * @return *this
+     */
+    inline SimpleMessageHeader& operator=(const AbstractSimpleMessageHeader& rhs) {
+        Super::operator=(rhs);
+        return *this;
+    }
 
-        /**
-         * Provides direct access to the underlying SimpleMessageHeaderData.
-         *
-         * @return A pointer to the message header data.
-         */
-        virtual const SimpleMessageHeaderData *PeekData(void) const;
+    /**
+     * Assignment operator.
+     *
+     * @param The right hand side operand.
+     *
+     * @return *this
+     */
+    inline SimpleMessageHeader& operator=(const SimpleMessageHeaderData& rhs) {
+        Super::operator=(rhs);
+        return *this;
+    }
 
-        /**
-         * Assignment operator.
-         *
-         * @param The right hand side operand.
-         *
-         * @return *this
-         */
-        inline SimpleMessageHeader& operator =(const SimpleMessageHeader& rhs) {
-            Super::operator =(rhs);
-            return *this;
-        }
+    /**
+     * Assignment operator.
+     *
+     * @param The right hand side operand. This must not be NULL.
+     *
+     * @return *this
+     */
+    inline SimpleMessageHeader& operator=(const SimpleMessageHeaderData* rhs) {
+        Super::operator=(rhs);
+        return *this;
+    }
 
-        /**
-         * Assignment operator.
-         *
-         * @param The right hand side operand.
-         *
-         * @return *this
-         */
-        inline SimpleMessageHeader& operator =(
-                const AbstractSimpleMessageHeader& rhs) {
-            Super::operator =(rhs);
-            return *this;
-        }
+private:
+    /** Superclass typedef. */
+    typedef AbstractSimpleMessageHeader Super;
 
-        /**
-         * Assignment operator.
-         *
-         * @param The right hand side operand.
-         *
-         * @return *this
-         */
-        inline SimpleMessageHeader& operator =(
-                const SimpleMessageHeaderData& rhs) {
-            Super::operator =(rhs);
-            return *this;
-        }
-
-        /**
-         * Assignment operator.
-         *
-         * @param The right hand side operand. This must not be NULL.
-         *
-         * @return *this
-         */
-        inline SimpleMessageHeader& operator =(
-                const SimpleMessageHeaderData *rhs) {
-            Super::operator =(rhs);
-            return *this;
-        }
-
-    private:
-
-        /** Superclass typedef. */
-        typedef AbstractSimpleMessageHeader Super;
-
-        /** The actual header data. */
-        SimpleMessageHeaderData data;
-
-    };
+    /** The actual header data. */
+    SimpleMessageHeaderData data;
+};
 
 
 } /* end namespace net */

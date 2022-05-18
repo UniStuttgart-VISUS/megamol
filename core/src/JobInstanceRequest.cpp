@@ -5,15 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/JobInstanceRequest.h"
+#include "stdafx.h"
 
 
 /*
  * megamol::core::JobInstanceRequest::JobInstanceRequest
  */
-megamol::core::JobInstanceRequest::JobInstanceRequest(void)
-        : InstanceRequest(), desc(NULL) {
+megamol::core::JobInstanceRequest::JobInstanceRequest(void) : InstanceRequest(), desc(NULL) {
     // intentionally empty
 }
 
@@ -21,9 +20,9 @@ megamol::core::JobInstanceRequest::JobInstanceRequest(void)
 /*
  * megamol::core::JobInstanceRequest::JobInstanceRequest
  */
-megamol::core::JobInstanceRequest::JobInstanceRequest(
-        const megamol::core::JobInstanceRequest& src) : InstanceRequest(),
-        desc(NULL) {
+megamol::core::JobInstanceRequest::JobInstanceRequest(const megamol::core::JobInstanceRequest& src)
+        : InstanceRequest()
+        , desc(NULL) {
     *this = src;
 }
 
@@ -39,10 +38,10 @@ megamol::core::JobInstanceRequest::~JobInstanceRequest(void) {
 /*
  * megamol::core::JobInstanceRequest::operator=
  */
-megamol::core::JobInstanceRequest&
-megamol::core::JobInstanceRequest::operator=(
-        const megamol::core::JobInstanceRequest& rhs) {
-    if (&rhs == this) return *this;
+megamol::core::JobInstanceRequest& megamol::core::JobInstanceRequest::operator=(
+    const megamol::core::JobInstanceRequest& rhs) {
+    if (&rhs == this)
+        return *this;
     ParamValueSetRequest::operator=(rhs);
     this->SetName(rhs.Name());
     this->desc = rhs.desc;
@@ -53,9 +52,6 @@ megamol::core::JobInstanceRequest::operator=(
 /*
  * megamol::core::JobInstanceRequest::operator==
  */
-bool megamol::core::JobInstanceRequest::operator==(
-        const megamol::core::JobInstanceRequest& rhs) const {
-    return ParamValueSetRequest::operator ==(rhs)
-        && (this->Name() == rhs.Name())
-        && (this->desc == rhs.desc);
+bool megamol::core::JobInstanceRequest::operator==(const megamol::core::JobInstanceRequest& rhs) const {
+    return ParamValueSetRequest::operator==(rhs) && (this->Name() == rhs.Name()) && (this->desc == rhs.desc);
 }

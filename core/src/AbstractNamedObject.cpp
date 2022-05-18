@@ -4,12 +4,12 @@
  * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "mmcore/AbstractNamedObject.h"
+#include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
+#include "vislib/UnsupportedOperationException.h"
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"
-#include "mmcore/utility/log/Log.h"
-#include "vislib/UnsupportedOperationException.h"
 
 using namespace megamol::core;
 
@@ -19,9 +19,10 @@ using namespace megamol::core;
 /*
  * AbstractNamedObject::GraphLocker::GraphLocker
  */
-AbstractNamedObject::GraphLocker::GraphLocker(AbstractNamedObject::const_ptr_type obj,
-        bool writelock) : vislib::sys::SyncObject(),
-        writelock(writelock), root(NULL) {
+AbstractNamedObject::GraphLocker::GraphLocker(AbstractNamedObject::const_ptr_type obj, bool writelock)
+        : vislib::sys::SyncObject()
+        , writelock(writelock)
+        , root(NULL) {
     ASSERT(obj != NULL);
 
     this->root = obj->RootModule();
@@ -41,7 +42,7 @@ AbstractNamedObject::GraphLocker::~GraphLocker(void) {
  */
 void AbstractNamedObject::GraphLocker::Lock(void) {
     //if (this->writelock) {
-//        this->root->ModuleGraphLock().LockExclusive();
+    //        this->root->ModuleGraphLock().LockExclusive();
     //} else {
     //    this->root->ModuleGraphLock().LockExclusive();
     //}
@@ -53,7 +54,7 @@ void AbstractNamedObject::GraphLocker::Lock(void) {
  */
 void AbstractNamedObject::GraphLocker::Unlock(void) {
     //if (this->writelock) {
-//        this->root->ModuleGraphLock().UnlockExclusive();
+    //        this->root->ModuleGraphLock().UnlockExclusive();
     //} else {
     //    this->root->ModuleGraphLock().UnlockExclusive();
     //}
@@ -75,23 +76,23 @@ AbstractNamedObject::~AbstractNamedObject(void) {
  * AbstractNamedObject::FullName
  */
 vislib::StringA AbstractNamedObject::FullName(void) const {
-  try {
-    AbstractNamedObject::GraphLocker locker(this->shared_from_this(), false);
-    vislib::sys::AutoLock lock(locker);
-    vislib::StringA name;
-    const_ptr_type ano = this->shared_from_this();
-    while (ano) {
-        if (ano->Name().IsEmpty() && (!ano->Parent())) {
-            break;
+    try {
+        AbstractNamedObject::GraphLocker locker(this->shared_from_this(), false);
+        vislib::sys::AutoLock lock(locker);
+        vislib::StringA name;
+        const_ptr_type ano = this->shared_from_this();
+        while (ano) {
+            if (ano->Name().IsEmpty() && (!ano->Parent())) {
+                break;
+            }
+            name.Prepend(ano->Name());
+            name.Prepend("::");
+            ano = ano->Parent();
         }
-        name.Prepend(ano->Name());
-        name.Prepend("::");
-        ano = ano->Parent();
+        return name;
+    } catch (...) { // evil multi-threading and broken shared ownership results in ill behaviour
+        return "";
     }
-    return name;
-  } catch(...) { // evil multi-threading and broken shared ownership results in ill behaviour
-    return "";
-  }
 }
 
 
@@ -136,11 +137,9 @@ void AbstractNamedObject::DisconnectCalls(void) {
 /*
  * AbstractNamedObject::IsParamRelevant
  */
-bool AbstractNamedObject::IsParamRelevant(
-        vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const vislib::SmartPtr<param::AbstractParam>& param) const {
-    throw vislib::UnsupportedOperationException(
-        "AbstractNamedObject::IsParamRelevant", __FILE__, __LINE__);
+bool AbstractNamedObject::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
+    const vislib::SmartPtr<param::AbstractParam>& param) const {
+    throw vislib::UnsupportedOperationException("AbstractNamedObject::IsParamRelevant", __FILE__, __LINE__);
 }
 
 
@@ -173,8 +172,12 @@ bool AbstractNamedObject::isNameValid(const vislib::StringA& name) {
 /*
  * AbstractNamedObject::AbstractNamedObject
  */
-AbstractNamedObject::AbstractNamedObject(void) : enable_shared_from_this(), name(),
-        parent(), owner(nullptr), cleanupMark(false) {
+AbstractNamedObject::AbstractNamedObject(void)
+        : enable_shared_from_this()
+        , name()
+        , parent()
+        , owner(nullptr)
+        , cleanupMark(false) {
     // intentionally empty
 }
 
@@ -182,7 +185,7 @@ AbstractNamedObject::AbstractNamedObject(void) : enable_shared_from_this(), name
 /*
  * AbstractNamedObject::SetOwner
  */
-void AbstractNamedObject::SetOwner(void *owner) {
+void AbstractNamedObject::SetOwner(void* owner) {
     if (owner == nullptr) {
         this->owner = nullptr;
     } else {

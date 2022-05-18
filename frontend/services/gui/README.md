@@ -12,14 +12,10 @@ This is the service that provides the GUI for MegaMol.
         - [Main Menu](#main-menu) 
         - [*Module Stock List* Sidebar](#module-stock-list-sidebar) 
         - [*Module Parameters* Sidebar](#module-parameters-sidebar) 
-        - [Project Tab ](#project-tab) 
-            - [Menu Bar](#menu-bar) 
-            - [Graph](#graph) 
-            - [Module Groups](#module-groups) 
-            - [Module Group Interface Slots](#module-group-interface-slots) 
+        - [Project Menu Bar](#project-menu-bar) 
+        - [Project Graph](#project-graph) 
     - [Hotkey Overview](#hotkey-overview)             
 - [Modules](#modules) 
-    - [GUIView](#guiview) 
     - [OverlayRenderer](#overlayrenderer) 
         - [Parameters](#parameters) 
 - [Information for Developers](#information-for-developers) 
@@ -61,6 +57,7 @@ The main menu provides the following options:
     * **`Log Console`** (`F9`) Show/Hide the log console window. In order to prevent automatically showing the log console on errors and warning, disable the `Force Open` option.
     * **`Transfer Function Editor`** (`F8`) Show/Hide the transfer function editor. You have to `Apply` changes in order to take effect.
     * **`Performance Metrics`** (`F7`) Show/Hide the performance metrics window showing the fps or ms. 
+    * **`Hotkey Editor`** (`F6`) Show/Hide the hotkey editor window. 
     * **`Show/Hide All Windows`** (`Ctrl + g`) Show/Hide all GUI windows (corresponding LUA/CLI option: `mmSetGUIVisible(<bool>)/mmGetGUIVisible()`/ `guishow`).
     * **`Windows Docking Preset`** Load the docking preset for all windows.
 * **`Screenshot`** 
@@ -94,6 +91,8 @@ The project configurator is part of the GUI and can be opened via the main menu:
 * **`View`**
     * **`Modules Sidebar`** Show/Hide sidebar with module stock list.
     * **`Parameter Sidebar`** Show/Hide sidebar with parameters of currently selected module.
+    *MegaMol has to be configured with CMake option ENABLE_PROFILING set to `true` in order to enable the following menu option:*
+    * **`Profiling Bar`** Show/Hide profiling bar. 
 
 #### *Module Stock List* Sidebar
 
@@ -106,25 +105,25 @@ The project configurator is part of the GUI and can be opened via the main menu:
 
 * Search for Parameter (`Ctrl + Shift + p`)
         
-#### Project Tab 
+#### Project Menu Bar
 
-##### Menu Bar
-
-* `Main View` Change main view state of currently selected view module.
-* `Reset Scrolling` Reset scrolling.
-* `Reset Zooming` Reset zooming.
-* `Grid` Show/Hide grid.
-* `Call Names` Show/Hide call names.
-* `Module Names` Show/Hide module names and other decoration.
-* `Slot Names` Show/Hide slot names.
+* `Running` Indicated if project is currently running. There is always exactly one project that is set running. 
+* `Graph Entry` Select `View` module to set or unset view module as graph entry
 * `Layout Graph` Apply simple layout of the project graph.
+    * `Modules`
+        * `Name` Show/Hide module names
+        * `Slot` Show/Hide slot names
+    * `Calls`
+        * `Name` Show/Hide call names
+        * `Slot` Show/Hide connected slot names
+* `Labels` Show/Hide slot names.
+* `Grid` Show/Hide grid.
+* Scrolling `Reset`
+* Zooming `Reset`
 
-##### Graph *(= Node-Link-Diagram)*
+#### Project Graph 
+*(= Node-Link-Diagram)*
 
-* Call Creation
-    * Drag and Drop from Call Slot to another highlighted compatible Call Slot.
-* Add Call Slot to existing Interface Slot
-    * Drag and Drop from Call Slot to another highlighted compatible Interface Slot. 
 * Spawn *Module Stock List* in pop-up window at mouse position.
     * `Ctrl + Shift + m`
     * `Double Left Click`    
@@ -137,42 +136,49 @@ The project configurator is part of the GUI and can be opened via the main menu:
 * Multiple Selection of Modules
     * Drag & Drop with `Left Mouse Button` (start outside of any module). Each module partially overlapped by the frame will be selected.
     * Hold `Shift` + `Left Click` on modules you additionally want to select/deselect to/from current selection.
-* `Module`
-    * Main View `Radio Button`: Toggle main view flag (only available for view modules).
-    * Parameter `Arrow Button`: Show/Hide *Module Parameters* in small window stuck to the module.
-    * Context Menu (`Right Click`)
-        * Delete (Alternative: Select with `Left Click` an press `Delete`)
-        * Layout (Only available when multiple modules are selected)
-        * Rename
-        * Add to Group
-            * New
-            * *Select from list of existing groups*
-        * Remove from Group
-* `Call`
-    * Context Menu (`Right Click`)
-        * Delete (Alternative: Select with `Left Click` an press `Delete`)
-* `Call Slot` 
-    * `Double Left Click` Show *Module Stock List* in pop-up window.
-    * Context Menu (`Right Click`)    
-        * Create new Interface Slot
-        * Remove from Interface Slot
-* `Group`(-Header)
-    * `Double Left Click` Toggle between expanded and collapsed view.
-    * Context Menu (`Right Click`)
-        * Collapse View / Expand View
-        * Layout 
-        * Rename      
-        * Delete (Alternative: Select with `Left Click` an press `Delete`)
+
+##### Modules
+* Main View `Radio Button`: Toggle main view flag (only available for view modules).
+* Parameter `Arrow Button`: Show/Hide *Module Parameters* in small window stuck to the module.
+* Context Menu (`Right Click`)
+    * Delete (Alternative: Select with `Left Click` an press `Delete`)
+    * Layout (Only available when multiple modules are selected)
+    * Rename
+    * Add to Group
+        * New
+        * *Select from list of existing groups*
+    * Remove from Group
+
+##### Calls
+* Context Menu (`Right Click`)
+    * Coloring: Select `Default`or `SetMap2` color table for call curve coloring.
+    * Delete (Alternative: Select with `Left Click` an press `Delete`)
+* Call Creation
+    * Drag and Drop from Call Slot to another highlighted compatible Call Slot.
+
+##### Call Slots
+* Add Call Slot to existing Interface Slot
+    * Drag and Drop from Call Slot to another highlighted compatible Interface Slot.
+* `Double Left Click` Show *Module Stock List* in pop-up window.
+* Context Menu (`Right Click`)    
+    * Create new Interface Slot
+    * Remove from Interface Slot
 
 ##### Module Groups
-
 Modules can be bundled in groups. 
 This allows a minimized (collapsed) view of large module groups inside the configurator. 
 Grouped modules can be reused when stored separately. 
 Module groups can be added to any other projects.
 Module groups are stored in project files using the already available module namespace (which is currently unused in the core). 
 
-##### Module Group Interface Slots
+* `Double Left Click` Toggle between expanded and collapsed view.
+* Context Menu (`Right Click`)
+    * Collapse View / Expand View
+    * Layout 
+    * Rename      
+    * Delete (Alternative: Select with `Left Click` an press `Delete`)           
+
+###### Module Group Interface Slots
 
 Call slots of modules, which are part of a group, can be added to the group interface. 
 This generates new interface slot which allow outgoing calls. 
@@ -181,7 +187,7 @@ Additionally, call slots can be added to the groups interface via the context me
 Caller interface slots (on the right side of a group) allow the bundling of more than one connection to the same callee slot of another module. 
 Add a call slot to an existing interface slot via drag and drop (compatible call slots are highlighted if an interface slot is hovered).
 Callee interface slots (on the left side of a group) allow only one connected call slot.
-Interface slots are stored in project files as part of the configurators state parameter.                       
+Interface slots are stored in project files as part of the configurators state parameter.  
 
 ### Hotkey Overview
 
@@ -190,7 +196,7 @@ The following hotkeys are used in the GUI:
 **Global *(in class GUIManager)*:**
 * Trigger Screenshot:        **`F2`**
 * Toggle Graph Entry:        **`F3`**
-* Show/hide Windows:         **`F7-F11`**
+* Show/hide Windows:         **`F6-F11`**
 * Show/hide Menu:            **`F12`**
 * Show/hide GUI:             **`Ctrl  + g`**
 * Search Parameter:          **`Ctrl  + p`**
@@ -332,32 +338,25 @@ In order to register a GUI window, popup or notification within a frontend servi
 
 - In the **frontend service header file (.h)** add a variable for opening the popup. If this variable is set to `true`, the popup is opened.
 
-        bool m_open_popup = true;
+        std::shared_ptr<bool> gui_open_popup;
 
 - Since the registration of a GUI popup is only required once, add the following code to the **setRequestedResources()** function. 
     *Adjust the index in `resources`!*
 
         auto &gui_window_request_resource = resources[0].getResource<megamol::frontend_resources::GUIRegisterWindow>();
-        gui_window_request_resource.register_popup("TEST PopUp", m_open_popup, [&]() {
-
-            // Put your popup content here ...
-            ImGui::TextUnformatted("Hello World ...");
-            if (ImGui::Button("Cancel")) {
-                ImGui::CloseCurrentPopup();
-            }            
-        });
+        gui_window_request_resource.register_popup("<PopUp Title", std::weak_ptr<bool>(gui_open_popup), [&]() {
 
 ### GUI Notification
 
 - In the **frontend service header file (.h)** add a variable for opening the popup. If this variable is set to `true`, the popup is opened.
 
-        bool m_open_popup = true;
+        std::shared_ptr<bool> gui_open_notification;
 
 - Since the registration of a GUI notification is only required once, add the following code to the **setRequestedResources()** function. 
     *Adjust the index in `resources`!*
 
         auto &gui_window_request_resource = resources[0].getResource<megamol::frontend_resources::GUIRegisterWindow>();
-        gui_window_request_resource.register_notification("TEST Notification", m_open_popup, "This is the notification ...");
+        gui_window_request_resource.register_notification("<Notification Title>", std::weak_ptr<bool>(gui_open_notification), "<Notification Message>");
     
   **NOTE:** The notification is also printed to the console. If the GUI resource is not available, there will be no console output of this message!
 
@@ -368,7 +367,7 @@ This is the default GUI state stored as JSON string in the lua project file:
 ```lua
 mmSetGUIVisible(true)
 mmSetGUIScale(1.000000)
-mmSetGUIState([=[{"ConfiguratorState":{"module_list_sidebar_width":250.0,"show_module_list_sidebar":true},"GUIState":{"font_file_name":"","font_size":13,"imgui_settings":"[Window][Configurator     F11]\nCollapsed=0\nDockId=0x00000004\n\n[Window][Parameters     F10]\nPos=0,18\nSize=639,1422\nCollapsed=0\nDockId=0x00000003,0\n\n[Window][Log Console     F9]\nCollapsed=0\nDockId=0x00000002\n\n[Window][Transfer Function Editor     F8]\nCollapsed=0\nDockId=0x00000003\n\n[Window][DockSpaceViewport_11111111]\nPos=0,18\nSize=2560,1422\nCollapsed=0\n\n[Window][Debug##Default]\nPos=60,60\nSize=400,400\nCollapsed=0\n\n[Window][Save Project (.lua)]\nPos=1080,470\nSize=400,500\nCollapsed=0\n\n[Docking][Data]\nDockSpace     ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,18 Size=2560,1422 Split=Y\n  DockNode    ID=0x00000001 Parent=0x8B93E3BD SizeRef=2560,1078 Split=X\n    DockNode  ID=0x00000003 Parent=0x00000001 SizeRef=639,1078 Selected=0x75D4D3D8\n    DockNode  ID=0x00000004 Parent=0x00000001 SizeRef=1919,1078 CentralNode=1\n  DockNode    ID=0x00000002 Parent=0x8B93E3BD SizeRef=2560,360\n\n","menu_visible":true,"style":2},"GraphStates":{"Project":{"canvas_scrolling":[0.0,0.0],"canvas_zooming":1.0,"param_extended_mode":false,"parameter_sidebar_width":300.0,"params_readonly":false,"params_visible":true,"project_name":"Project_1","show_call_label":true,"show_call_slots_label":false,"show_grid":false,"show_module_label":true,"show_parameter_sidebar":true,"show_slot_label":false}},"WindowConfigurations":{"Configurator":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":6,"win_collapsed":false,"win_flags":1032,"win_hotkey":[300,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[2560.0,1440.0],"win_show":false,"win_size":[2560.0,1440.0]},"Log Console":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":7,"win_collapsed":false,"win_flags":3072,"win_hotkey":[298,0],"win_position":[0.0,1264.0],"win_reset_position":[0.0,1264.0],"win_reset_size":[2560.0,176.0],"win_show":false,"win_size":[2560.0,176.0]},"Parameters":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":1,"win_collapsed":false,"win_flags":8,"win_hotkey":[299,0],"win_position":[0.0,18.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,500.0],"win_show":true,"win_size":[639.0,1422.0]},"Performance Metrics":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":3,"win_collapsed":false,"win_flags":2097217,"win_hotkey":[296,0],"win_position":[1280.0,0.0],"win_reset_position":[1280.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]},"Transfer Function Editor":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"log_force_open":true,"log_level":4294967295,"param_extended_mode":false,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":5,"win_collapsed":false,"win_flags":64,"win_hotkey":[297,0],"win_position":[400.0,0.0],"win_reset_position":[400.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]}}}]=])
+mmSetGUIState([=[{"ConfiguratorState":{"module_list_sidebar_width":250.0,"show_module_list_sidebar":false},"GUIState":{"font_file_name":"D:/03_megamol/master/build/install/bin/../share/resources/fonts/Roboto-Regular.ttf","font_size":12,"imgui_settings":"[Window][Configurator     F11]\nCollapsed=0\nDockId=0x00000004\n\n[Window][Parameters     F10]\nPos=0,18\nSize=479,781\nCollapsed=0\nDockId=0x00000003,0\n\n[Window][Log Console     F9]\nPos=0,801\nSize=1920,260\nCollapsed=0\nDockId=0x00000002,0\n\n[Window][DockSpaceViewport_11111111]\nPos=0,18\nSize=1920,1043\nCollapsed=0\n\n[Window][Debug##Default]\nPos=60,60\nSize=400,400\nCollapsed=0\n\n[Window][###fbw24927]\nPos=760,280\nSize=400,500\nCollapsed=0\n\n[Docking][Data]\nDockSpace     ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,18 Size=1920,1043 Split=Y\n  DockNode    ID=0x00000001 Parent=0x8B93E3BD SizeRef=1920,794 Split=X\n    DockNode  ID=0x00000003 Parent=0x00000001 SizeRef=479,794 Selected=0x75D4D3D8\n    DockNode  ID=0x00000004 Parent=0x00000001 SizeRef=1439,794 CentralNode=1\n  DockNode    ID=0x00000002 Parent=0x8B93E3BD SizeRef=1920,265 Selected=0xE0B4A65C\n\n","menu_visible":true,"style":2},"GraphStates":{"Project":{"call_coloring":false,"canvas_scrolling":[0.0,0.0],"canvas_zooming":1.0,"param_extended_mode":false,"parameter_sidebar_width":300.0,"profiling_bar_height":300.0,"project_name":"Project_1","show_call_label":true,"show_call_slots_label":false,"show_grid":false,"show_module_label":true,"show_parameter_sidebar":false,"show_profiling_bar":false,"show_slot_label":false}},"WindowConfigurations":{"Configurator":{"win_callback":6,"win_collapsed":false,"win_flags":1032,"win_hotkey":[300,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[750.0,500.0],"win_show":false,"win_size":[750.0,500.0]},"Hotkey Editor":{"hotkey_list":[[{"key":293,"mods":4,"name":"_hotkey_gui_exit","parent":"","parent_type":2}],[{"key":83,"mods":2,"name":"_hotkey_gui_save_project","parent":"","parent_type":2}],[{"key":76,"mods":2,"name":"_hotkey_gui_load_project","parent":"","parent_type":2}],[{"key":301,"mods":0,"name":"_hotkey_gui_menu","parent":"","parent_type":2}],[{"key":292,"mods":0,"name":"_hotkey_gui_toggle_graph_entry","parent":"","parent_type":2}],[{"key":291,"mods":0,"name":"_hotkey_gui_trigger_screenshot","parent":"","parent_type":2}],[{"key":71,"mods":2,"name":"_hotkey_gui_show-hide","parent":"","parent_type":2}],[{"key":300,"mods":0,"name":"_hotkey_gui_window_Configurator","parent":"17030246060415721360","parent_type":3}],[{"key":77,"mods":3,"name":"_hotkey_gui_configurator_module_search","parent":"","parent_type":4}],[{"key":80,"mods":3,"name":"_hotkey_gui_configurator_param_search","parent":"","parent_type":4}],[{"key":261,"mods":0,"name":"_hotkey_gui_configurator_delete_graph_entry","parent":"","parent_type":4}],[{"key":83,"mods":3,"name":"_hotkey_gui_configurator_save_project","parent":"","parent_type":4}],[{"key":299,"mods":0,"name":"_hotkey_gui_window_Parameters","parent":"2021973547876601465","parent_type":3}],[{"key":80,"mods":2,"name":"_hotkey_gui_parameterlist_param_search","parent":"","parent_type":4}],[{"key":298,"mods":0,"name":"_hotkey_gui_window_Log Console","parent":"3923344468212134616","parent_type":3}],[{"key":297,"mods":0,"name":"_hotkey_gui_window_Transfer Function Editor","parent":"6166565350214160899","parent_type":3}],[{"key":296,"mods":0,"name":"_hotkey_gui_window_Performance Metrics","parent":"4920642770320252208","parent_type":3}],[{"key":295,"mods":0,"name":"_hotkey_gui_window_Hotkey Editor","parent":"529232018636216348","parent_type":3}]],"win_callback":4,"win_collapsed":false,"win_flags":0,"win_hotkey":[295,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]},"Log Console":{"log_force_open":true,"log_level":100,"win_callback":7,"win_collapsed":false,"win_flags":3072,"win_hotkey":[298,0],"win_position":[0.0,801.0],"win_reset_position":[0.0,0.0],"win_reset_size":[500.0,50.0],"win_show":true,"win_size":[1920.0,260.0]},"Parameters":{"param_extended_mode":false,"param_modules_list":[],"win_callback":1,"win_collapsed":false,"win_flags":8,"win_hotkey":[299,0],"win_position":[0.0,18.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,500.0],"win_show":true,"win_size":[479.0,781.0]},"Performance Metrics":{"fpsms_max_value_count":20,"fpsms_mode":0,"fpsms_refresh_rate":2.0,"fpsms_show_options":false,"win_callback":3,"win_collapsed":false,"win_flags":2097217,"win_hotkey":[296,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]},"Transfer Function Editor":{"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":5,"win_collapsed":false,"win_flags":64,"win_hotkey":[297,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]}}}]=])
 ```
 
 ### Graph Data Structure

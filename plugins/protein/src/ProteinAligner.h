@@ -16,6 +16,7 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/Point.h"
+#include <glm/glm.hpp>
 
 namespace megamol {
 namespace protein {
@@ -27,7 +28,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ProteinAligner"; }
+    static const char* ClassName(void) {
+        return "ProteinAligner";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -44,7 +47,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     ProteinAligner(void);
@@ -76,11 +81,10 @@ protected:
     bool getExtents(core::Call& call);
 
 private:
-
     /**
      * Aligns the atom positions of the input protein onto the reference protein
      * The result will be written to the alignedPositions vector
-     * 
+     *
      * @param input Call containing the input protein
      * @param ref Call containing the reference protein
      */
@@ -92,7 +96,7 @@ private:
      * @param input The input protein call
      * @param cAlphaPositions Will contain the retrieved c alpha positions
      */
-    void getCAlphaPosList(const protein_calls::MolecularDataCall& input, std::vector<float>& cAlphaPositions);
+    void getCAlphaPosList(const protein_calls::MolecularDataCall& input, std::vector<glm::vec3>& cAlphaPositions);
 
     /** Output slot for the moved and rotated protein */
     core::CalleeSlot dataOutSlot;

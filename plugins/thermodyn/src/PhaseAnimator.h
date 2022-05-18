@@ -12,13 +12,19 @@ namespace thermodyn {
 class PhaseAnimator : public core::Module {
 public:
     /** Return module class name */
-    static const char* ClassName(void) { return "PhaseAnimator"; }
+    static const char* ClassName(void) {
+        return "PhaseAnimator";
+    }
 
     /** Return module class description */
-    static const char* Description(void) { return "Helper module animating phases"; }
+    static const char* Description(void) {
+        return "Helper module animating phases";
+    }
 
     /** Module is always available */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     PhaseAnimator();
 

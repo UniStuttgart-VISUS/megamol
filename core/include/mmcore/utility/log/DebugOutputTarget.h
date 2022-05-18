@@ -10,8 +10,8 @@
 #include "mmcore/utility/log/Log.h"
 
 #define SPDLOG_EOL ""
-#include "spdlog/spdlog.h"
 #include "spdlog/sinks/msvc_sink.h"
+#include "spdlog/spdlog.h"
 
 #ifdef _WIN32
 

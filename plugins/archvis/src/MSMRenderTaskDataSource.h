@@ -8,12 +8,12 @@
 #ifndef MSM_RENDER_TASK_DATA_SOURCE
 #define MSM_RENDER_TASK_DATA_SOURCE
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mesh/AbstractGPURenderTaskDataSource.h"
 
-namespace megamol{
+namespace megamol {
 namespace archvis {
 
 class MSMRenderTaskDataSource : public mesh::AbstractGPURenderTaskDataSource {
@@ -23,21 +23,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "MSMRenderTaskDataSource"; }
+    static const char* ClassName(void) {
+        return "MSMRenderTaskDataSource";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data source for creating RenderTasks for given MSM input data."; }
+    static const char* Description(void) {
+        return "Data source for creating RenderTasks for given MSM input data.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     MSMRenderTaskDataSource();
     ~MSMRenderTaskDataSource();
@@ -50,10 +56,13 @@ protected:
 private:
     megamol::core::CallerSlot m_MSM_callerSlot;
 
-    uint64_t m_MSM_hash;
+    /** In-place material collection (initialized with msm btf) */
+    std::shared_ptr<mesh::GPUMaterialCollection> m_material_collection;
+
+    uint32_t m_version;
 };
 
-}
-}
+} // namespace archvis
+} // namespace megamol
 
 #endif // !MSM_RENDER_TASK_DATA_SOURCE

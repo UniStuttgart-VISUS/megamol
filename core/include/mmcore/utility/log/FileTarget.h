@@ -12,8 +12,8 @@
 #include "mmcore/utility/log/Log.h"
 
 #define SPDLOG_EOL ""
-#include "spdlog/spdlog.h"
 #include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/spdlog.h"
 
 namespace megamol::core::utility::log {
 
@@ -41,7 +41,9 @@ public:
      *
      * @return The path to the physical log file
      */
-    inline const std::string& Filename(void) const { return this->filename; }
+    inline const std::string& Filename(void) const {
+        return this->filename;
+    }
 
     /**
      * Writes a message to the log target

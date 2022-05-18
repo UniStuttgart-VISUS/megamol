@@ -17,61 +17,58 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-#include "mmcore/misc/VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 
 
 namespace megamol {
 namespace astro {
 
-    /// <summary>
-    /// Gets min/max values on a <see cref="VolumetricDataCall" />.
-    /// </summary>
-    class VolumetricGlobalMinMax : public core::Module {
+/// <summary>
+/// Gets min/max values on a <see cref="VolumetricDataCall" />.
+/// </summary>
+class VolumetricGlobalMinMax : public core::Module {
 
-    public:
+public:
+    static inline const char* ClassName(void) {
+        return "VolumetricGlobalMinMax";
+    }
 
-        static inline const char *ClassName(void) {
-            return "VolumetricGlobalMinMax";
-        }
+    static inline const char* Description(void) {
+        return "Gets min/max values over all frames of a VolumetricDataCall";
+    }
 
-        static inline const char *Description(void) {
-            return "Gets min/max values over all frames of a VolumetricDataCall";
-        }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Ctor. */
+    VolumetricGlobalMinMax(void);
 
-        /** Ctor. */
-        VolumetricGlobalMinMax(void);
+    /** Dtor. */
+    virtual ~VolumetricGlobalMinMax(void);
 
-        /** Dtor. */
-        virtual ~VolumetricGlobalMinMax(void);
+protected:
+    virtual bool create(void);
 
-    protected:
+    virtual void release(void);
 
-        virtual bool create(void);
+    bool onGetData(core::Call& call);
 
-        virtual void release(void);
+    bool onGetExtents(core::Call& call);
 
-        bool onGetData(core::Call& call);
+    bool onGetMetadata(core::Call& call);
 
-        bool onGetExtents(core::Call& call);
+    bool onUnsupportedCallback(core::Call& call);
 
-        bool onGetMetadata(core::Call& call);
+    bool pipeVolumetricDataCall(core::Call& call, unsigned int funcIdx);
 
-        bool onUnsupportedCallback(core::Call& call);
-
-        bool pipeVolumetricDataCall(core::Call& call, unsigned int funcIdx);
-
-    private:
-
-        core::CallerSlot slotVolumetricDataIn;
-        core::CalleeSlot slotVolumetricDataOut;
-        size_t hash;
-        std::vector<double> minValues;
-        std::vector<double> maxValues;
-    };
+private:
+    core::CallerSlot slotVolumetricDataIn;
+    core::CalleeSlot slotVolumetricDataOut;
+    size_t hash;
+    std::vector<double> minValues;
+    std::vector<double> maxValues;
+};
 
 } /* end namespace astro */
 } /* end namespace megamol */

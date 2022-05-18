@@ -20,83 +20,81 @@ namespace vislib {
 namespace sys {
 
 
+/**
+ * Wrapper for dynamically loaded functions from modules. The template
+ * parameter specifies the function pointer type.
+ */
+template<class T>
+class DynamicFunctionPointer {
+public:
     /**
-     * Wrapper for dynamically loaded functions from modules. The template 
-     * parameter specifies the function pointer type.
+     * Ctor. Creates the function pointer for the function functionName in
+     * the module moduleName. The mudule must already be loaded! The
+     * modules reference counter is
+     *
+     * @param moduleName The name of the module.
+     * @param functionName The name of the function.
      */
-    template <class T> class DynamicFunctionPointer {
-    public:
+    DynamicFunctionPointer(char const* moduleName, char const* functionName);
 
-        /**
-         * Ctor. Creates the function pointer for the function functionName in 
-         * the module moduleName. The mudule must already be loaded! The 
-         * modules reference counter is
-         *
-         * @param moduleName The name of the module.
-         * @param functionName The name of the function.
-         */
-        DynamicFunctionPointer(char const* moduleName, char const* functionName);
+    /** Dtor. */
+    ~DynamicFunctionPointer(void);
 
-        /** Dtor. */
-        ~DynamicFunctionPointer(void);
-
-        /**
-         * Answer whether the function pointer is valid.
-         *
-         * @return true if the function pointer is valid, false otherwise.
-         */
-        inline bool IsValid(void) {
-            return static_cast<void*>(func) != NULL;
-        }
-
-        /**
-         * Cast operator to the function pointer for calling the function.
-         *
-         * @return The function pointer.
-         */
-        inline operator T&(void) {
-            return this->func;
-        }
-
-    private:
-
-        /** forbidden Ctor. */
-        DynamicFunctionPointer(void);
-
-        /** the function pointer */
-        T func;
-    };
-
-
-    /*
-     * vislib::sys::DynamicFunctionPointer::DynamicFunctionPointer
+    /**
+     * Answer whether the function pointer is valid.
+     *
+     * @return true if the function pointer is valid, false otherwise.
      */
-    template<class T>
-    vislib::sys::DynamicFunctionPointer<T>::DynamicFunctionPointer(char const* moduleName, char const* functionName) {
-        this->func = static_cast<T>(static_cast<void*>(GetProcAddress(GetModuleHandleA(moduleName), functionName)));
+    inline bool IsValid(void) {
+        return static_cast<void*>(func) != NULL;
     }
 
-
-    /*
-     * vislib::sys::DynamicFunctionPointer::~DynamicFunctionPointer
+    /**
+     * Cast operator to the function pointer for calling the function.
+     *
+     * @return The function pointer.
      */
-    template<class T>
-    vislib::sys::DynamicFunctionPointer<T>::~DynamicFunctionPointer(void) {
-        // Do not delete/free/remove/whatever the function member this->func
+    inline operator T&(void) {
+        return this->func;
     }
 
+private:
+    /** forbidden Ctor. */
+    DynamicFunctionPointer(void);
 
-    /*
-     * vislib::sys::DynamicFunctionPointer::DynamicFunctionPointer
-     */
-    template<class T>
-    vislib::sys::DynamicFunctionPointer<T>::DynamicFunctionPointer(void) {
-        throw UnsupportedOperationException("DynamicFunctionPointer ctor", __FILE__, __LINE__);
-    }
+    /** the function pointer */
+    T func;
+};
+
+
+/*
+ * vislib::sys::DynamicFunctionPointer::DynamicFunctionPointer
+ */
+template<class T>
+vislib::sys::DynamicFunctionPointer<T>::DynamicFunctionPointer(char const* moduleName, char const* functionName) {
+    this->func = static_cast<T>(static_cast<void*>(GetProcAddress(GetModuleHandleA(moduleName), functionName)));
+}
+
+
+/*
+ * vislib::sys::DynamicFunctionPointer::~DynamicFunctionPointer
+ */
+template<class T>
+vislib::sys::DynamicFunctionPointer<T>::~DynamicFunctionPointer(void) {
+    // Do not delete/free/remove/whatever the function member this->func
+}
+
+
+/*
+ * vislib::sys::DynamicFunctionPointer::DynamicFunctionPointer
+ */
+template<class T>
+vislib::sys::DynamicFunctionPointer<T>::DynamicFunctionPointer(void) {
+    throw UnsupportedOperationException("DynamicFunctionPointer ctor", __FILE__, __LINE__);
+}
 
 } /* end namespace sys */
 } /* end namespace vislib */
 
 #endif /* _WIN32 */
 #endif /* VISLIB_DYNAMICFUNCTIONPOINTER_H_INCLUDED */
-

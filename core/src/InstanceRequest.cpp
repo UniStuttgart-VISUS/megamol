@@ -5,15 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/InstanceRequest.h"
+#include "stdafx.h"
 
 
 /*
  * megamol::core::InstanceRequest::InstanceRequest
  */
-megamol::core::InstanceRequest::InstanceRequest(void)
-        : ParamValueSetRequest(), name() {
+megamol::core::InstanceRequest::InstanceRequest(void) : ParamValueSetRequest(), name() {
     // intentionally empty
 }
 

@@ -17,91 +17,70 @@
 // Toggle the use of procedural volume fields for debugging purposes
 //#define USE_PROCEDURAL_DATA
 
-#include "mmcore/view/Renderer3DModuleDS.h"
-#include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 //#include "vislib_vector_typedefs.h"
-#include "vislib/math/Vector.h"
-#include "vislib/math/Matrix.h"
 #include "vislib/math/Cuboid.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Vector.h"
 typedef vislib::math::Cuboid<float> Cubef;
 typedef vislib::math::Matrix<float, 3, vislib::math::COLUMN_MAJOR> Mat3f;
 typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
 
-#include "protein_calls/MolecularDataCall.h"
-#include "CUDAQuickSurf.h"
 #include "CudaDevArr.h"
+#include "DeformableGPUSurfaceMT.h"
 #include "HostArr.h"
 #include "gridParams.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/VTIDataCall.h"
-#include "DeformableGPUSurfaceMT.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "HostArr.h"
+#include "quicksurf/CUDAQuickSurf.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein_cuda {
 
-class ComparativeMolSurfaceRenderer : public core::view::Renderer3DModuleDS {
+class ComparativeMolSurfaceRenderer : public core_gl::view::Renderer3DModuleGL {
 
 public:
-
     /// Render modes for the surfaces
-    enum SurfaceRenderMode {SURFACE_NONE=0, SURFACE_POINTS, SURFACE_WIREFRAME,
-        SURFACE_FILL};
+    enum SurfaceRenderMode { SURFACE_NONE = 0, SURFACE_POINTS, SURFACE_WIREFRAME, SURFACE_FILL };
 
     /// Color modes for the surfaces
     enum SurfaceColorMode {
-        SURFACE_UNI=0,            // #0
-        SURFACE_NORMAL,           // #1
-        SURFACE_TEXCOORDS,        // #2
-        SURFACE_POTENTIAL,        // #3
-        SURFACE_DIST_TO_OLD_POS,  // #4
-        SURFACE_POTENTIAL0,       // #5
-        SURFACE_POTENTIAL1,       // #6
-        SURFACE_POTENTIAL_DIFF,   // #7
-        SURFACE_POTENTIAL_SIGN,   // #8
-        SURFACE_LAPLACIAN};       // #9
+        SURFACE_UNI = 0,         // #0
+        SURFACE_NORMAL,          // #1
+        SURFACE_TEXCOORDS,       // #2
+        SURFACE_POTENTIAL,       // #3
+        SURFACE_DIST_TO_OLD_POS, // #4
+        SURFACE_POTENTIAL0,      // #5
+        SURFACE_POTENTIAL1,      // #6
+        SURFACE_POTENTIAL_DIFF,  // #7
+        SURFACE_POTENTIAL_SIGN,  // #8
+        SURFACE_LAPLACIAN
+    }; // #9
 
-    enum UnmappedTrisColor {
-        UNMAPPEDTRIS_NONE=0,
-        UNMAPPEDTRIS_TRANS,
-        UNMAPPEDTRIS_COL
-    };
+    enum UnmappedTrisColor { UNMAPPEDTRIS_NONE = 0, UNMAPPEDTRIS_TRANS, UNMAPPEDTRIS_COL };
 
     /// Enum describing different ways of using RMS fitting
-    enum RMSFittingMode {RMS_NONE=0, RMS_ALL, RMS_BACKBONE, RMS_C_ALPHA};
+    enum RMSFittingMode { RMS_NONE = 0, RMS_ALL, RMS_BACKBONE, RMS_C_ALPHA };
 
     /// Different modes for frame-by-frame comparison
-    enum CompareMode {
-        COMPARE_1_1=0,
-        COMPARE_1_N,
-        COMPARE_N_1,
-        COMPARE_N_N,
-        COMPARE_1_MORPH,
-        COMPARE_1_ROT
-    };
+    enum CompareMode { COMPARE_1_1 = 0, COMPARE_1_N, COMPARE_N_1, COMPARE_N_N, COMPARE_1_MORPH, COMPARE_1_ROT };
 
-    enum ExternalForces {
-        METABALLS=0,
-        METABALLS_DISTFIELD,
-        GVF,
-        TWO_WAY_GVF
-    };
+    enum ExternalForces { METABALLS = 0, METABALLS_DISTFIELD, GVF, TWO_WAY_GVF };
 
-    enum UncertaintyCriterion {
-        EUCLIDEAN_DISTANCE=0,
-        PATH_DISTANCE
-    };
+    enum UncertaintyCriterion { EUCLIDEAN_DISTANCE = 0, PATH_DISTANCE };
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "ComparativeMolSurfaceRenderer";
     }
 
@@ -116,7 +95,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Offers comparative rendering of two molecular surfaces.";
     }
 
@@ -126,14 +105,10 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        if (!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable()) {
-            return false;
-        }
         return true;
     }
 
 protected:
-
     /**
      * Translate and rotate an array of positions according to the current
      * transformation obtained by RMS fitting (a translation vector and
@@ -146,11 +121,10 @@ protected:
      * @param surf  The surface object
      * @return 'True' on success, 'false' otherwise
      */
-//    bool applyRMSFitting(MolecularDataCall *mol, DeformableGPUSurfaceMT *surf);
+    //    bool applyRMSFitting(MolecularDataCall *mol, DeformableGPUSurfaceMT *surf);
 
     /** TODO */
-    void computeDensityBBox(const float *atomPos1, const float *atomPos2,
-            size_t atomCnt1, size_t atomCnt2);
+    void computeDensityBBox(const float* atomPos1, const float* atomPos2, size_t atomCnt1, size_t atomCnt2);
 
     /**
      * (Re-)computes a smooth density map based on an array of givwen particle
@@ -169,9 +143,7 @@ protected:
      * @return 'True' on success, 'false' otherwise
      */
     bool computeDensityMap(
-            const float *atomPos,
-            const megamol::protein_calls::MolecularDataCall *mol,
-            CUDAQuickSurf *cqs);
+        const float* atomPos, const megamol::protein_calls::MolecularDataCall* mol, CUDAQuickSurf* cqs);
 
     /**
      * Implementation of 'create'.
@@ -190,7 +162,8 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool fitMoleculeRMS(megamol::protein_calls::MolecularDataCall *mol1, megamol::protein_calls::MolecularDataCall *mol2);
+    bool fitMoleculeRMS(
+        megamol::protein_calls::MolecularDataCall* mol1, megamol::protein_calls::MolecularDataCall* mol2);
 
     /**
      * The get extents callback. The module should set the members of
@@ -201,7 +174,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * The get extent callback for vbo data.
@@ -234,9 +207,8 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool initPotentialMap(protein_calls::VTIDataCall *cmd, gridParams &gridPotentialMap,
-                    GLuint &potentialTex, CudaDevArr<float> &tex_D,
-                    int3 &dim, float3 &org, float3 &delta);
+    bool initPotentialMap(protein_calls::VTIDataCall* cmd, gridParams& gridPotentialMap, GLuint& potentialTex,
+        CudaDevArr<float>& tex_D, int3& dim, float3& org, float3& delta);
 
     /**
      * Implementation of 'release'.
@@ -249,7 +221,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::Call& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     /**
      * TODO
@@ -272,13 +244,8 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool renderMappedSurface(
-            GLuint vboOld, GLuint vboNew,
-            uint vertexCnt,
-            GLuint vboTriangleIdx,
-            uint triangleVertexCnt,
-            SurfaceRenderMode renderMode,
-            SurfaceColorMode colorMode);
+    bool renderMappedSurface(GLuint vboOld, GLuint vboNew, uint vertexCnt, GLuint vboTriangleIdx,
+        uint triangleVertexCnt, SurfaceRenderMode renderMode, SurfaceColorMode colorMode);
 
     /**
      * Renders the isosurface using different rendering modes and surface
@@ -296,26 +263,19 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool renderSurface(
-            GLuint vbo,
-            uint vertexCnt,
-            GLuint vboTriangleIdx,
-            uint triangleVertexCnt,
-            SurfaceRenderMode renderMode,
-            SurfaceColorMode colorMode,
-            GLuint potentialTex,
-            Vec3f uniformColor,
-            float alphaScl);
+    bool renderSurface(GLuint vbo, uint vertexCnt, GLuint vboTriangleIdx, uint triangleVertexCnt,
+        SurfaceRenderMode renderMode, SurfaceColorMode colorMode, GLuint potentialTex, Vec3f uniformColor,
+        float alphaScl);
 
     /**
      *TODO
      */
-    bool renderSurfaceWithSubdivFlag(DeformableGPUSurfaceMT &surf);
+    bool renderSurfaceWithSubdivFlag(DeformableGPUSurfaceMT& surf);
 
     /**
      *TODO
      */
-    bool renderSurfaceWithUncertainty(DeformableGPUSurfaceMT &surf);
+    bool renderSurfaceWithUncertainty(DeformableGPUSurfaceMT& surf);
 
     /**
      * Renders the isosurface using different rendering modes and surface
@@ -334,16 +294,9 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool renderSurfaceShowSubDiv(
-            GLuint vbo,
-            uint vertexCnt,
-            GLuint vboTriangleIdx,
-            uint triangleVertexCnt,
-            SurfaceRenderMode renderMode,
-            SurfaceColorMode colorMode,
-            GLuint potentialTex,
-            Vec3f uniformColor,
-            float alphaScl);
+    bool renderSurfaceShowSubDiv(GLuint vbo, uint vertexCnt, GLuint vboTriangleIdx, uint triangleVertexCnt,
+        SurfaceRenderMode renderMode, SurfaceColorMode colorMode, GLuint potentialTex, Vec3f uniformColor,
+        float alphaScl);
 
     /**
      * Render external forces as arrow glyphes (ray casted).
@@ -357,7 +310,7 @@ protected:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    bool renderGrid(DeformableGPUSurfaceMT &deformSurf);
+    bool renderGrid(DeformableGPUSurfaceMT& deformSurf);
 
     /**
      * Update all parameters if necessary.
@@ -365,7 +318,6 @@ protected:
     void updateParams();
 
 private:
-
 #ifdef USE_PROCEDURAL_DATA
     /**
      * Initializes procedural fields for debugging purposes
@@ -650,12 +602,9 @@ private:
     //static const float qsIsoVal;
 
 
-
     int3 texDim1, texDim2;
     float3 texOrg1, texOrg2;
     float3 texDelta1, texDelta2;
-
-
 
 
     /* Hardcoded colors for surface rendering */
@@ -727,19 +676,19 @@ private:
     /* Surface rendering */
 
     /// Camera information
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
 
     /// Shader implementing per pixel lighting
-    vislib::graphics::gl::GLSLShader pplSurfaceShader;
+    vislib_gl::graphics::gl::GLSLShader pplSurfaceShader;
 
     /// Shader implementing per pixel lighting
-    vislib::graphics::gl::GLSLShader pplSurfaceShaderVertexFlag;
+    vislib_gl::graphics::gl::GLSLShader pplSurfaceShaderVertexFlag;
 
     /// Shader implementing per pixel lighting
-    vislib::graphics::gl::GLSLShader pplSurfaceShaderUncertainty;
+    vislib_gl::graphics::gl::GLSLShader pplSurfaceShaderUncertainty;
 
     /// Shader implementing per pixel lighting
-    vislib::graphics::gl::GLSLShader pplMappedSurfaceShader;
+    vislib_gl::graphics::gl::GLSLShader pplMappedSurfaceShader;
 
     /// The textures holding surface attributes (e.g. surface potential)
     GLuint surfAttribTex1, surfAttribTex2;
@@ -750,17 +699,15 @@ private:
 
     /* RMSD fitting */
 
-    HostArr<float> rmsPosVec1;  ///> Position vector #0 for rms fitting
-    HostArr<float> rmsPosVec2;  ///> Position vector #1 for rms fitting
-    HostArr<float> rmsWeights;  ///> Particle weights
-    HostArr<int> rmsMask;       ///> Mask for particles
-    float rmsValue;             ///> The calculated RMS value
-    Mat3f rmsRotation;          ///> Rotation matrix for the fitting
-    Mat4f rmsRotationMatrix;    ///> Rotation matrix for the fitting
-    Vec3f rmsTranslation;       ///> Translation vector for the fitting
-    Vec3f rmsCentroid;          ///> Centroid of the second data set
-    static const float maxRMSVal;  ///> Maximum RMS value to enable fitting
-    HostArr<float> atomPosFitted;  ///> The rotated/translated atom positions
+    std::vector<glm::vec3> rmsPosVec1; ///> Position vector #0 for rms fitting
+    std::vector<glm::vec3> rmsPosVec2; ///> Position vector #1 for rms fitting
+    float rmsValue;                    ///> The calculated RMS value
+    Mat3f rmsRotation;                 ///> Rotation matrix for the fitting
+    Mat4f rmsRotationMatrix;           ///> Rotation matrix for the fitting
+    Vec3f rmsTranslation;              ///> Translation vector for the fitting
+    Vec3f rmsCentroid;                 ///> Centroid of the second data set
+    static const float maxRMSVal;      ///> Maximum RMS value to enable fitting
+    HostArr<float> atomPosFitted;      ///> The rotated/translated atom positions
 
 
     /* Boolean flags */
@@ -799,7 +746,6 @@ private:
     HostArr<float> mappedSurfVertexFlags;
 
     Vec3f centroid;
-
 };
 
 } // namespace protein_cuda

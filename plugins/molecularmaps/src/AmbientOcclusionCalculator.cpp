@@ -4,9 +4,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "AmbientOcclusionCalculator.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
 #include "vislib/math/AbstractPolynomImpl.h"
 #include "vislib/math/ShallowVector.h"
 
@@ -330,7 +330,7 @@ void AmbientOcclusionCalculator::createVolumeCPU(AmbientOcclusionCalculator::AOS
 
 #ifdef DEBUG_WRITE
     std::ofstream file("aovolume.raw", std::ios::binary);
-    file.write((char*) vol[0].data(), sizeof(float) * vol[0].size());
+    file.write((char*)vol[0].data(), sizeof(float) * vol[0].size());
     file.close();
 #endif /* DEBUG_WRITE */
 

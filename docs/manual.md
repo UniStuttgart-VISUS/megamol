@@ -95,23 +95,21 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 *Screenshot of `cmake-gui` after generating build files.*
 
 <!-- ---------------------------------------------------------------------- -->
-#### Linux (Ubuntu)
+#### Linux (Ubuntu, Debian)
 
-Since the full support of some C++17 functionality is required (e.g. *std::filesystem*), a `gcc` version equal or greater than **8** is required (with `CMAKE_CXX_FLAGS` appended by `--std=c++17`). 
-**Latest tested version:**
-
-    $ cat /proc/version
-    Linux version 5.8.0-41-generic (buildd@lgw01-amd64-003) (gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #46~20.04.1-Ubuntu SMP Mon Jan 18 17:52:23 UTC 2021
+Megamol requires a C++17 compiler.
+Our CI pipeline tests the build with gcc-9 and clang-10 on Ubuntu 20.04.
 
 1. As prerequisites, following packages from the repository are required:
 
-    `$ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev`
+    `$ sudo apt install cmake-curses-gui git xorg-dev libgl1-mesa-dev libglu1-mesa-dev libncurses-dev uuid-dev`
+
+    - Hint: You can optionally install `libboost-stacktrace-dev` to enable stacktrace printout for KHR debug messages.
 
 2. First, download the source code from GitHub:
 
-    `$ mkdir megamol`
-    `$ git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/`
-    `$ cd megamol/`
+    `$ git clone https://github.com/UniStuttgart-VISUS/megamol.git`  
+    `$ cd megamol`
 
 3. Checkout the latest release:
 
@@ -121,25 +119,21 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 
     `$ mkdir build; cd build`
 
-5. Check for required dependencies:
-    
-    `$ cmake ..`
+5. Start the ncurses gui for cmake:
 
-6. Start the ncurses gui for cmake:
-
-    `$ ccmake .`
+    `$ ccmake ..`
 
     - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
     - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
     - Then hit `g` to generate the build files.
 
-7. On the console prompt, start the building:
+6. On the console prompt, start the building:
 
     `$ make && make install`
 
     - Hint: Use the `-j` option for `make` to run the build in parallel threads.
 
-8. The binary `megamol` is located in the default installation path `../megamol/build/install/bin`.
+7. The run script `megamol.sh` is located in the default installation path `megamol/build/install/bin`.
 
 <!-- ---------------------------------------------------------------------- -->
 ### Command Line Arguments
@@ -149,7 +143,6 @@ Providing additional command line arguments allow individual configuration of gl
 
 The following command line arguments are available:
 
-**Note:** The *khrdebug* option is currently ignored and not applied.
 ```
     megamol.exe [OPTION...] <additional project files>
 
@@ -164,6 +157,7 @@ The following command line arguments are available:
       --nodecoration  open window without decorations
       --topmost       open window that stays on top of all others
       --nocursor      do not show mouse cursor inside window
+      --hidden        do not show the window
       --help          print help
 ```
 

@@ -16,14 +16,14 @@ namespace frontend {
 // you should also delete the FAQ comments in these template files after you read and understood them
 class Template_Service final : public AbstractFrontendService {
 public:
-
     // We encourage you to use a configuration struct
     // that can be passed to your init() function.
-    struct Config {
-    };
+    struct Config {};
 
     // sometimes somebody wants to know the name of the service
-    std::string serviceName() const override { return "Template_Service"; }
+    std::string serviceName() const override {
+        return "Template_Service";
+    }
 
     // constructor should not take arguments, actual object initialization deferred until init()
     Template_Service();
@@ -45,7 +45,7 @@ public:
     // usually resources shared among services and modules are read only, in the sense that the FrontendResource wrapper only returns const& to held resources
     // if you need to manipulate a resource that you do not own, make sure you know what you're doing before using const_cast<>
     // keep in mind that the FrontendResource is just a wrapper that holds a void* to an object that you provided
-    // thus, keep objects that you broadcast as resources alive until your close() gets called! 
+    // thus, keep objects that you broadcast as resources alive until your close() gets called!
     // if lifetime of one of your resources ends before your close() gets called you produce dangling references in other services!
     // if you need to re-initialize or swap resource contents in a way that needs an objects lifetime to end, consider wrapping that behaviour in a way that is user friendly
     std::vector<FrontendResource>& getProvidedResources() override;
@@ -53,19 +53,19 @@ public:
     // a service may request a set of resources that are provided by other services or the system
     // this works in two steps: the service tells the system which services it requests using the service names (usually the type name of the structs)
     // the frontend system makes sure to provide the service with the requested resources, or else program execution is terminated with an error message
-    // note that the list of resources given to the service is in order of the initial resource requests, 
+    // note that the list of resources given to the service is in order of the initial resource requests,
     // thus you don't need to search for resources by name but can rather access the set resource vector directly at the expected index
-    // the idea of behind resources is that when your service gets its list of requested resources, 
+    // the idea of behind resources is that when your service gets its list of requested resources,
     // the contract is that there will be an actual resource available and not some null pointer.
-    // if somebody does not play along and provides fake resources with wrong wrapped types to the system, thus giving your code garbage to work with, 
+    // if somebody does not play along and provides fake resources with wrong wrapped types to the system, thus giving your code garbage to work with,
     // we can not really stop him from doing so, but there should occur an unhandled exception thrown by std::any for a bad type cast
-    // the gist is that you should expect to get the correct resources you requested from the system 
+    // the gist is that you should expect to get the correct resources you requested from the system
     // and you can work on those resources without tedious error and type checking
     // if you want to see how resources are distributed among the services, look into FrontendServiceCollection.cpp::assignRequestedResources()
     // the lifetime of the resources you get starts when your setRequestedResources() gets called and ends before your close() gets called
     // dont depend on requested resources being available in your close(). you yourself sould destroy or close the resources you provide in close().
-    // init() gets called in order of service priority (see below) and close() gets called in reverse order, 
-    // so if you really need access to some resource in your close() make sure 
+    // init() gets called in order of service priority (see below) and close() gets called in reverse order,
+    // so if you really need access to some resource in your close() make sure
     // the priority order of your service is _after_ the service that provides your critical resources (i.e. your set priority number should be higher)
     const std::vector<std::string> getRequestedResourceNames() const override;
     void setRequestedResources(std::vector<FrontendResource> resources) override;
@@ -100,7 +100,7 @@ public:
 
     // after each service updates its provided resources, services may check for updates in their requested resources
     // for example, a GUI may check for user inputs placed in keyboard or mouse input resources that are provided by some other service
-    // usually working with resources should not modify them, 
+    // usually working with resources should not modify them,
     // but if you are really sure that it is ok for you to change resources, you may cast the away the const from the resource reference and manipulate the resource
     // for example, you may cast away the const from the MegaMolGraph to issue creation/deletion of modules and calls
     // or you may delete keyboard and mouse inputs from corresponding resources if you are sure they only affect your service
@@ -108,7 +108,7 @@ public:
     void digestChangedRequestedResources() override;
 
     // after rendering of a frame finished and before the next iteration of the main loop, services may want to reset resource state to some value
-    // e.g. after user inputs (keyboard, mouse) or window resize evets got handled by the relevant services or modules, 
+    // e.g. after user inputs (keyboard, mouse) or window resize evets got handled by the relevant services or modules,
     // the service providing and managing those resource structs may want to clear those inputs before the next frame starts
     // (in some cases the distinction between updateProvidedResources() at the beginning of a main loop iteration
     // and a resetProvidedResources() at the end of that iteration seems to be necessary)
@@ -119,25 +119,24 @@ public:
     // clean up after rendering, e.g. render gui over graph rendering, stop and show frame-timers in GLFW window, swap buffers, glClear for next framebuffer
     void postGraphRender() override;
 
-    // from AbstractFrontendService 
+    // from AbstractFrontendService
     // you inherit the following functions that manage priority of your service and shutdown requests to terminate the program
     // you and others may use those functions, but you will not override them
     // priority indicates the order in which services get their callbacks called, i.e. this is the sorting of the vector that holds all services
-    // lower priority numbers get called before the bigger ones. for close() and postGraphRender() services get called in the reverse order, 
+    // lower priority numbers get called before the bigger ones. for close() and postGraphRender() services get called in the reverse order,
     // i.e. this works like construction and destruction order of objects in a c++
     //
     // int setPriority(const int p) // priority initially 0
     // int getPriority() const;
 
-    // your service can signal to the program that a shutdown request has been received. 
+    // your service can signal to the program that a shutdown request has been received.
     // call setShutdown() to set your shutdown status to true, this is best done in your updateProvidedResources() or digestChangedRequestedResources().
     // if a servie signals a shutdown the system calls close() on all services in reverse priority order, then program execution terminates.
-    // 
+    //
     // bool shouldShutdown() const; // shutdown initially false
     // void setShutdown(const bool s = true);
 
 private:
-
     // this can hold references to the resources (i.e. structs) we provide to others, e.g. you may fill this and return it in getProvidedResources()
     // provided resources will be queried by the system only once,
     // there is no requirement to store the resources in a vector the whole time, you just need to return such a vector in getProvidedResources()
@@ -156,7 +155,7 @@ private:
     // the sorting of resources matches the order of your requested resources names, you can use this to directly index into the vector provided by setRequestedResources()
     // if every service follows the rules the provided resources should be valid existing objects, thus you can use them directly without error or nullptr checking,
     // but we in the end we must blindly rely on the std::any in FrontendResource to hold the struct or type you expect it to hold
-    // (or else std::any will throw a bad type cast exception that should terminate program execution. 
+    // (or else std::any will throw a bad type cast exception that should terminate program execution.
     // you do NOT catch or check for that exception or need to care for it in any way!)
     std::vector<FrontendResource> m_requestedResourceReferences;
 };

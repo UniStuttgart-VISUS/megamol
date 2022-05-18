@@ -29,8 +29,8 @@ endif()
 set(lib_search_hints)
 set(inc_search_hints)
 if (UUID_DIR)
-	list(APPEND lib_search_hints "${UUID_DIR}" "${UUID_DIR}/lib")
-	list(APPEND inc_search_hints "${UUID_DIR}" "${UUID_DIR}/include")
+  list(APPEND lib_search_hints "${UUID_DIR}" "${UUID_DIR}/lib")
+  list(APPEND inc_search_hints "${UUID_DIR}" "${UUID_DIR}/include")
 endif()
 
 find_library(UUID_LIBRARY

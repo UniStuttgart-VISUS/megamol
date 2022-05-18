@@ -1,10 +1,10 @@
 #pragma once
 
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 
 #include "optix/CallContext.h"
 
@@ -45,7 +45,7 @@ protected:
 private:
     void init(Context const& ctx);
 
-    bool assertData(core::moldyn::MultiParticleDataCall& call, Context const& ctx);
+    bool assertData(geocalls::MultiParticleDataCall& call, Context const& ctx);
 
     bool get_data_cb(core::Call& c);
 
@@ -74,5 +74,9 @@ private:
     unsigned int _frame_id = std::numeric_limits<unsigned int>::max();
 
     std::size_t _data_hash = std::numeric_limits<std::size_t>::max();
+
+    uint64_t sbt_version = 0;
+
+    uint64_t program_version = 0;
 };
-} // namespace megamol::hpg::optix
+} // namespace megamol::optix_hpg

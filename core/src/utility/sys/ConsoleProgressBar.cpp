@@ -1,7 +1,7 @@
 /*
  * ConsoleProgressBar.cpp
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -14,20 +14,22 @@
 #define PRINT_MILLISECONDS
 #ifdef _WIN32
 #define PBAR_FILLED_CHAR '\xFE' // cool ANSI-Character for Windows
-#else /* _WIN32 */
+#else                           /* _WIN32 */
 #define PBAR_FILLED_CHAR '>'    // normal ASCII-Character for Non-Windows.
-#endif /* _WIN32 */
-#define PBAR_EMPTY_CHAR  ' '
-#define PBAR_LEND_CHAR  '['
-#define PBAR_REND_CHAR  ']'
+#endif                          /* _WIN32 */
+#define PBAR_EMPTY_CHAR ' '
+#define PBAR_LEND_CHAR '['
+#define PBAR_REND_CHAR ']'
 
 
 /*
  * vislib::sys::ConsoleProgressBar::ConsoleProgressBar
  */
-vislib::sys::ConsoleProgressBar::ConsoleProgressBar(void) : running(false), 
-        maxValue(100), lastPers(-1.0f), startTime(0) {
-}
+vislib::sys::ConsoleProgressBar::ConsoleProgressBar(void)
+        : running(false)
+        , maxValue(100)
+        , lastPers(-1.0f)
+        , startTime(0) {}
 
 
 /*
@@ -43,8 +45,7 @@ vislib::sys::ConsoleProgressBar::~ConsoleProgressBar(void) {
 /*
  * vislib::sys::ConsoleProgressBar::Set
  */
-void vislib::sys::ConsoleProgressBar::Set(
-        vislib::sys::ConsoleProgressBar::Size value) {
+void vislib::sys::ConsoleProgressBar::Set(vislib::sys::ConsoleProgressBar::Size value) {
     if (this->running) {
         float pers = float(value) / float(this->maxValue);
         unsigned int now = vislib::sys::GetTicksOfDay();
@@ -57,21 +58,21 @@ void vislib::sys::ConsoleProgressBar::Set(
         // update at least once per second
         // update at most four times per second
         // update whenever a tenth percent changed
-        if (((int(pers * 
+        if (((int(pers *
 #ifdef PRINT_MILLISECONDS
-            1000.0f
-#else /* PRINT_MILLISECONDS */
-            100.0f
+                  1000.0f
+#else  /* PRINT_MILLISECONDS */
+                  100.0f
 #endif /* PRINT_MILLISECONDS */
-            ) != int(this->lastPers * 
+                  ) != int(this->lastPers *
 #ifdef PRINT_MILLISECONDS
-            1000.0f
-#else /* PRINT_MILLISECONDS */
-            100.0f
+                           1000.0f
+#else  /* PRINT_MILLISECONDS */
+                           100.0f
 #endif /* PRINT_MILLISECONDS */
-            )) 
-                && ((now - this->lastPersTime) > 250)) 
-                || ((now - this->lastPersTime) > 1000)) {
+                           )) &&
+                ((now - this->lastPersTime) > 250)) ||
+            ((now - this->lastPersTime) > 1000)) {
             this->lastPers = pers;
             this->lastPersTime = now;
             this->update();
@@ -83,8 +84,7 @@ void vislib::sys::ConsoleProgressBar::Set(
 /*
  * vislib::sys::ConsoleProgressBar::Start
  */
-void vislib::sys::ConsoleProgressBar::Start(const char *title, 
-        vislib::sys::ConsoleProgressBar::Size maxValue) {
+void vislib::sys::ConsoleProgressBar::Start(const char* title, vislib::sys::ConsoleProgressBar::Size maxValue) {
     if (this->running) {
         this->Stop();
     }
@@ -120,17 +120,14 @@ void vislib::sys::ConsoleProgressBar::update(void) {
     static vislib::StringA right;
     static vislib::StringA line;
     static vislib::StringA tmp;
-    unsigned int width = vislib::sys::Console::GetWidth() - 1;
+    unsigned int width = megamol::core::utility::log::Console::GetWidth() - 1;
 
     left = this->title;
 
     if (this->running) {
         right.Format("%3i%%", int(this->lastPers * 100.0f));
-        if ((this->lastPersTime > this->startTime) 
-                && (this->lastPers > 0.0f)) {
-            unsigned int endTime = this->startTime 
-                + int(float(this->lastPersTime - this->startTime) 
-                / this->lastPers);
+        if ((this->lastPersTime > this->startTime) && (this->lastPers > 0.0f)) {
+            unsigned int endTime = this->startTime + int(float(this->lastPersTime - this->startTime) / this->lastPers);
             unsigned int now = vislib::sys::GetTicksOfDay();
             // time elapsed
             printDuration(tmp, now - this->startTime);
@@ -167,12 +164,9 @@ void vislib::sys::ConsoleProgressBar::update(void) {
         } else {
             // print a progress bar.
             spc -= 2;
-            unsigned int filled 
-                = static_cast<unsigned int>(float(spc) * this->lastPers);
-            line = left + PBAR_LEND_CHAR
-                + vislib::StringA(PBAR_FILLED_CHAR, filled)
-                + vislib::StringA(PBAR_EMPTY_CHAR, spc - filled)
-                + PBAR_REND_CHAR + right + "\r";
+            unsigned int filled = static_cast<unsigned int>(float(spc) * this->lastPers);
+            line = left + PBAR_LEND_CHAR + vislib::StringA(PBAR_FILLED_CHAR, filled) +
+                   vislib::StringA(PBAR_EMPTY_CHAR, spc - filled) + PBAR_REND_CHAR + right + "\r";
         }
 
     } else {
@@ -194,8 +188,7 @@ void vislib::sys::ConsoleProgressBar::update(void) {
 /*
  * vislib::sys::ConsoleProgressBar::printDuration
  */
-void vislib::sys::ConsoleProgressBar::printDuration(vislib::StringA& outStr, 
-        unsigned int duration) {
+void vislib::sys::ConsoleProgressBar::printDuration(vislib::StringA& outStr, unsigned int duration) {
 #ifdef PRINT_MILLISECONDS
     unsigned int milli = duration % 1000;
 #endif /* PRINT_MILLISECONDS */
@@ -204,25 +197,29 @@ void vislib::sys::ConsoleProgressBar::printDuration(vislib::StringA& outStr,
     unsigned int hour = min / 60;
     min %= 60;
     sec %= 60;
-    if (hour > 0) { 
+    if (hour > 0) {
         outStr.Format("%2u:%.2u:%.2u"
 #ifdef PRINT_MILLISECONDS
-            ".%.3u"
+                      ".%.3u"
 #endif /* PRINT_MILLISECONDS */
-            , hour, min, sec
+            ,
+            hour, min, sec
 #ifdef PRINT_MILLISECONDS
-            , milli
+            ,
+            milli
 #endif /* PRINT_MILLISECONDS */
-            );
+        );
     } else {
         outStr.Format("%.2u:%.2u"
 #ifdef PRINT_MILLISECONDS
-            ".%.3u"
+                      ".%.3u"
 #endif /* PRINT_MILLISECONDS */
-            , min, sec
+            ,
+            min, sec
 #ifdef PRINT_MILLISECONDS
-            , milli
+            ,
+            milli
 #endif /* PRINT_MILLISECONDS */
-            );
+        );
     }
 }

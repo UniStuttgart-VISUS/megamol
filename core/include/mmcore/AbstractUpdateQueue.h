@@ -6,17 +6,24 @@
 namespace megamol {
 namespace core {
 
-template <typename T> class AbstractUpdateQueue {
+template<typename T>
+class AbstractUpdateQueue {
 public:
-    std::unique_lock<std::mutex> AcquireLock() { return std::unique_lock<std::mutex>(update_lock_); }
+    std::unique_lock<std::mutex> AcquireLock() {
+        return std::unique_lock<std::mutex>(update_lock_);
+    }
 
     std::unique_lock<std::mutex> AcquireDeferredLock() {
         return std::unique_lock<std::mutex>(update_lock_, std::defer_lock);
     }
 
-    void Push(T&& el) { update_queue_.push(el); }
+    void Push(T&& el) {
+        update_queue_.push(el);
+    }
 
-    void Push(T const& el) { update_queue_.push(el); }
+    void Push(T const& el) {
+        update_queue_.push(el);
+    }
 
     typename std::queue<T>::value_type Get() {
         T el = update_queue_.front();
@@ -24,11 +31,18 @@ public:
         return el;
     }
 
-    template <typename... Args> void Emplace(Args&&... vals) { update_queue_.emplace(std::forward<Args>(vals)...); }
+    template<typename... Args>
+    void Emplace(Args&&... vals) {
+        update_queue_.emplace(std::forward<Args>(vals)...);
+    }
 
-    bool Empty() { return update_queue_.empty(); }
+    bool Empty() {
+        return update_queue_.empty();
+    }
 
-    typename std::queue<T>::size_type Size() { return update_queue_.size(); }
+    typename std::queue<T>::size_type Size() {
+        return update_queue_.size();
+    }
 
 private:
     std::mutex update_lock_;

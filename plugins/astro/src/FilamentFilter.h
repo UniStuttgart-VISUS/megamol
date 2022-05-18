@@ -6,13 +6,13 @@
  */
 #pragma once
 
-#include <nanoflann.hpp>
-#include <set>
 #include "astro/AstroDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include <nanoflann.hpp>
+#include <set>
 
 
 namespace megamol {
@@ -22,7 +22,8 @@ namespace astro {
  * THIS IS THE APEX OF SHIT and a non-quality copy from nanoflann/examples/utils.h
  * TODO: Replace it with a proper adapter instead of creating a copy to index data!
  */
-template <typename T> struct PointCloud {
+template<typename T>
+struct PointCloud {
     struct Point {
         T x, y, z;
     };
@@ -30,7 +31,9 @@ template <typename T> struct PointCloud {
     std::vector<Point> pts;
 
     // Must return the number of data points
-    inline size_t kdtree_get_point_count() const { return pts.size(); }
+    inline size_t kdtree_get_point_count() const {
+        return pts.size();
+    }
 
     // Returns the dim'th component of the idx'th point in the class:
     // Since this is inlined and the "dim" argument is typically an immediate value, the
@@ -47,14 +50,23 @@ template <typename T> struct PointCloud {
     // Optional bounding-box computation: return false to default to a standard bbox computation loop.
     //   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it
     //   again. Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
-    template <class BBOX> bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
+    template<class BBOX>
+    bool kdtree_get_bbox(BBOX& /* bb */) const {
+        return false;
+    }
 };
 
 class FilamentFilter : public core::Module {
 public:
-    static const char* ClassName(void) { return "FilamentFilter"; }
-    static const char* Description(void) { return "Filters the filament particles of a AstroParticleDataCall"; }
-    static bool IsAvailable(void) { return true; }
+    static const char* ClassName(void) {
+        return "FilamentFilter";
+    }
+    static const char* Description(void) {
+        return "Filters the filament particles of a AstroParticleDataCall";
+    }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     FilamentFilter(void);

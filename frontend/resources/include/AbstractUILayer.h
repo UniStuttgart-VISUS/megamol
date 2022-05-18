@@ -13,7 +13,9 @@ namespace frontend_resources {
 
 class AbstractUILayer : public megamol::frontend_resources::AbstractInputScope {
 public:
-    virtual bool Enabled() { return true; }
+    virtual bool Enabled() {
+        return true;
+    }
 
     virtual void OnResize(int w, int h) {}
     virtual void OnDraw() {}

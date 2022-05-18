@@ -15,9 +15,9 @@
 
 #define CUDA_ERROR_CHECK // Toggle CUDA error checking
 
-#define CudaSafeCall( err ) cudaSafeCall( err, __FILE__, __LINE__ )
-#define CheckForCudaError() checkForCudaError( __FILE__, __LINE__ )
-#define CheckForCudaErrorSync() checkForCudaErrorSync( __FILE__, __LINE__ )
+#define CudaSafeCall(err) cudaSafeCall(err, __FILE__, __LINE__)
+#define CheckForCudaError() checkForCudaError(__FILE__, __LINE__)
+#define CheckForCudaErrorSync() checkForCudaErrorSync(__FILE__, __LINE__)
 
 /**
  * Utility function that retrieves the last CUDA error and prints an

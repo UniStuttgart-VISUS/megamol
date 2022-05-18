@@ -8,28 +8,31 @@
 #ifndef MEGAMOLCORE_CONTEST2019DATALOADER_H_INCLUDED
 #define MEGAMOLCORE_CONTEST2019DATALOADER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <map>
 #include "astro/AstroDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AnimDataModule.h"
 #include "vislib/math/Cuboid.h"
+#include <map>
 
 namespace megamol {
 namespace astro {
 
-template <typename T> T centralDifference(T valBefore, T valAfter, float stepSize = 1.0f) {
+template<typename T>
+T centralDifference(T valBefore, T valAfter, float stepSize = 1.0f) {
     return (valAfter - valBefore) / (2.0f * stepSize);
 }
 
-template <typename T> T forwardDifference(T myVal, T valAfter, float stepSize = 1.0f) {
+template<typename T>
+T forwardDifference(T myVal, T valAfter, float stepSize = 1.0f) {
     return (valAfter - myVal) / stepSize;
 }
 
-template <typename T> T backwardDifference(T myVal, T valBefore, float stepSize = 1.0f) {
+template<typename T>
+T backwardDifference(T myVal, T valBefore, float stepSize = 1.0f) {
     return (myVal - valBefore) / stepSize;
 }
 
@@ -40,21 +43,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "Contest2019DataLoader"; }
+    static const char* ClassName(void) {
+        return "Contest2019DataLoader";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data source module for the data of the SciVis Contest 2019."; }
+    static const char* Description(void) {
+        return "Data source module for the data of the SciVis Contest 2019.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     Contest2019DataLoader(void);

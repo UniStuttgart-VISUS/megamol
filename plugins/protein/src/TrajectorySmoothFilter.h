@@ -18,8 +18,8 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "protein_calls/MolecularDataCall.h"
 #include "mmcore/view/Renderer3DModule.h"
+#include "protein_calls/MolecularDataCall.h"
 
 #include "HostArr.h"
 
@@ -35,13 +35,12 @@ namespace protein {
 class TrajectorySmoothFilter : public core::Module {
 
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "TrajectorySmoothFilter";
     }
 
@@ -50,7 +49,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Calculates a smoothed version of a given trajectory.";
     }
 
@@ -70,7 +69,6 @@ public:
     virtual ~TrajectorySmoothFilter(void);
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -102,21 +100,20 @@ protected:
     bool getExtent(core::Call& call);
 
 private:
-
     /**
      * Helper class to unlock frame data.
      */
-	class Unlocker : public megamol::protein_calls::MolecularDataCall::Unlocker {
+    class Unlocker : public megamol::protein_calls::MolecularDataCall::Unlocker {
     public:
-
         /**
          * Ctor.
          *
          * @param mol The molecular data call whos 'Unlock'-method is to be
          *            called.
          */
-		Unlocker(megamol::protein_calls::MolecularDataCall& mol) : megamol::protein_calls::MolecularDataCall::Unlocker(),
-        mol(&mol){
+        Unlocker(megamol::protein_calls::MolecularDataCall& mol)
+                : megamol::protein_calls::MolecularDataCall::Unlocker()
+                , mol(&mol) {
             // intentionally empty
         }
 
@@ -131,9 +128,7 @@ private:
         }
 
     private:
-
-		megamol::protein_calls::MolecularDataCall *mol;
-
+        megamol::protein_calls::MolecularDataCall* mol;
     };
 
     /**
@@ -141,7 +136,7 @@ private:
      *
      * @param mol   Pointer to the data call.
      */
-	void updateParams(megamol::protein_calls::MolecularDataCall *mol);
+    void updateParams(megamol::protein_calls::MolecularDataCall* mol);
 
 
     /// Caller slot to get unfiltered data
@@ -156,7 +151,6 @@ private:
 
     /// Intermediate storage for smoothed atom positions
     HostArr<float> atomPosSmoothed;
-
 };
 
 

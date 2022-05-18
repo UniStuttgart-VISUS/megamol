@@ -41,7 +41,7 @@ foreach my $file (@files) {
     my %parts;
 
     while(<$infile>) {
-        # Ar	86.77	45.6743	115.934
+        # Ar    86.77    45.6743    115.934
         /^(\w+)\s+(\S+)\s+(\S+)\s+(\S+)$/;
         my $type = $1;
         if (defined $parts{$type}) {

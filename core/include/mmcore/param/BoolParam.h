@@ -1,107 +1,41 @@
 /*
  * BoolParam.h
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_BOOLPARAM_H_INCLUDED
-#define MEGAMOLCORE_BOOLPARAM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
-#include "AbstractParam.h"
+#include "GenericParam.h"
 
 
-namespace megamol {
-namespace core {
-namespace param {
+namespace megamol::core::param {
 
+class BoolParam : public GenericParam<bool, AbstractParamPresentation::ParamType::BOOL> {
+public:
+    BoolParam(float initVal) : Super(initVal) {}
 
-    /**
-     * class for bool parameter objects
-     */
-    class MEGAMOLCORE_API BoolParam : public AbstractParam {
-    public:
+    virtual ~BoolParam() = default;
 
-        /**
-         * Ctor.
-         *
-         * @param initVal The initial state value
-         */
-        BoolParam(bool initVal);
+    std::string Definition() const override {
+        return "MMBOOL";
+    }
 
-        /**
-         * Dtor.
-         */
-        virtual ~BoolParam(void);
+    bool ParseValue(std::string const& v) override {
+        try {
+            this->SetValue(vislib::TCharTraits::ParseBool(v.c_str()));
+            return true;
+        } catch (...) {}
+        return false;
+    }
 
-        /**
-         * Returns a machine-readable definition of the parameter.
-         *
-         * @param outDef A memory block to receive a machine-readable
-         *               definition of the parameter.
-         */
-        virtual void Definition(vislib::RawStorage& outDef) const;
+    std::string ValueString() const override {
+        return Value() ? "true" : "false";
+    }
 
-        /**
-         * Tries to parse the given string as value for this parameter and
-         * sets the new value if successful. This also triggers the update
-         * mechanism of the slot this parameter is assigned to.
-         *
-         * @param v The new value for the parameter as string.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool ParseValue(const vislib::TString& v);
+private:
+    using Super = GenericParam<bool, AbstractParamPresentation::ParamType::BOOL>;
+};
 
-        /**
-         * Sets the value of the parameter and optionally sets the dirty flag
-         * of the owning parameter slot.
-         *
-         * @param v the new value for the parameter
-         * @param setDirty If 'true' the dirty flag of the owning parameter
-         *                 slot is set and the update callback might be called.
-         */
-        void SetValue(bool v, bool setDirty = true);
-
-        /**
-         * Gets the value of the parameter
-         *
-         * @return The value of the parameter
-         */
-        inline bool Value(void) const {
-            return this->val;
-        }
-
-        /**
-         * Returns the value of the parameter as string.
-         *
-         * @return The value of the parameter as string.
-         */
-        virtual vislib::TString ValueString(void) const;
-
-        /**
-         * Gets the value of the parameter
-         *
-         * @return The value of the parameter
-         */
-        inline operator bool(void) const {
-            return this->val;
-        }
-
-    private:
-
-        /** The value of the parameter */
-        bool val;
-
-    };
-
-
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_BOOLPARAM_H_INCLUDED */
+} // namespace megamol::core::param

@@ -5,11 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "mmcore/ViewInstance.h"
+
 #include "mmcore/Module.h"
 #include "mmcore/ModuleNamespace.h"
-#include "vislib/sys/AutoLock.h"
+#include "mmcore/ViewInstance.h"
 #include "mmcore/utility/log/Log.h"
+#include "vislib/sys/AutoLock.h"
 
 using namespace megamol::core;
 
@@ -17,8 +18,7 @@ using namespace megamol::core;
 /*
  * ViewInstance::ViewInstance
  */
-ViewInstance::ViewInstance(void) : ModuleNamespace(""), ApiHandle(),
-        view(NULL), closeRequestCallback(NULL), closeRequestData(NULL) {
+ViewInstance::ViewInstance(void) : ModuleNamespace(""), view(NULL), closeRequestCallback(NULL), closeRequestData(NULL) {
     // intentionally empty
 }
 
@@ -28,16 +28,16 @@ ViewInstance::ViewInstance(void) : ModuleNamespace(""), ApiHandle(),
  */
 ViewInstance::~ViewInstance(void) {
     this->Terminate();
-    this->view = NULL; // DO NOT DELETE
+    this->view = NULL;                 // DO NOT DELETE
     this->closeRequestCallback = NULL; // DO NOT DELETE
-    this->closeRequestData = NULL; // DO NOT DELETE
+    this->closeRequestData = NULL;     // DO NOT DELETE
 }
 
 
 /*
  * ViewInstance::Initialize
  */
-bool ViewInstance::Initialize(ModuleNamespace::ptr_type ns, view::AbstractView *view) {
+bool ViewInstance::Initialize(ModuleNamespace::ptr_type ns, view::AbstractView* view) {
     if ((this->view != NULL) || (ns == NULL) || (view == NULL)) {
         return false;
     }
@@ -52,7 +52,7 @@ bool ViewInstance::Initialize(ModuleNamespace::ptr_type ns, view::AbstractView *
         return false;
     }
 
-    while (ns->ChildList_Begin() != ns->ChildList_End())  {
+    while (ns->ChildList_Begin() != ns->ChildList_End()) {
         AbstractNamedObject::ptr_type ano = *ns->ChildList_Begin();
         ns->RemoveChild(ano);
         this->AddChild(ano);
@@ -76,10 +76,11 @@ bool ViewInstance::Initialize(ModuleNamespace::ptr_type ns, view::AbstractView *
  * ViewInstance::ClearCleanupMark
  */
 void ViewInstance::ClearCleanupMark(void) {
-    if (!this->CleanupMark()) return;
+    if (!this->CleanupMark())
+        return;
 
     ModuleNamespace::ClearCleanupMark();
-    Module *viewMod = dynamic_cast<Module*>(this->view);
+    Module* viewMod = dynamic_cast<Module*>(this->view);
     if (viewMod != NULL) {
         viewMod->ClearCleanupMark();
     }
@@ -92,8 +93,8 @@ void ViewInstance::ClearCleanupMark(void) {
 void ViewInstance::PerformCleanup(void) {
     if (this->CleanupMark()) {
         // this should never happen!
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
-            "Internal Error: ViewInstance marked for cleanup.\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_WARN, "Internal Error: ViewInstance marked for cleanup.\n");
     }
     ModuleNamespace::PerformCleanup();
 }

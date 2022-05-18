@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "RendernodeView.h"
+#include "stdafx.h"
 
 #include <array>
 #include <chrono>
@@ -11,28 +11,28 @@
 
 #include "mmcore/cluster/SyncDataSourcesCall.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
-#include "vislib/RawStorageSerialiser.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
+#include "vislib/RawStorageSerialiser.h"
 
 //#define RV_DEBUG_OUTPUT = 1
 
 
 megamol::remote::RendernodeView::RendernodeView()
-    : request_mpi_slot_("requestMPI", "Requests initialization of MPI and the communicator for the view.")
-    , sync_data_slot_("syncData", "Requests synchronization of data sources in the MPI world.")
-    , BCastRankSlot_("BCastRank", "Set which MPI rank is the broadcast master")
-    , port_slot_("port", "Sets to port to listen to.")
-    , recv_comm_(std::make_unique<ZMQCommFabric>(zmq::socket_type::pull))
-    , run_threads(false)
+        : request_mpi_slot_("requestMPI", "Requests initialization of MPI and the communicator for the view.")
+        , sync_data_slot_("syncData", "Requests synchronization of data sources in the MPI world.")
+        , BCastRankSlot_("BCastRank", "Set which MPI rank is the broadcast master")
+        , port_slot_("port", "Sets to port to listen to.")
+        , recv_comm_(std::make_unique<ZMQCommFabric>(zmq::socket_type::pull))
+        , run_threads(false)
 #ifdef WITH_MPI
-    , comm_(MPI_COMM_NULL)
+        , comm_(MPI_COMM_NULL)
 #else
-    , comm_(0x04000000)
+        , comm_(0x04000000)
 #endif
-    , rank_(-1)
-    , bcast_rank_(-2)
-    , comm_size_(0) {
+        , rank_(-1)
+        , bcast_rank_(-2)
+        , comm_size_(0) {
     request_mpi_slot_.SetCompatibleCall<core::cluster::mpi::MpiCallDescription>();
     this->MakeSlotAvailable(&request_mpi_slot_);
 
@@ -50,10 +50,14 @@ megamol::remote::RendernodeView::RendernodeView()
 }
 
 
-megamol::remote::RendernodeView::~RendernodeView() { this->Release(); }
+megamol::remote::RendernodeView::~RendernodeView() {
+    this->Release();
+}
 
 
-void megamol::remote::RendernodeView::release(void) { shutdown_threads(); }
+void megamol::remote::RendernodeView::release(void) {
+    shutdown_threads();
+}
 
 
 bool megamol::remote::RendernodeView::create(void) {
@@ -91,9 +95,11 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
                 std::copy(ibegin + MessageTypeSize + MessageSizeSize, ibegin + MessageHeaderSize,
                     reinterpret_cast<char*>(&msg_id));
                 if (msg_id - old_msg_id == 1) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("RendernodeView: Got message with id: %d", msg_id);
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "RendernodeView: Got message with id: %d", msg_id);
                 } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError("RendernodeView: Unexpected id: %d", msg_id);
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "RendernodeView: Unexpected id: %d", msg_id);
                 }
                 old_msg_id = msg_id;
 #endif
@@ -143,7 +149,7 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 }
 
 
-void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context, core::Call* call) {
+void megamol::remote::RendernodeView::Render(double time, double instanceTime) {
 #ifdef WITH_MPI
     static bool first_frame = true;
 
@@ -182,21 +188,20 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
         }
         msg_size = msg.size();
     }
-#    ifdef RV_DEBUG_OUTPUT
+#ifdef RV_DEBUG_OUTPUT
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("RendernodeView: Starting broadcast.");
-#    endif
+#endif
     if (bcast_rank_ < 0) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "RendernodeView: Bcast rank not set. Skipping.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("RendernodeView: Bcast rank not set. Skipping.");
         return;
     }
     MPI_Bcast(timestamps.data(), 2, MPI_DOUBLE, bcast_rank_, this->comm_);
     MPI_Bcast(&msg_size, 1, MPI_UINT64_T, bcast_rank_, this->comm_);
     msg.resize(msg_size);
     MPI_Bcast(msg.data(), msg_size, MPI_UNSIGNED_CHAR, bcast_rank_, this->comm_);
-#    ifdef RV_DEBUG_OUTPUT
+#ifdef RV_DEBUG_OUTPUT
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("RendernodeView: Finished broadcast.");
-#    endif
+#endif
 
     // handle new param from broadcast
     if (!process_msgs(msg)) {
@@ -208,32 +213,35 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
     auto ss = this->sync_data_slot_.CallAs<core::cluster::SyncDataSourcesCall>();
     if (ss != nullptr) {
         if (!(*ss)(0)) { // check for dirty filenamesslot
-            megamol::core::utility::log::Log::DefaultLog.WriteError("RendernodeView: SyncData GetDirty callback failed.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "RendernodeView: SyncData GetDirty callback failed.");
             return;
         }
         int fnameDirty = ss->getFilenameDirty();
         int allFnameDirty = 0;
         MPI_Allreduce(&fnameDirty, &allFnameDirty, 1, MPI_INT, MPI_LAND, this->comm_);
-#    ifdef RV_DEBUG_OUTPUT
+#ifdef RV_DEBUG_OUTPUT
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("RendernodeView: allFnameDirty: %d", allFnameDirty);
-#    endif
+#endif
 
         if (allFnameDirty) {
             if (!(*ss)(1)) { // finally set the filename in the data source
-                megamol::core::utility::log::Log::DefaultLog.WriteError("RendernodeView: SyncData SetFilename callback failed.");
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "RendernodeView: SyncData SetFilename callback failed.");
                 return;
             }
             ss->resetFilenameDirty();
         }
-#    ifdef RV_DEBUG_OUTPUT
+#ifdef RV_DEBUG_OUTPUT
         if (!allFnameDirty && fnameDirty) {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("RendernodeView: Waiting for data in MPI world to be ready.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "RendernodeView: Waiting for data in MPI world to be ready.");
         }
-#    endif
+#endif
     } else {
-#    ifdef RV_DEBUG_OUTPUT
+#ifdef RV_DEBUG_OUTPUT
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("RendernodeView: No sync object connected.");
-#    endif
+#endif
     }
     // check whether rendering is possible in current state
     auto crv = this->getCallRenderView();
@@ -251,15 +259,14 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
         if ((this->_fbo->GetWidth() != this->getTileW()) || (this->_fbo->GetHeight() != this->getTileH()) ||
             (!this->_fbo->IsValid())) {
             this->_fbo->Release();
-            if (!this->_fbo->Create(this->getTileW(), this->getTileH(), GL_RGBA8, GL_RGBA,
-                    GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
-                    GL_DEPTH_COMPONENT)) {
+            if (!this->_fbo->Create(this->getTileW(), this->getTileH(), GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+                    vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT)) {
                 throw vislib::Exception("[View3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
                 return;
             }
         }
         this->_fbo->Enable();
-        auto bgcol = this->BkgndColour();
+        auto bgcol = this->BackgroundColor();
         glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -267,7 +274,8 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
 
 
         if (!crv->operator()(core::view::CallRenderViewGL::CALL_RENDER)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("RendernodeView: Failed to call render on dependend view.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "RendernodeView: Failed to call render on dependend view.");
         }
 
         this->_fbo->Disable();
@@ -276,9 +284,9 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
 
         glFinish();
     } else {
-#    ifdef RV_DEBUG_OUTPUT
+#ifdef RV_DEBUG_OUTPUT
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("RendernodeView: crv_ is nullptr.\n");
-#    endif
+#endif
     }
 
     // sync barrier
@@ -289,17 +297,16 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
 
 bool megamol::remote::RendernodeView::OnRenderView(core::Call& call) {
     auto crv = dynamic_cast<core::view::CallRenderViewGL*>(&call);
-    if (crv == nullptr) return false;
+    if (crv == nullptr)
+        return false;
     auto overrideCall = dynamic_cast<core::view::AbstractCallRender*>(&call);
 
     float time = crv->Time();
-    if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
-    mmcRenderViewContext context;
-    ::ZeroMemory(&context, sizeof(context));
-    context.Time = time;
-    context.InstanceTime = crv->InstanceTime();
+    if (time < 0.0f)
+        time = this->DefaultTime(crv->InstanceTime());
+    auto instanceTime = crv->InstanceTime();
 
-    this->Render(context, &call);
+    this->Render(time, instanceTime);
 
     return true;
 }
@@ -318,7 +325,8 @@ void megamol::remote::RendernodeView::recv_loop() {
 #endif
             }
 
-            if (!run_threads) break;
+            if (!run_threads)
+                break;
 
 #ifdef RV_DEBUG_OUTPUT
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("RendernodeView: Starting data copy in recv loop.");
@@ -357,7 +365,8 @@ bool megamol::remote::RendernodeView::init_threads() {
     shutdown_threads();
     this->recv_comm_ = FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::pull));
     auto const port = std::to_string(this->port_slot_.Param<core::param::IntParam>()->Value());
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("RendernodeView: Starting listener on port %s.\n", port.c_str());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        "RendernodeView: Starting listener on port %s.\n", port.c_str());
     std::string const address = "tcp://*:" + port;
     this->recv_comm_.Bind(address);
     run_threads = true;
@@ -379,8 +388,9 @@ bool megamol::remote::RendernodeView::initMPI() {
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo("RendernodeView: Got MPI communicator.");
                 this->comm_ = c->GetComm();
             } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("RendernodeView: Could not retrieve MPI communicator for the "
-                                                        "MPI-based view from the registered provider module.");
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "RendernodeView: Could not retrieve MPI communicator for the "
+                    "MPI-based view from the registered provider module.");
             }
 
         } else {

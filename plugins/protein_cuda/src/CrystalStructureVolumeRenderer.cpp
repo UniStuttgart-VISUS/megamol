@@ -10,8 +10,8 @@
 #define SFB_DEMO // Disable everything that is unnecessary and slows down the rendering
 
 
-#include "stdafx.h"
 #include "CrystalStructureVolumeRenderer.h"
+#include "stdafx.h"
 
 #define _USE_MATH_DEFINES 1
 
@@ -19,33 +19,34 @@
 #define NOCLIP_ISOSURF 0
 #define FILTER_BOUNDARY 0
 
+#include "CUDACurl.cuh"
 #include "CritPoints.h"
 #include "LIC.h"
-#include "CUDAQuickSurf.h"
-#include "CUDAMarchingCubes.h"
-#include "CUDACurl.cuh"
+#include "quicksurf/CUDAMarchingCubes.h"
+#include "quicksurf/CUDAQuickSurf.h"
 
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/utility/ColourParser.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 #include "mmcore/utility/log/Log.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/math/Quaternion.h"
 #include "vislib/math/Matrix.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/math/Quaternion.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "mmcore/view/Input.h"
 
-#include <thrust/version.h>
 #include "cuda_gl_interop.h"
+#include <thrust/version.h>
 
 #include <GL/glu.h>
 
@@ -60,104 +61,136 @@ using namespace megamol::core::utility::log;
 /*
  * protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer
  */
-protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(void):
-        Renderer3DModuleDS(),
-        dataCallerSlot("getData", "Connects the rendering with data storage"),
+protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(void)
+        : Renderer3DModuleGL()
+        , dataCallerSlot("getData", "Connects the rendering with data storage")
+        ,
         // Atom/edge rendering
-        interpolParam("atoms::posInterpol", "Toggle positional interpolation between frames"),
-        atomRenderModeParam("atoms::atomRM", "The atom render mode "),
-        sphereRadParam("atoms::atomSphereRad", "The sphere radius for atom rendering"),
-        edgeBaRenderModeParam("atoms::edgeBaRM", "The render mode for BA edges"),
-        baStickRadiusParam("atoms::stickRadBa", "The stick radius for BA edge rendering"),
-        edgeTiRenderModeParam("atoms::edgeTiRM", "The render mode for TI edges"),
-        tiStickRadiusParam("atoms::stickRadTi", "The stick radius for TI edge rendering"),
+        interpolParam("atoms::posInterpol", "Toggle positional interpolation between frames")
+        , atomRenderModeParam("atoms::atomRM", "The atom render mode ")
+        , sphereRadParam("atoms::atomSphereRad", "The sphere radius for atom rendering")
+        , edgeBaRenderModeParam("atoms::edgeBaRM", "The render mode for BA edges")
+        , baStickRadiusParam("atoms::stickRadBa", "The stick radius for BA edge rendering")
+        , edgeTiRenderModeParam("atoms::edgeTiRM", "The render mode for TI edges")
+        , tiStickRadiusParam("atoms::stickRadTi", "The stick radius for TI edge rendering")
+        ,
         // Positional filter
-        filterAllParam("posFilter::all", "Positional filter for cells"),
-        filterXMaxParam("posFilter::XMax", "The maximum position in x-direction"),
-        filterYMaxParam("posFilter::YMax", "The maximum position in y-direction"),
-        filterZMaxParam("posFilter::ZMax", "The maximum position in z-direction"),
-        filterXMinParam("posFilter::XMin", "The minimum position in x-direction"),
-        filterYMinParam("posFilter::YMin", "The minimum position in y-direction"),
-        filterZMinParam("posFilter::ZMin", "The minimum position in z-direction"),
+        filterAllParam("posFilter::all", "Positional filter for cells")
+        , filterXMaxParam("posFilter::XMax", "The maximum position in x-direction")
+        , filterYMaxParam("posFilter::YMax", "The maximum position in y-direction")
+        , filterZMaxParam("posFilter::ZMax", "The maximum position in z-direction")
+        , filterXMinParam("posFilter::XMin", "The minimum position in x-direction")
+        , filterYMinParam("posFilter::YMin", "The minimum position in y-direction")
+        , filterZMinParam("posFilter::ZMin", "The minimum position in z-direction")
+        ,
         // Vector field
-        vecRMParam("vecField::vecRM", "The render mode of the vectors"),
-        vecSclParam("vecField::vecScl", "Scale factor for vectors"),
-        arrowRadParam("vecField::arrowRad", "Radius of arrows"),
-        arrowUseFilterParam("vecField::arrowUseFilter", "Apply filters to arrow glyphs"),
-        showBaAtomsParam("vecField::showBaAtoms", "..."),
-        showTiAtomsParam("vecField::showTiAtoms", "..."),
-        showOAtomsParam("vecField::showOAtoms", "..."),
-        arrColorModeParam("vecField::arrowColor", "Change coloring of the arrow glyphes"),
-        minVecMagParam("vecField::filterMinSclLen", "Minimum (scaled) length for vectors"),
-        maxVecMagParam("vecField::filterMaxSclLen", "Maximum (scaled) length for vectors"),
-        maxVecCurlParam("vecField::filterMaxCurl", "Maximum curl for vectors"),
-        toggleNormVecParam("vecField::normalize", "Normalize vectors for arrow glyphs."),
+        vecRMParam("vecField::vecRM", "The render mode of the vectors")
+        , vecSclParam("vecField::vecScl", "Scale factor for vectors")
+        , arrowRadParam("vecField::arrowRad", "Radius of arrows")
+        , arrowUseFilterParam("vecField::arrowUseFilter", "Apply filters to arrow glyphs")
+        , showBaAtomsParam("vecField::showBaAtoms", "...")
+        , showTiAtomsParam("vecField::showTiAtoms", "...")
+        , showOAtomsParam("vecField::showOAtoms", "...")
+        , arrColorModeParam("vecField::arrowColor", "Change coloring of the arrow glyphes")
+        , minVecMagParam("vecField::filterMinSclLen", "Minimum (scaled) length for vectors")
+        , maxVecMagParam("vecField::filterMaxSclLen", "Maximum (scaled) length for vectors")
+        , maxVecCurlParam("vecField::filterMaxCurl", "Maximum curl for vectors")
+        , toggleNormVecParam("vecField::normalize", "Normalize vectors for arrow glyphs.")
+        ,
         // Uniform grid
-        gridSpacingParam("unigrid::gridSpacing", "Change grid spacing in uniform grid"),
-        gridDataRadParam("unigrid::gridDataRad", "Change assumed radius for grid data"),
-        gridQualityParam("unigrid::gridQuality", "Change quality of uniform grid calculation"),
+        gridSpacingParam("unigrid::gridSpacing", "Change grid spacing in uniform grid")
+        , gridDataRadParam("unigrid::gridDataRad", "Change assumed radius for grid data")
+        , gridQualityParam("unigrid::gridQuality", "Change quality of uniform grid calculation")
+        ,
         // Slice rendering
-        sliceRenderModeParam("slice::sliceRM", "Render mode for slices"),
-        xPlaneParam("slice::xPlanePos", "Change the position of the x-Plane"),
-        yPlaneParam("slice::yPlanePos", "Change the position of the y-Plane"),
-        zPlaneParam("slice::zPlanePos", "Change the position of the z-Plane"),
-        toggleYPlaneParam("slice::showYPlane", "Change the position of the y-Plane"),
-        toggleXPlaneParam("slice::showXPlane", "Change the position of the x-Plane"),
-        toggleZPlaneParam("slice::showZPlane", "Change the position of the z-Plane"),
-        licDirSclParam("slice::licVecScl", "LIC direction vector scale factor"),
-        licStreamlineLengthParam("slice::licLen", "Length of LIC stream lines"),
-        projectVec2DParam("slice::licProjVec2D", "Toggle 2D projection of vectors"),
-        licRandBuffSizeParam("slice::licRandBuffSize", "Change the size of the LIC random buffer"),
-        licContrastStretchingParam("slice::licContrast", "Change the contrast of the LIC output image"),
-        licBrightParam("slice::licBright", "..."),
-        licTCSclParam("slice::licTCScl", "Scale factor for texture coordinates."),
-        sliceDataSclParam("slice::sliceDataScl", "Scale data visualized on slices."),
+        sliceRenderModeParam("slice::sliceRM", "Render mode for slices")
+        , xPlaneParam("slice::xPlanePos", "Change the position of the x-Plane")
+        , yPlaneParam("slice::yPlanePos", "Change the position of the y-Plane")
+        , zPlaneParam("slice::zPlanePos", "Change the position of the z-Plane")
+        , toggleYPlaneParam("slice::showYPlane", "Change the position of the y-Plane")
+        , toggleXPlaneParam("slice::showXPlane", "Change the position of the x-Plane")
+        , toggleZPlaneParam("slice::showZPlane", "Change the position of the z-Plane")
+        , licDirSclParam("slice::licVecScl", "LIC direction vector scale factor")
+        , licStreamlineLengthParam("slice::licLen", "Length of LIC stream lines")
+        , projectVec2DParam("slice::licProjVec2D", "Toggle 2D projection of vectors")
+        , licRandBuffSizeParam("slice::licRandBuffSize", "Change the size of the LIC random buffer")
+        , licContrastStretchingParam("slice::licContrast", "Change the contrast of the LIC output image")
+        , licBrightParam("slice::licBright", "...")
+        , licTCSclParam("slice::licTCScl", "Scale factor for texture coordinates.")
+        , sliceDataSclParam("slice::sliceDataScl", "Scale data visualized on slices.")
+        ,
         // Rendering of critical points
-        showCritPointsParam("critPoints::showCritPoints", "Show critical points of the vector field"),
-        cpUsePosFilterParam("critPoints::usePosFilter", "..."),
+        showCritPointsParam("critPoints::showCritPoints", "Show critical points of the vector field")
+        , cpUsePosFilterParam("critPoints::usePosFilter", "...")
+        ,
         // Density grid
-        densGridGaussLimParam("densGrid::densGaussLim", "..."),
-        densGridRadParam("densGrid::densRad", "..."),
-        densGridSpacingParam("densGrid::densSpacing", "..."),
+        densGridGaussLimParam("densGrid::densGaussLim", "...")
+        , densGridRadParam("densGrid::densRad", "...")
+        , densGridSpacingParam("densGrid::densSpacing", "...")
+        ,
         // Iso surface of density grid
-        vColorModeParam("isosurf::color", "Change the coloring mode for the ray marching isosurface."),
-        volDeltaParam("isosurf::volDelta", "Change step size for sampling the volume texture"),
-        volAlphaSclParam("isosurf::volAlphaScl", "Alpha scale factor for volume rendering"),
-        volIsoValParam("isosurf::volIsoVal", "Change iso value for sampling the volume texture"),
-        volShowParam("isosurf::showIsoSurf", "..."),
-        showIsoSurfParam("isosurf::showIsoSurfMC", "Toggle rendering of the iso surface."),
-        volLicDirSclParam("isosurf::volLicDirScl", "..."),
-        volLicLenParam("isosurf::volLicLen", "..."),
-        volLicContrastStretchingParam("isosurf::volLicContrast", "Change the contrast of the LIC output image"),
-        volLicBrightParam("isosurf::volLicBright", "..."),
-        volLicTCSclParam("isosurf::volLicTCScl", "Scale factor for texture coordinates."),
-        rmTexParam("isosurf::rmTex", "Texture to be used for raymarching."),
+        vColorModeParam("isosurf::color", "Change the coloring mode for the ray marching isosurface.")
+        , volDeltaParam("isosurf::volDelta", "Change step size for sampling the volume texture")
+        , volAlphaSclParam("isosurf::volAlphaScl", "Alpha scale factor for volume rendering")
+        , volIsoValParam("isosurf::volIsoVal", "Change iso value for sampling the volume texture")
+        , volShowParam("isosurf::showIsoSurf", "...")
+        , showIsoSurfParam("isosurf::showIsoSurfMC", "Toggle rendering of the iso surface.")
+        , volLicDirSclParam("isosurf::volLicDirScl", "...")
+        , volLicLenParam("isosurf::volLicLen", "...")
+        , volLicContrastStretchingParam("isosurf::volLicContrast", "Change the contrast of the LIC output image")
+        , volLicBrightParam("isosurf::volLicBright", "...")
+        , volLicTCSclParam("isosurf::volLicTCScl", "Scale factor for texture coordinates.")
+        , rmTexParam("isosurf::rmTex", "Texture to be used for raymarching.")
+        ,
         // Fog
-        fogStartParam("fog::fogStart", "The minimum z-value for fog"),
-        fogEndParam("fog::fogEnd", "The maximum z-value for fog"),
-        fogDensityParam("fog::fogDensity", "The density value for fog"),
-        fogColourParam("fog::fogCol", "The fog color"),
-        meshFileParam("ridges::meshFile", "VTK mesh file"),
-        showRidgeParam("ridges::showRidge", "Render ridges"),
-        toggleIsoSurfaceSlot("toggleIsoSurf", "..."),
-        toggleCurlFilterSlot("toggleCurlFilter", "..."),
+        fogStartParam("fog::fogStart", "The minimum z-value for fog")
+        , fogEndParam("fog::fogEnd", "The maximum z-value for fog")
+        , fogDensityParam("fog::fogDensity", "The density value for fog")
+        , fogColourParam("fog::fogCol", "The fog color")
+        , meshFileParam("ridges::meshFile", "VTK mesh file")
+        , showRidgeParam("ridges::showRidge", "Render ridges")
+        , toggleIsoSurfaceSlot("toggleIsoSurf", "...")
+        , toggleCurlFilterSlot("toggleCurlFilter", "...")
+        ,
         // Flags
-        recalcGrid(true), recalcCritPoints(true), recalcCurlMag(true),
-        recalcArrowData(true), recalcPosInter(true),
-        recalcVisibility(true), recalcDipole(true),
-        recalcDensityGrid(true), filterVecField(true),
+        recalcGrid(true)
+        , recalcCritPoints(true)
+        , recalcCurlMag(true)
+        , recalcArrowData(true)
+        , recalcPosInter(true)
+        , recalcVisibility(true)
+        , recalcDipole(true)
+        , recalcDensityGrid(true)
+        , filterVecField(true)
+        ,
         // Arrays
-        frame0(NULL), frame1(NULL),
-        gridCurlMagD(NULL), gridCurlD(NULL), mcVertOut(NULL),
-        mcVertOut_D(NULL), mcNormOut(NULL), mcNormOut_D(NULL),
-        idxLastFrame(-1), cudaqsurf(NULL), atomCnt(0), visAtomCnt(0),
-        edgeCntBa(0), edgeCntTi(0), callTimeOld(-1.0), fboDim(-1, -1),
-        srcFboDim(-1, -1), cudaMC(NULL), nVerticesMCOld(0), frameOld(-1),
-        setCUDAGLDevice(true) {
+        frame0(NULL)
+        , frame1(NULL)
+        , gridCurlMagD(NULL)
+        , gridCurlD(NULL)
+        , mcVertOut(NULL)
+        , mcVertOut_D(NULL)
+        , mcNormOut(NULL)
+        , mcNormOut_D(NULL)
+        , idxLastFrame(-1)
+        , cudaqsurf(NULL)
+        , atomCnt(0)
+        , visAtomCnt(0)
+        , edgeCntBa(0)
+        , edgeCntTi(0)
+        , callTimeOld(-1.0)
+        , fboDim(-1, -1)
+        , srcFboDim(-1, -1)
+        , cudaMC(NULL)
+        , nVerticesMCOld(0)
+        , frameOld(-1)
+        , setCUDAGLDevice(true)
+        , width(0)
+        , height(0) {
 
 
     // Data caller slot
-	this->dataCallerSlot.SetCompatibleCall<protein_calls::CrystalStructureDataCallDescription>();
+    this->dataCallerSlot.SetCompatibleCall<protein_calls::CrystalStructureDataCallDescription>();
     this->MakeSlotAvailable(&this->dataCallerSlot);
 
     // General params
@@ -169,20 +202,17 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
 
     // Param for minimal length of vectors
     this->minVecMag = 0.0f;
-    this->minVecMagParam.SetParameter(
-            new core::param::FloatParam(this->minVecMag, 0.0f));
+    this->minVecMagParam.SetParameter(new core::param::FloatParam(this->minVecMag, 0.0f));
     this->MakeSlotAvailable(&this->minVecMagParam);
 
     // Param for maximum length of vectors
     this->maxVecMag = 1000.0f;
-    this->maxVecMagParam.SetParameter(
-            new core::param::FloatParam(this->maxVecMag, 0.0f));
+    this->maxVecMagParam.SetParameter(new core::param::FloatParam(this->maxVecMag, 0.0f));
     this->MakeSlotAvailable(&this->maxVecMagParam);
 
     // Param for maximum curl
     this->maxVecCurl = 1.0f;
-    this->maxVecCurlParam.SetParameter(
-            new core::param::FloatParam(this->maxVecCurl, 0.0f));
+    this->maxVecCurlParam.SetParameter(new core::param::FloatParam(this->maxVecCurl, 0.0f));
     this->MakeSlotAvailable(&this->maxVecCurlParam);
 
 
@@ -190,7 +220,7 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
 
     // Param for atom render mode
     this->atomRM = ATOM_NONE;
-    core::param::EnumParam *rm_atoms = new core::param::EnumParam(this->atomRM);
+    core::param::EnumParam* rm_atoms = new core::param::EnumParam(this->atomRM);
     rm_atoms->SetTypePair(ATOM_SPHERES, "Spheres");
     rm_atoms->SetTypePair(ATOM_NONE, "None");
     this->atomRenderModeParam << rm_atoms;
@@ -203,7 +233,7 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
 
     // Param for render mode for ba edges
     this->edgeBaRM = BA_EDGE_NONE;
-    core::param::EnumParam *rm_edge_ba = new core::param::EnumParam(this->edgeBaRM);
+    core::param::EnumParam* rm_edge_ba = new core::param::EnumParam(this->edgeBaRM);
     rm_edge_ba->SetTypePair(BA_EDGE_NONE, "None");
     rm_edge_ba->SetTypePair(BA_EDGE_LINES, "Lines");
     rm_edge_ba->SetTypePair(BA_EDGE_STICK, "Stick");
@@ -217,7 +247,7 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
 
     // Param for render mode for ti edges
     this->edgeTiRM = TI_EDGE_NONE;
-    core::param::EnumParam *rm_edge_ti = new core::param::EnumParam(this->edgeTiRM);
+    core::param::EnumParam* rm_edge_ti = new core::param::EnumParam(this->edgeTiRM);
     rm_edge_ti->SetTypePair(TI_EDGE_NONE, "None");
     rm_edge_ti->SetTypePair(TI_EDGE_LINES, "Lines");
     rm_edge_ti->SetTypePair(TI_EDGE_STICK, "Stick");
@@ -231,7 +261,7 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
 
     // Param for render mode of displacement vectors
     this->vecRM = VEC_NONE;
-    core::param::EnumParam *rm_vec = new core::param::EnumParam(this->vecRM);
+    core::param::EnumParam* rm_vec = new core::param::EnumParam(this->vecRM);
     rm_vec->SetTypePair(VEC_NONE, "None");
     rm_vec->SetTypePair(VEC_ARROWS, "Arrows");
     this->vecRMParam << rm_vec;
@@ -276,7 +306,7 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
 
     // Param for arrow coloring
     this->arrColorMode = ARRCOL_ORIENT;
-    core::param::EnumParam *arr_cm = new core::param::EnumParam(this->arrColorMode);
+    core::param::EnumParam* arr_cm = new core::param::EnumParam(this->arrColorMode);
     arr_cm->SetTypePair(ARRCOL_ORIENT, "Orientation");
     arr_cm->SetTypePair(ARRCOL_ELEMENT, "Element");
     arr_cm->SetTypePair(ARRCOL_MAGNITUDE, "Magnitude");
@@ -327,7 +357,7 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
 
     // Param for grid render mode
     this->sliceRM = SLICE_NONE;
-    core::param::EnumParam *rm = new core::param::EnumParam(this->sliceRM);
+    core::param::EnumParam* rm = new core::param::EnumParam(this->sliceRM);
     rm->SetTypePair(VEC_MAG, "Vec Mag");
     rm->SetTypePair(VEC_DIR, "Vec Dir");
     rm->SetTypePair(LIC_GPU, "LIC (GPU)");
@@ -353,7 +383,7 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
 
     // Gauss quality
     this->gridQuality = 0;
-    core::param::EnumParam *gq = new core::param::EnumParam(this->gridQuality);
+    core::param::EnumParam* gq = new core::param::EnumParam(this->gridQuality);
     gq->SetTypePair(0, "Low");
     gq->SetTypePair(1, "Medium");
     gq->SetTypePair(2, "High");
@@ -473,7 +503,7 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
 
     // Param for isosurface color mode
     this->vColorMode = VOL_UNI;
-    core::param::EnumParam *cm = new core::param::EnumParam(this->vColorMode);
+    core::param::EnumParam* cm = new core::param::EnumParam(this->vColorMode);
     cm->SetTypePair(VOL_UNI, "Uniform");
     cm->SetTypePair(VOL_DIR, "Vec dir");
     cm->SetTypePair(VOL_MAG, "Vec mag");
@@ -483,7 +513,7 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
 
     // Param for raymarching texture
     this->rmTex = DENSITY;
-    core::param::EnumParam *rm_tex = new core::param::EnumParam(this->rmTex);
+    core::param::EnumParam* rm_tex = new core::param::EnumParam(this->rmTex);
     rm_tex->SetTypePair(DENSITY, "Density map");
     rm_tex->SetTypePair(DIR_MAG, "Dir magnitude");
     rm_tex->SetTypePair(CURL_MAG, "Curl magnitude");
@@ -493,7 +523,7 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
     // Show iso surface
     this->showIsoSurf = false;
     this->showIsoSurfParam.SetParameter(new core::param::BoolParam(this->showIsoSurf));
-  //  this->MakeSlotAvailable(&this->showIsoSurfParam);
+    //  this->MakeSlotAvailable(&this->showIsoSurfParam);
 
     // Scale the direction vector when computing LIC on isosurface
     this->volLicDirScl = 1.0f;
@@ -507,7 +537,8 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
 
     // Change LIC contrast
     this->volLicContrastStretching = 0.0f;
-    this->volLicContrastStretchingParam.SetParameter(new core::param::FloatParam(this->volLicContrastStretching, 0.0f, 0.5f));
+    this->volLicContrastStretchingParam.SetParameter(
+        new core::param::FloatParam(this->volLicContrastStretching, 0.0f, 0.5f));
     this->MakeSlotAvailable(&this->volLicContrastStretchingParam);
 
     // Change LIC brightness
@@ -534,8 +565,7 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
 
     // Param for fog density
     this->fogDensity = 0.4f;
-    this->fogDensityParam.SetParameter(
-            new core::param::FloatParam(this->fogDensity, 0.0f, 1.0f));
+    this->fogDensityParam.SetParameter(new core::param::FloatParam(this->fogDensity, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->fogDensityParam);
 
     // Param for fog colour
@@ -544,10 +574,7 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
     this->fogColour[2] = 0.13f;
     this->fogColour[3] = 1.0f;
     this->fogColourParam << new core::param::StringParam(
-            core::utility::ColourParser::ToString(
-                    this->fogColour[0],
-                    this->fogColour[1],
-                    this->fogColour[2]));
+        core::utility::ColourParser::ToString(this->fogColour[0], this->fogColour[1], this->fogColour[2]).PeekBuffer());
     this->MakeSlotAvailable(&this->fogColourParam);
 
     // Param to goggle pos filter for crit points
@@ -571,7 +598,7 @@ protein_cuda::CrystalStructureVolumeRenderer::CrystalStructureVolumeRenderer(voi
 /*
  * protein_cuda::CrystalStructureVolumeRenderer::~CrystalStructureRenderer
  */
-protein_cuda::CrystalStructureVolumeRenderer::~CrystalStructureVolumeRenderer (void) {
+protein_cuda::CrystalStructureVolumeRenderer::~CrystalStructureVolumeRenderer(void) {
     this->Release();
 }
 
@@ -580,21 +607,19 @@ protein_cuda::CrystalStructureVolumeRenderer::~CrystalStructureVolumeRenderer (v
  * protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex
  */
 bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
-		const protein_calls::CrystalStructureDataCall *dc,
-        const float *atomPos) {
+    const protein_calls::CrystalStructureDataCall* dc, const float* atomPos) {
 
 #if (defined(CALC_GRID) && (CALC_GRID))
 
     using namespace vislib;
     using namespace vislib::math;
 
-    if(this->recalcDensityGrid) {
+    if (this->recalcDensityGrid) {
 
-        
-//        printf("Calc density grid start\n"); // DEBUG
 
-        Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis, gridYAxis,
-        gridZAxis, gridOrg;
+        //        printf("Calc density grid start\n"); // DEBUG
+
+        Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis, gridYAxis, gridZAxis, gridOrg;
         Vector<int, 3> gridDim;
         float gausslim;
 
@@ -605,15 +630,15 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
         gridMaxCoord[0] = this->bbox.ObjectSpaceBBox().Right();
         gridMaxCoord[1] = this->bbox.ObjectSpaceBBox().Top();
         gridMaxCoord[2] = this->bbox.ObjectSpaceBBox().Front();
-        gridXAxis[0] = gridMaxCoord[0]-gridMinCoord[0];
-        gridYAxis[1] = gridMaxCoord[1]-gridMinCoord[1];
-        gridZAxis[2] = gridMaxCoord[2]-gridMinCoord[2];
-        gridDim[0] = (int) ceil(gridXAxis[0] / this->densGridSpacing);
-        gridDim[1] = (int) ceil(gridYAxis[1] / this->densGridSpacing);
-        gridDim[2] = (int) ceil(gridZAxis[2] / this->densGridSpacing);
-        gridXAxis[0] = (gridDim[0]-1) * this->densGridSpacing;
-        gridYAxis[1] = (gridDim[1]-1) * this->densGridSpacing;
-        gridZAxis[2] = (gridDim[2]-1) * this->densGridSpacing;
+        gridXAxis[0] = gridMaxCoord[0] - gridMinCoord[0];
+        gridYAxis[1] = gridMaxCoord[1] - gridMinCoord[1];
+        gridZAxis[2] = gridMaxCoord[2] - gridMinCoord[2];
+        gridDim[0] = (int)ceil(gridXAxis[0] / this->densGridSpacing);
+        gridDim[1] = (int)ceil(gridYAxis[1] / this->densGridSpacing);
+        gridDim[2] = (int)ceil(gridZAxis[2] / this->densGridSpacing);
+        gridXAxis[0] = (gridDim[0] - 1) * this->densGridSpacing;
+        gridYAxis[1] = (gridDim[1] - 1) * this->densGridSpacing;
+        gridZAxis[2] = (gridDim[2] - 1) * this->densGridSpacing;
         gridMaxCoord[0] = gridMinCoord[0] + gridXAxis[0];
         gridMaxCoord[1] = gridMinCoord[1] + gridYAxis[1];
         gridMaxCoord[2] = gridMinCoord[2] + gridZAxis[2];
@@ -622,14 +647,14 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
         gridOrg[2] = gridMinCoord[2];
 
         // (Re)allocate memory if necessary
-        if(this->uniGridDensity.GetGridDim().X()*
-                this->uniGridDensity.GetGridDim().Y()*
-                this->uniGridDensity.GetGridDim().Z() == 0) {
+        if (this->uniGridDensity.GetGridDim().X() * this->uniGridDensity.GetGridDim().Y() *
+                this->uniGridDensity.GetGridDim().Z() ==
+            0) {
             this->uniGridDensity.Init(gridDim, gridOrg, this->densGridSpacing);
         }
-        if(this->uniGridColor.GetGridDim().X()*
-                this->uniGridColor.GetGridDim().Y()*
-                this->uniGridColor.GetGridDim().Z() == 0) {
+        if (this->uniGridColor.GetGridDim().X() * this->uniGridColor.GetGridDim().Y() *
+                this->uniGridColor.GetGridDim().Z() ==
+            0) {
             this->uniGridColor.Init(gridDim, gridOrg, this->densGridSpacing);
         }
 
@@ -651,9 +676,9 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
         unsigned int dipole_cnt = 0;
 
         this->maxLenDiff = 0.0f;
-        for(int cnt = 0; cnt < static_cast<int>(dc->GetDipoleCnt()); cnt++) {
+        for (int cnt = 0; cnt < static_cast<int>(dc->GetDipoleCnt()); cnt++) {
 
-            if(this->arrowVis[cnt]) {
+            if (this->arrowVis[cnt]) {
 
                 // Set color according to coloring mode (LIC, Uni color are
                 // set directly in the shader and therefore don't need a
@@ -661,68 +686,62 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
 
 #if (defined(NOCLIP_ISOSURF) && (NOCLIP_ISOSURF))
                 // Only add to density grid, if dipole is visible
-                if(this->visDipole[cnt]) {
+                if (this->visDipole[cnt]) {
 #endif
-                float lenDiffVec;
-                vislib::math::Vector<float, 3> diffVec;
-                diffVec.Set(dc->GetDipole()[cnt*3+0],
-                            dc->GetDipole()[cnt*3+1],
-                            dc->GetDipole()[cnt*3+2]);
-                lenDiffVec = diffVec.Length();
+                    float lenDiffVec;
+                    vislib::math::Vector<float, 3> diffVec;
+                    diffVec.Set(
+                        dc->GetDipole()[cnt * 3 + 0], dc->GetDipole()[cnt * 3 + 1], dc->GetDipole()[cnt * 3 + 2]);
+                    lenDiffVec = diffVec.Length();
 
-                if(this->toggleNormVec) {
-                    this->maxLenDiff = 1.0f;
-                }
-                else {
-                    this->maxLenDiff = vislib::math::Max(this->maxLenDiff, lenDiffVec);
-                }
+                    if (this->toggleNormVec) {
+                        this->maxLenDiff = 1.0f;
+                    } else {
+                        this->maxLenDiff = vislib::math::Max(this->maxLenDiff, lenDiffVec);
+                    }
 
-                gridPos.Add(dc->GetDipolePos()[3*cnt+0]-gridOrg[0]);
-                gridPos.Add(dc->GetDipolePos()[3*cnt+1]-gridOrg[1]);
-                gridPos.Add(dc->GetDipolePos()[3*cnt+2]-gridOrg[2]);
-                if((this->toggleNormVec)&&(lenDiffVec > 0.0f)) {
-                    gridPos.Add(1.0f);
-                }
-                else {
-                    gridPos.Add(lenDiffVec);
-                }
+                    gridPos.Add(dc->GetDipolePos()[3 * cnt + 0] - gridOrg[0]);
+                    gridPos.Add(dc->GetDipolePos()[3 * cnt + 1] - gridOrg[1]);
+                    gridPos.Add(dc->GetDipolePos()[3 * cnt + 2] - gridOrg[2]);
+                    if ((this->toggleNormVec) && (lenDiffVec > 0.0f)) {
+                        gridPos.Add(1.0f);
+                    } else {
+                        gridPos.Add(lenDiffVec);
+                    }
 
-                vislib::math::Vector<float, 3> color;
-                color = this->getColorGrad(lenDiffVec*this->vecScl);
-                if(this->vColorMode == VOL_MAG) {
-                    gridCol.Add(color.X());
-                    gridCol.Add(color.Y());
-                    gridCol.Add(color.Z());
-                    gridCol.Add(1.0f);
-                }
-                else if(this->vColorMode == VOL_DIR) {
-                    /*gridCol.Add((diffVec.X()/lenDiffVec+1.0)*0.5f);
-                    gridCol.Add((diffVec.Y()/lenDiffVec+1.0)*0.5f);
-                    gridCol.Add((diffVec.Z()/lenDiffVec+1.0)*0.5f);*/
-                    /*gridCol.Add((diffVec.X()+1.0)*0.5f);
-                    gridCol.Add((diffVec.Y()+1.0)*0.5f);
-                    gridCol.Add((diffVec.Z()+1.0)*0.5f);*/
+                    vislib::math::Vector<float, 3> color;
+                    color = this->getColorGrad(lenDiffVec * this->vecScl);
+                    if (this->vColorMode == VOL_MAG) {
+                        gridCol.Add(color.X());
+                        gridCol.Add(color.Y());
+                        gridCol.Add(color.Z());
+                        gridCol.Add(1.0f);
+                    } else if (this->vColorMode == VOL_DIR) {
+                        /*gridCol.Add((diffVec.X()/lenDiffVec+1.0)*0.5f);
+                        gridCol.Add((diffVec.Y()/lenDiffVec+1.0)*0.5f);
+                        gridCol.Add((diffVec.Z()/lenDiffVec+1.0)*0.5f);*/
+                        /*gridCol.Add((diffVec.X()+1.0)*0.5f);
+                        gridCol.Add((diffVec.Y()+1.0)*0.5f);
+                        gridCol.Add((diffVec.Z()+1.0)*0.5f);*/
 
-                    gridCol.Add(diffVec.X());
-                    gridCol.Add(diffVec.Y());
-                    gridCol.Add(diffVec.Z());
-                    
-                    gridCol.Add(1.0f);
-                }
-                else if(this->vColorMode == VOL_LIC) {
-                    gridCol.Add(diffVec.X());
-                    gridCol.Add(diffVec.Y());
-                    gridCol.Add(diffVec.Z());
-                    gridCol.Add(1.0f);
-                }
-                else {
-                    gridCol.Add(0.0f);
-                    gridCol.Add(0.0f);
-                    gridCol.Add(0.0f);
-                    gridCol.Add(0.0f);
-                }
+                        gridCol.Add(diffVec.X());
+                        gridCol.Add(diffVec.Y());
+                        gridCol.Add(diffVec.Z());
 
-                dipole_cnt++;
+                        gridCol.Add(1.0f);
+                    } else if (this->vColorMode == VOL_LIC) {
+                        gridCol.Add(diffVec.X());
+                        gridCol.Add(diffVec.Y());
+                        gridCol.Add(diffVec.Z());
+                        gridCol.Add(1.0f);
+                    } else {
+                        gridCol.Add(0.0f);
+                        gridCol.Add(0.0f);
+                        gridCol.Add(0.0f);
+                        gridCol.Add(0.0f);
+                    }
+
+                    dipole_cnt++;
 #if (defined(NOCLIP_ISOSURF) && (NOCLIP_ISOSURF))
                 }
 #endif
@@ -738,28 +757,24 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
                     gridCol[4*i+3]);
         }*/ // DEBUG
 
-//        printf("Vectors contained in density tex %u\n", dipole_cnt);
+        //        printf("Vectors contained in density tex %u\n", dipole_cnt);
 
         // Compute uniform grid containing density map of the vectors
-        CUDAQuickSurf *cqs = (CUDAQuickSurf *) this->cudaqsurf;
+        CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
 
-        int rc = cqs->calc_map(
-                static_cast<long>(gridPos.Count()/4),
-                gridPos.PeekElements(),
-                gridCol.PeekElements(),
-                true,                // Use 'color' array
-                gridOrg.PeekComponents(),
-                gridDim.PeekComponents(),
-                maxLenDiff,          // Maximum radius
-                this->densGridRad,   // Radius scaling
-                this->densGridSpacing,
-                this->volIsoVal,                // Iso value
-                gausslim);
+        int rc = cqs->calc_map(static_cast<long>(gridPos.Count() / 4), gridPos.PeekElements(), gridCol.PeekElements(),
+            true, // Use 'color' array
+            CUDAQuickSurf::VolTexFormat::RGB3F, gridOrg.PeekComponents(), gridDim.PeekComponents(),
+            maxLenDiff,        // Maximum radius
+            this->densGridRad, // Radius scaling
+            this->densGridSpacing,
+            this->volIsoVal, // Iso value
+            gausslim, false);
 
-        if(rc != 0) {
+        if (rc != 0) {
             Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s::CalcDensityTex: Quicksurf class returned val (number of data points %u)!= 0\n",
-                    this->ClassName(), gridPos.Count()/4);
+                "%s::CalcDensityTex: Quicksurf class returned val (number of data points %u)!= 0\n", this->ClassName(),
+                gridPos.Count() / 4);
             return false;
         }
 
@@ -780,18 +795,11 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
         }*/ // DEBUG
 
         // Setup density map
-        if(!glIsTexture(this->uniGridDensityTex)) glGenTextures(1, &this->uniGridDensityTex);
+        if (!glIsTexture(this->uniGridDensityTex))
+            glGenTextures(1, &this->uniGridDensityTex);
         glBindTexture(GL_TEXTURE_3D, this->uniGridDensityTex);
-        glTexImage3DEXT(GL_TEXTURE_3D,
-                0,
-                GL_ALPHA,
-                gridDim[0],
-                gridDim[1],
-                gridDim[2],
-                0,
-                GL_ALPHA,
-                GL_FLOAT,
-                this->uniGridDensity.PeekBuffer());
+        glTexImage3DEXT(GL_TEXTURE_3D, 0, GL_ALPHA, gridDim[0], gridDim[1], gridDim[2], 0, GL_ALPHA, GL_FLOAT,
+            this->uniGridDensity.PeekBuffer());
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -799,18 +807,11 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
         // Setup color texture
-        if(!glIsTexture(this->uniGridColorTex)) glGenTextures(1, &this->uniGridColorTex);
+        if (!glIsTexture(this->uniGridColorTex))
+            glGenTextures(1, &this->uniGridColorTex);
         glBindTexture(GL_TEXTURE_3D, this->uniGridColorTex);
-        glTexImage3DEXT(GL_TEXTURE_3D,
-                0,
-                GL_RGB32F,
-                gridDim[0],
-                gridDim[1],
-                gridDim[2],
-                0,
-                GL_RGB,
-                GL_FLOAT,
-                this->uniGridColor.PeekBuffer());
+        glTexImage3DEXT(GL_TEXTURE_3D, 0, GL_RGB32F, gridDim[0], gridDim[1], gridDim[2], 0, GL_RGB, GL_FLOAT,
+            this->uniGridColor.PeekBuffer());
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -820,17 +821,15 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
 
         // Check for opengl error
         GLenum err = glGetError();
-        if(err != GL_NO_ERROR) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "%s::CalcDensityMap: glError %s\n",
-                    this->ClassName(),
-                    gluErrorString(err));
+        if (err != GL_NO_ERROR) {
+            Log::DefaultLog.WriteMsg(
+                Log::LEVEL_ERROR, "%s::CalcDensityMap: glError %s\n", this->ClassName(), gluErrorString(err));
             return false;
         }
 
-//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: time for computing density map: %f",
-//                this->ClassName(),
-//                (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
+        //        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: time for computing density map: %f",
+        //                this->ClassName(),
+        //                (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
 
         this->recalcDensityGrid = false;
     }
@@ -850,8 +849,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
 
 #if (defined(CALC_GRID) && (CALC_GRID))
 
-    Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis, gridYAxis,
-                     gridZAxis, gridOrg;
+    Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis, gridYAxis, gridZAxis, gridOrg;
     Vector<int, 3> gridDim;
 
     gridMinCoord[0] = this->bbox.ObjectSpaceBBox().Left();
@@ -860,15 +858,15 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
     gridMaxCoord[0] = this->bbox.ObjectSpaceBBox().Right();
     gridMaxCoord[1] = this->bbox.ObjectSpaceBBox().Top();
     gridMaxCoord[2] = this->bbox.ObjectSpaceBBox().Front();
-    gridXAxis[0] = gridMaxCoord[0]-gridMinCoord[0];
-    gridYAxis[1] = gridMaxCoord[1]-gridMinCoord[1];
-    gridZAxis[2] = gridMaxCoord[2]-gridMinCoord[2];
-    gridDim[0] = (int) ceil(gridXAxis[0] / this->gridSpacing);
-    gridDim[1] = (int) ceil(gridYAxis[1] / this->gridSpacing);
-    gridDim[2] = (int) ceil(gridZAxis[2] / this->gridSpacing);
-    gridXAxis[0] = (gridDim[0]-1) * this->gridSpacing;
-    gridYAxis[1] = (gridDim[1]-1) * this->gridSpacing;
-    gridZAxis[2] = (gridDim[2]-1) * this->gridSpacing;
+    gridXAxis[0] = gridMaxCoord[0] - gridMinCoord[0];
+    gridYAxis[1] = gridMaxCoord[1] - gridMinCoord[1];
+    gridZAxis[2] = gridMaxCoord[2] - gridMinCoord[2];
+    gridDim[0] = (int)ceil(gridXAxis[0] / this->gridSpacing);
+    gridDim[1] = (int)ceil(gridYAxis[1] / this->gridSpacing);
+    gridDim[2] = (int)ceil(gridZAxis[2] / this->gridSpacing);
+    gridXAxis[0] = (gridDim[0] - 1) * this->gridSpacing;
+    gridYAxis[1] = (gridDim[1] - 1) * this->gridSpacing;
+    gridZAxis[2] = (gridDim[2] - 1) * this->gridSpacing;
     gridMaxCoord[0] = gridMinCoord[0] + gridXAxis[0];
     gridMaxCoord[1] = gridMinCoord[1] + gridYAxis[1];
     gridMaxCoord[2] = gridMinCoord[2] + gridZAxis[2];
@@ -877,13 +875,13 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
     gridOrg[2] = gridMinCoord[2];
 
     // (Re)allocate memory if necessary
-    if(this->uniGridCurlMag.GetGridDim().X()*
-            this->uniGridCurlMag.GetGridDim().Y()*
-            this->uniGridCurlMag.GetGridDim().Z() == 0) {
+    if (this->uniGridCurlMag.GetGridDim().X() * this->uniGridCurlMag.GetGridDim().Y() *
+            this->uniGridCurlMag.GetGridDim().Z() ==
+        0) {
         this->uniGridCurlMag.Init(gridDim, gridOrg, this->gridSpacing);
     }
 
-    unsigned int nVoxels = gridDim.X()*gridDim.Y()*gridDim.Z();
+    unsigned int nVoxels = gridDim.X() * gridDim.Y() * gridDim.Z();
     cudaError_t cudaErr;
     GLenum glErr;
 
@@ -891,11 +889,11 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
 
     // Allocate device memory if necessary
 
-    if(this->gridCurlD == NULL) {
-        checkCudaErrors(cudaMalloc((void **)&this->gridCurlD, sizeof(float)*nVoxels*3));
+    if (this->gridCurlD == NULL) {
+        checkCudaErrors(cudaMalloc((void**)&this->gridCurlD, sizeof(float) * nVoxels * 3));
     }
-    if(this->gridCurlMagD == NULL) {
-        checkCudaErrors(cudaMalloc((void **)&this->gridCurlMagD, sizeof(float)*nVoxels));
+    if (this->gridCurlMagD == NULL) {
+        checkCudaErrors(cudaMalloc((void**)&this->gridCurlMagD, sizeof(float) * nVoxels));
     }
 
     // Copy grid parameters to constant device memory
@@ -925,27 +923,23 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
     this->params.gridZAxis.z = gridZAxis.Z();
 
     cudaErr = protein_cuda::CUDASetCurlParams(&this->params);
-    if(cudaErr != cudaSuccess) {
+    if (cudaErr != cudaSuccess) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s::CalcMagCurlTex: unable to copy grid params to device memory (%s)\n",
-                this->ClassName(), cudaGetErrorString(cudaErr));
+            "%s::CalcMagCurlTex: unable to copy grid params to device memory (%s)\n", this->ClassName(),
+            cudaGetErrorString(cudaErr));
         return false;
     }
 
     // Compute curl magnitude
 
-    CUDAQuickSurf *cqs = (CUDAQuickSurf *) this->cudaqsurf;
+    CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
 
-    cudaErr = protein_cuda::CudaGetCurlMagnitude(cqs->getColorMap(),
-                                            this->gridCurlD,
-                                            this->gridCurlMagD,
-                                            nVoxels,
-                                            this->gridSpacing);
+    cudaErr = protein_cuda::CudaGetCurlMagnitude(
+        cqs->getColorMap(), this->gridCurlD, this->gridCurlMagD, nVoxels, this->gridSpacing);
 
-    if(cudaErr != cudaSuccess) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s::CalcMagCurlTex: unable to compute curl vector magnitude (%s)\n",
-                this->ClassName(), cudaGetErrorString(cudaErr));
+    if (cudaErr != cudaSuccess) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s::CalcMagCurlTex: unable to compute curl vector magnitude (%s)\n",
+            this->ClassName(), cudaGetErrorString(cudaErr));
         return false;
     }
 
@@ -957,13 +951,13 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
 
     // Setup texture
 
-    if(!glIsTexture(this->curlMagTex)) glGenTextures(1, &this->curlMagTex);
+    if (!glIsTexture(this->curlMagTex))
+        glGenTextures(1, &this->curlMagTex);
 
     glEnable(GL_TEXTURE_3D);
     glBindTexture(GL_TEXTURE_3D, this->curlMagTex);
-    glTexImage3DEXT(GL_TEXTURE_3D, 0, GL_ALPHA, gridDim.X(),
-            gridDim.Y(), gridDim.Z(), 0, GL_ALPHA,
-            GL_FLOAT, this->uniGridCurlMag.PeekBuffer());
+    glTexImage3DEXT(GL_TEXTURE_3D, 0, GL_ALPHA, gridDim.X(), gridDim.Y(), gridDim.Z(), 0, GL_ALPHA, GL_FLOAT,
+        this->uniGridCurlMag.PeekBuffer());
 
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -974,16 +968,15 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
     glBindTexture(GL_TEXTURE_3D, 0);
     glDisable(GL_TEXTURE_3D);
 
-//    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: time for computing curl: %f",
-//            this->ClassName(),
-//            (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
+    //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: time for computing curl: %f",
+    //            this->ClassName(),
+    //            (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
 
     // Check for opengl error
     glErr = glGetError();
-    if(glErr != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s::CalcMagCurlTex: unable to setup curl texture (glError %s)\n",
-                this->ClassName(), gluErrorString(glErr));
+    if (glErr != GL_NO_ERROR) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s::CalcMagCurlTex: unable to setup curl texture (glError %s)\n",
+            this->ClassName(), gluErrorString(glErr));
         return false;
     }
 
@@ -996,10 +989,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
 /*
  * protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid
  */
-bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid (
-		const protein_calls::CrystalStructureDataCall *dc,
-        const float *atomPos,
-        const float *col) {
+bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid(
+    const protein_calls::CrystalStructureDataCall* dc, const float* atomPos, const float* col) {
 
 #if (defined(CALC_GRID) && (CALC_GRID))
 
@@ -1007,8 +998,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid (
 
     using namespace vislib::math;
 
-    Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis, gridYAxis,
-                     gridZAxis, gridOrg;
+    Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis, gridYAxis, gridZAxis, gridOrg;
     Vector<int, 3> gridDim;
     float gausslim;
 
@@ -1019,15 +1009,15 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid (
     gridMaxCoord[0] = this->bbox.ObjectSpaceBBox().Right();
     gridMaxCoord[1] = this->bbox.ObjectSpaceBBox().Top();
     gridMaxCoord[2] = this->bbox.ObjectSpaceBBox().Front();
-    gridXAxis[0] = gridMaxCoord[0]-gridMinCoord[0];
-    gridYAxis[1] = gridMaxCoord[1]-gridMinCoord[1];
-    gridZAxis[2] = gridMaxCoord[2]-gridMinCoord[2];
-    gridDim[0] = (int) ceil(gridXAxis[0] / this->gridSpacing);
-    gridDim[1] = (int) ceil(gridYAxis[1] / this->gridSpacing);
-    gridDim[2] = (int) ceil(gridZAxis[2] / this->gridSpacing);
-    gridXAxis[0] = (gridDim[0]-1) * this->gridSpacing;
-    gridYAxis[1] = (gridDim[1]-1) * this->gridSpacing;
-    gridZAxis[2] = (gridDim[2]-1) * this->gridSpacing;
+    gridXAxis[0] = gridMaxCoord[0] - gridMinCoord[0];
+    gridYAxis[1] = gridMaxCoord[1] - gridMinCoord[1];
+    gridZAxis[2] = gridMaxCoord[2] - gridMinCoord[2];
+    gridDim[0] = (int)ceil(gridXAxis[0] / this->gridSpacing);
+    gridDim[1] = (int)ceil(gridYAxis[1] / this->gridSpacing);
+    gridDim[2] = (int)ceil(gridZAxis[2] / this->gridSpacing);
+    gridXAxis[0] = (gridDim[0] - 1) * this->gridSpacing;
+    gridYAxis[1] = (gridDim[1] - 1) * this->gridSpacing;
+    gridZAxis[2] = (gridDim[2] - 1) * this->gridSpacing;
     gridMaxCoord[0] = gridMinCoord[0] + gridXAxis[0];
     gridMaxCoord[1] = gridMinCoord[1] + gridYAxis[1];
     gridMaxCoord[2] = gridMinCoord[2] + gridZAxis[2];
@@ -1041,28 +1031,36 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid (
     //      gridDim[0], gridDim[1], gridDim[2], this->gridSpacing); // DEBUG
 
     // (Re)allocate if necessary
-    if(this->uniGridVecField.GetGridDim().X()*
-            this->uniGridVecField.GetGridDim().Y()*
-            this->uniGridVecField.GetGridDim().Z() == 0) {
+    if (this->uniGridVecField.GetGridDim().X() * this->uniGridVecField.GetGridDim().Y() *
+            this->uniGridVecField.GetGridDim().Z() ==
+        0) {
         this->uniGridVecField.Init(gridDim, gridOrg, this->gridSpacing);
     }
 
     switch (this->gridQuality) {
-        case 3: gausslim = 4.0f; break;  // max quality
-        case 2: gausslim = 3.0f; break;  // high quality
-        case 1: gausslim = 2.5f; break;  // medium quality
-        case 0:
-        default: gausslim = 2.0f; break; // low quality
+    case 3:
+        gausslim = 4.0f;
+        break; // max quality
+    case 2:
+        gausslim = 3.0f;
+        break; // high quality
+    case 1:
+        gausslim = 2.5f;
+        break; // medium quality
+    case 0:
+    default:
+        gausslim = 2.0f;
+        break; // low quality
     }
 
-    float *gridDataPos;
-    float *gridData;
+    float* gridDataPos;
+    float* gridData;
     unsigned int dataCnt = 0;
 
     time_t t = clock();
 
-    gridDataPos = new float[dc->GetDipoleCnt()*4]; // TODO Avoid memory allocation in every frame
-    gridData    = new float[dc->GetDipoleCnt()*4];
+    gridDataPos = new float[dc->GetDipoleCnt() * 4]; // TODO Avoid memory allocation in every frame
+    gridData = new float[dc->GetDipoleCnt() * 4];
     dataCnt = dc->GetDipoleCnt();
 
     /*for(int cnt = 0; cnt < static_cast<int>(dc->GetDipoleCnt()); cnt++) {
@@ -1071,46 +1069,42 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid (
     }*/
 
 #pragma omp parallel for
-    for(int cnt = 0; cnt < static_cast<int>(dc->GetDipoleCnt()); cnt++) {
-        Vector<float, 3> vec(&dc->GetDipole()[3*cnt]);
-        gridDataPos[4*cnt+0] = dc->GetDipolePos()[3*cnt+0]-gridOrg[0];
-        gridDataPos[4*cnt+1] = dc->GetDipolePos()[3*cnt+1]-gridOrg[1];
-        gridDataPos[4*cnt+2] = dc->GetDipolePos()[3*cnt+2]-gridOrg[2];
-        gridDataPos[4*cnt+3] = this->gridDataRad;
-        gridData[4*cnt+0] = vec[0];
-        gridData[4*cnt+1] = vec[1];
-        gridData[4*cnt+2] = vec[2];
-        gridData[4*cnt+3] = 1.0f;
+    for (int cnt = 0; cnt < static_cast<int>(dc->GetDipoleCnt()); cnt++) {
+        Vector<float, 3> vec(&dc->GetDipole()[3 * cnt]);
+        gridDataPos[4 * cnt + 0] = dc->GetDipolePos()[3 * cnt + 0] - gridOrg[0];
+        gridDataPos[4 * cnt + 1] = dc->GetDipolePos()[3 * cnt + 1] - gridOrg[1];
+        gridDataPos[4 * cnt + 2] = dc->GetDipolePos()[3 * cnt + 2] - gridOrg[2];
+        gridDataPos[4 * cnt + 3] = this->gridDataRad;
+        gridData[4 * cnt + 0] = vec[0];
+        gridData[4 * cnt + 1] = vec[1];
+        gridData[4 * cnt + 2] = vec[2];
+        gridData[4 * cnt + 3] = 1.0f;
         //printf("%i (%f %f %f)\n", cnt, vec[0], vec[1], vec[2]);
     }
 
     // Compute uniform grid (vector field and density map)
 
-    CUDAQuickSurf *cqs = (CUDAQuickSurf *) this->cudaqsurf;
-    int rc = cqs->calc_map(
-            dataCnt,
-            &gridDataPos[0],
-            &gridData[0],
-            true,                // Use seperate 'color' array
-            gridOrg.PeekComponents(),
-            gridDim.PeekComponents(),
-            this->gridDataRad,   // Maximum radius
-            1.0f,                // Radius scaling
-            this->gridSpacing,
-            1.0f,                // Iso value TODO ?
-            gausslim);
+    CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
+    int rc = cqs->calc_map(dataCnt, &gridDataPos[0], &gridData[0],
+        true, // Use seperate 'color' array
+        CUDAQuickSurf::VolTexFormat::RGB3F, gridOrg.PeekComponents(), gridDim.PeekComponents(),
+        this->gridDataRad, // Maximum radius
+        1.0f,              // Radius scaling
+        this->gridSpacing,
+        1.0f, // Iso value TODO ?
+        gausslim, false);
 
 
-    if(rc != 0) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s::CalcUniGrid: Quicksurf class returned val != 0\n", this->ClassName());
+    if (rc != 0) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s::CalcUniGrid: Quicksurf class returned val != 0\n", this->ClassName());
         this->recalcGrid = false;
         return false;
     }
 
     // Copy data from device to host
 
-    this->uniGridVecField.MemCpyFromDevice((float3 *)(cqs->getColorMap()));
+    this->uniGridVecField.MemCpyFromDevice((float3*)(cqs->getColorMap()));
 
     // DEBUG
     /*for(int x = 0; x < this->uniGridVecField.GetGridDim().X(); x++) {
@@ -1123,29 +1117,21 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid (
         }
     }*/
 
-//    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-//            "%s: time for computing uni grid %f",
-//            this->ClassName(),
-//            (double(clock()-t)/double(CLOCKS_PER_SEC))); // DEBUG
+    //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    //            "%s: time for computing uni grid %f",
+    //            this->ClassName(),
+    //            (double(clock()-t)/double(CLOCKS_PER_SEC))); // DEBUG
 
     //  Setup textures
 
 
     glEnable(GL_TEXTURE_3D);
-    if(!glIsTexture(this->uniGridTex)) {
+    if (!glIsTexture(this->uniGridTex)) {
         glGenTextures(1, &this->uniGridTex);
     }
     glBindTexture(GL_TEXTURE_3D, this->uniGridTex);
-    glTexImage3DEXT(GL_TEXTURE_3D,
-            0,
-            GL_RGB32F,
-            gridDim[0],
-            gridDim[1],
-            gridDim[2],
-            0,
-            GL_RGB,
-            GL_FLOAT,
-            this->uniGridVecField.PeekBuffer());
+    glTexImage3DEXT(GL_TEXTURE_3D, 0, GL_RGB32F, gridDim[0], gridDim[1], gridDim[2], 0, GL_RGB, GL_FLOAT,
+        this->uniGridVecField.PeekBuffer());
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -1156,11 +1142,9 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid (
 
     // Check for opengl error
     GLenum err = glGetError();
-    if(err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s::CalcUniGrid: glError %s\n",
-                this->ClassName(),
-                gluErrorString(err));
+    if (err != GL_NO_ERROR) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s::CalcUniGrid: glError %s\n", this->ClassName(), gluErrorString(err));
 
         delete[] gridDataPos;
         delete[] gridData;
@@ -1179,8 +1163,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid (
 /*
  * protein_cuda::CrystalStructureRenderer::ApplyPosFilter
  */
-void protein_cuda::CrystalStructureVolumeRenderer::ApplyPosFilter(
-		const protein_calls::CrystalStructureDataCall *dc) {
+void protein_cuda::CrystalStructureVolumeRenderer::ApplyPosFilter(const protein_calls::CrystalStructureDataCall* dc) {
 
     using namespace vislib::sys;
 
@@ -1189,14 +1172,14 @@ void protein_cuda::CrystalStructureVolumeRenderer::ApplyPosFilter(
     // Calculate atom visibility based on interpolated atom positions
     this->visAtom.SetCount(dc->GetAtomCnt());
 #pragma omp parallel for
-    for(int cnt = 0; cnt < int(dc->GetAtomCnt()); cnt++) {
+    for (int cnt = 0; cnt < int(dc->GetAtomCnt()); cnt++) {
         this->visAtom[cnt] = false;
-        if((this->posInter[4*cnt+0] > this->posXMax)||
-                (this->posInter[4*cnt+0] < this->posXMin)) continue;
-        if((this->posInter[4*cnt+1] > this->posYMax)||
-                (this->posInter[4*cnt+1] < this->posYMin)) continue;
-        if((this->posInter[4*cnt+2] > this->posZMax)||
-                (this->posInter[4*cnt+2] < this->posZMin)) continue;
+        if ((this->posInter[4 * cnt + 0] > this->posXMax) || (this->posInter[4 * cnt + 0] < this->posXMin))
+            continue;
+        if ((this->posInter[4 * cnt + 1] > this->posYMax) || (this->posInter[4 * cnt + 1] < this->posYMin))
+            continue;
+        if ((this->posInter[4 * cnt + 2] > this->posZMax) || (this->posInter[4 * cnt + 2] < this->posZMin))
+            continue;
 
         this->visAtom[cnt] = true;
     }
@@ -1208,8 +1191,8 @@ void protein_cuda::CrystalStructureVolumeRenderer::ApplyPosFilter(
     // Setup array with indices of all visible atoms
     this->visAtomIdx.Clear();
     this->visAtomIdx.SetCapacityIncrement(1000);
-    for(int cnt = 0; cnt < int(dc->GetAtomCnt()); cnt++) {
-        if(this->visAtom[cnt]) {
+    for (int cnt = 0; cnt < int(dc->GetAtomCnt()); cnt++) {
+        if (this->visAtom[cnt]) {
             this->visAtomIdx.Add(static_cast<int>(cnt));
         }
     }
@@ -1219,14 +1202,14 @@ void protein_cuda::CrystalStructureVolumeRenderer::ApplyPosFilter(
     // Calculate dipole visibility based on positions
     this->visDipole.SetCount(dc->GetDipoleCnt());
 #pragma omp parallel for
-    for(int cnt = 0; cnt < int(dc->GetDipoleCnt()); cnt++) {
+    for (int cnt = 0; cnt < int(dc->GetDipoleCnt()); cnt++) {
         this->visDipole[cnt] = false;
-        if((dc->GetDipolePos()[3*cnt+0] > this->posXMax)||
-                (dc->GetDipolePos()[3*cnt+0] < this->posXMin)) continue;
-        if((dc->GetDipolePos()[3*cnt+1] > this->posYMax)||
-                (dc->GetDipolePos()[3*cnt+1] < this->posYMin)) continue;
-        if((dc->GetDipolePos()[3*cnt+2] > this->posZMax)||
-                (dc->GetDipolePos()[3*cnt+2] < this->posZMin)) continue;
+        if ((dc->GetDipolePos()[3 * cnt + 0] > this->posXMax) || (dc->GetDipolePos()[3 * cnt + 0] < this->posXMin))
+            continue;
+        if ((dc->GetDipolePos()[3 * cnt + 1] > this->posYMax) || (dc->GetDipolePos()[3 * cnt + 1] < this->posYMin))
+            continue;
+        if ((dc->GetDipolePos()[3 * cnt + 2] > this->posZMax) || (dc->GetDipolePos()[3 * cnt + 2] < this->posZMin))
+            continue;
 
         this->visDipole[cnt] = true;
     }
@@ -1238,18 +1221,19 @@ void protein_cuda::CrystalStructureVolumeRenderer::ApplyPosFilter(
     this->edgeIdxTi.Clear();
     this->edgeIdxBa.SetCapacityIncrement(1000);
     this->edgeIdxTi.SetCapacityIncrement(1000);
-    for(int cnt = 0; cnt < static_cast<int>(dc->GetAtomCnt()); cnt++) {
-        if(this->visAtom[cnt] == false) continue;
-        for(int n = 0; n < 6; n++) { // Examine all six potential edges
-            if(dc->GetAtomCon()[cnt*6+n] != -1) {
-                if(this->visAtom[dc->GetAtomCon()[cnt*6+n]]) {
-					if(dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::BA) {
+    for (int cnt = 0; cnt < static_cast<int>(dc->GetAtomCnt()); cnt++) {
+        if (this->visAtom[cnt] == false)
+            continue;
+        for (int n = 0; n < 6; n++) { // Examine all six potential edges
+            if (dc->GetAtomCon()[cnt * 6 + n] != -1) {
+                if (this->visAtom[dc->GetAtomCon()[cnt * 6 + n]]) {
+                    if (dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::BA) {
                         this->edgeIdxBa.Add(cnt);
-                        this->edgeIdxBa.Add(dc->GetAtomCon()[cnt*6+n]);
+                        this->edgeIdxBa.Add(dc->GetAtomCon()[cnt * 6 + n]);
                     }
-					if(dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::TI) {
+                    if (dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::TI) {
                         this->edgeIdxTi.Add(cnt);
-                        this->edgeIdxTi.Add(dc->GetAtomCon()[cnt*6+n]);
+                        this->edgeIdxTi.Add(dc->GetAtomCon()[cnt * 6 + n]);
                     }
                 }
             }
@@ -1260,155 +1244,153 @@ void protein_cuda::CrystalStructureVolumeRenderer::ApplyPosFilter(
 
     this->recalcArrowData = true;
 
-//    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-//            "%s: done filtering - #atoms %u, #edges %u",
-//            this->ClassName(),
-//            this->visAtomIdx.Count(),
-//            this->edgeIdxTi.Count()+this->edgeIdxBa.Count());
+    //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    //            "%s: done filtering - #atoms %u, #edges %u",
+    //            this->ClassName(),
+    //            this->visAtomIdx.Count(),
+    //            this->edgeIdxTi.Count()+this->edgeIdxBa.Count());
 }
-
 
 
 /*
  * protein_cuda::CrystalStructureVolumeRenderer::create
  */
-bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
-    using namespace vislib::graphics::gl;
+bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
+    using namespace vislib_gl::graphics::gl;
 
     // Init random number generator
     srand((unsigned)time(0));
 
     // Create quicksurf object
-    if(!this->cudaqsurf) {
+    if (!this->cudaqsurf) {
         this->cudaqsurf = new CUDAQuickSurf();
     }
 
     // Init extensions
-    if(!ogl_IsVersionGEQ(2,0) || !isExtAvailable("GL_EXT_texture3D")
-        || !isExtAvailable("GL_EXT_framebuffer_object") || !isExtAvailable("GL_ARB_multitexture")
-        || !isExtAvailable("GL_ARB_draw_buffers")) {
+    /*if (!ogl_IsVersionGEQ(2, 0) || !isExtAvailable("GL_EXT_texture3D") ||
+        !isExtAvailable("GL_EXT_framebuffer_object") || !isExtAvailable("GL_ARB_multitexture") ||
+        !isExtAvailable("GL_ARB_draw_buffers")) {
         return false;
-    }
-    if(!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
+    }*/
 
     // Load shader sources
     ShaderSource vertSrc, fragSrc, geomSrc;
 
-    core::CoreInstance *ci = this->GetCoreInstance();
-    if(!ci) return false;
+    core::CoreInstance* ci = this->GetCoreInstance();
+    if (!ci)
+        return false;
 
-    if(!ci->ShaderSourceFactory().MakeShaderSource("scivis::slice::vertex", vertSrc)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource("scivis::slice::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source", this->ClassName());
         return false;
     }
-    if(!ci->ShaderSourceFactory().MakeShaderSource("scivis::slice::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load fragment shader source", this->ClassName() );
+    if (!ssf->MakeShaderSource("scivis::slice::fragment", fragSrc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load fragment shader source", this->ClassName());
         return false;
     }
     try {
-        if(!this->vrShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
-            throw vislib::Exception( "Generic creation failure", __FILE__, __LINE__);
-    } catch(vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA() );
+        if (!this->vrShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load sphere vertex shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().
-            MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to load vertex shader source for sphere shader",
-                this->ClassName());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
         return false;
     }
     // Load sphere fragment shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().
-            //MakeShaderSource("protein_cuda::std::sphereFragmentFog", fragSrc)) {
-            MakeShaderSource("protein_cuda::std::sphereFragment", fragSrc)) {
+    if (!ssf->
+         //MakeShaderSource("protein_cuda::std::sphereFragmentFog", fragSrc)) {
+         MakeShaderSource("protein_cuda::std::sphereFragment", fragSrc)) {
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to load vertex shader source for sphere shader",
-                this->ClassName());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
         return false;
     }
     try {
-        if(!this->sphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__ );
+        if (!this->sphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
-    }
-    catch(vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-    // Load raycasting vertex shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("scivis::raycasting::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader",
-                this->ClassName());
-        return false;
-    }
-    // Load raycasting fragment shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("scivis::raycasting::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
-        return false;
-    }
-    try {
-        if(!this->rcShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__ );
-        }
-    }
-    catch(vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load raycasting vertex shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("scivis::raycasting::vertexDebug", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader",
-                this->ClassName());
+    if (!ssf->MakeShaderSource("scivis::raycasting::vertex", vertSrc)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
     // Load raycasting fragment shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("scivis::raycasting::fragmentDebug", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
+    if (!ssf->MakeShaderSource("scivis::raycasting::fragment", fragSrc)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
     try {
-        if(!this->rcShaderDebug.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__ );
+        if (!this->rcShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
+        return false;
     }
-    catch(vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
+
+    // Load raycasting vertex shader
+    if (!ssf->MakeShaderSource("scivis::raycasting::vertexDebug", vertSrc)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
+        return false;
+    }
+    // Load raycasting fragment shader
+    if (!ssf->MakeShaderSource("scivis::raycasting::fragmentDebug", fragSrc)) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
+        return false;
+    }
+    try {
+        if (!this->rcShaderDebug.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
+        }
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load alternative arrow shader (uses geometry shader)
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::arrowVertexGeom", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::arrowVertexGeom", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for arrow shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::arrowGeom", geomSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::arrowGeom", geomSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for arrow shader");
         return false;
     }
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::arrowFragmentGeom", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::arrowFragmentGeom", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for arrow shader");
         return false;
     }
-    this->arrowShader.Compile( vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+    this->arrowShader.Compile(
+        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
     this->arrowShader.Link();
 
     // Load cylinder vertex shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::cylinderVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::cylinderVertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
         return false;
     }
     // Load cylinder fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("protein_cuda::std::cylinderFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::cylinderFragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cylinder shader");
         return false;
     }
@@ -1416,70 +1398,59 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
         if (!this->cylinderShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
-    } catch(vislib::Exception e) {
+    } catch (vislib::Exception e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create cylinder shader: %s\n", e.GetMsgA());
         return false;
     }
 
     // Load per pixel lighting shader
-    if(!this->GetCoreInstance()->ShaderSourceFactory().
-            MakeShaderSource("protein_cuda::std::perpixellightVertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightVertex", vertSrc)) {
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to load vertex shader source for per pixel lighting",
-                this->ClassName());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
         return false;
     }
 
-    if(!this->GetCoreInstance()->ShaderSourceFactory().
-            MakeShaderSource("protein_cuda::std::perpixellightFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightFragment", fragSrc)) {
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to load vertex shader source for per pixel lighting",
-                this->ClassName());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
         return false;
     }
     try {
-        if(!this->pplShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__ );
+        if (!this->pplShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
-    }
-    catch(vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create shader for per pixel lighting: %s\n", this->ClassName(), e.GetMsgA());
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create shader for per pixel lighting: %s\n",
+            this->ClassName(), e.GetMsgA());
         return false;
     }
 
 
+    // TODO
+    if (!ssf->MakeShaderSource("scivis::ppl::perpixellightVertex", vertSrc)) {
 
-        // TODO
-    if(!this->GetCoreInstance()->ShaderSourceFactory().
-            MakeShaderSource("scivis::ppl::perpixellightVertex", vertSrc)) {
-
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to load vertex shader source for per pixel lighting",
-                this->ClassName());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
         return false;
     }
 
-    if(!this->GetCoreInstance()->ShaderSourceFactory().
-            MakeShaderSource("scivis::ppl::perpixellightFragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("scivis::ppl::perpixellightFragment", fragSrc)) {
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s: Unable to load vertex shader source for per pixel lighting",
-                this->ClassName());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
         return false;
     }
     try {
-        if(!this->pplShaderClip.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__ );
+        if (!this->pplShaderClip.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
+            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
-    }
-    catch(vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create shader for per pixel lighting: %s\n", this->ClassName(), e.GetMsgA());
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create shader for per pixel lighting: %s\n",
+            this->ClassName(), e.GetMsgA());
         return false;
     }
-
-
 
 
     return true;
@@ -1492,10 +1463,10 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create (void) {
 bool protein_cuda::CrystalStructureVolumeRenderer::CreateFbo(UINT width, UINT height) {
 
     using namespace vislib::sys;
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-               "%s: (re)creating raycasting fbo.", this->ClassName());
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_INFO, "%s: (re)creating raycasting fbo.", this->ClassName());
 
     glEnable(GL_TEXTURE_2D);
 
@@ -1518,7 +1489,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CreateFbo(UINT width, UINT he
     sap.format = GL_STENCIL_INDEX;
     sap.state = FramebufferObject::ATTACHMENT_DISABLED;
 
-    return(this->rcFbo.Create(width, height, 3, cap, dap, sap));
+    return (this->rcFbo.Create(width, height, 3, cap, dap, sap));
 }
 
 
@@ -1528,10 +1499,10 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CreateFbo(UINT width, UINT he
 bool protein_cuda::CrystalStructureVolumeRenderer::CreateSrcFbo(size_t width, size_t height) {
 
     using namespace vislib::sys;
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-               "%s: (re)creating source fbo.", this->ClassName());
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_INFO, "%s: (re)creating source fbo.", this->ClassName());
 
     glEnable(GL_TEXTURE_2D);
 
@@ -1548,7 +1519,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CreateSrcFbo(size_t width, si
     sap.format = GL_STENCIL_INDEX;
     sap.state = FramebufferObject::ATTACHMENT_DISABLED;
 
-	return this->srcFbo.Create(static_cast<UINT>(width), static_cast<UINT>(height), 1, cap, dap, sap);
+    return this->srcFbo.Create(static_cast<UINT>(width), static_cast<UINT>(height), 1, cap, dap, sap);
 }
 
 
@@ -1557,26 +1528,48 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CreateSrcFbo(size_t width, si
  */
 void protein_cuda::CrystalStructureVolumeRenderer::FreeBuffs() {
 
-    if(this->frame0 != NULL) { delete[] this->frame0; this->frame0 = NULL; }
-    if(this->frame1 != NULL){ delete[] this->frame1; this->frame1 = NULL; }
+    if (this->frame0 != NULL) {
+        delete[] this->frame0;
+        this->frame0 = NULL;
+    }
+    if (this->frame1 != NULL) {
+        delete[] this->frame1;
+        this->frame1 = NULL;
+    }
 
-    if(this->gridCurlD != NULL) { checkCudaErrors(cudaFree(this->gridCurlD)); this->gridCurlD = NULL; }
-    if(this->gridCurlMagD != NULL) { checkCudaErrors(cudaFree(this->gridCurlMagD)); this->gridCurlMagD = NULL; }
-    if(this->mcVertOut_D != NULL) { checkCudaErrors(cudaFree(this->mcVertOut_D)); this->mcVertOut_D = NULL; }
-    if(this->mcNormOut_D != NULL) { checkCudaErrors(cudaFree(this->mcNormOut_D)); this->mcNormOut_D = NULL; }
+    if (this->gridCurlD != NULL) {
+        checkCudaErrors(cudaFree(this->gridCurlD));
+        this->gridCurlD = NULL;
+    }
+    if (this->gridCurlMagD != NULL) {
+        checkCudaErrors(cudaFree(this->gridCurlMagD));
+        this->gridCurlMagD = NULL;
+    }
+    if (this->mcVertOut_D != NULL) {
+        checkCudaErrors(cudaFree(this->mcVertOut_D));
+        this->mcVertOut_D = NULL;
+    }
+    if (this->mcNormOut_D != NULL) {
+        checkCudaErrors(cudaFree(this->mcNormOut_D));
+        this->mcNormOut_D = NULL;
+    }
 
-    if(glIsTexture(this->uniGridTex)) glDeleteTextures(1, &this->uniGridTex);
-    if(glIsTexture(this->curlMagTex)) glDeleteTextures(1, &this->curlMagTex);
-    if(glIsTexture(this->randNoiseTex)) glDeleteTextures(1, &this->randNoiseTex);
-    if(glIsTexture(this->uniGridDensityTex)) glDeleteTextures(1, &this->uniGridDensityTex);
-    if(glIsTexture(this->uniGridColorTex)) glDeleteTextures(1, &this->uniGridColorTex);
+    if (glIsTexture(this->uniGridTex))
+        glDeleteTextures(1, &this->uniGridTex);
+    if (glIsTexture(this->curlMagTex))
+        glDeleteTextures(1, &this->curlMagTex);
+    if (glIsTexture(this->randNoiseTex))
+        glDeleteTextures(1, &this->randNoiseTex);
+    if (glIsTexture(this->uniGridDensityTex))
+        glDeleteTextures(1, &this->uniGridDensityTex);
+    if (glIsTexture(this->uniGridColorTex))
+        glDeleteTextures(1, &this->uniGridColorTex);
 
     this->uniGridDensity.Clear();
     this->uniGridVecField.Clear();
     this->uniGridColor.Clear();
     this->licRandBuff.Clear();
     this->uniGridCurlMag.Clear();
-
 }
 
 
@@ -1584,13 +1577,11 @@ void protein_cuda::CrystalStructureVolumeRenderer::FreeBuffs() {
  * protein_cuda::CrystalStructureVolumeRenderer::FilterVecField
  */
 void protein_cuda::CrystalStructureVolumeRenderer::FilterVecField(
-		const protein_calls::CrystalStructureDataCall *dc,
-        const float *atomPos) {
+    const protein_calls::CrystalStructureDataCall* dc, const float* atomPos) {
 
     using namespace vislib::math;
 
-    Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis, gridYAxis,
-                     gridZAxis, gridOrg;
+    Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis, gridYAxis, gridZAxis, gridOrg;
     Vector<int, 3> gridDim;
 
     // Init uniform grid
@@ -1600,15 +1591,15 @@ void protein_cuda::CrystalStructureVolumeRenderer::FilterVecField(
     gridMaxCoord[0] = this->bbox.ObjectSpaceBBox().Right();
     gridMaxCoord[1] = this->bbox.ObjectSpaceBBox().Top();
     gridMaxCoord[2] = this->bbox.ObjectSpaceBBox().Front();
-    gridXAxis[0] = gridMaxCoord[0]-gridMinCoord[0];
-    gridYAxis[1] = gridMaxCoord[1]-gridMinCoord[1];
-    gridZAxis[2] = gridMaxCoord[2]-gridMinCoord[2];
-    gridDim[0] = (int) ceil(gridXAxis[0] / this->gridSpacing);
-    gridDim[1] = (int) ceil(gridYAxis[1] / this->gridSpacing);
-    gridDim[2] = (int) ceil(gridZAxis[2] / this->gridSpacing);
-    gridXAxis[0] = (gridDim[0]-1) * this->gridSpacing;
-    gridYAxis[1] = (gridDim[1]-1) * this->gridSpacing;
-    gridZAxis[2] = (gridDim[2]-1) * this->gridSpacing;
+    gridXAxis[0] = gridMaxCoord[0] - gridMinCoord[0];
+    gridYAxis[1] = gridMaxCoord[1] - gridMinCoord[1];
+    gridZAxis[2] = gridMaxCoord[2] - gridMinCoord[2];
+    gridDim[0] = (int)ceil(gridXAxis[0] / this->gridSpacing);
+    gridDim[1] = (int)ceil(gridYAxis[1] / this->gridSpacing);
+    gridDim[2] = (int)ceil(gridZAxis[2] / this->gridSpacing);
+    gridXAxis[0] = (gridDim[0] - 1) * this->gridSpacing;
+    gridYAxis[1] = (gridDim[1] - 1) * this->gridSpacing;
+    gridZAxis[2] = (gridDim[2] - 1) * this->gridSpacing;
     gridMaxCoord[0] = gridMinCoord[0] + gridXAxis[0];
     gridMaxCoord[1] = gridMinCoord[1] + gridYAxis[1];
     gridMaxCoord[2] = gridMinCoord[2] + gridZAxis[2];
@@ -1618,103 +1609,101 @@ void protein_cuda::CrystalStructureVolumeRenderer::FilterVecField(
 
     //if(this->filterVecField) {
 
-        // Keep track of min/max magnitudes (necessary for color gradient)
-        this->vecMagSclMax = -100.0f;
-        this->vecMagSclMin = 100.0f;
-        float min=1000.0, max=0.0;
-        for(int cnt = 0; cnt < int(dc->GetDipoleCnt()); ++cnt) {
-            Vector<float, 3> vec(&dc->GetDipole()[cnt*3]);
-            if(vec.Length()*this->vecScl > this->vecMagSclMax) {
-                this->vecMagSclMax = vec.Length()*this->vecScl;
-            }
-            if(vec.Length()*this->vecScl < this->vecMagSclMin) {
-                this->vecMagSclMin = vec.Length()*this->vecScl;
-            }
-
-            if(vec.Length() > max) {
-                max = vec.Length();
-            }
-            if(vec.Length() < min) {
-                min = vec.Length();
-            }
+    // Keep track of min/max magnitudes (necessary for color gradient)
+    this->vecMagSclMax = -100.0f;
+    this->vecMagSclMin = 100.0f;
+    float min = 1000.0, max = 0.0;
+    for (int cnt = 0; cnt < int(dc->GetDipoleCnt()); ++cnt) {
+        Vector<float, 3> vec(&dc->GetDipole()[cnt * 3]);
+        if (vec.Length() * this->vecScl > this->vecMagSclMax) {
+            this->vecMagSclMax = vec.Length() * this->vecScl;
         }
-        this->arrowVis.SetCount(dc->GetDipoleCnt());
+        if (vec.Length() * this->vecScl < this->vecMagSclMin) {
+            this->vecMagSclMin = vec.Length() * this->vecScl;
+        }
 
-       // printf("Vector min: %f max: %f\n", min, max); // DEBUG
+        if (vec.Length() > max) {
+            max = vec.Length();
+        }
+        if (vec.Length() < min) {
+            min = vec.Length();
+        }
+    }
+    this->arrowVis.SetCount(dc->GetDipoleCnt());
+
+    // printf("Vector min: %f max: %f\n", min, max); // DEBUG
 
 #pragma omp parallel for
-        for(int cnt = 0; cnt < int(dc->GetDipoleCnt()); ++cnt) {
-            Vector<float, 3> vec(&dc->GetDipole()[cnt*3]);
-            this->arrowVis[cnt] = true;
+    for (int cnt = 0; cnt < int(dc->GetDipoleCnt()); ++cnt) {
+        Vector<float, 3> vec(&dc->GetDipole()[cnt * 3]);
+        this->arrowVis[cnt] = true;
 
-#if(FILTER_BOUNDARY)
-            // Filter boundary areas
-            if(dc->GetDipolePos()[3*cnt+1] < 4.0f) {
-                this->arrowVis[cnt] = false;
-                continue;
-            }
-            if((dc->GetDipolePos()[3*cnt+1] > 34.0f)&&(dc->GetDipolePos()[3*cnt+1] < 42.0f)) {
-                this->arrowVis[cnt] = false;
-                continue;
-            }
-            if(dc->GetDipolePos()[3*cnt+1] > 73.0f) {
-                this->arrowVis[cnt] = false;
-                continue;
-            }
-            if((dc->GetDipolePos()[3*cnt+1] > 71.0f)&&(dc->GetDipolePos()[3*cnt+2] < 58.0f)) {
-                this->arrowVis[cnt] = false;
-                continue;
-            }
-            if((dc->GetDipolePos()[3*cnt+2] > 60.0f)&&(dc->GetDipolePos()[3*cnt+2] < 65.0f)) {
-                this->arrowVis[cnt] = false;
-                continue;
-            }
-            if(dc->GetDipolePos()[3*cnt+2] < 3.0f) {
-                this->arrowVis[cnt] = false;
-                continue;
-            }
+#if (FILTER_BOUNDARY)
+        // Filter boundary areas
+        if (dc->GetDipolePos()[3 * cnt + 1] < 4.0f) {
+            this->arrowVis[cnt] = false;
+            continue;
+        }
+        if ((dc->GetDipolePos()[3 * cnt + 1] > 34.0f) && (dc->GetDipolePos()[3 * cnt + 1] < 42.0f)) {
+            this->arrowVis[cnt] = false;
+            continue;
+        }
+        if (dc->GetDipolePos()[3 * cnt + 1] > 73.0f) {
+            this->arrowVis[cnt] = false;
+            continue;
+        }
+        if ((dc->GetDipolePos()[3 * cnt + 1] > 71.0f) && (dc->GetDipolePos()[3 * cnt + 2] < 58.0f)) {
+            this->arrowVis[cnt] = false;
+            continue;
+        }
+        if ((dc->GetDipolePos()[3 * cnt + 2] > 60.0f) && (dc->GetDipolePos()[3 * cnt + 2] < 65.0f)) {
+            this->arrowVis[cnt] = false;
+            continue;
+        }
+        if (dc->GetDipolePos()[3 * cnt + 2] < 3.0f) {
+            this->arrowVis[cnt] = false;
+            continue;
+        }
 #endif
 
-            // Apply length filter
-            if(vec.Length()*this->vecScl < this->minVecMag/100.0f) {
-                this->arrowVis[cnt] = false;
-                continue;
-            }
-            if(vec.Length()*this->vecScl > this->maxVecMag/100.0f) {
-                this->arrowVis[cnt] = false;
-                continue;
-            }
+        // Apply length filter
+        if (vec.Length() * this->vecScl < this->minVecMag / 100.0f) {
+            this->arrowVis[cnt] = false;
+            continue;
+        }
+        if (vec.Length() * this->vecScl > this->maxVecMag / 100.0f) {
+            this->arrowVis[cnt] = false;
+            continue;
+        }
 
 #if (defined(CALC_GRID) && (CALC_GRID))
 
-            // Apply curl filter
-            float curl = this->uniGridCurlMag.SampleNearest(
-                    dc->GetDipolePos()[3*cnt+0],
-                    dc->GetDipolePos()[3*cnt+1],
-                    dc->GetDipolePos()[3*cnt+2]);
-            if(curl > this->maxVecCurl) {
+        // Apply curl filter
+        float curl = this->uniGridCurlMag.SampleNearest(
+            dc->GetDipolePos()[3 * cnt + 0], dc->GetDipolePos()[3 * cnt + 1], dc->GetDipolePos()[3 * cnt + 2]);
+        if (curl > this->maxVecCurl) {
+            this->arrowVis[cnt] = false;
+            continue;
+        }
+#endif
+
+        if (dc->GetDipoleCnt() == 625000) { // Filter by atom type
+            if ((!this->showBaAtoms) && (dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::BA)) {
                 this->arrowVis[cnt] = false;
                 continue;
             }
-#endif
-
-            if(dc->GetDipoleCnt() == 625000) { // Filter by atom type
-				if ((!this->showBaAtoms) && (dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::BA)) {
-                    this->arrowVis[cnt] = false;
-                    continue;
-            	}
-				if ((!this->showOAtoms) && (dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::O)) {
-                    this->arrowVis[cnt] = false;
-                    continue;
-            	}
-				if ((!this->showTiAtoms) && (dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::TI)) {
-                    this->arrowVis[cnt] = false;
-                    continue;
-            	}
+            if ((!this->showOAtoms) && (dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::O)) {
+                this->arrowVis[cnt] = false;
+                continue;
+            }
+            if ((!this->showTiAtoms) && (dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::TI)) {
+                this->arrowVis[cnt] = false;
+                continue;
             }
         }
+    }
 
-      //  this->filterVecField = false;
+    //  this->filterVecField = false;
     //}
 }
 
@@ -1722,25 +1711,16 @@ void protein_cuda::CrystalStructureVolumeRenderer::FilterVecField(
 /*
  * protein_cuda::CrystalStructureVolumeRenderer::GetExtents
  */
-bool protein_cuda::CrystalStructureVolumeRenderer::GetExtents(core::Call& call) {
+bool protein_cuda::CrystalStructureVolumeRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+    protein_calls::CrystalStructureDataCall* dc =
+        this->dataCallerSlot.CallAs<protein_calls::CrystalStructureDataCall>();
+    if (dc == NULL)
+        return false;
+    if (!(*dc)(protein_calls::CrystalStructureDataCall::CallForGetExtent))
+        return false;
 
-    core::view::CallRender3D *cr3d = dynamic_cast<core::view::CallRender3D *>(&call);
-    if (cr3d == NULL) return false;
-
-	protein_calls::CrystalStructureDataCall *dc =
-			this->dataCallerSlot.CallAs<protein_calls::CrystalStructureDataCall>();
-    if(dc == NULL) return false;
-	if (!(*dc)(protein_calls::CrystalStructureDataCall::CallForGetExtent)) return false;
-
-    float scale;
-    if(!vislib::math::IsEqual(dc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
-        scale = 2.0f / dc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    cr3d->AccessBoundingBoxes() = dc->AccessBoundingBoxes();
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
-    cr3d->SetTimeFramesCount(dc->FrameCount());
+    call.AccessBoundingBoxes() = dc->AccessBoundingBoxes();
+    call.SetTimeFramesCount(dc->FrameCount());
     this->bbox = dc->AccessBoundingBoxes();
 
     /*cr3d->AccessBoundingBoxes() = dc->AccessBoundingBoxes();
@@ -1756,14 +1736,13 @@ bool protein_cuda::CrystalStructureVolumeRenderer::GetExtents(core::Call& call) 
  */
 bool protein_cuda::CrystalStructureVolumeRenderer::InitLIC() {
     // Create randbuffer
-    vislib::math::Vector<unsigned int, 3> buffDim(this->licRandBuffSize,
-            this->licRandBuffSize, this->licRandBuffSize);
+    vislib::math::Vector<unsigned int, 3> buffDim(this->licRandBuffSize, this->licRandBuffSize, this->licRandBuffSize);
     vislib::math::Vector<float, 3> buffOrg(0.0f, 0.0f, 0.0f);
     this->licRandBuff.Init(buffDim, buffOrg, 1.0f);
-    for(int x = 0; x < this->licRandBuffSize; x++) {
-        for(int y = 0; y < this->licRandBuffSize; y++) {
-            for(int z = 0; z < this->licRandBuffSize; z++) {
-                float randVal = (float)rand()/float(RAND_MAX);
+    for (int x = 0; x < this->licRandBuffSize; x++) {
+        for (int y = 0; y < this->licRandBuffSize; y++) {
+            for (int z = 0; z < this->licRandBuffSize; z++) {
+                float randVal = (float)rand() / float(RAND_MAX);
                 /*if(randVal > 0.5f)
                     this->licRandBuff.SetAt(x, y, z, 1.0f);
                 else
@@ -1775,20 +1754,13 @@ bool protein_cuda::CrystalStructureVolumeRenderer::InitLIC() {
 
     // Setup random noise texture
     glEnable(GL_TEXTURE_3D);
-    if(glIsTexture(this->randNoiseTex)) glDeleteTextures(1, &this->randNoiseTex);
+    if (glIsTexture(this->randNoiseTex))
+        glDeleteTextures(1, &this->randNoiseTex);
     glGenTextures(1, &this->randNoiseTex);
     glBindTexture(GL_TEXTURE_3D, this->randNoiseTex);
 
-    glTexImage3DEXT(GL_TEXTURE_3D,
-            0,
-            GL_ALPHA,
-            this->licRandBuffSize,
-            this->licRandBuffSize,
-            this->licRandBuffSize,
-            0,
-            GL_ALPHA,
-            GL_FLOAT,
-            this->licRandBuff.PeekBuffer());
+    glTexImage3DEXT(GL_TEXTURE_3D, 0, GL_ALPHA, this->licRandBuffSize, this->licRandBuffSize, this->licRandBuffSize, 0,
+        GL_ALPHA, GL_FLOAT, this->licRandBuff.PeekBuffer());
 
     //glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     //glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -1802,9 +1774,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::InitLIC() {
 
     // Check for opengl error
     GLenum err = glGetError();
-    if(err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s::InitLIC: glError %s\n", this->ClassName(), gluErrorString(err));
+    if (err != GL_NO_ERROR) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s::InitLIC: glError %s\n", this->ClassName(), gluErrorString(err));
         return false;
     }
 
@@ -1824,8 +1795,8 @@ void protein_cuda::CrystalStructureVolumeRenderer::release(void) {
     this->rcShader.Release();
     this->rcShaderDebug.Release();
     this->pplShader.Release();
-    if(this->cudaqsurf != NULL) {
-        CUDAQuickSurf *cqs = (CUDAQuickSurf *)this->cudaqsurf;
+    if (this->cudaqsurf != NULL) {
+        CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
         delete cqs;
     }
 }
@@ -1834,115 +1805,95 @@ void protein_cuda::CrystalStructureVolumeRenderer::release(void) {
 /*
  * protein_cuda::CrystalStructureVolumeRenderer::Render
  */
-bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
+bool protein_cuda::CrystalStructureVolumeRenderer::Render(core_gl::view::CallRender3DGL& call) {
     using namespace vislib::math;
-
     GLenum err;
 
-    core::view::AbstractCallRender3D *cr3d =
-            dynamic_cast<core::view::AbstractCallRender3D *>(&call);
-    if (cr3d == NULL) {
-        return false;
-    }
-    
-#ifdef _WIN32
-    if( setCUDAGLDevice ) {
-        if( cr3d->IsGpuAffinity() ) {
-            HGPUNV gpuId = cr3d->GpuAffinity<HGPUNV>();
-            int devId;
-            cudaWGLGetDevice( &devId, gpuId);
-            cudaGLSetGLDevice( devId);
-            printf( "cudaGLSetGLDevice: %s\n", cudaGetErrorString( cudaGetLastError()));
-        }
-        setCUDAGLDevice = false;
-    }
-#endif
+    this->width = call.GetViewResolution().x;
+    this->height = call.GetViewResolution().y;
 
-	protein_calls::CrystalStructureDataCall *dc =
-			this->dataCallerSlot.CallAs<protein_calls::CrystalStructureDataCall>();
+    protein_calls::CrystalStructureDataCall* dc =
+        this->dataCallerSlot.CallAs<protein_calls::CrystalStructureDataCall>();
     if (dc == NULL) {
         return false;
     }
 
     // Update parameters if necessary
-    if(!this->UpdateParams(dc)) {
-        Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: Unable to update parameters",
-                this->ClassName());
+    if (!this->UpdateParams(dc)) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to update parameters", this->ClassName());
         return false;
     }
 
     // Check button params
     if (this->toggleIsoSurfaceSlot.IsDirty()) {
         this->volShow = !this->volShow;
-        this->volShowParam.Param<core::param::BoolParam>()->SetValue( this->volShow);
+        this->volShowParam.Param<core::param::BoolParam>()->SetValue(this->volShow);
         this->toggleIsoSurfaceSlot.ResetDirty();
     }
     if (this->toggleCurlFilterSlot.IsDirty()) {
         this->filterVecField = !this->filterVecField;
-        this->arrowUseFilterParam.Param<core::param::BoolParam>()->SetValue( this->filterVecField);
+        this->arrowUseFilterParam.Param<core::param::BoolParam>()->SetValue(this->filterVecField);
         this->toggleCurlFilterSlot.ResetDirty();
     }
 
     // Get camera information
-    this->cameraInfo =  dynamic_cast<core::view::CallRender3D*>(&call)->GetCameraParameters();
+    this->cameraInfo = call.GetCamera();
 
-    float callTime = cr3d->Time();
-    dc->SetCalltime(callTime);                             // Set call time
-    dc->SetFrameID(static_cast<int>(callTime), true);      // Set frame ID and force flag
+    float callTime = call.Time();
+    dc->SetCalltime(callTime);                        // Set call time
+    dc->SetFrameID(static_cast<int>(callTime), true); // Set frame ID and force flag
 
     // Don't remove this !!
-	if (!(*dc)(protein_calls::CrystalStructureDataCall::CallForGetExtent)) {
+    if (!(*dc)(protein_calls::CrystalStructureDataCall::CallForGetExtent)) {
         return false;
     }
 
 #ifndef SFB_DEMO
-    if(this->callTimeOld != callTime) {
-        this->recalcGrid = true;     // Recalc displacement if position changed
+    if (this->callTimeOld != callTime) {
+        this->recalcGrid = true; // Recalc displacement if position changed
         this->recalcPosInter = true;
     }
 #else
-    if(this->frameOld != dc->FrameID()) {
-        this->recalcGrid = true;     // Recalc displacement if position changed
+    if (this->frameOld != dc->FrameID()) {
+        this->recalcGrid = true; // Recalc displacement if position changed
         this->recalcPosInter = true;
     }
 #endif
     this->callTimeOld = callTime;
 
     // Current frame
-	if (!(*dc)(protein_calls::CrystalStructureDataCall::CallForGetData)) {
+    if (!(*dc)(protein_calls::CrystalStructureDataCall::CallForGetData)) {
         return false;
     }
 
 #ifndef SFB_DEMO
     // Copy frame data and interpolate positions
-    if(this->idxLastFrame != static_cast<int>(callTime)) {
+    if (this->idxLastFrame != static_cast<int>(callTime)) {
 
         // Allocate memory if necessary
-        if(this->frame0 == NULL) {
-            this->frame0 = new float[dc->GetAtomCnt()*3];
+        if (this->frame0 == NULL) {
+            this->frame0 = new float[dc->GetAtomCnt() * 3];
         }
-        if(this->frame1 == NULL) {
-            this->frame1 = new float[dc->GetAtomCnt()*3];
+        if (this->frame1 == NULL) {
+            this->frame1 = new float[dc->GetAtomCnt() * 3];
         }
 
-        memcpy(this->frame0, dc->GetAtomPos(), dc->GetAtomCnt()*3*sizeof(float));
+        memcpy(this->frame0, dc->GetAtomPos(), dc->GetAtomCnt() * 3 * sizeof(float));
 
         // Get next frame if interpolation is enabled (otherwise use the same
         // frame twice)
-        if(this->interpol) {
-            if ((static_cast<int>(callTime)+1) < dc->FrameCount()) {
-                dc->SetFrameID(static_cast<int>(callTime)+1, true);
+        if (this->interpol) {
+            if ((static_cast<int>(callTime) + 1) < dc->FrameCount()) {
+                dc->SetFrameID(static_cast<int>(callTime) + 1, true);
                 dc->SetCalltime(static_cast<float>(dc->FrameID()));
             }
             // Current frame
-			if(!(*dc)(protein_calls::CrystalStructureDataCall::CallForGetData)) {
+            if (!(*dc)(protein_calls::CrystalStructureDataCall::CallForGetData)) {
                 return false;
             }
-            memcpy(this->frame1, dc->GetAtomPos(), dc->GetAtomCnt()*3*sizeof(float));
-        }
-        else {
-            memcpy(this->frame1, this->frame0, dc->GetAtomCnt()*3*sizeof(float));
+            memcpy(this->frame1, dc->GetAtomPos(), dc->GetAtomCnt() * 3 * sizeof(float));
+        } else {
+            memcpy(this->frame1, this->frame0, dc->GetAtomCnt() * 3 * sizeof(float));
         }
         dc->Unlock();
 
@@ -1952,40 +1903,44 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     }
     this->idxLastFrame = static_cast<int>(cr3d->Time());
 
-    if(this->recalcPosInter) {
+    if (this->recalcPosInter) {
         // Interpolate atom positions between frames
-        this->posInter.SetCount(dc->GetAtomCnt()*4);
+        this->posInter.SetCount(dc->GetAtomCnt() * 4);
         float inter = callTime - static_cast<float>(static_cast<int>(callTime));
         float threshold = vislib::math::Min(dc->AccessBoundingBoxes().ObjectSpaceBBox().Width(),
-                            vislib::math::Min(dc->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
-                                    dc->AccessBoundingBoxes().ObjectSpaceBBox().Depth())) * 0.75f;
+                              vislib::math::Min(dc->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
+                                  dc->AccessBoundingBoxes().ObjectSpaceBBox().Depth())) *
+                          0.75f;
 #pragma omp parallel for
-        for(int cnt = 0; cnt < int(dc->GetAtomCnt()); ++cnt) {
-            if(std::sqrt(std::pow(this->frame1[3*cnt+0] - this->frame0[3*cnt+0], 2) +
-                         std::pow(this->frame1[3*cnt+1] - this->frame0[3*cnt+1], 2) +
-                         std::pow(this->frame1[3*cnt+2] - this->frame0[3*cnt+2], 2)) < threshold ) {
+        for (int cnt = 0; cnt < int(dc->GetAtomCnt()); ++cnt) {
+            if (std::sqrt(std::pow(this->frame1[3 * cnt + 0] - this->frame0[3 * cnt + 0], 2) +
+                          std::pow(this->frame1[3 * cnt + 1] - this->frame0[3 * cnt + 1], 2) +
+                          std::pow(this->frame1[3 * cnt + 2] - this->frame0[3 * cnt + 2], 2)) < threshold) {
 
-                this->posInter[4*cnt+0] = (1.0f - inter) * this->frame0[3*cnt+0] + inter * this->frame1[3*cnt+0];
-                this->posInter[4*cnt+1] = (1.0f - inter) * this->frame0[3*cnt+1] + inter * this->frame1[3*cnt+1];
-                this->posInter[4*cnt+2] = (1.0f - inter) * this->frame0[3*cnt+2] + inter * this->frame1[3*cnt+2];
+                this->posInter[4 * cnt + 0] =
+                    (1.0f - inter) * this->frame0[3 * cnt + 0] + inter * this->frame1[3 * cnt + 0];
+                this->posInter[4 * cnt + 1] =
+                    (1.0f - inter) * this->frame0[3 * cnt + 1] + inter * this->frame1[3 * cnt + 1];
+                this->posInter[4 * cnt + 2] =
+                    (1.0f - inter) * this->frame0[3 * cnt + 2] + inter * this->frame1[3 * cnt + 2];
 
-            } else if(inter < 0.5f) {
-                this->posInter[4*cnt+0] = this->frame0[3*cnt+0];
-                this->posInter[4*cnt+1] = this->frame0[3*cnt+1];
-                this->posInter[4*cnt+2] = this->frame0[3*cnt+2];
+            } else if (inter < 0.5f) {
+                this->posInter[4 * cnt + 0] = this->frame0[3 * cnt + 0];
+                this->posInter[4 * cnt + 1] = this->frame0[3 * cnt + 1];
+                this->posInter[4 * cnt + 2] = this->frame0[3 * cnt + 2];
             } else {
-                this->posInter[4*cnt+0] = this->frame1[3*cnt+0];
-                this->posInter[4*cnt+1] = this->frame1[3*cnt+1];
-                this->posInter[4*cnt+2] = this->frame1[3*cnt+2];
+                this->posInter[4 * cnt + 0] = this->frame1[3 * cnt + 0];
+                this->posInter[4 * cnt + 1] = this->frame1[3 * cnt + 1];
+                this->posInter[4 * cnt + 2] = this->frame1[3 * cnt + 2];
             }
 
             // Van der waals radii
-			if(dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::BA)
-                this->posInter[4*cnt+3] = 2.68f*this->sphereRad;
-			else if(dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::O)
-                this->posInter[4*cnt+3] = 1.20f*this->sphereRad;
-			else if(dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::TI)
-                this->posInter[4*cnt+3] = 1.47f*this->sphereRad;
+            if (dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::BA)
+                this->posInter[4 * cnt + 3] = 2.68f * this->sphereRad;
+            else if (dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::O)
+                this->posInter[4 * cnt + 3] = 1.20f * this->sphereRad;
+            else if (dc->GetAtomType()[cnt] == protein_calls::CrystalStructureDataCall::TI)
+                this->posInter[4 * cnt + 3] = 1.47f * this->sphereRad;
         }
         this->recalcPosInter = false;
         this->recalcDipole = true;
@@ -1993,20 +1948,20 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
 
 #endif // SFB_DEMO
     // Setup atom color array
-    if(this->atomColor.Count() != dc->GetAtomCnt()*3) {
+    if (this->atomColor.Count() != dc->GetAtomCnt() * 3) {
         this->SetupAtomColors(dc); // TODO write radii also here
     }
 
 
     // (Re)calculate visibility based on interpolated atom positions
-    if(this->recalcVisibility) {
+    if (this->recalcVisibility) {
         this->ApplyPosFilter(dc);
         this->recalcVisibility = false;
     }
 
 
-    if(this->recalcGrid) {
-        if(!this->CalcUniGrid(dc, this->posInter.PeekElements(), NULL)) {
+    if (this->recalcGrid) {
+        if (!this->CalcUniGrid(dc, this->posInter.PeekElements(), NULL)) {
             return false;
         }
         this->recalcGrid = false;
@@ -2016,8 +1971,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     }
 
     // (Re)calc curl
-    if(this->recalcCurlMag) {
-        if(!this->CalcMagCurlTex()) {
+    if (this->recalcCurlMag) {
+        if (!this->CalcMagCurlTex()) {
             return false;
         }
 
@@ -2030,19 +1985,16 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     this->FilterVecField(dc, this->posInter.PeekElements());
 
     // (Re)calc density tex
-    if(!this->CalcDensityTex(dc, this->posInter.PeekElements())) {
+    if (!this->CalcDensityTex(dc, this->posInter.PeekElements())) {
         return false;
     }
 
     // (Re)create random texture for LIC
-    if(this->licRandBuff.GetGridDim().X()*
-            this->licRandBuff.GetGridDim().Y()*
-            this->licRandBuff.GetGridDim().Z() == 0) {
+    if (this->licRandBuff.GetGridDim().X() * this->licRandBuff.GetGridDim().Y() * this->licRandBuff.GetGridDim().Z() ==
+        0) {
 
-        if(!this->InitLIC()) {
-            Log::DefaultLog.WriteMsg(
-                    Log::LEVEL_ERROR, "%s: Unable to setup random texture",
-                    this->ClassName());
+        if (!this->InitLIC()) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to setup random texture", this->ClassName());
             return false;
         }
     }
@@ -2050,14 +2002,14 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     // Get current viewport and recreate fbo if necessary
     float curVP[4];
     glGetFloatv(GL_VIEWPORT, curVP);
-    if((curVP[2] != this->srcFboDim.X()) || (curVP[3] != srcFboDim.Y())) {
+    if ((curVP[2] != this->srcFboDim.X()) || (curVP[3] != srcFboDim.Y())) {
         this->srcFboDim.SetX(static_cast<int>(curVP[2]));
         this->srcFboDim.SetY(static_cast<int>(curVP[3]));
-		if (!this->CreateSrcFbo(static_cast<size_t>(curVP[2]), static_cast<size_t>(curVP[3]))) return false;
+        if (!this->CreateSrcFbo(static_cast<size_t>(curVP[2]), static_cast<size_t>(curVP[3])))
+            return false;
     }
 
     this->srcFbo.Enable(0);
-
 
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -2067,53 +2019,48 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
 
     // compute scale factor and scale world
     float scale;
-    if(!vislib::math::IsEqual(dc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f) ) {
+    if (!vislib::math::IsEqual(dc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
         scale = 2.0f / dc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
     } else {
         scale = 1.0f;
     }
-    glScalef( scale, scale, scale);
+    glScalef(scale, scale, scale);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
 #ifndef SFB_DEMO
     // Render atoms
-    if(this->atomRM == ATOM_SPHERES) {
+    if (this->atomRM == ATOM_SPHERES) {
         this->RenderAtomsSpheres(dc);
     }
 
 
     // Render ba edges
-    if(this->edgeBaRM == BA_EDGE_STICK) {
+    if (this->edgeBaRM == BA_EDGE_STICK) {
         this->RenderEdgesBaStick(dc, this->posInter.PeekElements(), NULL);
-    }
-    else if(this->edgeBaRM == BA_EDGE_LINES) {
+    } else if (this->edgeBaRM == BA_EDGE_LINES) {
         this->RenderEdgesBaLines(dc, this->posInter.PeekElements(), this->atomColor.PeekElements());
     }
 
     // Render ti edges
-    if(this->edgeTiRM == TI_EDGE_STICK) {
+    if (this->edgeTiRM == TI_EDGE_STICK) {
         this->RenderEdgesTiStick(dc, this->posInter.PeekElements(), this->atomColor.PeekElements());
-    }
-    else if(this->edgeTiRM == TI_EDGE_LINES) {
+    } else if (this->edgeTiRM == TI_EDGE_LINES) {
         this->RenderEdgesTiLines(dc, this->posInter.PeekElements(), this->atomColor.PeekElements());
     }
 
 #endif // SFB_DEMO
 
     // Render arrow glyphs representing the vector field
-    if(this->vecRM == VEC_ARROWS) {
-        if(!this->RenderVecFieldArrows(dc, this->posInter.PeekElements(), this->atomColor.PeekElements())) {
-            Log::DefaultLog.WriteMsg(
-                    Log::LEVEL_ERROR, "%s: Unable to render arrow glyphs",
-                    this->ClassName());
+    if (this->vecRM == VEC_ARROWS) {
+        if (!this->RenderVecFieldArrows(dc, this->posInter.PeekElements(), this->atomColor.PeekElements())) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to render arrow glyphs", this->ClassName());
         }
     }
 
 
-
-    Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis,gridYAxis, gridZAxis;
+    Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis, gridYAxis, gridZAxis;
     Vector<int, 3> gridDim;
     gridMinCoord[0] = this->bbox.ObjectSpaceBBox().Left();
     gridMinCoord[1] = this->bbox.ObjectSpaceBBox().Bottom();
@@ -2121,22 +2068,22 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     gridMaxCoord[0] = this->bbox.ObjectSpaceBBox().Right();
     gridMaxCoord[1] = this->bbox.ObjectSpaceBBox().Top();
     gridMaxCoord[2] = this->bbox.ObjectSpaceBBox().Front();
-    gridXAxis[0] = gridMaxCoord[0]-gridMinCoord[0];
-    gridYAxis[1] = gridMaxCoord[1]-gridMinCoord[1];
-    gridZAxis[2] = gridMaxCoord[2]-gridMinCoord[2];
-    gridDim[0] = (int) ceil(gridXAxis[0] / this->gridSpacing);
-    gridDim[1] = (int) ceil(gridYAxis[1] / this->gridSpacing);
-    gridDim[2] = (int) ceil(gridZAxis[2] / this->gridSpacing);
-    gridXAxis[0] = (gridDim[0]-1) * this->gridSpacing;
-    gridYAxis[1] = (gridDim[1]-1) * this->gridSpacing;
-    gridZAxis[2] = (gridDim[2]-1) * this->gridSpacing;
+    gridXAxis[0] = gridMaxCoord[0] - gridMinCoord[0];
+    gridYAxis[1] = gridMaxCoord[1] - gridMinCoord[1];
+    gridZAxis[2] = gridMaxCoord[2] - gridMinCoord[2];
+    gridDim[0] = (int)ceil(gridXAxis[0] / this->gridSpacing);
+    gridDim[1] = (int)ceil(gridYAxis[1] / this->gridSpacing);
+    gridDim[2] = (int)ceil(gridZAxis[2] / this->gridSpacing);
+    gridXAxis[0] = (gridDim[0] - 1) * this->gridSpacing;
+    gridYAxis[1] = (gridDim[1] - 1) * this->gridSpacing;
+    gridZAxis[2] = (gridDim[2] - 1) * this->gridSpacing;
     gridMaxCoord[0] = gridMinCoord[0] + gridXAxis[0];
     gridMaxCoord[1] = gridMinCoord[1] + gridYAxis[1];
     gridMaxCoord[2] = gridMinCoord[2] + gridZAxis[2];
 
 #ifndef SFB_DEMO
     ////////////////////////////////////////////////////////////////////////////
-    if(this->showRidge) {
+    if (this->showRidge) {
 
         // TODO VTK mesh rendering ...
         this->pplShaderClip.Enable();
@@ -2158,24 +2105,25 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
         glEnable(GL_DEPTH_TEST);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glColor4f(1.0, 1.0, 1.0, 1.0);
-        if( this->renderMesh ) {
-            glColor3f( 1.0f, 0.75f, 0.0f);
+        if (this->renderMesh) {
+            glColor3f(1.0f, 0.75f, 0.0f);
             glBegin(GL_TRIANGLES);
-            for (int p=0; p< static_cast<int>(meshFaces.Count()) / 3; p++) {
-                for (int e=0; e < 3; e++) {
+            for (int p = 0; p < static_cast<int>(meshFaces.Count()) / 3; p++) {
+                for (int e = 0; e < 3; e++) {
 
                     // Calc tex coords
-                    float texCoordX = (meshVertices[meshFaces[p*3+e]*3+0] - gridMinCoord[0])/(gridMaxCoord[0] - gridMinCoord[0]);
-                    float texCoordY = (meshVertices[meshFaces[p*3+e]*3+1] - gridMinCoord[1])/(gridMaxCoord[1] - gridMinCoord[1]);
-                    float texCoordZ = (meshVertices[meshFaces[p*3+e]*3+2] - gridMinCoord[2])/(gridMaxCoord[2] - gridMinCoord[2]);
+                    float texCoordX = (meshVertices[meshFaces[p * 3 + e] * 3 + 0] - gridMinCoord[0]) /
+                                      (gridMaxCoord[0] - gridMinCoord[0]);
+                    float texCoordY = (meshVertices[meshFaces[p * 3 + e] * 3 + 1] - gridMinCoord[1]) /
+                                      (gridMaxCoord[1] - gridMinCoord[1]);
+                    float texCoordZ = (meshVertices[meshFaces[p * 3 + e] * 3 + 2] - gridMinCoord[2]) /
+                                      (gridMaxCoord[2] - gridMinCoord[2]);
 
                     glTexCoord3f(texCoordX, texCoordY, texCoordZ);
-                    glNormal3f(meshNormals[meshFaces[p*3+e]*3+0],
-                            meshNormals[meshFaces[p*3+e]*3+1],
-                            meshNormals[meshFaces[p*3+e]*3+2]);
-                    glVertex3f(meshVertices[meshFaces[p*3+e]*3+0],
-                            meshVertices[meshFaces[p*3+e]*3+1],
-                            meshVertices[meshFaces[p*3+e]*3+2]);
+                    glNormal3f(meshNormals[meshFaces[p * 3 + e] * 3 + 0], meshNormals[meshFaces[p * 3 + e] * 3 + 1],
+                        meshNormals[meshFaces[p * 3 + e] * 3 + 2]);
+                    glVertex3f(meshVertices[meshFaces[p * 3 + e] * 3 + 0], meshVertices[meshFaces[p * 3 + e] * 3 + 1],
+                        meshVertices[meshFaces[p * 3 + e] * 3 + 2]);
                 }
             }
             glEnd();
@@ -2188,11 +2136,11 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     ///////////////////////////////////////////////////////////////////////////
 
     // Compute/render critical points
-    if(this->showCritPoints) {
+    if (this->showCritPoints) {
         this->RenderCritPointsSpheres(dc);
     }
 
-    if(this->showIsoSurf) {
+    if (this->showIsoSurf) {
         this->RenderIsoSurfMC();
     }
 #endif // SFB_DEMO
@@ -2207,12 +2155,12 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     glColor4f(1.0, 1.0, 1.0, 1.0);
 
     // Slice rendering
-    if(this->sliceRM != SLICE_NONE) {
+    if (this->sliceRM != SLICE_NONE) {
 
         // Calc tex coords for planes
-        float texCoordX = (this->xPlane - gridMinCoord[0])/(gridMaxCoord[0] - gridMinCoord[0]);
-        float texCoordY = (this->yPlane - gridMinCoord[1])/(gridMaxCoord[1] - gridMinCoord[1]);
-        float texCoordZ = (this->zPlane - gridMinCoord[2])/(gridMaxCoord[2] - gridMinCoord[2]);
+        float texCoordX = (this->xPlane - gridMinCoord[0]) / (gridMaxCoord[0] - gridMinCoord[0]);
+        float texCoordY = (this->yPlane - gridMinCoord[1]) / (gridMaxCoord[1] - gridMinCoord[1]);
+        float texCoordZ = (this->zPlane - gridMinCoord[2]) / (gridMaxCoord[2] - gridMinCoord[2]);
 
         this->vrShader.Enable();
         glUniform1iARB(this->vrShader.ParameterLocation("uniGridTex"), 0);
@@ -2227,7 +2175,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
         glUniform1fARB(this->vrShader.ParameterLocation("licContrast"), this->licContrastStretching);
         glUniform1fARB(this->vrShader.ParameterLocation("licBrightness"), this->licBright);
         glUniform1fARB(this->vrShader.ParameterLocation("licTCScl"), this->licTCScl);
-        if(this->projectVec2D)
+        if (this->projectVec2D)
             glUniform1iARB(this->vrShader.ParameterLocation("licProj2D"), 1);
         else
             glUniform1iARB(this->vrShader.ParameterLocation("licProj2D"), 0);
@@ -2251,7 +2199,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
         glActiveTextureARB(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_3D, this->uniGridTex);
 
-        if(this->showXPlane) { // Render x plane
+        if (this->showXPlane) { // Render x plane
             glUniform1iARB(this->vrShader.ParameterLocation("plane"), 0);
             glBegin(GL_QUADS);
 
@@ -2272,13 +2220,12 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
             glVertex3f(this->xPlane, gridMaxCoord[1], gridMaxCoord[2]);
 
             glEnd();
-
         }
-        if(this->showYPlane) { // Render y plane
+        if (this->showYPlane) { // Render y plane
             glUniform1iARB(this->vrShader.ParameterLocation("plane"), 1);
             glBegin(GL_QUADS);
 
-            glMultiTexCoord3fARB(GL_TEXTURE0,0.0f, texCoordY, 1.0f);
+            glMultiTexCoord3fARB(GL_TEXTURE0, 0.0f, texCoordY, 1.0f);
             glMultiTexCoord2fARB(GL_TEXTURE1, 0.0f, 1.0f);
             glVertex3f(gridMinCoord[0], this->yPlane, gridMaxCoord[2]);
 
@@ -2296,7 +2243,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
 
             glEnd();
         }
-        if(this->showZPlane) { // Render z plane
+        if (this->showZPlane) { // Render z plane
             glUniform1iARB(this->vrShader.ParameterLocation("plane"), 2);
             glBegin(GL_QUADS);
 
@@ -2344,10 +2291,14 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     glLoadIdentity();
 
     glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex2f(-1.0f, -1.0f);
-        glTexCoord2f(1, 0); glVertex2f(1.0f, -1.0f);
-        glTexCoord2f(1, 1); glVertex2f(1.0f, 1.0f);
-        glTexCoord2f(0, 1); glVertex2f(-1.0f, 1.0f);
+    glTexCoord2f(0, 0);
+    glVertex2f(-1.0f, -1.0f);
+    glTexCoord2f(1, 0);
+    glVertex2f(1.0f, -1.0f);
+    glTexCoord2f(1, 1);
+    glVertex2f(1.0f, 1.0f);
+    glTexCoord2f(0, 1);
+    glVertex2f(-1.0f, 1.0f);
     glEnd();
 
     glMatrixMode(GL_PROJECTION);
@@ -2361,21 +2312,17 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
 
     // Render volume
     // Note: uses depth and color buffer the rest of the scene has been rendered to
-    if(this->volShow) {
-        if(!this->RenderVolume()) {
-            Log::DefaultLog.WriteMsg(
-                    Log::LEVEL_ERROR, "%s: Unable to render volume\n",
-                    this->ClassName());
+    if (this->volShow) {
+        if (!this->RenderVolume()) {
+            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to render volume\n", this->ClassName());
             return false;
         }
     }
 
     // Check for opengl error
     err = glGetError();
-    if(err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s::Render: glError %s\n", this->ClassName(),
-                gluErrorString(err));
+    if (err != GL_NO_ERROR) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s::Render: glError %s\n", this->ClassName(), gluErrorString(err));
         return false;
     }
 
@@ -2391,88 +2338,82 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
  * protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows
  */
 bool protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
-		const protein_calls::CrystalStructureDataCall *dc,
-        const float *atomPos,
-        const float *col) {
+    const protein_calls::CrystalStructureDataCall* dc, const float* atomPos, const float* col) {
 
     using namespace vislib::math;
 
 
-
     // Check whether filter has been applied
-    if(this->arrowVis.Count() != dc->GetDipoleCnt()) return false;
+    if (this->arrowVis.Count() != dc->GetDipoleCnt())
+        return false;
 
     // Setup necessary data arrays and apply filtering
 
-    this->arrowData.SetCount(dc->GetDipoleCnt()*4);
-    this->arrowDataPos.SetCount(dc->GetDipoleCnt()*3);
-    this->arrowCol.SetCount(dc->GetDipoleCnt()*3);
+    this->arrowData.SetCount(dc->GetDipoleCnt() * 4);
+    this->arrowDataPos.SetCount(dc->GetDipoleCnt() * 3);
+    this->arrowCol.SetCount(dc->GetDipoleCnt() * 3);
 
 #pragma omp parallel for
-    for(int cnt = 0; cnt < int(dc->GetDipoleCnt()); ++cnt) {
+    for (int cnt = 0; cnt < int(dc->GetDipoleCnt()); ++cnt) {
 
-        Vector<float, 3> vec(&dc->GetDipole()[3*cnt]);
+        Vector<float, 3> vec(&dc->GetDipole()[3 * cnt]);
 
-        if(this->arrColorMode == ARRCOL_ELEMENT) {
+        if (this->arrColorMode == ARRCOL_ELEMENT) {
             // Set color based on atom color array
-            this->arrowCol[cnt*3+0] = this->atomColor.PeekElements()[3*cnt+0];
-            this->arrowCol[cnt*3+1] = this->atomColor.PeekElements()[3*cnt+1];
-            this->arrowCol[cnt*3+2] = this->atomColor.PeekElements()[3*cnt+2];
-        }
-        else if(this->arrColorMode == ARRCOL_ORIENT){
+            this->arrowCol[cnt * 3 + 0] = this->atomColor.PeekElements()[3 * cnt + 0];
+            this->arrowCol[cnt * 3 + 1] = this->atomColor.PeekElements()[3 * cnt + 1];
+            this->arrowCol[cnt * 3 + 2] = this->atomColor.PeekElements()[3 * cnt + 2];
+        } else if (this->arrColorMode == ARRCOL_ORIENT) {
             float len = vec.Length();
             // Set color based on orientation
-            this->arrowCol[cnt*3+0] = (vec.X()/len+1.0f)*0.5f;
-            this->arrowCol[cnt*3+1] = (vec.Y()/len+1.0f)*0.5f;
-            this->arrowCol[cnt*3+2] = (vec.Z()/len+1.0f)*0.5f;
-        }
-        else if(this->arrColorMode == ARRCOL_MAGNITUDE) {
+            this->arrowCol[cnt * 3 + 0] = (vec.X() / len + 1.0f) * 0.5f;
+            this->arrowCol[cnt * 3 + 1] = (vec.Y() / len + 1.0f) * 0.5f;
+            this->arrowCol[cnt * 3 + 2] = (vec.Z() / len + 1.0f) * 0.5f;
+        } else if (this->arrColorMode == ARRCOL_MAGNITUDE) {
             // Use gradient color based on magnitude
-            Vector<float, 3> color = this->getColorGrad(vec.Length()*this->vecScl);
-            this->arrowCol[cnt*3+0] = color.X();
-            this->arrowCol[cnt*3+1] = color.Y();
-            this->arrowCol[cnt*3+2] = color.Z();
-        }
-        else { // Invalid color mode
-            this->arrowCol[cnt*3+0] = 0.0f;
-            this->arrowCol[cnt*3+1] = 1.0f;
-            this->arrowCol[cnt*3+2] = 1.0f;
+            Vector<float, 3> color = this->getColorGrad(vec.Length() * this->vecScl);
+            this->arrowCol[cnt * 3 + 0] = color.X();
+            this->arrowCol[cnt * 3 + 1] = color.Y();
+            this->arrowCol[cnt * 3 + 2] = color.Z();
+        } else { // Invalid color mode
+            this->arrowCol[cnt * 3 + 0] = 0.0f;
+            this->arrowCol[cnt * 3 + 1] = 1.0f;
+            this->arrowCol[cnt * 3 + 2] = 1.0f;
         }
 
         //if((this->arrowVis[cnt])&&(this->visDipole[cnt])) {
-        //    printf("Vec #%i (%f %f %f)\n", cnt, vec.X(), vec.Y(), vec.Z()); 
+        //    printf("Vec #%i (%f %f %f)\n", cnt, vec.X(), vec.Y(), vec.Z());
         //} // DEBUG
 
-        if(this->toggleNormVec) {
+        if (this->toggleNormVec) {
             vec.Normalise();
         }
 
         // Setup vector
-        this->arrowData[4*cnt+0] = dc->GetDipolePos()[cnt*3+0] + vec.X()*this->vecScl*0.5f;
-        this->arrowData[4*cnt+1] = dc->GetDipolePos()[cnt*3+1] + vec.Y()*this->vecScl*0.5f;
-        this->arrowData[4*cnt+2] = dc->GetDipolePos()[cnt*3+2] + vec.Z()*this->vecScl*0.5f;
-        this->arrowData[4*cnt+3] = 1.0f;
+        this->arrowData[4 * cnt + 0] = dc->GetDipolePos()[cnt * 3 + 0] + vec.X() * this->vecScl * 0.5f;
+        this->arrowData[4 * cnt + 1] = dc->GetDipolePos()[cnt * 3 + 1] + vec.Y() * this->vecScl * 0.5f;
+        this->arrowData[4 * cnt + 2] = dc->GetDipolePos()[cnt * 3 + 2] + vec.Z() * this->vecScl * 0.5f;
+        this->arrowData[4 * cnt + 3] = 1.0f;
 
         // Set position of the arrow
-        this->arrowDataPos[3*cnt+0] = dc->GetDipolePos()[cnt*3+0] - vec.X()*this->vecScl*0.5f;
-        this->arrowDataPos[3*cnt+1] = dc->GetDipolePos()[cnt*3+1] - vec.Y()*this->vecScl*0.5f;
-        this->arrowDataPos[3*cnt+2] = dc->GetDipolePos()[cnt*3+2] - vec.Z()*this->vecScl*0.5f;
+        this->arrowDataPos[3 * cnt + 0] = dc->GetDipolePos()[cnt * 3 + 0] - vec.X() * this->vecScl * 0.5f;
+        this->arrowDataPos[3 * cnt + 1] = dc->GetDipolePos()[cnt * 3 + 1] - vec.Y() * this->vecScl * 0.5f;
+        this->arrowDataPos[3 * cnt + 2] = dc->GetDipolePos()[cnt * 3 + 2] - vec.Z() * this->vecScl * 0.5f;
     }
 
 
     // Write idx array
     this->arrowVisIdx.Clear();
     this->arrowVisIdx.SetCapacityIncrement(1000);
-    if(this->arrowUseFilter) {
-        for(int cnt = 0; cnt < int(dc->GetDipoleCnt()); cnt++) {
-            if((this->arrowVis[cnt])&&(this->visDipole[cnt])) {
+    if (this->arrowUseFilter) {
+        for (int cnt = 0; cnt < int(dc->GetDipoleCnt()); cnt++) {
+            if ((this->arrowVis[cnt]) && (this->visDipole[cnt])) {
                 this->arrowVisIdx.Add(static_cast<int>(cnt));
             }
         }
-    }
-    else {
-        for(int cnt = 0; cnt < int(dc->GetDipoleCnt()); cnt++) {
-            if(this->visDipole[cnt]) { // Only positional filtering
+    } else {
+        for (int cnt = 0; cnt < int(dc->GetDipoleCnt()); cnt++) {
+            if (this->visDipole[cnt]) { // Only positional filtering
                 this->arrowVisIdx.Add(static_cast<int>(cnt));
             }
         }
@@ -2481,15 +2422,12 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
 
     // Actual rendering
 
-    float viewportStuff[4] = {
-            cameraInfo->TileRect().Left(),
-            cameraInfo->TileRect().Bottom(),
-            cameraInfo->TileRect().Width(),
-            cameraInfo->TileRect().Height()
-    };
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
 
-    if(viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if(viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    if (viewportStuff[2] < 1.0f)
+        viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f)
+        viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
@@ -2537,24 +2475,18 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
     GLfloat lightPos[4];
     glGetLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
+    auto cp = cameraInfo.getPose();
+
     // Enable geometry shader
     this->arrowShader.Enable();
-    glUniform4fvARB(this->arrowShader.ParameterLocation("viewAttr"),
-            1, viewportStuff);
-    glUniform3fvARB(this->arrowShader.ParameterLocation("camIn"),
-            1, cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->arrowShader.ParameterLocation("camRight"),
-            1, cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->arrowShader.ParameterLocation("camUp" ),
-            1, cameraInfo->Up().PeekComponents());
-    glUniform1fARB(this->arrowShader.ParameterLocation("radScale"),
-            this->arrowRad);
-    glUniformMatrix4fvARB(this->arrowShader.ParameterLocation("modelview"),
-            1, false, modelMatrix_column);
-    glUniformMatrix4fvARB(this->arrowShader.ParameterLocation("proj"),
-            1, false, projMatrix_column);
-    glUniform4fvARB(this->arrowShader.ParameterLocation("lightPos"),
-            1, lightPos);
+    glUniform4fvARB(this->arrowShader.ParameterLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(this->arrowShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->arrowShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->arrowShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
+    glUniform1fARB(this->arrowShader.ParameterLocation("radScale"), this->arrowRad);
+    glUniformMatrix4fvARB(this->arrowShader.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+    glUniformMatrix4fvARB(this->arrowShader.ParameterLocation("proj"), 1, false, projMatrix_column);
+    glUniform4fvARB(this->arrowShader.ParameterLocation("lightPos"), 1, lightPos);
 
     // Get attribute locations
     GLint attribPos0 = glGetAttribLocationARB(this->arrowShader, "pos0");
@@ -2572,8 +2504,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
     glVertexAttribPointerARB(attribColor, 3, GL_FLOAT, GL_FALSE, 0, this->arrowCol.PeekElements());
 
     // Draw points
-    glDrawElements(GL_POINTS, static_cast<GLsizei>(this->arrowVisIdx.Count()),
-        GL_UNSIGNED_INT, this->arrowVisIdx.PeekElements());
+    glDrawElements(
+        GL_POINTS, static_cast<GLsizei>(this->arrowVisIdx.Count()), GL_UNSIGNED_INT, this->arrowVisIdx.PeekElements());
 
     // Disable arrays for attributes
     glDisableVertexAttribArrayARB(attribPos0);
@@ -2589,17 +2521,14 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
 /*
  * protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres
  */
-void protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres (
-		const protein_calls::CrystalStructureDataCall *dc) {
+void protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres(
+    const protein_calls::CrystalStructureDataCall* dc) {
 
-    float viewportStuff[4] = {
-            cameraInfo->TileRect().Left(),
-            cameraInfo->TileRect().Bottom(),
-            cameraInfo->TileRect().Width(),
-            cameraInfo->TileRect().Height()
-    };
-    if(viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if(viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
+    if (viewportStuff[2] < 1.0f)
+        viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f)
+        viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
@@ -2611,19 +2540,22 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres (
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
 
+    auto cp = this->cameraInfo.getPose();
+    auto cv = this->cameraInfo.get<core::view::Camera::PerspectiveParameters>();
+
     // Set shader variables
     glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
-    glUniform2fARB(this->sphereShader.ParameterLocation("zValues"), this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
+    glUniform2fARB(this->sphereShader.ParameterLocation("zValues"), cv.near_plane, cv.far_plane);
 
     // Set vertex and color pointers and draw them
     glVertexPointer(4, GL_FLOAT, 0, this->posInter.PeekElements());
     glColorPointer(3, GL_FLOAT, 0, this->atomColor.PeekElements());
     //glDrawArrays(GL_POINTS, 0, dc->GetAtomCnt());
-    glDrawElements(GL_POINTS, static_cast<GLsizei>(this->visAtomIdx.Count()),
-            GL_UNSIGNED_INT, this->visAtomIdx.PeekElements());
+    glDrawElements(
+        GL_POINTS, static_cast<GLsizei>(this->visAtomIdx.Count()), GL_UNSIGNED_INT, this->visAtomIdx.PeekElements());
 
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -2636,7 +2568,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres (
  * protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres
  */
 void protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
-		const protein_calls::CrystalStructureDataCall *dc) {
+    const protein_calls::CrystalStructureDataCall* dc) {
     using namespace vislib::math;
 
     glDisable(GL_BLEND);
@@ -2651,48 +2583,39 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
 
     // Recalculate critical points if necessary
     Vector<float, 3> offs(0.5f, 0.5f, 0.5f);
-    if(this->recalcCritPoints) {
-        this->critPoints = CritPoints::GetCritPoints(
-                this->uniGridVecField,
-                gridMinCoord + offs,
-                gridMaxCoord - offs);
+    if (this->recalcCritPoints) {
+        this->critPoints = CritPoints::GetCritPoints(this->uniGridVecField, gridMinCoord + offs, gridMaxCoord - offs);
         this->recalcCritPoints = false;
     }
 
     // Prepare sphere rendering
     vislib::Array<float> sphColor, sphPos;
     sphColor.SetCount(this->critPoints.Count());
-    sphPos.SetCount(this->critPoints.Count()/3*4);
+    sphPos.SetCount(this->critPoints.Count() / 3 * 4);
 
 #pragma omp parallel for
-    for(int cnt = 0; cnt < static_cast<int>(this->critPoints.Count()/3); cnt++) {
-            sphPos[cnt*4+0] = this->critPoints[3*cnt+0];
-            sphPos[cnt*4+1] = this->critPoints[3*cnt+1];
-            sphPos[cnt*4+2] = this->critPoints[3*cnt+2];
-            sphPos[cnt*4+3] = 1.2f;
-            sphColor[cnt*3+0] = 1.0f; // TODO Different colors for sink/source?
-            sphColor[cnt*3+1] = 0.5f;
-            sphColor[cnt*3+2] = 0.0f;
-        if(this->cpUsePosFilter) {
-            if((this->critPoints[3*cnt+0] > this->posXMax) ||
-                (this->critPoints[3*cnt+0] < this->posXMin) ||
-                (this->critPoints[3*cnt+1] > this->posYMax) ||
-                (this->critPoints[3*cnt+1] < this->posYMin) ||
-                (this->critPoints[3*cnt+2] > this->posZMax) ||
-                (this->critPoints[3*cnt+2] < this->posZMin)) {
-                    sphPos[cnt*4+3] = 0.0f; // Set radius to zero if sphere is filtered out
+    for (int cnt = 0; cnt < static_cast<int>(this->critPoints.Count() / 3); cnt++) {
+        sphPos[cnt * 4 + 0] = this->critPoints[3 * cnt + 0];
+        sphPos[cnt * 4 + 1] = this->critPoints[3 * cnt + 1];
+        sphPos[cnt * 4 + 2] = this->critPoints[3 * cnt + 2];
+        sphPos[cnt * 4 + 3] = 1.2f;
+        sphColor[cnt * 3 + 0] = 1.0f; // TODO Different colors for sink/source?
+        sphColor[cnt * 3 + 1] = 0.5f;
+        sphColor[cnt * 3 + 2] = 0.0f;
+        if (this->cpUsePosFilter) {
+            if ((this->critPoints[3 * cnt + 0] > this->posXMax) || (this->critPoints[3 * cnt + 0] < this->posXMin) ||
+                (this->critPoints[3 * cnt + 1] > this->posYMax) || (this->critPoints[3 * cnt + 1] < this->posYMin) ||
+                (this->critPoints[3 * cnt + 2] > this->posZMax) || (this->critPoints[3 * cnt + 2] < this->posZMin)) {
+                sphPos[cnt * 4 + 3] = 0.0f; // Set radius to zero if sphere is filtered out
             }
         }
     }
 
-    float viewportStuff[4] = {
-            this->cameraInfo->TileRect().Left(),
-            this->cameraInfo->TileRect().Bottom(),
-            this->cameraInfo->TileRect().Width(),
-            this->cameraInfo->TileRect().Height()
-    };
-    if(viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if(viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
+    if (viewportStuff[2] < 1.0f)
+        viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f)
+        viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
@@ -2705,24 +2628,26 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
 
+    auto cp = this->cameraInfo.getPose();
+    auto cv = this->cameraInfo.get<core::view::Camera::PerspectiveParameters>();
+
     // Set shader variables
     glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, this->cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, this->cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, this->cameraInfo->Up().PeekComponents());
-    glUniform2fARB(this->sphereShader.ParameterLocation("zValues"), this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
+    glUniform2fARB(this->sphereShader.ParameterLocation("zValues"), cv.near_plane, cv.far_plane);
 
     // Set vertex and color pointers and draw them
     glVertexPointer(4, GL_FLOAT, 0, sphPos.PeekElements());
     glColorPointer(3, GL_FLOAT, 0, sphColor.PeekElements());
-	glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(this->critPoints.Count() / 3));
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(this->critPoints.Count() / 3));
 
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     this->sphereShader.Disable();
-
 }
 
 
@@ -2730,8 +2655,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
  * protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaLines
  */
 void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaLines(
-		const protein_calls::CrystalStructureDataCall *dc, const float *atomPos,
-        const float *atomCol) {
+    const protein_calls::CrystalStructureDataCall* dc, const float* atomPos, const float* atomCol) {
 
     glDisable(GL_BLEND);
     glDisable(GL_LIGHTING);
@@ -2742,8 +2666,8 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaLines(
 
     glVertexPointer(3, GL_FLOAT, 16, atomPos);
     glColorPointer(3, GL_FLOAT, 0, atomCol);
-	glDrawElements(GL_LINES, static_cast<GLsizei>(this->edgeIdxBa.Count()), GL_UNSIGNED_INT,
-            this->edgeIdxBa.PeekElements());
+    glDrawElements(
+        GL_LINES, static_cast<GLsizei>(this->edgeIdxBa.Count()), GL_UNSIGNED_INT, this->edgeIdxBa.PeekElements());
 
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -2754,8 +2678,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaLines(
  * protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaStick
  */
 void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaStick(
-		const protein_calls::CrystalStructureDataCall *dc, const float *atomPos,
-        const float *atomCol) {
+    const protein_calls::CrystalStructureDataCall* dc, const float* atomPos, const float* atomCol) {
 
     int cnt, idx0, idx1;
     vislib::math::Vector<float, 3> firstAtomPos, secondAtomPos;
@@ -2764,92 +2687,91 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaStick(
     float angle;
 
     // Allocate memory for stick raycasting
-    this->vertCylinders.SetCount((this->edgeIdxBa.Count()/2)*4);
-    this->quatCylinders.SetCount((this->edgeIdxBa.Count()/2)*4);
-    this->inParaCylinders.SetCount((this->edgeIdxBa.Count()/2)*2);
-    this->color1Cylinders.SetCount((this->edgeIdxBa.Count()/2)*3);
-    this->color2Cylinders.SetCount((this->edgeIdxBa.Count()/2)*3);
+    this->vertCylinders.SetCount((this->edgeIdxBa.Count() / 2) * 4);
+    this->quatCylinders.SetCount((this->edgeIdxBa.Count() / 2) * 4);
+    this->inParaCylinders.SetCount((this->edgeIdxBa.Count() / 2) * 2);
+    this->color1Cylinders.SetCount((this->edgeIdxBa.Count() / 2) * 3);
+    this->color2Cylinders.SetCount((this->edgeIdxBa.Count() / 2) * 3);
 
     // Loop over all connections and compute cylinder parameters
 #pragma omp parallel for private(idx0, idx1, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
-    for(cnt = 0; cnt < static_cast<int>(this->edgeIdxBa.Count()/2); cnt++) {
-        idx0 = this->edgeIdxBa[2*cnt+0];
-        idx1 = this->edgeIdxBa[2*cnt+1];
+    for (cnt = 0; cnt < static_cast<int>(this->edgeIdxBa.Count() / 2); cnt++) {
+        idx0 = this->edgeIdxBa[2 * cnt + 0];
+        idx1 = this->edgeIdxBa[2 * cnt + 1];
 
-        firstAtomPos.SetX(atomPos[4*idx0+0]);
-        firstAtomPos.SetY(atomPos[4*idx0+1]);
-        firstAtomPos.SetZ(atomPos[4*idx0+2]);
+        firstAtomPos.SetX(atomPos[4 * idx0 + 0]);
+        firstAtomPos.SetY(atomPos[4 * idx0 + 1]);
+        firstAtomPos.SetZ(atomPos[4 * idx0 + 2]);
 
-        secondAtomPos.SetX(atomPos[4*idx1+0]);
-        secondAtomPos.SetY(atomPos[4*idx1+1]);
-        secondAtomPos.SetZ(atomPos[4*idx1+2]);
+        secondAtomPos.SetX(atomPos[4 * idx1 + 0]);
+        secondAtomPos.SetY(atomPos[4 * idx1 + 1]);
+        secondAtomPos.SetZ(atomPos[4 * idx1 + 2]);
 
         // compute the quaternion for the rotation of the cylinder
         dir = secondAtomPos - firstAtomPos;
-        tmpVec.Set( 1.0f, 0.0f, 0.0f);
-        angle = - tmpVec.Angle( dir);
-        ortho = tmpVec.Cross( dir);
+        tmpVec.Set(1.0f, 0.0f, 0.0f);
+        angle = -tmpVec.Angle(dir);
+        ortho = tmpVec.Cross(dir);
         ortho.Normalise();
-        quatC.Set( angle, ortho);
+        quatC.Set(angle, ortho);
         // compute the absolute position 'position' of the cylinder (center point)
-        position = firstAtomPos + (dir/2.0f);
+        position = firstAtomPos + (dir / 2.0f);
 
-        this->inParaCylinders[2*cnt+0] = this->baStickRadius;
-        this->inParaCylinders[2*cnt+1] = (firstAtomPos-secondAtomPos).Length();
+        this->inParaCylinders[2 * cnt + 0] = this->baStickRadius;
+        this->inParaCylinders[2 * cnt + 1] = (firstAtomPos - secondAtomPos).Length();
 
-        this->quatCylinders[4*cnt+0] = quatC.GetX();
-        this->quatCylinders[4*cnt+1] = quatC.GetY();
-        this->quatCylinders[4*cnt+2] = quatC.GetZ();
-        this->quatCylinders[4*cnt+3] = quatC.GetW();
+        this->quatCylinders[4 * cnt + 0] = quatC.GetX();
+        this->quatCylinders[4 * cnt + 1] = quatC.GetY();
+        this->quatCylinders[4 * cnt + 2] = quatC.GetZ();
+        this->quatCylinders[4 * cnt + 3] = quatC.GetW();
 
-        if(atomCol != NULL) {
-            this->color1Cylinders[3*cnt+0] = atomCol[3*idx0+0];
-            this->color1Cylinders[3*cnt+1] = atomCol[3*idx0+1];
-            this->color1Cylinders[3*cnt+2] = atomCol[3*idx0+2];
-            this->color2Cylinders[3*cnt+0] = atomCol[3*idx1+0];
-            this->color2Cylinders[3*cnt+1] = atomCol[3*idx1+1];
-            this->color2Cylinders[3*cnt+2] = atomCol[3*idx1+2];
+        if (atomCol != NULL) {
+            this->color1Cylinders[3 * cnt + 0] = atomCol[3 * idx0 + 0];
+            this->color1Cylinders[3 * cnt + 1] = atomCol[3 * idx0 + 1];
+            this->color1Cylinders[3 * cnt + 2] = atomCol[3 * idx0 + 2];
+            this->color2Cylinders[3 * cnt + 0] = atomCol[3 * idx1 + 0];
+            this->color2Cylinders[3 * cnt + 1] = atomCol[3 * idx1 + 1];
+            this->color2Cylinders[3 * cnt + 2] = atomCol[3 * idx1 + 2];
+        } else {
+            this->color1Cylinders[3 * cnt + 0] = 0.0f;
+            this->color1Cylinders[3 * cnt + 1] = 0.0f;
+            this->color1Cylinders[3 * cnt + 2] = 0.0f;
+            this->color2Cylinders[3 * cnt + 0] = 0.0f;
+            this->color2Cylinders[3 * cnt + 1] = 0.0f;
+            this->color2Cylinders[3 * cnt + 2] = 0.0f;
         }
-        else {
-            this->color1Cylinders[3*cnt+0] = 0.0f;
-            this->color1Cylinders[3*cnt+1] = 0.0f;
-            this->color1Cylinders[3*cnt+2] = 0.0f;
-            this->color2Cylinders[3*cnt+0] = 0.0f;
-            this->color2Cylinders[3*cnt+1] = 0.0f;
-            this->color2Cylinders[3*cnt+2] = 0.0f;
-        }
 
-        this->vertCylinders[4*cnt+0] = position.X();
-        this->vertCylinders[4*cnt+1] = position.Y();
-        this->vertCylinders[4*cnt+2] = position.Z();
-        this->vertCylinders[4*cnt+3] = 0.0f;
-
+        this->vertCylinders[4 * cnt + 0] = position.X();
+        this->vertCylinders[4 * cnt + 1] = position.Y();
+        this->vertCylinders[4 * cnt + 2] = position.Z();
+        this->vertCylinders[4 * cnt + 3] = 0.0f;
     }
 
 
     // Get viewpoint parameters for raycasting
-    float viewportStuff[4] = {
-            this->cameraInfo->TileRect().Left(),
-            this->cameraInfo->TileRect().Bottom(),
-            this->cameraInfo->TileRect().Width(),
-            this->cameraInfo->TileRect().Height()};
-    if(viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if(viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
+    if (viewportStuff[2] < 1.0f)
+        viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f)
+        viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
     glDisable(GL_BLEND);
 
+    auto cp = this->cameraInfo.getPose();
+    auto cv = this->cameraInfo.get<core::view::Camera::PerspectiveParameters>();
+
     // Enable cylinder shader
     this->cylinderShader.Enable();
     glUniform4fvARB(this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+    glUniform3fvARB(this->cylinderShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->cylinderShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->cylinderShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
     this->attribLocInParams = glGetAttribLocationARB(this->cylinderShader, "inParams");
-    this->attribLocQuatC    = glGetAttribLocationARB(this->cylinderShader, "quatC");
-    this->attribLocColor1   = glGetAttribLocationARB(this->cylinderShader, "color1");
-    this->attribLocColor2   = glGetAttribLocationARB(this->cylinderShader, "color2");
+    this->attribLocQuatC = glGetAttribLocationARB(this->cylinderShader, "quatC");
+    this->attribLocColor1 = glGetAttribLocationARB(this->cylinderShader, "color1");
+    this->attribLocColor2 = glGetAttribLocationARB(this->cylinderShader, "color2");
 
     glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -2865,7 +2787,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaStick(
     glVertexAttribPointerARB(this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
     glVertexAttribPointerARB(this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
 
-	glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(this->edgeIdxBa.Count() / 2));
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(this->edgeIdxBa.Count() / 2));
 
     glDisableVertexAttribArrayARB(this->attribLocInParams);
     glDisableVertexAttribArrayARB(this->attribLocQuatC);
@@ -2883,8 +2805,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaStick(
  * protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiLines
  */
 void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiLines(
-		const protein_calls::CrystalStructureDataCall *dc, const float *atomPos,
-        const float *atomCol) {
+    const protein_calls::CrystalStructureDataCall* dc, const float* atomPos, const float* atomCol) {
 
     glDisable(GL_BLEND);
     glDisable(GL_LIGHTING);
@@ -2895,8 +2816,8 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiLines(
 
     glVertexPointer(3, GL_FLOAT, 16, atomPos);
     glColorPointer(3, GL_FLOAT, 0, atomCol);
-	glDrawElements(GL_LINES, static_cast<GLsizei>(this->edgeIdxTi.Count()), GL_UNSIGNED_INT,
-            this->edgeIdxTi.PeekElements());
+    glDrawElements(
+        GL_LINES, static_cast<GLsizei>(this->edgeIdxTi.Count()), GL_UNSIGNED_INT, this->edgeIdxTi.PeekElements());
 
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -2907,8 +2828,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiLines(
  * protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiStick
  */
 void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiStick(
-		const protein_calls::CrystalStructureDataCall *dc, const float *atomPos,
-        const float *atomCol) {
+    const protein_calls::CrystalStructureDataCall* dc, const float* atomPos, const float* atomCol) {
 
     int cnt, idx0, idx1;
     vislib::math::Vector<float, 3> firstAtomPos, secondAtomPos;
@@ -2917,83 +2837,82 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiStick(
     float angle;
 
     // Allocate memory for stick raycasting
-    this->vertCylinders.SetCount((this->edgeIdxTi.Count()/2)*4);
-    this->quatCylinders.SetCount((this->edgeIdxTi.Count()/2)*4);
-    this->inParaCylinders.SetCount((this->edgeIdxTi.Count()/2)*2);
-    this->color1Cylinders.SetCount((this->edgeIdxTi.Count()/2)*3);
-    this->color2Cylinders.SetCount((this->edgeIdxTi.Count()/2)*3);
+    this->vertCylinders.SetCount((this->edgeIdxTi.Count() / 2) * 4);
+    this->quatCylinders.SetCount((this->edgeIdxTi.Count() / 2) * 4);
+    this->inParaCylinders.SetCount((this->edgeIdxTi.Count() / 2) * 2);
+    this->color1Cylinders.SetCount((this->edgeIdxTi.Count() / 2) * 3);
+    this->color2Cylinders.SetCount((this->edgeIdxTi.Count() / 2) * 3);
 
 
     // Loop over all connections and compute cylinder parameters
 #pragma omp parallel for private(idx0, idx1, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
-    for(cnt = 0; cnt < static_cast<int>(this->edgeIdxTi.Count()/2); cnt++) {
-        idx0 = this->edgeIdxTi[2*cnt+0];
-        idx1 = this->edgeIdxTi[2*cnt+1];
+    for (cnt = 0; cnt < static_cast<int>(this->edgeIdxTi.Count() / 2); cnt++) {
+        idx0 = this->edgeIdxTi[2 * cnt + 0];
+        idx1 = this->edgeIdxTi[2 * cnt + 1];
 
-        firstAtomPos.SetX(atomPos[4*idx0+0]);
-        firstAtomPos.SetY(atomPos[4*idx0+1]);
-        firstAtomPos.SetZ(atomPos[4*idx0+2]);
+        firstAtomPos.SetX(atomPos[4 * idx0 + 0]);
+        firstAtomPos.SetY(atomPos[4 * idx0 + 1]);
+        firstAtomPos.SetZ(atomPos[4 * idx0 + 2]);
 
-        secondAtomPos.SetX(atomPos[4*idx1+0]);
-        secondAtomPos.SetY(atomPos[4*idx1+1]);
-        secondAtomPos.SetZ(atomPos[4*idx1+2]);
+        secondAtomPos.SetX(atomPos[4 * idx1 + 0]);
+        secondAtomPos.SetY(atomPos[4 * idx1 + 1]);
+        secondAtomPos.SetZ(atomPos[4 * idx1 + 2]);
 
         // compute the quaternion for the rotation of the cylinder
         dir = secondAtomPos - firstAtomPos;
-        tmpVec.Set( 1.0f, 0.0f, 0.0f);
-        angle = - tmpVec.Angle( dir);
-        ortho = tmpVec.Cross( dir);
+        tmpVec.Set(1.0f, 0.0f, 0.0f);
+        angle = -tmpVec.Angle(dir);
+        ortho = tmpVec.Cross(dir);
         ortho.Normalise();
-        quatC.Set( angle, ortho);
+        quatC.Set(angle, ortho);
         // compute the absolute position 'position' of the cylinder (center point)
-        position = firstAtomPos + (dir/2.0f);
+        position = firstAtomPos + (dir / 2.0f);
 
-        this->inParaCylinders[2*cnt+0] = this->tiStickRadius;
-        this->inParaCylinders[2*cnt+1] = (firstAtomPos-secondAtomPos).Length();
+        this->inParaCylinders[2 * cnt + 0] = this->tiStickRadius;
+        this->inParaCylinders[2 * cnt + 1] = (firstAtomPos - secondAtomPos).Length();
 
-        this->quatCylinders[4*cnt+0] = quatC.GetX();
-        this->quatCylinders[4*cnt+1] = quatC.GetY();
-        this->quatCylinders[4*cnt+2] = quatC.GetZ();
-        this->quatCylinders[4*cnt+3] = quatC.GetW();
+        this->quatCylinders[4 * cnt + 0] = quatC.GetX();
+        this->quatCylinders[4 * cnt + 1] = quatC.GetY();
+        this->quatCylinders[4 * cnt + 2] = quatC.GetZ();
+        this->quatCylinders[4 * cnt + 3] = quatC.GetW();
 
-        this->color1Cylinders[3*cnt+0] = atomCol[3*idx0+0];
-        this->color1Cylinders[3*cnt+1] = atomCol[3*idx0+1];
-        this->color1Cylinders[3*cnt+2] = atomCol[3*idx0+2];
-        this->color2Cylinders[3*cnt+0] = atomCol[3*idx1+0];
-        this->color2Cylinders[3*cnt+1] = atomCol[3*idx1+1];
-        this->color2Cylinders[3*cnt+2] = atomCol[3*idx1+2];
+        this->color1Cylinders[3 * cnt + 0] = atomCol[3 * idx0 + 0];
+        this->color1Cylinders[3 * cnt + 1] = atomCol[3 * idx0 + 1];
+        this->color1Cylinders[3 * cnt + 2] = atomCol[3 * idx0 + 2];
+        this->color2Cylinders[3 * cnt + 0] = atomCol[3 * idx1 + 0];
+        this->color2Cylinders[3 * cnt + 1] = atomCol[3 * idx1 + 1];
+        this->color2Cylinders[3 * cnt + 2] = atomCol[3 * idx1 + 2];
 
-        this->vertCylinders[4*cnt+0] = position.X();
-        this->vertCylinders[4*cnt+1] = position.Y();
-        this->vertCylinders[4*cnt+2] = position.Z();
-        this->vertCylinders[4*cnt+3] = 0.0f;
-
+        this->vertCylinders[4 * cnt + 0] = position.X();
+        this->vertCylinders[4 * cnt + 1] = position.Y();
+        this->vertCylinders[4 * cnt + 2] = position.Z();
+        this->vertCylinders[4 * cnt + 3] = 0.0f;
     }
 
 
     // Get viewpoint parameters for raycasting
-    float viewportStuff[4] = {
-            this->cameraInfo->TileRect().Left(),
-            this->cameraInfo->TileRect().Bottom(),
-            this->cameraInfo->TileRect().Width(),
-            this->cameraInfo->TileRect().Height()};
-    if(viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
-    if(viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
+    float viewportStuff[4] = {0.0f, 0.0f, this->width, this->height};
+    if (viewportStuff[2] < 1.0f)
+        viewportStuff[2] = 1.0f;
+    if (viewportStuff[3] < 1.0f)
+        viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
     glDisable(GL_BLEND);
 
+    auto cp = this->cameraInfo.getPose();
+
     // Enable cylinder shader
     this->cylinderShader.Enable();
     glUniform4fvARB(this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camIn"), 1, cameraInfo->Front().PeekComponents());
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camRight"), 1, cameraInfo->Right().PeekComponents());
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camUp"), 1, cameraInfo->Up().PeekComponents());
+    glUniform3fvARB(this->cylinderShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->cylinderShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->cylinderShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
     this->attribLocInParams = glGetAttribLocationARB(this->cylinderShader, "inParams");
-    this->attribLocQuatC    = glGetAttribLocationARB(this->cylinderShader, "quatC");
-    this->attribLocColor1   = glGetAttribLocationARB(this->cylinderShader, "color1");
-    this->attribLocColor2   = glGetAttribLocationARB(this->cylinderShader, "color2");
+    this->attribLocQuatC = glGetAttribLocationARB(this->cylinderShader, "quatC");
+    this->attribLocColor1 = glGetAttribLocationARB(this->cylinderShader, "color1");
+    this->attribLocColor2 = glGetAttribLocationARB(this->cylinderShader, "color2");
 
     glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -3009,7 +2928,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiStick(
     glVertexAttribPointerARB(this->attribLocColor1, 3, GL_FLOAT, 0, 0, this->color1Cylinders.PeekElements());
     glVertexAttribPointerARB(this->attribLocColor2, 3, GL_FLOAT, 0, 0, this->color2Cylinders.PeekElements());
 
-	glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>((this->edgeIdxTi.Count() / 2)));
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>((this->edgeIdxTi.Count() / 2)));
 
     glDisableVertexAttribArrayARB(this->attribLocInParams);
     glDisableVertexAttribArrayARB(this->attribLocQuatC);
@@ -3034,8 +2953,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
 
     //time_t t = clock();
 
-    Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis, gridYAxis,
-    gridZAxis, gridOrg;
+    Vector<float, 3> gridMinCoord, gridMaxCoord, gridXAxis, gridYAxis, gridZAxis, gridOrg;
     Vector<int, 3> gridDim;
 
     // Init uniform grid
@@ -3045,15 +2963,15 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
     gridMaxCoord[0] = this->bbox.ObjectSpaceBBox().Right();
     gridMaxCoord[1] = this->bbox.ObjectSpaceBBox().Top();
     gridMaxCoord[2] = this->bbox.ObjectSpaceBBox().Front();
-    gridXAxis[0] = gridMaxCoord[0]-gridMinCoord[0];
-    gridYAxis[1] = gridMaxCoord[1]-gridMinCoord[1];
-    gridZAxis[2] = gridMaxCoord[2]-gridMinCoord[2];
-    gridDim[0] = (int) ceil(gridXAxis[0] / this->densGridSpacing);
-    gridDim[1] = (int) ceil(gridYAxis[1] / this->densGridSpacing);
-    gridDim[2] = (int) ceil(gridZAxis[2] / this->densGridSpacing);
-    gridXAxis[0] = (gridDim[0]-1) * this->densGridSpacing;
-    gridYAxis[1] = (gridDim[1]-1) * this->densGridSpacing;
-    gridZAxis[2] = (gridDim[2]-1) * this->densGridSpacing;
+    gridXAxis[0] = gridMaxCoord[0] - gridMinCoord[0];
+    gridYAxis[1] = gridMaxCoord[1] - gridMinCoord[1];
+    gridZAxis[2] = gridMaxCoord[2] - gridMinCoord[2];
+    gridDim[0] = (int)ceil(gridXAxis[0] / this->densGridSpacing);
+    gridDim[1] = (int)ceil(gridYAxis[1] / this->densGridSpacing);
+    gridDim[2] = (int)ceil(gridZAxis[2] / this->densGridSpacing);
+    gridXAxis[0] = (gridDim[0] - 1) * this->densGridSpacing;
+    gridYAxis[1] = (gridDim[1] - 1) * this->densGridSpacing;
+    gridZAxis[2] = (gridDim[2] - 1) * this->densGridSpacing;
     gridMaxCoord[0] = gridMinCoord[0] + gridXAxis[0];
     gridMaxCoord[1] = gridMinCoord[1] + gridYAxis[1];
     gridMaxCoord[2] = gridMinCoord[2] + gridZAxis[2];
@@ -3061,36 +2979,40 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
     gridOrg[1] = gridMinCoord[1];
     gridOrg[2] = gridMinCoord[2];
 
-    if(!this->cudaMC) {
+    if (!this->cudaMC) {
         this->cudaMC = new CUDAMarchingCubes();
     }
 
     uint3 gridDimAlt = make_uint3(gridDim.X(), gridDim.Y(), gridDim.Z());
-    float3 gridOrgAlt = make_float3(gridOrg.X(),gridOrg.Y(), gridOrg.Z());
+    float3 gridOrgAlt = make_float3(gridOrg.X(), gridOrg.Y(), gridOrg.Z());
     float3 gridBBox = make_float3(
-            gridMaxCoord[0] - gridMinCoord[0],
-            gridMaxCoord[1] - gridMinCoord[1],
-            gridMaxCoord[2] - gridMinCoord[2]);
+        gridMaxCoord[0] - gridMinCoord[0], gridMaxCoord[1] - gridMinCoord[1], gridMaxCoord[2] - gridMinCoord[2]);
 
     uint3 subVolStart;
-    subVolStart.x = static_cast<unsigned int>(((this->posXMin - gridOrg[0])/gridXAxis[0])*gridDim.X());
-    subVolStart.y = static_cast<unsigned int>(((this->posYMin - gridOrg[1])/gridYAxis[1])*gridDim.Y());
-    subVolStart.z = static_cast<unsigned int>(((this->posZMin - gridOrg[2])/gridZAxis[2])*gridDim.Z());
+    subVolStart.x = static_cast<unsigned int>(((this->posXMin - gridOrg[0]) / gridXAxis[0]) * gridDim.X());
+    subVolStart.y = static_cast<unsigned int>(((this->posYMin - gridOrg[1]) / gridYAxis[1]) * gridDim.Y());
+    subVolStart.z = static_cast<unsigned int>(((this->posZMin - gridOrg[2]) / gridZAxis[2]) * gridDim.Z());
 
     uint3 subVolEnd;
-    subVolEnd.x = static_cast<unsigned int>(((this->posXMax - gridOrg[0])/gridXAxis[0])*gridDim.X());
-    subVolEnd.y = static_cast<unsigned int>(((this->posYMax - gridOrg[1])/gridYAxis[1])*gridDim.Y());
-    subVolEnd.z = static_cast<unsigned int>(((this->posZMax - gridOrg[2])/gridZAxis[2])*gridDim.Z());
+    subVolEnd.x = static_cast<unsigned int>(((this->posXMax - gridOrg[0]) / gridXAxis[0]) * gridDim.X());
+    subVolEnd.y = static_cast<unsigned int>(((this->posYMax - gridOrg[1]) / gridYAxis[1]) * gridDim.Y());
+    subVolEnd.z = static_cast<unsigned int>(((this->posZMax - gridOrg[2]) / gridZAxis[2]) * gridDim.Z());
 
-    if(this->posXMax > gridMaxCoord[0]) this->posXMax = gridMaxCoord[0];
-    if(this->posYMax > gridMaxCoord[1]) this->posYMax = gridMaxCoord[1];
-    if(this->posZMax > gridMaxCoord[2]) this->posZMax = gridMaxCoord[2];
-    if(this->posXMin < gridMinCoord[0]) this->posXMin = gridMinCoord[0];
-    if(this->posYMin < gridMinCoord[1]) this->posYMin = gridMinCoord[1];
-    if(this->posZMin < gridMinCoord[2]) this->posZMin = gridMinCoord[2];
+    if (this->posXMax > gridMaxCoord[0])
+        this->posXMax = gridMaxCoord[0];
+    if (this->posYMax > gridMaxCoord[1])
+        this->posYMax = gridMaxCoord[1];
+    if (this->posZMax > gridMaxCoord[2])
+        this->posZMax = gridMaxCoord[2];
+    if (this->posXMin < gridMinCoord[0])
+        this->posXMin = gridMinCoord[0];
+    if (this->posYMin < gridMinCoord[1])
+        this->posYMin = gridMinCoord[1];
+    if (this->posZMin < gridMinCoord[2])
+        this->posZMin = gridMinCoord[2];
 
     // TODO Make NVertices dependent of actual subvolume
-    unsigned int nVerticesMC = (gridDim.X()*gridDim.Y()*gridDim.Z())/2*3*6;
+    unsigned int nVerticesMC = (gridDim.X() * gridDim.Y() * gridDim.Z()) / 2 * 3 * 6;
 
     //printf("Subvolume start (%f %f %f) (%u %u %u)\n", this->volXMin, this->volYMin,
     //      this->volZMin, subVolStart.x, subVolStart.y, subVolStart.z); // DEBUG
@@ -3098,21 +3020,25 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
     //printf("Subvolume end (%f %f %f) (%u %u %u)\n", this->volXMax, this->volYMax,
     //this->volZMax, subVolEnd.x, subVolEnd.y, subVolEnd.z); // DEBUG
 
-    if(nVerticesMC != this->nVerticesMCOld) {
+    if (nVerticesMC != this->nVerticesMCOld) {
         // Free if necessary
-        if(this->mcVertOut_D != NULL) checkCudaErrors(cudaFree(this->mcVertOut_D));
-        if(this->mcNormOut_D != NULL) checkCudaErrors(cudaFree(this->mcNormOut_D));
-        if(this->mcVertOut != NULL) delete[] this->mcVertOut;
-        if(this->mcNormOut != NULL) delete[] this->mcNormOut;
+        if (this->mcVertOut_D != NULL)
+            checkCudaErrors(cudaFree(this->mcVertOut_D));
+        if (this->mcNormOut_D != NULL)
+            checkCudaErrors(cudaFree(this->mcNormOut_D));
+        if (this->mcVertOut != NULL)
+            delete[] this->mcVertOut;
+        if (this->mcNormOut != NULL)
+            delete[] this->mcNormOut;
         // Allocate memory
-        checkCudaErrors(cudaMalloc((void **)&this->mcVertOut_D, nVerticesMC*sizeof(float3)));
-        checkCudaErrors(cudaMalloc((void **)&this->mcNormOut_D, nVerticesMC*sizeof(float3)));
-        this->mcVertOut = new float[nVerticesMC*3];
-        this->mcNormOut = new float[nVerticesMC*3];
+        checkCudaErrors(cudaMalloc((void**)&this->mcVertOut_D, nVerticesMC * sizeof(float3)));
+        checkCudaErrors(cudaMalloc((void**)&this->mcNormOut_D, nVerticesMC * sizeof(float3)));
+        this->mcVertOut = new float[nVerticesMC * 3];
+        this->mcNormOut = new float[nVerticesMC * 3];
         printf("(Re)allocating of memory done.");
     }
 
-    CUDAQuickSurf *cqs = (CUDAQuickSurf *) this->cudaqsurf;
+    CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
 
     // Setup
     if (!this->cudaMC->Initialize(gridDimAlt)) {
@@ -3120,14 +3046,12 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
     }
     if (!this->cudaMC->SetVolumeData(
             //this->gridCurlMagD,
-            cqs->getMap(),
-            NULL, gridDimAlt, gridOrgAlt, gridBBox, true)) {
+            cqs->getMap(), (float3*)nullptr, gridDimAlt, gridOrgAlt, gridBBox, true)) {
         return false;
     }
     this->cudaMC->SetSubVolume(subVolStart, subVolEnd);
     this->cudaMC->SetIsovalue(this->volIsoVal);
-    this->cudaMC->computeIsosurface(this->mcVertOut_D,
-            this->mcNormOut_D, NULL, nVerticesMC);
+    this->cudaMC->computeIsosurface(this->mcVertOut_D, this->mcNormOut_D, (float3*)nullptr, nVerticesMC);
     this->cudaMC->Cleanup();
 
     //printf("Number of vertices %u\n", this->cudaMC->GetVertexCount());
@@ -3152,22 +3076,16 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
 
     // Copy data to host
 
-    checkCudaErrors(cudaMemcpy(
-            this->mcVertOut,
-            this->mcVertOut_D,
-            this->cudaMC->GetVertexCount()*3*sizeof(float),
-            cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(this->mcVertOut, this->mcVertOut_D, this->cudaMC->GetVertexCount() * 3 * sizeof(float),
+        cudaMemcpyDeviceToHost));
 
-    checkCudaErrors(cudaMemcpy(
-            this->mcNormOut,
-            this->mcNormOut_D,
-            this->cudaMC->GetVertexCount()*3*sizeof(float),
-            cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(this->mcNormOut, this->mcNormOut_D, this->cudaMC->GetVertexCount() * 3 * sizeof(float),
+        cudaMemcpyDeviceToHost));
 
-   /* Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
-            "Time for CUDA memcopy %f",
-            (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
-    t = clock();*/
+    /* Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+             "Time for CUDA memcopy %f",
+             (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
+     t = clock();*/
 
 
     // Render
@@ -3222,20 +3140,26 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderVolCube() {
     gridMaxCoord[2] = this->bbox.ObjectSpaceBBox().Front();
 
 #if (defined(NOCLIP_ISOSURF) && (NOCLIP_ISOSURF))
-    this->posXMin -= this->maxLenDiff*this->densGridRad;
-    this->posYMin -= this->maxLenDiff*this->densGridRad;
-    this->posZMin -= this->maxLenDiff*this->densGridRad;
-    this->posXMax += this->maxLenDiff*this->densGridRad;
-    this->posYMax += this->maxLenDiff*this->densGridRad;
-    this->posZMax += this->maxLenDiff*this->densGridRad;
+    this->posXMin -= this->maxLenDiff * this->densGridRad;
+    this->posYMin -= this->maxLenDiff * this->densGridRad;
+    this->posZMin -= this->maxLenDiff * this->densGridRad;
+    this->posXMax += this->maxLenDiff * this->densGridRad;
+    this->posYMax += this->maxLenDiff * this->densGridRad;
+    this->posZMax += this->maxLenDiff * this->densGridRad;
 #endif
 
-    if(this->posXMin < gridMinCoord[0])this->posXMin = gridMinCoord[0];
-    if(this->posYMin < gridMinCoord[1])this->posYMin = gridMinCoord[1];
-    if(this->posZMin < gridMinCoord[2])this->posZMin = gridMinCoord[2];
-    if(this->posXMax > gridMaxCoord[0])this->posXMax = gridMaxCoord[0];
-    if(this->posYMax > gridMaxCoord[1])this->posYMax = gridMaxCoord[1];
-    if(this->posZMax > gridMaxCoord[2])this->posZMax = gridMaxCoord[2];
+    if (this->posXMin < gridMinCoord[0])
+        this->posXMin = gridMinCoord[0];
+    if (this->posYMin < gridMinCoord[1])
+        this->posYMin = gridMinCoord[1];
+    if (this->posZMin < gridMinCoord[2])
+        this->posZMin = gridMinCoord[2];
+    if (this->posXMax > gridMaxCoord[0])
+        this->posXMax = gridMaxCoord[0];
+    if (this->posYMax > gridMaxCoord[1])
+        this->posYMax = gridMaxCoord[1];
+    if (this->posZMax > gridMaxCoord[2])
+        this->posZMax = gridMaxCoord[2];
 
     /*printf("Bounding box:\n");
     printf("    LEFT %f, RIGHT %f\n", this->bbox.ObjectSpaceBBox().Left(), this->bbox.ObjectSpaceBBox().Right());
@@ -3243,12 +3167,12 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderVolCube() {
     printf("    BACK %f, FRONT %f\n", this->bbox.ObjectSpaceBBox().Back(), this->bbox.ObjectSpaceBBox().Front());*/
 
     // Cut off border areas according to filter parameters
-    float minXTex = (this->posXMin-gridMinCoord.X())/(gridMaxCoord.X()-gridMinCoord.X());
-    float minYTex = (this->posYMin-gridMinCoord.Y())/(gridMaxCoord.Y()-gridMinCoord.Y());
-    float minZTex = (this->posZMin-gridMinCoord.Z())/(gridMaxCoord.Z()-gridMinCoord.Z());
-    float maxXTex = (this->posXMax-gridMinCoord.X())/(gridMaxCoord.X()-gridMinCoord.X());
-    float maxYTex = (this->posYMax-gridMinCoord.Y())/(gridMaxCoord.Y()-gridMinCoord.Y());
-    float maxZTex = (this->posZMax-gridMinCoord.Z())/(gridMaxCoord.Z()-gridMinCoord.Z());
+    float minXTex = (this->posXMin - gridMinCoord.X()) / (gridMaxCoord.X() - gridMinCoord.X());
+    float minYTex = (this->posYMin - gridMinCoord.Y()) / (gridMaxCoord.Y() - gridMinCoord.Y());
+    float minZTex = (this->posZMin - gridMinCoord.Z()) / (gridMaxCoord.Z() - gridMinCoord.Z());
+    float maxXTex = (this->posXMax - gridMinCoord.X()) / (gridMaxCoord.X() - gridMinCoord.X());
+    float maxYTex = (this->posYMax - gridMinCoord.Y()) / (gridMaxCoord.Y() - gridMinCoord.Y());
+    float maxZTex = (this->posZMax - gridMinCoord.Z()) / (gridMaxCoord.Z() - gridMinCoord.Z());
 
 
     glBegin(GL_QUADS);
@@ -3357,12 +3281,11 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderVolCube() {
     glTexCoord3f(minXTex, minYTex, maxZTex);
     glVertex3f(this->posXMin, this->posYMin, this->posZMax);
 
-    glColor3f(minXTex, minYTex,minZTex);
+    glColor3f(minXTex, minYTex, minZTex);
     glTexCoord3f(minXTex, minYTex, minZTex);
     glVertex3f(this->posXMin, this->posYMin, this->posZMin);
 
     glEnd();
-
 }
 
 
@@ -3372,17 +3295,17 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderVolCube() {
 bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
     GLenum err;
 
-    if(!glIsTexture(this->uniGridTex)||!glIsTexture(this->uniGridDensityTex)) {
+    if (!glIsTexture(this->uniGridTex) || !glIsTexture(this->uniGridDensityTex)) {
         return false;
     }
 
     // Get current viewport and recreate fbo if necessary
     float curVP[4];
     glGetFloatv(GL_VIEWPORT, curVP);
-    if((curVP[2] != this->fboDim.X()) || (curVP[3] != this->fboDim.Y())) {
+    if ((curVP[2] != this->fboDim.X()) || (curVP[3] != this->fboDim.Y())) {
         this->fboDim.SetX(static_cast<int>(curVP[2]));
         this->fboDim.SetY(static_cast<int>(curVP[3]));
-        if(!this->CreateFbo(static_cast<UINT>(curVP[2]), static_cast<UINT>(curVP[3])))
+        if (!this->CreateFbo(static_cast<UINT>(curVP[2]), static_cast<UINT>(curVP[3])))
             return false;
     }
 
@@ -3396,8 +3319,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_TEXTURE_3D);
 
-    this->rcFbo.EnableMultiple(3, GL_COLOR_ATTACHMENT0_EXT,
-            GL_COLOR_ATTACHMENT1_EXT, GL_COLOR_ATTACHMENT2_EXT);
+    this->rcFbo.EnableMultiple(3, GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_COLOR_ATTACHMENT2_EXT);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -3416,6 +3338,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
 
+    auto cv = this->cameraInfo.get<core::view::Camera::PerspectiveParameters>();
+
     this->rcShader.Enable();
     glUniform1iARB(this->rcShader.ParameterLocation("tcBuff"), 0);
     glUniform1iARB(this->rcShader.ParameterLocation("densityTex"), 1);
@@ -3427,7 +3351,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
     glUniform1iARB(this->rcShader.ParameterLocation("randNoiseTex"), 7);
     glUniform1iARB(this->rcShader.ParameterLocation("curlMagTex"), 8);
     glUniform1iARB(this->rcShader.ParameterLocation("colorTex"), 9);
-    glUniform1fARB(this->rcShader.ParameterLocation("delta"), this->volDelta*0.01f);
+    glUniform1fARB(this->rcShader.ParameterLocation("delta"), this->volDelta * 0.01f);
     glUniform1fARB(this->rcShader.ParameterLocation("isoVal"), this->volIsoVal);
     glUniform1fARB(this->rcShader.ParameterLocation("alphaScl"), this->volAlphaScl);
     glUniform1fARB(this->rcShader.ParameterLocation("licDirScl"), this->volLicDirScl);
@@ -3435,8 +3359,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
     glUniform1fARB(this->rcShader.ParameterLocation("licContrast"), this->volLicContrastStretching);
     glUniform1fARB(this->rcShader.ParameterLocation("licBright"), this->volLicBright);
     glUniform1fARB(this->rcShader.ParameterLocation("licTCScl"), this->volLicTCScl);
-	glUniform4fARB(this->rcShader.ParameterLocation("viewportDim"), static_cast<float>(fboDim.X()), static_cast<float>(fboDim.Y()),
-            this->cameraInfo->NearClip(), this->cameraInfo->FarClip());
+    glUniform4fARB(this->rcShader.ParameterLocation("viewportDim"), static_cast<float>(fboDim.X()),
+        static_cast<float>(fboDim.Y()), cv.near_plane, cv.far_plane);
     glUniform1iARB(this->rcShader.ParameterLocation("vColorMode"), this->vColorMode);
     glUniform1iARB(this->rcShader.ParameterLocation("rayMarchTex"), this->rmTex);
 
@@ -3482,10 +3406,9 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
 
     // Check for opengl error
     err = glGetError();
-    if(err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "%s:RenderVolume:: glError %s \n", this->ClassName(),
-                gluErrorString(err));
+    if (err != GL_NO_ERROR) {
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s:RenderVolume:: glError %s \n", this->ClassName(), gluErrorString(err));
         return false;
     }
 
@@ -3493,31 +3416,27 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
 }
 
 
-bool protein_cuda::CrystalStructureVolumeRenderer::SetupAtomColors(
-		const protein_calls::CrystalStructureDataCall *dc) {
+bool protein_cuda::CrystalStructureVolumeRenderer::SetupAtomColors(const protein_calls::CrystalStructureDataCall* dc) {
 
-    this->atomColor.SetCount(dc->GetAtomCnt()*3);
+    this->atomColor.SetCount(dc->GetAtomCnt() * 3);
 #pragma omp parallel for
-	for (int at = 0; at < (int)dc->GetAtomCnt(); at++) {
-		if (dc->GetAtomType()[at] == protein_calls::CrystalStructureDataCall::BA) { // Green
-            this->atomColor[at*3+0] = 0.0f;
-            this->atomColor[at*3+1] = 0.6f;
-            this->atomColor[at*3+2] = 0.4f;
-        }
-		else if (dc->GetAtomType()[at] == protein_calls::CrystalStructureDataCall::TI) { // Light grey
-            this->atomColor[at*3+0] = 0.8f;
-            this->atomColor[at*3+1] = 0.8f;
-            this->atomColor[at*3+2] = 0.8f;
-        }
-		else if (dc->GetAtomType()[at] == protein_calls::CrystalStructureDataCall::O) { // Red
-            this->atomColor[at*3+0] = 1.0f;
-            this->atomColor[at*3+1] = 0.0f;
-            this->atomColor[at*3+2] = 0.0f;
-        }
-        else { // White
-            this->atomColor[at*3+0] = 0.0f;
-            this->atomColor[at*3+1] = 0.0f;
-            this->atomColor[at*3+2] = 0.0f;
+    for (int at = 0; at < (int)dc->GetAtomCnt(); at++) {
+        if (dc->GetAtomType()[at] == protein_calls::CrystalStructureDataCall::BA) { // Green
+            this->atomColor[at * 3 + 0] = 0.0f;
+            this->atomColor[at * 3 + 1] = 0.6f;
+            this->atomColor[at * 3 + 2] = 0.4f;
+        } else if (dc->GetAtomType()[at] == protein_calls::CrystalStructureDataCall::TI) { // Light grey
+            this->atomColor[at * 3 + 0] = 0.8f;
+            this->atomColor[at * 3 + 1] = 0.8f;
+            this->atomColor[at * 3 + 2] = 0.8f;
+        } else if (dc->GetAtomType()[at] == protein_calls::CrystalStructureDataCall::O) { // Red
+            this->atomColor[at * 3 + 0] = 1.0f;
+            this->atomColor[at * 3 + 1] = 0.0f;
+            this->atomColor[at * 3 + 2] = 0.0f;
+        } else { // White
+            this->atomColor[at * 3 + 0] = 0.0f;
+            this->atomColor[at * 3 + 1] = 0.0f;
+            this->atomColor[at * 3 + 2] = 0.0f;
         }
     }
 
@@ -3528,8 +3447,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::SetupAtomColors(
 /*
  * protein_cuda::CrystalStructureVolumeRenderer::updateParams
  */
-bool protein_cuda::CrystalStructureVolumeRenderer::UpdateParams(
-		const protein_calls::CrystalStructureDataCall *dc) {
+bool protein_cuda::CrystalStructureVolumeRenderer::UpdateParams(const protein_calls::CrystalStructureDataCall* dc) {
 
     // General params
 
@@ -3591,7 +3509,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::UpdateParams(
     // Ba edge render mode
     if (this->edgeBaRenderModeParam.IsDirty()) {
         this->edgeBaRenderModeParam.ResetDirty();
-        this->edgeBaRM = static_cast<EdgeBaRenderMode>(this->edgeBaRenderModeParam.Param<core::param::EnumParam>()->Value());
+        this->edgeBaRM =
+            static_cast<EdgeBaRenderMode>(this->edgeBaRenderModeParam.Param<core::param::EnumParam>()->Value());
     }
 
     // Ba Stick radius
@@ -3603,7 +3522,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::UpdateParams(
     // Ti edge render mode
     if (this->edgeTiRenderModeParam.IsDirty()) {
         this->edgeTiRenderModeParam.ResetDirty();
-        this->edgeTiRM = static_cast<EdgeTiRenderMode>(this->edgeTiRenderModeParam.Param<core::param::EnumParam>()->Value());
+        this->edgeTiRM =
+            static_cast<EdgeTiRenderMode>(this->edgeTiRenderModeParam.Param<core::param::EnumParam>()->Value());
     }
 
     // Ti stick radius
@@ -3732,10 +3652,10 @@ bool protein_cuda::CrystalStructureVolumeRenderer::UpdateParams(
     // Arrow color mode
     if (this->arrColorModeParam.IsDirty()) {
         this->arrColorModeParam.ResetDirty();
-        this->arrColorMode = static_cast<ArrowColorMode>(this->arrColorModeParam.Param<core::param::EnumParam>()->Value());
+        this->arrColorMode =
+            static_cast<ArrowColorMode>(this->arrColorModeParam.Param<core::param::EnumParam>()->Value());
         this->recalcArrowData = true;
     }
-
 
 
     // Arrow color mode
@@ -3750,7 +3670,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::UpdateParams(
     // Grid render mode
     if (this->sliceRenderModeParam.IsDirty()) {
         this->sliceRenderModeParam.ResetDirty();
-        this->sliceRM = static_cast<SliceRenderMode>(this->sliceRenderModeParam.Param<core::param::EnumParam>()->Value());
+        this->sliceRM =
+            static_cast<SliceRenderMode>(this->sliceRenderModeParam.Param<core::param::EnumParam>()->Value());
     }
 
     // Grid spacing
@@ -3858,7 +3779,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::UpdateParams(
         this->licRandBuffSize = this->licRandBuffSizeParam.Param<core::param::IntParam>()->Value();
         this->licRandBuffSizeParam.ResetDirty();
         // (Re)create random noise texture for LIC
-        if(!this->InitLIC()) return false;
+        if (!this->InitLIC())
+            return false;
     }
 
     // LIC contrast stretching
@@ -3920,7 +3842,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::UpdateParams(
     if (this->volIsoValParam.IsDirty()) {
         this->volIsoVal = this->volIsoValParam.Param<core::param::FloatParam>()->Value();
         this->volIsoValParam.ResetDirty();
-        if(this->rmTex == DENSITY) {
+        if (this->rmTex == DENSITY) {
             this->recalcDensityGrid = true;
         }
     }
@@ -3994,14 +3916,15 @@ bool protein_cuda::CrystalStructureVolumeRenderer::UpdateParams(
     // Fog colour
     if (this->fogColourParam.IsDirty()) {
         this->fogColourParam.ResetDirty();
-        core::utility::ColourParser::FromString(this->fogColourParam.Param<core::param::StringParam>()->Value(),
+        core::utility::ColourParser::FromString(this->fogColourParam.Param<core::param::StringParam>()->Value().c_str(),
             this->fogColour[0], fogColour[1], fogColour[2]);
         glFogfv(GL_FOG_COLOR, this->fogColour);
     }
 
     // VTK mesh file
-    if( this->meshFileParam.IsDirty() ) {
-        this->renderMesh = this->loadVTKMesh( this->meshFileParam.Param<core::param::FilePathParam>()->Value());
+    if (this->meshFileParam.IsDirty()) {
+        this->renderMesh =
+            this->loadVTKMesh(this->meshFileParam.Param<core::param::FilePathParam>()->Value().string().c_str());
         this->meshFileParam.ResetDirty();
     }
 
@@ -4012,15 +3935,10 @@ bool protein_cuda::CrystalStructureVolumeRenderer::UpdateParams(
 /*
  * protein_cuda::CrystalStructureVolumeRenderer::calcCellVolume
  */
-float protein_cuda::CrystalStructureVolumeRenderer::calcCellVolume(
-        vislib::math::Vector<float, 3> A,
-        vislib::math::Vector<float, 3> B,
-        vislib::math::Vector<float, 3> C,
-        vislib::math::Vector<float, 3> D,
-        vislib::math::Vector<float, 3> E,
-        vislib::math::Vector<float, 3> F,
-        vislib::math::Vector<float, 3> G,
-        vislib::math::Vector<float, 3> H) {
+float protein_cuda::CrystalStructureVolumeRenderer::calcCellVolume(vislib::math::Vector<float, 3> A,
+    vislib::math::Vector<float, 3> B, vislib::math::Vector<float, 3> C, vislib::math::Vector<float, 3> D,
+    vislib::math::Vector<float, 3> E, vislib::math::Vector<float, 3> F, vislib::math::Vector<float, 3> G,
+    vislib::math::Vector<float, 3> H) {
 
     float res = 0.0f;
 
@@ -4037,18 +3955,15 @@ float protein_cuda::CrystalStructureVolumeRenderer::calcCellVolume(
 /*
  * protein_cuda::CrystalStructureVolumeRenderer::calcCellTetrahedron
  */
-float protein_cuda::CrystalStructureVolumeRenderer::calcVolTetrahedron(
-        vislib::math::Vector<float, 3> A,
-        vislib::math::Vector<float, 3> B,
-        vislib::math::Vector<float, 3> C,
-        vislib::math::Vector<float, 3> D) {
+float protein_cuda::CrystalStructureVolumeRenderer::calcVolTetrahedron(vislib::math::Vector<float, 3> A,
+    vislib::math::Vector<float, 3> B, vislib::math::Vector<float, 3> C, vislib::math::Vector<float, 3> D) {
 
     using namespace vislib;
     using namespace vislib::math;
 
-    Vector <float, 3> vecA = B-A;
-    Vector <float, 3> vecB = C-A;
-    Vector <float, 3> vecC = D-A;
+    Vector<float, 3> vecA = B - A;
+    Vector<float, 3> vecB = C - A;
+    Vector<float, 3> vecC = D - A;
 
     float res = fabs(vecA.Cross(vecB).Dot(vecC));
     res /= 6.0f;
@@ -4075,21 +3990,20 @@ vislib::math::Vector<float, 3> protein_cuda::CrystalStructureVolumeRenderer::get
 
     // Calc color
     Vector<float, 3> colRes;
-    if(val < 0.5f) {
+    if (val < 0.5f) {
         val *= 2.0f;
-        colRes = val*colWhite + (1.0f - val)*colBlue;
-    }
-    else {
+        colRes = val * colWhite + (1.0f - val) * colBlue;
+    } else {
         val -= 0.5;
         val *= 2.0f;
-        colRes = val*colRed + (1.0f - val)*colWhite;
+        colRes = val * colRed + (1.0f - val) * colWhite;
     }
     //printf("color output (%f %f %f)\n ", colRes.X(), colRes.Y(), colRes.Z()); // DEBUG
 
     return colRes;
 }
 
-bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA filename ) {
+bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh(vislib::StringA filename) {
     // double colR, double colG, double colB, bool flipNormals, bool smoothNormals)
     //
     // reads VTK format, from Sadlo's read_geom_VTK()
@@ -4108,7 +4022,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA 
     bool flipNormals = false;
     bool smoothNormals = true;
 
-    FILE *fp = fopen( filename.PeekBuffer(), "r");
+    FILE* fp = fopen(filename.PeekBuffer(), "r");
     if (!fp) {
         printf("could not open input file %s\n", filename.PeekBuffer());
         return 1; // fail
@@ -4117,13 +4031,10 @@ bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA 
     const int bufSize = 4096;
     char buf1[bufSize], buf2[bufSize], buf3[bufSize], buf4[bufSize], buf5[bufSize], buf6[bufSize];
     fgets(buf1, bufSize, fp);
-    sscanf(buf1,"%s%s%s%s%s", buf2, buf3, buf4, buf5, buf6);
+    sscanf(buf1, "%s%s%s%s%s", buf2, buf3, buf4, buf5, buf6);
 
-    if (strcmp(buf2, "#") != 0 ||
-            strcmp(buf3, "vtk") != 0 ||
-            strcmp(buf4, "DataFile") != 0 ||
-            strcmp(buf5, "Version") != 0 ||
-            (strcmp(buf6, "1.0") != 0 && strcmp(buf6, "2.0"))) {
+    if (strcmp(buf2, "#") != 0 || strcmp(buf3, "vtk") != 0 || strcmp(buf4, "DataFile") != 0 ||
+        strcmp(buf5, "Version") != 0 || (strcmp(buf6, "1.0") != 0 && strcmp(buf6, "2.0"))) {
         printf("unsupported file format\n");
         fclose(fp);
         return 1; // fail
@@ -4131,7 +4042,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA 
 
     // skip description // ### this fails if description longer than bufSize
     fgets(buf1, bufSize, fp);
-    if (strncmp(buf1,"Description", strlen("Description")) != 0) {
+    if (strncmp(buf1, "Description", strlen("Description")) != 0) {
         printf("missing Description entry, aborting\n");
         fclose(fp);
         return 1; // fail
@@ -4146,7 +4057,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA 
 
     fgets(buf1, bufSize, fp);
     // ### HACK, skipping empty lines only here
-    while (strlen(buf1) == 1) fgets(buf1, bufSize, fp);
+    while (strlen(buf1) == 1)
+        fgets(buf1, bufSize, fp);
     if (strncmp(buf1, "DATASET POLYDATA", strlen("DATASET POLYDATA") != 0)) {
         printf("not \"DATASET POLYDATA\" type, aborting\n");
         fclose(fp);
@@ -4156,22 +4068,21 @@ bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA 
     int numVertices;
     fgets(buf1, bufSize, fp);
     sscanf(buf1, "%s%d%s", buf2, &numVertices, buf3);
-    if (strncmp(buf2, "POINTS", strlen("POINTS") != 0) ||
-            strncmp(buf3, "float", strlen("float") != 0)) {
+    if (strncmp(buf2, "POINTS", strlen("POINTS") != 0) || strncmp(buf3, "float", strlen("float") != 0)) {
         printf("expecting POINTS of type \"float\", aborting\n");
         fclose(fp);
         return 1; // fail
     }
 
     // read vertices
-    meshVertices.SetCount( 0);
-    meshVertices.SetCapacityIncrement( 1000);
-    meshVertices.Resize( numVertices * 3);
+    meshVertices.SetCount(0);
+    meshVertices.SetCapacityIncrement(1000);
+    meshVertices.Resize(numVertices * 3);
 
-    for (int v=0; v<numVertices; v++) {
+    for (int v = 0; v < numVertices; v++) {
         fgets(buf1, bufSize, fp);
         double verts[3];
-        sscanf(buf1, "%lf%lf%lf", verts+0, verts+1, verts+2);
+        sscanf(buf1, "%lf%lf%lf", verts + 0, verts + 1, verts + 2);
         meshVertices.Add(verts[0]);
         meshVertices.Add(verts[1]);
         meshVertices.Add(verts[2]);
@@ -4186,18 +4097,19 @@ bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA 
     int linesEntries = 0; // this is the complete connectivity info of lines, incl. the counts of vertices per line
     fgets(buf1, bufSize, fp);
     // ### HACK, skipping empty lines only here
-    while (strlen(buf1) == 1) fgets(buf1, bufSize, fp);
+    while (strlen(buf1) == 1)
+        fgets(buf1, bufSize, fp);
     sscanf(buf1, "%s%d%d", buf2, &numLines, &linesEntries);
     if (strncmp(buf2, "LINES", strlen("LINES")) != 0) {
         numLines = 0;
     }
 
     if (numLines > 0) {
-        for (int l=0; l<numLines; l++) {
+        for (int l = 0; l < numLines; l++) {
             //std::vector<int> line;
             int lineSize;
             fscanf(fp, "%d", &lineSize);
-            for (int e=0; e<lineSize; e++) {
+            for (int e = 0; e < lineSize; e++) {
                 int w;
                 fscanf(fp, "%d", &w);
                 //line.push_back(w);
@@ -4210,11 +4122,12 @@ bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA 
 
     // read polygons, if any
     //std::vector<std::vector<int> > polygons;
-    meshFaces.SetCount( 0);
-    meshFaces.SetCapacityIncrement( 1000);
+    meshFaces.SetCount(0);
+    meshFaces.SetCapacityIncrement(1000);
 
     int numPolygons = 0;
-    int polygonsEntries = 0; // this is the complete connectivity info of polygons, incl. the counts of vertices per polygon
+    int polygonsEntries =
+        0;              // this is the complete connectivity info of polygons, incl. the counts of vertices per polygon
     if (numLines > 0) { // if no lines read, buf1 already contains line
         buf1[0] = '\0';
         fgets(buf1, bufSize, fp);
@@ -4229,19 +4142,20 @@ bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA 
         numPolygons = 0;
     }
 
-    meshFaces.Resize( numPolygons * 3);
+    meshFaces.Resize(numPolygons * 3);
 
     if (numPolygons > 0) {
-        for (int p=0; p<numPolygons; p++) {
+        for (int p = 0; p < numPolygons; p++) {
             std::vector<int> polygon;
             int polygonSize;
             fscanf(fp, "%d", &polygonSize);
-            for (int e=0; e<polygonSize; e++) {
-                if( e > 2 ) continue;
+            for (int e = 0; e < polygonSize; e++) {
+                if (e > 2)
+                    continue;
                 int w;
                 fscanf(fp, "%d", &w);
                 //polygon.push_back(w);
-                meshFaces.Add( w);
+                meshFaces.Add(w);
             }
             //polygons.push_back(polygon);
         }
@@ -4255,42 +4169,42 @@ bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA 
     if (numPolygons > 0) {
 
         //float *normals = new float[vertices.size()];
-        this->meshNormals.SetCount( meshVertices.Count());
+        this->meshNormals.SetCount(meshVertices.Count());
 
-        for (int i=0; i<meshVertices.Count(); i++) {
+        for (int i = 0; i < meshVertices.Count(); i++) {
             meshNormals[i] = 0.0;
         }
 
 
-        for (int p=0; p<numPolygons; p++) {
+        for (int p = 0; p < numPolygons; p++) {
 
             float normVerts[9];
-            normVerts[0] = static_cast<float>(transX + scale * meshVertices[meshFaces[p*3+0]*3+0]);
-            normVerts[1] = static_cast<float>(transY + scale * meshVertices[meshFaces[p*3+0]*3+1]);
-            normVerts[2] = static_cast<float>(transZ + scale * meshVertices[meshFaces[p*3+0]*3+2]);
-            normVerts[3] = static_cast<float>(transX + scale * meshVertices[meshFaces[p*3+1]*3+0]);
-            normVerts[4] = static_cast<float>(transY + scale * meshVertices[meshFaces[p*3+1]*3+1]);
-            normVerts[5] = static_cast<float>(transZ + scale * meshVertices[meshFaces[p*3+1]*3+2]);
-            normVerts[6] = static_cast<float>(transX + scale * meshVertices[meshFaces[p*3+2]*3+0]);
-            normVerts[7] = static_cast<float>(transY + scale * meshVertices[meshFaces[p*3+2]*3+1]);
-            normVerts[8] = static_cast<float>(transZ + scale * meshVertices[meshFaces[p*3+2]*3+2]);
+            normVerts[0] = static_cast<float>(transX + scale * meshVertices[meshFaces[p * 3 + 0] * 3 + 0]);
+            normVerts[1] = static_cast<float>(transY + scale * meshVertices[meshFaces[p * 3 + 0] * 3 + 1]);
+            normVerts[2] = static_cast<float>(transZ + scale * meshVertices[meshFaces[p * 3 + 0] * 3 + 2]);
+            normVerts[3] = static_cast<float>(transX + scale * meshVertices[meshFaces[p * 3 + 1] * 3 + 0]);
+            normVerts[4] = static_cast<float>(transY + scale * meshVertices[meshFaces[p * 3 + 1] * 3 + 1]);
+            normVerts[5] = static_cast<float>(transZ + scale * meshVertices[meshFaces[p * 3 + 1] * 3 + 2]);
+            normVerts[6] = static_cast<float>(transX + scale * meshVertices[meshFaces[p * 3 + 2] * 3 + 0]);
+            normVerts[7] = static_cast<float>(transY + scale * meshVertices[meshFaces[p * 3 + 2] * 3 + 1]);
+            normVerts[8] = static_cast<float>(transZ + scale * meshVertices[meshFaces[p * 3 + 2] * 3 + 2]);
 
             float norm[3];
             {
                 float v1[3], v2[3];
-                v1[0] = normVerts[1*3 + 0] - normVerts[0*3 + 0];
-                v1[1] = normVerts[1*3 + 1] - normVerts[0*3 + 1];
-                v1[2] = normVerts[1*3 + 2] - normVerts[0*3 + 2];
+                v1[0] = normVerts[1 * 3 + 0] - normVerts[0 * 3 + 0];
+                v1[1] = normVerts[1 * 3 + 1] - normVerts[0 * 3 + 1];
+                v1[2] = normVerts[1 * 3 + 2] - normVerts[0 * 3 + 2];
 
-                v2[0] = normVerts[2*3 + 0] - normVerts[0*3 + 0];
-                v2[1] = normVerts[2*3 + 1] - normVerts[0*3 + 1];
-                v2[2] = normVerts[2*3 + 2] - normVerts[0*3 + 2];
+                v2[0] = normVerts[2 * 3 + 0] - normVerts[0 * 3 + 0];
+                v2[1] = normVerts[2 * 3 + 1] - normVerts[0 * 3 + 1];
+                v2[2] = normVerts[2 * 3 + 2] - normVerts[0 * 3 + 2];
 
                 norm[0] = (v1[1] * v2[2]) - (v1[2] * v2[1]);
                 norm[1] = (v1[2] * v2[0]) - (v1[0] * v2[2]);
                 norm[2] = (v1[0] * v2[1]) - (v1[1] * v2[0]);
 
-                double len = sqrt(norm[0]*norm[0] + norm[1]*norm[1] + norm[2]*norm[2]);
+                double len = sqrt(norm[0] * norm[0] + norm[1] * norm[1] + norm[2] * norm[2]);
 
                 if (flipNormals) {
                     len *= -1.0;
@@ -4302,31 +4216,30 @@ bool protein_cuda::CrystalStructureVolumeRenderer::loadVTKMesh( vislib::StringA 
             }
 
             // ###### HACK neglecting normals of non-triangles
-            meshNormals[meshFaces[p*3+0]*3+0] += norm[0];
-            meshNormals[meshFaces[p*3+0]*3+1] += norm[1];
-            meshNormals[meshFaces[p*3+0]*3+2] += norm[2];
+            meshNormals[meshFaces[p * 3 + 0] * 3 + 0] += norm[0];
+            meshNormals[meshFaces[p * 3 + 0] * 3 + 1] += norm[1];
+            meshNormals[meshFaces[p * 3 + 0] * 3 + 2] += norm[2];
 
-            meshNormals[meshFaces[p*3+1]*3+0] += norm[0];
-            meshNormals[meshFaces[p*3+1]*3+1] += norm[1];
-            meshNormals[meshFaces[p*3+1]*3+2] += norm[2];
+            meshNormals[meshFaces[p * 3 + 1] * 3 + 0] += norm[0];
+            meshNormals[meshFaces[p * 3 + 1] * 3 + 1] += norm[1];
+            meshNormals[meshFaces[p * 3 + 1] * 3 + 2] += norm[2];
 
-            meshNormals[meshFaces[p*3+2]*3+0] += norm[0];
-            meshNormals[meshFaces[p*3+2]*3+1] += norm[1];
-            meshNormals[meshFaces[p*3+2]*3+2] += norm[2];
+            meshNormals[meshFaces[p * 3 + 2] * 3 + 0] += norm[0];
+            meshNormals[meshFaces[p * 3 + 2] * 3 + 1] += norm[1];
+            meshNormals[meshFaces[p * 3 + 2] * 3 + 2] += norm[2];
         }
 
-        for (int p=0; p<numPolygons; p++) {
-            for (int i=0; i<3; i++) { // ### hack
-                double len = sqrt(
-                    meshNormals[meshFaces[p*3+i]*3+0] * meshNormals[meshFaces[p*3+i]*3+0] +
-                    meshNormals[meshFaces[p*3+i]*3+1] * meshNormals[meshFaces[p*3+i]*3+1] +
-                    meshNormals[meshFaces[p*3+i]*3+2] * meshNormals[meshFaces[p*3+i]*3+2]);
+        for (int p = 0; p < numPolygons; p++) {
+            for (int i = 0; i < 3; i++) { // ### hack
+                double len =
+                    sqrt(meshNormals[meshFaces[p * 3 + i] * 3 + 0] * meshNormals[meshFaces[p * 3 + i] * 3 + 0] +
+                         meshNormals[meshFaces[p * 3 + i] * 3 + 1] * meshNormals[meshFaces[p * 3 + i] * 3 + 1] +
+                         meshNormals[meshFaces[p * 3 + i] * 3 + 2] * meshNormals[meshFaces[p * 3 + i] * 3 + 2]);
 
-                meshNormals[meshFaces[p*3+i]*3+0] /= len;
-                meshNormals[meshFaces[p*3+i]*3+1] /= len;
-                meshNormals[meshFaces[p*3+i]*3+2] /= len;
+                meshNormals[meshFaces[p * 3 + i] * 3 + 0] /= len;
+                meshNormals[meshFaces[p * 3 + i] * 3 + 1] /= len;
+                meshNormals[meshFaces[p * 3 + i] * 3 + 2] /= len;
             }
-
         }
 
         /*

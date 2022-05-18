@@ -23,6 +23,7 @@ public:
     }
 
     virtual ~lockable() = default;
+
 private:
     mutable std::mutex lock_;
 }; // end class lockable

@@ -17,57 +17,55 @@
 namespace vislib {
 namespace sys {
 
+/**
+ * This superclass defines the interface for all synchronisation objects.
+ * Such a facade class allows the implementation of an autolock mechanism
+ * that releases a lock when the active block is left.
+ *
+ * @author Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de)
+ */
+class SyncObject {
+
+public:
+    /** Dtor. */
+    virtual ~SyncObject(void);
+
     /**
-     * This superclass defines the interface for all synchronisation objects. 
-     * Such a facade class allows the implementation of an autolock mechanism
-     * that releases a lock when the active block is left.
+     * Acquire the lock.
      *
-     * @author Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de)
+     * @throws SystemException If the lock could not be acquired.
      */
-    class SyncObject {
+    virtual void Lock(void) = 0;
 
-    public:
+    /**
+     * Release the lock.
+     *
+     * @throw SystemException If the lock could not be released.
+     */
+    virtual void Unlock(void) = 0;
 
-        /** Dtor. */
-        virtual ~SyncObject(void);
+protected:
+    /** Ctor. */
+    inline SyncObject(void) {}
 
-        /**
-         * Acquire the lock.
-         *
-         * @throws SystemException If the lock could not be acquired.
-         */
-        virtual void Lock(void) = 0;
+    /**
+     * Create a clone of 'rhs'.
+     *
+     * @param rhs The object to be cloned.
+     */
+    inline SyncObject(const SyncObject& rhs) {}
 
-        /**
-         * Release the lock.
-         *
-         * @throw SystemException If the lock could not be released.
-         */
-        virtual void Unlock(void) = 0;
-
-    protected:
-
-        /** Ctor. */
-        inline SyncObject(void) {}
-
-        /**
-         * Create a clone of 'rhs'.
-         *
-         * @param rhs The object to be cloned.
-         */
-        inline SyncObject(const SyncObject& rhs) {}
-
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        inline SyncObject& operator =(const SyncObject& rhs) {
-            return *this;
-        }
-    };
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     */
+    inline SyncObject& operator=(const SyncObject& rhs) {
+        return *this;
+    }
+};
 
 } /* end namespace sys */
 } /* end namespace vislib */

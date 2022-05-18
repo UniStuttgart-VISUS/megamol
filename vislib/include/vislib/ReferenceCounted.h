@@ -1,7 +1,7 @@
 /*
  * ReferenceCounted.h
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  * Copyright (C) 2008 by Christoph Mueller. Alle Rechte vorbehalten.
  */
@@ -22,72 +22,69 @@
 namespace vislib {
 
 
+/**
+ * This class adds a reference counting mechanism to a class.
+ *
+ * Objects that inherit from ReferenceCounted must always be allocated on
+ * the heap and must always use the C++ new operator for allocation, as
+ * ReferenceCounted will free itself using delete.
+ *
+ * The reference count of a newly created object is 1.
+ */
+class ReferenceCounted {
+
+public:
     /**
-     * This class adds a reference counting mechanism to a class.
+     * Increment the reference count.
      *
-     * Objects that inherit from ReferenceCounted must always be allocated on
-     * the heap and must always use the C++ new operator for allocation, as 
-     * ReferenceCounted will free itself using delete.
-     *
-     * The reference count of a newly created object is 1.
+     * @return The new value of the reference counter.
      */
-    class ReferenceCounted {
+    UINT32 AddRef(void);
 
-    public:
+    /**
+     * Decrement the reference count. If the reference count reaches zero,
+     * the object is released using the C++ delete operator.
+     *
+     * @return The new value of the reference counter.
+     */
+    UINT32 Release(void);
 
-        /**
-         * Increment the reference count.
-         *
-         * @return The new value of the reference counter.
-         */
-        UINT32 AddRef(void);
+protected:
+    /** Ctor. */
+    ReferenceCounted(void);
 
-        /**
-         * Decrement the reference count. If the reference count reaches zero,
-         * the object is released using the C++ delete operator.
-         *
-         * @return The new value of the reference counter.
-         */
-        UINT32 Release(void);
+    /**
+     * Copy ctor.
+     *
+     * @param rhs The object to be cloned.
+     */
+    ReferenceCounted(const ReferenceCounted& rhs);
 
-    protected:
+    /**
+     * Dtor.
+     *
+     * Making the dtor protected prevents explicit deletion of objects using
+     * delete and creation of objects on the stack to a certain extent.
+     */
+    virtual ~ReferenceCounted(void);
 
-        /** Ctor. */
-        ReferenceCounted(void);
+    /**
+     * Assignment.
+     *
+     * Note that assignment does not change the reference count of an
+     * object.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     */
+    ReferenceCounted& operator=(const ReferenceCounted& rhs);
 
-        /**
-         * Copy ctor.
-         *
-         * @param rhs The object to be cloned.
-         */
-        ReferenceCounted(const ReferenceCounted& rhs);
+private:
+    /** The current reference count. */
+    UINT32 cntRefs;
+};
 
-        /** 
-         * Dtor. 
-         *
-         * Making the dtor protected prevents explicit deletion of objects using
-         * delete and creation of objects on the stack to a certain extent.
-         */
-        virtual ~ReferenceCounted(void);
-
-        /**
-         * Assignment.
-         *
-         * Note that assignment does not change the reference count of an
-         * object.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        ReferenceCounted& operator =(const ReferenceCounted& rhs);
-
-    private:
-        
-        /** The current reference count. */
-        UINT32 cntRefs;
-    };
-    
 } /* end namespace vislib */
 
 #if defined(_WIN32) && defined(_MANAGED)

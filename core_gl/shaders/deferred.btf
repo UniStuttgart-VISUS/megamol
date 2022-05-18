@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="deferred">
+    <include file="common" />
+    
+    <shader name="vertex">
+        <snippet type="version">110</snippet>
+        <snippet type="string">
+<!--
+varying vec3 posES;
+
+void main(void) {
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+    posES = gl_Normal;
+}
+-->
+        </snippet>
+    </shader>
+
+    <shader name="blinnPhongFrag">
+        <snippet type="version">120</snippet>
+        <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
+        <snippet type="string">
+<!--
+uniform int renderMode;
+uniform vec3 camWS;
+uniform vec2 clipPlanes; // zNear, zFar
+uniform vec2 winSize;  // width, height
+
+uniform sampler2D depthBuff;
+uniform sampler2D colorBuff;
+uniform sampler2D normalBuff;
+
+varying vec3 posES;
+
+// Calculate eye space coords from window coords
+vec4 getPosES(float depth, vec2 winSize, vec2 clipPlanes) {
+    
+    // Get normalized device coordinates
+    vec3 posNDS;
+    posNDS.x = gl_FragCoord.x * 2 / winSize.x - 1;
+    posNDS.y = gl_FragCoord.y * 2 / winSize.y - 1;
+    posNDS.z = (2 * depth - (clipPlanes.y + clipPlanes.x)) / (clipPlanes.y - clipPlanes.x);
+
+    // Get clip space coordinates
+    vec4 posCS;
+     // w_cs = - z_e TODO document calculation
+    posCS.w = -((2*clipPlanes.y*clipPlanes.x) / (posNDS.z*(clipPlanes.y - clipPlanes.x) - (clipPlanes.y + clipPlanes.x)));
+    posCS.xyz = posNDS.xyz * posCS.w;
+                
+    // Get eye space coordinates
+    vec4 posES;
+    posES = gl_ProjectionMatrixInverse * posCS;
+    
+    return posES;
+}
+
+void main(void) {
+
+    float depth = texture2D(depthBuff, gl_TexCoord[0].st).x;
+    vec4 color  = texture2D(colorBuff, gl_TexCoord[0].st);
+    //vec3 normal = normalize(gl_NormalMatrix*texture2D(normalBuff, gl_TexCoord[0].st).xyz);
+    vec3 normal = normalize( texture2D(normalBuff, gl_TexCoord[0].st).xyz);
+    
+    if (renderMode == 0) { // Blinn phong illumination
+    
+        //vec4 posES  = getPosES(depth, winSize, clipPlanes);
+
+        // Calc light pos in eye space
+        //vec4 lightPosES = gl_ModelViewMatrix*gl_LightSource[0].position;
+        
+        vec3 L = normalize(vec3(gl_LightSource[0].position));
+        vec3 V = normalize(posES.xyz);
+        vec3 H = normalize(L + V);
+    
+        float diffuse = max(0.0, dot(L, normal.xyz));
+        float specular = max(0.0, min(1.0, pow(dot(H, normal), 10.0)));
+        float ambient = 0.2;
+        
+        //diffuse = 0.0;
+        //specular = 0.0;
+        //ambient = 0.0;
+        
+        //gl_FragColor = vec4(color.rgb*(diffuse + ambient) + specular , color.a);
+        gl_FragColor = vec4( LocalLighting( V, normal, L, color.rgb), color.a);
+        gl_FragDepth = texture2D(depthBuff, gl_TexCoord[0].st).x;
+    }
+    else if (renderMode == 1) { // Color
+        gl_FragColor = texture2D(colorBuff, gl_TexCoord[0].st);
+    }
+    else if (renderMode == 2) { // Normal
+        gl_FragColor = vec4(texture2D(normalBuff, gl_TexCoord[0].st).xyz, color.a);
+    }
+    else if (renderMode == 3) { // Depth
+        gl_FragColor = vec4(texture2D(depthBuff, gl_TexCoord[0].st).xyz, color.a);
+    }
+}
+-->
+        </snippet>
+    </shader>    
+</btf>

@@ -7,13 +7,13 @@
 
 #include "stdafx.h"
 
-#include <iostream>
-#include <omp.h>
-#include <string>
 #include "Color.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include <iostream>
+#include <omp.h>
+#include <string>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -982,8 +982,8 @@ void Color::MakeComparisonColorTable(const megamol::protein_calls::MolecularData
                     megamol::protein_calls::MolecularDataCall::Residue::AMINOACID &&
                 mol2->Residues()[cntRes]->Identifier() ==
                     megamol::protein_calls::MolecularDataCall::Residue::AMINOACID) {
-                aminoacid1 = (megamol::protein_calls::MolecularDataCall::AminoAcid*) (mol1->Residues()[cntRes]);
-                aminoacid2 = (megamol::protein_calls::MolecularDataCall::AminoAcid*) (mol2->Residues()[cntRes]);
+                aminoacid1 = (megamol::protein_calls::MolecularDataCall::AminoAcid*)(mol1->Residues()[cntRes]);
+                aminoacid2 = (megamol::protein_calls::MolecularDataCall::AminoAcid*)(mol2->Residues()[cntRes]);
             } else { // TODO check if this is correct
                 continue;
             }
@@ -1052,6 +1052,11 @@ void Color::MakeRainbowColorTable(unsigned int num, vislib::Array<vislib::math::
     }
 }
 
+
+void Color::ReadColorTableFromFile(
+    std::filesystem::path path, vislib::Array<vislib::math::Vector<float, 3>>& colorLookupTable) {
+    ReadColorTableFromFile(path.c_str(), colorLookupTable);
+}
 
 /*
  * Read color table from file.

@@ -11,88 +11,67 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 
 
 namespace megamol {
 namespace core {
 
-    class ModuleNamespace;
+/**
+ * Class represents a normal module namespace.
+ */
+class ModuleNamespace : public AbstractNamedObjectContainer {
+public:
+    /** Type alias for containers */
+    typedef std::shared_ptr<ModuleNamespace> ptr_type;
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-namespace std {
-
-    // dll-export of std-type instantiations
-    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr < ::megamol::core::ModuleNamespace >;
-    MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr < const ::megamol::core::ModuleNamespace >;
-
-}
-
-namespace megamol {
-namespace core {
-
+    /** Type alias for containers */
+    typedef std::shared_ptr<const ModuleNamespace> const_ptr_type;
 
     /**
-     * Class represents a normal module namespace.
+     * Utility function to dynamically cast to a shared_ptr of this type
+     *
+     * @param p The shared pointer to cast from
+     *
+     * @return A shared pointer of this type
      */
-    class MEGAMOLCORE_API ModuleNamespace : public AbstractNamedObjectContainer {
-    public:
+    template<class T>
+    inline static ptr_type dynamic_pointer_cast(std::shared_ptr<T> p) {
+        return std::dynamic_pointer_cast<ModuleNamespace, T>(p);
+    }
 
-        /** Type alias for containers */
-        typedef std::shared_ptr< ModuleNamespace > ptr_type;
+    /**
+     * Utility function to dynamically cast to a shared_ptr of this type
+     *
+     * @param p The shared pointer to cast from
+     *
+     * @return A shared pointer of this type
+     */
+    template<class T>
+    inline static const_ptr_type dynamic_pointer_cast(std::shared_ptr<const T> p) {
+        return std::dynamic_pointer_cast<const ModuleNamespace, const T>(p);
+    }
 
-        /** Type alias for containers */
-        typedef std::shared_ptr< const ModuleNamespace > const_ptr_type;
+    /**
+     * Ctor.
+     *
+     * @param name The name for the namespace
+     */
+    ModuleNamespace(const vislib::StringA& name);
 
-        /**
-         * Utility function to dynamically cast to a shared_ptr of this type
-         *
-         * @param p The shared pointer to cast from
-         *
-         * @return A shared pointer of this type
-         */
-        template<class T>
-        inline static ptr_type dynamic_pointer_cast(std::shared_ptr<T> p) {
-            return std::dynamic_pointer_cast<ModuleNamespace, T>(p);
-        }
+    /**
+     * Dtor.
+     */
+    virtual ~ModuleNamespace(void);
 
-        /**
-         * Utility function to dynamically cast to a shared_ptr of this type
-         *
-         * @param p The shared pointer to cast from
-         *
-         * @return A shared pointer of this type
-         */
-        template<class T>
-        inline static const_ptr_type dynamic_pointer_cast(std::shared_ptr<const T> p) {
-            return std::dynamic_pointer_cast<const ModuleNamespace, const T>(p);
-        }
+    /**
+     * Clears the cleanup mark for this and all dependent objects.
+     */
+    virtual void ClearCleanupMark(void);
 
-        /**
-         * Ctor.
-         *
-         * @param name The name for the namespace
-         */
-        ModuleNamespace(const vislib::StringA& name);
-
-        /**
-         * Dtor.
-         */
-        virtual ~ModuleNamespace(void);
-
-        /**
-         * Clears the cleanup mark for this and all dependent objects.
-         */
-        virtual void ClearCleanupMark(void);
-
-    protected:
-
-    private:
-
-    };
+protected:
+private:
+};
 
 
 } /* end namespace core */

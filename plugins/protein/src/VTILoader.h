@@ -15,15 +15,15 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/Module.h"
-#include "vislib/math/Vector.h"
-#include "vislib/String.h"
-#include "vislib/Map.h"
-#include "vislib/math/Cuboid.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AnimDataModule.h"
 #include "protein_calls/VTIDataCall.h"
 #include "protein_calls/VTKImageData.h"
+#include "vislib/Map.h"
+#include "vislib/String.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib/math/Vector.h"
 
 #include <fstream>
 #include <map>
@@ -52,7 +52,6 @@ namespace protein {
  */
 class VTILoader : public megamol::core::view::AnimDataModule {
 public:
-
     /** Ctor */
     VTILoader(void);
 
@@ -64,7 +63,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "VTILoader";
     }
 
@@ -73,7 +72,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Loader module for *.vti file format used by the Visualization \
                 Toolkit.";
     }
@@ -88,7 +87,6 @@ public:
     }
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -132,7 +130,7 @@ protected:
      * @param buffOut The output buffer containing the floats
      * @param sizeOut The size of the output buffer
      */
-    void readDataAscii2Float(char *buffIn, float* buffOut, SIZE_T sizeOut);
+    void readDataAscii2Float(char* buffIn, float* buffOut, SIZE_T sizeOut);
 
     /**
      * Reads data from an binary buffer to a float array. Binary data has to be
@@ -142,7 +140,7 @@ protected:
      * @param buffOut The output buffer containing the floats
      * @param sizeOut The size of the output buffer
      */
-    void readDataBinary2Float(char *buffIn, float* buffOut, SIZE_T sizeOut);
+    void readDataBinary2Float(char* buffIn, float* buffOut, SIZE_T sizeOut);
 
     /**
      * Creates a frame to be used in the frame cache. This method will be
@@ -161,16 +159,14 @@ protected:
      * @param frame The frame to be loaded.
      * @param idx The index of the frame to be loaded.
      */
-    virtual void loadFrame(Frame *frame, unsigned int idx);
+    virtual void loadFrame(Frame* frame, unsigned int idx);
 
 private:
-
     /**
      * Storage of frame data
      */
     class Frame : public megamol::core::view::AnimDataModule::Frame {
     public:
-
         /** Ctor */
         Frame(megamol::core::view::AnimDataModule& owner);
 
@@ -182,7 +178,7 @@ private:
          *
          * @return A pointer to the data.
          */
-		const protein_calls::VTKImageData *GetData() const {
+        const protein_calls::VTKImageData* GetData() const {
             return &this->data;
         }
 
@@ -212,8 +208,7 @@ private:
          * @param The piece's index.
          * @return A pointer to the requested data array or NULL.
          */
-        const char* GetPointDataByName(vislib::StringA id,
-                unsigned int idx) const {
+        const char* GetPointDataByName(vislib::StringA id, unsigned int idx) const {
             return this->data.PeekPointData(id, idx)->PeekData();
         }
 
@@ -225,8 +220,7 @@ private:
          * @param The piece's index.
          * @return A pointer to the requested data array or NULL.
          */
-        const char* GetPointDataByIdx(unsigned int arrayIdx,
-                unsigned int pieceIdx) const {
+        const char* GetPointDataByIdx(unsigned int arrayIdx, unsigned int pieceIdx) const {
 
             return this->data.PeekPointData(arrayIdx, pieceIdx)->PeekData();
         }
@@ -239,8 +233,7 @@ private:
          * @param The piece's index.
          * @return A pointer to the requested data array or NULL.
          */
-        const char* GetCellDataByName(vislib::StringA id,
-                unsigned int idx) {
+        const char* GetCellDataByName(vislib::StringA id, unsigned int idx) {
 
             return this->data.PeekCellData(id, idx)->PeekData();
         }
@@ -253,8 +246,7 @@ private:
          * @param The piece's index.
          * @return A pointer to the requested data array or NULL.
          */
-        const char* GetCellDataByIdx(unsigned int arrayIdx,
-                unsigned int pieceIdx) const {
+        const char* GetCellDataByIdx(unsigned int arrayIdx, unsigned int pieceIdx) const {
 
             return this->data.PeekCellData(arrayIdx, pieceIdx)->PeekData();
         }
@@ -371,7 +363,7 @@ private:
          * @param The piece's index.
          * @return A pointer to the requested data array or NULL.
          */
-		const protein_calls::VTKImageData::DataArray* PeekPointData(vislib::StringA id, unsigned int idx) {
+        const protein_calls::VTKImageData::DataArray* PeekPointData(vislib::StringA id, unsigned int idx) {
             return this->data.PeekPointData(id, idx);
         }
 
@@ -383,7 +375,7 @@ private:
          * @param The piece's index.
          * @return A pointer to the requested data array or NULL.
          */
-		const protein_calls::VTKImageData::DataArray* PeekCellData(vislib::StringA id, unsigned int idx) {
+        const protein_calls::VTKImageData::DataArray* PeekCellData(vislib::StringA id, unsigned int idx) {
             return this->data.PeekCellData(id, idx);
         }
 
@@ -398,9 +390,8 @@ private:
          * @param nComponents The number of components for each element.
          * @param pieceIdx    The index of the piece.
          */
-        void SetPointData(const char *data, double min, double max,
-				protein_calls::VTKImageData::DataArray::DataType t, vislib::StringA id,
-                size_t nComponents, unsigned int pieceIdx) {
+        void SetPointData(const char* data, double min, double max, protein_calls::VTKImageData::DataArray::DataType t,
+            vislib::StringA id, size_t nComponents, unsigned int pieceIdx) {
             this->data.SetPointData(data, min, max, t, id, nComponents, pieceIdx);
         }
 
@@ -415,32 +406,27 @@ private:
          * @param nComponents The number of components for each element.
          * @param pieceIdx    The index of the piece.
          */
-        void SetCellData(const char *data, double min, double max,
-				protein_calls::VTKImageData::DataArray::DataType t, vislib::StringA id,
-                size_t nComponents, unsigned int pieceIdx) {
+        void SetCellData(const char* data, double min, double max, protein_calls::VTKImageData::DataArray::DataType t,
+            vislib::StringA id, size_t nComponents, unsigned int pieceIdx) {
             this->data.SetCellData(data, min, max, t, id, nComponents, pieceIdx);
         }
 
     private:
-
-		protein_calls::VTKImageData data;
-
+        protein_calls::VTKImageData data;
     };
 
     /**
      * Helper class to unlock frame data when 'CallSimpleSphereData' is
      * used.
      */
-	class Unlocker : public protein_calls::VTIDataCall::Unlocker {
+    class Unlocker : public protein_calls::VTIDataCall::Unlocker {
     public:
-
         /**
          * Ctor.
          *
          * @param frame The frame to unlock
          */
-		Unlocker(Frame& frame) : protein_calls::VTIDataCall::Unlocker(),
-                frame(&frame) {
+        Unlocker(Frame& frame) : protein_calls::VTIDataCall::Unlocker(), frame(&frame) {
             // intentionally empty
         }
 
@@ -459,9 +445,8 @@ private:
         }
 
     private:
-
         /** The frame to unlock */
-        Frame *frame;
+        Frame* frame;
     };
 
     /**
@@ -508,7 +493,7 @@ private:
     SIZE_T hash;
 
     /// The byte order of the stored data (if binary)
-	protein_calls::VTKImageData::ByteOrder byteOrder;
+    protein_calls::VTKImageData::ByteOrder byteOrder;
 
     /// The version (major, minor)
     Vec2i version;
@@ -516,15 +501,15 @@ private:
     /// The data sets number of elements in each direction
     vislib::math::Cuboid<uint> wholeExtent;
 
-    Vec3f origin;        ///> The data sets origin in world space coordinates
-    Vec3f spacing;       ///> The data sets spacing in each direction
-    uint nPieces;        ///> The number of pieces in each frame
+    Vec3f origin;  ///> The data sets origin in world space coordinates
+    Vec3f spacing; ///> The data sets spacing in each direction
+    uint nPieces;  ///> The number of pieces in each frame
 
     vislib::StringA filenamesPrefix; ///> The prefix of the file series
     vislib::StringA filenamesSuffix; ///> The suffix og the file series
     uint filenamesDigits;            ///> The number of digits in the file names
 
-    uint nFrames;                    ///> The number of frames in the data set
+    uint nFrames; ///> The number of frames in the data set
 };
 
 

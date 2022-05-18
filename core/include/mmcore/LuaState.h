@@ -8,15 +8,15 @@
 #ifndef MEGAMOLCORE_LUASTATE_H_INCLUDED
 #define MEGAMOLCORE_LUASTATE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <mutex>
-#include <string>
 #include "LuaInterpreter.h"
 #include "mmcore/JobInstance.h"
 #include "mmcore/ViewInstance.h"
 #include "mmcore/param/ParamSlot.h"
+#include <mutex>
+#include <string>
 
 struct lua_State; // lua includes should stay in the core
 
@@ -41,7 +41,7 @@ class CoreInstance;
  * string, table, math, package, and os (see LUA_FULL_ENVIRONMENT define).
  * Lua constants LOGINFO, LOGWARNING, LOGERROR are provided for MegaMol log output.
  */
-class MEGAMOLCORE_API LuaState {
+class LuaState {
 public:
     static const std::string MEGAMOL_ENV;
 
@@ -97,7 +97,6 @@ public:
     // ************************************************************
 
 protected:
-
     // ** MegaMol API provided for configuration / startup
 
     /** mmGetBithWidth get bits of executable (integer) */
@@ -225,7 +224,6 @@ protected:
     int CurrentScriptPath(lua_State* L);
 
 private:
-
     /** answer whether LuaState is instanced for configuration */
     bool checkConfiguring(const std::string where);
 

@@ -11,51 +11,54 @@
 
 
 #include "graph/Parameter.h"
-#include "mmcore/utility/Picking_gl.h"
+#include "mmcore/utility/Picking.h"
 
 
 namespace megamol {
 namespace gui {
 
-    /** ************************************************************************
-     * Animation widget for parameter group
-     */
-    class AbstractParameterGroupWidget : public megamol::core::param::AbstractParamPresentation {
-    public:
-        typedef std::vector<megamol::gui::Parameter*> ParamPtrVector_t;
+/** ************************************************************************
+ * Animation widget for parameter group
+ */
+class AbstractParameterGroupWidget : public megamol::core::param::AbstractParamPresentation {
+public:
+    typedef std::vector<megamol::gui::Parameter*> ParamPtrVector_t;
 
-        ~AbstractParameterGroupWidget() override = default;
+    ~AbstractParameterGroupWidget() override = default;
 
-        virtual bool Check(bool only_check, ParamPtrVector_t& params) = 0;
+    virtual bool Check(bool only_check, ParamPtrVector_t& params) = 0;
 
-        virtual bool Draw(ParamPtrVector_t params, const std::string& in_search,
-            megamol::gui::Parameter::WidgetScope in_scope,
-            megamol::core::utility::PickingBuffer* inout_picking_buffer) = 0;
+    virtual bool Draw(ParamPtrVector_t params, const std::string& in_search,
+        megamol::gui::Parameter::WidgetScope in_scope, megamol::core::utility::PickingBuffer* inout_picking_buffer,
+        ImGuiID in_override_header_state) = 0;
 
-        bool IsActive() const {
-            return this->active;
-        }
+    bool IsActive() const {
+        return this->active;
+    }
 
-        void SetActive(bool a) {
-            this->active = a;
-        }
+    void SetActive(bool a) {
+        this->active = a;
+    }
 
-        std::string GetName() const {
-            return this->name;
-        };
-
-    protected:
-        // VARIABLES ----------------------------------------------------------
-
-        bool active;
-        std::string name;
-        const ImGuiID uid;
-
-        // FUNCTIONS ----------------------------------------------------------
-
-        explicit AbstractParameterGroupWidget(ImGuiID uid)
-                : megamol::core::param::AbstractParamPresentation(), active(false), name(), uid(uid){};
+    std::string GetName() const {
+        return this->name;
     };
+
+protected:
+    // VARIABLES ----------------------------------------------------------
+
+    bool active;
+    std::string name;
+    const ImGuiID uid;
+
+    // FUNCTIONS ----------------------------------------------------------
+
+    explicit AbstractParameterGroupWidget(ImGuiID uid)
+            : megamol::core::param::AbstractParamPresentation()
+            , active(false)
+            , name()
+            , uid(uid){};
+};
 
 
 } // namespace gui

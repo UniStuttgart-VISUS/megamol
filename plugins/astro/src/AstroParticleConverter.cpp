@@ -5,8 +5,8 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 #include "AstroParticleConverter.h"
+#include "stdafx.h"
 #include <glm/gtc/type_ptr.hpp>
 
 #include "simultaneous_sort.h"
@@ -14,30 +14,30 @@
 using namespace megamol;
 using namespace megamol::astro;
 using namespace megamol::core;
-using namespace megamol::core::moldyn;
+using namespace megamol::geocalls;
 
 /*
  * AstroParticleConverter::AstroParticleConverter
  */
 AstroParticleConverter::AstroParticleConverter(void)
-    : Module()
-    , sphereDataSlot("sphereData", "Output slot for the resulting sphere data")
-    , sphereSpecialSlot(
-          "formattedSphereData", "Output slot for the sphere data containing density and velocity informaton")
-    , astroDataSlot("astroData", "Input slot for astronomical data")
-    , colorModeSlot("colorMode", "Coloring mode for the output particles")
-    , minColorSlot("minColor", "minimum color of the used range")
-    , midColorSlot("midColor", "median color of the used range")
-    , maxColorSlot("maxColor", "maximum color of the used range")
-    , useMidColorSlot("useMidColor", "Enables the usage of the mid color in the color interpolation")
-    , minValueSlot("minValue", "minimum value of the currently shown parameter")
-    , maxValueSlot("maxValue", "maximum value of the currently shown parameter")
-    , lastDataHash(0)
-    , hashOffset(0)
-    , valmin(0.0f)
-    , valmax(1.0f)
-    , densityMin(0.0f)
-    , densityMax(0.0f) {
+        : Module()
+        , sphereDataSlot("sphereData", "Output slot for the resulting sphere data")
+        , sphereSpecialSlot(
+              "formattedSphereData", "Output slot for the sphere data containing density and velocity informaton")
+        , astroDataSlot("astroData", "Input slot for astronomical data")
+        , colorModeSlot("colorMode", "Coloring mode for the output particles")
+        , minColorSlot("minColor", "minimum color of the used range")
+        , midColorSlot("midColor", "median color of the used range")
+        , maxColorSlot("maxColor", "maximum color of the used range")
+        , useMidColorSlot("useMidColor", "Enables the usage of the mid color in the color interpolation")
+        , minValueSlot("minValue", "minimum value of the currently shown parameter")
+        , maxValueSlot("maxValue", "maximum value of the currently shown parameter")
+        , lastDataHash(0)
+        , hashOffset(0)
+        , valmin(0.0f)
+        , valmax(1.0f)
+        , densityMin(0.0f)
+        , densityMax(0.0f) {
 
     this->astroDataSlot.SetCompatibleCall<AstroDataCallDescription>();
     this->MakeSlotAvailable(&this->astroDataSlot);
@@ -107,7 +107,9 @@ AstroParticleConverter::AstroParticleConverter(void)
 /*
  * AstroParticleConverter::~AstroParticleConverter
  */
-AstroParticleConverter::~AstroParticleConverter(void) { this->Release(); }
+AstroParticleConverter::~AstroParticleConverter(void) {
+    this->Release();
+}
 
 /*
  * AstroParticleConverter::create
@@ -129,10 +131,12 @@ void AstroParticleConverter::release(void) {
  */
 bool AstroParticleConverter::getData(Call& call) {
     MultiParticleDataCall* mpdc = dynamic_cast<MultiParticleDataCall*>(&call);
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
     AstroDataCall* ast = this->astroDataSlot.CallAs<AstroDataCall>();
-    if (ast == nullptr) return false;
+    if (ast == nullptr)
+        return false;
 
     ast->SetFrameID(mpdc->FrameID(), mpdc->IsFrameForced());
     // ast->SetUnlocker(nullptr, false);
@@ -178,10 +182,12 @@ bool AstroParticleConverter::getData(Call& call) {
  */
 bool AstroParticleConverter::getSpecialData(Call& call) {
     MultiParticleDataCall* mpdc = dynamic_cast<MultiParticleDataCall*>(&call);
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
     AstroDataCall* ast = this->astroDataSlot.CallAs<AstroDataCall>();
-    if (ast == nullptr) return false;
+    if (ast == nullptr)
+        return false;
 
     ast->SetFrameID(mpdc->FrameID(), mpdc->IsFrameForced());
     // ast->SetUnlocker(nullptr, false);
@@ -291,10 +297,12 @@ bool AstroParticleConverter::getSpecialData(Call& call) {
  */
 bool AstroParticleConverter::getExtent(Call& call) {
     MultiParticleDataCall* mpdc = dynamic_cast<MultiParticleDataCall*>(&call);
-    if (mpdc == nullptr) return false;
+    if (mpdc == nullptr)
+        return false;
 
     AstroDataCall* ast = this->astroDataSlot.CallAs<AstroDataCall>();
-    if (ast == nullptr) return false;
+    if (ast == nullptr)
+        return false;
 
     ast->SetUnlocker(nullptr, false);
     if ((*ast)(AstroDataCall::CallForGetExtent)) {
@@ -593,7 +601,9 @@ void AstroParticleConverter::calcColorTable(const AstroDataCall& ast) {
  */
 glm::vec4 AstroParticleConverter::interpolateColor(const glm::vec4& minCol, const glm::vec4& midCol,
     const glm::vec4& maxCol, const float alpha, const bool useMidValue) {
-    if (!useMidValue) return glm::mix(minCol, maxCol, alpha);
-    if (alpha < 0.5f) return glm::mix(minCol, midCol, alpha * 2.0f);
+    if (!useMidValue)
+        return glm::mix(minCol, maxCol, alpha);
+    if (alpha < 0.5f)
+        return glm::mix(minCol, midCol, alpha * 2.0f);
     return glm::mix(midCol, maxCol, (alpha - 0.5f) * 2.0f);
 }

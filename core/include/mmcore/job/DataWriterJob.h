@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/job/AbstractThreadedJob.h"
-#include "mmcore/Module.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/job/AbstractThreadedJob.h"
 
 
 namespace megamol {
@@ -21,100 +21,96 @@ namespace core {
 namespace job {
 
 
+/**
+ * Class implementing a simple thread for the job.
+ */
+class DataWriterJob : public AbstractThreadedJob, public Module {
+public:
     /**
-     * Class implementing a simple thread for the job.
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class DataWriterJob : public AbstractThreadedJob, public Module {
-    public:
+    static const char* ClassName(void) {
+        return "DataWriterJob";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "DataWriterJob";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Threaded job conrtolling a data writer";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Threaded job conrtolling a data writer";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /**
+     * Disallow usage in quickstarts
+     *
+     * @return false
+     */
+    static bool SupportQuickstart(void) {
+        return false;
+    }
 
-        /**
-         * Disallow usage in quickstarts
-         *
-         * @return false
-         */
-        static bool SupportQuickstart(void) {
-            return false;
-        }
+    /**
+     * Ctor
+     */
+    DataWriterJob();
 
-        /**
-         * Ctor
-         */
-        DataWriterJob();
+    /**
+     * Dtor
+     */
+    virtual ~DataWriterJob();
 
-        /**
-         * Dtor
-         */
-        virtual ~DataWriterJob();
+    /**
+     * Terminates the job thread.
+     *
+     * @return true to acknowledge that the job will finish as soon
+     *         as possible, false if termination is not possible.
+     */
+    virtual bool Terminate(void);
 
-        /**
-         * Terminates the job thread.
-         *
-         * @return true to acknowledge that the job will finish as soon
-         *         as possible, false if termination is not possible.
-         */
-        virtual bool Terminate(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+private:
+    /**
+     * Perform the work of a thread.
+     *
+     * @param userData A pointer to user data that are passed to the thread,
+     *                 if it started.
+     *
+     * @return The application dependent return code of the thread. This
+     *         must not be STILL_ACTIVE (259).
+     */
+    virtual DWORD Run(void* userData);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /** Slot connecting to the controlled writer */
+    CallerSlot writerSlot;
 
-    private:
-
-        /**
-         * Perform the work of a thread.
-         *
-         * @param userData A pointer to user data that are passed to the thread,
-         *                 if it started.
-         *
-         * @return The application dependent return code of the thread. This 
-         *         must not be STILL_ACTIVE (259).
-         */
-        virtual DWORD Run(void *userData);
-
-        /** Slot connecting to the controlled writer */
-        CallerSlot writerSlot;
-
-        /** Flag if the writer is abortable */
-        bool abortable;
-
-    };
+    /** Flag if the writer is abortable */
+    bool abortable;
+};
 
 
 } /* end namespace job */

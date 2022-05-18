@@ -24,7 +24,6 @@ namespace protein_cuda {
 class DiffusionSolver {
 
 public:
-
     /**
      * CUDA implementation of an iterative method to compute the Gradient
      * Vector Field (GVF) based on a given volume gradient and a level set.
@@ -44,17 +43,8 @@ public:
      * @param scl                 Scale factor for the gvf
      * @return 'True' on success, 'false' otherwise
      */
-    static bool CalcGVF(
-            const float *volTarget_D,
-            float *gvfConstData_D,
-            const unsigned int *cellStatesTarget_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float *gvfIn_D,
-            float *gvfOut_D,
-            unsigned int maxIt,
-            float scl);
+    static bool CalcGVF(const float* volTarget_D, float* gvfConstData_D, const unsigned int* cellStatesTarget_D,
+        int3 volDim, float3 volOrg, float3 volDelta, float* gvfIn_D, float* gvfOut_D, unsigned int maxIt, float scl);
 
     /**
      * CUDA implementation of an iterative method to compute the Gradient
@@ -79,33 +69,21 @@ public:
      * @param scl                 Scale factor for the gvf
      * @return 'True' on success, 'false' otherwise
      */
-    static bool CalcTwoWayGVF(
-            const float *volSource_D,
-            const float *volTarget_D,
-            const unsigned int *cellStatesSource_D,
-            const unsigned int *cellStatesTarget_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float *gvfConstData_D,
-            float *gvfIn_D,
-            float *gvfOut_D,
-            unsigned int maxIt,
-            float scl);
+    static bool CalcTwoWayGVF(const float* volSource_D, const float* volTarget_D,
+        const unsigned int* cellStatesSource_D, const unsigned int* cellStatesTarget_D, int3 volDim, float3 volOrg,
+        float3 volDelta, float* gvfConstData_D, float* gvfIn_D, float* gvfOut_D, unsigned int maxIt, float scl);
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "DiffusionSolver";
     }
 
 protected:
-
 private:
-
 };
 
 } // namespace protein_cuda

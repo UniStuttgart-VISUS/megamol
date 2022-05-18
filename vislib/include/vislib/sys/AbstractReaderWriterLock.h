@@ -1,7 +1,7 @@
 /*
  * AbstractReaderWriterLock.h
  *
- * Copyright (C) 2006 - 2011 by Visualisierungsinstitut Universitaet Stuttgart. 
+ * Copyright (C) 2006 - 2011 by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
@@ -21,69 +21,68 @@ namespace vislib {
 namespace sys {
 
 
+/**
+ * Abstract base class for reader-writer locks, which allow for exclusive
+ * and shared lock. A typical scenario is to lock a data object allowing
+ * multiple concurrent read operations (shared lock) but synchronizes
+ * individual write operations (exclusive lock).
+ *
+ * The behaviour derived from SyncObject uses to the exclusive lock.
+ */
+class AbstractReaderWriterLock : public SyncObject {
+
+public:
+    /** Ctor. */
+    AbstractReaderWriterLock(void);
+
+    /** Dtor. */
+    virtual ~AbstractReaderWriterLock(void);
+
     /**
-     * Abstract base class for reader-writer locks, which allow for exclusive
-     * and shared lock. A typical scenario is to lock a data object allowing
-     * multiple concurrent read operations (shared lock) but synchronizes
-     * individual write operations (exclusive lock).
-     *
-     * The behaviour derived from SyncObject uses to the exclusive lock.
+     * Acquire an exclusive lock.
      */
-    class AbstractReaderWriterLock : public SyncObject {
+    virtual void Lock(void);
 
-    public:
+    /**
+     * Acquires an exclusive lock
+     */
+    virtual void LockExclusive(void) = 0;
 
-        /** Ctor. */
-        AbstractReaderWriterLock(void);
-
-        /** Dtor. */
-        virtual ~AbstractReaderWriterLock(void);
-
-        /**
-         * Acquire an exclusive lock.
-         */
-        virtual void Lock(void);
-
-        /**
-         * Acquires an exclusive lock
-         */
-        virtual void LockExclusive(void) = 0;
-
-        /**
-         * Tries to acquire the lock
-         */
-        virtual bool TryLock(unsigned long const timeout = 0) { return false; };
-
-        /**
-         * Acquires a shared lock
-         */
-        virtual void LockShared(void) = 0;
-
-        /**
-         * Release an exclusive lock
-         */
-        virtual void Unlock(void);
-
-        /**
-         * Release an exclusive lock
-         */
-        virtual void UnlockExclusive(void) = 0;
-
-        /**
-         * Release a shared lock
-         */
-        virtual void UnlockShared(void) = 0;
-
-    private:
-
-        /** Forbidden copy ctor. */
-        AbstractReaderWriterLock(const AbstractReaderWriterLock& src);
-
-        /** Forbidden assignment operator */
-        AbstractReaderWriterLock& operator=(const AbstractReaderWriterLock& rhs);
-
+    /**
+     * Tries to acquire the lock
+     */
+    virtual bool TryLock(unsigned long const timeout = 0) {
+        return false;
     };
-    
+
+    /**
+     * Acquires a shared lock
+     */
+    virtual void LockShared(void) = 0;
+
+    /**
+     * Release an exclusive lock
+     */
+    virtual void Unlock(void);
+
+    /**
+     * Release an exclusive lock
+     */
+    virtual void UnlockExclusive(void) = 0;
+
+    /**
+     * Release a shared lock
+     */
+    virtual void UnlockShared(void) = 0;
+
+private:
+    /** Forbidden copy ctor. */
+    AbstractReaderWriterLock(const AbstractReaderWriterLock& src);
+
+    /** Forbidden assignment operator */
+    AbstractReaderWriterLock& operator=(const AbstractReaderWriterLock& rhs);
+};
+
 } /* end namespace sys */
 } /* end namespace vislib */
 
@@ -91,4 +90,3 @@ namespace sys {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_ABSTRACTREADERWRITERLOCK_H_INCLUDED */
-

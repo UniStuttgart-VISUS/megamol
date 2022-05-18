@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/CallClipPlane.h"
+#include "stdafx.h"
 
 using namespace megamol::core;
 
@@ -33,10 +33,8 @@ view::CallClipPlane::~CallClipPlane(void) {
 /*
  * view::CallClipPlane::CalcPlaneSystem
  */
-void view::CallClipPlane::CalcPlaneSystem(
-        vislib::math::Vector<float, 3>& outX,
-        vislib::math::Vector<float, 3>& outY,
-        vislib::math::Vector<float, 3>& outZ) const {
+void view::CallClipPlane::CalcPlaneSystem(vislib::math::Vector<float, 3>& outX, vislib::math::Vector<float, 3>& outY,
+    vislib::math::Vector<float, 3>& outZ) const {
     outZ = this->plane.Normal();
     outX.Set(1.0f, 0.0f, 0.0f);
     outY.Set(0.0f, 1.0f, 0.0f);

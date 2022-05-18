@@ -1,7 +1,7 @@
 /*
  * ViewDescription.h
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -17,48 +17,45 @@
 namespace megamol {
 namespace core {
 
+/**
+ * Class of view descriptions.
+ */
+class ViewDescription : public InstanceDescription {
+public:
     /**
-     * Class of view descriptions.
+     * Ctor.
+     *
+     * @param classname The name of the view described.
      */
-    class MEGAMOLCORE_API ViewDescription : public InstanceDescription {
-    public:
+    ViewDescription(const char* classname);
 
-        /**
-         * Ctor.
-         *
-         * @param classname The name of the view described.
-         */
-        ViewDescription(const char *classname);
+    /**
+     * Dtor.
+     */
+    virtual ~ViewDescription(void);
 
-        /**
-         * Dtor.
-         */
-        virtual ~ViewDescription(void);
+    /**
+     * Sets the id of the module to be used as view module of this view.
+     *
+     * @param id The id of the view module.
+     */
+    inline void SetViewModuleID(const vislib::StringA& id) {
+        this->viewID = id;
+    }
 
-        /**
-         * Sets the id of the module to be used as view module of this view.
-         *
-         * @param id The id of the view module.
-         */
-        inline void SetViewModuleID(const vislib::StringA& id) {
-            this->viewID = id;
-        }
+    /**
+     * Gets the id of the module to be used as view module of this view.
+     *
+     * @return The id of the view module.
+     */
+    inline const vislib::StringA& ViewModuleID(void) const {
+        return this->viewID;
+    }
 
-        /**
-         * Gets the id of the module to be used as view module of this view.
-         *
-         * @return The id of the view module.
-         */
-        inline const vislib::StringA& ViewModuleID(void) const {
-            return this->viewID;
-        }
-
-    private:
-
-        /** The id of the module to be used as view */
-        vislib::StringA viewID;
-
-    };
+private:
+    /** The id of the module to be used as view */
+    vislib::StringA viewID;
+};
 
 } /* end namespace core */
 } /* end namespace megamol */

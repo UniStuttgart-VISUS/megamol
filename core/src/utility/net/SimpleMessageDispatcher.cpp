@@ -7,32 +7,29 @@
 
 #include "mmcore/utility/net/SimpleMessageDispatcher.h"
 
-#include "vislib/net/AbstractCommChannel.h"
 #include "mmcore/utility/net/SimpleMessageDispatchListener.h"
-#include "vislib/net/SocketException.h"
-#include "vislib/Trace.h"
 #include "mmcore/utility/sys/Thread.h"
+#include "vislib/Trace.h"
+#include "vislib/net/AbstractCommChannel.h"
+#include "vislib/net/SocketException.h"
 
 
 /*
  * vislib::net::SimpleMessageDispatcher::SimpleMessageDispatcher
  */
-vislib::net::SimpleMessageDispatcher::SimpleMessageDispatcher(void) {
-}
+vislib::net::SimpleMessageDispatcher::SimpleMessageDispatcher(void) {}
 
 
 /*
  * vislib::net::SimpleMessageDispatcher::~SimpleMessageDispatcher
  */
-vislib::net::SimpleMessageDispatcher::~SimpleMessageDispatcher(void) {
-}
+vislib::net::SimpleMessageDispatcher::~SimpleMessageDispatcher(void) {}
 
 
 /*
  * vislib::net::SimpleMessageDispatcher::AddListener
  */
-void vislib::net::SimpleMessageDispatcher::AddListener(
-        SimpleMessageDispatchListener *listener) {
+void vislib::net::SimpleMessageDispatcher::AddListener(SimpleMessageDispatchListener* listener) {
     ASSERT(listener != NULL);
 
     this->listeners.Lock();
@@ -46,9 +43,9 @@ void vislib::net::SimpleMessageDispatcher::AddListener(
 /*
  * vislib::net::SimpleMessageDispatcher::OnThreadStarting
  */
-void vislib::net::SimpleMessageDispatcher::OnThreadStarting(void *config) {
+void vislib::net::SimpleMessageDispatcher::OnThreadStarting(void* config) {
     ASSERT(config != NULL);
-    Configuration *c = static_cast<Configuration *>(config);
+    Configuration* c = static_cast<Configuration*>(config);
 
     ASSERT(!c->Channel.IsNull());
     this->configuration.Channel = c->Channel;
@@ -58,8 +55,7 @@ void vislib::net::SimpleMessageDispatcher::OnThreadStarting(void *config) {
 /*
  * vislib::net::SimpleMessageDispatcher::RemoveListener
  */
-void vislib::net::SimpleMessageDispatcher::RemoveListener(
-        SimpleMessageDispatchListener *listener) {
+void vislib::net::SimpleMessageDispatcher::RemoveListener(SimpleMessageDispatchListener* listener) {
     ASSERT(listener != NULL);
     this->listeners.RemoveAll(listener);
 }
@@ -68,59 +64,67 @@ void vislib::net::SimpleMessageDispatcher::RemoveListener(
 /*
  * vislib::net::SimpleMessageDispatcher::Run
  */
-DWORD vislib::net::SimpleMessageDispatcher::Run(void *config) {
+DWORD vislib::net::SimpleMessageDispatcher::Run(void* config) {
     ASSERT(!this->configuration.Channel.IsNull());
 
     bool doReceive = true;
-    
+
     try {
         Socket::Startup();
     } catch (SocketException e) {
-        VLTRACE(VISLIB_TRCELVL_ERROR, "Socket::Startup failed in "
-            "SimpleMessageDispatcher::Run: %s\n", e.GetMsgA());
+        VLTRACE(VISLIB_TRCELVL_ERROR,
+            "Socket::Startup failed in "
+            "SimpleMessageDispatcher::Run: %s\n",
+            e.GetMsgA());
         this->fireCommunicationError(e);
         return e.GetErrorCode();
     }
 
-    VLTRACE(VISLIB_TRCELVL_INFO, "The SimpleMessageDispatcher [%u] is entering "
-        "the message loop ...\n", vislib::sys::Thread::CurrentID());
+    VLTRACE(VISLIB_TRCELVL_INFO,
+        "The SimpleMessageDispatcher [%u] is entering "
+        "the message loop ...\n",
+        vislib::sys::Thread::CurrentID());
     this->fireDispatcherStarted();
 
     try {
         while (doReceive) {
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "[%u] is waiting for "
-                "message header ...\n", vislib::sys::Thread::CurrentID());
-            this->configuration.Channel->Receive(static_cast<void *>(this->msg),
-                this->msg.GetHeader().GetHeaderSize(), 
-                AbstractCommChannel::TIMEOUT_INFINITE, 
-                true);
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "[%u] received message "
-                "header with { MessageID = %u, BodySize = %u }\n", 
-                vislib::sys::Thread::CurrentID(),
-                this->msg.GetHeader().GetMessageID(),
+            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
+                "[%u] is waiting for "
+                "message header ...\n",
+                vislib::sys::Thread::CurrentID());
+            this->configuration.Channel->Receive(static_cast<void*>(this->msg), this->msg.GetHeader().GetHeaderSize(),
+                AbstractCommChannel::TIMEOUT_INFINITE, true);
+            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
+                "[%u] received message "
+                "header with { MessageID = %u, BodySize = %u }\n",
+                vislib::sys::Thread::CurrentID(), this->msg.GetHeader().GetMessageID(),
                 this->msg.GetHeader().GetBodySize());
             this->msg.AssertBodySize();
 
             if (this->msg.GetHeader().GetBodySize() > 0) {
-                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "[%u] is waiting "
-                    "for message body ...\n", vislib::sys::Thread::CurrentID());
-                this->configuration.Channel->Receive(this->msg.GetBody(), 
-                    this->msg.GetHeader().GetBodySize(),
-                    AbstractCommChannel::TIMEOUT_INFINITE, 
-                    true);
-                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "[%u] received "
-                    "message body.\n", vislib::sys::Thread::CurrentID());
+                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
+                    "[%u] is waiting "
+                    "for message body ...\n",
+                    vislib::sys::Thread::CurrentID());
+                this->configuration.Channel->Receive(this->msg.GetBody(), this->msg.GetHeader().GetBodySize(),
+                    AbstractCommChannel::TIMEOUT_INFINITE, true);
+                VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
+                    "[%u] received "
+                    "message body.\n",
+                    vislib::sys::Thread::CurrentID());
             }
 
-            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "[%u] is dispatching "
-                "message to registered listeners ...\n", 
+            VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
+                "[%u] is dispatching "
+                "message to registered listeners ...\n",
                 vislib::sys::Thread::CurrentID());
             doReceive = this->fireMessageReceived(this->msg);
         }
     } catch (Exception e) {
-        VLTRACE(VISLIB_TRCELVL_ERROR, "The SimpleMessageDispatcher [%u] "
-            "encountered an error: %s\n", vislib::sys::Thread::CurrentID(),
-            e.GetMsgA());
+        VLTRACE(VISLIB_TRCELVL_ERROR,
+            "The SimpleMessageDispatcher [%u] "
+            "encountered an error: %s\n",
+            vislib::sys::Thread::CurrentID(), e.GetMsgA());
         doReceive = this->fireCommunicationError(e);
     }
 
@@ -128,26 +132,28 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void *config) {
         this->configuration.Channel->Close();
     } catch (...) {
         VLTRACE(VISLIB_TRCELVL_WARN, "The SimpleMessageDispatcher tried to "
-            "close a channel which was probably already closed due to an "
-            "error before.\n");
+                                     "close a channel which was probably already closed due to an "
+                                     "error before.\n");
     }
 
     try {
         Socket::Cleanup();
     } catch (SocketException e) {
-        VLTRACE(VISLIB_TRCELVL_WARN, "Socket::Cleanup failed in "
-            "SimpleMessageDispatcher::Run: %s\n", e.GetMsgA());
+        VLTRACE(VISLIB_TRCELVL_WARN,
+            "Socket::Cleanup failed in "
+            "SimpleMessageDispatcher::Run: %s\n",
+            e.GetMsgA());
     }
 
     VLTRACE(VISLIB_TRCELVL_INFO, "The SimpleMessageDispatcher has left the "
-        "message loop ...\n");
+                                 "message loop ...\n");
     this->fireDispatcherExited();
 
     return 0;
 }
 
 
-/* 
+/*
  * vislib::net::SimpleMessageDispatcher::Terminate
  */
 bool vislib::net::SimpleMessageDispatcher::Terminate(void) {
@@ -156,8 +162,10 @@ bool vislib::net::SimpleMessageDispatcher::Terminate(void) {
         try {
             this->configuration.Channel->Close();
         } catch (Exception e) {
-            VLTRACE(VISLIB_TRCELVL_WARN, "An error occurred while trying to "
-                "terminate a SimpleMessageDispatcher: %s\n", e.GetMsgA());
+            VLTRACE(VISLIB_TRCELVL_WARN,
+                "An error occurred while trying to "
+                "terminate a SimpleMessageDispatcher: %s\n",
+                e.GetMsgA());
         }
     }
 
@@ -168,8 +176,7 @@ bool vislib::net::SimpleMessageDispatcher::Terminate(void) {
 /*
  * vislib::net::SimpleMessageDispatcher::fireCommunicationError
  */
-bool vislib::net::SimpleMessageDispatcher::fireCommunicationError(
-        const vislib::Exception& exception) {
+bool vislib::net::SimpleMessageDispatcher::fireCommunicationError(const vislib::Exception& exception) {
     bool retval = true;
 
     this->listeners.Lock();
@@ -179,9 +186,10 @@ bool vislib::net::SimpleMessageDispatcher::fireCommunicationError(
     }
     this->listeners.Unlock();
 
-    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "SimpleMessageDispatcher "
-        "received %sexit request from registered error listener.\n", 
-        (retval ? "no ": ""));
+    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
+        "SimpleMessageDispatcher "
+        "received %sexit request from registered error listener.\n",
+        (retval ? "no " : ""));
     return retval;
 }
 
@@ -217,8 +225,7 @@ void vislib::net::SimpleMessageDispatcher::fireDispatcherStarted(void) {
 /*
  * vislib::net::SimpleMessageDispatcher::fireMessageReceived
  */
-bool vislib::net::SimpleMessageDispatcher::fireMessageReceived(
-        const AbstractSimpleMessage& msg) {
+bool vislib::net::SimpleMessageDispatcher::fireMessageReceived(const AbstractSimpleMessage& msg) {
     bool retval = true;
 
     this->listeners.Lock();
@@ -228,8 +235,9 @@ bool vislib::net::SimpleMessageDispatcher::fireMessageReceived(
     }
     this->listeners.Unlock();
 
-    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE, "SimpleMessageDispatcher "
-        "received %sexit request from registered message listener.\n", 
-        (retval ? "no ": ""));
+    VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
+        "SimpleMessageDispatcher "
+        "received %sexit request from registered message listener.\n",
+        (retval ? "no " : ""));
     return retval;
 }

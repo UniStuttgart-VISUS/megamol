@@ -1,16 +1,16 @@
-#include "stdafx.h"
 #include "Console.h"
-#include <iostream>
+#include "stdafx.h"
 #include <cctype>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <thread>
 
 void printGreeting() {
     std::cout << std::endl
-        << "MegaMol Remote Lua Console Client" << std::endl
-        << "Copyright 2017 by MegaMol Team" << std::endl
-        << std::endl;
+              << "MegaMol Remote Lua Console Client" << std::endl
+              << "Copyright 2017 by MegaMol Team" << std::endl
+              << std::endl;
 }
 
 bool execCommand(Connection& conn, const std::string& command, const int index) {
@@ -31,19 +31,16 @@ bool execCommand(Connection& conn, const std::string& command, const int index) 
     }
 
     if (!conn.Connected()) {
-        cout << "Socket not connected" << endl
-            << endl;
+        cout << "Socket not connected" << endl << endl;
         return false;
     }
-    cout << "Reply: " << endl
-        << conn.sendCommand(c2) << endl
-        << endl;
+    cout << "Reply: " << endl << conn.sendCommand(c2) << endl << endl;
     return true;
 }
 
 void runScript(Connection& conn, const std::string& scriptfile, const bool singleSend, const int index) {
-    using std::cout;
     using std::cin;
+    using std::cout;
     using std::endl;
     using std::string;
 
@@ -75,14 +72,12 @@ void runScript(Connection& conn, const std::string& scriptfile, const bool singl
         }
     }
 
-    cout << "Script completed" << endl
-        << endl;
-
+    cout << "Script completed" << endl << endl;
 }
 
-void interactiveConsole(Connection &conn) {
-    using std::cout;
+void interactiveConsole(Connection& conn) {
     using std::cin;
+    using std::cout;
     using std::endl;
     using std::string;
 
@@ -99,8 +94,7 @@ void interactiveConsole(Connection &conn) {
         if (opCode == "open") {
             //  OPEN [host]              -  Establishes connection to the host
             if (conn.Disconnect()) {
-                cout << "Socket closed" << endl
-                    << endl;
+                cout << "Socket closed" << endl << endl;
             }
             try {
                 std::string host;
@@ -110,43 +104,28 @@ void interactiveConsole(Connection &conn) {
                 bool rv = conn.Connect(host);
                 assert(rv);
 
-                cout << endl
-                    << "\tConnected" << endl
-                    << endl;
+                cout << endl << "\tConnected" << endl << endl;
 
             } catch (std::exception& ex) {
-                cout << endl
-                    << "ERR Socket connection failed: " << ex.what() << endl
-                    << endl;
-            } catch (...) {
-                cout << endl
-                    << "ERR Socket connection failed: unknown exception" << endl
-                    << endl;
-            }
+                cout << endl << "ERR Socket connection failed: " << ex.what() << endl << endl;
+            } catch (...) { cout << endl << "ERR Socket connection failed: unknown exception" << endl << endl; }
 
         } else if (opCode == "close") {
             //  CLOSE                    -  Closes connection to the host
             if (conn.Disconnect()) {
-                cout << "Socket closed" << endl
-                    << endl;
+                cout << "Socket closed" << endl << endl;
             } else {
-                cout << "Socket not connected" << endl
-                    << endl;
+                cout << "Socket not connected" << endl << endl;
             }
 
         } else if (opCode == "status") {
             //  STATUS                   -  Informs about the current connection
-            cout << "Socket " << (conn.Connected() ? "connected" : "not connected") << endl
-                << endl;
+            cout << "Socket " << (conn.Connected() ? "connected" : "not connected") << endl << endl;
 
         } else {
             if (!execCommand(conn, command)) {
-                cout << "ERR unknown command" << endl
-                    << endl;
+                cout << "ERR unknown command" << endl << endl;
             }
         }
-
     }
-
-
 }

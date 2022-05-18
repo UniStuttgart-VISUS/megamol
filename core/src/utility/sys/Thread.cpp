@@ -10,13 +10,13 @@
 #include <unistd.h>
 #endif /* !_WIN32 */
 
-#include "vislib/assert.h"
-#include "vislib/sys/error.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/sys/SystemException.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/assert.h"
+#include "vislib/sys/SystemException.h"
+#include "vislib/sys/error.h"
 
 #include "mmcore/utility/sys/DynamicFunctionPointer.h"
 
@@ -25,7 +25,7 @@
 
 #ifndef _WIN32
 /**
- * Return code that marks a thread as still running. Make sure that the value 
+ * Return code that marks a thread as still running. Make sure that the value
  * is the same as on Windows.
  */
 #define STILL_ACTIVE (259)
@@ -38,7 +38,7 @@
 void vislib::sys::Thread::Sleep(const DWORD millis) {
 #ifdef _WIN32
     ::Sleep(millis);
-#else /* _WIN32 */
+#else  /* _WIN32 */
     if (millis >= 1000) {
         /* At least one second to sleep. Use ::sleep() for full seconds. */
         ::sleep(millis / 1000);
@@ -64,7 +64,7 @@ void vislib::sys::Thread::Reschedule(void) {
         ::Sleep(0);
     }
 #endif
-#else /* _WIN32 */
+#else  /* _WIN32 */
     if (::sched_yield() != 0) {
         throw SystemException(__FILE__, __LINE__);
     }
@@ -75,8 +75,7 @@ void vislib::sys::Thread::Reschedule(void) {
 /*
  * vislib::sys::Thread::Thread
  */
-vislib::sys::Thread::Thread(Runnable *runnable) 
-        : id(0), runnable(runnable), runnableFunc(NULL) {
+vislib::sys::Thread::Thread(Runnable* runnable) : id(0), runnable(runnable), runnableFunc(NULL) {
 #ifdef _WIN32
     this->handle = NULL;
 
@@ -97,8 +96,7 @@ vislib::sys::Thread::Thread(Runnable *runnable)
 /*
  * vislib::sys::Thread::Thread
  */
-vislib::sys::Thread::Thread(Runnable::Function runnableFunc) 
-        : id(0), runnable(NULL), runnableFunc(runnableFunc) {
+vislib::sys::Thread::Thread(Runnable::Function runnableFunc) : id(0), runnable(NULL), runnableFunc(runnableFunc) {
 #ifdef _WIN32
     this->handle = NULL;
 
@@ -148,7 +146,7 @@ DWORD vislib::sys::Thread::GetExitCode(void) const {
 
     return retval;
 
-#else /* _WIN32 */
+#else  /* _WIN32 */
     return this->exitCode;
 #endif /* _WIN32 */
 }
@@ -161,13 +159,11 @@ bool vislib::sys::Thread::IsRunning(void) const {
     try {
 #ifdef _WIN32
         return ((this->handle != NULL)
-#else /* _WIN32 */
+#else  /* _WIN32 */
         return ((this->id != 0)
 #endif /* _WIN32 */
-            && (this->GetExitCode() == STILL_ACTIVE));
-    } catch (SystemException) {
-        return false;
-    }
+                && (this->GetExitCode() == STILL_ACTIVE));
+    } catch (SystemException) { return false; }
 }
 
 
@@ -197,7 +193,7 @@ void vislib::sys::Thread::Join(void) {
 /*
  * vislib::sys::Thread::Start
  */
-bool vislib::sys::Thread::Start(void *userData) {
+bool vislib::sys::Thread::Start(void* userData) {
     if (this->IsRunning()) {
         /*
          * The thread must not be started twice at the same time as this would
@@ -220,25 +216,22 @@ bool vislib::sys::Thread::Start(void *userData) {
         ::CloseHandle(this->handle);
     }
 
-    if ((this->handle = ::CreateThread(NULL, 0, Thread::ThreadFunc, 
-            &this->threadFuncParam, 0, &this->id)) != NULL) {
+    if ((this->handle = ::CreateThread(NULL, 0, Thread::ThreadFunc, &this->threadFuncParam, 0, &this->id)) != NULL) {
         return true;
 
     } else {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "CreateThread() failed with error %d.\n", 
-            ::GetLastError());
+        VLTRACE(Trace::LEVEL_VL_ERROR, "CreateThread() failed with error %d.\n", ::GetLastError());
         throw SystemException(__FILE__, __LINE__);
     }
 
-#else /* _WIN32 */
-    if (::pthread_create(&this->id, &this->attribs, Thread::ThreadFunc, 
-            static_cast<void *>(&this->threadFuncParam)) == 0) {
-        this->exitCode = STILL_ACTIVE;  // Mark thread as running.
+#else  /* _WIN32 */
+    if (::pthread_create(&this->id, &this->attribs, Thread::ThreadFunc, static_cast<void*>(&this->threadFuncParam)) ==
+        0) {
+        this->exitCode = STILL_ACTIVE; // Mark thread as running.
         return true;
 
     } else {
-        VLTRACE(Trace::LEVEL_VL_ERROR, "pthread_create() failed with error %d.\n", 
-            ::GetLastError());
+        VLTRACE(Trace::LEVEL_VL_ERROR, "pthread_create() failed with error %d.\n", ::GetLastError());
         throw SystemException(__FILE__, __LINE__);
     }
 #endif /* _WIN32 */
@@ -248,28 +241,31 @@ bool vislib::sys::Thread::Start(void *userData) {
 /*
  * vislib::sys::Thread::Terminate
  */
-bool vislib::sys::Thread::Terminate(const bool forceTerminate, 
-                                    const int exitCode) {
-    ASSERT(exitCode != STILL_ACTIVE);   // User should never set this.
+bool vislib::sys::Thread::Terminate(const bool forceTerminate, const int exitCode) {
+    ASSERT(exitCode != STILL_ACTIVE); // User should never set this.
 
     if (forceTerminate) {
         /* Force immediate termination of the thread. */
 
 #ifdef _WIN32
         if (::TerminateThread(this->handle, exitCode) == FALSE) {
-            VLTRACE(Trace::LEVEL_VL_ERROR, "TerminateThread() failed with error "
-                "%d.\n", ::GetLastError());
+            VLTRACE(Trace::LEVEL_VL_ERROR,
+                "TerminateThread() failed with error "
+                "%d.\n",
+                ::GetLastError());
             throw SystemException(__FILE__, __LINE__);
         }
 
         return true;
 
-#else /* _WIN32 */
+#else  /* _WIN32 */
         this->exitCode = exitCode;
 
         if (::pthread_cancel(this->id) != 0) {
-            VLTRACE(Trace::LEVEL_VL_ERROR, "pthread_cancel() failed with error "
-                "%d.\n", ::GetLastError());
+            VLTRACE(Trace::LEVEL_VL_ERROR,
+                "pthread_cancel() failed with error "
+                "%d.\n",
+                ::GetLastError());
             throw SystemException(__FILE__, __LINE__);
         }
 
@@ -286,12 +282,13 @@ bool vislib::sys::Thread::Terminate(const bool forceTerminate,
  * vislib::sys::Thread::TryTerminate
  */
 bool vislib::sys::Thread::TryTerminate(const bool doWait) {
-    
+
     if (this->runnable == NULL) {
         throw IllegalStateException("TryTerminate can only be used, if the "
-            "thread is using a Runnable.", __FILE__, __LINE__);
+                                    "thread is using a Runnable.",
+            __FILE__, __LINE__);
     }
-    ASSERT(this->runnable != NULL); 
+    ASSERT(this->runnable != NULL);
 
     if (this->runnable->Terminate()) {
         /*
@@ -300,8 +297,8 @@ bool vislib::sys::Thread::TryTerminate(const bool doWait) {
          */
         if (doWait) {
             this->Join();
-        } 
-        
+        }
+
         return true;
 
     } else {
@@ -315,18 +312,18 @@ bool vislib::sys::Thread::TryTerminate(const bool doWait) {
 /*
  * vislib::sys::Thread::CleanupFunc
  */
-void vislib::sys::Thread::CleanupFunc(void *param) {
+void vislib::sys::Thread::CleanupFunc(void* param) {
     ASSERT(param != NULL);
 
-    Thread *t = static_cast<Thread *>(param);
+    Thread* t = static_cast<Thread*>(param);
 
-    /* 
+    /*
      * In case the thread has still an exit code of STILL_ACTIVE, set a new one
      * to mark the thread as finished.
      */
     if (t->exitCode == STILL_ACTIVE) {
         VLTRACE(Trace::LEVEL_VL_WARN, "CleanupFunc called with exit code "
-            "STILL_ACTIVE");
+                                      "STILL_ACTIVE");
         t->exitCode = 0;
     }
 }
@@ -337,15 +334,15 @@ void vislib::sys::Thread::CleanupFunc(void *param) {
  * vislib::sys::Thread::ThreadFunc
  */
 #ifdef _WIN32
-DWORD WINAPI vislib::sys::Thread::ThreadFunc(void *param) {
-#else /* _WIN32 */
-void *vislib::sys::Thread::ThreadFunc(void *param) {
+DWORD WINAPI vislib::sys::Thread::ThreadFunc(void* param) {
+#else  /* _WIN32 */
+void* vislib::sys::Thread::ThreadFunc(void* param) {
 #endif /* _WIN32 */
     ASSERT(param != NULL);
 
     int retval = 0;
-    ThreadFuncParam *tfp = static_cast<ThreadFuncParam *>(param);
-    Thread *t = tfp->thread;
+    ThreadFuncParam* tfp = static_cast<ThreadFuncParam*>(param);
+    Thread* t = tfp->thread;
     ASSERT(t != NULL);
 
 #ifndef _WIN32
@@ -361,18 +358,17 @@ void *vislib::sys::Thread::ThreadFunc(void *param) {
     }
     ASSERT(retval != STILL_ACTIVE); // Thread should never use STILL_ACTIVE!
 
-#ifndef _WIN32    
+#ifndef _WIN32
     t->exitCode = retval;
     pthread_cleanup_pop(1);
 #endif /* !_WIN32 */
 
-    VLTRACE(Trace::LEVEL_VL_INFO, "Thread [%u] has exited with code %d (0x%x).\n",
-        t->id, retval, retval);
+    VLTRACE(Trace::LEVEL_VL_INFO, "Thread [%u] has exited with code %d (0x%x).\n", t->id, retval, retval);
 
 #ifdef _WIN32
     return static_cast<DWORD>(retval);
-#else /* _WIN32 */
-    return reinterpret_cast<void *>(retval);
+#else  /* _WIN32 */
+    return reinterpret_cast<void*>(retval);
 #endif /* _WIN32 */
 }
 
@@ -381,15 +377,14 @@ void *vislib::sys::Thread::ThreadFunc(void *param) {
  * vislib::sys::Thread::Thread
  */
 vislib::sys::Thread::Thread(const Thread& rhs) {
-    throw UnsupportedOperationException("vislib::sys::Thread::Thread",
-        __FILE__, __LINE__);
+    throw UnsupportedOperationException("vislib::sys::Thread::Thread", __FILE__, __LINE__);
 }
 
 
 /*
  * vislib::sys::Thread::operator =
  */
-vislib::sys::Thread& vislib::sys::Thread::operator =(const Thread& rhs) {
+vislib::sys::Thread& vislib::sys::Thread::operator=(const Thread& rhs) {
     if (this != &rhs) {
         throw IllegalParamException("rhs_", __FILE__, __LINE__);
     }

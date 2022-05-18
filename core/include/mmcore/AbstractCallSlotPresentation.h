@@ -8,45 +8,37 @@
 #ifndef MEGAMOLCORE_ABSTRACTCALLSLOTPRESENTATION_H_INCLUDED
 #define MEGAMOLCORE_ABSTRACTCALLSLOTPRESENTATION_H_INCLUDED
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/log/Log.h"
 
 
 namespace megamol {
 namespace core {
 
-    /**
-     * Provide flag to present caller/callee slot in GUI depending on necessity
-     */
-    class MEGAMOLCORE_API AbstractCallSlotPresentation {
-    public:
+/**
+ * Provide flag to present caller/callee slot in GUI depending on necessity
+ */
+class AbstractCallSlotPresentation {
+public:
+    enum Necessity { SLOT_OPTIONAL, SLOT_REQUIRED };
 
-        enum Necessity {
-            SLOT_OPTIONAL,
-            SLOT_REQUIRED
-        };
+    void SetNecessity(Necessity n) {
+        this->necessity = n;
+    }
 
-        void SetNecessity(Necessity n) {
-            this->necessity = n;
-        }
+    Necessity GetNecessity(void) {
+        return this->necessity;
+    }
 
-        Necessity GetNecessity(void) {
-            return this->necessity;
-        }
+protected:
+    AbstractCallSlotPresentation(void) {
+        this->necessity = Necessity::SLOT_OPTIONAL;
+    }
 
-    protected:
+    virtual ~AbstractCallSlotPresentation(void) = default;
 
-        AbstractCallSlotPresentation(void) {
-            this->necessity = Necessity::SLOT_OPTIONAL;
-        }
-
-        virtual ~AbstractCallSlotPresentation(void) = default;
-
-    private:
-
-        Necessity necessity;
-
-    };
+private:
+    Necessity necessity;
+};
 
 } /* end namespace core */
 } /* end namespace megamol */

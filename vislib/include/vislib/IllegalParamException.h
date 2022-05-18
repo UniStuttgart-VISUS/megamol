@@ -20,56 +20,52 @@
 
 namespace vislib {
 
+/**
+ * This exception indicates an illegal parameter value.
+ *
+ * @author Christoph Mueller
+ */
+class IllegalParamException : public Exception {
+
+public:
     /**
-     * This exception indicates an illegal parameter value.
+     * Ctor.
      *
-     * @author Christoph Mueller
+     * @param paramName Name of the illegal parameter.
+     * @param file      The file the exception was thrown in.
+     * @param line      The line the exception was thrown in.
      */
-    class IllegalParamException : public Exception {
+    IllegalParamException(const char* paramName, const char* file, const int line);
 
-    public:
+    /**
+     * Ctor.
+     *
+     * @param paramName Name of the illegal parameter.
+     * @param file      The file the exception was thrown in.
+     * @param line      The line the exception was thrown in.
+     */
+    IllegalParamException(const wchar_t* paramName, const char* file, const int line);
 
-        /**
-         * Ctor.
-         *
-         * @param paramName Name of the illegal parameter.
-         * @param file      The file the exception was thrown in.
-         * @param line      The line the exception was thrown in.
-         */
-        IllegalParamException(const char *paramName, const char *file, 
-            const int line);
+    /**
+     * Create a clone of 'rhs'.
+     *
+     * @param rhs The object to be cloned.
+     */
+    IllegalParamException(const IllegalParamException& rhs);
 
-        /**
-         * Ctor.
-         *
-         * @param paramName Name of the illegal parameter.
-         * @param file      The file the exception was thrown in.
-         * @param line      The line the exception was thrown in.
-         */
-        IllegalParamException(const wchar_t *paramName, const char *file, 
-            const int line);
+    /** Dtor. */
+    virtual ~IllegalParamException(void);
 
-        /**
-         * Create a clone of 'rhs'.
-         *
-         * @param rhs The object to be cloned.
-         */
-        IllegalParamException(const IllegalParamException& rhs);
-
-        /** Dtor. */
-        virtual ~IllegalParamException(void);
-
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        virtual IllegalParamException& operator =(
-			const IllegalParamException& rhs);
-    };
-}
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     */
+    virtual IllegalParamException& operator=(const IllegalParamException& rhs);
+};
+} // namespace vislib
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

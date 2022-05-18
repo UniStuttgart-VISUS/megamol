@@ -16,9 +16,9 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "vislib/math/Cuboid.h"
 #include "mmcore/view/CallRender3D.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib/math/Cuboid.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -26,7 +26,6 @@ namespace protein_cuda {
 class VBODataCall : public core::Call {
 
 public:
-
     /// Index of the 'GetCamparams' function
     static const unsigned int CallForGetExtent;
 
@@ -38,7 +37,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "VBODataCall";
     }
 
@@ -47,7 +46,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Call to transmit one vertex buffer object handle and the according bounding box";
     }
 
@@ -67,8 +66,8 @@ public:
      *
      * @return The name of the requested function.
      */
-    static const char * FunctionName(unsigned int idx) {
-        switch( idx) {
+    static const char* FunctionName(unsigned int idx) {
+        switch (idx) {
         case 0:
             return "getExtent";
         case 1:
@@ -82,7 +81,7 @@ public:
      *
      * @return The bounding box
      */
-    core::BoundingBoxes &GetBBox() {
+    core::BoundingBoxes& GetBBox() {
         return this->bbox;
     }
 
@@ -172,7 +171,7 @@ public:
      *
      * @return The VBO handle
      */
-    inline struct cudaGraphicsResource **GetCudaRessourceHandle() {
+    inline struct cudaGraphicsResource** GetCudaRessourceHandle() {
         return this->vboHandle;
     }
 
@@ -238,7 +237,7 @@ public:
      *
      * @param frameCnt The data's frame count
      */
-    inline void SetFrameCnt(unsigned int frameCnt ) {
+    inline void SetFrameCnt(unsigned int frameCnt) {
         this->frameCnt = frameCnt;
     }
 
@@ -276,7 +275,7 @@ public:
      *
      * @param vbo The vbo handle
      */
-    inline void SetCudaRessourceHandle(struct cudaGraphicsResource **vboHandle) {
+    inline void SetCudaRessourceHandle(struct cudaGraphicsResource** vboHandle) {
         this->vboHandle = vboHandle;
     }
 
@@ -315,10 +314,7 @@ public:
 
 
 protected:
-
-
 private:
-
     /// The OpenGL VBO handle for vertex data
     GLuint vbo;
 
@@ -359,8 +355,7 @@ private:
     float texValMin;
 
     /// VBO device pointer
-    struct cudaGraphicsResource **vboHandle;
-
+    struct cudaGraphicsResource** vboHandle;
 };
 
 /// Description class typedef

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="dfrLambert">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">430</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">dfr/render_to_fbo.glsl</snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">430</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">dfr/lambert_fragment.glsl</snippet>
+    </shader>
+
+</btf>

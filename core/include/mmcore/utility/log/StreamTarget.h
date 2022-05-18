@@ -10,15 +10,15 @@
 #include "mmcore/utility/log/Log.h"
 
 #define SPDLOG_EOL ""
-#include "spdlog/spdlog.h"
 #include "spdlog/sinks/ostream_sink.h"
+#include "spdlog/spdlog.h"
 
 namespace megamol::core::utility::log {
 
 /**
  * Target class echoing the log messages into a stream
  */
-class MEGAMOLCORE_API StreamTarget : public Log::Target {
+class StreamTarget : public Log::Target {
 public:
     /** Stream target to stdout */
     static const std::shared_ptr<Target> StdOut;

@@ -3,15 +3,10 @@
  * Copyright (C) 2006-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "SombreroWarper.h"
+#include "stdafx.h"
 
-#include <chrono>
-#include <climits>
-#include <iostream>
-#include <limits>
-#include <map>
-#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -20,10 +15,15 @@
 #include "protein_calls/TunnelResidueDataCall.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowPoint.h"
+#include <chrono>
+#include <climits>
+#include <iostream>
+#include <limits>
+#include <map>
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::geocalls;
+using namespace megamol::geocalls_gl;
 using namespace megamol::protein_cuda;
 using namespace megamol::protein_calls;
 
@@ -34,39 +34,39 @@ using namespace megamol::protein_calls;
  * SombreroWarper::SombreroWarper
  */
 SombreroWarper::SombreroWarper(void)
-    : Module()
-    , meshInSlot("dataIn", "Receives the input mesh")
-    , tunnelInSlot("tunnelIn", "Receives the tunnel data")
-    , warpedMeshOutSlot("getData", "Returns the mesh data of the wanted area")
-    , minBrimLevelParam("minBrimLevel", "Minimal vertex level to count as brim.")
-    , maxBrimLevelParam("maxBrimLevel",
-          "Maximal vertex level to count as brim. A value of -1 sets the value to the maximal available level")
-    , liftingTargetDistance("meshDeformation::liftingTargetDistance",
-          "The distance that is applied to a vertex during the lifting process.")
-    , maxAllowedLiftingDistance(
-          "meshDeformation::maxAllowedDistance", "The maximum allowed distance before vertex lifting is performed.")
-    , flatteningParam("flat", "Flat representation of the result")
-    , southBorderWeightParam("southBorderWeight",
-          "Weight of the southern border. This parameter influences the optical quality of the "
-          "tip of the head. Do not change unless you know what you do.")
-    , southBorderHeightFactor("southBorderHeight", "Height factor for the souther border vertices.")
-    , invertNormalParam("invertNormals", "Inverts the surface normals")
-    , fixMeshParam("fixMesh", "If enabled, the module tries to fix outlier vertices")
-    , meshFixDistanceParam("fixDistance", "Maximal distance between vertices before being considered as outlier")
-    , radiusSelectionSlot("radiusVariant", "Select the radius computation method")
-    , brimScalingParam("scale::brimScaling", "Scaling factor for the brim radius")
-    , radiusScalingParam("scale::radiusScaling", "Scaling factor for the sombrero radius")
-    , lengthScalingParam("scale::lengthScaling", "Scaling factor for the sombrero length") {
+        : Module()
+        , meshInSlot("dataIn", "Receives the input mesh")
+        , tunnelInSlot("tunnelIn", "Receives the tunnel data")
+        , warpedMeshOutSlot("getData", "Returns the mesh data of the wanted area")
+        , minBrimLevelParam("minBrimLevel", "Minimal vertex level to count as brim.")
+        , maxBrimLevelParam("maxBrimLevel",
+              "Maximal vertex level to count as brim. A value of -1 sets the value to the maximal available level")
+        , liftingTargetDistance("meshDeformation::liftingTargetDistance",
+              "The distance that is applied to a vertex during the lifting process.")
+        , maxAllowedLiftingDistance(
+              "meshDeformation::maxAllowedDistance", "The maximum allowed distance before vertex lifting is performed.")
+        , flatteningParam("flat", "Flat representation of the result")
+        , southBorderWeightParam("southBorderWeight",
+              "Weight of the southern border. This parameter influences the optical quality of the "
+              "tip of the head. Do not change unless you know what you do.")
+        , southBorderHeightFactor("southBorderHeight", "Height factor for the souther border vertices.")
+        , invertNormalParam("invertNormals", "Inverts the surface normals")
+        , fixMeshParam("fixMesh", "If enabled, the module tries to fix outlier vertices")
+        , meshFixDistanceParam("fixDistance", "Maximal distance between vertices before being considered as outlier")
+        , radiusSelectionSlot("radiusVariant", "Select the radius computation method")
+        , brimScalingParam("scale::brimScaling", "Scaling factor for the brim radius")
+        , radiusScalingParam("scale::radiusScaling", "Scaling factor for the sombrero radius")
+        , lengthScalingParam("scale::lengthScaling", "Scaling factor for the sombrero length") {
 
     // Callee slot
     this->warpedMeshOutSlot.SetCallback(
-        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &SombreroWarper::getData);
+        CallTriMeshDataGL::ClassName(), CallTriMeshDataGL::FunctionName(0), &SombreroWarper::getData);
     this->warpedMeshOutSlot.SetCallback(
-        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(1), &SombreroWarper::getExtent);
+        CallTriMeshDataGL::ClassName(), CallTriMeshDataGL::FunctionName(1), &SombreroWarper::getExtent);
     this->MakeSlotAvailable(&this->warpedMeshOutSlot);
 
     // Caller slots
-    this->meshInSlot.SetCompatibleCall<CallTriMeshDataDescription>();
+    this->meshInSlot.SetCompatibleCall<CallTriMeshDataGLDescription>();
     this->MakeSlotAvailable(&this->meshInSlot);
 
     this->tunnelInSlot.SetCompatibleCall<TunnelResidueDataCallDescription>();
@@ -129,12 +129,16 @@ SombreroWarper::SombreroWarper(void)
 /*
  * SombreroWarper::~SombreroWarper
  */
-SombreroWarper::~SombreroWarper(void) { this->Release(); }
+SombreroWarper::~SombreroWarper(void) {
+    this->Release();
+}
 
 /*
  * SombreroWarper::create
  */
-bool SombreroWarper::create(void) { return true; }
+bool SombreroWarper::create(void) {
+    return true;
+}
 
 /*
  * SombreroWarper::release
@@ -145,14 +149,17 @@ void SombreroWarper::release(void) {}
  * SombreroWarper::getData
  */
 bool SombreroWarper::getData(Call& call) {
-    CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
-    if (outCall == nullptr) return false;
+    CallTriMeshDataGL* outCall = dynamic_cast<CallTriMeshDataGL*>(&call);
+    if (outCall == nullptr)
+        return false;
 
-    CallTriMeshData* inCall = this->meshInSlot.CallAs<CallTriMeshData>();
-    if (inCall == nullptr) return false;
+    CallTriMeshDataGL* inCall = this->meshInSlot.CallAs<CallTriMeshDataGL>();
+    if (inCall == nullptr)
+        return false;
 
     TunnelResidueDataCall* tunnelCall = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
-    if (tunnelCall == nullptr) return false;
+    if (tunnelCall == nullptr)
+        return false;
 
     inCall->SetFrameID(outCall->FrameID());
     tunnelCall->SetFrameID(outCall->FrameID());
@@ -171,14 +178,17 @@ bool SombreroWarper::getData(Call& call) {
  * SombreroWarper::getExtent
  */
 bool SombreroWarper::getExtent(Call& call) {
-    CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
-    if (outCall == nullptr) return false;
+    CallTriMeshDataGL* outCall = dynamic_cast<CallTriMeshDataGL*>(&call);
+    if (outCall == nullptr)
+        return false;
 
-    CallTriMeshData* inCall = this->meshInSlot.CallAs<CallTriMeshData>();
-    if (inCall == nullptr) return false;
+    CallTriMeshDataGL* inCall = this->meshInSlot.CallAs<CallTriMeshDataGL>();
+    if (inCall == nullptr)
+        return false;
 
     TunnelResidueDataCall* tunnelCall = this->tunnelInSlot.CallAs<TunnelResidueDataCall>();
-    if (tunnelCall == nullptr) return false;
+    if (tunnelCall == nullptr)
+        return false;
 
     this->checkParameters();
 
@@ -189,11 +199,15 @@ bool SombreroWarper::getExtent(Call& call) {
     inCall->SetFrameID(outCall->FrameID());
     tunnelCall->SetFrameID(outCall->FrameID());
 
-    if (!(*inCall)(1)) return false;
-    if (!(*tunnelCall)(1)) return false;
+    if (!(*inCall)(1))
+        return false;
+    if (!(*tunnelCall)(1))
+        return false;
 
-    if (!(*inCall)(0)) return false;
-    if (!(*tunnelCall)(0)) return false;
+    if (!(*inCall)(0))
+        return false;
+    if (!(*tunnelCall)(0))
+        return false;
 
     // something happened with the input data, we have to recompute it
     if ((lastDataHash != inCall->DataHash()) || dirtyFlag) {
@@ -204,13 +218,16 @@ bool SombreroWarper::getExtent(Call& call) {
         auto timebegin = std::chrono::steady_clock::now();
 #endif
         // copy
-        if (!this->copyMeshData(*inCall)) return false;
+        if (!this->copyMeshData(*inCall))
+            return false;
 
         // search the sombrero border
-        if (!this->findSombreroBorder()) return false;
+        if (!this->findSombreroBorder())
+            return false;
 
         // fill the holes of the mesh
-        if (!this->fillMeshHoles()) return false;
+        if (!this->fillMeshHoles())
+            return false;
 
 #ifdef SOMBRERO_TIMING
         auto timeend = std::chrono::steady_clock::now();
@@ -220,10 +237,12 @@ bool SombreroWarper::getExtent(Call& call) {
 #endif
 
         // recompute the broken vertex distances
-        if (!this->recomputeVertexDistances()) return false;
+        if (!this->recomputeVertexDistances())
+            return false;
 
         // compute the Rahi & Sharp angles
-        if (!this->computeVertexAngles(*tunnelCall)) return false;
+        if (!this->computeVertexAngles(*tunnelCall))
+            return false;
 
 #ifdef SOMBRERO_TIMING
         timeend = std::chrono::steady_clock::now();
@@ -233,7 +252,8 @@ bool SombreroWarper::getExtent(Call& call) {
 #endif
 
         // warp the mesh in the correct position
-        if (!this->warpMesh(*tunnelCall)) return false;
+        if (!this->warpMesh(*tunnelCall))
+            return false;
 
 #ifdef SOMBRERO_TIMING
         timeend = std::chrono::steady_clock::now();
@@ -244,14 +264,16 @@ bool SombreroWarper::getExtent(Call& call) {
 
         // if needed, fix the mesh
         if (this->fixMeshParam.Param<param::BoolParam>()->Value()) {
-            if (!this->fixBrokenMeshParts(this->meshFixDistanceParam.Param<param::FloatParam>()->Value())) return false;
+            if (!this->fixBrokenMeshParts(this->meshFixDistanceParam.Param<param::FloatParam>()->Value()))
+                return false;
         }
 
 #ifdef SOMBRERO_TIMING
         timebegin = std::chrono::steady_clock::now();
 #endif
         // set the surface normals to correct values
-        if (!this->recomputeVertexNormals(*tunnelCall)) return false;
+        if (!this->recomputeVertexNormals(*tunnelCall))
+            return false;
 
 #ifdef SOMBRERO_TIMING
         timeend = std::chrono::steady_clock::now();
@@ -261,7 +283,8 @@ bool SombreroWarper::getExtent(Call& call) {
 #endif
 
         // cut the mesh into two parts
-        if (!this->divideMeshForOutput()) return false;
+        if (!this->divideMeshForOutput())
+            return false;
 #ifdef SOMBRERO_TIMING
         timeend = std::chrono::steady_clock::now();
         elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
@@ -333,7 +356,7 @@ void SombreroWarper::checkParameters(void) {
 /*
  * SombreroWarper::copyMeshData
  */
-bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
+bool SombreroWarper::copyMeshData(CallTriMeshDataGL& ctmd) {
     this->meshVector.clear();
     this->meshVector.resize(ctmd.Count());
     this->meshVector.shrink_to_fit();
@@ -377,8 +400,9 @@ bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
         uint vertexLvlAttrib = UINT_MAX;
         uint bsDistAttrib = UINT_MAX;
         if (attribCount < 3) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Too few vertex attributes detected. The input mesh for the "
-                                                    "Sombrero warper needs at least three UINT32 vertex attributes.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Too few vertex attributes detected. The input mesh for the "
+                "Sombrero warper needs at least three UINT32 vertex attributes.");
             return false;
         }
         // determine the location of the needed attributes
@@ -460,7 +484,7 @@ bool SombreroWarper::findSombreroBorder(void) {
     this->brimIndices.clear();
     this->brimIndices.resize(this->meshVector.size());
     for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
-        CallTriMeshData::Mesh& mesh = this->meshVector[i];
+        CallTriMeshDataGL::Mesh& mesh = this->meshVector[i];
 
         uint vCnt = mesh.GetVertexCount();
         uint fCnt = mesh.GetTriCount();
@@ -489,7 +513,8 @@ bool SombreroWarper::findSombreroBorder(void) {
         uint maxVal = 0;
         for (uint j = 0; j < vCnt; j++) {
             uint atVal = this->vertexLevelAttachment[i][j];
-            if (atVal > maxVal) maxVal = atVal;
+            if (atVal > maxVal)
+                maxVal = atVal;
         }
 #if 0 // color the vertices corresponding to their level
         float mvf = static_cast<float>(maxVal);
@@ -522,10 +547,12 @@ bool SombreroWarper::findSombreroBorder(void) {
         int maxBrimVal = this->maxBrimLevelParam.Param<param::IntParam>()->Value();
         unsigned int minBrim = this->minBrimLevelParam.Param<param::IntParam>()->Value();
         unsigned int maxBrim = this->maxBrimLevelParam.Param<param::IntParam>()->Value();
-        if (maxBrimVal < 0) maxBrim = maxVal;
+        if (maxBrimVal < 0)
+            maxBrim = maxVal;
 
         if (minBrim > maxBrim) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("The minBrim value is larger than the maxBrim value");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "The minBrim value is larger than the maxBrim value");
             return false;
         }
 
@@ -835,7 +862,8 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
         if (bsIt != this->bsDistanceAttachment[i].end()) {
             bsVertex = static_cast<uint>(bsIt - this->bsDistanceAttachment[i].begin());
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("No binding site vertex present. No computation possible!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "No binding site vertex present. No computation possible!");
             return false;
         }
 
@@ -949,24 +977,26 @@ bool SombreroWarper::warpMesh(TunnelResidueDataCall& tunnelCall) {
          */
 #ifndef NO_DEFORMATION
         bool yResult = this->computeHeightPerVertex(bsVertex);
-        if (!yResult) return false;
+        if (!yResult)
+            return false;
 
-#    ifdef SOMBRERO_TIMING
+#ifdef SOMBRERO_TIMING
         timeend = std::chrono::steady_clock::now();
         elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
         std::cout << "Height per vertex computation took " << elapsed.count() << " ms" << std::endl;
         timebegin = std::chrono::steady_clock::now();
-#    endif
+#endif
 
         bool xzResult = this->computeXZCoordinatePerVertex(tunnelCall);
-        if (!xzResult) return false;
+        if (!xzResult)
+            return false;
 
-#    ifdef SOMBRERO_TIMING
+#ifdef SOMBRERO_TIMING
         timeend = std::chrono::steady_clock::now();
         elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(timeend - timebegin);
         std::cout << "x-z coordinate computation took " << elapsed.count() << " ms" << std::endl;
         timebegin = std::chrono::steady_clock::now();
-#    endif
+#endif
 #endif
     }
 
@@ -1264,7 +1294,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
                 }
                 forward++;
             }
-            if (found) continue;
+            if (found)
+                continue;
             while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
                 auto target = (*reverse).second;
                 if (this->bsDistanceAttachment[i][target] == mylevel - 1) {
@@ -1365,7 +1396,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             meridianSet.begin(), meridianSet.end(), sweatSet.begin(), sweatSet.end(), std::back_inserter(intRes));
 
         if (intRes.size() != 1) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("The sweatband and the meridian do not intersect properly");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "The sweatband and the meridian do not intersect properly");
             return false;
         }
 
@@ -1406,7 +1438,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             }
             k++;
             if (!found) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("The brim of the sombrero is not continous. Aborting...");
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "The brim of the sombrero is not continous. Aborting...");
                 return false;
             }
         }
@@ -1485,7 +1518,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
                 reverse++;
             }
             if (targets.size() == 0) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("No target vertex for the sweatband computation found");
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "No target vertex for the sweatband computation found");
                 return false;
             }
 
@@ -1515,7 +1549,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             sweatReadySet.insert(finalv);
         }
 
-#    if 0 // switch for the colouring of the sweatband vertices by angle
+#if 0 // switch for the colouring of the sweatband vertices by angle
         vislib::math::Vector<float, 3> red(255.0f, 0.0f, 0.0f);
         float factor = 1.0f / static_cast<float>(sweatSet.size());
         int f = 0;
@@ -1539,7 +1573,7 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             //}
             f++;
         }
-#    endif
+#endif
 #endif
 
         // the brim and sweatband is sorted, now we can estimate the directions
@@ -1599,7 +1633,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
 
         // determine candidate vertices
         for (auto current : meridian) {
-            if (current == startIndex) continue;
+            if (current == startIndex)
+                continue;
             auto forward = edgesForward[i].begin() + this->vertexEdgeOffsets[i][current].first;
             auto reverse = edgesReverse[i].begin() + this->vertexEdgeOffsets[i][current].second;
 
@@ -1640,7 +1675,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
                 }
                 forward++;
             }
-            if (found) continue;
+            if (found)
+                continue;
             while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
                 auto target = (*reverse).second;
                 if (vTypes[target] == 4) {
@@ -1676,7 +1712,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
                 }
                 forward++;
             }
-            if (found) continue;
+            if (found)
+                continue;
             while (reverse != edgesReverse[i].end() && (*reverse).first == current) {
                 auto target = (*reverse).second;
                 if (vTypes[target] == 4) {
@@ -1693,7 +1730,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             }
         }
         if (meridian.size() < 2) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("The meridian is not long enough to proceed with the computation");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "The meridian is not long enough to proceed with the computation");
             return false;
         }
 
@@ -1775,7 +1813,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             reverse++;
         }
         if (bsVertices.size() < 3) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("The binding site vertex lies in a degenerate region. Aborting...");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "The binding site vertex lies in a degenerate region. Aborting...");
             return false;
         }
         std::vector<uint> bsVertexCircle;
@@ -1786,7 +1825,8 @@ bool SombreroWarper::computeVertexAngles(TunnelResidueDataCall& tunnelCall) {
             }
         }
         if (bsVertexCircle.size() != 2) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Something went wrong during the circle computation. Aborting...");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Something went wrong during the circle computation. Aborting...");
             return false;
         }
         std::set<uint> doneset = std::set<uint>(bsVertexCircle.begin(), bsVertexCircle.end());
@@ -2126,7 +2166,8 @@ bool SombreroWarper::computeHeightPerVertex(uint bsVertex) {
         bool kernelRes =
             this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth, zVertexWeights);
         if (!kernelRes) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("The z-values kernel of the height computation failed!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "The z-values kernel of the height computation failed!");
             return false;
         }
 
@@ -2250,7 +2291,8 @@ bool SombreroWarper::computeXZCoordinatePerVertex(TunnelResidueDataCall& tunnelC
         bool kernelRes =
             this->cuda_kernels->CreateZValues(20000, zValues, zValidity, zEdgeOffset, zEdgeOffsetDepth, zVertexWeights);
         if (!kernelRes) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("The z-values kernel of the radius computation failed!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "The z-values kernel of the radius computation failed!");
             return false;
         }
 
@@ -2323,7 +2365,7 @@ bool SombreroWarper::recomputeVertexNormals(TunnelResidueDataCall& tunnelCall) {
             s_radius = this->sombreroRadiusNew[i] * this->radiusScalingParam.Param<param::FloatParam>()->Value();
             break;
         case 1: // Exit radius
-                // do nothing since the radius is already correct
+            // do nothing since the radius is already correct
             break;
         case 2: // Bottleneck radius
             if (tunnelCall.getTunnelNumber() > 0) {

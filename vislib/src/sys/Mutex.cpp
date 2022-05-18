@@ -18,7 +18,9 @@
 /*
  * vislib::sys::Mutex::Lock
  */
-void vislib::sys::Mutex::Lock(void) { mutex.lock(); }
+void vislib::sys::Mutex::Lock(void) {
+    mutex.lock();
+}
 
 
 /*
@@ -32,7 +34,9 @@ bool vislib::sys::Mutex::TryLock(const DWORD timeout) {
 /*
  * vislib::sys::Mutex::Unlock
  */
-void vislib::sys::Mutex::Unlock(void) { mutex.unlock(); }
+void vislib::sys::Mutex::Unlock(void) {
+    mutex.unlock();
+}
 
 
 /*

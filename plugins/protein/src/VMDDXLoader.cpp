@@ -9,22 +9,22 @@
 //
 
 
-#include "stdafx.h"
 #include "VMDDXLoader.h"
-#include "protein_calls/VTIDataCall.h"
+#include "Base64.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/utility/log/Log.h"
-#include "vislib/String.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "protein_calls/VTIDataCall.h"
+#include "stdafx.h"
 #include "vislib/Exception.h"
-#include <string>
-#include <sstream>
-#include <ctime>
-#include "Base64.h"
-#include <ctype.h>
+#include "vislib/String.h"
 #include <cmath>
+#include <ctime>
+#include <ctype.h>
+#include <sstream>
+#include <string>
 //#include "vislib_vector_typedefs.h"
 #include "vislib/math/Cuboid.h"
 typedef vislib::math::Cuboid<float> Cubef;
@@ -38,27 +38,26 @@ using namespace megamol::core::utility::log;
 /*
  * VMDDXLoader::VMDDXLoader
  */
-VMDDXLoader::VMDDXLoader(void) : Module(),
-        dataOutSlot("dataout", "The slot providing the loaded data"),
-        filenameSlot("filename", "The path to the *.dx data file to be loaded"),
-        hash(0),
-//        extent(0, 0, 0, 0, 0, 0),
-//        origin(0.0f, 0.0f, 0.0f),
-//        spacing(0.0f, 0.0f, 0.0f),
-        filenamesDigits(0),
-        nFrames(-1)
+VMDDXLoader::VMDDXLoader(void)
+        : Module()
+        , dataOutSlot("dataout", "The slot providing the loaded data")
+        , filenameSlot("filename", "The path to the *.dx data file to be loaded")
+        , hash(0)
+        ,
+        //        extent(0, 0, 0, 0, 0, 0),
+        //        origin(0.0f, 0.0f, 0.0f),
+        //        spacing(0.0f, 0.0f, 0.0f),
+        filenamesDigits(0)
+        , nFrames(-1)
 //        min(0.0f),
 //        max(0.0f)
 {
 
-    this->dataOutSlot.SetCallback(
-			protein_calls::VTIDataCall::ClassName(),
-			protein_calls::VTIDataCall::FunctionName(protein_calls::VTIDataCall::CallForGetData),
-            &VMDDXLoader::getData);
-    this->dataOutSlot.SetCallback(
-			protein_calls::VTIDataCall::ClassName(),
-			protein_calls::VTIDataCall::FunctionName(protein_calls::VTIDataCall::CallForGetExtent),
-            &VMDDXLoader::getExtent);
+    this->dataOutSlot.SetCallback(protein_calls::VTIDataCall::ClassName(),
+        protein_calls::VTIDataCall::FunctionName(protein_calls::VTIDataCall::CallForGetData), &VMDDXLoader::getData);
+    this->dataOutSlot.SetCallback(protein_calls::VTIDataCall::ClassName(),
+        protein_calls::VTIDataCall::FunctionName(protein_calls::VTIDataCall::CallForGetExtent),
+        &VMDDXLoader::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     this->filenameSlot.SetParameter(new core::param::FilePathParam(""));
@@ -97,16 +96,17 @@ bool VMDDXLoader::getData(core::Call& call) {
     using namespace vislib::sys;
 
     // Get data call
-	protein_calls::VTIDataCall *dc = dynamic_cast<protein_calls::VTIDataCall*>(&call);
-    if(dc == NULL) return false;
+    protein_calls::VTIDataCall* dc = dynamic_cast<protein_calls::VTIDataCall*>(&call);
+    if (dc == NULL)
+        return false;
 
-//    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Frame requested: %u",
-//            this->ClassName(),
-//            dc->FrameID()); // DEBUG
+    //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Frame requested: %u",
+    //            this->ClassName(),
+    //            dc->FrameID()); // DEBUG
 
     // Generate filename based on frame idx and pattern
     vislib::StringA frameFile;
-    if(this->filenamesDigits == 0) {
+    if (this->filenamesDigits == 0) {
         frameFile = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
     } else {
         std::stringstream ss;
@@ -128,13 +128,13 @@ bool VMDDXLoader::getData(core::Call& call) {
     // Set image data
     dc->SetData(&this->imgdata);
 
-    Cubef bbox(
-            this->imgdata.GetOrigin().GetX(),
-            this->imgdata.GetOrigin().GetY(),
-            this->imgdata.GetOrigin().GetZ(),
-            this->imgdata.GetOrigin().GetX() + (this->imgdata.GetWholeExtent().Right()-1)*this->imgdata.GetSpacing().GetX(),
-            this->imgdata.GetOrigin().GetY() + (this->imgdata.GetWholeExtent().Top()-1)*this->imgdata.GetSpacing().GetY(),
-            this->imgdata.GetOrigin().GetZ() + (this->imgdata.GetWholeExtent().Front()-1)*this->imgdata.GetSpacing().GetZ());
+    Cubef bbox(this->imgdata.GetOrigin().GetX(), this->imgdata.GetOrigin().GetY(), this->imgdata.GetOrigin().GetZ(),
+        this->imgdata.GetOrigin().GetX() +
+            (this->imgdata.GetWholeExtent().Right() - 1) * this->imgdata.GetSpacing().GetX(),
+        this->imgdata.GetOrigin().GetY() +
+            (this->imgdata.GetWholeExtent().Top() - 1) * this->imgdata.GetSpacing().GetY(),
+        this->imgdata.GetOrigin().GetZ() +
+            (this->imgdata.GetWholeExtent().Front() - 1) * this->imgdata.GetSpacing().GetZ());
 
     dc->AccessBoundingBoxes().Clear();
     dc->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
@@ -159,12 +159,13 @@ bool VMDDXLoader::getExtent(core::Call& call) {
         this->filenameSlot.ResetDirty();
         this->scanFolder(); // (Re-)scan the folder
         this->hash++;       // Change data hash
-        this->hash = this->hash%10;
+        this->hash = this->hash % 10;
     }
 
     // Get data call
-	protein_calls::VTIDataCall *dc = dynamic_cast<protein_calls::VTIDataCall*>(&call);
-    if(dc == NULL) return false;
+    protein_calls::VTIDataCall* dc = dynamic_cast<protein_calls::VTIDataCall*>(&call);
+    if (dc == NULL)
+        return false;
 
     // Set frame count
     dc->SetFrameCount(this->nFrames);
@@ -186,14 +187,13 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
 
     // Test whether the filename is invalid or empty
     if (filename.IsEmpty()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: No file to load (filename empty)",
-                this->ClassName());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: No file to load (filename empty)", this->ClassName());
         return true;
     }
 
     if (!file.LoadFile(filename)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to open file '%s'",
-                this->ClassName(), filename.PeekBuffer());
+        Log::DefaultLog.WriteMsg(
+            Log::LEVEL_ERROR, "%s: Unable to open file '%s'", this->ClassName(), filename.PeekBuffer());
         return false;
     }
 
@@ -201,10 +201,9 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
 
     time_t t = clock(); // DEBUG
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Parsing file '%s' (%u Bytes) ...",
-            this->ClassName(),
-            filename.PeekBuffer(),
-            fileSize); // DEBUG
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Parsing file '%s' (%u Bytes) ...", this->ClassName(),
+        filename.PeekBuffer(),
+        fileSize); // DEBUG
 
     // File successfully loaded, get extent spacing and origin
     lineCnt = 0;
@@ -217,29 +216,26 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
         if (file[lineCnt].Count() >= 4) {
             if (StringA(file[lineCnt].Word(3)).Equals("gridpositions")) {
                 // Get extent of the data
-                this->imgdata.SetWholeExtent(Cubeu(0, 0, 0,
-                        this->string2int(TString(file[lineCnt].Word(5)))-1,
-                        this->string2int(TString(file[lineCnt].Word(6)))-1,
-                        this->string2int(TString(file[lineCnt].Word(7)))-1));
+                this->imgdata.SetWholeExtent(Cubeu(0, 0, 0, this->string2int(TString(file[lineCnt].Word(5))) - 1,
+                    this->string2int(TString(file[lineCnt].Word(6))) - 1,
+                    this->string2int(TString(file[lineCnt].Word(7))) - 1));
             }
         }
 
         if (file[lineCnt].Count() >= 1) {
             if (StringA(file[lineCnt].Word(0)).Equals("origin")) {
                 // Get origin of the data
-                this->imgdata.SetOrigin(Vec3f(
-                        this->string2float(TString(file[lineCnt].Word(1))),
-                        this->string2float(TString(file[lineCnt].Word(2))),
-                        this->string2float(TString(file[lineCnt].Word(3)))));
+                this->imgdata.SetOrigin(Vec3f(this->string2float(TString(file[lineCnt].Word(1))),
+                    this->string2float(TString(file[lineCnt].Word(2))),
+                    this->string2float(TString(file[lineCnt].Word(3)))));
             }
         }
 
         if (file[lineCnt].Count() >= 1) {
             if (StringA(file[lineCnt].Word(0)).Equals("delta")) {
-                this->imgdata.SetSpacing(Vec3f(
-                        this->string2float(TString(file[lineCnt+0].Word(1))),
-                        this->string2float(TString(file[lineCnt+1].Word(2))),
-                        this->string2float(TString(file[lineCnt+2].Word(3)))));
+                this->imgdata.SetSpacing(Vec3f(this->string2float(TString(file[lineCnt + 0].Word(1))),
+                    this->string2float(TString(file[lineCnt + 1].Word(2))),
+                    this->string2float(TString(file[lineCnt + 2].Word(3)))));
                 lineCnt += 2;
             }
         }
@@ -271,10 +267,9 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
             if (StringA(file[lineCnt].Word(3)).Equals("array")) {
                 // Read data from now on
                 readFloatData = true;
-                this->data.Validate(
-                        (this->imgdata.GetWholeExtent().Width()+1)*
-                        (this->imgdata.GetWholeExtent().Depth()+1)*
-                        (this->imgdata.GetWholeExtent().Height()+1));
+                this->data.Validate((this->imgdata.GetWholeExtent().Width() + 1) *
+                                    (this->imgdata.GetWholeExtent().Depth() + 1) *
+                                    (this->imgdata.GetWholeExtent().Height() + 1));
             }
         }
 
@@ -283,23 +278,26 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
 
     // Change ordering from row major to column major
     this->dataTmp.Validate(this->data.GetCount());
-//#pragma omp parallel for
+    //#pragma omp parallel for
     for (int cnt = 0; cnt < static_cast<int>(this->data.GetCount()); ++cnt) {
-        int x = cnt%int((this->imgdata.GetWholeExtent().Width()+1));
-        int y = (cnt/int((this->imgdata.GetWholeExtent().Width()+1)))%int((this->imgdata.GetWholeExtent().Height()+1));
-        int z = (cnt/int((this->imgdata.GetWholeExtent().Width()+1)))/int((this->imgdata.GetWholeExtent().Height()+1));
-        this->dataTmp.Peek()[int((this->imgdata.GetWholeExtent().Depth()+1))*(int((this->imgdata.GetWholeExtent().Height()+1))*x+y)+z] = this->data.Peek()[cnt];
+        int x = cnt % int((this->imgdata.GetWholeExtent().Width() + 1));
+        int y = (cnt / int((this->imgdata.GetWholeExtent().Width() + 1))) %
+                int((this->imgdata.GetWholeExtent().Height() + 1));
+        int z = (cnt / int((this->imgdata.GetWholeExtent().Width() + 1))) /
+                int((this->imgdata.GetWholeExtent().Height() + 1));
+        this->dataTmp.Peek()[int((this->imgdata.GetWholeExtent().Depth() + 1)) *
+                                 (int((this->imgdata.GetWholeExtent().Height() + 1)) * x + y) +
+                             z] = this->data.Peek()[cnt];
     }
-    memcpy(this->data.Peek(), this->dataTmp.Peek(), this->data.GetSize()*sizeof(float));
+    memcpy(this->data.Peek(), this->dataTmp.Peek(), this->data.GetSize() * sizeof(float));
 
     // Setup data array
     this->imgdata.SetNumberOfPieces(1);
-    this->imgdata.SetPointData((const char*)this->data.Peek(), min, max,
-			protein_calls::VTKImageData::DataArray::VTI_FLOAT, "vmddata", 1, 0);
+    this->imgdata.SetPointData(
+        (const char*)this->data.Peek(), min, max, protein_calls::VTKImageData::DataArray::VTI_FLOAT, "vmddata", 1, 0);
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: ... done (%f s)",
-            this->ClassName(),
-            (double(clock()-t)/double(CLOCKS_PER_SEC))); // DEBUG
+    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: ... done (%f s)", this->ClassName(),
+        (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
     return true;
 }
@@ -308,25 +306,24 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
 /*
  * VMDDXLoader::readDataAscii2Float
  */
-void VMDDXLoader::readDataAscii2Float(char *buffIn, float* buffOut,
-        SIZE_T sizeOut) {
+void VMDDXLoader::readDataAscii2Float(char* buffIn, float* buffOut, SIZE_T sizeOut) {
 
     char num[64];
     char *pt_nums, *pt_end = buffIn;
-    unsigned int numCount=0;
-    while(numCount < sizeOut) {
-        while(isspace(*pt_end)) { // Omit whitespace chars
+    unsigned int numCount = 0;
+    while (numCount < sizeOut) {
+        while (isspace(*pt_end)) { // Omit whitespace chars
             pt_end++;
         }
         pt_nums = pt_end;
-        while(!isspace(*pt_end)) { // Get chars containing number
+        while (!isspace(*pt_end)) { // Get chars containing number
             pt_end++;
         }
         memset(num, 0, 64);
-        memcpy(num, pt_nums, pt_end-pt_nums+1);
-        buffOut[numCount]= static_cast<float>(atof(num));
+        memcpy(num, pt_nums, pt_end - pt_nums + 1);
+        buffOut[numCount] = static_cast<float>(atof(num));
         numCount++;
-        while(isspace(*pt_end)) { // Omit whitespace chars
+        while (isspace(*pt_end)) { // Omit whitespace chars
             pt_end++;
         }
     }
@@ -348,10 +345,10 @@ void VMDDXLoader::scanFolder() {
     this->filenamesPrefix.Clear();
     this->filenamesPrefix = filename.Substring(0, filename.Find('.'));
     this->filenamesSuffix.Clear();
-    this->filenamesSuffix = filename.Substring(filename.FindLast('.')+1, filename.Length());
+    this->filenamesSuffix = filename.Substring(filename.FindLast('.') + 1, filename.Length());
 
     // Determine number of frames if necessary
-    if(filename.Find('.') != filename.FindLast('.')) { // File name contains at least two '.', file series is assumed
+    if (filename.Find('.') != filename.FindLast('.')) { // File name contains at least two '.', file series is assumed
         this->filenamesDigits = filename.Length() - 2 - this->filenamesPrefix.Length() - this->filenamesSuffix.Length();
         //        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Generated filename pattern %s %u DIGITS %s", // TODO
         //                this->ClassName(), this->filenamesPrefix.PeekBuffer(), this->filenamesDigits,
@@ -386,12 +383,10 @@ void VMDDXLoader::scanFolder() {
             }
         }
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: %u frame files found",
-                this->ClassName(), this->nFrames);
+        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: %u frame files found", this->ClassName(), this->nFrames);
     } else { // Single file
         this->nFrames = 1;
     }
-
 }
 
 
@@ -404,8 +399,8 @@ int VMDDXLoader::string2int(vislib::StringA str) {
     std::stringstream ss(std::string(str.PeekBuffer()));
     int i;
 
-    if( (ss >> i).fail() ) {
-       //error
+    if ((ss >> i).fail()) {
+        //error
     }
     return i;
 }
@@ -422,8 +417,8 @@ float VMDDXLoader::string2float(vislib::StringA str) {
     std::stringstream ss(std::string(str.PeekBuffer()));
     float f;
 
-    if( (ss >> f).fail()) {
-       //error
+    if ((ss >> f).fail()) {
+        //error
     }
 
     return f;

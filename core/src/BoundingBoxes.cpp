@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/BoundingBoxes.h"
+#include "stdafx.h"
 #include "vislib/math/mathfunctions.h"
 
 using namespace megamol::core;
@@ -15,9 +15,18 @@ using namespace megamol::core;
 /*
  * BoundingBoxes::BoundingBoxes
  */
-BoundingBoxes::BoundingBoxes(void) : clipBox(), clipBoxValid(false), osBBox(),
-        osBBoxValid(false), osClipBox(), osClipBoxValid(false), osScale(0.0),
-        wsBBox(), wsBBoxValid(false), wsClipBox(), wsClipBoxValid(false) {
+BoundingBoxes::BoundingBoxes(void)
+        : clipBox()
+        , clipBoxValid(false)
+        , osBBox()
+        , osBBoxValid(false)
+        , osClipBox()
+        , osClipBoxValid(false)
+        , osScale(0.0)
+        , wsBBox()
+        , wsBBoxValid(false)
+        , wsClipBox()
+        , wsClipBoxValid(false) {
     // intentionally empty
 }
 
@@ -25,12 +34,18 @@ BoundingBoxes::BoundingBoxes(void) : clipBox(), clipBoxValid(false), osBBox(),
 /*
  * BoundingBoxes::BoundingBoxes
  */
-BoundingBoxes::BoundingBoxes(const BoundingBoxes& src) : clipBox(src.clipBox),
-        clipBoxValid(src.clipBoxValid), osBBox(src.osBBox),
-        osBBoxValid(src.osBBoxValid), osClipBox(src.osClipBox),
-        osClipBoxValid(src.osClipBoxValid), osScale(src.osScale),
-        wsBBox(src.wsBBox), wsBBoxValid(src.wsBBoxValid),
-        wsClipBox(src.wsClipBox), wsClipBoxValid(src.wsClipBoxValid) {
+BoundingBoxes::BoundingBoxes(const BoundingBoxes& src)
+        : clipBox(src.clipBox)
+        , clipBoxValid(src.clipBoxValid)
+        , osBBox(src.osBBox)
+        , osBBoxValid(src.osBBoxValid)
+        , osClipBox(src.osClipBox)
+        , osClipBoxValid(src.osClipBoxValid)
+        , osScale(src.osScale)
+        , wsBBox(src.wsBBox)
+        , wsBBoxValid(src.wsBBoxValid)
+        , wsClipBox(src.wsClipBox)
+        , wsClipBoxValid(src.wsClipBoxValid) {
     // intentionally empty
 }
 
@@ -62,15 +77,12 @@ void BoundingBoxes::MakeScaledWorld(float f) {
  */
 bool BoundingBoxes::operator==(const BoundingBoxes& rhs) const {
     // don't have to check clip box, because it's evaluated lazy
-    return (!this->osBBoxValid || (this->osBBox == rhs.osBBox))
-        && (this->osBBoxValid == rhs.osBBoxValid)
-        && (!this->osClipBoxValid || (this->osClipBox == rhs.osClipBox))
-        && (this->osClipBoxValid == rhs.osClipBoxValid)
-        && vislib::math::IsEqual(this->osScale, rhs.osScale)
-        && (!this->wsBBoxValid || (this->wsBBox == rhs.wsBBox))
-        && (this->wsBBoxValid == rhs.wsBBoxValid)
-        && (!this->wsClipBoxValid || (this->wsClipBox == rhs.wsClipBox))
-        && (this->wsClipBoxValid == rhs.wsClipBoxValid);
+    return (!this->osBBoxValid || (this->osBBox == rhs.osBBox)) && (this->osBBoxValid == rhs.osBBoxValid) &&
+           (!this->osClipBoxValid || (this->osClipBox == rhs.osClipBox)) &&
+           (this->osClipBoxValid == rhs.osClipBoxValid) && vislib::math::IsEqual(this->osScale, rhs.osScale) &&
+           (!this->wsBBoxValid || (this->wsBBox == rhs.wsBBox)) && (this->wsBBoxValid == rhs.wsBBoxValid) &&
+           (!this->wsClipBoxValid || (this->wsClipBox == rhs.wsClipBox)) &&
+           (this->wsClipBoxValid == rhs.wsClipBoxValid);
 }
 
 
@@ -119,10 +131,8 @@ void BoundingBoxes::calcClipBox(void) const {
 
                     // if everything fails ...
                     this->clipBox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-
                 }
             }
-
         }
     }
     this->clipBoxValid = true;

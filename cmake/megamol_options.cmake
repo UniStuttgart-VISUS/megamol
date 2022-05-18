@@ -45,6 +45,29 @@ if(ENABLE_CUDA)
   set(CMAKE_CUDA_ARCHITECTURES FALSE)
 endif()
 
+if (ENABLE_GL)
+  option(ENABLE_PROFILING "Enable profiling code" OFF)
+  if (ENABLE_PROFILING)
+    add_compile_definitions(PROFILING)
+  endif()
+endif()
+
+# VR Service / mwk-mint, interop, Spout2
+if (ENABLE_GL)
+  option(ENABLE_VR_SERVICE_UNITY_KOLABBW "Enable KolabBW-Unity-Interop in VR Service" OFF)
+  if(ENABLE_VR_SERVICE_UNITY_KOLABBW)
+    add_compile_definitions(WITH_VR_SERVICE_UNITY_KOLABBW)
+  endif()
+endif()
+
+# CUE
+if (WIN32)
+  option(ENABLE_CUESDK "Enable CUE for highlighting hotkeys on Corsair Keyboards" OFF)
+  if (ENABLE_CUESDK)
+    add_compile_definitions(CUESDK_ENABLED)
+  endif()
+endif()
+
 # GLFW
 option(USE_GLFW "Use GLFW" ON)
 
@@ -58,7 +81,14 @@ if(ENABLE_MPI)
   find_package(MPI REQUIRED)
   if(MPI_C_FOUND)
     target_compile_definitions(MPI::MPI_C INTERFACE "-DWITH_MPI")
+  endif()
 endif()
+
+# OpenGL
+option(ENABLE_GL "Enable GL support" ON)
+if (ENABLE_GL)
+  add_compile_definitions(WITH_GL)
+  find_package(OpenGL REQUIRED)
 endif()
 
 # Threading (XXX: this is a bit wonky due to Ubuntu/clang)
@@ -77,6 +107,3 @@ if(OPENMP_FOUND OR WIN32)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
-
-# OpenGL
-find_package(OpenGL REQUIRED)

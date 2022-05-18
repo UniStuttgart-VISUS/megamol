@@ -1,19 +1,19 @@
 #pragma once
 
+#include "mmcore/CoreInstance.h"
+#include "png.h"
+#include <filesystem>
 #include <map>
 #include <optional>
 #include <string>
 #include <vector>
-#include <filesystem>
-#include "mmcore/CoreInstance.h"
-#include "png.h"
 
 namespace megamol {
 namespace core {
 namespace utility {
 namespace graphics {
 
-class MEGAMOLCORE_API ScreenShotComments {
+class ScreenShotComments {
 public:
     typedef std::map<std::string, std::string> comments_storage_map;
     typedef std::vector<png_text> png_comments;
@@ -30,9 +30,9 @@ public:
 
     /**
      * Returns the project lua contained in the exif data of a PNG file.
-     * 
+     *
      * @param filename the png file name
-     * 
+     *
      * @return the lua project
      */
     static std::string GetProjectFromPNG(std::filesystem::path filename);

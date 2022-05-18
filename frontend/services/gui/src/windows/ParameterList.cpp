@@ -42,7 +42,7 @@ ParameterList::ParameterList(const std::string& window_name, AbstractWindow::Win
             this->win_modules_list.emplace_back(initial_module_uid);
         }
     } else if (this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) {
-        this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH] = {
+        this->win_hotkeys[HOTKEY_GUI_PARAMETER_SEARCH] = {"_hotkey_gui_parameterlist_param_search",
             megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false};
         this->win_config.hotkey =
             megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F10, core::view::Modifier::NONE);
@@ -87,14 +87,14 @@ bool ParameterList::Draw() {
 
     // Parameter substring name filtering (only for main parameter view)
     if (this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) {
-        if (this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed) {
+        if (this->win_hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed) {
             this->search_widget.SetSearchFocus();
-            this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed = false;
+            this->win_hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed = false;
         }
-        std::string help_test = "[" + this->hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].keycode.ToString() +
+        std::string help_test = "[" + this->win_hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].keycode.ToString() +
                                 "] Set keyboard focus to search input field.\n"
                                 "Case insensitive substring search in module and parameter names.";
-        this->search_widget.Widget("guiwindow_parameter_earch", help_test);
+        this->search_widget.Widget("guiwindow_parameter_search", help_test);
     }
 
     ImGui::Separator();
@@ -120,15 +120,7 @@ bool ParameterList::Draw() {
                 }
             }
             if (!skip && !this->win_extended_mode) {
-                // Check if at least one parameter is visible in basic mode.
-                bool param_visible = false;
-                for (auto& param : module_ptr->Parameters()) {
-                    if (param.IsGUIVisible()) {
-                        param_visible = true;
-                        break;
-                    }
-                }
-                skip = !param_visible;
+                skip = !module_ptr->ParametersVisible();
             }
             if (!skip) {
                 auto group_name = module_ptr->GroupName();
@@ -195,9 +187,8 @@ bool ParameterList::Draw() {
 
                     // Draw parameters
                     if (module_header_open) {
-                        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), module_search_string,
-                            this->win_extended_mode, true, Parameter::WidgetScope::LOCAL, this->win_tfeditor_ptr,
-                            override_header_state, nullptr);
+                        module_ptr->DrawParameters(module_search_string, this->win_extended_mode, true,
+                            Parameter::WidgetScope::LOCAL, this->win_tfeditor_ptr, override_header_state, nullptr);
                     }
                 }
             }
@@ -212,7 +203,7 @@ bool ParameterList::Draw() {
     if (ImGui::BeginDragDropTarget()) {
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_COPY_MODULE_PARAMETERS")) {
             assert(payload->DataSize == (dnd_size * sizeof(char)));
-            std::string payload_id = (const char*) payload->Data;
+            std::string payload_id = (const char*)payload->Data;
             try {
                 auto module_uid_payload = static_cast<ImGuiID>(std::strtol(payload_id.c_str(), nullptr, 10));
                 if (errno == ERANGE) {

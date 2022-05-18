@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/TimeControl.h"
@@ -22,87 +21,86 @@ namespace core {
 namespace view {
 
 
+/**
+ * Call connecting time control objects
+ */
+class CallTimeControl : public Call {
+public:
     /**
-     * Call connecting time control objects
+     * Answer the name of the objects of this description.
+     *
+     * @return The name of the objects of this description.
      */
-    class MEGAMOLCORE_API CallTimeControl : public Call {
-    public:
+    static const char* ClassName(void) {
+        return "CallTimeControl";
+    }
 
-        /**
-         * Answer the name of the objects of this description.
-         *
-         * @return The name of the objects of this description.
-         */
-        static const char *ClassName(void) {
-            return "CallTimeControl";
+    /**
+     * Gets a human readable description of the module.
+     *
+     * @return A human readable description of the module.
+     */
+    static const char* Description(void) {
+        return "Call connecting time control objects";
+    }
+
+    /**
+     * Answer the number of functions used for this call.
+     *
+     * @return The number of functions used for this call.
+     */
+    static unsigned int FunctionCount(void) {
+        return 1;
+    }
+
+    /**
+     * Answer the name of the function used for this call.
+     *
+     * @param idx The index of the function to return it's name.
+     *
+     * @return The name of the requested function.
+     */
+    static const char* FunctionName(unsigned int idx) {
+        switch (idx) {
+        case 0:
+            return "getMaster";
+        default:
+            return NULL;
         }
+    }
 
-        /**
-         * Gets a human readable description of the module.
-         *
-         * @return A human readable description of the module.
-         */
-        static const char *Description(void) {
-            return "Call connecting time control objects";
-        }
+    /** Ctor. */
+    CallTimeControl(void);
 
-        /**
-         * Answer the number of functions used for this call.
-         *
-         * @return The number of functions used for this call.
-         */
-        static unsigned int FunctionCount(void) {
-            return 1;
-        }
+    /** Dtor. */
+    virtual ~CallTimeControl(void);
 
-        /**
-         * Answer the name of the function used for this call.
-         *
-         * @param idx The index of the function to return it's name.
-         *
-         * @return The name of the requested function.
-         */
-        static const char * FunctionName(unsigned int idx) {
-            switch (idx) {
-                case 0: return "getMaster";
-                default: return NULL;
-            }
-        }
+    /**
+     * Answer the master time control
+     *
+     * @return The master time control
+     */
+    inline TimeControl* Master(void) const {
+        return this->m;
+    }
 
-        /** Ctor. */
-        CallTimeControl(void);
+    /**
+     * sets the master time control
+     *
+     * @param m The master time control
+     */
+    inline void SetMaster(TimeControl* m) {
+        this->m = m;
+    }
 
-        /** Dtor. */
-        virtual ~CallTimeControl(void);
-
-        /**
-         * Answer the master time control
-         *
-         * @return The master time control
-         */
-        inline TimeControl *Master(void) const {
-            return this->m;
-        }
-
-        /**
-         * sets the master time control
-         *
-         * @param m The master time control
-         */
-        inline void SetMaster(TimeControl *m) {
-            this->m = m;
-        }
-
-    private:
-
-        /** The master time control */
-        TimeControl *m;
-
-    };
+private:
+    /** The master time control */
+    TimeControl* m;
+};
 
 
-    /** Description class typedef */
-    typedef factories::CallAutoDescription<CallTimeControl> CallTimeControlDescription;
+/** Description class typedef */
+typedef factories::CallAutoDescription<CallTimeControl> CallTimeControlDescription;
 
 
 } /* end namespace view */

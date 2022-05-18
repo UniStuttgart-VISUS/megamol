@@ -8,13 +8,14 @@
 #ifndef CREATE_MSM_H_INCLUDED
 #define CREATE_MSM_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "MSMDataCall.h"
-#include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
+
+#include "ArchVisCalls.h"
 
 namespace megamol {
 namespace archvis {
@@ -26,21 +27,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "CreateMSM"; }
+    static const char* ClassName(void) {
+        return "CreateMSM";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Create Maßstabsmodell from float table input."; }
+    static const char* Description(void) {
+        return "Create Maßstabsmodell from float table input.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     CreateMSM();
     ~CreateMSM();
@@ -92,7 +99,7 @@ private:
     uint64_t m_inputElement_input_hash;
     uint64_t m_displacement_input_hash;
 
-    uint64_t m_my_hash;
+    uint32_t m_version;
 };
 
 } // namespace archvis

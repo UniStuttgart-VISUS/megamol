@@ -12,16 +12,16 @@
 #include "stdafx.h"
 #include <omp.h>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
 #include "protein_calls/MolecularDataCall.h"
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
 #include "TrajectorySmoothFilter.h"
@@ -35,10 +35,11 @@ using namespace megamol::protein_calls;
 /*
  * TrajectorySmoothFilter::TrajectorySmoothFilter
  */
-TrajectorySmoothFilter::TrajectorySmoothFilter(void) : core::Module(),
-    molDataCallerSlot("getdata", "Connects the filter with molecule data storage"),
-    dataOutSlot("dataout", "The slot providing the filtered data"),
-    nAvgFramesSlot("nAvgFrames", "Number of frames to average over") {
+TrajectorySmoothFilter::TrajectorySmoothFilter(void)
+        : core::Module()
+        , molDataCallerSlot("getdata", "Connects the filter with molecule data storage")
+        , dataOutSlot("dataout", "The slot providing the filtered data")
+        , nAvgFramesSlot("nAvgFrames", "Number of frames to average over") {
 
     // Enable caller slot
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
@@ -46,11 +47,9 @@ TrajectorySmoothFilter::TrajectorySmoothFilter(void) : core::Module(),
 
     // Enable dataout slot
     this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(),
-        MolecularDataCall::FunctionName(MolecularDataCall::CallForGetData),
-        &TrajectorySmoothFilter::getData);
+        MolecularDataCall::FunctionName(MolecularDataCall::CallForGetData), &TrajectorySmoothFilter::getData);
     this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(),
-        MolecularDataCall::FunctionName(MolecularDataCall::CallForGetExtent),
-        &TrajectorySmoothFilter::getExtent);
+        MolecularDataCall::FunctionName(MolecularDataCall::CallForGetExtent), &TrajectorySmoothFilter::getExtent);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     // Set number of averaging frames
@@ -63,7 +62,7 @@ TrajectorySmoothFilter::TrajectorySmoothFilter(void) : core::Module(),
 /*
  * TrajectorySmoothFilter::~TrajectorySmoothFilter
  */
-TrajectorySmoothFilter::~TrajectorySmoothFilter(void)  {
+TrajectorySmoothFilter::~TrajectorySmoothFilter(void) {
     this->Release();
 }
 
@@ -79,8 +78,7 @@ bool TrajectorySmoothFilter::create(void) {
 /*
  * TrajectorySmoothFilter::release
  */
-void TrajectorySmoothFilter::release(void) {
-}
+void TrajectorySmoothFilter::release(void) {}
 
 
 /*
@@ -92,13 +90,13 @@ bool TrajectorySmoothFilter::getData(megamol::core::Call& call) {
     uint firstFrame = 0;
 
     // Get a pointer to the outgoing data call
-    MolecularDataCall *molOut = this->molDataCallerSlot.CallAs<MolecularDataCall>();
+    MolecularDataCall* molOut = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (molOut == NULL) {
         return false;
     }
 
     // Get a pointer to the incoming data call
-    MolecularDataCall *molIn = dynamic_cast<MolecularDataCall*>(&call);
+    MolecularDataCall* molIn = dynamic_cast<MolecularDataCall*>(&call);
     if (molIn == NULL) {
         return false;
     }
@@ -107,23 +105,23 @@ bool TrajectorySmoothFilter::getData(megamol::core::Call& call) {
 
     // Obtain number of atoms
     molOut->SetFrameID(0, true); // Set 'force' flag
-    if (!(*molOut)(MolecularDataCall::CallForGetData)){
+    if (!(*molOut)(MolecularDataCall::CallForGetData)) {
         return false;
     }
     molOut->Unlock();
 
-    if (molIn->FrameID() >= (molOut->FrameCount()-(this->nAvgFrames-1))) {
+    if (molIn->FrameID() >= (molOut->FrameCount() - (this->nAvgFrames - 1))) {
         return false;
     }
 
     // (Re-)allocate memory and init with zero
-    this->atomPosSmoothed.Validate(molOut->AtomCount()*3);
-    memset(this->atomPosSmoothed.Peek(), 0, molOut->AtomCount()*3*sizeof(float));
+    this->atomPosSmoothed.Validate(molOut->AtomCount() * 3);
+    memset(this->atomPosSmoothed.Peek(), 0, molOut->AtomCount() * 3 * sizeof(float));
 
     // Loop through all averaging frames
     for (uint fr = 0; fr < this->nAvgFrames; ++fr) {
-        molOut->SetFrameID(molIn->FrameID()+fr, true); // Set 'force' flag
-        if (!(*molOut)(MolecularDataCall::CallForGetData)){
+        molOut->SetFrameID(molIn->FrameID() + fr, true); // Set 'force' flag
+        if (!(*molOut)(MolecularDataCall::CallForGetData)) {
             return false;
         }
         molOut->Unlock();
@@ -131,18 +129,18 @@ bool TrajectorySmoothFilter::getData(megamol::core::Call& call) {
         // Add positions
 #pragma omp parallel for
         for (int at = 0; at < static_cast<int>(molOut->AtomCount()); ++at) {
-            this->atomPosSmoothed.Peek()[3*at+0] += molOut->AtomPositions()[3*at+0];
-            this->atomPosSmoothed.Peek()[3*at+1] += molOut->AtomPositions()[3*at+1];
-            this->atomPosSmoothed.Peek()[3*at+2] += molOut->AtomPositions()[3*at+2];
+            this->atomPosSmoothed.Peek()[3 * at + 0] += molOut->AtomPositions()[3 * at + 0];
+            this->atomPosSmoothed.Peek()[3 * at + 1] += molOut->AtomPositions()[3 * at + 1];
+            this->atomPosSmoothed.Peek()[3 * at + 2] += molOut->AtomPositions()[3 * at + 2];
         }
     }
 
     // Normalize positions
 #pragma omp parallel for
     for (int at = 0; at < static_cast<int>(molOut->AtomCount()); ++at) {
-        this->atomPosSmoothed.Peek()[3*at+0] /= static_cast<float>(this->nAvgFrames);
-        this->atomPosSmoothed.Peek()[3*at+1] /= static_cast<float>(this->nAvgFrames);
-        this->atomPosSmoothed.Peek()[3*at+2] /= static_cast<float>(this->nAvgFrames);
+        this->atomPosSmoothed.Peek()[3 * at + 0] /= static_cast<float>(this->nAvgFrames);
+        this->atomPosSmoothed.Peek()[3 * at + 1] /= static_cast<float>(this->nAvgFrames);
+        this->atomPosSmoothed.Peek()[3 * at + 2] /= static_cast<float>(this->nAvgFrames);
     }
 
     // Transfer data from outgoing to incoming data call
@@ -152,8 +150,7 @@ bool TrajectorySmoothFilter::getData(megamol::core::Call& call) {
     molIn->SetAtomPositions(this->atomPosSmoothed.Peek());
 
     // Correct extent, we have lesser frames because of the averging
-    molIn->SetExtent(molOut->FrameCount()-(this->nAvgFrames-1),
-            molOut->AccessBoundingBoxes());
+    molIn->SetExtent(molOut->FrameCount() - (this->nAvgFrames - 1), molOut->AccessBoundingBoxes());
 
     molIn->SetFrameID(firstFrame); // Restore correct frame id
 
@@ -170,13 +167,13 @@ bool TrajectorySmoothFilter::getData(megamol::core::Call& call) {
 bool TrajectorySmoothFilter::getExtent(core::Call& call) {
 
     // Get a pointer to the incoming data call
-    MolecularDataCall *molIn = dynamic_cast<MolecularDataCall*>(&call);
+    MolecularDataCall* molIn = dynamic_cast<MolecularDataCall*>(&call);
     if (molIn == NULL) {
         return false;
     }
 
     // Get a pointer to the outgoing data call
-    MolecularDataCall *molOut = this->molDataCallerSlot.CallAs<MolecularDataCall>();
+    MolecularDataCall* molOut = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (molOut == NULL) {
         return false;
     }
@@ -189,8 +186,7 @@ bool TrajectorySmoothFilter::getExtent(core::Call& call) {
     // Set extent, the filter module outputs less frames than the original
     // data module because of the averaging
     molIn->AccessBoundingBoxes().Clear();
-    molIn->SetExtent(molOut->FrameCount()-(this->nAvgFrames-1),
-            molOut->AccessBoundingBoxes());
+    molIn->SetExtent(molOut->FrameCount() - (this->nAvgFrames - 1), molOut->AccessBoundingBoxes());
 
     return true;
 }
@@ -199,15 +195,10 @@ bool TrajectorySmoothFilter::getExtent(core::Call& call) {
 /*
  * TrajectorySmoothFilter::updateParams
  */
-void TrajectorySmoothFilter::updateParams(MolecularDataCall *mol) {
+void TrajectorySmoothFilter::updateParams(MolecularDataCall* mol) {
     // Parameter to determine number of averaging frames
     if (this->nAvgFramesSlot.IsDirty()) {
         this->nAvgFrames = this->nAvgFramesSlot.Param<core::param::BoolParam>()->Value();
         this->nAvgFramesSlot.ResetDirty();
     }
 }
-
-
-
-
-

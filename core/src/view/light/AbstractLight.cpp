@@ -4,16 +4,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/light/AbstractLight.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/ColorParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
 
 using namespace megamol::core::view::light;
 
@@ -21,15 +21,15 @@ using namespace megamol::core::view::light;
  * megamol::core::view::light::AbstractLight::AbstractLight
  */
 AbstractLight::AbstractLight(void)
-    : core::Module()
-    , version(0)
-    , lightsource(nullptr)
-    , rhs_connected(false)
-    , getLightSlot("getLightSlot", "Connects to another light")
-    , deployLightSlot("deployLightSlot", "Connects to a renderer module or another light")
-    // General light parameters
-    , lightColor("Color", "Sets the color of the Light")
-    , lightIntensity("Intensity", "Intensity of the Light") {
+        : core::Module()
+        , version(0)
+        , lightsource(nullptr)
+        , rhs_connected(false)
+        , getLightSlot("getLightSlot", "Connects to another light")
+        , deployLightSlot("deployLightSlot", "Connects to a renderer module or another light")
+        // General light parameters
+        , lightColor("Color", "Sets the color of the Light")
+        , lightIntensity("Intensity", "Intensity of the Light") {
 
     this->getLightSlot.SetCompatibleCall<CallLightDescription>();
     this->MakeSlotAvailable(&this->getLightSlot);

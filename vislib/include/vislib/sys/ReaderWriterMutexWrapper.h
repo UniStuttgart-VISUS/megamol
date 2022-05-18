@@ -17,19 +17,33 @@ public:
 
     ~ReaderWriterMutexWrapper() override {}
 
-    void Lock() override { mutex.Lock(); }
+    void Lock() override {
+        mutex.Lock();
+    }
 
-    void LockExclusive() override { Lock(); };
+    void LockExclusive() override {
+        Lock();
+    };
 
-    void LockShared() override { Lock(); };
+    void LockShared() override {
+        Lock();
+    };
 
-    bool TryLock(unsigned long const timeout = 0) override { return mutex.TryLock(timeout); };
+    bool TryLock(unsigned long const timeout = 0) override {
+        return mutex.TryLock(timeout);
+    };
 
-    void Unlock() override { mutex.Unlock(); }
+    void Unlock() override {
+        mutex.Unlock();
+    }
 
-    void UnlockExclusive() override { Unlock(); };
+    void UnlockExclusive() override {
+        Unlock();
+    };
 
-    void UnlockShared() override { Unlock(); };
+    void UnlockShared() override {
+        Unlock();
+    };
 
 private:
     Mutex mutex;

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "FBOCommFabric.h"
 
 #ifdef WITH_MPI
@@ -7,7 +6,10 @@
 
 
 megamol::remote::MPICommFabric::MPICommFabric(int target_rank, int source_rank)
-    : my_rank_{0}, target_rank_{target_rank}, source_rank_{source_rank}, recv_count_{1} {
+        : my_rank_{0}
+        , target_rank_{target_rank}
+        , source_rank_{source_rank}
+        , recv_count_{1} {
     // TODO this is wrong. mpiprovider gives you the correct comm
 #ifdef WITH_MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_);
@@ -15,10 +17,14 @@ megamol::remote::MPICommFabric::MPICommFabric(int target_rank, int source_rank)
 }
 
 
-bool megamol::remote::MPICommFabric::Connect(std::string const& address) { return true; }
+bool megamol::remote::MPICommFabric::Connect(std::string const& address) {
+    return true;
+}
 
 
-bool megamol::remote::MPICommFabric::Bind(std::string const& address) { return true; }
+bool megamol::remote::MPICommFabric::Bind(std::string const& address) {
+    return true;
+}
 
 
 bool megamol::remote::MPICommFabric::Send(std::vector<char> const& buf, send_type const type) {
@@ -40,13 +46,15 @@ bool megamol::remote::MPICommFabric::Recv(std::vector<char>& buf, recv_type cons
     auto status = MPI_Recv(buf.data(), recv_count_, MPI_CHAR, source_rank_, 0, MPI_COMM_WORLD, &stat);
     MPI_Get_count(&stat, MPI_CHAR, &recv_count_);
     return status == MPI_SUCCESS;
-#else 
+#else
     return false;
 #endif // WITH_MPI
 }
 
 
-bool megamol::remote::MPICommFabric::Disconnect() { return true; }
+bool megamol::remote::MPICommFabric::Disconnect() {
+    return true;
+}
 
 
 megamol::remote::MPICommFabric::~MPICommFabric() {}
@@ -56,7 +64,8 @@ megamol::remote::ZMQCommFabric::ZMQCommFabric(zmq::socket_type const& type) : ct
 
 
 megamol::remote::ZMQCommFabric::ZMQCommFabric(ZMQCommFabric&& rhs) noexcept
-    : ctx_{std::move(rhs.ctx_)}, socket_{std::move(rhs.socket_)} {}
+        : ctx_{std::move(rhs.ctx_)}
+        , socket_{std::move(rhs.socket_)} {}
 
 
 megamol::remote::ZMQCommFabric& megamol::remote::ZMQCommFabric::operator=(ZMQCommFabric&& rhs) noexcept {
@@ -88,9 +97,7 @@ bool megamol::remote::ZMQCommFabric::Bind(std::string const& address) {
         bound_ = true;
         // this->socket_.setsockopt(ZMQ_CONFLATE, true);
         this->socket_.setsockopt(ZMQ_LINGER, 0);
-    } catch (zmq::error_t const& e) {
-        printf("ZMQ ERROR: %s", e.what());
-    }
+    } catch (zmq::error_t const& e) { printf("ZMQ ERROR: %s", e.what()); }
     return this->socket_.connected();
 }
 
@@ -103,7 +110,8 @@ bool megamol::remote::ZMQCommFabric::Send(std::vector<char> const& buf, send_typ
 bool megamol::remote::ZMQCommFabric::Recv(std::vector<char>& buf, recv_type const type) {
     zmq::message_t msg;
     auto const ret = this->socket_.recv(&msg, ZMQ_DONTWAIT);
-    if (!ret) return false;
+    if (!ret)
+        return false;
     buf.resize(msg.size());
     std::copy(static_cast<char*>(msg.data()), static_cast<char*>(msg.data()) + msg.size(), buf.begin());
     return true;
@@ -132,17 +140,22 @@ bool megamol::remote::ZMQCommFabric::Disconnect() {
 }
 
 
-megamol::remote::ZMQCommFabric::~ZMQCommFabric() { /* this->Disconnect(); */ }
+megamol::remote::ZMQCommFabric::~ZMQCommFabric() { /* this->Disconnect(); */
+}
 
 
 megamol::remote::FBOCommFabric::FBOCommFabric(std::unique_ptr<AbstractCommFabric>&& pimpl)
-    : pimpl_{std::forward<std::unique_ptr<AbstractCommFabric>>(pimpl)} {}
+        : pimpl_{std::forward<std::unique_ptr<AbstractCommFabric>>(pimpl)} {}
 
 
-bool megamol::remote::FBOCommFabric::Connect(std::string const& address) { return this->pimpl_->Connect(address); }
+bool megamol::remote::FBOCommFabric::Connect(std::string const& address) {
+    return this->pimpl_->Connect(address);
+}
 
 
-bool megamol::remote::FBOCommFabric::Bind(std::string const& address) { return this->pimpl_->Bind(address); }
+bool megamol::remote::FBOCommFabric::Bind(std::string const& address) {
+    return this->pimpl_->Bind(address);
+}
 
 
 bool megamol::remote::FBOCommFabric::Send(std::vector<char> const& buf, send_type const type) {
@@ -155,4 +168,6 @@ bool megamol::remote::FBOCommFabric::Recv(std::vector<char>& buf, recv_type cons
 }
 
 
-bool megamol::remote::FBOCommFabric::Disconnect() { return this->pimpl_->Disconnect(); }
+bool megamol::remote::FBOCommFabric::Disconnect() {
+    return this->pimpl_->Disconnect();
+}

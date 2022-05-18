@@ -7,36 +7,36 @@
 
 #include "stdafx.h"
 #if (_MSC_VER > 1000)
-#    pragma warning(disable : 4996)
+#pragma warning(disable : 4996)
 #endif /* (_MSC_VER > 1000) */
 #if (_MSC_VER > 1000)
-#    pragma warning(default : 4996)
+#pragma warning(default : 4996)
 #endif /* (_MSC_VER > 1000) */
 
-#include <algorithm>
-#include <fstream>
-#include <map>
-#include <sstream>
-#include <string>
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/LuaState.h"
 #include "mmcore/utility/Configuration.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Environment.h"
-#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/Path.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/sys/sysfunctions.h"
+#include <algorithm>
+#include <fstream>
+#include <map>
+#include <sstream>
+#include <string>
 
 #include "lua.hpp"
 
 #ifdef _WIN32
-#    include <Windows.h>
+#include <Windows.h>
 #else /* _WIN32 */
-#    include <unistd.h>
+#include <unistd.h>
 #endif /* _WIN32 */
 
 //#define LUA_FULL_ENVIRONMENT
@@ -543,12 +543,11 @@ int megamol::core::LuaState::GetModuleParams(lua_State* L) {
                                 lua_error(L);
                             }
 
-                            vislib::RawStorage pspdef;
-                            psp->Definition(pspdef);
+                            auto const pspdef = psp->Definition();
                             // not nice, but we make HEX (base64 would be better, but I don't care)
-                            std::string answer2(pspdef.GetSize() * 2, ' ');
-                            for (SIZE_T i = 0; i < pspdef.GetSize(); ++i) {
-                                uint8_t b = *pspdef.AsAt<uint8_t>(i);
+                            std::string answer2(pspdef.size() * 2, ' ');
+                            for (SIZE_T i = 0; i < pspdef.size(); ++i) {
+                                uint8_t b = pspdef[i];
                                 uint8_t bh[2] = {static_cast<uint8_t>(b / 16), static_cast<uint8_t>(b % 16)};
                                 for (unsigned int j = 0; j < 2; ++j)
                                     answer2[i * 2 + j] = (bh[j] < 10u) ? ('0' + bh[j]) : ('A' + (bh[j] - 10u));
@@ -556,7 +555,7 @@ int megamol::core::LuaState::GetModuleParams(lua_State* L) {
                             answer << answer2 << "\1";
 
                             vislib::StringA valUTF8;
-                            vislib::UTF8Encoder::Encode(valUTF8, psp->ValueString());
+                            vislib::UTF8Encoder::Encode(valUTF8, psp->ValueString().c_str());
 
                             answer << valUTF8 << "\1";
                         }
@@ -659,12 +658,11 @@ int megamol::core::LuaState::GetParamType(lua_State* L) {
                 return 0;
             }
 
-            vislib::RawStorage pspdef;
-            psp->Definition(pspdef);
+            auto const pspdef = psp->Definition();
             // not nice, but we make HEX (base64 would be better, but I don't care)
-            std::string answer(pspdef.GetSize() * 2, ' ');
-            for (SIZE_T i = 0; i < pspdef.GetSize(); ++i) {
-                uint8_t b = *pspdef.AsAt<uint8_t>(i);
+            std::string answer(pspdef.size() * 2, ' ');
+            for (SIZE_T i = 0; i < pspdef.size(); ++i) {
+                uint8_t b = pspdef[i];
                 uint8_t bh[2] = {static_cast<uint8_t>(b / 16), static_cast<uint8_t>(b % 16)};
                 for (unsigned int j = 0; j < 2; ++j)
                     answer[i * 2 + j] = (bh[j] < 10u) ? ('0' + bh[j]) : ('A' + (bh[j] - 10u));
@@ -722,7 +720,7 @@ int megamol::core::LuaState::GetParamValue(lua_State* L) {
             }
 
             vislib::StringA valUTF8;
-            vislib::UTF8Encoder::Encode(valUTF8, psp->ValueString());
+            vislib::UTF8Encoder::Encode(valUTF8, psp->ValueString().c_str());
 
             lua_pushstring(L, valUTF8);
             return 1;

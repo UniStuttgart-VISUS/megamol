@@ -1,28 +1,30 @@
-#include "stdafx.h"
 #include "TextureDepthCompositing.h"
+#include "stdafx.h"
 
 #include <array>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
-#include "compositing/CompositingCalls.h"
+#include "compositing_gl/CompositingCalls.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::compositing::TextureDepthCompositing::TextureDepthCompositing()
-    : core::Module()
-    , m_version(0)
-    , m_depthComp_prgm(nullptr)
-    , m_output_texture(nullptr)
-    , m_output_depth_texture(nullptr)
-    , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
-    , m_output_depth_tex_slot("OutputDepthTexture", "Gives access to resulting output depth texture")
-    , m_input_tex_0_slot("InputTexture0", "Connects the primary input texture that is also used the set the output texture size")
-    , m_input_tex_1_slot("InputTexture1", "Connects the secondary input texture") 
-    , m_depth_tex_0_slot("DepthTexture0", "Connects the primary depth texture")
-    , m_depth_tex_1_slot("DepthTexture1", "Connects the secondary depth texture") {
-    
+        : core::Module()
+        , m_version(0)
+        , m_depthComp_prgm(nullptr)
+        , m_output_texture(nullptr)
+        , m_output_depth_texture(nullptr)
+        , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
+        , m_output_depth_tex_slot("OutputDepthTexture", "Gives access to resulting output depth texture")
+        , m_input_tex_0_slot(
+              "InputTexture0", "Connects the primary input texture that is also used the set the output texture size")
+        , m_input_tex_1_slot("InputTexture1", "Connects the secondary input texture")
+        , m_depth_tex_0_slot("DepthTexture0", "Connects the primary depth texture")
+        , m_depth_tex_1_slot("DepthTexture1", "Connects the secondary depth texture") {
+
     this->m_output_tex_slot.SetCallback(
         CallTexture2D::ClassName(), "GetData", &TextureDepthCompositing::getOutputImageCallback);
     this->m_output_tex_slot.SetCallback(
@@ -48,25 +50,30 @@ megamol::compositing::TextureDepthCompositing::TextureDepthCompositing()
     this->MakeSlotAvailable(&this->m_depth_tex_1_slot);
 }
 
-megamol::compositing::TextureDepthCompositing::~TextureDepthCompositing() { this->Release(); }
+megamol::compositing::TextureDepthCompositing::~TextureDepthCompositing() {
+    this->Release();
+}
 
 bool megamol::compositing::TextureDepthCompositing::create() {
 
     try {
         // create shader program
-        vislib::graphics::gl::ShaderSource compute_src;
+        vislib_gl::graphics::gl::ShaderSource compute_src;
 
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::textureDepthCompositing", compute_src)) {
+        auto ssf =
+            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+        if (!ssf->MakeShaderSource("Compositing::textureDepthCompositing", compute_src)) {
             return false;
         }
 
-		std::string compute_shader_src(compute_src.WholeCode(), (compute_src.WholeCode()).Length());
+        std::string compute_shader_src(compute_src.WholeCode(), (compute_src.WholeCode()).Length());
 
         std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
         shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Compute, compute_shader_src});
 
         m_depthComp_prgm = std::make_unique<glowl::GLSLProgram>(shader_srcs);
-        m_depthComp_prgm->setDebugLabel("Compositing::textureDepthCompositing"); //TODO debug label not set in time for catch...
+        m_depthComp_prgm->setDebugLabel(
+            "Compositing::textureDepthCompositing"); //TODO debug label not set in time for catch...
 
     } catch (glowl::GLSLProgramException const& exc) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -96,32 +103,32 @@ void megamol::compositing::TextureDepthCompositing::release() {}
 
 bool megamol::compositing::TextureDepthCompositing::getOutputImageCallback(core::Call& caller) {
     auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
-    if (lhs_tc == NULL) return false;
+    if (lhs_tc == NULL)
+        return false;
 
-    if (!computeDepthCompositing()) return false;
+    if (!computeDepthCompositing())
+        return false;
 
-    if (lhs_tc->version() < m_version) {
-        lhs_tc->setData(m_output_texture,m_version);
-    }
-
+    lhs_tc->setData(m_output_texture, m_version);
     return true;
 }
 
 bool megamol::compositing::TextureDepthCompositing::getDepthImageCallback(core::Call& caller) {
     auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
-    if (lhs_tc == NULL) return false;
+    if (lhs_tc == NULL)
+        return false;
 
-    if (!computeDepthCompositing()) return false;
+    if (!computeDepthCompositing())
+        return false;
 
-    if (lhs_tc->version() < m_version) {
-        lhs_tc->setData(m_output_depth_texture, m_version);
-    }
+    lhs_tc->setData(m_output_depth_texture, m_version);
 
     return true;
 }
 
 bool megamol::compositing::TextureDepthCompositing::getMetaDataCallback(core::Call& caller) {
-    return true; }
+    return true;
+}
 
 bool megamol::compositing::TextureDepthCompositing::computeDepthCompositing() {
 
@@ -130,15 +137,23 @@ bool megamol::compositing::TextureDepthCompositing::computeDepthCompositing() {
     auto rhs_dtc0 = m_depth_tex_0_slot.CallAs<CallTexture2D>();
     auto rhs_dtc1 = m_depth_tex_1_slot.CallAs<CallTexture2D>();
 
-    if (rhs_tc0 == NULL) return false;
-    if (rhs_tc1 == NULL) return false;
-    if (rhs_dtc0 == NULL) return false;
-    if (rhs_dtc1 == NULL) return false;
+    if (rhs_tc0 == NULL)
+        return false;
+    if (rhs_tc1 == NULL)
+        return false;
+    if (rhs_dtc0 == NULL)
+        return false;
+    if (rhs_dtc1 == NULL)
+        return false;
 
-    if (!(*rhs_tc0)(0)) return false;
-    if (!(*rhs_tc1)(0)) return false;
-    if (!(*rhs_dtc0)(0)) return false;
-    if (!(*rhs_dtc1)(0)) return false;
+    if (!(*rhs_tc0)(0))
+        return false;
+    if (!(*rhs_tc1)(0))
+        return false;
+    if (!(*rhs_dtc0)(0))
+        return false;
+    if (!(*rhs_dtc1)(0))
+        return false;
 
     // something has changed in the neath...
     bool something_has_changed =
@@ -154,13 +169,12 @@ bool megamol::compositing::TextureDepthCompositing::computeDepthCompositing() {
         auto depth1_tx2D = rhs_dtc1->getData();
 
         // set output texture size to primary input texture
-        
+
         std::array<float, 2> texture_res = {
             static_cast<float>(src0_tx2D->getWidth()), static_cast<float>(src0_tx2D->getHeight())};
 
         if (m_output_texture->getWidth() != std::get<0>(texture_res) ||
-            m_output_texture->getHeight() != std::get<1>(texture_res))
-        {
+            m_output_texture->getHeight() != std::get<1>(texture_res)) {
             glowl::TextureLayout tx_layout(
                 GL_RGBA16F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_RGBA, GL_HALF_FLOAT, 1);
             m_output_texture->reload(tx_layout, nullptr);
@@ -168,7 +182,6 @@ bool megamol::compositing::TextureDepthCompositing::computeDepthCompositing() {
             glowl::TextureLayout depth_tx_layout(
                 GL_R32F, std::get<0>(texture_res), std::get<1>(texture_res), 1, GL_R, GL_FLOAT, 1);
             m_output_depth_texture->reload(depth_tx_layout, nullptr);
-
         }
 
         m_depthComp_prgm->use();
@@ -189,10 +202,8 @@ bool megamol::compositing::TextureDepthCompositing::computeDepthCompositing() {
         m_output_texture->bindImage(0, GL_WRITE_ONLY);
         m_output_depth_texture->bindImage(1, GL_WRITE_ONLY);
 
-        glDispatchCompute(
-		    static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
-            static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 
-		    1);
+        glDispatchCompute(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
+            static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
 
         glUseProgram(0);
 

@@ -12,6 +12,8 @@
 
 #include "mmcore/utility/ZMQContextUser.h"
 
+//#define LRH_ANNOYING_DETAILS
+
 namespace megamol {
 namespace frontend_resources {
 
@@ -33,7 +35,9 @@ public:
     };
     threadsafe_queue<LuaRequest> request_queue;
 
-    std::queue<LuaRequest> get_request_queue() { return std::move(request_queue.pop_queue()); }
+    std::queue<LuaRequest> get_request_queue() {
+        return std::move(request_queue.pop_queue());
+    }
 
     zmq::context_t zmq_context;
 
@@ -42,11 +46,11 @@ public:
         assert(broker_worker.signal.is_running() == false);
 
         int retries = 0;
-        int max_retries = 100+1;
+        int max_retries = 100 + 1;
 
         auto delimiter_pos = broker_address.find_last_of(':');
-        std::string base_address = broker_address.substr(0, delimiter_pos+1); // include delimiter
-        std::string port_string = broker_address.substr(delimiter_pos+1); // ignore delimiter
+        std::string base_address = broker_address.substr(0, delimiter_pos + 1); // include delimiter
+        std::string port_string = broker_address.substr(delimiter_pos + 1);     // ignore delimiter
         int port = std::stoi(port_string);
 
         // retry to start broker socket on next port until max_retries reached
@@ -58,34 +62,36 @@ public:
             std::promise<bool> socket_feedback;
             auto socket_ok = socket_feedback.get_future();
 
-            auto thread =
-                std::thread([&]() { this->connection_broker_routine(zmq_context, address, broker_worker.signal, socket_feedback); });
+            auto thread = std::thread([&]() {
+                this->connection_broker_routine(zmq_context, address, broker_worker.signal, socket_feedback);
+            });
 
             // wait for lua socket to start successfully or fail - so we can propagate the fail and stop megamol execution
             socket_ok.wait();
 
             if (!socket_ok.get() || !broker_worker.signal.is_running()) {
-                if(retry_socket_port) {
+                if (retry_socket_port) {
                     // do loop one more time
                     retries++;
 
-                    if(thread.joinable())
+                    if (thread.joinable())
                         thread.join();
-                }
-                else {
+                } else {
                     // no retries, just fail
                     return false;
                 }
-            }
-            else {
+            } else {
                 // broker thread started successfully, so break out of retry loop
                 broker_worker.thread = std::move(thread);
                 break;
             }
-        } while(retries < max_retries);
+        } while (retries < max_retries);
 
         if (retry_socket_port && retries == max_retries) {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(("LRH Server max socket port retries reached (" + std::to_string(max_retries) + "). Address: " + broker_address + ", tried up to port: " + port_string).c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                ("LRH Server max socket port retries reached (" + std::to_string(max_retries) +
+                    "). Address: " + broker_address + ", tried up to port: " + port_string)
+                    .c_str());
             return false;
         }
 
@@ -93,7 +99,8 @@ public:
     }
 
     std::string spawn_lua_worker(std::string const& request) {
-        if (request.empty()) return std::string("Null Command.");
+        if (request.empty())
+            return std::string("Null Command.");
 
         std::promise<int> port_promise;
         auto port_future = port_promise.get_future();
@@ -112,7 +119,8 @@ public:
         return std::to_string(port);
     }
 
-    void connection_broker_routine(zmq::context_t& zmq_context, std::string const& address, ThreadSignaler& signal, std::promise<bool>& socket_ok) {
+    void connection_broker_routine(zmq::context_t& zmq_context, std::string const& address, ThreadSignaler& signal,
+        std::promise<bool>& socket_ok) {
         using megamol::core::utility::log::Log;
 
         zmq::socket_t socket(zmq_context, ZMQ_REP);
@@ -149,9 +157,7 @@ public:
 
         try {
             socket.close();
-        } catch (...) {
-            Log::DefaultLog.WriteInfo("LRH Server socket close threw exception");
-        }
+        } catch (...) { Log::DefaultLog.WriteInfo("LRH Server socket close threw exception"); }
         Log::DefaultLog.WriteInfo("LRH Server socket closed");
     }
 
@@ -174,12 +180,17 @@ public:
             while (signal.is_running()) {
                 zmq::message_t request;
 
-                if (!socket.connected()) break;
+                if (!socket.connected())
+                    break;
 
                 if (socket.recv(&request, ZMQ_DONTWAIT)) {
                     std::string request_str(reinterpret_cast<char*>(request.data()), request.size());
                     std::promise<std::string> promise;
                     std::future<std::string> future = promise.get_future();
+
+#ifdef LRH_ANNOYING_DETAILS
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("LRH: got request %s", request_str.c_str());
+#endif
 
                     request_queue.push(LuaRequest{request_str, std::ref(promise)});
                     std::string reply{"no response from LuaAPI at main thread"};
@@ -194,6 +205,13 @@ public:
 
                     const auto num_sent = socket.send(reply.data(), reply.size());
 #ifdef LRH_ANNOYING_DETAILS
+                    const int limit = 150;
+                    std::string concisereply = reply;
+                    if (concisereply.length() > limit) {
+                        concisereply = concisereply.substr(0, limit) + "...";
+                    }
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "LRH: sending reply %s", concisereply.c_str());
                     if (num_sent == reply.size()) {
                         megamol::core::utility::log::Log::DefaultLog.WriteInfo("LRH: sending looks OK");
                     } else {
@@ -210,14 +228,11 @@ public:
         } catch (std::exception& error) {
             Log::DefaultLog.WriteError("Error on LRH Pair Server: %s", error.what());
 
-        } catch (...) {
-            Log::DefaultLog.WriteError("Error on LRH Pair Server: unknown exception");
-        }
+        } catch (...) { Log::DefaultLog.WriteError("Error on LRH Pair Server: unknown exception"); }
 
         try {
             socket.close();
-        } catch (...) {
-        }
+        } catch (...) {}
         Log::DefaultLog.WriteInfo("LRH Pair Server socket closed");
     }
 };

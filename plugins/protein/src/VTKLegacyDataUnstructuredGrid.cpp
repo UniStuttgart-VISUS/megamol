@@ -10,8 +10,8 @@
 
 #include "stdafx.h"
 
-#include "VTKLegacyDataUnstructuredGrid.h"
 #include "mmcore/utility/log/Log.h"
+#include "protein/VTKLegacyDataUnstructuredGrid.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -34,16 +34,25 @@ void VTKLegacyDataUnstructuredGrid::AddPointData(
  * VTKLegacyDataUnstructuredGrid::VTKLegacyDataUnstructuredGrid
  */
 VTKLegacyDataUnstructuredGrid::VTKLegacyDataUnstructuredGrid()
-    : AbstractVTKLegacyData(), points(NULL), nPoints(0), cells(NULL), nCells(0), cellTypes(NULL), nCellData(0) {}
+        : AbstractVTKLegacyData()
+        , points(NULL)
+        , nPoints(0)
+        , cells(NULL)
+        , nCells(0)
+        , cellTypes(NULL)
+        , nCellData(0) {}
 
 
 /*
  * VTKLegacyDataUnstructuredGrid::~VTKLegacyDataUnstructuredGrid
  */
 VTKLegacyDataUnstructuredGrid::~VTKLegacyDataUnstructuredGrid() {
-    if (this->points) delete[] this->points;
-    if (this->cells) delete[] this->cells;
-    if (this->cellTypes) delete[] this->cellTypes;
+    if (this->points)
+        delete[] this->points;
+    if (this->cells)
+        delete[] this->cells;
+    if (this->cellTypes)
+        delete[] this->cellTypes;
 }
 
 
@@ -65,7 +74,7 @@ const AbstractVTKLegacyData::AttributeArray* VTKLegacyDataUnstructuredGrid::Peek
  */
 const AbstractVTKLegacyData::AttributeArray* VTKLegacyDataUnstructuredGrid::PeekPointDataByName(
     vislib::StringA name) const {
-// Check whether the id is in use
+    // Check whether the id is in use
     bool isUsed = false;
     int idx = -1;
     for (unsigned int i = 0; i < this->pointData.Count(); ++i) {

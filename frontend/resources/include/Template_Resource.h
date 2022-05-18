@@ -44,8 +44,7 @@
 namespace megamol {
 namespace frontend_resources {
 
-struct Template_Resource {
-};
+struct Template_Resource {};
 
 } /* end namespace frontend_resources */
 } /* end namespace megamol */

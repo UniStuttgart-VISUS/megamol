@@ -24,7 +24,7 @@ typedef unsigned int uint;
 // simulation parameters
 struct SimParams {
 
-	uint3 gridSize;
+    uint3 gridSize;
     uint numCells;
     float3 worldOrigin;
     float3 cellSize;
@@ -32,7 +32,7 @@ struct SimParams {
     uint numBodies;
     uint maxParticlesPerCell;
 
-	float probeRadius;
+    float probeRadius;
 
     uint maxNumNeighbors;
 

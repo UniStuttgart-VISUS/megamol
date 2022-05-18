@@ -6,11 +6,11 @@
  */
 #include "SimpleAstroFilter.h"
 
-#include <climits>
-#include <numeric>
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
+#include <climits>
+#include <numeric>
 
 using namespace megamol;
 using namespace megamol::astro;
@@ -20,50 +20,50 @@ using namespace megamol::core;
  * SimpleAstroFilter::SimpleAstroFilter
  */
 SimpleAstroFilter::SimpleAstroFilter(void)
-    : Module()
-    , particlesOutSlot("particlesOut", "Output slot for the filtered astro particle data")
-    , particlesInSlot("particlesIn", "Input slot for the astro particle data")
-    , showOnlyBaryonParam("showOnlyBaryons", "")
-    , showOnlyDarkMatterParam("showOnlyDarkMatter", "")
-    , showOnlyStarsParam("showOnlyStars", "")
-    , showOnlyWindParam("showOnlyWind", "")
-    , showOnlyStarFormingGasParam("showOnlyStarFormingGas", "")
-    , showOnlyAGNsParam("showOnlyAGNs", "")
-    , minVelocityMagnitudeParam("velocityMagnitude::min", "")
-    , maxVelocityMagnitudeParam("velocityMagnitude::max", "")
-    , filterVelocityMagnitudeParam("velocityMagnitude::filter", "")
-    , minTemperatureParam("temperature::min", "")
-    , maxTemperatureParam("temperature::max", "")
-    , filterTemperatureParam("temperature::filter", "")
-    , minMassParam("mass::min", "")
-    , maxMassParam("mass::max", "")
-    , filterMassParam("mass::filter", "")
-    , minInternalEnergyParam("internalEnergy::min", "")
-    , maxInternalEnergyParam("internalEnergy::max", "")
-    , filterInternalEnergyParam("internalEnergy::filter", "")
-    , minSmoothingLengthParam("smoothingLength::min", "")
-    , maxSmoothingLengthParam("smoothingLength::max", "")
-    , filterSmoothingLengthParam("smoothingLength::filter", "")
-    , minMolecularWeightParam("molecularWeight::min", "")
-    , maxMolecularWeightParam("molecularWeight::max", "")
-    , filterMolecularWeightParam("molecularWeight::filter", "")
-    , minDensityParam("density::min", "")
-    , maxDensityParam("density::max", "")
-    , filterDensityParam("density::filter", "")
-    , minGravitationalPotentialParam("gravitationalPotential::min", "")
-    , maxGravitationalPotentialParam("gravitationalPotential::max", "")
-    , filterGravitationalPotentialParam("gravitationalPotential::filter", "")
-    , minEntropyParam("entropy::min", "")
-    , maxEntropyParam("entropy::max", "")
-    , filterEntropyParam("entropy::filter", "")
-    , minAgnDistanceParam("agndistance::min", "")
-    , maxAgnDistanceParam("agndistance::max", "")
-    , filterAgnDistanceParam("agndistance::filter", "")
-    , fillFilterButtonParam("fillValues", "")
-    , hashOffset(0)
-    , refilter(true)
-    , lastDataHash(0)
-    , lastTimestep(0) {
+        : Module()
+        , particlesOutSlot("particlesOut", "Output slot for the filtered astro particle data")
+        , particlesInSlot("particlesIn", "Input slot for the astro particle data")
+        , showOnlyBaryonParam("showOnlyBaryons", "")
+        , showOnlyDarkMatterParam("showOnlyDarkMatter", "")
+        , showOnlyStarsParam("showOnlyStars", "")
+        , showOnlyWindParam("showOnlyWind", "")
+        , showOnlyStarFormingGasParam("showOnlyStarFormingGas", "")
+        , showOnlyAGNsParam("showOnlyAGNs", "")
+        , minVelocityMagnitudeParam("velocityMagnitude::min", "")
+        , maxVelocityMagnitudeParam("velocityMagnitude::max", "")
+        , filterVelocityMagnitudeParam("velocityMagnitude::filter", "")
+        , minTemperatureParam("temperature::min", "")
+        , maxTemperatureParam("temperature::max", "")
+        , filterTemperatureParam("temperature::filter", "")
+        , minMassParam("mass::min", "")
+        , maxMassParam("mass::max", "")
+        , filterMassParam("mass::filter", "")
+        , minInternalEnergyParam("internalEnergy::min", "")
+        , maxInternalEnergyParam("internalEnergy::max", "")
+        , filterInternalEnergyParam("internalEnergy::filter", "")
+        , minSmoothingLengthParam("smoothingLength::min", "")
+        , maxSmoothingLengthParam("smoothingLength::max", "")
+        , filterSmoothingLengthParam("smoothingLength::filter", "")
+        , minMolecularWeightParam("molecularWeight::min", "")
+        , maxMolecularWeightParam("molecularWeight::max", "")
+        , filterMolecularWeightParam("molecularWeight::filter", "")
+        , minDensityParam("density::min", "")
+        , maxDensityParam("density::max", "")
+        , filterDensityParam("density::filter", "")
+        , minGravitationalPotentialParam("gravitationalPotential::min", "")
+        , maxGravitationalPotentialParam("gravitationalPotential::max", "")
+        , filterGravitationalPotentialParam("gravitationalPotential::filter", "")
+        , minEntropyParam("entropy::min", "")
+        , maxEntropyParam("entropy::max", "")
+        , filterEntropyParam("entropy::filter", "")
+        , minAgnDistanceParam("agndistance::min", "")
+        , maxAgnDistanceParam("agndistance::max", "")
+        , filterAgnDistanceParam("agndistance::filter", "")
+        , fillFilterButtonParam("fillValues", "")
+        , hashOffset(0)
+        , refilter(true)
+        , lastDataHash(0)
+        , lastTimestep(0) {
 
     this->particlesInSlot.SetCompatibleCall<AstroDataCallDescription>();
     this->MakeSlotAvailable(&this->particlesInSlot);
@@ -172,7 +172,9 @@ SimpleAstroFilter::SimpleAstroFilter(void)
 /*
  * SimpleAstroFilter::~SimpleAstroFilter
  */
-SimpleAstroFilter::~SimpleAstroFilter(void) { this->Release(); }
+SimpleAstroFilter::~SimpleAstroFilter(void) {
+    this->Release();
+}
 
 /*
  * SimpleAstroFilter::create
@@ -194,10 +196,12 @@ void SimpleAstroFilter::release(void) {
  */
 bool SimpleAstroFilter::getData(core::Call& call) {
     AstroDataCall* adc = dynamic_cast<AstroDataCall*>(&call);
-    if (adc == nullptr) return false;
+    if (adc == nullptr)
+        return false;
 
     AstroDataCall* inCall = this->particlesInSlot.CallAs<AstroDataCall>();
-    if (inCall == nullptr) return false;
+    if (inCall == nullptr)
+        return false;
 
     inCall->operator=(*adc);
     inCall->SetUnlocker(nullptr, false);
@@ -223,10 +227,12 @@ bool SimpleAstroFilter::getData(core::Call& call) {
  */
 bool SimpleAstroFilter::getExtent(core::Call& call) {
     AstroDataCall* adc = dynamic_cast<AstroDataCall*>(&call);
-    if (adc == nullptr) return false;
+    if (adc == nullptr)
+        return false;
 
     AstroDataCall* inCall = this->particlesInSlot.CallAs<AstroDataCall>();
-    if (inCall == nullptr) return false;
+    if (inCall == nullptr)
+        return false;
 
     inCall->operator=(*adc);
     adc->SetUnlocker(nullptr, false);
@@ -476,42 +482,78 @@ bool SimpleAstroFilter::copyInCallToContent(const AstroDataCall& inCall, const s
  * SimpleAstroFilter::isParamDirty
  */
 bool SimpleAstroFilter::isParamDirty(void) {
-    if (this->showOnlyBaryonParam.IsDirty()) return true;
-    if (this->showOnlyDarkMatterParam.IsDirty()) return true;
-    if (this->showOnlyStarsParam.IsDirty()) return true;
-    if (this->showOnlyWindParam.IsDirty()) return true;
-    if (this->showOnlyStarFormingGasParam.IsDirty()) return true;
-    if (this->showOnlyAGNsParam.IsDirty()) return true;
-    if (this->minVelocityMagnitudeParam.IsDirty()) return true;
-    if (this->maxVelocityMagnitudeParam.IsDirty()) return true;
-    if (this->filterVelocityMagnitudeParam.IsDirty()) return true;
-    if (this->minTemperatureParam.IsDirty()) return true;
-    if (this->maxTemperatureParam.IsDirty()) return true;
-    if (this->filterTemperatureParam.IsDirty()) return true;
-    if (this->minMassParam.IsDirty()) return true;
-    if (this->maxMassParam.IsDirty()) return true;
-    if (this->filterMassParam.IsDirty()) return true;
-    if (this->minInternalEnergyParam.IsDirty()) return true;
-    if (this->maxInternalEnergyParam.IsDirty()) return true;
-    if (this->filterInternalEnergyParam.IsDirty()) return true;
-    if (this->minSmoothingLengthParam.IsDirty()) return true;
-    if (this->maxSmoothingLengthParam.IsDirty()) return true;
-    if (this->filterSmoothingLengthParam.IsDirty()) return true;
-    if (this->minMolecularWeightParam.IsDirty()) return true;
-    if (this->maxMolecularWeightParam.IsDirty()) return true;
-    if (this->filterMolecularWeightParam.IsDirty()) return true;
-    if (this->minDensityParam.IsDirty()) return true;
-    if (this->maxDensityParam.IsDirty()) return true;
-    if (this->filterDensityParam.IsDirty()) return true;
-    if (this->minGravitationalPotentialParam.IsDirty()) return true;
-    if (this->maxGravitationalPotentialParam.IsDirty()) return true;
-    if (this->filterGravitationalPotentialParam.IsDirty()) return true;
-    if (this->minEntropyParam.IsDirty()) return true;
-    if (this->maxEntropyParam.IsDirty()) return true;
-    if (this->filterEntropyParam.IsDirty()) return true;
-    if (this->minAgnDistanceParam.IsDirty()) return true;
-    if (this->maxAgnDistanceParam.IsDirty()) return true;
-    if (this->filterAgnDistanceParam.IsDirty()) return true;
+    if (this->showOnlyBaryonParam.IsDirty())
+        return true;
+    if (this->showOnlyDarkMatterParam.IsDirty())
+        return true;
+    if (this->showOnlyStarsParam.IsDirty())
+        return true;
+    if (this->showOnlyWindParam.IsDirty())
+        return true;
+    if (this->showOnlyStarFormingGasParam.IsDirty())
+        return true;
+    if (this->showOnlyAGNsParam.IsDirty())
+        return true;
+    if (this->minVelocityMagnitudeParam.IsDirty())
+        return true;
+    if (this->maxVelocityMagnitudeParam.IsDirty())
+        return true;
+    if (this->filterVelocityMagnitudeParam.IsDirty())
+        return true;
+    if (this->minTemperatureParam.IsDirty())
+        return true;
+    if (this->maxTemperatureParam.IsDirty())
+        return true;
+    if (this->filterTemperatureParam.IsDirty())
+        return true;
+    if (this->minMassParam.IsDirty())
+        return true;
+    if (this->maxMassParam.IsDirty())
+        return true;
+    if (this->filterMassParam.IsDirty())
+        return true;
+    if (this->minInternalEnergyParam.IsDirty())
+        return true;
+    if (this->maxInternalEnergyParam.IsDirty())
+        return true;
+    if (this->filterInternalEnergyParam.IsDirty())
+        return true;
+    if (this->minSmoothingLengthParam.IsDirty())
+        return true;
+    if (this->maxSmoothingLengthParam.IsDirty())
+        return true;
+    if (this->filterSmoothingLengthParam.IsDirty())
+        return true;
+    if (this->minMolecularWeightParam.IsDirty())
+        return true;
+    if (this->maxMolecularWeightParam.IsDirty())
+        return true;
+    if (this->filterMolecularWeightParam.IsDirty())
+        return true;
+    if (this->minDensityParam.IsDirty())
+        return true;
+    if (this->maxDensityParam.IsDirty())
+        return true;
+    if (this->filterDensityParam.IsDirty())
+        return true;
+    if (this->minGravitationalPotentialParam.IsDirty())
+        return true;
+    if (this->maxGravitationalPotentialParam.IsDirty())
+        return true;
+    if (this->filterGravitationalPotentialParam.IsDirty())
+        return true;
+    if (this->minEntropyParam.IsDirty())
+        return true;
+    if (this->maxEntropyParam.IsDirty())
+        return true;
+    if (this->filterEntropyParam.IsDirty())
+        return true;
+    if (this->minAgnDistanceParam.IsDirty())
+        return true;
+    if (this->maxAgnDistanceParam.IsDirty())
+        return true;
+    if (this->filterAgnDistanceParam.IsDirty())
+        return true;
     return false;
 }
 

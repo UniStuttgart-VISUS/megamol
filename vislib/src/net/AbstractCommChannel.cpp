@@ -6,24 +6,23 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "vislib/net/Socket.h"
 #include "vislib/net/AbstractCommChannel.h"
-
+#include "vislib/net/Socket.h"
 
 
 /*
  * vislib::net::AbstractCommChannel::TIMEOUT_INFINITE
  */
-const UINT vislib::net::AbstractCommChannel::TIMEOUT_INFINITE 
-    = vislib::net::AbstractCommClientChannel::TIMEOUT_INFINITE;
+const UINT vislib::net::AbstractCommChannel::TIMEOUT_INFINITE =
+    vislib::net::AbstractCommClientChannel::TIMEOUT_INFINITE;
 
 
 /*
  * vislib::net::AbstractCommChannel::AbstractCommChannel
  */
-vislib::net::AbstractCommChannel::AbstractCommChannel(void) 
-        : AbstractCommClientChannel(), AbstractCommServerChannel() {
-}
+vislib::net::AbstractCommChannel::AbstractCommChannel(void)
+        : AbstractCommClientChannel()
+        , AbstractCommServerChannel() {}
 
 
 /*

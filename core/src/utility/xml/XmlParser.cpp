@@ -1,12 +1,12 @@
 /*
  * XmlParser.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/utility/xml/XmlParser.h"
+#include "stdafx.h"
 
 
 /*
@@ -18,16 +18,13 @@ using namespace megamol::core::utility::xml;
 /*
  * XmlParser::XmlParser
  */
-XmlParser::XmlParser(void) : reader(NULL), level(0), number(0), endNumbers(),
-        errorMsgsPresent(false), msgs() {
-}
+XmlParser::XmlParser(void) : reader(NULL), level(0), number(0), endNumbers(), errorMsgsPresent(false), msgs() {}
 
 
 /*
  * XmlParser::~XmlParser
  */
-XmlParser::~XmlParser(void) {
-}
+XmlParser::~XmlParser(void) {}
 
 
 /*
@@ -40,8 +37,7 @@ bool XmlParser::Parse(XmlReader& reader) {
     try {
 
         if (!CheckBaseTag(reader)) {
-            throw vislib::Exception("XML-file not compatible with this parser",
-                __FILE__, __LINE__);
+            throw vislib::Exception("XML-file not compatible with this parser", __FILE__, __LINE__);
         }
 
         this->level = 0;
@@ -56,7 +52,7 @@ bool XmlParser::Parse(XmlReader& reader) {
             retval = false;
         }
 
-    } catch(...) {
+    } catch (...) {
         this->reader = NULL;
         throw;
     }
@@ -69,8 +65,7 @@ bool XmlParser::Parse(XmlReader& reader) {
 /*
  * XmlParser::CharacterData
  */
-void XmlParser::CharacterData(unsigned int level, const XML_Char *text, int len,
-        XmlReader::ParserState state) {
+void XmlParser::CharacterData(unsigned int level, const XML_Char* text, int len, XmlReader::ParserState state) {
     // intentionally empty
 }
 
@@ -78,8 +73,7 @@ void XmlParser::CharacterData(unsigned int level, const XML_Char *text, int len,
 /*
  * XmlParser::Comment
  */
-void XmlParser::Comment(unsigned int level, const XML_Char *text,
-        XmlReader::ParserState state) {
+void XmlParser::Comment(unsigned int level, const XML_Char* text, XmlReader::ParserState state) {
     // intentionally empty
 }
 
@@ -103,7 +97,7 @@ bool XmlParser::CheckBaseTag(const XmlReader& reader) {
 /*
  * XmlParser::Error
  */
-void XmlParser::Error(const char *msg) const {
+void XmlParser::Error(const char* msg) const {
     this->errorMsgsPresent = true;
     vislib::StringA fullMsg;
     vislib::StringA pos = (this->reader) ? this->reader->xmlPosition() : vislib::StringA();
@@ -122,7 +116,7 @@ void XmlParser::Error(const char *msg) const {
 /*
  * XmlParser::FatalError
  */
-void XmlParser::FatalError(const char *msg) const {
+void XmlParser::FatalError(const char* msg) const {
     this->Error(msg);
     if (this->reader) {
         this->reader->StopParsing();
@@ -133,12 +127,9 @@ void XmlParser::FatalError(const char *msg) const {
 /*
  * XmlParser::StartTag
  */
-bool XmlParser::StartTag(unsigned int num, unsigned int level,
-        const XML_Char * name, const XML_Char ** attrib,
-        XmlReader::ParserState state,
-        XmlReader::ParserState& outChildState,
-        XmlReader::ParserState& outEndTagState,
-        XmlReader::ParserState& outPostEndTagState) {
+bool XmlParser::StartTag(unsigned int num, unsigned int level, const XML_Char* name, const XML_Char** attrib,
+    XmlReader::ParserState state, XmlReader::ParserState& outChildState, XmlReader::ParserState& outEndTagState,
+    XmlReader::ParserState& outPostEndTagState) {
 
     //for (unsigned int i = 0; i < level; i++) printf("  ");
     //printf("<%s %u>\n", name, num);
@@ -154,9 +145,8 @@ bool XmlParser::StartTag(unsigned int num, unsigned int level,
 /*
  * XmlParser::EndTag
  */
-bool XmlParser::EndTag(unsigned int num, unsigned int level,
-        const XML_Char * name, XmlReader::ParserState state,
-        XmlReader::ParserState& outPostEndTagState) {
+bool XmlParser::EndTag(unsigned int num, unsigned int level, const XML_Char* name, XmlReader::ParserState state,
+    XmlReader::ParserState& outPostEndTagState) {
 
     //for (unsigned int i = 0; i < level; i++) printf("  ");
     //printf("</%s %u>\n", name, num);
@@ -168,7 +158,7 @@ bool XmlParser::EndTag(unsigned int num, unsigned int level,
 /*
  * XmlParser::Warning
  */
-void XmlParser::Warning(const char *msg) const {
+void XmlParser::Warning(const char* msg) const {
     vislib::StringA fullMsg;
     vislib::StringA pos = (this->reader) ? this->reader->xmlPosition() : vislib::StringA();
 
@@ -186,10 +176,9 @@ void XmlParser::Warning(const char *msg) const {
 /*
  * XmlParser::WarnUnexpectedAttribut
  */
-void XmlParser::WarnUnexpectedAttribut(const XML_Char *tag, const XML_Char *attr) const {
+void XmlParser::WarnUnexpectedAttribut(const XML_Char* tag, const XML_Char* attr) const {
     vislib::StringA msg;
-    msg.Format("Unexpected attribute \"%s\" in tag \"%s\"",
-        vislib::StringA(attr).PeekBuffer(),
+    msg.Format("Unexpected attribute \"%s\" in tag \"%s\"", vislib::StringA(attr).PeekBuffer(),
         vislib::StringA(tag).PeekBuffer());
     this->Warning(msg);
 }
@@ -198,17 +187,14 @@ void XmlParser::WarnUnexpectedAttribut(const XML_Char *tag, const XML_Char *attr
 /*
  * XmlParser::startXmlTag
  */
-void XmlParser::startXmlTag(const XML_Char *name, const XML_Char **attrib,
-        XmlReader::ParserState& outEndTagState,
-        XmlReader::ParserState& outPostEndTagState) {
-    bool handled = this->StartTag(this->number, this->level++, name, attrib, 
-        this->reader->readerState, this->reader->readerState, outEndTagState, 
-        outPostEndTagState);
+void XmlParser::startXmlTag(const XML_Char* name, const XML_Char** attrib, XmlReader::ParserState& outEndTagState,
+    XmlReader::ParserState& outPostEndTagState) {
+    bool handled = this->StartTag(this->number, this->level++, name, attrib, this->reader->readerState,
+        this->reader->readerState, outEndTagState, outPostEndTagState);
     if (!handled) {
 
         vislib::StringA msg;
-        msg.Format("Unexpected tag \"%s\" ignored",
-            vislib::StringA(name).PeekBuffer());
+        msg.Format("Unexpected tag \"%s\" ignored", vislib::StringA(name).PeekBuffer());
         this->Warning(msg);
 
         this->reader->readerState = XmlReader::STATE_IGNORE_SUBTREE;
@@ -222,8 +208,6 @@ void XmlParser::startXmlTag(const XML_Char *name, const XML_Char **attrib,
 /*
  * XmlParser::endXmlTag
  */
-void XmlParser::endXmlTag(const XML_Char *name,
-        XmlReader::ParserState& outPostEndTagState) {
-    this->EndTag(this->endNumbers.Pop(), --this->level, name, 
-        this->reader->readerState, outPostEndTagState);
+void XmlParser::endXmlTag(const XML_Char* name, XmlReader::ParserState& outPostEndTagState) {
+    this->EndTag(this->endNumbers.Pop(), --this->level, name, this->reader->readerState, outPostEndTagState);
 }

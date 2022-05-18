@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/param/AbstractParamPresentation.h"
+#include "stdafx.h"
 
 
 using namespace megamol::core::param;
@@ -14,34 +14,51 @@ using namespace megamol::core::param;
 
 std::string AbstractParamPresentation::GetTypeName(ParamType type) {
     switch (type) {
-    case(ParamType::BOOL): return "BoolParam";
-    case(ParamType::BUTTON): return "ButtonParam";
-    case(ParamType::COLOR): return "ColorParam";
-    case(ParamType::ENUM): return "EnumParam";
-    case(ParamType::FILEPATH): return "FilePathParam";
-    case(ParamType::FLEXENUM): return "FlexEnumParam";
-    case(ParamType::FLOAT): return "FloatParam";
-    case(ParamType::INT): return "IntParam";
-    case(ParamType::STRING): return "StringParam";
-    case(ParamType::TERNARY): return "TernaryParam";
-    case(ParamType::TRANSFERFUNCTION): return "TransferFunctionParam";
-    case(ParamType::VECTOR2F): return "Vector2fParam";
-    case(ParamType::VECTOR3F): return "Vector3fParam";
-    case(ParamType::VECTOR4F): return "Vector4fParam";
-    case(ParamType::GROUP_ANIMATION): return "AnimationGroup";
-    case (ParamType::GROUP_3D_CUBE): return "3DCubeGroup";
-    default: return "UNKNOWN";
+    case (ParamType::BOOL):
+        return "BoolParam";
+    case (ParamType::BUTTON):
+        return "ButtonParam";
+    case (ParamType::COLOR):
+        return "ColorParam";
+    case (ParamType::ENUM):
+        return "EnumParam";
+    case (ParamType::FILEPATH):
+        return "FilePathParam";
+    case (ParamType::FLEXENUM):
+        return "FlexEnumParam";
+    case (ParamType::FLOAT):
+        return "FloatParam";
+    case (ParamType::INT):
+        return "IntParam";
+    case (ParamType::STRING):
+        return "StringParam";
+    case (ParamType::TERNARY):
+        return "TernaryParam";
+    case (ParamType::TRANSFERFUNCTION):
+        return "TransferFunctionParam";
+    case (ParamType::VECTOR2F):
+        return "Vector2fParam";
+    case (ParamType::VECTOR3F):
+        return "Vector3fParam";
+    case (ParamType::VECTOR4F):
+        return "Vector4fParam";
+    case (ParamType::GROUP_ANIMATION):
+        return "AnimationGroup";
+    case (ParamType::GROUP_3D_CUBE):
+        return "3DCubeGroup";
+    default:
+        return "UNKNOWN";
     }
 }
 
 
 AbstractParamPresentation::AbstractParamPresentation(void)
-    : visible(true)
-    , read_only(false)
-    , presentation(AbstractParamPresentation::Presentation::Basic)
-    , compatible(Presentation::Basic)
-    , initialised(false)
-    , presentation_name_map() {
+        : visible(true)
+        , read_only(false)
+        , presentation(AbstractParamPresentation::Presentation::Basic)
+        , compatible(Presentation::Basic)
+        , initialised(false)
+        , presentation_name_map() {
 
     this->presentation_name_map.clear();
     this->presentation_name_map.emplace(Presentation::Basic, "Basic");
@@ -95,13 +112,12 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::FLOAT): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::Knob |
-                Presentation::Slider | Presentation::Drag;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::Knob | Presentation::Slider |
+                               Presentation::Drag;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::INT): {
-            this->compatible = Presentation::Basic | Presentation::String |
-                Presentation::Slider | Presentation::Drag;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::Slider | Presentation::Drag;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::STRING): {
@@ -117,18 +133,17 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
             this->SetGUIPresentation(Presentation::TransferFunction);
         } break;
         case (ParamType::VECTOR2F): {
-            this->compatible = Presentation::Basic | Presentation::String | 
-                Presentation::Slider | Presentation::Drag;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::Slider | Presentation::Drag;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::VECTOR3F): {
-            this->compatible = Presentation::Basic | Presentation::String | 
-                Presentation::Direction | Presentation::Slider | Presentation::Drag;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::Direction |
+                               Presentation::Slider | Presentation::Drag;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::VECTOR4F): {
-            this->compatible = Presentation::Basic | Presentation::String | 
-                Presentation::Color | Presentation::Rotation | Presentation::Slider | Presentation::Drag;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::Color |
+                               Presentation::Rotation | Presentation::Slider | Presentation::Drag;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::GROUP_ANIMATION): {
@@ -153,8 +168,7 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
 void AbstractParamPresentation::SetGUIPresentation(AbstractParamPresentation::Presentation present) {
     if (this->IsPresentationCompatible(present)) {
         this->presentation = present;
-    }
-    else {
+    } else {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "Incompatible parameter presentation. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
@@ -182,13 +196,16 @@ bool AbstractParamPresentation::StateFromJSON(const nlohmann::json& in_json, con
 
                         valid = true;
                         bool gui_visibility = true;
-                        valid &= megamol::core::utility::get_json_value<bool>(gui_state, { "gui_visibility" }, &gui_visibility);
+                        valid &= megamol::core::utility::get_json_value<bool>(
+                            gui_state, {"gui_visibility"}, &gui_visibility);
 
                         bool gui_read_only = false;
-                        valid &= megamol::core::utility::get_json_value<bool>(gui_state, { "gui_read-only" }, &gui_read_only);
+                        valid &=
+                            megamol::core::utility::get_json_value<bool>(gui_state, {"gui_read-only"}, &gui_read_only);
 
                         int presentation_mode = 0;
-                        valid &= megamol::core::utility::get_json_value<int>(gui_state, { "gui_presentation_mode" }, &presentation_mode);
+                        valid &= megamol::core::utility::get_json_value<int>(
+                            gui_state, {"gui_presentation_mode"}, &presentation_mode);
                         auto gui_presentation_mode = static_cast<Presentation>(presentation_mode);
 
                         if (valid) {
@@ -201,8 +218,7 @@ bool AbstractParamPresentation::StateFromJSON(const nlohmann::json& in_json, con
                 }
             }
         }
-    }
-    catch (...) {
+    } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON Error - Unable to read state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -216,14 +232,11 @@ bool AbstractParamPresentation::StateToJSON(nlohmann::json& inout_json, const st
 
     try {
         // Append to given json
-        inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_visibility"] =
-            this->IsGUIVisible();
-        inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_read-only"] =
-            this->IsGUIReadOnly();
+        inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_visibility"] = this->IsGUIVisible();
+        inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_read-only"] = this->IsGUIReadOnly();
         inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_presentation_mode"] =
             static_cast<int>(this->GetGUIPresentation());
-    }
-    catch (...) {
+    } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "JSON Error - Unable to write state to JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;

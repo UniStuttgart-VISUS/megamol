@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "stdafx.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "CudaDevArr.h"
+#include "stdafx.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -21,7 +21,6 @@ namespace protein_cuda {
 class CUDAStreamlines {
 
 public:
-
     // Offset in output VBO for positions
     static const int vboOffsPos;
 
@@ -32,7 +31,7 @@ public:
     static const int vboStride;
 
     /// Enum describing possible integration directions
-    enum Direction {FORWARD=1, BACKWARD, BIDIRECTIONAL};
+    enum Direction { FORWARD = 1, BACKWARD, BIDIRECTIONAL };
 
     /** CTor */
     CUDAStreamlines();
@@ -63,13 +62,8 @@ public:
      * @param vecFieldDelta The spacing of the lattice
      * @return 'True' on success, 'false' otherwise
      */
-    bool IntegrateRK4(
-            const float *seedPoints,
-            float step,
-            float *vecField,
-            int3 vecFieldDim,
-            float3 vecFieldOrg,
-            float3 vecFieldDelta);
+    bool IntegrateRK4(const float* seedPoints, float step, float* vecField, int3 vecFieldDim, float3 vecFieldOrg,
+        float3 vecFieldDelta);
 
     /**
      * Render the streamlines using GL_Line_Strip.
@@ -96,11 +90,7 @@ public:
      * @param fieldDelta The spacing of the lattice
      * @return 'True' on success, 'false' otherwise
      */
-    bool SampleScalarFieldToAlpha(
-            float *field,
-            int3 fieldDim,
-            float3 fieldOrg,
-            float3 fieldDelta);
+    bool SampleScalarFieldToAlpha(float* field, int3 fieldDim, float3 fieldOrg, float3 fieldDelta);
 
     /**
      * Samples a given vector field and stores the value in the RGB components
@@ -112,11 +102,7 @@ public:
      * @param fieldDelta The spacing of the lattice
      * @return 'True' on success, 'false' otherwise
      */
-    bool SampleVecFieldToRGB(
-            float *vecField,
-            int3 fieldDim,
-            float3 fieldOrg,
-            float3 fieldDelta);
+    bool SampleVecFieldToRGB(float* vecField, int3 fieldDim, float3 fieldOrg, float3 fieldDelta);
 
     /**
      * Initializes the RGB part of the color with a uniform value
@@ -127,7 +113,6 @@ public:
     bool SetUniformRGBColor(float3 col);
 
 protected:
-
     /**
      * Unregisters the cuda resource handle with the vertex buffer object and
      * destroys the vertex buffer object.
@@ -143,9 +128,8 @@ protected:
     bool initVBO();
 
 private:
-
     /// Cuda graphics resource associated with the vertex data VBO
-    struct cudaGraphicsResource *cudaToken;
+    struct cudaGraphicsResource* cudaToken;
 
     /// The OpenGL handle for the vertex buffer object holding the line strip
     GLuint lineStripVBO;
@@ -164,7 +148,6 @@ private:
 
     // Temporary device array for a scalar field
     CudaDevArr<float> sclField_D;
-
 };
 
 } // end namespace protein_cuda

@@ -7,12 +7,17 @@
 namespace megamol {
 namespace remote {
 
-template <int DIM> struct vec {
+template<int DIM>
+struct vec {
     static_assert(DIM > 0, "Zero dimensional vector not allowed");
     std::unique_ptr<float[]> coord_;
     vec(void) : coord_{new float[DIM]} {};
-    vec(float coord[DIM]) : vec{} { std::copy(coord, coord + DIM, coord_.get()); }
-    vec(vec const& rhs) : vec{} { std::copy(rhs.coord_.get(), rhs.coord_.get() + DIM, coord_.get()); }
+    vec(float coord[DIM]) : vec{} {
+        std::copy(coord, coord + DIM, coord_.get());
+    }
+    vec(vec const& rhs) : vec{} {
+        std::copy(rhs.coord_.get(), rhs.coord_.get() + DIM, coord_.get());
+    }
     vec& operator=(vec const& rhs) {
         std::copy(rhs.coord_.get(), rhs.coord_.get() + DIM, coord_.get());
         return *this;
@@ -21,12 +26,16 @@ template <int DIM> struct vec {
         std::copy(coord, coord + DIM, coord_.get());
         return *this;
     }
-    float& operator[](size_t idx) { return coord_[idx]; }
+    float& operator[](size_t idx) {
+        return coord_[idx];
+    }
 };
 
-template <int DIM> using vec_t = vec<DIM>;
+template<int DIM>
+using vec_t = vec<DIM>;
 
-template <int DIM> struct box {
+template<int DIM>
+struct box {
     vec_t<DIM> lower_;
     vec_t<DIM> upper_;
     box(void) : lower_{}, upper_{} {};
@@ -90,7 +99,7 @@ struct fbo_msg_header {
     // frame_times
     float frame_times[2]; /// [0] requested time, [1] time frames count
     // cam_params
-    float cam_params[9];  /// [0]-[2] position, [3]-[5] up, [6]-[8] lookat
+    float cam_params[9]; /// [0]-[2] position, [3]-[5] up, [6]-[8] lookat
     // viewport
     int screen_area[4];
     // updated viewport
@@ -111,9 +120,9 @@ struct fbo_msg {
     fbo_msg() = default;
 
     explicit fbo_msg(fbo_msg_header_t&& header, std::vector<char>&& col, std::vector<char>&& depth)
-        : fbo_msg_header{std::forward<fbo_msg_header_t>(header)}
-        , color_buf{std::forward<std::vector<char>>(col)}
-        , depth_buf{std::forward<std::vector<char>>(depth)} {}
+            : fbo_msg_header{std::forward<fbo_msg_header_t>(header)}
+            , color_buf{std::forward<std::vector<char>>(col)}
+            , depth_buf{std::forward<std::vector<char>>(depth)} {}
 
     fbo_msg_header_t fbo_msg_header;
     std::vector<char> color_buf;

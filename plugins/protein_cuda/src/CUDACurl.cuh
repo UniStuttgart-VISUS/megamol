@@ -38,55 +38,55 @@ uint3 CudaGetGridPos(unsigned int idx);
  */
 __global__
 void CudaCurlX_D(float *gridVecFieldD,
-		         float *gridCurlD,
-		         float hInvHalf);
+                 float *gridCurlD,
+                 float hInvHalf);
 
 /**
  * Device function computing the curl value in y direction
  */
 __global__
 void CudaCurlY_D(float *gridVecFieldD,
-		         float *gridCurlD,
-		         float hInvHalf);
+                 float *gridCurlD,
+                 float hInvHalf);
 
 /**
  * Device function computing the curl value in z direction
  */
 __global__
 void CudaCurlZ_D(float *gridVecFieldD,
-		         float *gridCurlD,
-		         float hInvHalf);
+                 float *gridCurlD,
+                 float hInvHalf);
 
 /**
  * Device function computing the gradient in x direction
  */
 __global__
 void CudaGradX_D(float *gridVecFieldD,
-		         float *gridCurlD,
-		         float hInvHalf);
+                 float *gridCurlD,
+                 float hInvHalf);
 
 /**
  * Device function computing the gradient in y direction
  */
 __global__
 void CudaGradY_D(float *gridVecFieldD,
-		         float *gridCurlD,
-		         float hInvHalf);
+                 float *gridCurlD,
+                 float hInvHalf);
 
 /**
  * Device function computing the gradient in z direction
  */
 __global__
 void CudaGradZ_D(float *gridVecFieldD,
-		         float *gridCurlD,
-		         float hInvHalf);
+                 float *gridCurlD,
+                 float hInvHalf);
 
 /**
  * Device function computing the magnitude of the curl value.
  */
 __global__
 void CudaCurlMag_D(float *gridCurlD,
-		           float *gridCurlMagD);
+                   float *gridCurlMagD);
 
 /**
  * Device function which normalizes all vectors in the grid and stores filter

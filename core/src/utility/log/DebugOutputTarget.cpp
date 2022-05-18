@@ -44,7 +44,8 @@ void megamol::core::utility::log::DebugOutputTarget::Msg(Log::UINT level,
  */
 void megamol::core::utility::log::DebugOutputTarget::Msg(
     Log::UINT level, Log::TimeStamp time, Log::SourceID sid, std::string const& msg) {
-    if (level > this->Level()) return;
+    if (level > this->Level())
+        return;
     logger->info("{}|{}", level, msg);
 }
 

@@ -8,13 +8,14 @@
 #ifndef FEM_TXT_LOADER_H_INCLUDED
 #define FEM_TXT_LOADER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "FEMDataCall.h"
-#include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+
+#include "ArchVisCalls.h"
 
 namespace megamol {
 namespace archvis {
@@ -26,21 +27,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "FEMLoader"; }
+    static const char* ClassName(void) {
+        return "FEMLoader";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data source for simply loading txt-based FEM files from disk"; }
+    static const char* Description(void) {
+        return "Data source for simply loading txt-based FEM files from disk";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     FEMLoader();
     ~FEMLoader();

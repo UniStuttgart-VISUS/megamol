@@ -8,8 +8,8 @@
 // Author     : scharnkn
 //
 
+#include "protein/VTKLegacyDataCallUnstructuredGrid.h"
 #include "stdafx.h"
-#include "VTKLegacyDataCallUnstructuredGrid.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -22,7 +22,8 @@ const unsigned int VTKLegacyDataCallUnstructuredGrid::CallForGetExtent = 1;
  * VTKLegacyDataCallUnstructuredGrid::VTKLegacyDataCallUnstructuredGrid
  */
 VTKLegacyDataCallUnstructuredGrid::VTKLegacyDataCallUnstructuredGrid(void)
-    : core::AbstractGetData3DCall(), calltime(0.0) {}
+        : core::AbstractGetData3DCall()
+        , calltime(0.0) {}
 
 
 /*

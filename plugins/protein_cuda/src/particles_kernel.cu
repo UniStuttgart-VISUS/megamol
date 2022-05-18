@@ -190,7 +190,7 @@ uint countNeighborsInCell( uint*   neighbors,     // output: neighbor indices
     float r;
     float3 vec;
     float4 smallCircle;
-    if( startIndex != 0xffffffff ) {	// cell is not empty
+    if( startIndex != 0xffffffff ) { // cell is not empty
         // iterate over atoms in this cell
         uint endIndex = FETCH( cellEnd, gridHash);
         for( uint j = startIndex; j < endIndex; j++) {
@@ -257,7 +257,7 @@ uint countNeighborsInCell( uint*   neighbors,     // output: neighbor indices
     float3 relPos;
     float dist;
     float neighborDist;
-    if( startIndex != 0xffffffff ) {	// cell is not empty
+    if( startIndex != 0xffffffff ) { // cell is not empty
         // iterate over atoms in this cell
         uint endIndex = FETCH( cellEnd, gridHash);
         for( uint j = startIndex; j < endIndex; j++) {
@@ -308,7 +308,7 @@ uint countProbeNeighborsInCell( //uint*   neighbors,     // output: neighbor ind
     float3 relPos;
     float dist;
     float neighborDist;
-    if( startIndex != 0xffffffff ) {	// cell is not empty
+    if( startIndex != 0xffffffff ) { // cell is not empty
         // iterate over atoms in this cell
         uint endIndex = FETCH( cellEnd, gridHash);
         for( uint j = startIndex; j < endIndex; j++) {
@@ -1378,7 +1378,7 @@ __device__ uint findNeighborsInCellCBCuda(
     float r;
     float3 vec;
     float4 smallCircle;
-    if( startIndex != 0xffffffff ) {	// cell is not empty
+    if( startIndex != 0xffffffff ) { // cell is not empty
         // iterate over atoms in this cell
         uint endIndex = FETCH( cellEnd, gridHash);
         for( uint j = startIndex; j < endIndex; j++) {
@@ -1576,9 +1576,9 @@ __global__ void removeCoveredSmallCirclesCBCuda(
 
 // compute all arcs of atom j on the surface of atom i
 __global__ void computeArcsCBCuda(
-        uint*   smallCircleVisible,		// out: small circle visibility
-        float4* arcs,					// out: the arcs
-        uint*   arcCount,				// out: the number of arcs
+        uint*   smallCircleVisible, // out: small circle visibility
+        float4* arcs,               // out: the arcs
+        uint*   arcCount,           // out: the number of arcs
         uint    numAtoms) {
     // get atom index
     uint atomIdx = blockIdx.y * blockDim.y + threadIdx.y;
@@ -1921,25 +1921,25 @@ __global__ void computeArcsCBCuda(
     }
     // DO NOT USE THIS!! It will create false, internal arcs!
     //if( arcCnt == 0 ) {
-    //	smallCircles[atomIdx * params.maxNumNeighbors + jIdx].w = -1.0f;
+    //    smallCircles[atomIdx * params.maxNumNeighbors + jIdx].w = -1.0f;
     //}
 
 }
 
 // Write all arc start and end points to a vertex array.
 __global__ void writeProbePositionsCBCuda(
-        float4*	probePos,		// out: the probe positions
-        float4*	sphereTriaVec1,	// out: the spherical triangle vector 1
-        float4*	sphereTriaVec2,	// out: the spherical triangle vector 2
-        float4*	sphereTriaVec3,	// out: the spherical triangle vector 3
-        float4*	torusPos,		// out: torus center
-        float4*	torusVS,		// out: torus visibility sphere
-        float4*	torusAxis,		// out: torus axis
-        float4* arcs,			// in: the arc start and end points
-        uint*	arcCount,		// in: the number of probes
-        uint*	arcCountScan,	// in: the prefix sum of "arcCount"
-        uint*	scCount,		// in: the small circle count
-        uint*	scCountScan,	// in: the prefix sum of "scCount"
+        float4* probePos,       // out: the probe positions
+        float4* sphereTriaVec1, // out: the spherical triangle vector 1
+        float4* sphereTriaVec2, // out: the spherical triangle vector 2
+        float4* sphereTriaVec3, // out: the spherical triangle vector 3
+        float4* torusPos,       // out: torus center
+        float4* torusVS,        // out: torus visibility sphere
+        float4* torusAxis,      // out: torus axis
+        float4* arcs,           // in: the arc start and end points
+        uint* arcCount,         // in: the number of probes
+        uint* arcCountScan,     // in: the prefix sum of "arcCount"
+        uint* scCount,          // in: the small circle count
+        uint* scCountScan,      // in: the prefix sum of "scCount"
         uint    numAtoms) {
     // get atom index
     uint atomIdx = blockIdx.y * blockDim.y + threadIdx.y;
@@ -2028,7 +2028,7 @@ __device__ uint findProbeNeighborsInCellCBCuda(
     float3 relPos;
     float dist;
     float neighborDist;
-    if( startIndex != 0xffffffff ) {	// cell is not empty
+    if( startIndex != 0xffffffff ) { // cell is not empty
         // iterate over atoms in this cell
         uint endIndex = FETCH( cellEnd, gridHash);
         for( uint j = startIndex; j < endIndex; j++) {

@@ -10,13 +10,12 @@
 
 #include <memory>
 
-#include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
-#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/Texture2D.hpp"
 
 namespace megamol {
@@ -29,7 +28,9 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "TextureCombine"; }
+    static const char* ClassName() {
+        return "TextureCombine";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -45,7 +46,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable() { return true; }
+    static bool IsAvailable() {
+        return true;
+    }
 
     TextureCombine();
     ~TextureCombine();
@@ -74,7 +77,7 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
-    typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
+    typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
     uint32_t m_version;
 

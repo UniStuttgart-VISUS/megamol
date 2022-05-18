@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/BoundingBoxes_2.h"
+#include "stdafx.h"
 #include "vislib/math/mathfunctions.h"
 
 using namespace megamol::core;
@@ -22,10 +22,10 @@ BoundingBoxes_2::BoundingBoxes_2(void) : clipBox(), clipBoxValid(false), boundin
  * BoundingBoxes_2::BoundingBoxes_2
  */
 BoundingBoxes_2::BoundingBoxes_2(const BoundingBoxes_2& src)
-    : clipBox(src.clipBox)
-    , clipBoxValid(src.clipBoxValid)
-    , boundingBox(src.boundingBox)
-    , boundingBoxValid(src.boundingBoxValid) {
+        : clipBox(src.clipBox)
+        , clipBoxValid(src.clipBoxValid)
+        , boundingBox(src.boundingBox)
+        , boundingBoxValid(src.boundingBoxValid) {
     // intentionally empty
 }
 

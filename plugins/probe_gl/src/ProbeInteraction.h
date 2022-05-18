@@ -8,23 +8,24 @@
 #ifndef PROBE_INTERACTION_H_INCLUDED
 #define PROBE_INTERACTION_H_INCLUDED
 
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 #include "ProbeInteractionCollection.h"
 
 namespace megamol {
 namespace probe_gl {
 
-class ProbeInteraction : public megamol::core::view::Renderer3DModule_2
-{
+class ProbeInteraction : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ProbeInteraction"; }
+    static const char* ClassName(void) {
+        return "ProbeInteraction";
+    }
 
     /**
      * Answer a human readable description of this module.
@@ -42,20 +43,18 @@ public:
      */
     static bool IsAvailable(void) {
 #ifdef _WIN32
-#    if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
         HDC dc = ::wglGetCurrentDC();
         HGLRC rc = ::wglGetCurrentContext();
         ASSERT(dc != NULL);
         ASSERT(rc != NULL);
-#    endif // DEBUG || _DEBUG
-#endif     // _WIN32
+#endif // DEBUG || _DEBUG
+#endif // _WIN32
         return true;
     }
 
     bool OnMouseButton(
-        core::view::MouseButton button, 
-        core::view::MouseButtonAction action, 
-        core::view::Modifiers mods) override;
+        core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
 
     bool OnMouseMove(double x, double y) override;
 
@@ -63,7 +62,6 @@ public:
     ~ProbeInteraction();
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -85,7 +83,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender3D_2& call);
+    bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -94,14 +92,11 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender3D_2& call);
-
-    bool getInteractionCollection(core::Call& call);
+    bool Render(core_gl::view::CallRender3DGL& call);
 
     bool getInteractionMetaData(core::Call& call);
 
 private:
-
     uint32_t m_version;
 
     double m_cursor_x, m_cursor_y;
@@ -110,39 +105,41 @@ private:
 
     bool m_open_context_menu;
 
+    bool m_open_showMenu_dropdown;
+    bool m_open_probeMenu_dropdown;
+    bool m_open_dataMenu_dropdown;
+
+    bool m_open_dataFilterByDepth_popup;
+
+    bool m_show_probes;
+    bool m_show_hull;
+    bool m_show_glyphs;
+
     /** Map storing the pressed state of all mouse buttons */
-    std::map<core::view::MouseButton, bool> m_mouse_button_states = {
-        {core::view::MouseButton::BUTTON_1, false},
-        {core::view::MouseButton::BUTTON_2, false},
-        {core::view::MouseButton::BUTTON_3, false},
-        {core::view::MouseButton::BUTTON_4, false},
-        {core::view::MouseButton::BUTTON_5, false}, 
-        {core::view::MouseButton::BUTTON_6, false},
-        {core::view::MouseButton::BUTTON_7, false},
-        {core::view::MouseButton::BUTTON_8, false},
-        {core::view::MouseButton::BUTTON_LEFT, false},
-        {core::view::MouseButton::BUTTON_MIDDLE, false}, 
-        {core::view::MouseButton::BUTTON_RIGHT, false}
-    };
+    std::map<core::view::MouseButton, bool> m_mouse_button_states = {{core::view::MouseButton::BUTTON_1, false},
+        {core::view::MouseButton::BUTTON_2, false}, {core::view::MouseButton::BUTTON_3, false},
+        {core::view::MouseButton::BUTTON_4, false}, {core::view::MouseButton::BUTTON_5, false},
+        {core::view::MouseButton::BUTTON_6, false}, {core::view::MouseButton::BUTTON_7, false},
+        {core::view::MouseButton::BUTTON_8, false}, {core::view::MouseButton::BUTTON_LEFT, false},
+        {core::view::MouseButton::BUTTON_MIDDLE, false}, {core::view::MouseButton::BUTTON_RIGHT, false}};
 
-    std::shared_ptr<ProbeInteractionCollection> m_interactions;
+    int32_t last_active_probe_id;
 
-    int64_t last_active_probe_id;
+    std::vector<int32_t> m_selected_probes;
 
     megamol::core::CallerSlot m_probe_fbo_slot;
     megamol::core::CallerSlot m_hull_fbo_slot;
     megamol::core::CallerSlot m_glyph_fbo_slot;
 
-    megamol::core::CalleeSlot m_interaction_collection_slot;
+    megamol::core::CallerSlot m_event_write_slot;
 
     // local storage of projection and view matrix (for 3D space interaction computations)
     glm::mat4 m_view_mx_cpy;
     glm::mat4 m_proj_mx_cpy;
 };
 
-}
-}
-
+} // namespace probe_gl
+} // namespace megamol
 
 
 #endif // !PROBE_INTERACTION_H_INCLUDED

@@ -1,7 +1,7 @@
 /*
  * ScopedLock.h
  *
- * Copyright (C) 2006 - 2012 by Visualisierungsinstitut Universitaet Stuttgart. 
+ * Copyright (C) 2006 - 2012 by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
@@ -22,68 +22,65 @@
 namespace vislib {
 namespace sys {
 
+/**
+ * This class provides a simplifies mechanism for using synchronisation
+ * objects. It acquires the lock passed in the constructor on construction
+ * and releases it in the dtor.
+ */
+template<class T>
+class ScopedLock {
+
+public:
     /**
-     * This class provides a simplifies mechanism for using synchronisation
-     * objects. It acquires the lock passed in the constructor on construction
-     * and releases it in the dtor.
+     * Acquires 'lock' and stores it for releasing it in dtor.
+     *
+     * WARNING: This ctor might throw an exception, if the lock cannot be
+     * acquired even when waiting infinitely. You should not go one if this
+     * happens.
+     *
+     * @throws SystemException If the lock could not be acquired.
      */
-    template<class T> class ScopedLock {
+    inline ScopedLock(T& lock) : lock(lock) {
+        this->lock.Lock();
+    }
 
-    public:
+    /**
+     * The dtor releases 'lock'.
+     */
+    inline ~ScopedLock(void) {
+        this->lock.Unlock();
+    }
 
-        /**
-         * Acquires 'lock' and stores it for releasing it in dtor.
-         *
-         * WARNING: This ctor might throw an exception, if the lock cannot be
-         * acquired even when waiting infinitely. You should not go one if this
-         * happens.
-         *
-         * @throws SystemException If the lock could not be acquired.
-         */
-        inline ScopedLock(T& lock) : lock(lock) {
-            this->lock.Lock();
+private:
+    /**
+     * Forbidden copy ctor.
+     *
+     * @param rhs The object to be cloned.
+     *
+     * @throws UnsupportedOperationException Unconditionally.
+     */
+    inline ScopedLock(const ScopedLock& rhs) : lock(rhs.lock) {
+        throw UnsupportedOperationException("vislib::sys::ScopedLock::ScopedLock", __FILE__, __LINE__);
+    }
+
+    /**
+     * Forbidden assignment.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @throws IllegalParamException if &rhs != this.
+     */
+    inline ScopedLock& operator=(const ScopedLock& rhs) {
+        if (this != &rhs) {
+            throw IllegalParamException("rhs", __FILE__, __LINE__);
         }
+        return *this;
+    }
 
-        /**
-         * The dtor releases 'lock'.
-         */
-        inline ~ScopedLock(void) {
-            this->lock.Unlock();
-        }
+    /** The actual lock object. */
+    T& lock;
+};
 
-    private:
-
-        /**
-         * Forbidden copy ctor.
-         *
-         * @param rhs The object to be cloned.
-         *
-         * @throws UnsupportedOperationException Unconditionally.
-         */
-        inline ScopedLock(const ScopedLock& rhs) : lock(rhs.lock) {
-            throw UnsupportedOperationException(
-                "vislib::sys::ScopedLock::ScopedLock",
-                __FILE__, __LINE__);
-        }
-
-        /**
-         * Forbidden assignment.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @throws IllegalParamException if &rhs != this.
-         */
-        inline ScopedLock& operator =(const ScopedLock& rhs) {
-            if (this != &rhs) {
-                throw IllegalParamException("rhs", __FILE__, __LINE__);
-            }
-            return *this;
-        }
-
-        /** The actual lock object. */
-        T& lock;
-    };
-    
 } /* end namespace sys */
 } /* end namespace vislib */
 
@@ -91,4 +88,3 @@ namespace sys {
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 #endif /* VISLIB_SCOPEDLOCK_H_INCLUDED */
-

@@ -25,8 +25,7 @@
 
 namespace sobol {
 
-struct Matrices
-{
+struct Matrices {
     static const unsigned num_dimensions = 1024;
     static const unsigned size = 52;
     static const unsigned matrices[];
@@ -37,16 +36,11 @@ struct Matrices
 // the point inside the sequence. The scramble parameter can be used
 // to permute elementary intervals, and might be chosen randomly to
 // generate a randomized QMC sequence.
-inline float sample(
-    unsigned long long index,
-    const unsigned dimension,
-    const unsigned scramble = 0U)
-{
+inline float sample(unsigned long long index, const unsigned dimension, const unsigned scramble = 0U) {
     assert(dimension < Matrices::num_dimensions);
 
     unsigned result = scramble;
-    for (unsigned i = dimension * Matrices::size; index; index >>= 1, ++i)
-    {
+    for (unsigned i = dimension * Matrices::size; index; index >>= 1, ++i) {
         if (index & 1)
             result ^= Matrices::matrices[i];
     }
@@ -57,4 +51,3 @@ inline float sample(
 } // namespace sobol
 
 #endif
-

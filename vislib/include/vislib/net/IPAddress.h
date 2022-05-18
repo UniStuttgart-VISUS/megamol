@@ -31,259 +31,255 @@
 namespace vislib {
 namespace net {
 
+/**
+ * Represents an IPv4 address.
+ *
+ * @author Christoph Mueller
+ */
+class IPAddress {
+
+public:
     /**
-     * Represents an IPv4 address.
-     *
-     * @author Christoph Mueller
+     * The all-hosts group multicast address addressing all nodes in the
+     * subnet.
      */
-    class IPAddress {
+    static const IPAddress ALL_NODES_ON_LINK;
 
-    public:
+    /**
+     * The all-routers multicast group address addressing all routers in the
+     * subnet.
+     */
+    static const IPAddress ALL_ROUTERS_ON_LINK;
 
-        /** 
-         * The all-hosts group multicast address addressing all nodes in the 
-         * subnet.
-         */
-        static const IPAddress ALL_NODES_ON_LINK;
+    /**
+     * Constant special IP address that allows receiving from all available
+     * adapters and sending from the default (lowest-numbered adapter)
+     * interface.
+     */
+    static const IPAddress ANY;
 
-        /** 
-         * The all-routers multicast group address addressing all routers in the
-         * subnet.
-         */
-        static const IPAddress ALL_ROUTERS_ON_LINK;
+    /** Constant broadcast address (255.255.255.255). */
+    static const IPAddress BROADCAST;
 
-        /** 
-         * Constant special IP address that allows receiving from all available
-         * adapters and sending from the default (lowest-numbered adapter)
-         * interface.
-         */
-        static const IPAddress ANY;
+    /** Constant loopback address (127.0.0.1). */
+    static const IPAddress LOCALHOST;
 
-        /** Constant broadcast address (255.255.255.255). */
-        static const IPAddress BROADCAST;
+    /** Constant invalid IP address. */
+    static const IPAddress NONE;
 
-        /** Constant loopback address (127.0.0.1). */
-        static const IPAddress LOCALHOST;
+    /**
+     * Create an IPAddress form the dottet string format or host name.
+     *
+     * @param address The IP address in the dotted string format or a valid
+     *                host name.
+     *
+     * @return The IP address matching 'address'.
+     *
+     * @throws IllegalParamException If 'address' is not a valid IP address
+     *                               or host name.
+     */
+    static IPAddress Create(const char* address = "127.0.0.1");
 
-        /** Constant invalid IP address. */
-        static const IPAddress NONE;
+    /**
+     * Create an IPAddress from the dotted string format.
+     *
+     * NOTE: The address might be invalid after construction, if 'address'
+     * is not a valid host name or IP address in the dotted string format.
+     * It is recommended to use the Lookup() method for finding a host or
+     * creating the address by IPAddress::Create.
+     *
+     * @param address The IP address in the dotted string format.
+     */
+    explicit IPAddress(const char* address = "127.0.0.1");
 
-        /**
-         * Create an IPAddress form the dottet string format or host name.
-         *
-         * @param address The IP address in the dotted string format or a valid
-         *                host name.
-         *
-         * @return The IP address matching 'address'.
-         *
-         * @throws IllegalParamException If 'address' is not a valid IP address 
-         *                               or host name.
-         */
-        static IPAddress Create(const char *address = "127.0.0.1");
+    /**
+     * Create an IPAddress from four characters.
+     *
+     * @param i1 The first number of the IP address.
+     * @param i2 The first number of the IP address.
+     * @param i3 The first number of the IP address.
+     * @param i4 The first number of the IP address.
+     */
+    IPAddress(unsigned char i1, unsigned char i2, unsigned char i3, unsigned char i4);
 
-        /**
-         * Create an IPAddress from the dotted string format.
-         *
-         * NOTE: The address might be invalid after construction, if 'address'
-         * is not a valid host name or IP address in the dotted string format.
-         * It is recommended to use the Lookup() method for finding a host or
-         * creating the address by IPAddress::Create.
-         *
-         * @param address The IP address in the dotted string format.
-         */
-        explicit IPAddress(const char *address = "127.0.0.1");
+    /**
+     * Cast constructor from struct in_addr.
+     *
+     * @param address The in_addr structure to be copied.
+     */
+    inline IPAddress(const struct in_addr& address) : address(address){};
 
-        /**
-         * Create an IPAddress from four characters.
-         *
-         * @param i1 The first number of the IP address.
-         * @param i2 The first number of the IP address.
-         * @param i3 The first number of the IP address.
-         * @param i4 The first number of the IP address.
-         */
-        IPAddress(unsigned char i1, unsigned char i2, unsigned char i3, 
-            unsigned char i4);
+    /**
+     * Create an IPAddress from its representation as a single integer.
+     *
+     * @param address         The address as integer. The byte order of this
+     *                        integer must be according to the value of the
+     *                        'isHostByteOrder' flag.
+     * @param isHostByteOrder Determines whether 'address' is host byte
+     *                        order or network byte order (false, default).
+     */
+    explicit IPAddress(const unsigned long address, const bool isHostByteOrder = false);
 
-        /**
-         * Cast constructor from struct in_addr.
-         *
-         * @param address The in_addr structure to be copied.
-         */
-        inline IPAddress(const struct in_addr& address) : address(address) { };
+    /**
+     * Copy ctor.
+     *
+     * @param rhs The object to be cloned.
+     */
+    inline IPAddress(const IPAddress& rhs) : address(rhs.address){};
 
-        /**
-         * Create an IPAddress from its representation as a single integer.
-         *
-         * @param address         The address as integer. The byte order of this
-         *                        integer must be according to the value of the
-         *                        'isHostByteOrder' flag.
-         * @param isHostByteOrder Determines whether 'address' is host byte 
-         *                        order or network byte order (false, default).
-         */
-        explicit IPAddress(const unsigned long address, 
-                const bool isHostByteOrder = false);
+    /** Dtor. */
+    ~IPAddress(void);
 
-        /**
-         * Copy ctor.
-         *
-         * @param rhs The object to be cloned.
-         */
-        inline IPAddress(const IPAddress& rhs) : address(rhs.address) { };
+    /**
+     * Get the prefix of length 'prefixLength' bits of the address. The rest
+     * of the returned address will be filled with zeroes.
+     *
+     * @param prefixLength The length of the prefix. If it is out of range,
+     *                     the method will succeed and return the complete
+     *                     address.
+     */
+    IPAddress GetPrefix(const ULONG prefixLength) const;
 
-        /** Dtor. */
-        ~IPAddress(void);
+    /**
+     * Lookup and set the IP address of the specified host. If the host is
+     * not found, nothing is changed and the return value is false.
+     *
+     * Note, that 'hostname' can either be an IP address in the dotted
+     * string format or the host name. Both will be tested.
+     *
+     * @param hostname Either a hostname or an IP address in the dotted
+     *                 string format.
+     *
+     * @return true, if the hostname could be resolved or the IP address was
+     *         valid, false otherwise.
+     */
+    bool Lookup(const char* hostname);
 
-        /**
-         * Get the prefix of length 'prefixLength' bits of the address. The rest
-         * of the returned address will be filled with zeroes.
-         *
-         * @param prefixLength The length of the prefix. If it is out of range, 
-         *                     the method will succeed and return the complete
-         *                     address.
-         */
-        IPAddress GetPrefix(const ULONG prefixLength) const;
+    /**
+     * Convert the IP address into dotted string format.
+     *
+     * @return The string representation of the IP address.
+     */
+    StringA ToStringA(void) const;
 
-        /**
-         * Lookup and set the IP address of the specified host. If the host is
-         * not found, nothing is changed and the return value is false.
-         *
-         * Note, that 'hostname' can either be an IP address in the dotted 
-         * string format or the host name. Both will be tested.
-         *
-         * @param hostname Either a hostname or an IP address in the dotted 
-         *                 string format.
-         *
-         * @return true, if the hostname could be resolved or the IP address was
-         *         valid, false otherwise.
-         */
-        bool Lookup(const char *hostname);
+    /**
+     * Convert the IP address into dotted string format.
+     *
+     * @return The string representation of the IP address.
+     */
+    inline StringW ToStringW(void) const {
+        return StringW(this->ToStringA());
+    }
 
-        /**
-         * Convert the IP address into dotted string format.
-         *
-         * @return The string representation of the IP address.
-         */
-        StringA ToStringA(void) const;
+    /**
+     * Provides access to the single bytes of the IP address.
+     *
+     * @param i The index of the byte to access, which must be within
+     *          [0, 4].
+     *
+     * @return The 'i'th byte of the address.
+     *
+     * @throws OutOfRangeException If 'i' is not a legal byte number.
+     */
+    BYTE operator[](const int i) const;
 
-        /**
-         * Convert the IP address into dotted string format.
-         *
-         * @return The string representation of the IP address.
-         */
-        inline StringW ToStringW(void) const {
-            return StringW(this->ToStringA());
-        }
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     */
+    IPAddress& operator=(const IPAddress& rhs);
 
-        /**
-         * Provides access to the single bytes of the IP address.
-         *
-         * @param i The index of the byte to access, which must be within 
-         *          [0, 4].
-         *
-         * @return The 'i'th byte of the address.
-         *
-         * @throws OutOfRangeException If 'i' is not a legal byte number.
-         */
-        BYTE operator [](const int i) const;
+    /**
+     * Test for equality.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @param true, if 'rhs' and this IP address are equal, false otherwise.
+     */
+    bool operator==(const IPAddress& rhs) const;
 
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        IPAddress& operator =(const IPAddress& rhs);
+    /**
+     * Test for inequality.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @param true, if 'rhs' and this IP address are not equal,
+     *        false otherwise.
+     */
+    inline bool operator!=(const IPAddress& rhs) const {
+        return !(*this == rhs);
+    }
 
-        /**
-         * Test for equality.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @param true, if 'rhs' and this IP address are equal, false otherwise.
-         */
-        bool operator ==(const IPAddress& rhs) const;
+    /**
+     * Cast to struct in_addr. Note, that a deep copy is returned.
+     *
+     * @return The in_addr that is represented by this object.
+     */
+    inline operator struct in_addr(void) const {
+        return this->address;
+    }
 
-        /**
-         * Test for inequality.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @param true, if 'rhs' and this IP address are not equal, 
-         *        false otherwise.
-         */
-        inline bool operator !=(const IPAddress& rhs) const {
-            return !(*this == rhs);
-        }
+    /**
+     * Cast to struct in_addr. The operation returns a reference to the
+     * internal in_addr structure.
+     *
+     * @return The in_addr that is represented by this object.
+     */
+    inline operator struct in_addr &(void) {
+        return this->address;
+    }
 
-        /**
-         * Cast to struct in_addr. Note, that a deep copy is returned.
-         *
-         * @return The in_addr that is represented by this object.
-         */
-        inline operator struct in_addr(void) const {
-            return this->address;
-        }
+    /**
+     * Cast to pointer to struct in_addr. The operation exposes the
+     * internal in6_addr structure.
+     *
+     * @return Pointer to the internal in6_addr that is represented by this
+     *         object.
+     */
+    inline operator const struct in_addr *(void) const {
+        return &this->address;
+    }
 
-        /**
-         * Cast to struct in_addr. The operation returns a reference to the 
-         * internal in_addr structure.
-         *
-         * @return The in_addr that is represented by this object.
-         */
-        inline operator struct in_addr&(void) {
-            return this->address;
-        }
+    /**
+     * Cast to pointer to struct in_addr. The operation exposes the
+     * internal in6_addr structure.
+     *
+     * @return Pointer to the internal in_addr that is represented by this
+     *         object.
+     */
+    inline operator struct in_addr *(void) {
+        return &this->address;
+    }
 
-        /**
-         * Cast to pointer to struct in_addr. The operation exposes the 
-         * internal in6_addr structure.
-         *
-         * @return Pointer to the internal in6_addr that is represented by this 
-         *         object.
-         */
-        inline operator const struct in_addr *(void) const {
-            return &this->address;
-        }
+    /**
+     * Applies a subnet mask on this IP address.
+     *
+     * @param mask The subnet mask.
+     *
+     * @return *this.
+     */
+    IPAddress& operator&=(const IPAddress& mask);
 
-        /**
-         * Cast to pointer to struct in_addr. The operation exposes the 
-         * internal in6_addr structure.
-         *
-         * @return Pointer to the internal in_addr that is represented by this 
-         *         object.
-         */
-        inline operator struct in_addr *(void) {
-            return &this->address;
-        }
+    /**
+     * Applies a subnet mask to this IP address and returns the result.
+     *
+     * @param mask The subnet mask.
+     *
+     * @return The IP address with the subnet mask applied.
+     */
+    inline IPAddress operator&(const IPAddress& mask) const {
+        IPAddress retval(*this);
+        retval &= mask;
+        return retval;
+    }
 
-        /**
-         * Applies a subnet mask on this IP address.
-         *
-         * @param mask The subnet mask.
-         *
-         * @return *this.
-         */
-        IPAddress& operator &=(const IPAddress& mask);
-
-        /**
-         * Applies a subnet mask to this IP address and returns the result.
-         *
-         * @param mask The subnet mask.
-         *
-         * @return The IP address with the subnet mask applied.
-         */
-        inline IPAddress operator &(const IPAddress& mask) const {
-            IPAddress retval(*this);
-            retval &= mask;
-            return retval;
-        }
-
-    private:
-
-        /** The IP address wrapped by this object. */
-        struct in_addr address;
-    };
+private:
+    /** The IP address wrapped by this object. */
+    struct in_addr address;
+};
 
 } /* end namespace net */
 } /* end namespace vislib */

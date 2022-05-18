@@ -1,10 +1,14 @@
 #pragma once
 
-#include "mmcore/view/ContextToGL.h"
-
 #include "CallRender3DCUDA.h"
+#include "glad/wgl.h"
+#include "mmcore_gl/view/ContextToGL.h"
 
 #include "cuda.h"
+// thank you Nvidia for breaking the typedef of HGPUNV if I do not have a Quadro board!
+#ifdef _WIN32
+#define WGL_NV_gpu_affinity 1
+#endif
 #include "cudaGL.h"
 
 #include "optix/Utils.h"
@@ -15,7 +19,7 @@ inline constexpr char cudatogl_name[] = "CUDAToGL";
 
 inline constexpr char cudatogl_desc[] = "Merges content to the input GL buffer";
 
-inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<vislib::graphics::gl::FramebufferObject>& lhs_fbo,
+inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<glowl::FramebufferObject>& lhs_fbo,
                                                  std::shared_ptr<CUDAFramebuffer>& fbo, int width, int height) -> void {
     if (fbo != nullptr) {
         CUDA_CHECK_ERROR(cuGraphicsUnmapResources(1, &fbo->data.col_tex_ref, fbo->data.exec_stream));
@@ -31,7 +35,7 @@ inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<vislib::graphics
 
     fbo = std::make_shared<CUDAFramebuffer>();
 
-    glGenTextures(1, (GLuint*) &fbo->data.col_tex);
+    glGenTextures(1, (GLuint*)&fbo->data.col_tex);
     glBindTexture(GL_TEXTURE_2D, fbo->data.col_tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -55,7 +59,7 @@ inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<vislib::graphics
 
     CUDA_CHECK_ERROR(cuSurfObjectCreate(&fbo->colorBuffer, &surf_desc));
 
-    glGenTextures(1, (GLuint*) &fbo->data.depth_tex);
+    glGenTextures(1, (GLuint*)&fbo->data.depth_tex);
     glBindTexture(GL_TEXTURE_2D, fbo->data.depth_tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -82,18 +86,18 @@ inline constexpr auto cuda_to_gl_init_func = [](std::shared_ptr<vislib::graphics
 };
 
 inline constexpr auto cuda_to_gl_ren_func = [](std::shared_ptr<glowl::GLSLProgram>& shader,
-                                                std::shared_ptr<vislib::graphics::gl::FramebufferObject>& lhs_fbo,
+                                                std::shared_ptr<glowl::FramebufferObject>& lhs_fbo,
                                                 std::shared_ptr<CUDAFramebuffer>& fbo, int width, int height) -> void {
     CUDA_CHECK_ERROR(cuGraphicsUnmapResources(1, &fbo->data.col_tex_ref, fbo->data.exec_stream));
     CUDA_CHECK_ERROR(cuGraphicsUnmapResources(1, &fbo->data.depth_tex_ref, fbo->data.exec_stream));
 
-    core::view::renderToFBO(shader, lhs_fbo, fbo->data.col_tex, fbo->data.depth_tex, width, height);
+    core_gl::view::renderToFBO(shader, lhs_fbo, fbo->data.col_tex, fbo->data.depth_tex, width, height);
 
     CUDA_CHECK_ERROR(cuGraphicsMapResources(1, &fbo->data.col_tex_ref, fbo->data.exec_stream));
     CUDA_CHECK_ERROR(cuGraphicsMapResources(1, &fbo->data.depth_tex_ref, fbo->data.exec_stream));
 };
 
-using CUDAToGL =
-    core::view::ContextToGL<CallRender3DCUDA, cuda_to_gl_init_func, cuda_to_gl_ren_func, cudatogl_name, cudatogl_desc>;
+using CUDAToGL = core_gl::view::ContextToGL<CallRender3DCUDA, cuda_to_gl_init_func, cuda_to_gl_ren_func, cudatogl_name,
+    cudatogl_desc>;
 
 } // namespace megamol::optix_hpg

@@ -3,8 +3,8 @@
  * Copyright (C) 2006-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "protein_calls/TunnelResidueDataCall.h"
+#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::core;

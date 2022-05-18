@@ -8,15 +8,15 @@
 #ifndef MEGAMOLCORE_ASTRODATACALL_H_INCLUDED
 #define MEGAMOLCORE_ASTRODATACALL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <glm/glm.hpp>
-#include <memory>
-#include <vector>
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/math/Cuboid.h"
+#include <glm/glm.hpp>
+#include <memory>
+#include <vector>
 
 namespace megamol {
 namespace astro {
@@ -33,7 +33,9 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "AstroDataCall"; }
+    static const char* ClassName(void) {
+        return "AstroDataCall";
+    }
 
 
     /**
@@ -41,7 +43,9 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) { return "Call to get astronomical particle data."; }
+    static const char* Description(void) {
+        return "Call to get astronomical particle data.";
+    }
 
     /** Index of the 'GetData' function */
     static const unsigned int CallForGetData;
@@ -60,7 +64,9 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return 2; }
+    static unsigned int FunctionCount(void) {
+        return 2;
+    }
 
     /**
      * Answer the name of the function used for this call.
@@ -84,98 +90,126 @@ public:
      *
      * @param positionVec Pointer to the new position vector to be set
      */
-    inline void SetPositions(vec3ArrayPtr& positionVec) { this->positions = positionVec; }
+    inline void SetPositions(vec3ArrayPtr& positionVec) {
+        this->positions = positionVec;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the positions
      *
      * @return Pointer to the position array
      */
-    inline const vec3ArrayPtr GetPositions(void) const { return this->positions; }
+    inline const vec3ArrayPtr GetPositions(void) const {
+        return this->positions;
+    }
 
     /**
      * Sets the velocity vector
      *
      * @param velocityVec Pointer to the new velocity vector to be set
      */
-    inline void SetVelocities(vec3ArrayPtr& velocityVec) { this->velocities = velocityVec; }
+    inline void SetVelocities(vec3ArrayPtr& velocityVec) {
+        this->velocities = velocityVec;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the velocities
      *
      * @return Pointer to the velocity array
      */
-    inline const vec3ArrayPtr GetVelocities(void) const { return this->velocities; }
+    inline const vec3ArrayPtr GetVelocities(void) const {
+        return this->velocities;
+    }
 
     /**
      * Sets the velocity derivative vector
      *
      * @param derivatives Pointer to the new velocity derivative vector to be set
      */
-    inline void SetVelocityDerivatives(vec3ArrayPtr& derivatives) { this->velocityDerivatives = derivatives; }
+    inline void SetVelocityDerivatives(vec3ArrayPtr& derivatives) {
+        this->velocityDerivatives = derivatives;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the velocity derivatives
      *
      * @return Pointer to the velocity derivative array
      */
-    inline const vec3ArrayPtr GetVelocityDerivatives(void) const { return this->velocityDerivatives; }
+    inline const vec3ArrayPtr GetVelocityDerivatives(void) const {
+        return this->velocityDerivatives;
+    }
 
     /**
      * Sets the temperature vector
      *
      * @param temparatureVec Pointer to the new temperature vector to be set
      */
-    inline void SetTemperature(floatArrayPtr& temparatureVec) { this->temperatures = temparatureVec; }
+    inline void SetTemperature(floatArrayPtr& temparatureVec) {
+        this->temperatures = temparatureVec;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the temperature
      *
      * @return Pointer to the temperature array
      */
-    inline const floatArrayPtr GetTemperature(void) const { return this->temperatures; }
+    inline const floatArrayPtr GetTemperature(void) const {
+        return this->temperatures;
+    }
 
     /**
      * Sets the temperature derivative vector
      *
      * @param derivatives Pointer to the new temperature derivative vector to be set
      */
-    inline void SetTemperatureDerivatives(floatArrayPtr& derivatives) { this->temperatureDerivatives = derivatives; }
+    inline void SetTemperatureDerivatives(floatArrayPtr& derivatives) {
+        this->temperatureDerivatives = derivatives;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the temperature derivatives
      *
      * @return Pointer to the temperature derivative array
      */
-    inline const floatArrayPtr GetTemperatureDerivatives(void) const { return this->temperatureDerivatives; }
+    inline const floatArrayPtr GetTemperatureDerivatives(void) const {
+        return this->temperatureDerivatives;
+    }
 
     /**
      * Sets the mass vector
      *
      * @param massVec Pointer to the new mass vector to be set
      */
-    inline void SetMass(floatArrayPtr& massVec) { this->masses = massVec; }
+    inline void SetMass(floatArrayPtr& massVec) {
+        this->masses = massVec;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the mass
      *
      * @return Pointer to the mass array
      */
-    inline const floatArrayPtr GetMass(void) const { return this->masses; }
+    inline const floatArrayPtr GetMass(void) const {
+        return this->masses;
+    }
 
     /**
      * Sets the internal energy vector
      *
      * @param internalEnergyVec Pointer to the new internal energy vector to be set
      */
-    inline void SetInternalEnergy(floatArrayPtr& internalEnergyVec) { this->internalEnergies = internalEnergyVec; }
+    inline void SetInternalEnergy(floatArrayPtr& internalEnergyVec) {
+        this->internalEnergies = internalEnergyVec;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the internal energy
      *
      * @return Pointer to the internal energy array
      */
-    inline const floatArrayPtr GetInternalEnergy(void) const { return this->internalEnergies; }
+    inline const floatArrayPtr GetInternalEnergy(void) const {
+        return this->internalEnergies;
+    }
 
     /**
      * Sets the internal energy derivative vector
@@ -191,21 +225,27 @@ public:
      *
      * @return Pointer to the internal energy derivative array
      */
-    inline const floatArrayPtr GetInternalEnergyDerivatives(void) const { return this->internalEnergyDerivatives; }
+    inline const floatArrayPtr GetInternalEnergyDerivatives(void) const {
+        return this->internalEnergyDerivatives;
+    }
 
     /**
      * Sets the smoothing length vector
      *
      * @param smoothingLengthVec Pointer to the new smoothing length vector to be set
      */
-    inline void SetSmoothingLength(floatArrayPtr& smoothingLengthVec) { this->smoothingLengths = smoothingLengthVec; }
+    inline void SetSmoothingLength(floatArrayPtr& smoothingLengthVec) {
+        this->smoothingLengths = smoothingLengthVec;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the smoothing length
      *
      * @return Pointer to the smoothing length array
      */
-    inline const floatArrayPtr GetSmoothingLength(void) const { return this->smoothingLengths; }
+    inline const floatArrayPtr GetSmoothingLength(void) const {
+        return this->smoothingLengths;
+    }
 
     /**
      * Sets the smoothing length derivative vector
@@ -221,21 +261,27 @@ public:
      *
      * @return Pointer to the smoothing length array
      */
-    inline const floatArrayPtr GetSmoothingLengthDerivatives(void) const { return this->smoothingLengthDerivatives; }
+    inline const floatArrayPtr GetSmoothingLengthDerivatives(void) const {
+        return this->smoothingLengthDerivatives;
+    }
 
     /**
      * Sets the molecular weight vector
      *
      * @param molecularWeightVec Pointer to the new molecular weight vector to be set
      */
-    inline void SetMolecularWeights(floatArrayPtr& molecularWeightVec) { this->molecularWeights = molecularWeightVec; }
+    inline void SetMolecularWeights(floatArrayPtr& molecularWeightVec) {
+        this->molecularWeights = molecularWeightVec;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the molecular weight
      *
      * @return Pointer to the molecular weight array
      */
-    inline const floatArrayPtr GetMolecularWeights(void) const { return this->molecularWeights; }
+    inline const floatArrayPtr GetMolecularWeights(void) const {
+        return this->molecularWeights;
+    }
 
     /**
      * Sets the molecular weight derivative vector
@@ -251,35 +297,45 @@ public:
      *
      * @return Pointer to the molecular weight derivative array
      */
-    inline const floatArrayPtr GetMolecularWeightDerivatives(void) const { return this->molecularWeightDerivatives; }
+    inline const floatArrayPtr GetMolecularWeightDerivatives(void) const {
+        return this->molecularWeightDerivatives;
+    }
 
     /**
      * Sets the density vector
      *
      * @param densityVec Pointer to the new density vector to be set
      */
-    inline void SetDensity(floatArrayPtr& densityVec) { this->densities = densityVec; }
+    inline void SetDensity(floatArrayPtr& densityVec) {
+        this->densities = densityVec;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the density
      *
      * @return Pointer to the density array
      */
-    inline const floatArrayPtr GetDensity(void) const { return this->densities; }
+    inline const floatArrayPtr GetDensity(void) const {
+        return this->densities;
+    }
 
     /**
      * Sets the density derivative vector
      *
      * @param derivative Pointer to the new density derivative vector to be set
      */
-    inline void SetDensityDerivative(floatArrayPtr& derivative) { this->densityDerivatives = derivative; }
+    inline void SetDensityDerivative(floatArrayPtr& derivative) {
+        this->densityDerivatives = derivative;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the density derivative
      *
      * @return Pointer to the density derivative array
      */
-    inline const floatArrayPtr GetDensityDerivative(void) const { return this->densityDerivatives; }
+    inline const floatArrayPtr GetDensityDerivative(void) const {
+        return this->densityDerivatives;
+    }
 
     /**
      * Sets the gravitational potential vector
@@ -295,7 +351,9 @@ public:
      *
      * @return Pointer to the gravitational potential array
      */
-    inline const floatArrayPtr GetGravitationalPotential(void) const { return this->gravitationalPotentials; }
+    inline const floatArrayPtr GetGravitationalPotential(void) const {
+        return this->gravitationalPotentials;
+    }
 
     /**
      * Sets the gravitational potential derivative vector
@@ -320,35 +378,45 @@ public:
      *
      * @param entropyVec Pointer to the new entropy vector to be set
      */
-    inline void SetEntropy(floatArrayPtr& entropyVec) { this->entropies = entropyVec; }
+    inline void SetEntropy(floatArrayPtr& entropyVec) {
+        this->entropies = entropyVec;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the entropy
      *
      * @return Pointer to the entropy array
      */
-    inline const floatArrayPtr GetEntropy(void) const { return this->entropies; }
+    inline const floatArrayPtr GetEntropy(void) const {
+        return this->entropies;
+    }
 
     /**
      * Sets the entropy derivative vector
      *
      * @param derivative Pointer to the new entropy derivative vector to be set
      */
-    inline void SetEntropyDerivatives(floatArrayPtr& derivative) { this->entropyDerivatives = derivative; }
+    inline void SetEntropyDerivatives(floatArrayPtr& derivative) {
+        this->entropyDerivatives = derivative;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the entropy derivatives
      *
      * @return Pointer to the entropy derivative array
      */
-    inline const floatArrayPtr GetEntropyDerivatives(void) const { return this->entropyDerivatives; }
+    inline const floatArrayPtr GetEntropyDerivatives(void) const {
+        return this->entropyDerivatives;
+    }
 
     /**
      * Sets the baryon flag vector
      *
      * @param isBaryonVec Pointer to the new baryon flag vector to be set
      */
-    inline void SetIsBaryonFlags(boolArrayPtr& isBaryonVec) { this->isBaryonFlags = isBaryonVec; }
+    inline void SetIsBaryonFlags(boolArrayPtr& isBaryonVec) {
+        this->isBaryonFlags = isBaryonVec;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the baryon flags
@@ -357,35 +425,45 @@ public:
      *
      * @return Pointer to the baryon flag array
      */
-    inline const boolArrayPtr GetIsBaryonFlags(void) const { return this->isBaryonFlags; }
+    inline const boolArrayPtr GetIsBaryonFlags(void) const {
+        return this->isBaryonFlags;
+    }
 
     /**
      * Sets the star flag vector
      *
      * @param isStarVec Pointer to the new star flag vector to be set
      */
-    inline void SetIsStarFlags(boolArrayPtr& isStarVec) { this->isStarFlags = isStarVec; }
+    inline void SetIsStarFlags(boolArrayPtr& isStarVec) {
+        this->isStarFlags = isStarVec;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the star flags
      *
      * @return Pointer to the star flag array
      */
-    inline const boolArrayPtr GetIsStarFlags(void) const { return this->isStarFlags; }
+    inline const boolArrayPtr GetIsStarFlags(void) const {
+        return this->isStarFlags;
+    }
 
     /**
      * Sets the wind flag vector
      *
      * @param isWindVec Pointer to the new wind flag vector to be set
      */
-    inline void SetIsWindFlags(boolArrayPtr& isWindVec) { this->isWindFlags = isWindVec; }
+    inline void SetIsWindFlags(boolArrayPtr& isWindVec) {
+        this->isWindFlags = isWindVec;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the wind flags
      *
      * @return Pointer to the wind flag array
      */
-    inline const boolArrayPtr GetIsWindFlags(void) const { return this->isWindFlags; }
+    inline const boolArrayPtr GetIsWindFlags(void) const {
+        return this->isWindFlags;
+    }
 
     /**
      * Sets the star forming gas flag vector
@@ -401,49 +479,63 @@ public:
      *
      * @return Pointer to the star forming gas flag array
      */
-    inline const boolArrayPtr GetIsStarFormingGasFlags(void) const { return this->isStarFormingGasFlags; }
+    inline const boolArrayPtr GetIsStarFormingGasFlags(void) const {
+        return this->isStarFormingGasFlags;
+    }
 
     /**
      * Sets the AGN flag vector
      *
      * @param isWindVec Pointer to the new AGN flag vector to be set
      */
-    inline void SetIsAGNFlags(boolArrayPtr& isAGNVec) { this->isAGNFlags = isAGNVec; }
+    inline void SetIsAGNFlags(boolArrayPtr& isAGNVec) {
+        this->isAGNFlags = isAGNVec;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the AGN flags
      *
      * @return Pointer to the AGN flag array
      */
-    inline const boolArrayPtr GetIsAGNFlags(void) const { return this->isAGNFlags; }
+    inline const boolArrayPtr GetIsAGNFlags(void) const {
+        return this->isAGNFlags;
+    }
 
     /**
      * Sets the particle ID vector
      *
      * @param particleIDVec Pointer to the new particle ID vector to be set
      */
-    inline void SetParticleIDs(idArrayPtr& particleIDVec) { this->particleIDs = particleIDVec; }
+    inline void SetParticleIDs(idArrayPtr& particleIDVec) {
+        this->particleIDs = particleIDVec;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the particle IDs
      *
      * @return Pointer to the particle ID array
      */
-    inline const idArrayPtr GetParticleIDs(void) const { return this->particleIDs; }
+    inline const idArrayPtr GetParticleIDs(void) const {
+        return this->particleIDs;
+    }
 
     /**
      * Sets the AGN distance vector
      *
      * @param agnDistances Pointer to the new agn distance vector to be set
      */
-    inline void SetAGNDistances(floatArrayPtr& agnDistances) { this->agnDistances = agnDistances; }
+    inline void SetAGNDistances(floatArrayPtr& agnDistances) {
+        this->agnDistances = agnDistances;
+    }
 
     /**
      * Retrieve the pointer to the vector storing the AGN distances
      *
      * @return Pointer to the agn distance array
      */
-    inline const floatArrayPtr GetAgnDistances(void) const { return this->agnDistances; }
+    inline const floatArrayPtr GetAgnDistances(void) const {
+        return this->agnDistances;
+    }
 
     /**
      * Retrieve the number of particles stored in this call.
@@ -453,7 +545,8 @@ public:
      * @return The numbers of particles stored
      */
     inline size_t GetParticleCount(void) const {
-        if (positions == nullptr) return 0;
+        if (positions == nullptr)
+            return 0;
         return positions->size();
     }
 

@@ -8,7 +8,7 @@
 #ifndef MSM_CONVEX_HULL_MESH_DATA_SOURCE_H_INCLUDED
 #define MSM_CONVEX_HULL_MESH_DATA_SOURCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
@@ -25,39 +25,44 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "MSMConvexHullDataSource"; }
+    static const char* ClassName(void) {
+        return "MSMConvexHullDataSource";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data source for generating convex hulls from MSM displacement values."; }
+    static const char* Description(void) {
+        return "Data source for generating convex hulls from MSM displacement values.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     MSMConvexHullDataSource();
     ~MSMConvexHullDataSource();
 
 protected:
-
     virtual bool getDataCallback(core::Call& caller);
 
     virtual bool getMetaDataCallback(core::Call& caller);
 
 private:
-    megamol::core::CallerSlot m_MSM_callerSlot;
+    uint32_t m_version;
 
-    uint64_t m_MSM_hash;
+    megamol::core::CallerSlot m_MSM_callerSlot;
 };
 
-}
-}
+} // namespace archvis
+} // namespace megamol
 
 
 #endif // !MSM_CONVEX_HULL_MESH_DATA_SOURCE_H_INCLUDED

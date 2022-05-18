@@ -1,29 +1,29 @@
-#include "stdafx.h"
 #include "PhaseAnimator.h"
+#include "stdafx.h"
 
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/FloatParam.h"
 
 #include "thermodyn/BoxDataCall.h"
 
 
 megamol::thermodyn::PhaseAnimator::PhaseAnimator()
-    : out_data_slot_("dataOut", "")
-    , part_in_data_slot_("partDataIn", "")
-    , box_in_data_slot_("boxDataIn", "")
-    , fluid_alpha_slot_("fluid_alpha", "")
-    , interface_alpha_slot_("interface_alpha", "")
-    , gas_alpha_slot_("gas_alpha", "")
-    , data_hash_(std::numeric_limits<size_t>::max())
-    , out_data_hash_(0)
-    , frame_id_(0) {
-    out_data_slot_.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(0), &PhaseAnimator::getDataCallback);
-    out_data_slot_.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
-        core::moldyn::MultiParticleDataCall::FunctionName(1), &PhaseAnimator::getExtentCallback);
+        : out_data_slot_("dataOut", "")
+        , part_in_data_slot_("partDataIn", "")
+        , box_in_data_slot_("boxDataIn", "")
+        , fluid_alpha_slot_("fluid_alpha", "")
+        , interface_alpha_slot_("interface_alpha", "")
+        , gas_alpha_slot_("gas_alpha", "")
+        , data_hash_(std::numeric_limits<size_t>::max())
+        , out_data_hash_(0)
+        , frame_id_(0) {
+    out_data_slot_.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(0), &PhaseAnimator::getDataCallback);
+    out_data_slot_.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
+        geocalls::MultiParticleDataCall::FunctionName(1), &PhaseAnimator::getExtentCallback);
     MakeSlotAvailable(&out_data_slot_);
 
-    part_in_data_slot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    part_in_data_slot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&part_in_data_slot_);
 
     box_in_data_slot_.SetCompatibleCall<thermodyn::BoxDataCallDescription>();
@@ -40,32 +40,43 @@ megamol::thermodyn::PhaseAnimator::PhaseAnimator()
 }
 
 
-megamol::thermodyn::PhaseAnimator::~PhaseAnimator() { this->Release(); }
+megamol::thermodyn::PhaseAnimator::~PhaseAnimator() {
+    this->Release();
+}
 
 
-bool megamol::thermodyn::PhaseAnimator::create() { return true; }
+bool megamol::thermodyn::PhaseAnimator::create() {
+    return true;
+}
 
 
 void megamol::thermodyn::PhaseAnimator::release() {}
 
 
 bool megamol::thermodyn::PhaseAnimator::getDataCallback(core::Call& c) {
-    auto out_call = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
-    if (out_call == nullptr) return false;
+    auto out_call = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
+    if (out_call == nullptr)
+        return false;
 
-    auto part_in_call = part_in_data_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
-    if (part_in_call == nullptr) return false;
+    auto part_in_call = part_in_data_slot_.CallAs<geocalls::MultiParticleDataCall>();
+    if (part_in_call == nullptr)
+        return false;
 
     auto box_in_call = box_in_data_slot_.CallAs<BoxDataCall>();
-    if (box_in_call == nullptr) return false;
+    if (box_in_call == nullptr)
+        return false;
 
     part_in_call->SetFrameID(out_call->FrameID(), true);
-    if (!(*part_in_call)(1)) return false;
-    if (!(*box_in_call)(1)) return false;
+    if (!(*part_in_call)(1))
+        return false;
+    if (!(*box_in_call)(1))
+        return false;
 
     if (part_in_call->DataHash() != data_hash_ || part_in_call->FrameID() != frame_id_ || isDirty()) {
-        if (!(*part_in_call)(0)) return false;
-        if (!(*box_in_call)(0)) return false;
+        if (!(*part_in_call)(0))
+            return false;
+        if (!(*box_in_call)(0))
+            return false;
 
         auto fluid_alpha = fluid_alpha_slot_.Param<core::param::FloatParam>()->Value();
         auto interface_alpha = interface_alpha_slot_.Param<core::param::FloatParam>()->Value();
@@ -143,10 +154,9 @@ bool megamol::thermodyn::PhaseAnimator::getDataCallback(core::Call& c) {
                 }
             }
 
-            parts.SetVertexData(
-                core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, ps.data(), 7 * sizeof(float));
+            parts.SetVertexData(geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, ps.data(), 7 * sizeof(float));
             parts.SetColourData(
-                core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA, ps.data() + 3, 7 * sizeof(float));
+                geocalls::SimpleSphericalParticles::COLDATA_FLOAT_RGBA, ps.data() + 3, 7 * sizeof(float));
         }
 
         data_hash_ = part_in_call->DataHash();
@@ -160,13 +170,16 @@ bool megamol::thermodyn::PhaseAnimator::getDataCallback(core::Call& c) {
 
 
 bool megamol::thermodyn::PhaseAnimator::getExtentCallback(core::Call& c) {
-    auto inCall = part_in_data_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
-    if (inCall == nullptr) return false;
+    auto inCall = part_in_data_slot_.CallAs<geocalls::MultiParticleDataCall>();
+    if (inCall == nullptr)
+        return false;
 
-    auto outCall = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
-    if (outCall == nullptr) return false;
+    auto outCall = dynamic_cast<geocalls::MultiParticleDataCall*>(&c);
+    if (outCall == nullptr)
+        return false;
 
-    if (!(*inCall)(1)) return false;
+    if (!(*inCall)(1))
+        return false;
 
     outCall->AccessBoundingBoxes().SetObjectSpaceBBox(inCall->AccessBoundingBoxes().ObjectSpaceBBox());
     outCall->AccessBoundingBoxes().SetObjectSpaceClipBox(inCall->AccessBoundingBoxes().ObjectSpaceClipBox());

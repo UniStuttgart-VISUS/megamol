@@ -14,26 +14,51 @@
 
 function(megamol_plugin PLUGIN_NAME)
   # Parse arguments
-  set(optionArgs DEPENDS_CUDA)
+  set(optionArgs ALWAYS_BUILD DEPENDS_CUDA DEPENDS_GL)
   set(oneValueArgs DIR BUILD_DEFAULT)
   set(multiValueArgs DEPENDS_PLUGINS DEPENDS_EXTERNALS)
   cmake_parse_arguments(MMPLUGIN_ARGS "${optionArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+  # Validate plugin name
+  if (NOT "${PLUGIN_NAME}" MATCHES "^[A-Za-z0-9_]+$")
+    message(FATAL_ERROR "Plugin name is only allowed to contain letters, numbers and underscore, found: ${PLUGIN_NAME}.")
+  endif ()
+
   # Upper case plugin name
   string(TOUPPER ${PLUGIN_NAME} PLUGIN_NAME_UPPER)
 
-  # Enable plugin build option
-  option(BUILD_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" ${MMPLUGIN_ARGS_BUILD_DEFAULT})
+  # Check feature requirements
+  set(REQUIREMENTS_AVAILABLE TRUE)
 
-  if (BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
-
-    # Check Cuda
-    if (MMPLUGIN_ARGS_DEPENDS_CUDA)
-      if (NOT ENABLE_CUDA)
-        message(FATAL_ERROR "The ${PLUGIN_NAME} plugin requires CUDA. Please enable it setting the option ENABLE_CUDA.")
-      endif ()
+  # Check Cuda
+  if (MMPLUGIN_ARGS_DEPENDS_CUDA)
+    if (NOT ENABLE_CUDA)
+      set(REQUIREMENTS_AVAILABLE FALSE)
+    else ()
       enable_language(CUDA)
     endif ()
+  endif ()
+
+  # Check GL
+  if (MMPLUGIN_ARGS_DEPENDS_GL)
+    if (NOT ENABLE_GL)
+      set(REQUIREMENTS_AVAILABLE FALSE)
+    endif ()
+  endif ()
+
+  # Enable plugin build option
+  if (NOT MMPLUGIN_ARGS_ALWAYS_BUILD)
+    option(BUILD_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" ${MMPLUGIN_ARGS_BUILD_DEFAULT})
+
+    # Show plugin option only to user if all requirements are available
+    if (REQUIREMENTS_AVAILABLE)
+      mark_as_advanced(CLEAR BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
+    else ()
+      mark_as_advanced(FORCE BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
+    endif ()
+  endif ()
+
+  if ((BUILD_PLUGIN_${PLUGIN_NAME_UPPER} OR MMPLUGIN_ARGS_ALWAYS_BUILD) AND REQUIREMENTS_AVAILABLE)
 
     # Set plugin enabled flag
     set(${PLUGIN_NAME}_PLUGIN_ENABLED ON PARENT_SCOPE)
@@ -43,19 +68,30 @@ function(megamol_plugin PLUGIN_NAME)
       set(MMPLUGIN_ARGS_DIR ${CMAKE_CURRENT_SOURCE_DIR})
     endif ()
 
+    # Common dirs
+    set(MMPLUGIN_DIR_INCLUDE "${MMPLUGIN_ARGS_DIR}/include")
+    set(MMPLUGIN_DIR_SRC "${MMPLUGIN_ARGS_DIR}/src")
+
+    # Validate include dir (if present) only contains a single dir "<plugin-name>".
+    if (IS_DIRECTORY "${MMPLUGIN_DIR_INCLUDE}")
+      file(GLOB include_subdirs RELATIVE "${MMPLUGIN_DIR_INCLUDE}" "${MMPLUGIN_DIR_INCLUDE}/*")
+      list(LENGTH include_subdirs list_size)
+      if ((NOT list_size EQUAL 1) OR (NOT PLUGIN_NAME IN_LIST include_subdirs) OR (NOT IS_DIRECTORY "${MMPLUGIN_DIR_INCLUDE}/${PLUGIN_NAME}"))
+        message(FATAL_ERROR "\"${MMPLUGIN_DIR_INCLUDE}\" must contain exactly one subdirectory \"${PLUGIN_NAME}\".")
+      endif ()
+    endif ()
+
     # Collect files within default plugin structure
-    file(GLOB_RECURSE public_header_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "include/*.h")
-    file(GLOB_RECURSE header_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "src/*.h")
-    file(GLOB_RECURSE source_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "src/*.cpp")
-    file(GLOB_RECURSE shader_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "shaders/*")
+    file(GLOB_RECURSE public_header_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "${MMPLUGIN_DIR_INCLUDE}/${PLUGIN_NAME}/*.h")
+    file(GLOB_RECURSE header_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "${MMPLUGIN_DIR_SRC}/*.h")
+    file(GLOB_RECURSE source_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "${MMPLUGIN_DIR_SRC}/*.cpp")
+    file(GLOB_RECURSE shader_files RELATIVE "${MMPLUGIN_ARGS_DIR}" "${MMPLUGIN_ARGS_DIR}/shaders/*")
 
     # Target definition
     add_library(${PLUGIN_NAME} OBJECT ${public_header_files} ${header_files} ${source_files} ${shader_files})
     target_include_directories(${PLUGIN_NAME}
-      PUBLIC
-        $<BUILD_INTERFACE:${MMPLUGIN_ARGS_DIR}/include>
-      PRIVATE
-        $<BUILD_INTERFACE:${MMPLUGIN_ARGS_DIR}/src>)
+      PUBLIC $<BUILD_INTERFACE:${MMPLUGIN_DIR_INCLUDE}>
+      PRIVATE $<BUILD_INTERFACE:${MMPLUGIN_DIR_SRC}>)
 
     # List of reserved words in plugins or externals dependencies lists.
     # This keywords are passed to target_link_libraries, but are ignored on other processing.
@@ -78,8 +114,12 @@ function(megamol_plugin PLUGIN_NAME)
     endforeach ()
 
     # Link
+    if (ENABLE_GL)
+      target_link_libraries(${PLUGIN_NAME} PRIVATE core_gl)
+    else ()
+      target_link_libraries(${PLUGIN_NAME} PRIVATE core)
+    endif ()
     target_link_libraries(${PLUGIN_NAME}
-      PRIVATE core
       PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}
       PRIVATE ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
 
@@ -95,10 +135,10 @@ function(megamol_plugin PLUGIN_NAME)
     # Grouping in Visual Studio
     set_target_properties(${PLUGIN_NAME} PROPERTIES
       FOLDER plugins)
-    source_group("Public Header Files" FILES ${public_header_files})
-    source_group("Header Files" FILES ${header_files})
-    source_group("Source Files" FILES ${source_files})
-    source_group("Shaders" FILES ${shader_files})
+    source_group(TREE "${MMPLUGIN_DIR_INCLUDE}/${PLUGIN_NAME}" PREFIX "Public Header Files" FILES ${public_header_files})
+    source_group(TREE "${MMPLUGIN_DIR_SRC}" PREFIX "Header Files" FILES ${header_files})
+    source_group(TREE "${MMPLUGIN_DIR_SRC}" PREFIX "Source Files" FILES ${source_files})
+    source_group(TREE "${MMPLUGIN_ARGS_DIR}/shaders" PREFIX "Shader Files" FILES ${shader_files})
 
     # Register plugin
     target_link_libraries(plugins INTERFACE ${PLUGIN_NAME})

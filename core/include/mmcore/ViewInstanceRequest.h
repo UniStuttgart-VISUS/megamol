@@ -18,71 +18,68 @@
 namespace megamol {
 namespace core {
 
+/**
+ * Abstract base class of job and view descriptions.
+ */
+class ViewInstanceRequest : public InstanceRequest {
+public:
     /**
-     * Abstract base class of job and view descriptions.
+     * Ctor.
      */
-    class ViewInstanceRequest : public InstanceRequest {
-    public:
+    ViewInstanceRequest(void);
 
-        /**
-         * Ctor.
-         */
-        ViewInstanceRequest(void);
+    /**
+     * Copy ctor.
+     *
+     * @param src The object to clone from
+     */
+    ViewInstanceRequest(const ViewInstanceRequest& src);
 
-        /**
-         * Copy ctor.
-         *
-         * @param src The object to clone from
-         */
-        ViewInstanceRequest(const ViewInstanceRequest& src);
+    /**
+     * Dtor.
+     */
+    virtual ~ViewInstanceRequest(void);
 
-        /**
-         * Dtor.
-         */
-        virtual ~ViewInstanceRequest(void);
+    /**
+     * Answer the description of the view to be instantiated.
+     *
+     * @return The description of the view to be instantiated
+     */
+    inline const ViewDescription* Description(void) const {
+        return this->desc;
+    }
 
-        /**
-         * Answer the description of the view to be instantiated.
-         *
-         * @return The description of the view to be instantiated
-         */
-        inline const ViewDescription* Description(void) const {
-            return this->desc;
-        }
+    /**
+     * Sets the description of the view to be instantiated.
+     *
+     * @param desc The description of the view to be instantiated.
+     */
+    inline void SetDescription(const ViewDescription* desc) {
+        this->desc = desc;
+    }
 
-        /**
-         * Sets the description of the view to be instantiated.
-         *
-         * @param desc The description of the view to be instantiated.
-         */
-        inline void SetDescription(const ViewDescription* desc) {
-            this->desc = desc;
-        }
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return Reference to 'this'
+     */
+    ViewInstanceRequest& operator=(const ViewInstanceRequest& rhs);
 
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return Reference to 'this'
-         */
-        ViewInstanceRequest& operator=(const ViewInstanceRequest& rhs);
+    /**
+     * Test for equality
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return 'true' if 'this' is equal to 'rhs'
+     */
+    bool operator==(const ViewInstanceRequest& rhs) const;
 
-        /**
-         * Test for equality
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return 'true' if 'this' is equal to 'rhs'
-         */
-        bool operator==(const ViewInstanceRequest& rhs) const;
-
-    private:
-
-        /** The view description to be instantiated */
-        const ViewDescription* desc;
-
-    };
+private:
+    /** The view description to be instantiated */
+    const ViewDescription* desc;
+};
 
 } /* end namespace core */
 } /* end namespace megamol */

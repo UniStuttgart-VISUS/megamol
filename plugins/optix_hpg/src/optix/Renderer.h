@@ -2,21 +2,22 @@
 
 #include <array>
 #include <limits>
+#include <tuple>
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+
+#include "AbstractRenderer.h"
 
 #include "cuda.h"
 
 #include "framestate.h"
 
 #include "glowl/FramebufferObject.hpp"
-
-#include "cudaGL.h"
-
-#include "optix/CallContext.h"
 
 #include "miss.h"
 #include "raygen.h"
@@ -34,14 +35,8 @@
 #include "CallRender3DCUDA.h"
 
 namespace megamol::optix_hpg {
-class Renderer : public core::view::RendererModule<CallRender3DCUDA> {
+class Renderer : public AbstractRenderer {
 public:
-    std::vector<std::string> requested_lifetime_resources() override {
-        auto res = core::view::RendererModule<CallRender3DCUDA>::requested_lifetime_resources();
-        res.push_back(frontend_resources::CUDA_Context_Req_Name);
-        return res;
-    }
-
     static const char* ClassName(void) {
         return "OptixRenderer";
     }
@@ -58,31 +53,38 @@ public:
 
     virtual ~Renderer();
 
-    bool Render(CallRender3DCUDA& call) override;
-
-    bool GetExtents(CallRender3DCUDA& call) override;
-
 protected:
-    bool create() override;
-
-    void release() override;
-
 private:
-    void setup();
+    void setup() override;
 
-    bool is_dirty() {
+    bool is_dirty() override {
         return spp_slot_.IsDirty() || max_bounces_slot_.IsDirty() || accumulate_slot_.IsDirty() ||
                intensity_slot_.IsDirty();
     }
 
-    void reset_dirty() {
+    void reset_dirty() override {
         spp_slot_.ResetDirty();
         max_bounces_slot_.ResetDirty();
         accumulate_slot_.ResetDirty();
         intensity_slot_.ResetDirty();
     }
 
-    core::CallerSlot _in_geo_slot;
+    void on_cam_param_change(
+        core::view::Camera const& cam, core::view::Camera::PerspectiveParameters const& cam_intrinsics) override;
+
+    void on_cam_pose_change(core::view::Camera::Pose const& cam_pose) override;
+
+    void on_change_data(OptixTraversableHandle world) override;
+
+    void on_change_background(glm::vec4 const& bg) override;
+
+    void on_change_programs(std::tuple<OptixProgramGroup const*, uint32_t> const& programs) override;
+
+    void on_change_parameters() override;
+
+    void on_change_viewport(glm::uvec2 const& viewport, std::shared_ptr<CUDAFramebuffer> fbo) override;
+
+    void on_change_sbt(std::tuple<void const*, uint32_t, uint64_t> const& records) override;
 
     core::param::ParamSlot spp_slot_;
 
@@ -92,34 +94,14 @@ private:
 
     core::param::ParamSlot intensity_slot_;
 
-    SBTRecord<device::RayGenData> _sbt_raygen_record;
+    SBTRecord<device::RayGenData> sbt_raygen_record_;
 
     std::array<SBTRecord<device::MissData>, 2> sbt_miss_records_;
-
-    MMOptixSBT sbt_;
-
-    OptixPipeline _pipeline;
 
     MMOptixModule raygen_module_;
 
     MMOptixModule miss_module_;
 
     MMOptixModule miss_occlusion_module_;
-
-    CUdeviceptr _frame_state_buffer;
-
-    device::FrameState _frame_state;
-
-    vislib::math::Rectangle<int> _current_fb_size;
-
-    unsigned int _frame_id = std::numeric_limits<unsigned int>::max();
-
-    std::size_t _in_data_hash = std::numeric_limits<std::size_t>::max();
-
-    cam_type::snapshot_type old_cam_snap;
-
-    glm::vec4 old_bg = glm::vec4(-1);
-
-    std::unique_ptr<Context> optix_ctx_;
 };
 } // namespace megamol::optix_hpg

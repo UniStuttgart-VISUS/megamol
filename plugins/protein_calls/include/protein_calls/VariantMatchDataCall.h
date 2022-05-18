@@ -16,9 +16,8 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "vislib/math/Cuboid.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/macro_utils.h"
+#include "vislib/math/Cuboid.h"
 
 namespace megamol {
 namespace protein_calls {
@@ -26,16 +25,15 @@ namespace protein_calls {
 class VariantMatchDataCall : public core::Call {
 
 public:
-
     /// Index of the 'CallForGetData' function
-	static const unsigned int CallForGetData;
+    static const unsigned int CallForGetData;
 
     /**
      * Answer the name of the objects of this description.
      *
      * @return The name of the objects of this description.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "VariantMatchDataCall";
     }
 
@@ -44,7 +42,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Call to transmit variant match data";
     }
 
@@ -64,8 +62,8 @@ public:
      *
      * @return The name of the requested function.
      */
-    static const char * FunctionName(unsigned int idx) {
-        switch(idx) {
+    static const char* FunctionName(unsigned int idx) {
+        switch (idx) {
         case 0:
             return "getData";
         }
@@ -81,14 +79,14 @@ public:
     /**
      * TODO
      */
-    inline const vislib::StringA *GetLabels() {
+    inline const vislib::StringA* GetLabels() {
         return this->labels;
     }
 
     /**
      * TODO
      */
-    inline const float *GetMatch() {
+    inline const float* GetMatch() {
         return this->match;
     }
 
@@ -116,14 +114,14 @@ public:
     /**
      * TODO
      */
-    void SetLabels(const vislib::StringA *labels) {
+    void SetLabels(const vislib::StringA* labels) {
         this->labels = labels;
     }
 
     /**
      * TODO
      */
-    void SetMatch(const float *match) {
+    void SetMatch(const float* match) {
         this->match = match;
     }
 
@@ -143,25 +141,21 @@ public:
     }
 
 protected:
-
-
 private:
-
     /// The number of variants
     unsigned int variantCnt;
 
     /// The labels of all variants
-    const vislib::StringA *labels;
+    const vislib::StringA* labels;
 
     /// The matching value matrix
-    const float *match;
+    const float* match;
 
     /// The maximum match value
     float max;
 
     /// The minimum match value
     float min;
-
 };
 
 /// Description class typedef
@@ -172,4 +166,3 @@ typedef core::factories::CallAutoDescription<VariantMatchDataCall> VariantMatchD
 } // end namespace megamol
 
 #endif // MMPROTEINCALLSPLUGIN_VARIANTMATCHDATACALL_H_INCLUDED
-

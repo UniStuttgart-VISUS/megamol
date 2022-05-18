@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "protein_calls/BindingSiteCall.h"
+#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -11,10 +11,15 @@ using namespace megamol::protein_calls;
 const unsigned int BindingSiteCall::CallForGetData = 0;
 
 
-BindingSiteCall::BindingSiteCall(void) : megamol::core::Call(),
-        bindingSites(NULL), bindingSiteResNames(NULL), bindingSiteNames(NULL),
-        bindingSiteDescriptions(NULL), bindingSiteColors(NULL), enzymeCase(false), isGxType(true) {
-}
+BindingSiteCall::BindingSiteCall(void)
+        : megamol::core::Call()
+        , bindingSites(NULL)
+        , bindingSiteResNames(NULL)
+        , bindingSiteNames(NULL)
+        , bindingSiteDescriptions(NULL)
+        , bindingSiteColors(NULL)
+        , enzymeCase(false)
+        , isGxType(true) {}
 
 
 BindingSiteCall::~BindingSiteCall(void) {

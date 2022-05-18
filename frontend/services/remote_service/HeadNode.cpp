@@ -34,14 +34,17 @@ bool megamol::frontend::Remote_Service::HeadNode::send(megamol::remote::Message_
 bool megamol::frontend::Remote_Service::HeadNode::start_server(std::string const& send_to_address) {
     try {
         close_server();
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Remote_Service::HeadNode: attempt ZMQCommFabric Connect on %s", send_to_address.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "Remote_Service::HeadNode: attempt ZMQCommFabric Connect on %s", send_to_address.c_str());
         this->comm_fabric_ = FBOCommFabric(std::make_unique<ZMQCommFabric>(zmq::socket_type::push));
         this->comm_fabric_.Connect(send_to_address);
         this->comm_thread_.thread = std::thread{[&]() { this->comm_thread_loop(); }};
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Remote_Service::HeadNode: Communication thread started.");
-    }
-    catch (std::exception& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Remote_Service::HeadNode: Could not connect ZMQCommFabric or initialize communication thread: %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "Remote_Service::HeadNode: Communication thread started.");
+    } catch (std::exception& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Remote_Service::HeadNode: Could not connect ZMQCommFabric or initialize communication thread: %s",
+            ex.what());
         return false;
     }
 
@@ -51,13 +54,13 @@ bool megamol::frontend::Remote_Service::HeadNode::start_server(std::string const
 bool megamol::frontend::Remote_Service::HeadNode::close_server() {
     if (comm_thread_.signal.is_running()) {
         try {
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Remote_Service::HeadNode: Joining sender thread.");
-        comm_thread_.signal.stop();
-        comm_thread_.join();
-        comm_fabric_.Disconnect();
-        }
-        catch (std::exception& ex) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Remote_Service::HeadNode: error joining thread or disconnecting ZMQCommFabric: %s", ex.what());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Remote_Service::HeadNode: Joining sender thread.");
+            comm_thread_.signal.stop();
+            comm_thread_.join();
+            comm_fabric_.Disconnect();
+        } catch (std::exception& ex) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Remote_Service::HeadNode: error joining thread or disconnecting ZMQCommFabric: %s", ex.what());
         }
     }
 
@@ -82,9 +85,9 @@ void megamol::frontend::Remote_Service::HeadNode::comm_thread_loop() {
             // using namespace std::chrono_literals;
             // std::this_thread::sleep_for(1000ms / 120);
         }
-    }
-    catch (std::exception& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Remote_Service::HeadNode: Error during communication: %s", ex.what());
+    } catch (std::exception& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Remote_Service::HeadNode: Error during communication: %s", ex.what());
     }
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("Remote_Service::HeadNode: Exiting sender loop.");
 
@@ -94,4 +97,3 @@ void megamol::frontend::Remote_Service::HeadNode::comm_thread_loop() {
 megamol::frontend::Remote_Service::HeadNode::~HeadNode() {
     close_server();
 }
-

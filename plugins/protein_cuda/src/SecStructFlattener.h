@@ -1,300 +1,294 @@
 /*
- *	SecStructFlattener.h
+ * SecStructFlattener.h
  *
- *	Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
- *	All rights reserved
+ * Copyright (C) 2016 by Universitaet Stuttgart (VISUS).
+ * All rights reserved
  */
 
 #ifndef MMPROTEINCUDAPLUGIN_SECSTRUCTFLATTENER_H_INCLUDED
 #define MMPROTEINCUDAPLUGIN_SECSTRUCTFLATTENER_H_INCLUDED
 
-#include "mmcore/Module.h"
-#include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
-#include "protein_calls/MolecularDataCall.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/math/Cuboid.h"
+#include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
+#include "vislib/math/Cuboid.h"
 #include "vislib/math/Plane.h"
 
 #include <vector>
 
 extern "C" void clearAll(void);
-extern "C" void getPositions(float * h_atomPositions, unsigned int numPositions);
+extern "C" void getPositions(float* h_atomPositions, unsigned int numPositions);
 extern "C" void performTimestep(float timestepSize, bool forceToCenter, float forceStrength);
-extern "C" void transferAtomData(float * h_atomPositions, unsigned int numPositions, unsigned int * h_cAlphaIndices, unsigned int numCAlphas);
+extern "C" void transferAtomData(
+    float* h_atomPositions, unsigned int numPositions, unsigned int* h_cAlphaIndices, unsigned int numCAlphas);
 extern "C" void transferPlane(vislib::math::Plane<float>& thePlane);
-extern "C" void transferSpringData(const float * h_atomPositions, unsigned int numPositions, const unsigned int * h_hBondIndices, unsigned int numBonds, 
-	unsigned int * h_cAlphaIndices, unsigned int numCAlphas, unsigned int * h_oIndices, unsigned int numOs, float conFriction, float conConstant, 
-	float hFriction, float hConstant, const unsigned int * moleculeStarts, unsigned int numMolecules, float cutoffDistance, float strengthFactor);
+extern "C" void transferSpringData(const float* h_atomPositions, unsigned int numPositions,
+    const unsigned int* h_hBondIndices, unsigned int numBonds, unsigned int* h_cAlphaIndices, unsigned int numCAlphas,
+    unsigned int* h_oIndices, unsigned int numOs, float conFriction, float conConstant, float hFriction,
+    float hConstant, const unsigned int* moleculeStarts, unsigned int numMolecules, float cutoffDistance,
+    float strengthFactor);
 
 namespace megamol {
 namespace protein_cuda {
 
-	class SecStructFlattener : public megamol::core::Module {
-	public:
+class SecStructFlattener : public megamol::core::Module {
+public:
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) {
+        return "SecStructFlattener";
+    }
 
-		/**
-         *	Answer the name of this module.
-         *	
-         *	@return The name of this module.
-         */
-		static const char *ClassName(void) {
-			return "SecStructFlattener";
-		}
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Flattens the secondary structure of a protein into a 2D plane";
+    }
 
-		/**
-         *	Answer a human readable description of this module.
-         *
-         *	@return A human readable description of this module.
-         */
-		static const char *Description(void) {
-			return "Flattens the secondary structure of a protein into a 2D plane";
-		}
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-		/**
-         *	Answers whether this module is available on the current system.
-         *	
-         *	@return 'true' if the module is available, 'false' otherwise.
-         */
-		static bool IsAvailable(void) {
-			return true;
-		}
+    /** Ctor. */
+    SecStructFlattener(void);
 
-		/** Ctor. */
-		SecStructFlattener(void);
+    /** Dtor. */
+    virtual ~SecStructFlattener(void);
 
-		/** Dtor. */
-		virtual ~SecStructFlattener(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-	protected:
+    /**
+     * Implementation of 'release'.
+     */
+    virtual void release(void);
 
-		/**
-         *	Implementation of 'Create'.
-         *	
-         *	@return 'true' on success, 'false' otherwise.
-         */
-		virtual bool create(void);
+    /**
+     * Call for get data.
+     */
+    bool getData(megamol::core::Call& call);
 
-		/**
-         *	Implementation of 'release'.
-         */
-		virtual void release(void);
+    /**
+     * Call for get extent.
+     */
+    bool getExtent(megamol::core::Call& call);
 
-		/**
-         *	Call for get data.
-         */
-		bool getData(megamol::core::Call& call);
+    /**
+     * Call for get plane data.
+     */
+    bool getPlaneData(megamol::core::Call& call);
 
-		/**
-         *	Call for get extent.
-         */
-		bool getExtent(megamol::core::Call& call);
+    /**
+     * Call for get plane extent.
+     */
+    bool getPlaneExtent(megamol::core::Call& call);
 
-		/**
-		 *	Call for get plane data.
-		 */
-		bool getPlaneData(megamol::core::Call& call);
+private:
+    /**
+     * Enum for the plane the protein should be flattened to.
+     */
+    enum FlatPlane { XY_PLANE = 0, XZ_PLANE = 1, YZ_PLANE = 2, LEAST_COMMON = 3, ARBITRARY = 4 };
 
-		/**
-		 *	Call for get plane extent.
-		 */
-		bool getPlaneExtent(megamol::core::Call& call);
+    /**
+     * Returns the name of the plane the protein gets flattened to.
+     *
+     * @param fp The flat plane
+     * @return The name of the flat plane
+     */
+    std::string getFlatPlaneName(FlatPlane fp);
 
-	private:
+    /**
+     * Returns the flat plane with the given index.
+     *
+     * @param idx The index of the flat plane.
+     * @return The flat plane with the given index.
+     */
+    FlatPlane getFlatPlaneByIndex(unsigned int idx);
 
-		/**
-		 *	Enum for the plane the protein should be flattened to.
-		 */
-		enum FlatPlane{
-			XY_PLANE = 0,
-			XZ_PLANE = 1,
-			YZ_PLANE = 2,
-			LEAST_COMMON = 3,
-			ARBITRARY = 4
-		};
+    /**
+     * Returns the number of flat plane modes.
+     *
+     * @return The number of flat plane modes.
+     */
+    int getFlatPlaneModeNumber(void);
 
-		/**
-		 *	Returns the name of the plane the protein gets flattened to.
-		 *
-		 *	@param fp The flat plane
-		 *	@return The name of the flat plane
-		 */
-		std::string getFlatPlaneName(FlatPlane fp);
+    /**
+     * Flattens the secondary structure of the protein progressively.
+     *
+     * @param tranferPositions Should the atom positions be tranferred to the cuda kernel?
+     */
+    void flatten(bool transferPositions = false);
 
-		/**
-		 *	Returns the flat plane with the given index.
-		 *	
-		 *	@param idx The index of the flat plane.
-		 *	@return The flat plane with the given index.
-		 */
-		FlatPlane getFlatPlaneByIndex(unsigned int idx);
+    /**
+     * Runs the simulation based on the tranferred parameters.
+     */
+    void runSimulation(void);
 
-		/**
-		 *	Returns the number of flat plane modes.
-		 *
-		 *	@return The number of flat plane modes.
-		 */
-		int getFlatPlaneModeNumber(void);
+    /**
+     * Callback function for the animation play button.
+     *
+     * @param p The button parameter
+     * @return true
+     */
+    bool onPlayToggleButton(megamol::core::param::ParamSlot& p);
 
-		/**
-		 *	Flattens the secondary structure of the protein progressively.
-		 *
-		 *	@param tranferPositions Should the atom positions be tranferred to the cuda kernel?
-		 */
-		void flatten(bool transferPositions = false);
+    /**
+     * Callback function for the single timestep button.
+     *
+     * @param p The button parameter
+     * @return true
+     */
+    bool onSingleStepButton(megamol::core::param::ParamSlot& p);
 
-		/**
-		 *	Runs the simulation based on the tranferred parameters.
-		 */
-		void runSimulation(void);
+    /**
+     * Callback function for the reset button.
+     *
+     * @param p The button parameter
+     * @return true
+     */
+    bool onResetButton(megamol::core::param::ParamSlot& p);
 
-		/**
-		 *	Callback function for the animation play button.
-		 *
-		 *	@param p The button parameter
-		 *	@return true
-		 */
-		bool onPlayToggleButton(megamol::core::param::ParamSlot& p);
+    /**
+     * Computes the three main directions of the c alpha atoms
+     */
+    void computeMainDirectionPCA(void);
 
-		/**
-		 *	Callback function for the single timestep button.
-		 *
-		 *	@param p The button parameter
-		 *	@return true
-		 */
-		bool onSingleStepButton(megamol::core::param::ParamSlot& p);
+    /** data caller slot */
+    megamol::core::CallerSlot getDataSlot;
 
-		/**
-		 *	Callback function for the reset button.
-		 *
-		 *	@param p The button parameter
-		 *	@return true
-		 */
-		bool onResetButton(megamol::core::param::ParamSlot& p);
+    /** slot for outgoing data */
+    megamol::core::CalleeSlot dataOutSlot;
 
-		/**
-		 *	Computes the three main directions of the c alpha atoms
-		 */
-		void computeMainDirectionPCA(void);
+    /** slot for outgoing plane data */
+    megamol::core::CalleeSlot planeOutSlot;
 
-		/** data caller slot */
-		megamol::core::CallerSlot getDataSlot;
+    /** toggles the play of the animation */
+    megamol::core::param::ParamSlot playParam;
 
-		/** slot for outgoing data */
-		megamol::core::CalleeSlot dataOutSlot;
+    /** button that toggles the play of the animation */
+    megamol::core::param::ParamSlot playButtonParam;
 
-		/** slot for outgoing plane data */
-		megamol::core::CalleeSlot planeOutSlot;
+    /** button that triggers the computation of a single timestep */
+    megamol::core::param::ParamSlot singleStepButtonParam;
 
-		/** toggles the play of the animation */
-		megamol::core::param::ParamSlot playParam;
+    /** the flat plane mode */
+    megamol::core::param::ParamSlot flatPlaneMode;
 
-		/** button that toggles the play of the animation */
-		megamol::core::param::ParamSlot playButtonParam;
+    /** the normal of the arbitrary plane */
+    megamol::core::param::ParamSlot arbPlaneNormalParam;
 
-		/** button that triggers the computation of a single timestep */
-		megamol::core::param::ParamSlot singleStepButtonParam;
+    /** the origin of the arbitrary plane */
+    megamol::core::param::ParamSlot arbPlaneCenterParam;
 
-		/** the flat plane mode */
-		megamol::core::param::ParamSlot flatPlaneMode;
+    /** Preserve the offset of the oxygen atoms relative to the c alphas? */
+    megamol::core::param::ParamSlot oxygenOffsetParam;
 
-		/** the normal of the arbitrary plane */
-		megamol::core::param::ParamSlot arbPlaneNormalParam;
-												
-		/** the origin of the arbitrary plane */
-		megamol::core::param::ParamSlot arbPlaneCenterParam;
+    /** Duration of a single timestep */
+    megamol::core::param::ParamSlot timestepParam;
 
-		/** Preserve the offset of the oxygen atoms relative to the c alphas? */
-		megamol::core::param::ParamSlot oxygenOffsetParam;
+    /** Maximal number of performed timesteps */
+    megamol::core::param::ParamSlot maxTimestepParam;
 
-		/** Duration of a single timestep */
-		megamol::core::param::ParamSlot timestepParam;
+    /** Number of performed timesteps per frame */
+    megamol::core::param::ParamSlot timestepsPerFrameParam;
 
-		/** Maximal number of performed timesteps */
-		megamol::core::param::ParamSlot maxTimestepParam;
+    /** The spring constant for the atom connection springs */
+    megamol::core::param::ParamSlot connectionSpringConstantParam;
 
-		/** Number of performed timesteps per frame */
-		megamol::core::param::ParamSlot timestepsPerFrameParam;
+    /** The spring constant for the h bond springs */
+    megamol::core::param::ParamSlot hbondSpringConstantParam;
 
-		/** The spring constant for the atom connection springs */
-		megamol::core::param::ParamSlot connectionSpringConstantParam;
+    /** The friction parameter for the atom connection springs */
+    megamol::core::param::ParamSlot connectionFrictionParam;
 
-		/** The spring constant for the h bond springs */
-		megamol::core::param::ParamSlot hbondSpringConstantParam;
+    /** The friction parameter for the h bond springs */
+    megamol::core::param::ParamSlot hbondFrictionParam;
 
-		/** The friction parameter for the atom connection springs */
-		megamol::core::param::ParamSlot connectionFrictionParam;
+    /** The cutoff distance for the repelling forces */
+    megamol::core::param::ParamSlot repellingForceCutoffDistanceParam;
 
-		/** The friction parameter for the h bond springs */
-		megamol::core::param::ParamSlot hbondFrictionParam;
+    /** Factor controlling the strength of the repelling forces */
+    megamol::core::param::ParamSlot repellingForceStrengthFactor;
 
-		/** The cutoff distance for the repelling forces */
-		megamol::core::param::ParamSlot repellingForceCutoffDistanceParam;
+    /** Flag activating a force to the center of the bounding box */
+    megamol::core::param::ParamSlot forceToCenterParam;
 
-		/** Factor controlling the strength of the repelling forces */
-		megamol::core::param::ParamSlot repellingForceStrengthFactor;
+    /** The strength of the force to the center of the bounding box */
+    megamol::core::param::ParamSlot forceToCenterStrengthParam;
 
-		/** Flag activating a force to the center of the bounding box */
-		megamol::core::param::ParamSlot forceToCenterParam;
+    /** The reset button */
+    megamol::core::param::ParamSlot resetButtonParam;
 
-		/** The strength of the force to the center of the bounding box */
-		megamol::core::param::ParamSlot forceToCenterStrengthParam;
+    /** The current atom positions */
+    float* atomPositions;
 
-		/** The reset button */
-		megamol::core::param::ParamSlot resetButtonParam;
+    /** The size of the atom positions array */
+    unsigned int atomPositionsSize;
 
-		/** The current atom positions */
-		float * atomPositions;
+    /** The bounding box of the data */
+    vislib::math::Cuboid<float> boundingBox;
 
-		/** The size of the atom positions array */
-		unsigned int atomPositionsSize;
+    /** The indices of the c alpha atoms */
+    std::vector<unsigned int> cAlphaIndices;
 
-		/** The bounding box of the data */
-		vislib::math::Cuboid<float> boundingBox;
+    /** The indices of the oxygen atoms */
+    std::vector<unsigned int> oIndices;
 
-		/** The indices of the c alpha atoms */
-		std::vector<unsigned int> cAlphaIndices;
+    /** The last hash of the used data set */
+    SIZE_T lastHash;
 
-		/** The indices of the oxygen atoms */
-		std::vector<unsigned int> oIndices;
+    /** The current hash of the data emitted by this module */
+    SIZE_T myHash;
 
-		/** The last hash of the used data set */
-		SIZE_T lastHash;
+    /** The offset to the hash from the data set hash */
+    SIZE_T hashOffset;
 
-		/** The current hash of the data emitted by this module */
-		SIZE_T myHash;
+    /** The current plane hash */
+    SIZE_T planeHash;
 
-		/** The offset to the hash from the data set hash */
-		SIZE_T hashOffset;
+    /** The lastly used plane mode */
+    FlatPlane lastPlaneMode;
 
-		/** The current plane hash */
-		SIZE_T planeHash;
+    /** The main directions of the c alpha atoms of the data set, ordered by significance */
+    std::vector<vislib::math::Vector<float, 3>> mainDirections;
 
-		/** The lastly used plane mode */
-		FlatPlane lastPlaneMode;
+    /** Indicator for the first frame */
+    bool firstFrame;
 
-		/** The main directions of the c alpha atoms of the data set, ordered by significance */
-		std::vector<vislib::math::Vector<float, 3>> mainDirections;
+    /** The distance vectors from the c alpha atoms to the corresponding oxygen atoms */
+    std::vector<vislib::math::Vector<float, 3>> oxygenOffsets;
 
-		/** Indicator for the first frame */
-		bool firstFrame;
+    /** The currently used projection plane */
+    vislib::math::Plane<float> currentPlane;
 
-		/** The distance vectors from the c alpha atoms to the corresponding oxygen atoms */
-		std::vector<vislib::math::Vector<float, 3>> oxygenOffsets;
+    /** The index of the current timestep */
+    SIZE_T currentTimestep;
 
-		/** The currently used projection plane */
-		vislib::math::Plane<float> currentPlane;
+    /** Should a single timestep be performed? */
+    bool oneStep;
 
-		/** The index of the current timestep */
-		SIZE_T currentTimestep;
-
-		/** Should a single timestep be performed? */
-		bool oneStep;
-
-		/** Should a reset of the dataset be forced? */
-		bool forceReset;
-	};
+    /** Should a reset of the dataset be forced? */
+    bool forceReset;
+};
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */

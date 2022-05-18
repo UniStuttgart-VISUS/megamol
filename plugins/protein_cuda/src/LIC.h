@@ -10,9 +10,9 @@
 #ifndef MMPROTEINCUDAPLUGIN_LIC_H
 #define MMPROTEINCUDAPLUGIN_LIC_H
 
-#include "vislib/math/Vector.h"
 #include "helper_cuda.h"
 #include "helper_math.h"
+#include "vislib/math/Vector.h"
 
 #include "UniGrid3D.h"
 
@@ -26,7 +26,6 @@ namespace protein_cuda {
 class LIC {
 
 public:
-
     /**
      * Computes LIC for plane parallel to x-y-plane. The computation is based
      * on 3D data, but if flagged, all vectors in the uniform grid are projected
@@ -45,15 +44,9 @@ public:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    static bool CalcLicX(UniGrid3D<float3> &grid,
-            UniGrid3D<float> &randBuff,
-            unsigned int streamLen,
-            float minStreamCnt,
-            float vecScale,
-            vislib::math::Vector<unsigned int, 3> licDim,
-            bool projectVec2D,
-            UniGrid3D<float> &licBuffX,
-            UniGrid3D<float> &licBuffXAlpha);
+    static bool CalcLicX(UniGrid3D<float3>& grid, UniGrid3D<float>& randBuff, unsigned int streamLen,
+        float minStreamCnt, float vecScale, vislib::math::Vector<unsigned int, 3> licDim, bool projectVec2D,
+        UniGrid3D<float>& licBuffX, UniGrid3D<float>& licBuffXAlpha);
 
     /**
      * Computes LIC for plane parallel to x-z-plane. The computation is based
@@ -73,15 +66,9 @@ public:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    static bool CalcLicY(UniGrid3D<float3> &grid,
-            UniGrid3D<float> &randBuff,
-            unsigned int streamLen,
-            float minStreamCnt,
-            float vecScale,
-            vislib::math::Vector<unsigned int, 3> licDim,
-            bool projectVec2D,
-            UniGrid3D<float> &licBuffY,
-            UniGrid3D<float> &licBuffYAlpha);
+    static bool CalcLicY(UniGrid3D<float3>& grid, UniGrid3D<float>& randBuff, unsigned int streamLen,
+        float minStreamCnt, float vecScale, vislib::math::Vector<unsigned int, 3> licDim, bool projectVec2D,
+        UniGrid3D<float>& licBuffY, UniGrid3D<float>& licBuffYAlpha);
 
     /**
      * Computes LIC for plane parallel to y-z-plane. The computation is based
@@ -101,18 +88,11 @@ public:
      *
      * @return 'True' on success, 'false' otherwise
      */
-    static bool CalcLicZ(UniGrid3D<float3> &grid,
-            UniGrid3D<float> &randBuff,
-            unsigned int streamLen,
-            float minStreamCnt,
-            float vecScale,
-            vislib::math::Vector<unsigned int, 3> licDim,
-            bool projectVec2D,
-            UniGrid3D<float> &licBuffZ,
-            UniGrid3D<float> &licBuffZAlpha);
+    static bool CalcLicZ(UniGrid3D<float3>& grid, UniGrid3D<float>& randBuff, unsigned int streamLen,
+        float minStreamCnt, float vecScale, vislib::math::Vector<unsigned int, 3> licDim, bool projectVec2D,
+        UniGrid3D<float>& licBuffZ, UniGrid3D<float>& licBuffZAlpha);
 
 protected:
-
     /**
      * Sample the uniform grid containing the vector field. Special treatment
      * necessary because the dimensions of the grid and the LIC buffer could be
@@ -125,9 +105,7 @@ protected:
      * @return The according value in the vector field
      */
     static vislib::math::Vector<float, 3> sampleUniGrid(
-            vislib::math::Vector<float, 3> pos,
-            UniGrid3D<float3> &grid,
-            vislib::math::Vector<float, 3> licDim);
+        vislib::math::Vector<float, 3> pos, UniGrid3D<float3>& grid, vislib::math::Vector<float, 3> licDim);
 
     /**
      * Sample the random buffer based on LIC buffer position while wrapping
@@ -138,11 +116,9 @@ protected:
      *
      * @return The sampled random value
      */
-    static float sampleRandBuffWrap(UniGrid3D<float> &randBuff,
-            vislib::math::Vector<float, 3> pos);
+    static float sampleRandBuffWrap(UniGrid3D<float>& randBuff, vislib::math::Vector<float, 3> pos);
 
 private:
-
     /**
      * Helper function which clamps a vector according to a given value.
      *
@@ -150,9 +126,8 @@ private:
      * @param min The lower boundary
      * @param max The upper boundary
      */
-    static void clampVec(vislib::math::Vector<float, 3> &vec,
-            vislib::math::Vector<float, 3> min,
-            vislib::math::Vector<float, 3> max);
+    static void clampVec(
+        vislib::math::Vector<float, 3>& vec, vislib::math::Vector<float, 3> min, vislib::math::Vector<float, 3> max);
 };
 
 } /* end namespace protein_cuda */

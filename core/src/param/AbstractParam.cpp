@@ -1,13 +1,13 @@
 /*
  * AbstractParam.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/AbstractParamSlot.h"
+#include "stdafx.h"
 
 using namespace megamol::core::param;
 
@@ -32,8 +32,7 @@ AbstractParam::AbstractParam(void) : slot(NULL), hash(0), has_changed(false) {
  * AbstractParam::isSlotPublic
  */
 bool AbstractParam::isSlotPublic(void) const {
-    return (this->slot == NULL) ? false
-        : (this->slot->isSlotAvailable());
+    return (this->slot == NULL) ? false : (this->slot->isSlotAvailable());
 }
 
 
@@ -41,6 +40,7 @@ bool AbstractParam::isSlotPublic(void) const {
  * AbstractParam::setDirty
  */
 void AbstractParam::setDirty(void) {
-    if (this->slot == NULL) return; // fail silently
+    if (this->slot == NULL)
+        return; // fail silently
     this->slot->update();
 }

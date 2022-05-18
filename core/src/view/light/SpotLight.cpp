@@ -4,12 +4,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/light/SpotLight.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/ColorParam.h"
+#include "stdafx.h"
 
 using namespace megamol::core::view::light;
 
@@ -21,12 +21,12 @@ void megamol::core::view::light::SpotLight::addLight(LightCollection& light_coll
  * megamol::core::view::light::SpotLight::SpotLight
  */
 SpotLight::SpotLight(void)
-    : AbstractLight()
-    , position("Position", "")
-    , direction("Direction", "")
-    , openingAngle("openingAngle", "")
-    , penumbraAngle("penumbraAngle", "")
-    , radius("Radius", "") {
+        : AbstractLight()
+        , position("Position", "")
+        , direction("Direction", "")
+        , openingAngle("openingAngle", "")
+        , penumbraAngle("penumbraAngle", "")
+        , radius("Radius", "") {
 
     // spot light
     lightsource = std::make_shared<SpotLightType>();
@@ -46,7 +46,9 @@ SpotLight::SpotLight(void)
 /*
  * megamol::core::view::light::SpotLight::~SpotLight
  */
-SpotLight::~SpotLight(void) { this->Release(); }
+SpotLight::~SpotLight(void) {
+    this->Release();
+}
 
 /*
  * megamol::core::view::light::SpotLight::readParams

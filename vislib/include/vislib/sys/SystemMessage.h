@@ -21,90 +21,88 @@
 namespace vislib {
 namespace sys {
 
+/**
+ * This class wraps the human readable string of a system error code. It
+ * does the lookup, allocates appropriate memory and releases the memory
+ * on destruction.
+ */
+class SystemMessage {
+
+public:
     /**
-     * This class wraps the human readable string of a system error code. It 
-     * does the lookup, allocates appropriate memory and releases the memory
-     * on destruction.
+     * Ctor.
+     *
+     * @param errorCode A system dependent error code.
      */
-    class SystemMessage {
+    SystemMessage(const DWORD errorCode);
 
-    public:
+    /**
+     * Create a clone of 'rhs'.
+     *
+     * @param rhs The object to be cloned.
+     */
+    SystemMessage(const SystemMessage& rhs);
 
-        /**
-         * Ctor.
-         *
-         * @param errorCode A system dependent error code.
-         */
-        SystemMessage(const DWORD errorCode);
+    /** Dtor. */
+    ~SystemMessage(void);
 
-        /**
-         * Create a clone of 'rhs'.
-         *
-         * @param rhs The object to be cloned.
-         */
-        SystemMessage(const SystemMessage& rhs);
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     */
+    SystemMessage& operator=(const SystemMessage& rhs);
 
-        /** Dtor. */
-        ~SystemMessage(void);
+    /**
+     * Cast to char string.
+     *
+     * This operator provides access to the human readable error message.
+     * The returned pointer is valid until the object is destroyed or
+     * another cast operator is called.
+     * The object remains owner of the memory allocated for the string.
+     *
+     * The error message string is created lazily.
+     *
+     * @return The human readable error message.
+     */
+    operator const char*(void) const;
 
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        SystemMessage& operator =(const SystemMessage& rhs);
+    /**
+     * Cast to wchar_t string.
+     *
+     * This operator provides access to the human readable error message.
+     * The returned pointer is valid until the object is destroyed or
+     * another cast operator is called.
+     * The object remains owner of the memory allocated for the string.
+     *
+     * The error message string is created lazily.
+     *
+     * @return The human readable error message.
+     */
+    operator const wchar_t*(void) const;
 
-        /**
-         * Cast to char string. 
-         *
-         * This operator provides access to the human readable error message.
-         * The returned pointer is valid until the object is destroyed or 
-         * another cast operator is called.
-         * The object remains owner of the memory allocated for the string.
-         *
-         * The error message string is created lazily.
-         *
-         * @return The human readable error message.
-         */
-        operator const char *(void) const;
+    /**
+     * Answer the system dependent error code associated with this
+     * message.
+     *
+     * @return The system error code.
+     */
+    inline DWORD GetErrorCode(void) const {
+        return this->errorCode;
+    }
 
-        /**
-         * Cast to wchar_t string. 
-         *
-         * This operator provides access to the human readable error message.
-         * The returned pointer is valid until the object is destroyed or 
-         * another cast operator is called.
-         * The object remains owner of the memory allocated for the string.
-         *
-         * The error message string is created lazily.
-         *
-         * @return The human readable error message.
-         */
-        operator const wchar_t *(void) const;
+private:
+    /** A system dependent error code. */
+    DWORD errorCode;
 
-        /**
-         * Answer the system dependent error code associated with this 
-         * message.
-         *
-         * @return The system error code.
-         */
-        inline DWORD GetErrorCode(void) const {
-            return this->errorCode;
-        }
+    /** Remember whether 'msg' points to a Unicode or ANSI string. */
+    mutable bool isMsgUnicode;
 
-    private:
-
-        /** A system dependent error code. */
-        DWORD errorCode;
-
-        /** Remember whether 'msg' points to a Unicode or ANSI string. */
-        mutable bool isMsgUnicode;
-
-        /** The formatted message string. */
-        mutable void *msg;
-    };
+    /** The formatted message string. */
+    mutable void* msg;
+};
 
 } /* end namespace sys */
 } /* end namespace vislib */

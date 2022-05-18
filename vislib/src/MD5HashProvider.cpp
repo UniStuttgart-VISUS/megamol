@@ -1,7 +1,7 @@
 /*
  * MD5HashProvider.cpp
  *
- * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2007 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -29,8 +29,8 @@
 
 #include "vislib/MD5HashProvider.h"
 
-#include "vislib/assert.h"
 #include "vislib/IllegalParamException.h"
+#include "vislib/assert.h"
 #include "vislib/memutils.h"
 
 
@@ -52,11 +52,9 @@
 #define S43 15
 #define S44 21
 
-static const unsigned char PADDING[64] = {
-  0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
+static const unsigned char PADDING[64] = {0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0};
 
 
 /* F, G, H and I are basic MD5 functions. */
@@ -71,30 +69,33 @@ static const unsigned char PADDING[64] = {
 
 
 /*
- * FF, GG, HH, and II transformations for rounds 1, 2, 3, and 4. Rotation is 
+ * FF, GG, HH, and II transformations for rounds 1, 2, 3, and 4. Rotation is
  * separate from addition to prevent recomputation.
  */
-#define FF(a, b, c, d, x, s, ac) { \
-    (a) += F ((b), (c), (d)) + (x) + (UINT32)(ac); \
-    (a) = ROTATE_LEFT ((a), (s)); \
-    (a) += (b); \
+#define FF(a, b, c, d, x, s, ac)                      \
+    {                                                 \
+        (a) += F((b), (c), (d)) + (x) + (UINT32)(ac); \
+        (a) = ROTATE_LEFT((a), (s));                  \
+        (a) += (b);                                   \
     }
-#define GG(a, b, c, d, x, s, ac) { \
-    (a) += G ((b), (c), (d)) + (x) + (UINT32)(ac); \
-    (a) = ROTATE_LEFT ((a), (s)); \
-    (a) += (b); \
+#define GG(a, b, c, d, x, s, ac)                      \
+    {                                                 \
+        (a) += G((b), (c), (d)) + (x) + (UINT32)(ac); \
+        (a) = ROTATE_LEFT((a), (s));                  \
+        (a) += (b);                                   \
     }
-#define HH(a, b, c, d, x, s, ac) { \
-    (a) += H ((b), (c), (d)) + (x) + (UINT32)(ac); \
-    (a) = ROTATE_LEFT ((a), (s)); \
-    (a) += (b); \
+#define HH(a, b, c, d, x, s, ac)                      \
+    {                                                 \
+        (a) += H((b), (c), (d)) + (x) + (UINT32)(ac); \
+        (a) = ROTATE_LEFT((a), (s));                  \
+        (a) += (b);                                   \
     }
-#define II(a, b, c, d, x, s, ac) { \
-    (a) += I ((b), (c), (d)) + (x) + (UINT32)(ac); \
-    (a) = ROTATE_LEFT ((a), (s)); \
-    (a) += (b); \
+#define II(a, b, c, d, x, s, ac)                      \
+    {                                                 \
+        (a) += I((b), (c), (d)) + (x) + (UINT32)(ac); \
+        (a) = ROTATE_LEFT((a), (s));                  \
+        (a) += (b);                                   \
     }
-
 
 
 /*
@@ -130,8 +131,7 @@ void vislib::MD5HashProvider::Initialise(void) {
 /*
  * vislib::MD5HashProvider::TransformBlock
  */
-void vislib::MD5HashProvider::TransformBlock(const BYTE *input, 
-                                             const SIZE_T cntInput) {
+void vislib::MD5HashProvider::TransformBlock(const BYTE* input, const SIZE_T cntInput) {
     // Must be initialised as the ctor does this.
 
     if ((input != NULL) && (cntInput > 0)) {
@@ -143,10 +143,10 @@ void vislib::MD5HashProvider::TransformBlock(const BYTE *input,
 /*
  * vislib::MD5HashProvider::TransformFinalBlock
  */
-bool vislib::MD5HashProvider::TransformFinalBlock(BYTE *outHash, 
-        SIZE_T& inOutSize, const BYTE *input, const SIZE_T cntInput) {
-    MD5_CTX ctx = this->context;    // Local context to be finalised.
-    bool retval = false;            // Remember whether output was copied.
+bool vislib::MD5HashProvider::TransformFinalBlock(
+    BYTE* outHash, SIZE_T& inOutSize, const BYTE* input, const SIZE_T cntInput) {
+    MD5_CTX ctx = this->context; // Local context to be finalised.
+    bool retval = false;         // Remember whether output was copied.
 
     /* Transform final block before finalising. */
     this->TransformBlock(input, cntInput);
@@ -165,17 +165,14 @@ bool vislib::MD5HashProvider::TransformFinalBlock(BYTE *outHash,
 /*
  * vislib::MD5HashProvider::decode
  */
-void vislib::MD5HashProvider::decode(UINT32 *output, const BYTE *input, 
-        const UINT len) {
+void vislib::MD5HashProvider::decode(UINT32* output, const BYTE* input, const UINT len) {
     ASSERT(output != NULL);
     ASSERT(input != NULL);
     ASSERT((len % 4) == 0);
 
     for (UINT i = 0, j = 0; j < len; i++, j += 4) {
-        output[i] = static_cast<UINT32>(input[j]) 
-            | (static_cast<UINT32>(input[j + 1]) << 8) 
-            | (static_cast<UINT32>(input[j + 2]) << 16) 
-            | (static_cast<UINT32>(input[j + 3]) << 24);
+        output[i] = static_cast<UINT32>(input[j]) | (static_cast<UINT32>(input[j + 1]) << 8) |
+                    (static_cast<UINT32>(input[j + 2]) << 16) | (static_cast<UINT32>(input[j + 3]) << 24);
     }
 }
 
@@ -183,8 +180,7 @@ void vislib::MD5HashProvider::decode(UINT32 *output, const BYTE *input,
 /*
  * vislib::MD5HashProvider::encode
  */
-void vislib::MD5HashProvider::encode(BYTE *output, const UINT32 *input, 
-        const UINT len) {
+void vislib::MD5HashProvider::encode(BYTE* output, const UINT32* input, const UINT len) {
     ASSERT(output != NULL);
     ASSERT(input != NULL);
     ASSERT((len % 4) == 0);
@@ -201,7 +197,7 @@ void vislib::MD5HashProvider::encode(BYTE *output, const UINT32 *input,
 /*
  * vislib::MD5HashProvider::finalise
  */
-void vislib::MD5HashProvider::finalise(BYTE *output, MD5_CTX *context) {
+void vislib::MD5HashProvider::finalise(BYTE* output, MD5_CTX* context) {
     ASSERT(output != NULL);
     ASSERT(context != NULL);
 
@@ -220,8 +216,7 @@ void vislib::MD5HashProvider::finalise(BYTE *output, MD5_CTX *context) {
     MD5HashProvider::update(context, bits, 8);
 
     /* Store state in 'outHash'. */
-    MD5HashProvider::encode(output, context->state, 
-        static_cast<UINT>(MD5HashProvider::HASH_SIZE));
+    MD5HashProvider::encode(output, context->state, static_cast<UINT>(MD5HashProvider::HASH_SIZE));
 
     /* Zeroize sensitive information. */
     ::SecureZeroMemory(context, sizeof(MD5_CTX));
@@ -264,7 +259,7 @@ void vislib::MD5HashProvider::transform(UINT32 state[4], const BYTE block[64]) {
     GG(c, d, a, b, x[11], S23, 0x265e5a51); /* 19 */
     GG(b, c, d, a, x[0], S24, 0xe9b6c7aa);  /* 20 */
     GG(a, b, c, d, x[5], S21, 0xd62f105d);  /* 21 */
-    GG(d, a, b, c, x[10], S22,  0x2441453); /* 22 */
+    GG(d, a, b, c, x[10], S22, 0x2441453);  /* 22 */
     GG(c, d, a, b, x[15], S23, 0xd8a1e681); /* 23 */
     GG(b, c, d, a, x[4], S24, 0xe7d3fbc8);  /* 24 */
     GG(a, b, c, d, x[9], S21, 0x21e1cde6);  /* 25 */
@@ -288,7 +283,7 @@ void vislib::MD5HashProvider::transform(UINT32 state[4], const BYTE block[64]) {
     HH(a, b, c, d, x[13], S31, 0x289b7ec6); /* 41 */
     HH(d, a, b, c, x[0], S32, 0xeaa127fa);  /* 42 */
     HH(c, d, a, b, x[3], S33, 0xd4ef3085);  /* 43 */
-    HH(b, c, d, a, x[6], S34,  0x4881d05);  /* 44 */
+    HH(b, c, d, a, x[6], S34, 0x4881d05);   /* 44 */
     HH(a, b, c, d, x[9], S31, 0xd9d4d039);  /* 45 */
     HH(d, a, b, c, x[12], S32, 0xe6db99e5); /* 46 */
     HH(c, d, a, b, x[15], S33, 0x1fa27cf8); /* 47 */
@@ -318,24 +313,22 @@ void vislib::MD5HashProvider::transform(UINT32 state[4], const BYTE block[64]) {
     state[3] += d;
 
     /* Zeroize sensitive information. */
-    ::ZeroMemory(x, sizeof (x));
+    ::ZeroMemory(x, sizeof(x));
 }
 
 
 /*
  * vislib::MD5HashProvider::update
  */
-void vislib::MD5HashProvider::update(MD5_CTX *context, const BYTE *input, 
-        const SIZE_T cntInput) {
+void vislib::MD5HashProvider::update(MD5_CTX* context, const BYTE* input, const SIZE_T cntInput) {
     UINT i = 0, index = 0, partLen = 0;
 
     /* Compute number of bytes mod 64. */
     index = static_cast<UINT>((context->count[0] >> 3) & 0x3F);
 
     /* Update number of bits. */
-    if ((context->count[0] += (static_cast<UINT32>(cntInput) << 3)) 
-            < (static_cast<UINT32>(cntInput) << 3)) {
-        context->count[1]++;    
+    if ((context->count[0] += (static_cast<UINT32>(cntInput) << 3)) < (static_cast<UINT32>(cntInput) << 3)) {
+        context->count[1]++;
     }
     context->count[1] += (static_cast<UINT32>(cntInput) >> 29);
 
@@ -361,7 +354,7 @@ void vislib::MD5HashProvider::update(MD5_CTX *context, const BYTE *input,
 
 
 /*
- * vislib::MD5HashProvider::HASH_SIZE 
+ * vislib::MD5HashProvider::HASH_SIZE
  */
 const SIZE_T vislib::MD5HashProvider::HASH_SIZE = 16;
 
@@ -369,8 +362,7 @@ const SIZE_T vislib::MD5HashProvider::HASH_SIZE = 16;
 /*
  * vislib::MD5HashProvider::operator =
  */
-vislib::MD5HashProvider& vislib::MD5HashProvider::operator =(
-        const MD5HashProvider& rhs) {
+vislib::MD5HashProvider& vislib::MD5HashProvider::operator=(const MD5HashProvider& rhs) {
     if (this != &rhs) {
         throw IllegalParamException("rhs", __FILE__, __LINE__);
     }

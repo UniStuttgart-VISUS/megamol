@@ -72,10 +72,10 @@ vec3 lighting(vec3 view_direction, vec3 light_direction, vec3 normal)
     float n_dot_h = clamp(dot( normal, halfway ),0.0,1.0);
 
     /*
-	/	Compute Fresnel term using the Schlick approximation.
-	/	To avoid artefacts, a small epsilon is added to 1.0-l_dot_h
-	*/
-	float fresnel = mix(0.2, 1.0, pow(1.01-l_dot_h,5.0));
+    /  Compute Fresnel term using the Schlick approximation.
+    /  To avoid artefacts, a small epsilon is added to 1.0-l_dot_h
+    */
+    float fresnel = mix(0.2, 1.0, pow(1.01-l_dot_h,5.0));
 
     float viewDependentRoughness = mix(1.0, 0.3, pow(1.01-v_dot_n,5.0));
 

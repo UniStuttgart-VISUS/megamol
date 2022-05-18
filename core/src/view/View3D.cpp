@@ -5,9 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/View3D.h"
+#include "stdafx.h"
+
+#include "GlobalValueStore.h"
 #include "mmcore/view/CallRenderView.h"
+#include "stdafx.h"
 
 
 using namespace megamol::core;
@@ -16,13 +19,11 @@ using namespace megamol::core::view;
 /*
  * View3D::View3D
  */
-View3D::View3D(void)
-    : view::AbstractView3D() {
+View3D::View3D(void) {
     this->_rhsRenderSlot.SetCompatibleCall<CallRender3DDescription>();
     this->MakeSlotAvailable(&this->_rhsRenderSlot);
 
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
-
 }
 
 /*
@@ -35,30 +36,63 @@ View3D::~View3D(void) {
 /*
  * View3D::Render
  */
-void View3D::Render(const mmcRenderViewContext& context, Call* call) {
+ImageWrapper View3D::Render(double time, double instanceTime) {
+
+    BaseView::beforeRender(time, instanceTime);
 
     CallRender3D* cr3d = this->_rhsRenderSlot.CallAs<CallRender3D>();
-    this->handleCameraMovement();
 
-    if (cr3d == NULL) {
-        return;
+    if (cr3d != NULL) {
+        cr3d->SetViewResolution({_fbo->getWidth(), _fbo->getHeight()});
+        cr3d->SetFramebuffer(_fbo);
+        cr3d->SetCamera(this->_camera);
+        (*cr3d)(view::CallRender3D::FnRender);
     }
 
-    if (call == nullptr) {
-        _framebuffer->width = _camera.image_tile().width();
-        _framebuffer->height = _camera.image_tile().height();
-        cr3d->SetFramebuffer(_framebuffer);
+    BaseView::afterRender();
+
+    return GetRenderingResult();
+}
+
+ImageWrapper megamol::core::view::View3D::GetRenderingResult() const {
+    ImageWrapper::DataChannels channels =
+        ImageWrapper::DataChannels::RGBA8; // vislib_gl::graphics::gl::FramebufferObject seems to use RGBA8
+    size_t fbo_width = _fbo->width;
+    size_t fbo_height = _fbo->height;
+
+    return frontend_resources::wrap_image({fbo_width, fbo_height}, _fbo->colorBuffer, channels);
+}
+
+void megamol::core::view::View3D::Resize(unsigned int width, unsigned int height) {
+    BaseView::Resize(width, height);
+
+    _fbo->colorBuffer = std::vector<uint32_t>(width * height);
+    _fbo->depthBuffer = std::vector<float>(width * height);
+    _fbo->width = width;
+    _fbo->height = height;
+}
+
+bool View3D::create() {
+
+    _fbo = std::make_shared<CallRenderView::FBO_TYPE>();
+
+    _fbo->depthBufferActive = false;
+    _fbo->colorBuffer = std::vector<uint32_t>(1);
+    _fbo->depthBuffer = std::vector<float>(1);
+    _fbo->width = 1;
+    _fbo->height = 1;
+    _fbo->x = 0;
+    _fbo->y = 0;
+
+    const auto arcball_key = "arcball";
+
+    // new frontend has global key-value resource
+    auto maybe = this->frontend_resources.get<megamol::frontend_resources::GlobalValueStore>().maybe_get(arcball_key);
+    if (maybe.has_value()) {
+        this->_camera_controller.setArcballDefault(vislib::CharTraitsA::ParseBool(maybe.value().c_str()));
     }
-    else {
-        auto cpu_call = dynamic_cast<view::CallRenderView*>(call);
-        cr3d->SetFramebuffer(cpu_call->GetFramebuffer());
-    }
 
-    AbstractView3D::beforeRender(context);
+    this->_firstImg = true;
 
-    cr3d->SetCamera(this->_camera);
-    (*cr3d)(view::CallRender3D::FnRender);
-
-    AbstractView3D::afterRender(context);
-
+    return true;
 }

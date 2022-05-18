@@ -15,7 +15,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "stdafx.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -28,7 +28,6 @@ namespace protein_cuda {
 class AbstractGPUSurface {
 
 public:
-
     /// Vertex data buffer offset for positions
     static const size_t vertexDataOffsPos;
 
@@ -76,7 +75,7 @@ public:
      *
      * @param triangleCnt The number of triangles.
      */
-    bool InitTriangleIdxVBO(size_t triangleCnt, GLuint &vbo);
+    bool InitTriangleIdxVBO(size_t triangleCnt, GLuint& vbo);
 
     /**
      * Initializes the vertex buffer objects based on the given vertex and
@@ -84,7 +83,7 @@ public:
      *
      * @param vertexCnt   The number of vertices.
      */
-    bool InitVertexDataVBO(size_t vertexCnt, GLuint &vbo);
+    bool InitVertexDataVBO(size_t vertexCnt, GLuint& vbo);
 
     /**
      * Answers the number of triangles.
@@ -114,7 +113,7 @@ public:
      *
      * @return The number of vertices.
      */
-    size_t GetVertexCnt()  const {
+    size_t GetVertexCnt() const {
         return this->vertexCnt;
     }
 
@@ -138,11 +137,6 @@ public:
      * @return 'True' if all extensions could be initialized, 'false' otherwise.
      */
     static bool InitExtensions() {
-        // Init extensions
-        if (!isExtAvailable("GL_ARB_copy_buffer")
-            || !isExtAvailable("GL_ARB_vertex_buffer_object")) {
-            return false;
-        }
         return true;
     }
 
@@ -152,7 +146,7 @@ public:
      * @param rhs The assigned surface object
      * @return The returned surface object
      */
-    AbstractGPUSurface& operator=(const AbstractGPUSurface &rhs);
+    AbstractGPUSurface& operator=(const AbstractGPUSurface& rhs);
 
     /**
      * Deallocate all allocated memory.
@@ -160,7 +154,6 @@ public:
     void Release();
 
 protected:
-
     /// Flag that tells whether the vertex data VBO has been initialized
     bool vertexDataReady;
 
@@ -180,7 +173,6 @@ protected:
     size_t triangleCnt;
 
 private:
-
 };
 
 } // namespace protein_cuda

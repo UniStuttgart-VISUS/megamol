@@ -28,37 +28,26 @@ namespace protein_cuda {
 class GPUSurfaceMT : public AbstractGPUSurface {
 
 public:
-
-        void ComputeMinMaxCoords(float3 &minC, float3 &maxC);
+    void ComputeMinMaxCoords(float3& minC, float3& maxC);
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "GPUSurfaceMT";
     }
 
     /**
      * TODO
      */
-    bool ComputeConnectivity(
-            float *volume_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue);
+    bool ComputeConnectivity(float* volume_D, int3 volDim, float3 volOrg, float3 volDelta, float isovalue);
 
     /**
      * TODO
      */
-    bool ComputeEdgeList(
-            float *volume_D,
-            float isoval,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta);
+    bool ComputeEdgeList(float* volume_D, float isoval, int3 volDim, float3 volOrg, float3 volDelta);
 
     /**
      * Computes the vertex positions based on a given level set using the
@@ -71,12 +60,7 @@ public:
      * @param isovalue   The isovalue defining the level set
      * @return 'True' on success, 'false' otherwise
      */
-    bool ComputeTriangles(
-            float *volume_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue);
+    bool ComputeTriangles(float* volume_D, int3 volDim, float3 volOrg, float3 volDelta, float isovalue);
 
     /**
      * Computes vertex normals. Needs vertex data to be ready.
@@ -88,12 +72,7 @@ public:
      * @param isovalue   The isovalue defining the level set
      * @return 'True' on success, 'false' otherwise
      */
-    bool ComputeNormals(
-            float *volume_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue);
+    bool ComputeNormals(float* volume_D, int3 volDim, float3 volOrg, float3 volDelta, float isovalue);
 
     /**
      * Initializes the VBO and computes vertex positions based on the given
@@ -106,12 +85,7 @@ public:
      * @param isovalue   The isovalue defining the level set
      * @return 'True' on success, 'false' otherwise
      */
-    bool ComputeVertexPositions(
-            float *volume_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue);
+    bool ComputeVertexPositions(float* volume_D, int3 volDim, float3 volOrg, float3 volDelta, float isovalue);
 
     /**
      * Computes texture coordinates based on the given texture dimensions and
@@ -133,11 +107,7 @@ public:
      * @return 'True' on success, 'false' otherwise
      */
     bool ComputeTexCoordsOfRMSDFittedPositions(
-            float minCoords[3],
-            float maxCoords[3],
-            float centroid[3],
-            float rotMat[9],
-            float transVec[3]);
+        float minCoords[3], float maxCoords[3], float centroid[3], float rotMat[9], float transVec[3]);
 
     /** DTor */
     GPUSurfaceMT();
@@ -156,7 +126,7 @@ public:
      * @param rhs The assigned surface object
      * @return The returned surface object
      */
-    GPUSurfaceMT& operator=(const GPUSurfaceMT &rhs);
+    GPUSurfaceMT& operator=(const GPUSurfaceMT& rhs);
 
     /**
      * Apply rotation to all vertex positions.
@@ -188,20 +158,13 @@ public:
      */
     void Release();
 
-    unsigned int *PeekEdges() {
+    unsigned int* PeekEdges() {
         return this->edges.Peek();
     }
 
-    bool ComputeTriangleNeighbors(
-            float *volume_D,
-            int3 volDim,
-            float3 volOrg,
-            float3 volDelta,
-            float isovalue);
+    bool ComputeTriangleNeighbors(float* volume_D, int3 volDim, float3 volOrg, float3 volDelta, float isovalue);
 
 protected:
-
-
     /* Surface triangulation */
 
     /// Array containing activity information for all grid cells (device memory)
@@ -235,10 +198,10 @@ protected:
     CudaDevArr<unsigned int> tetrahedronVertexOffsets_D;
 
     /// Cuda graphics resource associated with the vertex data VBO
-    struct cudaGraphicsResource *vertexDataResource;
+    struct cudaGraphicsResource* vertexDataResource;
 
     /// Cuda graphics resource associated with the triangle index VBO
-    struct cudaGraphicsResource *triangleIdxResource;
+    struct cudaGraphicsResource* triangleIdxResource;
 
     /// The number of active cells
     size_t activeCellCnt;
@@ -269,10 +232,6 @@ protected:
     CudaDevArr<unsigned int> triangleNeighbors_D;
 
 private:
-
-
-
-
 };
 
 } // namespace protein_cuda

@@ -8,7 +8,7 @@
 #ifndef MEGAMOLCORE_INPUTCALL_H_INCLUDED
 #define MEGAMOLCORE_INPUTCALL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
@@ -64,7 +64,7 @@ struct InputEvent {
 /**
  * Base class of input calls
  */
-class MEGAMOLCORE_API InputCall : public Call {
+class InputCall : public Call {
 public:
     static const unsigned int FnOnKey = 0;
     static const unsigned int FnOnChar = 1;
@@ -77,7 +77,9 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return 5; }
+    static unsigned int FunctionCount(void) {
+        return 5;
+    }
 
     /**
      * Answer the name of the function used for this call.
@@ -114,14 +116,18 @@ public:
      *
      * @return The input event.
      */
-    inline const InputEvent& GetInputEvent(void) const { return this->e; }
+    inline const InputEvent& GetInputEvent(void) const {
+        return this->e;
+    }
 
     /**
      * Stores an input event.
      *
      * @return The input event.
      */
-    inline void SetInputEvent(const InputEvent& evt) { this->e = evt; }
+    inline void SetInputEvent(const InputEvent& evt) {
+        this->e = evt;
+    }
 
     /**
      * Assignment operator

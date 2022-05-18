@@ -14,12 +14,12 @@ namespace megamol {
 namespace core {
 namespace factories {
 
-    /**
-     * Registers all module classes of the core in the provided manager
-     *
-     * @param instance The Manager
-     */
-    void register_module_classes(ModuleDescriptionManager& instance);
+/**
+ * Registers all module classes of the core in the provided manager
+ *
+ * @param instance The Manager
+ */
+void register_module_classes(ModuleDescriptionManager& instance);
 
 } /* end namespace factories */
 } /* end namespace core */

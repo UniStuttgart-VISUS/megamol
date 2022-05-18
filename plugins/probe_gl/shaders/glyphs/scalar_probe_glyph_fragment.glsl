@@ -1,6 +1,8 @@
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
 
+layout(std430, binding = 1) readonly buffer PerFrameDataBuffer { PerFrameData[] per_frame_data; };
+
 layout(location = 0) flat in int draw_id;
 layout(location = 1) in vec2 uv_coords;
 
@@ -51,14 +53,30 @@ void main() {
         float sample_0 = mesh_shader_params[draw_id].samples[sample_idx_0];
         float sample_1 = mesh_shader_params[draw_id].samples[sample_idx_1];
 
-        float sample_value = mix(sample_0,sample_1,lerp);
+        sampler2D tf_tx = sampler2D(mesh_shader_params[draw_id].tf_texture_handle);
 
-        float sample_value_normalized = (sample_value - mesh_shader_params[draw_id].min_value) / (mesh_shader_params[draw_id].max_value - mesh_shader_params[draw_id].min_value);
-        //out_colour = fakeViridis(sample_value_normalized);
-		sampler2D tf_tx = sampler2D(mesh_shader_params[draw_id].tf_texture_handle);
-		out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
+        bool interpolate = bool(per_frame_data[0].use_interpolation);
 
-        if( radius > sample_value_normalized && radius < 0.96 ) discard;
+        if(interpolate)
+        {
+            float sample_value = mix(sample_0,sample_1,lerp);
+            float sample_value_normalized = (sample_value - mesh_shader_params[draw_id].min_value) / (mesh_shader_params[draw_id].max_value - mesh_shader_params[draw_id].min_value);
+            //out_colour = fakeViridis(sample_value_normalized);
+            out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
+
+            if( radius > sample_value_normalized && radius < 0.96 ) discard;
+        }
+        else
+        {
+            int sample_idx = int(round(angle_shifted * sample_cnt));
+            float sample_value = mesh_shader_params[draw_id].samples[sample_idx];
+
+            float sample_value_normalized = (sample_value - mesh_shader_params[draw_id].min_value) / (mesh_shader_params[draw_id].max_value - mesh_shader_params[draw_id].min_value);
+            //out_colour = fakeViridis(sample_value_normalized);
+            out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
+
+            if( radius > sample_value_normalized && radius < 0.96 ) discard;
+        }
     }
 
     float zero_value_radius = (- mesh_shader_params[draw_id].min_value) / (mesh_shader_params[draw_id].max_value - mesh_shader_params[draw_id].min_value);

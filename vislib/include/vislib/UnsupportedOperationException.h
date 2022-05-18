@@ -20,56 +20,52 @@
 
 namespace vislib {
 
+/**
+ * This exception indicates an illegal parameter value.
+ *
+ * @author Christoph Mueller
+ */
+class UnsupportedOperationException : public Exception {
+
+public:
     /**
-     * This exception indicates an illegal parameter value.
+     * Ctor.
      *
-     * @author Christoph Mueller
+     * @param funcName Name of the unsupported method or function.
+     * @param file     The file the exception was thrown in.
+     * @param line     The line the exception was thrown in.
      */
-    class UnsupportedOperationException : public Exception {
+    UnsupportedOperationException(const char* funcName, const char* file, const int line);
 
-    public:
+    /**
+     * Ctor.
+     *
+     * @param funcName Name of the unsupported method or function.
+     * @param file     The file the exception was thrown in.
+     * @param line     The line the exception was thrown in.
+     */
+    UnsupportedOperationException(const wchar_t* funcName, const char* file, const int line);
 
-        /**
-         * Ctor.
-         *
-         * @param funcName Name of the unsupported method or function.
-         * @param file     The file the exception was thrown in.
-         * @param line     The line the exception was thrown in.
-         */
-        UnsupportedOperationException(const char *funcName, const char *file, 
-            const int line);
+    /**
+     * Create a clone of 'rhs'.
+     *
+     * @param rhs The object to be cloned.
+     */
+    UnsupportedOperationException(const UnsupportedOperationException& rhs);
 
-        /**
-         * Ctor.
-         *
-         * @param funcName Name of the unsupported method or function.
-         * @param file     The file the exception was thrown in.
-         * @param line     The line the exception was thrown in.
-         */
-        UnsupportedOperationException(const wchar_t *funcName, const char *file, 
-            const int line);
+    /** Dtor. */
+    virtual ~UnsupportedOperationException(void);
 
-        /**
-         * Create a clone of 'rhs'.
-         *
-         * @param rhs The object to be cloned.
-         */
-        UnsupportedOperationException(const UnsupportedOperationException& rhs);
-
-        /** Dtor. */
-        virtual ~UnsupportedOperationException(void);
-
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return *this.
-         */
-        virtual UnsupportedOperationException& operator =(
-			const UnsupportedOperationException& rhs);
-    };
-}
+    /**
+     * Assignment operator.
+     *
+     * @param rhs The right hand side operand.
+     *
+     * @return *this.
+     */
+    virtual UnsupportedOperationException& operator=(const UnsupportedOperationException& rhs);
+};
+} // namespace vislib
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

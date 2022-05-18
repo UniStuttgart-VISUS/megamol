@@ -5,11 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
+
 #include "mmcore/JobInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/ModuleNamespace.h"
-#include "vislib/sys/AutoLock.h"
 #include "mmcore/utility/log/Log.h"
+#include "vislib/sys/AutoLock.h"
 
 using namespace megamol::core;
 
@@ -17,7 +18,7 @@ using namespace megamol::core;
 /*
  * JobInstance::JobInstance
  */
-JobInstance::JobInstance(void) : ModuleNamespace(""), ApiHandle(), job(NULL) {
+JobInstance::JobInstance(void) : ModuleNamespace(""), job(NULL) {
     // intentionally empty
 }
 
@@ -34,7 +35,7 @@ JobInstance::~JobInstance(void) {
 /*
  * JobInstance::Initialize
  */
-bool JobInstance::Initialize(ModuleNamespace::ptr_type ns, job::AbstractJob *job) {
+bool JobInstance::Initialize(ModuleNamespace::ptr_type ns, job::AbstractJob* job) {
     if ((this->job != NULL) || (ns == NULL) || (job == NULL)) {
         return false;
     }
@@ -86,10 +87,11 @@ void JobInstance::Terminate(void) {
  * JobInstance::ClearCleanupMark
  */
 void JobInstance::ClearCleanupMark(void) {
-    if (!this->CleanupMark()) return;
+    if (!this->CleanupMark())
+        return;
 
     ModuleNamespace::ClearCleanupMark();
-    Module *jobMod = dynamic_cast<Module*>(this->job);
+    Module* jobMod = dynamic_cast<Module*>(this->job);
     if (jobMod != NULL) {
         jobMod->ClearCleanupMark();
     }
@@ -102,8 +104,8 @@ void JobInstance::ClearCleanupMark(void) {
 void JobInstance::PerformCleanup(void) {
     if (this->CleanupMark()) {
         // this should never happen!
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
-            "Internal Error: JobInstance marked for cleanup.\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_WARN, "Internal Error: JobInstance marked for cleanup.\n");
     }
     ModuleNamespace::PerformCleanup();
 }

@@ -6,27 +6,30 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 
 ## Contents
 
-- [Create new Plugin](#create-new-plugin)
-    - [Add own plugin using the template](#add-own-plugin-using-the-template) 
-- [Create GLSL Shader with utility classes](#create-glsl-shader-with-utility-classes)
-- [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
-    - [Recipe](#recipe) 
-    - [Usage: ```DATACallRead```](#usage-datacallread) 
-    - [Usage: ```DataCallWrite```](#usage-datacallwrite) 
-- [Synchronized Selection across Modules](#synchronized-selection-across-modules)
-    - [FlagStorage](#flagstorage) 
-    - [FlagStorage_GL](#flagstorage_gl) 
-- [1D Transfer Function](#1d-transfer-function)  
-    - [Usage](#usage)  
-- [Graph Manipulation](#graph-manipulation)
-    - [Graph Manipulation Queues](#graph-manipulation-queues) 
-- [Build System](#build-system)
-    - [External dependencies](#external-dependencies) 
-        - [Using external dependencies](#using-external-dependencies) 
-        - [Adding new external dependencies](#adding-new-external-dependencies) 
-          - [Header-only libraries](#header-only-libraries) 
-          - [Built libraries](#built-libraries) 
-- [GUI](#gui)
+- [MegaMol Developer Guide](#megamol-developer-guide)
+  - [Contents](#contents)
+  - [Create new Plugin](#create-new-plugin)
+    - [Add own plugin using the template](#add-own-plugin-using-the-template)
+  - [Create GLSL Shader with utility classes](#create-glsl-shader-with-utility-classes)
+  - [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
+    - [Definitions](#definitions)
+    - [Recipe](#recipe)
+      - [Interaction with the ```DATA``` from outside:](#interaction-with-the-data-from-outside)
+      - [*owner* Module:](#owner-module)
+  - [Synchronized Selection across Modules](#synchronized-selection-across-modules)
+    - [FlagStorage](#flagstorage)
+    - [FlagStorage_GL](#flagstorage_gl)
+  - [1D Transfer Function](#1d-transfer-function)
+    - [Usage](#usage)
+  - [Graph Manipulation](#graph-manipulation)
+    - [Graph Manipulation Queues](#graph-manipulation-queues)
+  - [Build System](#build-system)
+    - [External dependencies](#external-dependencies)
+      - [Using external dependencies](#using-external-dependencies)
+      - [Adding new external dependencies](#adding-new-external-dependencies)
+        - [Header-only libraries](#header-only-libraries)
+        - [Built libraries](#built-libraries)
+  - [GUI](#gui)
     - [Parameter Widgets](#parameter-widgets)
     - [Window/PopUp/Notification for Frontend Service](#windowpopupnotification-for-frontend-service)
 
@@ -134,36 +137,54 @@ You can have a look for an example in the ```FlagStorage_GL``` together with the
 We refer to the data passed around simply as ```DATA```, you can think of this as a struct containing everything changed by the corresponding Call.
 To properly track changes across several Modules, you need to follow the recipe.
 
+### Definitions
+- There is one Module holding and owning the ```DATA```. It is also responsible for resizing it (e.g. in occasion of an incoming update) and disposing it (on destruction). This is the *owner*. It can have a notion of what it is holding and manipulate the ```DATA```, but this is not necessary. It can also just be a container that is talked to by other modules.
+- There can be several Modules that read the ```DATA```. These are *consumer*s.
+- There can be several Modules that write/update the ```DATA```. These are *supplier*s.
+- Note that Modules that are *supplier*s automatically have *consumer* status as well, otherwise updates are lost.
 ### Recipe
 Split up the data flow for each direction, one call for reading only, one call for writing only.
 Keep in mind that the caller by definition is "left" in the module graph and the callee is "right". The callee is the end of a callback, but for this pattern this has nothing to do with the direction the data flows in, which results in the rules defined below.
-- set up a ```uint32_t version_DATA``` in each Module
-- create a ```CallerSlot``` for ```DATACallRead``` for modules reading the ```DATA```
-- (optional) create a ```CallerSlot``` for ```DATACallWrite``` for modules writing the ```DATA```
+
+![bidir example](bidir.png)
+
+- set up a ```uint32_t version_DATA``` in the *owner*
 - Create a ```DATACallRead``` either instancing the ```core::GenericVersionedCall``` template, or making sure that the call can distinguish between the ```DATA``` version that was last **set** into the Call and that which was last **got** out of the Call
-- (optional) Create a ```DATACallWrite``` along the same lines
-- create a ```CalleeSlot``` for ```DATACallRead``` for modules consuming the ```DATA```
-- create a ```CallerSlot``` for ```DATACallWrite``` for modules supplying the ```DATA```
+- Create a ```DATACallWrite``` along the same lines
+- create a ```CalleeSlot``` each for ```DATACallRead``` and ```DATACallWrite``` for the *owner*
+- create a ```CallerSlot``` for ```DATACallRead``` for *consumer*s
+- create a ```CallerSlot``` for ```DATACallWrite``` for *supplier*s
 
-A module with slots for both directions by convention should first execute the reading and then provide updates via writing.
+#### Interaction with the ```DATA``` from outside:
+This must always follow the same order to avoid inconsistencies.
 
-#### Usage: ```DATACallRead```
-- In the ```GetData``` callback, make sure you can *supply unchanged data very cheaply*.
-  - If parameters or incoming data have changed, modify your ```DATA``` accordingly, **increasing** your version.
-  - **ALWAYS** set the data in the call, supplying your version.
-- As a consumer
-    - issue the Call: ```(*call)(DATACallRead::CallGetData)``` or your specialized version
-    - check if something new is available: ```call::hasUpdate()```
-    - if necessary, fast-forward your own version to the available one ```version_DATA = GenericVersionedCall::version()```
+The following 'block' must be executed without the control flow leaving the current module, i.e. the only calls that are executed are the ones connected to the owner module that are part of the bidirectional flow.
+- if *consumer*: execute the reading:
+  - issue the Call ```(*call)(DATACallRead::CallGetData)``` or your specialized version
+  - check if something new is available: ```call::hasUpdate()```
+  - overwrite/replace what notion you had of ```DATA``` if there is an incoming update
+  - take note of the ```call::version()``` *V* of the incoming update.
+- if (also) *supplier*:
+  - if you need to modify the ```DATA``` (parameters, other incoming data, or user input cause this, for example)
+    - write the update
+    - increase *V*
+  - **ALWAYS** set the ```DATA``` in the ```DATACallWrite```, supplying *V*
+  - **ALWAYS** issue the Call: ```(*call)(DATACallWrite::CallGetData)``` or your specialized version
 
-#### Usage: ```DataCallWrite```
+Since this should take place in the same callback, *V* **must** not be kept around beyond that, it must be re-fetched in the next cycle anyway: any calls that go downstream before or after the above block could potentially alter the ```DATA``` in the *owner*.
+
+#### *owner* Module:
+
+Usage: ```DATACallRead```
+- In the ```GetData``` callback, make sure you can **supply unchanged data very cheaply**.
+  - If parameters or incoming data (downstream) have changed, modify your ```DATA``` accordingly, **increasing** ```version_DATA```.
+  - **ALWAYS** set the data in the call, supplying the version.
+  
+Usage: ```DataCallWrite```
 - In the ```GetData``` callback
-  - First check if the incoming set data is newer than what you last got: ```GenericVersionedCall::hasUpdate()```
-  - Fetch the data and if necessary, fast-forward your own version to the available one ```version_DATA = GenericVersionedCall::version()```
-- As a provider
-  - If parameters or incoming data have changed, modify your ```DATA``` accordingly, **increasing** your version.
-  - **ALWAYS** set the data in the call, supplying your version.
-  - issue the Call: ```(*call)(DATACallRead::CallGetData)``` or your specialized version
+  - If the incoming set data is newer than what you last got: ```call::hasUpdate()```
+    - Fetch the data
+    - fast-forward version to the available one ```version_DATA = call::version()```
 
 
 <!-- ###################################################################### -->
@@ -254,6 +275,16 @@ It causes the graph updater to stop at the indicated event and delay further gra
 | paramSetRequestsFlushIndices      |
 | groupParamSetRequestsFlushIndices |
 
+
+<!-- ###################################################################### -->
+-----
+## Module Behavior
+
+A module should always try to do its work, even with missing resources.
+Examples:
+- All views should clear themselves to their internal background color, even if no other module is connected.
+
+TODO: Module behavior in case of missing resources or call connections.
 
 <!-- ###################################################################### -->
 -----

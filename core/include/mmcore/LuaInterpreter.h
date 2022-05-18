@@ -4,10 +4,10 @@
 #include <fstream>
 #include <functional>
 #include <iostream>
-#include <vector>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "mmcore/utility/log/Log.h"
 
@@ -41,22 +41,24 @@
 namespace megamol {
 namespace core {
 
-template <class C> using luaCallbackFunc = int (C::*)(lua_State* L);
+template<class C>
+using luaCallbackFunc = int (C::*)(lua_State* L);
 
-template <class C, luaCallbackFunc<C> func> int dispatch(lua_State* L) {
+template<class C, luaCallbackFunc<C> func>
+int dispatch(lua_State* L) {
     C* ptr = *static_cast<C**>(lua_getextraspace(L));
     return (ptr->*func)(L);
 }
 
-static int invoke_lua_std_function(lua_State* L){
+static int invoke_lua_std_function(lua_State* L) {
     //const int argc = lua_gettop(L);
 
     const auto index = lua_upvalueindex(1);
     //if (lua_islightuserdata(L, index))
     //{
-        const void* ptr = lua_touserdata(L, index);
-        const auto func_ptr = reinterpret_cast<std::function<int(lua_State *)> const*>(ptr);
-        return (*func_ptr)(L);
+    const void* ptr = lua_touserdata(L, index);
+    const auto func_ptr = reinterpret_cast<std::function<int(lua_State*)> const*>(ptr);
+    return (*func_ptr)(L);
 
     //} else {
     //    std::cout << "PANIC: NO USER DATA" << std::endl;
@@ -201,6 +203,8 @@ private:
     bool getString(int i, std::string& out);
 
     bool getDouble(int i, double& out);
+
+    bool getBool(int i, bool& out);
 
     /** print table on the stack somewhat */
     void printTable(std::stringstream& out);
@@ -392,9 +396,14 @@ bool megamol::core::LuaInterpreter<T>::RunString(
                         if (getDouble(1, r)) {
                             result = std::to_string(r);
                         } else {
-                            result = "Result is a complex type.";
-                            megamol::core::utility::log::Log::DefaultLog.WriteError("Lua execution returned complex type");
-                            good = false;
+                            bool b;
+                            if (getBool(1, b)) {
+                                result = std::to_string(b);
+                            } else {
+                                result = "Result is a complex type.";
+                                megamol::core::utility::log::Log::DefaultLog.WriteError("Lua execution returned complex type");
+                                good = false;
+                            }
                         }
                     }
                 }
@@ -424,6 +433,15 @@ template <class T> bool megamol::core::LuaInterpreter<T>::getDouble(int i, doubl
     int t = lua_type(L, i);
     if (t == LUA_TNUMBER) {
         out = lua_tonumber(L, i);
+        return true;
+    }
+    return false;
+}
+
+template <class T> bool megamol::core::LuaInterpreter<T>::getBool(int i, bool& out) {
+    int t = lua_type(L, i);
+    if (t == LUA_TBOOLEAN) {
+        out = lua_toboolean(L, i);
         return true;
     }
     return false;
@@ -535,7 +553,9 @@ template <class T> int megamol::core::LuaInterpreter<T>::help(lua_State *L) {
     std::stringstream out;
     out << "MegaMol Lua Help:" << std::endl;
     std::string helpString;
-    for (const auto &s : theHelp)
+    auto copy = theHelp;
+    std::sort(copy.begin(), copy.end());
+    for (const auto &s : copy)
         helpString += s.first + s.second + "\n";
     out << helpString;
     lua_pushstring(L, out.str().c_str());

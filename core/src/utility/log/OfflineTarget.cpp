@@ -16,7 +16,11 @@
  * megamol::core::utility::log::OfflineTarget::OfflineTarget
  */
 megamol::core::utility::log::OfflineTarget::OfflineTarget(unsigned int bufferSize, Log::UINT level)
-    : Target(level), bufSize(bufferSize), msgCnt(0), msgs(new OfflineMessage[bufferSize]), omittedCnt(0) {
+        : Target(level)
+        , bufSize(bufferSize)
+        , msgCnt(0)
+        , msgs(new OfflineMessage[bufferSize])
+        , omittedCnt(0) {
     // intentionally empty
 }
 
@@ -61,17 +65,18 @@ void megamol::core::utility::log::OfflineTarget::Msg(Log::UINT level, megamol::c
 /*
  * megamol::core::utility::log::OfflineTarget::Reecho
  */
-void megamol::core::utility::log::OfflineTarget::Reecho(
-    megamol::core::utility::log::Log::Target& target, bool remove) {
+void megamol::core::utility::log::OfflineTarget::Reecho(megamol::core::utility::log::Log::Target& target, bool remove) {
     for (unsigned int i = 0; i < this->msgCnt; i++) {
         target.Msg(this->msgs[i].level, this->msgs[i].time, this->msgs[i].sid, this->msgs[i].msg);
     }
-    if (remove) this->msgCnt = 0;
+    if (remove)
+        this->msgCnt = 0;
     if (this->omittedCnt > 0) {
         std::stringstream omg;
         omg << this->omittedCnt << " offline log message" << ((this->omittedCnt == 1) ? "" : "s") << " omitted\n";
         target.Msg(Log::LEVEL_WARN, Log::CurrentTimeStamp(), Log::CurrentSourceID(), omg.str());
-        if (remove) this->omittedCnt = 0;
+        if (remove)
+            this->omittedCnt = 0;
     }
 }
 

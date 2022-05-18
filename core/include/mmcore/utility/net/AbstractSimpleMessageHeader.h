@@ -1,7 +1,7 @@
 /*
  * AbstractSimpleMessageHeader.h
  *
- * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart. 
+ * Copyright (C) 2006 - 2010 by Visualisierungsinstitut Universitaet Stuttgart.
  * Alle Rechte vorbehalten.
  */
 
@@ -22,151 +22,144 @@ namespace vislib {
 namespace net {
 
 
+/**
+ * This class provides the interface for a message header in the simple
+ * network protocol implementation of VISlib. There are two subclasses of
+ * this abstract class: SimpleMessageHeader is an implementation which
+ * provides storage for the header data. ShallowSimpleMessageHeader does
+ * not provide any storage, but takes a pointer to memory containing the
+ * header data.
+ */
+class AbstractSimpleMessageHeader {
+
+public:
+    /** Dtor. */
+    virtual ~AbstractSimpleMessageHeader(void);
+
     /**
-     * This class provides the interface for a message header in the simple 
-	 * network protocol implementation of VISlib. There are two subclasses of
-	 * this abstract class: SimpleMessageHeader is an implementation which
-	 * provides storage for the header data. ShallowSimpleMessageHeader does
-	 * not provide any storage, but takes a pointer to memory containing the
-	 * header data.
+     * Answer the body size stored in the message header.
+     *
+     * @return The body size.
      */
-    class AbstractSimpleMessageHeader {
+    inline SimpleMessageSize GetBodySize(void) const {
+        return this->PeekData()->BodySize;
+    }
 
-    public:
+    /**
+     * Answer the size of the header packet. This is the size of the data
+     * returned by PeekData().
+     *
+     * @return The size of the header data in bytes.
+     */
+    inline SimpleMessageSize GetHeaderSize(void) const {
+        return sizeof(SimpleMessageHeaderData);
+    }
 
-        /** Dtor. */
-        virtual ~AbstractSimpleMessageHeader(void);
+    /**
+     * Answer the message ID.
+     *
+     * @return The message ID.
+     */
+    inline SimpleMessageID GetMessageID(void) const {
+        return this->PeekData()->MessageID;
+    }
 
-		/**
-		 * Answer the body size stored in the message header.
-		 *
-		 * @return The body size.
-		 */
-		inline SimpleMessageSize GetBodySize(void) const {
-			return this->PeekData()->BodySize;
-		}
+    /**
+     * Answer whether the body size is not zero.
+     *
+     * @return true if the body size is larger than zero, false otherwise.
+     */
+    inline bool HasBody(void) const {
+        return (this->PeekData()->BodySize > 0);
+    }
 
-		/**
-		 * Answer the size of the header packet. This is the size of the data
-		 * returned by PeekData().
-		 *
-		 * @return The size of the header data in bytes.
-		 */
-		inline SimpleMessageSize GetHeaderSize(void) const {
-			return sizeof(SimpleMessageHeaderData);
-		}
+    /**
+     * Provides direct access to the underlying SimpleMessageHeaderData.
+     *
+     * @return A pointer to the message header data.
+     */
+    virtual SimpleMessageHeaderData* PeekData(void) = 0;
 
-		/**
-		 * Answer the message ID.
-		 *
-		 * @return The message ID.
-		 */
-		inline SimpleMessageID GetMessageID(void) const {
-			return this->PeekData()->MessageID;
-		}
+    /**
+     * Provides direct access to the underlying SimpleMessageHeaderData.
+     *
+     * @return A pointer to the message header data.
+     */
+    virtual const SimpleMessageHeaderData* PeekData(void) const = 0;
 
-		/**
-		 * Answer whether the body size is not zero.
-		 *
-		 * @return true if the body size is larger than zero, false otherwise.
-		 */
-		inline bool HasBody(void) const {
-			return (this->PeekData()->BodySize > 0);
-		}
+    /**
+     * Set the body size.
+     *
+     * @param bodySize The body size.
+     */
+    inline void SetBodySize(const SimpleMessageSize bodySize) {
+        this->PeekData()->BodySize = bodySize;
+    }
 
-		/**
-		 * Provides direct access to the underlying SimpleMessageHeaderData.
-		 *
-		 * @return A pointer to the message header data.
-		 */
-		virtual SimpleMessageHeaderData *PeekData(void) = 0;
+    /**
+     * Set a new message ID.
+     *
+     * @param messageID  The new message ID.
+     * @param isSystemID Disables the system ID check. Must be false.
+     *
+     * @throw IllegalParamException If the message ID is a system ID.
+     */
+    void SetMessageID(const SimpleMessageID messageID, bool isSystemID = false);
 
-		/**
-		 * Provides direct access to the underlying SimpleMessageHeaderData.
-		 *
-		 * @return A pointer to the message header data.
-		 */
-		virtual const SimpleMessageHeaderData *PeekData(void) const = 0;
+    /**
+     * Assignment operator.
+     *
+     * @param The right hand side operand.
+     *
+     * @return *this
+     */
+    AbstractSimpleMessageHeader& operator=(const AbstractSimpleMessageHeader& rhs);
 
-		/**
-		 * Set the body size.
-		 *
-		 * @param bodySize The body size.
-		 */
-		inline void SetBodySize(const SimpleMessageSize bodySize) {
-			this->PeekData()->BodySize = bodySize;
-		}
+    /**
+     * Assignment operator.
+     *
+     * @param The right hand side operand.
+     *
+     * @return *this
+     */
+    AbstractSimpleMessageHeader& operator=(const SimpleMessageHeaderData& rhs);
 
-		/**
-		 * Set a new message ID.
-		 *
-		 * @param messageID  The new message ID.
-		 * @param isSystemID Disables the system ID check. Must be false.
-		 *
-		 * @throw IllegalParamException If the message ID is a system ID.
-		 */
-		void SetMessageID(const SimpleMessageID messageID, 
-            bool isSystemID = false);
+    /**
+     * Assignment operator.
+     *
+     * @param The right hand side operand. This must not be NULL.
+     *
+     * @return *this
+     */
+    AbstractSimpleMessageHeader& operator=(const SimpleMessageHeaderData* rhs);
 
-		/**
-		 * Assignment operator.
-		 *
-		 * @param The right hand side operand.
-		 *
-		 * @return *this
-		 */
-		AbstractSimpleMessageHeader& operator =(
-			const AbstractSimpleMessageHeader& rhs);
+    /**
+     * Test for equality.
+     *
+     * @param The right hand side operand.
+     *
+     * @return true in case this object and 'rhs' are equal,
+     *         false otherwise.
+     */
+    bool operator==(const AbstractSimpleMessageHeader& rhs) const;
 
-		/**
-		 * Assignment operator.
-		 *
-		 * @param The right hand side operand.
-		 *
-		 * @return *this
-		 */
-		AbstractSimpleMessageHeader& operator =(
-			const SimpleMessageHeaderData& rhs);
+    /**
+     * Test for inequality.
+     *
+     * @param The right hand side operand.
+     *
+     * @return true in case this object and 'rhs' are not equal,
+     *         false otherwise.
+     */
+    inline bool operator!=(const AbstractSimpleMessageHeader& rhs) const {
+        return !(*this == rhs);
+    }
 
-		/**
-		 * Assignment operator.
-		 *
-		 * @param The right hand side operand. This must not be NULL.
-		 *
-		 * @return *this
-		 */
-		AbstractSimpleMessageHeader& operator =(
-			const SimpleMessageHeaderData *rhs);
+protected:
+    /** Ctor. */
+    AbstractSimpleMessageHeader(void);
+};
 
-		/**
-		 * Test for equality.
-		 *
-		 * @param The right hand side operand.
-		 * 
-		 * @return true in case this object and 'rhs' are equal, 
-		 *         false otherwise.
-		 */
-		bool operator ==(const AbstractSimpleMessageHeader& rhs) const;
-
-		/**
-		 * Test for inequality.
-		 *
-		 * @param The right hand side operand.
-		 * 
-		 * @return true in case this object and 'rhs' are not equal, 
-		 *         false otherwise.
-		 */
-		inline bool operator !=(const AbstractSimpleMessageHeader& rhs) const {
-			return !(*this == rhs);
-		}
-
-    protected:
-
-        /** Ctor. */
-        AbstractSimpleMessageHeader(void);
-
-    };
-    
 } /* end namespace net */
 } /* end namespace vislib */
 

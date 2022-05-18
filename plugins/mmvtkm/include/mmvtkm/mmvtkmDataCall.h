@@ -8,47 +8,44 @@
 #ifndef MEGAMOL_MMVTKM_VTKMDATACALL_H_INCLUDED
 #define MEGAMOL_MMVTKM_VTKMDATACALL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include <memory>
-#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/CallGeneric.h"
+#include "mmcore/factories/CallAutoDescription.h"
+#include <memory>
 //#include "mmcore/AbstractGetData3DCall.h"
 
 #include "vtkm/cont/DataSet.h"
 
 
-
-
-
 namespace megamol {
 namespace mmvtkm {
 
-    struct VtkmData {
-        /** Vtkm dataset storage */
-        vtkm::cont::DataSet data;
-    };
+struct VtkmData {
+    /** Vtkm dataset storage */
+    vtkm::cont::DataSet data;
+};
 
-    struct VtkmMetaData {
-        /** Min and max bounds of the dataset */
-        vtkm::Bounds minMaxBounds = vtkm::Bounds(0.f, 1.f, 0.f, 1.f, 0.f, 1.f);
-        std::vector<std::string> fieldNames;
-    };
+struct VtkmMetaData {
+    /** Min and max bounds of the dataset */
+    vtkm::Bounds minMaxBounds = vtkm::Bounds(0.f, 1.f, 0.f, 1.f, 0.f, 1.f);
+    std::vector<std::string> fieldNames;
+};
 
-    class mmvtkmDataCall : public core::GenericVersionedCall<std::shared_ptr<VtkmData>, VtkmMetaData> {
-    public:
-        inline mmvtkmDataCall() : GenericVersionedCall<std::shared_ptr<VtkmData>, VtkmMetaData>() {}
-        ~mmvtkmDataCall() = default;
+class mmvtkmDataCall : public core::GenericVersionedCall<std::shared_ptr<VtkmData>, VtkmMetaData> {
+public:
+    inline mmvtkmDataCall() : GenericVersionedCall<std::shared_ptr<VtkmData>, VtkmMetaData>() {}
+    ~mmvtkmDataCall() = default;
 
-        static const char* ClassName(void) {
-            return "vtkmDataCall";
-        }
-        static const char* Description(void) {
-            return "Transports vtkm data.";
-        }
-    };
+    static const char* ClassName(void) {
+        return "vtkmDataCall";
+    }
+    static const char* Description(void) {
+        return "Transports vtkm data.";
+    }
+};
 
 /**
  * Call for vtkm data.
@@ -117,31 +114,31 @@ namespace mmvtkm {
 //     */
 //    const vtkm::cont::DataSet* GetDataSet() const { return this->data_; }
 //
-//	/**
+//    /**
 //     * Sets the value if data has been changed within the vtkm data source
-//	 *
-//	 * @param true, if data has changed, false otherwise
+//     *
+//     * @param true, if data has changed, false otherwise
 //     */
 //    void UpdateDataChanges(bool update) { this->dataChanges_ = update; }
 //
-//	/**
+//    /**
 //     * Returns if the data within the vtkm data source has changed or not
 //     */
 //    bool HasUpdate() const { return this->dataChanges_; }
 //
-//	/**
-//	* Sets lower and upper bounds of the current dataset
-//	*/
-//	void SetBounds(const vtkm::Bounds& bounds) { 
-//		this->minMaxBounds_ = bounds;
-//	}
+//    /**
+//    * Sets lower and upper bounds of the current dataset
+//    */
+//    void SetBounds(const vtkm::Bounds& bounds) {
+//        this->minMaxBounds_ = bounds;
+//    }
 //
-//	/**
-//	* Returns lower and upper bounds of the current dataset
-//	*/
-//	const vtkm::Bounds GetBounds() const { 
-//		return this->minMaxBounds_;
-//	}
+//    /**
+//    * Returns lower and upper bounds of the current dataset
+//    */
+//    const vtkm::Bounds GetBounds() const {
+//        return this->minMaxBounds_;
+//    }
 //
 //    /**
 //    * Sets lower and upper bounds of the current dataset
@@ -161,15 +158,15 @@ namespace mmvtkm {
 //private:
 //    /** Vtkm dataset storage */
 //    const vtkm::cont::DataSet* data_;
-//	
-//	/** Min and max bounds of the dataset */
-//	vtkm::Bounds minMaxBounds_;
+//
+//    /** Min and max bounds of the dataset */
+//    vtkm::Bounds minMaxBounds_;
 //
 //    /** Fieldnames available in the current dataset */
 //    std::vector<std::string> fieldNames_;
 //
-//	/** True, if data was changed, false otherwise */
-//	bool dataChanges_;
+//    /** True, if data was changed, false otherwise */
+//    bool dataChanges_;
 //};
 
 

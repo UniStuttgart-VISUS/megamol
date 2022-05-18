@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="ellipsoid">
+  <include file="common"/>
+  <include file="electrostatics"/>
+
+  <snippet name="commondefines" type="string">
+    <!-- 
+// electrostatics is used as it contains the same lighting method as the original GLSLEllipsoidRenderer used
+#define CLIP
+#define DEPTH
+//#define SMALL_SPRITE_LIGHTING
+//#define CALC_CAM_SYS
+
+#ifdef DEBUG
+#undef CLIP
+#define RETICLE
+#define AXISHINTS
+#endif // DEBUG
+
+#ifndef FLACH
+#define FLACH
+#endif
+#define COLOR_BLUE vec3( 145.0/255.0, 191.0/255.0, 219.0/255.0)
+#define COLOR_GREEN vec3( 161.0/255.0, 215.0/255.0, 106.0/255.0)
+#define COLOR_YELLOW vec3( 255.0/255.0, 255.0/255.0, 191.0/255.0)
+#define COLOR_RED vec3( 228.0/255.0, 37.0/255.0, 34.0/255.0)
+
+-->
+  </snippet>
+
+  <shader name="vertex">
+    <snippet type="version">120</snippet>
+    <snippet name="commondefines"/>
+    <snippet type="string">
+      <!--
+uniform vec4 viewAttr;
+#ifndef CALC_CAM_SYS
+uniform vec3 camIn;
+uniform vec3 camUp;
+uniform vec3 camRight;
+#endif // CALC_CAM_SYS
+    
+in vec3 radii;
+in vec4 quatC;
+    
+varying vec4 objPos;
+varying vec4 camPos;
+varying vec4 lightPos;
+
+
+
+varying vec3 dRadz; // ?
+
+varying vec3 rotMatT0;
+varying vec3 rotMatT1; // rotation matrix from the quaternion
+varying vec3 rotMatT2;
+varying mat3 rotMatIT;
+
+#ifdef RETICLE
+varying vec2 centerFragment;
+#endif // RETICLE
+  
+
+void main() {
+    const vec4 quatConst = vec4(1.0, -1.0, 0.5, 0.0);
+    vec4 tmp, tmp1;
+    vec3 tmp2;
+    
+    vec4 inPos = gl_Vertex;
+    vec3 absradii = abs(radii);
+    dRadz = 1.0 / absradii;
+    
+    inPos.w = 1.0;
+    objPos = inPos;
+    
+    tmp = quatC.xzyw * quatC.yxzw;
+    tmp1 = quatC * quatC.w;
+    tmp1.w = -quatConst.z;
+    rotMatT0.xyz = tmp1.wzy * quatConst.xxy + tmp.wxy;  // matrix0 <- (ww-0.5, xy+zw, xz-yw, %)
+    rotMatT0.x = quatC.x * quatC.x + rotMatT0.x;        // matrix0 <- (ww+x*x-0.5, xy+zw, xz-yw, %)
+    rotMatT0 = rotMatT0 + rotMatT0;                     // matrix0 <- (2(ww+x*x)-1, 2(xy+zw), 2(xz-yw), %)
+
+    rotMatT1.xyz = tmp1.zwx * quatConst.yxx + tmp.xwz;  // matrix1 <- (xy-zw, ww-0.5, yz+xw, %)
+    rotMatT1.y = quatC.y * quatC.y + rotMatT1.y;        // matrix1 <- (xy-zw, ww+y*y-0.5, yz+xw, %)
+    rotMatT1 = rotMatT1 + rotMatT1;                     // matrix1 <- (2(xy-zw), 2(ww+y*y)-1, 2(yz+xw), %)
+
+    rotMatT2.xyz = tmp1.yxw * quatConst.xyx + tmp.yzw;  // matrix2 <- (xz+yw, yz-xw, ww-0.5, %)
+    rotMatT2.z = quatC.z * quatC.z + rotMatT2.z;        // matrix2 <- (xz+yw, yz-xw, ww+zz-0.5, %)
+    rotMatT2 = rotMatT2 + rotMatT2;                     // matrix2 <- (2(xz+yw), 2(yz-xw), 2(ww+zz)-1, %)
+    // End: Holy code!
+
+    rotMatIT = mat3(rotMatT0, rotMatT1, rotMatT2);
+    rotMatIT = transpose(rotMatIT);
+
+    // calculate cam position
+    tmp = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+    tmp.xyz -= objPos.xyz; // cam move
+    // TODO: cam rotation mit rotMat transposed
+    //camPos.x = dot(rotMatT0, tmp.xyz);
+    //camPos.y = dot(rotMatT1, tmp.xyz);
+    //camPos.z = dot(rotMatT2, tmp.xyz);
+    camPos.xyz = rotMatT0 * tmp.x + rotMatT1 * tmp.y + rotMatT2 * tmp.z;
+
+    camPos.xyz *= dRadz;
+
+
+    // calculate light position in glyph space
+    //lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position - objPos; // note: w is bs now!
+    // TODO: light rotation mit rotMat transposed
+    //lightPos.x = dot(rotMatT0, lightPos.xyz);
+    //lightPos.y = dot(rotMatT1, lightPos.xyz);
+    //lightPos.z = dot(rotMatT2, lightPos.xyz);
+    //lightPos.xyz = rotMatT0 * lightPos.x + rotMatT1 * lightPos.y + rotMatT2 * lightPos.z;
+    // Do not scale light position, so we can use the "faked" parameter space normals
+    lightPos = gl_ModelViewMatrixTranspose * gl_LightSource[0].position; // transpose of inverse inverse -> directional light
+    
+    //lightPos.xyz *= dRadz;
+
+
+    // send color to fragment shader
+    gl_FrontColor = gl_Color;
+
+
+    // calculate sprite position and size
+    vec2 winHalf = 2.0 / viewAttr.zw; // window size
+
+    // lumberjack™ approach
+    vec4 pos, projPos;
+    vec4 pX, pY, pOP;
+    vec2 mins, maxs, pp;
+
+    projPos.w = 0.0;
+
+    pos = vec4(-1.0, -1.0, -1.0, 1.0);
+    pos.xyz *= absradii; // scale
+    projPos.x = dot(rotMatT0, pos.xyz); // rotate
+    projPos.y = dot(rotMatT1, pos.xyz);
+    projPos.z = dot(rotMatT2, pos.xyz);
+    pos = objPos + projPos; // move
+    pos.w = 1.0; // now we're in object space
+    pOP = gl_ModelViewProjectionMatrix * pos;
+    pp = pOP.xy / pOP.w; // pp = (-1, -1, -1)
+    mins = maxs = pp;
+
+    pos = vec4(1.0, -1.0, -1.0, 1.0);
+    pos.xyz *= absradii; // scale
+    projPos.x = dot(rotMatT0, pos.xyz); // rotate
+    projPos.y = dot(rotMatT1, pos.xyz);
+    projPos.z = dot(rotMatT2, pos.xyz);
+    pos = objPos + projPos; // move
+    pos.w = 1.0; // now we're in object space
+    projPos = gl_ModelViewProjectionMatrix * pos;
+    pX = projPos - pOP;
+    pp = projPos.xy / projPos.w; // pp = (1, -1, -1)
+    mins = min(mins, pp);
+    maxs = max(maxs, pp);
+
+    pos = vec4(-1.0, 1.0, -1.0, 1.0);
+    pos.xyz *= absradii; // scale
+    projPos.x = dot(rotMatT0, pos.xyz); // rotate
+    projPos.y = dot(rotMatT1, pos.xyz);
+    projPos.z = dot(rotMatT2, pos.xyz);
+    pos = objPos + projPos; // move
+    pos.w = 1.0; // now we're in object space
+    projPos = gl_ModelViewProjectionMatrix * pos;
+    pY = projPos - pOP;
+    pp = projPos.xy / projPos.w; // pp = (-1, 1, -1)
+    mins = min(mins, pp);
+    maxs = max(maxs, pp);
+
+    projPos += pX;
+    pp = projPos.xy / projPos.w; // pp = (1, 1, -1)
+    mins = min(mins, pp);
+    maxs = max(maxs, pp);
+
+    pos = vec4(-1.0, -1.0, 1.0, 1.0);
+    pos.xyz *= absradii; // scale
+    projPos.x = dot(rotMatT0, pos.xyz); // rotate
+    projPos.y = dot(rotMatT1, pos.xyz);
+    projPos.z = dot(rotMatT2, pos.xyz);
+    pos = objPos + projPos; // move
+    pos.w = 1.0; // now we're in object space
+    pOP = gl_ModelViewProjectionMatrix * pos;
+    pp = pOP.xy / pOP.w; // pp = (-1, -1, 1)
+    mins = min(mins, pp);
+    maxs = max(maxs, pp);
+
+    projPos = pOP + pY;
+    pp = projPos.xy / projPos.w; // pp = (-1, 1, 1)
+    mins = min(mins, pp);
+    maxs = max(maxs, pp);
+
+    projPos += pX;
+    pp = projPos.xy / projPos.w; // pp = (1, 1, 1)
+    mins = min(mins, pp);
+    maxs = max(maxs, pp);
+
+    projPos = pOP + pX;
+    pp = projPos.xy / projPos.w; // pp = (1, -1, 1)
+    mins = min(mins, pp);
+    maxs = max(maxs, pp);
+
+    gl_Position = vec4((mins + maxs) * 0.5, 0.0, 1.0);
+    maxs = (maxs - mins) * 0.5 * winHalf;
+    gl_PointSize = max(maxs.x, maxs.y);
+    #ifdef SMALL_SPRITE_LIGHTING
+    // for normal crowbaring on very small sprites
+    lightPos.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
+    #endif // SMALL_SPRITE_LIGHTING
+
+    #ifdef RETICLE
+    centerFragment = gl_Position.xy / gl_Position.w;
+    #endif //RETICLE
+
+}
+    
+-->
+    </snippet>
+  </shader>
+
+  <shader name="fragment">
+    <snippet type="version">110</snippet>
+    <snippet name="commondefines"/>
+    <snippet name="LightDirectional" type="file">lightdirectional.glsl</snippet>
+    <snippet type="string">
+      <!--
+uniform vec4 viewAttr;
+
+
+varying vec4 objPos;
+varying vec4 camPos;
+varying vec4 lightPos;
+varying vec3 dRadz;
+
+
+#ifdef DEBUG
+varying vec2 centerFragment;
+#endif
+
+varying vec3 rotMatT0;
+varying vec3 rotMatT1; // rotation matrix from the quaternion
+varying vec3 rotMatT2;
+varying mat3 rotMatIT;
+
+void main() {
+    vec4 coord;
+    vec3 ray, tmp;
+    float lambda;
+
+    // transform fragment coordinates from window coordinates to view coordinates.
+    coord = gl_FragCoord 
+        * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
+        + vec4(-1.0, -1.0, -1.0, 1.0);
+    
+
+    // transform fragment coordinates from view coordinates to object coordinates.
+    coord = gl_ModelViewProjectionMatrixInverse * coord;
+    coord /= coord.w;
+    coord -= objPos; // ... and move
+    // ... and rotate mit rotMat transposed
+    ray = rotMatT0 * coord.x + rotMatT1 * coord.y + rotMatT2 * coord.z;
+
+    ray *= dRadz;
+
+    // calc the viewing ray
+    ray = normalize(ray - camPos.xyz);
+
+
+    // calculate the geometry-ray-intersection (sphere with radius = 1)
+    float d1 = -dot(camPos.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray
+    float d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
+    float radicand = 1.0 - d2s;                             // square of difference of projected length and lambda
+    #ifdef CLIP
+    if (radicand < 0.0) { discard; }
+    #endif // CLIP
+    lambda = d1 - sqrt(radicand);                           // lambda
+    vec3 sphereintersection = lambda * ray + camPos.xyz;    // intersection point
+
+
+    // "calc" normal at intersection point
+    vec3 normal = sphereintersection;
+    #ifdef SMALL_SPRITE_LIGHTING
+    normal = mix(-ray, normal, lightPos.w);
+    #endif // SMALL_SPRITE_LIGHTING
+    vec3 color = gl_Color.rgb;
+    vec3 s = step(normal, vec3(0));
+    color = s;
+
+    normal = rotMatIT * normal;
+    ray = rotMatIT * ray;
+    // chose color for lighting
+    // Because of some reason color is either not set or not accessible
+    
+    // Set the default global color from case 1 in the renderer manually 
+    //color = vec3(0.698, 0.698, 0.698);
+    
+    // calculate depth
+    // TODO: rewrite with rotation with untransposed
+    #ifdef DEPTH
+    tmp = sphereintersection / dRadz;
+
+    //sphereintersection = rotMatT0 * tmp.x + rotMatT1 * tmp.y + rotMatT2 * tmp.z;
+    //sphereintersection.x = rotMatT0.x * tmp.x + rotMatT1.x * tmp.y + rotMatT2.x * tmp.z;
+    //sphereintersection.y = rotMatT0.y * tmp.x + rotMatT1.y * tmp.y + rotMatT2.y * tmp.z;
+    //sphereintersection.z = rotMatT0.z * tmp.x + rotMatT1.z * tmp.y + rotMatT2.z * tmp.z;
+    sphereintersection.x = dot(rotMatT0, tmp.xyz);
+    sphereintersection.y = dot(rotMatT1, tmp.xyz);
+    sphereintersection.z = dot(rotMatT2, tmp.xyz);
+
+    // phong lighting with directional light, colors are hardcoded as they're inaccessible for some reason
+    gl_FragColor = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
+    //gl_FragColor = vec4(LocalLighting(ray, normalize(sphereintersection), lightPos.xyz, color), 1.0);
+
+
+    sphereintersection += objPos.xyz;
+
+    vec4 Ding = vec4(sphereintersection, 1.0);
+    float depth = dot(gl_ModelViewProjectionMatrixTranspose[2], Ding);
+    float depthW = dot(gl_ModelViewProjectionMatrixTranspose[3], Ding);
+    gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
+    #ifndef CLIP
+    gl_FragDepth = (radicand < 0.0) ? 1.0 : ((depth / depthW) + 1.0) * 0.5;
+    gl_FragColor.rgb = (radicand < 0.0) ? gl_Color.rgb : gl_FragColor.rgb;
+    #endif // CLIP
+    #endif // DEPTH
+
+    #ifdef RETICLE
+    coord = gl_FragCoord 
+        * vec4(viewAttr.z, viewAttr.w, 2.0, 0.0) 
+        + vec4(-1.0, -1.0, -1.0, 1.0);
+    if (min(abs(coord.x - centerFragment.x), abs(coord.y - centerFragment.y)) < 0.002) {
+        //gl_FragColor.rgb = vec3(1.0, 1.0, 0.5);
+        gl_FragColor.rgb += vec3(0.3, 0.3, 0.5);
+    }
+    #endif //RETICLE
+}
+-->
+    </snippet>
+  </shader>
+
+</btf>

@@ -12,10 +12,9 @@
 #include <climits>
 
 #include "vislib/assert.h"
-#include "vislib/sys/error.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/SystemException.h"
-
+#include "vislib/sys/error.h"
 
 
 /*
@@ -60,19 +59,18 @@ vislib::sys::DateTime::DateTime(void) : ticks(0L) {
     ::GetLocalTime(&systemTime);
     this->Set(systemTime, false);
 
-#else /* _WIN32 */
+#else  /* _WIN32 */
     time_t utc = ::time(NULL);
     this->Set(utc);
 #endif /* _WIN32 */
 }
-        
+
 
 /*
  * vislib::sys::DateTime::DateTime
  */
-vislib::sys::DateTime::DateTime(const INT year, const INT month, const INT day,
-        const INT hours, const INT minutes, const INT seconds, 
-        const INT milliseconds) {
+vislib::sys::DateTime::DateTime(const INT year, const INT month, const INT day, const INT hours, const INT minutes,
+    const INT seconds, const INT milliseconds) {
     try {
         this->Set(year, month, day, hours, minutes, seconds, milliseconds);
     } catch (...) {
@@ -85,8 +83,7 @@ vislib::sys::DateTime::DateTime(const INT year, const INT month, const INT day,
 /*
  * vislib::sys::DateTime::~DateTime
  */
-vislib::sys::DateTime::~DateTime(void) {
-}
+vislib::sys::DateTime::~DateTime(void) {}
 
 
 // TODO: This does not work any more with our input interpretation
@@ -113,149 +110,144 @@ vislib::sys::DateTime::~DateTime(void) {
 /*
  * vislib::sys::DateTime::GetDate
  */
-void vislib::sys::DateTime::GetDate(INT& outYear, 
-                                    INT& outMonth, 
-                                    INT& outDay) const {
+void vislib::sys::DateTime::GetDate(INT& outYear, INT& outMonth, INT& outDay) const {
     outYear = static_cast<INT>(this->get(DATE_PART_YEAR));
     outMonth = static_cast<INT>(this->get(DATE_PART_MONTH));
     outDay = static_cast<INT>(this->get(DATE_PART_DAY));
-//    //ASSERT(this->value >= 0); // TODO: Implementation does not yet work for BC
-//    INT64 days = this->GetDays();           // Full days.
-//    INT64 cnt400Years = 0;                  // # of full 400 year blocks.
-//    INT64 cnt100Years = 0;                  // # of full 100 year blocks.
-//    INT64 cnt4Years = 0;                    // # of full 4 year blocks.
-//    INT64 cntYears = 0;                     // # of remaining years.
-//    bool containsLeapYear = true;           // Contains 4 year block leap year?
-//    INT64 divisor = 0;                      // Divisor for n-year blocks.
-//
-//    /* 
-//     * Determine 400 year blocks lying behind and make 'days' relative to
-//     * active 400 year block.
-//     * A 400 year block has 400 full years. Every 4th year is a leap 
-//     * year except for 3, which are divisable by 100 but not by 400.
-//     */
-//    divisor = (400 * ONE_YEAR) + (400 / 4) - 3;
-//    cnt400Years = days / divisor;
-//    days %= divisor;
-//
-//    /*
-//     * Determine 100 year blocks within 400 year block lying behind the 
-//     * active 100 year block. There can be at most 3 inactive 100 year blocks,
-//     * because one of four must always be the active one. If the result
-//     * is 0, the first 100 year block is the active one. This is the one which
-//     * contains the year divisable by 100 and 400. This year is the exception
-//     * that is a leap year although divisable by 100.
-//     * A 100 year block has 100 full years. Every 4th year is a leap year
-//     * except for the one that is divisable by 100. Whether this one is also
-//     * divisable by 400 can be determined via the value of 'cnt100Years': If
-//     * this value indicates the first block, it is a leap year.
-//     */
-//    // mueller: I do not understand that any more. Tests succeed with normal
-//    // impl. until now. Check this in future!
-//    // Subtract 1 because first century of 4 has 366 days.
-//    //cnt100Years = (days - 1+1) / (100 * ONE_YEAR + (100 / 4) - 1);
-//    divisor = (100 * ONE_YEAR) + (100 / 4) - 1;
-//    cnt100Years = days / divisor;
-//    days %= divisor;
-//    //ASSERT(cnt100Years > -4);
-//    //ASSERT(cnt100Years < 4);
-//
-//    //days -= cnt100Years;
-//
-//    /*
-//     * Like for 400 and 100 year blocks, determine 4 year blocks in the active
-//     * 100 year block which lie behind the current date.
-//     * A 4 year block has the days of four full years plus one leap day.
-//     */
-//    divisor = (4 * ONE_YEAR) + (4 / 4);
-//    cnt4Years = days / divisor;
-//    days %= divisor;
-//    ASSERT(cnt4Years > -(100 / 4));
-//    ASSERT(cnt4Years < (100 / 4));
-//
-//    /*
-//     * Divide a last time to determine the active year in the 4 year block.
-//     */
-//    divisor = ONE_YEAR;// + ((days <= ONE_YEAR) ? 1 : 0);
-//    //if ((cnt400Years == 0) || ((cnt4Years == 0) && (cnt100Years != 0))) {
-//    //    divisor++;
-//    //}
-//    cntYears = days / divisor;
-//    days %= divisor;
-//    ASSERT(cntYears > -4);
-//    ASSERT(cntYears < 4);
-//
-//    /* At this point, we can compute the year. */
-//    outYear = static_cast<INT>(400 * cnt400Years + 100 * cnt100Years
-//         + 4 * cnt4Years + cntYears);
-////    if (this->value < 0) {
-////        //outYear = -outYear;
-////        //days = 365 - days - 1;
-//////        ASSERT(days >= 0);
-////    }
-//    //if (days < 0) {
-//    //    days = 365 + IsLeapYear(outYear - 1) + days + 1;
-//    //    //days = -days;
-//    //}
-//
-//    if (days < 0) {
-//        days = ONE_YEAR + days;
-//    } else {
-//        outYear++;
-//    }
-//    if (days == 0) days = 1;
-//
-//    if (DateTime::IsLeapYear(outYear) && (days + 1 < DAYS_AFTER_MONTH[2])) {
-//        days++;
-//    }
-//
-//    /* Compute month. */
-//    // Month must be greater than or than ('days' / 32).
-//    for (outMonth = static_cast<INT>((days >> 5) + 1);
-//            days > DAYS_AFTER_MONTH[outMonth]; outMonth++);
-//
-//    /* Compute day in month. */
-//    outDay = static_cast<INT>(days - DAYS_AFTER_MONTH[outMonth - 1]);
-//
-//    //if ((cntYears == 0) && containsLeapYear && (days == 59)) {
-//    //    /* On 29.02. */ 
-//    //    outMonth = 2;
-//    //    outDay = 29;
-//
-//    //} else {
-//    //    /* 
-//    //     * Manipulate 'days' to look like a non-leap year for month lookup
-//    //     * in the DAYS_AFTER_MONTH array.
-//    //     */
-//
-//    //    if ((cntYears == 0) && containsLeapYear && (days >= 59)) {
-//    //        /* After 29.02. */
-//    //        days--;
-//    //    }
-//
-//    //    days++;
-//
-//    //    // Month must be greater than or equal to ('days' / 32).
-//    //    for (outMonth = static_cast<INT>((days >> 5) + 1); 
-//    //        days > DAYS_AFTER_MONTH[outMonth]; outMonth++);
-//
-//    //    outDay = static_cast<INT>(days - DAYS_AFTER_MONTH[outMonth - 1]);
-//    //}
-//
-//    /* Handle years B. C. */
-//    //if (this->value < 0) {
-//    //    outYear *= -1;
-//    //}
+    //    //ASSERT(this->value >= 0); // TODO: Implementation does not yet work for BC
+    //    INT64 days = this->GetDays();           // Full days.
+    //    INT64 cnt400Years = 0;                  // # of full 400 year blocks.
+    //    INT64 cnt100Years = 0;                  // # of full 100 year blocks.
+    //    INT64 cnt4Years = 0;                    // # of full 4 year blocks.
+    //    INT64 cntYears = 0;                     // # of remaining years.
+    //    bool containsLeapYear = true;           // Contains 4 year block leap year?
+    //    INT64 divisor = 0;                      // Divisor for n-year blocks.
+    //
+    //    /*
+    //     * Determine 400 year blocks lying behind and make 'days' relative to
+    //     * active 400 year block.
+    //     * A 400 year block has 400 full years. Every 4th year is a leap
+    //     * year except for 3, which are divisable by 100 but not by 400.
+    //     */
+    //    divisor = (400 * ONE_YEAR) + (400 / 4) - 3;
+    //    cnt400Years = days / divisor;
+    //    days %= divisor;
+    //
+    //    /*
+    //     * Determine 100 year blocks within 400 year block lying behind the
+    //     * active 100 year block. There can be at most 3 inactive 100 year blocks,
+    //     * because one of four must always be the active one. If the result
+    //     * is 0, the first 100 year block is the active one. This is the one which
+    //     * contains the year divisable by 100 and 400. This year is the exception
+    //     * that is a leap year although divisable by 100.
+    //     * A 100 year block has 100 full years. Every 4th year is a leap year
+    //     * except for the one that is divisable by 100. Whether this one is also
+    //     * divisable by 400 can be determined via the value of 'cnt100Years': If
+    //     * this value indicates the first block, it is a leap year.
+    //     */
+    //    // mueller: I do not understand that any more. Tests succeed with normal
+    //    // impl. until now. Check this in future!
+    //    // Subtract 1 because first century of 4 has 366 days.
+    //    //cnt100Years = (days - 1+1) / (100 * ONE_YEAR + (100 / 4) - 1);
+    //    divisor = (100 * ONE_YEAR) + (100 / 4) - 1;
+    //    cnt100Years = days / divisor;
+    //    days %= divisor;
+    //    //ASSERT(cnt100Years > -4);
+    //    //ASSERT(cnt100Years < 4);
+    //
+    //    //days -= cnt100Years;
+    //
+    //    /*
+    //     * Like for 400 and 100 year blocks, determine 4 year blocks in the active
+    //     * 100 year block which lie behind the current date.
+    //     * A 4 year block has the days of four full years plus one leap day.
+    //     */
+    //    divisor = (4 * ONE_YEAR) + (4 / 4);
+    //    cnt4Years = days / divisor;
+    //    days %= divisor;
+    //    ASSERT(cnt4Years > -(100 / 4));
+    //    ASSERT(cnt4Years < (100 / 4));
+    //
+    //    /*
+    //     * Divide a last time to determine the active year in the 4 year block.
+    //     */
+    //    divisor = ONE_YEAR;// + ((days <= ONE_YEAR) ? 1 : 0);
+    //    //if ((cnt400Years == 0) || ((cnt4Years == 0) && (cnt100Years != 0))) {
+    //    //    divisor++;
+    //    //}
+    //    cntYears = days / divisor;
+    //    days %= divisor;
+    //    ASSERT(cntYears > -4);
+    //    ASSERT(cntYears < 4);
+    //
+    //    /* At this point, we can compute the year. */
+    //    outYear = static_cast<INT>(400 * cnt400Years + 100 * cnt100Years
+    //         + 4 * cnt4Years + cntYears);
+    ////    if (this->value < 0) {
+    ////        //outYear = -outYear;
+    ////        //days = 365 - days - 1;
+    //////        ASSERT(days >= 0);
+    ////    }
+    //    //if (days < 0) {
+    //    //    days = 365 + IsLeapYear(outYear - 1) + days + 1;
+    //    //    //days = -days;
+    //    //}
+    //
+    //    if (days < 0) {
+    //        days = ONE_YEAR + days;
+    //    } else {
+    //        outYear++;
+    //    }
+    //    if (days == 0) days = 1;
+    //
+    //    if (DateTime::IsLeapYear(outYear) && (days + 1 < DAYS_AFTER_MONTH[2])) {
+    //        days++;
+    //    }
+    //
+    //    /* Compute month. */
+    //    // Month must be greater than or than ('days' / 32).
+    //    for (outMonth = static_cast<INT>((days >> 5) + 1);
+    //            days > DAYS_AFTER_MONTH[outMonth]; outMonth++);
+    //
+    //    /* Compute day in month. */
+    //    outDay = static_cast<INT>(days - DAYS_AFTER_MONTH[outMonth - 1]);
+    //
+    //    //if ((cntYears == 0) && containsLeapYear && (days == 59)) {
+    //    //    /* On 29.02. */
+    //    //    outMonth = 2;
+    //    //    outDay = 29;
+    //
+    //    //} else {
+    //    //    /*
+    //    //     * Manipulate 'days' to look like a non-leap year for month lookup
+    //    //     * in the DAYS_AFTER_MONTH array.
+    //    //     */
+    //
+    //    //    if ((cntYears == 0) && containsLeapYear && (days >= 59)) {
+    //    //        /* After 29.02. */
+    //    //        days--;
+    //    //    }
+    //
+    //    //    days++;
+    //
+    //    //    // Month must be greater than or equal to ('days' / 32).
+    //    //    for (outMonth = static_cast<INT>((days >> 5) + 1);
+    //    //        days > DAYS_AFTER_MONTH[outMonth]; outMonth++);
+    //
+    //    //    outDay = static_cast<INT>(days - DAYS_AFTER_MONTH[outMonth - 1]);
+    //    //}
+    //
+    //    /* Handle years B. C. */
+    //    //if (this->value < 0) {
+    //    //    outYear *= -1;
+    //    //}
 }
 
 
 /*
  * vislib::sys::DateTime::GetTime
  */
-void vislib::sys::DateTime::GetTime(INT& outHours, 
-                                    INT& outMinutes, 
-                                    INT& outSeconds,
-                                    INT& outMilliseconds) const {
+void vislib::sys::DateTime::GetTime(INT& outHours, INT& outMinutes, INT& outSeconds, INT& outMilliseconds) const {
     INT64 time = this->ticks % DateTimeSpan::TICKS_PER_DAY;
     if (time < 0) {
         time += DateTimeSpan::TICKS_PER_DAY;
@@ -274,19 +266,18 @@ void vislib::sys::DateTime::GetTime(INT& outHours,
 /*
  * vislib::sys::DateTime::Set
  */
-void vislib::sys::DateTime::Set(const INT year, const INT month, const INT day,
-        const INT hours, const INT minutes, const INT seconds, 
-        const INT milliseconds, const INT ticks ) {
-    INT64 y = (year != 0) ? year : 1;       // The possibly corrected year.
-    INT64 m = (month != 0) ? month : 1;     // The possibly corrected month.
-    INT64 d = (day != 0) ? day : 1;         // The possibly corrected day.
-    INT64 t = 0;                            // Auxiliary variable.
-    INT64 days = 0;                         // The total days.
+void vislib::sys::DateTime::Set(const INT year, const INT month, const INT day, const INT hours, const INT minutes,
+    const INT seconds, const INT milliseconds, const INT ticks) {
+    INT64 y = (year != 0) ? year : 1;   // The possibly corrected year.
+    INT64 m = (month != 0) ? month : 1; // The possibly corrected month.
+    INT64 d = (day != 0) ? day : 1;     // The possibly corrected day.
+    INT64 t = 0;                        // Auxiliary variable.
+    INT64 days = 0;                     // The total days.
 
     /* Correct possible invalid months by rolling the year. */
     if (m < 0) {
         /* Roll backwards. */
-        t = ++m;                            // Must reflect missing month 0.
+        t = ++m; // Must reflect missing month 0.
         m = 12 + m % 12;
         if ((y += t / 12 - 1) == 0) {
             y = -1;
@@ -303,13 +294,12 @@ void vislib::sys::DateTime::Set(const INT year, const INT month, const INT day,
     ASSERT(m >= 1);
     ASSERT(m <= 12);
 
-    /* 
+    /*
      * Determine how many days are in each month of the input year. The year
      * must not yet be zero-based for this operation!
      */
     ASSERT(y != 0);
-    const INT64 *daysAfterMonth = DateTime::IsLeapYear(static_cast<INT>(y)) 
-        ? DAYS_AFTER_MONTH_LY : DAYS_AFTER_MONTH;
+    const INT64* daysAfterMonth = DateTime::IsLeapYear(static_cast<INT>(y)) ? DAYS_AFTER_MONTH_LY : DAYS_AFTER_MONTH;
 
     /* Positive years are zero-based from now on (year 0 does not exist!). */
     ASSERT(y != 0);
@@ -318,18 +308,15 @@ void vislib::sys::DateTime::Set(const INT year, const INT month, const INT day,
     }
 
     /* Compute the days since 01.01.0001. */
-    days = y * DAYS_PER_YEAR 
-        + (y / 4) - (y / 100) + (y / 400)   // Add leap day for leap years.
-        + daysAfterMonth[m - 1] 
-        + ((d > 0) ? (d - 1) : d);          // Days now zero-based. Also fix 
-                                            // day 0 to be day 1 of month.
+    days = y * DAYS_PER_YEAR + (y / 4) - (y / 100) + (y / 400) // Add leap day for leap years.
+           + daysAfterMonth[m - 1] + ((d > 0) ? (d - 1) : d);  // Days now zero-based. Also fix
+                                                               // day 0 to be day 1 of month.
 
     /* Convert the days to ticks. */
     this->ticks = DateTimeSpan::DaysToTicks(days);
 
     /* Add the time. */
-    this->ticks += DateTimeSpan::TimeToTicks(hours, minutes, seconds, 
-        milliseconds, ticks);
+    this->ticks += DateTimeSpan::TimeToTicks(hours, minutes, seconds, milliseconds, ticks);
 }
 
 
@@ -337,8 +324,7 @@ void vislib::sys::DateTime::Set(const INT year, const INT month, const INT day,
  * vislib::sys::DateTime::Set
  */
 void vislib::sys::DateTime::Set(const struct tm& tm) {
-    this->Set(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-        tm.tm_hour, tm.tm_min, tm.tm_sec, 0);
+    this->Set(tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, 0);
 }
 
 
@@ -355,7 +341,7 @@ void vislib::sys::DateTime::Set(const time_t time) {
     }
 
 #elif defined(_WIN32)
-    struct tm *tm = ::localtime(&time);
+    struct tm* tm = ::localtime(&time);
     if (tm != NULL) {
         this->Set(*tm);
     } else {
@@ -389,23 +375,19 @@ void vislib::sys::DateTime::Set(const FILETIME& fileTime) {
 /*
  * vislib::sys::DateTime::Set
  */
-void vislib::sys::DateTime::Set(const SYSTEMTIME& systemTime, 
-        const bool isUTC) {
+void vislib::sys::DateTime::Set(const SYSTEMTIME& systemTime, const bool isUTC) {
     SYSTEMTIME lSystemTime;
 
     if (isUTC) {
-        if (!::SystemTimeToTzSpecificLocalTime(NULL, 
-                const_cast<SYSTEMTIME *>(&systemTime), &lSystemTime)) {
+        if (!::SystemTimeToTzSpecificLocalTime(NULL, const_cast<SYSTEMTIME*>(&systemTime), &lSystemTime)) {
             throw SystemException(__FILE__, __LINE__);
         }
-        this->Set(lSystemTime.wYear, lSystemTime.wMonth, lSystemTime.wDay,
-            lSystemTime.wHour, lSystemTime.wMinute, lSystemTime.wSecond, 
-            lSystemTime.wMilliseconds);
+        this->Set(lSystemTime.wYear, lSystemTime.wMonth, lSystemTime.wDay, lSystemTime.wHour, lSystemTime.wMinute,
+            lSystemTime.wSecond, lSystemTime.wMilliseconds);
 
     } else {
-        this->Set(systemTime.wYear, systemTime.wMonth, systemTime.wDay,
-            systemTime.wHour, systemTime.wMinute, systemTime.wSecond,
-            systemTime.wMilliseconds);
+        this->Set(systemTime.wYear, systemTime.wMonth, systemTime.wDay, systemTime.wHour, systemTime.wMinute,
+            systemTime.wSecond, systemTime.wMilliseconds);
     }
 }
 #endif /* _WIN32 */
@@ -414,9 +396,7 @@ void vislib::sys::DateTime::Set(const SYSTEMTIME& systemTime,
 /*
  * vislib::sys::DateTime::SetDate
  */
-void vislib::sys::DateTime::SetDate(const INT year, 
-                                    const INT month, 
-                                    const INT day) {
+void vislib::sys::DateTime::SetDate(const INT year, const INT month, const INT day) {
     INT64 time = this->ticks % DateTimeSpan::TICKS_PER_DAY;
     this->Set(year, month, day, 0, 0, 0);
     this->ticks += time;
@@ -426,21 +406,17 @@ void vislib::sys::DateTime::SetDate(const INT year,
 /*
  * vislib::sys::DateTime::SetTime
  */
-void vislib::sys::DateTime::SetTime(const INT hours, 
-                                    const INT minutes, 
-                                    const INT seconds,
-                                    const INT milliseconds,
-                                    const INT ticks) {
+void vislib::sys::DateTime::SetTime(
+    const INT hours, const INT minutes, const INT seconds, const INT milliseconds, const INT ticks) {
     this->ticks -= this->ticks % DateTimeSpan::TICKS_PER_DAY;
-    this->ticks += DateTimeSpan::TimeToTicks(hours, minutes, seconds,
-        milliseconds, ticks);
+    this->ticks += DateTimeSpan::TimeToTicks(hours, minutes, seconds, milliseconds, ticks);
 }
 
 
 /*
  * vislib::sys::DateTime::operator =
  */
-vislib::sys::DateTime& vislib::sys::DateTime::operator =(const DateTime& rhs) {
+vislib::sys::DateTime& vislib::sys::DateTime::operator=(const DateTime& rhs) {
     if (this != &rhs) {
         this->ticks = rhs.ticks;
     }
@@ -451,8 +427,7 @@ vislib::sys::DateTime& vislib::sys::DateTime::operator =(const DateTime& rhs) {
 /*
  * vislib::sys::DateTime::operator +=
  */
-vislib::sys::DateTime& vislib::sys::DateTime::operator +=(
-        const DateTimeSpan& rhs) {
+vislib::sys::DateTime& vislib::sys::DateTime::operator+=(const DateTimeSpan& rhs) {
     DateTimeSpan tmp(this->ticks);
     tmp += rhs;
     this->ticks = static_cast<INT64>(tmp);
@@ -463,8 +438,7 @@ vislib::sys::DateTime& vislib::sys::DateTime::operator +=(
 /*
  * vislib::sys::DateTime::operator -=
  */
-vislib::sys::DateTime& vislib::sys::DateTime::operator -=(
-        const DateTimeSpan& rhs) {
+vislib::sys::DateTime& vislib::sys::DateTime::operator-=(const DateTimeSpan& rhs) {
     DateTimeSpan tmp(this->ticks);
     tmp -= rhs;
     this->ticks = static_cast<INT64>(tmp);
@@ -475,8 +449,7 @@ vislib::sys::DateTime& vislib::sys::DateTime::operator -=(
 /*
  * vislib::sys::DateTime::operator -
  */
-vislib::sys::DateTimeSpan vislib::sys::DateTime::operator -(
-        const DateTime& rhs) const {
+vislib::sys::DateTimeSpan vislib::sys::DateTime::operator-(const DateTime& rhs) const {
     DateTimeSpan retval(this->ticks);
     DateTimeSpan r(rhs.ticks);
     retval -= r;
@@ -490,7 +463,7 @@ vislib::sys::DateTimeSpan vislib::sys::DateTime::operator -(
 vislib::sys::DateTime::operator struct tm(void) const {
     struct tm retval;
     INT year, month, day, hour, minute, second;
-    
+
     this->Get(year, month, day, hour, minute, second);
 
     retval.tm_year = year - 1900;
@@ -499,9 +472,9 @@ vislib::sys::DateTime::operator struct tm(void) const {
     retval.tm_hour = hour;
     retval.tm_min = minute;
     retval.tm_sec = second;
-    retval.tm_isdst = -1;   // Mark DST state as unknown.
-    retval.tm_wday = 0;     // TODO
-    retval.tm_yday = 0;     // TODO
+    retval.tm_isdst = -1; // Mark DST state as unknown.
+    retval.tm_wday = 0;   // TODO
+    retval.tm_yday = 0;   // TODO
 
     return retval;
 }
@@ -517,13 +490,13 @@ vislib::sys::DateTime::operator time_t(void) const {
 
 
 #ifdef _WIN32
-/* 
+/*
  * vislib::sys::DateTime::operator FILETIME
  */
 vislib::sys::DateTime::operator FILETIME(void) const {
     FILETIME retval;
     SYSTEMTIME systemTime = static_cast<SYSTEMTIME>(*this);
-    
+
     if (!::SystemTimeToFileTime(&systemTime, &retval)) {
         throw SystemException(__FILE__, __LINE__);
     }
@@ -538,7 +511,7 @@ vislib::sys::DateTime::operator FILETIME(void) const {
 vislib::sys::DateTime::operator SYSTEMTIME(void) const {
     SYSTEMTIME localTime, retval;
     INT year, month, day, hours, minutes, seconds, millis;
-    
+
     this->Get(year, month, day, hours, minutes, seconds, millis);
 
     localTime.wYear = year;
@@ -548,10 +521,10 @@ vislib::sys::DateTime::operator SYSTEMTIME(void) const {
     localTime.wMinute = minutes;
     localTime.wSecond = seconds;
     localTime.wMilliseconds = millis;
-    localTime.wDayOfWeek = 0;          // TODO
+    localTime.wDayOfWeek = 0; // TODO
 
     ::TzSpecificLocalTimeToSystemTime(NULL, &localTime, &retval);
-    
+
     return retval;
 }
 #endif /* _WIN32 */
@@ -560,17 +533,14 @@ vislib::sys::DateTime::operator SYSTEMTIME(void) const {
 /*
  * vislib::sys::DateTime::DAYS_AFTER_MONTH
  */
-const INT64 vislib::sys::DateTime::DAYS_AFTER_MONTH[13] = {
-    0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 
-};
+const INT64 vislib::sys::DateTime::DAYS_AFTER_MONTH[13] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
 
 
 /*
  * vislib::sys::DateTime::DAYS_AFTER_MONTH
  */
 const INT64 vislib::sys::DateTime::DAYS_AFTER_MONTH_LY[13] = {
-    0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366
-};
+    0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366};
 
 
 /*
@@ -582,22 +552,19 @@ const INT64 vislib::sys::DateTime::DAYS_PER_YEAR = static_cast<INT64>(365);
 /*
  * vislib::sys::DateTime::DAYS_PER_4YEARS
  */
-const INT64 vislib::sys::DateTime::DAYS_PER_4YEARS 
-    = static_cast<INT64>(365) * 4 + 1;
+const INT64 vislib::sys::DateTime::DAYS_PER_4YEARS = static_cast<INT64>(365) * 4 + 1;
 
 
 /*
  * vislib::sys::DateTime::DAYS_PER_100YEARS
  */
-const INT64 vislib::sys::DateTime::DAYS_PER_100YEARS 
-    = static_cast<INT64>(365) * 100 + (100 / 4) - 1;
+const INT64 vislib::sys::DateTime::DAYS_PER_100YEARS = static_cast<INT64>(365) * 100 + (100 / 4) - 1;
 
 
 /*
  * vislib::sys::DateTime::DAYS_PER_400YEARS
  */
-const INT64 vislib::sys::DateTime::DAYS_PER_400YEARS 
-    = static_cast<INT64>(365) * 400 + (400 / 4) - 3;
+const INT64 vislib::sys::DateTime::DAYS_PER_400YEARS = static_cast<INT64>(365) * 400 + (400 / 4) - 3;
 
 
 /*
@@ -641,8 +608,7 @@ INT64 vislib::sys::DateTime::get(const DatePart datePart) const {
     // Last year has an extra day, so decrement result if 4
     if (y1 == 4) {
         y1 = 3;
-    }
-    else if (y1 == -4) {
+    } else if (y1 == -4) {
         ASSERT(0);
         y1 = -3;
     }
@@ -667,18 +633,17 @@ INT64 vislib::sys::DateTime::get(const DatePart datePart) const {
     // Leap year calculation looks different from IsLeapYear since y1, y4,
     // and y100 are relative to year 1, not year 0
     bool leapYear = (y1 == 3) && ((y4 != 24) || (y100 == 3));
-    const INT64 *daysAfterMonth = leapYear 
-        ? DAYS_AFTER_MONTH_LY : DAYS_AFTER_MONTH;
+    const INT64* daysAfterMonth = leapYear ? DAYS_AFTER_MONTH_LY : DAYS_AFTER_MONTH;
 
     // All months have less than 32 days, so n >> 5 is a good conservative
     // estimate for the month
     INT64 m = (n >> 5) + 1;
-    
+
     // m = 1-based month number
     while (n >= daysAfterMonth[m]) {
         m++;
     }
-            
+
     // If month was requested, return it
     if (datePart == DATE_PART_MONTH) {
         return m;

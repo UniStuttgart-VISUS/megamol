@@ -12,45 +12,37 @@
 /*
  * vislib::IllegalParamException::IllegalParamException
  */
-vislib::IllegalParamException::IllegalParamException(const char *paramName,
-        const char *file, const int line) 
+vislib::IllegalParamException::IllegalParamException(const char* paramName, const char* file, const int line)
         : Exception(file, line) {
-	Exception::formatMsg("Parameter '%s' has an invalid value.", paramName);
+    Exception::formatMsg("Parameter '%s' has an invalid value.", paramName);
 }
 
 
 /*
  * vislib::IllegalParamException::IllegalParamException
  */
-vislib::IllegalParamException::IllegalParamException(const wchar_t *paramName,
-        const char *file, const int line) 
+vislib::IllegalParamException::IllegalParamException(const wchar_t* paramName, const char* file, const int line)
         : Exception(file, line) {
-	Exception::formatMsg(L"Parameter '%s' has an invalid value.", paramName);
+    Exception::formatMsg(L"Parameter '%s' has an invalid value.", paramName);
 }
 
 
 /*
  * vislib::IllegalParamException::IllegalParamException
  */
-vislib::IllegalParamException::IllegalParamException(
-		const IllegalParamException& rhs) 
-		: Exception(rhs) {
-}
+vislib::IllegalParamException::IllegalParamException(const IllegalParamException& rhs) : Exception(rhs) {}
 
 
 /*
  * vislib::IllegalParamException::~IllegalParamException
  */
-vislib::IllegalParamException::~IllegalParamException(void) {
-}
+vislib::IllegalParamException::~IllegalParamException(void) {}
 
 
 /*
  * vislib::IllegalParamException::operator =
  */
-vislib::IllegalParamException& vislib::IllegalParamException::operator =(
-		const IllegalParamException& rhs) {
-	Exception::operator =(rhs);
-	return *this;
+vislib::IllegalParamException& vislib::IllegalParamException::operator=(const IllegalParamException& rhs) {
+    Exception::operator=(rhs);
+    return *this;
 }
-

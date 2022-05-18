@@ -4,8 +4,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "MapGenerator.h"
+#include "stdafx.h"
 
 #include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/param/BoolParam.h"
@@ -1420,7 +1420,7 @@ bool MapGenerator::GetMeshExtents(Call& call) {
         return false;
 
     if (this->store_new_mesh) {
-        MeshMode selected = (MeshMode) this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
+        MeshMode selected = (MeshMode)this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
         geocalls::CallTriMeshData::Mesh themesh;
         if (selected == MeshMode::MESH_ORIGINAL) {
             themesh.SetVertexData(static_cast<uint>(this->vertices.size() / 3), this->vertices.data(),
@@ -3701,7 +3701,7 @@ bool MapGenerator::Render(core::view::CallRender3DGL& call) {
         shaderReloaded = true;
     }
 
-    MeshMode meshMode = (MeshMode) this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
+    MeshMode meshMode = (MeshMode)this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
     if (this->out_mesh_selection_slot.IsDirty()) {
         store_new_mesh = true;
         this->out_mesh_selection_slot.ResetDirty();
@@ -3772,15 +3772,14 @@ bool MapGenerator::Render(core::view::CallRender3DGL& call) {
     glDisable(GL_CULL_FACE);
 
     // Get the bounding box, the view direction and the up direction of the camera.
-    cam_type::matrix_type viewTemp, projTemp;
-    call.GetCamera(this->cam);
-    cam.calc_matrices(this->cam_snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    glm::vec4 eye_vec = cam.view_vector();
-    glm::vec4 eye_up = cam.up_vector();
-
+    auto cam = call.GetCamera();
     auto bbox = call.AccessBoundingBoxes().BoundingBox();
-    auto eye_dir = vec3f(eye_vec.x, eye_vec.y, eye_vec.z);
-    auto up_dir = vec3f(eye_up.x, eye_up.y, eye_up.z);
+
+    auto dir = cam.getPose().direction;
+    auto dirUp = cam.getPose().up;
+
+    vec3f eye_dir = vec3f(dir.x, dir.y, dir.z);
+    vec3f up_dir = vec3f(dirUp.x, dirUp.y, dirUp.z);
 
     // Has the input data changed or the shader been reloaded?
     if (this->lastDataHash != ctmd->DataHash() || this->computeButton.IsDirty() || shaderReloaded ||
@@ -3806,27 +3805,37 @@ bool MapGenerator::Render(core::view::CallRender3DGL& call) {
             pdb_name = splitString(pdb_name, '\\').back();
             pdb_name = splitString(pdb_name, '/').back();
         }
-        vislib::TString prev_file_path;
+        std::filesystem::path prev_file_path;
         if (this->store_png_path.IsDirty()) {
             prev_file_path = this->store_png_path.Param<param::FilePathParam>()->Value();
             this->store_png_path.ResetDirty();
         }
-        prev_file_path.Append(A2T(pdb_name.c_str()));
-        prev_file_path.Append(_T(".png"));
+        prev_file_path.append(pdb_name.c_str());
+        prev_file_path.append(".png");
         this->store_png_path.Param<param::FilePathParam>()->SetValue(prev_file_path, false);
 
-        prev_file_path.Clear();
+        prev_file_path.clear();
         if (this->store_png_values_path.IsDirty()) {
             prev_file_path = this->store_png_values_path.Param<param::FilePathParam>()->Value();
             this->store_png_values_path.ResetDirty();
         }
-        prev_file_path.Append(A2T(pdb_name.c_str()));
-        prev_file_path.Append(_T("_values.dat"));
+        prev_file_path.append(pdb_name.c_str());
+        prev_file_path.append("_values.dat");
         this->store_png_values_path.Param<param::FilePathParam>()->SetValue(prev_file_path, false);
 
         // Get the colour tables.
-        Color::ReadColorTableFromFile(cut_colour_param.Param<param::FilePathParam>()->Value(), cut_colour_table);
-        Color::ReadColorTableFromFile(group_colour_param.Param<param::FilePathParam>()->Value(), group_colour_table);
+        {
+            auto* wPath = cut_colour_param.Param<param::FilePathParam>()->Value().c_str();
+            vislib::StringA path;
+            path.Append(W2A(wPath));
+            Color::ReadColorTableFromFile(path, cut_colour_table);
+        }
+        {
+            auto* wPath = group_colour_param.Param<param::FilePathParam>()->Value().c_str();
+            vislib::StringA path;
+            path.Append(W2A(wPath));
+            Color::ReadColorTableFromFile(path, group_colour_table);
+        }
 
         if (ctmd->Count() > 0 && ctmd->Objects()[0].GetVertexCount() > 0) {
             // Create local copy of the mesh.
@@ -4192,15 +4201,17 @@ bool MapGenerator::Render(core::view::CallRender3DGL& call) {
         this->store_png_fbo.GetColourTexture(&this->store_png_data[0], 0, GL_RGB, GL_UNSIGNED_BYTE);
 
         if (writeValues) {
-            this->writeValueImage(
-                this->store_png_values_path.Param<param::FilePathParam>()->Value(), *ctmd, this->store_png_data);
+            auto* wPath = this->store_png_values_path.Param<param::FilePathParam>()->Value().c_str();
+            vislib::TString path;
+            path.Append(W2T(wPath));
+            this->writeValueImage(path, *ctmd, this->store_png_data);
         }
 
         this->store_png_image.Image() =
             new vislib::graphics::BitmapImage(this->store_png_fbo.GetWidth(), this->store_png_fbo.GetHeight(), 3U,
                 vislib::graphics::BitmapImage::CHANNELTYPE_BYTE, static_cast<const void*>(&this->store_png_data[0]));
         this->store_png_image.Image()->FlipVertical();
-        if (this->store_png_image.Save(T2A(this->store_png_path.Param<param::FilePathParam>()->Value()))) {
+        if (this->store_png_image.Save(this->store_png_path.Param<param::FilePathParam>()->Value().c_str())) {
             core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO,
                 "%s: Stored molecular surface map to file: %s", this->ClassName(),
                 T2A(this->store_png_path.Param<param::FilePathParam>()->Value()));
@@ -4260,9 +4271,7 @@ bool MapGenerator::Render(core::view::CallRender3DGL& call) {
     // Determine the data that is rendered based on the Display mode and
     // update the renderer with the new data.
     if (this->display_param.Param<param::EnumParam>()->Value() == DisplayMode::PROTEIN) {
-        if (this->display_param.Param<param::EnumParam>()->Value() == DisplayMode::PROTEIN) {
-            this->triMeshRenderer.update(&this->faces, &this->vertices, &this->vertexColors, &this->normals);
-        }
+        this->triMeshRenderer.update(&this->faces, &this->vertices, &this->vertexColors, &this->normals);
     } else if (this->display_param.Param<param::EnumParam>()->Value() == DisplayMode::SHADOW) {
         // Get the AO texture.
         auto vector = this->aoCalculator.getVertexShadows();

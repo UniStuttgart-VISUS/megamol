@@ -6,7 +6,17 @@ pr:
 - master
 
 variables:
-  enablePlugins: '-DBUILD_PLUGIN_ADIOS_PLUGIN=ON -DBUILD_PLUGIN_ASTRO=ON -DBUILD_PLUGIN_IMAGEVIEWER2=ON -DBUILD_PLUGIN_MEGAMOL101=ON -DBUILD_PLUGIN_MMVTKM=ON -DBUILD_PLUGIN_REMOTE=ON'
+  defaultConfig: >-
+    -DBUILD_PLUGIN_ASTRO=ON
+    -DBUILD_PLUGIN_ASTRO_GL=ON
+    -DBUILD_PLUGIN_IMAGE_GL=ON
+    -DBUILD_PLUGIN_MEGAMOL101_GL=ON
+    -DBUILD_PLUGIN_MMADIOS=ON
+    -DBUILD_PLUGIN_MMVTKM=ON
+    -DBUILD_PLUGIN_MMVTKM_GL=ON
+    -DBUILD_PLUGIN_REMOTE=OFF
+  nonGlConfig: >-
+    -DENABLE_GL=OFF
 
 jobs:
 - job: Windows
@@ -15,9 +25,15 @@ jobs:
       'VS2019 Release':
         configuration: Release
         generator: 'Visual Studio 16 2019'
+        cmakeExtraArgs: '$(defaultConfig)'
       'VS2019 Debug':
         configuration: Debug
         generator: 'Visual Studio 16 2019'
+        cmakeExtraArgs: '$(defaultConfig)'
+      'VS2019 Release (nonGL)':
+        configuration: Release
+        generator: 'Visual Studio 16 2019'
+        cmakeExtraArgs: '$(nonGlConfig)'
 
   pool:
     name: 'hardware'
@@ -27,23 +43,11 @@ jobs:
     - VisualStudio_16.0
 
   steps:
-  - task: PowerShell@2
-    displayName: 'Install Python'
-    inputs:
-      targetType: 'inline'
-      script: |
-        $pythonUrl = "https://www.python.org/ftp/python/3.9.4/python-3.9.4-embed-amd64.zip"
-        $python_path = Join-Path (Get-Item .).FullName "python_tmp"
-        $tmp = New-TemporaryFile
-        $tmp = Rename-Item -Path $tmp -NewName "$tmp.zip" -PassThru
-        Invoke-WebRequest -OutFile $tmp $pythonUrl
-        Expand-Archive -Path $tmp -DestinationPath python_tmp -Force
-        $tmp | Remove-Item
-        echo "##vso[task.prependpath]$python_path"
+  - template: .ci/check-pr-labels-step.yml
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -A"x64" $(enablePlugins)'
+      cmakeArgs: '.. -G"$(generator)" -A"x64" $(cmakeExtraArgs)'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
@@ -52,26 +56,39 @@ jobs:
 - job: Linux
   strategy:
     matrix:
-      'GCC9 / Make / Release':
-        cCompiler: gcc-9
-        cxxCompiler: g++-9
-        configuration: Release
-        generator: 'Unix Makefiles'
+      ## Temporarily disabled until more CI machines are available!
+      #'GCC9 / Make / Release':
+      #  cCompiler: gcc-9
+      #  cxxCompiler: g++-9
+      #  configuration: Release
+      #  generator: 'Unix Makefiles'
+      #  cmakeExtraArgs: '$(defaultConfig)'
       'GCC9 / Make / Debug':
         cCompiler: gcc-9
         cxxCompiler: g++-9
         configuration: Debug
         generator: 'Unix Makefiles'
-      'GCC9 / Ninja / Release':
-        cCompiler: gcc-9
-        cxxCompiler: g++-9
-        configuration: Release
-        generator: 'Ninja'
-      'Clang10 / Make / Release':
+        cmakeExtraArgs: '$(defaultConfig)'
+      ## Temporarily disabled until more CI machines are available!
+      #'GCC9 / Ninja / Release':
+      #  cCompiler: gcc-9
+      #  cxxCompiler: g++-9
+      #  configuration: Release
+      #  generator: 'Ninja'
+      #  cmakeExtraArgs: '$(defaultConfig)'
+      ## Temporarily changed to Ninja instead of Make until more CI machines are available!
+      'Clang10 / Ninja / Release':
         cCompiler: clang-10
         cxxCompiler: clang++-10
         configuration: Release
+        generator: 'Ninja'
+        cmakeExtraArgs: '$(defaultConfig)'
+      'GCC9 / Make / Release (nonGL)':
+        cCompiler: gcc-9
+        cxxCompiler: g++-9
+        configuration: Release
         generator: 'Unix Makefiles'
+        cmakeExtraArgs: '$(nonGlConfig)'
 
   pool:
     name: 'default'
@@ -81,49 +98,14 @@ jobs:
     - megamol_build_enabled
 
   steps:
+  - template: .ci/check-pr-labels-step.yml
   - bash: echo "##vso[task.setvariable variable=numberOfCpuCores]$(nproc)"
     displayName: 'Bash get number of CPU cores'
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -DCMAKE_C_COMPILER=$(cCompiler) -DCMAKE_CXX_COMPILER=$(cxxCompiler) -DCMAKE_BUILD_TYPE=$(configuration) $(enablePlugins)'
+      cmakeArgs: '.. -G"$(generator)" -DCMAKE_C_COMPILER=$(cCompiler) -DCMAKE_CXX_COMPILER=$(cxxCompiler) -DCMAKE_BUILD_TYPE=$(configuration) $(cmakeExtraArgs)'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
       cmakeArgs: '--build . --parallel $(numberOfCpuCores)'
-
-# The file check runs on Linux. Windows clients probably uses git autocrlf, making it hard to detect wrong line endings in the repo.
-- job: FileChecks
-  displayName: 'File Checks'
-  pool:
-    name: 'default'
-    demands:
-    - Agent.OS -equals Linux
-  steps:
-  - task: Bash@3
-    displayName: 'Run File Checks'
-    inputs:
-      filePath: '.ci/check_files.sh'
-
-- job: ClangFormatCheck
-  displayName: 'Run ClangFormat Check'
-  pool:
-    name: 'default'
-    demands:
-    - Agent.OS -equals Linux
-    - cmake
-    - megamol_build_enabled
-  steps:
-  - task: CMake@1
-    displayName: 'CMake Configure'
-    inputs:
-      cmakeArgs: '..'
-  - task: CMake@1
-    displayName: 'CMake run ClangFormat'
-    inputs:
-      cmakeArgs: '--build . --target clangformat_all'
-  - task: Bash@3
-    displayName: 'Check for changes with git'
-    inputs:
-      targetType: 'inline'
-      script: git diff --exit-code

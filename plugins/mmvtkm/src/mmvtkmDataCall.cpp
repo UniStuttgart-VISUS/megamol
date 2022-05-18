@@ -1,7 +1,7 @@
 ///*
 // * vtkmDataCall.cpp
 // *
-// * Copyright (C) 2020-2021 by Universitaet Stuttgart (VISUS). 
+// * Copyright (C) 2020-2021 by Universitaet Stuttgart (VISUS).
 // * Alle Rechte vorbehalten.
 // */
 //
@@ -16,8 +16,8 @@
 ///*
 // * moldyn::mmvtkmDataCall::mmvtkmDataCall
 // */
-//mmvtkmDataCall::mmvtkmDataCall(void) : AbstractGetData3DCall(), 
-//	data_(nullptr) 
+//mmvtkmDataCall::mmvtkmDataCall(void) : AbstractGetData3DCall(),
+//    data_(nullptr)
 //{
 //    // Intentionally empty
 //}

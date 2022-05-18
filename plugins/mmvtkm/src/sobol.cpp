@@ -33,8 +33,7 @@ namespace sobol {
 const unsigned Matrices::num_dimensions;
 const unsigned Matrices::size;
 
-const unsigned Matrices::matrices[Matrices::num_dimensions * Matrices::size] =
-{
+const unsigned Matrices::matrices[Matrices::num_dimensions * Matrices::size] = {
     0x80000000U,
     0x40000000U,
     0x20000000U,
@@ -53286,4 +53285,3 @@ const unsigned Matrices::matrices[Matrices::num_dimensions * Matrices::size] =
 };
 
 } // namespace sobol
-

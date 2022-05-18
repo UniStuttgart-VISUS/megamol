@@ -10,20 +10,20 @@
 #ifndef MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H
 #define MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H
 
-#include "protein_calls/CrystalStructureDataCall.h"
 #include "CUDACurl.cuh"
 #include "UniGrid3D.h"
-#include "CUDAMarchingCubes.h"
+#include "protein_calls/CrystalStructureDataCall.h"
+#include "quicksurf/CUDAMarchingCubes.h"
 
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
 #include "mmcore/BoundingBoxes.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -31,15 +31,14 @@ namespace protein_cuda {
 /**
  * Renderer class combining volume rendering and raycasting.
  */
-class CrystalStructureVolumeRenderer : public core::view::Renderer3DModuleDS {
+class CrystalStructureVolumeRenderer : public core_gl::view::Renderer3DModuleGL {
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "CrystalStructureVolumeRenderer";
     }
 
@@ -54,7 +53,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Offers volume rendering for data based on crystal structures.";
     }
 
@@ -64,39 +63,45 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        if(!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable())
-            return false;
         return true;
     }
 
 protected:
-
     /** Arrow color mode */
-    enum ArrowColorMode {ARRCOL_ELEMENT, ARRCOL_ORIENT, ARRCOL_MAGNITUDE};
+    enum ArrowColorMode { ARRCOL_ELEMENT, ARRCOL_ORIENT, ARRCOL_MAGNITUDE };
 
     /** Atom rendering modes */
-    enum AtomRenderMode {ATOM_NONE, ATOM_SPHERES};
+    enum AtomRenderMode { ATOM_NONE, ATOM_SPHERES };
 
     /** Rendering modes for ba edges */
-    enum EdgeBaRenderMode {BA_EDGE_NONE, BA_EDGE_LINES, BA_EDGE_STICK};
+    enum EdgeBaRenderMode { BA_EDGE_NONE, BA_EDGE_LINES, BA_EDGE_STICK };
 
     /** Rendering modes for ti edges */
-    enum EdgeTiRenderMode {TI_EDGE_NONE, TI_EDGE_LINES, TI_EDGE_STICK};
+    enum EdgeTiRenderMode { TI_EDGE_NONE, TI_EDGE_LINES, TI_EDGE_STICK };
 
 
     /** Slice render mode */
-    enum SliceRenderMode {VEC_MAG, VEC_DIR, LIC_GPU, ROT_MAG, SLICE_DENSITYMAP,
-        SLICE_DELTA_X, SLICE_DELTA_Y, SLICE_DELTA_Z,
-        SLICE_COLORMAP, SLICE_NONE};
+    enum SliceRenderMode {
+        VEC_MAG,
+        VEC_DIR,
+        LIC_GPU,
+        ROT_MAG,
+        SLICE_DENSITYMAP,
+        SLICE_DELTA_X,
+        SLICE_DELTA_Y,
+        SLICE_DELTA_Z,
+        SLICE_COLORMAP,
+        SLICE_NONE
+    };
 
     /** Rendering modes for vectors */
-    enum VecRenderMode {VEC_NONE, VEC_ARROWS};
+    enum VecRenderMode { VEC_NONE, VEC_ARROWS };
 
     /** Coloring modes for the raymarching iso surface */
-    enum VolColorMode {VOL_UNI, VOL_DIR, VOL_MAG, VOL_LIC};
+    enum VolColorMode { VOL_UNI, VOL_DIR, VOL_MAG, VOL_LIC };
 
     /** Texture to be sued for raymarching */
-    enum RayMarchTex {DENSITY, DIR_MAG, CURL_MAG};
+    enum RayMarchTex { DENSITY, DIR_MAG, CURL_MAG };
 
     /**
      * (Re)calculate visibility of atoms, edges and cells. Should get called
@@ -104,7 +109,7 @@ protected:
      *
      * @param[in] dc The data call
      */
-    void ApplyPosFilter(const protein_calls::CrystalStructureDataCall *dc);
+    void ApplyPosFilter(const protein_calls::CrystalStructureDataCall* dc);
 
     /**
      * Calculate density map after filtering dipole vectors and setup density
@@ -114,8 +119,7 @@ protected:
      * @param[in] atomPos The atom positions
      * @return 'True' on success, 'false' otherwise
      */
-    bool CalcDensityTex(const protein_calls::CrystalStructureDataCall *dc,
-            const float *atomPos);
+    bool CalcDensityTex(const protein_calls::CrystalStructureDataCall* dc, const float* atomPos);
 
     /**
      * Calculate the curl magnitude for the vector field.
@@ -132,8 +136,7 @@ protected:
      * @param[in] atomCol The atom colors (may be NULL)
      * @return True, if the displacement map could be calculated.
      */
-    bool CalcUniGrid(const protein_calls::CrystalStructureDataCall *dc,
-            const float *atomPos, const float *col);
+    bool CalcUniGrid(const protein_calls::CrystalStructureDataCall* dc, const float* atomPos, const float* col);
 
     /**
      * Implementation of 'create'.
@@ -173,8 +176,7 @@ protected:
      * @param[in] dc      The data call
      * @param[in] atomPos The atom positions
      */
-    void FilterVecField(const protein_calls::CrystalStructureDataCall *dc,
-            const float *atomPos);
+    void FilterVecField(const protein_calls::CrystalStructureDataCall* dc, const float* atomPos);
 
     /**
      * The get extents callback. The module should set the members of
@@ -184,7 +186,7 @@ protected:
      * @param[in] call The calling call.
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * Initialize parameters for the LIC calculation and setup random texture.
@@ -205,7 +207,7 @@ protected:
      * @param[in] call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::Call& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     /**
      * Render the vector field as arrows glyphs.
@@ -215,22 +217,22 @@ protected:
      * @param[in] atomCol The atom colors (may be NULL)
      * @return 'True' on success, 'false' otherwise
      */
-    bool RenderVecFieldArrows(const protein_calls::CrystalStructureDataCall *dc,
-            const float *atomPos, const float *col);
+    bool RenderVecFieldArrows(
+        const protein_calls::CrystalStructureDataCall* dc, const float* atomPos, const float* col);
 
     /**
      * Render atom positions as spheres.
      *
      * @param[in] dc The data call
      */
-	void RenderAtomsSpheres(const protein_calls::CrystalStructureDataCall *dc);
+    void RenderAtomsSpheres(const protein_calls::CrystalStructureDataCall* dc);
 
     /**
      * Render critical points as spheres.
      *
      * @param[in] dc The data call
      */
-	void RenderCritPointsSpheres(const protein_calls::CrystalStructureDataCall *dc);
+    void RenderCritPointsSpheres(const protein_calls::CrystalStructureDataCall* dc);
 
     /**
      * Render edges between Ba atoms as lines.
@@ -239,8 +241,8 @@ protected:
      * @param[in] atomPos The atom positions
      * @param[in] atomCol The atom colors (may be NULL)
      */
-	void RenderEdgesBaLines(const protein_calls::CrystalStructureDataCall *dc,
-            const float *atomPos, const float *atomCol);
+    void RenderEdgesBaLines(
+        const protein_calls::CrystalStructureDataCall* dc, const float* atomPos, const float* atomCol);
 
     /**
      * Render edges between Ba atoms as sticks. Overloaded function which
@@ -250,8 +252,8 @@ protected:
      * @param[in] atomPos The atom positions
      * @param[in] atomCol The atom colors
      */
-	void RenderEdgesBaStick(const protein_calls::CrystalStructureDataCall *dc,
-            const float *atomPos, const float *atomCol);
+    void RenderEdgesBaStick(
+        const protein_calls::CrystalStructureDataCall* dc, const float* atomPos, const float* atomCol);
 
     /**
      * Render edges between Ti atoms as lines.
@@ -260,8 +262,8 @@ protected:
      * @param[in] atomPos The atom positions
      * @param[in] atomCol The atom colors
      */
-	void RenderEdgesTiLines(const protein_calls::CrystalStructureDataCall *dc,
-            const float *atomPos, const float *atomCol);
+    void RenderEdgesTiLines(
+        const protein_calls::CrystalStructureDataCall* dc, const float* atomPos, const float* atomCol);
 
     /**
      * Render edges between Ti atoms as sticks. Overloaded function which
@@ -271,8 +273,8 @@ protected:
      * @param[in] atomPos The atom positions
      * @param[in] atomCol The atom colors
      */
-	void RenderEdgesTiStick(const protein_calls::CrystalStructureDataCall *dc,
-            const float *atomPos, const float *atomCol);
+    void RenderEdgesTiStick(
+        const protein_calls::CrystalStructureDataCall* dc, const float* atomPos, const float* atomCol);
 
     /**
      * Render the unigrid curl magnitude as iso surface using CUDA.
@@ -299,7 +301,7 @@ protected:
      * @param[in] dc The data call
      * @return 'True' on success, 'false' otherwise
      */
-	bool SetupAtomColors(const protein_calls::CrystalStructureDataCall *dc);
+    bool SetupAtomColors(const protein_calls::CrystalStructureDataCall* dc);
 
     /**
      * Update all parameters if necessary.
@@ -307,10 +309,9 @@ protected:
      * @param[in] dc The data call
      * @return 'True' on success, 'false' otherwise
      */
-	bool UpdateParams(const protein_calls::CrystalStructureDataCall *dc);
+    bool UpdateParams(const protein_calls::CrystalStructureDataCall* dc);
 
 private:
-
     /**
      * Calculates the volume of one cell defined by the points A-H. The cell
      * doesn't have to be symmetrical. The calculation takes place by
@@ -320,15 +321,9 @@ private:
      * @param[in] A,B,C,D,E,F,G,H The corner points of the cell
      * @return The volume of the cell
      */
-    float calcCellVolume(
-            vislib::math::Vector<float, 3> A,
-            vislib::math::Vector<float, 3> B,
-            vislib::math::Vector<float, 3> C,
-            vislib::math::Vector<float, 3> D,
-            vislib::math::Vector<float, 3> E,
-            vislib::math::Vector<float, 3> F,
-            vislib::math::Vector<float, 3> G,
-            vislib::math::Vector<float, 3> H);
+    float calcCellVolume(vislib::math::Vector<float, 3> A, vislib::math::Vector<float, 3> B,
+        vislib::math::Vector<float, 3> C, vislib::math::Vector<float, 3> D, vislib::math::Vector<float, 3> E,
+        vislib::math::Vector<float, 3> F, vislib::math::Vector<float, 3> G, vislib::math::Vector<float, 3> H);
 
     /**
      * Calculates the volume of one tetrahedron defined by the points A-D.
@@ -336,11 +331,8 @@ private:
      * @param[in] A,B,C,D The corner points
      * @return The volume of the tetrahedron
      */
-    float calcVolTetrahedron(
-            vislib::math::Vector<float, 3> A,
-            vislib::math::Vector<float, 3> B,
-            vislib::math::Vector<float, 3> C,
-            vislib::math::Vector<float, 3> D);
+    float calcVolTetrahedron(vislib::math::Vector<float, 3> A, vislib::math::Vector<float, 3> B,
+        vislib::math::Vector<float, 3> C, vislib::math::Vector<float, 3> D);
 
     /**
      * Computes color gradient based on scalar value.
@@ -672,10 +664,10 @@ private:
     GLuint uniGridColorTex;
 
     /// Frame buffer object for raycasting
-    vislib::graphics::gl::FramebufferObject rcFbo;
+    vislib_gl::graphics::gl::FramebufferObject rcFbo;
 
     /// Frame buffer object for opaque objects of the scene
-    vislib::graphics::gl::FramebufferObject srcFbo;
+    vislib_gl::graphics::gl::FramebufferObject srcFbo;
 
     /// Texture for curl magnitude
     GLuint curlMagTex;
@@ -685,25 +677,25 @@ private:
 
 
     /// Shader for rendering volume slice
-    vislib::graphics::gl::GLSLShader vrShader;
+    vislib_gl::graphics::gl::GLSLShader vrShader;
 
     /// Shader for rendering spheres
-    vislib::graphics::gl::GLSLShader sphereShader;
+    vislib_gl::graphics::gl::GLSLShader sphereShader;
 
     /// Shader for rendering arrows
-    vislib::graphics::gl::GLSLGeometryShader arrowShader;
+    vislib_gl::graphics::gl::GLSLGeometryShader arrowShader;
 
     /// Shader for rendering cylinders
-    vislib::graphics::gl::GLSLShader cylinderShader;
+    vislib_gl::graphics::gl::GLSLShader cylinderShader;
 
     /// Shader for raycasting
-    vislib::graphics::gl::GLSLShader rcShader;
+    vislib_gl::graphics::gl::GLSLShader rcShader;
 
     /// Shader for rendering the cube backface
-    vislib::graphics::gl::GLSLShader rcShaderDebug;
+    vislib_gl::graphics::gl::GLSLShader rcShaderDebug;
 
     /// Shader for per pixel lighting and clipping
-    vislib::graphics::gl::GLSLShader pplShaderClip;
+    vislib_gl::graphics::gl::GLSLShader pplShaderClip;
 
     /// Attribute array for cylinder shader
     GLint attribLocInParams;
@@ -718,35 +710,35 @@ private:
     GLint attribLocColor2;
 
     /// Shader for per pixel lighting
-    vislib::graphics::gl::GLSLShader pplShader;
+    vislib_gl::graphics::gl::GLSLShader pplShader;
 
 
     /// Array for current frame
-    float *frame0;
+    float* frame0;
 
     /// Array for interpolation frame data
-    float *frame1;
+    float* frame1;
 
     /// Array for critical points of the vector field
     vislib::Array<float> critPoints;
 
     /// Array containing the result of the curl operator (device memory)
-    float *gridCurlMagD;
+    float* gridCurlMagD;
 
     /// Array containing the result of the curl operator (device memory)
-    float *gridCurlD;
+    float* gridCurlD;
 
     /// Vertex output array for CUDA marching cubes (host memory)
-    float *mcVertOut;
+    float* mcVertOut;
 
     /// Vertex output array for CUDA marching cubes (device memory)
-    float3 *mcVertOut_D;
+    float3* mcVertOut_D;
 
     /// Normal output array for CUDA marching cubes (host memory)
-    float *mcNormOut;
+    float* mcNormOut;
 
     /// Normal output array for CUDA marching cubes (device memory)
-    float3 *mcNormOut_D;
+    float3* mcNormOut_D;
 
     /// Array holding interpolated atom  positions
     vislib::Array<float> posInter;
@@ -827,7 +819,7 @@ private:
     int idxLastFrame;
 
     /// Pointer to CUDAQuickSurf object if it exists */
-    void *cudaqsurf;
+    void* cudaqsurf;
 
     /// The number of atoms
     unsigned int atomCnt;
@@ -841,6 +833,8 @@ private:
     /// The number of visible ti edges
     unsigned int edgeCntTi;
 
+    unsigned int width, height;
+
     /// Call time of the last frame
     float callTimeOld;
 
@@ -851,13 +845,13 @@ private:
     vislib::math::Vector<int, 2> srcFboDim;
 
     /// Camera information
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
 
     /// CUDA Parameters for curl calculation
     CurlGridParams params;
 
     /// CUDA marching cubes object
-    CUDAMarchingCubes *cudaMC;
+    CUDAMarchingCubes* cudaMC;
 
     /// Maximum vertices for CUDA marching cubes
     unsigned int nVerticesMCOld;
@@ -875,7 +869,7 @@ private:
     float maxLenDiff;
 
     int frameOld;
-    
+
     bool setCUDAGLDevice;
 };
 

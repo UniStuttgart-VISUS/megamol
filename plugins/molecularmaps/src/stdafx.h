@@ -52,7 +52,6 @@
 #include <mutex>
 #include <ppl.h>
 #include <queue>
-#include <queue>
 #include <set>
 #include <thread>
 #include <valarray>

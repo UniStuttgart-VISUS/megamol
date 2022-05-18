@@ -5,10 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/job/JobThread.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
+#include "stdafx.h"
 
 using namespace megamol::core;
 
@@ -48,12 +48,12 @@ void job::JobThread::release(void) {
 /*
  * job::JobThread::Run
  */
-DWORD job::JobThread::Run(void *userData) {
+DWORD job::JobThread::Run(void* userData) {
 
     // this->GetCoreInstance()->Log().WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
     //     "JobThread started (CoreLog)");
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-        "JobThread started (DefaultLog)");
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_INFO, "JobThread started (DefaultLog)");
 
     // TODO: Implement
 
@@ -66,8 +66,8 @@ DWORD job::JobThread::Run(void *userData) {
 
     // this->GetCoreInstance()->Log().WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
     //     "JobThread finished (CoreLog)");
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-        "JobThread finished (DefaultLog)");
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+        megamol::core::utility::log::Log::LEVEL_INFO, "JobThread finished (DefaultLog)");
 
     this->signalEnd(this->shouldTerminate());
     return 0;

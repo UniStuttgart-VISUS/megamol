@@ -1,5 +1,7 @@
 #pragma once
 
+#include <tuple>
+
 #include "mmcore/AbstractGetData3DCall.h"
 
 #include "optix.h"
@@ -41,44 +43,35 @@ public:
         _geo_handle = handle;
     }
 
-    void const* get_record() const {
-        return _sbt_record;
+    std::tuple<void const*, uint32_t, uint64_t> get_record() const {
+        get_sbt_update = set_sbt_update;
+        return std::make_tuple(_sbt_record, _sbt_num_records, _sbt_record_stride);
     }
 
-    void set_record(void const* record) {
+    void set_record(void const* record, uint32_t num_records, uint64_t record_stride, uint64_t version) {
         _sbt_record = record;
+        _sbt_num_records = num_records;
+        _sbt_record_stride = record_stride;
+        set_sbt_update = version;
     }
 
-    std::size_t get_record_stride() const {
-        return _sbt_record_stride;
+    bool has_sbt_update() const {
+        return get_sbt_update < set_sbt_update;
     }
 
-    void set_record_stride(std::size_t size) {
-        _sbt_record_stride = size;
+    std::tuple<OptixProgramGroup const*, uint32_t> get_program_groups() const {
+        get_program_update = set_program_update;
+        return std::make_tuple(_geo_programs, _num_programs);
     }
 
-    int get_num_records() const {
-        return _sbt_num_records;
-    }
-
-    void set_num_records(int count) {
-        _sbt_num_records = count;
-    }
-
-    OptixProgramGroup const* get_program_groups() const {
-        return _geo_programs;
-    }
-
-    void set_program_groups(OptixProgramGroup const* groups) {
+    void set_program_groups(OptixProgramGroup const* groups, uint32_t num_progams, uint64_t version) {
         _geo_programs = groups;
+        _num_programs = num_progams;
+        set_program_update = version;
     }
 
-    int get_num_programs() const {
-        return _num_programs;
-    }
-
-    void set_num_programs(int count) {
-        _num_programs = count;
+    bool has_program_update() const {
+        return get_program_update < set_program_update;
     }
 
 private:
@@ -90,11 +83,17 @@ private:
 
     std::size_t _sbt_record_stride;
 
-    int _sbt_num_records;
+    uint32_t _sbt_num_records;
 
     OptixProgramGroup const* _geo_programs;
 
-    int _num_programs;
+    uint32_t _num_programs;
+
+    uint64_t set_program_update;
+    mutable uint64_t get_program_update;
+
+    uint64_t set_sbt_update;
+    mutable uint64_t get_sbt_update;
 };
 
 using CallGeometryDescription = megamol::core::factories::CallAutoDescription<CallGeometry>;

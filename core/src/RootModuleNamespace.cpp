@@ -4,29 +4,29 @@
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #include "mmcore/RootModuleNamespace.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/Module.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/CallDescriptionManager.h"
-#include "mmcore/CallerSlot.h"
-#include "mmcore/CalleeSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/factories/ModuleDescription.h"
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/assert.h"
+#include "stdafx.h"
 #include "vislib/Array.h"
+#include "vislib/assert.h"
 #if defined(DEBUG) || defined(_DEBUG)
 #include "vislib/sys/AutoLock.h"
 #endif
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/Thread.h"
 #include "vislib/Stack.h"
 #include "vislib/String.h"
-#include "mmcore/utility/sys/Thread.h"
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
 #include <memory>
@@ -54,8 +54,7 @@ RootModuleNamespace::~RootModuleNamespace(void) {
 /*
  * RootModuleNamespace::FullNamespace
  */
-vislib::StringA RootModuleNamespace::FullNamespace(const vislib::StringA& base,
-        const vislib::StringA& path) const {
+vislib::StringA RootModuleNamespace::FullNamespace(const vislib::StringA& base, const vislib::StringA& path) const {
 
     if (path.StartsWith("::")) {
         return path;
@@ -78,7 +77,7 @@ vislib::StringA RootModuleNamespace::FullNamespace(const vislib::StringA& base,
  * RootModuleNamespace::FindNamespace
  */
 ModuleNamespace::ptr_type RootModuleNamespace::FindNamespace(
-        const vislib::Array<vislib::StringA>& path, bool createMissing, bool quiet) {
+    const vislib::Array<vislib::StringA>& path, bool createMissing, bool quiet) {
 
     ModuleNamespace::ptr_type cns = dynamic_pointer_cast(this->shared_from_this());
 
@@ -95,21 +94,18 @@ ModuleNamespace::ptr_type RootModuleNamespace::FindNamespace(
             }
 
         } else {
-            ModuleNamespace *nns = dynamic_cast<ModuleNamespace*>(ano.get());
+            ModuleNamespace* nns = dynamic_cast<ModuleNamespace*>(ano.get());
             if (nns != NULL) {
                 cns = ModuleNamespace::dynamic_pointer_cast(ano);
 
             } else {
                 if (!quiet) {
                     megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                        megamol::core::utility::log::Log::LEVEL_ERROR,
-                        "name conflicts with a namespace object\n");
+                        megamol::core::utility::log::Log::LEVEL_ERROR, "name conflicts with a namespace object\n");
                 }
                 return NULL;
-
             }
         }
-
     }
 
     return cns;
@@ -158,10 +154,10 @@ void RootModuleNamespace::SerializeGraph(vislib::RawStorage& outmem) {
         AbstractNamedObject::ptr_type ano = stack.Pop();
         ASSERT(ano != NULL);
         AbstractNamedObjectContainer::ptr_type anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(ano);
-        Module *mod = dynamic_cast<Module *>(ano.get());
+        Module* mod = dynamic_cast<Module*>(ano.get());
         //CalleeSlot *callee = dynamic_cast<CalleeSlot *>(ano.get());
-        CallerSlot *caller = dynamic_cast<CallerSlot *>(ano.get());
-        param::ParamSlot *param = dynamic_cast<param::ParamSlot *>(ano.get());
+        CallerSlot* caller = dynamic_cast<CallerSlot*>(ano.get());
+        param::ParamSlot* param = dynamic_cast<param::ParamSlot*>(ano.get());
 
         if (anoc) {
             child_list_type::iterator i, e;
@@ -190,8 +186,9 @@ void RootModuleNamespace::SerializeGraph(vislib::RawStorage& outmem) {
         }
 
         if (caller != NULL) {
-            Call *c = caller->CallAs<Call>();
-            if (c == NULL) continue;
+            Call* c = caller->CallAs<Call>();
+            if (c == NULL)
+                continue;
             factories::CallDescription::ptr d;
             //CallDescriptionManager::DescriptionIterator i = CallDescriptionManager::Instance()->GetIterator();
             //while (i.HasNext()) {
@@ -212,15 +209,16 @@ void RootModuleNamespace::SerializeGraph(vislib::RawStorage& outmem) {
         }
 
         if (param != NULL) {
-            if (param->Parameter().IsNull()) continue;
-            if (param->Param<param::ButtonParam>() != NULL) continue; // ignore button parameters (we do not want to press them)
+            if (param->Parameter().IsNull())
+                continue;
+            if (param->Param<param::ButtonParam>() != NULL)
+                continue; // ignore button parameters (we do not want to press them)
             paramName.Append(param->FullName());
-            vislib::TString v = param->Parameter()->ValueString();
+            vislib::TString v = param->Parameter()->ValueString().c_str();
             vislib::StringA vUTF8;
             vislib::UTF8Encoder::Encode(vUTF8, v);
             paramValue.Append(vUTF8);
         }
-
     }
 
     // serialize data

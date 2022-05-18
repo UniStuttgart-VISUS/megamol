@@ -8,7 +8,7 @@
 #ifndef ARCH_VIS_MSM_DATASOURCE_H_INCLUDED
 #define ARCH_VIS_MSM_DATASOURCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib/math/Matrix.h"
@@ -36,21 +36,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ArchVisMSMDataSource"; }
+    static const char* ClassName(void) {
+        return "ArchVisMSMDataSource";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data source for visualizing SFB1244's 'Maßstabsmodell'"; }
+    static const char* Description(void) {
+        return "Data source for visualizing SFB1244's 'Maßstabsmodell'";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     ArchVisMSMDataSource();
     ~ArchVisMSMDataSource();
@@ -96,21 +102,25 @@ private:
     class DataPackage {
     public:
         DataPackage(int node_cnt, int input_element_cnt)
-            : node_cnt(node_cnt)
-            , input_element_cnt(input_element_cnt)
-            , displacements_byteOffset(4)
-            , forces_byteOffset(4 + node_cnt * 3 * 4)
-            , byte_size(4 + node_cnt * 3 * 4 + input_element_cnt * 4)
-            , raw_data(new uint8_t[byte_size]) {}
+                : node_cnt(node_cnt)
+                , input_element_cnt(input_element_cnt)
+                , displacements_byteOffset(4)
+                , forces_byteOffset(4 + node_cnt * 3 * 4)
+                , byte_size(4 + node_cnt * 3 * 4 + input_element_cnt * 4)
+                , raw_data(new uint8_t[byte_size]) {}
 
-        ~DataPackage() { delete[] raw_data; }
+        ~DataPackage() {
+            delete[] raw_data;
+        }
 
         DataPackage(DataPackage const& other) = delete;
         DataPackage(DataPackage&& other) = delete;
         DataPackage& operator=(DataPackage const& rhs) = delete;
         DataPackage& operator=(DataPackage&& other) = delete;
 
-        float getTime() { return reinterpret_cast<float*>(raw_data)[0]; }
+        float getTime() {
+            return reinterpret_cast<float*>(raw_data)[0];
+        }
 
         Vec3 getNodeDisplacement(int idx) {
             return Vec3(reinterpret_cast<float*>(raw_data + displacements_byteOffset + idx * 3 * 4)[0],
@@ -118,11 +128,17 @@ private:
                 reinterpret_cast<float*>(raw_data + displacements_byteOffset + idx * 3 * 4)[1]);
         };
 
-        float getElementForces(int idx) { return reinterpret_cast<float*>(raw_data + forces_byteOffset + idx * 4)[0]; }
+        float getElementForces(int idx) {
+            return reinterpret_cast<float*>(raw_data + forces_byteOffset + idx * 4)[0];
+        }
 
-        size_t getByteSize() { return byte_size; }
+        size_t getByteSize() {
+            return byte_size;
+        }
 
-        uint8_t* data() { return raw_data; }
+        uint8_t* data() {
+            return raw_data;
+        }
 
     private:
         int node_cnt;

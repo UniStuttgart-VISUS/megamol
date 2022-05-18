@@ -14,12 +14,12 @@
 #pragma once
 #endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
 
-#include "mmcore/job/AbstractJob.h"
-#include "mmcore/Module.h"
+#include "HostArr.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/job/AbstractJob.h"
 #include "mmcore/param/ParamSlot.h"
 #include "protein_calls/VTIDataCall.h"
-#include "HostArr.h"
 
 namespace megamol {
 namespace protein {
@@ -27,13 +27,12 @@ namespace protein {
 class VTIWriter : public core::job::AbstractJob, public core::Module {
 
 public:
-
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "VTIWriter";
     }
 
@@ -42,7 +41,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Writer module for *.vti file format used by the Visualization \
                 Toolkit.";
     }
@@ -99,7 +98,6 @@ public:
     virtual bool Terminate(void);
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -112,8 +110,7 @@ protected:
      */
     virtual void release(void);
 
-    private:
-
+private:
     /**
      * Creates the folders in the output path that do not yet exist.
      *
@@ -124,50 +121,50 @@ protected:
     /**
      * TODO
      */
-	vislib::TString getFormatStr(protein_calls::VTKImageData::DataFormat f);
+    vislib::TString getFormatStr(protein_calls::VTKImageData::DataFormat f);
 
     /**
      * TODO
      */
-	vislib::TString getTypeStr(protein_calls::VTKImageData::DataArray::DataType t);
+    vislib::TString getTypeStr(protein_calls::VTKImageData::DataArray::DataType t);
 
     /**
      * TODO
      */
-    bool writeDataAscii(const void *data, size_t size, std::ofstream &outfile,
-			protein_calls::VTKImageData::DataArray::DataType t);
+    bool writeDataAscii(
+        const void* data, size_t size, std::ofstream& outfile, protein_calls::VTKImageData::DataArray::DataType t);
 
     /**
      * TODO
      */
-    bool writeDataBinary(const void *data, size_t size, std::ofstream &outfile,
-			protein_calls::VTKImageData::DataArray::DataType t);
+    bool writeDataBinary(
+        const void* data, size_t size, std::ofstream& outfile, protein_calls::VTKImageData::DataArray::DataType t);
 
     /**
      * TODO
      */
-    bool writeDataAsciiFloat(const float *data, size_t size, std::ofstream &outfile);
+    bool writeDataAsciiFloat(const float* data, size_t size, std::ofstream& outfile);
 
     /**
      * TODO
      */
-    bool writeDataBinaryFloat(const float *data, size_t size, std::ofstream &outfile);
+    bool writeDataBinaryFloat(const float* data, size_t size, std::ofstream& outfile);
 
     /**
      * TODO
      */
-	bool writeDataArray(const protein_calls::VTIDataCall *dc, bool isPointData,
-            unsigned int dataIdx, unsigned int pieceIdx, std::ofstream &outfile);
+    bool writeDataArray(const protein_calls::VTIDataCall* dc, bool isPointData, unsigned int dataIdx,
+        unsigned int pieceIdx, std::ofstream& outfile);
 
     /**
      * TODO
      */
-	bool writeFile(protein_calls::VTIDataCall *dc);
+    bool writeFile(protein_calls::VTIDataCall* dc);
 
     /**
      * TODO
      */
-	bool writePiece(const protein_calls::VTIDataCall *dc, uint idx, std::ofstream &outfile);
+    bool writePiece(const protein_calls::VTIDataCall* dc, uint idx, std::ofstream& outfile);
 
     /// Data caller slot
     core::CallerSlot dataCallerSlot;

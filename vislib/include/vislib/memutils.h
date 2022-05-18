@@ -23,7 +23,7 @@
 #ifdef __cplusplus
 #define NULL (0)
 #else
-#define NULL ((void *) 0)
+#define NULL ((void*)0)
 #endif /* __cplusplus */
 #endif /* NULL */
 
@@ -32,7 +32,11 @@
  * Delete memory designated by 'ptr' and set 'ptr' NULL.
  */
 #ifndef SAFE_DELETE
-#define SAFE_DELETE(ptr) if ((ptr) != NULL) {delete (ptr); (ptr) = NULL; }
+#define SAFE_DELETE(ptr) \
+    if ((ptr) != NULL) { \
+        delete (ptr);    \
+        (ptr) = NULL;    \
+    }
 #endif /* !SAFE_DELETE */
 
 
@@ -40,8 +44,11 @@
  * Delete array designated by 'ptr' and set 'ptr' NULL.
  */
 #ifndef ARY_SAFE_DELETE
-#define ARY_SAFE_DELETE(ptr) if ((ptr) != NULL) { delete[] (ptr);\
-    (ptr) = NULL; }
+#define ARY_SAFE_DELETE(ptr) \
+    if ((ptr) != NULL) {     \
+        delete[](ptr);       \
+        (ptr) = NULL;        \
+    }
 #endif /* !ARY_SAFE_DELETE */
 
 
@@ -49,7 +56,11 @@
  * Free memory designated by 'ptr', if 'ptr' is not NULL, and set 'ptr' NULL.
  */
 #ifndef SAFE_FREE
-#define SAFE_FREE(ptr) if ((ptr) != NULL) { ::free(ptr); (ptr) = NULL; }
+#define SAFE_FREE(ptr)   \
+    if ((ptr) != NULL) { \
+        ::free(ptr);     \
+        (ptr) = NULL;    \
+    }
 #endif /* !SAFE_FREE */
 
 
@@ -57,8 +68,11 @@
  * Delete memory using ::operator delete and set 'ptr' NULL.
  */
 #ifndef SAFE_OPERATOR_DELETE
-#define SAFE_OPERATOR_DELETE(ptr) if ((ptr) != NULL) {\
-    ::operator delete(ptr); (ptr) = NULL; }
+#define SAFE_OPERATOR_DELETE(ptr) \
+    if ((ptr) != NULL) {          \
+        ::operator delete(ptr);   \
+        (ptr) = NULL;             \
+    }
 #endif /* SAFE_OPERATOR_DELETE */
 
 

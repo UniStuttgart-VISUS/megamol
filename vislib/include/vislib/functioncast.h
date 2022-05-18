@@ -1,7 +1,7 @@
 /*
  * functioncast.h
  *
- * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -16,9 +16,9 @@
 
 
 /**
- * The 'function_cast' is used to cast between function pointers and void 
+ * The 'function_cast' is used to cast between function pointers and void
  * pointers. If a non-void, non-function pointer is used the behaviour is
- * undefined. Be sure not to cast away any specifications of calling 
+ * undefined. Be sure not to cast away any specifications of calling
  * conventions or this might result in stack corruption.
  */
 
@@ -29,13 +29,13 @@
 #else /* _WIN32 */
 
 /**
- * Utility template for implementing the cast from void pointer to an 
+ * Utility template for implementing the cast from void pointer to an
  * arbitrary function pointer. Template parameter 'T' is the function pointer
  * type.
  */
-template<typename T> class function_cast {
+template<typename T>
+class function_cast {
 public:
-
     /**
      * Ctor.
      *
@@ -50,7 +50,7 @@ public:
      *
      * @param input The void pointer.
      */
-    explicit function_cast(void * input) {
+    explicit function_cast(void* input) {
         value.voidPtr = input;
     }
 
@@ -59,7 +59,7 @@ public:
      *
      * @return The void pointer of this cast.
      */
-    void * VoidPtr(void) {
+    void* VoidPtr(void) {
         return value.voidPtr;
     }
 
@@ -73,32 +73,31 @@ public:
     }
 
 private:
-
     /** The nested helper type for this cast. */
     typedef union {
-        void * voidPtr;
+        void* voidPtr;
         T typePtr;
     } castCrowbar;
 
     /** The pointer of this cast. */
     castCrowbar value;
-
 };
 
 
 /**
  * Template specialisation for casts from function pointers to void pointers.
  */
-template<> class function_cast<void*> {
+template<>
+class function_cast<void*> {
 public:
-
     /**
      * Ctor.
      * The template parameter 'Tp' is the function pointer type.
      *
      * @param input The function pointer.
      */
-    template<typename Tp> explicit function_cast(Tp input) {
+    template<typename Tp>
+    explicit function_cast(Tp input) {
         function_cast<Tp> helper(input);
         this->ptr = helper.VoidPtr();
     }
@@ -113,10 +112,8 @@ public:
     }
 
 private:
-
     /** The pointer of this cast */
-    void *ptr;
-
+    void* ptr;
 };
 
 #endif /* _WIN32 */

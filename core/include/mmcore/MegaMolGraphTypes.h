@@ -1,9 +1,9 @@
 #pragma once
 
 #include "mmcore/Call.h"
-#include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 
 namespace megamol {
 namespace core {

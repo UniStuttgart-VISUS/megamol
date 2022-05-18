@@ -1,150 +1,55 @@
 /*
  * FloatParam.h
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_FLOATPARAM_H_INCLUDED
-#define MEGAMOLCORE_FLOATPARAM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
-#include "AbstractParam.h"
+#include <sstream>
 
-
-namespace megamol {
-namespace core {
-namespace param {
+#include "GenericParam.h"
 
 
-    /**
-     * class for float parameter objects
-     */
-    class MEGAMOLCORE_API FloatParam : public AbstractParam {
-    public:
+namespace megamol::core::param {
 
-        /**
-         * Ctor.
-         *
-         * @param initVal The initial value
-         */
-        FloatParam(float initVal);
+class FloatParam : public GenericParam<float, AbstractParamPresentation::ParamType::FLOAT> {
+public:
+    FloatParam(float initVal) : Super(initVal) {}
 
-        /**
-         * Ctor.
-         *
-         * @param initVal The initial value
-         * @param minVal The minimum value
-         */
-        FloatParam(float initVal, float minVal);
+    FloatParam(float initVal, float minVal) : Super(initVal, minVal) {}
 
-        /**
-         * Ctor.
-         *
-         * @param initVal The initial value
-         * @param minVal The minimum value
-         * @param maxVal The maximum value
-         */
-        FloatParam(float initVal, float minVal, float maxVal);
+    FloatParam(float initVal, float minVal, float maxVal) : Super(initVal, minVal, maxVal) {}
 
-        /**
-         * Dtor.
-         */
-        virtual ~FloatParam(void);
+    FloatParam(float initVal, float minVal, float maxVal, float stepSize) : Super(initVal, minVal, maxVal, stepSize) {}
 
-        /**
-         * Returns a machine-readable definition of the parameter.
-         *
-         * @param outDef A memory block to receive a machine-readable
-         *               definition of the parameter.
-         */
-        virtual void Definition(vislib::RawStorage& outDef) const;
+    virtual ~FloatParam() = default;
 
-        /**
-         * Tries to parse the given string as value for this parameter and
-         * sets the new value if successful. This also triggers the update
-         * mechanism of the slot this parameter is assigned to.
-         *
-         * @param v The new value for the parameter as string.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool ParseValue(const vislib::TString& v);
+    std::string Definition() const override {
+        std::ostringstream outDef;
+        outDef << "MMFLOT";
+        outDef.write(reinterpret_cast<char const*>(&MinValue()), sizeof(MinValue()));
+        outDef.write(reinterpret_cast<char const*>(&MaxValue()), sizeof(MaxValue()));
+        outDef.write(reinterpret_cast<char const*>(&StepSize()), sizeof(StepSize()));
 
-        /**
-         * Sets the value of the parameter and optionally sets the dirty flag
-         * of the owning parameter slot.
-         *
-         * @param v the new value for the parameter
-         * @param setDirty If 'true' the dirty flag of the owning parameter
-         *                 slot is set and the update callback might be called.
-         */
-        void SetValue(float v, bool setDirty = true);
+        return outDef.str();
+    }
 
-        /**
-         * Gets the value of the parameter
-         *
-         * @return The value of the parameter
-         */
-        inline float Value(void) const {
-            return this->val;
-        }
+    bool ParseValue(std::string const& v) override {
+        try {
+            this->SetValue((float)vislib::TCharTraits::ParseDouble(v.c_str()));
+            return true;
+        } catch (...) {}
+        return false;
+    }
 
-        /**
-         * Returns the value of the parameter as string.
-         *
-         * @return The value of the parameter as string.
-         */
-        virtual vislib::TString ValueString(void) const;
+    std::string ValueString() const override {
+        return std::to_string(Value());
+    }
 
-        /**
-         * Gets the value of the parameter
-         *
-         * @return The value of the parameter
-         */
-        inline operator float(void) const {
-            return this->val;
-        }
+private:
+    using Super = GenericParam<float, AbstractParamPresentation::ParamType::FLOAT>;
+};
 
-        /**
-         * Needed for RemoteControl - Manuel Gräber
-         * Gets the minimum value of the parameter
-         *
-         * @return The minimum value of the parameter
-         */
-        inline float MinValue(void) const {
-            return this->minVal;
-        }
-
-        /**
-         * Needed for RemoteControl - Manuel Gräber
-         * Gets the maximum value of the parameter
-         *
-         * @return The maximum value of the parameter
-         */
-        inline float MaxValue(void) const {
-            return this->maxVal;
-        }
-
-    private:
-
-        /** The value of the parameter */
-        float val;
-
-        /** The minimum value for the parameter */
-        float minVal;
-
-        /** The maximum value for the parameter */
-        float maxVal;
-
-    };
-
-
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_FLOATPARAM_H_INCLUDED */
+} // namespace megamol::core::param

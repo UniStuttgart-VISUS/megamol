@@ -8,16 +8,12 @@
 #include "vislib/net/PeerDisconnectedException.h"
 
 
-
 /*
  * vislib::net::PeerDisconnectedException::FormatMessageForLocalEndpoint
  */
-vislib::StringA 
-vislib::net::PeerDisconnectedException::FormatMessageForLocalEndpoint(
-        const char *localEndPoint) {
+vislib::StringA vislib::net::PeerDisconnectedException::FormatMessageForLocalEndpoint(const char* localEndPoint) {
     StringA retval;
-    retval.Format("The peer end point of \"%s\" disconnected gracefully.",
-        localEndPoint);
+    retval.Format("The peer end point of \"%s\" disconnected gracefully.", localEndPoint);
     return retval;
 }
 
@@ -25,12 +21,9 @@ vislib::net::PeerDisconnectedException::FormatMessageForLocalEndpoint(
 /*
  * vislib::net::PeerDisconnectedException::FormatMessageForLocalEndpoint
  */
-vislib::StringW 
-vislib::net::PeerDisconnectedException::FormatMessageForLocalEndpoint(
-        const wchar_t *localEndPoint) {
+vislib::StringW vislib::net::PeerDisconnectedException::FormatMessageForLocalEndpoint(const wchar_t* localEndPoint) {
     StringW retval;
-    retval.Format(L"The peer end point of \"%hs\" disconnected gracefully.",
-        localEndPoint);
+    retval.Format(L"The peer end point of \"%hs\" disconnected gracefully.", localEndPoint);
     return retval;
 }
 
@@ -38,31 +31,24 @@ vislib::net::PeerDisconnectedException::FormatMessageForLocalEndpoint(
 /*
  * vislib::net::PeerDisconnectedException::PeerDisconnectedException
  */
-vislib::net::PeerDisconnectedException::PeerDisconnectedException(
-        const char *msg, const char *file, const int line) 
-        : Super (msg, file, line) {
-}
+vislib::net::PeerDisconnectedException::PeerDisconnectedException(const char* msg, const char* file, const int line)
+        : Super(msg, file, line) {}
 
 
 /*
  * vislib::net::PeerDisconnectedException::PeerDisconnectedException
  */
-vislib::net::PeerDisconnectedException::PeerDisconnectedException(
-        const wchar_t *msg, const char *file, const int line) 
-        : Super (msg, file, line) {
-}
+vislib::net::PeerDisconnectedException::PeerDisconnectedException(const wchar_t* msg, const char* file, const int line)
+        : Super(msg, file, line) {}
 
 
 /*
  * vislib::net::PeerDisconnectedException::PeerDisconnectedException
  */
-vislib::net::PeerDisconnectedException::PeerDisconnectedException(
-        const PeerDisconnectedException& rhs) : Super (rhs) {
-}
+vislib::net::PeerDisconnectedException::PeerDisconnectedException(const PeerDisconnectedException& rhs) : Super(rhs) {}
 
 
 /*
  * vislib::net::PeerDisconnectedException::~PeerDisconnectedException
  */
-vislib::net::PeerDisconnectedException::~PeerDisconnectedException(void) {
-}
+vislib::net::PeerDisconnectedException::~PeerDisconnectedException(void) {}

@@ -8,8 +8,8 @@
 //     Author: scharnkn
 //
 
-#include "stdafx.h"
 #include "protein_calls/VTIDataCall.h"
+#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::protein_calls;
@@ -18,16 +18,13 @@ const unsigned int VTIDataCall::CallForGetData = 0;
 const unsigned int VTIDataCall::CallForGetExtent = 1;
 
 /*
- *	VTIDataCall::VTIDataCall
+ * VTIDataCall::VTIDataCall
  */
-VTIDataCall::VTIDataCall(void) : core::AbstractGetData3DCall(),
-        calltime(0.0) {
+VTIDataCall::VTIDataCall(void) : core::AbstractGetData3DCall(), calltime(0.0) {
     // intentionally empty
 }
 
 /*
- *	VTIDataCall::~VTIDataCall
+ * VTIDataCall::~VTIDataCall
  */
-VTIDataCall::~VTIDataCall(void) {
-}
-
+VTIDataCall::~VTIDataCall(void) {}

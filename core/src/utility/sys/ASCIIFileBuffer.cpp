@@ -7,10 +7,10 @@
 
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 
-#include "vislib/assert.h"
 #include "vislib/CharTraits.h"
-#include "vislib/memutils.h"
 #include "vislib/Trace.h"
+#include "vislib/assert.h"
+#include "vislib/memutils.h"
 
 
 /*
@@ -24,8 +24,7 @@ vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer() : cnt(0) {
 /*
  * vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer
  */
-vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer(
-        const vislib::sys::ASCIIFileBuffer::LineBuffer& src) : cnt(0) {
+vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer(const vislib::sys::ASCIIFileBuffer::LineBuffer& src) : cnt(0) {
     this->ptr.line = NULL;
     *this = src;
 }
@@ -46,10 +45,10 @@ vislib::sys::ASCIIFileBuffer::LineBuffer::~LineBuffer(void) {
 /*
  * vislib::sys::ASCIIFileBuffer::Line::operator=
  */
-vislib::sys::ASCIIFileBuffer::LineBuffer&
-vislib::sys::ASCIIFileBuffer::LineBuffer::operator=(
-        const vislib::sys::ASCIIFileBuffer::LineBuffer& rhs) {
-    if (this == &rhs) return *this;
+vislib::sys::ASCIIFileBuffer::LineBuffer& vislib::sys::ASCIIFileBuffer::LineBuffer::operator=(
+    const vislib::sys::ASCIIFileBuffer::LineBuffer& rhs) {
+    if (this == &rhs)
+        return *this;
 
     if ((this->cnt > 0) && (this->ptr.words != NULL)) {
         delete[] this->ptr.words;
@@ -71,7 +70,7 @@ vislib::sys::ASCIIFileBuffer::LineBuffer::operator=(
 /*
  * vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer
  */
-vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer(char *line) : cnt(0) {
+vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer(char* line) : cnt(0) {
     this->ptr.line = line;
 }
 
@@ -79,14 +78,12 @@ vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer(char *line) : cnt(0) {
 /*
  * vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer
  */
-vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer(
-        vislib::Array<char *>& words) : cnt(words.Count()) {
+vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer(vislib::Array<char*>& words) : cnt(words.Count()) {
     if (this->cnt == 0) {
         this->ptr.line = NULL;
     } else {
         this->ptr.words = new char*[this->cnt];
-        ::memcpy(this->ptr.words, words.PeekElements(),
-            sizeof(char *) * this->cnt);
+        ::memcpy(this->ptr.words, words.PeekElements(), sizeof(char*) * this->cnt);
     }
 }
 
@@ -94,8 +91,7 @@ vislib::sys::ASCIIFileBuffer::LineBuffer::LineBuffer(
 /*
  * vislib::sys::ASCIIFileBuffer::LineBuffer::operator=
  */
-vislib::sys::ASCIIFileBuffer::LineBuffer&
-vislib::sys::ASCIIFileBuffer::LineBuffer::operator=(char * line) {
+vislib::sys::ASCIIFileBuffer::LineBuffer& vislib::sys::ASCIIFileBuffer::LineBuffer::operator=(char* line) {
 
     if ((this->cnt > 0) && (this->ptr.words != NULL)) {
         delete[] this->ptr.words;
@@ -112,8 +108,8 @@ vislib::sys::ASCIIFileBuffer::LineBuffer::operator=(char * line) {
 /*
  * vislib::sys::ASCIIFileBuffer::LineBuffer::operator=
  */
-vislib::sys::ASCIIFileBuffer::LineBuffer&
-vislib::sys::ASCIIFileBuffer::LineBuffer::operator=(vislib::Array<char *>& words) {
+vislib::sys::ASCIIFileBuffer::LineBuffer& vislib::sys::ASCIIFileBuffer::LineBuffer::operator=(
+    vislib::Array<char*>& words) {
 
     if ((this->cnt > 0) && (this->ptr.words != NULL)) {
         delete[] this->ptr.words;
@@ -125,22 +121,19 @@ vislib::sys::ASCIIFileBuffer::LineBuffer::operator=(vislib::Array<char *>& words
         this->ptr.line = NULL;
     } else {
         this->ptr.words = new char*[this->cnt];
-        ::memcpy(this->ptr.words, words.PeekElements(),
-            sizeof(char*) * this->cnt);
+        ::memcpy(this->ptr.words, words.PeekElements(), sizeof(char*) * this->cnt);
     }
 
     return *this;
 }
 
 
-
 /*
  * vislib::sys::ASCIIFileBuffer::ASCIIFileBuffer
  */
-vislib::sys::ASCIIFileBuffer::ASCIIFileBuffer(ParsingElement elements)
-        : buffer(NULL), lines(), defElements(elements) {
+vislib::sys::ASCIIFileBuffer::ASCIIFileBuffer(ParsingElement elements) : buffer(NULL), lines(), defElements(elements) {
     if (this->defElements == PARSING_DEFAULT) {
-VLTRACE(VISLIB_TRCELVL_WARN, "ASCIIFileBuffer(PARSING_DEFAULT) illegal\n");
+        VLTRACE(VISLIB_TRCELVL_WARN, "ASCIIFileBuffer(PARSING_DEFAULT) illegal\n");
         this->defElements = PARSING_LINES;
     }
 }
@@ -168,8 +161,7 @@ void vislib::sys::ASCIIFileBuffer::Clear(void) {
 /*
  * vislib::sys::ASCIIFileBuffer::LoadFile
  */
-bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
-        ParsingElement elements) {
+bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file, ParsingElement elements) {
     if (elements == PARSING_DEFAULT) {
         elements = this->defElements;
     }
@@ -182,8 +174,7 @@ bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
     this->buffer = new char[l + 1];
     this->buffer[l] = 0;
     if (this->buffer == NULL) {
-        throw vislib::Exception("Cannot allocate memory to store file",
-            __FILE__, __LINE__);
+        throw vislib::Exception("Cannot allocate memory to store file", __FILE__, __LINE__);
     }
     SIZE_T rl = static_cast<SIZE_T>(file.Read(this->buffer, l));
     if (rl != l) {
@@ -199,8 +190,8 @@ bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
 
     if (elements == PARSING_LINES) {
         // line seeks
-        char *lsp = this->buffer; // line start pointer
-        for (char *p = this->buffer; l > 0; l--, p++) {
+        char* lsp = this->buffer; // line start pointer
+        for (char* p = this->buffer; l > 0; l--, p++) {
             if ((p[0] == '\n') || (p[0] == '\r')) {
                 // store lsp
                 if (this->lines.Capacity() == this->lines.Count()) {
@@ -210,8 +201,7 @@ bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
 
                 p[0] = '\0';
                 // prepare next
-                if ((l > 1) && (p[1] != p[0])
-                        && ((p[1] == '\n') || (p[1] == '\r'))) {
+                if ((l > 1) && (p[1] != p[0]) && ((p[1] == '\n') || (p[1] == '\r'))) {
                     p++;
                     l--;
                 }
@@ -223,18 +213,18 @@ bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
 
     } else if (elements == PARSING_WORDS) {
         // word seeks
-        char *lsp = this->buffer; // line start pointer
-        char *wsp = NULL;
-        Array<char *> words;
+        char* lsp = this->buffer; // line start pointer
+        char* wsp = NULL;
+        Array<char*> words;
 
-        for (char *p = this->buffer; l > 0; l--, p++) {
+        for (char* p = this->buffer; l > 0; l--, p++) {
             if (
 #ifdef _USE_ISSPACE
                 CharTraitsA::IsSpace(*p)
-#else /* _USE_ISSPACE */
+#else  /* _USE_ISSPACE */
                 (*p == ' ') || (*p == '\t')
 #endif /* _USE_ISSPACE */
-                    ) {
+            ) {
                 if (wsp != NULL) {
                     words.Append(wsp);
                     wsp = NULL;
@@ -255,8 +245,7 @@ bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
 
                 p[0] = '\0';
                 // prepare next
-                if ((l > 1) && (p[1] != p[0])
-                        && ((p[1] == '\n') || (p[1] == '\r'))) {
+                if ((l > 1) && (p[1] != p[0]) && ((p[1] == '\n') || (p[1] == '\r'))) {
                     p++;
                     l--;
                 }
@@ -276,9 +265,7 @@ bool vislib::sys::ASCIIFileBuffer::LoadFile(vislib::sys::File& file,
         words.Clear();
 
     } else {
-        throw vislib::IllegalStateException("ParsingElements illegal value",
-            __FILE__, __LINE__);
-
+        throw vislib::IllegalStateException("ParsingElements illegal value", __FILE__, __LINE__);
     }
 
     this->lines.Trim();

@@ -65,7 +65,7 @@ struct VertexID1Cmp {
  * Get the thread index based on the current CUDE grid dimensions.
  *
  * @return Returns the thread index based on the current CUDA grid
- *			dimensions.
+ *         dimensions.
  */
 __device__ uint GetThreadIndex() {
     return __umul24(__umul24(blockIdx.y, gridDim.x) + blockIdx.x, blockDim.x) + threadIdx.x;

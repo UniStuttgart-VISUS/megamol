@@ -1,8 +1,8 @@
 #pragma once
 
-#include <memory>
 #include <atomic>
 #include <future>
+#include <memory>
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
@@ -31,21 +31,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "FBOCompositor2"; }
+    static const char* ClassName(void) {
+        return "FBOCompositor2";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Composits images from socket into a rendering."; }
+    static const char* Description(void) {
+        return "Composits images from socket into a rendering.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }//gladLoadGL(); }
+    static bool IsAvailable(void) {
+        return true;
+    } //gladLoadGL(); }
 
     FBOCompositor2(void);
 

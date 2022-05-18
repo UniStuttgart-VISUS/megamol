@@ -16,25 +16,10 @@
         <snippet type="version">430</snippet>
         <snippet name="Main"             type="file">comp/textureAlphaCompositing_c.glsl</snippet>
     </shader>
-    
+
     <shader name="textureDepthCompositing">
         <snippet type="version">430</snippet>
         <snippet name="Main"             type="file">comp/textureDepthCompositing_c.glsl</snippet>
-    </shader>
-
-    <shader name="ssao">
-        <snippet type="version">430</snippet>
-        <snippet name="Main"             type="file">comp/ssao_c.glsl</snippet>
-    </shader>
-
-    <shader name="blur">
-        <snippet type="version">430</snippet>
-        <snippet name="Main"             type="file">comp/simple_blur_c.glsl</snippet>
-    </shader>
-
-    <shader name="fxaa">
-        <snippet type="version">430</snippet>
-        <snippet name="Main"             type="file">comp/fxaa_c.glsl</snippet>
     </shader>
 
     <shader name="lambert">
@@ -45,6 +30,11 @@
     <shader name="phong">
         <snippet type="version">430</snippet>
         <snippet name="Main"             type="file">comp/phong_c.glsl</snippet>
+    </shader>
+
+    <shader name="normalFromDepth">
+        <snippet type="version">430</snippet>
+        <snippet name="Main"             type="file">comp/normalFromDepth_c.glsl</snippet>
     </shader>
 
 </btf>

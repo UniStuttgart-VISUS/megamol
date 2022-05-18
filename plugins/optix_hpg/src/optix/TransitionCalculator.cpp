@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "TransitionCalculator.h"
+#include "stdafx.h"
 
 #include "glm/glm.hpp"
 
@@ -14,7 +14,9 @@ extern "C" const char embedded_transitioncalculator_programs[];
 
 
 megamol::optix_hpg::TransitionCalculator::TransitionCalculator()
-        : out_transitions_slot_("outTransitions", ""), in_mesh_slot_("inMesh", ""), in_paths_slot_("inPaths", "") {
+        : out_transitions_slot_("outTransitions", "")
+        , in_mesh_slot_("inMesh", "")
+        , in_paths_slot_("inPaths", "") {
     out_transitions_slot_.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &TransitionCalculator::get_data_cb);
     out_transitions_slot_.SetCallback(
@@ -24,7 +26,7 @@ megamol::optix_hpg::TransitionCalculator::TransitionCalculator()
     in_mesh_slot_.SetCompatibleCall<mesh::CallMeshDescription>();
     MakeSlotAvailable(&in_mesh_slot_);
 
-    in_paths_slot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    in_paths_slot_.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&in_paths_slot_);
 }
 
@@ -84,7 +86,7 @@ bool megamol::optix_hpg::TransitionCalculator::init() {
 
 
 bool megamol::optix_hpg::TransitionCalculator::assertData(
-    mesh::CallMesh& mesh, core::moldyn::MultiParticleDataCall& particles, unsigned int frameID) {
+    mesh::CallMesh& mesh, geocalls::MultiParticleDataCall& particles, unsigned int frameID) {
     // fetch data for current and subsequent timestep
     // create array of rays for the current particle configuration
     // upload mesh as geometry
@@ -195,8 +197,8 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(
 
     SBTRecord<device::TransitionCalculatorData> mesh_sbt_record;
     OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(mesh_module_, &mesh_sbt_record));
-    mesh_sbt_record.data.index_buffer = (glm::uvec3*) mesh_idx_data;
-    mesh_sbt_record.data.vertex_buffer = (glm::vec3*) mesh_pos_data;
+    mesh_sbt_record.data.index_buffer = (glm::uvec3*)mesh_idx_data;
+    mesh_sbt_record.data.vertex_buffer = (glm::vec3*)mesh_pos_data;
 
     ///----------------------------------------------
 
@@ -306,10 +308,10 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(
         CUDA_CHECK_ERROR(cuMemsetD32Async(mesh_outbound_ctr, 0, (num_vertices / 3), optix_ctx_->GetExecStream()));
         CUDA_CHECK_ERROR(cuMemsetD8Async(ray_state, 0, ray_vec.size(), optix_ctx_->GetExecStream()));
 
-        mesh_sbt_record.data.mesh_inbound_ctr_ptr = (std::uint32_t*) mesh_inbound_ctr;
-        mesh_sbt_record.data.mesh_outbound_ctr_ptr = (std::uint32_t*) mesh_outbound_ctr;
-        mesh_sbt_record.data.ray_state = (std::uint8_t*) ray_state;
-        mesh_sbt_record.data.ray_buffer = (void*) ray_buffer_.back();
+        mesh_sbt_record.data.mesh_inbound_ctr_ptr = (std::uint32_t*)mesh_inbound_ctr;
+        mesh_sbt_record.data.mesh_outbound_ctr_ptr = (std::uint32_t*)mesh_outbound_ctr;
+        mesh_sbt_record.data.ray_state = (std::uint8_t*)ray_state;
+        mesh_sbt_record.data.ray_buffer = (void*)ray_buffer_.back();
         mesh_sbt_record.data.num_rays = ray_vec.size();
         mesh_sbt_record.data.num_tris = num_vertices / 3;
         mesh_sbt_record.data.world = geo_handle;
@@ -358,7 +360,7 @@ bool megamol::optix_hpg::TransitionCalculator::get_data_cb(core::Call& c) {
     auto in_mesh = in_mesh_slot_.CallAs<mesh::CallMesh>();
     if (in_mesh == nullptr)
         return false;
-    auto in_paths = in_paths_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto in_paths = in_paths_slot_.CallAs<geocalls::MultiParticleDataCall>();
     if (in_paths == nullptr)
         return false;
 

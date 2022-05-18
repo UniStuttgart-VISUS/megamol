@@ -12,7 +12,8 @@
 
 namespace megamol::optix_hpg {
 extern "C" const char embedded_sphere_programs[];
-}
+extern "C" const char embedded_sphere_occlusion_programs[];
+} // namespace megamol::optix_hpg
 
 
 megamol::optix_hpg::SphereGeometry::SphereGeometry() : _out_geo_slot("outGeo", ""), _in_data_slot("inData", "") {
@@ -21,7 +22,7 @@ megamol::optix_hpg::SphereGeometry::SphereGeometry() : _out_geo_slot("outGeo", "
         CallGeometry::ClassName(), CallGeometry::FunctionName(1), &SphereGeometry::get_extents_cb);
     MakeSlotAvailable(&_out_geo_slot);
 
-    _in_data_slot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
+    _in_data_slot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&_in_data_slot);
 }
 
@@ -61,18 +62,20 @@ void megamol::optix_hpg::SphereGeometry::init(Context const& ctx) {
         {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "sphere_intersect"},
             {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "sphere_closesthit"},
             {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_BOUNDS, "sphere_bounds"}});
-    sphere_occlusion_module_ = MMOptixModule(embedded_sphere_programs, ctx.GetOptiXContext(),
+    sphere_occlusion_module_ = MMOptixModule(embedded_sphere_occlusion_programs, ctx.GetOptiXContext(),
         &ctx.GetModuleCompileOptions(), &ctx.GetPipelineCompileOptions(),
         MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_HITGROUP,
         {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "sphere_intersect"},
             {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "sphere_closesthit_occlusion"},
-            {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_BOUNDS, "sphere_bounds"}});
+            {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_BOUNDS, "sphere_bounds_occlusion"}});
+
+    ++program_version;
 
     // OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(sphere_module_, &_sbt_record));
 }
 
 
-bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleDataCall& call, Context const& ctx) {
+bool megamol::optix_hpg::SphereGeometry::assertData(geocalls::MultiParticleDataCall& call, Context const& ctx) {
     auto const pl_count = call.GetParticleListCount();
 
     for (auto const& el : particle_data_) {
@@ -97,9 +100,9 @@ bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleD
             continue;
 
         auto const color_type = particles.GetColourDataType();
-        auto const has_color = (color_type != core::moldyn::SimpleSphericalParticles::COLDATA_NONE) &&
-                               (color_type != core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I) &&
-                               (color_type != core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I);
+        auto const has_color = (color_type != geocalls::SimpleSphericalParticles::COLDATA_NONE) &&
+                               (color_type != geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I) &&
+                               (color_type != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I);
 
         std::vector<device::Particle> data(p_count);
         auto x_acc = particles.GetParticleStore().GetXAcc();
@@ -168,7 +171,7 @@ bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleD
         SBTRecord<device::SphereGeoData> sbt_record;
         OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(sphere_module_, &sbt_record));
 
-        sbt_record.data.particleBufferPtr = (device::Particle*) particle_data_[pl_idx];
+        sbt_record.data.particleBufferPtr = (device::Particle*)particle_data_[pl_idx];
         sbt_record.data.colorBufferPtr = nullptr;
         sbt_record.data.radius = particles.GetGlobalRadius();
         sbt_record.data.hasColorData = has_color;
@@ -177,7 +180,7 @@ bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleD
                 particles.GetGlobalColour()[2] / 255.f, particles.GetGlobalColour()[3] / 255.f);
 
         if (has_color) {
-            sbt_record.data.colorBufferPtr = (glm::vec4*) color_data_[pl_idx];
+            sbt_record.data.colorBufferPtr = (glm::vec4*)color_data_[pl_idx];
         }
         sbt_records_.push_back(sbt_record);
 
@@ -186,6 +189,8 @@ bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleD
         OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(sphere_occlusion_module_, &sbt_record_occlusion));
         sbt_record_occlusion.data = sbt_record.data;
         sbt_records_.push_back(sbt_record_occlusion);
+
+        ++sbt_version;
     }
 
     OptixAccelBuildOptions accelOptions = {};
@@ -217,7 +222,6 @@ bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleD
     // end geometry
     //////////////////////////////////////
 
-
     return true;
 }
 
@@ -226,7 +230,7 @@ bool megamol::optix_hpg::SphereGeometry::get_data_cb(core::Call& c) {
     auto out_geo = dynamic_cast<CallGeometry*>(&c);
     if (out_geo == nullptr)
         return false;
-    auto in_data = _in_data_slot.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto in_data = _in_data_slot.CallAs<geocalls::MultiParticleDataCall>();
     if (in_data == nullptr)
         return false;
 
@@ -255,11 +259,9 @@ bool megamol::optix_hpg::SphereGeometry::get_data_cb(core::Call& c) {
     program_groups_[1] = sphere_occlusion_module_;
 
     out_geo->set_handle(&_geo_handle);
-    out_geo->set_program_groups(program_groups_.data());
-    out_geo->set_num_programs(2);
-    out_geo->set_record(sbt_records_.data());
-    out_geo->set_record_stride(sizeof(SBTRecord<device::SphereGeoData>));
-    out_geo->set_num_records(sbt_records_.size());
+    out_geo->set_program_groups(program_groups_.data(), program_groups_.size(), program_version);
+    out_geo->set_record(
+        sbt_records_.data(), sbt_records_.size(), sizeof(SBTRecord<device::SphereGeoData>), sbt_version);
 
     return true;
 }
@@ -269,7 +271,7 @@ bool megamol::optix_hpg::SphereGeometry::get_extents_cb(core::Call& c) {
     auto out_geo = dynamic_cast<CallGeometry*>(&c);
     if (out_geo == nullptr)
         return false;
-    auto in_data = _in_data_slot.CallAs<core::moldyn::MultiParticleDataCall>();
+    auto in_data = _in_data_slot.CallAs<geocalls::MultiParticleDataCall>();
     if (in_data == nullptr)
         return false;
 

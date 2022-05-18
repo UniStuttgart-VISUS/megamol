@@ -1,12 +1,12 @@
 /*
  * EnumParam.cpp
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/param/EnumParam.h"
+#include "stdafx.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/UTF8Encoder.h"
@@ -37,8 +37,7 @@ EnumParam::~EnumParam(void) {
 void megamol::core::param::EnumParam::ClearTypePairs(void) {
     if (this->isSlotPublic()) {
         throw vislib::IllegalStateException(
-            "You must not modify an enum parameter which is already public",
-            __FILE__, __LINE__);
+            "You must not modify an enum parameter which is already public", __FILE__, __LINE__);
     }
     this->typepairs.Clear();
 }
@@ -47,26 +46,24 @@ void megamol::core::param::EnumParam::ClearTypePairs(void) {
 /*
  * EnumParam::Definition
  */
-void EnumParam::Definition(vislib::RawStorage& outDef) const {
+std::string EnumParam::Definition() const {
     vislib::StringA utf8;
     unsigned int s = 6;
     unsigned int c = 0;
-    vislib::ConstIterator<vislib::Map<int, vislib::TString>::Iterator >
-        constIter = this->typepairs.GetConstIterator();
+    vislib::ConstIterator<vislib::Map<int, vislib::TString>::Iterator> constIter = this->typepairs.GetConstIterator();
     while (constIter.HasNext()) {
-        const vislib::Map<int, vislib::TString>::ElementPair&
-            pair = constIter.Next();
+        const vislib::Map<int, vislib::TString>::ElementPair& pair = constIter.Next();
         s += sizeof(int) + vislib::UTF8Encoder::CalcUTF8Size(pair.Value());
     }
     s += sizeof(unsigned int);
 
+    vislib::RawStorage outDef;
     outDef.AssertSize(s);
     memcpy(outDef.AsAt<char>(0), "MMENUM", 6);
     s = 6 + sizeof(unsigned int);
     constIter = this->typepairs.GetConstIterator();
     while (constIter.HasNext()) {
-        const vislib::Map<int, vislib::TString>::ElementPair&
-            pair = constIter.Next();
+        const vislib::Map<int, vislib::TString>::ElementPair& pair = constIter.Next();
         if (!vislib::UTF8Encoder::Encode(utf8, pair.Value())) {
             continue;
         }
@@ -79,23 +76,27 @@ void EnumParam::Definition(vislib::RawStorage& outDef) const {
         c++;
     }
     *outDef.AsAt<unsigned int>(6) = c;
+
+    std::string return_str;
+    return_str.resize(outDef.GetSize());
+    std::copy(outDef.AsAt<char>(0), outDef.AsAt<char>(0) + outDef.GetSize(), return_str.begin());
+    return return_str;
 }
 
 
 /*
  * EnumParam::ParseValue
  */
-bool EnumParam::ParseValue(const vislib::TString& v) {
+bool EnumParam::ParseValue(std::string const& v) {
     try {
-        vislib::SingleLinkedList<int> keys = this->typepairs.FindKeys(v);
+        vislib::SingleLinkedList<int> keys = this->typepairs.FindKeys(v.c_str());
         if (keys.IsEmpty()) {
-            this->SetValue(vislib::TCharTraits::ParseInt(v));
+            this->SetValue(vislib::TCharTraits::ParseInt(v.c_str()));
         } else {
             this->SetValue(keys.First());
         }
         return true;
-    } catch(...) {
-    }
+    } catch (...) {}
     return false;
 }
 
@@ -103,11 +104,10 @@ bool EnumParam::ParseValue(const vislib::TString& v) {
 /*
  * EnumParam::SetTypePair
  */
-EnumParam* EnumParam::SetTypePair(int value, const char *name) {
+EnumParam* EnumParam::SetTypePair(int value, const char* name) {
     if (this->isSlotPublic()) {
         throw vislib::IllegalStateException(
-            "You must not modify an enum parameter which is already public",
-            __FILE__, __LINE__);
+            "You must not modify an enum parameter which is already public", __FILE__, __LINE__);
     }
     this->typepairs[value] = A2T(name);
     return this;
@@ -117,11 +117,10 @@ EnumParam* EnumParam::SetTypePair(int value, const char *name) {
 /*
  * EnumParam::SetTypePair
  */
-EnumParam* EnumParam::SetTypePair(int value, const wchar_t *name) {
+EnumParam* EnumParam::SetTypePair(int value, const wchar_t* name) {
     if (this->isSlotPublic()) {
         throw vislib::IllegalStateException(
-            "You must not modify an enum parameter which is already public",
-            __FILE__, __LINE__);
+            "You must not modify an enum parameter which is already public", __FILE__, __LINE__);
     }
     this->typepairs[value] = W2T(name);
     return this;
@@ -135,7 +134,8 @@ void EnumParam::SetValue(int v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
         this->indicateChange();
-        if (setDirty) this->setDirty();
+        if (setDirty)
+            this->setDirty();
     }
 }
 
@@ -143,10 +143,11 @@ void EnumParam::SetValue(int v, bool setDirty) {
 /*
  * EnumParam::ValueString
  */
-vislib::TString EnumParam::ValueString(void) const {
-    const vislib::TString *v = this->typepairs.FindValue(this->val);
-    if (v != NULL) return *v;
+std::string EnumParam::ValueString(void) const {
+    const vislib::TString* v = this->typepairs.FindValue(this->val);
+    if (v != NULL)
+        return (*v).PeekBuffer();
     vislib::TString str;
     str.Format(_T("%d"), this->val);
-    return str;
+    return str.PeekBuffer();
 }

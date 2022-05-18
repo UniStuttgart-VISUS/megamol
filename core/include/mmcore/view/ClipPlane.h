@@ -23,94 +23,90 @@ namespace core {
 namespace view {
 
 
+/**
+ * Module defining a clipping plane
+ */
+class ClipPlane : public Module {
+public:
     /**
-     * Module defining a clipping plane
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class ClipPlane : public Module {
-    public:
+    static const char* ClassName(void) {
+        return "ClipPlane";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "ClipPlane";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Module defining a clipping plane";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Module defining a clipping plane";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Ctor. */
+    ClipPlane(void);
 
-        /** Ctor. */
-        ClipPlane(void);
+    /** Dtor. */
+    virtual ~ClipPlane(void);
 
-        /** Dtor. */
-        virtual ~ClipPlane(void);
+private:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    private:
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
+    /**
+     * Callback called when the clipping plane is requested.
+     *
+     * @param call The calling call
+     *
+     * @return 'true' on success
+     */
+    bool requestPlane(Call& call);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+    /** The callee slot called on request of a clipping plane */
+    CalleeSlot getClipPlaneSlot;
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /** The clipping plane */
+    vislib::math::Plane<float> plane;
 
-        /**
-         * Callback called when the clipping plane is requested.
-         *
-         * @param call The calling call
-         *
-         * @return 'true' on success
-         */
-        bool requestPlane(Call& call);
+    /** The colour of the plane */
+    float col[4];
 
-        /** The callee slot called on request of a clipping plane */
-        CalleeSlot getClipPlaneSlot;
+    /** Disables or enables the clipping plane */
+    param::ParamSlot enableSlot;
 
-        /** The clipping plane */
-        vislib::math::Plane<float> plane;
+    /** Defines the colour of the clipping plane */
+    param::ParamSlot colourSlot;
 
-        /** The colour of the plane */
-        float col[4];
+    /** Defines the normal of the clipping plane */
+    param::ParamSlot normalSlot;
 
-        /** Disables or enables the clipping plane */
-        param::ParamSlot enableSlot;
+    /** Defines a point in the clipping plane */
+    param::ParamSlot pointSlot;
 
-        /** Defines the colour of the clipping plane */
-        param::ParamSlot colourSlot;
-
-        /** Defines the normal of the clipping plane */
-        param::ParamSlot normalSlot;
-
-        /** Defines a point in the clipping plane */
-        param::ParamSlot pointSlot;
-
-        /** The plane-origin distance */
-        param::ParamSlot distSlot;
-
-    };
+    /** The plane-origin distance */
+    param::ParamSlot distSlot;
+};
 
 
 } /* end namespace view */

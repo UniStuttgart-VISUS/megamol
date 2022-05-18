@@ -5,9 +5,6 @@
 
 megamol_plugin(mesh
   BUILD_DEFAULT ON
-  DEPENDS_PLUGINS
-    compositing_gl
-    mmstd_datatools
   DEPENDS_EXTERNALS PUBLIC
     quickhull
     tinyobjloader
@@ -15,20 +12,6 @@ megamol_plugin(mesh
     obj-io)
 
 if (mesh_PLUGIN_ENABLED)
-  # Find CGAL
-  find_package(CGAL REQUIRED)
-
-  if(NOT TARGET CGAL::CGAL)
-    message(FATAL_ERROR "Target for CGAL not found")
-  endif()
-
-  if (TARGET CGAL)
-    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
-    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
-  endif()
-
-  target_link_libraries(mesh PRIVATE CGAL::CGAL)
-
   if (MSVC)
     target_compile_definitions(mesh PRIVATE NOMINMAX)
   endif ()

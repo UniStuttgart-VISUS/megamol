@@ -14,26 +14,26 @@
 #define HELPER_FUNCTIONS_H
 
 #ifdef WIN32
-#pragma warning(disable:4996)
+#pragma warning(disable : 4996)
 #endif
 
 // includes, project
-#include <stdio.h>
-#include <stdlib.h>
-#include <string>
 #include <assert.h>
 #include <exception.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
 
-#include <fstream>
-#include <vector>
-#include <iostream>
 #include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <vector>
 
 // includes, timer, string parsing, image helpers
-#include <helper_timer.h>   // helper functions for timers
-#include <helper_string.h>  // helper functions for string parsing
-#include <helper_image.h>   // helper functions for image compare, dump, data comparisons
+#include <helper_image.h>  // helper functions for image compare, dump, data comparisons
+#include <helper_string.h> // helper functions for string parsing
+#include <helper_timer.h>  // helper functions for timers
 
 #ifndef EXIT_WAIVED
 #define EXIT_WAIVED 2

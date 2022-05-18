@@ -14,14 +14,14 @@
 #pragma once
 #endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
 
-#include "mmcore/Module.h"
-#include "mmcore/CallerSlot.h"
-#include "mmcore/CalleeSlot.h"
-#include "mmcore/param/ParamSlot.h"
-#include "gridParams.h"
-#include "protein_calls/MolecularDataCall.h"
-#include "HostArr.h"
 #include "CudaDevArr.h"
+#include "HostArr.h"
+#include "gridParams.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
+#include "protein_calls/MolecularDataCall.h"
 //#include "vislib_vector_typedefs.h"
 #include "vislib/math/Vector.h"
 typedef vislib::math::Vector<float, 3> Vec3f;
@@ -33,24 +33,26 @@ namespace protein_cuda {
 
 class PotentialCalculator : public core::Module {
 public:
-
     /// Enum representing the different algorithms used to compute the electro-
     /// static potential
-    enum ComputationalMethod {DIRECT_COULOMB_SUMMATION_NO_PERIODIC_BOUNDARIES=0,
-        DIRECT_COULOMB_SUMMATION, PARTICLE_MESH_EWALD,
-        CONTINUUM_SOLVATION_POISSON_BOLTZMAN, GPU_POISSON_SOLVER,
+    enum ComputationalMethod {
+        DIRECT_COULOMB_SUMMATION_NO_PERIODIC_BOUNDARIES = 0,
+        DIRECT_COULOMB_SUMMATION,
+        PARTICLE_MESH_EWALD,
+        CONTINUUM_SOLVATION_POISSON_BOLTZMAN,
+        GPU_POISSON_SOLVER,
         EWALD_SUMMATION
     };
 
     /// Enum for different types of periodic bounding boxes
-    enum BBoxType {BBOX_CUBIC=0, BBOX_TRUNCATED_OCTAHEDRON};
+    enum BBoxType { BBOX_CUBIC = 0, BBOX_TRUNCATED_OCTAHEDRON };
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char *ClassName(void) {
+    static const char* ClassName(void) {
         return "PotentialCalculator";
     }
 
@@ -59,7 +61,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char *Description(void) {
+    static const char* Description(void) {
         return "Module calculating the electrostatic potential of molecular \
                 data using different algorithms.";
     }
@@ -93,7 +95,6 @@ public:
     virtual ~PotentialCalculator();
 
 protected:
-
     /**
      * Implementation of 'Create'.
      *
@@ -123,54 +124,49 @@ protected:
     virtual void release(void);
 
 private:
+    /**
+     * TODO
+     */
+    bool computeChargeDistribution(const megamol::protein_calls::MolecularDataCall* mol);
 
     /**
      * TODO
      */
-	bool computeChargeDistribution(const megamol::protein_calls::MolecularDataCall *mol);
+    bool computePotentialMap(const megamol::protein_calls::MolecularDataCall* mol);
 
     /**
      * TODO
      */
-	bool computePotentialMap(const megamol::protein_calls::MolecularDataCall *mol);
+    bool computePotentialMapDCS(
+        const megamol::protein_calls::MolecularDataCall* mol, float sphericalCutOff, bool usePeriodicImages = false);
 
     /**
      * TODO
      */
-	bool computePotentialMapDCS(const megamol::protein_calls::MolecularDataCall *mol,
-            float sphericalCutOff,
-            bool usePeriodicImages=false);
+    bool computePotentialMapEwaldSum(const megamol::protein_calls::MolecularDataCall* mol, float beta);
 
     /**
      * TODO
      */
-	bool computePotentialMapEwaldSum(const megamol::protein_calls::MolecularDataCall *mol,
-            float beta);
+    float computeChargeWeightedStructureFactor(uint maxWaveLength, megamol::protein_calls::MolecularDataCall* mol);
 
     /**
      * TODO
      */
-    float computeChargeWeightedStructureFactor(uint maxWaveLength,
-		megamol::protein_calls::MolecularDataCall *mol);
+    void getPeriodicImages(Vec3f atomPos, vislib::Array<Vec3f>& imgArr);
 
     /**
      * TODO
      */
-    void getPeriodicImages(Vec3f atomPos,
-            vislib::Array<Vec3f> &imgArr);
-
-    /**
-     * TODO
-     */
-	void initGridParams(gridParams &grid, megamol::protein_calls::MolecularDataCall *dcOut);
+    void initGridParams(gridParams& grid, megamol::protein_calls::MolecularDataCall* dcOut);
 
     /**
      * TODO
      */
     void updateParams();
 
-    core::CallerSlot dataCallerSlot;  ///> Data caller slot
-    core::CalleeSlot dataCalleeSlot;  ///> Data callee slot
+    core::CallerSlot dataCallerSlot; ///> Data caller slot
+    core::CalleeSlot dataCalleeSlot; ///> Data callee slot
 
     /// Parameter for the potential calculation method
     core::param::ParamSlot computationalMethodSlot;
@@ -189,7 +185,7 @@ private:
     float potentialGridSpacing;
 
 
-    void *cudaqsurf;             ///> Pointer to CUDAQuickSurf objects
+    void* cudaqsurf; ///> Pointer to CUDAQuickSurf objects
 
     gridParams chargesGrid;         ///> Grid params for the charge distribution
     HostArr<float> charges;         ///> The charge distribution
@@ -202,18 +198,18 @@ private:
     /// The (cubic) bounding box of the particle data
     vislib::math::Cuboid<float> particleBBox;
 
-    gridParams potentialGrid;       ///> Grid params for the potential map
-    HostArr<float> potential;       ///> The potential map (host memory)
+    gridParams potentialGrid; ///> Grid params for the potential map
+    HostArr<float> potential; ///> The potential map (host memory)
 
-    CudaDevArr<float> potential_D;  ///> The potential map (device memory)
+    CudaDevArr<float> potential_D; ///> The potential map (device memory)
 
-    float minPotential;             ///> Minimum potential value
-    float maxPotential;             ///> Maximum potential value
+    float minPotential; ///> Minimum potential value
+    float maxPotential; ///> Maximum potential value
 
     /// The bounding box of the generated potential map
     vislib::math::Cuboid<float> potentialBBox;
 
-    bool jobDone;       ///> Flag whether the job is done
+    bool jobDone; ///> Flag whether the job is done
 };
 
 } // end namespace protein_cuda

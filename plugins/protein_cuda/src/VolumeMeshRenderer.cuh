@@ -119,7 +119,7 @@ struct less_float4 : public thrust::binary_function<float4,float4,bool> {
  */
 struct equal_float4 : public thrust::binary_function<float4,float4,bool> {
     __host__ __device__ bool operator()(const float4 &l, const float4 &r) const {
-		const float eps = 1e-4f;
+        const float eps = 1e-4f;
         return (( fabsf( l.x - r.x) < eps) && ( fabsf( l.y - r.y) < eps) && ( fabsf( l.z - r.z) < eps) && ( fabsf( l.w - r.w) < eps));
     }
 };

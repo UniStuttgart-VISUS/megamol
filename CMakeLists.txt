@@ -2,7 +2,7 @@
 # Copyright (c) 2020, MegaMol Dev Team
 # All rights reserved.
 #
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 # Policies
 cmake_policy(SET CMP0054 NEW)
@@ -31,21 +31,16 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "default install pat
 # Directories
 set(MEGAMOL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(MEGAMOL_VISLIB_DIR ${MEGAMOL_DIR}/vislib)
+set(MEGAMOL_VISLIB_GL_DIR ${MEGAMOL_DIR}/vislib_gl)
 set(MEGAMOL_CORE_DIR ${MEGAMOL_DIR}/core)
-set(MEGAMOL_CONSOLE_DIR ${MEGAMOL_DIR}/console)
+set(MEGAMOL_CORE_GL_DIR ${MEGAMOL_DIR}/core_gl)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
-# Versions
-include(global_versioninfo)
+# MegaMol build info library (version + config)
+include(megamol_build_info)
 
 # MegaMol options
 include(megamol_options)
-
-# MegaMol macros
-include(check_mmdep)
-
-# Clang-format
-include(ClangFormat)
 
 # External
 include("externals/CMakeExternals.cmake")
@@ -58,13 +53,15 @@ add_subdirectory(${MEGAMOL_DIR}/frontend/services)
 
 # Vislib
 add_subdirectory(${MEGAMOL_VISLIB_DIR})
+if (ENABLE_GL)
+  add_subdirectory(${MEGAMOL_VISLIB_GL_DIR})
+endif()
 
 # Core
 add_subdirectory(${MEGAMOL_CORE_DIR})
-
-# Console
-set(CONSOLE_NAME mmconsole)
-add_subdirectory(${MEGAMOL_CONSOLE_DIR})
+if (ENABLE_GL)
+  add_subdirectory(${MEGAMOL_CORE_GL_DIR})
+endif()
 
 # Remoteconsole
 add_subdirectory(remoteconsole)
@@ -80,10 +77,11 @@ endif()
 
 # Plugins
 add_subdirectory(plugins)
-if (BUILD_CONSOLE)
-  target_link_libraries(mmconsole PRIVATE plugins)
-endif()
 if (BUILD_FRONTEND)
+  if (ENABLE_GL)
+    target_link_libraries(plugins INTERFACE core_gl)
+    target_sources(plugins INTERFACE $<TARGET_OBJECTS:core_gl>)
+  endif()
   target_link_libraries(megamol PRIVATE plugins)
 endif()
 
@@ -116,11 +114,25 @@ if (EXAMPLES)
   endif ()
 endif ()
 
-# Validate dependencies
-foreach(d ${DEP_LIST})
-  string(REGEX REPLACE " +" ";" SINGLE_LIST "${d}")
-  list(GET SINGLE_LIST 0 plugin)
-  list(REMOVE_AT SINGLE_LIST 0)
-  check_mmdep(${plugin} "${SINGLE_LIST}")
-endforeach()
-unset(DEP_LIST CACHE)
+# Tests
+option(TESTS "Get the MegaMol tests repository" OFF)
+if (TESTS)
+  set(TESTS_DIR "${CMAKE_BINARY_DIR}/tests" CACHE PATH "Download directory of the tests")
+  option(TESTS_UPDATE "Pull updates from the tests repo" ON)
+  if (NOT EXISTS "${TESTS_DIR}")
+    message(STATUS "Downloading tests")
+    execute_process(COMMAND
+      ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-tests.git "${TESTS_DIR}" --depth 1
+      WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+      ERROR_QUIET
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+  elseif (TESTS_UPDATE)
+    message(STATUS "Pull tests updates")
+    execute_process(COMMAND
+      ${GIT_EXECUTABLE} pull
+      WORKING_DIRECTORY "${TESTS_DIR}"
+      ERROR_QUIET
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+  endif ()
+  install(DIRECTORY "${TESTS_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/tests" PATTERN ".git" EXCLUDE)
+endif ()

@@ -14,35 +14,33 @@
 #include "FilamentFilter.h"
 #include "SimpleAstroFilter.h"
 #include "SpectralIntensityVolume.h"
-#include "SurfaceLICRenderer.h"
 #include "VolumetricGlobalMinMax.h"
 #include "astro/AstroDataCall.h"
 
 namespace megamol::astro {
-    class AstroPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
-        REGISTERPLUGIN(AstroPluginInstance)
+class AstroPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+    REGISTERPLUGIN(AstroPluginInstance)
 
-    public:
-        AstroPluginInstance() : megamol::core::utility::plugins::AbstractPluginInstance("astro", "The astro plugin."){};
+public:
+    AstroPluginInstance() : megamol::core::utility::plugins::AbstractPluginInstance("astro", "The astro plugin."){};
 
-        ~AstroPluginInstance() override = default;
+    ~AstroPluginInstance() override = default;
 
-        // Registers modules and calls
-        void registerClasses() override {
+    // Registers modules and calls
+    void registerClasses() override {
 
-            // register modules
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::Contest2019DataLoader>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroParticleConverter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::FilamentFilter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroSchulz>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::DirectionToColour>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::SimpleAstroFilter>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::SurfaceLICRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::SpectralIntensityVolume>();
-            this->module_descriptions.RegisterAutoDescription<megamol::astro::VolumetricGlobalMinMax>();
+        // register modules
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::Contest2019DataLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroParticleConverter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::FilamentFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::AstroSchulz>();
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::DirectionToColour>();
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::SimpleAstroFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::SpectralIntensityVolume>();
+        this->module_descriptions.RegisterAutoDescription<megamol::astro::VolumetricGlobalMinMax>();
 
-            // register calls
-            this->call_descriptions.RegisterAutoDescription<megamol::astro::AstroDataCall>();
-        }
-    };
+        // register calls
+        this->call_descriptions.RegisterAutoDescription<megamol::astro::AstroDataCall>();
+    }
+};
 } // namespace megamol::astro

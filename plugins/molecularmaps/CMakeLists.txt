@@ -14,8 +14,8 @@ megamol_plugin(molecularmaps
 
 if (molecularmaps_PLUGIN_ENABLED)
 
-  if(NOT CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 7)
-    message(FATAL_ERROR "Molecularmaps currently only supports CUDA Version 8 or above. The version found was CUDA ${CUDA_VERSION_MAJOR} (${CMAKE_CUDA_COMPILER_VERSION}). Please turn off the Molecularmaps plugin or install a correct version of CUDA." )
+  if(NOT CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
+    message(FATAL_ERROR "Molecularmaps currently only supports CUDA Version 11 or above. The version found was CUDA ${CUDA_VERSION_MAJOR} (${CMAKE_CUDA_COMPILER_VERSION}). Please turn off the Molecularmaps plugin or install a correct version of CUDA." )
   endif()
 
   set(CMAKE_CUDA_ARCHITECTURES 52)

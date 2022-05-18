@@ -9,32 +9,32 @@
 
 #ifdef _WIN32
 #else /* _WIN32 */
-#include <unistd.h>
-#include <time.h>
+#include <climits>
 #include <sys/ipc.h>
 #include <sys/time.h>
-#include <climits>
+#include <time.h>
+#include <unistd.h>
 #endif /* _WIN32 */
 
-#include "vislib/assert.h"
-#include "vislib/sys/File.h"
 #include "vislib/IllegalParamException.h"
-#include "vislib/sys/IOException.h"
-#include "vislib/memutils.h"
-#include "vislib/sys/Path.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
-#include "vislib/sys/SystemException.h"
 #include "vislib/Trace.h"
-#include "vislib/UnsupportedOperationException.h"
 #include "vislib/UTF8Encoder.h"
+#include "vislib/UnsupportedOperationException.h"
+#include "vislib/assert.h"
+#include "vislib/memutils.h"
+#include "vislib/sys/File.h"
+#include "vislib/sys/IOException.h"
+#include "vislib/sys/Path.h"
+#include "vislib/sys/SystemException.h"
 
 
 #ifdef _WIN32
 /**
  * Common implementation of the vislib::sys::LoadResource functions.
  *
- * @param out     A RawStorage that will receive the resource data. 
+ * @param out     A RawStorage that will receive the resource data.
  * @param hModule The module handle passed to vislib::sys::LoadResource.
  * @param hRes    The handle of the resource to be retrieved. That must not
  *                be NULL.
@@ -44,17 +44,16 @@
  * @throws SystemException If the resource lookup or loading the resource
  *                         failed.
  */
-static vislib::RawStorage& loadResource(vislib::RawStorage& out, 
-        HMODULE hModule, HRSRC hRes) {
+static vislib::RawStorage& loadResource(vislib::RawStorage& out, HMODULE hModule, HRSRC hRes) {
     ASSERT(hRes != NULL);
     HGLOBAL hGlobal = NULL;
-    void *data = NULL;
+    void* data = NULL;
     DWORD size = 0;
 
     if ((hGlobal = ::LoadResource(hModule, hRes)) == NULL) {
-        // From MSDN: The return type of LoadResource is HGLOBAL for backward 
-        // compatibility, not because the function returns a handle to a 
-        // global memory block. Do not pass this handle to the GlobalLock 
+        // From MSDN: The return type of LoadResource is HGLOBAL for backward
+        // compatibility, not because the function returns a handle to a
+        // global memory block. Do not pass this handle to the GlobalLock
         // or GlobalFree function.
         throw vislib::sys::SystemException(__FILE__, __LINE__);
     }
@@ -77,52 +76,51 @@ static vislib::RawStorage& loadResource(vislib::RawStorage& out,
  * vislib::sys::LoadResource
  */
 #ifdef _WIN32
-vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, HMODULE hModule,
-        const char *resourceID, const char *resourceType) {
+vislib::RawStorage& vislib::sys::LoadResource(
+    RawStorage& out, HMODULE hModule, const char* resourceID, const char* resourceType) {
     HRSRC hRes = NULL;
-    
+
     if ((hRes = ::FindResourceA(hModule, resourceID, resourceType)) == NULL) {
         throw SystemException(__FILE__, __LINE__);
     }
-    
+
     return ::loadResource(out, hModule, hRes);
 }
-#else /* _WIN32 */
-vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, void *hModule, 
-        const char *resourceID, const char *resourceType) {
+#else  /* _WIN32 */
+vislib::RawStorage& vislib::sys::LoadResource(
+    RawStorage& out, void* hModule, const char* resourceID, const char* resourceType) {
     throw UnsupportedOperationException("LoadResource", __FILE__, __LINE__);
 }
 #endif /* _WIN32 */
-
 
 
 /*
  * vislib::sys::LoadResource
  */
 #ifdef _WIN32
-vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, HMODULE hModule,
-        const wchar_t *resourceID, const wchar_t *resourceType) {
+vislib::RawStorage& vislib::sys::LoadResource(
+    RawStorage& out, HMODULE hModule, const wchar_t* resourceID, const wchar_t* resourceType) {
     HRSRC hRes = NULL;
-    
+
     if ((hRes = ::FindResourceW(hModule, resourceID, resourceType)) == NULL) {
         throw SystemException(__FILE__, __LINE__);
     }
-    
+
     return ::loadResource(out, hModule, hRes);
 }
-#else /* _WIN32 */
-vislib::RawStorage& vislib::sys::LoadResource(RawStorage& out, void *hModule, 
-        const wchar_t *resourceID, const wchar_t *resourceType) {
+#else  /* _WIN32 */
+vislib::RawStorage& vislib::sys::LoadResource(
+    RawStorage& out, void* hModule, const wchar_t* resourceID, const wchar_t* resourceType) {
     throw UnsupportedOperationException("LoadResource", __FILE__, __LINE__);
 }
-#endif /* _WIN32 */      
+#endif /* _WIN32 */
 
 
 /*
  * vislib::sys::ReadLineFromFileA
  */
 vislib::StringA vislib::sys::ReadLineFromFileA(File& input, unsigned int size) {
-    char *buf = new char[size + 1];
+    char* buf = new char[size + 1];
     unsigned int pos;
 
     try {
@@ -149,13 +147,13 @@ vislib::StringA vislib::sys::ReadLineFromFileA(File& input, unsigned int size) {
         }
         buf[pos] = '\0';
 
-    } catch(IOException e) {
+    } catch (IOException e) {
         ARY_SAFE_DELETE(buf);
         throw IOException(e);
-    } catch(Exception e) {
+    } catch (Exception e) {
         ARY_SAFE_DELETE(buf);
         throw Exception(e);
-    } catch(...) {
+    } catch (...) {
         ARY_SAFE_DELETE(buf);
         throw Exception("Unexcepted exception", __FILE__, __LINE__);
     }
@@ -169,7 +167,7 @@ vislib::StringA vislib::sys::ReadLineFromFileA(File& input, unsigned int size) {
  * vislib::sys::ReadLineFromFileW
  */
 vislib::StringW vislib::sys::ReadLineFromFileW(File& input, unsigned int size) {
-    wchar_t *buf = new wchar_t[size + 1];
+    wchar_t* buf = new wchar_t[size + 1];
     unsigned int pos;
 
     try {
@@ -196,13 +194,13 @@ vislib::StringW vislib::sys::ReadLineFromFileW(File& input, unsigned int size) {
         }
         buf[pos] = L'\0';
 
-    } catch(IOException e) {
+    } catch (IOException e) {
         ARY_SAFE_DELETE(buf);
         throw IOException(e);
-    } catch(Exception e) {
+    } catch (Exception e) {
         ARY_SAFE_DELETE(buf);
         throw Exception(e);
-    } catch(...) {
+    } catch (...) {
         ARY_SAFE_DELETE(buf);
         throw Exception("Unexcepted exception", __FILE__, __LINE__);
     }
@@ -222,20 +220,16 @@ vislib::StringW vislib::sys::ReadLineFromFileW(File& input, unsigned int size) {
  *
  * @return The recognized BOM or 'TEXTFF_UNSPECIFIC'
  */
-vislib::sys::TextFileFormat interpretBOM(unsigned char *bom,
-        unsigned int& bomSize) {
-    if ((bomSize >= 3) && (bom[0] == 0xEF) && (bom[1] == 0xBB)
-            && (bom[2] == 0xBF)) {
+vislib::sys::TextFileFormat interpretBOM(unsigned char* bom, unsigned int& bomSize) {
+    if ((bomSize >= 3) && (bom[0] == 0xEF) && (bom[1] == 0xBB) && (bom[2] == 0xBF)) {
         bomSize = 3;
         return vislib::sys::TEXTFF_UTF8;
     }
-    if ((bomSize >= 4) && (bom[0] == 0x00) && (bom[1] == 0x00)
-            && (bom[2] == 0xFE) && (bom[3] == 0xFF)) {
+    if ((bomSize >= 4) && (bom[0] == 0x00) && (bom[1] == 0x00) && (bom[2] == 0xFE) && (bom[3] == 0xFF)) {
         bomSize = 4;
         return vislib::sys::TEXTFF_UTF32_BE;
     }
-    if ((bomSize >= 4) && (bom[0] == 0xFF) && (bom[1] == 0xFE)
-            && (bom[2] == 0x00) && (bom[3] == 0x00)) {
+    if ((bomSize >= 4) && (bom[0] == 0xFF) && (bom[1] == 0xFE) && (bom[2] == 0x00) && (bom[3] == 0x00)) {
         bomSize = 4;
         return vislib::sys::TEXTFF_UTF32;
     }
@@ -247,37 +241,31 @@ vislib::sys::TextFileFormat interpretBOM(unsigned char *bom,
         bomSize = 2;
         return vislib::sys::TEXTFF_UTF16;
     }
-    if ((bomSize >= 4) && (bom[0] == 0x2B) && (bom[1] == 0x2F)
-            && (bom[2] == 0x76) && ((bom[3] == 0x38) || (bom[3] == 0x39)
-                || (bom[3] == 0x2B) || (bom[3] == 0x2F))) {
+    if ((bomSize >= 4) && (bom[0] == 0x2B) && (bom[1] == 0x2F) && (bom[2] == 0x76) &&
+        ((bom[3] == 0x38) || (bom[3] == 0x39) || (bom[3] == 0x2B) || (bom[3] == 0x2F))) {
         bomSize = 0; // because forth byte is only partially BOM the decoder
                      // has to know the data and must retest for BOM
         return vislib::sys::TEXTFF_UTF7;
     }
-    if ((bomSize >= 3) && (bom[0] == 0xF7) && (bom[1] == 0x64)
-            && (bom[2] == 0x4C)) {
+    if ((bomSize >= 3) && (bom[0] == 0xF7) && (bom[1] == 0x64) && (bom[2] == 0x4C)) {
         bomSize = 3;
         return vislib::sys::TEXTFF_UTF1;
     }
-    if ((bomSize >= 4) && (bom[0] == 0xDD) && (bom[1] == 0x73)
-            && (bom[2] == 0x66) && (bom[3] == 0x73)) {
+    if ((bomSize >= 4) && (bom[0] == 0xDD) && (bom[1] == 0x73) && (bom[2] == 0x66) && (bom[3] == 0x73)) {
         bomSize = 4;
         return vislib::sys::TEXTFF_UTF_EBCDIC;
     }
-    if ((bomSize >= 3) && (bom[0] == 0x0E) && (bom[1] == 0xFE)
-            && (bom[2] == 0xFF)) {
+    if ((bomSize >= 3) && (bom[0] == 0x0E) && (bom[1] == 0xFE) && (bom[2] == 0xFF)) {
         bomSize = 3;
         return vislib::sys::TEXTFF_SCSU;
     }
-    if ((bomSize >= 3) && (bom[0] == 0xFB) && (bom[1] == 0xEE)
-            && (bom[2] == 0x28)) {
+    if ((bomSize >= 3) && (bom[0] == 0xFB) && (bom[1] == 0xEE) && (bom[2] == 0x28)) {
         if ((bomSize == 4) && (bom[3] != 0xFF)) {
             bomSize = 3;
         }
         return vislib::sys::TEXTFF_BOCU1;
     }
-    if ((bomSize >= 4) && (bom[0] == 0x84) && (bom[1] == 0x31)
-            && (bom[2] == 0x95) && (bom[3] == 0x33)) {
+    if ((bomSize >= 4) && (bom[0] == 0x84) && (bom[1] == 0x31) && (bom[2] == 0x95) && (bom[3] == 0x33)) {
         bomSize = 4;
         return vislib::sys::TEXTFF_GB18030;
     }
@@ -289,9 +277,8 @@ vislib::sys::TextFileFormat interpretBOM(unsigned char *bom,
 /**
  * Checks the specified file format against the file stream
  */
-void checkFileFormat(vislib::sys::File& file,
-        vislib::sys::TextFileFormat& format,
-        vislib::sys::TextFileFormat fallback) {
+void checkFileFormat(
+    vislib::sys::File& file, vislib::sys::TextFileFormat& format, vislib::sys::TextFileFormat fallback) {
     vislib::sys::File::FileSize start = file.Tell();
 
     if (start == 0) {
@@ -299,8 +286,8 @@ void checkFileFormat(vislib::sys::File& file,
         unsigned int bomSize = static_cast<unsigned int>(file.Read(bom, 4));
         vislib::sys::TextFileFormat bomFF = interpretBOM(bom, bomSize);
         if (bomFF != vislib::sys::TEXTFF_UNSPECIFIC) { // BOM detected
-            format = bomFF; // BOM always better than manual format
-                            // here we know that 'forceFormat' was false
+            format = bomFF;                            // BOM always better than manual format
+                                                       // here we know that 'forceFormat' was false
         } else {
             bomSize = 0;
         }
@@ -315,31 +302,28 @@ void checkFileFormat(vislib::sys::File& file,
 /*
  * vislib::sys::ReadTextFile
  */
-bool vislib::sys::ReadTextFile(vislib::StringA& outStr, 
-        vislib::sys::File& file, vislib::sys::TextFileFormat format,
-        bool forceFormat) {
+bool vislib::sys::ReadTextFile(
+    vislib::StringA& outStr, vislib::sys::File& file, vislib::sys::TextFileFormat format, bool forceFormat) {
     if ((format == TEXTFF_UNSPECIFIC) || !forceFormat) {
-        checkFileFormat(file, format,
-            (format == TEXTFF_UNSPECIFIC) ? TEXTFF_ASCII : format);
+        checkFileFormat(file, format, (format == TEXTFF_UNSPECIFIC) ? TEXTFF_ASCII : format);
     }
     ASSERT(format != TEXTFF_UNSPECIFIC);
     File::FileSize len = file.GetSize() - file.Tell();
 
     switch (format) {
     case TEXTFF_ASCII: {
-        char *src = outStr.AllocateBuffer(static_cast<unsigned int>(len + 1));
+        char* src = outStr.AllocateBuffer(static_cast<unsigned int>(len + 1));
         len = file.Read(src, len);
         src[len] = 0;
         return true;
     } break;
     case TEXTFF_UNICODE:
 #ifdef _WIN32
-CASE_TEXTFF_UNICODE: 
+    CASE_TEXTFF_UNICODE :
 #endif /* _WIN32 */
     {
         vislib::StringW tmp;
-        wchar_t *src = tmp.AllocateBuffer(static_cast<unsigned int>(
-            (len / sizeof(wchar_t)) + sizeof(wchar_t)));
+        wchar_t* src = tmp.AllocateBuffer(static_cast<unsigned int>((len / sizeof(wchar_t)) + sizeof(wchar_t)));
         len = file.Read(src, len - len % sizeof(wchar_t));
         src[len / sizeof(wchar_t)] = 0;
         outStr = tmp;
@@ -347,7 +331,7 @@ CASE_TEXTFF_UNICODE:
     } break;
     case TEXTFF_UTF8: {
         vislib::StringA bytes;
-        char *src = bytes.AllocateBuffer(static_cast<unsigned int>(len + 1));
+        char* src = bytes.AllocateBuffer(static_cast<unsigned int>(len + 1));
         len = file.Read(src, len);
         src[len] = 0;
         UTF8Encoder::Decode(outStr, bytes);
@@ -356,7 +340,7 @@ CASE_TEXTFF_UNICODE:
     case TEXTFF_UTF16:
 #ifdef _WIN32
         goto CASE_TEXTFF_UNICODE;
-#else /* _WIN32 */
+#else  /* _WIN32 */
         VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
 #endif /* _WIN32 */
         break;
@@ -399,12 +383,10 @@ CASE_TEXTFF_UNICODE:
 /*
  * vislib::sys::ReadTextFile
  */
-bool vislib::sys::ReadTextFile(vislib::StringW& outStr, 
-        vislib::sys::File& file, vislib::sys::TextFileFormat format,
-        bool forceFormat) {
+bool vislib::sys::ReadTextFile(
+    vislib::StringW& outStr, vislib::sys::File& file, vislib::sys::TextFileFormat format, bool forceFormat) {
     if ((format == TEXTFF_UNSPECIFIC) || !forceFormat) {
-        checkFileFormat(file, format,
-            (format == TEXTFF_UNSPECIFIC) ? TEXTFF_UNICODE : format);
+        checkFileFormat(file, format, (format == TEXTFF_UNSPECIFIC) ? TEXTFF_UNICODE : format);
     }
     ASSERT(format != TEXTFF_UNSPECIFIC);
     File::FileSize len = file.GetSize() - file.Tell();
@@ -412,7 +394,7 @@ bool vislib::sys::ReadTextFile(vislib::StringW& outStr,
     switch (format) {
     case TEXTFF_ASCII: {
         vislib::StringA tmp;
-        char *src = tmp.AllocateBuffer(static_cast<unsigned int>(len + 1));
+        char* src = tmp.AllocateBuffer(static_cast<unsigned int>(len + 1));
         len = file.Read(src, len);
         src[len] = 0;
         outStr = tmp;
@@ -420,18 +402,17 @@ bool vislib::sys::ReadTextFile(vislib::StringW& outStr,
     } break;
     case TEXTFF_UNICODE:
 #ifdef _WIN32
-CASE_TEXTFF_UNICODE:
+    CASE_TEXTFF_UNICODE :
 #endif /* WIN32 */
     {
-        wchar_t *src = outStr.AllocateBuffer(static_cast<unsigned int>(
-            (len / sizeof(wchar_t)) + sizeof(wchar_t)));
+        wchar_t* src = outStr.AllocateBuffer(static_cast<unsigned int>((len / sizeof(wchar_t)) + sizeof(wchar_t)));
         len = file.Read(src, len - len % sizeof(wchar_t));
         src[len / sizeof(wchar_t)] = 0;
         return true;
     } break;
     case TEXTFF_UTF8: {
         vislib::StringA bytes;
-        char *src = bytes.AllocateBuffer(static_cast<unsigned int>(len + 1));
+        char* src = bytes.AllocateBuffer(static_cast<unsigned int>(len + 1));
         len = file.Read(src, len);
         src[len] = 0;
         UTF8Encoder::Decode(outStr, bytes);
@@ -440,7 +421,7 @@ CASE_TEXTFF_UNICODE:
     case TEXTFF_UTF16:
 #ifdef _WIN32
         goto CASE_TEXTFF_UNICODE;
-#else /* _WIN32 */
+#else  /* _WIN32 */
         VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
 #endif /* _WIN32 */
         break;
@@ -487,8 +468,8 @@ unsigned int vislib::sys::GetTicksOfDay(void) {
 #ifdef _WIN32
     SYSTEMTIME systemTime;
     ::GetLocalTime(&systemTime);
-    return static_cast<unsigned int>(systemTime.wMilliseconds) 
-        + 1000 * (static_cast<unsigned int>(systemTime.wSecond) + 60 * (systemTime.wMinute + 60 * systemTime.wHour));
+    return static_cast<unsigned int>(systemTime.wMilliseconds) +
+           1000 * (static_cast<unsigned int>(systemTime.wSecond) + 60 * (systemTime.wMinute + 60 * systemTime.wHour));
 
 #else /* _WIN32 */
     struct timeval tv;
@@ -497,8 +478,8 @@ unsigned int vislib::sys::GetTicksOfDay(void) {
     if (::gettimeofday(&tv, NULL) == 0) {
 
         if (::gmtime_r(&tv.tv_sec, &tm) != NULL) {
-            return (tv.tv_usec / 1000) 
-                + 1000 * (static_cast<unsigned int>(tm.tm_sec) + 60 * (tm.tm_min + 60 * tm.tm_hour));
+            return (tv.tv_usec / 1000) +
+                   1000 * (static_cast<unsigned int>(tm.tm_sec) + 60 * (tm.tm_min + 60 * tm.tm_hour));
 
         } else {
             return tv.tv_usec / 1000 + 1000 * (tv.tv_sec % 86400);
@@ -516,8 +497,7 @@ unsigned int vislib::sys::GetTicksOfDay(void) {
 /*
  * vislib::sys::GetDLLVersion
  */
-HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion, 
-                                   const char *moduleName) {
+HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion, const char* moduleName) {
     DLLGETVERSIONPROC dllGetVersion = NULL;
     HMODULE hModule = NULL;
 
@@ -525,8 +505,7 @@ HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion,
         throw SystemException(__FILE__, __LINE__);
     }
 
-    if ((dllGetVersion = reinterpret_cast<DLLGETVERSIONPROC>(::GetProcAddress(
-            hModule, "DllGetVersion"))) == NULL) {
+    if ((dllGetVersion = reinterpret_cast<DLLGETVERSIONPROC>(::GetProcAddress(hModule, "DllGetVersion"))) == NULL) {
         throw SystemException(__FILE__, __LINE__);
     }
 
@@ -537,8 +516,7 @@ HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion,
 /*
  * vislib::sys::GetDLLVersion
  */
-HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion, 
-                                   const wchar_t * moduleName) {
+HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion, const wchar_t* moduleName) {
     DLLGETVERSIONPROC dllGetVersion = NULL;
     HMODULE hModule = NULL;
 
@@ -546,8 +524,7 @@ HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion,
         throw SystemException(__FILE__, __LINE__);
     }
 
-    if ((dllGetVersion = reinterpret_cast<DLLGETVERSIONPROC>(::GetProcAddress(
-            hModule, "DllGetVersion"))) == NULL) {
+    if ((dllGetVersion = reinterpret_cast<DLLGETVERSIONPROC>(::GetProcAddress(hModule, "DllGetVersion"))) == NULL) {
         throw SystemException(__FILE__, __LINE__);
     }
 
@@ -559,11 +536,10 @@ HRESULT vislib::sys::GetDLLVersion(DLLVERSIONINFO& outVersion,
 /*
  * vislib::sys::RemoveKernelNamespace
  */
-vislib::StringA vislib::sys::RemoveKernelNamespace(const char *name) {
+vislib::StringA vislib::sys::RemoveKernelNamespace(const char* name) {
     StringA n(name);
 
-    if (n.StartsWithInsensitive("global\\") 
-            || n.StartsWithInsensitive("local\\")) {
+    if (n.StartsWithInsensitive("global\\") || n.StartsWithInsensitive("local\\")) {
         n.Remove(0, n.Find('\\') + 1);
     }
 
@@ -574,11 +550,10 @@ vislib::StringA vislib::sys::RemoveKernelNamespace(const char *name) {
 /*
  * vislib::sys::RemoveKernelNamespace
  */
-vislib::StringW vislib::sys::RemoveKernelNamespace(const wchar_t *name) {
+vislib::StringW vislib::sys::RemoveKernelNamespace(const wchar_t* name) {
     StringW n(name);
 
-    if (n.StartsWithInsensitive(L"global\\") 
-            || n.StartsWithInsensitive(L"local\\")) {
+    if (n.StartsWithInsensitive(L"global\\") || n.StartsWithInsensitive(L"local\\")) {
         n.Remove(0, n.Find(L'\\') + 1);
     }
 
@@ -589,7 +564,7 @@ vislib::StringW vislib::sys::RemoveKernelNamespace(const wchar_t *name) {
 /*
  * vislib::sys::TranslateWinIpc2PosixName
  */
-vislib::StringA vislib::sys::TranslateWinIpc2PosixName(const char *name) {
+vislib::StringA vislib::sys::TranslateWinIpc2PosixName(const char* name) {
     StringA retval = RemoveKernelNamespace(name);
     retval.Prepend('/');
     return retval;
@@ -599,7 +574,7 @@ vislib::StringA vislib::sys::TranslateWinIpc2PosixName(const char *name) {
 /*
  * vislib::sys::TranslateWinIpc2PosixName
  */
-vislib::StringW vislib::sys::TranslateWinIpc2PosixName(const wchar_t *name) {
+vislib::StringW vislib::sys::TranslateWinIpc2PosixName(const wchar_t* name) {
     StringW retval = RemoveKernelNamespace(name);
     retval.Prepend(L'/');
     return retval;
@@ -610,10 +585,10 @@ vislib::StringW vislib::sys::TranslateWinIpc2PosixName(const wchar_t *name) {
 /*
  * vislib::sys::TranslateIpcName
  */
-key_t vislib::sys::TranslateIpcName(const char *name) {
+key_t vislib::sys::TranslateIpcName(const char* name) {
     key_t retval = -1;
-    
-    
+
+
     /* Remove Windows kernel namespaces from the name. */
     StringA n = RemoveKernelNamespace(name);
     ASSERT(n.Length() > 0);
@@ -624,8 +599,7 @@ key_t vislib::sys::TranslateIpcName(const char *name) {
         throw SystemException(__FILE__, __LINE__);
     }
 
-    VLTRACE(Trace::LEVEL_VL_INFO, "TranslateIpcName(\"%s\") = %u\n", name, 
-        retval);
+    VLTRACE(Trace::LEVEL_VL_INFO, "TranslateIpcName(\"%s\") = %u\n", name, retval);
     return retval;
 }
 #endif /* !_WIN32 */
@@ -634,23 +608,21 @@ key_t vislib::sys::TranslateIpcName(const char *name) {
 /*
  * vislib::sys::WriteTextFile
  */
-bool vislib::sys::WriteTextFile(vislib::sys::File& file,
-        const vislib::StringA& text, vislib::sys::TextFileFormat format,
-        TextFileFormatBOM bom) {
+bool vislib::sys::WriteTextFile(
+    vislib::sys::File& file, const vislib::StringA& text, vislib::sys::TextFileFormat format, TextFileFormatBOM bom) {
     switch (format) {
     case TEXTFF_UNSPECIFIC:
         goto CASE_TEXTFF_ASCII;
         break;
     case TEXTFF_ASCII:
-CASE_TEXTFF_ASCII: {
+    CASE_TEXTFF_ASCII : {
         // no BOM possible
         StringA::Size len = text.Length();
-        return (static_cast<StringA::Size>(file.Write(text.PeekBuffer(), len))
-            == len);
+        return (static_cast<StringA::Size>(file.Write(text.PeekBuffer(), len)) == len);
     } break;
     case TEXTFF_UNICODE:
 #ifdef _WIN32
-CASE_TEXTFF_UNICODE:
+    CASE_TEXTFF_UNICODE:
 #endif /* _WIN32 */
         // write BOM as sfx
         return WriteTextFile(file, vislib::StringW(text), format, bom);
@@ -659,7 +631,7 @@ CASE_TEXTFF_UNICODE:
         vislib::StringA bytes;
         UTF8Encoder::Encode(bytes, text);
         if (bom != TEXTFF_BOM_NO) {
-            unsigned char BOM[] = { 0xEF, 0xBB, 0xBF };
+            unsigned char BOM[] = {0xEF, 0xBB, 0xBF};
             file.Write(BOM, 3);
         }
         StringA::Size len = bytes.Length();
@@ -668,7 +640,7 @@ CASE_TEXTFF_UNICODE:
     case TEXTFF_UTF16:
 #ifdef _WIN32
         goto CASE_TEXTFF_UNICODE;
-#else /* _WIN32 */
+#else  /* _WIN32 */
         VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
 #endif /* _WIN32 */
         break;
@@ -713,9 +685,8 @@ CASE_TEXTFF_UNICODE:
 /*
  * vislib::sys::WriteTextFile
  */
-bool vislib::sys::WriteTextFile(vislib::sys::File& file,
-        const vislib::StringW& text, vislib::sys::TextFileFormat format,
-        TextFileFormatBOM bom) {
+bool vislib::sys::WriteTextFile(
+    vislib::sys::File& file, const vislib::StringW& text, vislib::sys::TextFileFormat format, TextFileFormatBOM bom) {
     switch (format) {
     case TEXTFF_UNSPECIFIC:
         goto CASE_TEXTFF_UTF8; // because it is platform independent unicode
@@ -726,25 +697,24 @@ bool vislib::sys::WriteTextFile(vislib::sys::File& file,
         break;
     case TEXTFF_UNICODE:
 #ifdef _WIN32
-CASE_TEXTFF_UNICODE:
+    CASE_TEXTFF_UNICODE :
 #endif /* _WIN32 */
     {
 #ifdef _WIN32
         if (bom != TEXTFF_BOM_NO) {
-            unsigned char BOM[] = { 0xFF, 0xFE };
+            unsigned char BOM[] = {0xFF, 0xFE};
             file.Write(BOM, 2);
         }
 #endif /* _WIN32 */
         StringW::Size len = text.Length() * sizeof(wchar_t);
-        return (static_cast<StringW::Size>(file.Write(text.PeekBuffer(), len))
-            == len);
+        return (static_cast<StringW::Size>(file.Write(text.PeekBuffer(), len)) == len);
     } break;
     case TEXTFF_UTF8:
-CASE_TEXTFF_UTF8: {
+    CASE_TEXTFF_UTF8 : {
         vislib::StringA bytes;
         UTF8Encoder::Encode(bytes, text);
         if (bom != TEXTFF_BOM_NO) {
-            unsigned char BOM[] = { 0xEF, 0xBB, 0xBF };
+            unsigned char BOM[] = {0xEF, 0xBB, 0xBF};
             file.Write(BOM, 3);
         }
         StringA::Size len = bytes.Length();
@@ -753,7 +723,7 @@ CASE_TEXTFF_UTF8: {
     case TEXTFF_UTF16:
 #ifdef _WIN32
         goto CASE_TEXTFF_UNICODE;
-#else /* _WIN32 */
+#else  /* _WIN32 */
         VLTRACE(VISLIB_TRCELVL_ERROR, "Unsupported text file format %d\n", format);
 #endif /* _WIN32 */
         break;

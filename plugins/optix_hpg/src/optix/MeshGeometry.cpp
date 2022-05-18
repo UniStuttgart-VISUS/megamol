@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "MeshGeometry.h"
+#include "stdafx.h"
 
 #include "optix/CallGeometry.h"
 
@@ -49,6 +49,8 @@ void megamol::optix_hpg::MeshGeometry::init(Context const& ctx) {
         MMOptixModule::MMOptixProgramGroupKind::MMOPTIX_PROGRAM_GROUP_KIND_HITGROUP, triangle_intersector_,
         {{MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_INTERSECTION, "mesh_intersect"},
             {MMOptixModule::MMOptixNameKind::MMOPTIX_NAME_CLOSESTHIT, "mesh_closesthit_occlusion"}});
+
+    ++program_version;
 }
 
 
@@ -148,8 +150,8 @@ bool megamol::optix_hpg::MeshGeometry::assertData(mesh::CallMesh& call, Context 
 
         SBTRecord<device::MeshGeoData> sbt_record;
         OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(mesh_module_, &sbt_record));
-        sbt_record.data.index_buffer = (glm::uvec3*) mesh_idx_data_.back();
-        sbt_record.data.vertex_buffer = (glm::vec3*) mesh_pos_data_.back();
+        sbt_record.data.index_buffer = (glm::uvec3*)mesh_idx_data_.back();
+        sbt_record.data.vertex_buffer = (glm::vec3*)mesh_pos_data_.back();
 
         sbt_records_.push_back(sbt_record);
 
@@ -158,6 +160,8 @@ bool megamol::optix_hpg::MeshGeometry::assertData(mesh::CallMesh& call, Context 
         OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(mesh_occlusion_module_, &sbt_record_occlusion));
         sbt_record_occlusion.data = sbt_record.data;
         sbt_records_.push_back(sbt_record_occlusion);
+
+        ++sbt_version;
     }
 
     OptixAccelBuildOptions accelOptions = {};
@@ -223,11 +227,8 @@ bool megamol::optix_hpg::MeshGeometry::get_data_cb(core::Call& c) {
     program_groups_[1] = mesh_occlusion_module_;
 
     out_geo->set_handle(&_geo_handle);
-    out_geo->set_program_groups(program_groups_.data());
-    out_geo->set_num_programs(2);
-    out_geo->set_record(sbt_records_.data());
-    out_geo->set_record_stride(sizeof(SBTRecord<device::MeshGeoData>));
-    out_geo->set_num_records(sbt_records_.size());
+    out_geo->set_program_groups(program_groups_.data(), program_groups_.size(), program_version);
+    out_geo->set_record(sbt_records_.data(), sbt_records_.size(), sizeof(SBTRecord<device::MeshGeoData>), sbt_version);
 
     return true;
 }

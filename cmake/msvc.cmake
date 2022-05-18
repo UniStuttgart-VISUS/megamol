@@ -1,12 +1,9 @@
 #message(WARNING "setting msvc compiler flags")
 
-set(COMMON_CXX_FLAGS "/DNOMINMAX /W3 /openmp /MP /GR /permissive- /Zc:twoPhase-")
+set(COMMON_CXX_FLAGS "/DNOMINMAX /W3 /openmp /MP /GR /permissive- /Zc:twoPhase- /utf-8")
 if (DISABLE_WARNINGS)
   set(COMMON_CXX_FLAGS "${COMMON_CXX_FLAGS} /w")
 endif()
-
-add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 set(CMAKE_CXX_FLAGS_DEBUG "${COMMON_CXX_FLAGS} /MDd /Od /DDEBUG /D_DEBUG /Zi" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_RELEASE "${COMMON_CXX_FLAGS} /MD /DNDEBUG /D_NDEBUG /Ob2 /Ox /Oi" CACHE STRING "" FORCE)

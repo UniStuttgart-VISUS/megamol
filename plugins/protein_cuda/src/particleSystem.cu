@@ -23,7 +23,7 @@
 #include <cstdio>
 #include <string.h>
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 
@@ -57,7 +57,7 @@ void cudaInit(int argc, char **argv) {
 
 void cudaGLInit(int argc, char **argv) {
     // use CUDA device with highest Gflops/s
-	cudaGLSetGLDevice(gpuGetMaxGflopsDeviceId());
+    cudaGLSetGLDevice(gpuGetMaxGflopsDeviceId());
 }
 
 void allocateArray(void **devPtr, size_t size) {
@@ -69,53 +69,53 @@ void allocateArray(void **devPtr, size_t size) {
 }
 
 void freeArray(void *devPtr) {
-	checkCudaErrors(cudaFree(devPtr));
+    checkCudaErrors(cudaFree(devPtr));
 }
 
 void threadSync() {
-	checkCudaErrors(cudaThreadSynchronize());
+    checkCudaErrors(cudaThreadSynchronize());
 }
 
 void copyArrayFromDevice(void* host, const void* device, unsigned int vbo, int size) {   
     if (vbo)
-		checkCudaErrors(cudaGLMapBufferObject((void**)&device, vbo));
+        checkCudaErrors(cudaGLMapBufferObject((void**)&device, vbo));
 
-	checkCudaErrors(cudaMemcpy(host, device, size, cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(host, device, size, cudaMemcpyDeviceToHost));
     
     if (vbo)
-		checkCudaErrors(cudaGLUnmapBufferObject(vbo));
+        checkCudaErrors(cudaGLUnmapBufferObject(vbo));
 }
 
 void copyArrayToDevice(void* device, const void* host, int offset, int size) {
-	checkCudaErrors(cudaMemcpy((char *)device + offset, host, size, cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy((char *)device + offset, host, size, cudaMemcpyHostToDevice));
 }
 
 void registerGLBufferObject(uint vbo) {
-	checkCudaErrors(cudaGLRegisterBufferObject(vbo));
+    checkCudaErrors(cudaGLRegisterBufferObject(vbo));
 }
 
 void unregisterGLBufferObject(uint vbo) {
-	checkCudaErrors(cudaGLUnregisterBufferObject(vbo));
+    checkCudaErrors(cudaGLUnregisterBufferObject(vbo));
 }
 
 void *mapGLBufferObject(uint vbo) {
     void *ptr;
-	checkCudaErrors(cudaGLMapBufferObject(&ptr, vbo));
+    checkCudaErrors(cudaGLMapBufferObject(&ptr, vbo));
     return ptr;
 }
 
 void unmapGLBufferObject(uint vbo) {
-	checkCudaErrors(cudaGLUnmapBufferObject(vbo));
+    checkCudaErrors(cudaGLUnmapBufferObject(vbo));
 }
 
 void setParameters(SimParams *hostParams) {
     // copy parameters to constant memory
-	checkCudaErrors(cudaMemcpyToSymbol(params, hostParams, sizeof(SimParams)));
+    checkCudaErrors(cudaMemcpyToSymbol(params, hostParams, sizeof(SimParams)));
 }
 
 void setRSParameters(RSParams *hostParams) {
     // copy parameters to constant memory
-	checkCudaErrors(cudaMemcpyToSymbol(rsParams, hostParams, sizeof(RSParams)));
+    checkCudaErrors(cudaMemcpyToSymbol(rsParams, hostParams, sizeof(RSParams)));
 }
 
 //Round a / b to nearest higher integer value
@@ -158,7 +158,7 @@ void reorderDataAndFindCellStart(uint*  cellStart,
     computeGridSize(numParticles, 256, numBlocks, numThreads);
 
     // set all cells to empty
-	checkCudaErrors(cudaMemset(cellStart, 0xffffffff, numCells*sizeof(uint)));
+    checkCudaErrors(cudaMemset(cellStart, 0xffffffff, numCells*sizeof(uint)));
 
     //checkCudaErrors(cudaBindTexture(0, oldPosTex, oldPos, numParticles*sizeof(float4)));
 
@@ -186,12 +186,12 @@ void countNeighbors( uint*  neighborCount,
                      uint   numAtoms,
                      uint   numNeighbors,
                      uint   numCells) {
-	checkCudaErrors(cudaBindTexture(0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
-	checkCudaErrors(cudaBindTexture(0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-	checkCudaErrors(cudaBindTexture(0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-	checkCudaErrors(cudaBindTexture(0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
-	checkCudaErrors(cudaBindTexture(0, cellStartTex, cellStart, numCells*sizeof(uint)));
-	checkCudaErrors(cudaBindTexture(0, cellEndTex, cellEnd, numCells*sizeof(uint)));
+    checkCudaErrors(cudaBindTexture(0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
+    checkCudaErrors(cudaBindTexture(0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    checkCudaErrors(cudaBindTexture(0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    checkCudaErrors(cudaBindTexture(0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
+    checkCudaErrors(cudaBindTexture(0, cellStartTex, cellStart, numCells*sizeof(uint)));
+    checkCudaErrors(cudaBindTexture(0, cellEndTex, cellEnd, numCells*sizeof(uint)));
 
     // thread per particle
     uint numThreads, numBlocks;
@@ -210,12 +210,12 @@ void countNeighbors( uint*  neighborCount,
     // check if kernel invocation generated an error
     getLastCudaError("Kernel execution failed");
 
-	checkCudaErrors(cudaUnbindTexture(atomPosTex));
-	checkCudaErrors(cudaUnbindTexture(neighborCountTex));
-	checkCudaErrors(cudaUnbindTexture(neighborsTex));
-	checkCudaErrors(cudaUnbindTexture(smallCirclesTex));
-	checkCudaErrors(cudaUnbindTexture(cellStartTex));
-	checkCudaErrors(cudaUnbindTexture(cellEndTex));
+    checkCudaErrors(cudaUnbindTexture(atomPosTex));
+    checkCudaErrors(cudaUnbindTexture(neighborCountTex));
+    checkCudaErrors(cudaUnbindTexture(neighborsTex));
+    checkCudaErrors(cudaUnbindTexture(smallCirclesTex));
+    checkCudaErrors(cudaUnbindTexture(cellStartTex));
+    checkCudaErrors(cudaUnbindTexture(cellEndTex));
 }
 
 void countNeighbors2( uint*  neighborCount,
@@ -227,11 +227,11 @@ void countNeighbors2( uint*  neighborCount,
                      uint   numAtoms,
                      uint   numNeighbors,
                      uint   numCells) {
-	checkCudaErrors(cudaBindTexture(0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
+    checkCudaErrors(cudaBindTexture(0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
     //checkCudaErrors( cudaBindTexture( 0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
     //checkCudaErrors( cudaBindTexture( 0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-	checkCudaErrors(cudaBindTexture(0, cellStartTex, cellStart, numCells*sizeof(uint)));
-	checkCudaErrors(cudaBindTexture(0, cellEndTex, cellEnd, numCells*sizeof(uint)));
+    checkCudaErrors(cudaBindTexture(0, cellStartTex, cellStart, numCells*sizeof(uint)));
+    checkCudaErrors(cudaBindTexture(0, cellEndTex, cellEnd, numCells*sizeof(uint)));
 
     // thread per particle
     uint numThreads, numBlocks;
@@ -249,11 +249,11 @@ void countNeighbors2( uint*  neighborCount,
     // check if kernel invocation generated an error
     getLastCudaError("Kernel execution failed");
 
-	checkCudaErrors(cudaUnbindTexture(atomPosTex));
+    checkCudaErrors(cudaUnbindTexture(atomPosTex));
     //checkCudaErrors( cudaUnbindTexture( neighborCountTex));
     //checkCudaErrors( cudaUnbindTexture( neighborsTex));
-	checkCudaErrors(cudaUnbindTexture(cellStartTex));
-	checkCudaErrors(cudaUnbindTexture(cellEndTex));
+    checkCudaErrors(cudaUnbindTexture(cellStartTex));
+    checkCudaErrors(cudaUnbindTexture(cellEndTex));
 }
 
 void countProbeNeighbors( //uint*  probeNeighborCount,
@@ -269,8 +269,8 @@ void countProbeNeighbors( //uint*  probeNeighborCount,
                      uint   numCells) {
     // bind textures
     // TODO!!
-	checkCudaErrors(cudaBindTexture(0, cellStartTex, cellStart, numCells*sizeof(uint)));
-	checkCudaErrors(cudaBindTexture(0, cellEndTex, cellEnd, numCells*sizeof(uint)));
+    checkCudaErrors(cudaBindTexture(0, cellStartTex, cellStart, numCells*sizeof(uint)));
+    checkCudaErrors(cudaBindTexture(0, cellEndTex, cellEnd, numCells*sizeof(uint)));
 
     // thread per particle
     uint numThreads, numBlocks;
@@ -286,8 +286,8 @@ void countProbeNeighbors( //uint*  probeNeighborCount,
 
     // unbind textures
     // TODO!!
-	checkCudaErrors(cudaUnbindTexture(cellStartTex));
-	checkCudaErrors(cudaUnbindTexture(cellEndTex));
+    checkCudaErrors(cudaUnbindTexture(cellStartTex));
+    checkCudaErrors(cudaUnbindTexture(cellEndTex));
 }
 
 void computeArcsCUDA( float*  arcs,
@@ -299,10 +299,10 @@ void computeArcsCUDA( float*  arcs,
                       uint    numAtoms,
                       uint    numNeighbors) {
     //checkCudaErrors( cudaBindTexture( 0, arcsTex, arcs, numAtoms*numNeighbors*4*sizeof(float4)));
-	checkCudaErrors(cudaBindTexture(0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
-	checkCudaErrors(cudaBindTexture(0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-	checkCudaErrors(cudaBindTexture(0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-	checkCudaErrors(cudaBindTexture(0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
+    checkCudaErrors(cudaBindTexture(0, atomPosTex, sortedPos, numAtoms*sizeof(float4)));
+    checkCudaErrors(cudaBindTexture(0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    checkCudaErrors(cudaBindTexture(0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    checkCudaErrors(cudaBindTexture(0, smallCirclesTex, smallCircles, numAtoms*numNeighbors*sizeof(float4)));
 
     // execute the kernel
     computeArcs<<< numAtoms, numNeighbors >>>( (float4*)arcs,
@@ -317,10 +317,10 @@ void computeArcsCUDA( float*  arcs,
     getLastCudaError("Kernel execution failed");
 
     //checkCudaErrors( cudaUnbindTexture( arcsTex));
-	checkCudaErrors(cudaUnbindTexture(atomPosTex));
-	checkCudaErrors(cudaUnbindTexture(neighborCountTex));
-	checkCudaErrors(cudaUnbindTexture(neighborsTex));
-	checkCudaErrors(cudaUnbindTexture(smallCirclesTex));
+    checkCudaErrors(cudaUnbindTexture(atomPosTex));
+    checkCudaErrors(cudaUnbindTexture(neighborCountTex));
+    checkCudaErrors(cudaUnbindTexture(neighborsTex));
+    checkCudaErrors(cudaUnbindTexture(smallCirclesTex));
 }
 
 void computeReducedSurfaceCuda( uint* point1, 
@@ -329,11 +329,11 @@ void computeReducedSurfaceCuda( uint* point1,
         uint* gridParticleIndex, float* visibleAtoms, uint* visibleAtomsId,
         uint numAtoms, uint numVisibleAtoms, uint numNeighbors) {
     // texture bindings
-	checkCudaErrors(cudaBindTexture(0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
-	checkCudaErrors(cudaBindTexture(0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
-	checkCudaErrors(cudaBindTexture(0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
-	checkCudaErrors(cudaBindTexture(0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
-	checkCudaErrors(cudaBindTexture(0, visibleAtomsIdTex, visibleAtomsId, numAtoms*sizeof(uint)));
+    checkCudaErrors(cudaBindTexture(0, neighborCountTex, neighborCount, numAtoms*sizeof(uint)));
+    checkCudaErrors(cudaBindTexture(0, neighborsTex, neighbors, numAtoms*numNeighbors*sizeof(uint)));
+    checkCudaErrors(cudaBindTexture(0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
+    checkCudaErrors(cudaBindTexture(0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
+    checkCudaErrors(cudaBindTexture(0, visibleAtomsIdTex, visibleAtomsId, numAtoms*sizeof(uint)));
 
     dim3 numThreads;
     numThreads.x = 8;
@@ -355,11 +355,11 @@ void computeReducedSurfaceCuda( uint* point1,
     // check if kernel invocation generated an error
     getLastCudaError("Kernel execution (computeReducedSurface) failed");
 
-	checkCudaErrors(cudaUnbindTexture(neighborCountTex));
-	checkCudaErrors(cudaUnbindTexture(neighborsTex));
-	checkCudaErrors(cudaUnbindTexture(atomPosTex));
-	checkCudaErrors(cudaUnbindTexture(visibleAtomsTex));
-	checkCudaErrors(cudaUnbindTexture(visibleAtomsIdTex));
+    checkCudaErrors(cudaUnbindTexture(neighborCountTex));
+    checkCudaErrors(cudaUnbindTexture(neighborsTex));
+    checkCudaErrors(cudaUnbindTexture(atomPosTex));
+    checkCudaErrors(cudaUnbindTexture(visibleAtomsTex));
+    checkCudaErrors(cudaUnbindTexture(visibleAtomsIdTex));
 }
 
 void computeTriangleVBOCuda( float3* vbo, uint4* point1, 
@@ -368,8 +368,8 @@ void computeTriangleVBOCuda( float3* vbo, uint4* point1,
         uint numAtoms, uint numVisibleAtoms, uint numNeighbors, uint offset) {
     // texture bindings
     // TODO!
-	checkCudaErrors(cudaBindTexture(0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
-	checkCudaErrors(cudaBindTexture(0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
+    checkCudaErrors(cudaBindTexture(0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
+    checkCudaErrors(cudaBindTexture(0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
     //checkCudaErrors( cudaBindTexture( 0, point1Tex, point1, numAtoms*numNeighbors*numNeighbors*sizeof(uint4)));
 
     dim3 numThreads;
@@ -392,8 +392,8 @@ void computeTriangleVBOCuda( float3* vbo, uint4* point1,
 
     // unbind textures
     // TODO!
-	checkCudaErrors(cudaUnbindTexture(atomPosTex));
-	checkCudaErrors(cudaUnbindTexture(visibleAtomsTex));
+    checkCudaErrors(cudaUnbindTexture(atomPosTex));
+    checkCudaErrors(cudaUnbindTexture(visibleAtomsTex));
     //checkCudaErrors( cudaUnbindTexture( point1Tex));
 }
 
@@ -403,10 +403,10 @@ void computeVisibleTriangleVBOCuda( float3* vbo, uint4* point1, cudaArray* visib
         uint numAtoms, uint numVisibleAtoms, uint numNeighbors, uint offset) {
     // texture bindings
     // TODO!
-	checkCudaErrors(cudaBindTexture(0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
-	checkCudaErrors(cudaBindTexture(0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
+    checkCudaErrors(cudaBindTexture(0, atomPosTex, atomPos, numAtoms*sizeof(float4)));
+    checkCudaErrors(cudaBindTexture(0, visibleAtomsTex, visibleAtoms, numAtoms*sizeof(float4)));
     //checkCudaErrors( cudaBindTexture( 0, point1Tex, point1, numAtoms*numNeighbors*numNeighbors*sizeof(uint4)));
-	checkCudaErrors(cudaBindTextureToArray(inVisibilityTex, visibility));
+    checkCudaErrors(cudaBindTextureToArray(inVisibilityTex, visibility));
 
     struct cudaChannelFormatDesc desc; 
     checkCudaErrors(cudaGetChannelDesc(&desc, visibility));
@@ -675,22 +675,22 @@ void computeArcsCB(
 }
 
 void writeProbePositionsCB(
-        float*	probePos,
-        float*	sphereTriaVec1,
-        float*	sphereTriaVec2,
-        float*	sphereTriaVec3,
-        float*	torusPos,
-        float*	torusVS,
-        float*	torusAxis,
+        float*  probePos,
+        float*  sphereTriaVec1,
+        float*  sphereTriaVec2,
+        float*  sphereTriaVec3,
+        float*  torusPos,
+        float*  torusVS,
+        float*  torusAxis,
         uint*   neighborCount,
         uint*   neighbors,
         float*  sortedAtomPos,
         float*  arcs,
-        uint*	arcCount,
-        uint*	arcCountScan,
-        uint*	scCount,
-        uint*	scCountScan,
-        float*	smallCircles,
+        uint*   arcCount,
+        uint*   arcCountScan,
+        uint*   scCount,
+        uint*   scCountScan,
+        float*  smallCircles,
         uint    numAtoms,
         uint    numNeighbors) {
     checkCudaErrors( cudaBindTexture( 0, atomPosTex, sortedAtomPos, numAtoms*sizeof(float4)));

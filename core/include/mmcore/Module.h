@@ -8,13 +8,12 @@
 #ifndef MEGAMOLCORE_MODULE_H_INCLUDED
 #define MEGAMOLCORE_MODULE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "mmcore/AbstractNamedObjectContainer.h"
 #include <string>
 #include <vector>
-#include "mmcore/AbstractNamedObjectContainer.h"
-#include "mmcore/api/MegaMolCore.std.h"
 
 #include "FrontendResource.h"
 #include "FrontendResourcesMap.h"
@@ -29,32 +28,14 @@ class AbstractSlot;
 namespace factories {
 class ModuleDescription;
 }
-class Module;
-
-} /* end namespace core */
-} /* end namespace megamol */
-
-namespace std {
-
-// dll-export of std-type instantiations
-MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API shared_ptr<::megamol::core::Module>;
-
-} // namespace std
-
-namespace megamol {
-namespace core {
 
 /**
  * Base class of all graph modules
  */
-class MEGAMOLCORE_API Module : public AbstractNamedObjectContainer {
+class Module : public AbstractNamedObjectContainer {
 public:
-    virtual std::vector<std::string> requested_lifetime_resources() { 
-        return
-        {
-            "GlobalValueStore"
-            , "IOpenGL_Context" // request for this resource may be deleted any time - this is just an example. but GL modules should request the GL context resource.
-        };
+    virtual std::vector<std::string> requested_lifetime_resources() {
+        return {"GlobalValueStore"};
     }
 
     friend class ::megamol::core::factories::ModuleDescription;
@@ -72,7 +53,8 @@ public:
      *
      * @return A shared pointer of this type
      */
-    template <class T> inline static ptr_type dynamic_pointer_cast(std::shared_ptr<T> p) {
+    template<class T>
+    inline static ptr_type dynamic_pointer_cast(std::shared_ptr<T> p) {
         return std::dynamic_pointer_cast<Module, T>(p);
     }
 
@@ -83,7 +65,8 @@ public:
      *
      * @return A shared pointer of this type
      */
-    template <class T> inline static const_ptr_type dynamic_pointer_cast(std::shared_ptr<const T> p) {
+    template<class T>
+    inline static const_ptr_type dynamic_pointer_cast(std::shared_ptr<const T> p) {
         return std::dynamic_pointer_cast<const Module, const T>(p);
     }
 
@@ -97,7 +80,9 @@ public:
      * @return Whether or not this module supports being used in a
      *         quickstart.
      */
-    static bool SupportQuickstart(void) { return true; }
+    static bool SupportQuickstart(void) {
+        return true;
+    }
 
     /**
      * Ctor.
@@ -129,6 +114,9 @@ public:
      */
     AbstractSlot* FindSlot(const vislib::StringA& name);
 
+    template<class S>
+    std::vector<S*> GetSlots();
+
     /**
      * Gets the name of the current instance as specified on the command
      * line, i.e. the name one level below the root namespace.
@@ -157,11 +145,17 @@ public:
      */
     virtual void PerformCleanup(void);
 
-    inline void SetClassName(const char* name) { this->className = name; }
+    inline void SetClassName(const char* name) {
+        this->className = name;
+    }
 
-    inline const char* ClassName() const { return this->className; }
+    inline const char* ClassName() const {
+        return this->className;
+    }
 
-    bool isCreated() const { return this->created; }
+    bool isCreated() const {
+        return this->created;
+    }
 
 protected:
     /**
@@ -192,7 +186,9 @@ protected:
      *
      * @return The instance of the core owning this module.
      */
-    inline class ::megamol::core::CoreInstance* instance(void) const { return this->GetCoreInstance(); }
+    inline class ::megamol::core::CoreInstance* instance(void) const {
+        return this->GetCoreInstance();
+    }
 
     /**
      * Implementation of 'Release'.
@@ -223,6 +219,21 @@ protected:
     // usage: auto const& resource = frontend_resources.get<ResourceType>()
     megamol::frontend_resources::FrontendResourcesMap frontend_resources;
 };
+
+template<class S>
+std::vector<S*> Module::GetSlots() {
+    child_list_type::iterator iter, end;
+    iter = this->ChildList_Begin();
+    end = this->ChildList_End();
+    std::vector<S*> res;
+    for (; iter != end; ++iter) {
+        S* slot = dynamic_cast<S*>(iter->get());
+        if (slot == NULL)
+            continue;
+        res.push_back(slot);
+    }
+    return res;
+}
 
 
 } /* end namespace core */

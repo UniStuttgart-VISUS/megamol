@@ -1,15 +1,14 @@
-#include "stdafx.h"
 #include "PCAProjection.h"
 
+#include "datatools/table/TableDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmstd_datatools/table/TableDataCall.h"
 
+#include "MDSProjection.h"
 #include <Eigen/Dense>
 #include <Eigen/SVD>
 #include <set>
 #include <sstream>
-#include "MDSProjection.h"
 
 
 using namespace megamol;
@@ -26,13 +25,13 @@ MDSProjection::MDSProjection(void)
         , dataInHash(0)
         , columnInfos() {
 
-    this->dataInSlot.SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
+    this->dataInSlot.SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
-    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(0), &MDSProjection::getDataCallback);
-    this->dataOutSlot.SetCallback(megamol::stdplugin::datatools::table::TableDataCall::ClassName(),
-        megamol::stdplugin::datatools::table::TableDataCall::FunctionName(1), &MDSProjection::getHashCallback);
+    this->dataOutSlot.SetCallback(megamol::datatools::table::TableDataCall::ClassName(),
+        megamol::datatools::table::TableDataCall::FunctionName(0), &MDSProjection::getDataCallback);
+    this->dataOutSlot.SetCallback(megamol::datatools::table::TableDataCall::ClassName(),
+        megamol::datatools::table::TableDataCall::FunctionName(1), &MDSProjection::getHashCallback);
     this->MakeSlotAvailable(&this->dataOutSlot);
 
     reduceToNSlot << new ::megamol::core::param::IntParam(2);
@@ -51,13 +50,12 @@ void MDSProjection::release(void) {}
 
 bool MDSProjection::getDataCallback(core::Call& c) {
     try {
-        megamol::stdplugin::datatools::table::TableDataCall* outCall =
-            dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
+        megamol::datatools::table::TableDataCall* outCall = dynamic_cast<megamol::datatools::table::TableDataCall*>(&c);
         if (outCall == NULL)
             return false;
 
-        megamol::stdplugin::datatools::table::TableDataCall* inCall =
-            this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+        megamol::datatools::table::TableDataCall* inCall =
+            this->dataInSlot.CallAs<megamol::datatools::table::TableDataCall>();
         if (inCall == NULL)
             return false;
 
@@ -91,13 +89,12 @@ bool MDSProjection::getDataCallback(core::Call& c) {
 
 bool MDSProjection::getHashCallback(core::Call& c) {
     try {
-        megamol::stdplugin::datatools::table::TableDataCall* outCall =
-            dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
+        megamol::datatools::table::TableDataCall* outCall = dynamic_cast<megamol::datatools::table::TableDataCall*>(&c);
         if (outCall == NULL)
             return false;
 
-        megamol::stdplugin::datatools::table::TableDataCall* inCall =
-            this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
+        megamol::datatools::table::TableDataCall* inCall =
+            this->dataInSlot.CallAs<megamol::datatools::table::TableDataCall>();
         if (inCall == NULL)
             return false;
 
@@ -116,7 +113,7 @@ bool MDSProjection::getHashCallback(core::Call& c) {
     return true;
 }
 
-bool megamol::infovis::MDSProjection::dataProjection(megamol::stdplugin::datatools::table::TableDataCall* inCall) {
+bool megamol::infovis::MDSProjection::dataProjection(megamol::datatools::table::TableDataCall* inCall) {
     // Test if inData has changed and if slots have changed
     if (this->dataInHash == inCall->DataHash()) {
         if (!reduceToNSlot.IsDirty()) {
@@ -156,7 +153,7 @@ bool megamol::infovis::MDSProjection::dataProjection(megamol::stdplugin::datatoo
     for (int indexX = 0; indexX < outputDimCount; indexX++) {
         columnInfos[indexX]
             .SetName("MDS" + std::to_string(indexX))
-            .SetType(megamol::stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE)
+            .SetType(megamol::datatools::table::TableDataCall::ColumnType::QUANTITATIVE)
             .SetMinimumValue(result.col(indexX).minCoeff())
             .SetMaximumValue(result.col(indexX).maxCoeff());
     }
@@ -201,7 +198,7 @@ Eigen::MatrixXd megamol::infovis::MDSProjection::classicMds(
     assert(squaredDissimilarityMatrix.rows() == squaredDissimilarityMatrix.cols());
 
     Eigen::MatrixXd J = Eigen::MatrixXd::Identity(rowsCount, rowsCount) -
-                        (1.0 / (double) rowsCount) * Eigen::MatrixXd::Ones(rowsCount, rowsCount);
+                        (1.0 / (double)rowsCount) * Eigen::MatrixXd::Ones(rowsCount, rowsCount);
 
     // Apply double centering
     Eigen::MatrixXd B = -0.5 * J * squaredDissimilarityMatrix * J;
@@ -320,7 +317,7 @@ Eigen::MatrixXd megamol::infovis::MDSProjection::smacofMds(Eigen::MatrixXd dissi
     for (k = 0; k < countSteps; k++) {
         if (weightsAllOne) {
             Eigen::MatrixXd B = bMatrix(X, weightsMatrix, dissimilarityMatrix);
-            X = ((B * X).array()) / (float) nPoints;
+            X = ((B * X).array()) / (float)nPoints;
 
         } else {
             X = Vp * bMatrix(X, weightsMatrix, dissimilarityMatrix) * X;
@@ -430,7 +427,7 @@ Eigen::MatrixXd megamol::infovis::MDSProjection::ordinalMds(Eigen::MatrixXd diss
                         for (int i : notMonotoncols) {
                             avg += distances(row, i);
                         }
-                        avg /= (double) notMonotoncols.size();
+                        avg /= (double)notMonotoncols.size();
 
                         for (int i : notMonotoncols)
                             newDistances(row, i) = avg;

@@ -7,22 +7,22 @@
 
 #include "stdafx.h"
 #if (_MSC_VER > 1000)
-#    pragma warning(disable : 4996)
+#pragma warning(disable : 4996)
 #endif /* (_MSC_VER > 1000) */
 #if (_MSC_VER > 1000)
-#    pragma warning(default : 4996)
+#pragma warning(default : 4996)
 #endif /* (_MSC_VER > 1000) */
 
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <sstream>
 #include <string>
-#include <filesystem>
 
 #ifndef _WIN32
-#    include <sys/types.h>
-#    include <unistd.h>
+#include <sys/types.h>
+#include <unistd.h>
 #endif // _WIN32
 
 #include "mmcore/CalleeSlot.h"

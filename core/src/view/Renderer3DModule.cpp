@@ -5,18 +5,17 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRender3D.h"
+#include "stdafx.h"
 
 
 namespace megamol::core::view {
 /*
  * Renderer3DModule::Renderer3DModule
  */
-Renderer3DModule::Renderer3DModule(void)
-    : RendererModule<CallRender3D>() {
+Renderer3DModule::Renderer3DModule(void) : RendererModule<CallRender3D, Module>() {
     // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->chainRenderSlot);
 
@@ -121,4 +120,4 @@ bool Renderer3DModule::RenderChain(CallRender3D& call) {
 void Renderer3DModule::PreRender(CallRender3D& call) {
     // intentionally empty
 }
-} // end namespace
+} // namespace megamol::core::view

@@ -1,5 +1,5 @@
 /*
- * Input.h
+ * KeyboardMouseInput.h
  *
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
@@ -7,9 +7,13 @@
 
 #pragma once
 
+#include <algorithm>
 #include <bitset>
-#include <type_traits>
+#include <iterator>
+#include <ostream>
 #include <sstream> // stringstream
+#include <type_traits>
+#include <vector>
 
 namespace megamol {
 namespace frontend_resources {
@@ -91,8 +95,8 @@ enum class Key : int {
     //KEY_x = 120,
     //KEY_y = 121,
     //KEY_z = 122,
-    KEY_WORLD_1 = 161,      /* non-US #1 */
-    KEY_WORLD_2 = 162,      /* non-US #2 */
+    KEY_WORLD_1 = 161, /* non-US #1 */
+    KEY_WORLD_2 = 162, /* non-US #2 */
     KEY_ESCAPE = 256,
     KEY_ENTER = 257,
     KEY_TAB = 258,
@@ -198,17 +202,57 @@ public:
 
     explicit Modifiers(int bits) : bits(bits) {}
 
-    inline int toInt() const { return static_cast<int>(bits.to_ulong()); }
+    inline int toInt() const {
+        return static_cast<int>(bits.to_ulong());
+    }
 
-    inline bool none() const { return bits.none(); }
+    inline std::string ToString() const {
+        std::vector<std::string> range;
+        const bool s = this->test(frontend_resources::Modifier::SHIFT);
+        const bool c = this->test(frontend_resources::Modifier::CTRL);
+        const bool a = this->test(frontend_resources::Modifier::ALT);
+        if (s)
+            range.emplace_back("SHIFT");
+        if (c)
+            range.emplace_back("CTRL");
+        if (a)
+            range.emplace_back("ALT");
+        std::ostringstream out;
+        auto b = range.begin();
+        auto e = range.end();
+        if (b != e) {
+            std::copy(b, std::prev(e), std::ostream_iterator<std::string>(out, " + "));
+            b = std::prev(e);
+        }
+        if (b != e) {
+            out << *b;
+        }
+        return out.str();
+    }
 
-    inline bool test(Modifier mod) const { return (bits & Modifiers(mod).bits).any(); }
+    inline void fromInt(int val) {
+        bits = Bits(val);
+    }
 
-    inline bool test(Modifiers mods) const { return (bits & mods.bits).any(); }
+    inline bool none() const {
+        return bits.none();
+    }
 
-    inline bool equals(Modifier mod) const { return (bits == Modifiers(mod).bits); }
+    inline bool test(Modifier mod) const {
+        return (bits & Modifiers(mod).bits).any();
+    }
 
-    inline bool equals(Modifiers mods) const { return (bits == mods.bits); }
+    inline bool test(Modifiers mods) const {
+        return (bits & mods.bits).any();
+    }
+
+    inline bool equals(Modifier mod) const {
+        return (bits == Modifiers(mod).bits);
+    }
+
+    inline bool equals(Modifiers mods) const {
+        return (bits == mods.bits);
+    }
 
     inline Modifiers& reset(Modifier mod) {
         Modifiers mask(mod);
@@ -237,6 +281,9 @@ public:
         return *this;
     }
 
+    inline bool operator==(const Modifiers& other) const {
+        return other.equals(*this);
+    }
 };
 
 inline Modifiers operator|(Modifiers lhs, Modifiers rhs) {
@@ -273,13 +320,13 @@ inline Modifiers operator^(Modifier lhs, Modifier rhs) {
 }
 
 
-class  KeyCode {
+class KeyCode {
 public:
     Modifiers mods;
     Key key;
 
     /** Ctor. */
-    KeyCode(void) { 
+    KeyCode(void) {
         this->key = frontend_resources::Key::KEY_UNKNOWN;
         this->mods = frontend_resources::Modifiers(frontend_resources::Modifier::NONE);
     }
@@ -296,6 +343,10 @@ public:
         this->key = key;
     }
 
+    bool operator==(const KeyCode& other) const {
+        return (mods.equals(other.mods) && key == other.key);
+    }
+
     /**
      * Generates a human-readable ASCII String representing the key code.
      *
@@ -305,137 +356,380 @@ public:
 
         std::string msg;
 
-        if (this->mods.test(frontend_resources::Modifier::SHIFT)) msg += "SHIFT + ";
-        if (this->mods.test(frontend_resources::Modifier::CTRL)) msg += "CTRL + ";
-        if (this->mods.test(frontend_resources::Modifier::ALT)) msg += "ALT + ";
+        const auto mmsg = mods.ToString();
+        if (!mmsg.empty()) {
+            msg += mmsg + " + ";
+        }
 
         switch (this->key) {
-            case (frontend_resources::Key::KEY_UNKNOWN) : msg += ""; break; // 'Unknown Key'
-            case (frontend_resources::Key::KEY_SPACE) : msg += "Space"; break;
-            case (frontend_resources::Key::KEY_APOSTROPHE) : msg += "'"; break;
-            case (frontend_resources::Key::KEY_COMMA) : msg += ","; break;    
-            case (frontend_resources::Key::KEY_MINUS) : msg += "-"; break;     
-            case (frontend_resources::Key::KEY_PERIOD) : msg += "."; break;   
-            case (frontend_resources::Key::KEY_SLASH) : msg += "/"; break;   
-            case (frontend_resources::Key::KEY_0) : msg += "0"; break;
-            case (frontend_resources::Key::KEY_1) : msg += "1"; break;
-            case (frontend_resources::Key::KEY_2) : msg += "2"; break;
-            case (frontend_resources::Key::KEY_3) : msg += "3"; break;
-            case (frontend_resources::Key::KEY_4) : msg += "4"; break;
-            case (frontend_resources::Key::KEY_5) : msg += "5"; break;
-            case (frontend_resources::Key::KEY_6) : msg += "6"; break;
-            case (frontend_resources::Key::KEY_7) : msg += "7"; break;
-            case (frontend_resources::Key::KEY_8) : msg += "8"; break;
-            case (frontend_resources::Key::KEY_9) : msg += "9"; break;
-            case (frontend_resources::Key::KEY_SEMICOLON) : msg += ":"; break;
-            case (frontend_resources::Key::KEY_EQUAL) : msg += "="; break; 
-            case (frontend_resources::Key::KEY_A) : msg += "a"; break;
-            case (frontend_resources::Key::KEY_B) : msg += "b"; break;
-            case (frontend_resources::Key::KEY_C) : msg += "c"; break;
-            case (frontend_resources::Key::KEY_D) : msg += "d"; break;
-            case (frontend_resources::Key::KEY_E) : msg += "e"; break;
-            case (frontend_resources::Key::KEY_F) : msg += "f"; break;
-            case (frontend_resources::Key::KEY_G) : msg += "g"; break;
-            case (frontend_resources::Key::KEY_H) : msg += "h"; break;
-            case (frontend_resources::Key::KEY_I) : msg += "i"; break;
-            case (frontend_resources::Key::KEY_J) : msg += "j"; break;
-            case (frontend_resources::Key::KEY_K) : msg += "k"; break;
-            case (frontend_resources::Key::KEY_L) : msg += "l"; break;
-            case (frontend_resources::Key::KEY_M) : msg += "m"; break;
-            case (frontend_resources::Key::KEY_N) : msg += "n"; break;
-            case (frontend_resources::Key::KEY_O) : msg += "o"; break;
-            case (frontend_resources::Key::KEY_P) : msg += "p"; break;
-            case (frontend_resources::Key::KEY_Q) : msg += "q"; break;
-            case (frontend_resources::Key::KEY_R) : msg += "r"; break;
-            case (frontend_resources::Key::KEY_S) : msg += "s"; break;
-            case (frontend_resources::Key::KEY_T) : msg += "t"; break;
-            case (frontend_resources::Key::KEY_U) : msg += "u"; break;
-            case (frontend_resources::Key::KEY_V) : msg += "v"; break;
-            case (frontend_resources::Key::KEY_W) : msg += "w"; break;
-            case (frontend_resources::Key::KEY_X) : msg += "x"; break;
-            case (frontend_resources::Key::KEY_Y) : msg += "y"; break;
-            case (frontend_resources::Key::KEY_Z) : msg += "z"; break;
-            case (frontend_resources::Key::KEY_LEFT_BRACKET) : msg += "["; break; 
-            case (frontend_resources::Key::KEY_BACKSLASH) : msg += "\\"; break;  
-            case (frontend_resources::Key::KEY_RIGHT_BRACKET) : msg += "]"; break; 
-            case (frontend_resources::Key::KEY_GRAVE_ACCENT) : msg += "`"; break; 
-            case (frontend_resources::Key::KEY_WORLD_1) : msg += "World 1"; break;  
-            case (frontend_resources::Key::KEY_WORLD_2) : msg += "Worls 2"; break; 
-            case (frontend_resources::Key::KEY_ESCAPE) : msg += "Esc"; break;
-            case (frontend_resources::Key::KEY_ENTER) : msg += "Enter"; break;
-            case (frontend_resources::Key::KEY_TAB) : msg += "Tab"; break;
-            case (frontend_resources::Key::KEY_BACKSPACE) : msg += "Backspace"; break;
-            case (frontend_resources::Key::KEY_INSERT) : msg += "Insert"; break;
-            case (frontend_resources::Key::KEY_DELETE) : msg += "Delete"; break;
-            case (frontend_resources::Key::KEY_RIGHT) : msg += "Right"; break;
-            case (frontend_resources::Key::KEY_LEFT) : msg += "Left"; break;
-            case (frontend_resources::Key::KEY_DOWN) : msg += "Down"; break;
-            case (frontend_resources::Key::KEY_UP) : msg += "Up"; break;
-            case (frontend_resources::Key::KEY_PAGE_UP) : msg += "Page Up"; break;
-            case (frontend_resources::Key::KEY_PAGE_DOWN) : msg += "Page Down"; break;
-            case (frontend_resources::Key::KEY_HOME) : msg += "Home"; break;
-            case (frontend_resources::Key::KEY_END) : msg += "End"; break;
-            case (frontend_resources::Key::KEY_CAPS_LOCK) : msg += "Caps Lock"; break;
-            case (frontend_resources::Key::KEY_SCROLL_LOCK) : msg += "Scroll Lock"; break;
-            case (frontend_resources::Key::KEY_NUM_LOCK) : msg += "Num Lock"; break;
-            case (frontend_resources::Key::KEY_PRINT_SCREEN) : msg += "Print Screen"; break;
-            case (frontend_resources::Key::KEY_PAUSE) : msg += "Pause"; break;
-            case (frontend_resources::Key::KEY_F1) : msg += "F1"; break;
-            case (frontend_resources::Key::KEY_F2) : msg += "F2"; break;
-            case (frontend_resources::Key::KEY_F3) : msg += "F3"; break;
-            case (frontend_resources::Key::KEY_F4) : msg += "F4"; break;
-            case (frontend_resources::Key::KEY_F5) : msg += "F5"; break;
-            case (frontend_resources::Key::KEY_F6) : msg += "F6"; break;
-            case (frontend_resources::Key::KEY_F7) : msg += "F7"; break;
-            case (frontend_resources::Key::KEY_F8) : msg += "F8"; break;
-            case (frontend_resources::Key::KEY_F9) : msg += "F9"; break;
-            case (frontend_resources::Key::KEY_F10) : msg += "F10"; break;
-            case (frontend_resources::Key::KEY_F11) : msg += "F11"; break;
-            case (frontend_resources::Key::KEY_F12) : msg += "F12"; break;
-            case (frontend_resources::Key::KEY_F13) : msg += "F13"; break;
-            case (frontend_resources::Key::KEY_F14) : msg += "F14"; break;
-            case (frontend_resources::Key::KEY_F15) : msg += "F15"; break;
-            case (frontend_resources::Key::KEY_F16) : msg += "F16"; break;
-            case (frontend_resources::Key::KEY_F17) : msg += "F17"; break;
-            case (frontend_resources::Key::KEY_F18) : msg += "F18"; break;
-            case (frontend_resources::Key::KEY_F19) : msg += "F19"; break;
-            case (frontend_resources::Key::KEY_F20) : msg += "F20"; break;
-            case (frontend_resources::Key::KEY_F21) : msg += "F21"; break;
-            case (frontend_resources::Key::KEY_F22) : msg += "F22"; break;
-            case (frontend_resources::Key::KEY_F23) : msg += "F23"; break;
-            case (frontend_resources::Key::KEY_F24) : msg += "F24"; break;
-            case (frontend_resources::Key::KEY_F25) : msg += "F25"; break;
-            case (frontend_resources::Key::KEY_KP_0) : msg += "Num 0"; break;
-            case (frontend_resources::Key::KEY_KP_1) : msg += "Num 1"; break;
-            case (frontend_resources::Key::KEY_KP_2) : msg += "Num 2"; break;
-            case (frontend_resources::Key::KEY_KP_3) : msg += "Num 3"; break;
-            case (frontend_resources::Key::KEY_KP_4) : msg += "Num 4"; break;
-            case (frontend_resources::Key::KEY_KP_5) : msg += "Num 5"; break;
-            case (frontend_resources::Key::KEY_KP_6) : msg += "Num 6"; break;
-            case (frontend_resources::Key::KEY_KP_7) : msg += "Num 7"; break;
-            case (frontend_resources::Key::KEY_KP_8) : msg += "Num 8"; break;
-            case (frontend_resources::Key::KEY_KP_9) : msg += "Num 9"; break;
-            case (frontend_resources::Key::KEY_KP_DECIMAL) : msg += "Num ,"; break;
-            case (frontend_resources::Key::KEY_KP_DIVIDE) : msg += "Num /"; break;
-            case (frontend_resources::Key::KEY_KP_MULTIPLY) : msg += "Num *"; break;
-            case (frontend_resources::Key::KEY_KP_SUBTRACT) : msg += "Num -"; break;
-            case (frontend_resources::Key::KEY_KP_ADD) : msg += "Num +"; break;
-            case (frontend_resources::Key::KEY_KP_ENTER) : msg += "Num Enter"; break;
-            case (frontend_resources::Key::KEY_KP_EQUAL) : msg += "Num Equal"; break;
-            case (frontend_resources::Key::KEY_LEFT_SHIFT) : msg += "Left Shift"; break;
-            case (frontend_resources::Key::KEY_LEFT_CONTROL) : msg += "Left Ctrl"; break;
-            case (frontend_resources::Key::KEY_LEFT_ALT) : msg += "Left Alt"; break;
-            case (frontend_resources::Key::KEY_LEFT_SUPER) : msg += "Left Super"; break;
-            case (frontend_resources::Key::KEY_RIGHT_SHIFT) : msg += "Right Shift"; break;
-            case (frontend_resources::Key::KEY_RIGHT_CONTROL) : msg += "Right Ctrl"; break;
-            case (frontend_resources::Key::KEY_RIGHT_ALT) : msg += "Right Alt"; break;
-            case (frontend_resources::Key::KEY_RIGHT_SUPER) : msg += "Right Super"; break;
-            case (frontend_resources::Key::KEY_MENU): msg += "Menu"; break;
+        case (frontend_resources::Key::KEY_UNKNOWN):
+            msg += "";
+            break; // 'Unknown Key'
+        case (frontend_resources::Key::KEY_SPACE):
+            msg += "Space";
+            break;
+        case (frontend_resources::Key::KEY_APOSTROPHE):
+            msg += "'";
+            break;
+        case (frontend_resources::Key::KEY_COMMA):
+            msg += ",";
+            break;
+        case (frontend_resources::Key::KEY_MINUS):
+            msg += "-";
+            break;
+        case (frontend_resources::Key::KEY_PERIOD):
+            msg += ".";
+            break;
+        case (frontend_resources::Key::KEY_SLASH):
+            msg += "/";
+            break;
+        case (frontend_resources::Key::KEY_0):
+            msg += "0";
+            break;
+        case (frontend_resources::Key::KEY_1):
+            msg += "1";
+            break;
+        case (frontend_resources::Key::KEY_2):
+            msg += "2";
+            break;
+        case (frontend_resources::Key::KEY_3):
+            msg += "3";
+            break;
+        case (frontend_resources::Key::KEY_4):
+            msg += "4";
+            break;
+        case (frontend_resources::Key::KEY_5):
+            msg += "5";
+            break;
+        case (frontend_resources::Key::KEY_6):
+            msg += "6";
+            break;
+        case (frontend_resources::Key::KEY_7):
+            msg += "7";
+            break;
+        case (frontend_resources::Key::KEY_8):
+            msg += "8";
+            break;
+        case (frontend_resources::Key::KEY_9):
+            msg += "9";
+            break;
+        case (frontend_resources::Key::KEY_SEMICOLON):
+            msg += ":";
+            break;
+        case (frontend_resources::Key::KEY_EQUAL):
+            msg += "=";
+            break;
+        case (frontend_resources::Key::KEY_A):
+            msg += "a";
+            break;
+        case (frontend_resources::Key::KEY_B):
+            msg += "b";
+            break;
+        case (frontend_resources::Key::KEY_C):
+            msg += "c";
+            break;
+        case (frontend_resources::Key::KEY_D):
+            msg += "d";
+            break;
+        case (frontend_resources::Key::KEY_E):
+            msg += "e";
+            break;
+        case (frontend_resources::Key::KEY_F):
+            msg += "f";
+            break;
+        case (frontend_resources::Key::KEY_G):
+            msg += "g";
+            break;
+        case (frontend_resources::Key::KEY_H):
+            msg += "h";
+            break;
+        case (frontend_resources::Key::KEY_I):
+            msg += "i";
+            break;
+        case (frontend_resources::Key::KEY_J):
+            msg += "j";
+            break;
+        case (frontend_resources::Key::KEY_K):
+            msg += "k";
+            break;
+        case (frontend_resources::Key::KEY_L):
+            msg += "l";
+            break;
+        case (frontend_resources::Key::KEY_M):
+            msg += "m";
+            break;
+        case (frontend_resources::Key::KEY_N):
+            msg += "n";
+            break;
+        case (frontend_resources::Key::KEY_O):
+            msg += "o";
+            break;
+        case (frontend_resources::Key::KEY_P):
+            msg += "p";
+            break;
+        case (frontend_resources::Key::KEY_Q):
+            msg += "q";
+            break;
+        case (frontend_resources::Key::KEY_R):
+            msg += "r";
+            break;
+        case (frontend_resources::Key::KEY_S):
+            msg += "s";
+            break;
+        case (frontend_resources::Key::KEY_T):
+            msg += "t";
+            break;
+        case (frontend_resources::Key::KEY_U):
+            msg += "u";
+            break;
+        case (frontend_resources::Key::KEY_V):
+            msg += "v";
+            break;
+        case (frontend_resources::Key::KEY_W):
+            msg += "w";
+            break;
+        case (frontend_resources::Key::KEY_X):
+            msg += "x";
+            break;
+        case (frontend_resources::Key::KEY_Y):
+            msg += "y";
+            break;
+        case (frontend_resources::Key::KEY_Z):
+            msg += "z";
+            break;
+        case (frontend_resources::Key::KEY_LEFT_BRACKET):
+            msg += "[";
+            break;
+        case (frontend_resources::Key::KEY_BACKSLASH):
+            msg += "\\";
+            break;
+        case (frontend_resources::Key::KEY_RIGHT_BRACKET):
+            msg += "]";
+            break;
+        case (frontend_resources::Key::KEY_GRAVE_ACCENT):
+            msg += "`";
+            break;
+        case (frontend_resources::Key::KEY_WORLD_1):
+            msg += "World 1";
+            break;
+        case (frontend_resources::Key::KEY_WORLD_2):
+            msg += "Worls 2";
+            break;
+        case (frontend_resources::Key::KEY_ESCAPE):
+            msg += "Esc";
+            break;
+        case (frontend_resources::Key::KEY_ENTER):
+            msg += "Enter";
+            break;
+        case (frontend_resources::Key::KEY_TAB):
+            msg += "Tab";
+            break;
+        case (frontend_resources::Key::KEY_BACKSPACE):
+            msg += "Backspace";
+            break;
+        case (frontend_resources::Key::KEY_INSERT):
+            msg += "Insert";
+            break;
+        case (frontend_resources::Key::KEY_DELETE):
+            msg += "Delete";
+            break;
+        case (frontend_resources::Key::KEY_RIGHT):
+            msg += "Right";
+            break;
+        case (frontend_resources::Key::KEY_LEFT):
+            msg += "Left";
+            break;
+        case (frontend_resources::Key::KEY_DOWN):
+            msg += "Down";
+            break;
+        case (frontend_resources::Key::KEY_UP):
+            msg += "Up";
+            break;
+        case (frontend_resources::Key::KEY_PAGE_UP):
+            msg += "Page Up";
+            break;
+        case (frontend_resources::Key::KEY_PAGE_DOWN):
+            msg += "Page Down";
+            break;
+        case (frontend_resources::Key::KEY_HOME):
+            msg += "Home";
+            break;
+        case (frontend_resources::Key::KEY_END):
+            msg += "End";
+            break;
+        case (frontend_resources::Key::KEY_CAPS_LOCK):
+            msg += "Caps Lock";
+            break;
+        case (frontend_resources::Key::KEY_SCROLL_LOCK):
+            msg += "Scroll Lock";
+            break;
+        case (frontend_resources::Key::KEY_NUM_LOCK):
+            msg += "Num Lock";
+            break;
+        case (frontend_resources::Key::KEY_PRINT_SCREEN):
+            msg += "Print Screen";
+            break;
+        case (frontend_resources::Key::KEY_PAUSE):
+            msg += "Pause";
+            break;
+        case (frontend_resources::Key::KEY_F1):
+            msg += "F1";
+            break;
+        case (frontend_resources::Key::KEY_F2):
+            msg += "F2";
+            break;
+        case (frontend_resources::Key::KEY_F3):
+            msg += "F3";
+            break;
+        case (frontend_resources::Key::KEY_F4):
+            msg += "F4";
+            break;
+        case (frontend_resources::Key::KEY_F5):
+            msg += "F5";
+            break;
+        case (frontend_resources::Key::KEY_F6):
+            msg += "F6";
+            break;
+        case (frontend_resources::Key::KEY_F7):
+            msg += "F7";
+            break;
+        case (frontend_resources::Key::KEY_F8):
+            msg += "F8";
+            break;
+        case (frontend_resources::Key::KEY_F9):
+            msg += "F9";
+            break;
+        case (frontend_resources::Key::KEY_F10):
+            msg += "F10";
+            break;
+        case (frontend_resources::Key::KEY_F11):
+            msg += "F11";
+            break;
+        case (frontend_resources::Key::KEY_F12):
+            msg += "F12";
+            break;
+        case (frontend_resources::Key::KEY_F13):
+            msg += "F13";
+            break;
+        case (frontend_resources::Key::KEY_F14):
+            msg += "F14";
+            break;
+        case (frontend_resources::Key::KEY_F15):
+            msg += "F15";
+            break;
+        case (frontend_resources::Key::KEY_F16):
+            msg += "F16";
+            break;
+        case (frontend_resources::Key::KEY_F17):
+            msg += "F17";
+            break;
+        case (frontend_resources::Key::KEY_F18):
+            msg += "F18";
+            break;
+        case (frontend_resources::Key::KEY_F19):
+            msg += "F19";
+            break;
+        case (frontend_resources::Key::KEY_F20):
+            msg += "F20";
+            break;
+        case (frontend_resources::Key::KEY_F21):
+            msg += "F21";
+            break;
+        case (frontend_resources::Key::KEY_F22):
+            msg += "F22";
+            break;
+        case (frontend_resources::Key::KEY_F23):
+            msg += "F23";
+            break;
+        case (frontend_resources::Key::KEY_F24):
+            msg += "F24";
+            break;
+        case (frontend_resources::Key::KEY_F25):
+            msg += "F25";
+            break;
+        case (frontend_resources::Key::KEY_KP_0):
+            msg += "Num 0";
+            break;
+        case (frontend_resources::Key::KEY_KP_1):
+            msg += "Num 1";
+            break;
+        case (frontend_resources::Key::KEY_KP_2):
+            msg += "Num 2";
+            break;
+        case (frontend_resources::Key::KEY_KP_3):
+            msg += "Num 3";
+            break;
+        case (frontend_resources::Key::KEY_KP_4):
+            msg += "Num 4";
+            break;
+        case (frontend_resources::Key::KEY_KP_5):
+            msg += "Num 5";
+            break;
+        case (frontend_resources::Key::KEY_KP_6):
+            msg += "Num 6";
+            break;
+        case (frontend_resources::Key::KEY_KP_7):
+            msg += "Num 7";
+            break;
+        case (frontend_resources::Key::KEY_KP_8):
+            msg += "Num 8";
+            break;
+        case (frontend_resources::Key::KEY_KP_9):
+            msg += "Num 9";
+            break;
+        case (frontend_resources::Key::KEY_KP_DECIMAL):
+            msg += "Num ,";
+            break;
+        case (frontend_resources::Key::KEY_KP_DIVIDE):
+            msg += "Num /";
+            break;
+        case (frontend_resources::Key::KEY_KP_MULTIPLY):
+            msg += "Num *";
+            break;
+        case (frontend_resources::Key::KEY_KP_SUBTRACT):
+            msg += "Num -";
+            break;
+        case (frontend_resources::Key::KEY_KP_ADD):
+            msg += "Num +";
+            break;
+        case (frontend_resources::Key::KEY_KP_ENTER):
+            msg += "Num Enter";
+            break;
+        case (frontend_resources::Key::KEY_KP_EQUAL):
+            msg += "Num Equal";
+            break;
+        case (frontend_resources::Key::KEY_LEFT_SHIFT):
+            msg += "Left Shift";
+            break;
+        case (frontend_resources::Key::KEY_LEFT_CONTROL):
+            msg += "Left Ctrl";
+            break;
+        case (frontend_resources::Key::KEY_LEFT_ALT):
+            msg += "Left Alt";
+            break;
+        case (frontend_resources::Key::KEY_LEFT_SUPER):
+            msg += "Left Super";
+            break;
+        case (frontend_resources::Key::KEY_RIGHT_SHIFT):
+            msg += "Right Shift";
+            break;
+        case (frontend_resources::Key::KEY_RIGHT_CONTROL):
+            msg += "Right Ctrl";
+            break;
+        case (frontend_resources::Key::KEY_RIGHT_ALT):
+            msg += "Right Alt";
+            break;
+        case (frontend_resources::Key::KEY_RIGHT_SUPER):
+            msg += "Right Super";
+            break;
+        case (frontend_resources::Key::KEY_MENU):
+            msg += "Menu";
+            break;
         default: {
-                std::stringstream key_stream;
-                key_stream << "[" << static_cast<int>(this->key) << "]";
-                msg += key_stream.str();
-            } break;
+            std::stringstream key_stream;
+            key_stream << "[" << static_cast<int>(this->key) << "]";
+            msg += key_stream.str();
+        } break;
         }
 
         return msg;
@@ -446,3 +740,25 @@ namespace input = frontend_resources;
 
 } /* end namespace frontend_resources */
 } /* end namespace megamol */
+
+namespace std {
+
+template<>
+struct hash<megamol::frontend_resources::KeyCode> {
+    std::size_t operator()(const megamol::frontend_resources::KeyCode& k) const noexcept {
+        using std::hash;
+        using std::size_t;
+        using std::string;
+
+        return (static_cast<uint64_t>(k.key) << 32 | k.mods.toInt());
+    }
+};
+
+template<>
+struct hash<megamol::frontend_resources::Modifiers> {
+    std::size_t operator()(const megamol::frontend_resources::Modifiers& m) const noexcept {
+        return m.toInt();
+    }
+};
+
+} // namespace std

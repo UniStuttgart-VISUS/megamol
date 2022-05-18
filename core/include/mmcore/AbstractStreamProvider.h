@@ -14,55 +14,55 @@
 namespace megamol {
 namespace core {
 
+/**
+ * Provides a stream.
+ *
+ * @author Alexander Straub
+ */
+class AbstractStreamProvider : public job::AbstractTickJob {
+
+public:
     /**
-    * Provides a stream.
-    *
-    * @author Alexander Straub
-    */
-    class MEGAMOLCORE_API AbstractStreamProvider : public job::AbstractTickJob {
+     * Constructor
+     */
+    AbstractStreamProvider();
 
-    public:
-        /**
-        * Constructor
-        */
-        AbstractStreamProvider();
+    /**
+     * Destructor
+     */
+    ~AbstractStreamProvider();
 
-        /**
-        * Destructor
-        */
-        ~AbstractStreamProvider();
+protected:
+    /**
+     * Callback function providing the stream.
+     *
+     * @return Stream
+     */
+    virtual std::iostream& GetStream() = 0;
 
-    protected:
-        /**
-        * Callback function providing the stream.
-        *
-        * @return Stream
-        */
-        virtual std::iostream& GetStream() = 0;
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create() override;
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create() override;
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release() override;
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release() override;
+    /**
+     * Starts the job.
+     *
+     * @return true if the job has been successfully started.
+     */
+    virtual bool run() override;
 
-        /**
-         * Starts the job.
-         *
-         * @return true if the job has been successfully started.
-         */
-        virtual bool run() override;
+private:
+    /** Input slot  */
+    CallerSlot inputSlot;
+};
 
-    private:
-        /** Input slot  */
-        CallerSlot inputSlot;
-    };
-
-}
-}
+} // namespace core
+} // namespace megamol

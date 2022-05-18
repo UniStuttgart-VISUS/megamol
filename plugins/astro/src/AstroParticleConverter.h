@@ -8,7 +8,7 @@
 #ifndef MEGAMOLCORE_ASTROPARTICLECONVERTER_H_INCLUDED
 #define MEGAMOLCORE_ASTROPARTICLECONVERTER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
@@ -21,18 +21,22 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "astro/AstroDataCall.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
+#include "geometry_calls/MultiParticleDataCall.h"
 
 namespace megamol {
 namespace astro {
 
 class AstroParticleConverter : public core::Module {
 public:
-    static const char* ClassName(void) { return "AstroParticleConverter"; }
+    static const char* ClassName(void) {
+        return "AstroParticleConverter";
+    }
     static const char* Description(void) {
         return "Converts data contained in a AstroDataCall to a MultiParticleDataCall";
     }
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     AstroParticleConverter(void);

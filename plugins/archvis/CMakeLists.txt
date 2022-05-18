@@ -7,8 +7,8 @@ megamol_plugin(archvis
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
     mesh
-    mmstd_datatools)
+    datatools)
 
-if (archvis_PLUGIN_ENABLED)
-  target_include_directories(archvis PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external>)
-endif ()
+#if (archvis_PLUGIN_ENABLED)
+#  target_include_directories(archvis PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external>)
+#endif ()

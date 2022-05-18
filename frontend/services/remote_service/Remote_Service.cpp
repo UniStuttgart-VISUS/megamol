@@ -8,9 +8,9 @@
 #include "Remote_Service.hpp"
 
 #include "HeadNode.hpp"
-#include "RenderNode.hpp"
-#include "MpiNode.hpp"
 #include "MPI_Context.h"
+#include "MpiNode.hpp"
+#include "RenderNode.hpp"
 
 #include "mmcore/MegaMolGraph.h"
 
@@ -42,9 +42,7 @@ namespace frontend {
 using frontend_resources::MPI_Context;
 
 std::string handle_remote_session_config(
-    megamol::frontend_resources::RuntimeConfig const& config,
-    Remote_Service::Config& remote_config)
-{
+    megamol::frontend_resources::RuntimeConfig const& config, Remote_Service::Config& remote_config) {
     std::string role_name;
 
     if (config.remote_headnode) {
@@ -56,13 +54,13 @@ std::string handle_remote_session_config(
         role_name = " (Render Node)";
     }
     if (config.remote_mpirendernode) {
-        #ifdef WITH_MPI
-            remote_config.role = megamol::frontend::Remote_Service::Role::MPIRenderNode;
-            role_name = " (MPI Render Node)";
-        #else
-            log_error(" MegaMol was compiled without MPI. Can not start in MPI mode. Shut down.");
-            std::exit(1);
-        #endif // WITH_MPI
+#ifdef WITH_MPI
+        remote_config.role = megamol::frontend::Remote_Service::Role::MPIRenderNode;
+        role_name = " (MPI Render Node)";
+#else
+        log_error(" MegaMol was compiled without MPI. Can not start in MPI mode. Shut down.");
+        std::exit(1);
+#endif // WITH_MPI
     }
 
     remote_config.mpi_broadcast_rank = config.remote_mpi_broadcast_rank;
@@ -99,7 +97,7 @@ Remote_Service::Remote_Service() {
 }
 
 Remote_Service::~Remote_Service() {
-    // clean up raw pointers you allocated with new, which is bad practice and nobody does 
+    // clean up raw pointers you allocated with new, which is bad practice and nobody does
 }
 
 bool Remote_Service::init(void* configPtr) {
@@ -110,10 +108,8 @@ bool Remote_Service::init(void* configPtr) {
 }
 
 bool Remote_Service::init(const Config& config) {
-    m_pimpl = std::unique_ptr<PimplData, std::function<void(PimplData*)>>(
-        new PimplData,
-        [](PimplData* ptr) { delete ptr; }
-    );
+    m_pimpl =
+        std::unique_ptr<PimplData, std::function<void(PimplData*)>>(new PimplData, [](PimplData* ptr) { delete ptr; });
     m_config = config;
 
     if (false) {
@@ -121,16 +117,12 @@ bool Remote_Service::init(const Config& config) {
         return false;
     }
 
-    this->m_providedResourceReferences =
-    {
-    };
+    this->m_providedResourceReferences = {};
 
-    this->m_requestedResourcesNames =
-    {
-          "MegaMolGraph"
-        , "ExecuteLuaScript" // std::function<std::tuple<bool,std::string>(std::string const&)>
-        , "GUIRegisterWindow"
-    };
+    this->m_requestedResourcesNames = {"MegaMolGraph",
+        "ExecuteLuaScript" // std::function<std::tuple<bool,std::string>(std::string const&)>
+        ,
+        "optional<GUIRegisterWindow>"};
 
     m_do_remote_things = std::function{[&]() {}};
 
@@ -160,21 +152,18 @@ bool Remote_Service::init(const Config& config) {
             return false;
         }
 
-        if (m_mpi.i_do_broadcast()) {
+        if (m_mpi.mpi_comm.do_i_broadcast()) {
             if (!m_render.start_receiver(config.rendernode_zmq_source_address)) {
                 log_error("could not start RenderNode receiver");
                 return false;
             }
         }
 
-        m_mpi_context.mpi_comm       = m_mpi.comm_;
-        m_mpi_context.mpi_comm_size  = m_mpi.comm_size_;
-        m_mpi_context.rank           = m_mpi.rank_;
-        m_mpi_context.broadcast_rank = m_mpi.broadcast_rank_;
+        // copy MPI context/comm info to global resource
+        // here we hope the MPI_Comm struct defined in mpi.h is ok with beeing copied
+        m_mpi_context = m_mpi.mpi_comm;
 
-        this->m_providedResourceReferences.push_back(
-            {"MPI_Context", m_mpi_context}
-        );
+        this->m_providedResourceReferences.push_back({"MPI_Context", m_mpi_context});
     }
 
     log("initialized successfully");
@@ -214,9 +203,8 @@ void Remote_Service::setRequestedResources(std::vector<FrontendResource> resourc
         remote_control_window();
     }
 }
-    
-void Remote_Service::updateProvidedResources() {
-}
+
+void Remote_Service::updateProvidedResources() {}
 
 void Remote_Service::digestChangedRequestedResources() {
     // depending on role does head or render things
@@ -226,32 +214,29 @@ void Remote_Service::digestChangedRequestedResources() {
         this->setShutdown();
 }
 
-void Remote_Service::resetProvidedResources() {
-}
+void Remote_Service::resetProvidedResources() {}
 
-void Remote_Service::preGraphRender() {
-}
+void Remote_Service::preGraphRender() {}
 
-void Remote_Service::postGraphRender() {
-}
+void Remote_Service::postGraphRender() {}
 
 void Remote_Service::do_headnode_things() {
     auto& graph = m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>();
 
-    for(auto command: m_headnode_remote_control.commands_queue)
-    switch (command) {
-    case HeadNodeRemoteControl::Command::ClearGraph:
-        head_send_message("mmClearGraph()");
-        break;
-    case HeadNodeRemoteControl::Command::SendGraph:
-        head_send_message(const_cast<megamol::core::MegaMolGraph&>(graph).Convenience().SerializeGraph());
-        break;
-    case HeadNodeRemoteControl::Command::SendLuaCommand:
-        head_send_message(m_headnode_remote_control.lua_command);
-        break;
-    default:
-        break;
-    }
+    for (auto command : m_headnode_remote_control.commands_queue)
+        switch (command) {
+        case HeadNodeRemoteControl::Command::ClearGraph:
+            head_send_message("mmClearGraph()");
+            break;
+        case HeadNodeRemoteControl::Command::SendGraph:
+            head_send_message(const_cast<megamol::core::MegaMolGraph&>(graph).Convenience().SerializeGraph());
+            break;
+        case HeadNodeRemoteControl::Command::SendLuaCommand:
+            head_send_message(m_headnode_remote_control.lua_command);
+            break;
+        default:
+            break;
+        }
     m_headnode_remote_control.commands_queue.clear();
 
     auto split_module_names = [&](std::string const& modules_list_string, auto& module_list) {
@@ -263,7 +248,7 @@ void Remote_Service::do_headnode_things() {
         auto end = modules_list_string.find_first_of(delimiters, begin);
 
         while (begin != std::string::npos) {
-            module_list.push_back(modules_list_string.substr(begin, end-begin));
+            module_list.push_back(modules_list_string.substr(begin, end - begin));
             begin = modules_list_string.find_first_not_of(delimiters, end);
             end = modules_list_string.find_first_of(delimiters, begin);
         }
@@ -281,8 +266,9 @@ void Remote_Service::do_headnode_things() {
 
             split_module_names(m_headnode_remote_control.modules_to_send_params_of, module_list);
 
-            for (auto& module: module_list)
-                send_params += const_cast<megamol::core::MegaMolGraph&>(graph).Convenience().SerializeModuleParameters(module);
+            for (auto& module : module_list)
+                send_params +=
+                    const_cast<megamol::core::MegaMolGraph&>(graph).Convenience().SerializeModuleParameters(module);
         }
 
         head_send_message(send_params);
@@ -326,57 +312,64 @@ void Remote_Service::add_headnode_remote_command(HeadNodeRemoteControl::Command 
 }
 
 void Remote_Service::remote_control_window() {
-    auto &gui_window_request_resource = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::GUIRegisterWindow>();
-    gui_window_request_resource.register_window("Head Node Remote Control", [&](megamol::gui::AbstractWindow::BasicConfig& window_config) {
-        window_config.flags = ImGuiWindowFlags_AlwaysAutoResize;
+    auto maybe_gui_window_request_resource =
+        m_requestedResourceReferences[2].getOptionalResource<megamol::frontend_resources::GUIRegisterWindow>();
 
-        static bool keep_sending_params = false;
-        static std::string param_send_modules = "all";
-        static std::string lua_command = "mmQuit()";
-        if (m_is_headnode_running) {
-            ImGui::Text("(Server RUNNING) ");
-            ImGui::SameLine();
-            if (ImGui::Button("Stop Head Node Server")) {
-                add_headnode_remote_command(HeadNodeRemoteControl::Command::CloseHeadNode);
+    if (!maybe_gui_window_request_resource.has_value()) {
+        return;
+    }
+
+    auto& gui_window_request_resource = maybe_gui_window_request_resource.value().get();
+
+    gui_window_request_resource.register_window(
+        "Head Node Remote Control", [&](megamol::gui::AbstractWindow::BasicConfig& window_config) {
+            window_config.flags = ImGuiWindowFlags_AlwaysAutoResize;
+
+            static bool keep_sending_params = false;
+            static std::string param_send_modules = "all";
+            static std::string lua_command = "mmQuit()";
+            if (m_is_headnode_running) {
+                ImGui::Text("(Server RUNNING) ");
+                ImGui::SameLine();
+                if (ImGui::Button("Stop Head Node Server")) {
+                    add_headnode_remote_command(HeadNodeRemoteControl::Command::CloseHeadNode);
+                }
+            } else {
+                ImGui::Text("(Server STOPPED) ");
+                ImGui::SameLine();
+                if (ImGui::Button("Start Head Node Server")) {
+                    add_headnode_remote_command(HeadNodeRemoteControl::Command::StartHeadNode);
+                }
             }
-        } else {
-            ImGui::Text("(Server STOPPED) ");
             ImGui::SameLine();
-            if (ImGui::Button("Start Head Node Server")) {
-                add_headnode_remote_command(HeadNodeRemoteControl::Command::StartHeadNode);
+            ImGui::InputText("ZMQ Target", &m_config.headnode_zmq_target_address);
+
+            if (ImGui::Button("Broadcast Local Graph")) {
+                add_headnode_remote_command(HeadNodeRemoteControl::Command::SendGraph);
             }
-        }
-        ImGui::SameLine();
-        ImGui::InputText("ZMQ Target", &m_config.headnode_zmq_target_address);
+            ImGui::SameLine();
+            if (ImGui::Button("Clear Rendernode Graphs")) {
+                add_headnode_remote_command(HeadNodeRemoteControl::Command::DontSendParams);
+                add_headnode_remote_command(HeadNodeRemoteControl::Command::ClearGraph);
+                keep_sending_params = false;
+            }
 
-        if (ImGui::Button("Broadcast Local Graph")) {
-            add_headnode_remote_command(HeadNodeRemoteControl::Command::SendGraph);
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Clear Rendernode Graphs")) {
-            add_headnode_remote_command(HeadNodeRemoteControl::Command::DontSendParams);
-            add_headnode_remote_command(HeadNodeRemoteControl::Command::ClearGraph);
-            keep_sending_params = false;
-        }
+            if (ImGui::RadioButton("Sync Module Params", keep_sending_params)) {
+                keep_sending_params = !keep_sending_params;
+                keep_sending_params ? add_headnode_remote_command(HeadNodeRemoteControl::Command::KeepSendingParams)
+                                    : add_headnode_remote_command(HeadNodeRemoteControl::Command::DontSendParams);
+            }
+            ImGui::SameLine();
+            if (ImGui::InputText("Sync Modules", &param_send_modules, ImGuiInputTextFlags_EnterReturnsTrue)) {
+                add_headnode_remote_command(HeadNodeRemoteControl::Command::SetParamSendingModules, param_send_modules);
+            }
 
-        if (ImGui::RadioButton("Sync Module Params", keep_sending_params)) {
-            keep_sending_params = !keep_sending_params;
-            keep_sending_params
-                ? add_headnode_remote_command(HeadNodeRemoteControl::Command::KeepSendingParams)
-                : add_headnode_remote_command(HeadNodeRemoteControl::Command::DontSendParams);
-        }
-        ImGui::SameLine();
-        if (ImGui::InputText("Sync Modules", &param_send_modules, ImGuiInputTextFlags_EnterReturnsTrue)) {
-            add_headnode_remote_command(HeadNodeRemoteControl::Command::SetParamSendingModules, param_send_modules);
-        }
-
-        if (ImGui::Button("Send Lua Command")) {
-            add_headnode_remote_command(HeadNodeRemoteControl::Command::SendLuaCommand, lua_command);
-        }
-        ImGui::SameLine();
-        ImGui::InputText("Lua Command", &lua_command);
-
-    });
+            if (ImGui::Button("Send Lua Command")) {
+                add_headnode_remote_command(HeadNodeRemoteControl::Command::SendLuaCommand, lua_command);
+            }
+            ImGui::SameLine();
+            ImGui::InputText("Lua Command", &lua_command);
+        });
 }
 
 bool Remote_Service::start_headnode(bool start_or_shutdown) {
@@ -412,15 +405,14 @@ void Remote_Service::do_mpi_things() {
     m_message.clear();
 
     if (m_mpi.i_do_broadcast()) {
-        if (m_render.await_message(m_message, 3)) {
-        }
+        if (m_render.await_message(m_message, 3)) {}
     }
 
-     m_mpi.get_broadcast_message(m_message);
+    m_mpi.get_broadcast_message(m_message);
 
-     execute_message(m_message);
+    execute_message(m_message);
 
-     m_mpi.sync_barrier();
+    m_mpi.sync_barrier();
 }
 
 void Remote_Service::head_send_message(std::string const& string) {
@@ -436,15 +428,15 @@ void Remote_Service::execute_message(std::vector<char> const& message) {
     static std::string commands_string;
     commands_string.resize(message.size());
     std::memcpy(commands_string.data(), message.data(), message.size());
-    
-    auto& executeLua = m_requestedResourceReferences[1].getResource<std::function<std::tuple<bool,std::string>(std::string const&)>>();
+
+    auto& executeLua = m_requestedResourceReferences[1]
+                           .getResource<std::function<std::tuple<bool, std::string>(std::string const&)>>();
     auto result = executeLua(commands_string);
 
     if (!std::get<0>(result)) {
         log_error("Error executing Lua: " + std::get<1>(result));
     }
 }
-
 
 
 // ===================================================================================================
@@ -454,31 +446,28 @@ void Remote_Service::execute_message(std::vector<char> const& message) {
 
 #if (0)
 
-    // identifier for sent messages. counts up for each message.
-    uint64_t msg_id_ = 0;
+// identifier for sent messages. counts up for each message.
+uint64_t msg_id_ = 0;
 
-    // need to wrap sent messages according to convention
+// need to wrap sent messages according to convention
 
-    // HEAD NODE SENDING
+// HEAD NODE SENDING
 
-    for (auto const& el : updates) {
-        std::vector<char> msg;
+for (auto const& el : updates) {
+    std::vector<char> msg;
 
-        std::string mg = "mmSetParamValue(\"" + el.first + "\", \"" + el.second + "\")";
+    std::string mg = "mmSetParamValue(\"" + el.first + "\", \"" + el.second + "\")";
 
-        msg.resize(MessageHeaderSize + mg.size());
-        msg[0] = static_cast<char>(MessageType::PARAM_UPD_MSG);
-        auto size = mg.size();
-        std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
-            msg.begin() + MessageTypeSize);
-        ++msg_id_;
-        std::copy(reinterpret_cast<char*>(&msg_id_), reinterpret_cast<char*>(&msg_id_) + MessageIDSize,
-            msg.begin() + MessageTypeSize + MessageSizeSize);
-        std::copy(mg.begin(), mg.end(), msg.begin() + MessageHeaderSize);
-
-
-    }
-
+    msg.resize(MessageHeaderSize + mg.size());
+    msg[0] = static_cast<char>(MessageType::PARAM_UPD_MSG);
+    auto size = mg.size();
+    std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
+        msg.begin() + MessageTypeSize);
+    ++msg_id_;
+    std::copy(reinterpret_cast<char*>(&msg_id_), reinterpret_cast<char*>(&msg_id_) + MessageIDSize,
+        msg.begin() + MessageTypeSize + MessageSizeSize);
+    std::copy(mg.begin(), mg.end(), msg.begin() + MessageHeaderSize);
+}
 
 
 bool megamol::remote::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
@@ -494,7 +483,8 @@ bool megamol::remote::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
         avp = call->PeekCalleeSlot()->Parent();
         av = dynamic_cast<const core::view::AbstractView*>(avp.get());
     }
-    if (av == nullptr) return false;
+    if (av == nullptr)
+        return false;
 
     csn = av->GetCameraSyncNumber();
     if ((csn != syncnumber)) {
@@ -525,7 +515,8 @@ bool megamol::remote::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
 }
 
 bool megamol::remote::HeadnodeServer::onLuaCommand(core::param::ParamSlot& param) {
-    if (!run_threads_) return true;
+    if (!run_threads_)
+        return true;
 
     std::vector<char> msg;
     std::string mg = std::string(param.Param<core::param::StringParam>()->ValueString());
@@ -548,27 +539,25 @@ bool megamol::remote::HeadnodeServer::onLuaCommand(core::param::ParamSlot& param
     return true;
 }
 
-    // retrieve modulgraph
-    if (this->deploy_project_slot_.Param<core::param::BoolParam>()->Value()) {
-        if (this->GetCoreInstance()->IsLuaProject()) {
-            auto const lua = std::string(this->GetCoreInstance()->GetMergedLuaProject());
-            std::vector<char> msg(MessageHeaderSize + lua.size());
-            msg[0] = MessageType::PRJ_FILE_MSG;
-            auto size = lua.size();
-            std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
-                msg.begin() + MessageTypeSize);
-            ++msg_id_;
-            std::copy(reinterpret_cast<char*>(&msg_id_), reinterpret_cast<char*>(&msg_id_) + MessageIDSize,
-                msg.begin() + MessageTypeSize + MessageSizeSize);
-            std::copy(lua.begin(), lua.end(), msg.begin() + MessageHeaderSize);
-            {
-                std::lock_guard<std::mutex> lock(send_buffer_guard_);
-                send_buffer_.insert(send_buffer_.end(), msg.begin(), msg.end());
-            }
+// retrieve modulgraph
+if (this->deploy_project_slot_.Param<core::param::BoolParam>()->Value()) {
+    if (this->GetCoreInstance()->IsLuaProject()) {
+        auto const lua = std::string(this->GetCoreInstance()->GetMergedLuaProject());
+        std::vector<char> msg(MessageHeaderSize + lua.size());
+        msg[0] = MessageType::PRJ_FILE_MSG;
+        auto size = lua.size();
+        std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
+            msg.begin() + MessageTypeSize);
+        ++msg_id_;
+        std::copy(reinterpret_cast<char*>(&msg_id_), reinterpret_cast<char*>(&msg_id_) + MessageIDSize,
+            msg.begin() + MessageTypeSize + MessageSizeSize);
+        std::copy(lua.begin(), lua.end(), msg.begin() + MessageHeaderSize);
+        {
+            std::lock_guard<std::mutex> lock(send_buffer_guard_);
+            send_buffer_.insert(send_buffer_.end(), msg.begin(), msg.end());
         }
     }
-
-
+}
 
 
 bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
@@ -600,9 +589,11 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
                 std::copy(ibegin + MessageTypeSize + MessageSizeSize, ibegin + MessageHeaderSize,
                     reinterpret_cast<char*>(&msg_id));
                 if (msg_id - old_msg_id == 1) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("RendernodeView: Got message with id: %d", msg_id);
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "RendernodeView: Got message with id: %d", msg_id);
                 } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError("RendernodeView: Unexpected id: %d", msg_id);
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "RendernodeView: Unexpected id: %d", msg_id);
                 }
                 old_msg_id = msg_id;
 #endif
@@ -652,8 +643,6 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 }
 
 
-
-
 #endif
 // TODO
 //        int fnameDirty = ss->getFilenameDirty();
@@ -674,36 +663,36 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 // #if(0)
 // #include "stdafx.h"
 // #include "Remote_Service::MpiNode.h"
-// 
+//
 // #include <array>
-// 
+//
 // #include "mmcore/CoreInstance.h"
 // #include "mmcore/param/BoolParam.h"
 // #include "mmcore/param/IntParam.h"
 // #include "mmcore/param/StringParam.h"
-// 
+//
 // #include "mmcore/cluster/SyncDataSourcesCall.h"
 // #include "mmcore/cluster/mpi/MpiCall.h"
 // #include "vislib/RawStorageSerialiser.h"
-// 
-// //  _fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
-// 
-// 
+//
+// //  _fbo = std::make_shared<vislib_gl::graphics::gl::FramebufferObject>();
+//
+//
 // void megamol::remote::Remote_Service::MpiNode::Render(const mmcRenderViewContext& context, core::Call* call) {
 // ifdef WITH_MPI
 //     static bool first_frame = true;
-// 
+//
 //     this->initMPI();
-// 
+//
 //     if (first_frame) {
 //         this->initTileViewParameters();
 //         this->checkParameters();
 //         first_frame = false;
 //     }
-// 
+//
 //     // 0 time, 1 instanceTime
 //     std::array<double, 2> timestamps = {0.0, 0.0};
-// 
+//
 //     // if broadcastmaster, start listening thread
 //     // auto isBCastMaster = isBCastMasterSlot_.Param<core::param::BoolParam>->Value();
 //     // auto BCastRank = BCastRankSlot_.Param<core::param::IntParam>->Value();
@@ -711,9 +700,9 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 //     if (!threads_initialized_ && BCastMaster) {
 //         init_threads();
 //     }
-// 
+//
 //     // BROADCAST HAPPENED HERE
-// 
+//
 //     // initialize rendering
 //     auto ss = this->sync_data_slot_.CallAs<core::cluster::SyncDataSourcesCall>();
 //     if (ss != nullptr) {
@@ -727,7 +716,7 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 // #    ifdef RV_DEBUG_OUTPUT
 //         megamol::core::utility::log::Log::DefaultLog.WriteInfo("Remote_Service::MpiNode: allFnameDirty: %d", allFnameDirty);
 // #    endif
-// 
+//
 //         if (allFnameDirty) {
 //             if (!(*ss)(1)) { // finally set the filename in the data source
 //                 megamol::core::utility::log::Log::DefaultLog.WriteError("Remote_Service::MpiNode: SyncData SetFilename callback failed.");
@@ -752,52 +741,52 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 //         crv->SetTime(static_cast<float>(timestamps[0]));
 //         crv->SetInstanceTime(timestamps[1]);
 //         crv->SetProjection(this->getProjType(), this->getEye());
-// 
+//
 //         if (this->hasTile()) {
 //             crv->SetTile(this->getVirtWidth(), this->getVirtHeight(), this->getTileX(), this->getTileY(),
 //                 this->getTileW(), this->getTileH());
 //         }
-// 
+//
 //         if ((this->_fbo->GetWidth() != this->getTileW()) || (this->_fbo->GetHeight() != this->getTileH()) ||
 //             (!this->_fbo->IsValid())) {
 //             this->_fbo->Release();
 //             if (!this->_fbo->Create(this->getTileW(), this->getTileH(), GL_RGBA8, GL_RGBA,
-//                     GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
+//                     GL_UNSIGNED_BYTE, vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
 //                     GL_DEPTH_COMPONENT)) {
 //                 throw vislib::Exception("[View3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
 //                 return;
 //             }
 //         }
 //         this->_fbo->Enable();
-//         auto bgcol = this->BkgndColour();
+//         auto bgcol = this->BackgroundColor();
 //         glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
 //         glClearDepth(1.0f);
 //         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //         crv->SetFramebufferObject(this->_fbo);
-// 
-// 
+//
+//
 //         if (!crv->operator()(core::view::CallRenderViewGL::CALL_RENDER)) {
 //             megamol::core::utility::log::Log::DefaultLog.WriteError("Remote_Service::MpiNode: Failed to call render on dependend view.");
 //         }
-// 
+//
 //         this->_fbo->Disable();
 //         this->_fbo->DrawColourTexture();
-// 
-// 
+//
+//
 //         glFinish();
 //     } else {
 // #    ifdef RV_DEBUG_OUTPUT
 //         megamol::core::utility::log::Log::DefaultLog.WriteWarn("Remote_Service::MpiNode: crv_ is nullptr.\n");
 // #    endif
 //     }
-// 
+//
 //     // sync barrier
 //     MPI_Barrier(this->comm_);
 // #endif
 // }
-// 
+//
 // #endif
-// 
+//
 
 } // namespace frontend
 } // namespace megamol

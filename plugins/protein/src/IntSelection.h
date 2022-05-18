@@ -1,7 +1,7 @@
 /*
  * SIFFDataSource.h
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS). 
+ * Copyright (C) 2009 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
@@ -11,101 +11,91 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/Module.h"
-#include "mmcore/param/ParamSlot.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "vislib/math/Cuboid.h"
-#include "vislib/RawStorage.h"
-
+#include "mmcore/Module.h"
 
 namespace megamol {
 namespace protein {
 
-
+/**
+ * zeug
+ */
+class IntSelection : public core::Module {
+public:
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) {
+        return "IntSelection";
+    }
 
     /**
-     * zeug
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
      */
-    class IntSelection : public core::Module {
-    public:
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "IntSelection";
-        }
+    static const char* Description(void) {
+        return "Module holding a list of selected ints (IDs, ...)";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "Module holding a list of selected ints (IDs, ...)";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Ctor. */
+    IntSelection(void);
 
-        /** Ctor. */
-        IntSelection(void);
+    /** Dtor. */
+    virtual ~IntSelection(void);
 
-        /** Dtor. */
-        virtual ~IntSelection(void);
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-    protected:
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
+private:
+    /**
+     * Gets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool getSelectionCallback(core::Call& caller);
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
+    /**
+     * Sets the data from the source.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool setSelectionCallback(core::Call& caller);
 
-    private:
+    /** The slot for requesting data */
+    core::CalleeSlot getSelectionSlot;
 
-        /**
-         * Gets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool getSelectionCallback(core::Call& caller);
+    /** The data */
+    vislib::Array<int> selection;
 
-        /**
-         * Sets the data from the source.
-         *
-         * @param caller The calling call.
-         *
-         * @return 'true' on success, 'false' on failure.
-         */
-        bool setSelectionCallback(core::Call& caller);
-
-        /** The slot for requesting data */
-        core::CalleeSlot getSelectionSlot;
-
-        /** The data */
-        vislib::Array<int> selection;
-
-        /** The data hash */
-        SIZE_T datahash;
-
-    };
+    /** The data hash */
+    SIZE_T datahash;
+};
 
 } /* end namespace protein */
 } /* end namespace megamol */

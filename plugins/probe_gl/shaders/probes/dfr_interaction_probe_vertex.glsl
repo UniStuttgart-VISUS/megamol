@@ -30,7 +30,7 @@ void main()
     vObjId = gl_DrawIDARB;
     vNormal = inverse(transpose(mat3(mesh_shader_params[gl_DrawIDARB].transform))) * v_normal;
     vColour = mesh_shader_params[gl_DrawIDARB].highlighted == 1 ? vec3(1.0,1.0,0.0) : vec3(0.8,0.8,0.8);
-    vColour = mesh_shader_params[gl_DrawIDARB].highlighted == 2 ? vec3(1.0,0.5,0.0) : vColour;
+    vColour = mesh_shader_params[gl_DrawIDARB].highlighted == 2 ? vec3(1.0,0.0,0.0) : vColour;
     mat4 object_transform = mesh_shader_params[gl_DrawIDARB].transform;
     vWorldPos = (object_transform * vec4(v_position,1.0)).xyz;
     gl_Position =  proj_mx * view_mx * object_transform * vec4(v_position,1.0);

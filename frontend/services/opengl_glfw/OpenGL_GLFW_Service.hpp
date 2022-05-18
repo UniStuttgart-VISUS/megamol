@@ -7,18 +7,19 @@
 
 #pragma once
 
+#include "GL_STUB.h"
+
 #include "AbstractFrontendService.hpp"
 
-#include "KeyboardMouse_Events.h"
 #include "Framebuffer_Events.h"
-#include "Window_Events.h"
+#include "KeyboardMouse_Events.h"
+#include "OpenGL_Context.h"
 #include "WindowManipulation.h"
-#include "IOpenGL_Context.h"
+#include "Window_Events.h"
 
 #include <memory>
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 struct WindowPlacement {
     int x = 100, y = 100, w = 800, h = 600, mon = 0;
@@ -28,6 +29,7 @@ struct WindowPlacement {
     bool fullScreen = false;
     bool topMost = false;
     bool noCursor = false;
+    bool hidden = false;
 };
 
 class OpenGL_GLFW_Service final : public AbstractFrontendService {
@@ -38,7 +40,6 @@ class OpenGL_GLFW_Service final : public AbstractFrontendService {
     using WindowManipulation = megamol::frontend_resources::WindowManipulation;
 
 public:
-
     struct Config {
         int versionMajor = 4;
         int versionMinor = 6;
@@ -47,30 +48,34 @@ public:
         bool enableKHRDebug = true;        // max error reporting
         bool enableVsync = false;          // max frame rate
         bool glContextCoreProfile = false;
+        bool forceWindowSize = false;
     };
 
-    std::string serviceName() const override { return "OpenGL_GLFW_Service"; }
+    std::string serviceName() const override {
+        return "OpenGL_GLFW_Service";
+    }
 
-    OpenGL_GLFW_Service() = default;
-    ~OpenGL_GLFW_Service() override;
+    OpenGL_GLFW_Service() GL_STUB();
+    ~OpenGL_GLFW_Service() override GL_STUB();
     // TODO: delete copy/move/assign?
 
     // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
-    bool init(const Config& config);
-    bool init(void* configPtr) override;
-    void close() override;
-    
-    void updateProvidedResources() override;
-    void digestChangedRequestedResources() override;
-    void resetProvidedResources() override;
+    bool init(const Config& config) GL_STUB(true);
+    bool init(void* configPtr) override GL_STUB(true);
+    void close() override GL_STUB();
 
-    void preGraphRender() override;  // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
-    void postGraphRender() override; // clean up after rendering, e.g. stop and show frame-timers in GLFW window
+    void updateProvidedResources() override GL_STUB();
+    void digestChangedRequestedResources() override GL_STUB();
+    void resetProvidedResources() override GL_STUB();
+
+    void preGraphRender() override GL_STUB(); // prepare rendering with API, e.g. set OpenGL context, frame-timers, etc
+    void postGraphRender() override
+        GL_STUB(); // clean up after rendering, e.g. stop and show frame-timers in GLFW window
 
     // expose the resources and input events this service provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
-    std::vector<FrontendResource>& getProvidedResources() override;
-    const std::vector<std::string> getRequestedResourceNames() const override;
-    void setRequestedResources(std::vector<FrontendResource> resources) override;
+    std::vector<FrontendResource>& getProvidedResources() override GL_STUB(m_renderResourceReferences);
+    const std::vector<std::string> getRequestedResourceNames() const override GL_STUB({});
+    void setRequestedResources(std::vector<FrontendResource> resources) override GL_STUB();
 
     // from AbstractFrontendService:
     // int setPriority(const int p) // priority initially 0
@@ -107,18 +112,6 @@ private:
     void create_glfw_mouse_cursors();
     void update_glfw_mouse_cursors(const int cursor_id);
 
-    struct OpenGL_Context : public megamol::frontend_resources::IOpenGL_Context {
-        void* ptr = nullptr;
-
-        void activate() const override;
-        void close() const override;
-    };
-
-    struct Fake_OpenGL_Context : public megamol::frontend_resources::IOpenGL_Context {
-        void activate() const override {}
-        void close() const override {}
-    };
-
     // abstract away GLFW library details behind pointer-to-implementation. only use GLFW header in .cpp
     struct PimplData;
     std::unique_ptr<PimplData, std::function<void(PimplData*)>> m_pimpl;
@@ -128,9 +121,7 @@ private:
     MouseEvents m_mouseEvents;
     WindowEvents m_windowEvents;
     FramebufferEvents m_framebufferEvents;
-    OpenGL_Context m_opengl_context_impl;
-    Fake_OpenGL_Context m_fake_opengl_context;
-    frontend_resources::IOpenGL_Context* m_opengl_context;
+    frontend_resources::OpenGL_Context m_opengl_context;
     WindowManipulation m_windowManipulation;
 
     // this holds references to the event structs we fill. the events are passed to the renderers/views using
@@ -140,5 +131,4 @@ private:
     std::vector<FrontendResource> m_requestedResourceReferences;
 };
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend
