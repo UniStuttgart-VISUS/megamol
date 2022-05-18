@@ -7,7 +7,6 @@
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 
 #include "mmcore/utility/log/Log.h"
-#include "vislib/math/ForceDirected.h"
 
 #include "glm/glm.hpp"
 #include <filesystem>
