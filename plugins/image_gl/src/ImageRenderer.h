@@ -1,21 +1,25 @@
-/**
- * MegaMol
- * Copyright (c) 2010, MegaMol Dev Team
- * All rights reserved.
+/*
+ * ImageRenderer.h
+ *
+ * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+ * Alle Rechte vorbehalten.
  */
 
+#ifndef MEGAMOLCORE_IMAGEVIEWER_H_INCLUDED
+#define MEGAMOLCORE_IMAGEVIEWER_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-
-#include <memory>
-
-#include <glowl/glowl.h>
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "vislib/Pair.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/math/Rectangle.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
+#include <glowl/GLSLProgram.hpp>
+#include <memory>
 
 #ifdef WITH_MPI
 #include "mpi.h"
@@ -29,22 +33,14 @@
 #include "vislib/RawStorage.h"
 
 using namespace megamol::core;
-namespace view_gl = megamol::core_gl::view;
 
 namespace megamol {
-<<<<<<<< HEAD:plugins/image_gl/src/ImageRenderer.h
 namespace image_gl {
 
 /**
- * Mesh-based renderer for bézier curve tubes
-========
-namespace imageviewer {
-
-/**
  * Mesh-based renderer for b�zier curve tubes
->>>>>>>> private/mapcluster:plugins/imageviewer/include/imageviewer/ImageRenderer.h
  */
-class ImageRenderer : public view_gl::Renderer3DModuleGL {
+class ImageRenderer : public core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -96,7 +92,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(view_gl::CallRender3DGL& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -110,15 +106,9 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(view_gl::CallRender3DGL& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
 private:
-    /**
-     * Utility function to convert a 'std::string' instance into 'TString',
-     * while preserving '\0' bytes.
-     */
-    static vislib::TString stdToTString(const std::string& str);
-
     /**
      * Splits a line at the semicolon into a left and right part. If there
      * is no semicolon, defaultEye governs which one of the strings is set,
@@ -170,6 +160,8 @@ private:
     bool assertImage(bool rightEye);
 
     bool initMPI();
+
+    vislib::TString stdToTString(const std::string& str);
 
     /** The image file path slot */
     param::ParamSlot leftFilenameSlot;
@@ -239,13 +231,9 @@ private:
     /** The height of the image */
     unsigned int height;
 
-<<<<<<<< HEAD:plugins/image_gl/src/ImageRenderer.h
-    std::unique_ptr<glowl::GLSLProgram> theShader;
-========
     bool newImageNeeded;
 
-    vislib::graphics::gl::GLSLShader theShader;
->>>>>>>> private/mapcluster:plugins/imageviewer/include/imageviewer/ImageRenderer.h
+    std::shared_ptr<glowl::GLSLProgram> theShader_;
     GLuint theVertBuffer;
     GLuint theTexCoordBuffer;
     GLuint theVAO;
@@ -271,9 +259,7 @@ private:
     size_t datahash;
 };
 
-<<<<<<<< HEAD:plugins/image_gl/src/ImageRenderer.h
-} // namespace image_gl
-========
 } /* end namespace imageviewer */
->>>>>>>> private/mapcluster:plugins/imageviewer/include/imageviewer/ImageRenderer.h
 } /* end namespace megamol */
+
+#endif /* MEGAMOLCORE_IMAGEVIEWER_H_INCLUDED */

@@ -3,25 +3,12 @@
  * Copyright (c) 2010, MegaMol Dev Team
  * All rights reserved.
  */
-<<<<<<<< HEAD:plugins/image_gl/src/JpegBitmapCodec.cpp
 
 #include "JpegBitmapCodec.h"
 #ifndef _WIN32
 #include "jpeglib.h"
 #endif
 #include "mmcore/utility/log/Log.h"
-========
-#include "stdafx.h"
-#include "imageviewer/JpegBitmapCodec.h"
-#ifndef _WIN32
-#include "jpeglib.h"
-#endif
-#include <fstream>
-#include "vislib/IllegalStateException.h"
-#include "vislib/RawStorage.h"
-#include "vislib/SmartPtr.h"
-#include "vislib/graphics/BitmapImage.h"
->>>>>>>> private/mapcluster:plugins/imageviewer/src/JpegBitmapCodec.cpp
 #include "vislib/IllegalStateException.h"
 #include "vislib/RawStorage.h"
 #include "vislib/SmartPtr.h"
@@ -103,12 +90,8 @@ JpegBitmapCodec::~JpegBitmapCodec(void) {
  */
 int JpegBitmapCodec::AutoDetect(const void* mem, SIZE_T size) const {
     const unsigned char* dat = static_cast<const unsigned char*>(mem);
-<<<<<<<< HEAD:plugins/image_gl/src/JpegBitmapCodec.cpp
     if (size < 3)
         return -1;
-========
-    if (size < 3) return -1;
->>>>>>>> private/mapcluster:plugins/imageviewer/src/JpegBitmapCodec.cpp
     if ((dat[0] == 0xFF) && (dat[1] == 0xD8) && (dat[2] == 0xFF)) {
         return 1; // looks like a jpeg, but I am not soooo sure
         // we could also test the application markers, but for the moment I don't care
@@ -120,43 +103,41 @@ int JpegBitmapCodec::AutoDetect(const void* mem, SIZE_T size) const {
 /*
  * JpegBitmapCodec::CanAutoDetect
  */
-bool JpegBitmapCodec::CanAutoDetect(void) const { return true; }
+bool JpegBitmapCodec::CanAutoDetect(void) const {
+    return true;
+}
 
 
 /*
  * JpegBitmapCodec::FileNameExtsA
  */
-const char* JpegBitmapCodec::FileNameExtsA(void) const { return ".jpeg;.jpe;.jpg"; }
+const char* JpegBitmapCodec::FileNameExtsA(void) const {
+    return ".jpeg;.jpe;.jpg";
+}
 
 
 /*
  * JpegBitmapCodec::FileNameExtsW
  */
-const wchar_t* JpegBitmapCodec::FileNameExtsW(void) const { return L".jpeg;.jpe;.jpg"; }
+const wchar_t* JpegBitmapCodec::FileNameExtsW(void) const {
+    return L".jpeg;.jpe;.jpg";
+}
 
 
 /*
  * JpegBitmapCodec::NameA
  */
-<<<<<<<< HEAD:plugins/image_gl/src/JpegBitmapCodec.cpp
 const char* JpegBitmapCodec::NameA(void) const {
     return "Joint Photographic Experts Group";
 }
-========
-const char* JpegBitmapCodec::NameA(void) const { return "Joint Photographic Experts Group"; }
->>>>>>>> private/mapcluster:plugins/imageviewer/src/JpegBitmapCodec.cpp
 
 
 /*
  * JpegBitmapCodec::NameW
  */
-<<<<<<<< HEAD:plugins/image_gl/src/JpegBitmapCodec.cpp
 const wchar_t* JpegBitmapCodec::NameW(void) const {
     return L"Joint Photographic Experts Group";
 }
-========
-const wchar_t* JpegBitmapCodec::NameW(void) const { return L"Joint Photographic Experts Group"; }
->>>>>>>> private/mapcluster:plugins/imageviewer/src/JpegBitmapCodec.cpp
 
 
 /**
@@ -583,20 +564,16 @@ bool JpegBitmapCodec::saveToMemory(vislib::RawStorage& mem) const {
 /*
  * JpegBitmapCodec::loadFromMemoryImplemented
  */
-<<<<<<<< HEAD:plugins/image_gl/src/JpegBitmapCodec.cpp
 bool JpegBitmapCodec::loadFromMemoryImplemented(void) const {
     return true;
 }
-========
-bool JpegBitmapCodec::loadFromMemoryImplemented(void) const { return true; }
->>>>>>>> private/mapcluster:plugins/imageviewer/src/JpegBitmapCodec.cpp
-
 
 /*
  * JpegBitmapCodec::saveToMemoryImplemented
  */
-bool JpegBitmapCodec::saveToMemoryImplemented(void) const { return true; }
-
+bool JpegBitmapCodec::saveToMemoryImplemented(void) const {
+    return true;
+}
 
 bool JpegBitmapCodec::saveToStream(vislib::sys::File& stream) const {
     vislib::RawStorage mem;
@@ -605,10 +582,6 @@ bool JpegBitmapCodec::saveToStream(vislib::sys::File& stream) const {
     return count == mem.GetSize();
 }
 
-<<<<<<<< HEAD:plugins/image_gl/src/JpegBitmapCodec.cpp
 bool JpegBitmapCodec::saveToStreamImplemented(void) const {
     return true;
 }
-========
-bool JpegBitmapCodec::saveToStreamImplemented(void) const { return true; }
->>>>>>>> private/mapcluster:plugins/imageviewer/src/JpegBitmapCodec.cpp
