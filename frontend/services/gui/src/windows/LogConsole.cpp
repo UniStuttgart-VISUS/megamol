@@ -34,15 +34,15 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
             data->CursorPos = (data->BufTextLen > 0) ? (data->BufTextLen - 1) : (0); // Place cursor within brackets
             user_data->move_cursor_to_end = false;
         }
-        // Adjust current input entry in history on any change of selected history entry
+
         auto input_str = std::string(data->Buf, data->BufTextLen);
         if (input_str != user_data->history[user_data->history_index]) {
+
+            //Adjust current input entry in history on any change of selected history entry
             user_data->history.back() = input_str;
             user_data->history_index = user_data->history.size() - 1;
-        }
 
-        // Look for suitable parameter hint for given command (only if input changes)
-        if (user_data->last_input_length != data->BufTextLen) {
+            // Look for suitable parameter hint for given command (only if input changes)
             user_data->param_hint.clear();
             auto bracket_pos = input_str.find('(');
             if (bracket_pos != std::string::npos) {
@@ -54,7 +54,6 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
                 }
             }
         }
-        user_data->last_input_length = data->BufTextLen;
         break;
     }
     case ImGuiInputTextFlags_CallbackCompletion: {
@@ -239,7 +238,6 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
     this->input_shared_data->move_cursor_to_end = false;
     this->input_shared_data->history.push_back(this->input_buffer);
     this->input_shared_data->history_index = this->input_shared_data->history.size() - 1;
-    this->input_shared_data->last_input_length = 0;
 }
 
 
@@ -389,7 +387,7 @@ bool megamol::gui::LogConsole::Draw() {
 
     // Scroll - Requires 3 frames for being applied!
     if (this->scroll_down > 0) {
-        const auto max_offset = 3.0f * ImGui::GetTextLineHeight();
+        const auto max_offset = 2.0f * ImGui::GetTextLineHeight();
         ImGui::SetScrollY(ImGui::GetScrollMaxY() + max_offset);
         this->scroll_down--;
     }
