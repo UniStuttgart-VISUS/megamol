@@ -257,6 +257,9 @@ private:
 
     /** hash to check whether image has changed */
     size_t datahash;
+
+    /** Flag determining whether the tiles have been recalculated */
+    bool new_tiles_;
 };
 
 } /* end namespace imageviewer */

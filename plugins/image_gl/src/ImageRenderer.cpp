@@ -59,6 +59,7 @@ ImageRenderer::ImageRenderer(void)
         , leftFiles()
         , rightFiles()
         , theShader_(nullptr)
+        , new_tiles_(false)
         , datahash{std::numeric_limits<size_t>::max()} {
 
     this->leftFilenameSlot << new param::FilePathParam("");
@@ -180,7 +181,7 @@ bool ImageRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     auto CamNearClip = near_plane;
     //auto Eye = cam.eye();
     //bool rightEye = (Eye == core::thecam::Eye::right);
-    bool rightEye = true;
+    bool rightEye = false;
 
     glm::mat4 view = cam.getViewMatrix();
     glm::mat4 proj = cam.getProjectionMatrix();
@@ -410,6 +411,7 @@ bool ImageRenderer::assertImage(bool rightEye) {
                     // img.CreateImage(1, 1, vislib::graphics::BitmapImage::TemplateByteRGB);
                     loadedFile = filename;
                 }
+                new_tiles_ = true;
 #ifdef WITH_MPI
                 // we finish this together
                 if (useMpi) {
@@ -477,6 +479,8 @@ bool ImageRenderer::Render(core_gl::view::CallRender3DGL& call) {
     float near_plane = 0.0f;
     float far_plane = 0.0f;
 
+    Log::DefaultLog.WriteInfo("%i %i", this->width, this->height);
+
     try {
         auto cam_intrinsics = cam.get<megamol::core::view::Camera::PerspectiveParameters>();
         near_plane = cam_intrinsics.near_plane;
@@ -486,24 +490,16 @@ bool ImageRenderer::Render(core_gl::view::CallRender3DGL& call) {
             "SimpleMoleculeRenderer - Error when getting perspective camera intrinsics");
     }
 
-    auto CamPos = cam.getPose().position;
-    auto CamView = cam.getPose().direction;
-    auto CamRight = cam.getPose().right;
-    auto CamUp = cam.getPose().up;
-    auto CamNearClip = near_plane;
     //auto Eye = cam.eye();
     //bool rightEye = (Eye == core::thecam::Eye::right);
-    bool rightEye = true;
+    bool rightEye = false;
 
     glm::mat4 view = cam.getViewMatrix();
     glm::mat4 proj = cam.getProjectionMatrix();
-    auto MVinv = glm::inverse(view);
     auto MVP = proj * view;
-    auto MVPinv = glm::inverse(MVP);
-    auto MVPtransp = glm::transpose(MVP);
 
     static bool buffers_initialized = false;
-    if (!buffers_initialized && this->tiles.Count() > 0) {
+    if ((!buffers_initialized || new_tiles_) && this->tiles.Count() > 0) {
         std::vector<GLfloat> theTexCoords;
         std::vector<GLfloat> theVertCoords;
         const float halfTexel = (1.0f / TILE_SIZE) * 0.5f;
@@ -540,6 +536,7 @@ bool ImageRenderer::Render(core_gl::view::CallRender3DGL& call) {
         ::glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
         ::glBindVertexArray(0);
         buffers_initialized = true;
+        new_tiles_ = false;
     }
 
     // param::ParamSlot *filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
