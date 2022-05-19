@@ -99,7 +99,7 @@ public:
      * @return The value of the parameter
      */
     std::filesystem::path Value() const {
-        return this->value;
+        return this->GetAbsolutePathValue(this->value);
     }
 
     /**
@@ -108,7 +108,7 @@ public:
      * @return The value of the parameter as string.
      */
     std::string ValueString() const override {
-        return this->value.generic_u8string();
+        return this->Value().generic_u8string();
     }
 
     /**
@@ -136,6 +136,19 @@ public:
      */
     static Flags_t ValidatePath(const std::filesystem::path& p, const Extensions_t&, Flags_t f);
 
+
+    /**
+     * Adds absolute path to current project directory to the file path parameter.
+     * This way file paths relative to the project directory can be resolved.
+     */
+    void SetProjectDirectory(const std::filesystem::path& p);
+
+    /**
+     * Returns either the current path value if it is an absolute path,
+     * or concatinates project directory path and current path value if it is a relative path.
+     */
+    std::filesystem::path GetAbsolutePathValue(const std::filesystem::path& p) const;
+
 private:
     /** The flags of the parameter */
     Flags_t flags;
@@ -148,6 +161,12 @@ private:
 
     /** The file or directory path */
     std::filesystem::path value;
+
+    /**
+     * Absolute path to project directory. If empty, no project path available.
+     * This path is relative per guarantee of the frontend
+     */
+    std::filesystem::path project_directory;
 };
 
 
