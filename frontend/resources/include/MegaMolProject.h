@@ -20,7 +20,7 @@ struct MegaMolProject {
     struct ProjectAttributes {
         // example: C:/megamol/project.lua
         std::string project_name = ""; // name of project in some way, either "projcet.lua" or "project" or "something"
-        path project_file;             // project.lua
+        path project_file;             // C:/megamol/project.lua
         path project_directory;        // C:/megamol/
     };
 

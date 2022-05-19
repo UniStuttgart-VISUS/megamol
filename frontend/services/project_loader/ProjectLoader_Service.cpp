@@ -116,6 +116,13 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
     const SetScriptPath& set_script_path = m_requestedResourceReferences[1].getResource<SetScriptPath>();
 
     set_script_path(filename.generic_u8string());
+    // TODO: we have a timing issue with the script path / project path here
+    // the lua script path resource gets updated by the lua service at the beginning of each frame
+    // but here the project service needs to set the project file/directory right before the lua code gets executed,
+    // such that the project path is known to the megamol graph when constructing modules with file path parameters
+    // thus we sed the current project path resource, which the megamol graph can look into
+    // somewhat of a very thight coupling here to pass information into the lua interpreter but currently no other solution...
+    const_cast<ProjectLoader_Service*>(this)->m_current_project.setProjectFile(filename);
 
     auto result = execute_lua(script);
     bool script_ok = std::get<0>(result);
