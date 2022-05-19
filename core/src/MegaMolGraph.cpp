@@ -10,6 +10,7 @@
 #include "ResourceRequest.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/String.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/AbstractView_EventConsumption.h"
@@ -607,6 +608,16 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
     // the current project directory path
     if (m_current_project_path->attributes.has_value()) {
         auto project_directory_path = m_current_project_path->attributes.value().project_directory;
+
+        for (auto child = module_ptr->ChildList_Begin(); child != module_ptr->ChildList_End(); ++child) {
+            auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
+            if (ps != nullptr) {
+                auto p = ps->Param<param::FilePathParam>();
+                if (p != nullptr) {
+                    p->SetProjectDirectory(project_directory_path);
+                }
+            }
+        }
     }
 
     const auto create_module = [module_description, module_ptr](auto& module_lifetime_dependencies) {
