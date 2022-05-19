@@ -70,7 +70,6 @@ public:
         std::vector<std::string> history;
         size_t history_index;
         std::string param_hint;
-        size_t last_input_length;
     };
 
     explicit LogConsole(const std::string& window_name);
