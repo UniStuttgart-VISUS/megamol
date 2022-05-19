@@ -47,7 +47,8 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
         std::replace(tmp_val_str.begin(), tmp_val_str.end(), '\\', '/');
         auto new_value = std::filesystem::path(tmp_val_str);
         if (this->value != new_value) {
-            auto error_flags = FilePathParam::ValidatePath(new_value, this->extensions, this->flags);
+            auto absolute_new_value = GetAbsolutePathValue(new_value);
+            auto error_flags = FilePathParam::ValidatePath(absolute_new_value, this->extensions, this->flags);
 
             if (error_flags & Flag_File) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -130,4 +131,19 @@ FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& 
             "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return 0;
     }
+}
+
+void FilePathParam::SetProjectDirectory(const std::filesystem::path& p) {
+    assert(p.is_absolute());
+
+    this->project_directory = p;
+}
+
+std::filesystem::path FilePathParam::GetAbsolutePathValue(const std::filesystem::path& p) const {
+    if (p.empty() || p.is_absolute())
+        return p;
+
+    auto concat = this->project_directory / p;
+
+    return concat;
 }
