@@ -497,6 +497,14 @@ void datatools::CSVFileSequence::assertData() {
         return;
     }
 
+    // we want to inject our variations of the file name into the referenced file path param
+    auto* fileParam = fnSlot->Param<core::param::FilePathParam>();
+    if (fileParam == NULL) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "file name slot is not a FilePathParam");
+        return;
+    }
+    auto curent_file_param_value = fileParam->ValueString();
+
     table::TableDataCall* gdc = this->inDataSlot.CallAs<table::TableDataCall>();
     if (gdc == NULL) {
         Log::DefaultLog.WriteError("Unable to get input data call");
@@ -506,16 +514,23 @@ void datatools::CSVFileSequence::assertData() {
     // count really available frames
     for (unsigned int i = this->fileNumMin; i <= this->fileNumMax; i += this->fileNumStep) {
         filename.Format(this->fileNameTemplate, i);
-        if (vislib::sys::File::Exists(filename)) {
+
+        // we need to use the file path param to check for existence of the file
+        fileParam->ParseValue(filename.PeekBuffer());
+
+        if (std::filesystem::exists(fileParam->Value())) {
             this->frameCnt++;
         } else {
             break;
         }
     }
+    fileParam->ParseValue(curent_file_param_value);
+
     if (this->frameCnt == 0) {
         Log::DefaultLog.WriteError("CSVFileSequence: No data files found");
         return;
     }
+
 
     // collect heuristic approach for clipping box
     filename.Format(this->fileNameTemplate, this->fileNumMin);
