@@ -2,7 +2,6 @@
 #extension GL_ARB_shader_draw_parameters : require
 #extension GL_ARB_bindless_texture : require
 
-#include "../triangle_common/defines.inc.glsl"
 #include "commons.inc.glsl"
 
 struct MeshShaderParams
@@ -19,8 +18,10 @@ layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderP
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in float value;
+layout(location = 2) in vec3 normal;
 
 out vec4 colors;
+out vec3 normals;
 
 out vec4 clip_planes;
 out int use_clip_planes;
@@ -33,6 +34,8 @@ void main() {
             ? 0.5f
             : ((value - mesh_shader_params[gl_DrawIDARB].min_value) /
                   (mesh_shader_params[gl_DrawIDARB].max_value - mesh_shader_params[gl_DrawIDARB].min_value)));
+
+    normals = normal;
 
     clip_planes = mesh_shader_params[gl_DrawIDARB].clip_plane;
     use_clip_planes = mesh_shader_params[gl_DrawIDARB].use_clip_plane;

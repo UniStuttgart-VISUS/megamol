@@ -1,6 +1,5 @@
 #version 430
 
-#include "../triangle_common/defines.inc.glsl"
 #include "commons.inc.glsl"
 
 layout(triangles) in;

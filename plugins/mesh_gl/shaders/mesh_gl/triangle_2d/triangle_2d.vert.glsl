@@ -1,7 +1,5 @@
 #version 330
 
-#include "../triangle_common/defines.inc.glsl"
-
 layout(location = 0) in vec2 in_position;
 layout(location = 1) in float in_value;
 layout(location = 2) in float in_mask;
