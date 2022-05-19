@@ -138,13 +138,13 @@ public:
 
 private:
     /** The flags of the parameter */
-    const Flags_t flags;
+    Flags_t flags;
 
     /** The accepted file extension(s).
      * Leave empty to allow all extensions.
      * Only considered when Flag_RestrictExtension is set.
      */
-    const Extensions_t extensions;
+    Extensions_t extensions;
 
     /** The file or directory path */
     std::filesystem::path value;
