@@ -97,6 +97,11 @@ namespace mesh_gl {
          */
         virtual void release() override;
 
+        /**
+         * Request resources to ask for OpenGL state
+         */
+        virtual std::vector<std::string> requested_lifetime_resources() override;
+
     private:
         /** Get input data and extent from called modules */
         bool get_input_data();

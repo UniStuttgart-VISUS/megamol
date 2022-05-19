@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "TriangleMeshRenderer3D.h"
 
+#include "OpenGL_Context.h"
+
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataCall.h"
 #include "mesh/TriangleMeshCall.h"
@@ -90,6 +92,14 @@ namespace mesh_gl {
     bool TriangleMeshRenderer3D::create() {
         AbstractGPURenderTaskDataSource::create();
 
+        auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+        if (!ogl_ctx.isVersionGEQ(4, 3) || !ogl_ctx.isExtAvailable("GL_ARB_shader_draw_parameters") ||
+            !ogl_ctx.isExtAvailable("GL_ARB_bindless_texture")) {
+
+            Log::DefaultLog.WriteError("GL version too low or required extensions not available.");
+            return false;
+        }
+
         auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
 
         try {
@@ -122,6 +132,12 @@ namespace mesh_gl {
     }
 
     void TriangleMeshRenderer3D::release() {}
+
+    std::vector<std::string> TriangleMeshRenderer3D::requested_lifetime_resources() {
+        std::vector<std::string> resources = Module::requested_lifetime_resources();
+        resources.emplace_back("OpenGL_Context");
+        return resources;
+    }
 
     bool TriangleMeshRenderer3D::get_input_data() {
         auto tmc_ptr = this->triangle_mesh_slot.CallAs<mesh::TriangleMeshCall>();

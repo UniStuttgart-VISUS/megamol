@@ -1,6 +1,6 @@
 #version 430
 #extension GL_ARB_shader_draw_parameters : require
-#extension GL_ARB_bindless_texture : require
+#extension GL_ARB_bindless_texture : enable
 
 #include "commons.inc.glsl"
 
