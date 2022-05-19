@@ -15,9 +15,9 @@
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 
-#include "mesh_gl/GPUMaterialCollection.h"
-
 #include "vislib/math/Rectangle.h"
+
+#include <glowl/glowl.h>
 
 #include <array>
 #include <memory>
@@ -163,7 +163,7 @@ namespace mesh_gl {
         struct render_data_t {
             bool initialized = false;
 
-            std::shared_ptr<GPUMaterialCollection> material_collection;
+            std::unique_ptr<glowl::GLSLProgram> shader_program;
 
             GLuint vao, vbo, ibo, cbo, mbo;
             GLuint tf, tf_size;

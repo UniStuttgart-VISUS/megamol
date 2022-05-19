@@ -9,6 +9,7 @@
 
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/Call.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -18,7 +19,10 @@
 #include "mmcore/utility/DataHash.h"
 #include "mmcore/view/CallClipPlane.h"
 
-#include "glowl/VertexLayout.hpp"
+#include "mmcore_gl/utility/ShaderFactory.h"
+
+#include <glowl/glowl.h>
+#include <glowl/VertexLayout.hpp>
 
 #include <memory>
 #include <sstream>
@@ -44,7 +48,6 @@ namespace mesh_gl {
             , mesh_data_hash(TriangleMeshRenderer3D::GUID())
             , mesh_data_changed(false)
             , rhs_gpu_tasks_version(0)
-            , material_collection(nullptr)
             , shader_changed(false) {
 
         // Connect input slots
@@ -87,8 +90,33 @@ namespace mesh_gl {
     bool TriangleMeshRenderer3D::create() {
         AbstractGPURenderTaskDataSource::create();
 
-        this->material_collection = std::make_shared<GPUMaterialCollection>();
-        this->material_collection->addMaterial(this->instance(), "triangle_mesh", "triangle_mesh");
+        auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+
+        try {
+            this->shader_program = core::utility::make_shared_glowl_shader("triangle_mesh_renderer_3d", shader_options,
+                "mesh_gl/triangle_3d/without_normals.vert.glsl", "mesh_gl/triangle_3d/calc_normals.geom.glsl",
+                "mesh_gl/triangle_3d/clip.frag.glsl");
+
+            this->shader_program_wireframe = core::utility::make_shared_glowl_shader(
+                "triangle_mesh_renderer_3d_wireframe",
+                shader_options, "mesh_gl/triangle_3d/without_normals.vert.glsl",
+                "mesh_gl/triangle_3d/calc_normals_wireframe.geom.glsl", "mesh_gl/triangle_3d/clip.frag.glsl");
+
+            this->shader_program_normal = core::utility::make_shared_glowl_shader("triangle_mesh_renderer_3d",
+                shader_options,
+                "mesh_gl/triangle_3d/with_normals.vert.glsl", "mesh_gl/triangle_3d/pass_normals.geom.glsl",
+                "mesh_gl/triangle_3d/clip.frag.glsl");
+
+            this->shader_program_normal_wireframe = core::utility::make_shared_glowl_shader(
+                "triangle_mesh_renderer_3d_wireframe", shader_options, "mesh_gl/triangle_3d/with_normals.vert.glsl",
+                "mesh_gl/triangle_3d/pass_normals_wireframe.geom.glsl", "mesh_gl/triangle_3d/clip.frag.glsl");
+
+            this->active_shader_program = this->shader_program;
+
+        } catch (const std::exception& e) {
+            Log::DefaultLog.WriteError(("TriangleMeshRenderer3D: " + std::string(e.what())).c_str());
+            return false;
+        }
 
         return true;
     }
@@ -132,37 +160,20 @@ namespace mesh_gl {
             this->wireframe.ResetDirty();
             this->calculate_normals.ResetDirty();
 
-            const std::string shader("triangle_mesh");
-            const std::string shader_wireframe("triangle_mesh_wireframe");
-            const std::string shader_normals("triangle_mesh_with_normals");
-            const std::string shader_wireframe_normals("triangle_mesh_with_normals_wireframe");
-
-            std::string filename;
-
             if (this->wireframe.Param<core::param::BoolParam>()->Value() &&
                 this->calculate_normals.Param<core::param::BoolParam>()->Value()) {
 
-                filename = shader_wireframe;
+                this->active_shader_program = shader_program_wireframe;
             } else if (!this->wireframe.Param<core::param::BoolParam>()->Value() &&
                        this->calculate_normals.Param<core::param::BoolParam>()->Value()) {
 
-                filename = shader;
+                this->active_shader_program = shader_program;
             } else if (this->wireframe.Param<core::param::BoolParam>()->Value() &&
                        !this->calculate_normals.Param<core::param::BoolParam>()->Value()) {
 
-                filename = shader_wireframe_normals;
+                this->active_shader_program = shader_program_normal_wireframe;
             } else {
-                filename = shader_normals;
-            }
-
-            this->material_collection->clear();
-            this->material_collection->addMaterial(this->instance(), filename, filename);
-
-            if (this->material_collection->getMaterials().begin()->second.shader_program == nullptr) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "No shader available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-
-                return false;
+                this->active_shader_program = shader_program_normal;
             }
 
             this->shader_changed = true;
@@ -198,7 +209,7 @@ namespace mesh_gl {
             this->render_data.values->min_value = 0.0f;
             this->render_data.values->max_value = 1.0f;
 
-            const auto color = this->default_color.Param<core::param::ColorParam>()->Value();
+            const auto& color = this->default_color.Param<core::param::ColorParam>()->Value();
             this->default_color.ResetDirty();
 
             std::stringstream ss;
@@ -326,9 +337,8 @@ namespace mesh_gl {
                 &this->render_data.values->max_value, per_draw_data_t::size_max_value);
 
             this->m_rendertask_collection.first->clear();
-            this->m_rendertask_collection.first->addRenderTask(identifier,
-                this->material_collection->getMaterials().begin()->second.shader_program, mesh_data.mesh->mesh,
-                mesh_data.sub_mesh_draw_command, this->render_data.per_draw_data);
+            this->m_rendertask_collection.first->addRenderTask(identifier, this->active_shader_program,
+                mesh_data.mesh->mesh, mesh_data.sub_mesh_draw_command, this->render_data.per_draw_data);
         }
 
         if (this->render_data.values->transfer_function_dirty || this->triangle_mesh_changed ||
@@ -383,7 +393,7 @@ namespace mesh_gl {
                     per_draw_data_t::size_plane_bool);
 
                 // Get clip plane
-                const auto plane = cp->GetPlane();
+                const auto& plane = cp->GetPlane();
                 const std::array<float, 4> abcd_plane{plane.A(), plane.B(), plane.C(), plane.D()};
 
                 std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_plane], abcd_plane.data(),

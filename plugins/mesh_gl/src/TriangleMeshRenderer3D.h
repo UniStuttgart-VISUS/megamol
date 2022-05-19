@@ -9,14 +9,17 @@
 #include "mesh/MeshDataCall.h"
 
 #include "mesh_gl/AbstractGPURenderTaskDataSource.h"
-#include "mesh_gl/GPUMaterialCollection.h"
 #include "mesh_gl/GPUMeshCollection.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
+#include "mmcore_gl/utility/ShaderFactory.h"
+
 #include "vislib/math/Cuboid.h"
+
+#include <glowl/glowl.h>
 
 #include <array>
 #include <memory>
@@ -130,8 +133,10 @@ namespace mesh_gl {
         /** Bounding box */
         vislib::math::Cuboid<float> bounding_box;
 
-        /** In-place material collection */
-        std::shared_ptr<GPUMaterialCollection> material_collection;
+        /** Shader program */
+        std::shared_ptr<glowl::GLSLProgram> active_shader_program;
+        std::shared_ptr<glowl::GLSLProgram> shader_program, shader_program_wireframe;
+        std::shared_ptr<glowl::GLSLProgram> shader_program_normal, shader_program_normal_wireframe;
 
         /** Rendering options */
         core::param::ParamSlot wireframe, calculate_normals, culling;

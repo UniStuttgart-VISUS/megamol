@@ -112,7 +112,7 @@ namespace core_gl {
             }
 
             // Create scaling matrix based on bounding box
-            const auto bb = call.GetBoundingBoxes().BoundingBox();
+            const auto& bb = call.GetBoundingBoxes().BoundingBox();
             const auto scale_factor = std::max(std::max(bb.Width(), bb.Height()), bb.Depth());
 
             glm::mat4 scale(1.0f);
@@ -210,7 +210,7 @@ namespace core_gl {
         }
 
         bool PlaneRenderer::GetExtents(CallRender3DGL& call) {
-            const auto old_bb = call.GetBoundingBoxes().BoundingBox();
+            const auto& old_bb = call.GetBoundingBoxes().BoundingBox();
 
             const auto x_offset = old_bb.Width() / 2.0f;
             const auto y_offset = old_bb.Height() / 2.0f;

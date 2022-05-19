@@ -197,7 +197,6 @@ void STLDataSource::read_binary(const std::string& filename) {
         // Read data
         ifs.seekg(80 * sizeof(uint8_t) + sizeof(uint32_t));
 
-
         this->vertex_buffer->resize(9uLL * this->num_triangles);
         this->normal_buffer->resize(9uLL * this->num_triangles);
 
@@ -210,10 +209,10 @@ void STLDataSource::read_binary(const std::string& filename) {
             ifs.read(reinterpret_cast<char*>(&(*this->vertex_buffer)[data_index]), 9 * sizeof(float));
             ifs.ignore(sizeof(uint16_t));
 
-            std::memcpy(&(*this->normal_buffer)[data_index + 3 * sizeof(float)], &(*this->normal_buffer)[data_index],
-                3 * sizeof(float));
-            std::memcpy(&(*this->normal_buffer)[data_index + 6 * sizeof(float)], &(*this->normal_buffer)[data_index],
-                3 * sizeof(float));
+            std::memcpy(
+                &(*this->normal_buffer)[data_index + 3], &(*this->normal_buffer)[data_index], 3 * sizeof(float));
+            std::memcpy(
+                &(*this->normal_buffer)[data_index + 6], &(*this->normal_buffer)[data_index], 3 * sizeof(float));
         }
 
         // Fill index buffer

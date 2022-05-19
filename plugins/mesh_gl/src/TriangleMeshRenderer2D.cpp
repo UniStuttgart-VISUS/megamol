@@ -4,13 +4,17 @@
 #include "mesh/MeshDataCall.h"
 #include "mesh/TriangleMeshCall.h"
 
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/view/MouseFlags.h"
 
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
+
+#include <glowl/glowl.h>
 
 #include <exception>
 #include <memory>
@@ -32,6 +36,7 @@ namespace mesh_gl {
             , mask_color("mask_color", "Color for invalid values")
             , default_color("default_color", "Default color if no dataset is selected")
             , wireframe("wireframe", "Render as wireframe instead of filling the triangles") {
+
         // Connect input slots
         this->render_input_slot.SetCompatibleCall<core_gl::view::CallRender2DGLDescription>();
         this->MakeSlotAvailable(&this->render_input_slot);
@@ -64,8 +69,16 @@ namespace mesh_gl {
     }
 
     bool TriangleMeshRenderer2D::create() {
-        this->render_data.material_collection = std::make_shared<GPUMaterialCollection>();
-        this->render_data.material_collection->addMaterial(this->instance(), "triangle_mesh_2d", "triangle_mesh_2d");
+        auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+
+        try {
+            this->render_data.shader_program =
+                core::utility::make_glowl_shader("triangle_mesh_renderer_2d", shader_options,
+                    "mesh_gl/triangle_2d/triangle_2d.vert.glsl", "mesh_gl/triangle_2d/triangle_2d.frag.glsl");
+        } catch (const std::exception& e) {
+            Log::DefaultLog.WriteError(("TriangleMeshRenderer2D: " + std::string(e.what())).c_str());
+            return false;
+        }
 
         return true;
     }
@@ -81,8 +94,6 @@ namespace mesh_gl {
 
             glDeleteTextures(1, &this->render_data.tf);
         }
-
-        this->render_data.material_collection->clear();
 
         return;
     }
@@ -274,22 +285,23 @@ namespace mesh_gl {
             }
 
             // Render
-            auto& shader_prog = this->render_data.material_collection->getMaterial("triangle_mesh_2d").shader_program;
-
-            shader_prog->use();
+            this->render_data.shader_program->use();
             glDisable(GL_DEPTH_TEST);
             glDepthMask(GL_FALSE);
 
-            glUniformMatrix4fv(
-                shader_prog->getUniformLocation("model_view_matrix"), 1, GL_FALSE, this->camera.model_view.data());
-            glUniformMatrix4fv(
-                shader_prog->getUniformLocation("projection_matrix"), 1, GL_FALSE, this->camera.projection.data());
+            glUniformMatrix4fv(this->render_data.shader_program->getUniformLocation("model_view_matrix"), 1, GL_FALSE,
+                this->camera.model_view.data());
+            glUniformMatrix4fv(this->render_data.shader_program->getUniformLocation("projection_matrix"), 1, GL_FALSE,
+                this->camera.projection.data());
 
-            glUniform1f(shader_prog->getUniformLocation("min_value"), this->render_data.values->min_value);
-            glUniform1f(shader_prog->getUniformLocation("max_value"), this->render_data.values->max_value);
+            glUniform1f(
+                this->render_data.shader_program->getUniformLocation("min_value"), this->render_data.values->min_value);
+            glUniform1f(
+                this->render_data.shader_program->getUniformLocation("max_value"), this->render_data.values->max_value);
 
             const auto mask_color = this->mask_color.Param<core::param::ColorParam>()->Value();
-            glUniform4f(shader_prog->getUniformLocation("mask_color"), mask_color[0], mask_color[1], mask_color[2],
+            glUniform4f(this->render_data.shader_program->getUniformLocation("mask_color"), mask_color[0],
+                mask_color[1], mask_color[2],
                 mask_color[3]);
 
             glBindVertexArray(this->render_data.vao);
