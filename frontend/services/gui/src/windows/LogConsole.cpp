@@ -34,27 +34,26 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
             data->CursorPos = (data->BufTextLen > 0) ? (data->BufTextLen - 1) : (0); // Place cursor within brackets
             user_data->move_cursor_to_end = false;
         }
-        // Adjust current input entry in history on any change of selected history entry
+
         auto input_str = std::string(data->Buf, data->BufTextLen);
         if (input_str != user_data->history[user_data->history_index]) {
+
+            //Adjust current input entry in history on any change of selected history entry
             user_data->history.back() = input_str;
             user_data->history_index = user_data->history.size() - 1;
-        }
 
-        // Look for suitable parameter hint for given command (only if input changes)
-        if (user_data->last_input_length != data->BufTextLen) {
+            // Look for suitable parameter hint for given command (only if input changes)
             user_data->param_hint.clear();
             auto bracket_pos = input_str.find('(');
             if (bracket_pos != std::string::npos) {
                 auto cmd = input_str.substr(0, bracket_pos);
                 for (int i = 0; i < user_data->commands.size(); i++) {
-                    if (gui_utils::CaseInsensitiveStringCompare(user_data->commands[i].first, cmd)) {
+                    if (gui_utils::CaseInsensitiveStringEqual(user_data->commands[i].first, cmd)) {
                         user_data->param_hint = user_data->commands[i].second;
                     }
                 }
             }
         }
-        user_data->last_input_length = data->BufTextLen;
         break;
     }
     case ImGuiInputTextFlags_CallbackCompletion: {
@@ -74,7 +73,7 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
         const std::string input = std::string(word_start, (int)(word_end - word_start));
         user_data->autocomplete_candidates.clear();
         for (int i = 0; i < user_data->commands.size(); i++) {
-            if (gui_utils::CaseInsensitiveStringCompare(user_data->commands[i].first, input)) {
+            if (gui_utils::CaseInsensitiveStringContain(user_data->commands[i].first, input)) {
                 user_data->autocomplete_candidates.push_back(user_data->commands[i]);
             }
         }
@@ -178,8 +177,16 @@ int megamol::gui::LogBuffer::sync() {
                     }
                 }
                 if (!extracted_new_message) {
-                    // Append to previous message
-                    this->messages.back().message.append(new_message);
+                    // Append new line of previous log message
+                    auto log_level = this->messages.back().level;
+                    this->messages.push_back({log_level, new_message});
+                    size_t msg_index = this->messages.size() - 1;
+                    if (log_level <= megamol::core::utility::log::Log::LEVEL_WARN) {
+                        this->warn_msg_indices.push_back(msg_index);
+                    } else if (log_level <= megamol::core::utility::log::Log::LEVEL_ERROR) {
+                        this->warn_msg_indices.push_back(msg_index);
+                        this->error_msg_indices.push_back(msg_index);
+                    }
                 }
                 message_str = message_str.substr(split_index + 1);
                 split_index = message_str.find('\n');
@@ -231,7 +238,6 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
     this->input_shared_data->move_cursor_to_end = false;
     this->input_shared_data->history.push_back(this->input_buffer);
     this->input_shared_data->history_index = this->input_shared_data->history.size() - 1;
-    this->input_shared_data->last_input_length = 0;
 }
 
 
@@ -381,7 +387,8 @@ bool megamol::gui::LogConsole::Draw() {
 
     // Scroll - Requires 3 frames for being applied!
     if (this->scroll_down > 0) {
-        ImGui::SetScrollY(ImGui::GetScrollMaxY());
+        const auto max_offset = 2.0f * ImGui::GetTextLineHeight();
+        ImGui::SetScrollY(ImGui::GetScrollMaxY() + max_offset);
         this->scroll_down--;
     }
     if (this->scroll_up > 0) {

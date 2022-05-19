@@ -126,7 +126,7 @@ def readListHeader(file):
 def readParticles(number, vertType, colType, file, listIndex):
     mins = [sys.float_info.max, sys.float_info.max, sys.float_info.max]
     maxs = [-sys.float_info.max, -sys.float_info.max, -sys.float_info.max]
-    consoleSilent = parseResult.bboxonly or parseResult.dumpxyz
+    consoleSilent = parseResult.bboxonly or parseResult.dumpxyz or parseResult.dumpvpd
     for p in range(number):
         if (vertType == 0):
             consoleSilent or print("        no position", end ='')
@@ -150,6 +150,16 @@ def readParticles(number, vertType, colType, file, listIndex):
 
         if (parseResult.dumpxyz):
             outFile.write("%s %f %f %f\n" % (chr(listIndex + 65), *pos))
+        if (parseResult.dumpvpd):
+            outFile.write(struct.pack('<f', pos[0]))
+            outFile.write(struct.pack('<f', pos[1]))
+            outFile.write(struct.pack('<f', pos[2]))
+            if vertType == 2:
+                outFile.write(struct.pack('<f', pos[3]))
+            elif vertType == 1:
+                outFile.write(struct.pack('<f', globalRad))
+            else:
+                sys.exit("unsupported particle format for dumping as binary")
 
         if (colType == 0):
             consoleSilent or print(", no color")
@@ -190,6 +200,7 @@ parser.add_argument('--tail', action='store', help='show that many particles at 
 parser.add_argument('--bboxonly', action='count', help='only print the bbox of head/tail, not the particles)')
 parser.add_argument('--versiononly', action='count', help='show only file version and exit')
 parser.add_argument('--dumpxyz', action='store', help='dump/convert mmpld to xyz files <DUMPXYZ>_<frame>.xyz')
+parser.add_argument('--dumpvpd', action='store', help='dump/convert mmpld to vpd files <DUMPVPD>_<frame>.vpd')
 parser.add_argument('--dumpft', action='count', help='dump frame table')
 parser.add_argument('--try-recovery', action='count', help='try interpreting trailing dead data as a dangling frame')
 parseResult = parser.parse_args()
@@ -324,7 +335,7 @@ for filename in parseResult.inputfiles:
                 frameNumParts += listNumParts
                 frameTotalMem += frameMem
                 
-                if (not parseResult.dumpxyz):
+                if (not parseResult.dumpxyz and not parseResult.dumpvpd):
                     if (listFramedata(parseResult, fi)):
                         if (parseResult.head):
                             if (parseResult.head == "all"):
@@ -381,8 +392,20 @@ for filename in parseResult.inputfiles:
                     vertType, colType, stride, globalRad, globalCol, intensityRange, listNumParts, listBBox, particleMem = readListHeader(f)
                     readParticles(listNumParts, vertType, colType, f, li)
 
+            if (parseResult.dumpvpd):
+                outName = "%s_%04u.vpd" % (parseResult.dumpvpd, fi)
+                print("dumping frame into %s" % outName)
+                outFile = open(outName, mode="wb")
+                outFile.write(struct.pack('<Q', frameNumParts))
+                f.seek(frameTable[fi], os.SEEK_SET)
+
+                timeStamp, numLists, _ = readFrameHeader(f)
+                for li in range(numLists):
+                    vertType, colType, stride, globalRad, globalCol, intensityRange, listNumParts, listBBox, particleMem = readListHeader(f)
+                    readParticles(listNumParts, vertType, colType, f, li)
+
             accumulatedParts += frameNumParts
-            if (parseResult.dumpxyz):
+            if (parseResult.dumpxyz or parseResult.dumpvpd):
                 outFile.close()
 
         accumulatedParts /= frameCount
