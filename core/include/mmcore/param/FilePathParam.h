@@ -27,11 +27,11 @@ namespace param {
  */
 class FilePathParam : public AbstractParam {
 public:
-    enum FilePathFlagsInternal_ : uint32_t { Internal_NoExistenceCheck = 1 << 2, Internal_RestrictExtension = 1 << 3 };
-
     enum FilePathFlags_ : uint32_t {
         Flag_File = 1 << 0,                    // Only allows to hold an existing file
         Flag_Directory = 1 << 1,               // Only allows to hold an existing directory
+        Internal_NoExistenceCheck = 1 << 2,    // Only used internally - do not use as flag
+        Internal_RestrictExtension = 1 << 3,   // Only used internally - do not use as flag
         Flag_Any = Flag_File | Flag_Directory, // Only allows to hold an existing file or directory
         Flag_Any_ToBeCreated = Flag_Any | Internal_NoExistenceCheck, // Allows to hold a non-existing file or directory
         Flag_File_ToBeCreated = Flag_File | Internal_NoExistenceCheck, // Allows to hold a non-existing file
