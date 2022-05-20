@@ -30,18 +30,17 @@ public:
     enum FilePathFlagsInternal_ : uint32_t { Internal_NoExistenceCheck = 1 << 2, Internal_RestrictExtension = 1 << 3 };
 
     enum FilePathFlags_ : uint32_t {
-        Flag_File = 1 << 0,                    // Only allows to hold existing files
-        Flag_Directory = 1 << 1,               // Only allows to hold existing directory
+        Flag_File = 1 << 0,                    // Only allows to hold an existing file
+        Flag_Directory = 1 << 1,               // Only allows to hold an existing directory
         Flag_Any = Flag_File | Flag_Directory, // Only allows to hold an existing file or directory
-        Flag_Any_ToBeCreated = Flag_Any | Internal_NoExistenceCheck, // Allows to hold non-existing files or directories
-        Flag_File_ToBeCreated = Flag_File | Internal_NoExistenceCheck, // Allows to hold non-existing files
-        Flag_Directory_ToBeCreated =
-            Flag_Directory | Internal_NoExistenceCheck, // Allows to hold non-existing directories
-        Flag_File_RestrictExtension =
-            Flag_File | Internal_RestrictExtension, // Only allows to hold files with given extensions
-        Flag_File_ToBeCreatedWithRestrExts =
-            Flag_File | Internal_NoExistenceCheck |
-            Internal_RestrictExtension // Allows to hold non-existing files but only with given extensions
+        Flag_Any_ToBeCreated = Flag_Any | Internal_NoExistenceCheck, // Allows to hold a non-existing file or directory
+        Flag_File_ToBeCreated = Flag_File | Internal_NoExistenceCheck, // Allows to hold a non-existing file
+        Flag_Directory_ToBeCreated =                                   // Allows to hold a non-existing directory
+        Flag_Directory | Internal_NoExistenceCheck,
+        Flag_File_RestrictExtension = // Allows to hold an existing file having one of the given extensions
+        Flag_File | Internal_RestrictExtension,
+        Flag_File_ToBeCreatedWithRestrExts = // Allows to hold a non-existing file having one of the given extensions
+        Flag_File | Internal_NoExistenceCheck | Internal_RestrictExtension
     };
 
     typedef uint32_t Flags_t;
