@@ -528,7 +528,7 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
                     return false;
                 }
                 vislib::StringA msmsCmd;
-#ifdef WIN32
+#ifdef _WIN32
                 msmsCmd.Format("msms.exe -probe_radius %f -density %.1f -if msmstest.xyz -of msmstest",
                     this->msmsProbeParam.Param<param::FloatParam>()->Value(),
                     this->msmsDetailParam.Param<param::FloatParam>()->Value());

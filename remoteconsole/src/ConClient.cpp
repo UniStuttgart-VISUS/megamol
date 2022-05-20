@@ -1,23 +1,16 @@
 // ConClient.cpp : Defines the entry point for the console application.
 //
 
-#include "Console.h"
-#include "stdafx.h"
-
-#undef min
-#undef max
-#include <cxxopts.hpp>
-#include <zmq.hpp>
-
 #include <iostream>
 #include <string>
 #include <thread>
 
-#ifdef _WIN32
-int _tmain(int argc, _TCHAR* argv[]) {
-#else  /* _WIN32 */
+#include <cxxopts.hpp>
+#include <zmq.hpp>
+
+#include "Console.h"
+
 int main(int argc, char* argv[]) {
-#endif /* _WIN32 */
     using std::cout;
     using std::endl;
 

@@ -1,9 +1,11 @@
 #pragma once
+
 #include <cctype>
 #include <iostream>
 #include <string>
 #include <thread>
 #include <vector>
+
 #include <zmq.hpp>
 
 class Connection {

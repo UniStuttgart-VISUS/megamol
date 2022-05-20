@@ -403,7 +403,7 @@ bool vislib::sys::ReadTextFile(
     case TEXTFF_UNICODE:
 #ifdef _WIN32
     CASE_TEXTFF_UNICODE :
-#endif /* WIN32 */
+#endif /* _WIN32 */
     {
         wchar_t* src = outStr.AllocateBuffer(static_cast<unsigned int>((len / sizeof(wchar_t)) + sizeof(wchar_t)));
         len = file.Read(src, len - len % sizeof(wchar_t));

@@ -8,7 +8,7 @@
 #include "mmcore/cluster/mpi/MpiProvider.h"
 #include "stdafx.h"
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <cstdio>
 #include <cstdlib>
 #endif /* !_WIN32 */
@@ -138,7 +138,7 @@ void megamol::core::cluster::mpi::MpiProvider::release(void) {
 vislib::StringA megamol::core::cluster::mpi::MpiProvider::getCommandLine(void) {
     vislib::StringA retval;
 
-#ifdef WIN32
+#ifdef _WIN32
     retval = ::GetCommandLineA();
 #else  /* _WIN32 */
     char* arg = nullptr;
