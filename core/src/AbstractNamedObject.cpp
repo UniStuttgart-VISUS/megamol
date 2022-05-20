@@ -6,7 +6,6 @@
  */
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"

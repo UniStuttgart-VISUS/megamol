@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include "mmcore_gl/view/special/DemoRenderer2D.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"

@@ -11,7 +11,6 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/profiler/Manager.h"
-#include "stdafx.h"
 
 using namespace megamol::core;
 

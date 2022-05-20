@@ -6,7 +6,6 @@
  */
 
 #include "TableWhere.h"
-#include "stdafx.h"
 
 #include <algorithm>
 #include <cassert>

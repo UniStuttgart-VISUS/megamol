@@ -16,7 +16,6 @@
 #include "mmcore/utility/sys/SystemInformation.h"
 #include "mmcore/utility/sys/Thread.h"
 #include "mmcore/utility/sys/ThreadPool.h"
-#include "stdafx.h"
 #include "trisoup/volumetrics/MarchingCubeTables.h"
 #include "vislib/graphics/NamedColours.h"
 #include "vislib/math/ShallowPoint.h"

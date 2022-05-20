@@ -1,5 +1,4 @@
 #include "datatools/MultiParticleDataAdaptor.h"
-#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::datatools;

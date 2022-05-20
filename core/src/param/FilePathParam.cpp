@@ -7,7 +7,6 @@
 
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/FileUtils.h"
-#include "stdafx.h"
 
 
 using namespace megamol::core::param;

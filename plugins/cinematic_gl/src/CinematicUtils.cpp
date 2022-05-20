@@ -8,7 +8,6 @@
 #include "cinematic_gl/CinematicUtils.h"
 #include "imgui.h"
 #include "imgui_internal.h"
-#include "stdafx.h"
 
 
 using namespace megamol::cinematic_gl;

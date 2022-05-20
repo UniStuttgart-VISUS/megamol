@@ -4,7 +4,6 @@
  * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 
 #include "mmcore/utility/xml/ConfigurationParser.h"
 #include "vislib/Array.h"
@@ -425,7 +424,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
             }
             if ((!megamol::core::utility::Configuration::logFilenameLocked) && (logSettings->logFileNameValid)) {
                 megamol::core::utility::log::Log::DefaultLog.SetLogFileName(
-                    logSettings->logFileNameValue.c_str(), USE_LOG_SUFFIX);
+                    logSettings->logFileNameValue.c_str(), false);
             }
         }
         delete logSettings;

@@ -12,7 +12,6 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
 #include "moldyn/ParticleGridDataCall.h"
-#include "stdafx.h"
 #include "vislib/String.h"
 #include "vislib/sys/FastFile.h"
 

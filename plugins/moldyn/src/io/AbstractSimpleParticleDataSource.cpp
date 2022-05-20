@@ -7,7 +7,6 @@
 
 #include "AbstractSimpleParticleDataSource.h"
 #include "mmcore/param/FilePathParam.h"
-#include "stdafx.h"
 
 namespace megamol::datatools::io {
 

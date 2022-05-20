@@ -6,7 +6,6 @@
  */
 
 #include "mmcore_gl/view/special/ScreenShooter.h"
-#include "stdafx.h"
 
 #include <climits>
 #include <limits>

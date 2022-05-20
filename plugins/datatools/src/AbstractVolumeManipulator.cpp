@@ -6,7 +6,6 @@
  */
 #include "datatools/AbstractVolumeManipulator.h"
 #include "datatools/AbstractParticleManipulator.h"
-#include "stdafx.h"
 
 using namespace megamol;
 

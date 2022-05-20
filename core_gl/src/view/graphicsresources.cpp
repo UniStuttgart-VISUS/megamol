@@ -6,7 +6,6 @@
  */
 
 #include "mmcore_gl/view/graphicsresources.h"
-#include "stdafx.h"
 #include "vislib_gl/graphics/gl/OutlineFont.h"
 #include "vislib_gl/graphics/gl/Verdana.inc"
 

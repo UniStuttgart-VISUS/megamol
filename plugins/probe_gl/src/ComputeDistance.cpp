@@ -1,5 +1,4 @@
 #include "ComputeDistance.h"
-#include "stdafx.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"

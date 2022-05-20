@@ -16,7 +16,6 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "stdafx.h"
 
 #include <fstream>
 #include <imgui.h>

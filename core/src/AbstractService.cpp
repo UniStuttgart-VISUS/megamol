@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "mmcore/AbstractService.h"
-#include "stdafx.h"
 
 using namespace megamol;
 

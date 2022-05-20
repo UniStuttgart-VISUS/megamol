@@ -8,7 +8,6 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "stdafx.h"
 #include "vislib/CharTraits.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"

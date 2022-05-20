@@ -5,7 +5,6 @@
  */
 
 #include "mmcore/special/StubModule.h"
-#include "stdafx.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/factories/CallAutoDescription.h"

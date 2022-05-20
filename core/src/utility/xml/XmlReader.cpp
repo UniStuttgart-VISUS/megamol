@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 
 #include "mmcore/utility/xml/XmlParser.h"
 #include "mmcore/utility/xml/XmlReader.h"

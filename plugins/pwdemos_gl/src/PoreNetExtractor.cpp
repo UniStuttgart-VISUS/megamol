@@ -4,7 +4,6 @@
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include "OpenGL_Context.h"
 #include "PoreNetExtractor.h"

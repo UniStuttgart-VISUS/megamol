@@ -14,7 +14,6 @@
 #include "mmospray/CallOSPRayAPIObject.h"
 #include "ospray/ospray_cpp.h"
 #include "ospray/ospray_cpp/ext/rkcommon.h"
-#include "stdafx.h"
 
 
 using namespace megamol::ospray;

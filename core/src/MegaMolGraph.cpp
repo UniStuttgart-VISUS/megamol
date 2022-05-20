@@ -3,7 +3,6 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/AbstractView_EventConsumption.h"
-#include "stdafx.h"
 
 #include <algorithm>
 #include <cctype>

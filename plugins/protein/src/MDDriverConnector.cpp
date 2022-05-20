@@ -9,7 +9,6 @@
 #include "MDDriverConnector.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/Thread.h"
-#include "stdafx.h"
 #include "vislib/StringConverter.h"
 #include "vislib/net/DNS.h"
 #include "vislib/net/IPEndPoint.h"

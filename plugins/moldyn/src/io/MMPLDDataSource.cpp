@@ -13,7 +13,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
-#include "stdafx.h"
 #include "vislib/String.h"
 #include "vislib/sys/FastFile.h"
 

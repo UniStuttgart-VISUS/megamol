@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/cluster/mpi/MpiProvider.h"
-#include "stdafx.h"
 
 #ifndef _WIN32
 #include <cstdio>

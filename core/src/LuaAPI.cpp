@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #if (_MSC_VER > 1000)
 #pragma warning(disable : 4996)
 #endif /* (_MSC_VER > 1000) */

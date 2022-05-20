@@ -3,7 +3,6 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include <algorithm>
 #include <fstream>
 #include <vector>

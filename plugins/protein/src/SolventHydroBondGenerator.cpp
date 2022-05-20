@@ -15,7 +15,6 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/utility/sys/MemmappedFile.h"
-#include "stdafx.h"
 #include "vislib/ArrayAllocator.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/StringConverter.h"

@@ -5,7 +5,6 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 
 #define _USE_MATH_DEFINES 1
 

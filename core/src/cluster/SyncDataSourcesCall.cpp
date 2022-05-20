@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/cluster/SyncDataSourcesCall.h"
-#include "stdafx.h"
 
 
 namespace megamol {

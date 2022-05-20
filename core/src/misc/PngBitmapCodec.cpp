@@ -7,7 +7,6 @@
  */
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "png.h"
-#include "stdafx.h"
 #include "vislib/SmartPtr.h"
 #include "zlib.h"
 

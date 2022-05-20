@@ -1,5 +1,4 @@
 #include "TextureCombine.h"
-#include "stdafx.h"
 
 #include <array>
 

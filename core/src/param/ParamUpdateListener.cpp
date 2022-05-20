@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/param/ParamUpdateListener.h"
-#include "stdafx.h"
 
 using namespace megamol::core::param;
 

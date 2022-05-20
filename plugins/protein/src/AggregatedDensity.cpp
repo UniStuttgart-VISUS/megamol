@@ -8,7 +8,6 @@
 #include "AggregatedDensity.h"
 #include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/AbstractGetData3DCall.h"
-#include "stdafx.h"
 #include <cfloat>
 #include <climits>
 #include <cmath>

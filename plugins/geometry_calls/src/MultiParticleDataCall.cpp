@@ -6,7 +6,6 @@
  */
 
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "stdafx.h"
 //#include "vislib/memutils.h"
 
 namespace megamol::geocalls {

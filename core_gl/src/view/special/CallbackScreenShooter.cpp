@@ -4,7 +4,6 @@
  * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 
 #include "mmcore/job/TickCall.h"
 #include "mmcore_gl/view/special/CallbackScreenShooter.h"

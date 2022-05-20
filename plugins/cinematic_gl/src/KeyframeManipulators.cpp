@@ -7,7 +7,6 @@
 
 #include "cinematic_gl/KeyframeManipulators.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/math/Cuboid.h"
 #include <glm/gtc/type_ptr.hpp>
 

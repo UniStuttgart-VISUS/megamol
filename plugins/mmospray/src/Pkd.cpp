@@ -4,7 +4,6 @@
  */
 
 #include "Pkd.h"
-#include "stdafx.h"
 #include <iostream>
 #include <stdint.h>
 #include <thread>

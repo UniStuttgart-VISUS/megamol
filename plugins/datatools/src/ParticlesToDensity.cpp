@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "ParticlesToDensity.h"
-#include "stdafx.h"
 
 #define _USE_MATH_DEFINES
 

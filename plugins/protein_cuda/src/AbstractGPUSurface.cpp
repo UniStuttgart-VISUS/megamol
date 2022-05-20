@@ -10,7 +10,6 @@
 
 #include "AbstractGPUSurface.h"
 #include "ogl_error_check.h"
-#include "stdafx.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 using namespace megamol;

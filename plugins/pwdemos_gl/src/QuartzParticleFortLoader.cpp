@@ -4,7 +4,6 @@
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include "QuartzParticleDataCall.h"
 #include "QuartzParticleFortLoader.h"

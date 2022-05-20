@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/AbstractGetDataCall.h"
-#include "stdafx.h"
 
 using namespace megamol::core;
 

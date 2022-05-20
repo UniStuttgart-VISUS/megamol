@@ -17,7 +17,6 @@
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "stdafx.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
 #if defined(DEBUG) || defined(_DEBUG)

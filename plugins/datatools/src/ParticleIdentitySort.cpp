@@ -1,5 +1,4 @@
 #include "ParticleIdentitySort.h"
-#include "stdafx.h"
 #include <numeric>
 
 

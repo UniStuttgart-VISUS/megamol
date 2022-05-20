@@ -1,5 +1,4 @@
 #include "SequenceRenderer.h"
-#include "stdafx.h"
 
 #include "SequenceRenderer.h"
 #include "mmcore/CoreInstance.h"

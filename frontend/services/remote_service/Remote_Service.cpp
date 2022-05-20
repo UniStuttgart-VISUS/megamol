@@ -661,8 +661,7 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 //        }
 
 // #if(0)
-// #include "stdafx.h"
-// #include "Remote_Service::MpiNode.h"
+// // #include "Remote_Service::MpiNode.h"
 //
 // #include <array>
 //

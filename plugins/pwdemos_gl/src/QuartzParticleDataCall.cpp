@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "QuartzParticleDataCall.h"
-#include "stdafx.h"
 
 
 namespace megamol {

@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #if (_MSC_VER > 1000)
 #pragma warning(disable : 4996)
 #endif /* (_MSC_VER > 1000) */
@@ -361,7 +360,7 @@ int megamol::core::LuaState::SetLogFile(lua_State* L) {
         // TODO do we need to make an OS-dependent path here?
         auto p = luaL_checkstring(L, 1);
         if (!megamol::core::utility::Configuration::logFilenameLocked) {
-            megamol::core::utility::log::Log::DefaultLog.SetLogFileName(vislib::sys::Path::Resolve(p), USE_LOG_SUFFIX);
+            megamol::core::utility::log::Log::DefaultLog.SetLogFileName(vislib::sys::Path::Resolve(p), false);
         }
     }
     return 0;

@@ -15,7 +15,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/CallRenderView.h"
-#include "stdafx.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/assert.h"
 #include <climits>

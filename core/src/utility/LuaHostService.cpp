@@ -1,6 +1,5 @@
 #include "mmcore/utility/LuaHostService.h"
 #include "mmcore/CoreInstance.h"
-#include "stdafx.h"
 #include "vislib/math/mathfunctions.h"
 
 //#define LRH_ANNOYING_DETAILS
