@@ -74,17 +74,26 @@ int main(int argc, char* argv[]) {
             }
             script = parseResult["script"].as<std::string>();
             if (parseResult.count("scriptdelay")) {
-                scriptDelay = static_cast<uint32_t>(
-                    std::clamp(parseResult["scriptdelay"].as<int>(), 0, std::numeric_limits<int>::max()));
+                const int val = parseResult["scriptdelay"].as<int>();
+                if (val < 0) {
+                    throw std::runtime_error("Invalid value for scriptdelay!");
+                }
+                scriptDelay = static_cast<uint32_t>(val);
             }
         }
         if (parseResult.count("timeout")) {
-            timeout =
-                static_cast<uint32_t>(std::clamp(parseResult["timeout"].as<int>(), 0, std::numeric_limits<int>::max()));
+            const int val = parseResult["timeout"].as<int>();
+            if (val < 0) {
+                throw std::runtime_error("Invalid value for timeout!");
+            }
+            timeout = static_cast<uint32_t>(val);
         }
         if (parseResult.count("hammer")) {
-            hammer =
-                static_cast<uint32_t>(std::clamp(parseResult["hammer"].as<int>(), 0, std::numeric_limits<int>::max()));
+            const int val = parseResult["hammer"].as<int>();
+            if (val < 0) {
+                throw std::runtime_error("Invalid value for hammer!");
+            }
+            hammer = static_cast<uint32_t>(val);
         }
     } catch (std::exception const& ex) {
         std::cerr << "Error parsing arguments: " << ex.what() << std::endl;
