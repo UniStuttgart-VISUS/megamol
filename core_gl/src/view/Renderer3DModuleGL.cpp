@@ -78,11 +78,12 @@ bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
         } else if (chainedCall->GetBoundingBoxes().IsClipBoxValid()) {
             newcb = othercb; // just override for the call
         }                   // we ignore the other two cases as they both lead to usage of the already set mycb
+        
+        call.AccessBoundingBoxes().SetBoundingBox(newbb);
+        call.AccessBoundingBoxes().SetClipBox(newcb);
 
         // TODO machs richtig
         call.SetTimeFramesCount(chainedCall->TimeFramesCount());
-        call.AccessBoundingBoxes().SetBoundingBox(newbb);
-        call.AccessBoundingBoxes().SetClipBox(newcb);
     }
 
     return true;

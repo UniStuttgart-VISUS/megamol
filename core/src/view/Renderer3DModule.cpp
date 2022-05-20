@@ -59,25 +59,28 @@ bool Renderer3DModule::GetExtentsChain(CallRender3D& call) {
     this->GetExtents(call);
 
     if (chainedCall != nullptr) {
-        // calculate union of bounding and clip boxes, respectively
-        // if only the chained bounding (or clip) box is valid, use it directly instead of the union
+        const auto& mybb = call.AccessBoundingBoxes().BoundingBox();
+        const auto& otherbb = chainedCall->AccessBoundingBoxes().BoundingBox();
+        const auto& mycb = call.AccessBoundingBoxes().ClipBox();
+        const auto& othercb = chainedCall->AccessBoundingBoxes().ClipBox();
+
+        auto newbb = mybb;
+        auto newcb = mycb;
+
         if (call.GetBoundingBoxes().IsBoundingBoxValid() && chainedCall->GetBoundingBoxes().IsBoundingBoxValid()) {
-            auto mybb = call.GetBoundingBoxes().BoundingBox();
-            mybb.Union(chainedCall->GetBoundingBoxes().BoundingBox());
-            call.AccessBoundingBoxes().SetBoundingBox(mybb);
+            newbb.Union(otherbb);
         } else if (chainedCall->GetBoundingBoxes().IsBoundingBoxValid()) {
-            auto mybb = chainedCall->GetBoundingBoxes().BoundingBox();
-            call.AccessBoundingBoxes().SetBoundingBox(mybb);
-        }
+            newbb = otherbb; // just override for the call
+        }                   // we ignore the other two cases as they both lead to usage of the already set mybb
 
         if (call.GetBoundingBoxes().IsClipBoxValid() && chainedCall->GetBoundingBoxes().IsClipBoxValid()) {
-            auto mycb = call.GetBoundingBoxes().ClipBox();
-            mycb.Union(chainedCall->GetBoundingBoxes().ClipBox());
-            call.AccessBoundingBoxes().SetClipBox(mycb);
+            newcb.Union(othercb);
         } else if (chainedCall->GetBoundingBoxes().IsClipBoxValid()) {
-            auto mycb = chainedCall->GetBoundingBoxes().ClipBox();
-            call.AccessBoundingBoxes().SetClipBox(mycb);
-        }
+            newcb = othercb; // just override for the call
+        }                   // we ignore the other two cases as they both lead to usage of the already set mycb
+        
+        call.AccessBoundingBoxes().SetBoundingBox(newbb);
+        call.AccessBoundingBoxes().SetClipBox(newcb);
 
         // TODO machs richtig
         call.SetTimeFramesCount(chainedCall->TimeFramesCount());
