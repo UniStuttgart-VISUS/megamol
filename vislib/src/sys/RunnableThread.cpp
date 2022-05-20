@@ -6,7 +6,7 @@
  * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/sys/RunnableThread.h"
+#include "vislib/sys/RunnableThread.h"
 
 
 /*

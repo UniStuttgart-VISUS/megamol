@@ -5,13 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/net/DiscoveryService.h"
+#include "vislib/net/DiscoveryService.h"
 
-#include "mmcore/utility/net/DiscoveryListener.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib/net/DiscoveryListener.h"
 #include "vislib/net/NetworkInformation.h"
 #include "vislib/net/SocketException.h"
 

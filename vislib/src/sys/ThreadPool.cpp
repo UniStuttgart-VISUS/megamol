@@ -5,20 +5,20 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/sys/ThreadPool.h"
+#include "vislib/sys/ThreadPool.h"
 
 #include <climits>
 #ifndef _WIN32
 #include <sched.h>
 #endif /* _WIN32 */
 
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"
+#include "vislib/sys/SystemInformation.h"
 
 
 /*

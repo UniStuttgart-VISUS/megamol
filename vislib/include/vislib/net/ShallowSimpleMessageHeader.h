@@ -14,8 +14,8 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/utility/net/AbstractSimpleMessageHeader.h"
 #include "vislib/assert.h"
+#include "vislib/net/AbstractSimpleMessageHeader.h"
 
 
 namespace vislib {

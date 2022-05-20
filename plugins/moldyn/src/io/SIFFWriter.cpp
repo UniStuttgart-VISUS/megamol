@@ -11,10 +11,10 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/Thread.h"
 #include "stdafx.h"
 #include "vislib/String.h"
 #include "vislib/sys/FastFile.h"
+#include "vislib/sys/Thread.h"
 #include "vislib/sys/sysfunctions.h"
 
 using namespace megamol;

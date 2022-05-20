@@ -6,13 +6,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/graphics/AbstractBitmapCodec.h"
+#include "vislib/graphics/AbstractBitmapCodec.h"
 
-#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/ArrayAllocator.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/sys/MemoryFile.h"
 #include "vislib/sys/Path.h"
 

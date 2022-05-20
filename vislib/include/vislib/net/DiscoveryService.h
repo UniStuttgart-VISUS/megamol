@@ -15,7 +15,6 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "mmcore/utility/sys/RunnableThread.h"
 #include "vislib/Array.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
@@ -24,6 +23,7 @@
 #include "vislib/net/Socket.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/Interlocked.h"
+#include "vislib/sys/RunnableThread.h"
 #include "vislib/types.h"
 
 

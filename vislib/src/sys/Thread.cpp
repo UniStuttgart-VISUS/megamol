@@ -4,7 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/sys/Thread.h"
+#include "vislib/sys/Thread.h"
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -18,7 +18,7 @@
 #include "vislib/sys/SystemException.h"
 #include "vislib/sys/error.h"
 
-#include "mmcore/utility/sys/DynamicFunctionPointer.h"
+#include "vislib/sys/DynamicFunctionPointer.h"
 
 #include <cstdio>
 #include <iostream>

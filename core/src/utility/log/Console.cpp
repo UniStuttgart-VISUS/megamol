@@ -13,7 +13,7 @@
 #include "vislib/sys/Path.h"
 #include <Windows.h>
 
-#include "mmcore/utility/sys/DynamicFunctionPointer.h"
+#include "vislib/sys/DynamicFunctionPointer.h"
 
 #else /* _WIN32 */
 #include <stdlib.h>
@@ -29,10 +29,10 @@
 
 #endif /* _WIN32 */
 
-#include "mmcore/utility/sys/Thread.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/assert.h"
 #include "vislib/sys/SystemException.h"
+#include "vislib/sys/Thread.h"
 
 
 namespace megamol::core::utility::log {

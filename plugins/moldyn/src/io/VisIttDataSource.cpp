@@ -13,11 +13,11 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "stdafx.h"
 #include "vislib/String.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/sys/FastFile.h"
+#include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/sysfunctions.h"
 #include <algorithm>
 #include <climits>

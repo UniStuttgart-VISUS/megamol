@@ -24,11 +24,11 @@
 #include "vislib/sys/AutoLock.h"
 #endif
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/Thread.h"
 #include "vislib/Stack.h"
 #include "vislib/String.h"
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
+#include "vislib/sys/Thread.h"
 #include <memory>
 
 using namespace megamol::core;

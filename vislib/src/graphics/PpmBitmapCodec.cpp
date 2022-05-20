@@ -6,13 +6,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/graphics/PpmBitmapCodec.h"
+#include "vislib/graphics/PpmBitmapCodec.h"
 
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/CharTraits.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib/sys/SystemInformation.h"
 #include <climits>
 
 

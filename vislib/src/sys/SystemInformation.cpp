@@ -5,12 +5,12 @@
  */
 
 
-#include "mmcore/utility/sys/SystemInformation.h"
+#include "vislib/sys/SystemInformation.h"
 
-#include "mmcore/utility/sys/DynamicFunctionPointer.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib/sys/DynamicFunctionPointer.h"
 #include "vislib/sys/SystemException.h"
 
 #include "vislib/MissingImplementationException.h"

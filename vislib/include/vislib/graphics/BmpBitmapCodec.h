@@ -15,7 +15,7 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/utility/graphics/AbstractBitmapCodec.h"
+#include "vislib/graphics/AbstractBitmapCodec.h"
 #include "vislib/types.h"
 
 //

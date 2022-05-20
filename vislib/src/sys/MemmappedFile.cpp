@@ -4,9 +4,8 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/sys/MemmappedFile.h"
+#include "vislib/sys/MemmappedFile.h"
 
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/UnsupportedOperationException.h"
@@ -14,6 +13,7 @@
 #include "vislib/math/mathfunctions.h"
 #include "vislib/memutils.h"
 #include "vislib/sys/IOException.h"
+#include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/error.h"
 
 #ifndef _WIN32

@@ -6,7 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/graphics/BmpBitmapCodec.h"
+#include "vislib/graphics/BmpBitmapCodec.h"
 
 #include "vislib/Trace.h"
 #include "vislib/assert.h"

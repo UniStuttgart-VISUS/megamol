@@ -5,10 +5,10 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/ProteinColor.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
 #include <math.h>

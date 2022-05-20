@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/net/AbstractSimpleMessage.h"
+#include "vislib/net/AbstractSimpleMessage.h"
 #include "vislib/assert.h"
 
 #include <climits>

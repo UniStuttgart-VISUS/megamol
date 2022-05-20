@@ -6,18 +6,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/graphics/BitmapCodecCollection.h"
+#include "vislib/graphics/BitmapCodecCollection.h"
 
-#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/ArrayAllocator.h"
 #include "vislib/Exception.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/StringTokeniser.h"
+#include "vislib/graphics/BmpBitmapCodec.h"
+#include "vislib/graphics/PpmBitmapCodec.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/sys/Path.h"
-
-#include "mmcore/utility/graphics/BmpBitmapCodec.h"
-#include "mmcore/utility/graphics/PpmBitmapCodec.h"
-
 
 /*
  * __vl_bitmapcodeccollection_defcol

@@ -15,8 +15,8 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "mmcore/utility/net/ShallowSimpleMessageHeader.h"
-#include "mmcore/utility/net/SimpleMessageHeader.h"
+#include "vislib/net/ShallowSimpleMessageHeader.h"
+#include "vislib/net/SimpleMessageHeader.h"
 
 
 namespace vislib {

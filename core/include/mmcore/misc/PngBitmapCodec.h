@@ -15,8 +15,8 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/utility/graphics/AbstractBitmapCodec.h"
 #include "vislib/RawStorage.h"
+#include "vislib/graphics/AbstractBitmapCodec.h"
 
 
 namespace sg {

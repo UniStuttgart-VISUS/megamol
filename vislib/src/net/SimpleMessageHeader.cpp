@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/net/SimpleMessageHeader.h"
+#include "vislib/net/SimpleMessageHeader.h"
 
 
 /*

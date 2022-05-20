@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/net/AbstractSimpleMessageHeader.h"
+#include "vislib/net/AbstractSimpleMessageHeader.h"
 
 #include "vislib/IllegalParamException.h"
 #include "vislib/assert.h"

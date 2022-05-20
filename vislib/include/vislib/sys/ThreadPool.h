@@ -14,10 +14,10 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/utility/sys/RunnableThread.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/Event.h"
+#include "vislib/sys/RunnableThread.h"
 #include "vislib/sys/Semaphore.h"
 #include "vislib/sys/ThreadPoolListener.h"
 #include "vislib/types.h"

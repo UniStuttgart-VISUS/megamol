@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/net/SimpleMessage.h"
+#include "vislib/net/SimpleMessage.h"
 
 #include <climits>
 

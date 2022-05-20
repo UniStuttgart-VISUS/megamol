@@ -15,8 +15,8 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "mmcore/utility/net/AbstractSimpleMessage.h"
 #include "vislib/RawStorage.h"
+#include "vislib/net/AbstractSimpleMessage.h"
 
 
 namespace vislib {

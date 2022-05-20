@@ -14,13 +14,13 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/Array.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/assert.h"
 #include "vislib/sys/File.h"
+#include "vislib/sys/MemmappedFile.h"
 
 
 namespace vislib {

@@ -13,7 +13,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/ConsoleProgressBar.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "stdafx.h"
 #include "vislib/PtrArray.h"
 #include "vislib/RawStorageWriter.h"
@@ -25,6 +24,7 @@
 #include "vislib/math/ShallowVector.h"
 #include "vislib/sys/DirectoryIterator.h"
 #include "vislib/sys/Path.h"
+#include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/error.h"
 #include "vislib/sys/sysfunctions.h"
 #include <cstdint>

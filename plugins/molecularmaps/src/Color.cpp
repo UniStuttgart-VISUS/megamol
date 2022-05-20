@@ -10,7 +10,7 @@
 #include "Color.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include <iostream>
 #include <omp.h>
 #include <string>

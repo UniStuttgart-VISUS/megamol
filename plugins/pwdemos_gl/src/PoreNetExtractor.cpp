@@ -15,7 +15,6 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "vislib/Array.h"
@@ -25,6 +24,7 @@
 #include "vislib/assert.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Vector.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <climits>

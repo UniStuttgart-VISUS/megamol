@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 
 #include "vislib/CharTraits.h"
 #include "vislib/Trace.h"

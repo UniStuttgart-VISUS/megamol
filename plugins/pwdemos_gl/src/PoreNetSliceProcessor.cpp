@@ -9,11 +9,11 @@
 //#define DEBUG_BMP
 #include "PoreNetSliceProcessor.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
-#include "mmcore/utility/sys/Thread.h"
 #include "vislib/Array.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib/sys/MemmappedFile.h"
+#include "vislib/sys/Thread.h"
 #ifdef DEBUG_BMP
 #include "vislib/graphics/BitmapImage.h"
 #include "vislib/graphics/BitmapPainter.h"

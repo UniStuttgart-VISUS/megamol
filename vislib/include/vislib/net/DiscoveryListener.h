@@ -15,7 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "mmcore/utility/net/DiscoveryService.h"
+#include "vislib/net/DiscoveryService.h"
 
 
 namespace vislib {

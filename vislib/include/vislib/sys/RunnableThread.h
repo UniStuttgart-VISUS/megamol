@@ -16,8 +16,8 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "mmcore/utility/sys/Thread.h"
 #include "vislib/sys/Runnable.h"
+#include "vislib/sys/Thread.h"
 
 
 namespace vislib {

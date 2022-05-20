@@ -15,10 +15,10 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-#include "mmcore/utility/net/SimpleMessage.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartRef.h"
 #include "vislib/net/AbstractCommChannel.h"
+#include "vislib/net/SimpleMessage.h"
 #include "vislib/net/Socket.h"
 #include "vislib/net/TcpCommChannel.h"
 #include "vislib/net/UdpCommChannel.h"

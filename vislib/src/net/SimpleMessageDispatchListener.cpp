@@ -5,12 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/net/SimpleMessageDispatchListener.h"
+#include "vislib/net/SimpleMessageDispatchListener.h"
 #include "vislib/net/Socket.h"
 
-#include "mmcore/utility/net/AbstractSimpleMessage.h"
-#include "mmcore/utility/net/SimpleMessageDispatcher.h"
 #include "vislib/Exception.h"
+#include "vislib/net/AbstractSimpleMessage.h"
+#include "vislib/net/SimpleMessageDispatcher.h"
 
 
 /*

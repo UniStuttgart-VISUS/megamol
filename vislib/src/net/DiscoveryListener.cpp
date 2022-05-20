@@ -6,7 +6,7 @@
  */
 
 
-#include "mmcore/utility/net/DiscoveryListener.h"
+#include "vislib/net/DiscoveryListener.h"
 
 
 /*

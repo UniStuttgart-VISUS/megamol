@@ -15,8 +15,8 @@
 #include "mmcore/Module.h"
 #include "mmcore/job/AbstractThreadedJob.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/net/DiscoveryListener.h"
-#include "mmcore/utility/net/DiscoveryService.h"
+#include "vislib/net/DiscoveryListener.h"
+#include "vislib/net/DiscoveryService.h"
 #include "vislib/sys/CriticalSection.h"
 
 

@@ -15,11 +15,11 @@
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/utility/graphics/AbstractBitmapCodec.h"
 #include "vislib/Array.h"
 #include "vislib/RawStorage.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
+#include "vislib/graphics/AbstractBitmapCodec.h"
 #include "vislib/graphics/BitmapImage.h"
 #include "vislib/sys/File.h"
 
