@@ -133,7 +133,7 @@ Our CI pipeline tests the build with gcc-9 and clang-10 on Ubuntu 20.04.
 
     - Hint: Use the `-j` option for `make` to run the build in parallel threads.
 
-7. The run script `megamol.sh` is located in the default installation path `megamol/build/install/bin`.
+7. The binary `megamol` is located in the default installation path `megamol/build/install/bin`.
 
 <!-- ---------------------------------------------------------------------- -->
 ### Command Line Arguments
@@ -342,22 +342,6 @@ Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your wo
 
 ```
     $ ./megamol
-```
-
-If additional external libraries are required (e.g. when using the OSPRay plugin), for Linux you have to run the provided shell script `./megamol.sh` instead. 
-This script adds the required library path:
-
-```bash
-    #!/bin/bash
-    #
-    # MegaMol startup script
-    # Copyright 2020, https://megamol.org/
-    #
-
-    BIN_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
-    cd "$BIN_DIR"
-
-    LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH ./megamol "$@"
 ```
 
 MegaMol should start and print several messages to the console and an empty rendering window should appear.
@@ -586,8 +570,8 @@ e.g. mmSetFramebufferSize(100, 100).
 
 **CLI Option:** 
 `--window wxh+x+y`  
- e.g. ./megamol.sh --window 100x100 for a window of size 100 x 100 pixels. 
- Also see help output: `./megamol.sh -h`
+ e.g. ./megamol --window 100x100 for a window of size 100 x 100 pixels. 
+ Also see help output: `./megamol -h`
 
 ### ScreenShooter Module
 

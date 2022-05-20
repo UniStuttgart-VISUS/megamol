@@ -137,7 +137,7 @@ In order to run the example change to the `bin` folder of the megamol executable
 
 *Under Windows:* `.\megamol.exe ../examples/cinematic/cinematic_editor_megamol.lua`
 
-*Under Linux:* `./megamol.sh ../examples/cinematic/cinematic_editor_megamol.lua`
+*Under Linux:* `./megamol ../examples/cinematic/cinematic_editor_megamol.lua`
 
 ### How to use the cinematic editor
 
