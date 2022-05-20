@@ -59,25 +59,30 @@ bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
     this->GetExtents(call);
 
     if (chainedCall != nullptr) {
-        auto mybb = call.AccessBoundingBoxes().BoundingBox();
-        auto otherbb = chainedCall->AccessBoundingBoxes().BoundingBox();
-        auto mycb = call.AccessBoundingBoxes().ClipBox();
-        auto othercb = chainedCall->AccessBoundingBoxes().ClipBox();
+        const auto& mybb = call.AccessBoundingBoxes().BoundingBox();
+        const auto& otherbb = chainedCall->AccessBoundingBoxes().BoundingBox();
+        const auto& mycb = call.AccessBoundingBoxes().ClipBox();
+        const auto& othercb = chainedCall->AccessBoundingBoxes().ClipBox();
+
+        auto newbb = mybb;
+        auto newcb = mycb;
 
         if (call.GetBoundingBoxes().IsBoundingBoxValid() && chainedCall->GetBoundingBoxes().IsBoundingBoxValid()) {
-            mybb.Union(otherbb);
+            newbb.Union(otherbb);
         } else if (chainedCall->GetBoundingBoxes().IsBoundingBoxValid()) {
-            mybb = otherbb; // just override for the call
+            newbb = otherbb; // just override for the call
         }                   // we ignore the other two cases as they both lead to usage of the already set mybb
 
         if (call.GetBoundingBoxes().IsClipBoxValid() && chainedCall->GetBoundingBoxes().IsClipBoxValid()) {
-            mycb.Union(othercb);
+            newcb.Union(othercb);
         } else if (chainedCall->GetBoundingBoxes().IsClipBoxValid()) {
-            mycb = othercb; // just override for the call
+            newcb = othercb; // just override for the call
         }                   // we ignore the other two cases as they both lead to usage of the already set mycb
 
         // TODO machs richtig
         call.SetTimeFramesCount(chainedCall->TimeFramesCount());
+        call.AccessBoundingBoxes().SetBoundingBox(newbb);
+        call.AccessBoundingBoxes().SetClipBox(newcb);
     }
 
     return true;
