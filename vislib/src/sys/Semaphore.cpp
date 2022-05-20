@@ -11,7 +11,7 @@
 #ifndef _WIN32
 #include <ctime>
 #include <fcntl.h> // For O_CREAT. Thank you for documenting that at sem_open.
-#endif             /* _!WIN32 */
+#endif             /* !_WIN32 */
 
 #include "vislib/IllegalParamException.h"
 #include "vislib/Trace.h"

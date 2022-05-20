@@ -19,7 +19,7 @@ static std::filesystem::path getHomeDir() {
 // find megamol executable path
 static std::filesystem::path getExecutableDirectory() {
     std::filesystem::path path;
-#ifdef WIN32
+#ifdef _WIN32
     std::vector<wchar_t> filename;
     DWORD length;
     do {
