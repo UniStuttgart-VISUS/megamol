@@ -33,7 +33,7 @@ class OverlayRenderer
           megamol::core_gl::utility::RenderUtils {
 public:
     virtual std::vector<std::string> requested_lifetime_resources() {
-        return {"IOpenGL_Context", "MegaMolGraph"};
+        return {"MegaMolGraph"};
     }
 
     /**
@@ -129,7 +129,6 @@ private:
     struct TranspCtrlIconState {
         TranspCtrlIcon icon;
         float current_anim_time;
-        float start_anim_time;
         std::chrono::system_clock::time_point start_real_time;
     };
 

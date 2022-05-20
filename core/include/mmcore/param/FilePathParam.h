@@ -33,6 +33,8 @@ public:
         Flag_NoExistenceCheck = 1 << 2,
         Flag_RestrictExtension = 1 << 3,
         /// Convenience flags:
+        Flag_Any = Flag_File | Flag_Directory,
+        Flag_Any_ToBeCreated = Flag_Any | Flag_NoExistenceCheck,
         Flag_File_RestrictExtension = Flag_File | Flag_RestrictExtension,
         Flag_File_ToBeCreated = Flag_File | Flag_NoExistenceCheck,
         Flag_File_ToBeCreatedWithRestrExts = Flag_File | Flag_NoExistenceCheck | Flag_RestrictExtension,

@@ -1440,6 +1440,7 @@ bool megamol::gui::Parameter::widget_string(
         multiline_cnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), multiline_cnt);
         ImVec2 multiline_size = ImVec2(ImGui::CalcItemWidth(),
             ImGui::GetFrameHeightWithSpacing() + (ImGui::GetFontSize() * static_cast<float>(multiline_cnt)));
+        ImGui::AlignTextToFramePadding();
         ImGui::InputTextMultiline(hidden_label.c_str(), &std::get<std::string>(this->gui_widget_value), multiline_size,
             ImGuiInputTextFlags_CtrlEnterForNewLine);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -1579,6 +1580,7 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
         bool button_edit = this->gui_file_browser.Button_Select(
             std::get<std::string>(this->gui_widget_value), file_extensions, file_flags);
         ImGui::SameLine();
+        ImGui::AlignTextToFramePadding();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_value), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
             auto tmp_val_str = std::get<std::string>(this->gui_widget_value);
