@@ -1597,10 +1597,10 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
                         this->gui_popup_msg =
                             "Omitting value '" + val.generic_u8string() + "'. Expected directory but file is given.";
                     }
-                    if (error_flags & FilePathParam::Flag_NoExistenceCheck) {
+                    if (error_flags & FilePathParam::Internal_NoExistenceCheck) {
                         this->gui_popup_msg = "Omitting value '" + val.generic_u8string() + "'. File does not exist.";
                     }
-                    if (error_flags & FilePathParam::Flag_RestrictExtension) {
+                    if (error_flags & FilePathParam::Internal_RestrictExtension) {
                         std::string log_exts;
                         for (auto& ext : file_extensions) {
                             log_exts += "'." + ext + "' ";
