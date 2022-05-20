@@ -560,7 +560,7 @@ BOOL CALLBACK vislib::sys::SystemInformation::findPrimaryMonitorProc(
 
     return TRUE;
 }
-#endif /*_ WIN32 */
+#endif /*_WIN32 */
 
 
 /*

@@ -5,11 +5,12 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 # Policies
-cmake_policy(SET CMP0054 NEW)
-cmake_policy(SET CMP0079 NEW) # Needed for static build, requires CMake 3.13!
+cmake_policy(SET CMP0054 NEW) # if arguments
+cmake_policy(SET CMP0079 NEW) # use targets from other directories
+cmake_policy(SET CMP0091 NEW) # MSVC runtime
 if (POLICY CMP0104)
-  cmake_policy(SET CMP0104 NEW)
-endif()
+  cmake_policy(SET CMP0104 NEW) # CUDA architectures
+endif ()
 
 # Disable in source build
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
@@ -17,63 +18,59 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 # Project
 project(megamol
-  VERSION 1.3.0)
+  VERSION 1.3.0
+  LANGUAGES C CXX)
 
-# Default to install to source directory
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install"
-    CACHE PATH "default install path" FORCE)
-endif()
+# Default build type
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to 'Release' as none was specified.")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo" "MinSizeRel")
+endif ()
 
-# This will replace "\" by "/"
-set(CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "default install path" FORCE)
+# Default install prefix
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "default install path" FORCE)
+endif ()
+set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "default install path" FORCE) # This will replace "\" by "/"
 
-# Directories
-set(MEGAMOL_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(MEGAMOL_VISLIB_DIR ${MEGAMOL_DIR}/vislib)
-set(MEGAMOL_VISLIB_GL_DIR ${MEGAMOL_DIR}/vislib_gl)
-set(MEGAMOL_CORE_DIR ${MEGAMOL_DIR}/core)
-set(MEGAMOL_CORE_GL_DIR ${MEGAMOL_DIR}/core_gl)
+# Modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
+
+# MegaMol config
+include(megamol_config)
 
 # MegaMol build info library (version + config)
 include(megamol_build_info)
 
-# MegaMol options
-include(megamol_options)
-
-# External
+# Externals
 include("externals/CMakeExternals.cmake")
 
+# MegaMol targets
+
 # Frontend Resources, Input Events interfaces
-add_subdirectory(${MEGAMOL_DIR}/frontend/resources)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/frontend/resources)
 
 # Frontend Services (e.g. OpenGL_GLFW provider)
-add_subdirectory(${MEGAMOL_DIR}/frontend/services)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/frontend/services)
 
 # Vislib
-add_subdirectory(${MEGAMOL_VISLIB_DIR})
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vislib)
 if (ENABLE_GL)
-  add_subdirectory(${MEGAMOL_VISLIB_GL_DIR})
-endif()
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vislib_gl)
+endif ()
 
 # Core
-add_subdirectory(${MEGAMOL_CORE_DIR})
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/core)
 if (ENABLE_GL)
-  add_subdirectory(${MEGAMOL_CORE_GL_DIR})
-endif()
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/core_gl)
+endif ()
+
+# MegaMol.exe
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/frontend/main)
 
 # Remoteconsole
 add_subdirectory(remoteconsole)
-
-# MegaMol.exe, new frontend, Main3000
-add_subdirectory(${MEGAMOL_DIR}/frontend/main)
-
-# Add directory structure for visual studio
-if(WIN32)
-  set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-  set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD TRUE)
-endif()
 
 # Plugins
 add_subdirectory(plugins)
@@ -81,12 +78,18 @@ if (BUILD_FRONTEND)
   if (ENABLE_GL)
     target_link_libraries(plugins INTERFACE core_gl)
     target_sources(plugins INTERFACE $<TARGET_OBJECTS:core_gl>)
-  endif()
+  endif ()
   target_link_libraries(megamol PRIVATE plugins)
-endif()
+endif ()
 
 # Utils
 add_subdirectory(utils)
+
+# Add directory structure for visual studio
+if (WIN32)
+  set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+  set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD TRUE)
+endif ()
 
 # Examples
 option(EXAMPLES "Get the MegaMol example repository" ON)

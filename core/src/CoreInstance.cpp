@@ -2489,7 +2489,7 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
                 WriteLineToFile(outfile, "      <!--<param name=\"");
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
-#ifdef WIN32
+#ifdef _WIN32
                 vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #else
                 // TODO This does not work in windows
@@ -2502,7 +2502,7 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
                 WriteLineToFile(outfile, "      <param name=\"");
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
-#ifdef WIN32
+#ifdef _WIN32
                 vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #else
                 // TODO This does not work in windows
