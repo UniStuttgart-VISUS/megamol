@@ -12,10 +12,10 @@
 #pragma warning(default : 4996)
 #endif /* (_MSC_VER > 1000) */
 
+#include "mmcore/LuaState.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/LuaState.h"
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"

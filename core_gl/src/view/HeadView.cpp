@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
+#include "mmcore_gl/view/HeadView.h"
 #include "mmcore/job/TickCall.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
-#include "mmcore_gl/view/HeadView.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Trace.h"

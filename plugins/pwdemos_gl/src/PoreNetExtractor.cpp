@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 #define _USE_MATH_DEFINES
-#include "OpenGL_Context.h"
 #include "PoreNetExtractor.h"
+#include "OpenGL_Context.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"

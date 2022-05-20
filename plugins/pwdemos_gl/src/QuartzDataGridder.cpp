@@ -6,8 +6,8 @@
  */
 
 #define _USE_MATH_DEFINES
-#include "QuartzCrystalDataCall.h"
 #include "QuartzDataGridder.h"
+#include "QuartzCrystalDataCall.h"
 #include "QuartzParticleDataCall.h"
 #include "mmcore/param/IntParam.h"
 #include <climits>

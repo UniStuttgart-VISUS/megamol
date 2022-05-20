@@ -6,8 +6,8 @@
  */
 
 
-#include "mmcore/utility/xml/XmlParser.h"
 #include "mmcore/utility/xml/XmlReader.h"
+#include "mmcore/utility/xml/XmlParser.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Exception.h"
