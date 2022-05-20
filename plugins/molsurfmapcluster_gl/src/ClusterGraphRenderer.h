@@ -6,7 +6,7 @@
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 
 namespace megamol {
-namespace molsurfmapcluster {
+namespace molsurfmapcluster_gl {
 
 class ClusterGraphRenderer : public core_gl::view::Renderer2DModuleGL {
 public:
@@ -86,5 +86,5 @@ private:
     core::param::ParamSlot viewportWidthParam;
 };
 
-} // namespace molsurfmapcluster
+} // namespace molsurfmapcluster_gl
 } // namespace megamol

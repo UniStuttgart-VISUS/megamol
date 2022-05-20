@@ -8,7 +8,7 @@
 #include <vector>
 
 namespace megamol {
-namespace molsurfmapcluster {
+namespace molsurfmapcluster_gl {
 
 /**
  * Struct containing the data sent over CallClustering_2
@@ -45,14 +45,18 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "CallClustering_2"; }
+    static const char* ClassName(void) {
+        return "CallClustering_2";
+    }
 
     /**
      * Gets a human readable description of the module.
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) { return "Call to get Clustering-Data"; }
+    static const char* Description(void) {
+        return "Call to get Clustering-Data";
+    }
 
     /** Ctor. */
     CallClustering_2(void);
@@ -65,7 +69,9 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return 2; }
+    static unsigned int FunctionCount(void) {
+        return 2;
+    }
 
     /**
      * Answer the name of the function used for this call.
@@ -123,5 +129,5 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<CallClustering_2> CallClustering_2Description;
 
-} // namespace molsurfmapcluster
+} // namespace molsurfmapcluster_gl
 } // namespace megamol

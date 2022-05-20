@@ -90,6 +90,14 @@ public:
     size_t GetImageCount(void) const;
 
     /**
+     * Answer the count of available images.
+     * CAUTION: Available means that the image can be requested via a wishlist, not that it is currently stored in the call.
+     *
+     * @param The number of available images
+     */
+    size_t GetAvailablePathsCount(void) const;
+
+    /**
      * Sets the data pointer
      *
      * @param ptr Pointer to the vector storing the images

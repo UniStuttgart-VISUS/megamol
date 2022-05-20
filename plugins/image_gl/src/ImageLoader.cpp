@@ -132,7 +132,6 @@ bool ImageLoader::GetMetaData(core::Call& call) {
         this->filenameSlot.ResetDirty();
         this->imageData->clear();
         std::filesystem::path path = this->filenameSlot.Param<param::FilePathParam>()->Value();
-        std::cout << path << std::endl;
 
         this->availableFiles->clear();
 

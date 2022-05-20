@@ -3,7 +3,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::molsurfmapcluster;
+using namespace megamol::molsurfmapcluster_gl;
 
 /*
  * ClusterMapRenderer::ClusterMapRenderer

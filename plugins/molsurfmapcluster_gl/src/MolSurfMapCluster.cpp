@@ -7,7 +7,6 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-
 #include "CallCluster.h"
 #include "CallClusterPosition.h"
 #include "CallClusteringLoader.h"
@@ -43,9 +42,9 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusterRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusterHierarchieRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusteringLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::Clustering_2>();
-        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusterMapRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusterGraphRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster_gl::Clustering_2>();
+        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster_gl::ClusterMapRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster_gl::ClusterGraphRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ProteinViewRenderer>();
 
         // register calls here:
@@ -53,7 +52,7 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallClustering>();
         this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallClusterPosition>();
         this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallClusteringLoader>();
-        this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallClustering_2>();
+        this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster_gl::CallClustering_2>();
     }
 };
 } // namespace megamol::molsurfmapcluster

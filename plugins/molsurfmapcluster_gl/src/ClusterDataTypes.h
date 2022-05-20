@@ -1,12 +1,13 @@
 #pragma once
 
+#include "vislib/graphics/BitmapImage.h"
 #include <cstdint>
 #include <memory>
 #include <string>
-#include "vislib/graphics/BitmapImage.h"
+#include <vector>
 
 namespace megamol {
-namespace molsurfmapcluster {
+namespace molsurfmapcluster_gl {
 
 struct ClusterNode_2 {
     /** The ID of this node */
@@ -38,7 +39,7 @@ struct ClusterNode_2 {
 };
 
 /** Enum representing all available clustering methods */
-enum class ClusteringMethod { IMAGE_MOMENTS = 0, COLOR_MOMENTS = 1, MOBILENETV2 = 2 };
+enum class ClusteringMethod { IMAGE_MOMENTS = 0, COLOR_MOMENTS = 1, FILEFEATURES = 2 };
 
 /** Enum representing all available distance measures */
 enum class DistanceMeasure {
@@ -49,5 +50,11 @@ enum class DistanceMeasure {
     JACCARD_DISTANCE = 4
 };
 
-} // namespace molsurfmapcluster
+/** Struct representing a feature vector, possibly read from file */
+struct FeatureData {
+    std::string pdb_id;
+    std::vector<float> feature_vec;
+};
+
+} // namespace molsurfmapcluster_gl
 } // namespace megamol

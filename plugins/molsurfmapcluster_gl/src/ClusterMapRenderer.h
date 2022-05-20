@@ -5,7 +5,7 @@
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 
 namespace megamol {
-namespace molsurfmapcluster {
+namespace molsurfmapcluster_gl {
 
 class ClusterMapRenderer : public core_gl::view::Renderer2DModuleGL {
 public:
@@ -79,5 +79,5 @@ private:
     core::CallerSlot clusterDataSlot;
 };
 
-} // namespace molsurfmapcluster
+} // namespace molsurfmapcluster_gl
 } // namespace megamol

@@ -47,6 +47,13 @@ size_t Image2DCall::GetImageCount(void) const {
     return 0;
 }
 
+size_t Image2DCall::GetAvailablePathsCount() const {
+    if (this->availablePathsPtr != nullptr) {
+        return this->availablePathsPtr->size();
+    }
+}
+
+
 /*
  * Image2DCall::SetImagePtr
  */
