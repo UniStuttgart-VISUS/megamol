@@ -17,132 +17,132 @@
 
 namespace megamol {
 namespace mesh {
+/**
+ * Call for transporting a triangle mesh in an ready-to-use fashion (for OpenGL).
+ *
+ * @author Alexander Straub
+ */
+class TriangleMeshCall : public core::AbstractGetDataCall {
+public:
+    typedef core::factories::CallAutoDescription<TriangleMeshCall> triangle_mesh_description;
+
     /**
-     * Call for transporting a triangle mesh in an ready-to-use fashion (for OpenGL).
-     *
-     * @author Alexander Straub
+     * Human-readable class name
      */
-    class TriangleMeshCall : public core::AbstractGetDataCall {
-    public:
-        typedef core::factories::CallAutoDescription<TriangleMeshCall> triangle_mesh_description;
+    static const char* ClassName() {
+        return "TriangleMeshCall";
+    }
 
-        /**
-         * Human-readable class name
-         */
-        static const char* ClassName() {
-            return "TriangleMeshCall";
+    /**
+     * Human-readable class description
+     */
+    static const char* Description() {
+        return "Call transporting triangle data";
+    }
+
+    /**
+     * Number of available functions
+     */
+    static unsigned int FunctionCount() {
+        return 2;
+    }
+
+    /**
+     * Names of available functions
+     */
+    static const char* FunctionName(unsigned int idx) {
+        switch (idx) {
+        case 0:
+            return "get_data";
+        case 1:
+            return "get_extent";
         }
 
-        /**
-         * Human-readable class description
-         */
-        static const char* Description() {
-            return "Call transporting triangle data";
-        }
+        return nullptr;
+    }
 
-        /**
-         * Number of available functions
-         */
-        static unsigned int FunctionCount() {
-            return 2;
-        }
+    /** Dimension */
+    enum class dimension_t { INVALID, TWO, THREE };
 
-        /**
-         * Names of available functions
-         */
-        static const char* FunctionName(unsigned int idx) {
-            switch (idx) {
-            case 0:
-                return "get_data";
-            case 1:
-                return "get_extent";
-            }
+    /**
+     * Constructor
+     */
+    TriangleMeshCall();
 
-            return nullptr;
-        }
+    /**
+     * Getter for the dimension
+     */
+    dimension_t get_dimension() const;
 
-        /** Dimension */
-        enum class dimension_t { INVALID, TWO, THREE };
+    /**
+     * Setter for the dimension
+     */
+    void set_dimension(dimension_t dimension);
 
-        /**
-         * Constructor
-         */
-        TriangleMeshCall();
+    /**
+     * Getter for the bounding rectangle for 2D data
+     */
+    const vislib::math::Rectangle<float>& get_bounding_rectangle() const;
 
-        /**
-         * Getter for the dimension
-         */
-        dimension_t get_dimension() const;
+    /**
+     * Setter for the bounding rectangle for 2D data
+     */
+    void set_bounding_rectangle(const vislib::math::Rectangle<float>& bounding_rectangle);
 
-        /**
-         * Setter for the dimension
-         */
-        void set_dimension(dimension_t dimension);
+    /**
+     * Getter for the bounding box for 3D data
+     */
+    const vislib::math::Cuboid<float>& get_bounding_box() const;
 
-        /**
-         * Getter for the bounding rectangle for 2D data
-         */
-        const vislib::math::Rectangle<float>& get_bounding_rectangle() const;
+    /**
+     * Setter for the bounding box for 3D data
+     */
+    void set_bounding_box(const vislib::math::Cuboid<float>& bounding_box);
 
-        /**
-         * Setter for the bounding rectangle for 2D data
-         */
-        void set_bounding_rectangle(const vislib::math::Rectangle<float>& bounding_rectangle);
+    /**
+     * Getter for the vertices defining the triangle mesh
+     */
+    std::shared_ptr<std::vector<float>> get_vertices() const;
 
-        /**
-         * Getter for the bounding box for 3D data
-         */
-        const vislib::math::Cuboid<float>& get_bounding_box() const;
+    /**
+     * Setter for the vertices defining the triangle mesh
+     */
+    void set_vertices(std::shared_ptr<std::vector<float>> vertices);
 
-        /**
-         * Setter for the bounding box for 3D data
-         */
-        void set_bounding_box(const vislib::math::Cuboid<float>& bounding_box);
+    /**
+     * Getter for the normals
+     */
+    std::shared_ptr<std::vector<float>> get_normals() const;
 
-        /**
-         * Getter for the vertices defining the triangle mesh
-         */
-        std::shared_ptr<std::vector<float>> get_vertices() const;
+    /**
+     * Setter for the normals
+     */
+    void set_normals(std::shared_ptr<std::vector<float>> normals);
 
-        /**
-         * Setter for the vertices defining the triangle mesh
-         */
-        void set_vertices(std::shared_ptr<std::vector<float>> vertices);
+    /**
+     * Getter for the indices defining the triangle mesh
+     */
+    std::shared_ptr<std::vector<unsigned int>> get_indices() const;
 
-        /**
-         * Getter for the normals
-         */
-        std::shared_ptr<std::vector<float>> get_normals() const;
+    /**
+     * Setter for the indices defining the triangle mesh
+     */
+    void set_indices(std::shared_ptr<std::vector<unsigned int>> indices);
 
-        /**
-         * Setter for the normals
-         */
-        void set_normals(std::shared_ptr<std::vector<float>> normals);
+protected:
+    /** Dimension */
+    dimension_t dimension;
 
-        /**
-         * Getter for the indices defining the triangle mesh
-         */
-        std::shared_ptr<std::vector<unsigned int>> get_indices() const;
+    /** Bounding rectangle */
+    vislib::math::Rectangle<float> bounding_rectangle;
 
-        /**
-         * Setter for the indices defining the triangle mesh
-         */
-        void set_indices(std::shared_ptr<std::vector<unsigned int>> indices);
+    /** Bounding box */
+    vislib::math::Cuboid<float> bounding_box;
 
-    protected:
-        /** Dimension */
-        dimension_t dimension;
-
-        /** Bounding rectangle */
-        vislib::math::Rectangle<float> bounding_rectangle;
-
-        /** Bounding box */
-        vislib::math::Cuboid<float> bounding_box;
-
-        /** Vertices, normals and indices defining the triangle mesh */
-        std::shared_ptr<std::vector<float>> vertices;
-        std::shared_ptr<std::vector<float>> normals;
-        std::shared_ptr<std::vector<unsigned int>> indices;
-    };
+    /** Vertices, normals and indices defining the triangle mesh */
+    std::shared_ptr<std::vector<float>> vertices;
+    std::shared_ptr<std::vector<float>> normals;
+    std::shared_ptr<std::vector<unsigned int>> indices;
+};
 } // namespace mesh
 } // namespace megamol

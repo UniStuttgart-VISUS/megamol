@@ -71,14 +71,14 @@ bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
             newbb.Union(otherbb);
         } else if (chainedCall->GetBoundingBoxes().IsBoundingBoxValid()) {
             newbb = otherbb; // just override for the call
-        }                   // we ignore the other two cases as they both lead to usage of the already set mybb
+        }                    // we ignore the other two cases as they both lead to usage of the already set mybb
 
         if (call.GetBoundingBoxes().IsClipBoxValid() && chainedCall->GetBoundingBoxes().IsClipBoxValid()) {
             newcb.Union(othercb);
         } else if (chainedCall->GetBoundingBoxes().IsClipBoxValid()) {
             newcb = othercb; // just override for the call
-        }                   // we ignore the other two cases as they both lead to usage of the already set mycb
-        
+        }                    // we ignore the other two cases as they both lead to usage of the already set mycb
+
         call.AccessBoundingBoxes().SetBoundingBox(newbb);
         call.AccessBoundingBoxes().SetClipBox(newcb);
 

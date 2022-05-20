@@ -34,8 +34,7 @@ namespace datatools_gl {
 namespace io {
 STLDataSource::STLDataSource()
         : filename_slot("STL file", "The name of to the STL file to load")
-        , mesh_output_slot("mesh_data", "Slot to request mesh data")
-{
+        , mesh_output_slot("mesh_data", "Slot to request mesh data") {
     // Create file name textbox
     this->filename_slot << new core::param::FilePathParam("");
     Module::MakeSlotAvailable(&this->filename_slot);

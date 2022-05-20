@@ -9,14 +9,14 @@
 
 #include "MeshBakery.h"
 #include "ObjWriter.h"
+#include "STLWriter.h"
+#include "SimplifyMesh.h"
 #include "UIElement.h"
 #include "WavefrontObjLoader.h"
 #include "gltf/glTFFileLoader.h"
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataCall.h"
 #include "mesh/TriangleMeshCall.h"
-#include "STLWriter.h"
-#include "SimplifyMesh.h"
 
 namespace megamol::mesh {
 class MeshPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {

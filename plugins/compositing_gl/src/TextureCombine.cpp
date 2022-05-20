@@ -13,16 +13,16 @@
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::compositing::TextureCombine::TextureCombine()
-    : core::Module()
-    , m_version(0)
-    , m_output_texture(nullptr)
-    , m_mode("Mode", "Sets texture combination mode, e.g. add, multiply...")
-    , m_weight_0("Weight0", "Weight for input texture 0 in additive mode")
-    , m_weight_1("Weight1", "Weight for input texture 1 in additive mode")
-    , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
-    , m_input_tex_0_slot(
-          "InputTexture0", "Connects the primary input texture that is also used the set the output texture size")
-    , m_input_tex_1_slot("InputTexture1", "Connects the secondary input texture") {
+        : core::Module()
+        , m_version(0)
+        , m_output_texture(nullptr)
+        , m_mode("Mode", "Sets texture combination mode, e.g. add, multiply...")
+        , m_weight_0("Weight0", "Weight for input texture 0 in additive mode")
+        , m_weight_1("Weight1", "Weight for input texture 1 in additive mode")
+        , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
+        , m_input_tex_0_slot(
+              "InputTexture0", "Connects the primary input texture that is also used the set the output texture size")
+        , m_input_tex_1_slot("InputTexture1", "Connects the secondary input texture") {
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Add");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Multiply");
