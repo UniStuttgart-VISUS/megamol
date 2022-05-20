@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 #include <fstream>
 
 #include "WavefrontObjWriter.h"

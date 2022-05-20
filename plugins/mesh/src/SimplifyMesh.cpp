@@ -1,6 +1,6 @@
-#include "stdafx.h"
 #include "SimplifyMesh.h"
 
+#ifdef WITH_CGAL
 #include "mesh/TriangleMeshCall.h"
 
 #include "mmcore/param/FloatParam.h"
@@ -237,3 +237,10 @@ SIZE_T megamol::mesh::SimplifyMesh::compute_hash(const SIZE_T data_hash) const {
     return core::utility::DataHash(
         SimplifyMesh::GUID(), data_hash, this->stop_ratio.Param<core::param::FloatParam>()->Value());
 }
+#else
+bool megamol::mesh::SimplifyMesh::create() {
+    return false;
+}
+
+void megamol::mesh::SimplifyMesh::release() {}
+#endif

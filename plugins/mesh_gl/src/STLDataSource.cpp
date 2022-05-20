@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "STLDataSource.h"
 
 #include "mmcore/Call.h"

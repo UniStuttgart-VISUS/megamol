@@ -107,3 +107,19 @@ if(OPENMP_FOUND OR WIN32)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
+
+# CGAL
+option(ENABLE_CGAL "Enable CGAL support" OFF)
+if (ENABLE_CGAL)
+  add_compile_definitions(WITH_CGAL)
+  find_package(CGAL REQUIRED)
+
+  if (NOT TARGET CGAL::CGAL)
+    message(FATAL_ERROR "Target for CGAL not found")
+  endif ()
+
+  if (TARGET CGAL)
+    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
+    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
+  endif ()
+endif()

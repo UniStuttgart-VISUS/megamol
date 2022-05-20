@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "mesh/MeshDataCall.h"
 
 #include <algorithm>

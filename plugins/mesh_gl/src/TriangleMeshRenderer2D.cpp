@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "TriangleMeshRenderer2D.h"
 
 #include "mesh/MeshDataCall.h"

@@ -16,17 +16,8 @@ if (mesh_PLUGIN_ENABLED)
     target_compile_definitions(mesh PRIVATE NOMINMAX)
   endif ()
 
-  # Find CGAL
-  find_package(CGAL REQUIRED)
-
-  if(NOT TARGET CGAL::CGAL)
-    message(FATAL_ERROR "Target for CGAL not found")
-  endif()
-
-  if (TARGET CGAL)
-    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
-    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
-  endif()
-
-  target_link_libraries(mesh PRIVATE CGAL::CGAL)
+  # Use CGAL
+  if (ENABLE_CGAL)
+    target_link_libraries(mesh PRIVATE CGAL::CGAL)
+  endif ()
 endif ()

@@ -1,6 +1,5 @@
 #include "Render3DUI.h"
 #include "mesh/MeshCalls.h"
-#include "stdafx.h"
 
 bool megamol::mesh_gl::Render3DUI::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {

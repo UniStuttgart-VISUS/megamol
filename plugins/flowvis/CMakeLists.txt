@@ -9,17 +9,8 @@ megamol_plugin(flowvis
     mesh)
 
 if (flowvis_PLUGIN_ENABLED)
-  # Find CGAL
-  find_package(CGAL REQUIRED)
-
-  if(NOT TARGET CGAL::CGAL)
-    message(FATAL_ERROR "Target for CGAL not found")
-  endif()
-
-  if (TARGET CGAL)
-    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
-    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
-  endif()
-
-  target_link_libraries(flowvis PRIVATE CGAL::CGAL)
+  # Use CGAL
+  if (ENABLE_CGAL)
+    target_link_libraries(flowvis PRIVATE CGAL::CGAL)
+  endif ()
 endif ()

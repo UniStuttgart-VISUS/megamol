@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 #include "STLWriter.h"
 
 #include "mesh/TriangleMeshCall.h"

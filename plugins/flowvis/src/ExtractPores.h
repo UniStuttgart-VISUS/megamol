@@ -21,113 +21,121 @@
 
 namespace megamol {
 namespace flowvis {
+/**
+ * Module for splitting a surface mesh into pores and throats.
+ *
+ * @author Alexander Straub
+ */
+class ExtractPores : public core::Module {
+public:
     /**
-     * Module for splitting a surface mesh into pores and throats.
+     * Answer the name of this module.
      *
-     * @author Alexander Straub
+     * @return The name of this module.
      */
-    class ExtractPores : public core::Module {
-    public:
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static inline const char* ClassName() {
-            return "ExtractPores";
-        }
+    static inline const char* ClassName() {
+        return "ExtractPores";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static inline const char* Description() {
-            return "Split a surface mesh into volumes representing pores and throats";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static inline const char* Description() {
+        return "Split a surface mesh into volumes representing pores and throats";
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static inline bool IsAvailable() {
-            return true;
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static inline bool IsAvailable() {
+#ifdef WITH_CGAL
+        return true;
+#else
+        return false;
+#endif
+    }
 
-        /**
-         * Global unique ID that can e.g. be used for hash calculation.
-         *
-         * @return Unique ID
-         */
-        static inline SIZE_T GUID() {
-            return 447330808uLL;
-        }
+    /**
+     * Global unique ID that can e.g. be used for hash calculation.
+     *
+     * @return Unique ID
+     */
+    static inline SIZE_T GUID() {
+        return 447330808uLL;
+    }
 
-        /**
-         * Initialises a new instance.
-         */
-        ExtractPores();
+#ifdef WITH_CGAL
+    /**
+     * Initialises a new instance.
+     */
+    ExtractPores();
 
-        /**
-         * Finalises an instance.
-         */
-        virtual ~ExtractPores();
+    /**
+     * Finalises an instance.
+     */
+    virtual ~ExtractPores();
+#endif
 
-    protected:
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create() override;
+protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create() override;
 
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release() override;
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release() override;
 
-    private:
-        /** Callbacks for performing the computation and exposing data */
-        bool getMeshDataCallback(core::Call& call);
-        bool getMeshMetaDataCallback(core::Call& call);
+private:
+#ifdef WITH_CGAL
+    /** Callbacks for performing the computation and exposing data */
+    bool getMeshDataCallback(core::Call& call);
+    bool getMeshMetaDataCallback(core::Call& call);
 
-        bool getMeshDataDataCallback(core::Call& call);
-        bool getMeshDataMetaDataCallback(core::Call& call);
+    bool getMeshDataDataCallback(core::Call& call);
+    bool getMeshDataMetaDataCallback(core::Call& call);
 
-        /** Function to start the computation */
-        bool compute();
+    /** Function to start the computation */
+    bool compute();
 
-        /** The slots for requesting data from this module, i.e., lhs connection */
-        core::CalleeSlot mesh_lhs_slot, mesh_data_lhs_slot;
+    /** The slots for requesting data from this module, i.e., lhs connection */
+    core::CalleeSlot mesh_lhs_slot, mesh_data_lhs_slot;
 
-        /** The slots for querying data, i.e., a rhs connection */
-        core::CallerSlot mesh_rhs_slot;
+    /** The slots for querying data, i.e., a rhs connection */
+    core::CallerSlot mesh_rhs_slot;
 
-        /** Parameter slots */
-        core::param::ParamSlot pore_criterion;
-        core::param::ParamSlot boundary_offset;
-        core::param::ParamSlot neighborhood_size;
+    /** Parameter slots */
+    core::param::ParamSlot pore_criterion;
+    core::param::ParamSlot boundary_offset;
+    core::param::ParamSlot neighborhood_size;
 
-        core::param::ParamSlot tf_type;
+    core::param::ParamSlot tf_type;
 
-        /** Input */
-        struct input_t {
-            std::shared_ptr<std::vector<float>> vertices;
-            std::shared_ptr<std::vector<float>> normals;
-            std::shared_ptr<std::vector<unsigned int>> indices;
-        } input;
+    /** Input */
+    struct input_t {
+        std::shared_ptr<std::vector<float>> vertices;
+        std::shared_ptr<std::vector<float>> normals;
+        std::shared_ptr<std::vector<unsigned int>> indices;
+    } input;
 
-        SIZE_T input_hash;
+    SIZE_T input_hash;
 
-        /** Output */
-        struct output_t {
-            std::shared_ptr<std::vector<float>> vertices;
-            std::shared_ptr<std::vector<float>> normals;
-            std::shared_ptr<std::vector<unsigned int>> indices;
+    /** Output */
+    struct output_t {
+        std::shared_ptr<std::vector<float>> vertices;
+        std::shared_ptr<std::vector<float>> normals;
+        std::shared_ptr<std::vector<unsigned int>> indices;
 
-            std::array<std::shared_ptr<mesh::MeshDataCall::data_set>, 5> datasets;
-        } output;
-    };
+        std::array<std::shared_ptr<mesh::MeshDataCall::data_set>, 5> datasets;
+    } output;
+#endif
+};
 } // namespace flowvis
 } // namespace megamol

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "TriangleMeshRenderer3D.h"
 
 #include "OpenGL_Context.h"

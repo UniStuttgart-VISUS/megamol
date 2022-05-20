@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "mesh/TriangleMeshCall.h"
 
 #include "vislib/math/Cuboid.h"

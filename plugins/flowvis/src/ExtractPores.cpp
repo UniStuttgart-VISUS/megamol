@@ -1,5 +1,6 @@
 #include "ExtractPores.h"
 
+#ifdef WITH_CGAL
 #include "mesh/MeshDataCall.h"
 #include "mesh/TriangleMeshCall.h"
 
@@ -495,3 +496,10 @@ bool megamol::flowvis::ExtractPores::compute() {
 
     return true;
 }
+#else
+bool megamol::flowvis::ExtractPores::create() {
+    return false;
+}
+
+void megamol::flowvis::ExtractPores::release() {}
+#endif
