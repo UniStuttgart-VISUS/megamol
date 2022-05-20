@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "ExtractPores.h"
 
 #include "mesh/MeshDataCall.h"
