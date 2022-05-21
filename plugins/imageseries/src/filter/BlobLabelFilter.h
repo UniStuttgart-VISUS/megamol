@@ -44,6 +44,9 @@ public:
         // Predecessor frame to the input image.
         AsyncImagePtr prevImage;
 
+        // Optional difference frame by which to decide whether labels should be included or not.
+        AsyncImagePtr diffImage;
+
         // Optional mask image from which to determine the locations of static obstacles/boundaries.
         AsyncImagePtr mask;
 

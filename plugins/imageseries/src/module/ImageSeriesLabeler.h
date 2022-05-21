@@ -89,6 +89,7 @@ private:
     core::param::ParamSlot thresholdParam;
     core::param::ParamSlot negateThresholdParam;
     core::param::ParamSlot flowFrontParam;
+    core::param::ParamSlot flowFrontOffsetParam;
 
     util::LRUCache<AsyncImageData2D::Hash, AsyncImageData2D> imageCache;
 

@@ -13,9 +13,10 @@ void BlobGraphBuilder::addFrame(AsyncImagePtr labels, AsyncImagePtr values) {
     pending->index = index++;
 
     pending->analyzerResult = std::make_shared<util::AsyncData<BlobAnalyzer::Output>>(
-        [labels, values]() {
+        [labels, prev = flowFrontMode ? previousLabels : nullptr, values]() {
             BlobAnalyzer::Input input;
             input.labels = labels;
+            input.prev = prev;
             input.image = values;
             return std::make_shared<BlobAnalyzer::Output>(BlobAnalyzer().apply(input));
         },
@@ -27,7 +28,8 @@ void BlobGraphBuilder::addFrame(AsyncImagePtr labels, AsyncImagePtr values) {
                 BlobRegistrator::Input input;
                 input.image = labels;
                 input.predecessor = prev;
-                input.flowFrontMode = flowFrontMode;
+                //input.flowFrontMode = flowFrontMode;
+                input.flowFrontMode = false;
                 return std::make_shared<BlobRegistrator::Output>(BlobRegistrator().apply(input));
             },
             0);
@@ -52,6 +54,7 @@ void BlobGraphBuilder::addFrame(AsyncImagePtr labels, AsyncImagePtr values) {
                         node.frameIndex = pending->index;
                         node.centerOfMass = blob.centerOfMass;
                         node.area = blob.pixelCount;
+                        node.boundingBox = blob.boundingBox;
                         // TODO interface length
                         result->labelMapping[blob.label] = result->graph.addNode(node);
                     }

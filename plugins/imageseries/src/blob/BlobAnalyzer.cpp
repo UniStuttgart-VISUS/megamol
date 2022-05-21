@@ -15,6 +15,7 @@ BlobAnalyzer::Output BlobAnalyzer::apply(Input input) {
     // Wait for image data to be ready
     auto image = input.image ? input.image->getImageData() : nullptr;
     auto label = input.labels ? input.labels->getImageData() : nullptr;
+    auto prev = input.prev ? input.prev->getImageData() : nullptr;
 
     // Empty -> return nothing
     if (!image || !label) {
@@ -32,10 +33,20 @@ BlobAnalyzer::Output BlobAnalyzer::apply(Input input) {
         return out;
     }
 
+    auto checkOptionalImage = [&image](std::shared_ptr<const Image>& opt) {
+        if (opt && (image->Width() != opt->Width() || image->Height() != opt->Height() || opt->GetChannelCount() != 1 ||
+                       opt->GetChannelType() != Image::ChannelType::CHANNELTYPE_BYTE)) {
+            opt = nullptr;
+        }
+    };
+
+    checkOptionalImage(prev);
+
     std::array<Blob, filter::BlobLabelFilter::LabelCount> blobArray;
 
     const auto* imgIn = image->PeekDataAs<std::uint8_t>();
     const auto* labIn = label->PeekDataAs<std::uint8_t>();
+    const auto* prvIn = prev ? prev->PeekDataAs<std::uint8_t>() : nullptr;
     std::size_t width = image->Width();
     std::size_t height = image->Height();
     std::size_t size = width * height;
@@ -43,8 +54,12 @@ BlobAnalyzer::Output BlobAnalyzer::apply(Input input) {
     for (std::size_t i = 0; i < size; ++i) {
         int x = i % width;
         int y = i / width;
-        Label label = labIn[i];
         int value = imgIn[i];
+        Label label = labIn[i];
+
+        if (prvIn && prvIn[i] != filter::BlobLabelFilter::LabelBackground) {
+            label = filter::BlobLabelFilter::LabelMinimal;
+        }
 
         Blob& blob = blobArray[label];
 

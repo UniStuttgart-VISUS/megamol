@@ -61,21 +61,28 @@ bool ImageSeriesGraphGenerator::getDataCallback(core::Call& caller) {
         if (valueHash != initInput.getHash() || labelHash != initLabel.getHash()) {
             valueHash = initInput.getHash();
             labelHash = initLabel.getHash();
+            graphBuilder = nullptr;
             asyncGraph = nullptr;
         }
 
         // Init graph builder if necessary
-        if (asyncGraph == nullptr && initInput.imageData && initLabel.imageData) {
+        if (graphBuilder == nullptr && initInput.imageData && initLabel.imageData) {
             graphBuilder = std::make_shared<blob::BlobGraphBuilder>();
             graphBuilder->setFlowFrontMode(flowFrontParam.Param<core::param::BoolParam>()->Value());
+        }
 
-            // TODO don't push frames all at once to avoid overloading work queue
-            for (std::size_t i = 0; i < initInput.imageCount; ++i) {
-                graphBuilder->addFrame(requestFrameByIndex(getLabelsCaller, i).imageData,
-                    requestFrameByIndex(getInputCaller, i).imageData);
+        if (graphBuilder && !asyncGraph) {
+            std::size_t pending = graphBuilder->getPendingFrameCount();
+            for (std::size_t i = pending; i < 16; ++i) {
+                std::size_t index = graphBuilder->getTotalFrameCount();
+                if (index < initInput.imageCount) {
+                    graphBuilder->addFrame(requestFrameByIndex(getLabelsCaller, index).imageData,
+                        requestFrameByIndex(getInputCaller, index).imageData);
+                } else {
+                    asyncGraph = graphBuilder->finalize();
+                    break;
+                }
             }
-
-            asyncGraph = graphBuilder->finalize();
         }
 
         GraphData2DCall::Output output;

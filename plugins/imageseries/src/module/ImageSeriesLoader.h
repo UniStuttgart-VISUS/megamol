@@ -16,6 +16,10 @@
 
 namespace megamol::ImageSeries {
 
+namespace filter {
+class AsyncFilterRunner;
+}
+
 /**
  * Data source for multiple 2D images, loaded from a directory in the local file system.
  */
@@ -97,6 +101,8 @@ private:
 
     std::shared_ptr<vislib::graphics::BitmapImage> loadImageFile(const std::filesystem::path& path) const;
 
+    std::unique_ptr<filter::AsyncFilterRunner> filterRunner;
+
     core::CalleeSlot getDataCallee;
 
     /// Path to the directory to read image files from
@@ -112,7 +118,7 @@ private:
 
     ImageSeries2DCall::Output metadata;
 
-    std::shared_ptr<vislib::graphics::BitmapCodecCollection> bitmapCodecCollection;
+    std::shared_ptr<vislib::graphics::BitmapCodecCollection> getBitmapCodecs() const;
 };
 
 } // namespace megamol::ImageSeries

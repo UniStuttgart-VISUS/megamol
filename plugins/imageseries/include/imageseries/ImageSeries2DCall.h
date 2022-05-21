@@ -91,6 +91,9 @@ public:
         // Vertical pixel resolution of all images in the series. 0 for empty series.
         std::uint32_t height = 0;
 
+        // Number of bytes per pixel. 0 for empty series or if unknown.
+        std::uint8_t bytesPerPixel = 0;
+
         // Effective time of the image that was returned (may be clamped or quantized).
         double resultTime = 0;
 

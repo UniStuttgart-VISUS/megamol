@@ -17,6 +17,7 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
     auto image = input.image ? input.image->getImageData() : nullptr;
     auto mask = input.mask ? input.mask->getImageData() : nullptr;
     auto prev = input.prevImage ? input.prevImage->getImageData() : nullptr;
+    auto diff = input.diffImage ? input.diffImage->getImageData() : nullptr;
 
     // Empty -> return nothing
     if (!image) {
@@ -28,17 +29,16 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
         return nullptr;
     }
 
-    // Mask must have matching size and channels, otherwise, it is ignored
-    if (mask && (image->Width() != mask->Width() || image->Height() != mask->Height() || mask->GetChannelCount() != 1 ||
-                    mask->GetChannelType() != Image::ChannelType::CHANNELTYPE_BYTE)) {
-        mask = nullptr;
-    }
+    auto checkOptionalImage = [&image](std::shared_ptr<const Image>& opt) {
+        if (opt && (image->Width() != opt->Width() || image->Height() != opt->Height() || opt->GetChannelCount() != 1 ||
+                       opt->GetChannelType() != Image::ChannelType::CHANNELTYPE_BYTE)) {
+            opt = nullptr;
+        }
+    };
 
-    // Prev image must have matching size and channels, otherwise, it is ignored
-    if (prev && (image->Width() != prev->Width() || image->Height() != prev->Height() || prev->GetChannelCount() != 1 ||
-                    prev->GetChannelType() != Image::ChannelType::CHANNELTYPE_BYTE)) {
-        prev = nullptr;
-    }
+    checkOptionalImage(mask);
+    checkOptionalImage(prev);
+    checkOptionalImage(diff);
 
     // Create output image
     auto result = std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_BYTE);
@@ -48,6 +48,7 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
     const auto* dataIn = image->PeekDataAs<std::uint8_t>();
     auto* dataOut = result->PeekDataAs<std::uint8_t>();
     const auto* prevIn = prev ? prev->PeekDataAs<std::uint8_t>() : nullptr;
+    const auto* diffIn = diff ? diff->PeekDataAs<std::uint8_t>() : prevIn;
     Index width = result->Width();
     Index height = result->Height();
     Index size = width * height;
@@ -83,10 +84,11 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
     };
 
     auto testPrev = [&](Index index) { return prevIn && (prevIn[index] < threshold) != input.negateThreshold; };
+    auto testDiff = [&](Index index) { return diffIn && (diffIn[index] < threshold) != input.negateThreshold; };
 
     auto markMinimal = [&](Index index) {
         if (testPixel(index)) {
-            if (testPrev(index)) {
+            if (testDiff(index)) {
                 pendingFlow.push_back(index);
             } else {
                 dataOut[index] = LabelMinimal;

@@ -18,6 +18,13 @@ public:
 
     static constexpr NodeID NodeIDNone = std::numeric_limits<NodeID>::max();
 
+    struct Rect {
+        int x1 = 0;
+        int y1 = 0;
+        int x2 = 0;
+        int y2 = 0;
+    };
+
     struct Node {
         std::uint32_t frameIndex = 0;
         glm::vec2 centerOfMass;
@@ -26,6 +33,7 @@ public:
         float interfaceLength = 0.f;
         std::uint8_t edgeCountIn = 0;
         std::uint8_t edgeCountOut = 0;
+        Rect boundingBox;
     };
 
     struct Edge {

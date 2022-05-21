@@ -27,6 +27,7 @@ ImageSeriesLabeler::ImageSeriesLabeler()
         , thresholdParam("Value threshold", "Per-pixel value threshold for labeling.")
         , negateThresholdParam("Negate value threshold", "Negates the value threshold for labeling.")
         , flowFrontParam("Split flow fronts", "Excludes pixels that are unchanged between frames.")
+        , flowFrontOffsetParam("Flow front offset", "Frame offset for flow front comparison.")
         , imageCache([](const AsyncImageData2D& imageData) { return imageData.getByteSize(); }) {
 
     getInputCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
@@ -75,6 +76,11 @@ ImageSeriesLabeler::ImageSeriesLabeler()
     flowFrontParam.Parameter()->SetGUIPresentation(Presentation::Checkbox);
     flowFrontParam.SetUpdateCallback(&ImageSeriesLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&flowFrontParam);
+
+    flowFrontOffsetParam << new core::param::IntParam(1, 1, 20);
+    flowFrontOffsetParam.Parameter()->SetGUIPresentation(Presentation::Slider);
+    flowFrontOffsetParam.SetUpdateCallback(&ImageSeriesLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&flowFrontOffsetParam);
 
     // Set default image cache size to 512 MB
     imageCache.setMaximumSize(512 * 1024 * 1024);
@@ -125,7 +131,8 @@ bool ImageSeriesLabeler::getDataCallback(core::Call& caller) {
                     // If flow front mode is enabled, get predecessor image from sequence
                     if (flowFrontParam.Param<core::param::BoolParam>()->Value() && output.framerate > 0.f) {
                         auto prevInput = getInput->GetInput();
-                        prevInput.time -= 1.f / output.framerate;
+                        prevInput.time -=
+                            flowFrontOffsetParam.Param<core::param::IntParam>()->Value() / output.framerate;
                         getInput->SetInput(prevInput);
                         if ((*getInput)(ImageSeries::ImageSeries2DCall::CallGetData)) {
                             filterInput.prevImage = getInput->GetOutput().imageData;
