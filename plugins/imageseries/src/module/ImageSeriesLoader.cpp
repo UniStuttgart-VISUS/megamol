@@ -164,6 +164,7 @@ void ImageSeriesLoader::filterImageFiles() {
 }
 
 void ImageSeriesLoader::updateMetadata() {
+    imageCache.clear();
     metadata = {};
 
     // No image files -> no data

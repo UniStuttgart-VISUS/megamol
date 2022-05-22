@@ -22,6 +22,7 @@ public:
     ImagePtr operator()();
 
     std::size_t getByteSize() const;
+    AsyncImageData2D::Hash getHash() const;
 
     static std::vector<float> makeGaussianKernel(float sigma, std::size_t radius);
 

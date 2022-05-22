@@ -17,6 +17,7 @@
 #include "module/ImageSeriesLoader.h"
 #include "module/ImageSeriesResampler.h"
 #include "module/ImageSeriesTimeDiffFilter.h"
+#include "module/ImageSeriesTimestampFilter.h"
 
 namespace megamol::ImageSeries {
 
@@ -46,6 +47,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesResampler>();
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesFlowPreprocessor>();
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesTimeDiffFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesTimestampFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesLabeler>();
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesGraphGenerator>();
     }

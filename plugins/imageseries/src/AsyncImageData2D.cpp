@@ -4,16 +4,16 @@
 
 namespace megamol::ImageSeries {
 
-AsyncImageData2D::AsyncImageData2D(ImageProvider imageProvider, std::size_t byteSize)
+AsyncImageData2D::AsyncImageData2D(ImageProvider imageProvider, std::size_t byteSize, Hash hash)
         : byteSize(byteSize)
-        , hash(computeHash()) {
+        , hash(hash) {
     job = getThreadPool().submit([this, imageProvider]() { imageData = imageProvider(); });
 }
 
 AsyncImageData2D::AsyncImageData2D(std::shared_ptr<const BitmapImage> imageData)
         : byteSize(imageData != nullptr ? imageData->Width() * imageData->Height() * imageData->BytesPerPixel() : 0)
         , imageData(imageData)
-        , hash(imageData != nullptr ? computeHash() : 0) {}
+        , hash(computeHash(imageData)) {}
 
 AsyncImageData2D::~AsyncImageData2D() {
     // Try to cancel job
@@ -47,10 +47,10 @@ AsyncImageData2D::Hash AsyncImageData2D::getHash() const {
     return hash;
 }
 
-AsyncImageData2D::Hash AsyncImageData2D::computeHash() {
-    // TODO use an actual hash function instead of a counter!
-    static std::atomic<Hash> currentHash = ATOMIC_VAR_INIT(1);
-    return currentHash++;
+AsyncImageData2D::Hash AsyncImageData2D::computeHash(std::shared_ptr<const BitmapImage> imageData) {
+    return imageData ? megamol::ImageSeries::util::hashBytes(
+                           imageData->PeekData(), imageData->BytesPerPixel() * imageData->Width() * imageData->Height())
+                     : 0;
 }
 
 std::shared_ptr<const vislib::graphics::BitmapImage> AsyncImageData2D::tryGetImageData() const {

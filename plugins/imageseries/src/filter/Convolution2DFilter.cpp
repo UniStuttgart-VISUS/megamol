@@ -77,6 +77,10 @@ std::size_t Convolution2DFilter::getByteSize() const {
     return input.image ? input.image->getByteSize() : 0;
 }
 
+AsyncImageData2D::Hash Convolution2DFilter::getHash() const {
+    return util::computeHash(input.image, input.kernelX, input.kernelY);
+}
+
 std::vector<float> Convolution2DFilter::makeGaussianKernel(float sigma, std::size_t radius) {
     static const double invSqrtTau = std::sqrt(2.0 * 3.14159265358979323846);
 

@@ -59,4 +59,8 @@ std::size_t DerivativeFilter::getByteSize() const {
     return input.image ? input.image->getByteSize() * 2 : 0;
 }
 
+AsyncImageData2D::Hash DerivativeFilter::getHash() const {
+    return util::computeHash(input.image);
+}
+
 } // namespace megamol::ImageSeries::filter

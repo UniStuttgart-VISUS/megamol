@@ -5,7 +5,11 @@
 
 #include "glm/glm.hpp"
 
+#include <utility>
+
 namespace megamol::ImageSeries::util {
+
+using Hash = std::uint32_t;
 
 template<typename T>
 T combineHash(T a) {
@@ -20,6 +24,46 @@ T combineHash(T a, T b) {
 template<typename T, typename... Args>
 T combineHash(T a, T b, Args... args) {
     return combineHash(a, combineHash(b, args...));
+}
+
+inline Hash hashBytes(const void* data, std::size_t size) {
+    Hash hash = 1;
+    const char* bytes = static_cast<const char*>(data);
+    for (size_t i = 0; i < size; ++i) {
+        hash += bytes[i];
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+
+    return hash;
+}
+
+template<typename T>
+Hash computeHash(const T& a) {
+    return std::hash<T>()(a);
+}
+
+template<>
+inline Hash computeHash(const Hash& a) {
+    return a;
+}
+
+template<typename T>
+Hash computeHash(const std::vector<T>& vec) {
+    Hash result = 1;
+    for (const auto& entry : vec) {
+        combineHash(result, computeHash(entry));
+    }
+    return result;
+}
+
+template<typename T, typename... Args>
+Hash computeHash(const T& a, const Args&... args) {
+    return combineHash(computeHash(a), computeHash(args...));
 }
 
 template<typename Type, std::size_t ChannelCount>

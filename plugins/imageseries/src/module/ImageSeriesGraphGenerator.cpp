@@ -9,7 +9,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 
-#include "../util/ImageUtils.h"
+#include "imageseries/util/ImageUtils.h"
 
 using Log = megamol::core::utility::log::Log;
 using Presentation = megamol::core::param::AbstractParamPresentation::Presentation;

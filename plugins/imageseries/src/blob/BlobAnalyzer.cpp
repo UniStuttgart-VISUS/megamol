@@ -1,7 +1,7 @@
 #include "BlobAnalyzer.h"
 
 #include "../filter/AsyncFilterRunner.h"
-#include "../util/ImageUtils.h"
+#include "imageseries/util/ImageUtils.h"
 
 #include <bitset>
 

@@ -233,4 +233,10 @@ std::size_t BlobLabelFilter::getByteSize() const {
     return input.image ? input.image->getByteSize() : 0;
 }
 
+AsyncImageData2D::Hash BlobLabelFilter::getHash() const {
+    return util::computeHash(input.image, input.prevImage, input.diffImage, input.mask, input.blobCountLimit,
+        input.minBlobSize, input.negateThreshold, input.threshold, input.negateMask, input.maskPriority,
+        input.markPrevious);
+}
+
 } // namespace megamol::ImageSeries::filter

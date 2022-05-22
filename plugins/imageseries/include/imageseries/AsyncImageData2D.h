@@ -6,8 +6,10 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <utility>
 #include <vector>
 
+#include "util/ImageUtils.h"
 #include "util/WorkerThreadPool.h"
 
 namespace vislib::graphics {
@@ -24,10 +26,10 @@ class Job;
 class AsyncImageData2D {
 public:
     using BitmapImage = vislib::graphics::BitmapImage;
-    using Hash = std::uint32_t;
+    using Hash = megamol::ImageSeries::util::Hash;
     using ImageProvider = std::function<std::shared_ptr<const BitmapImage>()>;
 
-    AsyncImageData2D(ImageProvider imageProvider, std::size_t byteSize);
+    AsyncImageData2D(ImageProvider imageProvider, std::size_t byteSize, Hash hash);
     AsyncImageData2D(std::shared_ptr<const BitmapImage> imageData = nullptr);
     ~AsyncImageData2D();
 
@@ -47,7 +49,7 @@ public:
 private:
     static util::WorkerThreadPool& getThreadPool();
 
-    Hash computeHash();
+    Hash computeHash(std::shared_ptr<const BitmapImage> imageData);
 
     std::size_t byteSize = 0;
     std::shared_ptr<const BitmapImage> imageData;
@@ -56,7 +58,17 @@ private:
     mutable util::Job job;
 };
 
-
 } // namespace megamol::ImageSeries
+
+namespace std {
+template<>
+struct hash<std::shared_ptr<const megamol::ImageSeries::AsyncImageData2D>> {
+    std::size_t operator()(const std::shared_ptr<const megamol::ImageSeries::AsyncImageData2D>& data) const {
+        return data ? data->getHash() : 0;
+    }
+};
+
+} // namespace std
+
 
 #endif

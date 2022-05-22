@@ -55,4 +55,8 @@ std::size_t DeinterlaceFilter::getByteSize() const {
     return input.image ? input.image->getByteSize() : 0;
 }
 
+AsyncImageData2D::Hash DeinterlaceFilter::getHash() const {
+    return util::computeHash(input.image, input.offset);
+}
+
 } // namespace megamol::ImageSeries::filter

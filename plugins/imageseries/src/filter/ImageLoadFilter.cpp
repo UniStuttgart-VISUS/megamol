@@ -37,4 +37,8 @@ std::size_t ImageLoadFilter::getByteSize() const {
     return input.sizeEstimate;
 }
 
+AsyncImageData2D::Hash ImageLoadFilter::getHash() const {
+    return util::computeHash(input.filename);
+}
+
 } // namespace megamol::ImageSeries::filter

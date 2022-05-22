@@ -54,4 +54,8 @@ std::size_t MaskFilter::getByteSize() const {
     return input.image ? input.image->getByteSize() : 0;
 }
 
+AsyncImageData2D::Hash MaskFilter::getHash() const {
+    return util::computeHash(input.image, input.mask);
+}
+
 } // namespace megamol::ImageSeries::filter

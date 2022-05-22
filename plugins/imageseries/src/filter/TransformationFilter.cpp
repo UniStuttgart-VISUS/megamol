@@ -68,4 +68,8 @@ std::size_t TransformationFilter::getByteSize() const {
     return input.image ? input.image->getByteSize() : 0;
 }
 
+AsyncImageData2D::Hash TransformationFilter::getHash() const {
+    return util::computeHash(input.image, util::hashBytes(&input.transform, sizeof(input.transform)));
+}
+
 } // namespace megamol::ImageSeries::filter

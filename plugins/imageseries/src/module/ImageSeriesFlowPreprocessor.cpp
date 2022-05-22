@@ -12,7 +12,7 @@
 #include "../filter/DeinterlaceFilter.h"
 #include "../filter/MaskFilter.h"
 #include "../filter/SegmentationFilter.h"
-#include "../util/ImageUtils.h"
+#include "imageseries/util/ImageUtils.h"
 
 using Log = megamol::core::utility::log::Log;
 using Presentation = megamol::core::param::AbstractParamPresentation::Presentation;

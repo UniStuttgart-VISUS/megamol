@@ -3,7 +3,7 @@
 #include "../filter/AsyncFilterRunner.h"
 #include "../filter/Convolution2DFilter.h"
 #include "../filter/DerivativeFilter.h"
-#include "../util/ImageUtils.h"
+#include "imageseries/util/ImageUtils.h"
 
 namespace megamol::ImageSeries::registration {
 

@@ -96,4 +96,12 @@ std::size_t TimeOffsetFilter::getByteSize() const {
     return input.reference ? input.reference->getByteSize() * 4 : 0;
 }
 
+AsyncImageData2D::Hash TimeOffsetFilter::getHash() const {
+    auto hashValue = util::computeHash(input.reference);
+    for (auto& frame : input.frames) {
+        util::computeHash(hashValue, frame.image, frame.weight, frame.certainty, frame.primary);
+    }
+    return hashValue;
+}
+
 } // namespace megamol::ImageSeries::filter

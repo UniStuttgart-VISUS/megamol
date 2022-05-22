@@ -1,5 +1,5 @@
-#ifndef SRC_IMAGESERIES_FILTER_SEGMENTATIONFILTER_HPP_
-#define SRC_IMAGESERIES_FILTER_SEGMENTATIONFILTER_HPP_
+#ifndef SRC_IMAGESERIES_FILTER_INDEXGENERATIONFILTER_HPP_
+#define SRC_IMAGESERIES_FILTER_INDEXGENERATIONFILTER_HPP_
 
 #include "imageseries/AsyncImageData2D.h"
 
@@ -7,19 +7,19 @@
 
 namespace megamol::ImageSeries::filter {
 
-class SegmentationFilter {
+class IndexGenerationFilter {
 public:
     using AsyncImagePtr = std::shared_ptr<const AsyncImageData2D>;
     using ImagePtr = std::shared_ptr<const AsyncImageData2D::BitmapImage>;
 
     struct Input {
         AsyncImagePtr image;
-        double threshold = 0.5;
-        bool negateOutput = false;
+        AsyncImagePtr indexMap;
+        std::uint16_t frameIndex = 0;
     };
 
-    SegmentationFilter(Input input);
-    SegmentationFilter(AsyncImagePtr image, double threshold = 0.5, bool negateOutput = false);
+    IndexGenerationFilter(Input input);
+    IndexGenerationFilter(AsyncImagePtr image, AsyncImagePtr indexMap, std::size_t frameIndex);
     ImagePtr operator()();
 
     std::size_t getByteSize() const;

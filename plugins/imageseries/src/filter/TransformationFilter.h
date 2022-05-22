@@ -24,6 +24,7 @@ public:
     ImagePtr operator()();
 
     std::size_t getByteSize() const;
+    AsyncImageData2D::Hash getHash() const;
 
 private:
     Input input;

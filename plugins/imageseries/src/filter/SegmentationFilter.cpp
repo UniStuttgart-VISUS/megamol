@@ -54,4 +54,8 @@ std::size_t SegmentationFilter::getByteSize() const {
     return input.image ? input.image->getByteSize() : 0;
 }
 
+AsyncImageData2D::Hash SegmentationFilter::getHash() const {
+    return util::computeHash(input.image, input.threshold, input.negateOutput);
+}
+
 } // namespace megamol::ImageSeries::filter
