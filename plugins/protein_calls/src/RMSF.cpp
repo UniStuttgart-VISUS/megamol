@@ -1,6 +1,5 @@
 #include "protein_calls/RMSF.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/Array.h"
 #include "vislib/math/ShallowVector.h"
 #include <cfloat>

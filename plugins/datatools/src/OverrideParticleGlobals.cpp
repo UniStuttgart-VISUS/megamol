@@ -9,7 +9,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "stdafx.h"
 #include "vislib/graphics/ColourParser.h"
 #include <algorithm>
 #include <cstdint>

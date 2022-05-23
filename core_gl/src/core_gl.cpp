@@ -6,7 +6,6 @@
 
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
-#include "stdafx.h"
 
 #include "mmcore_gl/DeferredShading.h"
 #include "mmcore_gl/flags/UniFlagStorage.h"

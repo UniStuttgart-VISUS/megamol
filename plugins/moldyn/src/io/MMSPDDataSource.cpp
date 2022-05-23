@@ -12,7 +12,6 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/utility/sys/SystemInformation.h"
-#include "stdafx.h"
 #include "vislib/ArrayAllocator.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/PtrArray.h"

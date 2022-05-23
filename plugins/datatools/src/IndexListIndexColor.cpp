@@ -7,7 +7,6 @@
 #include "IndexListIndexColor.h"
 #include "datatools/MultiIndexListDataCall.h"
 #include "datatools/MultiParticleDataAdaptor.h"
-#include "stdafx.h"
 #include <algorithm>
 
 using namespace megamol;

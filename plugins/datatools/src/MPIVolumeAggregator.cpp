@@ -9,7 +9,6 @@
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/sys/SystemInformation.h"
-#include "stdafx.h"
 #include <chrono>
 
 using namespace megamol;

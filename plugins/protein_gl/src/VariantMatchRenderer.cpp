@@ -11,7 +11,6 @@
 #include "VariantMatchRenderer.h"
 #include "ogl_error_check.h"
 #include "protein_calls/VariantMatchDataCall.h"
-#include "stdafx.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"

@@ -5,10 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "mmcore/CoreInstance.h"
 #include "mmcore_gl/view/special/ChronoGraph.h"
+#include "mmcore/CoreInstance.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <cmath>

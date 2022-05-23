@@ -12,7 +12,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmospray/CallOSPRayStructure.h"
-#include "stdafx.h"
 
 using namespace megamol::ospray;
 using namespace megamol;

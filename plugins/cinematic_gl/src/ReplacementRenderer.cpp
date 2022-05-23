@@ -10,7 +10,6 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "stdafx.h"
 
 
 using namespace megamol;

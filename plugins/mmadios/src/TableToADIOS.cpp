@@ -6,7 +6,6 @@
  */
 
 #include "TableToADIOS.h"
-#include "stdafx.h"
 
 #include "datatools/table/TableDataCall.h"
 #include "mmadios/CallADIOSData.h"

@@ -9,7 +9,6 @@
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 
 using namespace megamol::core;
 

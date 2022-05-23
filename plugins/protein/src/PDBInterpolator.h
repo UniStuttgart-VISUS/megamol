@@ -9,7 +9,6 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "stdafx.h"
 
 namespace megamol {
 namespace protein {

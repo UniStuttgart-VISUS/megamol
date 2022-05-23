@@ -1,5 +1,4 @@
 #include "ProbeClustering.h"
-#include "stdafx.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"

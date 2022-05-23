@@ -13,7 +13,6 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "stdafx.h"
 #include <numeric>
 
 

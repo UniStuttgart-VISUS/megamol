@@ -6,4 +6,3 @@
  */
 
 #include "geometry_calls/AbstractParticleDataCall.h"
-#include "stdafx.h"

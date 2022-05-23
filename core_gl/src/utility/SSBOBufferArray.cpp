@@ -6,7 +6,6 @@
  */
 
 #include "mmcore_gl/utility/SSBOBufferArray.h"
-#include "stdafx.h"
 
 
 using namespace megamol::core::utility;

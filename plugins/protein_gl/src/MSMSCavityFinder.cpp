@@ -4,7 +4,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "MSMSCavityFinder.h"
-#include "stdafx.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"

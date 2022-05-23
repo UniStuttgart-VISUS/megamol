@@ -1,5 +1,4 @@
 #include "RendernodeView.h"
-#include "stdafx.h"
 
 #include <array>
 #include <chrono>

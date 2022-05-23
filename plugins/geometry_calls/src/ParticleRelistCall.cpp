@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "geometry_calls/ParticleRelistCall.h"
-#include "stdafx.h"
 
 
 namespace megamol::geocalls {

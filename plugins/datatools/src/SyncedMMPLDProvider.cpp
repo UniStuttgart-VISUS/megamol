@@ -6,7 +6,6 @@
  */
 
 #include "SyncedMMPLDProvider.h"
-#include "stdafx.h"
 
 
 namespace megamol {

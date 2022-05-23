@@ -7,7 +7,6 @@
  * $Id$
  */
 
-#include "stdafx.h"
 
 #include <cmath>
 #include <math.h>

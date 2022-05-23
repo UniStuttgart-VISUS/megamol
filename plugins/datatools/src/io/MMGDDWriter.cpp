@@ -8,7 +8,6 @@
 #include "io/MMGDDWriter.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/String.h"
 #include "vislib/sys/FastFile.h"
 

@@ -4,7 +4,6 @@
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 
 #include "mmcore/JobInstance.h"
 #include "mmcore/Module.h"

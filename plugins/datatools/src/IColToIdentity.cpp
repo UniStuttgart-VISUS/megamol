@@ -1,5 +1,4 @@
 #include "IColToIdentity.h"
-#include "stdafx.h"
 
 
 megamol::datatools::IColToIdentity::IColToIdentity(void) : AbstractParticleManipulator("outData", "indata") {}

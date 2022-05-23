@@ -7,7 +7,6 @@
 
 #include "AbstractQuartzModule.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "stdafx.h"
 
 namespace megamol {
 namespace demos_gl {

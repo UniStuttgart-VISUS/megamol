@@ -14,7 +14,6 @@
  * $Id: slicing.cpp 24 2009-08-06 15:53:03Z falkmn $
  */
 
-#include "stdafx.h"
 
 #ifdef _WIN32
 #include <windows.h>

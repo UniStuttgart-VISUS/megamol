@@ -7,7 +7,6 @@
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/Module.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/String.h"
 #include "vislib/assert.h"
 #include <algorithm>

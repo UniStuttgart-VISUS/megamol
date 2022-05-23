@@ -10,7 +10,6 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/ConsoleProgressBar.h"
 #include "mmcore/utility/sys/Thread.h"
-#include "stdafx.h"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>

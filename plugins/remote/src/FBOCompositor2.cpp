@@ -1,5 +1,4 @@
 #include "FBOCompositor2.h"
-#include "stdafx.h"
 
 #include <fstream>
 #include <sstream>

@@ -15,7 +15,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
-#include "stdafx.h"
 
 
 using namespace megamol;

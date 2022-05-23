@@ -4,7 +4,6 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 
 #include "CartoonTessellationRenderer.h"
 #include "compositing_gl/CompositingCalls.h"

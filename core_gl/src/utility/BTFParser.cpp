@@ -7,7 +7,6 @@
 
 #include "mmcore_gl/utility/BTFParser.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "stdafx.h"
 #include "vislib/CharTraits.h"
 #include "vislib/assert.h"
 //#include "vislib/memutils.h"

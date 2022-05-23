@@ -14,7 +14,6 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "stdafx.h"
 
 
 using namespace megamol::ospray;

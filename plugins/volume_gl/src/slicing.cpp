@@ -14,7 +14,6 @@
  * $Id: slicing.cpp 24 2009-08-06 15:53:03Z falkmn $
  */
 
-#include "stdafx.h"
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #ifdef _WIN32

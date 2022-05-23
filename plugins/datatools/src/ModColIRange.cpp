@@ -7,7 +7,6 @@
 #include "ModColIRange.h"
 #include "datatools/MultiParticleDataAdaptor.h"
 #include "mmcore/param/FloatParam.h"
-#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::datatools;

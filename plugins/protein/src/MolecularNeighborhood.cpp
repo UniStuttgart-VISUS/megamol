@@ -10,7 +10,6 @@
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/math/Point.h"
 
 #include "protein/GridNeighbourFinder.h"

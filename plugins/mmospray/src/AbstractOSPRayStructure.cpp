@@ -5,7 +5,6 @@
  */
 
 #include "mmospray/AbstractOSPRayStructure.h"
-#include "stdafx.h"
 
 #include "glm/glm.hpp"
 #include "mmcore/view/CallClipPlane.h"

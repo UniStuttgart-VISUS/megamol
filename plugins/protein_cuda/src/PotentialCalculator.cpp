@@ -14,7 +14,6 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/VTIDataCall.h"
 #include "protein_calls/VTKImageData.h"
-#include "stdafx.h"
 //#include "vislib_vector_typedefs.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"

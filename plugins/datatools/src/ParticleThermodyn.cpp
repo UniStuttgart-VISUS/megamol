@@ -11,7 +11,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/ConsoleProgressBar.h"
-#include "stdafx.h"
 #include <algorithm>
 #include <array>
 #include <cassert>

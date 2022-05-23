@@ -5,7 +5,6 @@
  */
 
 #include "AntiAliasing.h"
-#include "stdafx.h"
 
 #include <array>
 #include <chrono>

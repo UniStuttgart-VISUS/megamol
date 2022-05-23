@@ -6,7 +6,6 @@
  */
 
 #include "protein_calls/MolecularDataCall.h"
-#include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/OutOfRangeException.h"

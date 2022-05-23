@@ -6,7 +6,6 @@
  */
 
 #include "TableProcessorBase.h"
-#include "stdafx.h"
 
 #include <cassert>
 #include <limits>

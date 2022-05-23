@@ -1,5 +1,4 @@
 #include "protein_calls/BindingSiteCall.h"
-#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::core;
