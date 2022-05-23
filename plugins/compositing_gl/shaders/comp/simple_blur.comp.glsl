@@ -1,3 +1,5 @@
+#version 450
+
 uniform sampler2D src_tx2D;
 
 layout(rgba16) writeonly uniform image2D tgt_tx2D;
@@ -18,9 +20,9 @@ void main()
     vec2 pixel_coords_norm = (vec2(pixel_coords) + vec2(0.5)) / vec2(tgt_resolution);
 
     vec4 result = vec4(0.0);
-    for (int x = -2; x < 2; ++x) 
+    for (int x = -2; x < 2; ++x)
     {
-        for (int y = -2; y < 2; ++y) 
+        for (int y = -2; y < 2; ++y)
         {
             ivec2 offset = ivec2(x, y);
             result += texelFetch(src_tx2D, pixel_coords + offset,0).rgba;
