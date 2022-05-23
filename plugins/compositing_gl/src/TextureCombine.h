@@ -76,6 +76,11 @@ protected:
      */
     bool getMetaDataCallback(core::Call& caller);
 
+    /**
+     * Callback for mode switch that sets parameter visibility
+     */
+    bool modeCallback(core::param::ParamSlot& slot);
+
 private:
     typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
