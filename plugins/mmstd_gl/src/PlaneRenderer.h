@@ -19,15 +19,14 @@
 #include <memory>
 
 namespace megamol {
-namespace core_gl {
-namespace view {
+namespace mmstd_gl {
 
 /**
  * Module for rendering (clip) plane.
  *
  * @author Alexander Straub
  */
-class PlaneRenderer : public Renderer3DModuleGL {
+class PlaneRenderer : public core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -80,8 +79,8 @@ protected:
     virtual void release() override;
 
     /** Callbacks for the computed streamlines */
-    virtual bool GetExtents(CallRender3DGL& call) override;
-    virtual bool Render(CallRender3DGL& call) override;
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call) override;
+    virtual bool Render(core_gl::view::CallRender3DGL& call) override;
 
 private:
     /** Call for getting the input plane */
@@ -100,6 +99,5 @@ private:
     bool initialized;
 };
 
-} // namespace view
-} // namespace core_gl
+} // namespace mmstd_gl
 } // namespace megamol

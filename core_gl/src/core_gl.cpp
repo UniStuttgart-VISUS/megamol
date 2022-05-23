@@ -12,7 +12,6 @@
 #include "mmcore_gl/view/BoundingBoxRenderer.h"
 #include "mmcore_gl/view/ContextToGL.h"
 #include "mmcore_gl/view/HeadView.h"
-#include "mmcore_gl/view/PlaneRenderer.h"
 #include "mmcore_gl/view/SplitViewGL.h"
 #include "mmcore_gl/view/TransferFunctionGL.h"
 #include "mmcore_gl/view/View2DGL.h"
@@ -54,7 +53,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<core_gl::view::View3DGL>();
         this->module_descriptions.RegisterAutoDescription<core_gl::view::HeadView>();
         this->module_descriptions.RegisterAutoDescription<core_gl::view::BoundingBoxRenderer>();
-        this->module_descriptions.RegisterAutoDescription<core_gl::view::PlaneRenderer>();
         this->module_descriptions.RegisterAutoDescription<core_gl::view::SplitViewGL>();
         this->module_descriptions.RegisterAutoDescription<core_gl::view::special::CallbackScreenShooter>();
         this->module_descriptions.RegisterAutoDescription<core_gl::DeferredShading>();
