@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CallClustering_2.h"
 #include "ClusterDataTypes.h"
 #include "image_calls/Image2DCall.h"
 #include "mmcore/Call.h"
@@ -94,7 +95,8 @@ private:
 
     bool calculateFileFeatureVectors(std::vector<std::pair<image_calls::Image2DCall*, int>> const& calls);
 
-    bool calculateMomentsFeatureVectors(std::vector<std::pair<image_calls::Image2DCall*, int>> const& calls, ClusteringMethod method);
+    bool calculateMomentsFeatureVectors(
+        std::vector<std::pair<image_calls::Image2DCall*, int>> const& calls, ClusteringMethod method);
 
     std::string valumeImageNameFromNormalImage(const std::string& str) const;
 
@@ -109,6 +111,14 @@ private:
 
     void calcImageMomentsForValueImage(
         std::vector<float> const& val_image, std::vector<float>& OUT_feature_vector) const;
+
+    float calcNodeNodeDistance(ClusterNode_2 const& node1, ClusterNode_2 const& node2) const;
+
+    float calcFeatureVectorDistance(std::vector<float> const& vec1, std::vector<float> const& vec2) const;
+
+    void mergeClusters(int64_t n_1, int64_t n_2, std::vector<int64_t> const& root_vec);
+
+    std::vector<int64_t> calcLeaveIndicesOfNode(int64_t node_id) const;
 
     std::filesystem::path getPathForIndex(int const index);
 
@@ -136,7 +146,7 @@ private:
     core::param::ParamSlot image_4_features_slot_;
 
     /** Pointer to the vector containing the cluster nodes */
-    std::shared_ptr<std::vector<ClusterNode_2>> nodes;
+    ClusteringData node_data_;
 
     std::map<std::string, std::vector<float>> feature_vectors_;
 

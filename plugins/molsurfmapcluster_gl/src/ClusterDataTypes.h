@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <map>
 
 namespace megamol {
 namespace molsurfmapcluster_gl {
@@ -36,6 +37,12 @@ struct ClusterNode_2 {
 
     /** Pointer to the represented image */
     std::weak_ptr<vislib::graphics::BitmapImage> picturePtr;
+
+    /** Map that stores the distance between this node and all other nodes */
+    std::map<int64_t, float> distanceMap;
+
+    /** The height of the node in the hierarchy */
+    float height = 0.0f;
 };
 
 /** Enum representing all available clustering methods */

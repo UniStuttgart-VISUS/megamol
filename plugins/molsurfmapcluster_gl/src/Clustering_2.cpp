@@ -86,7 +86,7 @@ Clustering_2::Clustering_2(void)
     this->MakeSlotAvailable(&this->distanceMeasureSelectionParam);
 
     // Variables
-    this->nodes = std::make_shared<std::vector<ClusterNode_2>>();
+    this->node_data_.nodes = std::make_shared<std::vector<ClusterNode_2>>();
     this->lastDataHash = {0, 0, 0, 0};
 }
 
@@ -114,7 +114,7 @@ bool Clustering_2::GetDataCallback(Call& call) {
             return false;
     }
 
-    // TODO copy data
+    cc->SetData(node_data_);
 
     return true;
 }
@@ -401,9 +401,195 @@ bool Clustering_2::calculateFileFeatureVectors(std::vector<std::pair<image_calls
 }
 
 bool Clustering_2::clusterImages(void) {
-    // TODO implement
+    if (node_data_.nodes == nullptr) {
+        return false;
+    }
+
+    // check calls
+    std::vector<std::pair<image_calls::Image2DCall*, int>> calls;
+    {
+        auto imc1 = this->getImageSlot.CallAs<image_calls::Image2DCall>();
+        auto imc2 = this->getImageSlot2.CallAs<image_calls::Image2DCall>();
+        auto imc3 = this->getImageSlot3.CallAs<image_calls::Image2DCall>();
+        auto imc4 = this->getImageSlot4.CallAs<image_calls::Image2DCall>();
+
+        if (imc1 != nullptr)
+            calls.push_back(std::make_pair(imc1, 0));
+        if (imc2 != nullptr)
+            calls.push_back(std::make_pair(imc2, 1));
+        if (imc3 != nullptr)
+            calls.push_back(std::make_pair(imc3, 2));
+        if (imc4 != nullptr)
+            calls.push_back(std::make_pair(imc4, 3));
+    }
+    // if nothing is connected, fail
+    if (calls.empty())
+        return false;
+    // ensure we only have one call
+    while (calls.size() > 1) {
+        calls.pop_back();
+    }
+
+    // add initial nodes
+    auto const& mycall = calls.front().first;
+    node_data_.nodes->resize(mycall->GetAvailablePathsCount());
+    auto const& availPaths = mycall->GetAvailablePathsPtr();
+    for (size_t i = 0; i < node_data_.nodes->size(); ++i) {
+        auto& node = node_data_.nodes->at(i);
+        node.id = i;
+        node.picturePath = availPaths->at(i);
+        node.valueImagePath = valumeImageNameFromNormalImage(node.picturePath);
+        node.pdbID = std::filesystem::path(node.picturePath).stem().string().substr(0, 4);
+        node.distanceMap.clear();
+    }
+
+    // calculate the node-node distances
+    if (node_data_.nodes->size() > 1) {
+        for (auto& n1 : *node_data_.nodes) {
+            for (auto const& n2 : *node_data_.nodes) {
+                n1.distanceMap[n2.id] = calcNodeNodeDistance(n1, n2);
+            }
+        }
+    }
+
+    // perform the actual clustering
+    std::vector<int64_t> root_vec;
+    for (auto const& n : *node_data_.nodes) {
+        root_vec.push_back(n.id);
+    }
+
+
+    auto const measure =
+        static_cast<DistanceMeasure>(this->distanceMeasureSelectionParam.Param<param::EnumParam>()->Value());
+    while (root_vec.size() > 1) {
+        // either the measures are true distances (Euclidean, L3) or they are similarity measures (Cosinus, Dice, Jaccard)
+        if (measure == DistanceMeasure::EUCLIDEAN_DISTANCE || measure == DistanceMeasure::L3_DISTANCE) {
+            int64_t min1 = -1, min2 = -1;
+            float mindist = std::numeric_limits<float>::max();
+            for (int64_t cur_idx = 0; cur_idx < root_vec.size(); ++cur_idx) {
+                auto const node_id_1 = root_vec[cur_idx];
+                auto const& dist_map = node_data_.nodes->at(node_id_1).distanceMap;
+                int64_t min_first = -1;
+                float min_second = std::numeric_limits<float>::max();
+                for (auto const& elem : dist_map) {
+                    if (elem.first != node_id_1) {
+                        if (elem.second < min_second) {
+                            min_second = elem.second;
+                            min_first = elem.first;
+                        }
+                    }
+                }
+                if (node_id_1 != min_first) {
+                    if (min_second < mindist) {
+                        mindist = min_second;
+                        min1 = node_id_1;
+                        min2 = min_first;
+                    }
+                }
+            }
+            // remove the two merged clusters from the root vector
+            root_vec.erase(std::remove(root_vec.begin(), root_vec.end(), min1), root_vec.end());
+            root_vec.erase(std::remove(root_vec.begin(), root_vec.end(), min2), root_vec.end());
+
+            mergeClusters(min1, min2, root_vec);
+
+            // add the new merged node
+            root_vec.push_back(node_data_.nodes->back().id);
+        } else {
+            int64_t max1 = -1, max2 = -1;
+            float maxdist = -1.0f;
+            for (int64_t cur_idx = 0; cur_idx < root_vec.size(); ++cur_idx) {
+                auto const node_id_1 = root_vec[cur_idx];
+                auto const& dist_map = node_data_.nodes->at(node_id_1).distanceMap;
+                int64_t max_first = -1;
+                float max_second = std::numeric_limits<float>::max();
+                for (auto const& elem : dist_map) {
+                    if (elem.first != node_id_1) {
+                        if (elem.second > max_second) {
+                            max_second = elem.second;
+                            max_first = elem.first;
+                        }
+                    }
+                }
+                if (node_id_1 != max_first) {
+                    if (max_second > maxdist) {
+                        maxdist = max_second;
+                        max1 = node_id_1;
+                        max2 = max_first;
+                    }
+                }
+            }
+            // remove the two merged clusters from the root vector
+            root_vec.erase(std::remove(root_vec.begin(), root_vec.end(), max1), root_vec.end());
+            root_vec.erase(std::remove(root_vec.begin(), root_vec.end(), max2), root_vec.end());
+
+            mergeClusters(max1, max2, root_vec);
+
+            // add the new merged node
+            root_vec.push_back(node_data_.nodes->back().id);
+        }
+    }
+
     return true;
 }
+
+void Clustering_2::mergeClusters(int64_t n_1, int64_t n_2, std::vector<int64_t> const& root_vec) {
+    // delete distance values for the clusters to be merged
+    for (auto const& node : root_vec) {
+        node_data_.nodes->at(node).distanceMap.erase(n_1);
+        node_data_.nodes->at(node).distanceMap.erase(n_2);
+    }
+
+    // create new node
+    ClusterNode_2 new_node;
+    new_node.id = static_cast<int64_t>(node_data_.nodes->size());
+    new_node.left = n_1;
+    new_node.right = n_2;
+
+    node_data_.nodes->push_back(new_node);
+    auto& new_node_ref = node_data_.nodes->back();
+
+    // change parent information of existing nodes
+    node_data_.nodes->at(n_1).parent = new_node.id;
+    node_data_.nodes->at(n_2).parent = new_node.id;
+
+    auto leaf_nodes = calcLeaveIndicesOfNode(new_node.id);
+
+    // recalculate distances
+    for (auto const& node_id : root_vec) {
+        // this is basically the average linkage of the old method
+        auto& node = node_data_.nodes->at(node_id);
+        auto other_leafs = calcLeaveIndicesOfNode(node_id);
+        float sum = 0.0f;
+        for (const auto leaf : leaf_nodes) {
+            auto& leaf_node = node_data_.nodes->at(leaf);
+            for (const auto other_leaf : other_leafs) {
+                auto& other_leaf_node = node_data_.nodes->at(other_leaf);
+                sum += calcNodeNodeDistance(leaf_node, other_leaf_node);
+            }
+        }
+        float const distance = sum / static_cast<float>(other_leafs.size() * leaf_nodes.size());
+        new_node_ref.distanceMap[node_id] = distance;
+    }
+
+    // calc height
+    new_node_ref.height = calcNodeNodeDistance(node_data_.nodes->at(n_1), node_data_.nodes->at(n_2)) / 2.0f;
+}
+
+std::vector<int64_t> Clustering_2::calcLeaveIndicesOfNode(int64_t node_id) const {
+    std::vector<int64_t> result;
+    auto const& cur_node = node_data_.nodes->at(node_id);
+    if (cur_node.left >= 0 && cur_node.right >= 0) {
+        auto left_vec = calcLeaveIndicesOfNode(cur_node.left);
+        auto right_vec = calcLeaveIndicesOfNode(cur_node.right);
+        result.insert(result.end(), left_vec.begin(), left_vec.end());
+        result.insert(result.end(), right_vec.begin(), right_vec.end());
+    } else {
+        result = {node_id};
+    }
+    return result;
+}
+
 
 std::string Clustering_2::valumeImageNameFromNormalImage(const std::string& str) const {
     if (str.empty()) {
@@ -574,4 +760,101 @@ void Clustering_2::calcImageMomentsForValueImage(
 
     OUT_feature_vector = {static_cast<float>(i1), 0.0, 0.0, static_cast<float>(i2), static_cast<float>(i4),
         static_cast<float>(i5), static_cast<float>(i6), static_cast<float>(i7), static_cast<float>(i8)};
+}
+
+float Clustering_2::calcNodeNodeDistance(ClusterNode_2 const& node1, ClusterNode_2 const& node2) const {
+    if (node1.id == node2.id) {
+        return 0.0f;
+    }
+    float distance = 0.0f;
+    // IMPORTANT: We only have to check if the left node is < 0, as the right node is >= 0 if and only if the left is also >= 0.
+    // both nodes are leaf nodes
+    if (node1.left < 0 && node2.left < 0) {
+        auto const& feature_vec_1 = feature_vectors_.at(node1.pdbID);
+        auto const& feature_vec_2 = feature_vectors_.at(node2.pdbID);
+        distance = calcFeatureVectorDistance(feature_vec_1, feature_vec_2);
+        // TODO use custom distance matrix
+    }
+    // only node1 is a leaf node
+    if (node1.left < 0 && node2.left >= 0) {
+        float const leftdist = calcNodeNodeDistance(node1, node_data_.nodes->at(node2.left));
+        float const rightdist = calcNodeNodeDistance(node1, node_data_.nodes->at(node2.right));
+        distance = 0.5f * (leftdist + rightdist);
+    }
+    // only node 2 is a leaf node
+    if (node1.left >= 0 && node2.left < 0) {
+        float const leftdist = calcNodeNodeDistance(node2, node_data_.nodes->at(node1.left));
+        float const rightdist = calcNodeNodeDistance(node2, node_data_.nodes->at(node1.right));
+        distance = 0.5f * (leftdist + rightdist);
+    }
+    // none of them is a leaf node
+    if (node1.left >= 0 && node2.left >= 0) {
+        float const d1 = calcNodeNodeDistance(node_data_.nodes->at(node1.left), node_data_.nodes->at(node2.left));
+        float const d2 = calcNodeNodeDistance(node_data_.nodes->at(node1.left), node_data_.nodes->at(node2.right));
+        float const d3 = calcNodeNodeDistance(node_data_.nodes->at(node1.right), node_data_.nodes->at(node2.left));
+        float const d4 = calcNodeNodeDistance(node_data_.nodes->at(node1.right), node_data_.nodes->at(node2.right));
+        distance = 0.25f * (d1 + d2 + d3 + d4);
+    }
+    return distance;
+}
+
+float Clustering_2::calcFeatureVectorDistance(std::vector<float> const& vec1, std::vector<float> const& vec2) const {
+    auto const mode = static_cast<DistanceMeasure>(distanceMeasureSelectionParam.Param<param::EnumParam>()->Value());
+    if (vec1.size() != vec2.size()) {
+        utility::log::Log::DefaultLog.WriteError(
+            "[Clustering_2]: Could not compare two feature vectors of different lengths");
+        return 0.0f;
+    }
+
+    switch (mode) {
+    case DistanceMeasure::EUCLIDEAN_DISTANCE: {
+        float sum = 0.0f;
+        for (size_t i = 0; i < vec1.size(); ++i) {
+            sum += std::pow(vec1[i] - vec2[i], 2.0f);
+        }
+        return std::sqrt(sum);
+    }
+    case DistanceMeasure::L3_DISTANCE: {
+        float sum = 0.0f;
+        for (size_t i = 0; i < vec1.size(); ++i) {
+            sum += std::pow(vec1[i] - vec2[i], 3.0f);
+        }
+        return std::cbrt(sum);
+    }
+    case DistanceMeasure::COSINUS_DISTANCE: {
+        float sumXY = 0.0f;
+        float sumX = 0.0f;
+        float sumY = 0.0f;
+        for (size_t i = 0; i < vec1.size(); ++i) {
+            sumXY += vec1[i] * vec2[i];
+            sumX += std::pow(vec1[i], 2.0f);
+            sumY += std::pow(vec2[i], 2.0f);
+        }
+        return sumXY / (std::sqrt(sumX) * std::sqrt(sumY));
+    }
+    case DistanceMeasure::DICE_DISTANCE: {
+        float sumXY = 0.0f;
+        float sumX = 0.0f;
+        float sumY = 0.0f;
+        for (size_t i = 0; i < vec1.size(); ++i) {
+            sumXY += vec1[i] * vec2[i];
+            sumX += vec1[i];
+            sumY += vec2[i];
+        }
+        return 2.0f * sumXY / (sumX + sumY);
+    }
+    case DistanceMeasure::JACCARD_DISTANCE: {
+        float sumXY = 0.0f;
+        float sumX = 0.0f;
+        float sumY = 0.0f;
+        for (size_t i = 0; i < vec1.size(); ++i) {
+            sumXY += vec1[i] * vec2[i];
+            sumX += vec1[i];
+            sumY += vec2[i];
+        }
+        return sumXY / (sumX + sumY - sumXY);
+    }
+    default:
+        return 0.0f;
+    }
 }
