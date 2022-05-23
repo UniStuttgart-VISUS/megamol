@@ -1,5 +1,4 @@
 #include "mmcore_gl/view/PlaneRenderer.h"
-#include "stdafx.h"
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallClipPlane.h"
