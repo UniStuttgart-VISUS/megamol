@@ -337,7 +337,7 @@ bool SphereRenderer::create(void) {
     // timer_.SetMaximumFrames(20, 100);
 
 #ifdef PROFILING
-    perf_manager = const_cast<frontend_resources::PerformanceManager*>(
+    perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
         &frontend_resources.get<frontend_resources::PerformanceManager>());
     frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer;
     upload_timer.name = "upload";
@@ -356,7 +356,7 @@ bool SphereRenderer::create(void) {
 
 void SphereRenderer::release(void) {
 #ifdef PROFILING
-    perf_manager->remove_timers(timers);
+    perf_manager_->remove_timers(timers_);
 #endif
     this->resetResources();
 }
@@ -1169,11 +1169,11 @@ bool SphereRenderer::renderSimple(core_gl::view::CallRender3DGL& call, MultiPart
         }
 
 #ifdef PROFILING
-        perf_manager->start_timer(timers[1], this->GetCoreInstance()->GetFrameID());
+        perf_manager_->start_timer(timers_[1], this->GetCoreInstance()->GetFrameID());
 #endif
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 #ifdef PROFILING
-        perf_manager->stop_timer(timers[1]);
+        perf_manager_->stop_timer(timers_[1]);
 #endif
 
         if (this->render_mode_ == RenderMode::SIMPLE_CLUSTERED) {

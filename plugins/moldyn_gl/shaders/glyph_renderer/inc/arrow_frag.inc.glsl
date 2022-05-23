@@ -47,7 +47,7 @@ void main() {
     if(orientation == 3) {
         if(absradii.y >= absradii.x && absradii.y >= absradii.z) {
             alignment = 1;
-            aligned_absradii = absradii.yzx;
+            aligned_absradii = absradii.yxz;
         }
         else if(absradii.z >= absradii.x && absradii.z >= absradii.y){
             alignment = 2;
@@ -56,7 +56,7 @@ void main() {
     }
     if(orientation == 1) {
         alignment = 1;
-        aligned_absradii = absradii.yzx;
+        aligned_absradii = absradii.yxz;
     }
     if(orientation == 2) {
         alignment = 2;
@@ -83,8 +83,8 @@ void main() {
     // re-assign coordinates to account for the alignment change
     // this way the code below doesn't need to be changed
     if(alignment == 1) {
-        ray = ray.yzx;
-        cpos = cpos.yzx;
+        ray = ray.yxz;
+        cpos = cpos.yxz;
     }
     else if(alignment == 2) {
         ray = ray.zxy;
@@ -183,18 +183,40 @@ void main() {
     normal.z = alignment == 2 ? -1.0 : 0.0;
     vec3 intersection = vec3(0.0);
 
+    // be aware of coordinate order for alignments
+    // alignment 0 --> xyz
+    // alignment 1 --> yxz
+    // alignment 2 --> zxy
+
     // cone
     if (!invalid.w) {
         invalid.xyz = bvec3(true, true, true);
         intersection = cpos + (ray * lambda.w);
-        normal = normalize(vec3(-TIP_RAD / TIP_LEN, normalize(intersection.yz)));
+        // TODO: need to adjust normals according to alignment!
+        vec2 norm_int = normalize(intersection.yz);
+        // norm_int = alignment == 0 ? normalize(intersection.yz) : norm_int;
+        // norm_int = alignment == 1 ? normalize(intersection.xz) : norm_int;
+        // norm_int = alignment == 2 ? normalize(intersection.xy) : norm_int;
+        normal = alignment == 0 ? normalize(vec3(TIP_RAD / TIP_LEN, norm_int.xy)) : normal;
+        normal = alignment == 1 ? normalize(vec3(norm_int.x, TIP_RAD / TIP_LEN, norm_int.y)) : normal;
+        normal = alignment == 2 ? normalize(vec3(norm_int.xy, TIP_RAD / TIP_LEN)) : normal;
+        //normal = normalize(vec3(-TIP_RAD / TIP_LEN, intersection.yz));
     }
     // cylinder
     if (!invalid.x) {
         invalid.zy = bvec2(true, true);
         intersection = cpos + (ray * lambda.x);
-        normal = vec3(0.0, normalize(intersection.yz));
+        vec2 norm_int = normalize(intersection.yz);
+        // norm_int = alignment == 0 ? normalize(intersection.yz) : norm_int;
+        // norm_int = alignment == 1 ? normalize(intersection.xz) : norm_int;
+        // norm_int = alignment == 2 ? normalize(intersection.yx) : norm_int;
+        normal = alignment == 0 ? normalize(vec3(0.0, norm_int.xy)) : normal;
+        normal = alignment == 1 ? normalize(vec3(norm_int.x, 0.0, norm_int.y)) : normal;
+        normal = alignment == 2 ? normalize(vec3(norm_int.xy, 0.0)) : normal;
+        //normal = vec3(0.0, normalize(intersection.yz));
     }
+    // no need for alignment adjustment for disks, since it is already done
+    // when normal is initialized
     // left cylinder disk
     if (!invalid.z) {
         invalid.y = true;

@@ -5,6 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
+#include "vk_platform.h"
+
 #ifndef MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED
 #define MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED
 
