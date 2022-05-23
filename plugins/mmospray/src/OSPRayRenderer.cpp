@@ -9,7 +9,6 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "ospray/ospray_cpp.h"
-#include "stdafx.h"
 #include <chrono>
 
 #include <sstream>

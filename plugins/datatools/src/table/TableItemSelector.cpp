@@ -1,5 +1,4 @@
 #include "TableItemSelector.h"
-#include "stdafx.h"
 
 #include <functional>
 

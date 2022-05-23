@@ -4,7 +4,6 @@
  * Copyright (C) 2009-2021 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 
 #define _USE_MATH_DEFINES 1
 

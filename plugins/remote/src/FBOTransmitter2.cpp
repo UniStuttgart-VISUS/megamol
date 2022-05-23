@@ -1,5 +1,4 @@
 #include "FBOTransmitter2.h"
-#include "stdafx.h"
 
 #include <array>
 

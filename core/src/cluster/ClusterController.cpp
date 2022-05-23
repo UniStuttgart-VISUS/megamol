@@ -15,7 +15,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"

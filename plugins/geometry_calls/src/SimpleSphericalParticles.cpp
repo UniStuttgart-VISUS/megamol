@@ -1,5 +1,4 @@
 #include "geometry_calls/SimpleSphericalParticles.h"
-#include "stdafx.h"
 
 
 namespace megamol::geocalls {

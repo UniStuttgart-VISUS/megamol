@@ -15,7 +15,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "ogl_error_check.h"
-#include "stdafx.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
 using namespace megamol;

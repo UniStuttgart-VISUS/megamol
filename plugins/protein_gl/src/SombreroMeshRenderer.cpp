@@ -4,7 +4,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 
 #include "SombreroMeshRenderer.h"
 #include "geometry_calls_gl/CallTriMeshDataGL.h"

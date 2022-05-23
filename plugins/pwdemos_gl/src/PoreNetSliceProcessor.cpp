@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 //#define DEBUG_BMP
 #include "PoreNetSliceProcessor.h"
 #include "mmcore/utility/log/Log.h"

@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "mmcore/JobDescription.h"
-#include "stdafx.h"
 
 
 /*

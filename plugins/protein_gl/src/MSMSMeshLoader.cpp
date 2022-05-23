@@ -15,7 +15,6 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/PerAtomFloatCall.h"
 #include "protein_calls/ProteinColor.h"
-#include "stdafx.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/assert.h"

@@ -7,7 +7,6 @@
 #include "OSPRayMetalMaterial.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "stdafx.h"
 
 using namespace megamol::ospray;
 

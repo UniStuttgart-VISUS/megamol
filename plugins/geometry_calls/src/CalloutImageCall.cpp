@@ -1,5 +1,4 @@
 #include "geometry_calls/CalloutImageCall.h"
-#include "stdafx.h"
 
 namespace megamol::geocalls {
 

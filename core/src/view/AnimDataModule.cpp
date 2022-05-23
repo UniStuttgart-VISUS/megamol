@@ -7,7 +7,6 @@
 
 #include "mmcore/view/AnimDataModule.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/assert.h"
 #include "vislib/sys/Thread.h"
 #include <chrono>

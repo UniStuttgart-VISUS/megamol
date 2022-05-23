@@ -6,7 +6,6 @@
  */
 
 #include "mmcore_gl/utility/SSBOStreamer.h"
-#include "stdafx.h"
 #include "vislib/assert.h"
 #include <algorithm>
 #include <iostream>

@@ -16,7 +16,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "protein_calls/VTIDataCall.h"
-#include "stdafx.h"
 #include "vislib/Exception.h"
 #include "vislib/String.h"
 #include "vislib/sys/ASCIIFileBuffer.h"

@@ -10,7 +10,6 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
-#include "stdafx.h"
 #include "vislib/StringTokeniser.h"
 #include <cfloat>
 #include <climits>

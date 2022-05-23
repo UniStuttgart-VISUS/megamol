@@ -3,7 +3,6 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/CmdLineProvider.h"

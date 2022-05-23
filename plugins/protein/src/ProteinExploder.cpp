@@ -15,7 +15,6 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "stdafx.h"
 
 #include "vislib/MD5HashProvider.h"
 #include "vislib/SHA1HashProvider.h"

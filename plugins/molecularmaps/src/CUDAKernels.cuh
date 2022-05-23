@@ -15,7 +15,6 @@
 #include "helper_includes\exception.h"
 #include "helper_includes\helper_cuda.h"
 
-#include "stdafx.h"
 
 /**
  * The equal operator for the CUDA float3 type.

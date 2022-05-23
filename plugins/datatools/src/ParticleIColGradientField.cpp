@@ -6,7 +6,6 @@
  */
 #include "ParticleIColGradientField.h"
 #include "datatools/MultiParticleDataAdaptor.h"
-#include "stdafx.h"
 
 #include "mmcore/param/FloatParam.h"
 #include "vislib/math/ShallowPoint.h"

@@ -7,7 +7,6 @@
 #include "mmcore/view/light/AmbientLight.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "stdafx.h"
 
 using namespace megamol::core::view::light;
 

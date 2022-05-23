@@ -13,7 +13,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 
 
 using namespace megamol;

@@ -9,7 +9,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ResourceWrapper.h"
-#include "stdafx.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/sys/BufferedFile.h"

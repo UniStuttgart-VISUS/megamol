@@ -1,5 +1,4 @@
 #include "protein_calls/ResidueSelectionCall.h"
-#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::protein_calls;

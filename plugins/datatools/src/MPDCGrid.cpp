@@ -1,5 +1,4 @@
 #include "MPDCGrid.h"
-#include "stdafx.h"
 
 #include "mmcore/param/IntParam.h"
 

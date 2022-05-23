@@ -10,7 +10,6 @@
 #include "mmadios/CallADIOSData.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include <numeric>
 
 namespace megamol {

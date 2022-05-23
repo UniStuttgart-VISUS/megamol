@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/view/CallClipPlane.h"
-#include "stdafx.h"
 
 using namespace megamol::core;
 

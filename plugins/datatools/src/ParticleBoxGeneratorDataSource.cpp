@@ -11,7 +11,6 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "stdafx.h"
 #include <algorithm>
 #include <chrono>
 #include <climits>

@@ -1,5 +1,4 @@
 #include "FBOCommFabric.h"
-#include "stdafx.h"
 
 #ifdef WITH_MPI
 #include <mpi.h>

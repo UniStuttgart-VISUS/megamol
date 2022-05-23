@@ -7,7 +7,6 @@
 #include "NullParticleWriter.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include <cstdint>
 #include <thread>
 

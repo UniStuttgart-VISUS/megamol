@@ -8,7 +8,6 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "stdafx.h"
 #include <algorithm>
 #include <chrono>
 #include <omp.h>

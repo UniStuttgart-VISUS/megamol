@@ -9,7 +9,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/ConsoleProgressBar.h"
-#include "stdafx.h"
 #include "vislib/sys/Thread.h"
 #include <algorithm>
 #include <cassert>

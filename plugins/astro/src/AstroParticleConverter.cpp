@@ -6,7 +6,6 @@
  */
 
 #include "AstroParticleConverter.h"
-#include "stdafx.h"
 #include <glm/gtc/type_ptr.hpp>
 
 #include "simultaneous_sort.h"

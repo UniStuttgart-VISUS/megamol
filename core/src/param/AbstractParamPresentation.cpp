@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/param/AbstractParamPresentation.h"
-#include "stdafx.h"
 
 
 using namespace megamol::core::param;

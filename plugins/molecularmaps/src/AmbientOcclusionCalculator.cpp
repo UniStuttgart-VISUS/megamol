@@ -6,7 +6,6 @@
 
 #include "AmbientOcclusionCalculator.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/math/AbstractPolynomImpl.h"
 #include "vislib/math/ShallowVector.h"
 

@@ -6,7 +6,6 @@
  */
 
 #include "DirectionToColour.h"
-#include "stdafx.h"
 
 #include <cassert>
 #include <limits>

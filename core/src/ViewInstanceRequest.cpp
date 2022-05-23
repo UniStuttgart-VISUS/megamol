@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/ViewInstanceRequest.h"
-#include "stdafx.h"
 
 
 /*

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 
 #include "glTFRenderTasksDataSource.h"
 #include "mmcore/param/StringParam.h"

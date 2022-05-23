@@ -7,7 +7,6 @@
 
 #include "MMPLDWriter.h"
 #include "mmcore/BoundingBoxes.h"
-#include "stdafx.h"
 #include <algorithm>
 
 #include "mmcore/param/BoolParam.h"

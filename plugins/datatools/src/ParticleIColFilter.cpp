@@ -7,7 +7,6 @@
 #include "ParticleIColFilter.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector2fParam.h"
-#include "stdafx.h"
 #include <algorithm>
 
 using namespace megamol;

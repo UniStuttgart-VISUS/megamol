@@ -7,7 +7,6 @@
 #include "QuartzCrystalDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/CharTraits.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"

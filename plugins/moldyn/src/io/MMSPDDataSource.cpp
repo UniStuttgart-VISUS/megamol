@@ -10,7 +10,6 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/ArrayAllocator.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/PtrArray.h"

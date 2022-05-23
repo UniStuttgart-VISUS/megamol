@@ -7,7 +7,6 @@
 
 #include "mmcore/view/TransferFunction.h"
 #include "mmcore/param/TransferFunctionParam.h"
-#include "stdafx.h"
 
 
 using namespace megamol::core;

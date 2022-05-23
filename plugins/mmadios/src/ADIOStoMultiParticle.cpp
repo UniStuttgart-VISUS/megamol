@@ -9,7 +9,6 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmadios/CallADIOSData.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include <numeric>
 
 

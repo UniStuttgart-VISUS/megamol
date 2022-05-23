@@ -4,7 +4,6 @@
  * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/utility/xml/ConfigurationParser.h"

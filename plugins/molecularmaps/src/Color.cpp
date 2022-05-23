@@ -5,7 +5,6 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 
 #include "Color.h"
 #include "mmcore/CoreInstance.h"

@@ -7,7 +7,6 @@
 #include "OSPRayGeometryTest.h"
 #include "mmcore/Call.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 
 using namespace megamol::ospray;
 

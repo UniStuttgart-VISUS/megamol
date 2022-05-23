@@ -13,7 +13,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/ConsoleProgressBar.h"
-#include "stdafx.h"
 #include "trisoup/volumetrics/MarchingCubeTables.h"
 #include "vislib/graphics/NamedColours.h"
 #include "vislib/math/ShallowPoint.h"

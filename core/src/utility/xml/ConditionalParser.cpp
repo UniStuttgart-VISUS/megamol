@@ -7,7 +7,6 @@
 
 #include "mmcore/utility/xml/ConditionalParser.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/CharTraits.h"
 #include "vislib/String.h"
 #include "vislib/Trace.h"

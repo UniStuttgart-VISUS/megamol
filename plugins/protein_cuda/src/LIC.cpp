@@ -9,7 +9,6 @@
 
 #include "LIC.h"
 #include "UniGrid3D.h"
-#include "stdafx.h"
 
 #include "helper_math.h"
 

@@ -4,7 +4,6 @@
  * Copyright (C) 2010 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #define _USE_MATH_DEFINES 1
 #include "SolPathDataSource.h"
 #include "mmcore/param/BoolParam.h"

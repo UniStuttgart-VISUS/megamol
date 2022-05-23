@@ -7,7 +7,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "stdafx.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"

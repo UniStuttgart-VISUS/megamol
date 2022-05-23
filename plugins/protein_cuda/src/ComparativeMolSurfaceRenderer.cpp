@@ -9,7 +9,6 @@
 //
 
 #include "ComparativeMolSurfaceRenderer.h"
-#include "stdafx.h"
 
 //#define USE_TIMER
 //#define VERBOSE

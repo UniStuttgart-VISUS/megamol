@@ -7,7 +7,6 @@
  */
 #include "TriSoupDataSource.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/assert.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"

@@ -1,6 +1,5 @@
 #include "ParticleDataSequenceConcatenate.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::datatools;

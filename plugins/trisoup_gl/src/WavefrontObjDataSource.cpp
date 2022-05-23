@@ -7,7 +7,6 @@
  */
 #include "WavefrontObjDataSource.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/Array.h"
 #include "vislib/PtrArray.h"
 #include "vislib/StringConverter.h"

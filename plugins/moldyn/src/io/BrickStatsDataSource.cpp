@@ -12,7 +12,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "moldyn/BrickStatsCall.h"
-#include "stdafx.h"
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/sys/FastFile.h"

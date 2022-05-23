@@ -11,7 +11,6 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/PtrArray.h"
 #include "vislib/RawStorageWriter.h"
 #include "vislib/String.h"

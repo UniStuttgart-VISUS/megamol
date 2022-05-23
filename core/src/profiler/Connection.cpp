@@ -6,7 +6,6 @@
  */
 #include "mmcore/profiler/Connection.h"
 #include "mmcore/profiler/Manager.h"
-#include "stdafx.h"
 #include "vislib/memutils.h"
 
 using namespace megamol;

@@ -17,7 +17,6 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/view/light/QuadLight.h"
 #include "mmcore/view/light/SpotLight.h"
-#include "stdafx.h"
 #include "vislib/sys/Path.h"
 #include "vislib/sys/SystemInformation.h"
 #include <algorithm>

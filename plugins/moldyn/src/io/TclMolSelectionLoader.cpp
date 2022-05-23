@@ -7,7 +7,6 @@
 #include "TclMolSelectionLoader.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
-#include "stdafx.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include <deque>
 #include <vector>
