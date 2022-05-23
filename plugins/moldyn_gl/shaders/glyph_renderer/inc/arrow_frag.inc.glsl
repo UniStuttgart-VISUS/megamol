@@ -192,7 +192,6 @@ void main() {
     if (!invalid.w) {
         invalid.xyz = bvec3(true, true, true);
         intersection = cpos + (ray * lambda.w);
-        // TODO: need to adjust normals according to alignment!
         vec2 norm_int = normalize(intersection.yz);
         // norm_int = alignment == 0 ? normalize(intersection.yz) : norm_int;
         // norm_int = alignment == 1 ? normalize(intersection.xz) : norm_int;

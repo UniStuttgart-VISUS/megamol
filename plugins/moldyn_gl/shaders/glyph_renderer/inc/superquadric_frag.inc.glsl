@@ -38,20 +38,21 @@ void main() {
     vec3 tmp = rotate_world_into_tensor * coord.xyz;
 
     // calc the viewing ray
-    vec3 ray = normalize(tmp - cam_pos);
+    vec3 cpos = cam_pos;
+    vec3 ray = normalize(tmp - cpos);
 
     // iterative ray marching approch
     // see: http://cg.inf.h-bonn-rhein-sieg.de/wp-content/uploads/2009/04/introductiontoraytracing.pdf
     // start solution with box intersection
-    float t = length(tmp - cam_pos);
+    float t = length(tmp - cpos);
     // TODO: what radius to use?
     float radius = 1.0;
     // TODO: what are the superqadrics parameters? the radii?
     // TODO: what are the exponents? the radii?
     vec3 superquadric = absradii;
-    float result = pow(abs((cam_pos.x + t * ray.x) / superquadric.x), exponent) +
-                   pow(abs((cam_pos.y + t * ray.y) / superquadric.y), exponent) +
-                   pow(abs((cam_pos.z + t * ray.z) / superquadric.z), exponent) -
+    float result = pow(abs((cpos.x + t * ray.x) / superquadric.x), exponent) +
+                   pow(abs((cpos.y + t * ray.y) / superquadric.y), exponent) +
+                   pow(abs((cpos.z + t * ray.z) / superquadric.z), exponent) -
                    radius;
 
     // set a threshold at which the result is good enough
@@ -61,9 +62,9 @@ void main() {
     // march along ray until we find a hit
     while(result > threshold) {
         float old_result = result;
-        result = pow(abs((cam_pos.x + t * ray.x) / superquadric.x), exponent) +
-                 pow(abs((cam_pos.y + t * ray.y) / superquadric.y), exponent) +
-                 pow(abs((cam_pos.z + t * ray.z) / superquadric.z), exponent) -
+        result = pow(abs((cpos.x + t * ray.x) / superquadric.x), exponent) +
+                 pow(abs((cpos.y + t * ray.y) / superquadric.y), exponent) +
+                 pow(abs((cpos.z + t * ray.z) / superquadric.z), exponent) -
                  radius;
 
         // if we move further away from the object
@@ -77,7 +78,7 @@ void main() {
         t -= tmp_t;
     }
 
-    vec3 intersection = cam_pos + t * ray;
+    vec3 intersection = cpos + t * ray;
 
     // normal calculation for superquadric
     // see: http://cg.inf.h-bonn-rhein-sieg.de/wp-content/uploads/2009/04/introductiontoraytracing.pdf
@@ -90,6 +91,8 @@ void main() {
     if( normal.z > 0 ) normal.z = pow( normal.z, k );
     else normal.z = -pow( -normal.z, k );
     normal = normalize( normal );
+
+    normal = transpose(rotate_world_into_tensor) * normal;
 
     //albedo_out = vec4(normal, 1.0);
     albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation),1.0);
