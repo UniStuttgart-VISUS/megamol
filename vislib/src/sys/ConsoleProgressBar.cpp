@@ -5,11 +5,15 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/utility/sys/ConsoleProgressBar.h"
-#include "mmcore/utility/log/Console.h"
+#include "vislib/sys/ConsoleProgressBar.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/sysfunctions.h"
 
+#ifdef _WIN32
+#include <Windows.h>
+#else /* _WIN32 */
+#include <curses.h>
+#endif /* _WIN32 */
 
 #define PRINT_MILLISECONDS
 #ifdef _WIN32
@@ -21,6 +25,29 @@
 #define PBAR_LEND_CHAR '['
 #define PBAR_REND_CHAR ']'
 
+namespace {
+// From log/Console.cpp
+unsigned int GetConsoleWidth(void) {
+#ifdef _WIN32
+    // get handle
+    HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+    if ((hStdout == NULL) || (hStdout == INVALID_HANDLE_VALUE))
+        return 0;
+
+    // get info
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    if (::GetConsoleScreenBufferInfo(hStdout, &info) == 0)
+        return 0;
+
+    return info.srWindow.Right + 1 - info.srWindow.Left;
+
+#else // _WIN32
+    int value = tigetnum("cols");
+    return (value == -2) ? 0 : value;
+
+#endif // _WIN32
+}
+} // namespace
 
 /*
  * vislib::sys::ConsoleProgressBar::ConsoleProgressBar
@@ -120,7 +147,7 @@ void vislib::sys::ConsoleProgressBar::update(void) {
     static vislib::StringA right;
     static vislib::StringA line;
     static vislib::StringA tmp;
-    unsigned int width = megamol::core::utility::log::Console::GetWidth() - 1;
+    unsigned int width = GetConsoleWidth() - 1;
 
     left = this->title;
 
