@@ -2620,8 +2620,8 @@ void SphereRenderer::renderDeferredPass(core_gl::view::CallRender3DGL& call) {
     glUniformMatrix4fv(this->lighting_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
     this->lighting_prgm_->setUniform("inUseHighPrecision", high_precision);
     if (enable_lighting) {
-        this->lighting_prgm_->setUniform("inObjLightDir", this->cur_light_dir_);
-        this->lighting_prgm_->setUniform("inObjCamPos", this->cur_cam_pos_);
+        this->lighting_prgm_->setUniform("inObjLightDir", glm::vec3(this->cur_light_dir_));
+        this->lighting_prgm_->setUniform("inObjCamPos", glm::vec3(this->cur_cam_pos_));
     }
     this->lighting_prgm_->setUniform("inAOOffset", this->ao_offset_slot_.Param<param::FloatParam>()->Value());
     this->lighting_prgm_->setUniform("inAOStrength", this->ao_strength_slot_.Param<param::FloatParam>()->Value());
