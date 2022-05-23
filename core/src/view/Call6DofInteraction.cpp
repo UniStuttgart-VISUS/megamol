@@ -1,5 +1,4 @@
 #include "mmcore/view/Call6DofInteraction.h"
-#include "stdafx.h"
 
 
 /*

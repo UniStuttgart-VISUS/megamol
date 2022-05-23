@@ -6,7 +6,6 @@
  */
 
 #include "CPERAWDataSource.h"
-#include "stdafx.h"
 
 #include <chrono>
 #include <fstream>

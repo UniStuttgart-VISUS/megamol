@@ -7,7 +7,6 @@
 #include "ParticleColorSignThreshold.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "stdafx.h"
 #include <algorithm>
 #include <cstdint>
 

@@ -8,7 +8,6 @@
 #include "AbstractTriMeshLoader.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/assert.h"
 
 using namespace megamol;

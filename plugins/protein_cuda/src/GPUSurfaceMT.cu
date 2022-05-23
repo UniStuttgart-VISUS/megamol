@@ -8,7 +8,6 @@
 // Author     : scharnkn
 //
 
-#include "stdafx.h"
 #include "GPUSurfaceMT.h"
 
 #include "cuda_error_check.h"

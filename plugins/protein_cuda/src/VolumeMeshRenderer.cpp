@@ -4,16 +4,15 @@
  * Copyright(C) 2012 by Universitaet Stuttgart(VISUS).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 
 #define _USE_MATH_DEFINES 1
 
 //#define TEST
+#include "VolumeMeshRenderer.h"
 #include "MappableCategoryFloat.h"
 #include "MappableFloatPair.h"
 #include "MolecularSurfaceFeature.h"
 #include "SplitMergeFeature.h"
-#include "VolumeMeshRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"

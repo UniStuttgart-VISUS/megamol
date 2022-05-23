@@ -4,12 +4,11 @@
  * Copyright (C) 2008 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/xml/XmlReader.h"
 #include "mmcore_gl/utility/BTFParser.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/sys/Path.h"
 

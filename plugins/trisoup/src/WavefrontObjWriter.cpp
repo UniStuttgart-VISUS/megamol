@@ -8,7 +8,6 @@
 #include "WavefrontObjWriter.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
-#include "stdafx.h"
 #include <thread>
 
 using namespace megamol;

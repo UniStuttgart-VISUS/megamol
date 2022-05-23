@@ -9,6 +9,5 @@
 //
 
 #include "protein_calls/VTKImageData.h"
-#include "stdafx.h"
 
 // EMPTY

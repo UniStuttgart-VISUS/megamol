@@ -1,5 +1,4 @@
 #include "StaticMMPLDProvider.h"
-#include "stdafx.h"
 
 #include "mmcore/param/StringParam.h"
 #include "vislib/StringConverter.h"

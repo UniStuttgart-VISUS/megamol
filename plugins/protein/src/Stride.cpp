@@ -1,5 +1,4 @@
 #include "Stride.h"
-#include "stdafx.h"
 #include <algorithm>
 #include <cstdio>
 #include <iostream>

@@ -17,7 +17,6 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "protein_calls/VTIDataCall.h"
-#include "stdafx.h"
 #include "vislib/Exception.h"
 #include "vislib/String.h"
 #include <cmath>

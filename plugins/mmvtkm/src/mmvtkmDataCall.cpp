@@ -5,8 +5,7 @@
 // * Alle Rechte vorbehalten.
 // */
 //
-//#include "stdafx.h"
-//#include "mmvtkm/mmvtkmDataCall.h"
+////#include "mmvtkm/mmvtkmDataCall.h"
 //
 //
 //using namespace megamol;

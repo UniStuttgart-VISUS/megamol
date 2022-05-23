@@ -6,7 +6,6 @@
  */
 
 #include "VolumetricDataSource.h"
-#include "stdafx.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"

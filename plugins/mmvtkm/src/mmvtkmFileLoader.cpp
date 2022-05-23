@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 
 #include "mmvtkm/mmvtkmFileLoader.h"
 

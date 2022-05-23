@@ -8,7 +8,6 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/ShallowVector.h"
 #include <algorithm>

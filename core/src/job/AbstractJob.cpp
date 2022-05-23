@@ -8,7 +8,6 @@
 #include "mmcore/job/AbstractJob.h"
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 
 
 using namespace megamol::core;

@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "OverrideMultiParticleListGlobalColors.h"
-#include "stdafx.h"
 #include "vislib/graphics/ColourHSVf.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 

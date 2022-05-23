@@ -7,7 +7,6 @@
  */
 #include "MSMSGenus0Generator.h"
 #include "protein_calls/ProteinColor.h"
-#include "stdafx.h"
 #include <fstream>
 
 #include "mmcore/param/ColorParam.h"

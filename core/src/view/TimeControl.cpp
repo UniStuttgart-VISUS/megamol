@@ -10,7 +10,6 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/CallTimeControl.h"
-#include "stdafx.h"
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 

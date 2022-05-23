@@ -12,7 +12,6 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "stdafx.h"
 
 
 using namespace megamol;

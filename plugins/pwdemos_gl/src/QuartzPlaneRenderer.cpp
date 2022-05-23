@@ -9,7 +9,6 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "stdafx.h"
 #include "vislib/assert.h"
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/math/Vector.h"

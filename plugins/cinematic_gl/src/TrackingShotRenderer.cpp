@@ -15,7 +15,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 
 
 using namespace megamol;

@@ -6,7 +6,6 @@
  */
 #include "CoordSysMarker.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/assert.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Vector.h"

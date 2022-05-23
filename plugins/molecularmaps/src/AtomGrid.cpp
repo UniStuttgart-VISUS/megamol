@@ -4,7 +4,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "AtomGrid.h"
-#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::molecularmaps;

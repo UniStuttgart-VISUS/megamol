@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/JobInstanceRequest.h"
-#include "stdafx.h"
 
 
 /*

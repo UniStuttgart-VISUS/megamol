@@ -8,7 +8,6 @@
 // Author     : scharnkn
 //
 
-#include "stdafx.h"
 
 #include "protein/AbstractVTKLegacyData.h"
 

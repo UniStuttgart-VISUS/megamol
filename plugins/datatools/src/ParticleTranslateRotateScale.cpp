@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "ParticleTranslateRotateScale.h"
-#include "stdafx.h"
 
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>

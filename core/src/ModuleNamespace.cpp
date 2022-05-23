@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "mmcore/ModuleNamespace.h"
-#include "stdafx.h"
 
 using namespace megamol::core;
 

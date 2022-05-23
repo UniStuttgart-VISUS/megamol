@@ -6,11 +6,9 @@
  */
 
 #include "mmcore/view/View3D.h"
-#include "stdafx.h"
 
 #include "GlobalValueStore.h"
 #include "mmcore/view/CallRenderView.h"
-#include "stdafx.h"
 
 
 using namespace megamol::core;

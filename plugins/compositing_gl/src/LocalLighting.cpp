@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include "LocalLighting.h"
-#include "stdafx.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/ColorParam.h"

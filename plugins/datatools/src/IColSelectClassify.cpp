@@ -7,7 +7,6 @@
 #include "IColSelectClassify.h"
 #include "datatools/MultiParticleDataAdaptor.h"
 #include "mmcore/param/FloatParam.h"
-#include "stdafx.h"
 #include <algorithm>
 
 using namespace megamol;

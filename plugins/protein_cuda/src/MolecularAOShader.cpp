@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include "MolecularAOShader.h"
 #include "protein_calls/MolecularDataCall.h"

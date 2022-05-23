@@ -8,7 +8,6 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "stdafx.h"
 #ifdef PROFILING
 #include "mmcore/CoreInstance.h"
 #endif

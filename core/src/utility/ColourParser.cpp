@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/utility/ColourParser.h"
-#include "stdafx.h"
 #include "vislib/String.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/UnsupportedOperationException.h"
