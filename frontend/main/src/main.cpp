@@ -52,7 +52,6 @@ int main(const int argc, const char** argv) {
     megamol::core::utility::log::Log::DefaultLog.SetLevel(config.echo_level);
     megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(config.echo_level);
     megamol::core::utility::log::Log::DefaultLog.SetFileLevel(config.log_level);
-    megamol::core::utility::log::Log::DefaultLog.SetOfflineMessageBufferSize(100);
     megamol::core::utility::log::Log::DefaultLog.SetMainTarget(
         std::make_shared<megamol::core::utility::log::DefaultTarget>());
     if (!config.log_file.empty())

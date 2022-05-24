@@ -34,6 +34,9 @@ public:
     /** Default log message pattern for spdlog */
     static const char std_pattern[7];
 
+    /** Name of default logger in spdlog */
+    static const char logger_name[23];
+
     /** type for time stamps */
     using TimeStamp = time_t;
 
@@ -180,56 +183,40 @@ public:
      */
     Log(UINT level, const char* filename, bool addSuffix);
 
-    /**
-     * Copy ctor.
-     *
-     * @param source The object which will be copied from.
-     */
-    Log(const Log& source);
-
     /** Dtor. */
     ~Log(void);
 
-    /**
-     * Access the echo log target
-     *
-     * @return The echo log target
-     */
-    inline const std::shared_ptr<Target> AccessEchoTarget(void) const {
-        return this->echoTarget;
-    }
+    ///**
+    // * Access the echo log target
+    // *
+    // * @return The echo log target
+    // */
+    //inline const std::shared_ptr<Target> AccessEchoTarget(void) const {
+    //    return this->echoTarget;
+    //}
 
-    /**
-     * Access the main log target
-     *
-     * @return The main log target
-     */
-    inline const std::shared_ptr<Target> AccessMainTarget(void) const {
-        return this->mainTarget;
-    }
+    ///**
+    // * Access the main log target
+    // *
+    // * @return The main log target
+    // */
+    //inline const std::shared_ptr<Target> AccessMainTarget(void) const {
+    //    return this->mainTarget;
+    //}
 
-    /**
-     * Access the file log target
-     *
-     * @return The file log target
-     */
-    inline const std::shared_ptr<Target> AccessFileTarget(void) const {
-        return this->fileTarget;
-    }
+    ///**
+    // * Access the file log target
+    // *
+    // * @return The file log target
+    // */
+    //inline const std::shared_ptr<Target> AccessFileTarget(void) const {
+    //    return this->fileTarget;
+    //}
 
     /** Disable the autoflush flag. */
     inline void DisableAutoFlush(void) {
         this->SetAutoFlush(false);
     }
-
-    /**
-     * Writes all offline messages to the echo target.
-     *
-     * @param remove If 'true' the offline messages will be removed after
-     *               the operation returns. If 'false' the offline messages
-     *               remain in the offline buffer.
-     */
-    void EchoOfflineMessages(bool remove = false);
 
     /** Enables the autoflush flag. */
     inline void EnableAutoFlush(void) {
@@ -271,15 +258,6 @@ public:
      * @return The name of the current physical log file as ANSI string.
      */
     std::string GetLogFileNameA(void) const;
-
-    /**
-     * Answer the number of messages that will be stored in memory if no
-     * physical log file is available.
-     *
-     * @return The number of messages that will be stored in memory if no
-     *         physical log file is available.
-     */
-    unsigned int GetOfflineMessageBufferSize(void) const;
 
     /**
      * Answer the state of the autoflush flag.
@@ -355,26 +333,6 @@ public:
     void SetMainTarget(std::shared_ptr<Target> target);
 
     /**
-     * Sets the number of messages that will be stored in memory if no
-     * physical log file is available.
-     *
-     * @param msgbufsize The number of messages that will be stored in
-     *                   memory if no physical log file is available.
-     */
-    void SetOfflineMessageBufferSize(unsigned int msgbufsize);
-
-    /**
-     * Connects the internal memory for log targets of this this log with
-     * the memory of the 'master' log. Changes to the targets themself are
-     * not thread-safe. Log messages as input to the targets may be
-     * thead-safe depending on the employed targets.
-     *
-     * @param master The master log providing the memory for stroing the
-     *               log targets.
-     */
-    void ShareTargetStorage(const Log& master);
-
-    /**
      * Writes a formatted error message to the log. The level will be
      * 'LEVEL_ERROR'.
      *
@@ -408,28 +366,6 @@ public:
      * @param lvlOff The log level offset
      */
     void WriteInfo(int lvlOff, const char* fmt, ...);
-
-    /**
-     * Writes a pre-formatted message with specified log level, time stamp
-     * and source id to the log.
-     *
-     * @param level The level of the message
-     * @param time The time stamp of the message
-     * @param sid The object id of the source of the message
-     * @param msg The message text itself
-     */
-    void WriteMessage(UINT level, TimeStamp time, SourceID sid, const std::string& msg);
-
-    /**
-     * Writes a pre-formatted message with specified log level, time stamp
-     * and source id to the log.
-     *
-     * @param level The level of the message
-     * @param time The time stamp of the message
-     * @param sid The object id of the source of the message
-     * @param msg The message text itself
-     */
-    void WriteMessageVaA(UINT level, TimeStamp time, SourceID sid, const char* fmt, va_list argptr);
 
     /**
      * Writes a formatted messages with the specified log level to the log
@@ -471,6 +407,28 @@ public:
 
 private:
     /**
+     * Writes a pre-formatted message with specified log level, time stamp
+     * and source id to the log.
+     *
+     * @param level The level of the message
+     * @param time The time stamp of the message
+     * @param sid The object id of the source of the message
+     * @param msg The message text itself
+     */
+    void writeMessage(UINT level, TimeStamp time, SourceID sid, const std::string& msg);
+
+    /**
+     * Writes a pre-formatted message with specified log level, time stamp
+     * and source id to the log.
+     *
+     * @param level The level of the message
+     * @param time The time stamp of the message
+     * @param sid The object id of the source of the message
+     * @param msg The message text itself
+     */
+    void writeMessageVaA(UINT level, TimeStamp time, SourceID sid, const char* fmt, va_list argptr);
+
+    /**
      * Answer a file name suffix for log files
      *
      * @return A file name suffix for log files
@@ -478,13 +436,19 @@ private:
     std::string getFileNameSuffix(void);
 
     /** The main log target */
-    std::shared_ptr<Target> mainTarget;
+    //std::shared_ptr<Target> mainTarget;
 
     /** The log echo target */
-    std::shared_ptr<Target> echoTarget;
+    //std::shared_ptr<Target> echoTarget;
 
     /** The log file target */
-    std::shared_ptr<Target> fileTarget;
+    //std::shared_ptr<Target> fileTarget;
+
+    UINT mt_level_;
+
+    UINT et_level_;
+
+    UINT ft_level_;
 
     /** Flag whether or not to flush any targets after each message */
     bool autoflush;

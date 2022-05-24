@@ -7,7 +7,6 @@
 
 #include "LogConsole.h"
 #include "imgui_stdlib.h"
-#include "mmcore/utility/log/OfflineTarget.h"
 #include "widgets/ButtonWidgets.h"
 
 #include <regex>
@@ -244,9 +243,9 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
 LogConsole::~LogConsole() {
 
     // Reset echo target only if log target of this class instance is used
-    if (megamol::core::utility::log::Log::DefaultLog.AccessEchoTarget() == this->echo_log_target) {
+    /*if (megamol::core::utility::log::Log::DefaultLog.AccessEchoTarget() == this->echo_log_target) {
         megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(nullptr);
-    }
+    }*/
     this->echo_log_target.reset();
 }
 
@@ -474,15 +473,13 @@ bool megamol::gui::LogConsole::Draw() {
 
 bool megamol::gui::LogConsole::connect_log() {
 
-    auto current_echo_target = megamol::core::utility::log::Log::DefaultLog.AccessEchoTarget();
-    std::shared_ptr<megamol::core::utility::log::OfflineTarget> offline_echo_target =
-        std::dynamic_pointer_cast<megamol::core::utility::log::OfflineTarget>(current_echo_target);
+    //auto current_echo_target = megamol::core::utility::log::Log::DefaultLog.AccessEchoTarget();
 
     // Only connect if echo target is still default OfflineTarget
     /// Note: A second log console is temporarily created when "GUIView" module is loaded in configurator for complete
     /// module list. For this "GUIView" module NO log is connected, because the main LogConsole instance is already
     /// connected and the taget is not the default OfflineTarget.
-    if ((offline_echo_target != nullptr) && (this->echo_log_target != nullptr)) {
+    if (this->echo_log_target != nullptr) {
         megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(this->echo_log_target);
         megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
     }
