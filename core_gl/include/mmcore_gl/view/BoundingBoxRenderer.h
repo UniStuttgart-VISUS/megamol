@@ -6,13 +6,16 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/RendererModule.h"
 #include "mmcore_gl/ModuleGL.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol::core_gl::view {
 
@@ -142,10 +145,10 @@ private:
     GLuint va;
 
     /** Shader program for lines */
-    vislib_gl::graphics::gl::GLSLShader lineShader;
+    std::unique_ptr<glowl::GLSLProgram> lineShader;
 
     /** Shader program for a cube */
-    vislib_gl::graphics::gl::GLSLShader cubeShader;
+    std::unique_ptr<glowl::GLSLProgram> cubeShader;
 
     /** Bounding Boxes */
     megamol::core::BoundingBoxes_2 boundingBoxes;

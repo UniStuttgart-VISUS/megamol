@@ -1,30 +1,27 @@
-/*
- * BoundingBoxRenderer.cpp
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #include "mmcore_gl/view/BoundingBoxRenderer.h"
-
-#include "mmcore/CoreInstance.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/ColorParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/IntParam.h"
-
-#include "mmcore/utility/log/Log.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include <glm/ext.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <memory>
 #include <vector>
 
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include <glm/ext.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 using namespace megamol::core_gl;
 using namespace megamol::core_gl::view;
@@ -32,7 +29,7 @@ using namespace megamol::core_gl::view;
 /*
  * BoundingBoxRenderer::BoundingBoxRenderer
  */
-BoundingBoxRenderer::BoundingBoxRenderer(void)
+BoundingBoxRenderer::BoundingBoxRenderer()
         : RendererModule<CallRender3DGL, ModuleGL>()
         , enableBoundingBoxSlot("enableBoundingBox", "Enables the rendering of the bounding box")
         , boundingBoxColorSlot("boundingBoxColor", "Color of the bounding box")
@@ -74,50 +71,25 @@ BoundingBoxRenderer::BoundingBoxRenderer(void)
 /*
  * BoundingBoxRenderer::~BoundingBoxRenderer
  */
-BoundingBoxRenderer::~BoundingBoxRenderer(void) {
+BoundingBoxRenderer::~BoundingBoxRenderer() {
     this->Release();
 }
 
 /*
  * BoundingBoxRenderer::create
  */
-bool BoundingBoxRenderer::create(void) {
-    // TODO the vislib shaders have to die a slow and painful death
-    vislib_gl::graphics::gl::ShaderSource bbVertSrc, bbFragSrc;
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    if (!ssf->MakeShaderSource("boundingbox::vertex", bbVertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to load vertex shader source for bounding box line shader");
-    }
-    if (!ssf->MakeShaderSource("boundingbox::fragment", bbFragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to load fragment shader source for bounding box line shader");
-    }
-    try {
-        if (!this->lineShader.Create(bbVertSrc.Code(), bbVertSrc.Count(), bbFragSrc.Code(), bbFragSrc.Count())) {
-            throw vislib::Exception("Shader creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to create bounding box line shader: %s\n", e.GetMsgA());
-        return false;
-    }
+bool BoundingBoxRenderer::create() {
+    using namespace megamol::core::utility::log;
 
-    vislib_gl::graphics::gl::ShaderSource vcVertSrc, vcFragSrc;
-    if (!ssf->MakeShaderSource("viewcube::vertex", vcVertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to load vertex shader source for view cube shader");
-    }
-    if (!ssf->MakeShaderSource("viewcube::fragment", vcFragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to load fragment shader source for view cube shader");
-    }
+    auto const shader_options = ::msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
     try {
-        if (!this->cubeShader.Create(vcVertSrc.Code(), vcVertSrc.Count(), vcFragSrc.Code(), vcFragSrc.Count())) {
-            throw vislib::Exception("Shader creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to create view cube shader: %s\n", e.GetMsgA());
+        lineShader = core::utility::make_glowl_shader("boundingbox", shader_options,
+            "core/boundingbox/boundingbox.vert.glsl", "core/boundingbox/boundingbox.frag.glsl");
+        cubeShader = core::utility::make_glowl_shader(
+            "viewcube", shader_options, "core/boundingbox/viewcube.vert.glsl", "core/boundingbox/viewcube.frag.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("BoundingBoxRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -152,8 +124,7 @@ bool BoundingBoxRenderer::create(void) {
 /*
  * BoundingBoxRenderer::release
  */
-void BoundingBoxRenderer::release(void) {
-    this->lineShader.Release();
+void BoundingBoxRenderer::release() {
     if (this->va != 0) {
         glDeleteVertexArrays(1, &this->va);
         this->va = 0;
@@ -246,7 +217,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxFront(
 
     auto colptr = this->boundingBoxColorSlot.Param<core::param::ColorParam>()->Value();
 
-    this->lineShader.Enable();
+    this->lineShader->use();
 
     glDisable(GL_LIGHTING);
     glEnable(GL_BLEND);
@@ -263,10 +234,10 @@ bool BoundingBoxRenderer::RenderBoundingBoxFront(
     glBindVertexArray(this->va);
     glEnableVertexAttribArray(0);
 
-    glUniformMatrix4fv(this->lineShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
-    glUniform3fv(this->lineShader.ParameterLocation("bbMin"), 1, glm::value_ptr(bbmin));
-    glUniform3fv(this->lineShader.ParameterLocation("bbMax"), 1, glm::value_ptr(bbmax));
-    glUniform3f(this->lineShader.ParameterLocation("color"), colptr[0], colptr[1], colptr[2]);
+    this->lineShader->setUniform("mvp", mvp);
+    this->lineShader->setUniform("bbMin", bbmin);
+    this->lineShader->setUniform("bbMax", bbmax);
+    this->lineShader->setUniform("color", colptr[0], colptr[1], colptr[2]);
 
     glDrawElements(GL_QUADS, 24, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
@@ -282,7 +253,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxFront(
     glDisable(GL_CULL_FACE);
     glPolygonMode(GL_FRONT, GL_FILL);
 
-    this->lineShader.Disable();
+    glUseProgram(0);
 
     return true;
 }
@@ -297,7 +268,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(
 
     auto color = this->boundingBoxColorSlot.Param<core::param::ColorParam>()->Value();
 
-    this->lineShader.Enable();
+    this->lineShader->use();
 
     glDisable(GL_LIGHTING);
     glEnable(GL_BLEND);
@@ -314,10 +285,10 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(
     glBindVertexArray(this->va);
     glEnableVertexAttribArray(0);
 
-    glUniformMatrix4fv(this->lineShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
-    glUniform3fv(this->lineShader.ParameterLocation("bbMin"), 1, glm::value_ptr(bbmin));
-    glUniform3fv(this->lineShader.ParameterLocation("bbMax"), 1, glm::value_ptr(bbmax));
-    glUniform3f(this->lineShader.ParameterLocation("color"), color[0], color[1], color[2]);
+    this->lineShader->setUniform("mvp", mvp);
+    this->lineShader->setUniform("bbMin", bbmin);
+    this->lineShader->setUniform("bbMax", bbmax);
+    this->lineShader->setUniform("color", color[0], color[1], color[2]);
 
     glDrawElements(GL_QUADS, 24, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
@@ -333,7 +304,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(
     glDisable(GL_CULL_FACE);
     glPolygonMode(GL_BACK, GL_FILL);
 
-    this->lineShader.Disable();
+    glUseProgram(0);
 
     return true;
 }
@@ -396,15 +367,15 @@ bool BoundingBoxRenderer::RenderViewCube(CallRender3DGL& call) {
     glViewport(x, y, size, size);
 
     // Render view cube
-    this->cubeShader.Enable();
+    this->cubeShader->use();
 
-    glUniformMatrix4fv(this->cubeShader.ParameterLocation("rot_mx"), 1, false, glm::value_ptr(rotation));
-    glUniformMatrix4fv(this->cubeShader.ParameterLocation("model_mx"), 1, false, glm::value_ptr(model));
-    glUniformMatrix4fv(this->cubeShader.ParameterLocation("proj_mx"), 1, false, glm::value_ptr(proj));
+    this->cubeShader->setUniform("rot_mx", rotation);
+    this->cubeShader->setUniform("model_mx", model);
+    this->cubeShader->setUniform("proj_mx", proj);
 
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
-    this->cubeShader.Disable();
+    glUseProgram(0);
 
     // Restore viewport
     glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
