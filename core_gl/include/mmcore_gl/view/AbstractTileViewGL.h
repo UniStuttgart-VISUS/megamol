@@ -166,4 +166,4 @@ private:
 };
 
 
-} /* end namespace megamol */
+} // namespace megamol::core_gl::view
