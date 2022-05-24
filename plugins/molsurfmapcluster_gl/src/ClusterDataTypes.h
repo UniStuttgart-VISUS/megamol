@@ -26,6 +26,9 @@ struct ClusterNode_2 {
     /** The ID of the representative node. -1 or id, if this node is the representative */
     int64_t representative = -1;
 
+    /** The number of leaf nodes this node has. If this node is a leaf node, the value will be 1. */
+    int64_t numLeafNodes = 1;
+
     /** The PDB id of the represented protein */
     std::string pdbID = "";
 

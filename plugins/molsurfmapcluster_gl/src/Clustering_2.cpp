@@ -104,7 +104,7 @@ void Clustering_2::release(void) {
 }
 
 bool Clustering_2::GetDataCallback(Call& call) {
-    auto cc = dynamic_cast<CallClustering_2*>(&call);
+    auto const cc = dynamic_cast<CallClustering_2*>(&call);
     if (cc == nullptr)
         return false;
 
@@ -120,7 +120,7 @@ bool Clustering_2::GetDataCallback(Call& call) {
 }
 
 bool Clustering_2::GetExtentCallback(Call& call) {
-    CallClustering_2* cc = dynamic_cast<CallClustering_2*>(&call);
+    auto const cc = dynamic_cast<CallClustering_2*>(&call);
     if (cc == nullptr)
         return false;
 
@@ -136,13 +136,13 @@ bool Clustering_2::GetExtentCallback(Call& call) {
         auto imc4 = this->getImageSlot4.CallAs<image_calls::Image2DCall>();
 
         if (imc1 != nullptr)
-            calls.push_back(std::make_pair(imc1, 0));
+            calls.emplace_back(std::make_pair(imc1, 0));
         if (imc2 != nullptr)
-            calls.push_back(std::make_pair(imc2, 1));
+            calls.emplace_back(std::make_pair(imc2, 1));
         if (imc3 != nullptr)
-            calls.push_back(std::make_pair(imc3, 2));
+            calls.emplace_back(std::make_pair(imc3, 2));
         if (imc4 != nullptr)
-            calls.push_back(std::make_pair(imc4, 3));
+            calls.emplace_back(std::make_pair(imc4, 3));
     }
     // if the first one is not connected, fail
     if (calls.empty() || calls.at(0).first == nullptr)
@@ -171,12 +171,11 @@ bool Clustering_2::GetExtentCallback(Call& call) {
         this->dataHashOffset++;
     }
 
-    ClusteringMetaData meta;
+    ClusteringMetaData meta{0, 0};
     meta.dataHash = this->dataHashOffset;
     for (const auto& val : this->lastDataHash) {
         meta.dataHash += val;
     }
-    //meta.numLeafNodes = calls.at(0).first->GetImageCount();
     meta.numLeafNodes = calls.at(0).first->GetAvailablePathsCount();
     cc->SetMetaData(meta);
 
@@ -219,7 +218,7 @@ bool Clustering_2::checkParameterDirtyness(void) {
 bool Clustering_2::loadFeatureVectorFromFile(
     const std::filesystem::path& file_path, std::map<std::string, std::vector<float>>& OUT_feature_map) const {
 
-    auto fsize = std::filesystem::file_size(file_path);
+    auto const fsize = std::filesystem::file_size(file_path);
     std::vector<FeatureData> readVec;
 
     std::ifstream file(file_path, std::ios::binary);
@@ -248,9 +247,8 @@ bool Clustering_2::loadFeatureVectorFromFile(
             str.pdb_id.append(pdbId.data(), length);
             // remove spaces
             str.pdb_id.erase(std::remove_if(str.pdb_id.begin(), str.pdb_id.end(),
-                                 [](char& c) { return std::isspace<char>(c, std::locale::classic()); }),
+                                 [](char const& c) { return std::isspace<char>(c, std::locale::classic()); }),
                 str.pdb_id.end());
-            //std::vector<float> copy(str.feature_vec.begin(), str.feature_vec.end());
             OUT_feature_map.insert(std::make_pair(str.pdb_id, str.feature_vec));
         }
     } else {
@@ -269,6 +267,7 @@ bool Clustering_2::runComputation(void) {
         core::utility::log::Log::DefaultLog.WriteError("[Clustering_2]: Clustering calculation failed!");
         return false;
     }
+    postprocessClustering();
     return true;
 }
 
@@ -282,13 +281,13 @@ bool Clustering_2::calculateFeatureVectors(void) {
         auto imc4 = this->getImageSlot4.CallAs<image_calls::Image2DCall>();
 
         if (imc1 != nullptr)
-            calls.push_back(std::make_pair(imc1, 0));
+            calls.emplace_back(std::make_pair(imc1, 0));
         if (imc2 != nullptr)
-            calls.push_back(std::make_pair(imc2, 1));
+            calls.emplace_back(std::make_pair(imc2, 1));
         if (imc3 != nullptr)
-            calls.push_back(std::make_pair(imc3, 2));
+            calls.emplace_back(std::make_pair(imc3, 2));
         if (imc4 != nullptr)
-            calls.push_back(std::make_pair(imc4, 3));
+            calls.emplace_back(std::make_pair(imc4, 3));
     }
     // if nothing is connected, fail
     if (calls.empty())
@@ -414,13 +413,13 @@ bool Clustering_2::clusterImages(void) {
         auto imc4 = this->getImageSlot4.CallAs<image_calls::Image2DCall>();
 
         if (imc1 != nullptr)
-            calls.push_back(std::make_pair(imc1, 0));
+            calls.emplace_back(std::make_pair(imc1, 0));
         if (imc2 != nullptr)
-            calls.push_back(std::make_pair(imc2, 1));
+            calls.emplace_back(std::make_pair(imc2, 1));
         if (imc3 != nullptr)
-            calls.push_back(std::make_pair(imc3, 2));
+            calls.emplace_back(std::make_pair(imc3, 2));
         if (imc4 != nullptr)
-            calls.push_back(std::make_pair(imc4, 3));
+            calls.emplace_back(std::make_pair(imc4, 3));
     }
     // if nothing is connected, fail
     if (calls.empty())
@@ -531,6 +530,13 @@ bool Clustering_2::clusterImages(void) {
     }
 
     return true;
+}
+
+void Clustering_2::postprocessClustering() {
+    for (auto& node : *node_data_.nodes) {
+        auto const leaf_vec = calcLeaveIndicesOfNode(node.id);
+        node.numLeafNodes = leaf_vec.size();
+    }
 }
 
 void Clustering_2::mergeClusters(int64_t n_1, int64_t n_2, std::vector<int64_t> const& root_vec) {

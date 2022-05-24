@@ -118,6 +118,8 @@ private:
 
     void mergeClusters(int64_t n_1, int64_t n_2, std::vector<int64_t> const& root_vec);
 
+    void postprocessClustering();
+
     std::vector<int64_t> calcLeaveIndicesOfNode(int64_t node_id) const;
 
     std::filesystem::path getPathForIndex(int const index);

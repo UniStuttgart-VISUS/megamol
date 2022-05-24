@@ -1,9 +1,13 @@
 #pragma once
 
+#include "CallClustering_2.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
+
+#include <glowl/BufferObject.hpp>
+#include <glowl/GLSLProgram.hpp>
 
 namespace megamol {
 namespace molsurfmapcluster_gl {
@@ -56,34 +60,86 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    virtual bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    virtual void release(void) override;
 
     /**
      * The get extents callback. The module should set the members of
      * 'call' to tell the caller the extents of its data (bounding boxes
      * and times).
      */
-    virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
+    virtual bool GetExtents(core_gl::view::CallRender2DGL& call) override;
 
     /**
      * The render callback.
      */
-    virtual bool Render(core_gl::view::CallRender2DGL& call);
+    virtual bool Render(core_gl::view::CallRender2DGL& call) override;
 
 private:
+    void calculateNodePositions(ClusteringData const& cluster_data);
+
+    void calculateNodeConnections(ClusteringData const& cluster_data);
+
+    void uploadDataToGPU();
+
+    std::vector<int64_t> getLeaveIndicesInDFSOrder(
+        int64_t const start_idx, std::vector<ClusterNode_2> const& nodes) const;
+
     /** Slot for the cluster data */
-    core::CallerSlot clusterDataSlot;
+    core::CallerSlot cluster_data_slot_;
 
     /** Parameter setting the height of the used viewport */
-    core::param::ParamSlot viewportHeightParam;
+    core::param::ParamSlot viewport_height_param_;
 
     /** Parameter setting the width of the used viewport */
-    core::param::ParamSlot viewportWidthParam;
+    core::param::ParamSlot viewport_width_param_;
+
+    /** Parameter setting the size of the rendered nodes */
+    core::param::ParamSlot vert_size_param_;
+
+    /** Parameter setting the width of the renderer lines */
+    core::param::ParamSlot line_size_param_;
+
+    /** Parameter enabling the drawing of the pdb ids */
+    core::param::ParamSlot draw_pdb_ids_param_;
+
+    /** Parameter enabling the drawing of the miniature maps */
+    core::param::ParamSlot draw_minimap_param_;
+
+    /** Parameter enabling the drawing of the brenda classes */
+    core::param::ParamSlot draw_brenda_param_;
+
+    /** The positions of the nodes */
+    std::vector<glm::vec2> node_positions_;
+
+    /** The colors of the nodes */
+    std::vector<glm::vec3> node_colors_;
+
+    /** The positions of the line vertices */
+    std::vector<glm::vec2> line_positions_;
+
+    /** The colors of the line vertices */
+    std::vector<glm::vec3> line_colors_;
+
+    /** The last processed data hash */
+    size_t last_data_hash_;
+
+    /** The shader used for the vertices */
+    std::unique_ptr<glowl::GLSLProgram> point_shader_;
+
+    /** The shader used for the connecting lines */
+    std::unique_ptr<glowl::GLSLProgram> line_shader_;
+
+    std::unique_ptr<glowl::BufferObject> vert_pos_buffer_;
+    std::unique_ptr<glowl::BufferObject> vert_col_buffer_;
+    std::unique_ptr<glowl::BufferObject> line_pos_buffer_;
+    std::unique_ptr<glowl::BufferObject> line_col_buffer_;
+    GLuint vert_vao_;
+    GLuint line_vao_;
 };
 
 } // namespace molsurfmapcluster_gl
