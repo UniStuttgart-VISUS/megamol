@@ -1,26 +1,16 @@
-/*
- * DemoRenderer2D.h
- *
- * Copyright (C) 2009 - 2010 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_DEMORENDERER2D_H_INCLUDED
-#define MEGAMOLCORE_DEMORENDERER2D_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/factories/ModuleAutoDescription.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 
-
-namespace megamol {
-namespace core_gl {
-namespace view {
-namespace special {
-
+namespace megamol::core_gl::view::special {
 
 /**
  * A simple 2d renderer which just creates a circle
@@ -32,7 +22,7 @@ public:
      *
      * @return The class name
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DemoRenderer2D";
     }
 
@@ -41,7 +31,7 @@ public:
      *
      * @return The description string
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Demo 2D-Renderer";
     }
 
@@ -50,7 +40,7 @@ public:
      *
      * @return 'true'
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -59,7 +49,7 @@ public:
      *
      * @return false
      */
-    static bool SupportQuickstart(void) {
+    static bool SupportQuickstart() {
         return false;
     }
 
@@ -71,7 +61,7 @@ public:
     /**
      * dtor
      */
-    virtual ~DemoRenderer2D();
+    ~DemoRenderer2D() override;
 
 protected:
     /**
@@ -79,7 +69,7 @@ protected:
      *
      * @return 'true' on success
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Sets the extents (animation and bounding box) into the call object
@@ -88,7 +78,7 @@ protected:
      *
      * @return 'true' on success
      */
-    virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
+    bool GetExtents(core_gl::view::CallRender2DGL& call) override;
 
     /**
      * Renders the scene
@@ -97,12 +87,12 @@ protected:
      *
      * @return 'true' on success
      */
-    virtual bool Render(core_gl::view::CallRender2DGL& call);
+    bool Render(core_gl::view::CallRender2DGL& call) override;
 
     /**
      * Releases all resources of the module
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Callback for mouse events (move, press, and release)
@@ -111,7 +101,7 @@ protected:
      * @param y The y coordinate of the mouse in world space
      * @param flags The mouse flags
      */
-    virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
+    bool MouseEvent(float x, float y, core::view::MouseFlags flags) override;
 
 private:
     /** The mouse coordinate */
@@ -127,10 +117,4 @@ private:
     bool drag;
 };
 
-
-} /* end namespace special */
-} /* end namespace view */
-} // namespace core_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_DEMORENDERER2D_H_INCLUDED */
+} // namespace megamol::core_gl::view::special

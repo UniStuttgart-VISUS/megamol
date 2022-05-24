@@ -10,10 +10,10 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore_gl/view/CallRenderViewGL.h"
-
 #include "mmcore/utility/log/Log.h"
+#include "mmcore_gl/view/CallRenderViewGL.h"
 #include "vislib/Trace.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
 
 #include "OpenGL_Context.h"
 

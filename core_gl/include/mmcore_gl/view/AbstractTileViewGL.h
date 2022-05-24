@@ -1,25 +1,16 @@
-/*
- * AbstractTileView.h
- *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTTILEVIEW_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTTILEVIEW_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Camera.h"
 #include "mmcore_gl/view/AbstractOverrideViewGL.h"
-#include "vislib/forceinline.h"
 
-
-namespace megamol {
-namespace core_gl {
-namespace view {
+namespace megamol::core_gl::view {
 
 /**
  * Abstract base class of override rendering views
@@ -27,10 +18,10 @@ namespace view {
 class AbstractTileViewGL : public AbstractOverrideViewGL {
 public:
     /** Ctor. */
-    AbstractTileViewGL(void);
+    AbstractTileViewGL();
 
     /** Dtor. */
-    virtual ~AbstractTileViewGL(void);
+    virtual ~AbstractTileViewGL();
 
     ///**
     // * Adjust the tile to match the window specified in 'context' if any.
@@ -42,17 +33,17 @@ public:
 
 protected:
     /** Initialises the tile view parameters */
-    void initTileViewParameters(void);
+    void initTileViewParameters();
 
     /** checks parameter slot changes */
-    void checkParameters(void);
+    void checkParameters();
 
     /**
      * Answer the stereo projection type
      *
      * @return The stereo projection type
      */
-    VISLIB_FORCEINLINE core::view::Camera::ProjectionType getProjType(void) const {
+    inline core::view::Camera::ProjectionType getProjType() const {
         return this->projType;
     }
 
@@ -61,7 +52,7 @@ protected:
      *
      * @return The height of the rendering tile
      */
-    VISLIB_FORCEINLINE float getTileH(void) const {
+    inline float getTileH() const {
         return this->tileH;
     }
 
@@ -70,7 +61,7 @@ protected:
      *
      * @return The width of the rendering tile
      */
-    VISLIB_FORCEINLINE float getTileW(void) const {
+    inline float getTileW() const {
         return this->tileW;
     }
 
@@ -79,7 +70,7 @@ protected:
      *
      * @return The x coordinate of the rendering tile
      */
-    VISLIB_FORCEINLINE float getTileX(void) const {
+    inline float getTileX() const {
         return this->tileX;
     }
 
@@ -88,7 +79,7 @@ protected:
      *
      * @return The y coordinate of the rendering tile
      */
-    VISLIB_FORCEINLINE float getTileY(void) const {
+    inline float getTileY() const {
         return this->tileY;
     }
 
@@ -97,7 +88,7 @@ protected:
      *
      * @return The height of the virtual viewport
      */
-    VISLIB_FORCEINLINE float getVirtHeight(void) const {
+    inline float getVirtHeight() const {
         return this->virtHeight;
     }
 
@@ -106,7 +97,7 @@ protected:
      *
      * @return The width of the virtual viewport
      */
-    VISLIB_FORCEINLINE float getVirtWidth(void) const {
+    inline float getVirtWidth() const {
         return this->virtWidth;
     }
 
@@ -116,7 +107,7 @@ protected:
      *
      * @return true if the tile should be overridden, false otherwise.
      */
-    inline bool hasTile(void) const {
+    inline bool hasTile() const {
         return ((this->getVirtWidth() != 0) && (this->getVirtHeight() != 0) && (this->getTileW() != 0) &&
                 (this->getTileH() != 0));
     }
@@ -175,8 +166,4 @@ private:
 };
 
 
-} /* end namespace view */
-} // namespace core_gl
 } /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTTILEVIEW_H_INCLUDED */

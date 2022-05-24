@@ -1,10 +1,12 @@
-/*
- * CallbackScreenShooter.h
- *
- * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #pragma once
+
+#include <functional>
 
 #include "mmcore/AbstractCallbackCall.h"
 #include "mmcore/AbstractWriterParams.h"
@@ -14,12 +16,7 @@
 #include "mmcore/job/AbstractTickJob.h"
 #include "mmcore_gl/view/special/ScreenShooter.h"
 
-#include <functional>
-
-namespace megamol {
-namespace core_gl {
-namespace view {
-namespace special {
+namespace megamol::core_gl::view::special {
 
 /**
  * Call transporting a callback delivering an ostream object for writing data.
@@ -120,7 +117,7 @@ public:
     /**
      * Dtor
      */
-    virtual ~CallbackScreenShooter();
+    ~CallbackScreenShooter() override;
 
 protected:
     /**
@@ -128,12 +125,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() override;
+    void release() override;
 
 private:
     /**
@@ -155,7 +152,4 @@ private:
     core::CalleeSlot tickSlot;
 };
 
-} // namespace special
-} // namespace view
-} // namespace core_gl
-} // namespace megamol
+} // namespace megamol::core_gl::view::special

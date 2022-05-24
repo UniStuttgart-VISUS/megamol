@@ -1,25 +1,15 @@
-/*
- * ChronoGraph.h
- *
- * Copyright (C) 2010 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_CHRONOGRAPH_H_INCLUDED
-#define MEGAMOLCORE_CHRONOGRAPH_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/factories/ModuleAutoDescription.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 
-
-namespace megamol {
-namespace core_gl {
-namespace view {
-namespace special {
-
+namespace megamol::core_gl::view::special {
 
 /**
  * A simple 2d renderer which just creates a circle
@@ -31,7 +21,7 @@ public:
      *
      * @return The class name
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ChronoGraph";
     }
 
@@ -40,7 +30,7 @@ public:
      *
      * @return The description string
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "ChronoGraph renderer displaying the core instance time";
     }
 
@@ -49,7 +39,7 @@ public:
      *
      * @return 'true'
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -58,7 +48,7 @@ public:
      *
      * @return false
      */
-    static bool SupportQuickstart(void) {
+    static bool SupportQuickstart() {
         return false;
     }
 
@@ -70,7 +60,7 @@ public:
     /**
      * dtor
      */
-    virtual ~ChronoGraph();
+    ~ChronoGraph() override;
 
 protected:
     /**
@@ -78,7 +68,7 @@ protected:
      *
      * @return 'true' on success
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Sets the extents (animation and bounding box) into the call object
@@ -87,7 +77,7 @@ protected:
      *
      * @return 'true' on success
      */
-    virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
+    bool GetExtents(core_gl::view::CallRender2DGL& call) override;
 
     /**
      * Renders the scene
@@ -96,12 +86,12 @@ protected:
      *
      * @return 'true' on success
      */
-    virtual bool Render(core_gl::view::CallRender2DGL& call);
+    bool Render(core_gl::view::CallRender2DGL& call) override;
 
     /**
      * Releases all resources of the module
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -127,10 +117,4 @@ private:
     void renderInfoCircle(float time, float x, float y, float w, float h);
 };
 
-
-} /* end namespace special */
-} /* end namespace view */
-} // namespace core_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_CHRONOGRAPH_H_INCLUDED */
+} // namespace megamol::core_gl::view::special

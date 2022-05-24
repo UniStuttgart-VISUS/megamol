@@ -1,17 +1,17 @@
-/*
- * ContextToGL.h
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
+
+#include <glowl/FramebufferObject.hpp>
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
-
-#include "glowl/FramebufferObject.hpp"
 
 namespace megamol::core_gl::view {
 
@@ -31,7 +31,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return CN;
     }
 
@@ -40,7 +40,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return DESC;
     }
 
@@ -49,19 +49,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    ContextToGL(void) : core_gl::view::Renderer3DModuleGL(), _getContextSlot("getContext", "Slot for non-GL context") {
+    ContextToGL() : core_gl::view::Renderer3DModuleGL(), _getContextSlot("getContext", "Slot for non-GL context") {
 
         this->_getContextSlot.template SetCompatibleCall<core::factories::CallAutoDescription<CALL>>();
         this->MakeSlotAvailable(&this->_getContextSlot);
     }
 
     /** Dtor. */
-    virtual ~ContextToGL(void) {
+    ~ContextToGL() override {
         this->Release();
     }
 
@@ -71,7 +71,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void) {
+    bool create() override {
         try {
             auto const shdr_cp_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
@@ -93,7 +93,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void) {}
+    void release() override {}
 
     /**
      * The get extents callback. The module should set the members of
@@ -104,7 +104,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(CallRender3DGL& call);
+    bool GetExtents(CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -113,7 +113,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(CallRender3DGL& call);
+    bool Render(CallRender3DGL& call) override;
 
     bool OnChar(unsigned codePoint) override {
         auto* ci = this->_getContextSlot.template CallAs<core::view::InputCall>();

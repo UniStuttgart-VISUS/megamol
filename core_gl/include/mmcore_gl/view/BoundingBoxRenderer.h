@@ -1,12 +1,10 @@
-/*
- * BoundingBoxRenderer.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_BOUNDINGBOXRENDERER_H_INCLUDED
-#define MEGAMOLCORE_BOUNDINGBOXRENDERER_H_INCLUDED
+#pragma once
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -16,9 +14,7 @@
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 
-namespace megamol {
-namespace core_gl {
-namespace view {
+namespace megamol::core_gl::view {
 
 /**
  * Renderer responsible for the rendering of the currently active bounding box as well as the view cube etc.
@@ -32,7 +28,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BoundingBoxRenderer";
     }
 
@@ -41,7 +37,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renders the incoming bounding box as well as the view cube etc.";
     }
 
@@ -50,15 +46,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    BoundingBoxRenderer(void);
+    BoundingBoxRenderer();
 
     /** Dtor. */
-    virtual ~BoundingBoxRenderer(void);
+    ~BoundingBoxRenderer() override;
 
 protected:
     /**
@@ -66,12 +62,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /*
@@ -80,7 +76,7 @@ private:
      * @param call The call containing all relevant parameters
      * @return True on success, false otherwise
      */
-    virtual bool GetExtents(CallRender3DGL& call) override;
+    bool GetExtents(CallRender3DGL& call) override;
 
     /*
      * Renders the bounding box and the viewcube on top of the other rendered things
@@ -88,7 +84,7 @@ private:
      * @param call The call containing the camera and other parameters
      * @return True on success, false otherwise
      */
-    virtual bool Render(CallRender3DGL& call) override final;
+    bool Render(CallRender3DGL& call) final;
 
     /**
      * Render function for the bounding box front
@@ -154,8 +150,4 @@ private:
     /** Bounding Boxes */
     megamol::core::BoundingBoxes_2 boundingBoxes;
 };
-} // namespace view
-} // namespace core_gl
-} // namespace megamol
-
-#endif /* MEGAMOLCORE_BOUNDINGBOXRENDERER_H_INCLUDED */
+} // namespace megamol::core_gl::view

@@ -1,16 +1,14 @@
-/*
- * Module.h
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
 #include "mmcore/Module.h"
 
-namespace megamol {
-namespace core_gl {
+namespace megamol::core_gl {
 
 /**
  * Base class of all graph modules
@@ -24,6 +22,4 @@ public:
     }
 };
 
-
-} /* end namespace core_gl */
-} /* end namespace megamol */
+} // namespace megamol::core_gl

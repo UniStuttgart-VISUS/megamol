@@ -6,14 +6,14 @@
 
 #pragma once
 
+#include <glowl/FramebufferObject.hpp>
+
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/TimeControl.h"
 #include "mmcore_gl/view/AbstractViewGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
 #include "vislib/math/Rectangle.h"
-#include "vislib_gl/graphics/gl/FramebufferObject.h"
 
 namespace megamol::core_gl::view {
 
@@ -82,7 +82,7 @@ public:
      * @param time ...
      * @param instanceTime ...
      */
-    virtual ImageWrapper Render(double time, double instanceTime) override;
+    ImageWrapper Render(double time, double instanceTime) override;
 
     ImageWrapper GetRenderingResult() const override;
 
@@ -98,7 +98,7 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height) override;
+    void Resize(unsigned int width, unsigned int height) override;
 
     /**
      * Callback requesting a rendering of this view
@@ -135,7 +135,7 @@ protected:
     void release() override;
 
     /** Override of GetExtents */
-    virtual bool GetExtents(core::Call& call) override;
+    bool GetExtents(core::Call& call) override;
 
 private:
     /**

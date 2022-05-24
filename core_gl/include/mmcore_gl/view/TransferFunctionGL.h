@@ -1,8 +1,7 @@
-/*
- * TransferFunctionGL.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -11,11 +10,7 @@
 #include "mmcore/view/AbstractTransferFunction.h"
 #include "mmcore_gl/ModuleGL.h"
 
-
-namespace megamol {
-namespace core_gl {
-namespace view {
-
+namespace megamol::core_gl::view {
 
 /**
  * Module defining a transfer function.
@@ -27,7 +22,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TransferFunctionGL";
     }
 
@@ -36,7 +31,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module defining a piecewise linear transfer function";
     }
 
@@ -45,15 +40,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    TransferFunctionGL(void);
+    TransferFunctionGL();
 
     /** Dtor. */
-    virtual ~TransferFunctionGL(void) {
+    ~TransferFunctionGL() override {
         this->Release();
     }
 
@@ -65,12 +60,12 @@ private:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Callback called when the transfer function is requested.
@@ -79,7 +74,7 @@ private:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool requestTF(core::Call& call);
+    bool requestTF(core::Call& call) override;
 
     /** The OpenGL texture object id */
     unsigned int texID;
@@ -89,6 +84,4 @@ private:
 };
 
 
-} /* end namespace view */
-} // namespace core_gl
-} /* end namespace megamol */
+} // namespace megamol::core_gl::view

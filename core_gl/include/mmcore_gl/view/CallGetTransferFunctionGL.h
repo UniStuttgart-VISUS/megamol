@@ -1,8 +1,7 @@
-/*
- * CallGetTransferFunction.h
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -10,17 +9,13 @@
 #include <array>
 #include <memory>
 
-#include "glowl/glowl.h"
+#include <glowl/glowl.h>
 
 #include "mmcore/view/AbstractCallGetTransferFunction.h"
-
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
-namespace megamol {
-namespace core_gl {
-namespace view {
-
+namespace megamol::core_gl::view {
 
 /**
  * Call for accessing a transfer function.
@@ -39,7 +34,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallGetTransferFunctionGL";
     }
 
@@ -48,7 +43,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for a 1D transfer function";
     }
 
@@ -57,7 +52,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -73,15 +68,15 @@ public:
         case 0:
             return "GetTexture";
         default:
-            return NULL;
+            return nullptr;
         }
     }
 
     /** Ctor. */
-    CallGetTransferFunctionGL(void);
+    CallGetTransferFunctionGL();
 
     /** Dtor. */
-    virtual ~CallGetTransferFunctionGL(void);
+    ~CallGetTransferFunctionGL() override;
 
     ///// CALLER Interface Functions //////////////////////////////////////////
 
@@ -108,7 +103,7 @@ public:
      *
      * @return The OpenGL texture object id
      */
-    inline unsigned int OpenGLTexture(void) const {
+    inline unsigned int OpenGLTexture() const {
         return this->texID;
     }
 
@@ -117,7 +112,7 @@ public:
      *
      * @return The OpenGL format of the texture
      */
-    inline int OpenGLTextureFormat(void) const {
+    inline int OpenGLTextureFormat() const {
         if (this->texFormat == TEXTURE_FORMAT_RGBA) {
             return GL_RGBA;
         }
@@ -156,11 +151,7 @@ private:
     unsigned int texID;
 };
 
-
 /** Description class typedef */
 typedef core::factories::CallAutoDescription<CallGetTransferFunctionGL> CallGetTransferFunctionGLDescription;
 
-
-} /* end namespace view */
-} // namespace core_gl
-} /* end namespace megamol */
+} // namespace megamol::core_gl::view

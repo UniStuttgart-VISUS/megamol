@@ -1,25 +1,20 @@
-/*
- * DeferredShading.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef Deferred_SHADING_H_INCLUDED
-#define Deferred_SHADING_H_INCLUDED
+#pragma once
 
-#include "vislib/math/Matrix.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include <glowl/glowl.h>
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "vislib/math/Matrix.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/FramebufferObject.hpp"
-
-namespace megamol {
-namespace core_gl {
+namespace megamol::core_gl {
 
 /**
  * TODO
@@ -31,7 +26,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DeferredShading";
     }
 
@@ -40,7 +35,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "...TODO...";
     }
 
@@ -49,7 +44,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         /*TODO*/
         return true;
     }
@@ -58,7 +53,7 @@ public:
     DeferredShading();
 
     /** Dtor. */
-    ~DeferredShading();
+    ~DeferredShading() override;
 
 protected:
     /**
@@ -66,12 +61,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -82,7 +77,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core_gl::view::CallRender3DGL& call);
+    bool GetExtents(core_gl::view::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -91,14 +86,14 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core_gl::view::CallRender3DGL& call);
+    bool Render(core_gl::view::CallRender3DGL& call) override;
 
     /**
      * Method that gets called before the rendering is started for all changed modules
      *
      * @param call The rendering call that contains the camera
      */
-    void PreRender(core_gl::view::CallRender3DGL& call);
+    void PreRender(core_gl::view::CallRender3DGL& call) override;
 
 private:
     typedef vislib_gl::graphics::gl::GLSLShader GLSLShader;
@@ -126,7 +121,4 @@ private:
     core::param::ParamSlot m_btf_filename_slot;
 };
 
-} // namespace core_gl
-} // namespace megamol
-
-#endif
+} // namespace megamol::core_gl

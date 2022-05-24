@@ -1,23 +1,19 @@
-/*
- * HeadView.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
-#pragma once
 
-#include "mmcore/view/Input.h"
+#pragma once
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/view/Input.h"
 #include "mmcore_gl/view/AbstractViewGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
-
 #include "vislib/Serialiser.h"
 
-namespace megamol {
-namespace core_gl {
-namespace view {
+namespace megamol::core_gl::view {
 
 /**
  * Abstract base class of rendering views
@@ -29,7 +25,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "HeadView";
     }
 
@@ -38,7 +34,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Head View Module";
     }
 
@@ -47,7 +43,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -61,22 +57,22 @@ public:
      * @return Whether or not this module supports being used in a
      *         quickstart.
      */
-    static bool SupportQuickstart(void) {
+    static bool SupportQuickstart() {
         return false;
     }
 
     /** Ctor. */
-    HeadView(void);
+    HeadView();
 
     /** Dtor. */
-    virtual ~HeadView(void);
+    ~HeadView() override;
 
     /**
      * Answer the default time for this view
      *
      * @return The default time
      */
-    virtual float DefaultTime(double instTime) const;
+    float DefaultTime(double instTime) const override;
 
     /**
      * Serialises the camera of the view
@@ -97,7 +93,7 @@ public:
      *
      * @param context
      */
-    virtual ImageWrapper Render(double time, double instanceTime) override;
+    ImageWrapper Render(double time, double instanceTime) override;
 
     ImageWrapper GetRenderingResult() const override;
 
@@ -105,7 +101,7 @@ public:
      * Resets the view. This normally sets the camera parameters to
      * default values.
      */
-    virtual void ResetView(void);
+    void ResetView() override;
 
     /**
      * Resizes the AbstractView3D.
@@ -113,7 +109,7 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height);
+    void Resize(unsigned int width, unsigned int height) override;
 
     /**
      * Callback requesting a rendering of this view
@@ -122,19 +118,19 @@ public:
      *
      * @return The return value
      */
-    virtual bool OnRenderView(core::Call& call);
+    bool OnRenderView(core::Call& call) override;
 
-    virtual bool OnKey(
+    bool OnKey(
         frontend_resources::Key key, frontend_resources::KeyAction action, frontend_resources::Modifiers mods) override;
 
-    virtual bool OnChar(unsigned int codePoint) override;
+    bool OnChar(unsigned int codePoint) override;
 
-    virtual bool OnMouseButton(frontend_resources::MouseButton button, frontend_resources::MouseButtonAction action,
+    bool OnMouseButton(frontend_resources::MouseButton button, frontend_resources::MouseButtonAction action,
         frontend_resources::Modifiers mods) override;
 
-    virtual bool OnMouseMove(double x, double y) override;
+    bool OnMouseMove(double x, double y) override;
 
-    virtual bool OnMouseScroll(double dx, double dy) override;
+    bool OnMouseScroll(double dx, double dy) override;
 
 protected:
     /**
@@ -142,12 +138,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Unpacks the mouse coordinates, which are relative to the virtual
@@ -172,6 +168,4 @@ private:
     view::CallRenderViewGL* override_view_call;
 };
 
-} /* end namespace view */
-} // namespace core_gl
-} /* end namespace megamol */
+} // namespace megamol::core_gl::view

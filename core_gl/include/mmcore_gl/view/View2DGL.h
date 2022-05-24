@@ -1,31 +1,19 @@
-/*
- * View2DGL.h
- *
- * Copyright (C) 2008 - 2010 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_VIEW2DGL_H_INCLUDED
-#define MEGAMOLCORE_VIEW2DGL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/BoundingBoxes_2.h"
-#include "mmcore/CallerSlot.h"
-#include "mmcore/param/ParamSlot.h"
+#include <glowl/FramebufferObject.hpp>
+
 #include "mmcore/view/BaseView.h"
-#include "mmcore/view/TimeControl.h"
-
 #include "mmcore/view/CameraControllers.h"
 #include "mmcore_gl/view/AbstractViewGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
 
-#include <glowl/FramebufferObject.hpp>
-
-namespace megamol {
-namespace core_gl {
-namespace view {
+namespace megamol::core_gl::view {
 
 /**
  * Base class of rendering graph calls
@@ -37,7 +25,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "View2DGL";
     }
 
@@ -46,20 +34,20 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "2D View Module";
     }
 
     /** Ctor. */
-    View2DGL(void);
+    View2DGL();
 
     /** Dtor. */
-    virtual ~View2DGL(void);
+    ~View2DGL() override;
 
     /**
      * ...
      */
-    virtual ImageWrapper Render(double time, double instanceTime) override;
+    ImageWrapper Render(double time, double instanceTime) override;
 
     ImageWrapper GetRenderingResult() const override;
 
@@ -69,17 +57,13 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height) override;
+    void Resize(unsigned int width, unsigned int height) override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 };
-} /* end namespace view */
-} // namespace core_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_VIEW2DGL_H_INCLUDED */
+} // namespace megamol::core_gl::view

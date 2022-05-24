@@ -1,15 +1,12 @@
-/*
- * ScreenShooter.h
- *
- * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_SCREENSHOOTER_H_INCLUDED
-#define MEGAMOLCORE_SCREENSHOOTER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <glowl/FramebufferObject.hpp>
 
 #include "mmcore/Module.h"
 #include "mmcore/ViewInstance.h"
@@ -17,21 +14,14 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
 
-#include "glowl/FramebufferObject.hpp"
-
-
-namespace megamol {
-namespace core_gl {
-namespace view {
-namespace special {
-
+namespace megamol::core_gl::view::special {
 
 /**
  * Class implementing the screen shooter job module
  */
 class ScreenShooter : public core::job::AbstractJob, public core::Module, public core::view::AbstractView::Hooks {
 public:
-    std::vector<std::string> requested_lifetime_resources() {
+    std::vector<std::string> requested_lifetime_resources() override {
         auto lifetime_resources = Module::requested_lifetime_resources();
         lifetime_resources.push_back("MegaMolGraph");
         return lifetime_resources;
@@ -42,7 +32,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ScreenShooter";
     }
 
@@ -51,7 +41,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "A simple job module used to create large off-screen renderings";
     }
 
@@ -60,14 +50,14 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void);
+    static bool IsAvailable();
 
     /**
      * Disallow usage in quickstarts
      *
      * @return false
      */
-    static bool SupportQuickstart(void) {
+    static bool SupportQuickstart() {
         return false;
     }
 
@@ -81,7 +71,7 @@ public:
     /**
      * Dtor
      */
-    virtual ~ScreenShooter();
+    ~ScreenShooter() override;
 
     /**
      * Answers whether or not this job is still running.
@@ -89,14 +79,14 @@ public:
      * @return 'true' if this job is still running, 'false' if it has
      *         finished.
      */
-    virtual bool IsRunning(void) const;
+    bool IsRunning() const override;
 
     /**
      * Starts the job thread.
      *
      * @return true if the job has been successfully started.
      */
-    virtual bool Start(void);
+    bool Start() override;
 
     /**
      * Terminates the job thread.
@@ -104,7 +94,7 @@ public:
      * @return true to acknowledge that the job will finish as soon
      *         as possible, false if termination is not possible.
      */
-    virtual bool Terminate(void);
+    bool Terminate() override;
 
 protected:
     /**
@@ -112,19 +102,19 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Hook method to be called before the view is rendered.
      *
      * @param view The calling view
      */
-    virtual void BeforeRender(core::view::AbstractView* view);
+    void BeforeRender(core::view::AbstractView* view) override;
 
     /*
      * Create the screenshot.
@@ -186,10 +176,4 @@ private:
     std::shared_ptr<glowl::FramebufferObject> currentFbo;
 };
 
-
-} /* end namespace special */
-} /* end namespace view */
-} // namespace core_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_SCREENSHOOTER_H_INCLUDED */
+} // namespace megamol::core_gl::view::special

@@ -1,22 +1,19 @@
-/*
- * View3DGL.h
- *
- * Copyright (C) 2018, 2020 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
-#include "mmcore/view/BaseView.h"
 
+#include <glowl/FramebufferObject.hpp>
+
+#include "mmcore/view/BaseView.h"
 #include "mmcore/view/CameraControllers.h"
-#include "mmcore_gl/view/AbstractTileViewGL.h"
+#include "mmcore_gl/view/AbstractViewGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
 
-#include "glowl/FramebufferObject.hpp"
-
-namespace megamol {
-namespace core_gl {
-namespace view {
+namespace megamol::core_gl::view {
 
 class View3DGL : public core::view::BaseView<CallRenderViewGL, core::view::Camera3DController, AbstractViewGL> {
 
@@ -26,7 +23,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "View3DGL";
     }
 
@@ -35,17 +32,17 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "New and improved 3D View Module";
     }
 
     /** Ctor. */
-    View3DGL(void);
+    View3DGL();
 
     /** Dtor. */
-    virtual ~View3DGL(void);
+    ~View3DGL() override;
 
-    virtual ImageWrapper Render(double time, double instanceTime) override;
+    ImageWrapper Render(double time, double instanceTime) override;
 
     ImageWrapper GetRenderingResult() const override;
 
@@ -55,7 +52,7 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height) override;
+    void Resize(unsigned int width, unsigned int height) override;
 
 protected:
     /**
@@ -63,9 +60,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 };
 
-} // namespace view
-} // namespace core_gl
-} /* end namespace megamol */
+} // namespace megamol::core_gl::view

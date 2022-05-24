@@ -1,21 +1,18 @@
-/*
- * CallRender3DGL.h
- *
- * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
-#include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/CallRender3D.h"
 #include <glm/glm.hpp>
-
 #include <glowl/FramebufferObject.hpp>
 
-namespace megamol {
-namespace core_gl {
-namespace view {
+#include "mmcore/factories/CallAutoDescription.h"
+#include "mmcore/view/CallRender3D.h"
+
+namespace megamol::core_gl::view {
 
 inline constexpr char callrender3dgl_name[] = "CallRender3DGL";
 
@@ -34,17 +31,15 @@ class CallRender3DGL
         : public core::view::BaseCallRender<glowl::FramebufferObject, callrender3dgl_name, callrender3dgl_desc> {
 public:
     /** Ctor. */
-    CallRender3DGL(void) : BaseCallRender<glowl::FramebufferObject, callrender3dgl_name, callrender3dgl_desc>() {
+    CallRender3DGL() : BaseCallRender<glowl::FramebufferObject, callrender3dgl_name, callrender3dgl_desc>() {
         this->caps.RequireOpenGL();
     }
 
     /** Dtor. */
-    virtual ~CallRender3DGL(void) = default;
+    ~CallRender3DGL() override = default;
 };
 
 /** Description class typedef */
 typedef core::factories::CallAutoDescription<CallRender3DGL> CallRender3DGLDescription;
 
-} // namespace view
-} // namespace core_gl
-} /* end namespace megamol */
+} // namespace megamol::core_gl::view
