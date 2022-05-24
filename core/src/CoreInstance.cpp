@@ -49,7 +49,6 @@
 #include "factories/ModuleClassRegistry.h"
 #include "utility/ServiceManager.h"
 
-#include "mmcore/utility/log/Console.h"
 #include "mmcore/utility/log/Log.h"
 #include "png.h"
 #include "vislib/Array.h"
