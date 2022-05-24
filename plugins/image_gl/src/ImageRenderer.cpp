@@ -6,8 +6,8 @@
 
 #include "ImageRenderer.h"
 #include "JpegBitmapCodec.h"
-#include "mmcore/misc/PngBitmapCodec.h"
 #include "vislib/graphics/BitmapCodecCollection.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 

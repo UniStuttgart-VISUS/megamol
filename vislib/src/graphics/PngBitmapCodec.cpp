@@ -5,7 +5,7 @@
  * (Copyright (C) 2010 by VISUS (Universitaet Stuttgart))
  * Alle Rechte vorbehalten.
  */
-#include "mmcore/misc/PngBitmapCodec.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 #include "png.h"
 #include "vislib/SmartPtr.h"
 #include "zlib.h"
