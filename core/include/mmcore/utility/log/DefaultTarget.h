@@ -2,7 +2,6 @@
 
 #include "mmcore/utility/log/Log.h"
 
-#define SPDLOG_EOL ""
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 

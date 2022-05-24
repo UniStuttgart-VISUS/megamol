@@ -8,14 +8,14 @@ megamol::core::utility::log::DefaultTarget::DefaultTarget(Log::UINT level) : Tar
         _stderr_sink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
         _stdout_sink->set_level(spdlog::level::level_enum::debug);
 #ifdef _WIN32
-        _stdout_sink->set_color(spdlog::level::level_enum::info, _stdout_sink->WHITE);
+        _stdout_sink->set_color(spdlog::level::level_enum::info, 15);
 #else
         _stdout_sink->set_color(spdlog::level::level_enum::info, _stdout_sink->white);
 #endif
         _stdout_sink->set_pattern(Log::std_pattern);
         _stderr_sink->set_level(spdlog::level::level_enum::err);
 #ifdef _WIN32
-        _stderr_sink->set_color(spdlog::level::level_enum::info, _stderr_sink->WHITE);
+        _stderr_sink->set_color(spdlog::level::level_enum::info, 15);
 #else
         _stderr_sink->set_color(spdlog::level::level_enum::info, _stderr_sink->white);
 #endif
