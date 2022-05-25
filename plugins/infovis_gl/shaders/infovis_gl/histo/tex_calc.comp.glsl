@@ -1,6 +1,6 @@
 #version 430
 
-#include "core/bitflags.inc.glsl"
+#include "mmstd_gl/flags/bitflags.inc.glsl"
 #include "common.inc.glsl"
 
 int local_histo[256];

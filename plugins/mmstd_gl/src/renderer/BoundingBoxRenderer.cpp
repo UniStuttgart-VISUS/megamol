@@ -83,9 +83,9 @@ bool BoundingBoxRenderer::create() {
     auto const shader_options = ::msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
     try {
         lineShader = core::utility::make_glowl_shader("boundingbox", shader_options,
-            "core/boundingbox/boundingbox.vert.glsl", "core/boundingbox/boundingbox.frag.glsl");
-        cubeShader = core::utility::make_glowl_shader(
-            "viewcube", shader_options, "core/boundingbox/viewcube.vert.glsl", "core/boundingbox/viewcube.frag.glsl");
+            "mmstd_gl/boundingbox/boundingbox.vert.glsl", "mmstd_gl/boundingbox/boundingbox.frag.glsl");
+        cubeShader = core::utility::make_glowl_shader("viewcube", shader_options,
+            "mmstd_gl/boundingbox/viewcube.vert.glsl", "mmstd_gl/boundingbox/viewcube.frag.glsl");
 
     } catch (std::exception& e) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("BoundingBoxRenderer: " + std::string(e.what())).c_str());

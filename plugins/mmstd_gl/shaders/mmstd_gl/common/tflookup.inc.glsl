@@ -1,5 +1,5 @@
-#ifndef CORE_TFLOOKUP_INC_GLSL
-#define CORE_TFLOOKUP_INC_GLSL
+#ifndef MMSTD_GL_TFLOOKUP_INC_GLSL
+#define MMSTD_GL_TFLOOKUP_INC_GLSL
 
 // Does a color lookup for a non-normalized value using a transfer function.
 // @see CallGetTransferFunction::TextureCoordinates()
@@ -15,4 +15,4 @@ vec4 tflookup(sampler1D tfTexture, vec2 tfRange, float value) {
     return texture(tfTexture, normalizedValue * uRange + uOffset);
 }
 
-#endif // CORE_TFLOOKUP_INC_GLSL
+#endif // MMSTD_GL_TFLOOKUP_INC_GLSL

@@ -1,7 +1,6 @@
 #version 430
-//#extension GL_GOOGLE_include_directive: require
 
-#include "core/bitflags.inc.glsl"
+#include "bitflags.inc.glsl"
 
 // Compute coherent runs of bits in a flag storage to compact data for, e.g., serialization.
 // Invoke once per flag, making sure that the FIRST invocation rebuilds the onoff buffer (update_onoff uniform).

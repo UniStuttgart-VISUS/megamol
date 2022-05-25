@@ -54,8 +54,8 @@ bool UniFlagStorage::create() {
     // TODO beware this shader only compiles and has never been tested. It will probably release the kraken or something more sinister
     try {
         auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
-        compressGPUFlagsProgram =
-            core::utility::make_glowl_shader("compress_bitflags", shaderOptions, "core/compress_bitflags.comp.glsl");
+        compressGPUFlagsProgram = core::utility::make_glowl_shader(
+            "compress_bitflags", shaderOptions, "mmstd_gl/flags/compress_bitflags.comp.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteError(
             ("UniFlagStorage: could not compile compute shader: " + std::string(e.what())).c_str());

@@ -1,5 +1,5 @@
-#ifndef CORE_TFCONVENIENCE_INC_GLSL
-#define CORE_TFCONVENIENCE_INC_GLSL
+#ifndef MMSTD_GL_TFCONVENIENCE_INC_GLSL
+#define MMSTD_GL_TFCONVENIENCE_INC_GLSL
 
 uniform sampler1D tfTexture;
 uniform vec2 tfRange;
@@ -9,4 +9,4 @@ vec4 tflookup(float value) {
     return tflookup(tfTexture, tfRange, value);
 }
 
-#endif // CORE_TFCONVENIENCE_INC_GLSL
+#endif // MMSTD_GL_TFCONVENIENCE_INC_GLSL
