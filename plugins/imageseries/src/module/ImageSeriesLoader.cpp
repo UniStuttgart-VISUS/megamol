@@ -191,8 +191,8 @@ void ImageSeriesLoader::updateMetadata() {
 std::size_t ImageSeriesLoader::timestampToFrameIndex(double timestamp) const {
     double normalized = (timestamp - metadata.minimumTime) / (metadata.maximumTime - metadata.minimumTime);
     // Ensure that we never end up with a negative index
-    std::int32_t limit = std::max<std::int32_t>(metadata.imageCount, 1) - 1;
-    return std::max<std::int32_t>(0, std::min<std::int32_t>(normalized * limit, limit));
+    std::int32_t limit = std::max<std::int32_t>(metadata.imageCount, 1);
+    return std::max<std::int32_t>(0, std::min<std::int32_t>(normalized * limit, limit - 1));
 }
 
 double ImageSeriesLoader::frameIndexToTimestamp(std::size_t index) const {

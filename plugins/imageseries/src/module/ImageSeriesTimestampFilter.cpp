@@ -59,13 +59,10 @@ bool ImageSeriesTimestampFilter::getDataCallback(core::Call& caller) {
             // Retrieve cached image or run filter on input data
             output.imageData = imageCache.findOrCreate(output.getHash(), [=](AsyncImageData2D::Hash) {
                 filter::IndexGenerationFilter::Input params;
-                std::size_t frameCount = output.imageCount;
-                for (std::size_t i = 0; i < frameCount; ++i) {
-                    double ratio = double(i) / frameCount;
+                for (std::size_t i = 0; i < output.imageCount; ++i) {
                     params.frameIndex = i;
                     params.image =
-                        requestFrame(getInputCaller, (1 - ratio) * output.minimumTime + ratio * output.maximumTime)
-                            .imageData;
+                        requestFrame(getInputCaller, output.minimumTime + (i + 0.5f) / output.framerate).imageData;
                     auto indexMap = filterRunner->run<filter::IndexGenerationFilter>(params);
                     params.indexMap = indexMap;
                 }

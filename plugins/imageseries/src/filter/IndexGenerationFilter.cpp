@@ -33,12 +33,12 @@ IndexGenerationFilter::ImagePtr IndexGenerationFilter::operator()() {
 
     // TODO: add compatibility with non-byte multichannel images
     if (image->GetChannelCount() != 1 || image->GetChannelType() != Image::ChannelType::CHANNELTYPE_BYTE ||
-        (map && (map->GetChannelCount() != 2 || map->GetChannelType() != Image::ChannelType::CHANNELTYPE_BYTE))) {
+        (map && (map->GetChannelCount() != 1 || map->GetChannelType() != Image::ChannelType::CHANNELTYPE_WORD))) {
         return nullptr;
     }
 
     // Create output image
-    auto result = std::make_shared<Image>(image->Width(), image->Height(), 2, Image::ChannelType::CHANNELTYPE_BYTE);
+    auto result = std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_WORD);
 
     const auto* imageIn = image->PeekDataAs<std::uint8_t>();
     auto* mapOut = result->PeekDataAs<std::uint16_t>();
@@ -48,11 +48,11 @@ IndexGenerationFilter::ImagePtr IndexGenerationFilter::operator()() {
         // Map image given: use min value
         const auto* mapIn = map->PeekDataAs<std::uint16_t>();
         for (std::size_t i = 0; i < size; i++) {
-            mapOut[i] = imageIn[i] ? std::min<std::int16_t>(input.frameIndex, mapIn[i]) : mapIn[i];
+            mapOut[i] = imageIn[i] ? std::min<std::uint16_t>(input.frameIndex, mapIn[i]) : mapIn[i];
         }
     } else {
         // No input map: assume int16_max for existing map
-        std::int16_t value = std::numeric_limits<std::int16_t>::max();
+        std::uint16_t value = std::numeric_limits<std::uint16_t>::max();
         for (std::size_t i = 0; i < size; i++) {
             mapOut[i] = imageIn[i] ? input.frameIndex : value;
         }
