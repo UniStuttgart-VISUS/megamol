@@ -16,8 +16,8 @@
 #include "mmcore/Module.h"
 #include "mmcore/cluster/ClusterController.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/net/DiscoveryService.h"
 #include "vislib/Listenable.h"
+#include "vislib/net/DiscoveryService.h"
 
 
 namespace megamol {

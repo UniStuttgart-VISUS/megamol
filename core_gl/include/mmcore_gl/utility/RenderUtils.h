@@ -20,10 +20,10 @@
 #include <glowl/GLSLProgram.hpp>
 #include <glowl/Texture2D.hpp>
 
-#include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/FileUtils.h"
 #include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 
 
 namespace megamol::core_gl::utility {

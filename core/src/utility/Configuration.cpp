@@ -9,7 +9,6 @@
 #include "mmcore/utility/xml/ConfigurationParser.h"
 #include "mmcore/utility/xml/XmlReader.h"
 
-#include "mmcore/utility/log/Console.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/NoSuchElementException.h"
 #include "vislib/String.h"

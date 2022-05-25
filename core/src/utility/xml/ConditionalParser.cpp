@@ -7,12 +7,12 @@
 
 #include "mmcore/utility/xml/ConditionalParser.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/CharTraits.h"
 #include "vislib/String.h"
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/assert.h"
+#include "vislib/sys/SystemInformation.h"
 
 //#define DO_SOME_BULB_TEXT 1
 

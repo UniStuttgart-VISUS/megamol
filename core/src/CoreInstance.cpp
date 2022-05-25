@@ -30,7 +30,6 @@
 #include "mmcore/utility/ProjectParser.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/net/AbstractSimpleMessage.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 #include "mmcore/utility/xml/XmlReader.h"
 #include "vislib/GUID.h"
@@ -40,6 +39,7 @@
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/functioncast.h"
+#include "vislib/net/AbstractSimpleMessage.h"
 #include "vislib/net/NetworkInformation.h"
 #include "vislib/net/Socket.h"
 #include "vislib/sys/AutoLock.h"
@@ -49,7 +49,6 @@
 #include "factories/ModuleClassRegistry.h"
 #include "utility/ServiceManager.h"
 
-#include "mmcore/utility/log/Console.h"
 #include "mmcore/utility/log/Log.h"
 #include "png.h"
 #include "vislib/Array.h"

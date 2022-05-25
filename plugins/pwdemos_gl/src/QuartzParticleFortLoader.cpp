@@ -11,11 +11,11 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/String.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/memutils.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/utils.h"
 #include <cmath>
 
