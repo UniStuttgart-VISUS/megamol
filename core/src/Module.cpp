@@ -18,7 +18,7 @@
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #endif
 
@@ -56,7 +56,7 @@ bool Module::Create(std::vector<megamol::frontend::FrontendResource> resources) 
     if (!this->created) {
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         auto p3 = dynamic_cast<core::view::Renderer3DModule*>(this);
-        auto p3_2 = dynamic_cast<core_gl::view::Renderer3DModuleGL*>(this);
+        auto p3_2 = dynamic_cast<mmstd_gl::Renderer3DModuleGL*>(this);
         auto p2 = dynamic_cast<core::view::Renderer2DModule*>(this);
         if (p2 || p3 || p3_2) {
             std::string output = this->ClassName();
