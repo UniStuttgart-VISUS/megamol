@@ -3,6 +3,7 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
@@ -27,9 +28,11 @@ ClusterGraphRenderer::ClusterGraphRenderer(void)
         , draw_pdb_ids_param_("information::PDBId", "Enable the drawing of the PDB IDs")
         , draw_minimap_param_("information::minimap", "Enable the drawing of the minimaps")
         , draw_brenda_param_("information::brenda", "Enable the drawing of the BRENDA classes")
+        , cluster_cutoff_param_("clusterCutoff", "Cutoff value to determine the size of clusters")
         , last_data_hash_(0)
         , line_vao_(0)
-        , vert_vao_(0) {
+        , vert_vao_(0)
+        , selected_cluster_id_(-1) {
     // Caller Slot
     cluster_data_slot_.SetCompatibleCall<CallClustering_2Description>();
     this->MakeSlotAvailable(&cluster_data_slot_);
@@ -55,6 +58,9 @@ ClusterGraphRenderer::ClusterGraphRenderer(void)
 
     draw_brenda_param_.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&draw_brenda_param_);
+
+    cluster_cutoff_param_.SetParameter(new param::FloatParam(0.7f, 0.01f, 1.0f));
+    this->MakeSlotAvailable(&cluster_cutoff_param_);
 }
 
 /*
@@ -314,6 +320,11 @@ void ClusterGraphRenderer::uploadDataToGPU() {
     line_pos_buffer_->rebuffer(line_positions_);
     line_col_buffer_->rebuffer(line_colors_);
 }
+
+void ClusterGraphRenderer::applyClusterColoring(ClusteringData const& cluster_data) {
+    // TODO
+}
+
 
 std::vector<int64_t> ClusterGraphRenderer::getLeaveIndicesInDFSOrder(
     int64_t const start_idx, std::vector<ClusterNode_2> const& nodes) const {

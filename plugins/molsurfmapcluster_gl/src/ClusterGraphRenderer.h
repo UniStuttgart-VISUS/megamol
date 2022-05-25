@@ -84,6 +84,8 @@ private:
 
     void calculateNodeConnections(ClusteringData const& cluster_data);
 
+    void applyClusterColoring(ClusteringData const& cluster_data);
+
     void uploadDataToGPU();
 
     std::vector<int64_t> getLeaveIndicesInDFSOrder(
@@ -113,6 +115,9 @@ private:
     /** Parameter enabling the drawing of the brenda classes */
     core::param::ParamSlot draw_brenda_param_;
 
+    /** Parameter setting the cluster cutoff value */
+    core::param::ParamSlot cluster_cutoff_param_;
+
     /** The positions of the nodes */
     std::vector<glm::vec2> node_positions_;
 
@@ -140,6 +145,8 @@ private:
     std::unique_ptr<glowl::BufferObject> line_col_buffer_;
     GLuint vert_vao_;
     GLuint line_vao_;
+
+    int64_t selected_cluster_id_;
 };
 
 } // namespace molsurfmapcluster_gl
