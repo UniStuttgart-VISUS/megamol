@@ -180,13 +180,20 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
         }
     }
 
+    // Tracks the list of pixels associated with the current front of each label
+    std::vector<std::vector<Index>> currentInterfaces;
+
     // Phase 2: follow fluid flow
     for (; currentTimestamp <= maximumTimestamp; ++currentTimestamp) {
+        std::vector<std::pair<Label, Label>> interfaceEdges;
+        std::vector<std::vector<Index>> previousInterfaces = std::move(currentInterfaces);
+        currentInterfaces.clear();
+
         // Split pending pixels into sections with unique labels
         std::vector<Index> frontQueue;
         Label frontLabel = LabelFirst;
         auto splitFront = [&](FrontQueueEntry entry) {
-            if (dataOut[entry.index] != LabelFlow) {
+            if (dataOut[entry.index] != LabelFlow || frontLabel == LabelLast) {
                 return;
             }
             frontQueue.clear();
@@ -196,6 +203,7 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
             // Insert edge into graph
             // TODO - this does not handle merges yet
             addEdge(currentTimestamp - 1, entry.label, currentTimestamp, frontLabel);
+            interfaceEdges.emplace_back(entry.label, frontLabel);
 
             for (std::size_t queueIndex = 0; queueIndex < frontQueue.size(); ++queueIndex) {
                 auto index = frontQueue[queueIndex];
@@ -211,9 +219,11 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
                     }
                 }
             }
-            if (frontLabel != LabelLast) {
-                frontLabel++;
-            }
+
+            // Store all pixels in this interface for velocity computation
+            currentInterfaces.push_back(std::move(frontQueue));
+
+            frontLabel++;
         };
 
         // Split different non-connected fronts
@@ -231,9 +241,41 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
                 getOrCreateNode(currentTimestamp, fillLabel).area += fillCount;
             } else {
                 // Preserve front pixels with a steeper timestamp gradient, requeueing them for the next iteration
-                nextFront.push_back(entry.index);
+                nextFront.emplace_back(entry.index, dataOut[entry.index]);
                 dataOut[entry.index] = LabelFlow;
             }
+        }
+
+        // Compute interface velocities
+        for (const auto& edge : interfaceEdges) {
+            // Bounds check (especially for the first frame)
+            if (static_cast<std::size_t>(edge.first - LabelFirst) >= previousInterfaces.size() ||
+                static_cast<std::size_t>(edge.second - LabelFirst) >= currentInterfaces.size()) {
+                continue;
+            }
+
+            auto& sourceInterface = previousInterfaces[edge.first - LabelFirst];
+            auto& targetInterface = currentInterfaces[edge.second - LabelFirst];
+
+            if (sourceInterface.empty() || targetInterface.empty()) {
+                continue;
+            }
+
+            // Use Hausdorff distance as a proxy for velocity
+            int maxSquareDistance = 0;
+            for (Index sourceIndex : sourceInterface) {
+                int sourceX = sourceIndex % width;
+                int sourceY = sourceIndex / width;
+                int minSquareDistance = std::numeric_limits<int>::max();
+                for (Index targetIndex : targetInterface) {
+                    int differenceX = sourceX - static_cast<int>(targetIndex % width);
+                    int differenceY = sourceY - static_cast<int>(targetIndex / width);
+                    int squareDistance = differenceX * differenceX + differenceY * differenceY;
+                    minSquareDistance = std::min(minSquareDistance, squareDistance);
+                }
+                maxSquareDistance = std::max(minSquareDistance, maxSquareDistance);
+            }
+            getOrCreateNode(currentTimestamp, edge.second).velocity += std::sqrt(static_cast<float>(maxSquareDistance));
         }
     }
 
