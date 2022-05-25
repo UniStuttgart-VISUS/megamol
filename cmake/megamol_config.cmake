@@ -43,6 +43,13 @@ else ()
   message(FATAL_ERROR "Unsupported compiler specified: '${CMAKE_CXX_COMPILER_ID}'")
 endif ()
 
+# Set RPath to "../lib" on binary install
+if (UNIX)
+  set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+endif ()
+
 # Dependencies
 
 # OpenMP

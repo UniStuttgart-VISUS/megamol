@@ -40,15 +40,6 @@ if(BUILD_FRONTEND)
       install(FILES $<TARGET_PDB_FILE:${BINARY_NAME}> DESTINATION bin OPTIONAL)
     endif()
   endif ()
-  
-  if(UNIX)
-    include(GNUInstallDirs)
-    set(cfg_LIB_PATH "../lib") # relative path from bin to lib dir
-    set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
-    configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
-  endif()  
-
 endif()
 
 if(ENABLE_GL)
