@@ -220,8 +220,14 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
         , input_lua_func(nullptr)
         , is_autocomplete_popup_open(false) {
 
-    this->echo_log_target = std::make_shared<megamol::core::utility::log::StreamTarget>(
-        this->echo_log_stream, megamol::core::utility::log::Log::LEVEL_ALL);
+    auto logger = spdlog::get(core::utility::log::Log::logger_name);
+    if (logger) {
+        auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(this->echo_log_stream);
+        sink->set_pattern(core::utility::log::Log::std_pattern);
+        sink->set_level(spdlog::level::level_enum::info);
+        logger->sinks().push_back(sink);
+    }
+
     this->connect_log();
 
     // Configure CONSOLE Window
