@@ -258,7 +258,7 @@ function(require_external NAME)
     if (WIN32)
       set(CHEMFILES_LIB "lib/chemfiles.lib")
     else ()
-      set(CHEMFILES_LIB "lib/chemfiles.a")
+      set(CHEMFILES_LIB "lib/libchemfiles.a")
     endif ()
 
     add_external_project(chemfiles STATIC
