@@ -7,10 +7,10 @@
  */
 #include "TriSoupDataSource.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/assert.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
+#include "vislib/sys/MemmappedFile.h"
 
 using namespace megamol;
 using namespace megamol::trisoup_gl;

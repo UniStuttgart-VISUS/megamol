@@ -11,7 +11,6 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
@@ -19,6 +18,7 @@
 
 #include "geometry_calls/CallTriMeshData.h"
 
+#include "vislib/graphics/PngBitmapCodec.h"
 #include "vislib/graphics/gl/OutlineFont.h"
 #include "vislib/graphics/gl/Verdana.inc"
 

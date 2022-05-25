@@ -12,7 +12,7 @@
 #include <chrono>
 
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/SystemInformation.h"
+#include "vislib/sys/SystemInformation.h"
 
 #include "comm/DistributedProto.h"
 using namespace megamol::remote;

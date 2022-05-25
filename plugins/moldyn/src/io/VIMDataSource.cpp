@@ -11,7 +11,6 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/PtrArray.h"
 #include "vislib/RawStorageWriter.h"
 #include "vislib/String.h"
@@ -20,6 +19,7 @@
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/ShallowQuaternion.h"
 #include "vislib/sys/Path.h"
+#include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/error.h"
 #include "vislib/sys/sysfunctions.h"
 #include <cassert>

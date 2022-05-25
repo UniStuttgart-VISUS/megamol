@@ -10,7 +10,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/ConsoleProgressBar.h"
+#include "vislib/sys/ConsoleProgressBar.h"
 #include <algorithm>
 #include <array>
 #include <cassert>

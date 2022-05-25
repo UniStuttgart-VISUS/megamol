@@ -19,12 +19,12 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/KeyCode.h"
+#include "vislib/sys/MemmappedFile.h"
 
 #include <array>
 #include <climits>

@@ -21,9 +21,9 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 
-#include "mmcore/utility/sys/Thread.h"
 #include "vislib/PtrArray.h"
 #include "vislib/sys/Event.h"
+#include "vislib/sys/Thread.h"
 
 namespace megamol {
 namespace volume {

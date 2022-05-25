@@ -15,10 +15,10 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "protein_calls/VTIDataCall.h"
 #include "vislib/Exception.h"
 #include "vislib/String.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include <cmath>
 #include <ctime>
 #include <ctype.h>

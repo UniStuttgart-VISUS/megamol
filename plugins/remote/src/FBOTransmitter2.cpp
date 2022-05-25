@@ -16,10 +16,10 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "vislib/Trace.h"
+#include "vislib/sys/SystemInformation.h"
 
 #ifdef __unix__
 #include <limits.h>

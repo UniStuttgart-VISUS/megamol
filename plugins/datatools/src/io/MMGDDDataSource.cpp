@@ -8,9 +8,9 @@
 #include "io/MMGDDDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/String.h"
 #include "vislib/sys/FastFile.h"
+#include "vislib/sys/SystemInformation.h"
 #include <cassert>
 
 using namespace megamol;
