@@ -127,8 +127,7 @@ private:
     /**
      * Volume rendering using molecular data.
      */
-    bool RenderMolecularData(
-        mmstd_gl::CallRender3DGL* call, megamol::protein_calls::MolecularDataCall* mol);
+    bool RenderMolecularData(mmstd_gl::CallRender3DGL* call, megamol::protein_calls::MolecularDataCall* mol);
 
     /**
      * Refresh all parameters.

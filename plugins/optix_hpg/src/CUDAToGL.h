@@ -97,7 +97,7 @@ inline constexpr auto cuda_to_gl_ren_func = [](std::shared_ptr<glowl::GLSLProgra
     CUDA_CHECK_ERROR(cuGraphicsMapResources(1, &fbo->data.depth_tex_ref, fbo->data.exec_stream));
 };
 
-using CUDAToGL = mmstd_gl::ContextToGL<CallRender3DCUDA, cuda_to_gl_init_func, cuda_to_gl_ren_func, cudatogl_name,
-    cudatogl_desc>;
+using CUDAToGL =
+    mmstd_gl::ContextToGL<CallRender3DCUDA, cuda_to_gl_init_func, cuda_to_gl_ren_func, cudatogl_name, cudatogl_desc>;
 
 } // namespace megamol::optix_hpg

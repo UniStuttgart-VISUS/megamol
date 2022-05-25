@@ -503,8 +503,7 @@ void AOSphereRenderer::uploadCameraUniforms(
 /*
  * AOSphereRenderer::renderParticles
  */
-void AOSphereRenderer::renderParticles(
-    mmstd_gl::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2) {
+void AOSphereRenderer::renderParticles(mmstd_gl::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2) {
 
     vislib_gl::graphics::gl::GLSLShader* sphereShader = NULL;
 
@@ -656,8 +655,7 @@ void AOSphereRenderer::renderParticles(
 /*
  * AOSphereRenderer::renderParticles
  */
-void AOSphereRenderer::renderParticles(
-    mmstd_gl::CallRender3DGL& call, protein_calls::MolecularDataCall* mol) {
+void AOSphereRenderer::renderParticles(mmstd_gl::CallRender3DGL& call, protein_calls::MolecularDataCall* mol) {
 
     vislib_gl::graphics::gl::GLSLShader* sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
@@ -764,8 +762,7 @@ void AOSphereRenderer::renderParticles(
 /*
  * AOSphereRenderer::renderParticlesVBO
  */
-void AOSphereRenderer::renderParticlesVBO(
-    mmstd_gl::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2) {
+void AOSphereRenderer::renderParticlesVBO(mmstd_gl::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2) {
 
     vislib_gl::graphics::gl::GLSLShader* sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
@@ -852,8 +849,7 @@ void AOSphereRenderer::renderParticlesVBO(
 /*
  * AOSphereRenderer::renderParticlesVBO
  */
-void AOSphereRenderer::renderParticlesVBO(
-    mmstd_gl::CallRender3DGL& call, protein_calls::MolecularDataCall* mol) {
+void AOSphereRenderer::renderParticlesVBO(mmstd_gl::CallRender3DGL& call, protein_calls::MolecularDataCall* mol) {
 
     vislib_gl::graphics::gl::GLSLShader* sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();

@@ -2651,8 +2651,8 @@ bool SphereRenderer::rebuildGBuffer() {
 }
 
 
-void SphereRenderer::rebuildWorkingData(mmstd_gl::CallRender3DGL& call, MultiParticleDataCall* mpdc,
-    const vislib_gl::graphics::gl::GLSLShader& shader) {
+void SphereRenderer::rebuildWorkingData(
+    mmstd_gl::CallRender3DGL& call, MultiParticleDataCall* mpdc, const vislib_gl::graphics::gl::GLSLShader& shader) {
 
     // Upload new data if neccessary
     if (this->stateInvalid) {

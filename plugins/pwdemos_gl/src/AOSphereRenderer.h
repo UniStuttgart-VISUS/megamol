@@ -97,8 +97,7 @@ private:
      * TODO: Document
      */
     void resizeVolume();
-    void uploadCameraUniforms(
-        mmstd_gl::CallRender3DGL& call, vislib_gl::graphics::gl::GLSLShader* sphereShader);
+    void uploadCameraUniforms(mmstd_gl::CallRender3DGL& call, vislib_gl::graphics::gl::GLSLShader* sphereShader);
     void renderParticles(mmstd_gl::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2);
     void renderParticles(mmstd_gl::CallRender3DGL& call, protein_calls::MolecularDataCall* mol);
     void renderParticlesVBO(mmstd_gl::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2);

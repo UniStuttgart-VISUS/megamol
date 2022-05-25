@@ -25,10 +25,10 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmstd_gl/flags/FlagCallsGL.h"
-#include "mmstd_gl/flags/UniFlagStorage.h"
 #include "mmcore_gl/utility/SSBOBufferArray.h"
 #include "mmcore_gl/utility/SSBOStreamer.h"
+#include "mmstd_gl/flags/FlagCallsGL.h"
+#include "mmstd_gl/flags/UniFlagStorage.h"
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
@@ -630,8 +630,7 @@ private:
      * @param mpdc    ...
      * @param shader  ...
      */
-    void rebuildWorkingData(
-        mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc, const GLSLShader& shader);
+    void rebuildWorkingData(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc, const GLSLShader& shader);
 
     /**
      * Render deferred pass.

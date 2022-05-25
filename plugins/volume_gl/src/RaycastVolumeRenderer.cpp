@@ -66,8 +66,7 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     this->m_lights_callerSlot.SetCompatibleCall<megamol::core::view::light::CallLightDescription>();
     this->MakeSlotAvailable(&this->m_lights_callerSlot);
 
-    this->m_transferFunction_callerSlot
-        .SetCompatibleCall<megamol::mmstd_gl::CallGetTransferFunctionGLDescription>();
+    this->m_transferFunction_callerSlot.SetCompatibleCall<megamol::mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->m_transferFunction_callerSlot);
 
     this->m_mode << new megamol::core::param::EnumParam(0);
