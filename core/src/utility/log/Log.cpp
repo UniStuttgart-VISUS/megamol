@@ -30,7 +30,9 @@
 #include "spdlog/spdlog.h"
 
 
-const char megamol::core::utility::log::Log::std_pattern[7] = "%^%v%$";
+const char megamol::core::utility::log::Log::std_pattern[12] = "%^(%l)|%v%$";
+
+const char megamol::core::utility::log::Log::file_pattern[22] = "[%Y-%m-%d %T] (%l)|%v";
 
 const char megamol::core::utility::log::Log::logger_name[23] = "default_megamol_logger";
 
@@ -50,7 +52,7 @@ std::shared_ptr<spdlog::sinks::stdout_color_sink_mt> create_default_sink() {
 
 std::shared_ptr<spdlog::sinks::basic_file_sink_mt> create_file_sink(std::string const& path) {
     auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(path, true);
-    sink->set_pattern(megamol::core::utility::log::Log::std_pattern);
+    sink->set_pattern(megamol::core::utility::log::Log::file_pattern);
     return sink;
 }
 
@@ -122,20 +124,20 @@ static megamol::core::utility::log::Log __vl_log_defaultlog;
 megamol::core::utility::log::Log& megamol::core::utility::log::Log::DefaultLog(__vl_log_defaultlog);
 
 
-/*
- * megamol::core::utility::log::Log::CurrentTimeStamp
- */
-megamol::core::utility::log::Log::TimeStamp megamol::core::utility::log::Log::CurrentTimeStamp(void) {
-    return time(nullptr);
-}
-
-
-/*
- * megamol::core::utility::log::Log::CurrentSourceID
- */
-megamol::core::utility::log::Log::SourceID megamol::core::utility::log::Log::CurrentSourceID(void) {
-    return spdlog::details::os::thread_id();
-}
+///*
+// * megamol::core::utility::log::Log::CurrentTimeStamp
+// */
+//megamol::core::utility::log::Log::TimeStamp megamol::core::utility::log::Log::CurrentTimeStamp(void) {
+//    return time(nullptr);
+//}
+//
+//
+///*
+// * megamol::core::utility::log::Log::CurrentSourceID
+// */
+//megamol::core::utility::log::Log::SourceID megamol::core::utility::log::Log::CurrentSourceID(void) {
+//    return spdlog::details::os::thread_id();
+//}
 
 
 /*
@@ -308,7 +310,7 @@ void megamol::core::utility::log::Log::SetMainTarget(std::shared_ptr<megamol::co
 void megamol::core::utility::log::Log::WriteError(const char* fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    this->writeMessageVaA(LEVEL_ERROR, Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
+    this->writeMessageVaA(log_level::error, fmt, argptr);
     va_end(argptr);
 }
 
@@ -319,8 +321,7 @@ void megamol::core::utility::log::Log::WriteError(const char* fmt, ...) {
 void megamol::core::utility::log::Log::WriteError(int lvlOff, const char* fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    this->writeMessageVaA(static_cast<UINT>(static_cast<int>(LEVEL_ERROR) + lvlOff), Log::CurrentTimeStamp(),
-        Log::CurrentSourceID(), fmt, argptr);
+    this->writeMessageVaA(log_level::error, fmt, argptr);
     va_end(argptr);
 }
 
@@ -331,7 +332,7 @@ void megamol::core::utility::log::Log::WriteError(int lvlOff, const char* fmt, .
 void megamol::core::utility::log::Log::WriteInfo(const char* fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    this->writeMessageVaA(LEVEL_INFO, Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
+    this->writeMessageVaA(log_level::info, fmt, argptr);
     va_end(argptr);
 }
 
@@ -342,8 +343,7 @@ void megamol::core::utility::log::Log::WriteInfo(const char* fmt, ...) {
 void megamol::core::utility::log::Log::WriteInfo(int lvlOff, const char* fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    this->writeMessageVaA(static_cast<UINT>(static_cast<int>(LEVEL_INFO) + lvlOff), Log::CurrentTimeStamp(),
-        Log::CurrentSourceID(), fmt, argptr);
+    this->writeMessageVaA(log_level::info, fmt, argptr);
     va_end(argptr);
 }
 
@@ -351,8 +351,7 @@ void megamol::core::utility::log::Log::WriteInfo(int lvlOff, const char* fmt, ..
 /*
  * megamol::core::utility::log::Log::writeMessage
  */
-void megamol::core::utility::log::Log::writeMessage(UINT level, megamol::core::utility::log::Log::TimeStamp time,
-    megamol::core::utility::log::Log::SourceID sid, const std::string& msg) {
+void megamol::core::utility::log::Log::writeMessage(log_level level, const std::string& msg) {
     auto logger = spdlog::get(logger_name);
     if (!logger)
         return;
@@ -360,32 +359,28 @@ void megamol::core::utility::log::Log::writeMessage(UINT level, megamol::core::u
         return;
     // remove newline at end because spdlog and other log targets already add newlines
     if (msg.back() == '\n') {
-        this->writeMessage(level, time, sid, msg.substr(0, msg.size() - 1));
+        this->writeMessage(level, msg.substr(0, msg.size() - 1));
         return;
     }
 
-    if (level > mt_level_)
-        return;
-
-    if (level >= 1 && level <= 99) {
-        logger->error("{}|{}", level, msg);
-        return;
+    switch (level) {
+    case log_level::error:
+        logger->error("{}", msg);
+        break;
+    case log_level::warn:
+        logger->warn("{}", msg);
+        break;
+    case log_level::info:
+    default:
+        logger->info("{}", msg);
     }
-
-    if (level >= 100 && level <= 199) {
-        logger->warn("{}|{}", level, msg);
-        return;
-    }
-
-    logger->info("{}|{}", level, msg);
 }
 
 
 /*
  * megamol::core::utility::log::Log::writeMessage
  */
-void megamol::core::utility::log::Log::writeMessageVaA(UINT level, megamol::core::utility::log::Log::TimeStamp time,
-    megamol::core::utility::log::Log::SourceID sid, const char* fmt, va_list argptr) {
+void megamol::core::utility::log::Log::writeMessageVaA(log_level level, const char* fmt, va_list argptr) {
     std::string msg;
     if (fmt != nullptr) {
         va_list tmp;
@@ -397,7 +392,7 @@ void megamol::core::utility::log::Log::writeMessageVaA(UINT level, megamol::core
     } else {
         msg = "Empty log message\n";
     }
-    this->writeMessage(level, time, sid, msg);
+    this->writeMessage(level, msg);
 }
 
 
@@ -407,7 +402,7 @@ void megamol::core::utility::log::Log::writeMessageVaA(UINT level, megamol::core
 void megamol::core::utility::log::Log::WriteMsg(const UINT level, const char* fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    this->writeMessageVaA(level, Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
+    this->writeMessageVaA(log_level::info, fmt, argptr);
     va_end(argptr);
 }
 
@@ -418,7 +413,7 @@ void megamol::core::utility::log::Log::WriteMsg(const UINT level, const char* fm
 void megamol::core::utility::log::Log::WriteWarn(const char* fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    this->writeMessageVaA(LEVEL_WARN, Log::CurrentTimeStamp(), Log::CurrentSourceID(), fmt, argptr);
+    this->writeMessageVaA(log_level::warn, fmt, argptr);
     va_end(argptr);
 }
 
@@ -429,8 +424,7 @@ void megamol::core::utility::log::Log::WriteWarn(const char* fmt, ...) {
 void megamol::core::utility::log::Log::WriteWarn(int lvlOff, const char* fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    this->writeMessageVaA(static_cast<UINT>(static_cast<int>(LEVEL_WARN) + lvlOff), Log::CurrentTimeStamp(),
-        Log::CurrentSourceID(), fmt, argptr);
+    this->writeMessageVaA(log_level::warn, fmt, argptr);
     va_end(argptr);
 }
 
@@ -451,33 +445,19 @@ megamol::core::utility::log::Log& megamol::core::utility::log::Log::operator=(co
  * megamol::core::utility::log::Log::getFileNameSuffix
  */
 std::string megamol::core::utility::log::Log::getFileNameSuffix(void) {
-    TimeStamp timestamp = megamol::core::utility::log::Log::CurrentTimeStamp();
-    struct tm* t;
-#ifdef _WIN32
-#if (_MSC_VER >= 1400)
-    struct tm __tS;
-    t = &__tS;
-    if (localtime_s(t, &timestamp) != 0) {
-        // timestamp error *** argh ***
-        __tS.tm_hour = __tS.tm_min = __tS.tm_sec = 0;
-    }
-#else  /* (_MSC_VER >= 1400) */
-    t = localtime(&timestamp);
-#endif /* (_MSC_VER >= 1400) */
-#else  /* _WIN32 */
-    t = localtime(&timestamp);
-#endif /* _WIN32 */
+    auto t = spdlog::details::os::localtime();
 
-    t->tm_mon += 1;
-    t->tm_year += 1900;
+    t.tm_mon += 1;
+    t.tm_year += 1900;
 
     std::stringstream buf;
-    buf << "_" << vislib::sys::SystemInformation::ComputerNameA().PeekBuffer() << "." << CurrentSourceID() << "_"
-        << std::setprecision(2) << t->tm_mday << "." << t->tm_mon << "." << std::setprecision(4) << t->tm_year << "_"
-        << std::setprecision(2) << t->tm_hour << "." << t->tm_min;
+    buf << "_" << vislib::sys::SystemInformation::ComputerNameA().PeekBuffer() << "."
+        << spdlog::details::os::thread_id() << "_" << std::setprecision(2) << t.tm_mday << "." << t.tm_mon << "."
+        << std::setprecision(4) << t.tm_year << "_" << std::setprecision(2) << t.tm_hour << "." << t.tm_min;
 
     return buf.str();
 }
+
 
 inline static bool iequals(const std::string& one, const std::string& other) {
 
@@ -486,27 +466,28 @@ inline static bool iequals(const std::string& one, const std::string& other) {
                 [](const char& c1, const char& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); }));
 }
 
+
 UINT megamol::core::utility::log::Log::ParseLevelAttribute(const std::string attr) {
 
-    UINT retval = megamol::core::utility::log::Log::LEVEL_ERROR;
+    UINT retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::error);
     if (iequals(attr, "error")) {
-        retval = megamol::core::utility::log::Log::LEVEL_ERROR;
+        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::error);
     } else if (iequals(attr, "warn")) {
-        retval = megamol::core::utility::log::Log::LEVEL_WARN;
+        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::warn);
     } else if (iequals(attr, "warning")) {
-        retval = megamol::core::utility::log::Log::LEVEL_WARN;
+        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::warn);
     } else if (iequals(attr, "info")) {
-        retval = megamol::core::utility::log::Log::LEVEL_INFO;
+        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::info);
     } else if (iequals(attr, "none")) {
-        retval = megamol::core::utility::log::Log::LEVEL_NONE;
+        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::info);
     } else if (iequals(attr, "null")) {
-        retval = megamol::core::utility::log::Log::LEVEL_NONE;
+        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::info);
     } else if (iequals(attr, "zero")) {
-        retval = megamol::core::utility::log::Log::LEVEL_NONE;
+        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::info);
     } else if (iequals(attr, "all")) {
-        retval = megamol::core::utility::log::Log::LEVEL_ALL;
+        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::info);
     } else if (iequals(attr, "*")) {
-        retval = megamol::core::utility::log::Log::LEVEL_ALL;
+        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::info);
     } else {
         retval = std::stoi(attr);
         // dont catch stoi exceptions

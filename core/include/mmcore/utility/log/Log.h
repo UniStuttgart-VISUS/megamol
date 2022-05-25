@@ -32,7 +32,10 @@ namespace log {
 class Log {
 public:
     /** Default log message pattern for spdlog */
-    static const char std_pattern[7];
+    static const char std_pattern[12];
+
+    /** Default file log message pattern for spdlog */
+    static const char file_pattern[22];
 
     /** Name of default logger in spdlog */
     static const char logger_name[23];
@@ -45,6 +48,8 @@ public:
 
     /** unsigned int alias */
     using UINT = unsigned int;
+
+    enum class log_level : UINT { info, warn, error };
 
     /**
      * Set this level to log all messages. If you use this constant for
@@ -86,19 +91,19 @@ public:
     /** The default log object. */
     static Log& DefaultLog;
 
-    /**
-     * Answer the current source id
-     *
-     * @return A source id representing THIS
-     */
-    static SourceID CurrentSourceID(void);
+    ///**
+    // * Answer the current source id
+    // *
+    // * @return A source id representing THIS
+    // */
+    //static SourceID CurrentSourceID(void);
 
-    /**
-     * Answer the current time.
-     *
-     * @return A time stamp representing NOW.
-     */
-    static TimeStamp CurrentTimeStamp(void);
+    ///**
+    // * Answer the current time.
+    // *
+    // * @return A time stamp representing NOW.
+    // */
+    //static TimeStamp CurrentTimeStamp(void);
 
     /**
      * Abstract base class for log targets
@@ -155,7 +160,7 @@ public:
          *
          * @param level The log level for this target
          */
-        Target(UINT level = Log::LEVEL_ERROR);
+        Target(UINT level = 1);
 
     private:
         /** The log level for this target */
@@ -169,7 +174,7 @@ public:
      * @param msgbufsize The number of messages that will be stored in
      *                   memory if no physical log file is available.
      */
-    Log(UINT level = LEVEL_ERROR, unsigned int msgbufsize = 10);
+    Log(UINT level = 1, unsigned int msgbufsize = 10);
 
     /**
      * Ctor. Constructs a new log file with the specified physical file.
@@ -411,22 +416,18 @@ private:
      * and source id to the log.
      *
      * @param level The level of the message
-     * @param time The time stamp of the message
-     * @param sid The object id of the source of the message
      * @param msg The message text itself
      */
-    void writeMessage(UINT level, TimeStamp time, SourceID sid, const std::string& msg);
+    void writeMessage(log_level level, const std::string& msg);
 
     /**
      * Writes a pre-formatted message with specified log level, time stamp
      * and source id to the log.
      *
      * @param level The level of the message
-     * @param time The time stamp of the message
-     * @param sid The object id of the source of the message
      * @param msg The message text itself
      */
-    void writeMessageVaA(UINT level, TimeStamp time, SourceID sid, const char* fmt, va_list argptr);
+    void writeMessageVaA(log_level level, const char* fmt, va_list argptr);
 
     /**
      * Answer a file name suffix for log files
