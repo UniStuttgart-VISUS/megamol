@@ -39,6 +39,28 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
     Index height = result->Height();
     Index size = width * height;
 
+    std::vector<std::vector<graph::GraphData2D::NodeID>> nodeIDs;
+    graph::GraphData2D nodeGraph;
+
+    auto getOrCreateNodeID = [&](Timestamp ts, Label label) {
+        if (nodeIDs.size() <= ts) {
+            nodeIDs.resize(ts + 1);
+        }
+        while (nodeIDs[ts].size() <= label) {
+            nodeIDs[ts].push_back(graph::GraphData2D::NodeIDNone);
+        }
+        auto nodeID = nodeIDs[ts][label];
+        if (nodeID == graph::GraphData2D::NodeIDNone) {
+            graph::GraphData2D::Node node;
+            node.frameIndex = ts;
+            nodeID = nodeGraph.addNode(std::move(node));
+            nodeIDs[ts][label] = nodeID;
+        }
+        return nodeID;
+    };
+
+    auto getOrCreateNode = [&](Timestamp ts, Label label) { return nodeGraph.getNode(getOrCreateNodeID(ts, label)); };
+
     Timestamp timeThreshold = input.timeThreshold;
 
     Timestamp currentTimestamp = 0;
@@ -78,8 +100,8 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
     auto floodFill = [&](Index index, Label label) {
         floodQueue.clear();
         floodQueue.push_back(index);
-        for (std::size_t stackIndex = 0; stackIndex < floodQueue.size(); ++stackIndex) {
-            index = floodQueue[stackIndex];
+        for (std::size_t queueIndex = 0; queueIndex < floodQueue.size(); ++queueIndex) {
+            index = floodQueue[queueIndex];
 
             // Pixel is not on the right boundary
             if (index % width < width - 1) {
@@ -142,26 +164,24 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
     // Phase 2: follow fluid flow
     for (; currentTimestamp <= maximumTimestamp; ++currentTimestamp) {
         // Split pending pixels into sections with unique labels
-        std::vector<Index> frontStack;
+        std::vector<Index> frontQueue;
         Label frontLabel = LabelFirst;
         auto splitFront = [&](Index index) {
             if (dataOut[index] != LabelFlow) {
                 return;
             }
-            frontStack.clear();
-            frontStack.push_back(index);
+            frontQueue.clear();
+            frontQueue.push_back(index);
             dataOut[index] = frontLabel;
-            while (!frontStack.empty()) {
-                index = frontStack.back();
-                frontStack.pop_back();
-
+            for (std::size_t queueIndex = 0; queueIndex < frontQueue.size(); ++queueIndex) {
+                index = frontQueue[queueIndex];
                 int cx = index % width;
                 int cy = index / width;
                 for (int y = std::max<int>(0, cy - 2); y < std::min<int>(cy + 3, height); ++y) {
                     for (int x = std::max<int>(0, cx - 2); x < std::min<int>(cx + 3, width); ++x) {
                         Index nextIndex = x + y * width;
                         if (dataOut[nextIndex] == LabelFlow) {
-                            frontStack.push_back(nextIndex);
+                            frontQueue.push_back(nextIndex);
                             dataOut[nextIndex] = frontLabel;
                         }
                     }
@@ -177,9 +197,9 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
             splitFront(pendingIndex);
         }
 
-        std::swap(frontStack, nextFront);
+        std::swap(frontQueue, nextFront);
         nextFront.clear();
-        for (auto pendingIndex : frontStack) {
+        for (auto pendingIndex : frontQueue) {
             if (dataIn[pendingIndex] == currentTimestamp) {
                 // Same timestamp: perform flood fill from this pixel
                 floodFill(pendingIndex, dataOut[pendingIndex]);

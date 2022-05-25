@@ -30,7 +30,8 @@ public:
         glm::vec2 centerOfMass;
         glm::vec2 velocity;
         float area = 0.f;
-        float interfaceLength = 0.f;
+        float interfaceFluid = 0.f;
+        float interfaceSolid = 0.f;
         std::uint8_t edgeCountIn = 0;
         std::uint8_t edgeCountOut = 0;
         Rect boundingBox;
