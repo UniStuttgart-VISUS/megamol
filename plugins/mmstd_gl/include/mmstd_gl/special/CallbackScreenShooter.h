@@ -14,9 +14,9 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/job/AbstractTickJob.h"
-#include "mmcore_gl/view/special/ScreenShooter.h"
+#include "mmstd_gl/special/ScreenShooter.h"
 
-namespace megamol::core_gl::view::special {
+namespace megamol::mmstd_gl::special {
 
 /**
  * Call transporting a callback delivering an ostream object for writing data.
@@ -152,4 +152,4 @@ private:
     core::CalleeSlot tickSlot;
 };
 
-} // namespace megamol::core_gl::view::special
+} // namespace megamol::mmstd_gl::special

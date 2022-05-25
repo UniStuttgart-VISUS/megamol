@@ -5,12 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore_gl/view/ContextToGL.h"
-#include "mmcore/utility/log/Log.h"
+#include "mmstd_gl/renderer/ContextToGL.h"
 
-namespace megamol::core_gl::view {
-
-using core::utility::log::Log;
-
-
-} // namespace megamol::core_gl::view
+using namespace megamol::mmstd_gl;

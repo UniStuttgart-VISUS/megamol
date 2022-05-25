@@ -11,7 +11,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 //#include "mmcore/FlagCall.h"
@@ -42,7 +42,7 @@ using namespace megamol::core;
  * SombreroMeshRenderer::SombreroMeshRenderer
  */
 SombreroMeshRenderer::SombreroMeshRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , getDataSlot("getData", "The slot to fetch the tri-mesh data")
         , getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)")
         , getFlagDataSlot("getFlagData", "The slot to fetch the data from the flag storage")
@@ -146,8 +146,8 @@ bool SombreroMeshRenderer::create(void) {
 /*
  * TriSoupRenderer::GetExtents
  */
-bool SombreroMeshRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
-    core_gl::view::CallRender3DGL* cr = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
+bool SombreroMeshRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
+    mmstd_gl::CallRender3DGL* cr = dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (cr == NULL)
         return false;
     megamol::geocalls_gl::CallTriMeshDataGL* ctmd = this->getDataSlot.CallAs<megamol::geocalls_gl::CallTriMeshDataGL>();
@@ -343,8 +343,8 @@ void SombreroMeshRenderer::overrideColors(const int meshIdx, const vislib::math:
 /*
  * SombreroMeshRenderer::Render
  */
-bool SombreroMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
-    core_gl::view::CallRender3DGL* cr = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
+bool SombreroMeshRenderer::Render(mmstd_gl::CallRender3DGL& call) {
+    mmstd_gl::CallRender3DGL* cr = dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (cr == NULL)
         return false;
     megamol::geocalls_gl::CallTriMeshDataGL* ctmd = this->getDataSlot.CallAs<megamol::geocalls_gl::CallTriMeshDataGL>();

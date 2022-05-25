@@ -182,7 +182,7 @@ void ModernTrisoupRenderer::release(void) {
     }
 }
 
-bool ModernTrisoupRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool ModernTrisoupRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     auto ctmd = this->getDataSlot_.CallAs<geocalls_gl::CallTriMeshDataGL>();
     if (ctmd == nullptr) {
@@ -200,7 +200,7 @@ bool ModernTrisoupRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-bool ModernTrisoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool ModernTrisoupRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     auto call_fbo = call.GetFramebuffer();
     auto cam = call.GetCamera();
 

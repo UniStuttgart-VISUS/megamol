@@ -29,7 +29,7 @@ using megamol::core::utility::log::Log;
  * DiagramRenderer::DiagramRenderer (CTOR)
  */
 DiagramRenderer::DiagramRenderer(void)
-        : core_gl::view::Renderer2DModuleGL()
+        : mmstd_gl::Renderer2DModuleGL()
         , dataCallerSlot("getData", "Connects the diagram rendering with data storage.")
         , selectionCallerSlot("getSelection", "Connects the diagram rendering with selection storage.")
         , hiddenCallerSlot("getHidden", "Connects the diagram rendering with visibility storage.")
@@ -235,7 +235,7 @@ bool DiagramRenderer::CalcExtents() {
     return true;
 }
 
-bool DiagramRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool DiagramRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
     // set the bounding box to 0..1
     call.AccessBoundingBoxes().SetBoundingBox(0.0f - legendOffset - legendWidth, 0.0f - 2.0f * fontSize, 0,
         this->aspectRatioParam.Param<param::FloatParam>()->Value() + fontSize, 1.0f + fontSize, 0);
@@ -518,7 +518,7 @@ bool DiagramRenderer::onHideAllButton(param::ParamSlot& p) {
 /*
  * Diagram2DRenderer::Render
  */
-bool DiagramRenderer::Render(core_gl::view::CallRender2DGL& call) {
+bool DiagramRenderer::Render(mmstd_gl::CallRender2DGL& call) {
     // get pointer to Diagram2DCall
     diagram = this->dataCallerSlot.CallAs<protein_calls::DiagramCall>();
     if (diagram == NULL)

@@ -8,7 +8,7 @@
 
 #include "mmcore/Module.h"
 
-namespace megamol::core_gl {
+namespace megamol::mmstd_gl {
 
 /**
  * Base class of all graph modules
@@ -22,4 +22,4 @@ public:
     }
 };
 
-} // namespace megamol::core_gl
+} // namespace megamol::mmstd_gl

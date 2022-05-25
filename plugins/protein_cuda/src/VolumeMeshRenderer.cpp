@@ -531,7 +531,7 @@ void VolumeMeshRenderer::release(void) {
 /*
  * ProteinRenderer::GetExtents
  */
-bool VolumeMeshRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool VolumeMeshRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (!mol) {
         return false;
@@ -550,7 +550,7 @@ bool VolumeMeshRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * VolumeMeshRenderer::Render
  */
-bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool VolumeMeshRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     using megamol::core::utility::log::Log;
 
     if (setCUDAGLDevice) {

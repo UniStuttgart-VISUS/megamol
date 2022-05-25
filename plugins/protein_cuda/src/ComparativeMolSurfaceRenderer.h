@@ -21,7 +21,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 //#include "vislib_vector_typedefs.h"
 #include "vislib/math/Cuboid.h"
@@ -43,7 +43,7 @@ typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
 namespace megamol {
 namespace protein_cuda {
 
-class ComparativeMolSurfaceRenderer : public core_gl::view::Renderer3DModuleGL {
+class ComparativeMolSurfaceRenderer : public mmstd_gl::Renderer3DModuleGL {
 
 public:
     /// Render modes for the surfaces
@@ -174,7 +174,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The get extent callback for vbo data.
@@ -221,7 +221,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * TODO

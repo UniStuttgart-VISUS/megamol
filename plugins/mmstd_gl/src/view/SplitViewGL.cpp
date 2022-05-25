@@ -4,22 +4,21 @@
  * All rights reserved.
  */
 
-#include "mmcore_gl/view/SplitViewGL.h"
+#include "mmstd_gl/view/SplitViewGL.h"
+
+#include "OpenGL_Context.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore_gl/view/CallRenderViewGL.h"
+#include "mmstd_gl/renderer/CallRenderViewGL.h"
 #include "vislib/Trace.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
 
-#include "OpenGL_Context.h"
-
-
 using namespace megamol;
-using namespace megamol::core_gl;
+using namespace megamol::mmstd_gl;
 using megamol::core::utility::log::Log;
 
 enum Orientation { HORIZONTAL = 0, VERTICAL = 1 };
@@ -45,28 +44,28 @@ view::SplitViewGL::SplitViewGL()
         , _mouseY(0.0)
         , _dragSplitter(false) {
 
-    _lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    _lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey), &AbstractView::OnKeyCallback);
-    _lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    _lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar), &AbstractView::OnCharCallback);
-    _lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    _lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
         &AbstractView::OnMouseButtonCallback);
-    _lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    _lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove), &AbstractView::OnMouseMoveCallback);
-    _lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    _lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
         &AbstractView::OnMouseScrollCallback);
     // AbstractCallRender
-    _lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    _lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
         core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnRender),
         &AbstractView::OnRenderView);
-    _lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    _lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
         core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnGetExtents),
         &AbstractView::GetExtents);
     // CallRenderViewGL
-    _lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
+    _lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
+        CallRenderViewGL::FunctionName(CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
     MakeSlotAvailable(&_lhsRenderSlot);
 
     _render1Slot.SetCompatibleCall<CallRenderViewGLDescription>();
@@ -286,7 +285,7 @@ void view::SplitViewGL::Resize(unsigned int width, unsigned int height) {
 }
 
 bool view::SplitViewGL::OnRenderView(core::Call& call) {
-    auto* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
+    auto* crv = dynamic_cast<CallRenderViewGL*>(&call);
     if (crv == nullptr)
         return false;
 
@@ -319,15 +318,15 @@ bool view::SplitViewGL::OnKey(
 
         if (_inputToBothSlot.Param<core::param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
-            auto consumed = (*crv1)(view::CallRenderViewGL::FnOnKey);
+            auto consumed = (*crv1)(CallRenderViewGL::FnOnKey);
 
             crv2->SetInputEvent(evt);
-            consumed |= (*crv2)(view::CallRenderViewGL::FnOnKey);
+            consumed |= (*crv2)(CallRenderViewGL::FnOnKey);
 
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderViewGL::FnOnKey))
+            if (!(*crv)(CallRenderViewGL::FnOnKey))
                 return false;
         }
     }
@@ -347,15 +346,15 @@ bool view::SplitViewGL::OnChar(unsigned int codePoint) {
 
         if (_inputToBothSlot.Param<core::param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
-            auto consumed = (*crv1)(view::CallRenderViewGL::FnOnChar);
+            auto consumed = (*crv1)(CallRenderViewGL::FnOnChar);
 
             crv2->SetInputEvent(evt);
-            consumed |= (*crv2)(view::CallRenderViewGL::FnOnChar);
+            consumed |= (*crv2)(CallRenderViewGL::FnOnChar);
 
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderViewGL::FnOnChar))
+            if (!(*crv)(CallRenderViewGL::FnOnChar))
                 return false;
         }
     }
@@ -385,15 +384,15 @@ bool view::SplitViewGL::OnMouseButton(frontend_resources::MouseButton button,
 
         if (_inputToBothSlot.Param<core::param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
-            auto consumed = (*crv1)(view::CallRenderViewGL::FnOnMouseButton);
+            auto consumed = (*crv1)(CallRenderViewGL::FnOnMouseButton);
 
             crv2->SetInputEvent(evt);
-            consumed |= (*crv2)(view::CallRenderViewGL::FnOnMouseButton);
+            consumed |= (*crv2)(CallRenderViewGL::FnOnMouseButton);
 
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderViewGL::FnOnMouseButton))
+            if (!(*crv)(CallRenderViewGL::FnOnMouseButton))
                 return false;
         }
     }
@@ -442,15 +441,15 @@ bool view::SplitViewGL::OnMouseMove(double x, double y) {
 
         if (_inputToBothSlot.Param<core::param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
-            auto consumed = (*crv1)(view::CallRenderViewGL::FnOnMouseMove);
+            auto consumed = (*crv1)(CallRenderViewGL::FnOnMouseMove);
 
             crv2->SetInputEvent(evt);
-            consumed |= (*crv2)(view::CallRenderViewGL::FnOnMouseMove);
+            consumed |= (*crv2)(CallRenderViewGL::FnOnMouseMove);
 
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderViewGL::FnOnMouseMove))
+            if (!(*crv)(CallRenderViewGL::FnOnMouseMove))
                 return false;
         }
     }
@@ -472,15 +471,15 @@ bool view::SplitViewGL::OnMouseScroll(double dx, double dy) {
 
         if (_inputToBothSlot.Param<core::param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
-            auto consumed = (*crv1)(view::CallRenderViewGL::FnOnMouseScroll);
+            auto consumed = (*crv1)(CallRenderViewGL::FnOnMouseScroll);
 
             crv2->SetInputEvent(evt);
-            consumed |= (*crv2)(view::CallRenderViewGL::FnOnMouseScroll);
+            consumed |= (*crv2)(CallRenderViewGL::FnOnMouseScroll);
 
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderViewGL::FnOnMouseScroll))
+            if (!(*crv)(CallRenderViewGL::FnOnMouseScroll))
                 return false;
         }
     }

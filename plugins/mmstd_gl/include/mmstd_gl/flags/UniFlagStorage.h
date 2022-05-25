@@ -16,10 +16,9 @@
 #include "mmcore/Module.h"
 #include "mmcore/flags/FlagStorage.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/flags/FlagCollectionGL.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "mmstd_gl/flags/FlagCollectionGL.h"
 
-namespace megamol::core_gl {
+namespace megamol::mmstd_gl {
 
 /**
  * Class holding a GL buffer of uints which contain flags that say something
@@ -138,9 +137,9 @@ protected:
     core::CalleeSlot writeGLFlagsSlot;
 
     std::unique_ptr<glowl::GLSLProgram> compressGPUFlagsProgram;
-    std::shared_ptr<core_gl::FlagCollection_GL> theGLData;
+    std::shared_ptr<mmstd_gl::FlagCollection_GL> theGLData;
     bool cpu_stale = true;
     bool gpu_stale = true;
 };
 
-} // namespace megamol::core_gl
+} // namespace megamol::mmstd_gl

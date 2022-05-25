@@ -26,7 +26,7 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 
 #include "protein_calls/ProteinColor.h"
 #include "protein_calls/RMSF.h"
@@ -408,7 +408,7 @@ void UncertaintyCartoonRenderer::release(void) {
 /*
  * UncertaintyCartoonRenderer::GetExtents
  */
-bool UncertaintyCartoonRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool UncertaintyCartoonRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     // get pointer to UncertaintyDataCall
     UncertaintyDataCall* udc = this->uncertaintyDataSlot.CallAs<UncertaintyDataCall>();
@@ -630,7 +630,7 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall* udc, Mo
 /*
  * UncertaintyCartoonRenderer::Render
  */
-bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool UncertaintyCartoonRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
 #ifdef DEBUG_GL
     glEnable(GL_DEBUG_OUTPUT);

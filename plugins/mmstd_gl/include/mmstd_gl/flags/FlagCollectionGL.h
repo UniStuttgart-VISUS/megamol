@@ -61,7 +61,7 @@ public:
 };
 } // namespace glowl_experimental
 
-namespace megamol::core_gl {
+namespace megamol::mmstd_gl {
 
 class FlagCollection_GL {
 public:
@@ -83,4 +83,4 @@ public:
         }
     }
 };
-} // namespace megamol::core_gl
+} // namespace megamol::mmstd_gl

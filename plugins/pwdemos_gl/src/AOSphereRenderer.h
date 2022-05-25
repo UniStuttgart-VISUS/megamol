@@ -11,8 +11,8 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
@@ -24,7 +24,7 @@ namespace demos_gl {
 /**
  * Renderer for simple sphere glyphs
  */
-class AOSphereRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+class AOSphereRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -76,7 +76,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -90,7 +90,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
 private:
     /**
@@ -98,11 +98,11 @@ private:
      */
     void resizeVolume();
     void uploadCameraUniforms(
-        megamol::core_gl::view::CallRender3DGL& call, vislib_gl::graphics::gl::GLSLShader* sphereShader);
-    void renderParticles(megamol::core_gl::view::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2);
-    void renderParticles(megamol::core_gl::view::CallRender3DGL& call, protein_calls::MolecularDataCall* mol);
-    void renderParticlesVBO(megamol::core_gl::view::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2);
-    void renderParticlesVBO(megamol::core_gl::view::CallRender3DGL& call, protein_calls::MolecularDataCall* mol);
+        mmstd_gl::CallRender3DGL& call, vislib_gl::graphics::gl::GLSLShader* sphereShader);
+    void renderParticles(mmstd_gl::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2);
+    void renderParticles(mmstd_gl::CallRender3DGL& call, protein_calls::MolecularDataCall* mol);
+    void renderParticlesVBO(mmstd_gl::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2);
+    void renderParticlesVBO(mmstd_gl::CallRender3DGL& call, protein_calls::MolecularDataCall* mol);
 
 
     /**

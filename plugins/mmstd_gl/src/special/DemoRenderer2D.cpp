@@ -6,18 +6,18 @@
  */
 
 #define _USE_MATH_DEFINES
-#include "mmcore_gl/view/special/DemoRenderer2D.h"
+#include "mmstd_gl/special/DemoRenderer2D.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <cmath>
 
-using namespace megamol::core_gl;
+using namespace megamol::mmstd_gl;
 
 
 /*
  * view::special::DemoRenderer2D::DemoRenderer2D
  */
-view::special::DemoRenderer2D::DemoRenderer2D()
-        : core_gl::view::Renderer2DModuleGL()
+special::DemoRenderer2D::DemoRenderer2D()
+        : Renderer2DModuleGL()
         , mx(0.0f)
         , my(0.0f)
         , fromx(1.0f)
@@ -32,7 +32,7 @@ view::special::DemoRenderer2D::DemoRenderer2D()
 /*
  * view::special::DemoRenderer2D::~DemoRenderer2D
  */
-view::special::DemoRenderer2D::~DemoRenderer2D() {
+special::DemoRenderer2D::~DemoRenderer2D() {
     this->Release();
 }
 
@@ -40,7 +40,7 @@ view::special::DemoRenderer2D::~DemoRenderer2D() {
 /*
  * view::special::DemoRenderer2D::create
  */
-bool view::special::DemoRenderer2D::create(void) {
+bool special::DemoRenderer2D::create(void) {
     // intentionally empty
     return true;
 }
@@ -49,7 +49,7 @@ bool view::special::DemoRenderer2D::create(void) {
 /*
  * view::special::DemoRenderer2D::GetExtents
  */
-bool view::special::DemoRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool special::DemoRenderer2D::GetExtents(CallRender2DGL& call) {
 
     call.AccessBoundingBoxes().SetBoundingBox(0.0f, 0.0f, 0, 4.0f, 4.0f, 0);
 
@@ -60,7 +60,7 @@ bool view::special::DemoRenderer2D::GetExtents(core_gl::view::CallRender2DGL& ca
 /*
  * view::special::DemoRenderer2D::Render
  */
-bool view::special::DemoRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
+bool special::DemoRenderer2D::Render(CallRender2DGL& call) {
 
     auto bbox = call.GetBoundingBoxes().BoundingBox();
 
@@ -108,7 +108,7 @@ bool view::special::DemoRenderer2D::Render(core_gl::view::CallRender2DGL& call) 
 /*
  * view::special::DemoRenderer2D::release
  */
-void view::special::DemoRenderer2D::release(void) {
+void special::DemoRenderer2D::release(void) {
     // intentionally empty
 }
 
@@ -116,7 +116,7 @@ void view::special::DemoRenderer2D::release(void) {
 /*
  * view::special::DemoRenderer2D::MouseEvent
  */
-bool view::special::DemoRenderer2D::MouseEvent(float x, float y, core::view::MouseFlags flags) {
+bool special::DemoRenderer2D::MouseEvent(float x, float y, core::view::MouseFlags flags) {
     if (x < 0.0f)
         this->mx = 0.0f;
     else if (x > 4.0f)

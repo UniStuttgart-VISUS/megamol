@@ -5,12 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore_gl/view/special/ScreenShooter.h"
+#include "mmstd_gl/special/ScreenShooter.h"
 
 #include <climits>
 #include <limits>
 #include <map>
 #include <sstream>
+
+#include <png.h>
 
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
@@ -27,8 +29,7 @@
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/Thread.h"
-#include "mmcore_gl/view/CallRenderViewGL.h"
-#include "png.h"
+#include "mmstd_gl/renderer/CallRenderViewGL.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
@@ -37,10 +38,7 @@
 #include "vislib/sys/File.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
-namespace megamol {
-namespace core_gl {
-namespace view {
-namespace special {
+namespace {
 
 /**
  * My error handling function for png export
@@ -180,18 +178,15 @@ static DWORD myPngStoreData(void* d) {
     return 0;
 }
 
-} /* end namespace special */
-} /* end namespace view */
-} // namespace core_gl
-} /* end namespace megamol */
+} // namespace
 
-using namespace megamol::core_gl;
+using namespace megamol::mmstd_gl;
 
 
 /*
  * view::special::ScreenShooter::IsAvailable
  */
-bool view::special::ScreenShooter::IsAvailable(void) {
+bool special::ScreenShooter::IsAvailable(void) {
     return true;
     // required extensions must be tested lazy,
     //     because open gl can still be missing
@@ -201,7 +196,7 @@ bool view::special::ScreenShooter::IsAvailable(void) {
 /*
  * view::special::ScreenShooter::release
  */
-view::special::ScreenShooter::ScreenShooter(const bool reducedParameters)
+special::ScreenShooter::ScreenShooter(const bool reducedParameters)
         : core::job::AbstractJob()
         , Module()
         , viewNameSlot("view", "The name of the view instance or view to be used")
@@ -300,7 +295,7 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters)
 /*
  * view::special::ScreenShooter::release
  */
-view::special::ScreenShooter::~ScreenShooter() {
+special::ScreenShooter::~ScreenShooter() {
     this->Release();
 }
 
@@ -308,7 +303,7 @@ view::special::ScreenShooter::~ScreenShooter() {
 /*
  * view::special::ScreenShooter::release
  */
-bool view::special::ScreenShooter::IsRunning(void) const {
+bool special::ScreenShooter::IsRunning(void) const {
     return this->running;
 }
 
@@ -316,7 +311,7 @@ bool view::special::ScreenShooter::IsRunning(void) const {
 /*
  * view::special::ScreenShooter::release
  */
-bool view::special::ScreenShooter::Start(void) {
+bool special::ScreenShooter::Start(void) {
     this->running = true;
     return true;
 }
@@ -325,7 +320,7 @@ bool view::special::ScreenShooter::Start(void) {
 /*
  * view::special::ScreenShooter::release
  */
-bool view::special::ScreenShooter::Terminate(void) {
+bool special::ScreenShooter::Terminate(void) {
     this->running = false;
     return true;
 }
@@ -334,7 +329,7 @@ bool view::special::ScreenShooter::Terminate(void) {
 /*
  * view::special::ScreenShooter::release
  */
-bool view::special::ScreenShooter::create(void) {
+bool special::ScreenShooter::create(void) {
     currentFbo = std::make_shared<glowl::FramebufferObject>(1, 1);
     return true;
 }
@@ -343,7 +338,7 @@ bool view::special::ScreenShooter::create(void) {
 /*
  * view::special::ScreenShooter::release
  */
-void view::special::ScreenShooter::release(void) {
+void special::ScreenShooter::release(void) {
     // intentionally empty.
 }
 
@@ -351,7 +346,7 @@ void view::special::ScreenShooter::release(void) {
 /*
  * view::special::ScreenShooter::BeforeRender
  */
-void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) {
+void special::ScreenShooter::BeforeRender(core::view::AbstractView* view) {
     using megamol::core::utility::log::Log;
     ShooterData data;
     vislib::sys::Thread t2(&myPngStoreData);
@@ -442,7 +437,7 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
         return;
     }
 
-    view::CallRenderViewGL crv;
+    CallRenderViewGL crv;
     BYTE* buffer = NULL;
     vislib::sys::FastFile file;
     bool rollback = false;
@@ -950,7 +945,7 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
 /*
  * view::special::ScreenShooter::createScreenshot
  */
-void view::special::ScreenShooter::createScreenshot(const std::string& filename) {
+void special::ScreenShooter::createScreenshot(const std::string& filename) {
     this->imageFilenameSlot.Param<core::param::FilePathParam>()->SetValue(filename);
 
     triggerButtonClicked(this->triggerButtonSlot);
@@ -960,7 +955,7 @@ void view::special::ScreenShooter::createScreenshot(const std::string& filename)
 /*
  * view::special::ScreenShooter::triggerButtonClicked
  */
-bool view::special::ScreenShooter::triggerButtonClicked(core::param::ParamSlot& slot) {
+bool special::ScreenShooter::triggerButtonClicked(core::param::ParamSlot& slot) {
     // happy trigger finger hit button action happend
     using megamol::core::utility::log::Log;
     ASSERT(&slot == &this->triggerButtonSlot);
@@ -1032,7 +1027,7 @@ bool view::special::ScreenShooter::triggerButtonClicked(core::param::ParamSlot& 
 /*
  * view::special::ScreenShooter::findTimeParam
  */
-megamol::core::param::ParamSlot* view::special::ScreenShooter::findTimeParam(core::view::AbstractView* view) {
+megamol::core::param::ParamSlot* special::ScreenShooter::findTimeParam(core::view::AbstractView* view) {
     vislib::TString name(this->animTimeParamNameSlot.Param<core::param::StringParam>()->Value().c_str());
     core::param::ParamSlot* timeSlot = nullptr;
 

@@ -12,7 +12,7 @@
 #include "mmcore/view/AbstractCallRenderView.h"
 #include "mmcore/view/Input.h"
 
-namespace megamol::core_gl::view {
+namespace megamol::mmstd_gl {
 
 inline constexpr char callrenderviewgl_name[] = "CallRenderViewGL";
 
@@ -38,4 +38,4 @@ public:
 /** Description class typedef */
 typedef core::factories::CallAutoDescription<CallRenderViewGL> CallRenderViewGLDescription;
 
-} // namespace megamol::core_gl::view
+} // namespace megamol::mmstd_gl

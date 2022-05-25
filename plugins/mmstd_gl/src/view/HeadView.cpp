@@ -5,17 +5,17 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore_gl/view/HeadView.h"
-#include "mmcore/job/TickCall.h"
-#include "mmcore_gl/view/CallRenderViewGL.h"
-
-#include "mmcore/utility/log/Log.h"
-#include "vislib/Trace.h"
+#include "mmstd_gl/view/HeadView.h"
 
 #include <memory>
 
+#include "mmcore/job/TickCall.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmstd_gl/renderer/CallRenderViewGL.h"
+#include "vislib/Trace.h"
+
 using namespace megamol;
-using namespace megamol::core_gl;
+using namespace megamol::mmstd_gl;
 using megamol::core::utility::log::Log;
 
 /*
@@ -25,7 +25,7 @@ view::HeadView::HeadView(void)
         : viewSlot("view", "Connects to a view")
         , tickSlot("tick", "Connects to a module that needs a tick") {
 
-    this->viewSlot.SetCompatibleCall<core_gl::view::CallRenderViewGLDescription>();
+    this->viewSlot.SetCompatibleCall<CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->viewSlot);
 
     this->tickSlot.SetCompatibleCall<core::job::TickCall::TickCallDescription>();
@@ -117,7 +117,7 @@ core::view::ImageWrapper view::HeadView::Render(double time, double instanceTime
     return GetRenderingResult();
 }
 
-core::view::ImageWrapper megamol::core_gl::view::HeadView::GetRenderingResult() const {
+core::view::ImageWrapper megamol::mmstd_gl::view::HeadView::GetRenderingResult() const {
     return frontend_resources::wrap_image<frontend_resources::WrappedImageType::ByteArray>(
         {0, 0}, nullptr, ImageWrapper::DataChannels::RGBA8);
 }
@@ -157,7 +157,7 @@ void view::HeadView::Resize(unsigned int width, unsigned int height) {
  * view::HeadView::OnRenderView
  */
 bool view::HeadView::OnRenderView(core::Call& call) {
-    view::CallRenderViewGL* view = dynamic_cast<view::CallRenderViewGL*>(&call);
+    CallRenderViewGL* view = dynamic_cast<CallRenderViewGL*>(&call);
     if (view == nullptr)
         return false;
 
@@ -189,7 +189,7 @@ bool view::HeadView::OnKey(
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderViewGL::FnOnKey))
+        if ((*view)(CallRenderViewGL::FnOnKey))
             consumed = true;
     }
 
@@ -210,7 +210,7 @@ bool view::HeadView::OnChar(unsigned int codePoint) {
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderViewGL::FnOnChar))
+        if ((*view)(CallRenderViewGL::FnOnChar))
             consumed = true;
     }
 
@@ -232,7 +232,7 @@ bool view::HeadView::OnMouseButton(frontend_resources::MouseButton button, front
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderViewGL::FnOnMouseButton))
+        if ((*view)(CallRenderViewGL::FnOnMouseButton))
             return true;
     }
 
@@ -252,7 +252,7 @@ bool view::HeadView::OnMouseMove(double x, double y) {
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderViewGL::FnOnMouseMove))
+        if ((*view)(CallRenderViewGL::FnOnMouseMove))
             return true;
     }
 
@@ -272,7 +272,7 @@ bool view::HeadView::OnMouseScroll(double dx, double dy) {
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderViewGL::FnOnMouseScroll))
+        if ((*view)(CallRenderViewGL::FnOnMouseScroll))
             return true;
     }
 

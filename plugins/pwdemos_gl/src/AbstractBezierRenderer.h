@@ -9,8 +9,8 @@
 
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 
 
@@ -20,7 +20,7 @@ namespace demos_gl {
 /**
  * Raycasting-based renderer for bézier curve tubes
  */
-class AbstractBezierRenderer : public core_gl::view::Renderer3DModuleGL {
+class AbstractBezierRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
 protected:
     /** Ctor. */
@@ -45,7 +45,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -59,7 +59,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The implementation of the render callback
@@ -68,7 +68,7 @@ protected:
      *
      * @return The return value of the function
      */
-    virtual bool render(core_gl::view::CallRender3DGL& call) = 0;
+    virtual bool render(mmstd_gl::CallRender3DGL& call) = 0;
 
     /**
      * Informs the class if the shader is required

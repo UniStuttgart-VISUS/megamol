@@ -7,6 +7,7 @@ megamol_plugin(protein_gl
   BUILD_DEFAULT OFF
   DEPENDS_GL
   DEPENDS_PLUGINS
+    mmstd_gl
     protein
     trisoup
     protein_calls

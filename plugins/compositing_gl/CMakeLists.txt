@@ -5,7 +5,9 @@
 
 megamol_plugin(compositing_gl
   BUILD_DEFAULT ON
-  DEPENDS_GL)
+  DEPENDS_GL
+  DEPENDS_PLUGINS
+    mmstd_gl)
 
 if (compositing_gl_PLUGIN_ENABLED)
   # Additional sources

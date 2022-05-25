@@ -4,7 +4,7 @@
  * All rights reserved.
  */
 
-#include "mmcore_gl/flags/UniFlagStorage.h"
+#include "mmstd_gl/flags/UniFlagStorage.h"
 
 #include <json.hpp>
 
@@ -13,11 +13,11 @@
 #include "mmcore/flags/FlagCalls.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd_gl/flags/FlagCallsGL.h"
 
 using namespace megamol;
-using namespace megamol::core_gl;
+using namespace megamol::mmstd_gl;
 
 
 UniFlagStorage::UniFlagStorage()

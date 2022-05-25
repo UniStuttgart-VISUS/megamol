@@ -14,8 +14,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/light/CallLight.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/ProteinColor.h"
@@ -32,7 +32,7 @@ namespace protein_gl {
  * Simple Molecular Renderer class
  */
 
-class SimpleMoleculeRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+class SimpleMoleculeRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /** The names of the render modes */
     enum RenderMode {
@@ -106,7 +106,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -114,7 +114,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Render the molecular data using lines and points.

@@ -4,7 +4,7 @@
  * All rights reserved.
  */
 
-#include "mmcore_gl/view/BoundingBoxRenderer.h"
+#include "mmstd_gl/renderer/BoundingBoxRenderer.h"
 
 #include <algorithm>
 #include <cmath>
@@ -23,8 +23,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
-using namespace megamol::core_gl;
-using namespace megamol::core_gl::view;
+using namespace megamol::mmstd_gl;
 
 /*
  * BoundingBoxRenderer::BoundingBoxRenderer

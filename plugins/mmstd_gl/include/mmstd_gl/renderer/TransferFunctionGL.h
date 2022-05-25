@@ -8,9 +8,9 @@
 
 #include "CallGetTransferFunctionGL.h"
 #include "mmcore/view/AbstractTransferFunction.h"
-#include "mmcore_gl/ModuleGL.h"
+#include "mmstd_gl/ModuleGL.h"
 
-namespace megamol::core_gl::view {
+namespace megamol::mmstd_gl {
 
 /**
  * Module defining a transfer function.
@@ -84,4 +84,4 @@ private:
 };
 
 
-} // namespace megamol::core_gl::view
+} // namespace megamol::mmstd_gl

@@ -14,7 +14,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
 
-namespace megamol::core_gl::view::special {
+namespace megamol::mmstd_gl::special {
 
 /**
  * Class implementing the screen shooter job module
@@ -176,4 +176,4 @@ private:
     std::shared_ptr<glowl::FramebufferObject> currentFbo;
 };
 
-} // namespace megamol::core_gl::view::special
+} // namespace megamol::mmstd_gl::special

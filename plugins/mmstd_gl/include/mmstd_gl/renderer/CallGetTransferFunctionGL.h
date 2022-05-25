@@ -15,7 +15,7 @@
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
-namespace megamol::core_gl::view {
+namespace megamol::mmstd_gl {
 
 /**
  * Call for accessing a transfer function.
@@ -154,4 +154,4 @@ private:
 /** Description class typedef */
 typedef core::factories::CallAutoDescription<CallGetTransferFunctionGL> CallGetTransferFunctionGLDescription;
 
-} // namespace megamol::core_gl::view
+} // namespace megamol::mmstd_gl

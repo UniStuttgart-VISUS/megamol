@@ -8,9 +8,9 @@
 
 #include "CallRender2DGL.h"
 #include "mmcore/view/RendererModule.h"
-#include "mmcore_gl/ModuleGL.h"
+#include "mmstd_gl/ModuleGL.h"
 
-namespace megamol::core_gl::view {
+namespace megamol::mmstd_gl {
 
 /**
  * Base class of rendering graph 2D renderer modules.
@@ -54,4 +54,4 @@ inline bool Renderer2DModuleGL::RenderChain(CallRender2DGL& call) {
     return true;
 }
 
-} // namespace megamol::core_gl::view
+} // namespace megamol::mmstd_gl

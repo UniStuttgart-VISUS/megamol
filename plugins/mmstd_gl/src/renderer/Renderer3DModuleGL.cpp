@@ -5,11 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "mmcore/view/AbstractView.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-using namespace megamol::core_gl::view;
+#include "mmcore/view/AbstractView.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+
+using namespace megamol::mmstd_gl;
 
 /*
  * Renderer3DModuleGL::Renderer3DModuleGL

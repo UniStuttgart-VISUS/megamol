@@ -7,15 +7,15 @@
 #pragma once
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore_gl/view/AbstractViewGL.h"
-#include "mmcore_gl/view/CallRenderViewGL.h"
+#include "mmstd_gl/renderer/CallRenderViewGL.h"
+#include "mmstd_gl/view/AbstractViewGL.h"
 
-namespace megamol::core_gl::view {
+namespace megamol::mmstd_gl::view {
 
 /**
  * Abstract base class of override rendering views
  */
-class AbstractOverrideViewGL : public core_gl::view::AbstractViewGL {
+class AbstractOverrideViewGL : public mmstd_gl::view::AbstractViewGL {
 public:
     /** Ctor. */
     AbstractOverrideViewGL();
@@ -134,4 +134,4 @@ private:
     unsigned int viewportHeight;
 };
 
-} // namespace megamol::core_gl::view
+} // namespace megamol::mmstd_gl::view

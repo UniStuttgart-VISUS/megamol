@@ -19,8 +19,8 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/RendererModule.h"
-#include "mmcore_gl/ModuleGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd_gl/ModuleGL.h"
 
 #include "FSRAMDHelper.h"
 
@@ -32,11 +32,11 @@ namespace megamol::mmstd_gl {
  * and returns the re-scaled framebuffer to the initial caller.
  */
 template<typename CALL>
-class ResolutionScalerBase : public core::view::RendererModule<CALL, core_gl::ModuleGL> {
+class ResolutionScalerBase : public core::view::RendererModule<CALL, mmstd_gl::ModuleGL> {
 public:
     /** ctor */
     ResolutionScalerBase()
-            : core::view::RendererModule<CALL, core_gl::ModuleGL>()
+            : core::view::RendererModule<CALL, mmstd_gl::ModuleGL>()
             , scale_mode_("Scale Mode", "Sets the scale mode for the input fbo, e.g. no scale, bilinear, FSR.")
             , rcas_sharpness_attenuation_("Sharpness", "Sets the sharpness attenuation parameter used in RCAS.")
             , fsr_resolution_presets_("Scale Factor", "Sets the scale factor for the resolution (i.e. 2x means the "

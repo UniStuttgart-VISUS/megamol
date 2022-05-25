@@ -14,15 +14,15 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/RendererModule.h"
-#include "mmcore_gl/ModuleGL.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd_gl/ModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 
-namespace megamol::core_gl::view {
+namespace megamol::mmstd_gl {
 
 /**
  * Renderer responsible for the rendering of the currently active bounding box as well as the view cube etc.
  * This is a special renderer without the typical structure of other renderers, since it does not inherit from
- * core_gl::view::Renderer3DModuleGL.
+ * mmstd_gl::Renderer3DModuleGL.
  */
 class BoundingBoxRenderer : public core::view::RendererModule<CallRender3DGL, ModuleGL> {
 public:
@@ -153,4 +153,4 @@ private:
     /** Bounding Boxes */
     megamol::core::BoundingBoxes_2 boundingBoxes;
 };
-} // namespace megamol::core_gl::view
+} // namespace megamol::mmstd_gl

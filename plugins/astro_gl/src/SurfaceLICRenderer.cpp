@@ -10,8 +10,8 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "mmcore_gl/view/TransferFunctionGL.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/renderer/TransferFunctionGL.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
@@ -53,13 +53,13 @@ SurfaceLICRenderer::SurfaceLICRenderer()
         , fbo(nullptr)
         , hash(-1) {
 
-    this->input_renderer.SetCompatibleCall<core_gl::view::CallRender3DGLDescription>();
+    this->input_renderer.SetCompatibleCall<mmstd_gl::CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->input_renderer);
 
     this->input_velocities.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->input_velocities);
 
-    this->input_transfer_function.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->input_transfer_function.SetCompatibleCall<mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->input_transfer_function);
 
     this->arc_length << new core::param::FloatParam(0.03f);
@@ -158,8 +158,8 @@ bool SurfaceLICRenderer::create() {
 
 void SurfaceLICRenderer::release() {}
 
-bool SurfaceLICRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
-    auto ci = this->input_renderer.CallAs<core_gl::view::CallRender3DGL>();
+bool SurfaceLICRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
+    auto ci = this->input_renderer.CallAs<mmstd_gl::CallRender3DGL>();
     auto cd = this->input_velocities.CallAs<geocalls::VolumetricDataCall>();
 
     if (ci == nullptr)
@@ -174,7 +174,7 @@ bool SurfaceLICRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
     *ci = call;
 
-    if (!(*ci)(core_gl::view::CallRender3DGL::FnGetExtents))
+    if (!(*ci)(mmstd_gl::CallRender3DGL::FnGetExtents))
         return false;
     if (!(*cd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS))
         return false;
@@ -191,11 +191,11 @@ bool SurfaceLICRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool SurfaceLICRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     const auto req_frame = call.Time();
 
     // Get input rendering
-    auto ci = this->input_renderer.CallAs<core_gl::view::CallRender3DGL>();
+    auto ci = this->input_renderer.CallAs<mmstd_gl::CallRender3DGL>();
     if (ci == nullptr)
         return false;
 
@@ -216,7 +216,7 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     ci->SetFramebuffer(this->fbo);
 
-    if (!(*ci)(core_gl::view::CallRender3DGL::FnRender))
+    if (!(*ci)(mmstd_gl::CallRender3DGL::FnRender))
         return false;
     call.SetTimeFramesCount(ci->TimeFramesCount());
 
@@ -252,7 +252,7 @@ bool SurfaceLICRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     // Get input transfer function
-    auto ct = this->input_transfer_function.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    auto ct = this->input_transfer_function.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
 
     GLuint tf_texture = 0;
 

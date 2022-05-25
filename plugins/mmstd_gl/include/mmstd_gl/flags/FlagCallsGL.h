@@ -8,9 +8,9 @@
 
 #include "mmcore/CallGeneric.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore_gl/flags/FlagCollectionGL.h"
+#include "mmstd_gl/flags/FlagCollectionGL.h"
 
-namespace megamol::core_gl {
+namespace megamol::mmstd_gl {
 
 class FlagCallRead_GL : public core::GenericVersionedCall<std::shared_ptr<FlagCollection_GL>, core::EmptyMetaData> {
 public:
@@ -42,4 +42,4 @@ public:
 typedef megamol::core::factories::CallAutoDescription<FlagCallRead_GL> FlagCallRead_GLDescription;
 typedef megamol::core::factories::CallAutoDescription<FlagCallWrite_GL> FlagCallWrite_GLDescription;
 
-} // namespace megamol::core_gl
+} // namespace megamol::mmstd_gl

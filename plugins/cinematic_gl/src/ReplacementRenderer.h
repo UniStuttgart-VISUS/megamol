@@ -13,8 +13,8 @@
 #include "cinematic_gl/CinematicUtils.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/RendererModule.h"
-#include "mmcore_gl/ModuleGL.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd_gl/ModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "vislib/math/Cuboid.h"
 
 
@@ -24,8 +24,7 @@ namespace cinematic_gl {
 /*
  * Replacement rendering.
  */
-class ReplacementRenderer
-        : public megamol::core::view::RendererModule<megamol::core_gl::view::CallRender3DGL, core_gl::ModuleGL> {
+class ReplacementRenderer : public megamol::core::view::RendererModule<mmstd_gl::CallRender3DGL, mmstd_gl::ModuleGL> {
 public:
     /**
      * Answer the name of this module.
@@ -82,7 +81,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -90,7 +89,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
 private:
     /**********************************************************************

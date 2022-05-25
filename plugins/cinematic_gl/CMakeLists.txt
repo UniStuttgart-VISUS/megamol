@@ -7,6 +7,7 @@ megamol_plugin(cinematic_gl
   BUILD_DEFAULT ON
   DEPENDS_GL
   DEPENDS_PLUGINS
+    mmstd_gl
     cinematic
   DEPENDS_EXTERNALS
     libpng

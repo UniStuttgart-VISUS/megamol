@@ -8,8 +8,8 @@
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd_gl/flags/FlagCallsGL.h"
 
 using namespace megamol::infovis_gl;
 using namespace megamol::datatools;
@@ -27,10 +27,10 @@ TableHistogramRenderer2D::TableHistogramRenderer2D()
     tableDataCallerSlot_.SetCompatibleCall<table::TableDataCallDescription>();
     MakeSlotAvailable(&tableDataCallerSlot_);
 
-    flagStorageReadCallerSlot_.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    flagStorageReadCallerSlot_.SetCompatibleCall<mmstd_gl::FlagCallRead_GLDescription>();
     MakeSlotAvailable(&flagStorageReadCallerSlot_);
 
-    flagStorageWriteCallerSlot_.SetCompatibleCall<core_gl::FlagCallWrite_GLDescription>();
+    flagStorageWriteCallerSlot_.SetCompatibleCall<mmstd_gl::FlagCallWrite_GLDescription>();
     MakeSlotAvailable(&flagStorageWriteCallerSlot_);
 }
 
@@ -64,23 +64,23 @@ void TableHistogramRenderer2D::releaseImpl() {
     glDeleteBuffers(1, &floatDataBuffer_);
 }
 
-bool TableHistogramRenderer2D::handleCall(core_gl::view::CallRender2DGL& call) {
+bool TableHistogramRenderer2D::handleCall(mmstd_gl::CallRender2DGL& call) {
     auto floatTableCall = tableDataCallerSlot_.CallAs<table::TableDataCall>();
     if (floatTableCall == nullptr) {
         return false;
     }
-    auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<core_gl::FlagCallRead_GL>();
+    auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<mmstd_gl::FlagCallRead_GL>();
     if (readFlagsCall == nullptr) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TableHistogramRenderer2D requires a read flag storage!");
         return false;
     }
-    auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<core_gl::FlagCallWrite_GL>();
+    auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<mmstd_gl::FlagCallWrite_GL>();
     if (writeFlagsCall == nullptr) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TableHistogramRenderer2D requires a write flag storage!");
         return false;
     }
 
-    (*readFlagsCall)(core_gl::FlagCallRead_GL::CallGetData);
+    (*readFlagsCall)(mmstd_gl::FlagCallRead_GL::CallGetData);
 
     floatTableCall->SetFrameID(static_cast<unsigned int>(call.Time()));
     (*floatTableCall)(1);
@@ -139,8 +139,8 @@ bool TableHistogramRenderer2D::handleCall(core_gl::view::CallRender2DGL& call) {
 }
 
 void TableHistogramRenderer2D::updateSelection(SelectionMode selectionMode, int selectedComponent, int selectedBin) {
-    auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<core_gl::FlagCallRead_GL>();
-    auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<core_gl::FlagCallWrite_GL>();
+    auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<mmstd_gl::FlagCallRead_GL>();
+    auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<mmstd_gl::FlagCallWrite_GL>();
     if (readFlagsCall != nullptr && writeFlagsCall != nullptr) {
         selectionProgram_->use();
 
@@ -163,6 +163,6 @@ void TableHistogramRenderer2D::updateSelection(SelectionMode selectionMode, int 
         glUseProgram(0);
 
         writeFlagsCall->setData(readFlagsCall->getData(), readFlagsCall->version() + 1);
-        (*writeFlagsCall)(core_gl::FlagCallWrite_GL::CallGetData);
+        (*writeFlagsCall)(mmstd_gl::FlagCallWrite_GL::CallGetData);
     }
 }

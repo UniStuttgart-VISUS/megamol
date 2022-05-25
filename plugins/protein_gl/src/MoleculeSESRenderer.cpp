@@ -370,7 +370,7 @@ bool MoleculeSESRenderer::create(void) {
 /*
  * MoleculeSESRenderer::GetExtents
  */
-bool MoleculeSESRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool MoleculeSESRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
@@ -387,7 +387,7 @@ bool MoleculeSESRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * MoleculeSESRenderer::Render
  */
-bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool MoleculeSESRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // temporary variables
     unsigned int cntRS = 0;
 

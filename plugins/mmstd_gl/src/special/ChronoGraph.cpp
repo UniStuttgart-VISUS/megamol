@@ -6,19 +6,19 @@
  */
 
 #define _USE_MATH_DEFINES
-#include "mmcore_gl/view/special/ChronoGraph.h"
-#include "mmcore/CoreInstance.h"
-#include "vislib/math/mathfunctions.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <cmath>
 
-using namespace megamol::core_gl;
+#include "mmcore/CoreInstance.h"
+#include "mmstd_gl/special/ChronoGraph.h"
+#include "vislib/math/mathfunctions.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
+using namespace megamol::mmstd_gl;
 
 /*
  * view::special::ChronoGraph::ChronoGraph
  */
-view::special::ChronoGraph::ChronoGraph() : core_gl::view::Renderer2DModuleGL() {
+special::ChronoGraph::ChronoGraph() : mmstd_gl::Renderer2DModuleGL() {
     // intentionally empty
 }
 
@@ -26,7 +26,7 @@ view::special::ChronoGraph::ChronoGraph() : core_gl::view::Renderer2DModuleGL() 
 /*
  * view::special::ChronoGraph::~ChronoGraph
  */
-view::special::ChronoGraph::~ChronoGraph() {
+special::ChronoGraph::~ChronoGraph() {
     this->Release();
 }
 
@@ -34,7 +34,7 @@ view::special::ChronoGraph::~ChronoGraph() {
 /*
  * view::special::ChronoGraph::create
  */
-bool view::special::ChronoGraph::create(void) {
+bool special::ChronoGraph::create(void) {
     // intentionally empty
     return true;
 }
@@ -43,7 +43,7 @@ bool view::special::ChronoGraph::create(void) {
 /*
  * view::special::ChronoGraph::GetExtents
  */
-bool view::special::ChronoGraph::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool special::ChronoGraph::GetExtents(CallRender2DGL& call) {
     call.AccessBoundingBoxes().SetBoundingBox(-1.0f, -1.0f, 0, 1.0f, 1.0f, 0);
     return true;
 }
@@ -52,7 +52,7 @@ bool view::special::ChronoGraph::GetExtents(core_gl::view::CallRender2DGL& call)
 /*
  * view::special::ChronoGraph::Render
  */
-bool view::special::ChronoGraph::Render(core_gl::view::CallRender2DGL& call) {
+bool special::ChronoGraph::Render(mmstd_gl::CallRender2DGL& call) {
     ::glEnable(GL_LINE_SMOOTH);
     ::glEnable(GL_BLEND);
     ::glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -79,7 +79,7 @@ bool view::special::ChronoGraph::Render(core_gl::view::CallRender2DGL& call) {
 /*
  * view::special::ChronoGraph::release
  */
-void view::special::ChronoGraph::release(void) {
+void special::ChronoGraph::release(void) {
     // intentionally empty
 }
 
@@ -87,7 +87,7 @@ void view::special::ChronoGraph::release(void) {
 /*
  * view::special::ChronoGraph::renderInfoGrid
  */
-void view::special::ChronoGraph::renderInfoGrid(float time, float x, float y, float w, float h) {
+void special::ChronoGraph::renderInfoGrid(float time, float x, float y, float w, float h) {
     const int steps = 10;
     float a;
 
@@ -126,7 +126,7 @@ void view::special::ChronoGraph::renderInfoGrid(float time, float x, float y, fl
 /*
  * view::special::ChronoGraph::renderInfoCircle
  */
-void view::special::ChronoGraph::renderInfoCircle(float time, float x, float y, float w, float h) {
+void special::ChronoGraph::renderInfoCircle(float time, float x, float y, float w, float h) {
     const int steps = 100;
     float a, cx, cy, px, py;
     float rad = 0.5f * vislib::math::Min(::fabs(w), ::fabs(h));

@@ -5,7 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore_gl/view/View2DGL.h"
+#include "mmstd_gl/view/View2DGL.h"
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -13,15 +14,15 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore_gl/view/CallRender2DGL.h"
-#include "mmcore_gl/view/CallRenderViewGL.h"
+#include "mmstd_gl/renderer/CallRender2DGL.h"
+#include "mmstd_gl/renderer/CallRenderViewGL.h"
 #include "vislib/Trace.h"
 #include "vislib/math/Matrix4.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
-using namespace megamol::core_gl;
+using namespace megamol::mmstd_gl;
 
 
 /*
@@ -30,28 +31,28 @@ using namespace megamol::core_gl;
 view::View2DGL::View2DGL(void) {
 
     // Override renderSlot behavior
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->_lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey), &AbstractView::OnKeyCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->_lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar), &AbstractView::OnCharCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->_lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton),
         &AbstractView::OnMouseButtonCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->_lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove), &AbstractView::OnMouseMoveCallback);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->_lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
         core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll),
         &AbstractView::OnMouseScrollCallback);
     // AbstractCallRender
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->_lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
         core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnRender),
         &AbstractView::OnRenderView);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->_lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
         core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnGetExtents),
         &AbstractView::GetExtents);
     // CallRenderViewGL
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
+    this->_lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),
+        CallRenderViewGL::FunctionName(CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
 
     this->_rhsRenderSlot.SetCompatibleCall<CallRender2DGLDescription>();

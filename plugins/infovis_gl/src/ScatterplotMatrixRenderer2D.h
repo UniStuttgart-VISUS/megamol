@@ -6,24 +6,26 @@
 
 #pragma once
 
+#include <memory>
+#include <optional>
+
+#include <glowl/FramebufferObject.hpp>
+
+#include "Renderer2D.h"
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/flags/FlagStorage.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/utility/SSBOBufferArray.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "mmcore_gl/view/CallRender2DGL.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
-
-#include "Renderer2D.h"
-#include "mmcore/flags/FlagStorage.h"
-#include "mmcore_gl/flags/FlagCallsGL.h"
+#include "mmstd_gl/flags/FlagCallsGL.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/renderer/CallRender2DGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 #include "vislib/math/Matrix.h"
-#include <glowl/FramebufferObject.hpp>
-#include <memory>
-#include <optional>
+
 
 namespace megamol::infovis_gl {
 
@@ -139,7 +141,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    bool Render(core_gl::view::CallRender2DGL& call) override;
+    bool Render(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -150,7 +152,7 @@ private:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core_gl::view::CallRender2DGL& call) override;
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
 
     bool hasDirtyData() const;
 
@@ -160,7 +162,7 @@ private:
 
     void resetDirtyScreen();
 
-    bool validate(core_gl::view::CallRender2DGL& call, bool ignoreMVP);
+    bool validate(mmstd_gl::CallRender2DGL& call, bool ignoreMVP);
 
     void updateColumns();
 
@@ -287,9 +289,9 @@ private:
 
     datatools::table::TableDataCall* floatTable;
 
-    core_gl::view::CallGetTransferFunctionGL* transferFunction;
+    mmstd_gl::CallGetTransferFunctionGL* transferFunction;
 
-    core_gl::FlagCallRead_GL* readFlags;
+    mmstd_gl::FlagCallRead_GL* readFlags;
 
     ParamState map;
 

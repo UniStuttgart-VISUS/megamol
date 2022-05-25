@@ -9,16 +9,16 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Input.h"
-#include "mmcore_gl/view/AbstractViewGL.h"
-#include "mmcore_gl/view/CallRenderViewGL.h"
+#include "mmstd_gl/renderer/CallRenderViewGL.h"
+#include "mmstd_gl/view/AbstractViewGL.h"
 #include "vislib/Serialiser.h"
 
-namespace megamol::core_gl::view {
+namespace megamol::mmstd_gl::view {
 
 /**
  * Abstract base class of rendering views
  */
-class HeadView : public core_gl::view::AbstractViewGL {
+class HeadView : public mmstd_gl::view::AbstractViewGL {
 public:
     /**
      * Answer the name of this module.
@@ -165,7 +165,7 @@ private:
     unsigned int width, height;
 
     /** Incoming call */
-    view::CallRenderViewGL* override_view_call;
+    CallRenderViewGL* override_view_call;
 };
 
-} // namespace megamol::core_gl::view
+} // namespace megamol::mmstd_gl::view

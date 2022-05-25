@@ -5,15 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore_gl/view/special/CallbackScreenShooter.h"
-#include "mmcore/job/TickCall.h"
+#include "mmstd_gl/special/CallbackScreenShooter.h"
 
 #include <functional>
 
-namespace megamol {
-namespace core_gl {
-namespace view {
-namespace special {
+#include "mmcore/job/TickCall.h"
+
+using namespace megamol::mmstd_gl::special;
 
 CallbackScreenShooter::CallbackScreenShooter()
         : ScreenShooter(true)
@@ -59,8 +57,3 @@ void CallbackScreenShooter::CreateScreenshot() {
         ScreenShooter::createScreenshot(filename.second);
     }
 }
-
-} // namespace special
-} // namespace view
-} // namespace core_gl
-} // namespace megamol

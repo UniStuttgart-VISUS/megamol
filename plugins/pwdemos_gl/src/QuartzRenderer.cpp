@@ -30,7 +30,7 @@ namespace demos_gl {
  * QuartzRenderer::QuartzRenderer
  */
 QuartzRenderer::QuartzRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , AbstractMultiShaderQuartzRenderer()
         , showClipAxesSlot("showClipAxes", "Shows/Hides the axes (x and y) of the clipping plane") {
 
@@ -62,7 +62,7 @@ QuartzRenderer::~QuartzRenderer(void) {
 /*
  * QuartzRenderer::GetExtents
  */
-bool QuartzRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool QuartzRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     ParticleGridDataCall* pgdc = this->dataInSlot.CallAs<ParticleGridDataCall>();
     if ((pgdc != NULL) && ((*pgdc)(ParticleGridDataCall::CallForGetExtent))) {
         call.AccessBoundingBoxes().SetBoundingBox(pgdc->AccessBoundingBoxes().ObjectSpaceBBox());
@@ -82,7 +82,7 @@ bool QuartzRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * QuartzRenderer::Render
  */
-bool QuartzRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool QuartzRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     ParticleGridDataCall* pgdc = this->getParticleData();
     if (pgdc == NULL)
         return false;

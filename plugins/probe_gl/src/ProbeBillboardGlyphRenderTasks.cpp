@@ -4,7 +4,7 @@
 #include "ProbeGlCalls.h"
 #include "mesh_gl/MeshCalls_gl.h"
 #include "mmcore/EventCall.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "probe/ProbeCalls.h"
 
 #include "glm/glm.hpp"
@@ -68,7 +68,7 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
         , m_tf_range({0.0f, 0.0f})
         , m_show_glyphs(true) {
 
-    this->m_transfer_function_Slot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->m_transfer_function_Slot.SetCompatibleCall<mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->m_transfer_function_Slot);
 
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
@@ -153,7 +153,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         return false;
     }
 
-    auto* tfc = this->m_transfer_function_Slot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    auto* tfc = this->m_transfer_function_Slot.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     if (tfc != NULL) {
         ((*tfc)(0));
     }

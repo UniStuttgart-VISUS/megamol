@@ -12,7 +12,7 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/view/CallRender3D.h"
 
-namespace megamol::core_gl::view {
+namespace megamol::mmstd_gl {
 
 inline constexpr char callrender3dgl_name[] = "CallRender3DGL";
 
@@ -42,4 +42,4 @@ public:
 /** Description class typedef */
 typedef core::factories::CallAutoDescription<CallRender3DGL> CallRender3DGLDescription;
 
-} // namespace megamol::core_gl::view
+} // namespace megamol::mmstd_gl

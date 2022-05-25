@@ -9,17 +9,17 @@
 #include <glowl/glowl.h>
 
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib/math/Matrix.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 
-namespace megamol::core_gl {
+namespace megamol::mmstd_gl {
 
 /**
  * TODO
  */
-class DeferredShading : public megamol::core_gl::view::Renderer3DModuleGL {
+class DeferredShading : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -77,7 +77,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core_gl::view::CallRender3DGL& call) override;
+    bool GetExtents(CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -86,14 +86,14 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core_gl::view::CallRender3DGL& call) override;
+    bool Render(CallRender3DGL& call) override;
 
     /**
      * Method that gets called before the rendering is started for all changed modules
      *
      * @param call The rendering call that contains the camera
      */
-    void PreRender(core_gl::view::CallRender3DGL& call) override;
+    void PreRender(CallRender3DGL& call) override;
 
 private:
     typedef vislib_gl::graphics::gl::GLSLShader GLSLShader;
@@ -121,4 +121,4 @@ private:
     core::param::ParamSlot m_btf_filename_slot;
 };
 
-} // namespace megamol::core_gl
+} // namespace megamol::mmstd_gl

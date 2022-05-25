@@ -81,8 +81,7 @@ void ImageSpaceAmortization2D::releaseImpl() {
     // nothing to do
 }
 
-bool ImageSpaceAmortization2D::renderImpl(
-    core_gl::view::CallRender2DGL& call, core_gl::view::CallRender2DGL& nextRendererCall) {
+bool ImageSpaceAmortization2D::renderImpl(CallRender2DGL& call, CallRender2DGL& nextRendererCall) {
 
     auto const& fbo = call.GetFramebuffer();
     auto const& cam = call.GetCamera();

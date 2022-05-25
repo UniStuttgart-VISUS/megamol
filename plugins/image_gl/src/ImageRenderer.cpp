@@ -24,7 +24,7 @@
 #include "mmcore/utility/sys/SystemInformation.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 //#include <cmath>
 
 using namespace megamol::core;
@@ -36,7 +36,7 @@ const unsigned int TILE_SIZE = 2 * 1024;
  * misc::ImageRenderer::ImageRenderer
  */
 image_gl::ImageRenderer::ImageRenderer(void)
-        : Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , leftFilenameSlot("leftImg", "The image file name")
         , rightFilenameSlot("rightImg", "The image file name")
         , pasteFilenamesSlot("pasteFiles", "Slot to paste both file names at once (semicolon-separated)")
@@ -151,7 +151,7 @@ bool image_gl::ImageRenderer::create(void) {
 /*
  * image_gl::ImageRenderer::GetExtents
  */
-bool image_gl::ImageRenderer::GetExtents(view_gl::CallRender3DGL& call) {
+bool image_gl::ImageRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     call.SetTimeFramesCount(1);
     call.AccessBoundingBoxes().Clear();
@@ -456,7 +456,7 @@ bool image_gl::ImageRenderer::initMPI() {
 /*
  * image_gl::ImageRenderer::Render
  */
-bool image_gl::ImageRenderer::Render(view_gl::CallRender3DGL& call) {
+bool image_gl::ImageRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     auto const lhsFBO = call.GetFramebuffer();
     lhsFBO->bindToDraw();

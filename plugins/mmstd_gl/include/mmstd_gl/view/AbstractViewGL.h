@@ -8,7 +8,7 @@
 
 #include "mmcore/view/AbstractView.h"
 
-namespace megamol::core_gl::view {
+namespace megamol::mmstd_gl::view {
 class AbstractViewGL : public core::view::AbstractView {
 public:
     std::vector<std::string> requested_lifetime_resources() override {
@@ -17,4 +17,4 @@ public:
         return resources;
     }
 };
-} // namespace megamol::core_gl::view
+} // namespace megamol::mmstd_gl::view

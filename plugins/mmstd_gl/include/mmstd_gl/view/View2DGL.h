@@ -10,10 +10,10 @@
 
 #include "mmcore/view/BaseView.h"
 #include "mmcore/view/CameraControllers.h"
-#include "mmcore_gl/view/AbstractViewGL.h"
-#include "mmcore_gl/view/CallRenderViewGL.h"
+#include "mmstd_gl/renderer/CallRenderViewGL.h"
+#include "mmstd_gl/view/AbstractViewGL.h"
 
-namespace megamol::core_gl::view {
+namespace megamol::mmstd_gl::view {
 
 /**
  * Base class of rendering graph calls
@@ -66,4 +66,4 @@ public:
      */
     bool create() override;
 };
-} // namespace megamol::core_gl::view
+} // namespace megamol::mmstd_gl::view

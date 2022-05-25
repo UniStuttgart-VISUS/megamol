@@ -5,7 +5,7 @@
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "mesh/MeshCalls.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "probe/ProbeCalls.h"
 
 megamol::probe_gl::ProbeDetailViewRenderTasks::ProbeDetailViewRenderTasks()
@@ -19,7 +19,7 @@ megamol::probe_gl::ProbeDetailViewRenderTasks::ProbeDetailViewRenderTasks()
         , m_probes_mesh(nullptr)
         , m_tf_min(0.0f)
         , m_tf_max(1.0f) {
-    this->m_transfer_function_Slot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->m_transfer_function_Slot.SetCompatibleCall<mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->m_transfer_function_Slot);
 
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
@@ -143,7 +143,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
     if (!(*pc)(0)) return false;
 
     // check/get transfer function
-    auto* tfc = this->m_transfer_function_Slot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    auto* tfc = this->m_transfer_function_Slot.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     if (tfc != NULL) {
         if (!(*tfc)(0)) return false;
     }

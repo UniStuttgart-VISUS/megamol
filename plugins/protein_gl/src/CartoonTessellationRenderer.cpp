@@ -16,8 +16,8 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include <inttypes.h>
 #include <stdint.h>
@@ -34,7 +34,7 @@ const GLuint SSBObindingPoint = 2;
  * moldyn::CartoonTessellationRenderer::CartoonTessellationRenderer
  */
 CartoonTessellationRenderer::CartoonTessellationRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , getDataSlot("getdata", "Connects to the data source")
         , getLightsSlot("lights", "Lights are retrieved over this slot.")
         , getFramebufferSlot("framebuffer", "Optional framebuffer information is retrieved over this slot")
@@ -233,8 +233,8 @@ void CartoonTessellationRenderer::getBytesAndStrideLines(MolecularDataCall& mol,
 /*
  * GetExtents
  */
-bool CartoonTessellationRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
-    core_gl::view::CallRender3DGL* cr = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
+bool CartoonTessellationRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
+    mmstd_gl::CallRender3DGL* cr = dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (cr == NULL)
         return false;
 
@@ -282,8 +282,8 @@ MolecularDataCall* CartoonTessellationRenderer::getData(unsigned int t, float& o
 /*
  * moldyn::SimpleSphereRenderer::Render
  */
-bool CartoonTessellationRenderer::Render(core_gl::view::CallRender3DGL& call) {
-    core_gl::view::CallRender3DGL* cr = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
+bool CartoonTessellationRenderer::Render(mmstd_gl::CallRender3DGL& call) {
+    mmstd_gl::CallRender3DGL* cr = dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (cr == NULL)
         return false;
 

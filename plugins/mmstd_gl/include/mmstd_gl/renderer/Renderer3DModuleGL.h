@@ -7,10 +7,10 @@
 #pragma once
 
 #include "mmcore/view/RendererModule.h"
-#include "mmcore_gl/ModuleGL.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd_gl/ModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 
-namespace megamol::core_gl::view {
+namespace megamol::mmstd_gl {
 
 /**
  * New and improved base class of rendering graph 3D renderer modules.
@@ -76,4 +76,4 @@ private:
     // TODO events
 };
 
-} // namespace megamol::core_gl::view
+} // namespace megamol::mmstd_gl

@@ -8,9 +8,9 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Camera.h"
-#include "mmcore_gl/view/AbstractOverrideViewGL.h"
+#include "mmstd_gl/view/AbstractOverrideViewGL.h"
 
-namespace megamol::core_gl::view {
+namespace megamol::mmstd_gl::view {
 
 /**
  * Abstract base class of override rendering views
@@ -166,4 +166,4 @@ private:
 };
 
 
-} // namespace megamol::core_gl::view
+} // namespace megamol::mmstd_gl::view

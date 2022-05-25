@@ -9,8 +9,8 @@
 
 #include "AbstractTexQuartzRenderer.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/CallRender2DGL.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender2DGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
@@ -21,7 +21,7 @@ namespace demos_gl {
 /**
  * QuartzPlaneTexRenderer
  */
-class QuartzPlaneTexRenderer : public core_gl::view::Renderer2DModuleGL, public AbstractTexQuartzRenderer {
+class QuartzPlaneTexRenderer : public mmstd_gl::Renderer2DModuleGL, public AbstractTexQuartzRenderer {
 public:
     /**
      * Answer the name of this module.
@@ -77,7 +77,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender2DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -91,7 +91,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender2DGL& call);
+    virtual bool Render(mmstd_gl::CallRender2DGL& call);
 
 private:
     /** The crystalite shader */

@@ -31,7 +31,7 @@ namespace demos_gl {
  * QuartzTexRenderer::QuartzTexRenderer
  */
 QuartzTexRenderer::QuartzTexRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , AbstractTexQuartzRenderer()
         , cryShader()
         , showClipAxesSlot("showClipAxes", "Shows/Hides the axes (x and y) of the clipping plane") {
@@ -63,7 +63,7 @@ QuartzTexRenderer::~QuartzTexRenderer(void) {
 /*
  * QuartzTexRenderer::GetExtents
  */
-bool QuartzTexRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool QuartzTexRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     ParticleGridDataCall* pgdc = this->dataInSlot.CallAs<ParticleGridDataCall>();
     if ((pgdc != NULL) && ((*pgdc)(ParticleGridDataCall::CallForGetExtent))) {
         call.AccessBoundingBoxes() = pgdc->AccessBoundingBoxes();
@@ -81,7 +81,7 @@ bool QuartzTexRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * QuartzTexRenderer::Render
  */
-bool QuartzTexRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool QuartzTexRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     ParticleGridDataCall* pgdc = this->getParticleData();
     if (pgdc == NULL)
         return false;

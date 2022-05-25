@@ -5,17 +5,16 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore_gl/view/TransferFunctionGL.h"
+#include "mmstd_gl/renderer/TransferFunctionGL.h"
 
 #include "mmcore/param/TransferFunctionParam.h"
 
 
-using namespace megamol::core_gl;
-using namespace megamol::core_gl::view;
+using namespace megamol::mmstd_gl;
 using namespace megamol::core::param;
 
 
-view::TransferFunctionGL::TransferFunctionGL(void) : ModuleGL(), AbstractTransferFunction(), texID(0) {
+TransferFunctionGL::TransferFunctionGL(void) : ModuleGL(), AbstractTransferFunction(), texID(0) {
 
     CallGetTransferFunctionGLDescription cgtfd;
     this->getTFSlot.SetCallback(cgtfd.ClassName(), cgtfd.FunctionName(0), &TransferFunctionGL::requestTF);

@@ -11,7 +11,7 @@
 #include <glowl/glowl.h>
 
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib/Pair.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/math/Rectangle.h"
@@ -28,16 +28,13 @@
 #include "mmcore/utility/graphics/AbstractBitmapCodec.h"
 #include "vislib/RawStorage.h"
 
-using namespace megamol::core;
-namespace view_gl = megamol::core_gl::view;
-
 namespace megamol {
 namespace image_gl {
 
 /**
  * Mesh-based renderer for bézier curve tubes
  */
-class ImageRenderer : public view_gl::Renderer3DModuleGL {
+class ImageRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -89,7 +86,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(view_gl::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -103,7 +100,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(view_gl::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
 private:
     /**
@@ -124,40 +121,40 @@ private:
      * <machine>[;<machine>]*. Sets blankMachines to machines that
      * should not try loading the images (for performance reasons).
      */
-    bool onBlankMachineSet(param::ParamSlot& slot);
+    bool onBlankMachineSet(core::param::ParamSlot& slot);
 
     /**
      * Callback invoked when the user pastes a line containing
      * <leftimg>[;<rightimg>]. The text is split using interpretLine
      * and assigned to (left|right)FilenameSlot.
      */
-    bool onFilesPasted(param::ParamSlot& slot);
+    bool onFilesPasted(core::param::ParamSlot& slot);
 
     /**
      * Callback invoked when the user pastes a text containing multiple
      * lines containing <leftimg>[;<rightimg>]. Splits text into single
      * lines and then behaves like onFilesPasted for each line.
      */
-    bool onSlideshowPasted(param::ParamSlot& slot);
+    bool onSlideshowPasted(core::param::ParamSlot& slot);
 
     /** Callback for going back to slide 0 */
-    bool onFirstPressed(param::ParamSlot& slot);
+    bool onFirstPressed(core::param::ParamSlot& slot);
 
     /** Callback for going back one slide */
-    bool onPreviousPressed(param::ParamSlot& slot);
+    bool onPreviousPressed(core::param::ParamSlot& slot);
 
     /** Callback for going forward one slide */
-    bool onNextPressed(param::ParamSlot& slot);
+    bool onNextPressed(core::param::ParamSlot& slot);
 
     /** Callback for going forward to the last slide */
-    bool onLastPressed(param::ParamSlot& slot);
+    bool onLastPressed(core::param::ParamSlot& slot);
 
     /**
      * Callback that occurs on slide change. Copies file names from
      * leftFiles and rightFiles to leftFilenameSlot and
      * rightFilenameSlot respectively based on currentSlot.
      */
-    bool onCurrentSet(param::ParamSlot& slot);
+    bool onCurrentSet(core::param::ParamSlot& slot);
 
     /** makes sure the image for the respective eye is loaded. */
     bool assertImage(bool rightEye);
@@ -165,43 +162,43 @@ private:
     bool initMPI();
 
     /** The image file path slot */
-    param::ParamSlot leftFilenameSlot;
+    core::param::ParamSlot leftFilenameSlot;
 
     /** The image file path slot */
-    param::ParamSlot rightFilenameSlot;
+    core::param::ParamSlot rightFilenameSlot;
 
     /** Slot to receive both file names at once */
-    param::ParamSlot pasteFilenamesSlot;
+    core::param::ParamSlot pasteFilenamesSlot;
 
     /** Slot to receive a whole slideshow at once */
-    param::ParamSlot pasteSlideshowSlot;
+    core::param::ParamSlot pasteSlideshowSlot;
 
     /** slot for going back to slide 0 */
-    param::ParamSlot firstSlot;
+    core::param::ParamSlot firstSlot;
 
     /** slot for going back one slide */
-    param::ParamSlot previousSlot;
+    core::param::ParamSlot previousSlot;
 
     /** slide for setting the current slide index */
-    param::ParamSlot currentSlot;
+    core::param::ParamSlot currentSlot;
 
     /** slot for going forward one slide */
-    param::ParamSlot nextSlot;
+    core::param::ParamSlot nextSlot;
 
     /** slot for going forward to the last slide */
-    param::ParamSlot lastSlot;
+    core::param::ParamSlot lastSlot;
 
     /** slot for inserting machine names that will not load the images */
-    param::ParamSlot blankMachine;
+    core::param::ParamSlot blankMachine;
 
     /** if only one image per pair is defined: where it should go */
-    param::ParamSlot defaultEye;
+    core::param::ParamSlot defaultEye;
 
     /** slot for MPIprovider */
-    CallerSlot callRequestMpi;
+    core::CallerSlot callRequestMpi;
 
     /** slot for image data */
-    CallerSlot callRequestImage;
+    core::CallerSlot callRequestImage;
 
 #ifdef WITH_MPI
     /** The communicator that the view uses. */

@@ -1,4 +1,4 @@
-#include "mmcore_gl/DeferredShading.h"
+#include "mmstd_gl/renderer/DeferredShading.h"
 
 #include <glm/ext.hpp>
 
@@ -8,10 +8,10 @@
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
-namespace megamol::core_gl {
+using namespace megamol::mmstd_gl;
 
 DeferredShading::DeferredShading()
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , m_GBuffer(nullptr)
         , m_deferred_shading_prgm(nullptr)
         , m_lights_buffer(nullptr)
@@ -37,13 +37,13 @@ void DeferredShading::release() {
     m_GBuffer.reset();
 }
 
-bool DeferredShading::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool DeferredShading::GetExtents(CallRender3DGL& call) {
     return true;
 }
 
-bool DeferredShading::Render(core_gl::view::CallRender3DGL& call) {
+bool DeferredShading::Render(CallRender3DGL& call) {
 
-    megamol::core_gl::view::CallRender3DGL* cr = &call; // dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
+    CallRender3DGL* cr = &call; // dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (cr == NULL)
         return false;
 
@@ -165,7 +165,7 @@ bool DeferredShading::Render(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-void DeferredShading::PreRender(core_gl::view::CallRender3DGL& call) {
+void DeferredShading::PreRender(CallRender3DGL& call) {
 
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);
@@ -183,4 +183,3 @@ void DeferredShading::PreRender(core_gl::view::CallRender3DGL& call) {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
-} // namespace megamol::core_gl

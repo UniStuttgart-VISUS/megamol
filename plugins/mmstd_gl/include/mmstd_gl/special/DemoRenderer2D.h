@@ -8,14 +8,14 @@
 
 #include "mmcore/factories/ModuleAutoDescription.h"
 #include "mmcore/view/MouseFlags.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 
-namespace megamol::core_gl::view::special {
+namespace megamol::mmstd_gl::special {
 
 /**
  * A simple 2d renderer which just creates a circle
  */
-class DemoRenderer2D : public core_gl::view::Renderer2DModuleGL {
+class DemoRenderer2D : public mmstd_gl::Renderer2DModuleGL {
 public:
     /**
      * The class name for the factory
@@ -78,7 +78,7 @@ protected:
      *
      * @return 'true' on success
      */
-    bool GetExtents(core_gl::view::CallRender2DGL& call) override;
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * Renders the scene
@@ -87,7 +87,7 @@ protected:
      *
      * @return 'true' on success
      */
-    bool Render(core_gl::view::CallRender2DGL& call) override;
+    bool Render(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * Releases all resources of the module
@@ -117,4 +117,4 @@ private:
     bool drag;
 };
 
-} // namespace megamol::core_gl::view::special
+} // namespace megamol::mmstd_gl::special

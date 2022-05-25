@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore_gl/view/AbstractOverrideViewGL.h"
+#include "mmstd_gl/view/AbstractOverrideViewGL.h"
 
-using namespace megamol::core_gl;
+using namespace megamol::mmstd_gl;
 using namespace megamol::frontend_resources;
 
 
@@ -19,7 +19,7 @@ view::AbstractOverrideViewGL::AbstractOverrideViewGL(void)
         , viewportWidth(1)
         , viewportHeight(1) {
 
-    this->renderViewSlot.SetCompatibleCall<view::CallRenderViewGLDescription>();
+    this->renderViewSlot.SetCompatibleCall<CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->renderViewSlot);
 }
 
@@ -37,8 +37,7 @@ view::AbstractOverrideViewGL::~AbstractOverrideViewGL(void) {
  * view::AbstractOverrideView::DefaultTime
  */
 float view::AbstractOverrideViewGL::DefaultTime(double instTime) const {
-    view::CallRenderViewGL* call =
-        const_cast<view::AbstractOverrideViewGL*>(this)->renderViewSlot.CallAs<view::CallRenderViewGL>();
+    CallRenderViewGL* call = const_cast<view::AbstractOverrideViewGL*>(this)->renderViewSlot.CallAs<CallRenderViewGL>();
     if (call == NULL)
         return 0.0f;
     const core::CalleeSlot* s = call->PeekCalleeSlot();
@@ -75,9 +74,9 @@ void view::AbstractOverrideViewGL::DeserialiseCamera(vislib::Serialiser& seriali
  */
 void view::AbstractOverrideViewGL::ResetView(void) {
     // resets camera, not override values
-    view::CallRenderViewGL* crv = this->getCallRenderView();
+    CallRenderViewGL* crv = this->getCallRenderView();
     if (crv != NULL) {
-        (*crv)(view::CallRenderViewGL::CALL_RESETVIEW);
+        (*crv)(CallRenderViewGL::CALL_RESETVIEW);
     }
 }
 
@@ -143,7 +142,7 @@ bool view::AbstractOverrideViewGL::OnKey(Key key, KeyAction action, Modifiers mo
     evt.keyData.action = action;
     evt.keyData.mods = mods;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderViewGL::FnOnKey))
+    if (!(*cr)(CallRenderViewGL::FnOnKey))
         return false;
 
     return true;
@@ -159,7 +158,7 @@ bool view::AbstractOverrideViewGL::OnChar(unsigned int codePoint) {
     evt.tag = core::view::InputEvent::Tag::Char;
     evt.charData.codePoint = codePoint;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderViewGL::FnOnChar))
+    if (!(*cr)(CallRenderViewGL::FnOnChar))
         return false;
 
     return true;
@@ -177,7 +176,7 @@ bool view::AbstractOverrideViewGL::OnMouseButton(MouseButton button, MouseButton
     evt.mouseButtonData.action = action;
     evt.mouseButtonData.mods = mods;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderViewGL::FnOnMouseButton))
+    if (!(*cr)(CallRenderViewGL::FnOnMouseButton))
         return false;
 
     return true;
@@ -194,7 +193,7 @@ bool view::AbstractOverrideViewGL::OnMouseMove(double x, double y) {
     evt.mouseMoveData.x = x;
     evt.mouseMoveData.y = y;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderViewGL::FnOnMouseMove))
+    if (!(*cr)(CallRenderViewGL::FnOnMouseMove))
         return false;
 
     return true;
@@ -211,7 +210,7 @@ bool view::AbstractOverrideViewGL::OnMouseScroll(double dx, double dy) {
     evt.mouseScrollData.dx = dx;
     evt.mouseScrollData.dy = dy;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRenderViewGL::FnOnMouseScroll))
+    if (!(*cr)(CallRenderViewGL::FnOnMouseScroll))
         return false;
 
     return true;

@@ -11,9 +11,9 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-namespace megamol::core_gl::view {
+namespace megamol::mmstd_gl {
 
 template<typename FBO>
 using INITFUNC = void(std::shared_ptr<glowl::FramebufferObject>&, std::shared_ptr<FBO>&, int, int);
@@ -24,7 +24,7 @@ using RENFUNC = void(
 
 template<typename CALL, INITFUNC<typename CALL::FBO_TYPE> init_func, RENFUNC<typename CALL::FBO_TYPE> ren_func,
     char const* CN, char const* DESC>
-class ContextToGL : public core_gl::view::Renderer3DModuleGL {
+class ContextToGL : public mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -54,7 +54,7 @@ public:
     }
 
     /** Ctor. */
-    ContextToGL() : core_gl::view::Renderer3DModuleGL(), _getContextSlot("getContext", "Slot for non-GL context") {
+    ContextToGL() : mmstd_gl::Renderer3DModuleGL(), _getContextSlot("getContext", "Slot for non-GL context") {
 
         this->_getContextSlot.template SetCompatibleCall<core::factories::CallAutoDescription<CALL>>();
         this->MakeSlotAvailable(&this->_getContextSlot);
@@ -280,4 +280,4 @@ inline void renderToFBO(std::shared_ptr<glowl::GLSLProgram>& shader, std::shared
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-} // namespace megamol::core_gl::view
+} // namespace megamol::mmstd_gl

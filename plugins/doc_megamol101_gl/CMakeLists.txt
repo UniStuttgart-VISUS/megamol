@@ -5,4 +5,6 @@
 
 megamol_plugin(megamol101_gl
   BUILD_DEFAULT OFF
-  DEPENDS_GL)
+  DEPENDS_GL
+  DEPENDS_PLUGINS
+    mmstd_gl)

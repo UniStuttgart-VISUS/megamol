@@ -124,7 +124,7 @@ void DeferredRenderingProvider::refreshLights(core::view::light::CallLight* ligh
 }
 
 void DeferredRenderingProvider::draw(
-    core_gl::view::CallRender3DGL& call, core::view::light::CallLight* lightCall, bool noShading) {
+    mmstd_gl::CallRender3DGL& call, core::view::light::CallLight* lightCall, bool noShading) {
 
     bool no_lighting = !this->enableShadingParam.Param<core::param::BoolParam>()->Value();
     if (noShading) {

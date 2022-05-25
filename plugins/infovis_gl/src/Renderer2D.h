@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 
 namespace megamol::infovis_gl {
 
-class Renderer2D : public core_gl::view::Renderer2DModuleGL {
+class Renderer2D : public mmstd_gl::Renderer2DModuleGL {
 public:
-    Renderer2D() : core_gl::view::Renderer2DModuleGL() {}
+    Renderer2D() : mmstd_gl::Renderer2DModuleGL() {}
 
     ~Renderer2D() override = default;
 

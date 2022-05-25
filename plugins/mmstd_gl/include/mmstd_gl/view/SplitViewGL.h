@@ -11,16 +11,16 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/AbstractViewGL.h"
-#include "mmcore_gl/view/CallRenderViewGL.h"
+#include "mmstd_gl/renderer/CallRenderViewGL.h"
+#include "mmstd_gl/view/AbstractViewGL.h"
 #include "vislib/math/Rectangle.h"
 
-namespace megamol::core_gl::view {
+namespace megamol::mmstd_gl::view {
 
 /**
  * Abstract base class of rendering views
  */
-class SplitViewGL : public core_gl::view::AbstractViewGL {
+class SplitViewGL : public mmstd_gl::view::AbstractViewGL {
 public:
     /**
      * Answer the name of this module.
@@ -236,4 +236,4 @@ private:
 };
 
 
-} // namespace megamol::core_gl::view
+} // namespace megamol::mmstd_gl::view

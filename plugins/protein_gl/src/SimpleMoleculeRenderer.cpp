@@ -47,7 +47,7 @@ using namespace megamol::core::utility::log;
  * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
  */
 SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , getLightsSlot("getLights", "Connects the molecule rendering with availabel light sources")
@@ -306,7 +306,7 @@ bool SimpleMoleculeRenderer::create(void) {
 /*
  * protein::SimpleMoleculeRenderer::GetExtents
  */
-bool SimpleMoleculeRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool SimpleMoleculeRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
         return false;
@@ -328,7 +328,7 @@ bool SimpleMoleculeRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * protein::SimpleMoleculeRenderer::Render
  */
-bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool SimpleMoleculeRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     auto call_fbo = call.GetFramebuffer();
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);

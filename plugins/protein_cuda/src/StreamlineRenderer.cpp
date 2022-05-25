@@ -229,7 +229,7 @@ void StreamlineRenderer::release(void) {
 /*
  * StreamlineRenderer::GetExtents
  */
-bool StreamlineRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool StreamlineRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     // Extent of volume data
 
     protein_calls::VTIDataCall* vtiCall = this->fieldDataCallerSlot.CallAs<protein_calls::VTIDataCall>();
@@ -256,7 +256,7 @@ bool StreamlineRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * StreamlineRenderer::Render
  */
-bool StreamlineRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool StreamlineRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     // Update parameters
     this->updateParams();
