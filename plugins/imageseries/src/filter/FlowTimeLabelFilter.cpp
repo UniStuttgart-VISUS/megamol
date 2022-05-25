@@ -59,7 +59,18 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
         return nodeID;
     };
 
-    auto getOrCreateNode = [&](Timestamp ts, Label label) { return nodeGraph.getNode(getOrCreateNodeID(ts, label)); };
+    auto getOrCreateNode = [&](Timestamp ts, Label label) -> graph::GraphData2D::Node& {
+        return nodeGraph.getNode(getOrCreateNodeID(ts, label));
+    };
+
+    auto addEdge = [&](Timestamp srcTS, Label srcLabel, Timestamp destTS, Label destLabel) {
+        graph::GraphData2D::Edge edge;
+        edge.from = getOrCreateNodeID(srcTS, destTS);
+        edge.to = getOrCreateNodeID(destTS, destLabel);
+        nodeGraph.getNode(edge.from).edgeCountOut++;
+        nodeGraph.getNode(edge.to).edgeCountIn++;
+        nodeGraph.addEdge(std::move(edge));
+    };
 
     Timestamp timeThreshold = input.timeThreshold;
 
@@ -76,8 +87,14 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
         }
     }
 
+    struct FrontQueueEntry {
+        FrontQueueEntry(Index index = 0, Label label = LabelBackground) : index(index), label(label) {}
+        Index index; // Image pixel index of this queue entry
+        Label label; // Timestamp of this queue entry
+    };
+
     std::vector<Index> floodQueue;
-    std::vector<Index> nextFront;
+    std::vector<FrontQueueEntry> nextFront;
 
     auto mark = [&](Index index, Label label) {
         // Skip already-visited pixels
@@ -93,7 +110,7 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
         } else if (sample > currentTimestamp && sample < static_cast<std::uint32_t>(currentTimestamp) + timeThreshold) {
             // Mark as pending
             dataOut[index] = LabelFlow;
-            nextFront.push_back(index);
+            nextFront.emplace_back(index, label);
         }
     };
 
@@ -120,6 +137,7 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
                 mark(index - width, label);
             }
         }
+        return floodQueue.size();
     };
 
     // Phase 1: find initial frame
@@ -133,9 +151,10 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
                 std::size_t nextFrontPrevSize = nextFront.size();
 
                 // Perform speculative flood fill. If the region is big enough, keep the changes. Otherwise, revert them
-                floodFill(i, frontLabel);
-                if (floodQueue.size() >= input.minBlobSize) {
+                std::size_t fillCount = floodFill(i, frontLabel);
+                if (fillCount >= input.minBlobSize) {
                     // Region large enough: advance label counter and keep filled pixels
+                    getOrCreateNode(currentTimestamp, frontLabel).area += fillCount + 1;
                     if (frontLabel != LabelLast) {
                         frontLabel++;
                     }
@@ -148,7 +167,7 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
                     }
                     // Revert queued pixels
                     for (std::size_t frontIndex = nextFrontPrevSize; frontIndex < nextFront.size(); ++frontIndex) {
-                        dataOut[nextFront[frontIndex]] = LabelBackground;
+                        dataOut[nextFront[frontIndex].index] = LabelBackground;
                     }
                     nextFront.resize(nextFrontPrevSize);
                 }
@@ -166,15 +185,20 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
         // Split pending pixels into sections with unique labels
         std::vector<Index> frontQueue;
         Label frontLabel = LabelFirst;
-        auto splitFront = [&](Index index) {
-            if (dataOut[index] != LabelFlow) {
+        auto splitFront = [&](FrontQueueEntry entry) {
+            if (dataOut[entry.index] != LabelFlow) {
                 return;
             }
             frontQueue.clear();
-            frontQueue.push_back(index);
-            dataOut[index] = frontLabel;
+            frontQueue.push_back(entry.index);
+            dataOut[entry.index] = frontLabel;
+
+            // Insert edge into graph
+            // TODO - this does not handle merges yet
+            addEdge(currentTimestamp - 1, entry.label, currentTimestamp, frontLabel);
+
             for (std::size_t queueIndex = 0; queueIndex < frontQueue.size(); ++queueIndex) {
-                index = frontQueue[queueIndex];
+                auto index = frontQueue[queueIndex];
                 int cx = index % width;
                 int cy = index / width;
                 for (int y = std::max<int>(0, cy - 2); y < std::min<int>(cy + 3, height); ++y) {
@@ -193,20 +217,62 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
         };
 
         // Split different non-connected fronts
-        for (auto pendingIndex : nextFront) {
-            splitFront(pendingIndex);
+        for (const auto& entry : nextFront) {
+            splitFront(entry);
         }
 
-        std::swap(frontQueue, nextFront);
+        std::vector<FrontQueueEntry> currentFront = std::move(nextFront);
         nextFront.clear();
-        for (auto pendingIndex : frontQueue) {
-            if (dataIn[pendingIndex] == currentTimestamp) {
+        for (const auto& entry : currentFront) {
+            if (dataIn[entry.index] == currentTimestamp) {
                 // Same timestamp: perform flood fill from this pixel
-                floodFill(pendingIndex, dataOut[pendingIndex]);
+                auto fillLabel = dataOut[entry.index];
+                auto fillCount = floodFill(entry.index, fillLabel) + 1;
+                getOrCreateNode(currentTimestamp, fillLabel).area += fillCount;
             } else {
-                // Preserve front pixels with a steeper timestamp gradient, requeueing them for next time
-                nextFront.push_back(pendingIndex);
-                dataOut[pendingIndex] = LabelFlow;
+                // Preserve front pixels with a steeper timestamp gradient, requeueing them for the next iteration
+                nextFront.push_back(entry.index);
+                dataOut[entry.index] = LabelFlow;
+            }
+        }
+    }
+
+    // TODO remove small mask blobs
+
+    auto checkMaskNeighbor = [&](Index index, bool& mask) {
+        if (dataOut[index] == LabelMask) {
+            mask = true;
+            return true;
+        } else {
+            return dataOut[index] == LabelBackground;
+        }
+    };
+
+    auto checkMaskVicinity = [&](int cx, int cy) {
+        for (int y = std::max<int>(0, cy - 2); y < std::min<int>(cy + 3, height); ++y) {
+            for (int x = std::max<int>(0, cx - 2); x < std::min<int>(cx + 3, width); ++x) {
+                if (dataOut[x + y * width] == LabelMask) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
+    // Phase 3: compute solid interface length
+    for (Index y = 1; y < height - 1; ++y) {
+        for (Index x = 1; x < width - 1; ++x) {
+            Index index = x + y * width;
+            auto label = dataOut[index];
+            if (label > LabelFirst) {
+                bool mask = false;
+                bool hasBackgroundOrMask = checkMaskNeighbor(index - 1, mask) || checkMaskNeighbor(index + 1, mask) ||
+                                           checkMaskNeighbor(index - width, mask) ||
+                                           checkMaskNeighbor(index + width, mask);
+                if (hasBackgroundOrMask && (mask || checkMaskVicinity(x, y))) {
+                    auto timestamp = dataIn[index];
+                    getOrCreateNode(timestamp, label).interfaceSolid++;
+                }
             }
         }
     }
