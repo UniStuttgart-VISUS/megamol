@@ -1,7 +1,7 @@
 /*
- * STLDataSource.h
+ * MeshSTLDataSource.h
  *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2019-2022 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 #pragma once
@@ -13,7 +13,7 @@
 namespace megamol {
 namespace mesh_gl {
 
-class STLDataSource : public datatools_gl::io::STLDataSource {
+class MeshSTLDataSource : public datatools_gl::io::STLDataSource {
 public:
     /// <summary>
     /// Answer the name of this module
@@ -42,12 +42,12 @@ public:
     /// <summary>
     /// Constructor
     /// </summary>
-    STLDataSource();
+    MeshSTLDataSource();
 
     /// <summary>
     /// Destructor
     /// </summary>
-    ~STLDataSource();
+    ~MeshSTLDataSource();
 
 protected:
     /// <summary>

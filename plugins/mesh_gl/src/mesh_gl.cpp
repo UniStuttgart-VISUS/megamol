@@ -9,10 +9,10 @@
 
 #include "3DUIRenderTaskDataSource.h"
 #include "GPUMeshes.h"
+#include "MeshSTLDataSource.h"
 #include "MeshViewerRenderTasks.h"
 #include "Render3DUI.h"
 #include "RenderMDIMesh.h"
-#include "STLDataSource.h"
 #include "SimpleGPUMtlDataSource.h"
 #include "TriangleMeshRenderer2D.h"
 #include "TriangleMeshRenderer3D.h"
@@ -39,7 +39,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::SimpleGPUMtlDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::MeshViewerRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::Render3DUI>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::STLDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::MeshSTLDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::TriangleMeshRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::TriangleMeshRenderer3D>();

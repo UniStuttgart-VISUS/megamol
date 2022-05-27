@@ -1,4 +1,4 @@
-#include "STLDataSource.h"
+#include "MeshSTLDataSource.h"
 
 #include "mmcore/Call.h"
 
@@ -19,24 +19,24 @@
 namespace megamol {
 namespace mesh_gl {
 
-STLDataSource::STLDataSource() : ngmesh_output_slot("mesh_output", "Triangle mesh output") {
+MeshSTLDataSource::MeshSTLDataSource() : ngmesh_output_slot("mesh_output", "Triangle mesh output") {
     // Remove parent output slot
     Module::SetSlotUnavailable(&(datatools_gl::io::STLDataSource::mesh_output_slot));
 
     // Create output slot for triangle mesh data
     this->ngmesh_output_slot.SetCallback(
-        mesh::TriangleMeshCall::ClassName(), "get_extent", &STLDataSource::get_extent_callback);
+        mesh::TriangleMeshCall::ClassName(), "get_extent", &MeshSTLDataSource::get_extent_callback);
     this->ngmesh_output_slot.SetCallback(
-        mesh::TriangleMeshCall::ClassName(), "get_data", &STLDataSource::get_mesh_data_callback);
+        mesh::TriangleMeshCall::ClassName(), "get_data", &MeshSTLDataSource::get_mesh_data_callback);
 
     Module::MakeSlotAvailable(&this->ngmesh_output_slot);
 }
 
-STLDataSource::~STLDataSource() {
+MeshSTLDataSource::~MeshSTLDataSource() {
     this->Release();
 }
 
-bool STLDataSource::get_extent_callback(core::Call& caller) {
+bool MeshSTLDataSource::get_extent_callback(core::Call& caller) {
     // Get mesh call
     auto& call = dynamic_cast<mesh::TriangleMeshCall&>(caller);
 
@@ -53,7 +53,7 @@ bool STLDataSource::get_extent_callback(core::Call& caller) {
     return true;
 }
 
-bool STLDataSource::get_mesh_data_callback(core::Call& caller) {
+bool MeshSTLDataSource::get_mesh_data_callback(core::Call& caller) {
     // Get mesh call
     auto& call = dynamic_cast<mesh::TriangleMeshCall&>(caller);
 
