@@ -3,10 +3,12 @@
 #include "CallClustering_2.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
 
 #include <glowl/BufferObject.hpp>
+#include <glowl/FramebufferObject.hpp>
 #include <glowl/GLSLProgram.hpp>
 
 namespace megamol {
@@ -118,17 +120,29 @@ private:
     /** Parameter setting the cluster cutoff value */
     core::param::ParamSlot cluster_cutoff_param_;
 
+    /** Parameter for the default node color */
+    core::param::ParamSlot default_color_param_;
+
+    /** Parameter for the text color */
+    core::param::ParamSlot text_color_param_;
+
     /** The positions of the nodes */
     std::vector<glm::vec2> node_positions_;
 
     /** The colors of the nodes */
     std::vector<glm::vec3> node_colors_;
 
+    /** The ids of the nodes */
+    std::vector<int> node_ids_;
+
     /** The positions of the line vertices */
     std::vector<glm::vec2> line_positions_;
 
     /** The colors of the line vertices */
     std::vector<glm::vec3> line_colors_;
+
+    /** The node ids for all lines */
+    std::vector<int> line_node_ids_;
 
     /** The last processed data hash */
     size_t last_data_hash_;
@@ -139,14 +153,59 @@ private:
     /** The shader used for the connecting lines */
     std::unique_ptr<glowl::GLSLProgram> line_shader_;
 
+    /** The shader used for the molecular surface maps */
+    std::unique_ptr<glowl::GLSLProgram> map_shader_;
+
+    /** The shader used for copying texture contents to the normal framebuffer */
+    std::unique_ptr<glowl::GLSLProgram> texture_copy_shader_ptr_;
+
+    /** Buffer containing the node vertex positions */
     std::unique_ptr<glowl::BufferObject> vert_pos_buffer_;
+
+    /** Buffer containing the node vertex color */
     std::unique_ptr<glowl::BufferObject> vert_col_buffer_;
+
+    /** Buffer containing the node vertex id */
+    std::unique_ptr<glowl::BufferObject> vert_id_buffer_;
+
+    /** Buffer containing the lien vertex positions */
     std::unique_ptr<glowl::BufferObject> line_pos_buffer_;
+
+    /** Buffer containing the node vertex colors */
     std::unique_ptr<glowl::BufferObject> line_col_buffer_;
+
+    /** Buffer containing the node vertex ids */
+    std::unique_ptr<glowl::BufferObject> line_id_buffer_;
+
+    /** FBO for picking */
+    std::unique_ptr<glowl::FramebufferObject> fbo_;
+
+    /** The font used for font rendering */
+    core::utility::SDFFont font_;
+
+    /** rainbow color table to color the clusters */
+    std::vector<glm::vec3> cluster_colors_;
+
+    /** ids of the leaf nodes */
+    std::vector<int64_t> leaf_ids_;
+
+    /** VAO for the node vertices */
     GLuint vert_vao_;
+
+    /** VAO for the line vertices */
     GLuint line_vao_;
 
+    /** Index of the selected cluster */
     int64_t selected_cluster_id_;
+
+    /** Index of the previous selected cluster */
+    int64_t last_selected_cluster_id;
+
+    /** Index of the hovered cluster */
+    int64_t hovered_cluster_id_;
+
+    /** Index of the root node */
+    int64_t root_id_;
 };
 
 } // namespace molsurfmapcluster_gl

@@ -10,7 +10,7 @@
 #include "mmcore/CoreInstance.h"
 
 namespace megamol {
-namespace molsurfmapcluster {
+namespace molsurfmapcluster_gl {
 class EnzymeClassProvider {
 public:
     /** Ctor. */

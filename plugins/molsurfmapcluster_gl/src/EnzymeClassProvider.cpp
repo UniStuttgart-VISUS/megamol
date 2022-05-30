@@ -4,7 +4,7 @@
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
-using namespace megamol::molsurfmapcluster;
+using namespace megamol::molsurfmapcluster_gl;
 
 /*
  * EnzymeClassProvider::classMap

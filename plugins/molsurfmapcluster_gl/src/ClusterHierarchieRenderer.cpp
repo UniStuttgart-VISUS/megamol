@@ -31,6 +31,7 @@ using namespace megamol::core;
 using namespace megamol::core_gl;
 using namespace megamol::core::view;
 using namespace megamol::molsurfmapcluster;
+using namespace megamol::molsurfmapcluster_gl;
 
 
 /*
