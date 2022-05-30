@@ -103,7 +103,6 @@ bool ClusterGraphRenderer::OnMouseButton(
  * ClusterGraphRenderer::OnMouseMove
  */
 bool ClusterGraphRenderer::OnMouseMove(double x, double y) {
-
     if (fbo_ != nullptr) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         fbo_->bindToRead(1);
@@ -113,7 +112,7 @@ bool ClusterGraphRenderer::OnMouseMove(double x, double y) {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         hovered_cluster_id_ = read_value - 1; // move the value back. 0 corresponds to no id.
     }
-
+    mouse_pos_ = glm::vec2(x, y);
     return false;
 }
 
@@ -344,6 +343,7 @@ bool ClusterGraphRenderer::Render(core_gl::view::CallRender2DGL& call) {
     float const map_height = 0.5f * map_width;
     auto text_col = text_color_param_.Param<param::ColorParam>()->Value();
 
+    // draw the minimaps below the graph
     if (draw_minimap_param_.Param<param::BoolParam>()->Value()) {
         map_shader_->use();
         map_shader_->setUniform("mvp", mvp);
@@ -360,9 +360,11 @@ bool ClusterGraphRenderer::Render(core_gl::view::CallRender2DGL& call) {
 
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
+        glUseProgram(0);
         top_value -= map_height;
     }
 
+    // draw the pdb ids
     if (draw_pdb_ids_param_.Param<param::BoolParam>()->Value()) {
         float const text_size = 0.75f * map_height;
         float const text_height = font_.LineHeight(text_size);
@@ -377,6 +379,7 @@ bool ClusterGraphRenderer::Render(core_gl::view::CallRender2DGL& call) {
         top_value -= text_height;
     }
 
+    // draw the brenda class information
     if (draw_brenda_param_.Param<param::BoolParam>()->Value()) {
         float const text_size = 0.3f * map_height;
         float const text_height = font_.LineHeight(text_size);
@@ -395,9 +398,40 @@ bool ClusterGraphRenderer::Render(core_gl::view::CallRender2DGL& call) {
         }
     }
 
+    // draw the mouse hover map and string
+    if (hovered_cluster_id_ >= 0) {
+        auto cam_pose = cam.getPose();
+        auto cam_intrinsics = cam.get<core::view::Camera::OrthographicParameters>();
+        glm::dvec2 world_pos(-1.0);
+        world_pos.x = ((mouse_pos_.x * 2.0 / static_cast<double>(call.GetViewResolution().x)) - 1.0);
+        world_pos.y = 1.0 - (mouse_pos_.y * 2.0 / static_cast<double>(call.GetViewResolution().y));
+        world_pos.x = world_pos.x * 0.5 * cam_intrinsics.frustrum_height * cam_intrinsics.aspect + cam_pose.position.x;
+        world_pos.y = world_pos.y * 0.5 * cam_intrinsics.frustrum_height + cam_pose.position.y;
+
+        auto const hover_map_width = 0.4f * static_cast<float>(call.GetViewResolution().x);
+        auto const hover_map_height = 0.5f * hover_map_width;
+
+        glm::vec2 const lower_left = world_pos + glm::dvec2(0.01 * hover_map_width);
+        glm::vec2 const upper_right = lower_left + glm::vec2(hover_map_width, hover_map_height);
+        glm::vec2 const middle = 0.5f * (lower_left + upper_right);
+
+        map_shader_->use();
+        map_shader_->setUniform("mvp", mvp);
+        map_shader_->setUniform("lowerleft", lower_left);
+        map_shader_->setUniform("upperright", upper_right);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        glUseProgram(0);
+
+        auto const& hovered_node = clustering_data.nodes->at(hovered_cluster_id_);
+        std::string const text = hovered_node.pdbID;
+        auto const text_size = 0.3f * hover_map_height;
+        font_.DrawString(mvp, text_col.data(), middle.x, middle.y, text_size, false, text.c_str(),
+            utility::SDFFont::ALIGN_CENTER_MIDDLE);
+    }
+
     glEnable(GL_DEPTH_TEST);
-
-
     return true;
 }
 
@@ -471,28 +505,31 @@ void ClusterGraphRenderer::calculateNodeConnections(ClusteringData const& cluste
         return;
     }
 
+    // the line node order always goes from the root node to the children
+    // this ensures the correct cluster id picking later on
     auto const& nodes = *cluster_data.nodes;
     for (auto const& node : nodes) {
+        int const parent_id = static_cast<int>(node.id);
         if (node.left >= 0) {
-            auto const start_pos = node_positions_[node.left];
-            auto const end_pos = node_positions_[node.id];
+            auto const start_pos = node_positions_[node.id];
+            auto const end_pos = node_positions_[node.left];
             line_positions_.emplace_back(start_pos);
-            line_positions_.emplace_back(glm::vec2(start_pos.x, end_pos.y));
-            line_positions_.emplace_back(glm::vec2(start_pos.x, end_pos.y));
+            line_positions_.emplace_back(glm::vec2(end_pos.x, start_pos.y));
+            line_positions_.emplace_back(glm::vec2(end_pos.x, start_pos.y));
             line_positions_.emplace_back(end_pos);
-            int const id = static_cast<int>(node.id);
-            std::vector ids = {id, id, id, id};
+            int const id = static_cast<int>(node.left);
+            std::vector ids = {parent_id, parent_id, parent_id, id};
             line_node_ids_.insert(line_node_ids_.end(), ids.begin(), ids.end());
         }
         if (node.right >= 0) {
-            auto const start_pos = node_positions_[node.right];
-            auto const end_pos = node_positions_[node.id];
+            auto const start_pos = node_positions_[node.id];
+            auto const end_pos = node_positions_[node.right];
             line_positions_.emplace_back(start_pos);
-            line_positions_.emplace_back(glm::vec2(start_pos.x, end_pos.y));
-            line_positions_.emplace_back(glm::vec2(start_pos.x, end_pos.y));
+            line_positions_.emplace_back(glm::vec2(end_pos.x, start_pos.y));
+            line_positions_.emplace_back(glm::vec2(end_pos.x, start_pos.y));
             line_positions_.emplace_back(end_pos);
-            int const id = static_cast<int>(node.id);
-            std::vector ids = {id, id, id, id};
+            int const id = static_cast<int>(node.right);
+            std::vector ids = {parent_id, parent_id, parent_id, id};
             line_node_ids_.insert(line_node_ids_.end(), ids.begin(), ids.end());
         }
     }

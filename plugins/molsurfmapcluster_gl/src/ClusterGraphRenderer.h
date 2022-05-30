@@ -206,6 +206,9 @@ private:
 
     /** Index of the root node */
     int64_t root_id_;
+
+    /** Position of the mouse in screen coordinates */
+    glm::dvec2 mouse_pos_;
 };
 
 } // namespace molsurfmapcluster_gl

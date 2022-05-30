@@ -536,6 +536,27 @@ void Clustering_2::postprocessClustering() {
     for (auto& node : *node_data_.nodes) {
         auto const leaf_vec = calcLeaveIndicesOfNode(node.id);
         node.numLeafNodes = leaf_vec.size();
+
+        // calculate closest pdb id and files
+        if (node.numLeafNodes > 0) {
+            std::vector<float> feature_vec;
+            calcFeatureVectorForNonLeaf(leaf_vec, feature_vec);
+            float min_distance = std::numeric_limits<float>::max();
+            // search for closest leaf feature vector
+            for (auto const& leaf_node_id : leaf_vec) {
+                auto const& leaf_node = node_data_.nodes->at(leaf_node_id);
+                auto const& leaf_feature = feature_vectors_.at(leaf_node.pdbID);
+                auto const dist = calcFeatureVectorDistance(feature_vec, leaf_feature);
+                if (dist < min_distance) {
+                    min_distance = dist;
+                    node.pdbID = leaf_node.pdbID;
+                    node.picturePath = leaf_node.picturePath;
+                    node.valueImagePath = leaf_node.valueImagePath;
+                    node.picturePtr = leaf_node.picturePtr;
+                    node.representative = leaf_node_id;
+                }
+            }
+        }
     }
 }
 
@@ -862,5 +883,18 @@ float Clustering_2::calcFeatureVectorDistance(std::vector<float> const& vec1, st
     }
     default:
         return 0.0f;
+    }
+}
+
+void Clustering_2::calcFeatureVectorForNonLeaf(
+    std::vector<int64_t> const& leaf_node_ids, std::vector<float>& OUT_feature_vector) const {
+    OUT_feature_vector.clear();
+    for (auto const& leaf_node_id : leaf_node_ids) {
+        auto const& leaf_node = node_data_.nodes->at(leaf_node_id);
+        auto const leaf_feature = feature_vectors_.at(leaf_node.pdbID);
+        // we abuse the fact that resize does not change the vector if the size is already correct
+        OUT_feature_vector.resize(leaf_feature.size(), 0.0f);
+        std::transform(OUT_feature_vector.begin(), OUT_feature_vector.end(), leaf_feature.begin(),
+            OUT_feature_vector.begin(), std::plus<>());
     }
 }
