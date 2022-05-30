@@ -1742,7 +1742,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
         up *= sinf(half_aperture_angle);
         right *= sinf(half_aperture_angle) * static_cast<float>(fbo_->getWidth()) / static_cast<float>(fbo_->getHeight());
 
-        this->deferred_shader_->setUniform("ray", cam_view);
+        this->deferred_shader_->setUniform("ray", glm::vec3(cam_view.x, cam_view.y, cam_view.z));
 
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
