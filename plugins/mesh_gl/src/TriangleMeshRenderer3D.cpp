@@ -300,13 +300,7 @@ bool TriangleMeshRenderer3D::getDataCallback(core::Call& call) {
     if (this->render_data.vertices != nullptr && this->render_data.indices != nullptr) {
         const auto num_vertices = this->render_data.vertices->size() / 3;
 
-        if (num_vertices != this->render_data.indices->size()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Number of vertices and indices do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-
-            return false;
-        }
-        else if (num_vertices != this->render_data.values->data->size()) {
+        if (num_vertices != this->render_data.values->data->size()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Number of vertices and data values do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);

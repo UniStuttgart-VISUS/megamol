@@ -137,15 +137,6 @@ bool TriangleMeshRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
         this->render_data.vertices = get_triangles->get_vertices();
         this->render_data.indices = get_triangles->get_indices();
 
-        const auto num_vertices = this->render_data.vertices->size() / 3;
-
-        if (num_vertices != this->render_data.indices->size()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Number of vertices and indices do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-
-            return false;
-        }
-
         // Prepare OpenGL buffers
         if (this->render_data.vertices != nullptr && this->render_data.indices != nullptr) {
             glBindVertexArray(this->render_data.vao);
