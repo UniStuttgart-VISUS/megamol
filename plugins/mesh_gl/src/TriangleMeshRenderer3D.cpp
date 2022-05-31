@@ -305,15 +305,13 @@ bool TriangleMeshRenderer3D::getDataCallback(core::Call& call) {
                 "Number of vertices and indices do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
             return false;
-        }
-        else if (num_vertices != this->render_data.values->data->size()) {
+        } else if (num_vertices != this->render_data.values->data->size()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Number of vertices and data values do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);
 
             return false;
-        }
-        else if (this->render_data.normals != nullptr && num_vertices != this->render_data.normals->size() / 3) {
+        } else if (this->render_data.normals != nullptr && num_vertices != this->render_data.normals->size() / 3) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Number of vertices and normals do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 
