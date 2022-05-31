@@ -548,7 +548,7 @@ private:
      * @return 'True' on success, 'false' otherwise.
      */
     bool makeColorString(const MultiParticleDataCall::Particles& parts, std::string& out_code,
-        std::string& out_declaration, bool interleaved);
+        std::string& out_declaration, bool interleaved, msf::ShaderFactoryOptionsOpenGL& shader_options);
 
     /**
      * Make SSBO vertex shader position string.
@@ -561,7 +561,7 @@ private:
      * @return 'True' on success, 'false' otherwise.
      */
     bool makeVertexString(const MultiParticleDataCall::Particles& parts, std::string& out_code,
-        std::string& out_declaration, bool interleaved);
+        std::string& out_declaration, bool interleaved, msf::ShaderFactoryOptionsOpenGL& shader_options);
 
     /**
      * Make SSBO shaders.
@@ -571,7 +571,7 @@ private:
      * @return ...
      */
     std::shared_ptr<glowl::GLSLProgram> makeShader(
-        const std::string& prgm_name);
+        const std::string& prgm_name, const msf::ShaderFactoryOptionsOpenGL& shader_options);
 
     /**
      * Generate SSBO shaders.
@@ -636,6 +636,7 @@ private:
     void renderDeferredPass(megamol::core_gl::view::CallRender3DGL& cr3d);
 
     /**
+     * Currently not in use.
      * Generate direction shader array string.
      *
      * @param directions      ...
@@ -653,16 +654,6 @@ private:
      * @param apex        ...
      */
     void generate3ConeDirections(std::vector<glm::vec4>& out_directions, float apex);
-
-    /**
-    * Hacky way to generate shader snippets for new shader factory
-    * Requires that the generated file is already included in the
-    * linked .vert/.geom/.frag/.comp file
-    *
-    * @param file_name The file name to which the code gets written
-    * @param code The shader code that is written to the file
-    */
-    bool generateShaderFile(const std::string& file_name, const std::string& code);
 };
 
 } /* end namespace rendering */

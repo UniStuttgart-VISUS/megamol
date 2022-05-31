@@ -2114,14 +2114,13 @@ bool SphereRenderer::disableFlagStorage(const std::shared_ptr<glowl::GLSLProgram
 
 
 bool SphereRenderer::makeColorString(const MultiParticleDataCall::Particles& parts, std::string& out_code,
-    std::string& out_declaration, bool interleaved) {
+    std::string& out_declaration, bool interleaved, msf::ShaderFactoryOptionsOpenGL& shader_options) {
 
     bool ret = true;
 
     switch (parts.GetColourDataType()) {
     case MultiParticleDataCall::Particles::COLDATA_NONE:
-        out_declaration = "";
-        out_code = "    inColor = globalCol;\n";
+        shader_options.addDefinition("COLDATA_NONE");
         break;
     case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -2129,78 +2128,25 @@ bool SphereRenderer::makeColorString(const MultiParticleDataCall::Particles& par
         ret = false;
         break;
     case MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA:
-        out_declaration = "    uint color;\n";
-        if (interleaved) {
-            out_code =
-                "    inColor = unpackUnorm4x8(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE "+ instanceOffset].color);\n";
-        } else {
-            out_code = "    inColor = unpackUnorm4x8(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE
-                      "+ instanceOffset].color);\n";
-        }
+        shader_options.addDefinition("COLDATA_UINT8_RGBA");
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB:
-        out_declaration = "    float r; float g; float b;\n";
-        if (interleaved) {
-            out_code =
-                "    inColor = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
-                "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].g,\n"
-                "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].b, 1.0); \n";
-        } else {
-            out_code =
-                "    inColor = vec4(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
-                "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].g,\n"
-                "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].b, 1.0); \n";
-        }
+        shader_options.addDefinition("COLDATA_FLOAT_RGB");
         break;
     case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
-        out_declaration = "    float r; float g; float b; float a;\n";
-        if (interleaved) {
-            out_code = "    inColor = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
-                      "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].g,\n"
-                      "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].b,\n"
-                      "                       theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].a); \n";
-        } else {
-            out_code = "    inColor = vec4(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].r,\n"
-                      "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].g,\n"
-                      "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].b,\n"
-                      "                       theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].a); \n";
-        }
+        shader_options.addDefinition("COLDATA_FLOAT_RGBA");
         break;
-    case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
-        out_declaration = "    float colorIndex;\n";
-        if (interleaved) {
-            out_code = "    inColIdx = theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex; \n";
-        } else {
-            out_code = "    inColIdx = theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex; \n";
-        }
-    } break;
-    case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I: {
-        out_declaration = "    double colorIndex;\n";
-        if (interleaved) {
-            out_code =
-                "    inColIdx = float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].colorIndex); \n";
-        } else {
-            out_code = "    inColIdx = float(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE
-                      " + instanceOffset].colorIndex); \n";
-        }
-    } break;
-    case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA: {
-        out_declaration = "    uint col1; uint col2;\n";
-        if (interleaved) {
-            out_code = "    inColor.xy = unpackUnorm2x16(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE
-                      "+ instanceOffset].col1);\n"
-                      "    inColor.zw = unpackUnorm2x16(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE
-                      "+ instanceOffset].col2);\n";
-        } else {
-            out_code = "    inColor.xy = unpackUnorm2x16(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE
-                      "+ instanceOffset].col1);\n"
-                      "    inColor.zw = unpackUnorm2x16(theColBuffer[" SSBO_GENERATED_SHADER_INSTANCE
-                      "+ instanceOffset].col2);\n";
-        }
-    } break;
+    case MultiParticleDataCall::Particles::COLDATA_FLOAT_I:
+        shader_options.addDefinition("COLDATA_FLOAT_I");
+        break;
+    case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I:
+        shader_options.addDefinition("COLDATA_DOUBLE_I");
+        break;
+    case MultiParticleDataCall::Particles::COLDATA_USHORT_RGBA:
+        shader_options.addDefinition("COLDATA_USHORT_RGBA");
+        break;
     default:
-        out_declaration = "";
-        out_code = "    inColor = globalCol;\n";
+        shader_options.addDefinition("COLDATA_DEFAULT");
         break;
     }
     // out_code = "    inColor = vec4(0.2, 0.7, 1.0, 1.0);";
@@ -2210,72 +2156,25 @@ bool SphereRenderer::makeColorString(const MultiParticleDataCall::Particles& par
 
 
 bool SphereRenderer::makeVertexString(const MultiParticleDataCall::Particles& parts, std::string& out_code,
-    std::string& out_declaration, bool interleaved) {
+    std::string& out_declaration, bool interleaved, msf::ShaderFactoryOptionsOpenGL& shader_options) {
 
     bool ret = true;
 
     switch (parts.GetVertexDataType()) {
     case MultiParticleDataCall::Particles::VERTDATA_NONE:
-        out_declaration = "";
-        out_code = "";
+        shader_options.addDefinition("VERTDATA_NONE");
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
-        out_declaration = "    float posX; float posY; float posZ;\n";
-        if (interleaved) {
-            out_code = "    inPosition = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
-                      "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
-                      "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                      "    rad = constRad;";
-        } else {
-            out_code =
-                "    inPosition = vec4(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
-                "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
-                "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                "    rad = constRad;";
-        }
+        shader_options.addDefinition("VERTDATA_FLOAT_XYZ");
         break;
     case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
-        out_declaration = "    uint posX1; uint posX2; uint posY1; uint posY2; uint posZ1; uint posZ2;\n";
-        if (interleaved) {
-            out_code = "    uvec2 thex = uvec2(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX1, "
-                      "theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX2);\n"
-                      "    uvec2 they = uvec2(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY1, "
-                      "theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY2);\n"
-                      "    uvec2 thez = uvec2(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ1, "
-                      "theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ2);\n"
-                      "    inPosition = inPosition = vec4(float(packDouble2x32(thex)), float(packDouble2x32(they)), "
-                      "float(packDouble2x32(thez)), 1.0);\n"
-                      "    rad = constRad;";
-        } else {
-            out_code = "    uvec2 thex = uvec2(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX1, "
-                      "thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX2);\n"
-                      "    uvec2 they = uvec2(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY1, "
-                      "thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY2);\n"
-                      "    uvec2 thez = uvec2(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ1, "
-                      "thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ2);\n"
-                      "    inPosition = inPosition = vec4(float(packDouble2x32(thex)), float(packDouble2x32(they)), "
-                      "float(packDouble2x32(thez)), 1.0);\n"
-                      "    rad = constRad;";
-        }
+        shader_options.addDefinition("VERTDATA_DOUBLE_XYZ");
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
-        out_declaration = "    float posX; float posY; float posZ; float posR;\n";
-        if (interleaved) {
-            out_code = "    inPosition = vec4(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
-                      "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
-                      "                 theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                      "    rad = theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posR;";
-        } else {
-            out_code =
-                "    inPosition = vec4(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX,\n"
-                "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY,\n"
-                "                 thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ, 1.0); \n"
-                "    rad = thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posR;";
-        }
+        shader_options.addDefinition("VERTDATA_FLOAT_XYZR");
         break;
     default:
-        out_declaration = "";
-        out_code = "";
+        shader_options.addDefinition("VERTDATA_DEFAULT");
         break;
     }
 
@@ -2284,7 +2183,7 @@ bool SphereRenderer::makeVertexString(const MultiParticleDataCall::Particles& pa
 
 
 std::shared_ptr<glowl::GLSLProgram> SphereRenderer::makeShader(
-    const std::string& prgm_name) {
+    const std::string& prgm_name, const msf::ShaderFactoryOptionsOpenGL& shader_options) {
 
     std::shared_ptr<glowl::GLSLProgram> sh;
 
@@ -2292,9 +2191,7 @@ std::shared_ptr<glowl::GLSLProgram> SphereRenderer::makeShader(
         std::string vert_path = "sphere_renderer/" + prgm_name + ".vert.glsl";
         std::string frag_path = "sphere_renderer/" + prgm_name + ".frag.glsl";
 
-        // should be safe to use shader_options_flags_ since only ssbo and splat use call makeShader
-        // and both use shader_options_flags_
-        sh = core::utility::make_glowl_shader(prgm_name, *shader_options_flags_, vert_path, frag_path);
+        sh = core::utility::make_glowl_shader(prgm_name, shader_options, vert_path, frag_path);
     }
     catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
@@ -2309,6 +2206,8 @@ std::shared_ptr<glowl::GLSLProgram> SphereRenderer::makeShader(
 std::shared_ptr<glowl::GLSLProgram> SphereRenderer::generateShader(
     const MultiParticleDataCall::Particles& parts, const std::string& prgm_name) {
 
+    msf::ShaderFactoryOptionsOpenGL ssbo_splat_shader_options = *shader_options_flags_;
+
     int c = parts.GetColourDataType();
     int p = parts.GetVertexDataType();
 
@@ -2319,54 +2218,24 @@ std::shared_ptr<glowl::GLSLProgram> SphereRenderer::generateShader(
     shader_map::iterator i = this->the_shaders_.find(std::make_tuple(c, p, interleaved));
     if (i == this->the_shaders_.end()) {
         std::string vert_code, col_code, vert_decl, col_decl, decl;
-        makeVertexString(parts, vert_code, vert_decl, interleaved);
-        makeColorString(parts, col_code, col_decl, interleaved);
+        makeVertexString(parts, vert_code, vert_decl, interleaved, ssbo_splat_shader_options);
+        makeColorString(parts, col_code, col_decl, interleaved, ssbo_splat_shader_options);
+
+        ssbo_splat_shader_options.addDefinition("SSBO_GENERATED_SHADER_ALIGNMENT", SSBO_GENERATED_SHADER_ALIGNMENT);
+        ssbo_splat_shader_options.addDefinition("SSBO_GENERATED_SHADER_INSTANCE", SSBO_GENERATED_SHADER_INSTANCE);
+        ssbo_splat_shader_options.addDefinition("SSBO_VERTEX_BINDING_POINT", std::to_string(ssbo_vertex_binding_point));
+        ssbo_splat_shader_options.addDefinition("SSBO_COLOR_BINDING_POINT", std::to_string(ssbo_color_binding_point));
 
         if (interleaved) {
-
-            decl = "\nstruct SphereParams {\n";
+            ssbo_splat_shader_options.addDefinition("INTERLEAVED");
 
             if (parts.GetColourData() < parts.GetVertexData()) {
-                decl += col_decl;
-                decl += vert_decl;
-            } else {
-                decl += vert_decl;
-                decl += col_decl;
+                ssbo_splat_shader_options.addDefinition("COL_LOWER_VERT");
             }
-            decl += "};\n";
-
-            decl += "layout(" SSBO_GENERATED_SHADER_ALIGNMENT ", binding = " + std::to_string(ssbo_vertex_binding_point) +
-                    ") buffer shader_data {\n"
-                    "    SphereParams theBuffer[];\n"
-                    "};\n";
-
-        } else {
-            // we seem to have separate buffers for vertex and color data
-
-            decl = "\nstruct SpherePosParams {\n" + vert_decl;
-            decl += "};\n";
-
-            decl += "\nstruct SphereColParams {\n" + col_decl;
-            decl += "};\n";
-
-            decl += "layout(" SSBO_GENERATED_SHADER_ALIGNMENT ", binding = " + std::to_string(ssbo_vertex_binding_point) +
-                    ") buffer shader_data {\n"
-                    "    SpherePosParams thePosBuffer[];\n"
-                    "};\n";
-            decl += "layout(" SSBO_GENERATED_SHADER_ALIGNMENT ", binding = " + std::to_string(ssbo_color_binding_point) +
-                    ") buffer shader_data2 {\n"
-                    "    SphereColParams theColBuffer[];\n"
-                    "};\n";
         }
 
-        std::string code = "\n";
-        code += col_code;
-        code += vert_code;
-
-        generateShaderFile(prgm_name + "_declaration_snippet", decl);
-        generateShaderFile(prgm_name + "_code_snippet", code);
-
-        this->the_shaders_.emplace(std::make_pair(std::make_tuple(c, p, interleaved), makeShader(prgm_name)));
+        this->the_shaders_.emplace(
+            std::make_pair(std::make_tuple(c, p, interleaved), makeShader(prgm_name, ssbo_splat_shader_options)));
         i = this->the_shaders_.find(std::make_tuple(c, p, interleaved));
     }
 
@@ -2677,6 +2546,7 @@ void SphereRenderer::generate3ConeDirections(std::vector<glm::vec4>& directions,
 }
 
 
+// not used currently
 std::string SphereRenderer::generateDirectionShaderArrayString(
     const std::vector<glm::vec4>& directions, const std::string& directions_name) {
 
@@ -2698,16 +2568,4 @@ std::string SphereRenderer::generateDirectionShaderArrayString(
     result << ");" << std::endl;
 
     return result.str();
-}
-
-bool SphereRenderer::generateShaderFile(const std::string& file_name, const std::string& code) {
-    //std::string full_path = "shaders/sphere_renderer/inc/" + file_name + ".inc.glsl";
-    std::string full_path = "../../../plugins/moldyn_gl/shaders/sphere_renderer/inc/" + file_name + ".inc.glsl";
-
-    std::ofstream shader_file;
-    shader_file.open(full_path);
-    shader_file << code;
-    shader_file.close();
-
-    return true;
 }
