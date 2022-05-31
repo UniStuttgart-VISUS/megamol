@@ -7,6 +7,8 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/utility/graphics/BitmapCodecCollection.h"
+#include "mmcore_gl/utility/RenderUtils.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "protein_calls/ProteinColor.h"
 
@@ -348,17 +350,36 @@ bool ClusterGraphRenderer::Render(core_gl::view::CallRender2DGL& call) {
         map_shader_->use();
         map_shader_->setUniform("mvp", mvp);
 
+        // if necessary, load the textures
+        for (const auto& node_id : leaf_ids_) {
+            auto& node = clustering_data.nodes->at(node_id);
+            if (picture_storage_.count(node.picturePath) == 0) {
+                picture_storage_[node.picturePath] = nullptr;
+                core_gl::utility::RenderUtils::LoadTextureFromFile(
+                    picture_storage_[node.picturePath], node.picturePath, GL_LINEAR, GL_LINEAR);
+            }
+        }
+
         for (const auto& node_id : leaf_ids_) {
             auto const node_pos = node_positions_[node_id];
+            auto const& node = clustering_data.nodes->at(node_id);
             glm::vec2 lower_left(node_pos.x - 0.5f * map_width, top_value - map_height);
             glm::vec2 upper_right(node_pos.x + 0.5f * map_width, top_value);
 
             map_shader_->setUniform("lowerleft", lower_left);
             map_shader_->setUniform("upperright", upper_right);
 
-            // TODO bind actual texture
+            glActiveTexture(GL_TEXTURE0);
+            if (picture_storage_.count(node.picturePath) == 0) {
+                continue;
+            }
+            picture_storage_.at(node.picturePath)->bindTexture();
+
+            map_shader_->setUniform("tex", 0);
 
             glDrawArrays(GL_TRIANGLES, 0, 6);
+
+            glBindTexture(GL_TEXTURE_2D, 0);
         }
         glUseProgram(0);
         top_value -= map_height;
@@ -408,6 +429,8 @@ bool ClusterGraphRenderer::Render(core_gl::view::CallRender2DGL& call) {
         world_pos.x = world_pos.x * 0.5 * cam_intrinsics.frustrum_height * cam_intrinsics.aspect + cam_pose.position.x;
         world_pos.y = world_pos.y * 0.5 * cam_intrinsics.frustrum_height + cam_pose.position.y;
 
+        auto const& hovered_node = clustering_data.nodes->at(hovered_cluster_id_);
+
         auto const hover_map_width = 0.4f * static_cast<float>(call.GetViewResolution().x);
         auto const hover_map_height = 0.5f * hover_map_width;
 
@@ -420,11 +443,20 @@ bool ClusterGraphRenderer::Render(core_gl::view::CallRender2DGL& call) {
         map_shader_->setUniform("lowerleft", lower_left);
         map_shader_->setUniform("upperright", upper_right);
 
+        std::string path = hovered_node.picturePath;
+        if (hovered_node.representative >= 0) {
+            auto const& node = clustering_data.nodes->at(hovered_node.representative);
+            path = node.picturePath;
+        }
+
+        glActiveTexture(GL_TEXTURE0);
+        picture_storage_.at(path)->bindTexture();
+
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
+        glBindTexture(GL_TEXTURE_2D, 0);
         glUseProgram(0);
 
-        auto const& hovered_node = clustering_data.nodes->at(hovered_cluster_id_);
         std::string const text = hovered_node.pdbID;
         auto const text_size = 0.3f * hover_map_height;
         font_.DrawString(mvp, text_col.data(), middle.x, middle.y, text_size, false, text.c_str(),

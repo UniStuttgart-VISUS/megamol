@@ -180,6 +180,9 @@ private:
     /** FBO for picking */
     std::unique_ptr<glowl::FramebufferObject> fbo_;
 
+    /** Vector containing the pointer to the images */
+    std::map<std::filesystem::path, std::shared_ptr<glowl::Texture2D>> picture_storage_;
+
     /** The font used for font rendering */
     core::utility::SDFFont font_;
 
