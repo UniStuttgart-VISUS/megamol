@@ -137,6 +137,15 @@ bool TriangleMeshRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
         this->render_data.vertices = get_triangles->get_vertices();
         this->render_data.indices = get_triangles->get_indices();
 
+        const auto num_vertices = this->render_data.vertices->size() / 3;
+
+        if (num_vertices != this->render_data.indices->size()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Number of vertices and indices do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+
+            return false;
+        }
+
         // Prepare OpenGL buffers
         if (this->render_data.vertices != nullptr && this->render_data.indices != nullptr) {
             glBindVertexArray(this->render_data.vao);
@@ -212,6 +221,16 @@ bool TriangleMeshRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
             new_mask = true;
         }
 
+        const auto num_vertices = this->render_data.vertices->size() / 3;
+
+        if (num_vertices != this->render_data.values->data->size()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Number of vertices and data values do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
+
+            return false;
+        }
+
         // Prepare OpenGL buffers
         glBindVertexArray(this->render_data.vao);
 
@@ -229,6 +248,14 @@ bool TriangleMeshRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
         glBindVertexArray(0);
 
         if (new_mask) {
+            if (this->render_data.mask != nullptr && num_vertices != this->render_data.mask->size()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "Number of vertices and mask values do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                    __LINE__);
+
+                return false;
+            }
+
             glBindVertexArray(this->render_data.vao);
 
             glBindBuffer(GL_ARRAY_BUFFER, this->render_data.mbo);

@@ -243,7 +243,6 @@ bool TriangleMeshRenderer3D::get_input_data() {
 
 bool TriangleMeshRenderer3D::get_input_extent() {
     auto tmc_ptr = this->triangle_mesh_slot.CallAs<mesh::TriangleMeshCall>();
-    auto mdc_ptr = this->triangle_mesh_slot.CallAs<mesh::MeshDataCall>();
 
     if (tmc_ptr == nullptr) {
         return false;
@@ -299,6 +298,28 @@ bool TriangleMeshRenderer3D::getDataCallback(core::Call& call) {
     }
 
     if (this->render_data.vertices != nullptr && this->render_data.indices != nullptr) {
+        const auto num_vertices = this->render_data.vertices->size() / 3;
+
+        if (num_vertices != this->render_data.indices->size()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Number of vertices and indices do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+
+            return false;
+        }
+        else if (num_vertices != this->render_data.values->data->size()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Number of vertices and data values do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
+
+            return false;
+        }
+        else if (this->render_data.normals != nullptr && num_vertices != this->render_data.normals->size() / 3) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Number of vertices and normals do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+
+            return false;
+        }
+
         rt_collections.push_back(this->m_rendertask_collection.first);
 
         const std::string identifier("triangle_mesh");
