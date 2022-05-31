@@ -11,7 +11,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "mmcore/view/light/AmbientLight.h"
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore/view/light/HDRILight.h"
@@ -19,6 +18,7 @@
 #include "mmcore/view/light/QuadLight.h"
 #include "mmcore/view/light/SpotLight.h"
 #include "vislib/sys/Path.h"
+#include "vislib/sys/SystemInformation.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>

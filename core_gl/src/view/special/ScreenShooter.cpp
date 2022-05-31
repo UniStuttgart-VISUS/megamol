@@ -26,7 +26,6 @@
 #include "mmcore/utility/DateTime.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/Thread.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
 #include "png.h"
 #include "vislib/Trace.h"
@@ -35,6 +34,7 @@
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/File.h"
+#include "vislib/sys/Thread.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 namespace megamol {

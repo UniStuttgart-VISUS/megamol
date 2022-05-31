@@ -28,11 +28,11 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/LuaAPI.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Environment.h"
 #include "vislib/sys/Path.h"
+#include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/sysfunctions.h"
 
 #include "lua.hpp"

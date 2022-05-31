@@ -5,8 +5,8 @@
  */
 #pragma once
 
-#include "mmcore/utility/graphics/AbstractBitmapCodec.h"
 #include "vislib/RawStorage.h"
+#include "vislib/graphics/AbstractBitmapCodec.h"
 #ifdef _WIN32
 #include <Shlwapi.h>
 #include <Wincodecsdk.h>
