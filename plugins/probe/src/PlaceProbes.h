@@ -73,6 +73,7 @@ protected:
     core::param::ParamSlot _method_slot;
     core::param::ParamSlot _probes_per_unit_slot;
     core::param::ParamSlot _scale_probe_begin_slot;
+    core::param::ParamSlot _override_probe_length_slot;
 
 
 private:

@@ -1,5 +1,5 @@
 /*
- * SumGlyphs.h
+ * FilterProbes.h
  * Copyright (C) 2021 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
@@ -22,7 +22,12 @@
 namespace megamol {
 namespace probe {
 
-class SumGlyphs : public core::Module {
+inline glm::vec3 to_vec3(std::array<float,3> const& input) {
+    return glm::vec3(input[0], input[1], input[2]);
+}
+
+
+class FilterProbes : public core::Module {
 public:
     /**
      * Answer the name of this module.
@@ -30,7 +35,7 @@ public:
      * @return The name of this module.
      */
     static const char* ClassName() {
-        return "SumGlyphs";
+        return "FilterProbes";
     }
 
     /**
@@ -51,8 +56,8 @@ public:
         return true;
     }
 
-    SumGlyphs();
-    virtual ~SumGlyphs();
+    FilterProbes();
+    virtual ~FilterProbes();
 
 protected:
     virtual bool create();
@@ -60,6 +65,7 @@ protected:
 
     uint32_t _version;
 
+    core::param::ParamSlot _center_param;
     core::CallerSlot _probe_rhs_slot;
     core::CalleeSlot _probe_lhs_slot;
 
@@ -72,8 +78,9 @@ private:
     bool parameterChanged(core::param::ParamSlot& p);
     float calculateAverageDistance(std::vector<std::array<float,3>> const& input_data, int const num_neighbors);
     float getDistance(std::array<float, 3> const& point1, std::array<float, 3> const& point2);
+    bool newPosDir(int const id_filtered, int const id_all);
 
-    std::shared_ptr<ProbeCollection> _sum_probe_collection;
+    std::shared_ptr<ProbeCollection> _filtered_probe_collection;
 
     bool _recalc;
 };

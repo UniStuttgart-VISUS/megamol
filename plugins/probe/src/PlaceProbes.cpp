@@ -26,6 +26,7 @@ megamol::probe::PlaceProbes::PlaceProbes()
         , _probe_positions_slot("deployProbePositions", "Safe probe positions to a file")
         , _load_probe_positions_slot("loadProbePositions", "Load saved probe positions")
         , _scale_probe_begin_slot("distanceFromSurfaceFactor", "")
+        , _override_probe_length_slot("overrideProbeLength", "")
         , _longest_edge_index(0) {
 
     this->_probe_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(0), &PlaceProbes::getData);
@@ -60,6 +61,12 @@ megamol::probe::PlaceProbes::PlaceProbes()
 
 
     this->_probes_per_unit_slot << new core::param::FloatParam(1, 0);
+    this->_probes_per_unit_slot.SetUpdateCallback(&PlaceProbes::parameterChanged);
+    this->MakeSlotAvailable(&this->_probes_per_unit_slot);
+
+    this->_override_probe_length_slot << new core::param::FloatParam(0);
+    this->_override_probe_length_slot.SetUpdateCallback(&PlaceProbes::parameterChanged);
+    this->MakeSlotAvailable(&this->_override_probe_length_slot);
 
     this->_scale_probe_begin_slot << new core::param::FloatParam(1.0f);
     this->_scale_probe_begin_slot.SetUpdateCallback(&PlaceProbes::parameterChanged);
@@ -889,6 +896,13 @@ bool megamol::probe::PlaceProbes::placeByCenterpoint() {
         normal[0] /= normal_length;
         normal[1] /= normal_length;
         normal[2] /= normal_length;
+
+        auto override_length = _override_probe_length_slot.Param<core::param::FloatParam>()
+            ->Value();
+
+        if (override_length > 0.0f){
+            normal_length = override_length;
+        }
 
         probe.m_position = {
             probe_accessor[probe_step * i + 0], probe_accessor[probe_step * i + 1], probe_accessor[probe_step * i + 2]};

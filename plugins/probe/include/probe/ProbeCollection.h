@@ -36,7 +36,7 @@ struct BaseProbe {
     /** for clustered samples */
     int m_cluster_id;
     /** true, if clustering considers this probe to be a representant */
-    bool m_representant;
+    bool m_representant = false;
     /** string id of the meshes that the probe goes through */
     std::vector<std::string> m_geo_ids;
     /** string id of the meshes that the probe goes through */
@@ -149,26 +149,9 @@ public:
         return m_probes[idx];
     }
 
-    BaseProbe getBaseProbe(size_t idx) const {
-        using T = std::decay_t<decltype(m_probes[idx])>;
-        if constexpr (std::is_same_v<T, probe::FloatProbe>) {
-            FloatProbe fp = std::get<FloatProbe>(m_probes[idx]);
-            FloatProbe* fpp = &fp;
-            BaseProbe* bpp = dynamic_cast<BaseProbe*>(fpp);
-            return *bpp;
-        } else if constexpr (std::is_same_v<T, probe::IntProbe>) {
-            IntProbe ip = std::get<IntProbe>(m_probes[idx]);
-            IntProbe* ipp = &ip;
-            BaseProbe* bpp = dynamic_cast<BaseProbe*>(ipp);
-            return *bpp;
-        } else if constexpr (std::is_same_v<T, probe::Vec4Probe>) {
-            Vec4Probe vecp = std::get<Vec4Probe>(m_probes[idx]);
-            Vec4Probe* vecpp = &vecp;
-            BaseProbe* bpp = dynamic_cast<BaseProbe*>(vecpp);
-            return *bpp;
-        } else {
-            return std::get<BaseProbe>(m_probes[idx]);
-        }
+    const BaseProbe& getBaseProbe(size_t idx) const {
+        const BaseProbe& x = std::visit([](const auto& x) -> const BaseProbe& { return x; }, m_probes[idx]);
+        return x;
     }
 
     uint32_t getProbeCount() const {

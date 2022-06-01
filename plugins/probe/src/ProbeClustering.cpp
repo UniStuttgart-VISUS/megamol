@@ -53,7 +53,7 @@ megamol::probe::ProbeClustering::ProbeClustering()
     _print_debug_info_slot.SetUpdateCallback(&ProbeClustering::print_debug_info);
     MakeSlotAvailable(&_print_debug_info_slot);
 
-    _toggle_reps_slot << new core::param::BoolParam(false);
+    _toggle_reps_slot << new core::param::BoolParam(true);
     MakeSlotAvailable(&_toggle_reps_slot);
 
     _angle_threshold_slot << new core::param::FloatParam(45.0f, 0.0f);
@@ -275,6 +275,44 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
         bool toggle_reps = _toggle_reps_slot.Param<core::param::BoolParam>()->Value();
 
         if (toggle_reps) {
+            auto const num_probes = _probes->getProbeCount();
+            // reset representant flag
+            bool vec_probe = false;
+            bool distrib_probe = false;
+            bool float_probe = false;
+            {
+                auto const test_probe = _probes->getGenericProbe(0);
+                vec_probe = std::holds_alternative<Vec4Probe>(test_probe);
+                distrib_probe = std::holds_alternative<FloatDistributionProbe>(test_probe);
+                float_probe = std::holds_alternative<FloatProbe>(test_probe);
+            }
+            if (vec_probe) {
+                for (int i = 0; i < num_probes; ++i) {
+                    auto probe = _probes->getProbe<Vec4Probe>(i);
+                    probe.m_representant = false;
+                    _probes->setProbe(i, probe);
+                }
+            } else if (distrib_probe) {
+                for (int i = 0; i < num_probes; ++i) {
+                    auto probe = _probes->getProbe<FloatDistributionProbe>(i);
+                    probe.m_representant = false;
+                    _probes->setProbe(i, probe);
+                }
+            } else if (float_probe) {
+                for (int i = 0; i < num_probes; ++i) {
+                    auto probe = _probes->getProbe<FloatProbe>(i);
+                    probe.m_representant = false;
+                    _probes->setProbe(i, probe);
+                }
+            } else {
+                for (int i = 0; i < num_probes; ++i) {
+                    auto probe = _probes->getProbe<IntProbe>(i);
+                    probe.m_representant = false;
+                    _probes->setProbe(i, probe);
+                }
+            }
+
+
             std::unordered_map<datatools::clustering::index_t, std::vector<datatools::clustering::index_t>> cluster_map;
             cluster_map.reserve(*max_el);
 
@@ -302,13 +340,6 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
                 cluster_reps.push_back(min_idx);
             }
 
-            bool vec_probe = false;
-            bool distrib_probe = false;
-            {
-                auto const test_probe = _probes->getGenericProbe(0);
-                vec_probe = std::holds_alternative<Vec4Probe>(test_probe);
-                distrib_probe = std::holds_alternative<FloatDistributionProbe>(test_probe);
-            }
             if (vec_probe) {
                 for (auto const& el : cluster_reps) {
                     auto probe = _probes->getProbe<Vec4Probe>(el);
@@ -321,9 +352,15 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
                     probe.m_representant = true;
                     _probes->setProbe(el, probe);
                 }
-            } else {
+            } else if (float_probe) {
                 for (auto const& el : cluster_reps) {
                     auto probe = _probes->getProbe<FloatProbe>(el);
+                    probe.m_representant = true;
+                    _probes->setProbe(el, probe);
+                }
+            } else {
+                for (auto const& el : cluster_reps) {
+                    auto probe = _probes->getProbe<IntProbe>(el);
                     probe.m_representant = true;
                     _probes->setProbe(el, probe);
                 }

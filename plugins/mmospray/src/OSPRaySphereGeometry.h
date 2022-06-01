@@ -59,6 +59,12 @@ protected:
 
     /** The call for data */
     core::CallerSlot getDataSlot;
+
+        // filtered data
+    std::vector<std::vector<std::array<float, 3>>> _enabled_vertices;
+    std::vector<std::vector<std::array<float, 4>>> _enabled_colors;
+    std::vector < std::vector<std::array<float, 3>>> _selected_vertices;
+
 };
 
 } // namespace ospray
