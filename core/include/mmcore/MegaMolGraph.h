@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-#include "CommandRegistry.h"
 #include "FrontendResource.h"
 #include "FrontendResourcesLookup.h"
 #include "ImagePresentationEntryPoints.h"
@@ -91,13 +90,6 @@ public:
 
     frontend_resources::MegaMolGraph_SubscriptionRegistry& GraphSubscribers();
 
-    frontend_resources::Command::EffectFunction Parameter_Lambda = [&](const frontend_resources::Command* self) {
-        auto my_p = this->FindParameter(self->parent);
-        if (my_p != nullptr) {
-            my_p->setDirty();
-        }
-    };
-
 private:
     [[nodiscard]] ModuleList_t::iterator find_module(std::string const& name);
     [[nodiscard]] ModuleList_t::iterator find_module_by_prefix(std::string const& name);
@@ -137,8 +129,6 @@ private:
     // poke the rendering, collect the resulting View renderings and present them to the user appropriately
     std::list<Module::ptr_type> graph_entry_points;
     megamol::frontend_resources::ImagePresentationEntryPoints* m_image_presentation = nullptr;
-
-    megamol::frontend_resources::CommandRegistry* m_command_registry = nullptr;
 
     MegaMolGraph_Convenience convenience_functions;
 

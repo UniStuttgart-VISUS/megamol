@@ -130,23 +130,6 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& old, std::stri
     module_it->request.id = newId;
     module_it->modulePtr->setName(newId.c_str());
 
-    for (auto child = module_it->modulePtr->ChildList_Begin(); child != module_it->modulePtr->ChildList_End();
-         ++child) {
-        auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
-        if (ps != nullptr) {
-            auto p = ps->Param<param::ButtonParam>();
-            if (p != nullptr) {
-                auto command_name = oldId + std::string("_") + ps->Name().PeekBuffer();
-                auto updated_command_name = newId + std::string("_") + ps->Name().PeekBuffer();
-                auto c = m_command_registry->get_command(command_name);
-                m_command_registry->remove_command_by_name(command_name);
-                c.name = updated_command_name;
-                c.parent = ps->FullName();
-                m_command_registry->add_command(c);
-            }
-        }
-    }
-
     const auto matches_old_prefix = [&](std::string const& call_slot) {
         auto res = call_slot.find(oldId);
         return (res != std::string::npos) && res == 0;
@@ -401,12 +384,12 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(
     std::vector<megamol::frontend::FrontendResource> const& resources) {
     this->provided_resources_lookup = {resources};
 
-    auto [success, graph_resources] = provided_resources_lookup.get_requested_resources(
-        {"ImagePresentationEntryPoints", megamol::frontend_resources::CommandRegistry_Req_Name,
+    auto [success, graph_resources] = provided_resources_lookup.get_requested_resources({
+        "ImagePresentationEntryPoints",
 #ifdef PROFILING
-            megamol::frontend_resources::PerformanceManager_Req_Name
+        megamol::frontend_resources::PerformanceManager_Req_Name,
 #endif
-        });
+    });
 
     if (!success)
         return false;
@@ -414,8 +397,6 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(
     m_image_presentation = &const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
         graph_resources[0].getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
 
-    m_command_registry = &const_cast<megamol::frontend_resources::CommandRegistry&>(
-        graph_resources[1].getResource<megamol::frontend_resources::CommandRegistry>());
 
 #ifdef PROFILING
     m_perf_manager = &const_cast<frontend_resources::PerformanceManager&>(
@@ -539,32 +520,16 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
 
     bool isCreateOk = create_module(this->module_list_.front().lifetime_resources);
 
-    if (!isCreateOk) {
-        this->module_list_.pop_front();
-    } else {
-        // iterate parameters, add hotkeys to CommandRegistry
-        for (auto child = module_ptr->ChildList_Begin(); child != module_ptr->ChildList_End(); ++child) {
-            auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
-            if (ps != nullptr) {
-                auto p = ps->Param<param::ButtonParam>();
-                if (p != nullptr) {
-                    frontend_resources::Command c;
-                    c.key = p->GetKeyCode();
-                    c.parent = ps->FullName();
-                    c.name = module_ptr->Name().PeekBuffer() + std::string("_") + ps->Name().PeekBuffer();
-                    c.effect = this->Parameter_Lambda;
-                    m_command_registry->add_command(c);
-                }
-            }
-        }
-    }
-
     for (auto& subscriber : graph_subscribers.subscribers) {
         if (!subscriber.AddModule(this->module_list_.front())) {
             log_error("graph subscriber " + subscriber.Name() + " failed to process module add: " + request.className +
                       "(" + request.id + ")");
             isCreateOk = false;
         }
+    }
+
+    if (!isCreateOk) {
+        this->module_list_.pop_front();
     }
 
     return isCreateOk;
@@ -740,17 +705,6 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
         }
     }
 
-    // iterate parameters, remove hotkeys from CommandRegistry
-    for (auto child = module_ptr->ChildList_Begin(); child != module_ptr->ChildList_End(); ++child) {
-        auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
-        if (ps != nullptr) {
-            auto p = ps->Param<param::ButtonParam>();
-            if (p != nullptr) {
-                m_command_registry->remove_command_by_parent(ps->FullName().PeekBuffer());
-            }
-        }
-    }
-
     // delete all outgoing/incoming calls
     auto discard_calls = find_all_of(call_list_, [&](CallInstance_t const& call_info) {
         return (call_info.request.from.find(request) != std::string::npos ||
@@ -805,6 +759,7 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
             return false;
         }
     }
+
 #ifdef PROFILING
     auto the_call = call_it->callPtr;
     m_perf_manager->remove_timers(the_call->cpu_queries);
