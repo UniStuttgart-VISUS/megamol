@@ -39,9 +39,7 @@ public:
     const std::vector<std::string> getRequestedResourceNames() const override {
         return _requestedResourcesNames;
     }
-    void setRequestedResources(std::vector<FrontendResource> resources) override {
-        _requestedResourcesReferences = resources;
-    }
+    void setRequestedResources(std::vector<FrontendResource> resources) override;
 
     std::vector<FrontendResource> _providedResourceReferences;
     std::vector<std::string> _requestedResourcesNames;

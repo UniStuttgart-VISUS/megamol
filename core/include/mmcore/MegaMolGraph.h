@@ -8,8 +8,6 @@
 #include "FrontendResource.h"
 #include "FrontendResourcesLookup.h"
 #include "ImagePresentationEntryPoints.h"
-#include "PerformanceManager.h"
-
 #include "ModuleGraphSubscription.h"
 #include "mmcore/MegaMolGraphTypes.h"
 #include "mmcore/MegaMolGraph_Convenience.h"
@@ -133,10 +131,6 @@ private:
     MegaMolGraph_Convenience convenience_functions;
 
     frontend_resources::MegaMolGraph_SubscriptionRegistry graph_subscribers;
-
-#ifdef PROFILING
-    megamol::frontend_resources::PerformanceManager* m_perf_manager = nullptr;
-#endif
 };
 
 

@@ -386,9 +386,6 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(
 
     auto [success, graph_resources] = provided_resources_lookup.get_requested_resources({
         "ImagePresentationEntryPoints",
-#ifdef PROFILING
-        megamol::frontend_resources::PerformanceManager_Req_Name,
-#endif
     });
 
     if (!success)
@@ -396,12 +393,6 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(
 
     m_image_presentation = &const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
         graph_resources[0].getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
-
-
-#ifdef PROFILING
-    m_perf_manager = &const_cast<frontend_resources::PerformanceManager&>(
-        graph_resources[2].getResource<megamol::frontend_resources::PerformanceManager>());
-#endif
 
     return true;
 }
@@ -655,18 +646,6 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
         }
     }
 
-#ifdef PROFILING
-    auto the_call = call.get();
-    //printf("adding timers for @ %p = %s \n", reinterpret_cast<void*>(the_call), the_call->GetDescriptiveText().c_str());
-    the_call->cpu_queries =
-        m_perf_manager->add_timers(the_call, frontend_resources::PerformanceManager::query_api::CPU);
-    if (the_call->GetCapabilities().OpenGLRequired()) {
-        the_call->gl_queries =
-            m_perf_manager->add_timers(the_call, frontend_resources::PerformanceManager::query_api::OPENGL);
-    }
-    the_call->perf_man = m_perf_manager;
-#endif
-
     return true;
 }
 
@@ -759,14 +738,6 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
             return false;
         }
     }
-
-#ifdef PROFILING
-    auto the_call = call_it->callPtr;
-    m_perf_manager->remove_timers(the_call->cpu_queries);
-    if (the_call->GetCapabilities().OpenGLRequired()) {
-        m_perf_manager->remove_timers(the_call->gl_queries);
-    }
-#endif
 
     source->SetCleanupMark(true);
     source->DisconnectCalls();
