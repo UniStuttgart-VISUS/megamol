@@ -1,13 +1,13 @@
 #pragma once
 
+#include "mmcore/CoreInstance.h"
+#include "mmcore/utility/ResourceWrapper.h"
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <map>
 #include <string>
-#include <array>
 #include <vector>
-#include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/CoreInstance.h"
 
 namespace megamol {
 namespace molsurfmapcluster_gl {
@@ -26,7 +26,8 @@ public:
      * @param coreInstance The core instance needed for file path retrieval.
      * @return Reference to the stored map
      */
-    static const std::multimap<std::string, std::array<int, 4>>& RetrieveEnzymeClassMap(const core::CoreInstance& coreInstance);
+    static const std::multimap<std::string, std::array<int, 4>>& RetrieveEnzymeClassMap(
+        const core::CoreInstance& coreInstance);
 
     /**
      * Returns the class of a given PDB id.
@@ -52,13 +53,34 @@ public:
     static std::vector<std::array<int, 4>> RetrieveClassesForPdbId(
         std::string pdbId, const core::CoreInstance& coreInstance);
 
-    /** 
+    /**
      * Converts a given enzyme class to the string representing it
      *
      * @param enzymeClass Array containing the four class definitions
      * @return String representing the given enzyme class
      */
     static std::string ConvertEnzymeClassToString(const std::array<int, 4>& enzymeClass);
+
+    /**
+     * Calculates the distance between two enzyme classes
+     *
+     * @param class1 The first enzyme class.
+     * @param class2 The second enzyme class.
+     * @return The distance between the two classes. Minimum value is 0, if both are identical, maximum is 4.
+     */
+    static float EnzymeClassDistance(const std::array<int, 4>& class1, const std::array<int, 4>& class2);
+
+    /**
+     * Calculates the distance between the classes of two proteins.
+     * If at least one of the proteins has more than one class, the minimum distance is retrieved.
+     *
+     * @param pdbid1 The pdb identifier of the first protein.
+     * @param pdbid2 The pdb identifier of the second protein.
+     * @param coreInstance The core instance needed for file path retrieval.
+     * @return The distance between the two enzyme classes. Minimum value is 0, if both are identical, maximum is 4.
+     */
+    static float EnzymeClassDistance(
+        const std::string pdbid1, const std::string pdbid2, const core::CoreInstance& coreInstance);
 
 private:
     /**
@@ -79,5 +101,5 @@ private:
     /** map mapping pdb ids to classification numbers */
     static std::multimap<std::string, std::array<int, 4>> classMap;
 };
-} // namespace MolSurfMapCluster
+} // namespace molsurfmapcluster_gl
 } // namespace megamol

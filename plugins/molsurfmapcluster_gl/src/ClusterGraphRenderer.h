@@ -3,6 +3,7 @@
 #include "CallClustering_2.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
@@ -86,15 +87,21 @@ private:
 
     void calculateNodeConnections(ClusteringData const& cluster_data);
 
-    void applyClusterColoring(ClusteringData const& cluster_data);
+    void applyClusterColoring(ClusteringData const& cluster_data, std::vector<glm::vec3> const& color_table);
 
     void uploadDataToGPU();
+
+    void extractColorMap(
+        core::view::CallGetTransferFunction const& cgtf, std::vector<glm::vec3>& OUT_color_table) const;
 
     std::vector<int64_t> getLeaveIndicesInDFSOrder(
         int64_t const start_idx, std::vector<ClusterNode_2> const& nodes) const;
 
     /** Slot for the cluster data */
     core::CallerSlot cluster_data_slot_;
+
+    /** Slot for the transfer function */
+    core::CallerSlot color_input_slot_;
 
     /** Parameter setting the height of the used viewport */
     core::param::ParamSlot viewport_height_param_;
@@ -125,6 +132,12 @@ private:
 
     /** Parameter for the text color */
     core::param::ParamSlot text_color_param_;
+
+    /** Parameter slot for the selection of the coloring mode */
+    core::param::ParamSlot color_mode_selection_param_;
+
+    /** Parameter slot for the file path pointing to the comparison matrix */
+    core::param::ParamSlot comparison_matrix_file_param_;
 
     /** The positions of the nodes */
     std::vector<glm::vec2> node_positions_;

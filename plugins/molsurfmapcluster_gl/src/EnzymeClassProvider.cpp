@@ -1,7 +1,7 @@
 #include "EnzymeClassProvider.h"
 
-#include <sstream>
 #include "mmcore/utility/log/Log.h"
+#include <sstream>
 
 using namespace megamol;
 using namespace megamol::molsurfmapcluster_gl;
@@ -81,6 +81,47 @@ std::string EnzymeClassProvider::ConvertEnzymeClassToString(const std::array<int
     result += enzymeClass[3] != -1 ? "." + std::to_string(enzymeClass[3]) : "";
     return result;
 }
+
+/*
+ * EnzymeClassProvider::EnzymeClassDistance
+ */
+float EnzymeClassProvider::EnzymeClassDistance(const std::array<int, 4>& class1, const std::array<int, 4>& class2) {
+    if (class1[0] < 0 || class2[0] < 0)
+        return 10.0f;
+    if (class1[0] == class2[0]) {
+        if (class1[1] == class2[1] || class1[2] == class2[2]) {
+            if (class1[1] == class2[1] && class1[2] == class2[2]) {
+                if (class1[3] == class2[3]) {
+                    return 0.0f;
+                }
+                return 1.0f;
+            }
+            return 2.0f;
+        }
+        return 3.0f;
+    }
+    return 4.0f;
+}
+
+/*
+ * EnzymeClassProvider::EnzymeClassDistance
+ */
+float EnzymeClassProvider::EnzymeClassDistance(
+    const std::string pdbid1, const std::string pdbid2, const core::CoreInstance& coreInstance) {
+    auto const first_classes = RetrieveClassesForPdbId(pdbid1, coreInstance);
+    auto const second_classes = RetrieveClassesForPdbId(pdbid2, coreInstance);
+    float min_dist = 4.0f; // 4 is the maximum value
+    for (auto const& first : first_classes) {
+        for (auto const& second : second_classes) {
+            const auto dist = EnzymeClassDistance(first, second);
+            if (dist < min_dist) {
+                min_dist = dist;
+            }
+        }
+    }
+    return min_dist;
+}
+
 
 /*
  * EnzymeClassProvider::loadMapFromFile

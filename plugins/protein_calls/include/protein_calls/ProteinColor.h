@@ -129,7 +129,15 @@ public:
         const protein_calls::PerAtomFloatCall* psc = nullptr, bool forceRecompute = false, bool useNeighbors = false,
         bool enzymeMode = false, bool gxtype = true);
 
-private:
+    /**
+     * Interpolates on a given color table linearly
+     *
+     * @param val The value to find the color for
+     * @param colors The color table to interpolate on
+     * @param minVal The minimum possible value for val
+     * @param maxVal The maximum possible value for val
+     * @return The interpolated color
+     */
     static glm::vec3 InterpolateMultipleColors(
         float val, const std::vector<glm::vec3>& colors, float minVal = 0.0f, float maxVal = 0.0f);
 };

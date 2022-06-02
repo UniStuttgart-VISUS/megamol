@@ -1,13 +1,18 @@
 #include "ClusterGraphRenderer.h"
 #include "CallClustering_2.h"
+#include "DistanceMatrixLoader.h"
 #include "EnzymeClassProvider.h"
+#include "mmcore/AbstractCallSlotPresentation.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/graphics/BitmapCodecCollection.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore_gl/utility/RenderUtils.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "protein_calls/ProteinColor.h"
@@ -26,6 +31,7 @@ using namespace megamol::molsurfmapcluster_gl;
 ClusterGraphRenderer::ClusterGraphRenderer(void)
         : core_gl::view::Renderer2DModuleGL()
         , cluster_data_slot_("clusterData", "Input slot for the cluster data")
+        , color_input_slot_("transferFunction", "Input slot for the transfer function")
         , viewport_height_param_("viewport::height", "Height of the viewport")
         , viewport_width_param_("viewport::width", "Width of the viewport")
         , vert_size_param_("graph::vertexSize", "Size of the rendered vertices")
@@ -36,6 +42,8 @@ ClusterGraphRenderer::ClusterGraphRenderer(void)
         , cluster_cutoff_param_("clusterCutoff", "Cutoff value to determine the size of clusters")
         , default_color_param_("color::defaultColor", "Default node color")
         , text_color_param_("color::textColor", "Default text color")
+        , color_mode_selection_param_("color::mode", "Coloring mode")
+        , comparison_matrix_file_param_("color::matrix", "Path to a comparison matrix in csv format")
         , font_(utility::SDFFont::PRESET_ROBOTO_SANS)
         , last_data_hash_(0)
         , line_vao_(0)
@@ -47,9 +55,14 @@ ClusterGraphRenderer::ClusterGraphRenderer(void)
         , hovered_cluster_id_(-1)
         , last_selected_cluster_id(-1)
         , root_id_(-1) {
-    // Caller Slot
+    // Caller Slots
     cluster_data_slot_.SetCompatibleCall<CallClustering_2Description>();
+    cluster_data_slot_.SetNecessity(AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&cluster_data_slot_);
+
+    color_input_slot_.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
+    color_input_slot_.SetNecessity(AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
+    this->MakeSlotAvailable(&color_input_slot_);
 
     // Parameter Slots
     viewport_height_param_.SetParameter(new param::IntParam(1440, 1000, 10800));
@@ -81,6 +94,17 @@ ClusterGraphRenderer::ClusterGraphRenderer(void)
 
     text_color_param_.SetParameter(new param::ColorParam(0.0f, 0.0f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&text_color_param_);
+
+    auto enpar = new core::param::EnumParam(static_cast<int>(ClusterColoringMode::CLUSTER));
+    enpar->SetTypePair(static_cast<int>(ClusterColoringMode::CLUSTER), "Cluster");
+    enpar->SetTypePair(static_cast<int>(ClusterColoringMode::BRENDA), "BRENDA");
+    enpar->SetTypePair(static_cast<int>(ClusterColoringMode::TM_SCORE), "TM-Score");
+    color_mode_selection_param_.SetParameter(enpar);
+    this->MakeSlotAvailable(&color_mode_selection_param_);
+
+    comparison_matrix_file_param_.SetParameter(
+        new param::FilePathParam("", param::FilePathParam::FilePathFlags_::Flag_File_ToBeCreated));
+    this->MakeSlotAvailable(&comparison_matrix_file_param_);
 }
 
 /*
@@ -248,6 +272,11 @@ bool ClusterGraphRenderer::Render(core_gl::view::CallRender2DGL& call) {
     if (!(*cc)(CallClustering_2::CallForGetData))
         return false;
 
+    auto const ctf = color_input_slot_.CallAs<view::CallGetTransferFunction>();
+    if (ctf != nullptr) {
+        (*ctf)(0);
+    }
+
     auto const& cam = call.GetCamera();
     auto const view = cam.getViewMatrix();
     auto const proj = cam.getProjectionMatrix();
@@ -265,10 +294,34 @@ bool ClusterGraphRenderer::Render(core_gl::view::CallRender2DGL& call) {
         calculateNodeConnections(clustering_data);
     }
     changes = selected_cluster_id_ != last_selected_cluster_id ? true : changes;
-    if (changes || cluster_cutoff_param_.IsDirty()) {
+    changes = changes || default_color_param_.IsDirty();
+    changes = changes || color_mode_selection_param_.IsDirty();
+
+    if (comparison_matrix_file_param_.IsDirty()) {
+        comparison_matrix_file_param_.ResetDirty();
+        if (molsurfmapcluster::DistanceMatrixLoader::load(
+                comparison_matrix_file_param_.Param<param::FilePathParam>()->Value())) {
+            changes = true;
+        }
+    }
+
+    // change the color if necessary
+    if (changes || cluster_cutoff_param_.IsDirty() || (ctf != nullptr && ctf->IsDirty())) {
+        default_color_param_.ResetDirty();
+        color_mode_selection_param_.ResetDirty();
+        std::vector<glm::vec3> color_table;
+        if (ctf != nullptr) {
+            ctf->ResetDirty();
+            extractColorMap(*ctf, color_table);
+        }
+        if (color_table.empty()) {
+            // fallback to fake viridis
+            color_table = {glm::vec3(0.266666f, 0.05098f, 0.32941f), glm::vec3(0.127255f, 0.54117f, 0.55294f),
+                glm::vec3(0.992157f, 0.90588f, 0.14509f)};
+        }
         last_selected_cluster_id = selected_cluster_id_;
         cluster_cutoff_param_.ResetDirty();
-        applyClusterColoring(clustering_data);
+        applyClusterColoring(clustering_data, color_table);
         uploadDataToGPU();
     }
 
@@ -284,11 +337,6 @@ bool ClusterGraphRenderer::Render(core_gl::view::CallRender2DGL& call) {
     glClearColor(0, 0, 0, 0);
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    // we have to do a specific stunt to clear the id texture to -1
-    int constexpr tex_initval = -1;
-    auto const texname = fbo_->getColorAttachment(1)->getTextureHandle();
-    //glClearTexImage(texname, 0, GL_RED, GL_INT, &tex_initval);
 
     // render lines
     glBindVertexArray(line_vao_);
@@ -578,84 +626,164 @@ void ClusterGraphRenderer::uploadDataToGPU() {
     line_id_buffer_->rebuffer(line_node_ids_);
 }
 
-void ClusterGraphRenderer::applyClusterColoring(ClusteringData const& cluster_data) {
+void ClusterGraphRenderer::applyClusterColoring(
+    ClusteringData const& cluster_data, std::vector<glm::vec3> const& color_table) {
     int64_t const cur_selected_id = selected_cluster_id_ >= 0 ? selected_cluster_id_ : root_id_;
-    if (cur_selected_id < 0) {
-        return;
-    }
-    float const cluster_factor = cluster_cutoff_param_.Param<param::FloatParam>()->Value();
-    auto const& root_node = cluster_data.nodes->at(cur_selected_id);
-    float const init_height = root_node.height;
-    float const border_height = init_height * cluster_factor;
-    auto const& node_vec = *cluster_data.nodes;
-
-    // setup filtering set containing all ids of the searched subtree
-    std::set<int64_t> subtree_set;
-    std::deque<int64_t> nodes_to_process = {cur_selected_id};
-    while (!nodes_to_process.empty()) {
-        auto const cur_id = nodes_to_process.front();
-        nodes_to_process.pop_front();
-        auto const& cur_node = node_vec[cur_id];
-        if (cur_node.left >= 0) {
-            nodes_to_process.push_back(cur_node.left);
-        }
-        if (cur_node.right >= 0) {
-            nodes_to_process.push_back(cur_node.right);
-        }
-        subtree_set.insert(cur_id);
-    }
-
-    // search for the cluster roots
-    std::vector<int64_t> cluster_roots;
-    for (const auto& node : node_vec) {
-        if (node.parent >= 0 && subtree_set.count(node.id) > 0) {
-            auto const& parent_node = node_vec[node.parent];
-            if (node.height <= border_height && parent_node.height > border_height) {
-                cluster_roots.emplace_back(node.id);
-            }
-        }
-    }
-
-    // find out the cluster id for each node
-    std::vector<int32_t> cluster_assignment(node_vec.size(), -1);
-    int32_t cur_cluster_id = 0;
-    for (const auto& cur_root_id : cluster_roots) {
-        std::deque<int64_t> to_process = {cur_root_id};
-        while (!to_process.empty()) {
-            auto const cur_id = to_process.front();
-            to_process.pop_front();
-            auto const& node = node_vec[cur_id];
-            cluster_assignment[cur_id] = cur_cluster_id;
-            if (node.left >= 0) {
-                to_process.push_back(node.left);
-            }
-            if (node.right >= 0) {
-                to_process.push_back(node.right);
-            }
-        }
-        ++cur_cluster_id;
-    }
-
-    cluster_colors_.clear();
-    protein_calls::ProteinColor::MakeRainbowColorTable(cluster_roots.size(), cluster_colors_);
-
-    // apply the colors to the nodes
+    auto const colmode =
+        static_cast<ClusterColoringMode>(color_mode_selection_param_.Param<param::EnumParam>()->Value());
     glm::vec3 const default_color = glm::make_vec3(default_color_param_.Param<param::ColorParam>()->Value().data());
-    for (int64_t node_id = 0; node_id < node_colors_.size(); ++node_id) {
-        auto const cluster_id = cluster_assignment[node_id];
-        node_colors_[node_id] = default_color;
-        if (cluster_id >= 0) {
-            node_colors_[node_id] = cluster_colors_[cluster_id];
-        }
-    }
+    std::fill(node_colors_.begin(), node_colors_.end(), default_color);
+    std::fill(line_colors_.begin(), line_colors_.end(), default_color);
 
-    // apply the colors to the lines
-    for (int64_t line_id = 0; line_id < line_colors_.size(); ++line_id) {
-        auto const node_id = line_node_ids_[line_id];
-        auto const cluster_id = cluster_assignment[node_id];
-        line_colors_[line_id] = default_color;
-        if (cluster_id >= 0) {
-            line_colors_[line_id] = cluster_colors_[cluster_id];
+    if (colmode == ClusterColoringMode::CLUSTER) {
+        if (cur_selected_id < 0) {
+            return;
+        }
+        float const cluster_factor = cluster_cutoff_param_.Param<param::FloatParam>()->Value();
+        auto const& root_node = cluster_data.nodes->at(cur_selected_id);
+        float const init_height = root_node.height;
+        float const border_height = init_height * cluster_factor;
+        auto const& node_vec = *cluster_data.nodes;
+
+        // setup filtering set containing all ids of the searched subtree
+        std::set<int64_t> subtree_set;
+        std::deque<int64_t> nodes_to_process = {cur_selected_id};
+        while (!nodes_to_process.empty()) {
+            auto const cur_id = nodes_to_process.front();
+            nodes_to_process.pop_front();
+            auto const& cur_node = node_vec[cur_id];
+            if (cur_node.left >= 0) {
+                nodes_to_process.push_back(cur_node.left);
+            }
+            if (cur_node.right >= 0) {
+                nodes_to_process.push_back(cur_node.right);
+            }
+            subtree_set.insert(cur_id);
+        }
+
+        // search for the cluster roots
+        std::vector<int64_t> cluster_roots;
+        for (const auto& node : node_vec) {
+            if (node.parent >= 0 && subtree_set.count(node.id) > 0) {
+                auto const& parent_node = node_vec[node.parent];
+                if (node.height <= border_height && parent_node.height > border_height) {
+                    cluster_roots.emplace_back(node.id);
+                }
+            }
+        }
+
+        // find out the cluster id for each node
+        std::vector<int32_t> cluster_assignment(node_vec.size(), -1);
+        int32_t cur_cluster_id = 0;
+        for (const auto& cur_root_id : cluster_roots) {
+            std::deque<int64_t> to_process = {cur_root_id};
+            while (!to_process.empty()) {
+                auto const cur_id = to_process.front();
+                to_process.pop_front();
+                auto const& node = node_vec[cur_id];
+                cluster_assignment[cur_id] = cur_cluster_id;
+                if (node.left >= 0) {
+                    to_process.push_back(node.left);
+                }
+                if (node.right >= 0) {
+                    to_process.push_back(node.right);
+                }
+            }
+            ++cur_cluster_id;
+        }
+
+        cluster_colors_.clear();
+        protein_calls::ProteinColor::MakeRainbowColorTable(cluster_roots.size(), cluster_colors_);
+
+        // apply the colors to the nodes
+        for (int64_t node_id = 0; node_id < node_colors_.size(); ++node_id) {
+            auto const cluster_id = cluster_assignment[node_id];
+            node_colors_[node_id] = default_color;
+            if (cluster_id >= 0) {
+                node_colors_[node_id] = cluster_colors_[cluster_id];
+            }
+        }
+
+        // apply the colors to the lines
+        for (int64_t line_id = 0; line_id < line_colors_.size(); ++line_id) {
+            auto const node_id = line_node_ids_[line_id];
+            auto const cluster_id = cluster_assignment[node_id];
+            line_colors_[line_id] = default_color;
+            if (cluster_id >= 0) {
+                line_colors_[line_id] = cluster_colors_[cluster_id];
+            }
+        }
+    } else {
+        for (int64_t node_id = 0; node_id < node_colors_.size(); ++node_id) {
+            auto const& cur_node = cluster_data.nodes->at(node_id);
+            // we only recolor connections of leaf nodes
+            if (cur_node.left < 0 && cur_node.right < 0) {
+                auto const& par_node = cluster_data.nodes->at(cur_node.parent);
+                auto const& left_node = cluster_data.nodes->at(par_node.left);
+                auto const& right_node = cluster_data.nodes->at(par_node.right);
+                if (left_node.numLeafNodes == 1 && right_node.numLeafNodes == 1) {
+                    auto distance = 0.0f;
+                    auto min_val = 0.0f;
+                    auto max_val = 0.0f;
+                    if (colmode == ClusterColoringMode::BRENDA) {
+                        distance =
+                            EnzymeClassProvider::EnzymeClassDistance(left_node.pdbID, right_node.pdbID, *instance());
+                        min_val = 0.0f;
+                        max_val = 4.0f;
+                    } else if (colmode == ClusterColoringMode::TM_SCORE) {
+                        distance = molsurfmapcluster::DistanceMatrixLoader::GetDistance(left_node.pdbID, right_node.pdbID);
+                        // the TM-score matrix has a 1 for perfect similarity and 0 for perfect distance, so we inverse it
+                        distance = 1.0f - distance;
+                        min_val = 0.0f;
+                        max_val = 1.0f;
+                    }
+                    auto const color =
+                        protein_calls::ProteinColor::InterpolateMultipleColors(distance, color_table, min_val, max_val);
+                    node_colors_[left_node.id] = color;
+                    node_colors_[right_node.id] = color;
+                    node_colors_[par_node.id] = color;
+                }
+            }
+        }
+        // now, do the same for the connections
+        // we loop only over the last index of each line strip, as this is the lowest point of the line
+        for (int64_t line_id = 3; line_id < line_colors_.size(); line_id += 4) {
+            auto const node_id = line_node_ids_[line_id];
+            auto const& cur_node = cluster_data.nodes->at(node_id);
+            // check if the node is a leaf node
+            if (cur_node.left < 0 && cur_node.right < 0) {
+                // get the parent node and both children of the parent
+                // one of the children is the current node, but we do not know which
+                auto const& parent_node = cluster_data.nodes->at(cur_node.parent);
+                auto const& left_node = cluster_data.nodes->at(parent_node.left);
+                auto const& right_node = cluster_data.nodes->at(parent_node.right);
+                // both children have to be leaf nodes to change the color
+                if (left_node.numLeafNodes == 1 && right_node.numLeafNodes == 1) {
+                    // find out the color we want to use and apply it
+                    auto distance = 0.0f;
+                    auto min_val = 0.0f;
+                    auto max_val = 0.0f;
+                    if (colmode == ClusterColoringMode::BRENDA) {
+                        distance =
+                            EnzymeClassProvider::EnzymeClassDistance(left_node.pdbID, right_node.pdbID, *instance());
+                        min_val = 0.0f;
+                        max_val = 4.0f;
+                    } else if (colmode == ClusterColoringMode::TM_SCORE) {
+                        distance =
+                            molsurfmapcluster::DistanceMatrixLoader::GetDistance(left_node.pdbID, right_node.pdbID);
+                        // the TM-score matrix has a 1 for perfect similarity and 0 for perfect distance, so we inverse it
+                        distance = 1.0f - distance;
+                        min_val = 0.0f;
+                        max_val = 1.0f;
+                    }
+                    auto const color =
+                        protein_calls::ProteinColor::InterpolateMultipleColors(distance, color_table, min_val, max_val);
+                    line_colors_[line_id] = color;
+                    line_colors_[line_id - 1] = color;
+                    line_colors_[line_id - 2] = color;
+                    line_colors_[line_id - 3] = color;
+                }
+            }
         }
     }
 }
@@ -692,4 +820,14 @@ std::vector<int64_t> ClusterGraphRenderer::getLeaveIndicesInDFSOrder(
         result.insert(result.end(), right_res.begin(), right_res.end());
     }
     return result;
+}
+
+void ClusterGraphRenderer::extractColorMap(
+    core::view::CallGetTransferFunction const& cgtf, std::vector<glm::vec3>& OUT_color_table) const {
+    auto const num_vals = cgtf.TextureSize();
+    auto const ptr = cgtf.GetTextureData();
+    OUT_color_table.resize(num_vals);
+    for (size_t i = 0; i < num_vals; ++i) {
+        OUT_color_table[i] = glm::make_vec3(&ptr[4 * i]);
+    }
 }

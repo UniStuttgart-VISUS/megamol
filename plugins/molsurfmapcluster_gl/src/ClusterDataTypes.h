@@ -2,10 +2,10 @@
 
 #include "vislib/graphics/BitmapImage.h"
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
-#include <map>
 
 namespace megamol {
 namespace molsurfmapcluster_gl {
@@ -50,6 +50,9 @@ struct ClusterNode_2 {
 
 /** Enum representing all available clustering methods */
 enum class ClusteringMethod { IMAGE_MOMENTS = 0, COLOR_MOMENTS = 1, FILEFEATURES = 2 };
+
+/** Enum representing all available cluster coloring modes */
+enum class ClusterColoringMode { CLUSTER = 0, BRENDA = 1, TM_SCORE = 2 };
 
 /** Enum representing all available distance measures */
 enum class DistanceMeasure {
