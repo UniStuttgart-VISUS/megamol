@@ -229,7 +229,9 @@ int main(const int argc, const char** argv) {
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
     // Graph and Config are also a resources that may be accessed by services
-    services.getProvidedResources().push_back({"MegaMolGraph", graph});
+    services.getProvidedResources().push_back({megamol::frontend_resources::MegaMolGraph_Req_Name, graph});
+    services.getProvidedResources().push_back(
+        {megamol::frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name, graph.GraphSubscribers()});
     services.getProvidedResources().push_back({"RuntimeConfig", config});
     services.getProvidedResources().push_back({"GlobalValueStore", global_value_store});
 
