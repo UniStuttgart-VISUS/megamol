@@ -11,6 +11,7 @@
 #include "ImagePresentationEntryPoints.h"
 #include "PerformanceManager.h"
 
+#include "ModuleGraphSubscription.h"
 #include "mmcore/MegaMolGraphTypes.h"
 #include "mmcore/MegaMolGraph_Convenience.h"
 #include "mmcore/RootModuleNamespace.h"
@@ -88,6 +89,8 @@ public:
 
     MegaMolGraph_Convenience& Convenience();
 
+    frontend_resources::MegaMolGraph_SubscriptionRegistry& GraphSubscribers();
+
     frontend_resources::Command::EffectFunction Parameter_Lambda = [&](const frontend_resources::Command* self) {
         auto my_p = this->FindParameter(self->parent);
         if (my_p != nullptr) {
@@ -138,6 +141,8 @@ private:
     megamol::frontend_resources::CommandRegistry* m_command_registry = nullptr;
 
     MegaMolGraph_Convenience convenience_functions;
+
+    frontend_resources::MegaMolGraph_SubscriptionRegistry graph_subscribers;
 
 #ifdef PROFILING
     megamol::frontend_resources::PerformanceManager* m_perf_manager = nullptr;

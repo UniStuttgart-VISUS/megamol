@@ -177,6 +177,14 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& old, std::stri
         }
     }
 
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.RenameModule(oldId, newId, *module_it)) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process module rename: " + oldId + " -> " +
+                      newId);
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -421,6 +429,10 @@ megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenienc
     return this->convenience_functions;
 }
 
+megamol::frontend_resources::MegaMolGraph_SubscriptionRegistry& megamol::core::MegaMolGraph::GraphSubscribers() {
+    return this->graph_subscribers;
+}
+
 void megamol::core::MegaMolGraph::Clear() {
     call_list_.clear();
     for (auto& m : module_list_)
@@ -546,6 +558,15 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
             }
         }
     }
+
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.AddModule(this->module_list_.front())) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process module add: " + request.className +
+                      "(" + request.id + ")");
+            isCreateOk = false;
+        }
+    }
+
     return isCreateOk;
 }
 
@@ -660,6 +681,15 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 
     log("create call: " + request.from + " -> " + request.to + " (" + std::string(call_description->ClassName()) + ")");
     this->call_list_.emplace_front(CallInstance_t{call, request});
+
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.AddCall(this->call_list_.front())) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process call add : " + request.from +
+                      " -> " + request.to);
+            return false;
+        }
+    }
+
 #ifdef PROFILING
     auto the_call = call.get();
     //printf("adding timers for @ %p = %s \n", reinterpret_cast<void*>(the_call), the_call->GetDescriptiveText().c_str());
@@ -701,6 +731,13 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
     if (!module_ptr) {
         log_error("error. no object behind pointer when deleting module: " + request);
         return false;
+    }
+
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.DeleteModule(*module_it)) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process module deletion: " + request);
+            return false;
+        }
     }
 
     // iterate parameters, remove hotkeys from CommandRegistry
@@ -761,6 +798,13 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
         return false;
     }
 
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.DeleteCall(*call_it)) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process call deletion: " + request.from +
+                      " -> " + request.to);
+            return false;
+        }
+    }
 #ifdef PROFILING
     auto the_call = call_it->callPtr;
     m_perf_manager->remove_timers(the_call->cpu_queries);
@@ -798,4 +842,16 @@ megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_mo
     std::string const& request) const {
     return std::find_if(module_list_.begin(), module_list_.end(),
         [&](auto const& module) { return check_module_is_prefix(request, module); });
+}
+
+void megamol::frontend_resources::MegaMolGraph_SubscriptionRegistry::subscribe(ModuleGraphSubscription subscriber) {
+    subscribers.push_back(subscriber);
+}
+
+void megamol::frontend_resources::MegaMolGraph_SubscriptionRegistry::unsubscribe(std::string const& subscriber_name) {
+    auto find_it = std::find_if(
+        subscribers.begin(), subscribers.end(), [&](auto const& elem) { return elem.Name() == subscriber_name; });
+
+    if (find_it != subscribers.end())
+        subscribers.erase(find_it);
 }
