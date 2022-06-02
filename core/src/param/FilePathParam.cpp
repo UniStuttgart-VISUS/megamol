@@ -143,7 +143,5 @@ std::filesystem::path FilePathParam::GetAbsolutePathValue(const std::filesystem:
     if (p.empty() || p.is_absolute())
         return p;
 
-    auto concat = this->project_directory / p;
-
-    return concat;
+    return this->project_directory / p;
 }
