@@ -108,7 +108,7 @@ public:
      * @return The value of the parameter as string.
      */
     std::string ValueString() const override {
-        return this->Value().generic_u8string();
+        return this->GetRelativePathValueString();
     }
 
     /**
@@ -149,6 +149,23 @@ public:
      */
     std::filesystem::path GetAbsolutePathValue(const std::filesystem::path& p) const;
 
+    /**
+     * Returns the current raw path value, which might be an absolute path in the file system
+     * or a path relative to some project directory
+     */
+    std::filesystem::path GetRelativePathValue() const {
+        return this->value;
+    }
+
+    /**
+     * Returns string of the current raw path value, which might be an absolute path in the file system
+     * or a path relative to some project directory.
+     * This is used by the serialization function of the MegaMolGraph to preserve relative paths of FilePathParams.
+     */
+    std::string GetRelativePathValueString() const {
+        return GetRelativePathValue().generic_u8string();
+    }
+
 private:
     /** The flags of the parameter */
     Flags_t flags;
@@ -164,7 +181,7 @@ private:
 
     /**
      * Absolute path to project directory. If empty, no project path available.
-     * This path is relative per guarantee of the frontend
+     * This path is absolute per guarantee of the frontend
      */
     std::filesystem::path project_directory;
 };
