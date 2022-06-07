@@ -10,6 +10,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/Camera.h"
 #include "mmcore/view/MouseFlags.h"
 
 #include "mmcore_gl/view/CallRender2DGL.h"
@@ -177,11 +178,8 @@ private:
 
     } render_data;
 
-    /** Struct for storing data needed for creating transformation matrices */
-    struct camera_t {
-        std::array<GLfloat, 16> model_view, projection;
-
-    } camera;
+    /** Storing a copy of the camera */
+    core::view::Camera camera;
 };
 } // namespace mesh_gl
 } // namespace megamol
