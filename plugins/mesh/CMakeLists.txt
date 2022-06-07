@@ -15,4 +15,9 @@ if (mesh_PLUGIN_ENABLED)
   if (MSVC)
     target_compile_definitions(mesh PRIVATE NOMINMAX)
   endif ()
+
+  # Use CGAL
+  if (ENABLE_CGAL)
+    target_link_libraries(mesh PRIVATE CGAL::CGAL)
+  endif ()
 endif ()

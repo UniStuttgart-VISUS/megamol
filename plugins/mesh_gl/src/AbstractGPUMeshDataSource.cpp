@@ -4,7 +4,6 @@
  * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
-
 #include "mesh_gl/AbstractGPUMeshDataSource.h"
 #include "mesh_gl/MeshCalls_gl.h"
 

@@ -8,4 +8,6 @@ megamol_plugin(mesh_gl
   DEPENDS_GL
   DEPENDS_PLUGINS
     mesh
-    compositing_gl)
+    compositing_gl
+    datatools_gl
+    geometry_calls_gl)

@@ -1,4 +1,3 @@
-
 #include "WavefrontObjLoader.h"
 
 #include "mmcore/param/FilePathParam.h"

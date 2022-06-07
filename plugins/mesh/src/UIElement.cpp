@@ -1,4 +1,3 @@
-
 #include "UIElement.h"
 
 megamol::mesh::UIElement::UIElement()
