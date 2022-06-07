@@ -16,7 +16,7 @@
 #include "mesh/MeshCalls.h"
 #include "mmcore/param/ParamSlot.h"
 #include "probe/ProbeCollection.h"
-#include "ConstructHull.h"
+#include "probe/CallKDTree.h"
 
 
 namespace megamol {

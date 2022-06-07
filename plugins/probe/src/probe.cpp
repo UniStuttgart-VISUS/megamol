@@ -9,7 +9,6 @@
 
 #include "ConstructKDTree.h"
 #include "ExtractCenterline.h"
-#include "ExtractMesh.h"
 #include "ExtractProbeGeometry.h"
 #include "GenerateGlyphs.h"
 #include "ManipulateMesh.h"
@@ -49,7 +48,6 @@ public:
     void registerClasses() override {
 
         // register modules
-        this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractMesh>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::PlaceProbes>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::SampleAlongPobes>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractProbeGeometry>();

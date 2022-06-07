@@ -5,14 +5,12 @@
  */
 #pragma once
 
-#include "concave_hull.h"
 #include "geometry_calls/VolumetricDataCall.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "poisson.h"
 #include <cstdlib>
 
 namespace megamol {

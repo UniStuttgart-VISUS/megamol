@@ -14,18 +14,15 @@ megamol_plugin(probe
     libigl
     asmjit
     blend2d
-    qhull
     PUBLIC Eigen
     nanoflann)
 
 if (probe_PLUGIN_ENABLED)
-  file(GLOB_RECURSE third RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*")
   file(GLOB_RECURSE ospray_sources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "probe_ospray/src/*.cpp")
   file(GLOB_RECURSE ospray_headers RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "probe_ospray/src/*.h")
   file(GLOB_RECURSE ospray_public_headers RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "probe_ospray/include/*.h")
 
   target_sources(probe PRIVATE ${third})
-  target_include_directories(probe PUBLIC "3rd")
   
   find_package(CGAL 5.3 CONFIG REQUIRED)
   target_link_libraries(probe PUBLIC CGAL::CGAL)

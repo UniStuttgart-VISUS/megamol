@@ -12,13 +12,13 @@
 #include "mmcore/Module.h"
 
 #include "geometry_calls/VolumetricDataCall.h"
-#include "kdtree.h"
 #include "mmadios/CallADIOSData.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "probe/ProbeCollection.h"
+#include "probe/CallKDTree.h"
 
 #include "CGAL/Delaunay_triangulation_3.h"
 #include "CGAL/Delaunay_triangulation_cell_base_3.h"
@@ -96,11 +96,11 @@ protected:
 
 private:
     template<typename T>
-    void doScalarSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data);
+    void doScalarSampling(const std::shared_ptr<my_kd_tree_t>& tree, std::vector<T>& data);
 
     template<typename T>
     void doScalarDistributionSampling(
-        const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data);
+        const std::shared_ptr<my_kd_tree_t>& tree, std::vector<T>& data);
 
     template<typename T>
     void doVolumeRadiusSampling(T* data);
@@ -109,19 +109,19 @@ private:
     void doVolumeTrilinSampling(T* data);
 
     template<typename T>
-    void doVectorSamling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, const std::vector<T>& data_x,
+    void doVectorSamling(const std::shared_ptr<my_kd_tree_t>& tree, const std::vector<T>& data_x,
         const std::vector<T>& data_y, const std::vector<T>& data_z, const std::vector<T>& data_w);
 
     template<typename T>
-    void doTetrahedralSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data);
+    void doTetrahedralSampling(const std::shared_ptr<my_kd_tree_t>& tree, std::vector<T>& data);
 
     template<typename T>
-    void doTetrahedralVectorSamling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree,
+    void doTetrahedralVectorSamling(const std::shared_ptr<my_kd_tree_t>& tree,
         const std::vector<T>& data_x, const std::vector<T>& data_y, const std::vector<T>& data_z,
         const std::vector<T>& data_w);
 
     template<typename T>
-    void doNearestNeighborSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data);
+    void doNearestNeighborSampling(const std::shared_ptr<my_kd_tree_t>& tree, std::vector<T>& data);
 
     bool getData(core::Call& call);
 
@@ -139,8 +139,7 @@ private:
 
 
 template<typename T>
-void SampleAlongPobes::doScalarSampling(
-    const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data) {
+void SampleAlongPobes::doScalarSampling(const std::shared_ptr<my_kd_tree_t>& tree, std::vector<T>& data) {
 
     const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
     const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
@@ -196,26 +195,34 @@ void SampleAlongPobes::doScalarSampling(
 
         for (int j = 0; j < samples_per_probe; j++) {
 
-            pcl::PointXYZ sample_point;
-            sample_point.x = probe.m_position[0] + j * sample_step * probe.m_direction[0];
-            sample_point.y = probe.m_position[1] + j * sample_step * probe.m_direction[1];
-            sample_point.z = probe.m_position[2] + j * sample_step * probe.m_direction[2];
+            std::array<float,3> sample_point;
+            sample_point[0] = probe.m_position[0] + j * sample_step * probe.m_direction[0];
+            sample_point[1] = probe.m_position[1] + j * sample_step * probe.m_direction[1];
+            sample_point[2] = probe.m_position[2] + j * sample_step * probe.m_direction[2];
 
-            std::vector<uint32_t> k_indices;
-            std::vector<float> k_distances;
+            std::vector<std::pair<size_t, float>> res;
 
-            auto num_neighbors = tree->radiusSearch(sample_point, radius, k_indices, k_distances);
+            auto num_neighbors =
+                tree->radiusSearch(&sample_point[0], radius, res, nanoflann::SearchParams(10, 0.01f, true));
             if (num_neighbors == 0) {
-                num_neighbors = tree->nearestKSearch(sample_point, 1, k_indices, k_distances);
+                std::vector<size_t> ret_index(1);
+                std::vector<float> out_dist_sqr(1);
+                nanoflann::KNNResultSet<float> resultSet(1);
+                resultSet.init(ret_index.data(), out_dist_sqr.data());
+                num_neighbors = tree->findNeighbors(resultSet ,&sample_point[0], nanoflann::SearchParams(10));
+
+                res.resize(1);
+                res[0].first = ret_index[0];
+                res[0].second = out_dist_sqr[0];
             }
 
             // accumulate values
             float value = 0;
             for (int n = 0; n < num_neighbors; n++) {
-                auto distance_weight = k_distances[n] / radius;
-                value += data[k_indices[n]] * distance_weight;
-                min_data = std::min(min_data, static_cast<float>(data[k_indices[n]]));
-                max_data = std::max(max_data, static_cast<float>(data[k_indices[n]]));
+                auto distance_weight = res[n].second / radius;
+                value += data[res[n].first] * distance_weight;
+                min_data = std::min(min_data, static_cast<float>(data[res[n].first]));
+                max_data = std::max(max_data, static_cast<float>(data[res[n].first]));
             } // end num_neighbors
             value /= num_neighbors;
             if (this->_weighting.Param<megamol::core::param::EnumParam>()->Value() == 0) {
@@ -245,7 +252,7 @@ void SampleAlongPobes::doScalarSampling(
 
 template<typename T>
 inline void SampleAlongPobes::doScalarDistributionSampling(
-    const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data) {
+    const std::shared_ptr<my_kd_tree_t>& tree, std::vector<T>& data) {
 
     const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
     const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
@@ -299,17 +306,25 @@ inline void SampleAlongPobes::doScalarDistributionSampling(
 
         for (int j = 0; j < samples_per_probe; j++) {
 
-            pcl::PointXYZ sample_point;
-            sample_point.x = probe.m_position[0] + j * sample_step * probe.m_direction[0];
-            sample_point.y = probe.m_position[1] + j * sample_step * probe.m_direction[1];
-            sample_point.z = probe.m_position[2] + j * sample_step * probe.m_direction[2];
+            std::array<float,3> sample_point;
+            sample_point[0] = probe.m_position[0] + j * sample_step * probe.m_direction[0];
+            sample_point[1] = probe.m_position[1] + j * sample_step * probe.m_direction[1];
+            sample_point[2] = probe.m_position[2] + j * sample_step * probe.m_direction[2];
 
-            std::vector<uint32_t> k_indices;
-            std::vector<float> k_distances;
+            std::vector<std::pair<size_t, float>> res;
 
-            auto num_neighbors = tree->radiusSearch(sample_point, radius, k_indices, k_distances);
+            auto num_neighbors =
+                tree->radiusSearch(&sample_point[0], radius, res, nanoflann::SearchParams(10, 0.01f, true));
             if (num_neighbors == 0) {
-                num_neighbors = tree->nearestKSearch(sample_point, 1, k_indices, k_distances);
+                std::vector<size_t> ret_index(1);
+                std::vector<float> out_dist_sqr(1);
+                nanoflann::KNNResultSet<float> resultSet(1);
+                resultSet.init(ret_index.data(), out_dist_sqr.data());
+                num_neighbors = tree->findNeighbors(resultSet, &sample_point[0], nanoflann::SearchParams(10));
+
+                res.resize(1);
+                res[0].first = ret_index[0];
+                res[0].second = out_dist_sqr[0];
             }
 
             // accumulate values
@@ -317,9 +332,9 @@ inline void SampleAlongPobes::doScalarDistributionSampling(
             float min_data = std::numeric_limits<float>::max();
             float max_data = std::numeric_limits<float>::min();
             for (int n = 0; n < num_neighbors; n++) {
-                value += data[k_indices[n]];
-                min_data = std::min(min_data, static_cast<float>(data[k_indices[n]]));
-                max_data = std::max(max_data, static_cast<float>(data[k_indices[n]]));
+                value += data[res[n].first];
+                min_data = std::min(min_data, static_cast<float>(data[res[n].first]));
+                max_data = std::max(max_data, static_cast<float>(data[res[n].first]));
             } // end num_neighbors
             value /= num_neighbors;
 
@@ -339,7 +354,7 @@ inline void SampleAlongPobes::doScalarDistributionSampling(
 }
 
 template<typename T>
-inline void SampleAlongPobes::doVectorSamling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree,
+inline void SampleAlongPobes::doVectorSamling(const std::shared_ptr<my_kd_tree_t>& tree,
     const std::vector<T>& data_x, const std::vector<T>& data_y, const std::vector<T>& data_z,
     const std::vector<T>& data_w) {
 
@@ -399,27 +414,35 @@ inline void SampleAlongPobes::doVectorSamling(const std::shared_ptr<pcl::KdTreeF
 
         for (int j = 0; j < samples_per_probe; j++) {
 
-            pcl::PointXYZ sample_point;
-            sample_point.x = probe.m_position[0] + j * sample_step * probe.m_direction[0];
-            sample_point.y = probe.m_position[1] + j * sample_step * probe.m_direction[1];
-            sample_point.z = probe.m_position[2] + j * sample_step * probe.m_direction[2];
+            std::array<float,3> sample_point;
+            sample_point[0] = probe.m_position[0] + j * sample_step * probe.m_direction[0];
+            sample_point[1] = probe.m_position[1] + j * sample_step * probe.m_direction[1];
+            sample_point[2] = probe.m_position[2] + j * sample_step * probe.m_direction[2];
 
-            std::vector<uint32_t> k_indices;
-            std::vector<float> k_distances;
+            std::vector<std::pair<size_t, float>> res;
 
-            auto num_neighbors = tree->radiusSearch(sample_point, radius, k_indices, k_distances);
+            auto num_neighbors =
+                tree->radiusSearch(&sample_point[0], radius, res, nanoflann::SearchParams(10, 0.01f, true));
             if (num_neighbors == 0) {
-                num_neighbors = tree->nearestKSearch(sample_point, 1, k_indices, k_distances);
+                std::vector<size_t> ret_index(1);
+                std::vector<float> out_dist_sqr(1);
+                nanoflann::KNNResultSet<float> resultSet(1);
+                resultSet.init(ret_index.data(), out_dist_sqr.data());
+                num_neighbors = tree->findNeighbors(resultSet, &sample_point[0], nanoflann::SearchParams(10));
+
+                res.resize(1);
+                res[0].first = ret_index[0];
+                res[0].second = out_dist_sqr[0];
             }
 
 
             // accumulate values
             float value_x = 0, value_y = 0, value_z = 0, value_w = 0;
             for (int n = 0; n < num_neighbors; n++) {
-                value_x += data_x[k_indices[n]];
-                value_y += data_y[k_indices[n]];
-                value_z += data_z[k_indices[n]];
-                value_w += data_w[k_indices[n]];
+                value_x += data_x[res[n].first];
+                value_y += data_y[res[n].first];
+                value_z += data_z[res[n].first];
+                value_w += data_w[res[n].first];
             } // end num_neighbors
             samples->samples[j][0] = value_x / num_neighbors;
             ;
@@ -443,7 +466,7 @@ inline void SampleAlongPobes::doVectorSamling(const std::shared_ptr<pcl::KdTreeF
 
 template<typename T>
 void SampleAlongPobes::doTetrahedralSampling(
-    const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data) {
+    const std::shared_ptr<my_kd_tree_t>& tree, std::vector<T>& data) {
 
     using K = CGAL::Exact_predicates_inexact_constructions_kernel;
     using Vb = CGAL::Triangulation_vertex_base_with_info_3<T, K>;
@@ -457,11 +480,12 @@ void SampleAlongPobes::doTetrahedralSampling(
     Triangulation tri;
 
     {
-        auto const num_points = tree->getInputCloud()->points.size();
-        auto const& cloud = tree->getInputCloud()->points;
+        
+        auto const num_points = tree->dataset.derived().size();
+        auto const& cloud = tree->dataset.derived();
         std::vector<std::pair<Point, T>> points(num_points);
         std::transform(cloud.cbegin(), cloud.cend(), data.cbegin(), points.begin(),
-            [](pcl::PointXYZ const& p, T const& val) { return std::make_pair(Point(p.x, p.y, p.z), val); });
+            [](std::array<float, 3> const& p, T const& val) { return std::make_pair(Point(p[0], p[1], p[2]), val); });
         tri = Triangulation(points.cbegin(), points.cend());
     }
 
@@ -576,7 +600,7 @@ void SampleAlongPobes::doTetrahedralSampling(
 }
 
 template<typename T>
-inline void SampleAlongPobes::doTetrahedralVectorSamling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree,
+inline void SampleAlongPobes::doTetrahedralVectorSamling(const std::shared_ptr<my_kd_tree_t>& tree,
     const std::vector<T>& data_x, const std::vector<T>& data_y, const std::vector<T>& data_z,
     const std::vector<T>& data_w) {
 
@@ -594,18 +618,18 @@ inline void SampleAlongPobes::doTetrahedralVectorSamling(const std::shared_ptr<p
     Triangulation tri;
 
     {
-        auto const num_points = tree->getInputCloud()->points.size();
-        auto const& cloud = tree->getInputCloud()->points;
+        auto const num_points = tree->dataset.derived().size();
+        auto const& cloud = tree->dataset.derived();
         std::vector<std::pair<Point, InfoType>> points(num_points);
         for (int i = 0; i < num_points; ++i) {
 
-            pcl::PointXYZ const& p = cloud[i];
+            auto const& p = cloud[i];
             T const& val_x = data_x[i];
             T const& val_y = data_y[i];
             T const& val_z = data_z[i];
             T const& val_w = data_w[i];
 
-            points[i] = std::make_pair(Point(p.x, p.y, p.z), std::array<T, 4>({val_x, val_y, val_z, val_w}));
+            points[i] = std::make_pair(Point(p[0], p[1], p[2]), std::array<T, 4>({val_x, val_y, val_z, val_w}));
         }
         tri = Triangulation(points.cbegin(), points.cend());
     }
@@ -739,7 +763,7 @@ inline void SampleAlongPobes::doTetrahedralVectorSamling(const std::shared_ptr<p
 
 template<typename T>
 void SampleAlongPobes::doNearestNeighborSampling(
-    const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data) {
+    const std::shared_ptr<my_kd_tree_t>& tree, std::vector<T>& data) {
 
     using K = CGAL::Exact_predicates_inexact_constructions_kernel;
     using Vb = CGAL::Triangulation_vertex_base_with_info_3<T, K>;
@@ -753,11 +777,11 @@ void SampleAlongPobes::doNearestNeighborSampling(
     Triangulation tri;
 
     {
-        auto const num_points = tree->getInputCloud()->points.size();
-        auto const& cloud = tree->getInputCloud()->points;
+        auto const num_points = tree->dataset.derived().size();
+        auto const& cloud = tree->dataset.derived();
         std::vector<std::pair<Point, T>> points(num_points);
         std::transform(cloud.cbegin(), cloud.cend(), data.cbegin(), points.begin(),
-            [](pcl::PointXYZ const& p, T const& val) { return std::make_pair(Point(p.x, p.y, p.z), val); });
+            [](std::array<float, 3> const& p, T const& val) { return std::make_pair(Point(p[0], p[1], p[2]), val); });
         tri = Triangulation(points.begin(), points.end());
     }
 

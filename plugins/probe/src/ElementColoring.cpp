@@ -11,6 +11,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "probe/CallKDTree.h"
 #include "probe/ProbeCalls.h"
+#include <sstream>
 
 
 namespace megamol {

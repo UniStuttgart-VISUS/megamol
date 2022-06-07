@@ -248,21 +248,30 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
 
                                 for (int j = 0; j < samples_per_probe; j++) {
 
-                                    pcl::PointXYZ sample_point;
-                                    sample_point.x = position[0] + j * sample_step * direction[0];
-                                    sample_point.y = position[1] + j * sample_step * direction[1];
-                                    sample_point.z = position[2] + j * sample_step * direction[2];
+                                    std::array<float,3> sample_point;
+                                    sample_point[0] = position[0] + j * sample_step * direction[0];
+                                    sample_point[1] = position[1] + j * sample_step * direction[1];
+                                    sample_point[2] = position[2] + j * sample_step * direction[2];
 
-                                    std::vector<float> k_distances;
-                                    std::vector<uint32_t> k_indices;
+                                    std::vector<std::pair<size_t, float>> res;
 
-                                    auto num_neighbors =
-                                        tree->radiusSearch(sample_point, arg.m_sample_radius, k_indices, k_distances);
+                                    auto num_neighbors = tree->radiusSearch(
+                                        &sample_point[0], radius, res, nanoflann::SearchParams(10, 0.01f, true));
                                     if (num_neighbors == 0) {
-                                        num_neighbors = tree->nearestKSearch(sample_point, 1, k_indices, k_distances);
-                                    }
+                                        std::vector<size_t> ret_index(1);
+                                        std::vector<float> out_dist_sqr(1);
+                                        nanoflann::KNNResultSet<float> resultSet(1);
+                                        resultSet.init(ret_index.data(), out_dist_sqr.data());
+                                        num_neighbors = tree->findNeighbors(
+                                            resultSet, &sample_point[0], nanoflann::SearchParams(10));
 
-                                    indices.insert(indices.end(), k_indices.begin(), k_indices.end());
+                                        res.resize(1);
+                                        res[0].first = ret_index[0];
+                                        res[0].second = out_dist_sqr[0];
+                                    }
+                                    for (auto r : res) {
+                                        indices.emplace_back(r.first);
+                                    }
                                 } // end num samples per probe
                             }
                         };
@@ -353,21 +362,30 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
                             float depth = std::min(end, pending_filter_event.back().depth);
                             //float depth = pending_filter_event.back().depth;
 
-                            pcl::PointXYZ sample_point;
-                            sample_point.x = position[0] + depth * direction[0];
-                            sample_point.y = position[1] + depth * direction[1];
-                            sample_point.z = position[2] + depth * direction[2];
+                            std::array<float,3> sample_point;
+                            sample_point[0] = position[0] + depth * direction[0];
+                            sample_point[1] = position[1] + depth * direction[1];
+                            sample_point[2] = position[2] + depth * direction[2];
 
-                            std::vector<float> k_distances;
-                            std::vector<uint32_t> k_indices;
+                                    std::vector<std::pair<size_t, float>> res;
 
-                            auto num_neighbors =
-                                tree->radiusSearch(sample_point, arg.m_sample_radius, k_indices, k_distances);
+                            auto num_neighbors = tree->radiusSearch(
+                                &sample_point[0], radius, res, nanoflann::SearchParams(10, 0.01f, true));
                             if (num_neighbors == 0) {
-                                num_neighbors = tree->nearestKSearch(sample_point, 1, k_indices, k_distances);
-                            }
+                                std::vector<size_t> ret_index(1);
+                                std::vector<float> out_dist_sqr(1);
+                                nanoflann::KNNResultSet<float> resultSet(1);
+                                resultSet.init(ret_index.data(), out_dist_sqr.data());
+                                num_neighbors =
+                                    tree->findNeighbors(resultSet, &sample_point[0], nanoflann::SearchParams(10));
 
-                            indices.insert(indices.end(), k_indices.begin(), k_indices.end());
+                                res.resize(1);
+                                res[0].first = ret_index[0];
+                                res[0].second = out_dist_sqr[0];
+                            }
+                            for (auto r : res) {
+                                indices.emplace_back(r.first);
+                            }
                         }
                     };
 

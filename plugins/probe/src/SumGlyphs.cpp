@@ -101,8 +101,7 @@ bool SumGlyphs::getData(core::Call& call) {
                 probe_positions[i] = pos;
                 probes_with_this_clusterid[cluster_id].emplace_back(i);
             }
-            //using current_probe_type =  std::decay_t<decltype(probes->getGenericProbe(0))>;
-
+            using current_probe_type =  std::decay_t<decltype(probes->getGenericProbe(0))>;
 
 
             // calculate middle probe distance
