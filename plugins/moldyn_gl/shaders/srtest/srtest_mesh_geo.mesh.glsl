@@ -80,7 +80,7 @@ void main() {
         }*/
 
         mat4 v;
-        touchplane(objPos, rad, oc_pos, v);
+        touchplane_old(objPos, rad, oc_pos, v);
 
         for (int i = 0; i < NUM_V; ++i) {
             //v[i] = MVP * v[i];

@@ -9,6 +9,9 @@
 #include "mmcore/view/light/DistantLight.h"
 
 
+#define SCALE 0.0001f
+
+
 megamol::moldyn_gl::rendering::SRTest::SRTest()
         : data_in_slot_("inData", "")
         , getLightsSlot("lights", "Lights are retrieved over this slot.")
@@ -464,7 +467,13 @@ bool megamol::moldyn_gl::rendering::SRTest::GetExtents(megamol::core_gl::view::C
         cr->SetTimeFramesCount(c2->FrameCount());
         auto const plcount = c2->GetParticleListCount();
 
-        cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
+        //cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
+        auto const bbox = c2->AccessBoundingBoxes().ObjectSpaceBBox();
+        auto const cbox = c2->AccessBoundingBoxes().ObjectSpaceClipBox();
+        
+        cr->AccessBoundingBoxes().SetBoundingBox(lower_.x, lower_.y, lower_.z,
+            upper_.x, upper_.y, upper_.z);
+        cr->AccessBoundingBoxes().SetClipBox(lower_.x, lower_.y, lower_.z, upper_.x, upper_.y, upper_.z);
 
     } else {
         cr->SetTimeFramesCount(1);
@@ -478,6 +487,27 @@ bool megamol::moldyn_gl::rendering::SRTest::GetExtents(megamol::core_gl::view::C
 
 void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleDataCall& in_data) {
     core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] Loading Data");
+
+    /*auto const bbox = in_data.AccessBoundingBoxes().ObjectSpaceBBox();
+    auto const origin = glm::vec3(bbox.GetLeft(), bbox.GetBottom(), bbox.GetBack());
+    auto const size = 1.0f / glm::vec3(bbox.Width(), bbox.Height(), bbox.Depth());
+    auto const max_size = glm::max(size.x, size.y, size.z);
+
+    auto const scale_coord = [&origin, &size](float x, float y, float z) {
+        return ((glm::vec3(x, y, z) - origin) * size) * 2.0f - 1.0f;
+    };
+
+    auto const scale_rad = [&max_size](float rad) { return rad * max_size; };*/
+
+    auto const trafo = glm::scale(glm::mat4(1.0f), glm::vec3(SCALE, SCALE, SCALE));
+
+    auto const scale_coord = [&trafo](float x, float y, float z) { return glm::vec3(trafo * glm::vec4(x, y, z, 1.0f));
+    };
+
+    auto const scale_rad = [](float rad) { return rad * SCALE; };
+
+    lower_ = glm::vec3(std::numeric_limits<float>::max());
+    upper_ = glm::vec3(std::numeric_limits<float>::lowest());
 
     auto const pl_count = in_data.GetParticleListCount();
 
@@ -529,7 +559,7 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
 
         if (parts.GetVertexDataType() != geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) {
             data_.pl_data.use_global_radii[pl_idx] = 1;
-            data_.pl_data.global_radii[pl_idx] = parts.GetGlobalRadius();
+            data_.pl_data.global_radii[pl_idx] = scale_rad(parts.GetGlobalRadius());
             core::utility::log::Log::DefaultLog.WriteInfo(
                 "[SRTest] Having global radius: %f", data_.pl_data.global_radii[pl_idx]);
         } else {
@@ -575,11 +605,21 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
         auto const& ca_acc = parts.GetParticleStore().GetCAAcc();
 
         for (std::decay_t<decltype(p_count)> p_idx = 0; p_idx < p_count; ++p_idx) {
-            positions.push_back(x_acc->Get_f(p_idx));
+            auto const pos = scale_coord(x_acc->Get_f(p_idx), y_acc->Get_f(p_idx), z_acc->Get_f(p_idx));
+            auto const rad = scale_rad(rad_acc->Get_f(p_idx));
+
+            lower_ = glm::min(lower_, pos);
+            upper_ = glm::max(upper_, pos);
+
+            /*positions.push_back(x_acc->Get_f(p_idx));
             positions.push_back(y_acc->Get_f(p_idx));
-            positions.push_back(z_acc->Get_f(p_idx));
+            positions.push_back(z_acc->Get_f(p_idx));*/
+            positions.push_back(pos.x);
+            positions.push_back(pos.y);
+            positions.push_back(pos.z);
             if (mode == upload_mode::POS_COL_SEP || mode == upload_mode::FULL_SEP) {
-                positions.push_back(rad_acc->Get_f(p_idx));
+                //positions.push_back(rad_acc->Get_f(p_idx));
+                positions.push_back(rad);
                 colors.push_back(cr_acc->Get_f(p_idx));
                 colors.push_back(cg_acc->Get_f(p_idx));
                 colors.push_back(cb_acc->Get_f(p_idx));
@@ -594,10 +634,14 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
                 positions.push_back(*reinterpret_cast<float*>(&col));
             }
 
-            X.push_back(x_acc->Get_f(p_idx));
+            /*X.push_back(x_acc->Get_f(p_idx));
             Y.push_back(y_acc->Get_f(p_idx));
             Z.push_back(z_acc->Get_f(p_idx));
-            RAD.push_back(rad_acc->Get_f(p_idx));
+            RAD.push_back(rad_acc->Get_f(p_idx));*/
+            X.push_back(pos.x);
+            Y.push_back(pos.y);
+            Z.push_back(pos.z);
+            RAD.push_back(rad);
             R.push_back(cr_acc->Get_f(p_idx));
             G.push_back(cg_acc->Get_f(p_idx));
             B.push_back(cb_acc->Get_f(p_idx));

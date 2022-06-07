@@ -26,6 +26,7 @@ out Point {
     flat vec4 pointColor;
     flat vec3 oc_pos;
     //flat float c;
+    flat vec3 new_camPos;
 }
 pp[];
 
@@ -36,9 +37,10 @@ void main() {
 
         access_data(g_idx, pp[l_idx].objPos, pp[l_idx].pointColor, pp[l_idx].rad);
 
-        pp[l_idx].oc_pos = -(camPos - pp[l_idx].objPos);
+        pp[l_idx].oc_pos = pp[l_idx].objPos - camPos;
         pp[l_idx].sqrRad = pp[l_idx].rad * pp[l_idx].rad;
         //pp[l_idx].c = dot(pp[l_idx].oc_pos, pp[l_idx].oc_pos) - pp[l_idx].sqrRad;
+        pp[l_idx].new_camPos = camPos - pp[l_idx].objPos;
 
         vec4 projPos;
         float l;

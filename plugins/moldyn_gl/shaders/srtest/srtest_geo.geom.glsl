@@ -48,7 +48,7 @@ void main() {
     v[2] = MVP * v[2];
     v[3] = MVP * v[3];*/
     mat4 v;
-    touchplane(v_pp[idx].objPos, v_pp[idx].rad, v_pp[idx].oc_pos, v);
+    touchplane_old(v_pp[idx].objPos, v_pp[idx].rad, v_pp[idx].oc_pos, v);
 
     /*v[0] /= v[0].w;
     v[1] /= v[1].w;

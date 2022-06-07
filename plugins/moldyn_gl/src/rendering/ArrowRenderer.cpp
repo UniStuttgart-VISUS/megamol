@@ -71,6 +71,17 @@ bool ArrowRenderer::create(void) {
     if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
         return false;
 
+#ifdef PROFILING
+    auto& pm = const_cast<frontend_resources::PerformanceManager&>(
+        frontend_resources.get<frontend_resources::PerformanceManager>());
+    frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer;
+    upload_timer.name = "upload";
+    upload_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    render_timer.name = "render";
+    render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    timing_handles_ = pm.add_timers(this, {upload_timer, render_timer});
+#endif
+
     try {
         auto shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         arrowShader_ = core::utility::make_glowl_shader("ArrowShader", shdr_options,
@@ -154,6 +165,10 @@ void ArrowRenderer::release(void) {
 
 
 bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
+#ifdef PROFILING
+    auto& pm = const_cast<frontend_resources::PerformanceManager&>(
+        frontend_resources.get<frontend_resources::PerformanceManager>());
+#endif
 
     MultiParticleDataCall* c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if (c2 != nullptr) {
@@ -165,7 +180,13 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
             return false;
 
         if (in_data_hash_ != c2->DataHash() || in_frame_id_ != c2->FrameID()) {
+#ifdef PROFILING
+            pm.start_timer(timing_handles_[0], this->GetCoreInstance()->GetFrameID());
+#endif
             loadData(*c2);
+#ifdef PROFILING
+            pm.stop_timer(timing_handles_[0]);
+#endif
             in_data_hash_ = c2->DataHash();
             in_frame_id_ = c2->FrameID();
         }
@@ -270,6 +291,12 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
             // light.second.lightIntensity;
         }
     }
+
+#ifdef PROFILING
+    pm.set_transient_comment(timing_handles_[1], "std");
+    if (this->GetCoreInstance()->GetFrameID() > 100)
+        pm.start_timer(timing_handles_[1], this->GetCoreInstance()->GetFrameID());
+#endif
 
     glDisable(GL_BLEND);
 
@@ -450,6 +477,11 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+
+#ifdef PROFILING
+    if (this->GetCoreInstance()->GetFrameID() > 100)
+        pm.stop_timer(timing_handles_[1]);
+#endif
 
     return true;
 }

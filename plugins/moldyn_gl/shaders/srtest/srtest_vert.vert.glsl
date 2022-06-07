@@ -77,10 +77,10 @@ void main() {
 
     mat4 v;
 #ifdef __SRTEST_QUAD__
-    //touchplane_old(objPos, rad, oc_pos, v);
-    touchplane(objPos, rad, oc_pos, v);
+    touchplane_old(objPos, rad, oc_pos, v);
+    //touchplane(objPos, rad, oc_pos, v);
 #else
-    touchplane_v2(objPos, rad, oc_pos, v);
+    touchplane_old_v2(objPos, rad, oc_pos, v);
 #endif
 
     vec4 pos = v[inv_idx + bump_idx];

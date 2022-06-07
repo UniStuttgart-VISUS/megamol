@@ -358,6 +358,10 @@ private:
 
     core::view::Camera old_cam_;
 
+    glm::vec3 lower_;
+
+    glm::vec3 upper_;
+
 #ifdef PROFILING
     frontend_resources::PerformanceManager::handle_vector timing_handles_;
 #endif

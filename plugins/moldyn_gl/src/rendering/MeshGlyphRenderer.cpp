@@ -94,13 +94,24 @@ bool MeshGlyphRenderer::create(void) {
     if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
         return false;
 
+#ifdef PROFILING
+    auto& pm = const_cast<frontend_resources::PerformanceManager&>(
+        frontend_resources.get<frontend_resources::PerformanceManager>());
+    frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer;
+    upload_timer.name = "upload";
+    upload_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    render_timer.name = "render";
+    render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    timing_handles_ = pm.add_timers(this, {upload_timer, render_timer});
+#endif
+
     try {
         auto shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         ellipsoid_shader_ = core::utility::make_glowl_shader("MeshEllipsoidShader", shdr_options,
-            std::filesystem::path("glyph/ellipsoid_mesh.mesh.glsl"), std::filesystem::path("glyph/ellipsoid_mesh.frag.glsl"));
+            std::filesystem::path("glyph/ellipsoid_mesh.mesh.glsl"),
+            std::filesystem::path("glyph/ellipsoid_mesh.frag.glsl"));
         box_shader_ = core::utility::make_glowl_shader("MeshBoxShader", shdr_options,
-            std::filesystem::path("glyph/box_mesh.mesh.glsl"),
-            std::filesystem::path("glyph/box_mesh.frag.glsl"));
+            std::filesystem::path("glyph/box_mesh.mesh.glsl"), std::filesystem::path("glyph/box_mesh.frag.glsl"));
     } catch (glowl::GLSLProgramException const& ex) {
         core::utility::log::Log::DefaultLog.WriteError("[MeshGlyphRenderer]: %s", ex.what());
         return false;
@@ -305,6 +316,11 @@ bool megamol::moldyn_gl::rendering::MeshGlyphRenderer::validateData(geocalls::El
 }
 
 bool MeshGlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
+#ifdef PROFILING
+    auto& pm = const_cast<frontend_resources::PerformanceManager&>(
+        frontend_resources.get<frontend_resources::PerformanceManager>());
+#endif
+
     auto* epdc = this->getDataSlot.CallAs<geocalls::EllipsoidalParticleDataCall>();
     if (epdc == nullptr)
         return false;
@@ -317,7 +333,15 @@ bool MeshGlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     if (!(*epdc)(0))
         return false;
 
-    if (!this->validateData(epdc))
+#ifdef PROFILING
+    pm.start_timer(timing_handles_[0], this->GetCoreInstance()->GetFrameID());
+#endif
+    auto vd_ret = this->validateData(epdc);
+#ifdef PROFILING
+    pm.stop_timer(timing_handles_[0]);
+#endif
+
+    if (!vd_ret)
         return false;
 
     auto* tfc = this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
@@ -349,6 +373,12 @@ bool MeshGlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     // todo...
     //glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+
+#ifdef PROFILING
+    pm.set_transient_comment(timing_handles_[1], "std");
+    if (this->GetCoreInstance()->GetFrameID()>100)
+    pm.start_timer(timing_handles_[1], this->GetCoreInstance()->GetFrameID());
+#endif
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -788,6 +818,7 @@ bool MeshGlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
             case Glyph::ELLIPSOID:
                 //glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actualItems) * 3);
                 shader->setUniform("num_points", static_cast<unsigned int>(actualItems));
+                //core::utility::log::Log::DefaultLog.WriteInfo("[MESH] NumPoints %d", actualItems);
                 glDrawMeshTasksNV(0, static_cast<GLsizei>(actualItems) / 16 + 1);
                 break;
             case Glyph::ARROW:
@@ -812,6 +843,11 @@ bool MeshGlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
         glDisable(GL_CLIP_DISTANCE0);
     }
     glDisable(GL_DEPTH_TEST);
+
+#ifdef PROFILING
+    if (this->GetCoreInstance()->GetFrameID() > 100)
+    pm.stop_timer(timing_handles_[1]);
+#endif
 
     return true;
 }
