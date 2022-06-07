@@ -216,11 +216,11 @@ bool ConstructKDTree::getData(core::Call& call) {
         ct->setMetaData(meta_data);
 
         // Extract the kd tree for easy sampling of the data
-
-        this->_full_data_tree = std::make_shared<my_kd_tree_t>(
-            3 /*dim*/, _cloud, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
-        this->_full_data_tree->buildIndex();
-        this->_version++;
+        _data2kd = std::make_shared<const data2KD>(_cloud);
+        _full_data_tree = std::make_shared<my_kd_tree_t>(
+            3 /*dim*/, *_data2kd, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
+        _full_data_tree->buildIndex();
+        _version++;
         _old_datahash = cd->getDataHash();
     }
 

@@ -72,6 +72,7 @@ private:
     bool toggleFormat(core::param::ParamSlot& p);
 
     // PCL stuff
+    std::shared_ptr<const data2KD> _data2kd;
     std::vector<std::array<float,3>> _cloud;
     std::shared_ptr<my_kd_tree_t> _full_data_tree;
 
