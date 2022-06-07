@@ -743,9 +743,9 @@ function(require_external NAME)
     endif ()
 
     if (WIN32)
-      set(QHULL_LIB "lib/qhull<SUFFIX>.lib")
+      set(QHULL_LIB "lib/qhull.lib")
     else ()
-      set(QUHULL_LIB "lib/libqhull<SUFFIX>.a")
+      set(QUHULL_LIB "lib/libqhull.a")
     endif ()
 
     add_external_project(qhull STATIC
