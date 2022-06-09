@@ -1,8 +1,7 @@
-/*
- * ChronoGraph.cpp
- *
- * Copyright (C) 2010 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #define _USE_MATH_DEFINES

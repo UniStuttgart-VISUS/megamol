@@ -1,8 +1,7 @@
-/*
- * AbstractOverrideView.cpp
- *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmstd_gl/view/AbstractOverrideViewGL.h"

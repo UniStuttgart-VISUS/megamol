@@ -1,8 +1,7 @@
-/*
- * CallbackScreenShooter.cpp
- *
- * Copyright (C) 2019 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmstd_gl/special/CallbackScreenShooter.h"

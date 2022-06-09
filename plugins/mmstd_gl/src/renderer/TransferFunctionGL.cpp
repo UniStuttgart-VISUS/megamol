@@ -1,8 +1,7 @@
-/*
- * TransferFunctionGL.cpp
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmstd_gl/renderer/TransferFunctionGL.h"

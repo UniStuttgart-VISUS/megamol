@@ -1,8 +1,7 @@
-/*
- * View3DGL.cpp
- *
- * Copyright (C) 2018, 2020 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmstd_gl/view/View3DGL.h"

@@ -1,8 +1,7 @@
-/*
- * DemoRenderer2D.cpp
- *
- * Copyright (C) 2009 - 2010 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #define _USE_MATH_DEFINES
