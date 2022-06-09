@@ -1,30 +1,27 @@
-/*
- * AbstractView.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
+#include "AbstractInputScope.h"
+#include "ImageWrapper.h"
+#include "ScriptPaths.h"
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/Camera.h"
+#include "mmcore/view/CameraSerializer.h"
+#include "mmcore/view/TimeControl.h"
 #include "vislib/Array.h"
 #include "vislib/Serialiser.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
-#include <AbstractInputScope.h>
-
-#include "ScriptPaths.h"
-#include "mmcore/BoundingBoxes_2.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Camera.h"
-#include "mmcore/view/CameraSerializer.h"
-#include "mmcore/view/TimeControl.h"
-
-#include "ImageWrapper.h"
 
 namespace megamol::core::view {
 
@@ -51,14 +48,14 @@ public:
         /**
          * Empty ctor.
          */
-        Hooks(void) {
+        Hooks() {
             // intentionally empty
         }
 
         /**
          * Empty but virtual dtor.
          */
-        virtual ~Hooks(void) {
+        virtual ~Hooks() {
             // intentionally empty
         }
 
@@ -82,10 +79,10 @@ public:
     };
 
     /** Ctor. */
-    AbstractView(void);
+    AbstractView();
 
     /** Dtor. */
-    virtual ~AbstractView(void);
+    ~AbstractView() override;
 
     /**
      * Answer the default time for this view
@@ -118,7 +115,7 @@ public:
     /**
      * Return the current camera
      */
-    virtual Camera GetCamera() const;
+    Camera GetCamera() const;
 
     /**
      * ...
@@ -249,7 +246,7 @@ protected:
      *
      * @return 'true' if hook code should be run
      */
-    inline bool doHookCode(void) const {
+    inline bool doHookCode() const {
         return !this->_hooks.IsEmpty();
     }
 
@@ -258,14 +255,14 @@ protected:
      *
      * @return An iterator to the list of registered hooks.
      */
-    inline HooksIterator getHookIterator(void) {
+    inline HooksIterator getHookIterator() {
         return this->_hooks.GetIterator();
     }
 
     /**
      * The code triggering the pre render hook
      */
-    inline void doBeforeRenderHook(void) {
+    inline void doBeforeRenderHook() {
         HooksIterator i = this->getHookIterator();
         while (i.HasNext()) {
             i.Next()->BeforeRender(this);
@@ -275,7 +272,7 @@ protected:
     /**
      * The code triggering the post render hook
      */
-    inline void doAfterRenderHook(void) {
+    inline void doAfterRenderHook() {
         HooksIterator i = this->getHookIterator();
         while (i.HasNext()) {
             i.Next()->AfterRender(this);
@@ -314,7 +311,7 @@ protected:
      *
      * @return The file path of the camera file as string
      */
-    std::string determineCameraFilePath(void) const;
+    std::string determineCameraFilePath() const;
 
     /**
      * Flag if this is the first time an image gets created. Used for

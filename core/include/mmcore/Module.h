@@ -1,26 +1,20 @@
-/*
- * Module.h
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_MODULE_H_INCLUDED
-#define MEGAMOLCORE_MODULE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/AbstractNamedObjectContainer.h"
 #include <string>
 #include <vector>
 
 #include "FrontendResource.h"
 #include "FrontendResourcesMap.h"
+#include "mmcore/AbstractNamedObjectContainer.h"
 
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /** forward declaration */
 class CoreInstance;
@@ -80,7 +74,7 @@ public:
      * @return Whether or not this module supports being used in a
      *         quickstart.
      */
-    static bool SupportQuickstart(void) {
+    static bool SupportQuickstart() {
         return true;
     }
 
@@ -91,10 +85,10 @@ public:
      * be placed in 'create' since the ctor cannot fail and important
      * members (such as 'instance') are set after the ctor returns.
      */
-    Module(void);
+    Module();
 
     /** Dtor. */
-    virtual ~Module(void);
+    ~Module() override;
 
     /**
      * Tries to create this module. Do not overwrite this method!
@@ -137,13 +131,13 @@ public:
     /**
      * Clears the cleanup mark for this and all dependent objects.
      */
-    virtual void ClearCleanupMark(void);
+    void ClearCleanupMark() override;
 
     /**
      * Performs the cleanup operation by removing and deleteing of all
      * marked objects.
      */
-    virtual void PerformCleanup(void);
+    void PerformCleanup() override;
 
     inline void SetClassName(const char* name) {
         this->className = name;
@@ -163,7 +157,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void) = 0;
+    virtual bool create() = 0;
 
     /**
      * Check the configuration for a value for the parameter 'val'.
@@ -186,14 +180,14 @@ protected:
      *
      * @return The instance of the core owning this module.
      */
-    inline class ::megamol::core::CoreInstance* instance(void) const {
+    inline class ::megamol::core::CoreInstance* instance() const {
         return this->GetCoreInstance();
     }
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void) = 0;
+    virtual void release() = 0;
 
     /**
      * Makes the given slot for this module available.
@@ -236,7 +230,4 @@ std::vector<S*> Module::GetSlots() {
 }
 
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_MODULE_H_INCLUDED */
+} // namespace megamol::core
