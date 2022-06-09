@@ -4,6 +4,8 @@
 
 #include "vislib/graphics/BitmapImage.h"
 
+#include "../util/GraphLuaExporter.h"
+
 #include <array>
 #include <deque>
 #include <vector>
@@ -65,10 +67,15 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
 
     auto addEdge = [&](Timestamp srcTS, Label srcLabel, Timestamp destTS, Label destLabel) {
         graph::GraphData2D::Edge edge;
-        edge.from = getOrCreateNodeID(srcTS, destTS);
+        edge.from = getOrCreateNodeID(srcTS, srcLabel);
         edge.to = getOrCreateNodeID(destTS, destLabel);
-        nodeGraph.getNode(edge.from).edgeCountOut++;
-        nodeGraph.getNode(edge.to).edgeCountIn++;
+
+        auto& nodeFrom = nodeGraph.getNode(edge.from);
+        auto& nodeTo = nodeGraph.getNode(edge.to);
+
+        nodeFrom.edgeCountOut++;
+        nodeTo.edgeCountIn++;
+
         nodeGraph.addEdge(std::move(edge));
     };
 
@@ -114,11 +121,50 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
         }
     };
 
+    auto rectUnion = [](graph::GraphData2D::Rect r1, graph::GraphData2D::Rect r2) -> graph::GraphData2D::Rect {
+        if (r1.x1 == r1.x2 || r1.y1 == r1.y2) {
+            return r2;
+        } else if (r2.x1 == r2.x2 || r2.y1 == r2.y2) {
+            return r1;
+        } else {
+            graph::GraphData2D::Rect r;
+            r.x1 = std::min(r1.x1, r2.x1);
+            r.x2 = std::max(r1.x2, r2.x2);
+            r.y1 = std::min(r1.y1, r2.y1);
+            r.y2 = std::max(r1.y2, r2.y2);
+            return r;
+        }
+    };
+
+    int lastFloodFillCenterX = 0;
+    int lastFloodFillCenterY = 0;
+
+    graph::GraphData2D::Rect floodFillRect;
+
     auto floodFill = [&](Index index, Label label) {
         floodQueue.clear();
         floodQueue.push_back(index);
+
+        lastFloodFillCenterX = 0;
+        lastFloodFillCenterY = 0;
+        floodFillRect.x1 = index % width;
+        floodFillRect.x2 = index % width;
+        floodFillRect.y1 = index / width;
+        floodFillRect.y2 = index / width;
+
         for (std::size_t queueIndex = 0; queueIndex < floodQueue.size(); ++queueIndex) {
             index = floodQueue[queueIndex];
+
+            int x = index % width;
+            int y = index / width;
+
+            lastFloodFillCenterX += x;
+            lastFloodFillCenterY += y;
+
+            floodFillRect.x1 = std::min(floodFillRect.x1, x);
+            floodFillRect.x2 = std::max(floodFillRect.x2, x);
+            floodFillRect.y1 = std::min(floodFillRect.y1, y);
+            floodFillRect.y2 = std::max(floodFillRect.y2, y);
 
             // Pixel is not on the right boundary
             if (index % width < width - 1) {
@@ -154,7 +200,11 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
                 std::size_t fillCount = floodFill(i, frontLabel);
                 if (fillCount >= input.minBlobSize) {
                     // Region large enough: advance label counter and keep filled pixels
-                    getOrCreateNode(currentTimestamp, frontLabel).area += fillCount + 1;
+                    auto& node = getOrCreateNode(currentTimestamp, frontLabel);
+                    node.area += fillCount;
+                    node.centerOfMass.x += lastFloodFillCenterX;
+                    node.centerOfMass.y += lastFloodFillCenterY;
+                    node.boundingBox = rectUnion(node.boundingBox, floodFillRect);
                     if (frontLabel != LabelLast) {
                         frontLabel++;
                     }
@@ -220,6 +270,8 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
                 }
             }
 
+            getOrCreateNode(currentTimestamp, frontLabel).interfaceFluid += frontQueue.size();
+
             // Store all pixels in this interface for velocity computation
             currentInterfaces.push_back(std::move(frontQueue));
 
@@ -237,8 +289,12 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
             if (dataIn[entry.index] == currentTimestamp) {
                 // Same timestamp: perform flood fill from this pixel
                 auto fillLabel = dataOut[entry.index];
-                auto fillCount = floodFill(entry.index, fillLabel) + 1;
-                getOrCreateNode(currentTimestamp, fillLabel).area += fillCount;
+                auto fillCount = floodFill(entry.index, fillLabel);
+                auto& node = getOrCreateNode(currentTimestamp, fillLabel);
+                node.area += fillCount;
+                node.centerOfMass.x += lastFloodFillCenterX;
+                node.centerOfMass.y += lastFloodFillCenterY;
+                node.boundingBox = rectUnion(node.boundingBox, floodFillRect);
             } else {
                 // Preserve front pixels with a steeper timestamp gradient, requeueing them for the next iteration
                 nextFront.emplace_back(entry.index, dataOut[entry.index]);
@@ -275,7 +331,8 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
                 }
                 maxSquareDistance = std::max(minSquareDistance, maxSquareDistance);
             }
-            getOrCreateNode(currentTimestamp, edge.second).velocity += std::sqrt(static_cast<float>(maxSquareDistance));
+            getOrCreateNode(currentTimestamp, edge.second).velocityMagnitude +=
+                std::sqrt(static_cast<float>(maxSquareDistance));
         }
     }
 
@@ -316,6 +373,14 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
                     getOrCreateNode(timestamp, label).interfaceSolid++;
                 }
             }
+        }
+    }
+
+    // Postprocess nodes
+    for (std::size_t i = 0; i < nodeGraph.getNodes().size(); ++i) {
+        auto& node = nodeGraph.getNode(i);
+        if (node.area > 0.000001f) {
+            node.centerOfMass /= node.area;
         }
     }
 

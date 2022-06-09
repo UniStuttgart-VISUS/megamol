@@ -27,8 +27,9 @@ public:
 
     struct Node {
         std::uint32_t frameIndex = 0;
-        glm::vec2 centerOfMass;
-        glm::vec2 velocity;
+        glm::vec2 centerOfMass = {};
+        glm::vec2 velocity = {};
+        float velocityMagnitude = 0;
         float area = 0.f;
         float interfaceFluid = 0.f;
         float interfaceSolid = 0.f;
@@ -66,7 +67,7 @@ private:
     Node placeholderNode;
 };
 
-using AsyncGraphData2D = util::AsyncData<const GraphData2D>;
+using AsyncGraphData2D = megamol::ImageSeries::util::AsyncData<const GraphData2D>;
 using AsyncGraphPtr = std::shared_ptr<const AsyncGraphData2D>;
 
 } // namespace megamol::ImageSeries::graph
