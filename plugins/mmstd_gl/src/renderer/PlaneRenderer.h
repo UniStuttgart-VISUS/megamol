@@ -1,32 +1,29 @@
-/*
- * PlaneRenderer.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #pragma once
-
-#include "mmcore/CallerSlot.h"
-
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
-
-#include "glowl/GLSLProgram.hpp"
-
-#include "vislib/math/Plane.h"
 
 #include <array>
 #include <memory>
 
-namespace megamol {
-namespace mmstd_gl {
+#include <glowl/GLSLProgram.hpp>
+
+#include "mmcore/CallerSlot.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
+#include "vislib/math/Plane.h"
+
+namespace megamol::mmstd_gl {
 
 /**
  * Module for rendering (clip) plane.
  *
  * @author Alexander Straub
  */
-class PlaneRenderer : public core_gl::view::Renderer3DModuleGL {
+class PlaneRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -63,7 +60,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~PlaneRenderer();
+    ~PlaneRenderer() override;
 
 protected:
     /**
@@ -71,16 +68,16 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() override;
+    void release() override;
 
     /** Callbacks for the computed streamlines */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call) override;
-    virtual bool Render(core_gl::view::CallRender3DGL& call) override;
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /** Call for getting the input plane */
@@ -99,5 +96,4 @@ private:
     bool initialized;
 };
 
-} // namespace mmstd_gl
-} // namespace megamol
+} // namespace megamol::mmstd_gl

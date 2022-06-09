@@ -7,7 +7,6 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-#include "PlaneRenderer.h"
 #include "mmstd_gl/flags/FlagCallsGL.h"
 #include "mmstd_gl/flags/UniFlagStorage.h"
 #include "mmstd_gl/renderer/BoundingBoxRenderer.h"
@@ -26,6 +25,7 @@
 #include "mmstd_gl/view/SplitViewGL.h"
 #include "mmstd_gl/view/View2DGL.h"
 #include "mmstd_gl/view/View3DGL.h"
+#include "renderer/PlaneRenderer.h"
 #include "upscaling/ImageSpaceAmortization2D.h"
 #include "upscaling/ResolutionScaler2D.h"
 #include "upscaling/ResolutionScaler3D.h"

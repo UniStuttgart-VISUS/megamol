@@ -1,23 +1,25 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "PlaneRenderer.h"
-
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/Camera.h"
-
-#include "mmcore_gl/view/CallRender3DGL.h"
-
-#include "glowl/GLSLProgram.hpp"
-
-#include "glm/mat4x4.hpp"
-
-#include "vislib/math/Plane.h"
 
 #include <exception>
 #include <memory>
 #include <string>
 #include <utility>
 
-namespace megamol {
-namespace mmstd_gl {
+#include <glm/mat4x4.hpp>
+#include <glowl/GLSLProgram.hpp>
+
+#include "mmcore/view/CallClipPlane.h"
+#include "mmcore/view/Camera.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "vislib/math/Plane.h"
+
+namespace megamol::mmstd_gl {
 
 PlaneRenderer::PlaneRenderer() : input_plane_slot("input_plane", "Input (clip) plane to render"), initialized(false) {
 
@@ -35,7 +37,7 @@ bool PlaneRenderer::create() {
 
 void PlaneRenderer::release() {}
 
-bool PlaneRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool PlaneRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // Get plane
     auto cp = this->input_plane_slot.CallAs<core::view::CallClipPlane>();
 
@@ -204,7 +206,7 @@ bool PlaneRenderer::Render(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-bool PlaneRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool PlaneRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     const auto& old_bb = call.GetBoundingBoxes().BoundingBox();
 
     const auto x_offset = old_bb.Width() / 2.0f;
@@ -218,5 +220,4 @@ bool PlaneRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-} // namespace mmstd_gl
-} // namespace megamol
+} // namespace megamol::mmstd_gl
