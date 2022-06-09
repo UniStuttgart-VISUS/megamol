@@ -4,8 +4,6 @@
  * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
-
-
 #include "mesh_gl/AbstractGPUMaterialDataSource.h"
 
 megamol::mesh_gl::AbstractGPUMaterialDataSource::AbstractGPUMaterialDataSource()

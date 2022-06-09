@@ -7,6 +7,7 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
+#include "PlaneRenderer.h"
 #include "mmstd_gl/flags/FlagCallsGL.h"
 #include "mmstd_gl/flags/UniFlagStorage.h"
 #include "mmstd_gl/renderer/BoundingBoxRenderer.h"
@@ -48,6 +49,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::view::HeadView>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::TransferFunctionGL>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::BoundingBoxRenderer>();
+        this->module_descriptions.RegisterAutoDescription<mmstd_gl::PlaneRenderer>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::DeferredShading>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::UniFlagStorage>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::ImageSpaceAmortization2D>();

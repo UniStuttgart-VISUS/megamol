@@ -86,6 +86,22 @@ if (ENABLE_MPI)
   endif ()
 endif ()
 
+# CGAL
+option(ENABLE_CGAL "Enable CGAL support" OFF)
+if (ENABLE_CGAL)
+  add_compile_definitions(WITH_CGAL)
+  find_package(CGAL REQUIRED)
+
+  if (NOT TARGET CGAL::CGAL)
+    message(FATAL_ERROR "Target for CGAL not found")
+  endif ()
+
+  if (TARGET CGAL)
+    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
+    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
+  endif ()
+endif()
+
 # Profiling
 cmake_dependent_option(ENABLE_PROFILING "Enable profiling code" OFF "ENABLE_GL" OFF)
 if (ENABLE_PROFILING)

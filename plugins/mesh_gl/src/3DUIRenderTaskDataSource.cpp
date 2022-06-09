@@ -1,4 +1,3 @@
-
 #include "3DUIRenderTaskDataSource.h"
 
 #include "tiny_gltf.h"
