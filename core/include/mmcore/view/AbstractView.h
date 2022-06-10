@@ -40,6 +40,13 @@ class AbstractView : public Module, public megamol::frontend_resources::Abstract
 
 
 public:
+    enum class ViewDimension {
+        NONE,
+        VIEW_2D,
+        VIEW_3D,
+        OTHER,
+    };
+
     /**
      * Interfaces class for hooking into view processes
      */
@@ -79,7 +86,7 @@ public:
     };
 
     /** Ctor. */
-    AbstractView();
+    explicit AbstractView(ViewDimension dim);
 
     /** Dtor. */
     ~AbstractView() override;
@@ -121,6 +128,10 @@ public:
      * ...
      */
     virtual void CalcCameraClippingPlanes(float border);
+
+    ViewDimension const& GetViewDimension() const {
+        return viewDimension_;
+    }
 
     /**
      * Renders this AbstractView.
@@ -333,6 +344,8 @@ protected:
 
     /** A flag that decides whether the camera is controllable by the view */
     bool _cameraIsMutable;
+
+    ViewDimension viewDimension_;
 
     /** Slot containing the settings of the currently stored camera */
     param::ParamSlot _cameraSettingsSlot;

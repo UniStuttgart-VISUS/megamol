@@ -13,8 +13,9 @@ using namespace megamol::frontend_resources;
 /*
  * view::AbstractOverrideView::AbstractOverrideView
  */
-view::AbstractOverrideViewGL::AbstractOverrideViewGL(void)
-        : renderViewSlot("renderView", "Slot for outgoing rendering requests to other views")
+view::AbstractOverrideViewGL::AbstractOverrideViewGL()
+        : AbstractViewGL(ViewDimension::NONE)
+        , renderViewSlot("renderView", "Slot for outgoing rendering requests to other views")
         , viewportWidth(1)
         , viewportHeight(1) {
 
@@ -26,7 +27,7 @@ view::AbstractOverrideViewGL::AbstractOverrideViewGL(void)
 /*
  * view::AbstractOverrideView::~AbstractOverrideView
  */
-view::AbstractOverrideViewGL::~AbstractOverrideViewGL(void) {
+view::AbstractOverrideViewGL::~AbstractOverrideViewGL() {
 
     // TODO: Implement
 }

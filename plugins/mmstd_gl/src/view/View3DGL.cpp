@@ -19,7 +19,7 @@ using namespace megamol::mmstd_gl::view;
 /*
  * View3DGL::View3DGL
  */
-View3DGL::View3DGL() {
+View3DGL::View3DGL() : BaseView(ViewDimension::VIEW_3D) {
     this->_rhsRenderSlot.SetCompatibleCall<CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->_rhsRenderSlot);
     // Override renderSlot behavior

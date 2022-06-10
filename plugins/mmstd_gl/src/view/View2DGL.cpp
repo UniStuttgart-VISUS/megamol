@@ -27,7 +27,7 @@ using namespace megamol::mmstd_gl;
 /*
  * view::View2DGL::View2DGL
  */
-view::View2DGL::View2DGL(void) {
+view::View2DGL::View2DGL() : BaseView(ViewDimension::VIEW_2D) {
 
     // Override renderSlot behavior
     this->_lhsRenderSlot.SetCallback(CallRenderViewGL::ClassName(),

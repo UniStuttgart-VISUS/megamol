@@ -24,7 +24,8 @@ using megamol::core::utility::log::Log;
 enum Orientation { HORIZONTAL = 0, VERTICAL = 1 };
 
 view::SplitViewGL::SplitViewGL()
-        : _render1Slot("render1", "Connects to the view 1 (left or top)")
+        : AbstractViewGL(ViewDimension::NONE)
+        , _render1Slot("render1", "Connects to the view 1 (left or top)")
         , _render2Slot("render2", "Connects to the view 2 (right or bottom)")
         , _splitOrientationSlot("split.orientation", "Splitter orientation")
         , _splitPositionSlot("split.pos", "Splitter position")

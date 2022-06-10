@@ -20,8 +20,9 @@ using megamol::core::utility::log::Log;
 /*
  * view::HeadView::HeadView
  */
-view::HeadView::HeadView(void)
-        : viewSlot("view", "Connects to a view")
+view::HeadView::HeadView()
+        : AbstractViewGL(ViewDimension::NONE)
+        , viewSlot("view", "Connects to a view")
         , tickSlot("tick", "Connects to a module that needs a tick") {
 
     this->viewSlot.SetCompatibleCall<CallRenderViewGLDescription>();

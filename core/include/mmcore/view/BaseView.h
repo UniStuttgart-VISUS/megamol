@@ -19,7 +19,7 @@ namespace view {
 template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
 class BaseView : public ABSTRACTVIEW_TYPE {
 public:
-    BaseView();
+    explicit BaseView(AbstractView::ViewDimension dim);
     ~BaseView() = default;
 
     void beforeRender(double time, double instanceTime);
@@ -85,8 +85,9 @@ protected:
 };
 
 template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
-inline BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::BaseView()
-        : _fbo(nullptr)
+inline BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::BaseView(AbstractView::ViewDimension dim)
+        : ABSTRACTVIEW_TYPE(dim)
+        , _fbo(nullptr)
         , _camera_controller(&this->_camera) {
 
     // none of the saved camera states are valid right now
