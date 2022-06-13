@@ -44,8 +44,6 @@
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/PerformanceCounter.h"
 
-#include "factories/CallClassRegistry.h"
-#include "factories/ModuleClassRegistry.h"
 #include "utility/ServiceManager.h"
 
 #include "mmcore/utility/log/Log.h"
@@ -101,8 +99,7 @@ extern HMODULE mmCoreModuleHandle;
  * megamol::core::CoreInstance::CoreInstance
  */
 megamol::core::CoreInstance::CoreInstance(void)
-        : factories::AbstractObjectFactoryInstance()
-        , preInit(new PreInit)
+        : preInit(new PreInit)
         , config()
         , lua(nullptr)
         , builtinViewDescs()
@@ -135,12 +132,6 @@ megamol::core::CoreInstance::CoreInstance(void)
 
     profiler::Manager::Instance().SetCoreInstance(this);
     this->namespaceRoot->SetCoreInstance(*this);
-    factories::register_module_classes(this->module_descriptions);
-    factories::register_call_classes(this->call_descriptions);
-    for (auto md : this->module_descriptions)
-        this->all_module_descriptions.Register(md);
-    for (auto cd : this->call_descriptions)
-        this->all_call_descriptions.Register(cd);
 
     // megamol::core::utility::LuaHostService::ID =
     //    this->InstallService<megamol::core::utility::LuaHostService>();
@@ -201,8 +192,6 @@ megamol::core::CoreInstance::~CoreInstance(void) {
     // then factories
     this->all_module_descriptions.Shutdown();
     this->all_call_descriptions.Shutdown();
-    this->module_descriptions.Shutdown();
-    this->call_descriptions.Shutdown();
     // finally plugins
     this->plugins.clear();
 

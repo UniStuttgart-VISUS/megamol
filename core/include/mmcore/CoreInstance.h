@@ -74,7 +74,7 @@ class ServiceManager;
 /**
  * class of core instances.
  */
-class CoreInstance : public factories::AbstractObjectFactoryInstance {
+class CoreInstance {
 public:
     friend class megamol::core::LuaState;
 
