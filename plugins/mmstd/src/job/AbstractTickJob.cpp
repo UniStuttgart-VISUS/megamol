@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/job/AbstractTickJob.h"
-#include "mmcore/job/TickCall.h"
+#include "mmstd/job/AbstractTickJob.h"
+#include "mmstd/job/TickCall.h"
 
 namespace megamol {
 namespace core {

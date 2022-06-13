@@ -5,10 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/AbstractStreamProvider.h"
+#include "mmstd/generic/AbstractStreamProvider.h"
 #include "mmcore/Call.h"
-#include "mmcore/DirectDataWriterCall.h"
-#include "mmcore/job/TickCall.h"
+#include "mmstd/data/DirectDataWriterCall.h"
+#include "mmstd/job/TickCall.h"
 
 #include <functional>
 

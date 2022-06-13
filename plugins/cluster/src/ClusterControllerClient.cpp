@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/cluster/ClusterControllerClient.h"
-#include "mmcore/cluster/CallRegisterAtController.h"
+#include "cluster/ClusterControllerClient.h"
+#include "cluster/CallRegisterAtController.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/net/IPEndPoint.h"

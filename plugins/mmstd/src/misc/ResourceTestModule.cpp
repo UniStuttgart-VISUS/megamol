@@ -1,4 +1,4 @@
-#include "mmcore/ResourceTestModule.h"
+#include "ResourceTestModule.h"
 
 
 megamol::core::ResourceTestModule::ResourceTestModule() {}

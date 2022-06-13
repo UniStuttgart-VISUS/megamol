@@ -1,4 +1,5 @@
-#include "mmcore/utility/LuaHostSettingsModule.h"
+#include "LuaHostSettingsModule.h"
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"

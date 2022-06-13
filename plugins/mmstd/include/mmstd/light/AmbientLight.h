@@ -5,7 +5,7 @@
  */
 #pragma once
 
-#include "mmcore/view/light/AbstractLight.h"
+#include "mmstd/light/AbstractLight.h"
 
 namespace megamol {
 namespace core {

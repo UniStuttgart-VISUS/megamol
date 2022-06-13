@@ -7,6 +7,7 @@ megamol_plugin(datatools
   BUILD_DEFAULT ON
   DEPENDS_PLUGINS
     mmstd
+    cluster
     geometry_calls
     mesh
   DEPENDS_EXTERNALS

@@ -5,10 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/job/DataWriterJob.h"
-#include "mmcore/DataWriterCtrlCall.h"
+#include "mmstd/data/DataWriterJob.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmstd/data/DataWriterCtrlCall.h"
 
 using namespace megamol::core;
 

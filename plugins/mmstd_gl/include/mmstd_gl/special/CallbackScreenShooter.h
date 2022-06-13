@@ -8,12 +8,12 @@
 
 #include <functional>
 
-#include "mmcore/AbstractCallbackCall.h"
 #include "mmcore/AbstractWriterParams.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/job/AbstractTickJob.h"
+#include "mmstd/generic/AbstractCallbackCall.h"
+#include "mmstd/job/AbstractTickJob.h"
 #include "mmstd_gl/special/ScreenShooter.h"
 
 namespace megamol::mmstd_gl::special {

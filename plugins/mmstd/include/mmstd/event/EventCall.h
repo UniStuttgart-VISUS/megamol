@@ -11,7 +11,7 @@
 #include <memory>
 
 #include "DoubleBufferedEventCollection.h"
-#include "mmcore/CallGeneric.h"
+#include "mmstd/generic/CallGeneric.h"
 
 namespace megamol {
 namespace core {

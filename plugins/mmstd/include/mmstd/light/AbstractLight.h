@@ -9,7 +9,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/light/CallLight.h"
+#include "mmstd/light/CallLight.h"
 
 namespace megamol {
 namespace core {

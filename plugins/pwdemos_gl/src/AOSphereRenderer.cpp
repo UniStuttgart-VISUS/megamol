@@ -18,7 +18,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/assert.h"

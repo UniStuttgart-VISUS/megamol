@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/AbstractGetDataCall.h"
+#include "mmstd/data/AbstractGetDataCall.h"
 
 using namespace megamol::core;
 

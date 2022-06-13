@@ -11,7 +11,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/TransferFunctionParam.h"
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmstd/renderer/CallGetTransferFunction.h"
 
 namespace megamol {
 namespace core {

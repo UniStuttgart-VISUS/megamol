@@ -9,9 +9,9 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/flags/FlagCollection.h"
-#include "mmcore/flags/FlagStorageTypes.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd/flags/FlagCollection.h"
+#include "mmstd/flags/FlagStorageTypes.h"
 
 namespace megamol::core {
 

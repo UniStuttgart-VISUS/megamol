@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/CallTimeControl.h"
+#include "mmstd/renderer/CallTimeControl.h"
 
 using namespace megamol::core;
 

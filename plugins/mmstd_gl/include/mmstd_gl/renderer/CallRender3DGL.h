@@ -10,7 +10,7 @@
 #include <glowl/FramebufferObject.hpp>
 
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmstd/renderer/CallRender3D.h"
 
 namespace megamol::mmstd_gl {
 

@@ -18,8 +18,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/RendererModule.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd/renderer/RendererModule.h"
 #include "mmstd_gl/ModuleGL.h"
 
 #include "FSRAMDHelper.h"

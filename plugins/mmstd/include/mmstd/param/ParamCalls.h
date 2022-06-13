@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mmcore/CallGeneric.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/generic/CallGeneric.h"
 
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"

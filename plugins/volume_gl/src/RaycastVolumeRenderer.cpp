@@ -32,7 +32,7 @@
 
 #include <glm/ext.hpp>
 
-#include "mmcore/view/light/DistantLight.h"
+#include "mmstd/light/DistantLight.h"
 
 using namespace megamol::volume_gl;
 

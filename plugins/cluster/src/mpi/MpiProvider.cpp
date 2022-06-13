@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/cluster/mpi/MpiProvider.h"
+#include "cluster/mpi/MpiProvider.h"
 
 #ifndef _WIN32
 #include <cstdio>
@@ -14,7 +14,7 @@
 
 #include "mmcore/param/IntParam.h"
 
-#include "mmcore/cluster/mpi/MpiCall.h"
+#include "cluster/mpi/MpiCall.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/assert.h"

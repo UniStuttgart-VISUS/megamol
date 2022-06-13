@@ -14,7 +14,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 #include "mmstd_gl/flags/FlagCallsGL.h"
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"

@@ -16,7 +16,7 @@
 #include "QuartzCrystalDataCall.h"
 #include "QuartzParticleGridDataCall.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib/sys/File.h"
 #include "vislib/sys/RunnableThread.h"

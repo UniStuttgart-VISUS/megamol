@@ -10,7 +10,7 @@
 #include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"

@@ -8,7 +8,7 @@
 
 #include "SphereRenderer.h"
 
-#include "mmcore/view/light/DistantLight.h"
+#include "mmstd/light/DistantLight.h"
 #include "mmstd_gl/flags/FlagCallsGL.h"
 
 #include "OpenGL_Context.h"

@@ -9,8 +9,8 @@
 #define MEGAMOL_GEOMETRY_CALLS_LINESDATACALL_H_INCLUDED
 #pragma once
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib/assert.h"
 #include "vislib/forceinline.h"
 #include "vislib/graphics/ColourRGBAu8.h"

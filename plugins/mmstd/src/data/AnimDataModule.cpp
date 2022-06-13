@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/assert.h"
 #include "vislib/sys/Thread.h"

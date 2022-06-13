@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/DataWriterCtrlCall.h"
+#include "mmstd/data/DataWriterCtrlCall.h"
 
 using namespace megamol::core;
 

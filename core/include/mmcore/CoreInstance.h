@@ -592,7 +592,7 @@ public:
      * @param data The serialized graph description (Pointer to an
      *             vislib::net::AbstractSimpleMessage)
      */
-    void GOES_INTO_GRAPH SetupGraphFromNetwork(const void* data);
+    //void GOES_INTO_GRAPH SetupGraphFromNetwork(const void* data);
 
     /**
      * Instantiates a call.

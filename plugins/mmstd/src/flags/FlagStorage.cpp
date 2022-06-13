@@ -4,15 +4,15 @@
  * All rights reserved.
  */
 
-#include "mmcore/flags/FlagStorage.h"
+#include "mmstd/flags/FlagStorage.h"
 
 #include <json.hpp>
 
 #include "FlagStorageBitsChecker.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/flags/FlagCalls.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmstd/flags/FlagCalls.h"
 
 using namespace megamol;
 using namespace megamol::core;

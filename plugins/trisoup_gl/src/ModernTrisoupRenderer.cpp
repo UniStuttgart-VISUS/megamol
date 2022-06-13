@@ -13,10 +13,10 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/view/light/DistantLight.h"
-#include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/light/DistantLight.h"
+#include "mmstd/light/PointLight.h"
 
 using namespace megamol;
 using namespace megamol::trisoup_gl;

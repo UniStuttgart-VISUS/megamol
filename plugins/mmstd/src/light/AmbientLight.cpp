@@ -4,7 +4,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/light/AmbientLight.h"
+#include "mmstd/light/AmbientLight.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 

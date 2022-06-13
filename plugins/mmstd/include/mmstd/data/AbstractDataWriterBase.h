@@ -11,12 +11,12 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmstd/data/AbstractDataWriter.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/Thread.h"
 #include <climits>

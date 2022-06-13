@@ -12,7 +12,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/light/PointLight.h"
+#include "mmstd/light/PointLight.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "trisoup/trisoupVolumetricDataCall.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"

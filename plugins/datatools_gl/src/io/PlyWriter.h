@@ -9,9 +9,9 @@
 #pragma once
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
-#include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd/data/AbstractDataWriter.h"
 #include "vislib/sys/FastFile.h"
 
 namespace megamol {

@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetDataCall.h"
 
 
 namespace megamol {

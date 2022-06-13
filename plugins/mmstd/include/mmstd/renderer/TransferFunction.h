@@ -8,7 +8,7 @@
 #pragma once
 
 #include "mmcore/Module.h"
-#include "mmcore/view/AbstractTransferFunction.h"
+#include "mmstd/renderer/AbstractTransferFunction.h"
 
 
 namespace megamol {

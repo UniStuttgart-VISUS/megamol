@@ -3,8 +3,8 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/param/ParamCalls.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd/param/ParamCalls.h"
 
 namespace megamol::core::param {
 template<typename T>

@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/cluster/CallRegisterAtController.h"
+#include "cluster/CallRegisterAtController.h"
 
 using namespace megamol::core;
 

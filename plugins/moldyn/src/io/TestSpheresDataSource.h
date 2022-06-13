@@ -11,7 +11,7 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "vislib/memutils.h"
 
 namespace megamol::moldyn::io {

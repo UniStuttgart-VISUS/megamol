@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/AbstractCallRender.h"
+#include "mmstd/renderer/AbstractCallRender.h"
 #include "vislib/assert.h"
 
 using namespace megamol::core;

@@ -4,7 +4,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/light/SpotLight.h"
+#include "mmstd/light/SpotLight.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"

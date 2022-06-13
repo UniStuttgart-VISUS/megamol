@@ -9,7 +9,7 @@
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/light/CallLight.h"
+#include "mmstd/light/CallLight.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 namespace megamol::trisoup_gl {

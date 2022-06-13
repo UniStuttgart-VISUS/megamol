@@ -8,9 +8,9 @@
 
 #include "mmcore/utility/log/Log.h"
 
+#include "cluster/mpi/MpiCall.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"

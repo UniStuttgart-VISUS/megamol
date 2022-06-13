@@ -9,8 +9,8 @@
 #define MEGAMOL_EVENT_STORAGE_H_INCLUDED
 
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/DoubleBufferedEventCollection.h"
 #include "mmcore/Module.h"
+#include "mmstd/event/DoubleBufferedEventCollection.h"
 
 namespace megamol {
 namespace core {

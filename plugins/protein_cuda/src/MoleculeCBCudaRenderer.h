@@ -15,7 +15,7 @@
 #include "glowl/Texture2D.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmstd/renderer/CallRender3D.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"

@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/TransferFunction.h"
+#include "mmstd/renderer/TransferFunction.h"
 #include "mmcore/param/TransferFunctionParam.h"
 
 

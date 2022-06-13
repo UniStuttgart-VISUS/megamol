@@ -5,10 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/AbstractDataWriter.h"
-#include "mmcore/DataWriterCtrlCall.h"
+#include "mmstd/data/AbstractDataWriter.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmstd/data/DataWriterCtrlCall.h"
 
 using namespace megamol::core;
 

@@ -4,7 +4,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/light/HDRILight.h"
+#include "mmstd/light/HDRILight.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"

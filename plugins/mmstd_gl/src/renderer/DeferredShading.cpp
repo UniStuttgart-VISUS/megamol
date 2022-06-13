@@ -10,8 +10,8 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
-#include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/light/PointLight.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
 using namespace megamol::mmstd_gl;

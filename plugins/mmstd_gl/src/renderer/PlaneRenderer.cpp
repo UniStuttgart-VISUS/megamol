@@ -14,8 +14,8 @@
 #include <glm/mat4x4.hpp>
 #include <glowl/GLSLProgram.hpp>
 
-#include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/Camera.h"
+#include "mmstd/renderer/CallClipPlane.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "vislib/math/Plane.h"
 

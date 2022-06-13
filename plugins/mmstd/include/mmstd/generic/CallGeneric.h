@@ -10,8 +10,8 @@
 
 #include <type_traits>
 
-#include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/BoundingBoxes_2.h"
+#include "mmstd/data/AbstractGetDataCall.h"
 
 namespace megamol {
 namespace core {

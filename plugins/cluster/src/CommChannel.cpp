@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/cluster/CommChannel.h"
+#include "cluster/CommChannel.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/UnsupportedOperationException.h"

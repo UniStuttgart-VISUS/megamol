@@ -4,7 +4,7 @@
  * All rights reserved. Alle Rechte vorbehalten.
  */
 
-#include "mmcore/special/StubModule.h"
+#include "StubModule.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/factories/CallAutoDescription.h"

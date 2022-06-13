@@ -5,13 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/ClipPlane.h"
+#include "mmstd/renderer/ClipPlane.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"

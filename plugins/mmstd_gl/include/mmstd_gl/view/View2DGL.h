@@ -8,8 +8,8 @@
 
 #include <glowl/FramebufferObject.hpp>
 
-#include "mmcore/view/BaseView.h"
 #include "mmcore/view/CameraControllers.h"
+#include "mmstd/view/BaseView.h"
 #include "mmstd_gl/renderer/CallRenderViewGL.h"
 #include "mmstd_gl/view/AbstractViewGL.h"
 

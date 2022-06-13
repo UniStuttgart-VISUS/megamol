@@ -5,10 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/cluster/ClusterController.h"
+#include "cluster/ClusterController.h"
+#include "cluster/CallRegisterAtController.h"
+#include "cluster/ClusterControllerClient.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/cluster/CallRegisterAtController.h"
-#include "mmcore/cluster/ClusterControllerClient.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/IntParam.h"

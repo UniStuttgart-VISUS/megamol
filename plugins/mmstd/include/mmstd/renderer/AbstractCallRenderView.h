@@ -8,8 +8,8 @@
 #pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/Input.h"
+#include "mmstd/renderer/CallRender3D.h"
 
 
 namespace megamol {

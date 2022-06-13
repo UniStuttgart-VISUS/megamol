@@ -6,7 +6,7 @@
 
 #include "FlagStorageBitsChecker.h"
 
-#include "mmcore/flags/FlagStorage.h"
+#include "mmstd/flags/FlagStorage.h"
 
 using namespace megamol;
 using namespace megamol::core;

@@ -8,9 +8,9 @@
 #pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/AbstractCallRenderView.h"
 #include "mmcore/view/CPUFramebuffer.h"
 #include "mmcore/view/Input.h"
+#include "mmstd/renderer/AbstractCallRenderView.h"
 
 
 namespace megamol {

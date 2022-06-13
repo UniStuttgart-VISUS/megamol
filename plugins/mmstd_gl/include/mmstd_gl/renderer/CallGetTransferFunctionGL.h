@@ -11,7 +11,7 @@
 
 #include <glowl/glowl.h>
 
-#include "mmcore/view/AbstractCallGetTransferFunction.h"
+#include "mmstd/renderer/AbstractCallGetTransferFunction.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 

@@ -14,9 +14,9 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/InputCall.h"
 #include "mmcore/view/MouseFlags.h"
+#include "mmstd/renderer/AbstractCallRender.h"
 #include <AbstractInputScope.h>
 
 namespace megamol {

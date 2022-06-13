@@ -11,7 +11,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/light/CallLight.h"
+#include "mmstd/light/CallLight.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 #include "glowl/BufferObject.hpp"

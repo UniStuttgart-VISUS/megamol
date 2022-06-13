@@ -10,7 +10,7 @@
 #include "geometry_calls/BezierCurvesListDataCall.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/light/PointLight.h"
+#include "mmstd/light/PointLight.h"
 #include "vislib/math/BezierCurve.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowPoint.h"

@@ -4,7 +4,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/light/AbstractLight.h"
+#include "mmstd/light/AbstractLight.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"

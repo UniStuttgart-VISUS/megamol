@@ -14,7 +14,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "vislib/Array.h"
 #include "vislib/Exception.h"

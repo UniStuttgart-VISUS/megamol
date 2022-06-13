@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/RendererModule.h"
+#include "mmstd/renderer/CallRender3D.h"
+#include "mmstd/renderer/RendererModule.h"
 
 namespace megamol {
 namespace core {

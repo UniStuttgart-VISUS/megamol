@@ -1,7 +1,7 @@
-#include "../include/mmcore/EventStorage.h"
+#include "EventStorage.h"
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/EventCall.h"
+#include "mmstd/event/EventCall.h"
 
 megamol::core::EventStorage::EventStorage()
         : m_events_slot("deployEventCollection", "Provides read-only access to pending events to clients.")

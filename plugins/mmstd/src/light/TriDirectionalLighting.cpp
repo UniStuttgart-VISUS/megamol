@@ -4,7 +4,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/light/TriDirectionalLighting.h"
+#include "mmstd/light/TriDirectionalLighting.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "mmcore/param/BoolParam.h"

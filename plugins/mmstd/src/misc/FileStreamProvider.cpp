@@ -5,7 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/FileStreamProvider.h"
+#include "FileStreamProvider.h"
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 

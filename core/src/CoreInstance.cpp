@@ -21,8 +21,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
-#include "mmcore/cluster/ClusterController.h"
-#include "mmcore/job/JobThread.h"
+//#include "mmcore/cluster/ClusterController.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
@@ -2127,6 +2126,7 @@ void megamol::core::CoreInstance::Shutdown(void) {
 /*
  * megamol::core::CoreInstance::SetupGraphFromNetwork
  */
+/*
 void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
     using megamol::core::utility::log::Log;
     using vislib::net::AbstractSimpleMessage;
@@ -2255,6 +2255,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
             Log::LEVEL_ERROR, "Failed to setup module graph from network message: unexpected exception\n");
     }
 }
+*/
 
 
 /*

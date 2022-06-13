@@ -10,7 +10,7 @@
 
 #include <glowl/glowl.h>
 
-#include "mmcore/flags/FlagStorageTypes.h"
+#include "mmstd/flags/FlagStorageTypes.h"
 
 namespace glowl_experimental {
 class ImmutableBufferObject {

@@ -10,8 +10,8 @@
 #include <glm/glm.hpp>
 
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/CPUFramebuffer.h"
+#include "mmstd/renderer/AbstractCallRender.h"
 
 namespace megamol {
 namespace core {

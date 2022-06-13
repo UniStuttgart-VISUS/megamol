@@ -24,8 +24,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/CallRender3D.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/renderer/CallRender3D.h"
 
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 

@@ -8,8 +8,8 @@
 #ifndef CALL_LIGHTS_H_INCLUDED
 #define CALL_LIGHTS_H_INCLUDED
 
-#include "mmcore/CallGeneric.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/generic/CallGeneric.h"
 
 #include "LightCollection.h"
 

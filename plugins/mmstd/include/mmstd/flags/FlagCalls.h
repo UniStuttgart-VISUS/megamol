@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "mmcore/CallGeneric.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/flags/FlagCollection.h"
+#include "mmstd/flags/FlagCollection.h"
+#include "mmstd/generic/CallGeneric.h"
 
 namespace megamol::core {
 

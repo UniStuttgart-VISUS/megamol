@@ -4,7 +4,7 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmstd/renderer/CallGetTransferFunction.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/StringConverter.h"

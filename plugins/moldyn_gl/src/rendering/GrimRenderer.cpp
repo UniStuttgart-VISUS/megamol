@@ -8,7 +8,7 @@
 #include "GrimRenderer.h"
 
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/view/light/DistantLight.h"
+#include "mmstd/light/DistantLight.h"
 
 #include <glm/ext.hpp>
 

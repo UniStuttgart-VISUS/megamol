@@ -4,7 +4,7 @@
 #include "compositing_gl/CompositingCalls.h"
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/EventCall.h"
+#include "mmstd/event/EventCall.h"
 
 #include "ProbeEvents.h"
 

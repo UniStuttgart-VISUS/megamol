@@ -1,8 +1,8 @@
 #pragma once
 
-#include "LuaHostService.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/LuaHostService.h"
 
 namespace megamol {
 namespace core {

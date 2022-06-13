@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/cluster/SyncDataSourcesCall.h"
+#include "cluster/SyncDataSourcesCall.h"
 
 
 namespace megamol {

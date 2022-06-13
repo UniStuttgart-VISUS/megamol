@@ -6,8 +6,8 @@
  */
 #pragma once
 
-#include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
+#include "mmstd/data/AbstractDataWriter.h"
 
 namespace megamol {
 namespace datatools {

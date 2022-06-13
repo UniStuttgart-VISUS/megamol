@@ -26,8 +26,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/CallClipPlane.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/renderer/CallClipPlane.h"
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"

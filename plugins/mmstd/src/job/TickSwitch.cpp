@@ -7,7 +7,7 @@
 #include "TickSwitch.h"
 
 #include "mmcore/Call.h"
-#include "mmcore/job/TickCall.h"
+#include "mmstd/job/TickCall.h"
 
 namespace megamol {
 namespace core {

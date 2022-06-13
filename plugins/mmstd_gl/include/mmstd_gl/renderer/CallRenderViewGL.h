@@ -9,8 +9,8 @@
 #include <glowl/FramebufferObject.hpp>
 
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/AbstractCallRenderView.h"
 #include "mmcore/view/Input.h"
+#include "mmstd/renderer/AbstractCallRenderView.h"
 
 namespace megamol::mmstd_gl {
 

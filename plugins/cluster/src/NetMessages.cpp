@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/cluster/NetMessages.h"
+#include "cluster/NetMessages.h"
 
 
 using namespace megamol::core;

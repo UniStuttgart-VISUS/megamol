@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "mmcore/CallGeneric.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/generic/CallGeneric.h"
 #include "mmstd_gl/flags/FlagCollectionGL.h"
 
 namespace megamol::mmstd_gl {

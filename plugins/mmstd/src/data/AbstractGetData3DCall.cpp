@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/AbstractGetData3DCall.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 
 using namespace megamol::core;
 

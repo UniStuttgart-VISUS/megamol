@@ -12,7 +12,7 @@
 
 #include "cinematic_gl/CinematicUtils.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/RendererModule.h"
+#include "mmstd/renderer/RendererModule.h"
 #include "mmstd_gl/ModuleGL.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "vislib/math/Cuboid.h"

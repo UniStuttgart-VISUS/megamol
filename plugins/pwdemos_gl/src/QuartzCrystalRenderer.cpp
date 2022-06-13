@@ -9,7 +9,7 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/light/PointLight.h"
+#include "mmstd/light/PointLight.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 

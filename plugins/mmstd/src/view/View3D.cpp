@@ -5,10 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/View3D.h"
+#include "mmstd/view/View3D.h"
 
 #include "GlobalValueStore.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmstd/renderer/CallRenderView.h"
 
 
 using namespace megamol::core;

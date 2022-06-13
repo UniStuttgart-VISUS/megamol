@@ -17,9 +17,9 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/flags/FlagStorage.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/SDFFont.h"
+#include "mmstd/flags/FlagStorage.h"
 #include "mmstd_gl/renderer/CallRender2DGL.h"
 #include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 

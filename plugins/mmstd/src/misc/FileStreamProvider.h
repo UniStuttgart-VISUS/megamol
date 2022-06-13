@@ -6,8 +6,8 @@
  */
 #pragma once
 
-#include "mmcore/AbstractStreamProvider.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd/generic/AbstractStreamProvider.h"
 
 #include <fstream>
 #include <iostream>

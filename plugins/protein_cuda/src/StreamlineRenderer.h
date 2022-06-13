@@ -19,7 +19,7 @@
 #include "VBODataCall.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmstd/renderer/CallRender3D.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/VTIDataCall.h"
 #include "vislib_gl/graphics/gl/GLSLGeometryShader.h"

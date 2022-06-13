@@ -6,8 +6,8 @@
  */
 #pragma once
 
-#include "mmcore/AbstractCallbackCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/generic/AbstractCallbackCall.h"
 
 #include <functional>
 #include <iostream>

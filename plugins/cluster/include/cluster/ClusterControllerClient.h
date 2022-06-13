@@ -11,10 +11,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "cluster/ClusterController.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/cluster/ClusterController.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/Listenable.h"
 #include "vislib/net/DiscoveryService.h"

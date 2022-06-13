@@ -8,8 +8,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/renderer/AbstractCallRender.h"
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "mmstd_gl/renderer/TransferFunctionGL.h"
 

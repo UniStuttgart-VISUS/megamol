@@ -8,7 +8,7 @@
 
 #include <tbb/tbb.h>
 
-#include "mmcore/flags/FlagStorageTypes.h"
+#include "mmstd/flags/FlagStorageTypes.h"
 #include "vislib/assert.h"
 
 namespace megamol::core {

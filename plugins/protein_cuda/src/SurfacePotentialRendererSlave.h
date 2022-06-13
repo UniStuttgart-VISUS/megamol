@@ -15,7 +15,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmstd/renderer/CallRender3D.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 //#include "vislib_vector_typedefs.h"

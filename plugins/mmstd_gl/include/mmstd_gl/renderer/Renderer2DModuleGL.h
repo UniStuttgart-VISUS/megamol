@@ -7,7 +7,7 @@
 #pragma once
 
 #include "CallRender2DGL.h"
-#include "mmcore/view/RendererModule.h"
+#include "mmstd/renderer/RendererModule.h"
 #include "mmstd_gl/ModuleGL.h"
 
 namespace megamol::mmstd_gl {

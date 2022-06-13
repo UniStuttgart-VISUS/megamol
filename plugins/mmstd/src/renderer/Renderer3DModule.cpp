@@ -5,9 +5,9 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmstd/renderer/Renderer3DModule.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmstd/renderer/CallRender3D.h"
 
 
 namespace megamol::core::view {

@@ -7,7 +7,7 @@
 #pragma once
 
 #include "CallGetTransferFunctionGL.h"
-#include "mmcore/view/AbstractTransferFunction.h"
+#include "mmstd/renderer/AbstractTransferFunction.h"
 #include "mmstd_gl/ModuleGL.h"
 
 namespace megamol::mmstd_gl {

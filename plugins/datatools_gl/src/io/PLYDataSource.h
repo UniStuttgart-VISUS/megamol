@@ -13,7 +13,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "tinyply.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"

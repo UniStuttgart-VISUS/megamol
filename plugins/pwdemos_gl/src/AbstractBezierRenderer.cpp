@@ -7,7 +7,7 @@
 
 #define _USE_MATH_DEFINES
 #include "AbstractBezierRenderer.h"
-#include "mmcore/AbstractGetData3DCall.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include "OpenGL_Context.h"

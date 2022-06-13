@@ -8,9 +8,9 @@
 #ifndef MEGAMOLCORE_BASEVIEW_H_INCLUDED
 #define MEGAMOLCORE_BASEVIEW_H_INCLUDED
 
-#include "AbstractCallRenderView.h"
-#include "AbstractView.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/view/AbstractView.h"
+#include "mmstd/renderer/AbstractCallRenderView.h"
 
 namespace megamol {
 namespace core {

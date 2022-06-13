@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/cluster/mpi/MpiCall.h"
+#include "cluster/mpi/MpiCall.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/CmdLineProvider.h"
