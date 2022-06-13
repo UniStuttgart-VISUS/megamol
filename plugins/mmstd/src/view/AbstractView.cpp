@@ -5,7 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/AbstractView.h"
+#include "mmstd/view/AbstractView.h"
+
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/AbstractParam.h"
@@ -13,8 +14,8 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/AbstractCallRender.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmstd/renderer/AbstractCallRender.h"
+#include "mmstd/renderer/CallRenderView.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/assert.h"
 #include <climits>
@@ -27,7 +28,7 @@ using megamol::core::utility::log::Log;
  * view::AbstractView::AbstractView
  */
 view::AbstractView::AbstractView(ViewDimension dim)
-        : Module()
+        : AbstractViewInterface()
         , _firstImg(false)
         , _cameraIsMutable(true)
         , viewDimension_(dim)

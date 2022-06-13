@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CPUFramebuffer.h"
 #include "mmcore/view/CameraControllers.h"
 #include "mmstd/renderer/CallRenderView.h"
+#include "mmstd/view/AbstractView.h"
 #include "mmstd/view/BaseView.h"
 
 namespace megamol {

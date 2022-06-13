@@ -302,7 +302,7 @@ public:
      *
      * @return The instantiated view module
      */
-    view::AbstractView* instantiateSubView(ViewDescription* vd);
+    view::AbstractViewInterface* instantiateSubView(ViewDescription* vd);
 
     /**
      * Instantiates the next pending job, if there is one.

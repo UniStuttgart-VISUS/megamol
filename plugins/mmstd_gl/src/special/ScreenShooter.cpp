@@ -974,7 +974,10 @@ bool special::ScreenShooter::triggerButtonClicked(core::param::ParamSlot& slot) 
 
         if (vi != nullptr) {
             if (vi->View() != nullptr) {
-                av = vi->View();
+                auto* tmp = dynamic_cast<core::view::AbstractView*>(vi->View());
+                if (tmp != nullptr) {
+                    av = tmp;
+                }
             }
         }
         if (av != nullptr) {

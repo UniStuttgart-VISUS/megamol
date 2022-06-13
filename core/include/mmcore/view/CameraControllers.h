@@ -4,6 +4,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include "KeyboardMouseInput.h"
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -19,6 +21,13 @@
 namespace megamol {
 namespace core {
 namespace view {
+
+using megamol::frontend_resources::Key;
+using megamol::frontend_resources::KeyAction;
+using megamol::frontend_resources::Modifier;
+using megamol::frontend_resources::Modifiers;
+using megamol::frontend_resources::MouseButton;
+using megamol::frontend_resources::MouseButtonAction;
 
 class Camera3DController {
 public:

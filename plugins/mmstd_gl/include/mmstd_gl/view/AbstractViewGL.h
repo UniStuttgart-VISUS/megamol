@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "mmcore/view/AbstractView.h"
+#include "mmstd/view/AbstractView.h"
 
 namespace megamol::mmstd_gl::view {
 class AbstractViewGL : public core::view::AbstractView {

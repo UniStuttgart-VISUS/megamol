@@ -13,7 +13,7 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/TimeControl.h"
+#include "mmstd/renderer/TimeControl.h"
 
 
 namespace megamol {

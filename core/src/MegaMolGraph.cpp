@@ -323,7 +323,7 @@ std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::ListP
 
 bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string module) {
     auto moduleName = clean(module);
-    // currently, we expect the entry point to be derived from AbstractView
+    // currently, we expect the entry point to be derived from AbstractViewInterface
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
@@ -335,8 +335,10 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string module) {
     auto& module_ref = *module_shared_ptr;
     auto* module_raw_ptr = &module_ref;
 
-    if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_raw_ptr); view_ptr == nullptr) {
-        log_error("error adding graph entry point. module is not an entry point type (AbstractView): " + moduleName);
+    if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractViewInterface*>(module_raw_ptr);
+        view_ptr == nullptr) {
+        log_error(
+            "error adding graph entry point. module is not an entry point type (AbstractViewInterface): " + moduleName);
         return false;
     }
 

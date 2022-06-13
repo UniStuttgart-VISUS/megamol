@@ -6,7 +6,7 @@
 
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-#include "mmcore/view/AbstractView.h"
+#include "mmstd/view/AbstractView.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 
 using namespace megamol::mmstd_gl;

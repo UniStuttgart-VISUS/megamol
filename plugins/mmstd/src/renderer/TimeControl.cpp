@@ -5,11 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "mmcore/view/TimeControl.h"
+#include "mmstd/renderer/TimeControl.h"
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/view/CallTimeControl.h"
+#include "mmstd/renderer/CallTimeControl.h"
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
 

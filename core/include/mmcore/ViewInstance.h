@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/ModuleNamespace.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmcore/view/AbstractViewInterface.h"
 #include "vislib/assert.h"
 #include "vislib/forceinline.h"
 
@@ -52,14 +52,14 @@ public:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool Initialize(ModuleNamespace::ptr_type ns, view::AbstractView* view);
+    bool Initialize(ModuleNamespace::ptr_type ns, view::AbstractViewInterface* view);
 
     /**
      * Gets the view object encapsuled by this instance.
      *
      * @return The view object.
      */
-    VISLIB_FORCEINLINE view::AbstractView* View(void) {
+    VISLIB_FORCEINLINE view::AbstractViewInterface* View(void) {
         return this->view;
     }
 
@@ -103,7 +103,7 @@ public:
 
 private:
     /** The view module */
-    view::AbstractView* view;
+    view::AbstractViewInterface* view;
 
     /** The close request callback function pointer */
     mmcViewCloseRequestFunction closeRequestCallback;

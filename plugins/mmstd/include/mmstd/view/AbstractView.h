@@ -6,17 +6,14 @@
 
 #pragma once
 
-#include "AbstractInputScope.h"
-#include "ImageWrapper.h"
 #include "ScriptPaths.h"
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Camera.h"
+#include "mmcore/view/AbstractViewInterface.h"
 #include "mmcore/view/CameraSerializer.h"
-#include "mmcore/view/TimeControl.h"
+#include "mmstd/renderer/TimeControl.h"
 #include "vislib/Array.h"
 #include "vislib/Serialiser.h"
 #include "vislib/SingleLinkedList.h"
@@ -36,7 +33,7 @@ using megamol::frontend_resources::MouseButtonAction;
 /**
  * Abstract base class of rendering views
  */
-class AbstractView : public Module, public megamol::frontend_resources::AbstractInputScope {
+class AbstractView : public AbstractViewInterface {
 
 
 public:
@@ -122,7 +119,7 @@ public:
     /**
      * Return the current camera
      */
-    Camera GetCamera() const;
+    virtual Camera GetCamera() const;
 
     /**
      * ...
@@ -132,18 +129,6 @@ public:
     ViewDimension const& GetViewDimension() const {
         return viewDimension_;
     }
-
-    /**
-     * Renders this AbstractView.
-     * The View will use its own camera and framebuffer for the rendering exectuion
-     *
-     * @param time ...
-     * @param instanceTime ...
-     */
-    using ImageWrapper = megamol::frontend_resources::ImageWrapper;
-    virtual ImageWrapper Render(double time, double instanceTime) = 0;
-
-    virtual ImageWrapper GetRenderingResult() const = 0;
 
     /**
      * Returns the current Bounding Box extents

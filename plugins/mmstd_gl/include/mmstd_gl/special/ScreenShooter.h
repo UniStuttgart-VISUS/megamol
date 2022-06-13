@@ -12,7 +12,7 @@
 #include "mmcore/ViewInstance.h"
 #include "mmcore/job/AbstractJob.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmstd/view/AbstractView.h"
 
 namespace megamol::mmstd_gl::special {
 
