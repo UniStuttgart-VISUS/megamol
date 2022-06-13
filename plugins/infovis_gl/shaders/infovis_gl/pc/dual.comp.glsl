@@ -7,8 +7,8 @@ layout(binding = 7, r32ui) uniform coherent uimage2DArray o_dualtex;
 
 void main(){
     uint invID = globalInvocationIndex();
-    uint itemID = invID % (2 * itemCount);
-    uint dimID = invID / (2* itemCount); // correct division of inv to item/dim
+    uint itemID = invID % (itemCount);
+    uint dimID = invID / (itemCount); // correct division of inv to item/dim
     float left = pc_dataValueNormalized(itemID, dimID);
     float right = pc_dataValueNormalized(itemID, dimID + 1);
 

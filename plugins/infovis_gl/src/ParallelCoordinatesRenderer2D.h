@@ -260,6 +260,7 @@ protected:
     std::array<GLint, 3> maxWorkgroupCount_;
 
     std::unique_ptr<glowl::FramebufferObject> densityFbo_;
+    std::unique_ptr<glowl::Texture2DArray> dualTexture_;
 
     // View and camera state
     std::optional<core::view::Camera> cameraCopy_;

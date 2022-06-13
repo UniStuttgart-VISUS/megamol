@@ -255,6 +255,9 @@ bool ParallelCoordinatesRenderer2D::create() {
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount_[1]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount_[2]);
 
+    //needs to be moved
+    dualTexture_ = nullptr;
+
     return true;
 }
 
@@ -855,28 +858,32 @@ void ParallelCoordinatesRenderer2D::drawDensity(std::shared_ptr<glowl::Framebuff
 
 void ParallelCoordinatesRenderer2D::drawDual() {
     // data -> compute, each axes pair
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("here");
     useProgramAndBindCommon(dualProgram_);
     //texture2d array
-    const std::vector<uint32_t> zeroData(axisHeight_ * axisHeight_, 0);
-    auto dualTexture_ =
-        std::make_unique<glowl::Texture2DArray>("o_dualtex", glowl::TextureLayout(GL_R32UI, 600, 600, dimensionCount_, GL_RED, GL_UNSIGNED_INT, 1,
-                                                            {
-                                                                {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER},
-                                                                {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-                                                                {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER},
-                                                                {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
-                                                                {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
-                                                            },
-                                                            {}), nullptr);
+    //const std::vector<uint32_t> zeroData(axisHeight_ * axisHeight_, 0);
+
+    if (dualTexture_ == nullptr) {
+        dualTexture_ = std::make_unique<glowl::Texture2DArray>("o_dualtex",
+            glowl::TextureLayout(GL_R32UI, 600, 600, dimensionCount_, GL_RED, GL_UNSIGNED_INT, 1,
+                {
+                    {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER},
+                    {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+                    {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER},
+                    {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
+                    {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
+                },
+                {}),
+            nullptr);
+    }
+    
     std::array<GLuint, 3> groupCounts{};
     dualTexture_->bindImage(7, GL_WRITE_ONLY);
-    computeDispatchSizes(2 * itemCount_ * dimensionCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
+    computeDispatchSizes(itemCount_ * dimensionCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
     glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
 
     useProgramAndBindCommon(dualDisplayProgram_);
     dualTexture_->bindImage(7, GL_READ_ONLY);
-    glDrawArraysInstanced(GL_LINES, 0, 2, 600*600);
+    glDrawArraysInstanced(GL_LINES, 0, 2, dimensionCount_* 600*600);
 
     glUseProgram(0);
 }
