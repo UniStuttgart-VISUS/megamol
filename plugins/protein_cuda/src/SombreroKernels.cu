@@ -67,7 +67,7 @@ struct VertexID1Cmp {
  * @return Returns the thread index based on the current CUDA grid
  *            dimensions.
  */
-__device__ uint GetThreadIndex() {
+__device__ uint GetCurThreadIndex() {
     return __umul24(__umul24(blockIdx.y, gridDim.x) + blockIdx.x, blockDim.x) + threadIdx.x;
 }
 
@@ -83,7 +83,7 @@ __device__ uint GetThreadIndex() {
 __global__ void GetNeighbourIds(uint* p_neighbour_ids, bool* p_valid_z_values,
     const SombreroKernels::Edge* p_vertex_edge_offset, const uint* p_vertex_edge_offset_depth, uint p_vertex_cnt,
     uint p_edge_cnt) {
-    const uint idx = GetThreadIndex();
+    const uint idx = GetCurThreadIndex();
     if (idx >= p_vertex_cnt) return;
     if (!p_valid_z_values[idx]) return;
 
@@ -115,7 +115,7 @@ __global__ void GetNeighbourIds(uint* p_neighbour_ids, bool* p_valid_z_values,
  * @param p_face_cnt The number of faces in the mesh.
  */
 __global__ void InitEdges(const uint3* p_faces, SombreroKernels::Edge* p_edges, uint p_face_cnt) {
-    const uint idx = GetThreadIndex();
+    const uint idx = GetCurThreadIndex();
     if (idx >= p_face_cnt) return;
 
     // First edge.
@@ -167,7 +167,7 @@ __global__ void InitEdges(const uint3* p_faces, SombreroKernels::Edge* p_edges, 
  */
 __global__ void MatchEdges(
     SombreroKernels::Edge* p_edges, SombreroKernels::Edge* p_sorted_edges, uint* p_edge_offset, uint p_edge_cnt) {
-    const uint idx = GetThreadIndex();
+    const uint idx = GetCurThreadIndex();
     if (idx >= p_edge_cnt) return;
 
     // Get current edge and check if it is already matched.
@@ -207,7 +207,7 @@ __global__ void MatchEdges(
  */
 __global__ void SetFaceEdgeOffset(SombreroKernels::Edge* p_face_edge_offset, SombreroKernels::Edge* p_face_id_0_offset,
     SombreroKernels::Edge* p_face_id_1_offset, uint depth, uint p_face_cnt) {
-    const uint idx = GetThreadIndex();
+    const uint idx = GetCurThreadIndex();
     if (idx >= p_face_cnt) return;
 
     // Find edges that belong to the face.
@@ -237,7 +237,7 @@ __global__ void SetFaceEdgeOffset(SombreroKernels::Edge* p_face_edge_offset, Som
 __global__ void SetVertexEdgeOffset(SombreroKernels::Edge* p_vertex_edge_offset,
     SombreroKernels::Edge* p_vertex_id_0_sorted, SombreroKernels::Edge* p_vertex_id_1_sorted,
     uint* p_vertex_id_0_offset, uint* p_vertex_id_1_offset, uint* depth, uint p_vertex_cnt, uint p_edge_cnt) {
-    const uint idx = GetThreadIndex();
+    const uint idx = GetCurThreadIndex();
     if (idx >= p_vertex_cnt) return;
 
     // Find edges that belong to the vertex.
@@ -283,7 +283,7 @@ __global__ void SetVertexEdgeOffset(SombreroKernels::Edge* p_vertex_edge_offset,
 __global__ void SetPhiValues(float* p_phivalues_in, float* p_phivalues_out, bool* p_valid_phi_values,
     const uint* p_vertex_neighbours, const uint* p_vertex_edge_offset_depth, const int* p_vertex_type,
     const uint* p_vertex_neighbours_offset, uint p_vertex_cnt, uint p_edge_cnt) {
-    const uint idx = GetThreadIndex();
+    const uint idx = GetCurThreadIndex();
     if (idx >= p_vertex_cnt) return;
     if (!p_valid_phi_values[idx]) return;
 
@@ -336,7 +336,7 @@ __global__ void SetPhiValues(float* p_phivalues_in, float* p_phivalues_out, bool
  */
 __global__ void SetZValues(float* p_zvalues, bool* p_valid_z_values, const uint* p_vertex_neighbours,
     const uint* p_vertex_edge_offset_depth, const uint* p_vertex_multiplicity, uint p_vertex_cnt, uint p_edge_cnt) {
-    const uint idx = GetThreadIndex();
+    const uint idx = GetCurThreadIndex();
     if (idx >= p_vertex_cnt) return;
     if (!p_valid_z_values[idx]) return;
 
@@ -374,7 +374,7 @@ __global__ void SetZValues(float* p_zvalues, bool* p_valid_z_values, const uint*
  */
 __global__ void SortNeighbourIds(uint* p_neighbour_ids, uint* p_neighbour_ids_offset, bool* p_valid_z_values,
     const uint* p_vertex_edge_offset_depth, const int* p_vertex_type, uint p_vertex_cnt, uint p_edge_cnt) {
-    const uint idx = GetThreadIndex();
+    const uint idx = GetCurThreadIndex();
     if (idx >= p_vertex_cnt) return;
     if (!p_valid_z_values[idx]) return;
 
