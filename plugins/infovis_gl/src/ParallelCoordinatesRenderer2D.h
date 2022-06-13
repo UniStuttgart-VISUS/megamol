@@ -108,6 +108,7 @@ protected:
     enum DrawMode {
         DRAW_DISCRETE = 0,
         DRAW_DENSITY,
+        DRAW_DUAL
     };
 
     enum SelectionMode {
@@ -146,6 +147,8 @@ protected:
     void drawDiscrete(bool useTf, glm::vec4 const& color, glm::vec4 selectedColor);
 
     void drawDensity(std::shared_ptr<glowl::FramebufferObject> const& fbo);
+
+    void drawDual();
 
     void drawAxes(glm::mat4 ortho);
 
@@ -245,8 +248,11 @@ protected:
     std::unique_ptr<glowl::GLSLProgram> drawAxesProgram_;
     std::unique_ptr<glowl::GLSLProgram> drawIndicatorPickProgram_;
     std::unique_ptr<glowl::GLSLProgram> drawIndicatorStrokeProgram_;
+    std::unique_ptr<glowl::GLSLProgram> dualProgram_;
+    std::unique_ptr<glowl::GLSLProgram> dualDisplayProgram_;
 
     std::array<GLint, 3> filterWorkgroupSize_;
+    std::array<GLint, 3> dualWorkgroupSize_;
     std::array<GLint, 3> selectPickWorkgroupSize_;
     std::array<GLint, 3> selectStrokeWorkgroupSize_;
     std::array<GLint, 3> densityMinMaxWorkgroupSize_;

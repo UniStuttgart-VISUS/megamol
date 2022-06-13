@@ -89,6 +89,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         , selectPickWorkgroupSize_()
         , selectStrokeWorkgroupSize_()
         , densityMinMaxWorkgroupSize_()
+        //, dualWorkgroupSize_()
         , maxWorkgroupCount_()
         , cameraCopy_(std::nullopt)
         , viewRes_(glm::ivec2(1, 1)) {
@@ -108,6 +109,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
     auto drawModes = new core::param::EnumParam(DRAW_DISCRETE);
     drawModes->SetTypePair(DRAW_DISCRETE, "Kernel Blending");
     drawModes->SetTypePair(DRAW_DENSITY, "Kernel Density Estimation");
+    drawModes->SetTypePair(DRAW_DUAL, "New Dual Coordinates");
     drawModeParam_.SetParameter(drawModes);
     MakeSlotAvailable(&drawModeParam_);
 
@@ -230,6 +232,13 @@ bool ParallelCoordinatesRenderer2D::create() {
 
         drawIndicatorStrokeProgram_ = core::utility::make_glowl_shader("pc_indicator_stroke", shader_options,
             "infovis_gl/pc/indicator_stroke.vert.glsl", "infovis_gl/pc/indicator_stroke.frag.glsl");
+
+        dualProgram_
+        = core::utility::make_glowl_shader("pc_dual", shader_options, "infovis_gl/pc/dual.comp.glsl");
+
+        dualDisplayProgram_
+        = core::utility::make_glowl_shader(
+            "pc_dualDisplay", shader_options, "infovis_gl/pc/dual.vert.glsl", "infovis_gl/pc/dual.frag.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteError(("ParallelCoordinatesRenderer2D: " + std::string(e.what())).c_str());
         return false;
@@ -239,6 +248,8 @@ bool ParallelCoordinatesRenderer2D::create() {
     glGetProgramiv(selectPickProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, selectPickWorkgroupSize_.data());
     glGetProgramiv(selectStrokeProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, selectStrokeWorkgroupSize_.data());
     glGetProgramiv(densityMinMaxProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, densityMinMaxWorkgroupSize_.data());
+    glGetProgramiv(dualProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, dualWorkgroupSize_.data());
+
 
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount_[0]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount_[1]);
@@ -341,6 +352,9 @@ bool ParallelCoordinatesRenderer2D::Render(core_gl::view::CallRender2DGL& call) 
         break;
     case DRAW_DENSITY:
         drawDensity(call.GetFramebuffer());
+        break;
+    case DRAW_DUAL:
+        drawDual();
         break;
     }
 
@@ -836,6 +850,34 @@ void ParallelCoordinatesRenderer2D::drawDensity(std::shared_ptr<glowl::Framebuff
         "sqrtDensity", sqrtDensityParam_.Param<core::param::BoolParam>()->Value() ? 1 : 0);
 
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glUseProgram(0);
+}
+
+void ParallelCoordinatesRenderer2D::drawDual() {
+    // data -> compute, each axes pair
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("here");
+    useProgramAndBindCommon(dualProgram_);
+    //texture2d array
+    const std::vector<uint32_t> zeroData(axisHeight_ * axisHeight_, 0);
+    auto dualTexture_ =
+        std::make_unique<glowl::Texture2DArray>("o_dualtex", glowl::TextureLayout(GL_R32UI, 600, 600, dimensionCount_, GL_RED, GL_UNSIGNED_INT, 1,
+                                                            {
+                                                                {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER},
+                                                                {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+                                                                {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER},
+                                                                {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
+                                                                {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
+                                                            },
+                                                            {}), nullptr);
+    std::array<GLuint, 3> groupCounts{};
+    dualTexture_->bindImage(7, GL_WRITE_ONLY);
+    computeDispatchSizes(2 * itemCount_ * dimensionCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
+    glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
+
+    useProgramAndBindCommon(dualDisplayProgram_);
+    dualTexture_->bindImage(7, GL_READ_ONLY);
+    glDrawArraysInstanced(GL_LINES, 0, 2, 600*600);
+
     glUseProgram(0);
 }
 
