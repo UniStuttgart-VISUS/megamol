@@ -9,7 +9,6 @@
 //
 
 #include "StreamlineRenderer.h"
-#include "stdafx.h"
 
 #include "CUDAFieldTopology.cuh"
 #include "VBODataCall.h"

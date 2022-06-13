@@ -5,7 +5,8 @@
  */
 
 #include "TriangleMeshRenderer.h"
-#include "stdafx.h"
+
+#include "mmcore/utility/log/Log.h"
 
 #define SHADER_BASED
 

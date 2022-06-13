@@ -10,7 +10,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "moldyn/ParticleGridDataCall.h"
-#include "stdafx.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/PtrArray.h"

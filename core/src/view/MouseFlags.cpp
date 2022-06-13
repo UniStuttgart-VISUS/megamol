@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/view/MouseFlags.h"
-#include "stdafx.h"
 
 
 /*

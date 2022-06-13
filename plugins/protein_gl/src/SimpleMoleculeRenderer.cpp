@@ -5,7 +5,6 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 
 #define _USE_MATH_DEFINES 1
 
@@ -21,7 +20,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "protein_calls/ProteinColor.h"
@@ -31,6 +29,7 @@
 #include "vislib/StringTokeniser.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include <GL/glu.h>
 #include <omp.h>
 

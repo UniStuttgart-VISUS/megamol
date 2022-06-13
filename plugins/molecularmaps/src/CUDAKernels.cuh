@@ -16,7 +16,32 @@
 #include "helper_includes\helper_cuda.h"
 #include <glm/glm.hpp>
 
-#include "stdafx.h"
+#include "vislib/types.h"
+#include "Types.h"
+#include <memory.h>
+
+#include "mmcore/utility/log/Log.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLTesselationShader.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Vector.h"
+
+// C++ includes
+#include <algorithm>
+#include <array>
+#include <cfloat>
+#include <ctime>
+#include <iostream>
+#include <map>
+#include <mutex>
+#include <ppl.h>
+#include <queue>
+#include <set>
+#include <thread>
+#include <valarray>
+#include <vector>
 
 /**
  * The equal operator for the CUDA float3 type.

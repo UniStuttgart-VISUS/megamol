@@ -5,7 +5,6 @@
  * All Rights reserved.
  */
 
-#include "stdafx.h"
 
 #include "SecStructRenderer2D.h"
 #include "mmcore/CoreInstance.h"

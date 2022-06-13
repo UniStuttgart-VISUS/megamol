@@ -7,7 +7,6 @@
 // Created on : Sep 17, 2013
 // Author     : scharnkn
 //
-#include "stdafx.h"
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "DeformableGPUSurfaceMT.h"

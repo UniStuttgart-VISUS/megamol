@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 
 #define _USE_MATH_DEFINES 1
 
@@ -19,7 +18,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "protein_calls/ProteinColor.h"
@@ -30,6 +28,7 @@
 #include "vislib/assert.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/File.h"
 #include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"

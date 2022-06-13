@@ -8,7 +8,6 @@
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
-#include "stdafx.h"
 
 using namespace megamol::core_gl::view;
 

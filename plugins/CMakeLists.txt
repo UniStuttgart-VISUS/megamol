@@ -3,6 +3,8 @@
 # All rights reserved.
 #
 
+include(CMakeDependentOption)
+
 # megamol_plugin()
 #
 # Parameters:
@@ -46,17 +48,8 @@ function(megamol_plugin PLUGIN_NAME)
     endif ()
   endif ()
 
-  # Enable plugin build option
-  if (NOT MMPLUGIN_ARGS_ALWAYS_BUILD)
-    option(BUILD_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" ${MMPLUGIN_ARGS_BUILD_DEFAULT})
-
-    # Show plugin option only to user if all requirements are available
-    if (REQUIREMENTS_AVAILABLE)
-      mark_as_advanced(CLEAR BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
-    else ()
-      mark_as_advanced(FORCE BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
-    endif ()
-  endif ()
+  # Enable plugin build option, show only if requirements are available and not always build
+  cmake_dependent_option(BUILD_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" "${MMPLUGIN_ARGS_BUILD_DEFAULT}" "REQUIREMENTS_AVAILABLE;NOT MMPLUGIN_ARGS_ALWAYS_BUILD" OFF)
 
   if ((BUILD_PLUGIN_${PLUGIN_NAME_UPPER} OR MMPLUGIN_ARGS_ALWAYS_BUILD) AND REQUIREMENTS_AVAILABLE)
 
@@ -114,10 +107,11 @@ function(megamol_plugin PLUGIN_NAME)
     endforeach ()
 
     # Link
+    target_link_libraries(${PLUGIN_NAME}
+      PUBLIC OpenMP::OpenMP_CXX
+      PRIVATE core)
     if (ENABLE_GL)
       target_link_libraries(${PLUGIN_NAME} PRIVATE core_gl)
-    else ()
-      target_link_libraries(${PLUGIN_NAME} PRIVATE core)
     endif ()
     target_link_libraries(${PLUGIN_NAME}
       PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}

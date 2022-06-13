@@ -1,5 +1,4 @@
 #include "TextureDepthCompositing.h"
-#include "stdafx.h"
 
 #include <array>
 

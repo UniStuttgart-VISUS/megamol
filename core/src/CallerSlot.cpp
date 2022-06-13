@@ -8,7 +8,6 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
-#include "stdafx.h"
 
 using namespace megamol::core;
 

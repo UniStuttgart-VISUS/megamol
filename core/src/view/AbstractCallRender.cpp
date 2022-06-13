@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/view/AbstractCallRender.h"
-#include "stdafx.h"
 #include "vislib/assert.h"
 
 using namespace megamol::core;

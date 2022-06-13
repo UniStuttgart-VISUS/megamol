@@ -1,5 +1,4 @@
 #include "table/TableSplit.h"
-#include "stdafx.h"
 
 #include "mmcore/param/StringParam.h"
 

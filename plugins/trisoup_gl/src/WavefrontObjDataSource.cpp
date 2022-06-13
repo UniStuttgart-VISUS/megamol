@@ -7,9 +7,6 @@
  */
 #include "WavefrontObjDataSource.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
-#include "stdafx.h"
 #include "vislib/Array.h"
 #include "vislib/PtrArray.h"
 #include "vislib/StringConverter.h"
@@ -17,7 +14,9 @@
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/math/Vector.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/File.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/sys/Path.h"
 #include "vislib/sys/PerformanceCounter.h"
 #include <cfloat>

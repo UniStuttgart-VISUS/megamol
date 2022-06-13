@@ -6,12 +6,11 @@
 #ifndef MMMOLMAPPLG_MAPGENERATOR_H_INCLUDED
 #define MMMOLMAPPLG_MAPGENERATOR_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
@@ -20,6 +19,8 @@
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "protein_calls/BindingSiteCall.h"
 
+#include "vislib/graphics/BitmapImage.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 #include "vislib_gl/graphics/gl/OutlineFont.h"
 #include "vislib_gl/graphics/gl/Verdana.inc"
 
@@ -105,8 +106,8 @@ private:
      *
      * @return false if an error occured, true otherwise.
      */
-    bool capColouring(megamol::geocalls_gl::CallTriMeshDataGL* p_cap_data_call, megamol::core_gl::view::CallRender3DGL& p_cr3d,
-        protein_calls::BindingSiteCall* p_bs);
+    bool capColouring(megamol::geocalls_gl::CallTriMeshDataGL* p_cap_data_call,
+        megamol::core_gl::view::CallRender3DGL& p_cr3d, protein_calls::BindingSiteCall* p_bs);
 
     /**
      * Colours the mesh in a certain radius around a binding site.

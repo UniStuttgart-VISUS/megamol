@@ -1,5 +1,4 @@
 #include "BoxRenderer.h"
-#include "stdafx.h"
 
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"

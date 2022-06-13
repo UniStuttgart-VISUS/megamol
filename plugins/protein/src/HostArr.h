@@ -11,6 +11,8 @@
 #ifndef MMPROTEINPLUGIN_HOSTARR_H_INCLUDED
 #define MMPROTEINPLUGIN_HOSTARR_H_INCLUDED
 
+#include <cstdlib>
+
 namespace megamol {
 namespace protein {
 

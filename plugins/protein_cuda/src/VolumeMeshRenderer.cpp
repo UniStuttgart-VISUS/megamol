@@ -4,16 +4,15 @@
  * Copyright(C) 2012 by Universitaet Stuttgart(VISUS).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 
 #define _USE_MATH_DEFINES 1
 
 //#define TEST
+#include "VolumeMeshRenderer.h"
 #include "MappableCategoryFloat.h"
 #include "MappableFloatPair.h"
 #include "MolecularSurfaceFeature.h"
 #include "SplitMergeFeature.h"
-#include "VolumeMeshRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -22,13 +21,13 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/CallRender3D.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "protein_calls/IntSelectionCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/StringConverter.h"
 #include "vislib/math/Matrix.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/PerformanceCounter.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"

@@ -6,7 +6,7 @@
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallDescription.h"
-#include "mmcore/utility/graphics/BitmapCodecCollection.h"
+#include "vislib/graphics/BitmapCodecCollection.h"
 
 namespace megamol {
 namespace image_calls {

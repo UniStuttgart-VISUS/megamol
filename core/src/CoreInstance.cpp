@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #if (_MSC_VER > 1000)
 #pragma warning(disable : 4996)
 #endif /* (_MSC_VER > 1000) */
@@ -31,7 +30,6 @@
 #include "mmcore/utility/ProjectParser.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/net/AbstractSimpleMessage.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 #include "mmcore/utility/xml/XmlReader.h"
 #include "vislib/GUID.h"
@@ -41,6 +39,7 @@
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/functioncast.h"
+#include "vislib/net/AbstractSimpleMessage.h"
 #include "vislib/net/NetworkInformation.h"
 #include "vislib/net/Socket.h"
 #include "vislib/sys/AutoLock.h"
@@ -50,7 +49,6 @@
 #include "factories/ModuleClassRegistry.h"
 #include "utility/ServiceManager.h"
 
-#include "mmcore/utility/log/Console.h"
 #include "mmcore/utility/log/Log.h"
 #include "png.h"
 #include "vislib/Array.h"
@@ -2489,7 +2487,7 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
                 WriteLineToFile(outfile, "      <!--<param name=\"");
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
-#ifdef WIN32
+#ifdef _WIN32
                 vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #else
                 // TODO This does not work in windows
@@ -2502,7 +2500,7 @@ bool megamol::core::CoreInstance::WriteStateToXML(const char* outFilename) {
                 WriteLineToFile(outfile, "      <param name=\"");
                 WriteLineToFile(outfile, param->FullName().PeekBuffer());
                 WriteLineToFile(outfile, "\" value=\"");
-#ifdef WIN32
+#ifdef _WIN32
                 vislib::sys::WriteLineToFile<char>(outfile, param->Parameter()->ValueString().c_str());
 #else
                 // TODO This does not work in windows

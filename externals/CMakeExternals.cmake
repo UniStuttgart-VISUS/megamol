@@ -258,7 +258,7 @@ function(require_external NAME)
     if (WIN32)
       set(CHEMFILES_LIB "lib/chemfiles.lib")
     else ()
-      set(CHEMFILES_LIB "lib/chemfiles.a")
+      set(CHEMFILES_LIB "lib/libchemfiles.a")
     endif ()
 
     add_external_project(chemfiles STATIC
@@ -658,7 +658,8 @@ function(require_external NAME)
       DEBUG_SUFFIX gd)
 
     set_target_properties(libzmq PROPERTIES
-      INTERFACE_COMPILE_DEFINITIONS "ZMQ_STATIC")
+      INTERFACE_COMPILE_DEFINITIONS "ZMQ_STATIC"
+      INTERFACE_LINK_LIBRARIES "-lpthread;-lrt")
 
     # TODO libzmq cmake does a lot more checks and options. This will probably work only in some configurations.
     if (WIN32)
@@ -712,7 +713,7 @@ function(require_external NAME)
 
     add_external_project(megamol-shader-factory STATIC
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-      GIT_TAG "v0.7"
+      GIT_TAG "v0.8"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
       DEPENDS glad)
 

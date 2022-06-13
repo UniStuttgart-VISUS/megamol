@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "mmcore/utility/sys/ConsoleProgressBar.h"
+#include "vislib/sys/ConsoleProgressBar.h"
 
 #include "datatools/PointcloudHelpers.h"
 

@@ -7,7 +7,6 @@
 
 #include "SecStructFlattener.h"
 #include "PlaneDataCall.h"
-#include "stdafx.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"

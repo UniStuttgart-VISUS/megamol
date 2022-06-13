@@ -1,5 +1,4 @@
 #include "CSVWriter.h"
-#include "stdafx.h"
 
 #include <filesystem>
 #include <fstream>

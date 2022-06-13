@@ -7,7 +7,6 @@
  */
 #include "MSMSGenus0Generator.h"
 #include "protein_calls/ProteinColor.h"
-#include "stdafx.h"
 #include <fstream>
 
 #include "mmcore/param/ColorParam.h"
@@ -18,7 +17,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/PerAtomFloatCall.h"
 #include "protein_calls/ProteinColor.h"
@@ -26,6 +24,7 @@
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/assert.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 
 
 using namespace megamol;
@@ -653,7 +652,7 @@ bool MSMSGenus0Generator::load(const vislib::TString& filename, float probe_radi
                     return false;
                 }
                 vislib::StringA msmsCmd;
-#ifdef WIN32
+#ifdef _WIN32
                 msmsCmd.Format("msms.exe -probe_radius %f -density %.1f -if msmstest.xyz -of msmstest", probe_radius,
                     this->msmsDetailParam.Param<param::FloatParam>()->Value());
 #else

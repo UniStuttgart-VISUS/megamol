@@ -12,15 +12,14 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/PerAtomFloatCall.h"
 #include "protein_calls/ProteinColor.h"
 #include "protein_calls/ProteinHelpers.h"
-#include "stdafx.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/assert.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include <fstream>
 
 
@@ -583,7 +582,7 @@ bool MSMSMeshLoader::load(const vislib::TString& filename, unsigned int frameID)
                     return false;
                 }
                 vislib::StringA msmsCmd;
-#ifdef WIN32
+#ifdef _WIN32
                 msmsCmd.Format("msms.exe -probe_radius %f -density %.1f -if msmstest.xyz -of msmstest",
                     this->msmsProbeParam.Param<param::FloatParam>()->Value(),
                     this->msmsDetailParam.Param<param::FloatParam>()->Value());

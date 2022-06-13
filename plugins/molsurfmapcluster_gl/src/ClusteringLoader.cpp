@@ -6,14 +6,14 @@
  * Alle Rechte vorbehalten.
  */
 #include "ClusteringLoader.h"
+#include "CallClusteringLoader.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/utility/log/Log.h"
+#include "vislib/StringTokeniser.h"
+#include "vislib/graphics/BitmapCodecCollection.h"
 #include <filesystem>
 #include <fstream>
 #include <string>
-#include "CallClusteringLoader.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/utility/graphics/BitmapCodecCollection.h"
-#include "mmcore/utility/log/Log.h"
-#include "vislib/StringTokeniser.h"
 
 using namespace megamol;
 using namespace megamol::molsurfmapcluster;
@@ -80,8 +80,7 @@ void ClusteringLoader::assertData(void) {
         } else {
             // Picture not successfully loaded
             core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
-                "Failed to load file \"%s\"",
-                this->filenameSlot.Param<core::param::FilePathParam>()->Value().string());
+                "Failed to load file \"%s\"", this->filenameSlot.Param<core::param::FilePathParam>()->Value().string());
             // we are in an erronous state, clean up everything
             this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         }

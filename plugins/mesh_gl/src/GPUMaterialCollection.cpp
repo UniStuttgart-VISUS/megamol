@@ -6,7 +6,6 @@
  */
 
 #include "mesh_gl/GPUMaterialCollection.h"
-#include "stdafx.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"

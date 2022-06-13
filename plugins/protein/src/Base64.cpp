@@ -9,7 +9,8 @@
 //
 
 #include "Base64.h"
-#include "stdafx.h"
+
+#include <memory>
 
 using namespace megamol::protein;
 

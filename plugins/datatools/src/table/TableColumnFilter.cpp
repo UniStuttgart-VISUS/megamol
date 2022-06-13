@@ -6,7 +6,6 @@
  */
 
 #include "TableColumnFilter.h"
-#include "stdafx.h"
 
 #include "mmcore/param/StringParam.h"
 

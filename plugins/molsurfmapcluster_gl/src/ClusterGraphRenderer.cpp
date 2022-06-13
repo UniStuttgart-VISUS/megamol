@@ -11,11 +11,11 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/utility/graphics/BitmapCodecCollection.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore_gl/utility/RenderUtils.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "protein_calls/ProteinColor.h"
+#include "vislib/graphics/BitmapCodecCollection.h"
 
 #include <algorithm>
 #include <deque>
@@ -731,7 +731,8 @@ void ClusterGraphRenderer::applyClusterColoring(
                         min_val = 0.0f;
                         max_val = 4.0f;
                     } else if (colmode == ClusterColoringMode::TM_SCORE) {
-                        distance = molsurfmapcluster::DistanceMatrixLoader::GetDistance(left_node.pdbID, right_node.pdbID);
+                        distance =
+                            molsurfmapcluster::DistanceMatrixLoader::GetDistance(left_node.pdbID, right_node.pdbID);
                         // the TM-score matrix has a 1 for perfect similarity and 0 for perfect distance, so we inverse it
                         distance = 1.0f - distance;
                         min_val = 0.0f;

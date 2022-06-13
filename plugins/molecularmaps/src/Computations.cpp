@@ -5,7 +5,8 @@
  */
 
 #include "Computations.h"
-#include "stdafx.h"
+
+#include <array>
 
 using namespace megamol::molecularmaps;
 using namespace megamol::protein_calls;

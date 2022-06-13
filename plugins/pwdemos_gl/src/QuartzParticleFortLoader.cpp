@@ -4,19 +4,18 @@
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "QuartzParticleDataCall.h"
 #include "QuartzParticleFortLoader.h"
+#include "QuartzParticleDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/String.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/memutils.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/utils.h"
 #include <cmath>
 

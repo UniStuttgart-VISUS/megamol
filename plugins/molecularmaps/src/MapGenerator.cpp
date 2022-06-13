@@ -5,7 +5,6 @@
  */
 
 #include "MapGenerator.h"
-#include "stdafx.h"
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "mmcore/param/BoolParam.h"

@@ -9,7 +9,6 @@
 //
 
 #include "ComparativeMolSurfaceRenderer.h"
-#include "stdafx.h"
 
 //#define USE_TIMER
 //#define VERBOSE
@@ -37,7 +36,7 @@
 #include <cmath>
 #include <sstream>
 
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;

@@ -6,7 +6,6 @@
  */
 
 #include "io/MMSPDHeader.h"
-#include "stdafx.h"
 
 using namespace megamol::moldyn::io;
 

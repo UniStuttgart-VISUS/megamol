@@ -2,7 +2,6 @@
 #include "VoluMetricJob.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "trisoup/volumetrics/JobStructures.h"
 #include "trisoup/volumetrics/MarchingCubeTables.h"
 #include "vislib/math/ShallowPoint.h"

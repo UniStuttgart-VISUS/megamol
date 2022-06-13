@@ -5,7 +5,6 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 
 #include "MeshViewerRenderTasks.h"
 

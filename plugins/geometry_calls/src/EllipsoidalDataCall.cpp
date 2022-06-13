@@ -6,7 +6,6 @@
  */
 
 #include "geometry_calls/EllipsoidalDataCall.h"
-#include "stdafx.h"
 
 namespace megamol::geocalls {
 

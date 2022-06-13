@@ -4,7 +4,6 @@
  * Copyright (C) 2010 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 
 #include "SolPathRenderer.h"
 #include "mmcore/CoreInstance.h"

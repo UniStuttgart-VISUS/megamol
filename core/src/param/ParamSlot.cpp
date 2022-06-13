@@ -9,7 +9,6 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
-#include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 

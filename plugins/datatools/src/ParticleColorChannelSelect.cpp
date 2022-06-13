@@ -6,7 +6,6 @@
  */
 #include "ParticleColorChannelSelect.h"
 #include "mmcore/param/EnumParam.h"
-#include "stdafx.h"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>

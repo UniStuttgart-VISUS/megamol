@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "datatools/MultiIndexListDataCall.h"
-#include "stdafx.h"
 
 using namespace megamol;
 

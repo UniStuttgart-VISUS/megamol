@@ -8,10 +8,9 @@
 // Author     : scharnkn
 //
 
-#include "stdafx.h"
 
-#include "mmcore/utility/log/Log.h"
 #include "protein/VTKLegacyDataUnstructuredGrid.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::protein;

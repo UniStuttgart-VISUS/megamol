@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "mmcore/view/CameraSerializer.h"
-#include "stdafx.h"
 
 using namespace megamol::core;
 using namespace megamol::core::view;

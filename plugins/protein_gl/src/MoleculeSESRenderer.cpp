@@ -4,7 +4,6 @@
  * Copyright (C) 2009-2021 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 
 #define _USE_MATH_DEFINES 1
 
@@ -19,7 +18,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
@@ -30,6 +28,7 @@
 #include "vislib/StringTokeniser.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/File.h"
 #include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"

@@ -7,7 +7,6 @@
 
 #include "HydroBondFilter.h"
 #include "protein/GridNeighbourFinder.h"
-#include "stdafx.h"
 
 #include "protein_calls/MolecularDataCall.h"
 

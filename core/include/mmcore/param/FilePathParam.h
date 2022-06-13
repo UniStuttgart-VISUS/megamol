@@ -28,15 +28,19 @@ namespace param {
 class FilePathParam : public AbstractParam {
 public:
     enum FilePathFlags_ : uint32_t {
-        Flag_File = 1 << 0,
-        Flag_Directory = 1 << 1,
-        Flag_NoExistenceCheck = 1 << 2,
-        Flag_RestrictExtension = 1 << 3,
-        /// Convenience flags:
-        Flag_File_RestrictExtension = Flag_File | Flag_RestrictExtension,
-        Flag_File_ToBeCreated = Flag_File | Flag_NoExistenceCheck,
-        Flag_File_ToBeCreatedWithRestrExts = Flag_File | Flag_NoExistenceCheck | Flag_RestrictExtension,
-        Flag_Directory_ToBeCreated = Flag_Directory | Flag_NoExistenceCheck
+        Flag_File = 1 << 0,                    // Only allows to hold an existing file
+        Flag_Directory = 1 << 1,               // Only allows to hold an existing directory
+        Internal_NoExistenceCheck = 1 << 2,    // Only used internally - do not use as flag
+        Internal_RestrictExtension = 1 << 3,   // Only used internally - do not use as flag
+        Flag_Any = Flag_File | Flag_Directory, // Only allows to hold an existing file or directory
+        Flag_Any_ToBeCreated = Flag_Any | Internal_NoExistenceCheck, // Allows to hold a non-existing file or directory
+        Flag_File_ToBeCreated = Flag_File | Internal_NoExistenceCheck, // Allows to hold a non-existing file
+        Flag_Directory_ToBeCreated =                                   // Allows to hold a non-existing directory
+        Flag_Directory | Internal_NoExistenceCheck,
+        Flag_File_RestrictExtension = // Allows to hold an existing file having one of the given extensions
+        Flag_File | Internal_RestrictExtension,
+        Flag_File_ToBeCreatedWithRestrExts = // Allows to hold a non-existing file having one of the given extensions
+        Flag_File | Internal_NoExistenceCheck | Internal_RestrictExtension
     };
 
     typedef uint32_t Flags_t;

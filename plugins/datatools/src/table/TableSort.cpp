@@ -6,7 +6,6 @@
  */
 
 #include "TableSort.h"
-#include "stdafx.h"
 
 #include <algorithm>
 #include <cassert>

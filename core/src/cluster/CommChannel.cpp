@@ -7,7 +7,6 @@
 
 #include "mmcore/cluster/CommChannel.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/UnsupportedOperationException.h"
 

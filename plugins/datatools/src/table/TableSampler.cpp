@@ -6,7 +6,6 @@
  */
 
 #include "TableSampler.h"
-#include "stdafx.h"
 
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"

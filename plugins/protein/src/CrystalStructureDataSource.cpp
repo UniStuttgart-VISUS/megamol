@@ -7,7 +7,6 @@
  * $Id$
  */
 
-#include "stdafx.h"
 #include <sstream>
 
 #include "CrystalStructureDataSource.h"

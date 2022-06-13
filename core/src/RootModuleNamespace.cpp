@@ -17,18 +17,17 @@
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "stdafx.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
 #if defined(DEBUG) || defined(_DEBUG)
 #include "vislib/sys/AutoLock.h"
 #endif
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/Thread.h"
 #include "vislib/Stack.h"
 #include "vislib/String.h"
 #include "vislib/Trace.h"
 #include "vislib/UTF8Encoder.h"
+#include "vislib/sys/Thread.h"
 #include <memory>
 
 using namespace megamol::core;

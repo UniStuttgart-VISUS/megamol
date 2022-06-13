@@ -4,7 +4,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "CaverTunnelResidueLoader.h"
-#include "stdafx.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"

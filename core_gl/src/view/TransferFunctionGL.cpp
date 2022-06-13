@@ -6,7 +6,6 @@
  */
 
 #include "mmcore_gl/view/TransferFunctionGL.h"
-#include "stdafx.h"
 
 #include "mmcore/param/TransferFunctionParam.h"
 

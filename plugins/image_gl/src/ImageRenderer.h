@@ -29,8 +29,8 @@
  * Copyright (C) 2010 by Sebastian Grottel.
  */
 #include "mmcore/CallerSlot.h"
-#include "mmcore/utility/graphics/AbstractBitmapCodec.h"
 #include "vislib/RawStorage.h"
+#include "vislib/graphics/AbstractBitmapCodec.h"
 
 using namespace megamol::core;
 

@@ -89,6 +89,7 @@ private:
 
     float menu_font_size;
     float menu_height;
+
     glm::vec4 background_color;
     bool hotkey_window_setup_once;
 

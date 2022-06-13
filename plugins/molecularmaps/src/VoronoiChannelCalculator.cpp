@@ -5,7 +5,11 @@
  */
 
 #include "VoronoiChannelCalculator.h"
-#include "stdafx.h"
+
+#include "mmcore/utility/log/Log.h"
+
+#include <array>
+#include <concrt.h>
 
 using namespace megamol::core;
 using namespace megamol::molecularmaps;

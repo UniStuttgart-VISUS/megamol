@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/view/CallTimeControl.h"
-#include "stdafx.h"
 
 using namespace megamol::core;
 

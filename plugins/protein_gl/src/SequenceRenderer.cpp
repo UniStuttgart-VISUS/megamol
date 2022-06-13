@@ -1,10 +1,8 @@
 #include "SequenceRenderer.h"
-#include "stdafx.h"
 
 #include "RuntimeConfig.h"
 #include "SequenceRenderer.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"

@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/param/AbstractParamSlot.h"
-#include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 
