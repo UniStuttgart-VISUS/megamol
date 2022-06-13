@@ -16,9 +16,13 @@ if(BUILD_FRONTEND)
   # Collect source files
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
+  set (resource_files "")
+  if (MSVC)
+    set(resource_files "${CMAKE_CURRENT_SOURCE_DIR}/extra/metadata.rc")
+  endif()
 
   # Add target
-  add_executable(${BINARY_NAME} ${header_files} ${source_files})
+  add_executable(${BINARY_NAME} ${header_files} ${source_files} "${resource_files}")
   target_include_directories(${BINARY_NAME} PRIVATE "src" "include")
   target_link_libraries(${BINARY_NAME} PRIVATE core frontend_services libcxxopts)
   target_link_libraries(${BINARY_NAME} PRIVATE ${CMAKE_DL_LIBS})
