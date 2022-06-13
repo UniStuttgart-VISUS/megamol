@@ -7,6 +7,7 @@ megamol_plugin(probe_gl
   BUILD_DEFAULT OFF
   DEPENDS_GL
   DEPENDS_PLUGINS
+    mmstd
     mmstd_gl
     datatools
     probe

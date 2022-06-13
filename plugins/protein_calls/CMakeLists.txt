@@ -5,5 +5,7 @@
 
 megamol_plugin(protein_calls
   BUILD_DEFAULT ON
+  DEPENDS_PLUGINS
+    mmstd
   DEPENDS_EXTERNALS
     Eigen)

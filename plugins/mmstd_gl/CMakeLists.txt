@@ -6,6 +6,8 @@
 megamol_plugin(mmstd_gl
   ALWAYS_BUILD
   DEPENDS_GL
+  DEPENDS_PLUGINS
+    mmstd
   DEPENDS_EXTERNALS
     glowl)
 

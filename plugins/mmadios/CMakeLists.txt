@@ -6,6 +6,7 @@
 megamol_plugin(mmadios
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
+    mmstd
     datatools
     geometry_calls)
 

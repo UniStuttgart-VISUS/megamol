@@ -6,6 +6,7 @@
 megamol_plugin(remote
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
+    mmstd
     image_calls
   DEPENDS_EXTERNALS
     glm
