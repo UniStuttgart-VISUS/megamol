@@ -465,26 +465,24 @@ void ModernTrisoupRenderer::updateLights(core::view::light::CallLight* lightCall
         core::utility::log::Log::DefaultLog.WriteWarn(
             "[ModernTrisoupRenderer]: There are no proper lights connected, no shading is happening");
     } else {
-        if (lightCall->hasUpdate()) {
-            auto& lights = lightCall->getData();
+        auto& lights = lightCall->getData();
 
-            pointLights_.clear();
-            directionalLights_.clear();
+        pointLights_.clear();
+        directionalLights_.clear();
 
-            auto point_lights = lights.get<core::view::light::PointLightType>();
-            auto distant_lights = lights.get<core::view::light::DistantLightType>();
+        auto point_lights = lights.get<core::view::light::PointLightType>();
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
 
-            for (const auto& pl : point_lights) {
-                pointLights_.push_back({pl.position[0], pl.position[1], pl.position[2], pl.intensity});
-            }
+        for (const auto& pl : point_lights) {
+            pointLights_.push_back({pl.position[0], pl.position[1], pl.position[2], pl.intensity});
+        }
 
-            for (const auto& dl : distant_lights) {
-                if (dl.eye_direction) {
-                    auto cd = glm::normalize(camDir); // paranoia
-                    directionalLights_.push_back({cd.x, cd.y, cd.z, dl.intensity});
-                } else {
-                    directionalLights_.push_back({dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
-                }
+        for (const auto& dl : distant_lights) {
+            if (dl.eye_direction) {
+                auto cd = glm::normalize(camDir); // paranoia
+                directionalLights_.push_back({cd.x, cd.y, cd.z, dl.intensity});
+            } else {
+                directionalLights_.push_back({dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
             }
         }
     }
