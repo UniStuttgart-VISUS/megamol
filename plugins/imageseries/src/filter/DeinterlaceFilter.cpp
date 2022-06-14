@@ -51,12 +51,14 @@ DeinterlaceFilter::ImagePtr DeinterlaceFilter::operator()() {
     return std::const_pointer_cast<const Image>(result);
 }
 
-std::size_t DeinterlaceFilter::getByteSize() const {
-    return input.image ? input.image->getByteSize() : 0;
-}
-
-AsyncImageData2D::Hash DeinterlaceFilter::getHash() const {
-    return util::computeHash(input.image, input.offset);
+ImageMetadata DeinterlaceFilter::getMetadata() const {
+    if (input.image) {
+        ImageMetadata metadata = input.image->getMetadata();
+        metadata.hash = util::computeHash(input.image, input.offset);
+        return metadata;
+    } else {
+        return {};
+    }
 }
 
 } // namespace megamol::ImageSeries::filter

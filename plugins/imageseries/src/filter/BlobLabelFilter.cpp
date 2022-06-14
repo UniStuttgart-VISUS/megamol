@@ -229,14 +229,16 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
     return std::const_pointer_cast<const Image>(result);
 }
 
-std::size_t BlobLabelFilter::getByteSize() const {
-    return input.image ? input.image->getByteSize() : 0;
-}
-
-AsyncImageData2D::Hash BlobLabelFilter::getHash() const {
-    return util::computeHash(input.image, input.prevImage, input.diffImage, input.mask, input.blobCountLimit,
-        input.minBlobSize, input.negateThreshold, input.threshold, input.negateMask, input.maskPriority,
-        input.markPrevious);
+ImageMetadata BlobLabelFilter::getMetadata() const {
+    if (input.image) {
+        ImageMetadata metadata = input.image->getMetadata();
+        metadata.hash = util::computeHash(input.image, input.prevImage, input.diffImage, input.mask,
+            input.blobCountLimit, input.minBlobSize, input.negateThreshold, input.threshold, input.negateMask,
+            input.maskPriority, input.markPrevious);
+        return metadata;
+    } else {
+        return {};
+    }
 }
 
 } // namespace megamol::ImageSeries::filter

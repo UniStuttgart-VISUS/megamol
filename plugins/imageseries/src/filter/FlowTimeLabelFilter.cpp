@@ -249,7 +249,7 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
 
     // Phase 2: follow fluid flow
     for (; currentTimestamp <= maximumTimestamp; ++currentTimestamp) {
-        std::vector<std::pair<Label, Label>> interfaceEdges;
+        std::vector<std::vector<Label>> interfaceEdges;
         std::vector<std::vector<Index>> previousInterfaces = std::move(currentInterfaces);
         currentInterfaces.clear();
 
@@ -267,7 +267,11 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
             // Insert edge into graph
             // TODO - this does not handle merges yet
             addEdge(currentTimestamp - 1, entry.label, currentTimestamp, frontLabel);
-            interfaceEdges.emplace_back(entry.label, frontLabel);
+
+            // Track interface edges for velocity computation
+            interfaceEdges.resize(
+                std::max<std::size_t>(interfaceEdges.size(), static_cast<std::size_t>(entry.label) + 1));
+            interfaceEdges[entry.label].push_back(frontLabel);
 
             graph::GraphData2D::Rect rect;
             for (std::size_t queueIndex = 0; queueIndex < frontQueue.size(); ++queueIndex) {
@@ -320,37 +324,62 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
             }
         }
 
-        // Compute interface velocities
-        for (const auto& edge : interfaceEdges) {
-            // Bounds check (especially for the first frame)
-            if (static_cast<std::size_t>(edge.first - LabelFirst) >= previousInterfaces.size() ||
-                static_cast<std::size_t>(edge.second - LabelFirst) >= currentInterfaces.size()) {
-                continue;
-            }
-
-            auto& sourceInterface = previousInterfaces[edge.first - LabelFirst];
-            auto& targetInterface = currentInterfaces[edge.second - LabelFirst];
-
+        auto computeHausdorffDistance = [&](const std::vector<Index>& sourceInterface,
+                                            const std::vector<Index>& targetInterface) -> double {
             if (sourceInterface.empty() || targetInterface.empty()) {
-                continue;
+                return 0.0;
             }
 
             // Use Hausdorff distance as a proxy for velocity
-            int maxSquareDistance = 0;
+            int64_t maxSquareDistance = 0;
             for (Index sourceIndex : sourceInterface) {
                 int sourceX = sourceIndex % width;
                 int sourceY = sourceIndex / width;
-                int minSquareDistance = std::numeric_limits<int>::max();
+                int64_t minSquareDistance = std::numeric_limits<int>::max();
                 for (Index targetIndex : targetInterface) {
-                    int differenceX = sourceX - static_cast<int>(targetIndex % width);
-                    int differenceY = sourceY - static_cast<int>(targetIndex / width);
-                    int squareDistance = differenceX * differenceX + differenceY * differenceY;
+                    int64_t differenceX = sourceX - static_cast<int>(targetIndex % width);
+                    int64_t differenceY = sourceY - static_cast<int>(targetIndex / width);
+                    int64_t squareDistance = differenceX * differenceX + differenceY * differenceY;
                     minSquareDistance = std::min(minSquareDistance, squareDistance);
                 }
                 maxSquareDistance = std::max(minSquareDistance, maxSquareDistance);
             }
-            getOrCreateNode(currentTimestamp, edge.second).velocityMagnitude +=
-                std::sqrt(static_cast<float>(maxSquareDistance));
+
+            return std::sqrt(static_cast<double>(maxSquareDistance));
+        };
+
+        // Compute interface velocities
+        for (std::size_t i = 0; i < interfaceEdges.size(); ++i) {
+            auto& edge = interfaceEdges[i];
+            if (edge.empty() || static_cast<std::size_t>(i - LabelFirst) >= previousInterfaces.size()) {
+                continue;
+            }
+
+            auto& sourceInterface = previousInterfaces[i - LabelFirst];
+
+            if (edge.size() == 1) {
+                // Fast path: 1-1 edge
+                if (static_cast<std::size_t>(edge[0] - LabelFirst) < currentInterfaces.size()) {
+                    getOrCreateNode(currentTimestamp, edge[0]).velocityMagnitude +=
+                        computeHausdorffDistance(sourceInterface, currentInterfaces[edge[0] - LabelFirst]);
+                }
+            } else {
+                // For 1-n connections, we need to merge the target nodes together to avoid treating interface splits
+                // as having very high velocities
+                std::vector<Index> mergedInterface;
+                for (auto targetLabel : edge) {
+                    if (static_cast<std::size_t>(targetLabel - LabelFirst) < currentInterfaces.size()) {
+                        auto& targetInterface = currentInterfaces[targetLabel - LabelFirst];
+                        mergedInterface.insert(mergedInterface.end(), targetInterface.begin(), targetInterface.end());
+                    }
+                }
+
+                // Compute merged velocity and apply it to all target nodes
+                double velocity = computeHausdorffDistance(sourceInterface, mergedInterface);
+                for (auto targetLabel : edge) {
+                    getOrCreateNode(currentTimestamp, targetLabel).velocityMagnitude += velocity;
+                }
+            }
         }
     }
 
@@ -407,13 +436,16 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
     return std::const_pointer_cast<const Image>(result);
 }
 
-std::size_t FlowTimeLabelFilter::getByteSize() const {
-    return input.timeMap ? input.timeMap->getByteSize() / 2 : 0;
-}
-
-AsyncImageData2D::Hash FlowTimeLabelFilter::getHash() const {
-    return util::computeHash(input.timeMap, input.blobCountLimit, input.minBlobSize, input.timeThreshold,
-        input.minimumTimestamp, input.maximumTimestamp);
+ImageMetadata FlowTimeLabelFilter::getMetadata() const {
+    if (input.timeMap) {
+        ImageMetadata metadata = input.timeMap->getMetadata();
+        metadata.bytesPerChannel = 1;
+        metadata.hash = util::computeHash(input.timeMap, input.blobCountLimit, input.minBlobSize, input.timeThreshold,
+            input.minimumTimestamp, input.maximumTimestamp);
+        return metadata;
+    } else {
+        return {};
+    }
 }
 
 } // namespace megamol::ImageSeries::filter

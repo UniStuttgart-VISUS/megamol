@@ -7,10 +7,10 @@ namespace megamol::ImageSeries::filter {
 ImageLoadFilter::ImageLoadFilter(Input input) : input(input) {}
 
 ImageLoadFilter::ImageLoadFilter(
-    std::shared_ptr<vislib::graphics::BitmapCodecCollection> codecs, std::string filename, std::size_t sizeEstimate) {
+    std::shared_ptr<vislib::graphics::BitmapCodecCollection> codecs, std::string filename, ImageMetadata metadata) {
     input.codecs = codecs;
     input.filename = filename;
-    input.sizeEstimate = sizeEstimate;
+    input.metadata = metadata;
 }
 
 ImageLoadFilter::ImagePtr ImageLoadFilter::operator()() {
@@ -33,12 +33,11 @@ ImageLoadFilter::ImagePtr ImageLoadFilter::operator()() {
     return nullptr;
 }
 
-std::size_t ImageLoadFilter::getByteSize() const {
-    return input.sizeEstimate;
-}
-
-AsyncImageData2D::Hash ImageLoadFilter::getHash() const {
-    return util::computeHash(input.filename);
+ImageMetadata ImageLoadFilter::getMetadata() const {
+    ImageMetadata metadata = input.metadata;
+    metadata.hash = util::computeHash(input.filename);
+    metadata.filename = input.filename;
+    return metadata;
 }
 
 } // namespace megamol::ImageSeries::filter

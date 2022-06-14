@@ -22,8 +22,7 @@ public:
     SegmentationFilter(AsyncImagePtr image, double threshold = 0.5, bool negateOutput = false);
     ImagePtr operator()();
 
-    std::size_t getByteSize() const;
-    AsyncImageData2D::Hash getHash() const;
+    ImageMetadata getMetadata() const;
 
 private:
     Input input;

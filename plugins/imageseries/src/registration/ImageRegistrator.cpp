@@ -18,8 +18,9 @@ void ImageRegistrator::setInputImage(AsyncImagePtr image) {
         blurInput.image = this->inputImage;
         blurInput.kernelX = filter::Convolution2DFilter::makeGaussianKernel(5, 10);
         blurInput.kernelY = blurInput.kernelX;
-        auto blurredImage = std::make_shared<AsyncImageData2D>(filter::Convolution2DFilter(blurInput)());
 
+        auto blurredImage =
+            std::make_shared<AsyncImageData2D>(filter::Convolution2DFilter(blurInput), image->getMetadata());
         this->inputDerivative = filter::DerivativeFilter(blurredImage)();
     }
 }

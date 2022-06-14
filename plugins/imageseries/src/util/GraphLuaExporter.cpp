@@ -5,7 +5,7 @@
 
 namespace megamol::ImageSeries::graph::util {
 
-bool exportToLua(const GraphData2D& graph, const std::string& outfileName) {
+bool exportToLua(const GraphData2D& graph, const std::string& outfileName, const std::string& metaPath) {
 
     static std::atomic_int counter;
 
@@ -19,10 +19,9 @@ bool exportToLua(const GraphData2D& graph, const std::string& outfileName) {
     // TODO metadata
     // clang-format off
 	file << "local graphData = {}\n";
-	file << "graphData.graphName = '" << "Ca = 10^-3, M = 1" << "'\n";
-	file << "graphData.imgDir = '" << "gfx/Dataset1png/Ca=10-3,M=1" << "'\n";
-	file << "graphData.minRange = " << 0.02 << "\n";
-	file << "graphData.maxRange = " << 0.5 << "\n";
+	file << "graphData.imgDir = [[" << metaPath << "]]\n";
+	file << "graphData.minRange = " << 0.0 << "\n";
+	file << "graphData.maxRange = " << 1.0 << "\n";
     // clang-format on
 
     file << "graphData.Nodes = {\n";

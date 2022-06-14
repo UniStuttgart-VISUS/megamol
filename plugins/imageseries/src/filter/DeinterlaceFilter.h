@@ -21,8 +21,7 @@ public:
     DeinterlaceFilter(AsyncImagePtr image, int offset = 0);
     ImagePtr operator()();
 
-    std::size_t getByteSize() const;
-    AsyncImageData2D::Hash getHash() const;
+    ImageMetadata getMetadata() const;
 
 private:
     Input input;

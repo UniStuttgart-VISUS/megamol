@@ -92,16 +92,19 @@ TimeOffsetFilter::ImagePtr TimeOffsetFilter::operator()() {
     return std::const_pointer_cast<const Image>(result);
 }
 
-std::size_t TimeOffsetFilter::getByteSize() const {
-    return input.reference ? input.reference->getByteSize() * 4 : 0;
+ImageMetadata TimeOffsetFilter::getMetadata() const {
+    if (input.reference) {
+        ImageMetadata metadata = input.reference->getMetadata();
+        metadata.channels = 4;
+        metadata.hash = util::computeHash(input.reference);
+        for (auto& frame : input.frames) {
+            metadata.hash = util::computeHash(metadata.hash, frame.image, frame.weight, frame.certainty, frame.primary);
+        }
+        return metadata;
+    } else {
+        return {};
+    }
 }
 
-AsyncImageData2D::Hash TimeOffsetFilter::getHash() const {
-    auto hashValue = util::computeHash(input.reference);
-    for (auto& frame : input.frames) {
-        util::computeHash(hashValue, frame.image, frame.weight, frame.certainty, frame.primary);
-    }
-    return hashValue;
-}
 
 } // namespace megamol::ImageSeries::filter

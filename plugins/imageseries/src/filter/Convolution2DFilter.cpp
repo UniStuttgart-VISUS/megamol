@@ -73,12 +73,14 @@ Convolution2DFilter::ImagePtr Convolution2DFilter::operator()() {
     return std::const_pointer_cast<const Image>(result);
 }
 
-std::size_t Convolution2DFilter::getByteSize() const {
-    return input.image ? input.image->getByteSize() : 0;
-}
-
-AsyncImageData2D::Hash Convolution2DFilter::getHash() const {
-    return util::computeHash(input.image, input.kernelX, input.kernelY);
+ImageMetadata Convolution2DFilter::getMetadata() const {
+    if (input.image) {
+        ImageMetadata metadata = input.image->getMetadata();
+        metadata.hash = util::computeHash(input.image, input.kernelX, input.kernelY);
+        return metadata;
+    } else {
+        return {};
+    }
 }
 
 std::vector<float> Convolution2DFilter::makeGaussianKernel(float sigma, std::size_t radius) {

@@ -50,12 +50,15 @@ SegmentationFilter::ImagePtr SegmentationFilter::operator()() {
     return std::const_pointer_cast<const Image>(result);
 }
 
-std::size_t SegmentationFilter::getByteSize() const {
-    return input.image ? input.image->getByteSize() : 0;
-}
+ImageMetadata SegmentationFilter::getMetadata() const {
+    if (input.image) {
+        ImageMetadata metadata = input.image->getMetadata();
+        metadata.hash = util::computeHash(input.image, input.threshold, input.negateOutput);
 
-AsyncImageData2D::Hash SegmentationFilter::getHash() const {
-    return util::computeHash(input.image, input.threshold, input.negateOutput);
+        return metadata;
+    } else {
+        return {};
+    }
 }
 
 } // namespace megamol::ImageSeries::filter

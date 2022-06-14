@@ -21,8 +21,7 @@ public:
     Convolution2DFilter(Input input);
     ImagePtr operator()();
 
-    std::size_t getByteSize() const;
-    AsyncImageData2D::Hash getHash() const;
+    ImageMetadata getMetadata() const;
 
     static std::vector<float> makeGaussianKernel(float sigma, std::size_t radius);
 

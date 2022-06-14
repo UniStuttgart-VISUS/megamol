@@ -90,12 +90,15 @@ ChordFilter::ImagePtr ChordFilter::operator()() {
     return std::const_pointer_cast<const Image>(result);
 }
 
-std::size_t ChordFilter::getByteSize() const {
-    return input.image ? input.image->getByteSize() : 0;
-}
-
-AsyncImageData2D::Hash ChordFilter::getHash() const {
-    return util::computeHash(input.image, input.threshold, input.clearEdges);
+ImageMetadata ChordFilter::getMetadata() const {
+    if (input.image) {
+        ImageMetadata metadata = input.image->getMetadata();
+        metadata.bytesPerChannel = 2;
+        metadata.hash = util::computeHash(input.image, input.threshold, input.clearEdges);
+        return metadata;
+    } else {
+        return {};
+    }
 }
 
 } // namespace megamol::ImageSeries::filter

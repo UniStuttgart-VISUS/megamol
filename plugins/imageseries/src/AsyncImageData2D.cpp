@@ -4,16 +4,9 @@
 
 namespace megamol::ImageSeries {
 
-AsyncImageData2D::AsyncImageData2D(ImageProvider imageProvider, std::size_t byteSize, Hash hash)
-        : byteSize(byteSize)
-        , hash(hash) {
+AsyncImageData2D::AsyncImageData2D(ImageProvider imageProvider, ImageMetadata metadata) : metadata(metadata) {
     job = getThreadPool().submit([this, imageProvider]() { imageData = imageProvider(); });
 }
-
-AsyncImageData2D::AsyncImageData2D(std::shared_ptr<const BitmapImage> imageData)
-        : byteSize(imageData != nullptr ? imageData->Width() * imageData->Height() * imageData->BytesPerPixel() : 0)
-        , imageData(imageData)
-        , hash(computeHash(imageData)) {}
 
 AsyncImageData2D::~AsyncImageData2D() {
     // Try to cancel job
@@ -39,12 +32,16 @@ bool AsyncImageData2D::isFailed() const {
     return isFinished() && !imageData;
 }
 
+const ImageMetadata& AsyncImageData2D::getMetadata() const {
+    return metadata;
+}
+
 std::size_t AsyncImageData2D::getByteSize() const {
-    return byteSize;
+    return metadata.getByteSize();
 }
 
 AsyncImageData2D::Hash AsyncImageData2D::getHash() const {
-    return hash;
+    return metadata.hash;
 }
 
 AsyncImageData2D::Hash AsyncImageData2D::computeHash(std::shared_ptr<const BitmapImage> imageData) {

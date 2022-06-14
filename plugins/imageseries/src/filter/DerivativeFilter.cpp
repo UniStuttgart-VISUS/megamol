@@ -55,12 +55,15 @@ DerivativeFilter::ImagePtr DerivativeFilter::operator()() {
     return std::const_pointer_cast<const Image>(result);
 }
 
-std::size_t DerivativeFilter::getByteSize() const {
-    return input.image ? input.image->getByteSize() * 2 : 0;
-}
-
-AsyncImageData2D::Hash DerivativeFilter::getHash() const {
-    return util::computeHash(input.image);
+ImageMetadata DerivativeFilter::getMetadata() const {
+    if (input.image) {
+        ImageMetadata metadata = input.image->getMetadata();
+        metadata.channels = 2;
+        metadata.hash = util::computeHash(input.image);
+        return metadata;
+    } else {
+        return {};
+    }
 }
 
 } // namespace megamol::ImageSeries::filter

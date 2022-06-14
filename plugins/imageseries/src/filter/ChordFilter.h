@@ -22,8 +22,7 @@ public:
     ChordFilter(AsyncImagePtr image, double threshold = 0.5, bool clearEdges = true);
     ImagePtr operator()();
 
-    std::size_t getByteSize() const;
-    AsyncImageData2D::Hash getHash() const;
+    ImageMetadata getMetadata() const;
 
 private:
     Input input;

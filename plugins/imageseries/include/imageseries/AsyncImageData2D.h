@@ -23,14 +23,36 @@ class WorkerThreadPool;
 class Job;
 } // namespace util
 
+struct ImageMetadata {
+    enum class Mode {
+        Color,
+        Grayscale,
+        Labels,
+    };
+
+    bool valid = false;
+    Mode mode = Mode::Color;
+    std::uint32_t index = 0;
+    std::uint32_t width = 0;
+    std::uint32_t height = 0;
+    std::uint32_t channels = 1;
+    std::uint32_t bytesPerChannel = 1;
+    util::Hash hash = 0;
+    std::string filename;
+
+    std::size_t getByteSize() const {
+        return width * height * channels * bytesPerChannel;
+    }
+};
+
 class AsyncImageData2D {
 public:
     using BitmapImage = vislib::graphics::BitmapImage;
     using Hash = megamol::ImageSeries::util::Hash;
     using ImageProvider = std::function<std::shared_ptr<const BitmapImage>()>;
 
-    AsyncImageData2D(ImageProvider imageProvider, std::size_t byteSize, Hash hash);
-    AsyncImageData2D(std::shared_ptr<const BitmapImage> imageData = nullptr);
+    AsyncImageData2D() = default;
+    AsyncImageData2D(ImageProvider imageProvider, ImageMetadata metadata);
     ~AsyncImageData2D();
 
     bool isWaiting() const;
@@ -39,8 +61,8 @@ public:
     bool isValid() const;
     bool isFailed() const;
 
+    const ImageMetadata& getMetadata() const;
     std::size_t getByteSize() const;
-
     Hash getHash() const;
 
     std::shared_ptr<const BitmapImage> tryGetImageData() const;
@@ -51,9 +73,8 @@ private:
 
     Hash computeHash(std::shared_ptr<const BitmapImage> imageData);
 
-    std::size_t byteSize = 0;
+    ImageMetadata metadata;
     std::shared_ptr<const BitmapImage> imageData;
-    Hash hash = 0;
 
     mutable util::Job job;
 };

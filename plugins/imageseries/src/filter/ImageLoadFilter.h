@@ -19,16 +19,15 @@ public:
     struct Input {
         std::shared_ptr<vislib::graphics::BitmapCodecCollection> codecs;
         std::string filename;
-        std::size_t sizeEstimate = 0;
+        ImageMetadata metadata;
     };
 
     ImageLoadFilter(Input input);
-    ImageLoadFilter(std::shared_ptr<vislib::graphics::BitmapCodecCollection> codecs, std::string filename,
-        std::size_t sizeEstimate = 0);
+    ImageLoadFilter(
+        std::shared_ptr<vislib::graphics::BitmapCodecCollection> codecs, std::string filename, ImageMetadata metadata);
     ImagePtr operator()();
 
-    std::size_t getByteSize() const;
-    AsyncImageData2D::Hash getHash() const;
+    ImageMetadata getMetadata() const;
 
 private:
     Input input;

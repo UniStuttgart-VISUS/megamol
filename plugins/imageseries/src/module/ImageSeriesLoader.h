@@ -116,7 +116,8 @@ private:
 
     util::LRUCache<std::uint32_t, AsyncImageData2D> imageCache;
 
-    ImageSeries2DCall::Output metadata;
+    ImageMetadata metadata;
+    ImageSeries2DCall::Output outputPrototype;
 
     std::shared_ptr<vislib::graphics::BitmapCodecCollection> getBitmapCodecs() const;
 };

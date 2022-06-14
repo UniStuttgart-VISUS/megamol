@@ -20,8 +20,7 @@ public:
     DerivativeFilter(AsyncImagePtr image);
     ImagePtr operator()();
 
-    std::size_t getByteSize() const;
-    AsyncImageData2D::Hash getHash() const;
+    ImageMetadata getMetadata() const;
 
 private:
     Input input;

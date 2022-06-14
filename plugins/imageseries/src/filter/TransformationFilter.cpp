@@ -64,12 +64,14 @@ TransformationFilter::ImagePtr TransformationFilter::operator()() {
     return std::const_pointer_cast<const Image>(result);
 }
 
-std::size_t TransformationFilter::getByteSize() const {
-    return input.image ? input.image->getByteSize() : 0;
-}
-
-AsyncImageData2D::Hash TransformationFilter::getHash() const {
-    return util::computeHash(input.image, util::hashBytes(&input.transform, sizeof(input.transform)));
+ImageMetadata TransformationFilter::getMetadata() const {
+    if (input.image) {
+        ImageMetadata metadata = input.image->getMetadata();
+        metadata.hash = util::computeHash(input.image, util::hashBytes(&input.transform, sizeof(input.transform)));
+        return metadata;
+    } else {
+        return {};
+    }
 }
 
 } // namespace megamol::ImageSeries::filter

@@ -59,7 +59,7 @@ void ImageSeriesLoader::release() {
 bool ImageSeriesLoader::getDataCallback(core::Call& caller) {
     if (auto call = dynamic_cast<ImageSeries2DCall*>(&caller)) {
         // Copy base metadata fields
-        auto output = metadata;
+        auto output = outputPrototype;
 
         // TODO Obtain suitable frame
         output.imageIndex = timestampToFrameIndex(call->GetInput().time);
@@ -68,9 +68,12 @@ bool ImageSeriesLoader::getDataCallback(core::Call& caller) {
         if (output.imageIndex < imageFilesFiltered.size()) {
             const auto& path = imageFilesFiltered[output.imageIndex];
             output.filename = path.string();
+
+            ImageMetadata meta = metadata;
+            meta.index = output.imageIndex;
+            meta.valid = true;
             output.imageData = imageCache.findOrCreate(output.imageIndex, [&](std::uint32_t) {
-                return filterRunner->run<ImageSeries::filter::ImageLoadFilter>(
-                    getBitmapCodecs(), path, output.width * output.height * output.bytesPerPixel);
+                return filterRunner->run<ImageSeries::filter::ImageLoadFilter>(getBitmapCodecs(), path, meta);
             });
         }
 
@@ -87,7 +90,7 @@ bool ImageSeriesLoader::getDataCallback(core::Call& caller) {
 bool ImageSeriesLoader::getMetaDataCallback(core::Call& caller) {
     if (auto call = dynamic_cast<ImageSeries2DCall*>(&caller)) {
         // Write only metadata without image data.
-        call->SetOutput(metadata);
+        call->SetOutput(outputPrototype);
         return true;
     } else {
         return false;
@@ -165,40 +168,48 @@ void ImageSeriesLoader::filterImageFiles() {
 
 void ImageSeriesLoader::updateMetadata() {
     imageCache.clear();
-    metadata = {};
+    outputPrototype = {};
 
     // No image files -> no data
     if (imageFilesFiltered.empty()) {
         return;
     }
 
-    metadata.imageCount = imageFilesFiltered.size();
-    metadata.minimumTime = 0; // TODO allow customizing bounds per-dataset
-    metadata.maximumTime = 1; // TODO allow customizing bounds per-dataset
-    metadata.framerate = metadata.imageCount / (metadata.maximumTime - metadata.minimumTime);
+    outputPrototype.imageCount = imageFilesFiltered.size();
+    outputPrototype.minimumTime = 0; // TODO allow customizing bounds per-dataset
+    outputPrototype.maximumTime = 1; // TODO allow customizing bounds per-dataset
+    outputPrototype.framerate =
+        outputPrototype.imageCount / (outputPrototype.maximumTime - outputPrototype.minimumTime);
 
     // Find first valid image in series to populate metadata
     for (auto& path : imageFilesFiltered) {
         if (auto image = loadImageFile(path)) {
+            outputPrototype.width = image->Width();
+            outputPrototype.height = image->Height();
+            outputPrototype.bytesPerPixel = image->BytesPerPixel();
+
             metadata.width = image->Width();
             metadata.height = image->Height();
-            metadata.bytesPerPixel = image->BytesPerPixel();
+            metadata.channels = image->GetChannelCount();
+            metadata.bytesPerChannel = image->BytesPerPixel() / std::max<unsigned int>(1, image->GetChannelCount());
+            metadata.filename = pathParam.Param<core::param::FilePathParam>()->Value();
             break;
         }
     }
 }
 
 std::size_t ImageSeriesLoader::timestampToFrameIndex(double timestamp) const {
-    double normalized = (timestamp - metadata.minimumTime) / (metadata.maximumTime - metadata.minimumTime);
+    double normalized =
+        (timestamp - outputPrototype.minimumTime) / (outputPrototype.maximumTime - outputPrototype.minimumTime);
     // Ensure that we never end up with a negative index
-    std::int32_t limit = std::max<std::int32_t>(metadata.imageCount, 1);
+    std::int32_t limit = std::max<std::int32_t>(outputPrototype.imageCount, 1);
     return std::max<std::int32_t>(0, std::min<std::int32_t>(normalized * limit, limit - 1));
 }
 
 double ImageSeriesLoader::frameIndexToTimestamp(std::size_t index) const {
     // Ensure that we never divide by 0
-    double limit = std::max<std::int32_t>(metadata.imageCount, 2) - 1;
-    return metadata.minimumTime + (index / limit) * (metadata.maximumTime - metadata.minimumTime);
+    double limit = std::max<std::int32_t>(outputPrototype.imageCount, 2) - 1;
+    return outputPrototype.minimumTime + (index / limit) * (outputPrototype.maximumTime - outputPrototype.minimumTime);
 }
 
 std::shared_ptr<vislib::graphics::BitmapImage> ImageSeriesLoader::loadImageFile(
