@@ -21,18 +21,23 @@ public:
     struct Rect {
         int x1 = 0;
         int y1 = 0;
-        int x2 = 0;
-        int y2 = 0;
+        int x2 = -1;
+        int y2 = -1;
+
+        bool valid() const {
+            return x1 <= x2 && y1 <= y2;
+        }
     };
 
     struct Node {
         std::uint32_t frameIndex = 0;
         glm::vec2 centerOfMass = {};
         glm::vec2 velocity = {};
-        float velocityMagnitude = 0;
+        float velocityMagnitude = 0.f;
         float area = 0.f;
         float interfaceFluid = 0.f;
         float interfaceSolid = 0.f;
+        float averageChordLength = 0.f;
         std::uint8_t edgeCountIn = 0;
         std::uint8_t edgeCountOut = 0;
         Rect boundingBox;
@@ -54,11 +59,15 @@ public:
     void addEdge(Edge edge);
 
     bool hasNode(NodeID id) const;
+    NodeID getNodeCount() const;
     Node& getNode(NodeID id);
     const Node& getNode(NodeID id) const;
 
     const std::vector<Node>& getNodes() const;
     const std::vector<Edge>& getEdges() const;
+
+    std::vector<std::vector<NodeID>> getOutboundEdges() const;
+    std::vector<std::vector<NodeID>> getInboundEdges() const;
 
 private:
     std::vector<Node> nodes;
