@@ -213,7 +213,7 @@ function(require_external NAME)
 
     add_external_project(bhtsne STATIC
       GIT_REPOSITORY https://github.com/lvdmaaten/bhtsne.git
-      GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc"
+      GIT_TAG "cd619e6c186b909a2d8ed26fbf0b1afec770f43d"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${BHTSNE_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
         "${CMAKE_SOURCE_DIR}/externals/bhtsne/CMakeLists.txt"
