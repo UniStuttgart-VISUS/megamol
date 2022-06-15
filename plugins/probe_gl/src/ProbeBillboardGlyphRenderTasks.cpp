@@ -164,6 +164,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     if (something_has_changed) {
         ++m_version;
 
+        this->m_billboard_size_slot.ResetDirty();
         this->m_rendering_mode_slot.ResetDirty();
         auto gpu_mtl_storage = mtlc->getData();
         auto probes = pc->getData();
