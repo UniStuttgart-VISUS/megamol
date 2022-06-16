@@ -45,7 +45,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster_gl::Clustering_2>();
         this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster_gl::ClusterMapRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster_gl::ClusterGraphRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ProteinViewRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster_gl::ProteinViewRenderer>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallPNGPics>();

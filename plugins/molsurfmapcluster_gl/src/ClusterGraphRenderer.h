@@ -82,6 +82,9 @@ protected:
      */
     virtual bool Render(core_gl::view::CallRender2DGL& call) override;
 
+    /** Method to request resources from the frontend */
+    std::vector<std::string> requested_lifetime_resources() override;
+
 private:
     void calculateNodePositions(ClusteringData const& cluster_data);
 
@@ -157,6 +160,9 @@ private:
     /** The node ids for all lines */
     std::vector<int> line_node_ids_;
 
+    /** The pdb ids for all nodes */
+    std::vector<std::string> node_pdb_ids_;
+
     /** The last processed data hash */
     size_t last_data_hash_;
 
@@ -225,6 +231,9 @@ private:
 
     /** Position of the mouse in screen coordinates */
     glm::dvec2 mouse_pos_;
+
+    /** prefix of the data path */
+    std::filesystem::path path_prefix_;
 };
 
 } // namespace molsurfmapcluster_gl

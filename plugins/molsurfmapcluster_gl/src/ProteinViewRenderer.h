@@ -1,140 +1,97 @@
-/*
- * ProteinViewRenderer.h
- *
- * Copyright (C) 2021 by Karsten Schatz
- * Copyright (C) 2008-2021 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
-
-#ifndef MEGAMOLCORE_PROTEINVIEWRENDERER_H_INCLUDED
-#define MEGAMOLCORE_PROTEINVIEWRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "glowl/BufferObject.hpp"
-#include "glowl/Texture2D.hpp"
-#include "image_calls/Image2DCall.h"
-#include "mmcore/Call.h"
-#include "mmcore/CallerSlot.h"
+#include "glowl/FramebufferObject.hpp"
+#include "glowl/GLSLProgram.hpp"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/view/light/CallLight.h"
 #include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "vislib/math/Cuboid.h"
-#include "vislib/memutils.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include <glad/gl.h>
 
-namespace megamol {
-namespace molsurfmapcluster {
-
-
-/**
- * Renderer for tri-mesh data
- */
+namespace megamol::molsurfmapcluster_gl {
 class ProteinViewRenderer : public core_gl::view::Renderer3DModuleGL {
 public:
-    /**
-     * Answer the name of this module.
-     *
-     * @return The name of this module.
-     */
     static const char* ClassName(void) {
         return "ProteinViewRenderer";
     }
 
-    /**
-     * Answer a human readable description of this module.
-     *
-     * @return A human readable description of this module.
-     */
     static const char* Description(void) {
         return "Renderer for tri-mesh data";
     }
 
-    /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
     static bool IsAvailable(void) {
         return true;
     }
 
-    /** Ctor. */
     ProteinViewRenderer(void);
-
-    /** Dtor. */
     virtual ~ProteinViewRenderer(void);
 
 protected:
-    /**
-     * Implementation of 'Create'.
-     *
-     * @return 'true' on success, 'false' otherwise.
-     */
     virtual bool create(void);
-
-    /**
-     * The get extents callback. The module should set the members of
-     * 'call' to tell the caller the extents of its data (bounding boxes
-     * and times).
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
-
-    /**
-     * Implementation of 'Release'.
-     */
     virtual void release(void);
-
-    /**
-     * The render callback.
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
     virtual bool Render(core_gl::view::CallRender3DGL& call);
 
 private:
-    /** The slot to fetch the data */
-    core::CallerSlot getDataSlot;
+    void updateLights(core::view::light::CallLight* lightCall, glm::vec3 camDir);
 
-    /** The slot to fetch the image data */
-    core::CallerSlot getImageDataSlot;
+    enum class WindingRule : int { CLOCK_WISE = 0, COUNTER_CLOCK_WISE = 1 };
 
-    /** Flag whether or not to show vertices */
-    core::param::ParamSlot showVertices;
+    enum class RenderingMode : int { FILLED = 0, WIREFRAME = 1, POINTS = 2, NONE = 3 };
 
-    /** Flag whether or not use lighting for the surface */
-    core::param::ParamSlot lighting;
+    struct LightParams {
+        float x, y, z, intensity;
+    };
 
-    /** The Triangle winding rule */
-    core::param::ParamSlot windRule;
+    core::CallerSlot getDataSlot_;
+    core::CallerSlot getLightsSlot_;
+    core::CallerSlot get_texture_slot_;
+    core::CallerSlot getFramebufferSlot_;
 
-    /** The Triangle color */
-    core::param::ParamSlot colorSlot;
+    core::param::ParamSlot frontStyleParam_;
+    core::param::ParamSlot backStyleParam_;
+    core::param::ParamSlot windingRuleParam_;
+    core::param::ParamSlot colorParam_;
 
-    /**  The name slot */
-    core::param::ParamSlot nameSlot;
+    core::param::ParamSlot ambientColorParam_;
+    core::param::ParamSlot diffuseColorParam_;
+    core::param::ParamSlot specularColorParam_;
+    core::param::ParamSlot ambientFactorParam_;
+    core::param::ParamSlot diffuseFactorParam_;
+    core::param::ParamSlot specularFactorParam_;
+    core::param::ParamSlot specularExponentParam_;
+    core::param::ParamSlot useLambertParam_;
+    core::param::ParamSlot lightingParam_;
+    core::param::ParamSlot pdbid_param_;
 
-    megamol::core::utility::SDFFont theFont;
-    glm::ivec2 m_viewport;
+    std::shared_ptr<glowl::GLSLProgram> meshShader_;
+    std::shared_ptr<glowl::GLSLProgram> textureShader_;
 
-    vislib_gl::graphics::gl::GLSLShader textureShader;
-    std::unique_ptr<glowl::BufferObject> texBuffer;
-    std::unique_ptr<glowl::Texture2D> texture = nullptr;
-    GLuint texVa;
+    std::unique_ptr<glowl::BufferObject> positionBuffer_;
+    std::unique_ptr<glowl::BufferObject> colorBuffer_;
+    std::unique_ptr<glowl::BufferObject> normalBuffer_;
+    std::unique_ptr<glowl::BufferObject> texcoordBuffer_;
+    std::unique_ptr<glowl::BufferObject> indexBuffer_;
+    std::unique_ptr<glowl::BufferObject> texture_buffer_;
 
-    SIZE_T lastHash = 0;
+    std::unique_ptr<glowl::BufferObject> pointLightBuffer_;
+    std::unique_ptr<glowl::BufferObject> directionalLightBuffer_;
+
+    std::shared_ptr<glowl::Texture2D> the_texture_;
+
+    std::vector<LightParams> pointLights_;
+    std::vector<LightParams> directionalLights_;
+
+    core::utility::SDFFont font_;
+
+    GLuint vertexArray_;
+    GLuint tex_vertex_array_;
+
+    size_t last_texture_hash_;
 };
-
-
-} // namespace molsurfmapcluster
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_TRISOUPRENDERER_H_INCLUDED */
+} // namespace megamol::molsurfmapcluster_gl

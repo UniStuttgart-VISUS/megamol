@@ -11,5 +11,6 @@ megamol_plugin(molsurfmapcluster_gl
     geometry_calls_gl
     protein_calls
     image_calls
+    compositing_gl
   DEPENDS_EXTERNALS
     Eigen)

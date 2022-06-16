@@ -78,8 +78,12 @@ protected:
     /** The bounding box */
     vislib::math::Cuboid<float> bbox;
 
+    bool reload_colors;
+
     /** The data update hash */
     SIZE_T datahash;
+
+    size_t last_incoming_hash_;
 
     /**
      * Loads the specified file

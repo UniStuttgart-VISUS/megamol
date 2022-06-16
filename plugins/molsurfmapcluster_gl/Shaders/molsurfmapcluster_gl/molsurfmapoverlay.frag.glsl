@@ -1,8 +1,9 @@
+#version 430
+
 uniform sampler2D tex;
 uniform vec3 viewvec;
 
 in vec2 texCoord;
-
 
 layout(location = 0) out vec4 out_color;
 

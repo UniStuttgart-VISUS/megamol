@@ -1,3 +1,5 @@
+#version 460
+
 uniform sampler2D tex;
 
 in vec2 texCoord;

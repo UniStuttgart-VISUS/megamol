@@ -51,6 +51,8 @@ MSMSMeshLoader::MSMSMeshLoader(void)
         , minGradColorParam("color::minGradColor", "Color for min value for gradient coloring")
         , midGradColorParam("color::midGradColor", "Color for mid value for gradient coloring")
         , maxGradColorParam("color::maxGradColor", "Color for max value for gradient coloring")
+        , last_incoming_hash_(0)
+        , reload_colors(true)
         , prevTime(-1) {
     // the data out slot
     this->getDataSlot.SetCallback(CallTriMeshDataGL::ClassName(), "GetData", &MSMSMeshLoader::getDataCallback);
@@ -204,8 +206,9 @@ bool MSMSMeshLoader::getDataCallback(core::Call& caller) {
             if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() ||
                 this->colorWeightParam.IsDirty() || this->minGradColorParam.IsDirty() ||
                 this->midGradColorParam.IsDirty() || this->maxGradColorParam.IsDirty() ||
-                this->prevTime != int(ctmd->FrameID())) {
+                this->prevTime != int(ctmd->FrameID()) || reload_colors) {
 
+                reload_colors = false;
                 ProteinColor::ColoringMode currentColoringMode0 = static_cast<ProteinColor::ColoringMode>(
                     this->coloringModeParam0.Param<param::EnumParam>()->Value());
                 ProteinColor::ColoringMode currentColoringMode1 = static_cast<ProteinColor::ColoringMode>(
@@ -521,6 +524,7 @@ bool MSMSMeshLoader::getExtentCallback(core::Call& caller) {
     }
 
     ctmd->SetDataHash(this->datahash);
+    bool refresh = false;
     if (this->filenameSlot.Param<core::param::FilePathParam>()->Value().empty()) {
         MolecularDataCall* mol = this->molDataSlot.CallAs<MolecularDataCall>();
         if (mol) {
@@ -528,12 +532,17 @@ bool MSMSMeshLoader::getExtentCallback(core::Call& caller) {
             if ((*mol)(MolecularDataCall::CallForGetExtent)) {
                 frameCnt = mol->FrameCount();
                 this->bbox = mol->AccessBoundingBoxes().ObjectSpaceBBox();
+                if (last_incoming_hash_ != mol->DataHash()) {
+                    last_incoming_hash_ = mol->DataHash();
+                    refresh = true;
+                }
             }
         }
     }
     ctmd->SetExtent(frameCnt, this->bbox.Left(), this->bbox.Bottom(), this->bbox.Back(), this->bbox.Right(),
         this->bbox.Top(), this->bbox.Front());
-    if (this->obj.Count() != frameCnt) {
+    if (this->obj.Count() != frameCnt || refresh) {
+        reload_colors = true;
         for (unsigned int i = 0; i < this->obj.Count(); i++) {
             delete this->obj[i];
             this->obj[i] = NULL;

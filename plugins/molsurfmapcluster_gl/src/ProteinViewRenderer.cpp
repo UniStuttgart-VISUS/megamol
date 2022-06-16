@@ -1,138 +1,207 @@
-/*
- * TriSoupRenderer.cpp
- *
- * Copyright (C) 2010 by Sebastian Grottel
- * Copyright (C) 2008-2010 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #include "ProteinViewRenderer.h"
+
+#include "compositing_gl/CompositingCalls.h"
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "image_calls/Image2DCall.h"
+#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/utility/ColourParser.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/utility/log/Log.h"
-#include "vislib/sys/MemmappedFile.h"
-#include "vislib/math/ShallowPoint.h"
-#include "vislib/math/Vector.h"
-#include "vislib/math/mathfunctions.h"
-#include <filesystem>
+#include "mmcore/view/light/DistantLight.h"
+#include "mmcore/view/light/PointLight.h"
+#include "mmcore_gl/utility/RenderUtils.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 using namespace megamol;
-using namespace megamol::molsurfmapcluster;
+using namespace megamol::molsurfmapcluster_gl;
+;
 
-using namespace megamol::core;
-
-
-/*
- * ProteinViewRenderer::ProteinViewRenderer
- */
 ProteinViewRenderer::ProteinViewRenderer(void)
-        : Renderer3DModuleGL()
-        , getDataSlot("getData", "The slot to fetch the tri-mesh data")
-        , getImageDataSlot("getImageData", "The slot to fetch the image data")
-        , showVertices("showVertices", "Flag whether to show the verices of the object")
-        , lighting("lighting", "Flag whether or not use lighting for the surface")
-        , windRule("windingrule", "The triangle edge winding rule")
-        , nameSlot("name", "The name of the displayed protein mesh")
-        , colorSlot("color", "The triangle color (if no colors are read from file)")
-        , theFont(megamol::core::utility::SDFFont::PRESET_ROBOTO_SANS)
-        , texVa(0)
-        , lastHash(0) {
+        : getDataSlot_("getData", "Connects the renderer to a data provider to retrieve data")
+        , getLightsSlot_("getLights", "Connects the renderer to the used light source")
+        , get_texture_slot_("getTexture", "Connects the renderer to the texture path provider")
+        , getFramebufferSlot_("getFramebuffer", "Connects the renderer to an external framebuffer object")
+        , lightingParam_("lighting::enableLighting", "Flag to enable the lighting of the mesh")
+        , frontStyleParam_("frontstyle", "Rendering style for the front surface")
+        , backStyleParam_("backstyle", "Rendering style for the back surface")
+        , windingRuleParam_("windingrule", "Triangle edge winding rule")
+        , colorParam_("color", "The color of the mesh that is used if no color is provided in the data")
+        , ambientColorParam_("lighting::ambientColor", "Ambient color of the used lights")
+        , diffuseColorParam_("lighting::diffuseColor", "Diffuse color of the used lights")
+        , specularColorParam_("lighting::specularColor", "Specular color of the used lights")
+        , ambientFactorParam_("lighting::ambientFactor", "Factor for the ambient lighting of Blinn-Phong")
+        , diffuseFactorParam_("lighting::diffuseFactor", "Factor for the diffuse lighting of Blinn-Phong")
+        , specularFactorParam_("lighting::specularFactor", "Factor for the specular lighting of Blinn-Phong")
+        , specularExponentParam_("lighting::specularExponent", "Exponent for the specular lighting of Blinn-Phong")
+        , useLambertParam_(
+              "lighting::lambertShading", "If turned on, the local lighting uses lambert instead of Blinn-Phong.")
+        , pdbid_param_("pdbid", "PDB identifier of the protein to show")
+        , meshShader_(nullptr)
+        , textureShader_(nullptr)
+        , positionBuffer_(nullptr)
+        , colorBuffer_(nullptr)
+        , normalBuffer_(nullptr)
+        , texcoordBuffer_(nullptr)
+        , indexBuffer_(nullptr)
+        , pointLightBuffer_(nullptr)
+        , directionalLightBuffer_(nullptr)
+        , the_texture_(nullptr)
+        , vertexArray_(0)
+        , tex_vertex_array_(0)
+        , font_(core::utility::SDFFont::PRESET_ROBOTO_SANS)
+        , last_texture_hash_(0) {
 
-    this->getDataSlot.SetCompatibleCall<megamol::geocalls_gl::CallTriMeshDataGLDescription>();
-    this->MakeSlotAvailable(&this->getDataSlot);
+    getDataSlot_.SetCompatibleCall<megamol::geocalls_gl::CallTriMeshDataGLDescription>();
+    getDataSlot_.SetNecessity(megamol::core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
+    this->MakeSlotAvailable(&getDataSlot_);
 
-    this->getImageDataSlot.SetCompatibleCall<image_calls::Image2DCallDescription>();
-    this->MakeSlotAvailable(&this->getImageDataSlot);
+    getLightsSlot_.SetCompatibleCall<megamol::core::view::light::CallLightDescription>();
+    getLightsSlot_.SetNecessity(megamol::core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
+    this->MakeSlotAvailable(&getLightsSlot_);
 
-    this->nameSlot.SetParameter(new param::StringParam(""));
-    this->MakeSlotAvailable(&this->nameSlot);
+    get_texture_slot_.SetCompatibleCall<image_calls::Image2DCallDescription>();
+    this->MakeSlotAvailable(&get_texture_slot_);
 
-    this->showVertices.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->showVertices);
+    getFramebufferSlot_.SetCompatibleCall<megamol::compositing::CallFramebufferGLDescription>();
+    this->MakeSlotAvailable(&getFramebufferSlot_);
 
-    this->lighting.SetParameter(new param::BoolParam(true));
-    this->MakeSlotAvailable(&this->lighting);
+    core::param::EnumParam* ep = new core::param::EnumParam(static_cast<int>(RenderingMode::FILLED));
+    ep->SetTypePair(static_cast<int>(RenderingMode::FILLED), "Filled");
+    ep->SetTypePair(static_cast<int>(RenderingMode::WIREFRAME), "Wireframe");
+    ep->SetTypePair(static_cast<int>(RenderingMode::POINTS), "Points");
+    ep->SetTypePair(static_cast<int>(RenderingMode::NONE), "None");
+    frontStyleParam_ << ep;
+    this->MakeSlotAvailable(&frontStyleParam_);
 
-    param::EnumParam* ep = new param::EnumParam(0);
-    ep = new param::EnumParam(0);
-    ep->SetTypePair(0, "Counter-Clock Wise");
-    ep->SetTypePair(1, "Clock Wise");
-    this->windRule << ep;
-    this->MakeSlotAvailable(&this->windRule);
+    ep = new core::param::EnumParam(static_cast<int>(RenderingMode::NONE));
+    ep->SetTypePair(static_cast<int>(RenderingMode::FILLED), "Filled");
+    ep->SetTypePair(static_cast<int>(RenderingMode::WIREFRAME), "Wireframe");
+    ep->SetTypePair(static_cast<int>(RenderingMode::POINTS), "Points");
+    ep->SetTypePair(static_cast<int>(RenderingMode::NONE), "None");
+    backStyleParam_ << ep;
+    this->MakeSlotAvailable(&backStyleParam_);
 
-    this->colorSlot.SetParameter(new param::ColorParam(1.0f, 1.0f, 1.0f, 1.0f));
-    this->MakeSlotAvailable(&this->colorSlot);
+    ep = new core::param::EnumParam(static_cast<int>(WindingRule::COUNTER_CLOCK_WISE));
+    ep->SetTypePair(static_cast<int>(WindingRule::COUNTER_CLOCK_WISE), "Counter-Clock Wise");
+    ep->SetTypePair(static_cast<int>(WindingRule::CLOCK_WISE), "Clock Wise");
+    windingRuleParam_ << ep;
+    this->MakeSlotAvailable(&windingRuleParam_);
+
+    colorParam_.SetParameter(new core::param::ColorParam("#ffffff"));
+    this->MakeSlotAvailable(&colorParam_);
+
+    ambientColorParam_.SetParameter(new core::param::ColorParam("#ffffff"));
+    this->MakeSlotAvailable(&ambientColorParam_);
+
+    diffuseColorParam_.SetParameter(new core::param::ColorParam("#ffffff"));
+    this->MakeSlotAvailable(&diffuseColorParam_);
+
+    specularColorParam_.SetParameter(new core::param::ColorParam("#ffffff"));
+    this->MakeSlotAvailable(&specularColorParam_);
+
+    ambientFactorParam_.SetParameter(new core::param::FloatParam(0.2f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&ambientFactorParam_);
+
+    diffuseFactorParam_.SetParameter(new core::param::FloatParam(0.798f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&diffuseFactorParam_);
+
+    specularFactorParam_.SetParameter(new core::param::FloatParam(0.02f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&specularFactorParam_);
+
+    specularExponentParam_.SetParameter(new core::param::FloatParam(120.0f, 1.0f, 1000.0f));
+    this->MakeSlotAvailable(&specularExponentParam_);
+
+    useLambertParam_.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&useLambertParam_);
+
+    lightingParam_.SetParameter(new core::param::BoolParam(true));
+    this->MakeSlotAvailable(&lightingParam_);
+
+    pdbid_param_.SetParameter(new core::param::StringParam(""));
+    this->MakeSlotAvailable(&pdbid_param_);
 }
 
-
-/*
- * ProteinViewRenderer::~ProteinViewRenderer
- */
 ProteinViewRenderer::~ProteinViewRenderer(void) {
     this->Release();
 }
 
-
-/*
- * ProteinViewRenderer::create
- */
 bool ProteinViewRenderer::create(void) {
-    // Initialise font
-    if (!this->theFont.Initialise(this->GetCoreInstance())) {
-        core::utility::log::Log::DefaultLog.WriteError("Couldn't initialize the font.");
-        return false;
-    }
 
-    vislib_gl::graphics::gl::ShaderSource texVertShader;
-    vislib_gl::graphics::gl::ShaderSource texFragShader;
-
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    if (!ssf->MakeShaderSource("molsurfMapOverlay::vertex", texVertShader)) {
-        core::utility::log::Log::DefaultLog.WriteMsg(
-            core::utility::log::Log::LEVEL_ERROR, "Unable to load vertex shader source for texture Vertex Shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("molsurfMapOverlay::fragment", texFragShader)) {
-        core::utility::log::Log::DefaultLog.WriteMsg(
-            core::utility::log::Log::LEVEL_ERROR, "Unable to load fragment shader source for texture Fragment Shader");
-        return false;
-    }
-
+    auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
     try {
-        if (!this->textureShader.Create(
-                texVertShader.Code(), texVertShader.Count(), texFragShader.Code(), texFragShader.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        core::utility::log::Log::DefaultLog.WriteError("Unable to create shader: %s\n", e.GetMsgA());
-        return false;
+        meshShader_ = core::utility::make_shared_glowl_shader("mesh", shdr_options,
+            std::filesystem::path("trisoup_gl/trisoup.vert.glsl"),
+            std::filesystem::path("trisoup_gl/trisoup.frag.glsl"));
+        textureShader_ = core::utility::make_shared_glowl_shader("overlay", shdr_options,
+            std::filesystem::path("molsurfmapcluster_gl/molsurfmapoverlay.vert.glsl"),
+            std::filesystem::path("molsurfmapcluster_gl/molsurfmapoverlay.frag.glsl"));
+    } catch (glowl::GLSLProgramException const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "[ProteinViewRenderer] %s", ex.what());
+    } catch (std::exception const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[ProteinViewRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "[ProteinViewRenderer] Unable to compile shader: Unknown exception.");
     }
 
-    texVertShader.Clear();
-    texFragShader.Clear();
+    positionBuffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    colorBuffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    normalBuffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    texcoordBuffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    indexBuffer_ = std::make_unique<glowl::BufferObject>(GL_ELEMENT_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    pointLightBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    directionalLightBuffer_ =
+        std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
 
-    const float size = 1.0f;
+    glGenVertexArrays(1, &vertexArray_);
+    glBindVertexArray(vertexArray_);
+
+    positionBuffer_->bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    colorBuffer_->bind();
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    normalBuffer_->bind();
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    texcoordBuffer_->bind();
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    indexBuffer_->bind();
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glDisableVertexAttribArray(2);
+    glDisableVertexAttribArray(3);
+
+    constexpr float size = 1.0f;
     std::vector<float> texVerts = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, size, 0.0f, 0.0f, 1.0f, size, 0.0f, 0.0f, 1.0f,
         0.0f, size, size, 0.0f, 1.0f, 1.0f};
 
-    this->texBuffer = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, texVerts, GL_STATIC_DRAW);
+    texture_buffer_ = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, texVerts, GL_STATIC_DRAW);
 
-    glGenVertexArrays(1, &this->texVa);
-    glBindVertexArray(this->texVa);
+    glGenVertexArrays(1, &tex_vertex_array_);
+    glBindVertexArray(tex_vertex_array_);
 
-    this->texBuffer->bind();
+    texture_buffer_->bind();
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
     glEnableVertexAttribArray(1);
@@ -143,21 +212,28 @@ bool ProteinViewRenderer::create(void) {
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
 
+    font_.Initialise(instance());
+
     return true;
 }
 
+void ProteinViewRenderer::release(void) {
+    if (vertexArray_ != 0) {
+        glDeleteVertexArrays(1, &vertexArray_);
+        vertexArray_ = 0;
+    }
+}
 
-/*
- * ProteinViewRenderer::GetExtents
- */
 bool ProteinViewRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
-    megamol::geocalls_gl::CallTriMeshDataGL* ctmd = this->getDataSlot.CallAs<megamol::geocalls_gl::CallTriMeshDataGL>();
-    if (ctmd == NULL)
+    auto ctmd = this->getDataSlot_.CallAs<geocalls_gl::CallTriMeshDataGL>();
+    if (ctmd == nullptr) {
         return false;
+    }
     ctmd->SetFrameID(static_cast<int>(call.Time()));
-    if (!(*ctmd)(1))
+    if (!(*ctmd)(1)) {
         return false;
+    }
 
     call.SetTimeFramesCount(ctmd->FrameCount());
     call.AccessBoundingBoxes().Clear();
@@ -166,470 +242,368 @@ bool ProteinViewRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-
-/*
- * ProteinViewRenderer::release
- */
-void ProteinViewRenderer::release(void) {
-    // intentionally empty
-}
-
-
-/*
- * TriSoupRenderer::Render
- */
 bool ProteinViewRenderer::Render(core_gl::view::CallRender3DGL& call) {
-    megamol::geocalls_gl::CallTriMeshDataGL* ctmd = this->getDataSlot.CallAs<megamol::geocalls_gl::CallTriMeshDataGL>();
-    if (ctmd == NULL)
+    auto call_fbo = call.GetFramebuffer();
+    auto cam = call.GetCamera();
+
+    auto view_mat = cam.getViewMatrix();
+    auto proj_mat = cam.getProjectionMatrix();
+    auto mvp_mat = proj_mat * view_mat;
+
+    bool has_external_fbo = false;
+    auto cfbo = getFramebufferSlot_.CallAs<compositing::CallFramebufferGL>();
+    auto fbo = call.GetFramebuffer();
+    if (cfbo != nullptr) {
+        cfbo->operator()(compositing::CallFramebufferGL::CallGetMetaData);
+        cfbo->operator()(compositing::CallFramebufferGL::CallGetData);
+        if (cfbo->getData() != nullptr) {
+            fbo = cfbo->getData();
+            has_external_fbo = true;
+        }
+    }
+
+    fbo->bind();
+
+    auto lc = this->getLightsSlot_.CallAs<core::view::light::CallLight>();
+    this->updateLights(lc, cam.getPose().direction);
+
+    megamol::geocalls_gl::CallTriMeshDataGL* ctmd =
+        this->getDataSlot_.CallAs<megamol::geocalls_gl::CallTriMeshDataGL>();
+    if (ctmd == nullptr) {
         return false;
+    }
 
     ctmd->SetFrameID(static_cast<int>(call.Time()));
-    if (!(*ctmd)(1))
+    if (!(*ctmd)(1)) {
         return false;
-
-    ctmd->SetFrameID(static_cast<int>(call.Time())); // necessary?
-    if (!(*ctmd)(0))
-        return false;
-
-    core::view::Camera cam = call.GetCamera();
-    glm::mat4 proj = cam.getProjectionMatrix();
-    glm::mat4 view = cam.getViewMatrix();
-    glm::mat4 mvp = proj * view;
-    glm::vec3 viewdir = cam.getPose().direction;
-
-    auto viewport = call.GetViewResolution();
-    this->m_viewport = {viewport.x, viewport.y};
-
-    glm::mat4 ortho = glm::ortho(
-        0.0f, static_cast<float>(this->m_viewport.x), 0.0f, static_cast<float>(this->m_viewport.y), -1.0f, 1.0f);
-
-#if 1
-    // lighting setup
-    //this->GetLights();
-    glm::vec4 lightPos = {0.0f, 0.0f, 0.0f, 1.0f};
-    // TODO read lights correctly
-    //if (this->lightMap.size() != 1) {
-    //    // megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-    //    //    "[TriSoupRenderer] Only one single point light source is supported by this renderer");
-    //}
-    //for (auto light : this->lightMap) {
-    //    if (light.second.lightType != core::view::light::POINTLIGHT) {
-    //        // megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-    //        //    "[TriSoupRenderer] Only single point light source is supported by this renderer");
-    //    } else {
-    //        auto lPos = light.second.pl_position;
-    //        // light.second.lightColor;
-    //        // light.second.lightIntensity;
-    //        if (lPos.size() == 3) {
-    //            lightPos[0] = lPos[0];
-    //            lightPos[1] = lPos[1];
-    //            lightPos[2] = lPos[2];
-    //        }
-    //        if (lPos.size() == 4) {
-    //            lightPos[0] = lPos[0];
-    //            lightPos[1] = lPos[1];
-    //            lightPos[2] = lPos[2];
-    //            lightPos[3] = lPos[3];
-    //        }
-    //        break;
-    //    }
-    //}
-    glm::vec4 zeros(0.f);
-    glm::vec4 ambient(0.2f, 0.2f, 0.2f, 1.f);
-    glm::vec4 diffuse(1.f, 1.f, 1.f, 0.f);
-    glm::vec4 specular(0.f, 0.f, 0.f, 0.f);
-
-    ::glMatrixMode(GL_PROJECTION);
-    ::glPushMatrix();
-    ::glLoadMatrixf(glm::value_ptr(proj));
-
-    ::glMatrixMode(GL_MODELVIEW);
-    ::glPushMatrix();
-    ::glLoadMatrixf(glm::value_ptr(view));
-
-    bool normals = false;
-    bool colors = false;
-    bool textures = false;
-    ::glEnable(GL_DEPTH_TEST);
-    bool doLighting = this->lighting.Param<param::BoolParam>()->Value();
-    if (doLighting) {
-        ::glEnable(GL_LIGHTING);
-        ::glEnable(GL_LIGHT0);
-        ::glLightfv(GL_LIGHT0, GL_POSITION, glm::value_ptr(lightPos));
-        ::glLightfv(GL_LIGHT0, GL_AMBIENT, glm::value_ptr(ambient));
-        ::glLightfv(GL_LIGHT0, GL_DIFFUSE, glm::value_ptr(diffuse));
-        ::glLightfv(GL_LIGHT0, GL_SPECULAR, glm::value_ptr(specular));
-    } else {
-        ::glLightfv(GL_LIGHT0, GL_POSITION, glm::value_ptr(zeros));
-        ::glLightfv(GL_LIGHT0, GL_AMBIENT, glm::value_ptr(zeros));
-        ::glLightfv(GL_LIGHT0, GL_DIFFUSE, glm::value_ptr(zeros));
-        ::glLightfv(GL_LIGHT0, GL_SPECULAR, glm::value_ptr(zeros));
-        ::glDisable(GL_LIGHT0);
-        ::glDisable(GL_LIGHTING);
-    }
-    ::glDisable(GL_BLEND);
-    ::glEnableClientState(GL_VERTEX_ARRAY);
-    ::glDisableClientState(GL_NORMAL_ARRAY);
-    ::glDisableClientState(GL_COLOR_ARRAY);
-    ::glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    ::glEnable(GL_COLOR_MATERIAL);
-    ::glEnable(GL_TEXTURE_2D);
-    ::glBindTexture(GL_TEXTURE_2D, 0);
-    ::glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-    ::glEnable(GL_NORMALIZE);
-
-    // GLsizei** oldbind = new GLsizei*[16];
-    // for (int i = 0; i < 16; i++) {
-    //    oldbind[i] = new GLsizei();
-    //}
-    ////glGetVertexAttribPointerv(0, GL_VERTEX_ARRAY_POINTER, (GLvoid**)oldbind);
-    // glGetPointerv(GL_VERTEX_ARRAY_POINTER, (GLvoid**)oldbind);
-    glVertexAttribPointer(0, 0, GL_FLOAT, GL_FALSE, 0, nullptr);
-    // glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &oldbind);
-    // glBindBuffer(GL_ARRAY_BUFFER, 0);
-    // glBindVertexArray(0);
-
-
-    GLint cfm;
-    ::glGetIntegerv(GL_CULL_FACE_MODE, &cfm);
-    GLint pm[2];
-    ::glGetIntegerv(GL_POLYGON_MODE, pm);
-    GLint twr;
-    ::glGetIntegerv(GL_FRONT_FACE, &twr);
-
-    if (this->windRule.Param<param::EnumParam>()->Value() == 0) {
-        ::glFrontFace(GL_CCW);
-    } else {
-        ::glFrontFace(GL_CW);
     }
 
-    int fpm, bpm;
-    fpm = GL_FILL;
-    bpm = GL_FILL;
+    ctmd->SetFrameID(static_cast<int>(call.Time()));
+    if (!(*ctmd)(0)) {
+        return false;
+    }
 
-    ::glPolygonMode(GL_FRONT, fpm);
-    ::glPolygonMode(GL_BACK, bpm);
-    ::glDisable(GL_CULL_FACE);
+    GLint frontStyle = GL_NONE;
+    GLint backStyle = GL_NONE;
+    GLint culling = GL_NONE;
+    GLint frontFace = GL_NONE;
 
-    //::glColor3f(1.0f, 1.0f, 1.0f);
-    float r, g, b;
-    this->colorSlot.ResetDirty();
-    auto curcol = this->colorSlot.Param<param::ColorParam>()->Value();
-    ::glColor3fv(curcol.data());
+    switch (static_cast<RenderingMode>(this->frontStyleParam_.Param<core::param::EnumParam>()->Value())) {
+    case RenderingMode::FILLED:
+        frontStyle = GL_FILL;
+        break;
+    case RenderingMode::WIREFRAME:
+        frontStyle = GL_LINE;
+        break;
+    case RenderingMode::POINTS:
+        frontStyle = GL_POINT;
+        break;
+    case RenderingMode::NONE:
+        frontStyle = GL_FILL;
+        culling = GL_FRONT;
+        break;
+    default:
+        break;
+    }
 
-    for (unsigned int i = 0; i < ctmd->Count(); i++) {
-        const megamol::geocalls_gl::CallTriMeshDataGL::Mesh& obj = ctmd->Objects()[i];
+    switch (static_cast<RenderingMode>(this->backStyleParam_.Param<core::param::EnumParam>()->Value())) {
+    case RenderingMode::FILLED:
+        backStyle = GL_FILL;
+        break;
+    case RenderingMode::WIREFRAME:
+        backStyle = GL_LINE;
+        break;
+    case RenderingMode::POINTS:
+        backStyle = GL_POINT;
+        break;
+    case RenderingMode::NONE:
+        backStyle = GL_FILL;
+        culling = (culling == 0) ? GL_BACK : GL_FRONT_AND_BACK;
+        break;
+    default:
+        break;
+    }
+
+    glPolygonMode(GL_FRONT, frontStyle);
+    glPolygonMode(GL_BACK, backStyle);
+    if (culling == GL_NONE) {
+        glDisable(GL_CULL_FACE);
+    } else {
+        glEnable(GL_CULL_FACE);
+        glCullFace(culling);
+    }
+
+    glGetIntegerv(GL_FRONT_FACE, &frontFace);
+    if (this->windingRuleParam_.Param<core::param::EnumParam>()->Value() ==
+        static_cast<int>(WindingRule::COUNTER_CLOCK_WISE)) {
+        glFrontFace(GL_CCW);
+    } else {
+        glFrontFace(GL_CW);
+    }
+
+    std::vector<float> positions;
+    std::vector<float> normals;
+    std::vector<float> colors;
+    std::vector<float> texCoords;
+    std::vector<uint32_t> vertIds;
+
+    for (uint32_t i = 0; i < ctmd->Count(); ++i) {
+        const auto& obj = ctmd->Objects()[i];
+        auto vertCount = obj.GetVertexCount();
+        auto triCount = obj.GetTriCount();
+        positions.resize(vertCount * 3);
+        normals.resize(vertCount * 3);
+        colors.resize(vertCount * 3);
+        texCoords.resize(vertCount * 2);
+        vertIds.resize(triCount * 3);
+
+        bool has_normals = false;
+        bool has_colors = false;
+        bool has_texCoords = false;
+        bool has_vertIds = false;
 
         switch (obj.GetVertexDataType()) {
-        case megamol::geocalls_gl::CallTriMeshDataGL::Mesh::DT_FLOAT:
-            ::glVertexPointer(3, GL_FLOAT, 0, obj.GetVertexPointerFloat());
+        case geocalls_gl::CallTriMeshDataGL::Mesh::DT_FLOAT:
+            std::memcpy(positions.data(), obj.GetVertexPointerFloat(), sizeof(float) * positions.size());
             break;
-        case megamol::geocalls_gl::CallTriMeshDataGL::Mesh::DT_DOUBLE:
-            ::glVertexPointer(3, GL_DOUBLE, 0, obj.GetVertexPointerDouble());
+        case geocalls_gl::CallTriMeshDataGL::Mesh::DT_DOUBLE:
+            std::transform(obj.GetVertexPointerDouble(), obj.GetVertexPointerDouble() + positions.size(),
+                positions.data(), [](auto a) { return static_cast<float>(a); });
             break;
         default:
             continue;
         }
 
-        if (obj.HasNormalPointer() != NULL) {
-            if (!normals) {
-                ::glEnableClientState(GL_NORMAL_ARRAY);
-                normals = true;
-            }
+        if (obj.HasNormalPointer()) {
+            has_normals = true;
             switch (obj.GetNormalDataType()) {
-            case megamol::geocalls_gl::CallTriMeshDataGL::Mesh::DT_FLOAT:
-                ::glNormalPointer(GL_FLOAT, 0, obj.GetNormalPointerFloat());
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_FLOAT:
+                std::memcpy(normals.data(), obj.GetNormalPointerFloat(), sizeof(float) * normals.size());
                 break;
-            case megamol::geocalls_gl::CallTriMeshDataGL::Mesh::DT_DOUBLE:
-                ::glNormalPointer(GL_DOUBLE, 0, obj.GetNormalPointerDouble());
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_DOUBLE:
+                std::transform(obj.GetNormalPointerDouble(), obj.GetNormalPointerDouble() + normals.size(),
+                    normals.data(), [](auto a) { return static_cast<float>(a); });
                 break;
             default:
                 continue;
             }
-        } else if (normals) {
-            ::glDisableClientState(GL_NORMAL_ARRAY);
-            normals = false;
         }
 
-        if (obj.HasColourPointer() != NULL) {
-            if (!colors) {
-                ::glEnableClientState(GL_COLOR_ARRAY);
-                colors = true;
-            }
+        if (obj.HasColourPointer()) {
+            has_colors = true;
             switch (obj.GetColourDataType()) {
-            case megamol::geocalls_gl::CallTriMeshDataGL::Mesh::DT_BYTE:
-                ::glColorPointer(3, GL_UNSIGNED_BYTE, 0, obj.GetColourPointerByte());
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_BYTE:
+                std::transform(obj.GetColourPointerByte(), obj.GetColourPointerByte() + colors.size(), colors.data(),
+                    [](auto a) { return static_cast<float>(a) / 255.0f; });
                 break;
-            case megamol::geocalls_gl::CallTriMeshDataGL::Mesh::DT_FLOAT:
-                ::glColorPointer(3, GL_FLOAT, 0, obj.GetColourPointerFloat());
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_FLOAT:
+                std::memcpy(colors.data(), obj.GetColourPointerFloat(), sizeof(float) * colors.size());
                 break;
-            case megamol::geocalls_gl::CallTriMeshDataGL::Mesh::DT_DOUBLE:
-                ::glColorPointer(3, GL_DOUBLE, 0, obj.GetColourPointerDouble());
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_DOUBLE:
+                std::transform(obj.GetColourPointerDouble(), obj.GetColourPointerDouble() + colors.size(),
+                    colors.data(), [](auto a) { return static_cast<float>(a); });
                 break;
             default:
                 continue;
             }
-        } else if (colors) {
-            ::glDisableClientState(GL_COLOR_ARRAY);
-            colors = false;
         }
 
-        if (obj.HasTextureCoordinatePointer() != NULL) {
-            if (!textures) {
-                ::glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-                textures = true;
-            }
+        if (obj.HasTextureCoordinatePointer()) {
+            has_texCoords = true;
             switch (obj.GetTextureCoordinateDataType()) {
-            case megamol::geocalls_gl::CallTriMeshDataGL::Mesh::DT_FLOAT:
-                ::glTexCoordPointer(2, GL_FLOAT, 0, obj.GetTextureCoordinatePointerFloat());
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_FLOAT:
+                std::memcpy(texCoords.data(), obj.GetTextureCoordinatePointerFloat(), sizeof(float) * texCoords.size());
                 break;
-            case megamol::geocalls_gl::CallTriMeshDataGL::Mesh::DT_DOUBLE:
-                ::glTexCoordPointer(2, GL_DOUBLE, 0, obj.GetTextureCoordinatePointerDouble());
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_DOUBLE:
+                std::transform(obj.GetTextureCoordinatePointerDouble(),
+                    obj.GetTextureCoordinatePointerDouble() + texCoords.size(), texCoords.data(),
+                    [](auto a) { return static_cast<float>(a); });
                 break;
             default:
                 continue;
             }
-        } else if (textures) {
-            ::glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-            textures = false;
         }
 
-        if (obj.GetMaterial() != NULL) {
-            const megamol::geocalls_gl::CallTriMeshDataGL::Material& mat = *obj.GetMaterial();
-
-            if (doLighting) {
-                ::glDisable(GL_COLOR_MATERIAL);
-                GLfloat mat_ambient[4] = {mat.GetKa()[0], mat.GetKa()[1], mat.GetKa()[2], 1.0f};
-                GLfloat mat_diffuse[4] = {mat.GetKd()[0], mat.GetKd()[1], mat.GetKd()[2], 1.0f};
-                GLfloat mat_specular[4] = {mat.GetKs()[0], mat.GetKs()[1], mat.GetKs()[2], 1.0f};
-                GLfloat mat_emission[4] = {mat.GetKe()[0], mat.GetKe()[1], mat.GetKe()[2], 1.0f};
-                GLfloat mat_shininess[1] = {mat.GetNs()};
-                ::glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
-                ::glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
-                ::glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-                ::glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
-                ::glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
-            } else {
-                ::glColor3f(mat.GetKd()[0], mat.GetKd()[1], mat.GetKd()[2]);
-            }
-
-            GLuint mapid = mat.GetMapID();
-            if (mapid > 0) {
-                //::glActiveTexture(GL_TEXTURE0);
-                ::glEnable(GL_COLOR_MATERIAL);
-                ::glBindTexture(GL_TEXTURE_2D, mapid);
-                ::glEnable(GL_TEXTURE_2D);
-                ::glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                ::glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            }
-        } else {
-            GLfloat mat_ambient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
-            GLfloat mat_diffuse[4] = {0.8f, 0.8f, 0.8f, 1.0f};
-            GLfloat mat_specular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-            GLfloat mat_emission[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-            GLfloat mat_shininess[1] = {0.0f};
-            ::glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
-            ::glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
-            ::glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-            ::glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
-            ::glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
-            ::glBindTexture(GL_TEXTURE_2D, 0);
-            ::glEnable(GL_COLOR_MATERIAL);
-        }
-
-        if (obj.HasTriIndexPointer() != NULL) {
+        if (obj.HasTriIndexPointer()) {
+            has_vertIds = true;
             switch (obj.GetTriDataType()) {
-            case megamol::geocalls_gl::CallTriMeshDataGL::Mesh::DT_BYTE:
-                ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_BYTE, obj.GetTriIndexPointerByte());
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_BYTE:
+                std::transform(obj.GetTriIndexPointerByte(), obj.GetTriIndexPointerByte() + vertIds.size(),
+                    vertIds.data(), [](auto a) { return static_cast<uint32_t>(a); });
                 break;
-            case megamol::geocalls_gl::CallTriMeshDataGL::Mesh::DT_UINT16:
-                ::glDrawElements(
-                    GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_SHORT, obj.GetTriIndexPointerUInt16());
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_UINT16:
+                std::transform(obj.GetTriIndexPointerUInt16(), obj.GetTriIndexPointerUInt16() + vertIds.size(),
+                    vertIds.data(), [](auto a) { return static_cast<uint32_t>(a); });
                 break;
-            case megamol::geocalls_gl::CallTriMeshDataGL::Mesh::DT_UINT32:
-                ::glDrawElements(GL_TRIANGLES, obj.GetTriCount() * 3, GL_UNSIGNED_INT, obj.GetTriIndexPointerUInt32());
+            case geocalls_gl::CallTriMeshDataGL::Mesh::DT_UINT32:
+                std::memcpy(vertIds.data(), obj.GetTriIndexPointerUInt32(), sizeof(uint32_t) * vertIds.size());
                 break;
-            default:
-                continue;
             }
+        }
+
+        positionBuffer_->rebuffer(positions);
+        normalBuffer_->rebuffer(normals);
+        colorBuffer_->rebuffer(colors);
+        texcoordBuffer_->rebuffer(texCoords);
+        indexBuffer_->rebuffer(vertIds);
+
+        glEnable(GL_DEPTH_TEST);
+        glBindVertexArray(vertexArray_);
+        meshShader_->use();
+
+        pointLightBuffer_->bind(1);
+        directionalLightBuffer_->bind(2);
+
+        meshShader_->setUniform("mvp", mvp_mat);
+        meshShader_->setUniform("point_light_cnt", static_cast<int>(pointLights_.size()));
+        meshShader_->setUniform("distant_light_cnt", static_cast<int>(directionalLights_.size()));
+        meshShader_->setUniform("cam_pos", cam.getPose().position);
+
+        meshShader_->setUniform(
+            "ambientColor", glm::make_vec4(ambientColorParam_.Param<core::param::ColorParam>()->Value().data()));
+        meshShader_->setUniform(
+            "diffuseColor", glm::make_vec4(diffuseColorParam_.Param<core::param::ColorParam>()->Value().data()));
+        meshShader_->setUniform(
+            "specularColor", glm::make_vec4(specularColorParam_.Param<core::param::ColorParam>()->Value().data()));
+        meshShader_->setUniform("k_amb", ambientFactorParam_.Param<core::param::FloatParam>()->Value());
+        meshShader_->setUniform("k_diff", diffuseFactorParam_.Param<core::param::FloatParam>()->Value());
+        meshShader_->setUniform("k_spec", specularFactorParam_.Param<core::param::FloatParam>()->Value());
+        meshShader_->setUniform("k_exp", specularExponentParam_.Param<core::param::FloatParam>()->Value());
+        meshShader_->setUniform(
+            "meshColor", glm::make_vec3(colorParam_.Param<core::param::ColorParam>()->Value().data()));
+
+        meshShader_->setUniform("use_lambert", useLambertParam_.Param<core::param::BoolParam>()->Value());
+        bool performLighting = lightingParam_.Param<core::param::BoolParam>()->Value() && !has_external_fbo;
+        meshShader_->setUniform("enable_lighting", performLighting);
+
+        meshShader_->setUniform("has_colors", has_colors);
+
+        if (has_vertIds) {
+            glDrawElements(GL_TRIANGLES, triCount * 3, GL_UNSIGNED_INT, nullptr);
         } else {
-            ::glDrawArrays(GL_TRIANGLES, 0, obj.GetVertexCount());
+            glDrawArrays(GL_TRIANGLES, 0, vertCount);
         }
 
-        if (!doLighting) {
-            ::glColor3f(r, g, b);
-        }
-    }
-
-    if (normals)
-        ::glDisableClientState(GL_NORMAL_ARRAY);
-    if (colors)
-        ::glDisableClientState(GL_COLOR_ARRAY);
-    if (textures)
-        ::glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-    {
-        GLfloat mat_ambient[4] = {0.2f, 0.2f, 0.2f, 1.0f};
-        GLfloat mat_diffuse[4] = {0.8f, 0.8f, 0.8f, 1.0f};
-        GLfloat mat_specular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-        GLfloat mat_emission[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-        GLfloat mat_shininess[1] = {0.0f};
-        ::glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
-        ::glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
-        ::glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-        ::glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, mat_emission);
-        ::glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
-        ::glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-    ::glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    if (this->showVertices.Param<param::BoolParam>()->Value()) {
-        //::glEnable(GL_POINT_SIZE);
-        ::glPointSize(3.0f);
-        ::glDisable(GL_LIGHTING);
-
-        ::glColor3f(1.0f, 0.0f, 0.0f);
-        for (unsigned int i = 0; i < ctmd->Count(); i++) {
-            switch (ctmd->Objects()[i].GetVertexDataType()) {
-            case megamol::geocalls_gl::CallTriMeshDataGL::Mesh::DT_FLOAT:
-                ::glVertexPointer(3, GL_FLOAT, 0, ctmd->Objects()[i].GetVertexPointerFloat());
-                break;
-            case megamol::geocalls_gl::CallTriMeshDataGL::Mesh::DT_DOUBLE:
-                ::glVertexPointer(3, GL_DOUBLE, 0, ctmd->Objects()[i].GetVertexPointerDouble());
-                break;
-            default:
-                continue;
-            }
-            ::glDrawArrays(GL_POINTS, 0, ctmd->Objects()[i].GetVertexCount());
-        }
-
-        //::glEnable(GL_POINT_SIZE);
-        ::glPointSize(1.0f);
-    }
-
-    ::glCullFace(cfm);
-    ::glFrontFace(twr);
-    ::glPolygonMode(GL_FRONT, pm[0]);
-    ::glPolygonMode(GL_BACK, pm[1]);
-
-    ::glEnable(GL_CULL_FACE);
-    ::glDisableClientState(GL_VERTEX_ARRAY);
-    //::glDisable(GL_POINT_SIZE);
-    ::glEnable(GL_BLEND);
-
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-    ::GetLastError();
-#endif
-    ::glCullFace(cfm);
-    ::glFrontFace(twr);
-    ::glDisableClientState(GL_VERTEX_ARRAY);
-
-    ::glMatrixMode(GL_PROJECTION);
-    ::glPopMatrix();
-    ::glMatrixMode(GL_MODELVIEW);
-    ::glPopMatrix();
-
-#endif
-
-    // TODO bind texture
-
-
-    if (!this->nameSlot.Param<param::StringParam>()->Value().empty()) {
-        std::string name = this->nameSlot.Param<param::StringParam>()->Value();
-        image_calls::Image2DCall* cppIn = this->getImageDataSlot.CallAs<image_calls::Image2DCall>();
-        if (!(*cppIn)(image_calls::Image2DCall::CallForGetMetaData))
-            return true;
-        if (lastHash != cppIn->DataHash() || this->nameSlot.IsDirty()) {
-            lastHash = cppIn->DataHash();
-            this->nameSlot.ResetDirty();
-            if (!(*cppIn)(image_calls::Image2DCall::CallForWaitForData))
-                return false;
-            if (!(*cppIn)(image_calls::Image2DCall::CallForGetData))
-                return false;
-            if (!(*cppIn)(image_calls::Image2DCall::CallForWaitForData))
-                return false;
-
-            auto immap = cppIn->GetImagePtr();
-            bool found = false;
-            std::string result = "";
-            if (immap != nullptr) {
-                for (auto v : *immap) {
-                    std::filesystem::path path = v.first;
-                    std::string pname = path.stem().string();
-                    if (pname.size() > 4) {
-                        pname = pname.substr(0, 4);
-                    }
-                    if (name.compare(pname) == 0) { // strings are equal
-                        found = true;
-                        result = v.first;
-                        break;
-                    }
-                }
-#if 1
-                if (found) {
-                    auto& im = immap->at(result);
-                    auto err = glGetError(); // flush errors
-                    glowl::TextureLayout layout(GL_RGB8, im.Width(), im.Height(), 1, GL_RGB, GL_UNSIGNED_BYTE, 1);
-                    this->texture = std::make_unique<glowl::Texture2D>("", layout, im.PeekDataAs<BYTE>());
-                }
-#endif
-            }
-        }
-
-
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glUseProgram(0);
+        glBindVertexArray(0);
         glDisable(GL_DEPTH_TEST);
-        glDisable(GL_BLEND);
+
+        glFrontFace(frontFace);
+        glPolygonMode(GL_FRONT, GL_FILL);
+        glPolygonMode(GL_BACK, GL_FILL);
         glDisable(GL_CULL_FACE);
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
+    }
 
-        this->texture->bindTexture();
+    // load the texture if necessary
+    auto const tex_ptr = get_texture_slot_.CallAs<image_calls::Image2DCall>();
+    if (tex_ptr != nullptr) {
+        if ((*tex_ptr)(image_calls::Image2DCall::CallForGetMetaData)) {
+            if (last_texture_hash_ != tex_ptr->DataHash() || pdbid_param_.IsDirty()) {
+                last_texture_hash_ = tex_ptr->DataHash();
+                pdbid_param_.ResetDirty();
+                the_texture_ = nullptr;
 
-        glBindVertexArray(this->texVa);
-        this->textureShader.Enable();
+                auto const requested_id = pdbid_param_.Param<core::param::StringParam>()->Value();
+                auto const path_count = tex_ptr->GetAvailablePathsCount();
+                auto const paths_ptr = tex_ptr->GetAvailablePathsPtr();
+                if (paths_ptr != nullptr && requested_id.size() >= 4) {
+                    const auto& vec = *paths_ptr;
+                    std::string id = requested_id.substr(0, 4);
+                    auto const res_pos = std::find_if(vec.begin(), vec.end(), [id](std::string const& cur) {
+                        std::filesystem::path const p = cur;
+                        std::string const stem = p.stem().string();
+                        return id == stem.substr(0, 4);
+                    });
+                    if (res_pos != vec.end()) {
+                        core_gl::utility::RenderUtils::LoadTextureFromFile(
+                            the_texture_, *res_pos, GL_LINEAR, GL_LINEAR);
+                    }
+                }
+            }
+        }
+    } else {
+        the_texture_ = nullptr;
+    }
 
-        ortho = glm::mat4(1.0f);
+    auto const viewport = call.GetViewResolution();
+    glm::mat4 ortho =
+        glm::ortho(0.0f, static_cast<float>(viewport.x), 0.0f, static_cast<float>(viewport.y), -1.0f, 1.0f);
 
-        glUniform2f(this->textureShader.ParameterLocation("lowerleft"), 0.25f, 0.25f);
-        glUniform2f(this->textureShader.ParameterLocation("upperright"), 0.95f, 0.95f);
-        glUniform3f(this->textureShader.ParameterLocation("viewvec"), viewdir.x, viewdir.y, viewdir.z);
-        glUniformMatrix4fv(this->textureShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(ortho));
-        glUniform1i(this->textureShader.ParameterLocation("tex"), 0);
+    // render the texture
+    if (the_texture_ != nullptr) {
+        auto const viewdir = cam.getPose().direction;
+
+        glActiveTexture(GL_TEXTURE0);
+        the_texture_->bindTexture();
+
+        glBindVertexArray(tex_vertex_array_);
+        textureShader_->use();
+
+        textureShader_->setUniform("lowerleft", 0.25f, 0.25f);
+        textureShader_->setUniform("upperright", 0.95f, 0.95f);
+        textureShader_->setUniform("viewvec", viewdir);
+        textureShader_->setUniform("mvp", glm::mat4(1.0));
+        textureShader_->setUniform("tex", 0);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-        this->textureShader.Disable();
+        glUseProgram(0);
         glBindVertexArray(0);
-        glDisable(GL_TEXTURE_2D);
-
-#if 1
-        if (!this->nameSlot.Param<param::StringParam>()->Value().empty()) {
-            std::string id = this->nameSlot.Param<param::StringParam>()->Value();
-            if (id.size() > 4) {
-                id = id.substr(0, 4);
-            }
-            auto fontSize = 50.0f;
-            auto stringToDraw = id.c_str();
-
-            auto lineHeight = theFont.LineHeight(fontSize);
-            auto lineWidth = theFont.LineWidth(fontSize, stringToDraw);
-            std::array<float, 4> color = {0.0f, 0.0f, 0.0f, 1.0f};
-
-            this->theFont.DrawString(mvp, color.data(), 0.0f, 0.0, -1.0f, fontSize, false, stringToDraw);
-        }
-#endif
-
-
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
-        glPopMatrix();
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
 
+    if (!pdbid_param_.Param<core::param::StringParam>()->Value().empty()) {
+        auto str = pdbid_param_.Param<core::param::StringParam>()->Value();
+        if (str.size() >= 4) {
+            str = str.substr(0, 4);
+        }
+        auto fontSize = 50.0f;
+        auto stringToDraw = str.c_str();
+
+        std::array<float, 4> color = {0.0f, 0.0f, 0.0f, 1.0f};
+        // TODO fix font rendering
+        font_.DrawString(ortho, color.data(), 0.0f, 0.0, 1.0f, fontSize, false, stringToDraw);
+    }
+
+    // reset to old fbo
+    call_fbo->bind();
+
     return true;
+}
+
+void ProteinViewRenderer::updateLights(core::view::light::CallLight* lightCall, glm::vec3 camDir) {
+    if (lightCall == nullptr || !(*lightCall)(core::view::light::CallLight::CallGetData)) {
+        pointLights_.clear();
+        directionalLights_.clear();
+        core::utility::log::Log::DefaultLog.WriteWarn(
+            "[ProteinViewRenderer]: There are no proper lights connected, no shading is happening");
+    } else {
+        auto& lights = lightCall->getData();
+
+        pointLights_.clear();
+        directionalLights_.clear();
+
+        auto point_lights = lights.get<core::view::light::PointLightType>();
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
+
+        for (const auto& pl : point_lights) {
+            pointLights_.push_back({pl.position[0], pl.position[1], pl.position[2], pl.intensity});
+        }
+
+        for (const auto& dl : distant_lights) {
+            if (dl.eye_direction) {
+                auto cd = glm::normalize(camDir); // paranoia
+                directionalLights_.push_back({cd.x, cd.y, cd.z, dl.intensity});
+            } else {
+                directionalLights_.push_back({dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
+            }
+        }
+    }
+
+    pointLightBuffer_->rebuffer(pointLights_);
+    directionalLightBuffer_->rebuffer(directionalLights_);
+
+    if (pointLights_.empty() && directionalLights_.empty()) {
+        core::utility::log::Log::DefaultLog.WriteWarn("[ProteinViewRenderer]: There are no directional or "
+                                                      "positional lights connected. Lighting not available.");
+    }
 }

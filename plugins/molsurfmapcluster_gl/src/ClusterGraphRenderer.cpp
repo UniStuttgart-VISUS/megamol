@@ -5,12 +5,14 @@
 #include "mmcore/AbstractCallSlotPresentation.h"
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore_gl/utility/RenderUtils.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
@@ -115,12 +117,55 @@ ClusterGraphRenderer::~ClusterGraphRenderer(void) {
 }
 
 /*
+ * ClusterGraphRenderer::requested_lifetime_resources
+ */
+std::vector<std::string> ClusterGraphRenderer::requested_lifetime_resources() {
+    std::vector<std::string> resources = ModuleGL::requested_lifetime_resources();
+    resources.emplace_back("RuntimeConfig");
+    resources.emplace_back("MegaMolGraph");
+    return resources;
+}
+
+/*
  * ClusterGraphRenderer::OnMouseButton
  */
 bool ClusterGraphRenderer::OnMouseButton(
     view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
-    if (button == view::MouseButton::BUTTON_RIGHT && action == view::MouseButtonAction::PRESS) {
+    if (button == view::MouseButton::BUTTON_RIGHT && action == view::MouseButtonAction::PRESS &&
+        !mods.test(view::Modifier::CTRL)) {
         selected_cluster_id_ = hovered_cluster_id_;
+    }
+    std::filesystem::path pdb_root_path = path_prefix_ / ".." / ".." / "PDB";
+    pdb_root_path = canonical(pdb_root_path);
+    if (hovered_cluster_id_ >= 0) {
+        auto const pdbid = node_pdb_ids_[hovered_cluster_id_];
+        pdb_root_path = pdb_root_path / pdbid;
+        pdb_root_path.replace_extension(".pdb");
+        pdb_root_path = canonical(pdb_root_path);
+    }
+    if (button == view::MouseButton::BUTTON_LEFT && action == view::MouseButtonAction::PRESS &&
+        mods.test(view::Modifier::CTRL) && hovered_cluster_id_ >= 0) {
+        auto const& graph = frontend_resources.get<megamol::core::MegaMolGraph>();
+        auto const parslot_loader = graph.FindParameterSlot("leftpdb::pdbFilename");
+        if (parslot_loader != nullptr) {
+            parslot_loader->Param<core::param::FilePathParam>()->SetValue(pdb_root_path);
+        }
+        auto const parslot_renderer = graph.FindParameterSlot("left::pdbid");
+        if (parslot_renderer != nullptr) {
+            parslot_renderer->Param<core::param::StringParam>()->SetValue(node_pdb_ids_[hovered_cluster_id_]);
+        }
+    }
+    if (button == view::MouseButton::BUTTON_RIGHT && action == view::MouseButtonAction::PRESS &&
+        mods.test(view::Modifier::CTRL) && hovered_cluster_id_ >= 0) {
+        auto const& graph = frontend_resources.get<megamol::core::MegaMolGraph>();
+        auto const parslot_loader = graph.FindParameterSlot("rightpdb::pdbFilename");
+        if (parslot_loader != nullptr) {
+            parslot_loader->Param<core::param::FilePathParam>()->SetValue(pdb_root_path);
+        }
+        auto const parslot_renderer = graph.FindParameterSlot("right::pdbid");
+        if (parslot_renderer != nullptr) {
+            parslot_renderer->Param<core::param::StringParam>()->SetValue(node_pdb_ids_[hovered_cluster_id_]);
+        }
     }
     return false;
 }
@@ -402,6 +447,7 @@ bool ClusterGraphRenderer::Render(core_gl::view::CallRender2DGL& call) {
         for (const auto& node_id : leaf_ids_) {
             auto& node = clustering_data.nodes->at(node_id);
             if (picture_storage_.count(node.picturePath) == 0) {
+                path_prefix_ = std::filesystem::path(node.picturePath).parent_path();
                 picture_storage_[node.picturePath] = nullptr;
                 core_gl::utility::RenderUtils::LoadTextureFromFile(
                     picture_storage_[node.picturePath], node.picturePath, GL_LINEAR, GL_LINEAR);
@@ -520,6 +566,7 @@ void ClusterGraphRenderer::calculateNodePositions(ClusteringData const& cluster_
     node_colors_.clear();
     node_ids_.clear();
     leaf_ids_.clear();
+    node_pdb_ids_.clear();
     root_id_ = -1;
     selected_cluster_id_ = -1;
     if (cluster_data.nodes == nullptr) {
@@ -556,6 +603,7 @@ void ClusterGraphRenderer::calculateNodePositions(ClusteringData const& cluster_
     node_positions_.resize(nodes.size(), glm::vec2(0.0f, 0.0f));
     node_colors_.resize(nodes.size(), default_color);
     node_ids_.resize(nodes.size(), -1);
+    node_pdb_ids_.resize(nodes.size(), "");
     const auto& root_node = nodes[root_idx];
     float const width_between_nodes = (max_coord.x - min_coord.x) / static_cast<float>(root_node.numLeafNodes - 1);
     // process leaf nodes
@@ -563,6 +611,7 @@ void ClusterGraphRenderer::calculateNodePositions(ClusteringData const& cluster_
         auto const node_idx = to_process_queue[i];
         node_positions_[node_idx] = glm::vec2(min_coord.x + i * width_between_nodes, min_coord.y);
         node_ids_[node_idx] = static_cast<int>(node_idx);
+        node_pdb_ids_[node_idx] = nodes[node_idx].pdbID;
     }
     // the following nodes are already sorted correctly, so we can process them directly
     for (int64_t cur_idx = to_process_queue.size(); cur_idx < nodes.size(); ++cur_idx) {
@@ -574,6 +623,7 @@ void ClusterGraphRenderer::calculateNodePositions(ClusteringData const& cluster_
         float const y_coord = glm::mix(min_coord.y, max_coord.y, a);
         node_positions_[cur_idx] = glm::vec2(x_coord, y_coord);
         node_ids_[cur_idx] = static_cast<int>(cur_idx);
+        node_pdb_ids_[cur_idx] = cur_node.pdbID;
     }
 }
 
