@@ -4,7 +4,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "TunnelToBFactor.h"
-#include "stdafx.h"
 
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/TunnelResidueDataCall.h"

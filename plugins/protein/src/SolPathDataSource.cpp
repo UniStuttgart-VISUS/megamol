@@ -4,19 +4,18 @@
  * Copyright (C) 2010 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #define _USE_MATH_DEFINES 1
 #include "SolPathDataSource.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/math/Vector.h"
+#include "vislib/sys/MemmappedFile.h"
 #include <cfloat>
 #include <climits>
 #include <cmath>

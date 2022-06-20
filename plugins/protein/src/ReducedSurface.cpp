@@ -6,7 +6,6 @@
 
 
 #include "protein/ReducedSurface.h"
-#include "stdafx.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/Trace.h"

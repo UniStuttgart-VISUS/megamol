@@ -23,7 +23,7 @@ namespace view {
 /**
  * Call for accessing a transfer function.
  */
-class MEGAMOLCORE_API AbstractCallGetTransferFunction : public core::Call {
+class AbstractCallGetTransferFunction : public core::Call {
 public:
     /** possible texture formats */
     enum TextureFormat { TEXTURE_FORMAT_RGB, TEXTURE_FORMAT_RGBA };
@@ -65,8 +65,10 @@ public:
      * outside of min/max are to be clamped.
      */
     inline void SetRange(std::array<float, 2> range) {
-        this->range_updated = true;
-        this->range = range;
+        if (this->range != range) {
+            this->range_updated = true;
+            this->range = range;
+        }
     }
 
     // GET --------------------------------------------------------------------
@@ -157,6 +159,13 @@ public:
         bool consume = this->range_updated;
         this->range_updated = false;
         return consume;
+    }
+
+    /**
+     * Check for updated range value
+     */
+    bool UpdateRange(void) {
+        return this->range_updated;
     }
 
 protected:

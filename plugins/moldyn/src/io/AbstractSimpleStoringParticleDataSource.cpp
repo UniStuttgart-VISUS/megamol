@@ -8,7 +8,6 @@
 #include "AbstractSimpleStoringParticleDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 
 namespace megamol::datatools::io {
 

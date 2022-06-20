@@ -2,11 +2,10 @@
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/SystemInformation.h"
-#include "stdafx.h"
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/CmdLineProvider.h"
+#include "vislib/sys/SystemInformation.h"
 #include <algorithm>
 #include <numeric>
 
@@ -19,7 +18,7 @@ adiosDataSource::adiosDataSource()
         , getData("getdata", "Slot to request data from this data source.")
         , filenameSlot("filename", "The path to the ADIOS-based file to load.") {
 
-    this->filenameSlot.SetParameter(new core::param::FilePathParam("", core::param::FilePathParam::Flag_Directory));
+    this->filenameSlot.SetParameter(new core::param::FilePathParam("", core::param::FilePathParam::Flag_Any));
     this->filenameSlot.SetUpdateCallback(&adiosDataSource::filenameChanged);
     this->MakeSlotAvailable(&this->filenameSlot);
 
@@ -435,7 +434,7 @@ bool adiosDataSource::initMPI() {
 vislib::StringA adiosDataSource::getCommandLine(void) {
     vislib::StringA retval;
 
-#ifdef WIN32
+#ifdef _WIN32
     retval = ::GetCommandLineA();
 #else  /* _WIN32 */
     char* arg = nullptr;

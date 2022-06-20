@@ -16,7 +16,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 #include "SombreroKernels.cuh"
-#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/TunnelResidueDataCall.h"
 
@@ -133,7 +133,7 @@ private:
      * @param ctmd The incoming call with the source data.
      * @return True on success, false otherwise.
      */
-    bool copyMeshData(megamol::geocalls::CallTriMeshData& ctmd);
+    bool copyMeshData(megamol::geocalls_gl::CallTriMeshDataGL& ctmd);
 
     /**
      * Fills holes in the generated mesh that were detected beforehand by findSombreroBorder(void)
@@ -285,10 +285,10 @@ private:
     core::param::ParamSlot lengthScalingParam;
 
     /** Vector containing the modified mesh data */
-    std::vector<geocalls::CallTriMeshData::Mesh> meshVector;
+    std::vector<geocalls_gl::CallTriMeshDataGL::Mesh> meshVector;
 
     /** Vector containing the cut modified mesh data */
-    std::vector<geocalls::CallTriMeshData::Mesh> outMeshVector;
+    std::vector<geocalls_gl::CallTriMeshDataGL::Mesh> outMeshVector;
 
     /** The vertex positions of the mesh */
     std::vector<std::vector<float>> vertices;

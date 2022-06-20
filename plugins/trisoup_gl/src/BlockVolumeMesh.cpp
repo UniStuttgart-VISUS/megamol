@@ -7,7 +7,6 @@
  */
 #include "BlockVolumeMesh.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "trisoup/CallBinaryVolumeData.h"
 #include "vislib/assert.h"
 

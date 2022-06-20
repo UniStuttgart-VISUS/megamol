@@ -6,7 +6,6 @@
  */
 
 #include "geometry_calls/VolumetricDataCall.h"
-#include "stdafx.h"
 
 #include <utility>
 

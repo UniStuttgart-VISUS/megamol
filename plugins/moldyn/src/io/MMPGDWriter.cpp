@@ -11,10 +11,9 @@
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/Thread.h"
-#include "stdafx.h"
 #include "vislib/String.h"
 #include "vislib/sys/FastFile.h"
+#include "vislib/sys/Thread.h"
 
 using namespace megamol::moldyn::io;
 using namespace megamol::moldyn;

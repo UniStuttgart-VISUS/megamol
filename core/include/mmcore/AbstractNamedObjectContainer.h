@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractNamedObject.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/macro_utils.h"
 #include <list>
 #include <memory>
@@ -21,13 +20,10 @@
 namespace megamol {
 namespace core {
 
-class AbstractNamedObjectContainer;
-
-
 /**
  * Abstract base class for object placed in the module network namespaces
  */
-class MEGAMOLCORE_API AbstractNamedObjectContainer : public AbstractNamedObject {
+class AbstractNamedObjectContainer : public AbstractNamedObject {
 public:
     /** Type alias for containers */
     typedef std::shared_ptr<AbstractNamedObjectContainer> ptr_type;

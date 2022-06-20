@@ -6,7 +6,6 @@
  */
 #include "IColInverse.h"
 #include "datatools/MultiParticleDataAdaptor.h"
-#include "stdafx.h"
 #include "vislib/math/ShallowVector.h"
 #include <algorithm>
 

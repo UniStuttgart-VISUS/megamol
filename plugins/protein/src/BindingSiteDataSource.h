@@ -12,6 +12,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "glm/glm.hpp"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
@@ -118,9 +119,9 @@ private:
     vislib::Array<vislib::StringA> bindingSiteDescription;
 
     // color table
-    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+    std::vector<glm::vec3> colorLookupTable;
     // color table
-    vislib::Array<vislib::math::Vector<float, 3>> bindingSiteColors;
+    std::vector<glm::vec3> bindingSiteColors;
 };
 
 } /* end namespace protein */

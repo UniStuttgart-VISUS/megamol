@@ -12,8 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "CudaDevArr.h"
-#include "stdafx.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 namespace megamol {
 namespace protein_cuda {

@@ -7,9 +7,9 @@
 
 
 #include "ImageWidget.h"
-#include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/FileUtils.h"
 #include "vislib/graphics/BitmapImage.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 
 
 using namespace megamol;

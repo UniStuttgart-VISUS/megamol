@@ -1,5 +1,4 @@
 #include "SplitMergeFeature.h"
-#include "stdafx.h"
 
 namespace megamol {
 namespace protein_cuda {

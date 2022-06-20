@@ -6,7 +6,6 @@
  */
 
 #include "TableJoin.h"
-#include "stdafx.h"
 
 #include <limits>
 

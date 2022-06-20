@@ -6,7 +6,6 @@
  */
 
 #include "MPDCListsConcatenate.h"
-#include "stdafx.h"
 
 #include "geometry_calls/MultiParticleDataCall.h"
 

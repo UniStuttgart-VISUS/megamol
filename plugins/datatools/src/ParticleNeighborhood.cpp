@@ -10,7 +10,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include <algorithm>
 #include <cassert>
 #include <cfloat>

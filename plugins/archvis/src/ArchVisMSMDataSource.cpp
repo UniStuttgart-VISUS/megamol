@@ -21,7 +21,6 @@
 #include "mmcore/param/StringParam.h"
 
 #include "ArchVisMSMDataSource.h"
-#include "stdafx.h"
 
 using namespace megamol::archvis;
 

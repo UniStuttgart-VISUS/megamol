@@ -36,12 +36,22 @@ public:
 
     int sync() override;
 
-    inline const std::vector<LogEntry>& log() const {
+    inline std::vector<LogEntry> const& log() const {
         return this->messages;
+    }
+
+    inline std::vector<size_t> const& warn_log_indices() const {
+        return this->warn_msg_indices;
+    }
+
+    inline std::vector<size_t> const& error_log_indices() const {
+        return this->error_msg_indices;
     }
 
 private:
     std::vector<LogEntry> messages;
+    std::vector<size_t> warn_msg_indices;
+    std::vector<size_t> error_msg_indices;
 };
 
 
@@ -60,7 +70,6 @@ public:
         std::vector<std::string> history;
         size_t history_index;
         std::string param_hint;
-        size_t last_input_length;
     };
 
     explicit LogConsole(const std::string& window_name);
@@ -102,7 +111,6 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
     bool connect_log();
-    void print_message(const LogBuffer::LogEntry& entry, unsigned int global_log_level) const;
 };
 
 

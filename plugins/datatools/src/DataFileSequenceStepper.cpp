@@ -11,7 +11,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallRenderView.h"
-#include "stdafx.h"
 #include "vislib/sys/File.h"
 
 

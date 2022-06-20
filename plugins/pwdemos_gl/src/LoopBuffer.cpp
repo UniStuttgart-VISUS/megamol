@@ -6,7 +6,6 @@
  */
 
 #include "LoopBuffer.h"
-#include "stdafx.h"
 
 namespace megamol {
 namespace demos_gl {

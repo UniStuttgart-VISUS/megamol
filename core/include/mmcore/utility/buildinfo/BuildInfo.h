@@ -16,8 +16,6 @@ int MEGAMOL_VERSION_PATCH();
 std::string const& MEGAMOL_VERSION();
 
 // Build time
-uint64_t MEGAMOL_BUILD_TIMESTAMP();
-std::string const& MEGAMOL_BUILD_TIME();
 std::string const& MEGAMOL_GIT_HASH();
 std::string const& MEGAMOL_GIT_BRANCH_NAME();
 std::string const& MEGAMOL_GIT_BRANCH_NAME_FULL();

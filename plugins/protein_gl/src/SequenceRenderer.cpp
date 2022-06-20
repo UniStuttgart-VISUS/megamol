@@ -1,16 +1,15 @@
 #include "SequenceRenderer.h"
-#include "stdafx.h"
 
 #include "SequenceRenderer.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ResourceWrapper.h"
-#include "protein/Color.h"
+#include "protein_calls/ProteinColor.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
@@ -76,7 +75,7 @@ SequenceRenderer::SequenceRenderer(void)
     this->colorTableFileParam.SetParameter(
         new param::FilePathParam("colors.txt", param::FilePathParam::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->colorTableFileParam);
-    protein::Color::ReadColorTableFromFile(
+    ProteinColor::ReadColorTableFromFile(
         this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorTable);
 
     // param slot for key toggling
@@ -210,7 +209,7 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
 
     // read and update the color table, if necessary
     if (this->colorTableFileParam.IsDirty()) {
-        protein::Color::ReadColorTableFromFile(
+        ProteinColor::ReadColorTableFromFile(
             this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorTable);
         this->colorTableFileParam.ResetDirty();
     }
@@ -572,9 +571,9 @@ bool SequenceRenderer::PrepareData(MolecularDataCall* mol, BindingSiteCall* bs) 
                         this->chainVertices.Add(0.0f);
                         // this->chainVertices.Add( this->rowHeight - 0.5f);
                         this->chainVertices.Add(2.5f);
-                        this->chainColors.Add(this->colorTable[cCnt].X());
-                        this->chainColors.Add(this->colorTable[cCnt].Y());
-                        this->chainColors.Add(this->colorTable[cCnt].Z());
+                        this->chainColors.Add(this->colorTable[cCnt].x);
+                        this->chainColors.Add(this->colorTable[cCnt].y);
+                        this->chainColors.Add(this->colorTable[cCnt].z);
                     } else {
                         if (this->resCount % static_cast<unsigned int>(
                                                  this->resCountPerRowParam.Param<param::IntParam>()->Value()) !=
@@ -585,9 +584,9 @@ bool SequenceRenderer::PrepareData(MolecularDataCall* mol, BindingSiteCall* bs) 
                             // chain tile vertices and colors
                             this->chainVertices.Add(this->chainVertices[this->resCount * 2 - 2] + 1.0f);
                             this->chainVertices.Add(this->chainVertices[this->resCount * 2 - 1]);
-                            this->chainColors.Add(this->colorTable[cCnt].X());
-                            this->chainColors.Add(this->colorTable[cCnt].Y());
-                            this->chainColors.Add(this->colorTable[cCnt].Z());
+                            this->chainColors.Add(this->colorTable[cCnt].x);
+                            this->chainColors.Add(this->colorTable[cCnt].y);
+                            this->chainColors.Add(this->colorTable[cCnt].z);
                         } else {
                             // structure vertices
                             this->vertices.Add(0.0f);
@@ -599,9 +598,9 @@ bool SequenceRenderer::PrepareData(MolecularDataCall* mol, BindingSiteCall* bs) 
                             // chain tile vertices and colors
                             this->chainVertices.Add(0.0f);
                             this->chainVertices.Add(this->chainVertices[this->resCount * 2 - 1] + this->rowHeight);
-                            this->chainColors.Add(this->colorTable[cCnt].X());
-                            this->chainColors.Add(this->colorTable[cCnt].Y());
-                            this->chainColors.Add(this->colorTable[cCnt].Z());
+                            this->chainColors.Add(this->colorTable[cCnt].x);
+                            this->chainColors.Add(this->colorTable[cCnt].y);
+                            this->chainColors.Add(this->colorTable[cCnt].z);
                         }
                     }
                     // store the amino acid name

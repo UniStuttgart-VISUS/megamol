@@ -6,7 +6,6 @@
  */
 
 #include "mmospray/CallOSPRayTransformation.h"
-#include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 
 namespace megamol {

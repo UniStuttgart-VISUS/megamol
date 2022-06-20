@@ -1,1 +1,0 @@
-#define USE_LINE_STRIP

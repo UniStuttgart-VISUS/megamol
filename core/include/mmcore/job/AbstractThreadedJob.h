@@ -11,10 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/job/AbstractJob.h"
-#include "mmcore/utility/sys/Thread.h"
 #include "vislib/SmartPtr.h"
+#include "vislib/sys/Thread.h"
 
 
 namespace megamol {
@@ -28,7 +27,7 @@ namespace job {
 /**
  * Abstract base class for theaded jobs
  */
-class MEGAMOLCORE_API AbstractThreadedJob : public AbstractJob, public vislib::sys::Runnable {
+class AbstractThreadedJob : public AbstractJob, public vislib::sys::Runnable {
 #ifdef _WIN32
 #pragma warning(default : 4275)
 #endif /* _WIN32 */

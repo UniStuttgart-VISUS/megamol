@@ -4,7 +4,7 @@
 #include "ProbeGlCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/EventCall.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "probe/CallKDTree.h"
 #include "probe/ProbeCalls.h"

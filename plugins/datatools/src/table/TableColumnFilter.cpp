@@ -6,7 +6,6 @@
  */
 
 #include "TableColumnFilter.h"
-#include "stdafx.h"
 
 #include "mmcore/param/StringParam.h"
 
@@ -65,8 +64,10 @@ bool TableColumnFilter::processData(core::Call& c) {
         if (!(*inCall)())
             return false;
 
-        if (this->datahash != inCall->DataHash() || this->frameID != inCall->GetFrameID()) {
-            this->datahash = inCall->DataHash();
+        if (this->datahash != inCall->DataHash() || this->frameID != inCall->GetFrameID() ||
+            this->selectionStringSlot.IsDirty()) {
+            this->datahash++;
+            this->selectionStringSlot.ResetDirty();
             this->frameID = inCall->GetFrameID();
 
             auto column_count = inCall->GetColumnsCount();

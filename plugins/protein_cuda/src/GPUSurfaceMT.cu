@@ -8,7 +8,6 @@
 // Author     : scharnkn
 //
 
-#include "stdafx.h"
 #include "GPUSurfaceMT.h"
 
 #include "cuda_error_check.h"
@@ -18,7 +17,7 @@
 
 #include <algorithm>
 #include <cuda_runtime.h>
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 

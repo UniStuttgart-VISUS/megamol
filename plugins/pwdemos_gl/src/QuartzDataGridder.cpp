@@ -5,16 +5,15 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "QuartzCrystalDataCall.h"
 #include "QuartzDataGridder.h"
+#include "QuartzCrystalDataCall.h"
 #include "QuartzParticleDataCall.h"
 #include "mmcore/param/IntParam.h"
 #include <climits>
 #include <cmath>
 //#include "mmcore/utility/log/Log.h"
-//#include "mmcore/utility/sys/MemmappedFile.h"
+//#include "vislib/sys/MemmappedFile.h"
 //#include "vislib/memutils.h"
 //#include "vislib/math/ShallowVector.h"
 //#include "vislib/String.h"

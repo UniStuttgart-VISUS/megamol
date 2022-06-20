@@ -1,5 +1,5 @@
 
-![](docs/logo.png)
+![](docs/images/logo.png)
 
 MegaMol is a visualization middleware used to visualize point-based molecular data sets. This software is developed within the Collaborative Research Center 716, subproject D.3 at the [Visualization Research Center (VISUS)](https://www.visus.uni-stuttgart.de/en) of the University of Stuttgart and at the Computer Graphics and Visualization Group of the TU Dresden.  
 

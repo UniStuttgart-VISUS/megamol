@@ -4,7 +4,6 @@
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 
 #include "mmcore/FileStreamProvider.h"
 #include "mmcore/param/BoolParam.h"

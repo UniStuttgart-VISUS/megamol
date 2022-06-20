@@ -1,6 +1,5 @@
 #pragma once
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include <memory>
 #include <zmq.hpp>
 
@@ -8,7 +7,7 @@ namespace megamol {
 namespace core {
 namespace utility {
 
-class MEGAMOLCORE_API ZMQContextUser {
+class ZMQContextUser {
 public:
     typedef std::shared_ptr<ZMQContextUser> ptr;
 

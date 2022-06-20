@@ -5,7 +5,6 @@
  */
 
 #include "factories/ModuleClassRegistry.h"
-#include "stdafx.h"
 
 #include "mmcore/factories/ModuleAutoDescription.h"
 #include "mmcore/factories/ModuleDescription.h"
@@ -14,10 +13,10 @@
 #include "job/TickSwitch.h"
 #include "mmcore/EventStorage.h"
 #include "mmcore/FileStreamProvider.h"
-#include "mmcore/FlagStorage.h"
 #include "mmcore/ResourceTestModule.h"
 #include "mmcore/cluster/ClusterController.h"
 #include "mmcore/cluster/mpi/MpiProvider.h"
+#include "mmcore/flags/FlagStorage.h"
 #include "mmcore/job/DataWriterJob.h"
 #include "mmcore/job/JobThread.h"
 #include "mmcore/param/GenericParamModule.h"

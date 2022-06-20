@@ -10,7 +10,6 @@
 
 
 #include "CrystalStructureVolumeRenderer.h"
-#include "stdafx.h"
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 

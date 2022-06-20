@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/param/ColorParam.h"
-#include "stdafx.h"
 
 #include "mmcore/utility/ColourParser.h"
 

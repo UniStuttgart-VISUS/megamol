@@ -3,7 +3,6 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/AbstractView_EventConsumption.h"
-#include "stdafx.h"
 
 #include <algorithm>
 #include <cctype>
@@ -421,10 +420,10 @@ megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenienc
 }
 
 void megamol::core::MegaMolGraph::Clear() {
-    // currently entry points are expected to be graph modules, i.e. views
-    // therefore it is ok for us to clear all entry points if the graph shuts down
     call_list_.clear();
-    m_image_presentation->clear_entry_points();
+    for (auto& m : module_list_)
+        if (m.isGraphEntryPoint)
+            m_image_presentation->remove_entry_point(m.request.id);
     graph_entry_points.clear();
     module_list_.clear();
 }
@@ -600,7 +599,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
             if (!slots.empty()) {
                 slot_names = "";
                 for (auto x = 0; x < slots.size() - 1; ++x) {
-                    slot_names += slots[x]->Name();
+                    slot_names += slots[x]->Name() + ", ";
                 }
                 slot_names += slots[slots.size() - 1]->Name();
             }
@@ -620,7 +619,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
             if (!slots.empty()) {
                 slot_names = "";
                 for (auto x = 0; x < slots.size() - 1; ++x) {
-                    slot_names += slots[x]->Name();
+                    slot_names += slots[x]->Name() + ", ";
                 }
                 slot_names += slots[slots.size() - 1]->Name();
             }

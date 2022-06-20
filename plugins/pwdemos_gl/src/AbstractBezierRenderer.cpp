@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include "AbstractBezierRenderer.h"
 #include "mmcore/AbstractGetData3DCall.h"

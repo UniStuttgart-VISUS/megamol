@@ -853,8 +853,8 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
                     ImGui::SameLine();
 
                     // Presentation
-                    ButtonWidgets::OptionButton(
-                        "param_present_button", "", (this->GetGUIPresentation() != Present_t::Basic), false);
+                    ButtonWidgets::OptionButton(ButtonWidgets::ButtonStyle::POINT_CIRCLE, "param_present_button", "",
+                        (this->GetGUIPresentation() != Present_t::Basic), false);
                     if (ImGui::BeginPopupContextItem("param_present_button_context", ImGuiPopupFlags_MouseButtonLeft)) {
                         for (auto& present_name_pair : this->GetPresentationNameMap()) {
                             if (this->IsPresentationCompatible(present_name_pair.first)) {
@@ -1440,6 +1440,7 @@ bool megamol::gui::Parameter::widget_string(
         multiline_cnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), multiline_cnt);
         ImVec2 multiline_size = ImVec2(ImGui::CalcItemWidth(),
             ImGui::GetFrameHeightWithSpacing() + (ImGui::GetFontSize() * static_cast<float>(multiline_cnt)));
+        ImGui::AlignTextToFramePadding();
         ImGui::InputTextMultiline(hidden_label.c_str(), &std::get<std::string>(this->gui_widget_value), multiline_size,
             ImGuiInputTextFlags_CtrlEnterForNewLine);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -1579,9 +1580,12 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
         bool button_edit = this->gui_file_browser.Button_Select(
             std::get<std::string>(this->gui_widget_value), file_extensions, file_flags);
         ImGui::SameLine();
+        ImGui::AlignTextToFramePadding();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_value), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
-            val = std::filesystem::u8path(std::get<std::string>(this->gui_widget_value));
+            auto tmp_val_str = std::get<std::string>(this->gui_widget_value);
+            std::replace(tmp_val_str.begin(), tmp_val_str.end(), '\\', '/');
+            val = std::filesystem::path(tmp_val_str);
             try {
                 if (last_val != val) {
                     auto error_flags = FilePathParam::ValidatePath(val, file_extensions, file_flags);
@@ -1593,10 +1597,10 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
                         this->gui_popup_msg =
                             "Omitting value '" + val.generic_u8string() + "'. Expected directory but file is given.";
                     }
-                    if (error_flags & FilePathParam::Flag_NoExistenceCheck) {
+                    if (error_flags & FilePathParam::Internal_NoExistenceCheck) {
                         this->gui_popup_msg = "Omitting value '" + val.generic_u8string() + "'. File does not exist.";
                     }
-                    if (error_flags & FilePathParam::Flag_RestrictExtension) {
+                    if (error_flags & FilePathParam::Internal_RestrictExtension) {
                         std::string log_exts;
                         for (auto& ext : file_extensions) {
                             log_exts += "'." + ext + "' ";
@@ -1692,19 +1696,6 @@ bool megamol::gui::Parameter::widget_int(
             this->gui_widget_value = val;
         }
 
-        // If no step size is set, set relative default step size depending on given min-max value range
-        if (step == INT_MAX) {
-            step = 1;
-            if ((minv > INT_MIN) && (maxv < INT_MAX)) {
-                step = std::max(1, static_cast<int>(static_cast<float>(maxv - minv) * 0.01f));
-            } else if ((minv == INT_MIN) && (maxv < INT_MAX)) {
-                step = std::max(1, static_cast<int>(std::abs(static_cast<float>(maxv - val)) * 0.01f));
-            } else if ((minv > INT_MIN) && (maxv == INT_MAX)) {
-                step = std::max(1, static_cast<int>(std::abs(static_cast<float>(val - minv)) * 0.01f));
-            }
-            this->gui_widget_stepsize = step;
-            retval = true;
-        }
         int min_step_size = step;
         int max_step_size = 10 * step;
         if (!std::holds_alternative<int>(this->gui_widget_stepsize)) {
@@ -1782,19 +1773,6 @@ bool megamol::gui::Parameter::widget_float(megamol::gui::Parameter::WidgetScope 
             this->gui_widget_value = val;
         }
 
-        // If no step size is set, set relative default step size depending on given min-max value range
-        if (step == FLT_MAX) {
-            step = 1.0f;
-            if ((minv > -FLT_MAX) && (maxv < FLT_MAX)) {
-                step = std::max(0.000001f, (maxv - minv) * 0.01f);
-            } else if ((minv == -FLT_MAX) && (maxv < FLT_MAX)) {
-                step = std::max(0.000001f, std::abs(maxv - val) * 0.01f);
-            } else if ((minv > -FLT_MAX) && (maxv == FLT_MAX)) {
-                step = std::max(0.000001f, std::abs(val - minv) * 0.01f);
-            }
-            this->gui_widget_stepsize = step;
-            retval = true;
-        }
         float min_step_size = step;
         float max_step_size = 10.f * min_step_size;
         if (!std::holds_alternative<float>(this->gui_widget_stepsize)) {

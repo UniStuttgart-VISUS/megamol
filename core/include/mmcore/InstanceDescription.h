@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/ParamValueSetRequest.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/ModuleDescription.h"
 #include "mmcore/factories/ObjectDescription.h"
@@ -27,7 +26,7 @@ namespace core {
 /**
  * Abstract base class of job and view descriptions.
  */
-class MEGAMOLCORE_API InstanceDescription : public factories::ObjectDescription, public ParamValueSetRequest {
+class InstanceDescription : public factories::ObjectDescription, public ParamValueSetRequest {
 public:
     /** Type of module instantiation requests */
     typedef vislib::Pair<vislib::StringA, factories::ModuleDescription::ptr> ModuleInstanceRequest;

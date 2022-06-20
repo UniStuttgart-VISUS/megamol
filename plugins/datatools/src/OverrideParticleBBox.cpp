@@ -10,7 +10,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowPoint.h"
 #include <float.h>

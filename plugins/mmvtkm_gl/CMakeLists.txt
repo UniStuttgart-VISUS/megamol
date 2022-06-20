@@ -13,11 +13,11 @@ megamol_plugin(mmvtkm_gl
   DEPENDS_EXTERNALS
     vtkm)
 
-if (mmvtkm_PLUGIN_ENABLED)
+if (mmvtkm_gl_PLUGIN_ENABLED)
   external_get_property(vtkm SOURCE_DIR)
   string(REPLACE "-src" "-build" BUILD_DIR "${SOURCE_DIR}")
 
-  target_include_directories(mmvtkm PUBLIC
+  target_include_directories(mmvtkm_gl PUBLIC
     "${SOURCE_DIR}"
     "${BUILD_DIR}/include"
     "${SOURCE_DIR}/vtkm/thirdparty/taotuple"
@@ -25,5 +25,5 @@ if (mmvtkm_PLUGIN_ENABLED)
     "${SOURCE_DIR}/vtkm/thirdparty/lcl/vtkmlcl"
     )
 
-  target_link_libraries(mmvtkm PRIVATE vtkm_renderer vtkm_worklet)
+  target_link_libraries(mmvtkm_gl PRIVATE vtkm_renderer vtkm_worklet)
 endif ()

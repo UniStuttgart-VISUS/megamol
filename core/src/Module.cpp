@@ -9,7 +9,6 @@
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/assert.h"

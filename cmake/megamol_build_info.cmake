@@ -1,6 +1,5 @@
 # megamol_build_info
-# This script will provide several build information as C++ library.
-# Usage: link to the megamol_build_info library as normal library and `#include "megamol_build_info.h"`.
+# This script will provide several build information as compiled resources.
 
 # Dependency
 include(cmrc/CMakeRC)
@@ -16,8 +15,6 @@ set(BUILD_INFO_CONFIGURE_TIME_FILES
   ${INFO_RESOURCES_DIR}/MEGAMOL_VERSION_PATCH
   ${INFO_RESOURCES_DIR}/MEGAMOL_VERSION)
 set(BUILD_INFO_BUILD_TIME_FILES
-  ${INFO_RESOURCES_DIR}/MEGAMOL_BUILD_TIMESTAMP
-  ${INFO_RESOURCES_DIR}/MEGAMOL_BUILD_TIME
   ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_HASH
   ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_BRANCH_NAME
   ${INFO_RESOURCES_DIR}/MEGAMOL_GIT_BRANCH_NAME_FULL

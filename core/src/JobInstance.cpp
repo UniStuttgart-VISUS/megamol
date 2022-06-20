@@ -4,7 +4,6 @@
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 
 #include "mmcore/JobInstance.h"
 #include "mmcore/Module.h"
@@ -18,7 +17,7 @@ using namespace megamol::core;
 /*
  * JobInstance::JobInstance
  */
-JobInstance::JobInstance(void) : ModuleNamespace(""), ApiHandle(), job(NULL) {
+JobInstance::JobInstance(void) : ModuleNamespace(""), job(NULL) {
     // intentionally empty
 }
 

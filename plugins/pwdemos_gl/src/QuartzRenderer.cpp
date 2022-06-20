@@ -13,7 +13,6 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/light/PointLight.h"
-#include "stdafx.h"
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/memutils.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"

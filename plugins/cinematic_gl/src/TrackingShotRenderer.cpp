@@ -15,7 +15,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 
 
 using namespace megamol;
@@ -40,7 +39,8 @@ TrackingShotRenderer::TrackingShotRenderer(void)
         , manipulatorGrabbed(false)
         , interpolSteps(20)
         , showHelpText(false)
-        , lineWidth(1.0f) {
+        , lineWidth(1.0f)
+        , skipped_first_mouse_interact(false) {
 
     this->keyframeKeeperSlot.SetCompatibleCall<cinematic::CallKeyframeKeeperDescription>();
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
@@ -177,7 +177,6 @@ bool TrackingShotRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) 
 
     // Init rendering ---------------------------------------------------------
     auto const lhsFBO = call.GetFramebuffer();
-    lhsFBO->bind();
 
     glm::vec4 back_color;
     glGetFloatv(GL_COLOR_CLEAR_VALUE, static_cast<GLfloat*>(glm::value_ptr(back_color)));
@@ -240,8 +239,6 @@ bool TrackingShotRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) 
     // Draw 2D ---------------------------------------------------------------
     this->utils.DrawAll(ortho, vp_dim);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     return true;
 }
 
@@ -275,6 +272,11 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
     bool down = (action == core::view::MouseButtonAction::PRESS);
     if (button == MouseButton::BUTTON_LEFT) {
         if (down) {
+            if (!this->skipped_first_mouse_interact) {
+                this->skipped_first_mouse_interact = true;
+                return false;
+            }
+
             // Check if manipulator is selected
             if (this->manipulators.CheckForHitManipulator(this->mouseX, this->mouseY)) {
                 this->manipulatorGrabbed = true;

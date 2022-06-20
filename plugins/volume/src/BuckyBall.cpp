@@ -6,7 +6,6 @@
  */
 
 #include "BuckyBall.h"
-#include "stdafx.h"
 
 #include "mmcore/Call.h"
 

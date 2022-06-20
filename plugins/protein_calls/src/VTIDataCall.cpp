@@ -9,7 +9,6 @@
 //
 
 #include "protein_calls/VTIDataCall.h"
-#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::protein_calls;

@@ -188,10 +188,7 @@ public:
     /**
      * Set GUI visibility.
      */
-    inline void SetVisibility(bool visible) {
-        // In order to take immediate effect, the GUI visibility directly is set (and not indirectly via hotkey)
-        this->gui_state.gui_visible = visible;
-    }
+    void SetVisibility(bool visible);
 
     /**
      * Set GUI scale.
@@ -303,6 +300,7 @@ private:
         bool open_popup_save;                          // Flag for opening save pop-up
         bool open_popup_load;                          // Flag for opening load pop-up
         bool open_popup_screenshot;                    // Flag for opening screenshot file pop-up
+        bool open_popup_font;                          // Flag for opening font pop-up
         bool menu_visible;                             // Flag indicating menu state
         unsigned int graph_fonts_reserved;             // Number of fonts reserved for the configurator graph canvas
         bool shutdown_triggered;                       // Flag indicating user triggered shutdown
@@ -310,13 +308,18 @@ private:
         std::string screenshot_filepath;               // Filename the screenshot should be saved to
         int screenshot_filepath_id;                    // Last unique id for screenshot filename
         unsigned int font_load;               // Flag indicating whether new font should be applied in which frame
-        std::string font_load_filename;       // Font imgui name or font file name.
-        int font_load_size;                   // Font size (only used whe font file name is given)
+        std::string font_load_name;           // Font imgui name or font file name.
+        std::string font_input_string_buffer; // Widget string buffer for font input.
+        std::string
+            default_font_filename; // File name of the currently loaded font (only set when new font is loaded from file).
+        int font_load_size;        // Font size (only used whe font file name is given)
         std::string request_load_projet_file; // Project file name which should be loaded by fronted service
         float stat_averaged_fps;              // current average fps value
         float stat_averaged_ms;               // current average fps value
         size_t stat_frame_count;              // current fame count
         bool load_docking_preset;             // Flag indicating docking preset loading
+        float window_alpha;                   // Global transparency value for window background
+        float scale_input_float_buffer;       // Widget float buffer for scale input
     };
 
     // VARIABLES --------------------------------------------------------------

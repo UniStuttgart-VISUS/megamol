@@ -5,16 +5,10 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTVIEW_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTVIEW_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/api/MegaMolCore.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/AbstractParam.h"
 #include "vislib/Array.h"
 #include "vislib/Serialiser.h"
@@ -32,9 +26,7 @@
 
 #include "ImageWrapper.h"
 
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 using megamol::frontend_resources::Key;
 using megamol::frontend_resources::KeyAction;
@@ -47,14 +39,14 @@ using megamol::frontend_resources::MouseButtonAction;
 /**
  * Abstract base class of rendering views
  */
-class MEGAMOLCORE_API AbstractView : public Module, public megamol::frontend_resources::AbstractInputScope {
+class AbstractView : public Module, public megamol::frontend_resources::AbstractInputScope {
 
 
 public:
     /**
      * Interfaces class for hooking into view processes
      */
-    class MEGAMOLCORE_API Hooks {
+    class Hooks {
     public:
         /**
          * Empty ctor.
@@ -146,6 +138,15 @@ public:
     virtual ImageWrapper GetRenderingResult() const = 0;
 
     /**
+     * Returns the current Bounding Box extents
+     *
+     * The frontend VR Service needs to access the Bounding Box of the data set to align positioning in the VR scene.
+     */
+    BoundingBoxes_2 const& GetBoundingBoxes() const {
+        return _bboxs;
+    };
+
+    /**
      * Resets the view. This normally sets the camera parameters to
      * default values.
      */
@@ -222,7 +223,7 @@ public:
      *
      * @return The background colour for the view
      */
-    glm::vec4 BkgndColour(void) const;
+    glm::vec4 BackgroundColor() const;
 
     /**
      * Restores the view
@@ -382,19 +383,14 @@ protected:
     std::chrono::microseconds _lastFrameDuration;
 
     /** The background colour for the view */
-    mutable param::ParamSlot _bkgndColSlot;
+    mutable param::ParamSlot _backgroundColSlot;
 
 private:
     /** List of registered hooks */
     vislib::SingleLinkedList<Hooks*> _hooks;
 
     /** The background colour for the view */
-    mutable glm::vec4 _bkgndCol;
+    mutable glm::vec4 _backgroundCol;
 };
 
-
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTVIEW_H_INCLUDED */
+} // namespace megamol::core::view

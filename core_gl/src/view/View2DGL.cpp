@@ -15,7 +15,6 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
-#include "stdafx.h"
 #include "vislib/Trace.h"
 #include "vislib/math/Matrix4.h"
 #include "vislib/math/Rectangle.h"
@@ -74,29 +73,27 @@ megamol::core::view::ImageWrapper view::View2DGL::Render(double time, double ins
 
     AbstractView::beforeRender(time, instanceTime);
 
+    // clear fbo before sending it down the rendering call
+    // the view is the owner of this fbo and therefore responsible
+    // for clearing it at the beginning of a render frame
+    this->_fbo->bind();
+    auto bgcol = this->BackgroundColor();
+    glClearColor(bgcol.r * bgcol.a, bgcol.g * bgcol.a, bgcol.b * bgcol.a, bgcol.a); // Premultiply alpha
+    glClearDepth(1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     CallRender2DGL* cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
 
     if (cr2d != NULL) {
-
-        // clear fbo before sending it down the rendering call
-        // the view is the owner of this fbo and therefore responsible
-        // for clearing it at the beginning of a render frame
-        this->_fbo->bind();
-        auto bgcol = this->BkgndColour();
-        glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
-        glClearDepth(1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
         cr2d->SetViewResolution({_fbo->getWidth(), _fbo->getHeight()});
         cr2d->SetFramebuffer(_fbo);
         cr2d->SetCamera(_camera);
 
         (*cr2d)(core::view::AbstractCallRender::FnRender);
-
-        // after render
-        AbstractView::afterRender();
     }
+
+    AbstractView::afterRender();
 
     return GetRenderingResult();
 }

@@ -9,7 +9,6 @@
 #include "mmcore/cluster/CallRegisterAtController.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/net/IPEndPoint.h"
 #include "vislib/net/NetworkInformation.h"
 

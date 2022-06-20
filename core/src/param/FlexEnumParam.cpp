@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/param/FlexEnumParam.h"
-#include "stdafx.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/UTF8Encoder.h"

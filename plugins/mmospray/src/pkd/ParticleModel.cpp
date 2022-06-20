@@ -4,7 +4,6 @@
  */
 
 #include "pkd/ParticleModel.h"
-#include "stdafx.h"
 
 #include "mmcore/utility/log/Log.h"
 

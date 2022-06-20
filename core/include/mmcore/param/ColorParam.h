@@ -9,7 +9,6 @@
 #define MEGAMOLCORE_COLORPARAM_H_INCLUDED
 
 #include "AbstractParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
 
 #include <array>
 
@@ -22,7 +21,7 @@ namespace param {
 /**
  * Class for 32bit RGBA color parameters with each channel between 0.0 and 1.0.
  */
-class MEGAMOLCORE_API ColorParam : public AbstractParam {
+class ColorParam : public AbstractParam {
 public:
     typedef std::array<float, 4> ColorType;
 

@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/ParamValueSetRequest.h"
-#include "stdafx.h"
 
 
 /*

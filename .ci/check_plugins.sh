@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+set -o pipefail
 
 EXIT_CODE=0
 

@@ -3,11 +3,10 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/SystemInformation.h"
-#include "stdafx.h"
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/sys/CmdLineProvider.h"
+#include "vislib/sys/SystemInformation.h"
 #include <chrono>
 
 namespace megamol {
@@ -403,7 +402,7 @@ bool adiosWriter::run() {
 vislib::StringA adiosWriter::getCommandLine(void) {
     vislib::StringA retval;
 
-#ifdef WIN32
+#ifdef _WIN32
     retval = ::GetCommandLineA();
 #else  /* _WIN32 */
     char* arg = nullptr;

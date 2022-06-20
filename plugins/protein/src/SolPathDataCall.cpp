@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "protein/SolPathDataCall.h"
-#include "stdafx.h"
 
 using namespace megamol::protein;
 

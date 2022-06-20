@@ -12,14 +12,13 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
-#include "stdafx.h"
 #include "vislib/ArrayAllocator.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/types.h"
 #include <ctime>
@@ -745,9 +744,6 @@ GROLoader::GROLoader(void)
     this->xtcFilenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->xtcFilenameSlot);
 
-    this->forceDataCallerSlot.SetCompatibleCall<ForceDataCallDescription>();
-    this->MakeSlotAvailable(&this->forceDataCallerSlot);
-
     this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(),
         MolecularDataCall::FunctionName(MolecularDataCall::CallForGetData), &GROLoader::getData);
     this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(),
@@ -885,17 +881,6 @@ bool GROLoader::getData(core::Call& call) {
         // get data via MDDriver if socket is valid and go is on
         if (mdd->IsSocketFunctional() && this->mDDGoSlot.Param<core::param::BoolParam>()->Value() == true) {
             this->mdd->GetCoordinates(this->data[0]->AtomCount(), const_cast<float*>(this->data[0]->AtomPositions()));
-        }
-
-        // get pointer to ForceDataCall
-        ForceDataCall* force = this->forceDataCallerSlot.CallAs<ForceDataCall>();
-        if (force != NULL) {
-
-            if ((*force)(ForceDataCall::CallForGetForceData)) {
-
-                // send force data to MDDriver
-                this->mdd->RequestForces(force->ForceCount(), force->AtomIDs(), force->Forces());
-            }
         }
     } // mdd != NULL
 
