@@ -203,7 +203,7 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
 
                         glUniform1ui(m_filterNone_prgm->ParameterLocation("flag_cnt"), flag_cnt);
 
-                        flag_data->flags->bind(1);
+                        flag_data->flags->bindBase(GL_SHADER_STORAGE_BUFFER,1);
 
                         m_filterNone_prgm->Dispatch(static_cast<int>(std::ceil(flag_cnt / 64.0f)), 1, 1);
 
@@ -285,7 +285,7 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
                 auto writeFlags = m_writeFlagsSlot.CallAs<core_gl::FlagCallWrite_GL>();
 
                 if (readFlags != nullptr && writeFlags != nullptr) {
-                    (*readFlags)(core_gl::FlagCallWrite_GL::CallGetData);
+                    (*readFlags)(core_gl::FlagCallRead_GL::CallGetData);
 
                     if (readFlags->hasUpdate()) {
                         this->m_version = readFlags->version();
@@ -304,7 +304,7 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
 
                         glUniform1ui(m_filterAll_prgm->ParameterLocation("flag_cnt"), flag_cnt);
 
-                        flag_data->flags->bind(1);
+                        flag_data->flags->bindBase(GL_SHADER_STORAGE_BUFFER,1);
 
                         m_filterAll_prgm->Dispatch(static_cast<int>(std::ceil(flag_cnt / 64.0f)), 1, 1);
 
@@ -317,7 +317,7 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
                         glUniform1ui(m_setFlags_prgm->ParameterLocation("id_cnt"), static_cast<GLuint>(indices.size()));
 
                         kdtree_ids->bind(0);
-                        flag_data->flags->bind(1);
+                        flag_data->flags->bindBase(GL_SHADER_STORAGE_BUFFER,1);
 
                         m_setFlags_prgm->Dispatch(static_cast<int>(std::ceil(indices.size() / 64.0f)), 1, 1);
 
@@ -416,7 +416,7 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
 
                         glUniform1ui(m_filterAll_prgm->ParameterLocation("flag_cnt"), flag_cnt);
 
-                        flag_data->flags->bind(1);
+                        flag_data->flags->bindBase(GL_SHADER_STORAGE_BUFFER,1);
 
                         m_filterAll_prgm->Dispatch(static_cast<int>(std::ceil(flag_cnt / 64.0f)), 1, 1);
 
@@ -429,7 +429,7 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
                         glUniform1ui(m_setFlags_prgm->ParameterLocation("id_cnt"), static_cast<GLuint>(indices.size()));
 
                         kdtree_ids->bind(0);
-                        flag_data->flags->bind(1);
+                        flag_data->flags->bindBase(GL_SHADER_STORAGE_BUFFER,1);
 
                         m_setFlags_prgm->Dispatch(static_cast<int>(std::ceil(indices.size() / 64.0f)), 1, 1);
 
