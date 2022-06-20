@@ -6,7 +6,6 @@
  */
 
 #include "MeshArrowRenderer.h"
-#include "stdafx.h"
 
 #include "mmcore/view/light/DistantLight.h"
 
