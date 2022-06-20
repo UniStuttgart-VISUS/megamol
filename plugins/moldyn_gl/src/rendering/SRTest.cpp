@@ -592,7 +592,9 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
 
         auto& IDX = data_.indices[pl_idx];
 
-        if (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_NONE) {
+        if (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_NONE &&
+            parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I &&
+            parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_DOUBLE_I) {
             data_.pl_data.use_global_color[pl_idx] = 0;
         } else {
             data_.pl_data.use_global_color[pl_idx] = 1;
