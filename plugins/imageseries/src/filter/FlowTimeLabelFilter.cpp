@@ -81,7 +81,7 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
         nodeGraph.addEdge(std::move(edge));
     };
 
-    Timestamp timeThreshold = input.timeThreshold;
+    Timestamp voidTimestamp = 65000;
 
     Timestamp currentTimestamp = 0;
     Timestamp minimumTimestamp = input.minimumTimestamp;
@@ -104,6 +104,7 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
 
     std::vector<Index> floodQueue;
     std::vector<FrontQueueEntry> nextFront;
+    bool floodFillIsLocalMinimum = true;
 
     auto mark = [&](Index index, Label label) {
         // Skip already-visited pixels
@@ -116,10 +117,12 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
             // Mark as filled
             dataOut[index] = label;
             floodQueue.push_back(index);
-        } else if (sample > currentTimestamp && sample < static_cast<std::uint32_t>(currentTimestamp) + timeThreshold) {
+        } else if (sample > currentTimestamp && sample < voidTimestamp) {
             // Mark as pending
             dataOut[index] = LabelFlow;
             nextFront.emplace_back(index, label);
+        } else if (sample < currentTimestamp) {
+            floodFillIsLocalMinimum = false;
         }
     };
 
@@ -159,6 +162,7 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
     graph::GraphData2D::Rect floodFillRect;
 
     auto floodFill = [&](Index index, Label label) {
+        floodFillIsLocalMinimum = true;
         floodQueue.clear();
         floodQueue.push_back(index);
 
@@ -200,47 +204,57 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
         return floodQueue.size();
     };
 
-    // Phase 1: find initial frame
-    for (currentTimestamp = minimumTimestamp; currentTimestamp <= maximumTimestamp; ++currentTimestamp) {
-        Label frontLabel = LabelFirst;
-        for (Index i = 0; i < size; ++i) {
-            if (dataIn[i] == currentTimestamp) {
-                dataOut[i] = frontLabel;
+    minimumTimestamp = maximumTimestamp;
 
-                // Remember old size of nextFront
-                std::size_t nextFrontPrevSize = nextFront.size();
+    // Phase 1: mark all regions that are smaller than all their neighbors
+    std::vector<std::uint8_t> initMarkTable(width * height);
+    for (Index i = 0; i < size; ++i) {
+        currentTimestamp = dataIn[i];
 
-                // Perform speculative flood fill. If the region is big enough, keep the changes. Otherwise, revert them
-                std::size_t fillCount = floodFill(i, frontLabel);
-                if (fillCount >= input.minBlobSize) {
-                    // Region large enough: advance label counter and keep filled pixels
-                    auto& node = getOrCreateNode(currentTimestamp, frontLabel);
-                    node.area += fillCount;
-                    node.centerOfMass.x += lastFloodFillCenterX;
-                    node.centerOfMass.y += lastFloodFillCenterY;
-                    node.boundingBox = rectUnion(node.boundingBox, floodFillRect);
-                    if (frontLabel != LabelLast) {
-                        frontLabel++;
-                    }
-                } else {
-                    // Region too small: mask out any involved pixels and revert front queue
-                    dataOut[i] = LabelMask;
-                    // Mask flooded pixels
-                    for (auto index : floodQueue) {
-                        dataOut[index] = LabelMask;
-                    }
-                    // Revert queued pixels
-                    for (std::size_t frontIndex = nextFrontPrevSize; frontIndex < nextFront.size(); ++frontIndex) {
-                        dataOut[nextFront[frontIndex].index] = LabelBackground;
-                    }
-                    nextFront.resize(nextFrontPrevSize);
-                }
-            }
+        if (dataOut[i] != LabelBackground || currentTimestamp > voidTimestamp || initMarkTable[i]) {
+            continue;
         }
 
-        // Enter phase 2 if any suitably sized region was found
-        if (frontLabel != LabelFirst) {
-            break;
+        dataOut[i] = LabelMinimal;
+
+        // Remember old size of nextFront
+        std::size_t nextFrontPrevSize = nextFront.size();
+
+        // Perform speculative flood fill. If the region is big enough, keep the changes. Otherwise, revert them
+        std::size_t fillCount = floodFill(i, LabelMinimal);
+        bool minBlobSizeReached = (fillCount >= input.minBlobSize);
+        if (minBlobSizeReached && floodFillIsLocalMinimum) {
+            // Region large enough: advance label counter and keep filled pixels
+            auto& node = getOrCreateNode(currentTimestamp, LabelMinimal);
+            node.area += fillCount;
+            node.centerOfMass.x += lastFloodFillCenterX;
+            node.centerOfMass.y += lastFloodFillCenterY;
+            node.boundingBox = rectUnion(node.boundingBox, floodFillRect);
+
+            minimumTimestamp = std::min<Timestamp>(minimumTimestamp, currentTimestamp);
+        } else {
+            if (minBlobSizeReached || currentTimestamp > input.minimumTimestamp + input.timeThreshold) {
+                // Region large enough (or far in the future), but not a local minimum: reset pixels to background
+                dataOut[i] = LabelBackground;
+                for (auto index : floodQueue) {
+                    dataOut[index] = LabelBackground;
+                    initMarkTable[index] = true;
+                }
+            } else {
+                // Region too small: mask out any involved pixels
+                dataOut[i] = LabelMask;
+                for (auto index : floodQueue) {
+                    dataOut[index] = LabelMask;
+                }
+            }
+
+            // Revert queued pixels
+            for (std::size_t frontIndex = nextFrontPrevSize; frontIndex < nextFront.size(); ++frontIndex) {
+                auto index = nextFront[frontIndex].index;
+                dataOut[index] = LabelBackground;
+                initMarkTable[index] = true;
+            }
+            nextFront.resize(nextFrontPrevSize);
         }
     }
 
@@ -248,7 +262,7 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
     std::vector<std::vector<Index>> currentInterfaces;
 
     // Phase 2: follow fluid flow
-    for (; currentTimestamp <= maximumTimestamp; ++currentTimestamp) {
+    for (currentTimestamp = minimumTimestamp; currentTimestamp <= maximumTimestamp; ++currentTimestamp) {
         std::vector<std::vector<Label>> interfaceEdges;
         std::vector<std::vector<Index>> previousInterfaces = std::move(currentInterfaces);
         currentInterfaces.clear();
