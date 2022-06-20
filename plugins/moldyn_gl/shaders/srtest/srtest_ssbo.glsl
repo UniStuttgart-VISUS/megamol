@@ -53,7 +53,7 @@ void access_data(uint idx, out vec3 objPos, out vec4 objColor, out float rad) {
         objColor = unpackUnorm4x8(inColor[idx]);
     }
 }
-#elif defined(__SRTEST_UPLOAD_NO_SEP__)
+#elif defined(__SRTEST_UPLOAD_NO_SEP__) || defined(__SRTEST_UPLOAD_BUFFER_ARRAY__)
 struct ppPoint {
     vec3 pos;
     uint col;

@@ -10,6 +10,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/utility/SSBOBufferArray.h"
 
 #include "srtest/mesh_shader_task.h"
 #include "srtest/rendering_task.h"

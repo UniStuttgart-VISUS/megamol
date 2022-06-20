@@ -3,6 +3,7 @@
 #include <array>
 
 #include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmcore_gl/utility/SSBOBufferArray.h"
 
 namespace megamol::moldyn_gl::rendering {
 struct per_list_package {
@@ -28,6 +29,7 @@ struct data_package {
     std::vector<std::vector<uint32_t>> indices;
     std::vector<uint64_t> data_sizes;
     per_list_package pl_data;
+    std::vector<core::utility::SSBOBufferArray> bufArray;
 };
 
 using data_package_t = data_package;
@@ -65,11 +67,11 @@ struct param_package {
 
 using param_package_t = param_package;
 
-enum class upload_mode { POS_COL_SEP, FULL_SEP, VEC3_SEP, NO_SEP, NULL_MODE };
+enum class upload_mode { POS_COL_SEP, FULL_SEP, VEC3_SEP, NO_SEP, BUFFER_ARRAY, NULL_MODE };
 
 using upload_mode_ut = std::underlying_type_t<upload_mode>;
 
-static inline std::array<std::string, 5> upload_mode_string = {"POS_COL_SEP", "FULL_SEP", "VEC3_SEP", "NO_SEP", "NULL_MODE"};
+static inline std::array<std::string, 6> upload_mode_string = {"POS_COL_SEP", "FULL_SEP", "VEC3_SEP", "NO_SEP", "BUFFER_ARRAY", "NULL_MODE"};
 
 class rendering_task {
 public:

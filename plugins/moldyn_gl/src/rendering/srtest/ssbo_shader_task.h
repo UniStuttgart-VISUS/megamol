@@ -47,6 +47,8 @@ protected:
     per_list_package_t pl_data_;
 
     draw_cmd_t draw_cmd_;
+
+    std::vector<core::utility::SSBOBufferArray> const* bufArray;
 };
 
 } // namespace megamol::moldyn_gl::rendering

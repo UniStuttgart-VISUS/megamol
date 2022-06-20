@@ -32,5 +32,7 @@ private:
 
     std::vector<uint64_t> num_prims_;
     per_list_package_t pl_data_;
+
+    std::vector<core::utility::SSBOBufferArray> const* bufArray;
 };
 } // namespace megamol::moldyn_gl::rendering

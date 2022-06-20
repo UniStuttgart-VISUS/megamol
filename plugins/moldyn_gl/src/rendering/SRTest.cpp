@@ -51,6 +51,7 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
     ep->SetTypePair(static_cast<upload_mode_ut>(upload_mode::POS_COL_SEP), "POS_COL_SEP");
     ep->SetTypePair(static_cast<upload_mode_ut>(upload_mode::VEC3_SEP), "VEC3_SEP");
     ep->SetTypePair(static_cast<upload_mode_ut>(upload_mode::NO_SEP), "NO_SEP");
+    ep->SetTypePair(static_cast<upload_mode_ut>(upload_mode::BUFFER_ARRAY), "BUFFER_ARRAY");
     upload_mode_slot_ << ep;
     MakeSlotAvailable(&upload_mode_slot_);
 
@@ -152,6 +153,17 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
             shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+        } break;
+        case upload_mode::BUFFER_ARRAY: {
+            shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
+            shdr_ssbo_vert_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
+            shdr_ssbo_quads_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
+            shdr_ssbo_strip_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
+            shdr_ssbo_muzic_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
+            shdr_mesh_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
+            shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
+            shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
+            shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
         } break;
         case upload_mode::POS_COL_SEP:
         default: {
@@ -259,6 +271,24 @@ void megamol::moldyn_gl::rendering::SRTest::release() {
 }
 
 
+std::shared_ptr<glowl::FramebufferObject> create_fbo(std::shared_ptr<glowl::FramebufferObject> const& org_fbo) {
+    auto fbo = std::make_shared<glowl::FramebufferObject>(
+        org_fbo->getWidth(), org_fbo->getHeight(), glowl::FramebufferObject::DEPTH24_STENCIL8);
+    fbo->createColorAttachment(GL_RGB32F, GL_RGB, GL_UNSIGNED_BYTE);
+    return fbo;
+}
+
+
+void blit_fbo(std::shared_ptr<glowl::FramebufferObject>& org, std::shared_ptr<glowl::FramebufferObject>& dest) {
+    org->bindToRead(0);
+    dest->bindToDraw();
+    glBlitFramebuffer(0, 0, org->getWidth(), org->getHeight(), 0, 0, dest->getWidth(), dest->getHeight(),
+        GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+}
+
+
 bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallRender3DGL& cr) {
 #ifdef PROFILING
     auto& pm = const_cast<frontend_resources::PerformanceManager&>(
@@ -271,6 +301,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
     auto proj = cam.getProjectionMatrix();
     auto cam_pose = cam.get<core::view::Camera::Pose>();
     auto cr_fbo = cr.GetFramebuffer();
+    //auto cr_fbo = create_fbo(cr_fbo_org);
 
     // Lights
     glm::vec3 curlightDir = glm::vec3(0.0f, 0.0f, 1.0f);
@@ -389,6 +420,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
     // data_.pl_data.clip_distance = clip_thres_slot_.Param<core::param::FloatParam>()->Value();
 
     cr_fbo->bind();
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     /*GLuint64 startTime, midTime, stopTime;
     GLuint queryID[3];
@@ -426,7 +458,13 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
                                                      upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
     pm.start_timer(timing_handles_[1], this->GetCoreInstance()->GetFrameID());
 #endif
+    /*glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glStencilMask(0xFF);
+    glStencilOp(GL_KEEP, GL_INCR, GL_INCR);*/
     rt->render(ubo_);
+    /*glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glDisable(GL_STENCIL_TEST);*/
 #ifdef PROFILING
     pm.stop_timer(timing_handles_[1]);
 #endif
@@ -444,6 +482,8 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
     glDeleteQueries(3, queryID);*/
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    //blit_fbo(cr_fbo, cr_fbo_org);
 
     /*core::utility::log::Log::DefaultLog.WriteInfo(
         "[SRTest] Upload time: %d Render time: %d", midTime - startTime, stopTime - midTime);*/
@@ -467,13 +507,13 @@ bool megamol::moldyn_gl::rendering::SRTest::GetExtents(megamol::core_gl::view::C
         cr->SetTimeFramesCount(c2->FrameCount());
         auto const plcount = c2->GetParticleListCount();
 
-        //cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
-        auto const bbox = c2->AccessBoundingBoxes().ObjectSpaceBBox();
+        cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
+        /*auto const bbox = c2->AccessBoundingBoxes().ObjectSpaceBBox();
         auto const cbox = c2->AccessBoundingBoxes().ObjectSpaceClipBox();
         
         cr->AccessBoundingBoxes().SetBoundingBox(lower_.x, lower_.y, lower_.z,
             upper_.x, upper_.y, upper_.z);
-        cr->AccessBoundingBoxes().SetClipBox(lower_.x, lower_.y, lower_.z, upper_.x, upper_.y, upper_.z);
+        cr->AccessBoundingBoxes().SetClipBox(lower_.x, lower_.y, lower_.z, upper_.x, upper_.y, upper_.z);*/
 
     } else {
         cr->SetTimeFramesCount(1);
@@ -487,6 +527,7 @@ bool megamol::moldyn_gl::rendering::SRTest::GetExtents(megamol::core_gl::view::C
 
 void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleDataCall& in_data) {
     core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] Loading Data");
+
 
     /*auto const bbox = in_data.AccessBoundingBoxes().ObjectSpaceBBox();
     auto const origin = glm::vec3(bbox.GetLeft(), bbox.GetBottom(), bbox.GetBack());
@@ -533,6 +574,8 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
 
     auto mode = static_cast<upload_mode>(upload_mode_slot_.Param<core::param::EnumParam>()->Value());
 
+    data_.bufArray.resize(pl_count);
+
     for (std::decay_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
         auto const& parts = in_data.AccessParticles(pl_idx);
         auto& positions = data_.positions[pl_idx];
@@ -559,7 +602,8 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
 
         if (parts.GetVertexDataType() != geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) {
             data_.pl_data.use_global_radii[pl_idx] = 1;
-            data_.pl_data.global_radii[pl_idx] = scale_rad(parts.GetGlobalRadius());
+            //data_.pl_data.global_radii[pl_idx] = scale_rad(parts.GetGlobalRadius());
+            data_.pl_data.global_radii[pl_idx] = parts.GetGlobalRadius();
             core::utility::log::Log::DefaultLog.WriteInfo(
                 "[SRTest] Having global radius: %f", data_.pl_data.global_radii[pl_idx]);
         } else {
@@ -574,6 +618,9 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
         colors.clear();
         colors.reserve(p_count * 4);
 
+        //#define ADDED_STUFF
+
+        #ifdef ADDED_STUFF
         X.clear();
         X.reserve(p_count);
         Y.clear();
@@ -592,6 +639,7 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
         A.reserve(p_count);
         IDX.clear();
         IDX.reserve(p_count * 6);
+        #endif
 
         data_.data_sizes[pl_idx] = p_count;
 
@@ -605,8 +653,10 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
         auto const& ca_acc = parts.GetParticleStore().GetCAAcc();
 
         for (std::decay_t<decltype(p_count)> p_idx = 0; p_idx < p_count; ++p_idx) {
-            auto const pos = scale_coord(x_acc->Get_f(p_idx), y_acc->Get_f(p_idx), z_acc->Get_f(p_idx));
-            auto const rad = scale_rad(rad_acc->Get_f(p_idx));
+            /*auto const pos = scale_coord(x_acc->Get_f(p_idx), y_acc->Get_f(p_idx), z_acc->Get_f(p_idx));
+            auto const rad = scale_rad(rad_acc->Get_f(p_idx));*/
+            auto pos = glm::vec3(x_acc->Get_f(p_idx), y_acc->Get_f(p_idx), z_acc->Get_f(p_idx));
+            auto rad = rad_acc->Get_f(p_idx);
 
             lower_ = glm::min(lower_, pos);
             upper_ = glm::max(upper_, pos);
@@ -628,7 +678,7 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
                 unsigned int col = glm::packUnorm4x8(
                     glm::vec4(cr_acc->Get_f(p_idx), cg_acc->Get_f(p_idx), cb_acc->Get_f(p_idx), ca_acc->Get_f(p_idx)));
                 colors.push_back(*reinterpret_cast<float*>(&col));
-            } else if (mode == upload_mode::NO_SEP) {
+            } else if (mode == upload_mode::NO_SEP || mode == upload_mode::BUFFER_ARRAY) {
                 unsigned int col = glm::packUnorm4x8(
                     glm::vec4(cr_acc->Get_f(p_idx), cg_acc->Get_f(p_idx), cb_acc->Get_f(p_idx), ca_acc->Get_f(p_idx)));
                 positions.push_back(*reinterpret_cast<float*>(&col));
@@ -638,6 +688,8 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
             Y.push_back(y_acc->Get_f(p_idx));
             Z.push_back(z_acc->Get_f(p_idx));
             RAD.push_back(rad_acc->Get_f(p_idx));*/
+
+            #ifdef ADDED_STUFF
             X.push_back(pos.x);
             Y.push_back(pos.y);
             Z.push_back(pos.z);
@@ -653,6 +705,12 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
             IDX.push_back(p_idx * 4 + 3);
             IDX.push_back(p_idx * 4 + 3);
             IDX.push_back(p_idx * 4 + 4);
+            #endif
+        }
+
+        if (mode == upload_mode::BUFFER_ARRAY) {
+            auto& bufA = data_.bufArray[pl_idx];
+            bufA.SetDataWithSize(positions.data(), 16, 16, parts.GetCount(), (GLuint)(2 * 1024 * 1024 * 1024 - 1));
         }
     }
 

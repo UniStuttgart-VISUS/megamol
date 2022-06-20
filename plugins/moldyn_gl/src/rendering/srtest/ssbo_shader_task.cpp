@@ -15,39 +15,60 @@ bool megamol::moldyn_gl::rendering::ssbo_shader_task::render(GLuint ubo) {
 
     glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo);
 
-    for (int i = 0; i < num_prims_.size(); ++i) {
-        auto num_prims = num_prims_[i];
+    if (get_mode() == upload_mode::BUFFER_ARRAY) {
+        for (int pl_idx = 0; pl_idx < bufArray->size(); ++pl_idx) {
+            auto& bufA = bufArray->operator[](pl_idx);
+            const GLuint numChunks = bufA.GetNumChunks();
+            for (int i = 0; i < numChunks; ++i) {
+                auto num_prims = bufA.GetNumItems(i);
 
-        program->setUniform("useGlobalCol", pl_data_.use_global_color[i]);
-        program->setUniform("useGlobalRad", pl_data_.use_global_radii[i]);
-        program->setUniform("globalCol", pl_data_.global_color[i]);
-        program->setUniform("globalRad", pl_data_.global_radii[i]);
+                program->setUniform("useGlobalCol", pl_data_.use_global_color[pl_idx]);
+                program->setUniform("useGlobalRad", pl_data_.use_global_radii[pl_idx]);
+                program->setUniform("globalCol", pl_data_.global_color[pl_idx]);
+                program->setUniform("globalRad", pl_data_.global_radii[pl_idx]);
 
-        program->setUniform("num_points", static_cast<unsigned int>(num_prims));
+                program->setUniform("num_points", static_cast<unsigned int>(num_prims));
 
-        switch (get_mode()) {
-        case upload_mode::FULL_SEP: {
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xbos_[i]);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ybos_[i]);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, zbos_[i]);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, radbos_[i]);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, rbos_[i]);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, gbos_[i]);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, bbos_[i]);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, abos_[i]);
-        } break;
-        case upload_mode::NO_SEP: {
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbos_[i]);
-        } break;
-        case upload_mode::POS_COL_SEP:
-        case upload_mode::VEC3_SEP:
-        default:
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbos_[i]);
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbos_[i]);
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, bufA.GetHandle(i));
+
+                draw_cmd_(num_prims);
+            }
         }
+    } else {
+        for (int i = 0; i < num_prims_.size(); ++i) {
+            auto num_prims = num_prims_[i];
 
-        // glDrawArrays(GL_POINTS, 0, num_prims);
-        draw_cmd_(num_prims);
+            program->setUniform("useGlobalCol", pl_data_.use_global_color[i]);
+            program->setUniform("useGlobalRad", pl_data_.use_global_radii[i]);
+            program->setUniform("globalCol", pl_data_.global_color[i]);
+            program->setUniform("globalRad", pl_data_.global_radii[i]);
+
+            program->setUniform("num_points", static_cast<unsigned int>(num_prims));
+
+            switch (get_mode()) {
+            case upload_mode::FULL_SEP: {
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, xbos_[i]);
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ybos_[i]);
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, zbos_[i]);
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, radbos_[i]);
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, rbos_[i]);
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, gbos_[i]);
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, bbos_[i]);
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, abos_[i]);
+            } break;
+            case upload_mode::NO_SEP: {
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbos_[i]);
+            } break;
+            case upload_mode::POS_COL_SEP:
+            case upload_mode::VEC3_SEP:
+            default:
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vbos_[i]);
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, cbos_[i]);
+            }
+
+            // glDrawArrays(GL_POINTS, 0, num_prims);
+            draw_cmd_(num_prims);
+        }
     }
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -69,6 +90,10 @@ bool megamol::moldyn_gl::rendering::ssbo_shader_task::upload(data_package_t cons
     case upload_mode::NO_SEP:
         upload_no_sep(package);
         break;
+    case upload_mode::BUFFER_ARRAY: {
+        bufArray = &package.bufArray;
+        pl_data_ = package.pl_data;
+    }
     case upload_mode::POS_COL_SEP:
     case upload_mode::VEC3_SEP:
     default:
