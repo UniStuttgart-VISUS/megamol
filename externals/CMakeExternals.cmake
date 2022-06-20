@@ -292,6 +292,34 @@ function(require_external NAME)
       install(DIRECTORY "${cuesdk_archive_SOURCE_DIR}/redist/x64/" DESTINATION "bin" FILES_MATCHING PATTERN "*2017.dll")
     endif ()
 
+
+  # curl
+  elseif(NAME STREQUAL "curl")
+    if(TARGET curl)
+      return()
+    endif()
+
+    if (WIN32)
+      set(CURL_LIB "lib/libcurl<SUFFIX>.lib")
+    else ()
+      set(CURL_LIB "lib/libcurl<SUFFIX>.a")
+    endif ()
+
+    add_external_project(curl STATIC
+      GIT_REPOSITORY https://github.com/curl/curl.git
+      GIT_TAG "curl-7_83_1"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${CURL_LIB}"
+      DEBUG_SUFFIX "-d"
+      CMAKE_ARGS
+        -DBUILD_CURL_EXE=OFF
+        -DBUILD_SHARED_LIBS=OFF
+    )
+
+    add_external_library(curl
+      INCLUDE_DIR "include"
+      LIBRARY ${CURL_LIB}
+      DEBUG_SUFFIX "-d")
+
   # expat
   elseif (NAME STREQUAL "expat")
     if (TARGET expat)
