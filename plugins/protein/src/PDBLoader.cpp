@@ -1179,7 +1179,7 @@ void PDBLoader::loadFile(const std::filesystem::path& filename) {
         if (pdbid.stem().string().length() == 4) {
             // we have a pdb id, so we can download it
             CURL* curl;
-            std::string url = "http://www.rcsb.org/pdb/files/";
+            std::string url = "http://files.rcsb.org/download/";
             url.append(pdbid.string());
             std::string file_content;
 
