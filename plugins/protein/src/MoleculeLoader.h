@@ -1,9 +1,12 @@
 #pragma once
 
 #include "mmcore/Call.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+
+#include "protein_calls/MolecularDataCall.h"
 
 #include "chemfiles.hpp"
 
@@ -49,36 +52,98 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    virtual bool create(void) override;
 
     /**
-     * Call callback to get the data
+     * Call callback to get the molecular data call data
      *
      * @param c The calling call
      *
      * @return True on success
      */
-    bool getData(core::Call& call);
+    bool getMDCData(core::Call& call);
 
     /**
-     * Call callback to get the extent of the data
+     * Call callback to get the extent of the molecular data call data
      *
      * @param c The calling call
      *
      * @return True on success
      */
-    bool getExtent(core::Call& call);
+    bool getMDCExtent(core::Call& call);
+
+    /**
+     * Call callback to get the modern call data
+     *
+     * @param c The calling call
+     *
+     * @return True on success
+     */
+    bool getMoleculeData(core::Call& call);
+
+    /**
+     * Call callback to get the extent of the modern call data
+     *
+     * @param c The calling call
+     *
+     * @return True on success
+     */
+    bool getMoleculeExtent(core::Call& call);
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    virtual void release(void) override;
+
+    /**
+     * Loads the structure file into memory
+     *
+     * @param path_to_structure Path to the file containing the structure information
+     * @return True on success, false otherwise
+     */
+    bool loadFile(std::filesystem::path const& path_to_structure);
+
+    /**
+     *  Loads the files into memory
+     *
+     *  @param path_to_structure Path to the file containing the structure information
+     *  @param path_to_trajectory Path to the file containing the trajectory information
+     *  @return True on success, false otherwise
+     */
+    bool loadFile(std::filesystem::path const& path_to_structure, std::filesystem::path const& path_to_trajectory);
+
+    /**
+     * Updates all file contents if necessary
+     */
+    void updateFiles();
+
+    /**
+     * Postprocesses the files targeting a molecular data call
+     */
+    void postProcessFilesMDC();
+
+    /**
+     * Postproces the files targeting a modern molecular call
+     */
+    void postPorcessFilesMolecule();
 
 private:
-    core::param::ParamSlot filenameSlot_;
-    core::param::ParamSlot trajectoryFilenameSlot_;
+    /** Slot connecting this module to the requesting modules */
+    core::CalleeSlot data_out_slot_;
 
-    std::shared_ptr<chemfiles::Trajectory> base_;
+    /** Slot for the structure file path */
+    core::param::ParamSlot filename_slot_;
+    /** Slot for the trajectory file path */
+    core::param::ParamSlot trajectory_filename_slot_;
+
+    /** Pointer to the structure */
+    std::shared_ptr<chemfiles::Trajectory> structure_;
+    /** Pointer to the trajectory */
     std::shared_ptr<chemfiles::Trajectory> trajectory_;
+
+    /** Path to the current structure */
+    std::filesystem::path path_to_current_structure_;
+    /** Path to the current trajectory */
+    std::filesystem::path path_to_current_trajectory_;
 };
 } // namespace megamol::protein
