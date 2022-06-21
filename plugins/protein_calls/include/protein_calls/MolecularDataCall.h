@@ -19,6 +19,7 @@
 #include "vislib/String.h"
 #include "vislib/macro_utils.h"
 #include "vislib/math/Vector.h"
+#include <filesystem>
 #include <vector>
 
 namespace megamol {
@@ -1737,14 +1738,14 @@ public:
      *
      * @param pdbFilename The filename of the pdb file
      */
-    inline void SetPDBFilename(vislib::TString pdbFilename) {
+    inline void SetPDBFilename(std::filesystem::path pdbFilename) {
         this->pdbFilename = pdbFilename;
     }
 
     /*
      * Returns the filename of the containing pdb file.
      */
-    inline vislib::TString GetPDBFilename(void) const {
+    inline std::filesystem::path GetPDBFilename(void) const {
         return this->pdbFilename;
     }
 
@@ -1848,8 +1849,7 @@ private:
     unsigned int numHydrogenBonds;
 
     /** The name of the pdb file the data is from */
-    VISLIB_MSVC_SUPPRESS_WARNING(4251)
-    vislib::TString pdbFilename;
+    std::filesystem::path pdbFilename;
 };
 
 /** Description class typedef */

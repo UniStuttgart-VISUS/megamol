@@ -23,6 +23,7 @@
 #include "vislib/math/Vector.h"
 #include "vislib/sys/RunnableThread.h"
 #include <fstream>
+#include <filesystem>
 
 #ifdef WITH_CURL
 #include <curl/curl.h>
@@ -552,14 +553,14 @@ private:
      *
      * @param filename The path to the file to load.
      */
-    void loadFile(const vislib::TString& filename);
+    void loadFile(const std::filesystem::path& filename);
 
     /**
      * Loads a file containing information about the cap(s).
      *
      * @param filename The path to the file to load.
      */
-    void loadFileCap(const vislib::TString& filename);
+    void loadFileCap(const std::filesystem::path& filename);
 
     /**
      * Parse one atom entry.
@@ -758,7 +759,7 @@ private:
     vislib::Array<int> atomVisibility;
 
     /** Storage of the pdb filename */
-    vislib::TString pdbfilename;
+    std::filesystem::path pdbfilename;
 };
 
 

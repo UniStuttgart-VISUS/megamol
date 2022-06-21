@@ -2293,7 +2293,7 @@ bool MapGenerator::findPoles(const vislib::math::Vector<float, 3>& p_eye_dir,
  * MapGenerator::getNameOfPDB
  */
 std::string MapGenerator::getNameOfPDB(MolecularDataCall& mdc) {
-    std::string name(vislib::StringA(T2A(mdc.GetPDBFilename())).PeekBuffer());
+    std::string name = mdc.GetPDBFilename().string();
     if (name.length() > 4) {
         name = name.substr(0, name.length() - 4);
     }
@@ -4200,7 +4200,7 @@ bool MapGenerator::Render(core_gl::view::CallRender3DGL& call) {
         this->store_png_data.SetCount(this->store_png_fbo.GetWidth() * this->store_png_fbo.GetHeight() * 3);
         this->store_png_fbo.GetColourTexture(&this->store_png_data[0], 0, GL_RGB, GL_UNSIGNED_BYTE);
 
-        std::filesystem::path pdbfile = mdc->GetPDBFilename().PeekBuffer();
+        std::filesystem::path pdbfile = mdc->GetPDBFilename();
         auto pdbname = pdbfile.stem();
 
         if (writeValues) {

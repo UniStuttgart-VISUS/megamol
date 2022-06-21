@@ -526,6 +526,7 @@ bool ProteinViewRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     auto const viewport = call.GetViewResolution();
+
     glm::mat4 ortho =
         glm::ortho(0.0f, static_cast<float>(viewport.x), 0.0f, static_cast<float>(viewport.y), -1.0f, 1.0f);
 
@@ -556,12 +557,11 @@ bool ProteinViewRenderer::Render(core_gl::view::CallRender3DGL& call) {
         if (str.size() >= 4) {
             str = str.substr(0, 4);
         }
-        auto fontSize = 50.0f;
+        auto fontSize = 20.0f;
         auto stringToDraw = str.c_str();
-
         std::array<float, 4> color = {0.0f, 0.0f, 0.0f, 1.0f};
         // TODO fix font rendering
-        font_.DrawString(ortho, color.data(), 0.0f, 0.0, 1.0f, fontSize, false, stringToDraw);
+        font_.DrawString(ortho, color.data(), 0.0f, 0.0, 0.5f, fontSize, false, stringToDraw);
     }
 
     // reset to old fbo
