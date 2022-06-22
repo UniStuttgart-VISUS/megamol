@@ -10,7 +10,14 @@ megamol_plugin(infovis
   DEPENDS_EXTERNALS
     Eigen
     nanoflann
-    bhtsne)
+    bhtsne
+    umappp)
+
+if (MSVC)
+  # Avoid C3016 due to modern OpenMP usage. Note: /openmp:llvm might work as well.
+  # Avoid C1128 due to excessive inlining.
+  set_source_files_properties("src/UMAProjection.cpp" PROPERTIES COMPILE_FLAGS "/openmp- /bigobj")
+endif()
 
 if (infovis_PLUGIN_ENABLED)
   # Additional sources

@@ -64,7 +64,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(Eigen
       GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-      GIT_TAG "3.3.7")
+      GIT_TAG "3.4.0")
 
   # glm
   elseif (NAME STREQUAL "glm")
@@ -157,6 +157,103 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/alexstraub1990/simultaneous-sort.git
       GIT_TAG 220fdf37fec2d9d3e3f7674194544ee70eb93ee7 # master on 2021-07-26, because nothing was specified here.
       INCLUDE_DIR "include")
+
+  # aarand
+  elseif (NAME STREQUAL "aarand")
+    if (TARGET aarand)
+      return()
+    endif ()
+
+    add_external_headeronly_project(aarand
+      GIT_REPOSITORY https://github.com/LTLA/aarand
+      GIT_TAG 2a8509c499f668bf424306f1aa986da429902c71
+      INCLUDE_DIR "include")
+
+  # Annoy
+  elseif (NAME STREQUAL "Annoy")
+    if (TARGET Annoy)
+      return()
+    endif ()
+
+    add_external_headeronly_project(Annoy 
+      GIT_REPOSITORY https://github.com/spotify/Annoy
+      GIT_TAG 02e6de1c40dfe78a984e5a6f0611d0c6513ff875)
+
+    # Copy headers and set include path (the annoying way).
+    external_get_property(Annoy SOURCE_DIR)
+    set(ANNOY_INCLUDE_DIR "${SOURCE_DIR}/include/annoy")
+    file(MAKE_DIRECTORY ${ANNOY_INCLUDE_DIR})
+    file(COPY ${SOURCE_DIR}/src/annoylib.h DESTINATION ${ANNOY_INCLUDE_DIR})
+    file(COPY ${SOURCE_DIR}/src/kissrandom.h DESTINATION ${ANNOY_INCLUDE_DIR})
+    file(COPY ${SOURCE_DIR}/src/mman.h DESTINATION ${ANNOY_INCLUDE_DIR})
+    target_include_directories(Annoy INTERFACE "${SOURCE_DIR}/include")
+
+  # hnswlib
+  elseif (NAME STREQUAL "hnswlib")
+    if (TARGET hnswlib)
+      return()
+    endif ()
+
+    add_external_headeronly_project(hnswlib
+      GIT_REPOSITORY https://github.com/LTLA/hnswlib
+      GIT_TAG d6c8e3a3896129a7f642bc23cdce4536e8b45a65
+      INCLUDE_DIR ".")
+
+  # kmeans
+  elseif (NAME STREQUAL "kmeans")
+    if (TARGET kmeans)
+      return()
+    endif ()
+
+    add_external_headeronly_project(kmeans
+      GIT_REPOSITORY https://github.com/LTLA/CppKmeans
+      GIT_TAG 4397a8d576cf0b657fd9012c049e05727c45796d
+      INCLUDE_DIR "include")
+
+  # knncolle
+  elseif (NAME STREQUAL "knncolle")
+    if (TARGET knncolle)
+      return()
+    endif ()
+
+    add_external_headeronly_project(knncolle
+      GIT_REPOSITORY https://github.com/LTLA/knncolle
+      GIT_TAG c5a1776ebf10641d9bf8715e89cb2d965b06e899
+      INCLUDE_DIR "include")
+
+  # irlba
+  elseif (NAME STREQUAL "irlba")
+    if (TARGET irlba)
+      return()
+    endif ()
+
+    add_external_headeronly_project(irlba 
+      GIT_REPOSITORY https://github.com/LTLA/CppIrlba
+      GIT_TAG ba06d3fcb32b280772b8c8b9947ed068da2a5c77
+      INCLUDE_DIR "include")
+
+  # umappp
+  elseif (NAME STREQUAL "umappp")
+    if (TARGET umappp)
+      return()
+    endif ()
+
+    require_external(aarand)
+    require_external(Annoy)
+    require_external(hnswlib)
+    require_external(kmeans)
+    require_external(knncolle)
+    require_external(irlba)
+    require_external(Eigen)
+
+    add_external_headeronly_project(umappp
+      GIT_REPOSITORY https://github.com/LTLA/umappp.git
+      GIT_TAG "e47f81b55c6adda777d22f361ec5def89248e5d7"
+      INCLUDE_DIR "include"
+      DEPENDS aarand Annoy hnswlib kmeans knncolle irlba Eigen)
+
+    target_link_libraries(umappp INTERFACE 
+      aarand Annoy hnswlib kmeans knncolle irlba Eigen)
 
   # ###########################################################################
   # ### Built libraries #######################################################
