@@ -162,7 +162,8 @@ bool megamol::infovis::TSNEProjection::project(megamol::datatools::table::TableD
     }
 
     double* result = (double*)malloc(rowsCount * outputColumnCount * sizeof(double));
-    TSNE::run(inputData, rowsCount, columnCount, result, outputColumnCount, perplexity, theta, randomSeed, false, maxIter, 250, 250);
+    TSNE::run(inputData, rowsCount, columnCount, result, outputColumnCount, perplexity, theta, randomSeed, false,
+        maxIter, 250, 250);
 
     double* maximas = new double[outputColumnCount];
     double* minimas = new double[outputColumnCount];
