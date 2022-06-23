@@ -67,7 +67,7 @@ megamol::moldyn_gl::rendering::SRTest::~SRTest() {
     this->Release();
 }
 
-
+#define __SRTEST_CAM_ALIGNED__
 bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
     try {
         auto shdr_vao_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
@@ -84,6 +84,9 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         auto shdr_ssbo_quads_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
         shdr_ssbo_quads_options.addDefinition("__SRTEST_SSBO__");
         shdr_ssbo_quads_options.addDefinition("__SRTEST_QUAD__");
+#ifdef __SRTEST_CAM_ALIGNED__
+        shdr_ssbo_quads_options.addDefinition("__SRTEST_CAM_ALIGNED__");
+#endif
         shdr_ssbo_quads_options.addDefinition("BASE_IDX", QUADS_BASE_IDX);
         shdr_ssbo_quads_options.addDefinition("INV_IDX", QUADS_INV_IDX);
         shdr_ssbo_quads_options.addDefinition("BUMP_IDX", QUADS_BUMP_IDX);
@@ -114,6 +117,10 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         shdr_mesh_altn_options.addDefinition("__SRTEST_MESH_ALTN__");
         shdr_mesh_altn_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
         auto shdr_mesh_geo_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
+#ifdef __SRTEST_CAM_ALIGNED__
+        shdr_mesh_geo_options.addDefinition("__SRTEST_CAM_ALIGNED__");
+#endif
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
         shdr_mesh_geo_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
         auto shdr_mesh_geo_altn_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());

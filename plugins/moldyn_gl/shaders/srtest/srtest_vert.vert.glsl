@@ -77,7 +77,11 @@ void main() {
 
     mat4 v;
 #ifdef __SRTEST_QUAD__
+#ifdef __SRTEST_CAM_ALIGNED__
+    touchplane(objPos, rad, oc_pos, v);
+#else
     touchplane_old(objPos, rad, oc_pos, v);
+#endif
     //touchplane(objPos, rad, oc_pos, v);
 #else
     touchplane_old_v2(objPos, rad, oc_pos, v);

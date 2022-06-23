@@ -80,7 +80,11 @@ void main() {
         }*/
 
         mat4 v;
+#ifdef __SRTEST_CAM_ALIGNED__
+        touchplane(objPos, rad, oc_pos, v);
+#else
         touchplane_old(objPos, rad, oc_pos, v);
+#endif
 
         for (int i = 0; i < NUM_V; ++i) {
             //v[i] = MVP * v[i];
