@@ -1,3 +1,8 @@
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
+ */
 #pragma once
 
 #include "mmcore/Call.h"

@@ -12,7 +12,6 @@
 #include "vislib/sys/sysfunctions.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
 #include <math.h>
-//#include "mmcore/misc/ImageViewer.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "vislib/math/FastMap.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
