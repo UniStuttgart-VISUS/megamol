@@ -17,7 +17,7 @@
 #include "widgets/PopUps.h"
 #include "widgets/SplitterWidget.h"
 #include "widgets/StringSearchWidget.h"
-#include <queue>
+#include <list>
 
 
 namespace megamol {
@@ -66,12 +66,14 @@ public:
         return this->modules;
     }
     ModulePtr_t GetModule(ImGuiID module_uid);
+    ModulePtr_t GetModule(const std::string& module_fullname);
     bool ModuleExists(const std::string& module_fullname);
+    bool UniqueModuleRename(const std::string& module_full_name);
 
     bool AddCall(const CallStockVector_t& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid);
-    bool AddCall(const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
-    bool AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
-
+    CallPtr_t AddCall(const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
+    bool ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
+    CallPtr_t GetCall(std::string const& caller_fullname, std::string const& callee_fullname);
     bool DeleteCall(ImGuiID call_uid);
     inline const CallPtrVector_t& Calls() {
         return this->calls;
@@ -97,7 +99,6 @@ public:
         this->dirty_flag = true;
     }
 
-    bool UniqueModuleRename(const std::string& module_full_name);
 
     std::string GetFilename() const;
     void SetFilename(const std::string& filename, bool saved_filename);
@@ -106,10 +107,9 @@ public:
 
     bool PushSyncQueue(QueueAction in_action, const QueueData& in_data);
     bool PopSyncQueue(QueueAction& out_action, QueueData& out_data);
+    QueueData FindQueueEntryByActionName(QueueAction action, const std::string& name);
     inline void ClearSyncQueue() {
-        while (!this->sync_queue.empty()) {
-            this->sync_queue.pop();
-        }
+        this->sync_queue.clear();
     }
 
     inline bool IsRunning() const {
@@ -168,13 +168,17 @@ public:
         return (this->gui_graph_state.interact.module_hovered_uid != GUI_INVALID_ID);
     }
 
+    /// TODO get set module/call labels
+    /// TODO get/set call coloring
+
+
     void SetLayoutGraph(bool layout = true) {
         this->gui_graph_layout = ((layout) ? (1) : (0));
     }
 
 private:
     typedef std::tuple<QueueAction, QueueData> SyncQueueData_t;
-    typedef std::queue<SyncQueueData_t> SyncQueue_t;
+    typedef std::list<SyncQueueData_t> SyncQueue_t;
 
     // VARIABLES --------------------------------------------------------------
 
@@ -195,8 +199,11 @@ private:
     bool gui_show_grid;
     bool gui_show_parameter_sidebar;
     bool gui_change_show_parameter_sidebar;
-    unsigned int gui_graph_layout;
     float gui_parameter_sidebar_width;
+    bool gui_show_profiling_bar;
+    bool gui_change_show_profiling_bar;
+    float gui_profiling_bar_height;
+    unsigned int gui_graph_layout;
     bool gui_reset_zooming;
     bool gui_increment_zooming;
     bool gui_decrement_zooming;
@@ -207,15 +214,21 @@ private:
     bool gui_canvas_hovered;
     float gui_current_font_scaling;
     StringSearchWidget gui_search_widget;
-    SplitterWidget gui_splitter_widget;
+    SplitterWidget gui_parameters_splitter;
+    SplitterWidget gui_profiling_splitter;
     PopUps gui_rename_popup;
     HoverToolTip gui_tooltip;
+#ifdef PROFILING
+    ImageWidget gui_profiling_run_button;
+    std::vector<std::pair<std::weak_ptr<gui::Module>, std::weak_ptr<gui::Call>>> profiling_list;
+    std::chrono::system_clock::time_point scroll_delta_time;
+#endif // PROFILING
 
     // FUNCTIONS --------------------------------------------------------------
 
     void draw_menu(GraphState_t& state);
-    void draw_canvas(float child_width, GraphState_t& state);
-    void draw_parameters(float child_width);
+    void draw_canvas(ImVec2 position, ImVec2 size, GraphState_t& state);
+    void draw_parameters(ImVec2 position, ImVec2 size);
 
     void draw_canvas_grid() const;
     void draw_canvas_dragged_call();
@@ -235,6 +248,10 @@ private:
 
     std::string generate_unique_group_name() const;
     std::string generate_unique_module_name(const std::string& name) const;
+
+#ifdef PROFILING
+    void draw_profiling(ImVec2 position, ImVec2 size);
+#endif // PROFILING
 };
 
 

@@ -4,6 +4,7 @@
  * All rights reserved.
  */
 
+
 #include "CartoonTessellationRenderer.h"
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
@@ -18,7 +19,6 @@
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "stdafx.h"
 #include <inttypes.h>
 #include <stdint.h>
 
@@ -295,7 +295,7 @@ bool CartoonTessellationRenderer::Render(core_gl::view::CallRender3DGL& call) {
     auto call_fbo = call.GetFramebuffer();
     deferredProvider_.setFramebufferExtents(call_fbo->getWidth(), call_fbo->getHeight());
 
-    // timer.BeginFrame();
+    //  timer.BeginFrame();
 
     glm::vec4 clipDat;
     glm::vec4 clipCol;

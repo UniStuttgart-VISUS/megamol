@@ -4,9 +4,8 @@
  * Alle Rechte vorbehalten.
  */
 #include "SombreroWarper.h"
-#include "stdafx.h"
 
-#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -23,7 +22,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::geocalls;
+using namespace megamol::geocalls_gl;
 using namespace megamol::protein_cuda;
 using namespace megamol::protein_calls;
 
@@ -60,13 +59,13 @@ SombreroWarper::SombreroWarper(void)
 
     // Callee slot
     this->warpedMeshOutSlot.SetCallback(
-        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(0), &SombreroWarper::getData);
+        CallTriMeshDataGL::ClassName(), CallTriMeshDataGL::FunctionName(0), &SombreroWarper::getData);
     this->warpedMeshOutSlot.SetCallback(
-        CallTriMeshData::ClassName(), CallTriMeshData::FunctionName(1), &SombreroWarper::getExtent);
+        CallTriMeshDataGL::ClassName(), CallTriMeshDataGL::FunctionName(1), &SombreroWarper::getExtent);
     this->MakeSlotAvailable(&this->warpedMeshOutSlot);
 
     // Caller slots
-    this->meshInSlot.SetCompatibleCall<CallTriMeshDataDescription>();
+    this->meshInSlot.SetCompatibleCall<CallTriMeshDataGLDescription>();
     this->MakeSlotAvailable(&this->meshInSlot);
 
     this->tunnelInSlot.SetCompatibleCall<TunnelResidueDataCallDescription>();
@@ -149,11 +148,11 @@ void SombreroWarper::release(void) {}
  * SombreroWarper::getData
  */
 bool SombreroWarper::getData(Call& call) {
-    CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
+    CallTriMeshDataGL* outCall = dynamic_cast<CallTriMeshDataGL*>(&call);
     if (outCall == nullptr)
         return false;
 
-    CallTriMeshData* inCall = this->meshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshDataGL* inCall = this->meshInSlot.CallAs<CallTriMeshDataGL>();
     if (inCall == nullptr)
         return false;
 
@@ -178,11 +177,11 @@ bool SombreroWarper::getData(Call& call) {
  * SombreroWarper::getExtent
  */
 bool SombreroWarper::getExtent(Call& call) {
-    CallTriMeshData* outCall = dynamic_cast<CallTriMeshData*>(&call);
+    CallTriMeshDataGL* outCall = dynamic_cast<CallTriMeshDataGL*>(&call);
     if (outCall == nullptr)
         return false;
 
-    CallTriMeshData* inCall = this->meshInSlot.CallAs<CallTriMeshData>();
+    CallTriMeshDataGL* inCall = this->meshInSlot.CallAs<CallTriMeshDataGL>();
     if (inCall == nullptr)
         return false;
 
@@ -356,7 +355,7 @@ void SombreroWarper::checkParameters(void) {
 /*
  * SombreroWarper::copyMeshData
  */
-bool SombreroWarper::copyMeshData(CallTriMeshData& ctmd) {
+bool SombreroWarper::copyMeshData(CallTriMeshDataGL& ctmd) {
     this->meshVector.clear();
     this->meshVector.resize(ctmd.Count());
     this->meshVector.shrink_to_fit();
@@ -484,7 +483,7 @@ bool SombreroWarper::findSombreroBorder(void) {
     this->brimIndices.clear();
     this->brimIndices.resize(this->meshVector.size());
     for (uint i = 0; i < static_cast<uint>(this->meshVector.size()); i++) {
-        CallTriMeshData::Mesh& mesh = this->meshVector[i];
+        CallTriMeshDataGL::Mesh& mesh = this->meshVector[i];
 
         uint vCnt = mesh.GetVertexCount();
         uint fCnt = mesh.GetTriCount();

@@ -7,7 +7,6 @@
 
 #include "mmcore/job/AbstractThreadedJob.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 
 using namespace megamol::core;
 

@@ -7,11 +7,11 @@
  */
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 
-#include "mmcore/utility/graphics/BitmapCodecCollection.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Exception.h"
 #include "vislib/Trace.h"
 #include "vislib/UnsupportedOperationException.h"
+#include "vislib/graphics/BitmapCodecCollection.h"
 #include "vislib/graphics/BitmapImage.h"
 #include <GL/glu.h>
 

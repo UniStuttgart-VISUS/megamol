@@ -1,24 +1,13 @@
 #version 430
 
 #include "protein_gl/simplemolecule/sm_common_defines.glsl"
-#include "lightdirectional.glsl"
+#include "protein_gl/deferred/gbuffer_output.glsl"
 #include "protein_gl/moleculeses/mses_rootsolver.glsl"
-
-uniform vec4 viewAttr;
-uniform vec3 zValues;
-uniform vec3 fogCol;
-uniform float alpha = 0.5;
-
-uniform mat4 view;
-uniform mat4 proj;
-uniform mat4 viewInverse;
-uniform mat4 mvp;
-uniform mat4 mvpinverse;
-uniform mat4 mvptransposed;
+#include "protein_gl/moleculeses/mses_common_defines.glsl"
 
 in vec4 objPos;
 in vec4 camPos;
-in vec4 lightPos;
+
 in vec4 radii;
 in vec4 visibilitySphere;
 
@@ -31,7 +20,7 @@ in float maxAngle;
 in vec4 colors;
 in vec3 cuttingPlane;
 
-#include "moleculeses/mses_decodecolor.glsl"
+#include "protein_gl/moleculeses/mses_decodecolor.glsl"
 
 void main(void) {
     vec4 coord;
@@ -115,16 +104,9 @@ void main(void) {
     else
         color = decodeColor( colors.y);
 #endif // FLATSHADE_SES
-    // uniform color
-    //color = vec3( 1.0, 0.75, 0.0);
-    //color = vec3( 0.98, 0.82, 0.0 ); // for VIS
-    //color = vec3( 0.02, 0.75, 0.02);
-    //color = vec3( 0.19, 0.52, 0.82);
 
-    // phong lighting with directional light
-    //gl_FragColor = vec4( LocalLighting( ray, normal, lightPos.xyz, color), 1.0);
-    gl_FragColor = vec4(color, 1.0);
-    gl_FragDepth = gl_FragCoord.z;
+    albedo_out = vec4(color, 1.0);
+    float depthval = gl_FragCoord.z;
     
     // calculate depth
 #ifdef DEPTH
@@ -139,21 +121,19 @@ void main(void) {
     float depth = dot(mvptransposed[2], Ding);
     float depthW = dot(mvptransposed[3], Ding);
 #ifdef OGL_DEPTH_SES
-    gl_FragDepth = ((depth / depthW) + 1.0) * 0.5;
+    depthval = ((depth / depthW) + 1.0) * 0.5;
 #else
-    //gl_FragDepth = ( depth + zValues.y) / zValues.z;
-    gl_FragDepth = (depth + zValues.y)/( zValues.z + zValues.y);
+    //depthval = ( depth + zValues.x) / zValues.y;
+    depthval = (depth + zValues.x)/( zValues.y + zValues.x);
 #endif // OGL_DEPTH_SES
 #endif // DEPTH
-
-#ifdef FOGGING_SES
-    float f = clamp( ( 1.0 - gl_FragDepth)/( 1.0 - zValues.x ), 0.0, 1.0);
-    gl_FragColor.rgb = mix( fogCol, gl_FragColor.rgb, f);
-#endif // FOGGING_SES
-    gl_FragColor.a = alpha;
     
     tmp = normal;
     normal.x = dot( rotMatT0, tmp.xyz);
     normal.y = dot( rotMatT1, tmp.xyz);
     normal.z = dot( rotMatT2, tmp.xyz);
+
+    normal_out = normal;
+    depth_out = depthval;
+    gl_FragDepth = depthval;
 }

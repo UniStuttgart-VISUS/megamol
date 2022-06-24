@@ -6,7 +6,6 @@
  */
 #include "OSCBFix.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "stdafx.h"
 #include <climits>
 
 

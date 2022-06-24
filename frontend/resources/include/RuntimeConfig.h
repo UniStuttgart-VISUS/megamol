@@ -68,13 +68,16 @@ struct RuntimeConfig {
         nodecoration = 1 << 1,
         topmost = 1 << 2,
         nocursor = 1 << 3,
+        hidden = 1 << 4,
     };
     unsigned int window_mode = 0;
     unsigned int window_monitor = 0;
+    bool force_window_size = false;
     bool gui_show = true;
     float gui_scale = 1.0f;
     bool screenshot_show_privacy_note = true;
     bool show_version_note = true;
+    std::string profiling_output_file;
 
     struct Tile {
         UintPair global_framebuffer_resolution; // e.g. whole powerwall resolution, needed for tiling
@@ -95,6 +98,14 @@ struct RuntimeConfig {
     unsigned int remote_mpi_broadcast_rank = 0;
     std::string remote_headnode_zmq_target_address = "tcp://127.0.0.1:62562";
     std::string remote_rendernode_zmq_source_address = "tcp://*:62562";
+
+    enum class VRMode {
+        Off,
+#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+        UnityKolab,
+#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+    };
+    VRMode vr_mode = VRMode::Off;
 
     std::string as_string() const {
         auto summarize = [](std::vector<std::string> const& vec) -> std::string {

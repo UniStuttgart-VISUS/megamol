@@ -82,6 +82,7 @@ void megamol::gui::GUIManager::init_state() {
     this->gui_state.open_popup_save = false;
     this->gui_state.open_popup_load = false;
     this->gui_state.open_popup_screenshot = false;
+    this->gui_state.open_popup_font = false;
     this->gui_state.menu_visible = true;
     this->gui_state.graph_fonts_reserved = 0;
     this->gui_state.shutdown_triggered = false;
@@ -90,13 +91,17 @@ void megamol::gui::GUIManager::init_state() {
     this->create_unique_screenshot_filename(this->gui_state.screenshot_filepath);
     this->gui_state.screenshot_filepath_id = 0;
     this->gui_state.font_load = 0;
-    this->gui_state.font_load_filename = "";
+    this->gui_state.font_load_name = "";
     this->gui_state.font_load_size = 12;
+    this->gui_state.font_input_string_buffer = "";
+    this->gui_state.default_font_filename = "";
     this->gui_state.request_load_projet_file = "";
     this->gui_state.stat_averaged_fps = 0.0f;
     this->gui_state.stat_averaged_ms = 0.0f;
     this->gui_state.stat_frame_count = 0;
     this->gui_state.load_docking_preset = true;
+    this->gui_state.window_alpha = 1.0f;
+    this->gui_state.scale_input_float_buffer = 1.0f;
 }
 
 
@@ -130,7 +135,7 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     if (this->gui_state.gui_visible && valid_imgui_scope) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Nesting ImGui contexts is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        this->gui_state.gui_visible = false;
+        return false;
     }
 
     if (!this->render_backend.IsBackendInitialized()) {
@@ -206,6 +211,9 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         default:
             break;
         }
+        style.Colors[ImGuiCol_WindowBg].w = this->gui_state.window_alpha;
+        style.Colors[ImGuiCol_ChildBg].w = this->gui_state.window_alpha;
+
         // Set tesselation error: Smaller value => better tesselation of circles and round corners.
         style.CircleTessellationMaxError = 0.3f;
         // Scale all ImGui style options with current scaling factor
@@ -283,16 +291,16 @@ bool GUIManager::PostDraw() {
 
         try {
 
-            // Main HOTKEY_GUI_MENU ---------------------------------------------------------------
+            // Draw global menu -----------------------------------------------
             this->draw_menu();
 
-            // Draw Windows ------------------------------------------------------------
+            // Draw Windows and their pop-ups ---------------------------------
             this->win_collection.Draw(this->gui_state.menu_visible);
 
-            // Draw Pop-ups ------------------------------------------------------------
+            // Draw global pop-ups --------------------------------------------
             this->draw_popups();
 
-            // Draw global parameter widgets -------------------------------------------
+            // Draw global parameter widgets ----------------------------------
             if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
                 /// ! Only enabled in second frame if interaction objects are added during first frame !
                 this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
@@ -303,9 +311,9 @@ bool GUIManager::PostDraw() {
                 this->picking_buffer.DisableInteraction();
             }
 
-        } catch (...) {
+        } catch (std::exception ex) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Unknown Error... [%s at %s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
         }
 
         // Render the current ImGui frame
@@ -326,33 +334,35 @@ bool GUIManager::PostDraw() {
             if (!this->render_backend.SupportsCustomFonts()) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "[GUI] Ignoring loading of custom font. Unsupported feature by currently used render backend.");
+
             } else if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
-                           this->gui_state.font_load_filename, std::string("ttf"))) {
+                           this->gui_state.font_load_name, std::string("ttf"))) {
 
                 ImFontConfig config;
                 config.OversampleH = 4;
                 config.OversampleV = 4;
                 config.GlyphRanges = this->gui_state.font_utf8_ranges.data();
 
-                if (io.Fonts->AddFontFromFileTTF(this->gui_state.font_load_filename.c_str(),
+                if (io.Fonts->AddFontFromFileTTF(this->gui_state.font_load_name.c_str(),
                         static_cast<float>(this->gui_state.font_load_size), &config) != nullptr) {
                     bool font_api_load_success = this->render_backend.CreateFontsTexture();
                     // Load last added font
                     if (font_api_load_success) {
                         io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
+                        this->gui_state.default_font_filename = this->gui_state.font_load_name;
                         load_success = true;
                     }
                 }
                 if (!load_success) {
                     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                         "[GUI] Unable to load font from file '%s' with size %d. [%s, %s, line %d]\n",
-                        this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__,
-                        __FUNCTION__, __LINE__);
+                        this->gui_state.font_load_name.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
+                        __LINE__);
                 }
-            } else if ((!this->gui_state.font_load_filename.empty()) &&
-                       (this->gui_state.font_load_filename != "<unknown>")) {
+            } else if ((!this->gui_state.font_load_name.empty()) && (this->gui_state.font_load_name != "<unknown>")) {
+
                 std::string imgui_font_string =
-                    this->gui_state.font_load_filename + ", " + std::to_string(this->gui_state.font_load_size) + "px";
+                    this->gui_state.font_load_name + ", " + std::to_string(this->gui_state.font_load_size) + "px";
                 for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < (io.Fonts->Fonts.Size); n++) {
                     std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
                     if (font_name == imgui_font_string) {
@@ -362,34 +372,20 @@ bool GUIManager::PostDraw() {
                 }
                 if (!load_success) {
                     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                        "[GUI] Unable to load font '%s' by name with size %d. [%s, %s, line %d]\n",
-                        this->gui_state.font_load_filename.c_str(), this->gui_state.font_load_size, __FILE__,
-                        __FUNCTION__, __LINE__);
+                        "[GUI] Unable to load font '%s' by name with size %d. The font size might not be available due "
+                        "to changed scaling factor. [%s, %s, line %d]\n",
+                        this->gui_state.font_load_name.c_str(), this->gui_state.font_load_size, __FILE__, __FUNCTION__,
+                        __LINE__);
                 }
             }
+
             this->gui_state.font_load = 0;
         }
     }
 
     // Process hotkeys --------------------------------------------------------
     if (this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI].is_pressed) {
-        if (this->gui_state.gui_visible) {
-            this->gui_state.gui_hide_next_frame = 3;
-        } else {
-            // Show GUI after it was hidden (before early exit!)
-            // Restore window 'open' state (Always restore at least HOTKEY_GUI_MENU)
-            this->gui_state.menu_visible = true;
-            const auto func = [&](AbstractWindow& wc) {
-                if (std::find(this->gui_state.gui_restore_hidden_windows.begin(),
-                        this->gui_state.gui_restore_hidden_windows.end(),
-                        wc.Name()) != this->gui_state.gui_restore_hidden_windows.end()) {
-                    wc.Config().show = true;
-                }
-            };
-            this->win_collection.EnumWindows(func);
-            this->gui_state.gui_restore_hidden_windows.clear();
-            this->gui_state.gui_visible = true;
-        }
+        this->SetVisibility(!this->gui_state.gui_visible);
     }
     if (this->gui_hotkeys[HOTKEY_GUI_EXIT_PROGRAM].is_pressed) {
         this->gui_state.shutdown_triggered = true;
@@ -415,8 +411,8 @@ bool GUIManager::PostDraw() {
     // Assume pending changes in scaling as applied  --------------------------
     megamol::gui::gui_scaling.ConsumePendingChange();
 
-    // Hide GUI if it is currently shown --------------------------------------
-    if (this->gui_state.gui_visible) {
+    // Apply hiding GUI if it is currently shown ------------------------------
+    if (this->gui_state.gui_visible && (this->gui_state.gui_hide_next_frame > 0)) {
         /// Disabling ImGui window focus required 3 frames (!?)
         if (this->gui_state.gui_hide_next_frame == 3) {
             // First frame
@@ -446,6 +442,9 @@ bool GUIManager::PostDraw() {
 
 
 bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
+
+    if (!this->gui_state.gui_visible)
+        return false;
 
     ImGui::SetCurrentContext(this->imgui_context);
 
@@ -508,71 +507,21 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
         return true;
     }
 
-    //// GUI
-    // for (auto& hotkey : this->gui_hotkeys) {
-    //    if (this->is_hotkey_pressed(hotkey.second.keycode)) {
-    //        hotkey.second.is_pressed = true;
-    //        hotkeyPressed = true;
-    //    }
-    //}
-    //// Hotkeys of window(s)
-    // const auto windows_func = [&](AbstractWindow& wc) {
-    //    // Check Window Hotkey
-    //    bool windowHotkeyPressed = this->is_hotkey_pressed(wc.Config().hotkey);
-    //    if (windowHotkeyPressed) {
-    //        wc.Config().show = !wc.Config().show;
-    //    }
-    //    hotkeyPressed |= windowHotkeyPressed;
-    //
-    //    // Check for additional window hotkeys
-    //    for (auto& hotkey : wc.GetHotkeys()) {
-    //        if (this->is_hotkey_pressed(hotkey.second.keycode)) {
-    //            hotkey.second.is_pressed = true;
-    //            hotkeyPressed = true;
-    //        }
-    //    }
-    //};
-    // this->win_collection.EnumWindows(windows_func);
-    //
-    // if (hotkeyPressed)
-    //    return true;
-
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).
     // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
     if (io.WantTextInput) {
         return true;
     }
 
-    // Check for parameter hotkeys
-    // hotkeyPressed = false;
-    // if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
-    //    for (auto& module_ptr : graph_ptr->Modules()) {
-    //        // Break loop after first occurrence of parameter hotkey
-    //        if (hotkeyPressed) {
-    //            break;
-    //        }
-    //        for (auto& p : module_ptr->Parameters()) {
-    //            if (p.Type() == ParamType_t::BUTTON) {
-    //                auto keyCode = p.GetStorage<megamol::core::view::KeyCode>();
-    //                if (this->is_hotkey_pressed(keyCode)) {
-    //                    // Sync directly button action to parameter in core
-    //                    /// Does not require syncing of graphs
-    //                    if (p.CoreParamPtr() != nullptr) {
-    //                        p.CoreParamPtr()->setDirty();
-    //                    }
-    //                    /// p.ForceSetValueDirty();
-    //                    hotkeyPressed = true;
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
-
     return hotkeyPressed;
 }
 
 
 bool GUIManager::OnChar(unsigned int codePoint) {
+
+    if (!this->gui_state.gui_visible)
+        return false;
+
     ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
@@ -586,6 +535,9 @@ bool GUIManager::OnChar(unsigned int codePoint) {
 
 
 bool GUIManager::OnMouseMove(double x, double y) {
+
+    if (!this->gui_state.gui_visible)
+        return false;
 
     ImGui::SetCurrentContext(this->imgui_context);
 
@@ -607,6 +559,9 @@ bool GUIManager::OnMouseMove(double x, double y) {
 
 bool GUIManager::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+
+    if (!this->gui_state.gui_visible)
+        return false;
 
     ImGui::SetCurrentContext(this->imgui_context);
 
@@ -631,6 +586,9 @@ bool GUIManager::OnMouseButton(
 
 bool GUIManager::OnMouseScroll(double dx, double dy) {
 
+    if (!this->gui_state.gui_visible)
+        return false;
+
     ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
@@ -646,6 +604,27 @@ bool GUIManager::OnMouseScroll(double dx, double dy) {
 }
 
 
+void megamol::gui::GUIManager::SetVisibility(bool visible) {
+    if (this->gui_state.gui_visible && !visible) {
+        // Trigger GUI hiding
+        this->gui_state.gui_hide_next_frame = 3;
+    } else if (!this->gui_state.gui_visible && visible) {
+        // Show GUI after it was hidden
+        // Restore window 'open' state (Always restore at least HOTKEY_GUI_MENU)
+        const auto func = [&](AbstractWindow& wc) {
+            if (std::find(this->gui_state.gui_restore_hidden_windows.begin(),
+                    this->gui_state.gui_restore_hidden_windows.end(),
+                    wc.Name()) != this->gui_state.gui_restore_hidden_windows.end()) {
+                wc.Config().show = true;
+            }
+        };
+        this->win_collection.EnumWindows(func);
+        this->gui_state.gui_restore_hidden_windows.clear();
+        this->gui_state.gui_visible = true;
+    }
+}
+
+
 void megamol::gui::GUIManager::SetScale(float scale) {
 
     megamol::gui::gui_scaling.Set(scale);
@@ -653,14 +632,18 @@ void megamol::gui::GUIManager::SetScale(float scale) {
 
         // Reload ImGui style options
         this->gui_state.style_changed = true;
-        // Reload and scale all fonts
+
+        // Reload and scale all default fonts
         this->gui_state.load_default_fonts = true;
 
-        // Additionally trigger reload of currently used default font
-        /// Need to wait 1 additional frame for scaled font being available!
-        this->gui_state.font_load = 2;
-        this->gui_state.font_load_size = static_cast<int>(
-            static_cast<float>(this->gui_state.font_load_size) * (megamol::gui::gui_scaling.TransitionFactor()));
+        if (!this->gui_state.default_font_filename.empty()) {
+            // Additionally trigger reload of currently used default font that is loaded from file
+            /// Need to wait 1 additional frame for scaled font being available!
+            this->gui_state.font_load_name = this->gui_state.default_font_filename;
+            this->gui_state.font_load_size = static_cast<int>(
+                static_cast<float>(this->gui_state.font_load_size) * (megamol::gui::gui_scaling.TransitionFactor()));
+            this->gui_state.font_load = 2;
+        }
     }
     // Scale all windows
     const auto size_func = [&](AbstractWindow& wc) {
@@ -684,83 +667,15 @@ void megamol::gui::GUIManager::SetClipboardFunc(const char* (*get_clipboard_func
 }
 
 
-bool megamol::gui::GUIManager::SynchronizeRunningGraph(
+bool megamol::gui::GUIManager::GraphSynchronization(
     megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
 
-    // Synchronization is not required when no gui element is visible
+    // Synchronization is not required when no gui element is visible (?)
     if (!this->gui_state.gui_visible)
         return true;
 
-    // 1) Load all known calls from core instance ONCE ---------------------------
-    if (!this->win_configurator_ptr->GetGraphCollection().LoadCallStock(core_instance)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    // Load all known modules from core instance ONCE
-    if (!this->win_configurator_ptr->GetGraphCollection().LoadModuleStock(core_instance)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Failed to load module stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    bool synced = false;
-    bool sync_success = false;
-    auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph();
-    // 2a) Either synchronize GUI Graph -> Core Graph ... ---------------------
-    if (!synced && (graph_ptr != nullptr)) {
-        bool graph_sync_success = true;
-
-        Graph::QueueAction action;
-        Graph::QueueData data;
-        while (graph_ptr->PopSyncQueue(action, data)) {
-            synced = true;
-            switch (action) {
-            case (Graph::QueueAction::ADD_MODULE): {
-                graph_sync_success &= megamol_graph.CreateModule(data.class_name, data.name_id);
-            } break;
-            case (Graph::QueueAction::RENAME_MODULE): {
-                bool rename_success = megamol_graph.RenameModule(data.name_id, data.rename_id);
-                graph_sync_success &= rename_success;
-            } break;
-            case (Graph::QueueAction::DELETE_MODULE): {
-                graph_sync_success &= megamol_graph.DeleteModule(data.name_id);
-            } break;
-            case (Graph::QueueAction::ADD_CALL): {
-                graph_sync_success &= megamol_graph.CreateCall(data.class_name, data.caller, data.callee);
-            } break;
-            case (Graph::QueueAction::DELETE_CALL): {
-                graph_sync_success &= megamol_graph.DeleteCall(data.caller, data.callee);
-            } break;
-            case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
-                megamol_graph.SetGraphEntryPoint(data.name_id);
-            } break;
-            case (Graph::QueueAction::REMOVE_GRAPH_ENTRY): {
-                megamol_graph.RemoveGraphEntryPoint(data.name_id);
-            } break;
-            default:
-                break;
-            }
-        }
-        if (!graph_sync_success) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Failed to synchronize gui graph with core graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
-        }
-        sync_success &= graph_sync_success;
-    }
-
-    // 2b) ... OR (exclusive or) synchronize Core Graph -> GUI Graph ----------
-    if (!synced) {
-        // Creates new graph at first call
-        ImGuiID running_graph_uid = (graph_ptr != nullptr) ? (graph_ptr->UID()) : (GUI_INVALID_ID);
-        bool graph_sync_success = this->win_configurator_ptr->GetGraphCollection().LoadUpdateProjectFromCore(
-            running_graph_uid, megamol_graph);
-        if (!graph_sync_success) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
-        }
+    if (this->win_configurator_ptr->GetGraphCollection().SyncRunningGUIGraphWithCoreGraph(
+            megamol_graph, core_instance)) {
 
         // Check for new GUI state
         if (!this->gui_state.new_gui_state.empty()) {
@@ -769,88 +684,21 @@ bool megamol::gui::GUIManager::SynchronizeRunningGraph(
         }
 
         // Check for new script path name
-        if (graph_sync_success) {
-            if (auto synced_graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
-                std::string script_filename;
-                // Get project filename from lua state of frontend service
-                if (!this->gui_state.project_script_paths.empty()) {
-                    script_filename = this->gui_state.project_script_paths.front();
-                }
-                // Load GUI state from project file when project file changed
-                if (!script_filename.empty()) {
-                    auto script_path = std::filesystem::u8path(script_filename);
-                    synced_graph_ptr->SetFilename(script_path.generic_u8string(), false);
-                }
+        if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
+            std::string script_filename;
+            if (!this->gui_state.project_script_paths.empty()) {
+                script_filename = this->gui_state.project_script_paths.front();
+            }
+            if (!script_filename.empty()) {
+                auto script_path = std::filesystem::u8path(script_filename);
+                graph_ptr->SetFilename(script_path.generic_u8string(), false);
             }
         }
 
-        sync_success &= graph_sync_success;
+        return true;
     }
 
-    // 3) Synchronize parameter values -------------------------------------------
-    if (graph_ptr != nullptr) {
-
-        bool param_sync_success = true;
-        for (auto& module_ptr : graph_ptr->Modules()) {
-            for (auto& p : module_ptr->Parameters()) {
-
-                // Try to connect gui parameters to newly created parameters of core modules
-                if (p.CoreParamPtr().IsNull()) {
-                    auto module_name = module_ptr->FullName();
-                    megamol::core::Module* core_module_ptr = nullptr;
-                    core_module_ptr = megamol_graph.FindModule(module_name).get();
-                    // Connect pointer of new parameters of core module to parameters in gui module
-                    if (core_module_ptr != nullptr) {
-                        auto se = core_module_ptr->ChildList_End();
-                        for (auto si = core_module_ptr->ChildList_Begin(); si != se; ++si) {
-                            auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
-                            if (param_slot != nullptr) {
-                                std::string param_full_name(param_slot->FullName().PeekBuffer());
-                                for (auto& parameter : module_ptr->Parameters()) {
-                                    if (gui_utils::CaseInsensitiveStringCompare(
-                                            parameter.FullNameCore(), param_full_name)) {
-                                        megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
-                                            (*param_slot), parameter, true, false, true);
-                                    }
-                                }
-                            }
-                        }
-                    }
-#ifdef GUI_VERBOSE
-                    if (p.CoreParamPtr().IsNull()) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Unable to connect core parameter to gui parameter. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
-                    }
-#endif // GUI_VERBOSE
-                }
-
-                if (!p.CoreParamPtr().IsNull()) {
-                    // Write changed gui state to core parameter
-                    if (p.IsGUIStateDirty()) {
-                        param_sync_success &= megamol::gui::Parameter::WriteCoreParameterGUIState(p, p.CoreParamPtr());
-                        p.ResetGUIStateDirty();
-                    }
-                    // Write changed parameter value to core parameter
-                    if (p.IsValueDirty()) {
-                        param_sync_success &= megamol::gui::Parameter::WriteCoreParameterValue(p, p.CoreParamPtr());
-                        p.ResetValueDirty();
-                    }
-                    // Read current parameter value and GUI state fro core parameter
-                    param_sync_success &=
-                        megamol::gui::Parameter::ReadCoreParameterToParameter(p.CoreParamPtr(), p, false, false);
-                }
-            }
-        }
-#ifdef GUI_VERBOSE
-        if (!param_sync_success) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] Failed to synchronize parameter values. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        }
-#endif // GUI_VERBOSE
-        sync_success &= param_sync_success;
-    }
-    return sync_success;
+    return false;
 }
 
 
@@ -1031,14 +879,14 @@ void megamol::gui::GUIManager::load_default_fonts() {
         std::string default_font_path;
         auto get_preset_font_path = [&](const std::string& directory) {
             std::string font_path =
-                megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_ROBOTOSANS);
+                megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_FILENAME_FONT_DEFAULT_ROBOTOSANS);
             if (!font_path.empty()) {
                 font_paths.emplace_back(font_path);
                 configurator_font_path = font_path;
                 default_font_path = font_path;
             }
-            font_path =
-                megamol::core::utility::FileUtils::SearchFileRecursive(directory, GUI_DEFAULT_FONT_SOURCECODEPRO);
+            font_path = megamol::core::utility::FileUtils::SearchFileRecursive(
+                directory, GUI_FILENAME_FONT_DEFAULT_SOURCECODEPRO);
             if (!font_path.empty()) {
                 font_paths.emplace_back(font_path);
             }
@@ -1071,11 +919,7 @@ void megamol::gui::GUIManager::load_default_fonts() {
             }
         }
 
-        // Set default if there is no pending font load request otherwise
-        if (this->gui_state.font_load == 0) {
-            this->gui_state.font_load_filename = default_font_path;
-            this->gui_state.font_load_size = static_cast<int>(default_font_size);
-        }
+        this->gui_state.default_font_filename.clear();
     }
 
     this->render_backend.CreateFontsTexture();
@@ -1150,6 +994,20 @@ void GUIManager::draw_menu() {
             this->gui_state.load_docking_preset = true;
         }
 #endif
+
+        ImGui::Separator();
+
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted("Transparency");
+        this->tooltip.Marker("Alpha value of window background");
+        ImGui::SameLine();
+        if (ImGui::SliderFloat("###window_transparency", &this->gui_state.window_alpha, 0.0f, 1.0f, "%.2f")) {
+            ImGuiStyle& style = ImGui::GetStyle();
+            style.Colors[ImGuiCol_WindowBg].w = this->gui_state.window_alpha;
+            style.Colors[ImGuiCol_ChildBg].w = this->gui_state.window_alpha;
+            ;
+        }
+
         ImGui::EndMenu();
     }
     ImGui::Separator();
@@ -1175,8 +1033,8 @@ void GUIManager::draw_menu() {
 
                 bool running = graph_ptr->IsRunning();
                 std::string button_label = "graph_running_button" + label_id;
-                if (megamol::gui::ButtonWidgets::OptionButton(
-                        button_label, ((running) ? ("Running") : ("Run")), running, running)) {
+                if (megamol::gui::ButtonWidgets::OptionButton(ButtonWidgets::ButtonStyle::POINT_CIRCLE, button_label,
+                        ((running) ? ("Running") : ("Run")), running, running)) {
                     if (!running) {
                         this->win_configurator_ptr->GetGraphCollection().RequestNewRunningGraph(graph_ptr->UID());
                     }
@@ -1252,89 +1110,40 @@ void GUIManager::draw_menu() {
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Font")) {
-
-            ImGuiIO& io = ImGui::GetIO();
-            ImFont* font_current = ImGui::GetFont();
-            if (ImGui::BeginCombo("Select Available Font", font_current->GetDebugName())) {
-                /// first fonts until index this->graph_fonts_reserved are exclusively used by graph in configurator
-                for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < io.Fonts->Fonts.Size; n++) {
-                    if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current))) {
-                        io.FontDefault = io.Fonts->Fonts[n];
-                        this->gui_state.font_load_filename = this->extract_fontname(io.FontDefault->GetDebugName());
-                        this->gui_state.font_load_size = static_cast<int>(io.FontDefault->FontSize);
-                    }
-                }
-                ImGui::EndCombo();
-            }
-
-            ImGui::Separator();
-
-            ImGui::AlignTextToFramePadding();
-            ImGui::TextUnformatted("Load Font from File");
-            std::string help("Same font can be loaded multiple times with different font size.");
-            this->tooltip.Marker(help);
-
-            std::string label("Font Size");
-            ImGui::InputInt(label.c_str(), &this->gui_state.font_load_size, 1, 10, ImGuiInputTextFlags_None);
-            // Validate font size
-            if (this->gui_state.font_load_size <= 5) {
-                this->gui_state.font_load_size = 5; // minimum valid font size
-            }
-
-            ImGui::BeginGroup();
-
-            float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
-            ImGui::PushItemWidth(widget_width);
-
-            this->file_browser.Button_Select(this->gui_state.font_load_filename, {"ttf"},
-                megamol::core::param::FilePathParam::Flag_File_RestrictExtension);
-            ImGui::SameLine();
-            ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_load_filename, ImGuiInputTextFlags_None);
-            ImGui::PopItemWidth();
-            // Validate font file before offering load button
-            bool valid_file = megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
-                this->gui_state.font_load_filename, std::string("ttf"));
-
-            if (!valid_file) {
-                megamol::gui::gui_utils::PushReadOnly();
-                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-            }
-            if (ImGui::Button("Add Font")) {
-                this->gui_state.font_load = 1;
-                // Close menu
-                ImGui::CloseCurrentPopup();
-            }
-            if (!valid_file) {
-                ImGui::PopItemFlag();
-                megamol::gui::gui_utils::PopReadOnly();
-                ImGui::SameLine();
-                ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font file name.");
-            }
-            ImGui::EndGroup();
-
-            ImGui::EndMenu();
-        }
-
         if (ImGui::BeginMenu("Scale")) {
-            float scale = megamol::gui::gui_scaling.Get();
-            if (ImGui::RadioButton("100%", (scale == 1.0f))) {
+            ImGui::TextUnformatted("GUI Scaling Factor:");
+            ImGui::PushItemWidth(ImGui::GetFrameHeight() * 5.0f);
+            ImGui::InputFloat("###scale_input", &this->gui_state.scale_input_float_buffer, 0.1f, 0.5f, "%.2f",
+                ImGuiInputTextFlags_None);
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
+                this->SetScale(this->gui_state.scale_input_float_buffer);
+            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
+                this->gui_state.scale_input_float_buffer = megamol::gui::gui_scaling.Get();
+            }
+            ImGui::PopItemWidth();
+            ImGui::Separator();
+            ImGui::TextUnformatted("Presets:");
+            if (ImGui::MenuItem("100%", nullptr, (this->gui_state.scale_input_float_buffer == 1.0f))) {
                 this->SetScale(1.0f);
             }
-            if (ImGui::RadioButton("150%", (scale == 1.5f))) {
+            if (ImGui::MenuItem("150%", nullptr, (this->gui_state.scale_input_float_buffer == 1.5f))) {
                 this->SetScale(1.5f);
             }
-            if (ImGui::RadioButton("200%", (scale == 2.0f))) {
+            if (ImGui::MenuItem("200%", nullptr, (this->gui_state.scale_input_float_buffer == 2.0f))) {
                 this->SetScale(2.0f);
             }
-            if (ImGui::RadioButton("250%", (scale == 2.5f))) {
+            if (ImGui::MenuItem("250%", nullptr, (this->gui_state.scale_input_float_buffer == 2.5f))) {
                 this->SetScale(2.5f);
             }
-            if (ImGui::RadioButton("300%", (scale == 3.0f))) {
+            if (ImGui::MenuItem("300%", nullptr, (this->gui_state.scale_input_float_buffer == 3.0f))) {
                 this->SetScale(3.0f);
             }
 
             ImGui::EndMenu();
+        }
+
+        if (ImGui::MenuItem("Font")) {
+            this->gui_state.open_popup_font = true;
         }
 
         ImGui::EndMenu();
@@ -1356,8 +1165,8 @@ void GUIManager::draw_menu() {
 
 void megamol::gui::GUIManager::draw_popups() {
 
-    // Draw pop-ups defined in windows
-    this->win_collection.PopUps();
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiIO& io = ImGui::GetIO();
 
     // Externally registered pop-ups
     auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
@@ -1410,12 +1219,91 @@ void megamol::gui::GUIManager::draw_popups() {
         }
     }
 
+
+    // FONT
+    if (this->gui_state.open_popup_font) {
+        this->gui_state.open_popup_font = false;
+        ImGui::OpenPopup("Font");
+    }
+    bool open = true;
+    if (ImGui::BeginPopupModal("Font", &open, (ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))) {
+
+        bool close_popup = false;
+
+        ImFont* font_current = ImGui::GetFont();
+        ImGui::TextUnformatted("Select available font:");
+        if (ImGui::BeginCombo("###select_available_font", font_current->GetDebugName())) {
+            /// first fonts until index this->graph_fonts_reserved are exclusively used by graph in configurator
+            for (int n = static_cast<int>(this->gui_state.graph_fonts_reserved); n < io.Fonts->Fonts.Size; n++) {
+                if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current))) {
+                    io.FontDefault = io.Fonts->Fonts[n];
+                    this->gui_state.default_font_filename.clear();
+                    /// UX: close_popup = true;
+                }
+            }
+            ImGui::EndCombo();
+        }
+
+        ImGui::Separator();
+
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted("Load new font from TTF file:");
+
+        std::string label("Font Size");
+        ImGui::InputInt(label.c_str(), &this->gui_state.font_load_size, 1, 10, ImGuiInputTextFlags_None);
+        // Validate font size
+        if (this->gui_state.font_load_size <= 5) {
+            this->gui_state.font_load_size = 5; // minimum valid font size
+        }
+
+        ImGui::BeginGroup();
+
+        float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
+        ImGui::PushItemWidth(widget_width);
+
+        this->file_browser.Button_Select(this->gui_state.font_input_string_buffer, {"ttf"},
+            megamol::core::param::FilePathParam::Flag_File_RestrictExtension);
+        ImGui::SameLine();
+        ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_input_string_buffer, ImGuiInputTextFlags_None);
+        ImGui::PopItemWidth();
+        // Validate font file before offering load button
+        bool valid_file = megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
+            this->gui_state.font_input_string_buffer, std::string("ttf"));
+
+        if (!valid_file) {
+            megamol::gui::gui_utils::PushReadOnly();
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        }
+        if (ImGui::Button("Add Font")) {
+            this->gui_state.font_load_name = this->gui_state.font_input_string_buffer;
+            this->gui_state.font_load = 1;
+            /// UX: close_popup = true;
+        }
+        std::string help("Same font can be loaded multiple times with different font size.");
+        this->tooltip.Marker(help);
+        if (!valid_file) {
+            ImGui::PopItemFlag();
+            megamol::gui::gui_utils::PopReadOnly();
+            ImGui::SameLine();
+            ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font file name.");
+        }
+
+        ImGui::Separator();
+        if (ImGui::Button("Close") || close_popup || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+            ImGui::CloseCurrentPopup();
+        }
+
+        ImGui::EndGroup();
+
+        ImGui::EndPopup();
+    }
+
     // ABOUT
     if (this->gui_state.open_popup_about) {
         this->gui_state.open_popup_about = false;
         ImGui::OpenPopup("About");
     }
-    bool open = true;
+    open = true;
     if (ImGui::BeginPopupModal("About", &open, (ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))) {
 
         const std::string email("megamol@visus.uni-stuttgart.de");
@@ -1645,13 +1533,17 @@ bool megamol::gui::GUIManager::state_from_string(const std::string& state) {
                 megamol::core::utility::get_json_value<int>(state_str, {"style"}, &style);
                 this->gui_state.style = static_cast<GUIManager::Styles>(style);
                 this->gui_state.style_changed = true;
+
                 megamol::core::utility::get_json_value<std::string>(
-                    state_str, {"font_file_name"}, &this->gui_state.font_load_filename);
+                    state_str, {"font_file_name"}, &this->gui_state.font_load_name);
                 megamol::core::utility::get_json_value<int>(state_str, {"font_size"}, &this->gui_state.font_load_size);
                 this->gui_state.font_load = 2;
+
                 std::string imgui_settings;
                 megamol::core::utility::get_json_value<std::string>(state_str, {"imgui_settings"}, &imgui_settings);
                 this->load_imgui_settings_from_string(imgui_settings);
+                megamol::core::utility::get_json_value<float>(
+                    state_str, {"global_win_background_alpha"}, &this->gui_state.window_alpha);
             }
         }
 
@@ -1673,15 +1565,20 @@ bool megamol::gui::GUIManager::state_from_string(const std::string& state) {
 
 bool megamol::gui::GUIManager::state_to_string(std::string& out_state) {
 
+    ImGuiIO& io = ImGui::GetIO();
+
     try {
         out_state.clear();
         nlohmann::json json_state;
 
         json_state[GUI_JSON_TAG_GUI]["menu_visible"] = this->gui_state.menu_visible;
         json_state[GUI_JSON_TAG_GUI]["style"] = static_cast<int>(this->gui_state.style);
-        json_state[GUI_JSON_TAG_GUI]["font_file_name"] = this->gui_state.font_load_filename;
-        json_state[GUI_JSON_TAG_GUI]["font_size"] = this->gui_state.font_load_size;
+        json_state[GUI_JSON_TAG_GUI]["font_file_name"] =
+            ((this->gui_state.default_font_filename.empty()) ? (this->extract_fontname(io.FontDefault->GetDebugName()))
+                                                             : (this->gui_state.default_font_filename));
+        json_state[GUI_JSON_TAG_GUI]["font_size"] = ImGui::GetFontSize();
         json_state[GUI_JSON_TAG_GUI]["imgui_settings"] = this->save_imgui_settings_to_string();
+        json_state[GUI_JSON_TAG_GUI]["global_win_background_alpha"] = this->gui_state.window_alpha;
 
         // Write window configurations
         this->win_collection.StateToJSON(json_state);

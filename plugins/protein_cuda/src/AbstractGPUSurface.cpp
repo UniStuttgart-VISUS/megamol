@@ -10,8 +10,7 @@
 
 #include "AbstractGPUSurface.h"
 #include "ogl_error_check.h"
-#include "stdafx.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;

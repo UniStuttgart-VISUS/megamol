@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
 //#include "vislib/Map.h"
 #include "vislib/String.h"
 #include "vislib/tchar.h"
@@ -32,7 +31,7 @@ namespace param {
  * sets values sooner than the user code defining the valid
  * contents is executed.
  */
-class MEGAMOLCORE_API FlexEnumParam : public AbstractParam {
+class FlexEnumParam : public AbstractParam {
 public:
     typedef std::set<std::string> Storage_t;
 

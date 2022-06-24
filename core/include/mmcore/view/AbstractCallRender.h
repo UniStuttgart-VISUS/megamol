@@ -28,7 +28,7 @@ namespace view {
  *
  * Handles the output buffer control.
  */
-class MEGAMOLCORE_API AbstractCallRender : public InputCall {
+class AbstractCallRender : public InputCall {
 public:
     static const unsigned int FnRender = 5;
     static const unsigned int FnGetExtents = 6;
@@ -317,7 +317,7 @@ private:
  * call (bounding boxes, temporal extents).
  */
 template<typename FBO, const char* NAME, const char* DESC>
-class MEGAMOLCORE_API BaseCallRender : public AbstractCallRender {
+class BaseCallRender : public AbstractCallRender {
 public:
     using FBO_TYPE = FBO;
 

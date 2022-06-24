@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "ParticleRelaxationModule.h"
-#include "stdafx.h"
 #include <algorithm>
 
 using namespace megamol;

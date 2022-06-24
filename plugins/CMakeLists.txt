@@ -3,6 +3,8 @@
 # All rights reserved.
 #
 
+include(CMakeDependentOption)
+
 # megamol_plugin()
 #
 # Parameters:
@@ -14,7 +16,7 @@
 
 function(megamol_plugin PLUGIN_NAME)
   # Parse arguments
-  set(optionArgs DEPENDS_CUDA DEPENDS_GL)
+  set(optionArgs ALWAYS_BUILD DEPENDS_CUDA DEPENDS_GL)
   set(oneValueArgs DIR BUILD_DEFAULT)
   set(multiValueArgs DEPENDS_PLUGINS DEPENDS_EXTERNALS)
   cmake_parse_arguments(MMPLUGIN_ARGS "${optionArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -46,17 +48,10 @@ function(megamol_plugin PLUGIN_NAME)
     endif ()
   endif ()
 
-  # Enable plugin build option
-  option(BUILD_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" ${MMPLUGIN_ARGS_BUILD_DEFAULT})
+  # Enable plugin build option, show only if requirements are available and not always build
+  cmake_dependent_option(BUILD_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" "${MMPLUGIN_ARGS_BUILD_DEFAULT}" "REQUIREMENTS_AVAILABLE;NOT MMPLUGIN_ARGS_ALWAYS_BUILD" OFF)
 
-  # Show plugin option only to user if all requirements are available
-  if (REQUIREMENTS_AVAILABLE)
-    mark_as_advanced(CLEAR BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
-  else ()
-    mark_as_advanced(FORCE BUILD_PLUGIN_${PLUGIN_NAME_UPPER})
-  endif ()
-
-  if (BUILD_PLUGIN_${PLUGIN_NAME_UPPER} AND REQUIREMENTS_AVAILABLE)
+  if ((BUILD_PLUGIN_${PLUGIN_NAME_UPPER} OR MMPLUGIN_ARGS_ALWAYS_BUILD) AND REQUIREMENTS_AVAILABLE)
 
     # Set plugin enabled flag
     set(${PLUGIN_NAME}_PLUGIN_ENABLED ON PARENT_SCOPE)
@@ -112,10 +107,11 @@ function(megamol_plugin PLUGIN_NAME)
     endforeach ()
 
     # Link
+    target_link_libraries(${PLUGIN_NAME}
+      PUBLIC OpenMP::OpenMP_CXX
+      PRIVATE core)
     if (ENABLE_GL)
       target_link_libraries(${PLUGIN_NAME} PRIVATE core_gl)
-    else ()
-      target_link_libraries(${PLUGIN_NAME} PRIVATE core)
     endif ()
     target_link_libraries(${PLUGIN_NAME}
       PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}

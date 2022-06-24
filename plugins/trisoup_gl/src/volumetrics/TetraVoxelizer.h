@@ -4,10 +4,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/utility/sys/ThreadPool.h"
 #include "trisoup/volumetrics/JobStructures.h"
 #include "trisoup/volumetrics/TagVolume.h"
 #include "vislib/math/ShallowShallowTriangle.h"
+#include "vislib/sys/ThreadPool.h"
 
 namespace megamol {
 namespace trisoup_gl {

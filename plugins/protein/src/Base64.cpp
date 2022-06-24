@@ -9,7 +9,8 @@
 //
 
 #include "Base64.h"
-#include "stdafx.h"
+
+#include <memory>
 
 using namespace megamol::protein;
 
@@ -104,7 +105,7 @@ const char Base64::MapDecode[128] = {
 /*
  * Base64::Encode
  */
-void Base64::Encode(const char* input, char* output, SIZE_T s) {
+void Base64::Encode(const char* input, char* output, size_t s) {
 
     char bytes[3];
     uint nfillers;
@@ -140,7 +141,7 @@ void Base64::Encode(const char* input, char* output, SIZE_T s) {
 /*
  * Base64::Decode
  */
-void Base64::Decode(const char* input, char* output, SIZE_T s) {
+void Base64::Decode(const char* input, char* output, size_t s) {
     char bytes[4];
     uint nFillers;
     // Decode byte triples

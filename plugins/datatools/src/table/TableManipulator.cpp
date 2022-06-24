@@ -6,7 +6,6 @@
  */
 
 #include "TableManipulator.h"
-#include "stdafx.h"
 
 #include "mmcore/param/StringParam.h"
 

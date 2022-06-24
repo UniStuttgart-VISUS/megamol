@@ -96,6 +96,7 @@ protected:
      */
     virtual bool Render(core_gl::view::CallRender3DGL& call);
 
+#if 0
     /**
      * Callback for mouse events (move, press, and release)
      *
@@ -104,6 +105,7 @@ protected:
      * @param flags The mouse flags
      */
     virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
+#endif
 
 private:
     struct lastCamState_t {

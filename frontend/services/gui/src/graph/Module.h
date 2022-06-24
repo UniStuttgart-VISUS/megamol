@@ -12,9 +12,9 @@
 
 #include "CallSlot.h"
 #include "ParameterGroups.h"
+#include "mmcore/MultiPerformanceHistory.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
-
 
 namespace megamol {
 namespace gui {
@@ -155,11 +155,50 @@ public:
     void SetScreenPosition(ImVec2 pos) {
         this->gui_set_screen_position = pos;
     }
+#ifdef PROFILING
+    void SetProfilingData(void* ptr, frontend_resources::PerformanceManager* perf_manager) {
+        this->profiling_parent_pointer = ptr;
+
+        auto handles = perf_manager->lookup_timers(ptr);
+        for (auto& h : handles) {
+            auto& conf = perf_manager->lookup_config(h);
+            switch (conf.api) {
+            case frontend_resources::PerformanceManager::query_api::CPU:
+                this->cpu_perf_history.emplace(std::make_pair(h, core::MultiPerformanceHistory()));
+                this->cpu_perf_history[h].set_name(conf.name);
+                break;
+            case frontend_resources::PerformanceManager::query_api::OPENGL:
+                this->gl_perf_history.emplace(std::make_pair(h, core::MultiPerformanceHistory()));
+                this->gl_perf_history[h].set_name(conf.name);
+                break;
+            }
+        }
+    }
+
+    void* GetProfilingParent() {
+        return this->profiling_parent_pointer;
+    }
+
+    void AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
+        const frontend_resources::PerformanceManager::timer_entry& entry);
+
+    bool ShowProfiling() {
+        return this->show_profiling_data;
+    }
+
+    void DrawProfiling(GraphItemsState_t& state);
+
+    ImVec2 GetProfilingButtonPosition() {
+        return this->profiling_button_position;
+    }
+
+#endif
 
 private:
     // VARIABLES --------------------------------------------------------------
 
     const ImGuiID uid;
+    // TODO place StockModule (Properties?) here instead
     const std::string class_name;
     const std::string description;
     const std::string plugin_name;
@@ -184,9 +223,26 @@ private:
     ImVec2 gui_set_screen_position;
     bool gui_set_selected_slot_position;
     bool gui_hidden;
+    bool gui_other_item_hovered;
 
     HoverToolTip gui_tooltip;
     PopUps gui_rename_popup;
+
+#ifdef PROFILING
+
+    std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
+        cpu_perf_history;
+    std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
+        gl_perf_history;
+    void* profiling_parent_pointer;
+    float profiling_window_height; // determine dynamically
+    bool show_profiling_data;
+    ImageWidget gui_profiling_button;
+    ImageWidget gui_profiling_run_button;
+    bool pause_profiling_history_update;
+    ImVec2 profiling_button_position;
+
+#endif // PROFILING
 
     // FUNCTIONS --------------------------------------------------------------
 

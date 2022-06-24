@@ -7,7 +7,6 @@
 
 #include "MMPLDWriter.h"
 #include "mmcore/BoundingBoxes.h"
-#include "stdafx.h"
 #include <algorithm>
 
 #include "mmcore/param/BoolParam.h"
@@ -15,9 +14,9 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/Thread.h"
 #include "vislib/String.h"
 #include "vislib/sys/FastFile.h"
+#include "vislib/sys/Thread.h"
 
 namespace megamol::moldyn::io {
 

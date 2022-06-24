@@ -11,19 +11,19 @@
 #define MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H
 
 #include "CUDACurl.cuh"
-#include "CUDAMarchingCubes.h"
 #include "UniGrid3D.h"
 #include "protein_calls/CrystalStructureDataCall.h"
+#include "quicksurf/CUDAMarchingCubes.h"
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
 #include "mmcore/BoundingBoxes.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLGeometryShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -31,7 +31,7 @@ namespace protein_cuda {
 /**
  * Renderer class combining volume rendering and raycasting.
  */
-class CrystalStructureVolumeRenderer : public core::view::Renderer3DModuleDS {
+class CrystalStructureVolumeRenderer : public core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -63,8 +63,6 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        if (!vislib::graphics::gl::GLSLShader::AreExtensionsAvailable())
-            return false;
         return true;
     }
 
@@ -188,7 +186,7 @@ protected:
      * @param[in] call The calling call.
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * Initialize parameters for the LIC calculation and setup random texture.
@@ -209,7 +207,7 @@ protected:
      * @param[in] call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::Call& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     /**
      * Render the vector field as arrows glyphs.
@@ -666,10 +664,10 @@ private:
     GLuint uniGridColorTex;
 
     /// Frame buffer object for raycasting
-    vislib::graphics::gl::FramebufferObject rcFbo;
+    vislib_gl::graphics::gl::FramebufferObject rcFbo;
 
     /// Frame buffer object for opaque objects of the scene
-    vislib::graphics::gl::FramebufferObject srcFbo;
+    vislib_gl::graphics::gl::FramebufferObject srcFbo;
 
     /// Texture for curl magnitude
     GLuint curlMagTex;
@@ -679,25 +677,25 @@ private:
 
 
     /// Shader for rendering volume slice
-    vislib::graphics::gl::GLSLShader vrShader;
+    vislib_gl::graphics::gl::GLSLShader vrShader;
 
     /// Shader for rendering spheres
-    vislib::graphics::gl::GLSLShader sphereShader;
+    vislib_gl::graphics::gl::GLSLShader sphereShader;
 
     /// Shader for rendering arrows
-    vislib::graphics::gl::GLSLGeometryShader arrowShader;
+    vislib_gl::graphics::gl::GLSLGeometryShader arrowShader;
 
     /// Shader for rendering cylinders
-    vislib::graphics::gl::GLSLShader cylinderShader;
+    vislib_gl::graphics::gl::GLSLShader cylinderShader;
 
     /// Shader for raycasting
-    vislib::graphics::gl::GLSLShader rcShader;
+    vislib_gl::graphics::gl::GLSLShader rcShader;
 
     /// Shader for rendering the cube backface
-    vislib::graphics::gl::GLSLShader rcShaderDebug;
+    vislib_gl::graphics::gl::GLSLShader rcShaderDebug;
 
     /// Shader for per pixel lighting and clipping
-    vislib::graphics::gl::GLSLShader pplShaderClip;
+    vislib_gl::graphics::gl::GLSLShader pplShaderClip;
 
     /// Attribute array for cylinder shader
     GLint attribLocInParams;
@@ -712,7 +710,7 @@ private:
     GLint attribLocColor2;
 
     /// Shader for per pixel lighting
-    vislib::graphics::gl::GLSLShader pplShader;
+    vislib_gl::graphics::gl::GLSLShader pplShader;
 
 
     /// Array for current frame
@@ -835,6 +833,8 @@ private:
     /// The number of visible ti edges
     unsigned int edgeCntTi;
 
+    unsigned int width, height;
+
     /// Call time of the last frame
     float callTimeOld;
 
@@ -845,7 +845,7 @@ private:
     vislib::math::Vector<int, 2> srcFboDim;
 
     /// Camera information
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
 
     /// CUDA Parameters for curl calculation
     CurlGridParams params;

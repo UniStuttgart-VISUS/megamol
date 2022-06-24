@@ -6,7 +6,6 @@
  */
 
 #include "mmcore_gl/view/special/ScreenShooter.h"
-#include "stdafx.h"
 
 #include <climits>
 #include <limits>
@@ -27,7 +26,6 @@
 #include "mmcore/utility/DateTime.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/Thread.h"
 #include "mmcore_gl/view/CallRenderViewGL.h"
 #include "png.h"
 #include "vislib/Trace.h"
@@ -36,6 +34,7 @@
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/File.h"
+#include "vislib/sys/Thread.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 namespace megamol {
@@ -244,13 +243,13 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters)
     if (!reducedParameters)
         this->MakeSlotAvailable(&this->imageFilenameSlot);
 
-    core::param::EnumParam* bkgnd = new core::param::EnumParam(0);
-    bkgnd->SetTypePair(0, "Scene Background");
-    bkgnd->SetTypePair(1, "Transparent");
-    bkgnd->SetTypePair(2, "White");
-    bkgnd->SetTypePair(3, "Black");
-    bkgnd->SetTypePair(4, "Render Raster");
-    this->backgroundSlot << bkgnd;
+    core::param::EnumParam* background = new core::param::EnumParam(0);
+    background->SetTypePair(0, "Scene Background");
+    background->SetTypePair(1, "Transparent");
+    background->SetTypePair(2, "White");
+    background->SetTypePair(3, "Black");
+    background->SetTypePair(4, "Render Raster");
+    this->backgroundSlot << background;
     this->MakeSlotAvailable(&this->backgroundSlot);
 
     this->triggerButtonSlot << new core::param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::ALT);
@@ -407,9 +406,9 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
             Log::DefaultLog.WriteInfo("Animation screen shooting aborted: unable to fetch time code");
         }
     }
-    int bkgndMode = this->backgroundSlot.Param<core::param::EnumParam>()->Value();
+    int backgroundMode = this->backgroundSlot.Param<core::param::EnumParam>()->Value();
     bool closeAfter = this->closeAfterShotSlot.Param<core::param::BoolParam>()->Value();
-    data.bpp = (bkgndMode == 1) ? 4 : 3;
+    data.bpp = (backgroundMode == 1) ? 4 : 3;
     data.pngInfoPtr = NULL;
     data.pngPtr = NULL;
 
@@ -482,7 +481,7 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
         png_set_text(data.pngPtr, data.pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
 
         png_set_IHDR(data.pngPtr, data.pngInfoPtr, data.imgWidth, data.imgHeight, 8,
-            (bkgndMode == 1) ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+            (backgroundMode == 1) ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
             PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
         // check how complex the upcoming action is
@@ -506,9 +505,9 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
                 throw vislib::Exception("Cannot allocate image buffer.", __FILE__, __LINE__);
             }
 
-            switch (bkgndMode) {
+            switch (backgroundMode) {
             case 0:
-                crv.SetBackgroundColor(view->BkgndColour());
+                crv.SetBackgroundColor(view->BackgroundColor());
                 break;
             case 1:
                 crv.SetBackgroundColor(glm::vec4(0, 0, 0, 1));
@@ -522,7 +521,7 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
             case 4:
                 crv.SetBackgroundColor(glm::vec4(255.0f / 192.0f, 255.0f / 192.0f, 255.0f / 192.0f, 1));
                 break;
-            default: /* don't set bkgnd */
+            default: /* don't set background */
                 break;
             }
 
@@ -536,15 +535,15 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
 
             currentFbo->bindToRead(0);
             glGetError();
-            glReadPixels(0, 0, currentFbo->getWidth(), currentFbo->getHeight(), (bkgndMode == 1) ? GL_RGBA : GL_RGB,
-                GL_UNSIGNED_BYTE, buffer);
+            glReadPixels(0, 0, currentFbo->getWidth(), currentFbo->getHeight(),
+                (backgroundMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, buffer);
             glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
             if (glGetError() != GL_NO_ERROR) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[ScreenShooter] Failed to create Screenshot: Cannot read image data.\n");
             }
 
-            if (bkgndMode == 1) {
+            if (backgroundMode == 1) {
                 // fixing alpha from premultiplied to postmultiplied
                 for (UINT x = 0; x < data.imgWidth; x++) {
                     for (UINT y = 0; y < data.imgHeight; y++) {
@@ -730,9 +729,9 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
                     }
 
                     // render a tile
-                    switch (bkgndMode) {
+                    switch (backgroundMode) {
                     case 0:
-                        crv.SetBackgroundColor(view->BkgndColour());
+                        crv.SetBackgroundColor(view->BackgroundColor());
                         break;
                     case 1:
                         crv.SetBackgroundColor(glm::vec4(0, 0, 0, 1));
@@ -750,7 +749,7 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
                             crv.SetBackgroundColor(glm::vec4(255.0f / 128.0f, 255.0f / 128.0f, 255.0f / 128.0f, 1));
                         }
                         break;
-                    default: /* don't set bkgnd */
+                    default: /* don't set background */
                         break;
                     }
 
@@ -767,13 +766,13 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
                     currentFbo->bindToRead(0);
                     glGetError();
                     glReadPixels(0, 0, currentFbo->getWidth(), currentFbo->getHeight(),
-                        (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, buffer);
+                        (backgroundMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, buffer);
                     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
                     if (glGetError() != GL_NO_ERROR) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[ScreenShooter] Failed to create Screenshot: Cannot read image data.\n");
                     }
-                    if (bkgndMode == 1) {
+                    if (backgroundMode == 1) {
                         // fixing alpha from premultiplied to postmultiplied
                         for (UINT x = 0; x < data.tileWidth; x++) {
                             for (UINT y = 0; y < data.tileHeight; y++) {
@@ -941,12 +940,9 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
 
     if (closeAfter) {
         this->running = false;
-        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
-            this->GetCoreInstance()->Shutdown();
-        } else {
-            /// XXX TODO Tell any frontend service to shutdown
-            Log::DefaultLog.WriteError("'close after' option is not yet supported for new megamol frontend.");
-        }
+
+        /// XXX TODO Tell any frontend service to shutdown
+        Log::DefaultLog.WriteError("'close after' option is not yet supported for new megamol frontend.");
     }
 }
 
@@ -977,18 +973,10 @@ bool view::special::ScreenShooter::triggerButtonClicked(core::param::ParamSlot& 
         core::ViewInstance* vi = nullptr;
         core::view::AbstractView* av = nullptr;
 
-        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
-            AbstractNamedObjectContainer::ptr_type anoc =
-                AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
-            AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
-            vi = dynamic_cast<core::ViewInstance*>(ano.get());
-            av = dynamic_cast<core::view::AbstractView*>(ano.get());
-        } else {
-            auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
-            auto module_ptr = megamolgraph.FindModule(std::string(mvn.PeekBuffer()));
-            vi = dynamic_cast<core::ViewInstance*>(module_ptr.get());
-            av = dynamic_cast<core::view::AbstractView*>(module_ptr.get());
-        }
+        auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+        auto module_ptr = megamolgraph.FindModule(std::string(mvn.PeekBuffer()));
+        vi = dynamic_cast<core::ViewInstance*>(module_ptr.get());
+        av = dynamic_cast<core::view::AbstractView*>(module_ptr.get());
 
         if (vi != nullptr) {
             if (vi->View() != nullptr) {
@@ -1051,14 +1039,9 @@ megamol::core::param::ParamSlot* view::special::ScreenShooter::findTimeParam(cor
     if (name.IsEmpty()) {
         timeSlot = dynamic_cast<core::param::ParamSlot*>(view->FindNamedObject("anim::time").get());
     } else {
-        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
-            AbstractNamedObjectContainer* anoc = dynamic_cast<AbstractNamedObjectContainer*>(view->RootModule().get());
-            timeSlot = dynamic_cast<core::param::ParamSlot*>(anoc->FindNamedObject(vislib::StringA(name)).get());
-        } else {
-            auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
-            std::string fullname = std::string(view->Name().PeekBuffer()) + "::" + std::string(name.PeekBuffer());
-            timeSlot = megamolgraph.FindParameterSlot(fullname);
-        }
+        auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+        std::string fullname = std::string(view->Name().PeekBuffer()) + "::" + std::string(name.PeekBuffer());
+        timeSlot = megamolgraph.FindParameterSlot(fullname);
     }
 
     return timeSlot;

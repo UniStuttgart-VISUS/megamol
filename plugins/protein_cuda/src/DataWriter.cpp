@@ -8,18 +8,17 @@
  */
 
 #include "DataWriter.h"
-#include "stdafx.h"
 
 #define _USE_MATH_DEFINES 1
 
 #include <fstream>
 #include <sstream>
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <GL/glu.h>
 
-#include "CUDAQuickSurf.h"
 #include "mmcore/utility/log/Log.h"
+#include "quicksurf/CUDAQuickSurf.h"
 
 #include "helper_cuda.h"
 #include <cuda_gl_interop.h>
@@ -662,10 +661,11 @@ bool protein_cuda::DataWriter::CalcMapDipoleAvg(protein_calls::CrystalStructureD
 
     // compute both density map and floating point color texture map
     CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
-    int rc = cqs->calc_map(dc->GetCellCnt(), &xyzr[0], &color[0], true, this->origin, this->numvoxels,
+    int rc = cqs->calc_map(dc->GetCellCnt(), &xyzr[0], &color[0], true, CUDAQuickSurf::VolTexFormat::RGB3F,
+        this->origin, this->numvoxels,
         2.5f, // Max radius
         1.0f, // radius scaling
-        gridspacing, isoval, gausslim);
+        gridspacing, isoval, gausslim, false);
 
     if (rc == 0) {
         free(xyzr);
@@ -787,10 +787,11 @@ bool protein_cuda::DataWriter::CalcMapTiDisplAvg(protein_calls::CrystalStructure
 
     // compute both density map and floating point color texture map
     CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
-    int rc = cqs->calc_map(dc->GetCellCnt(), &xyzr[0], &this->addedTiDispl[0], true, this->origin, this->numvoxels,
+    int rc = cqs->calc_map(dc->GetCellCnt(), &xyzr[0], &this->addedTiDispl[0], true, CUDAQuickSurf::VolTexFormat::RGB3F,
+        this->origin, this->numvoxels,
         2.5f, // Max radius
         1.0f, // radius scaling
-        gridspacing, isoval, gausslim);
+        gridspacing, isoval, gausslim, false);
 
     if (rc == 0) {
         free(xyzr);

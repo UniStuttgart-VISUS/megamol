@@ -66,14 +66,15 @@
 #define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.75f, 0.5f, 1.0f))
 
 // Texture File Names
-#define GUI_DEFAULT_FONT_ROBOTOSANS ("Roboto-Regular.ttf")
-#define GUI_DEFAULT_FONT_SOURCECODEPRO ("SourceCodePro-Regular.ttf")
-#define GUI_TRANSPORT_ICON_PLAY ("transport_ctrl_play.png")
-#define GUI_TRANSPORT_ICON_PAUSE ("transport_ctrl_pause.png")
-#define GUI_TRANSPORT_ICON_FAST_FORWARD ("transport_ctrl_fast-forward.png")
-#define GUI_TRANSPORT_ICON_FAST_REWIND ("transport_ctrl_fast-rewind.png")
-#define GUI_VIEWCUBE_ROTATION_ARROW ("viewcube_rotation_arrow.png")
-#define GUI_VIEWCUBE_UP_ARROW ("viewcube_up_arrow.png")
+#define GUI_FILENAME_FONT_DEFAULT_ROBOTOSANS ("Roboto-Regular.ttf")
+#define GUI_FILENAME_FONT_DEFAULT_SOURCECODEPRO ("SourceCodePro-Regular.ttf")
+#define GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY ("transport_ctrl_play.png")
+#define GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE ("transport_ctrl_pause.png")
+#define GUI_FILENAME_TEXTURE_TRANSPORT_ICON_FAST_FORWARD ("transport_ctrl_fast-forward.png")
+#define GUI_FILENAME_TEXTURE_TRANSPORT_ICON_FAST_REWIND ("transport_ctrl_fast-rewind.png")
+#define GUI_FILENAME_TEXTURE_VIEWCUBE_ROTATION_ARROW ("viewcube_rotation_arrow.png")
+#define GUI_FILENAME_TEXTURE_VIEWCUBE_UP_ARROW ("viewcube_up_arrow.png")
+#define GUI_FILENAME_TEXTURE_PROFILING_BUTTON ("profiling_button.png")
 
 
 #ifdef WITH_GL
@@ -258,10 +259,12 @@ typedef struct _interact_state_ {
     ImVec2 module_param_child_position;              // out
     bool module_show_label;                          // in
 
-    ImGuiID call_selected_uid;  // in out
-    ImGuiID call_hovered_uid;   // in out
-    bool call_show_label;       // in
-    bool call_show_slots_label; // in
+    ImGuiID call_selected_uid;       // in out
+    ImGuiID call_hovered_uid;        // in out
+    bool call_show_label;            // in
+    bool call_show_slots_label;      // in
+    unsigned int call_coloring_mode; // in
+    unsigned int call_coloring_map;  // in
 
     ImGuiID slot_dropped_uid; // in out
 
@@ -280,6 +283,9 @@ typedef struct _interact_state_ {
 
     bool graph_is_running; // in
 
+    bool profiling_pause_update; // in out
+    bool profiling_show;         // in out
+
 } GraphItemsInteract_t;
 
 /* Data type holding shared state of graph items. */
@@ -295,6 +301,7 @@ typedef struct _graph_state_ {
     FontScalingArray_t graph_zoom_font_scalings; // in
     float graph_width;                           // in
     bool show_parameter_sidebar;                 // in
+    bool show_profiling_bar;                     // in
     megamol::gui::HotkeyMap_t hotkeys;           // in out
     ImGuiID graph_selected_uid;                  // out
     bool graph_delete;                           // out
@@ -363,16 +370,30 @@ public:
     }
 
     /**
-     * Returns true if both strings equal each other case insensitively.
+     * Returns true if both strings have same length(!) and equal each other case insensitively.
      *
      * @param source   One string.
      * @param search   Second string.
      */
-    static bool CaseInsensitiveStringCompare(std::string const& str1, std::string const& str2) {
+    static bool CaseInsensitiveStringEqual(std::string const& str1, std::string const& str2) {
 
         return ((str1.size() == str2.size()) &&
                 std::equal(str1.begin(), str1.end(), str2.begin(),
                     [](char const& c1, char const& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); }));
+    }
+
+    /**
+     * Returns true if check string is contained in reference string case insensitively.
+     *
+     * @param ref_str   Reference string.
+     * @param chk_str   String to check if contained in reference string.
+     */
+    static bool CaseInsensitiveStringContain(std::string const& ref_str, std::string const& chk_str) {
+
+        if (ref_str.size() < chk_str.size())
+            return false;
+        return std::equal(chk_str.begin(), chk_str.end(), ref_str.begin(),
+            [](char const& c1, char const& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); });
     }
 
     /*

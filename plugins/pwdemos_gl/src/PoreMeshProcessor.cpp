@@ -6,12 +6,11 @@
  */
 
 #include "PoreMeshProcessor.h"
-#include "stdafx.h"
 //#include "vislib/Array.h"
 #include "mmcore/utility/log/Log.h"
 //#include "vislib/math/Point.h"
-#include "mmcore/utility/sys/Thread.h"
-//#include "mmcore/utility/sys/MemmappedFile.h"
+#include "vislib/sys/Thread.h"
+//#include "vislib/sys/MemmappedFile.h"
 //#include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowPoint.h"
 

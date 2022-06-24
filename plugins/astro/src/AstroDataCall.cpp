@@ -6,7 +6,6 @@
  */
 
 #include "astro/AstroDataCall.h"
-#include "stdafx.h"
 
 using namespace megamol::astro;
 

@@ -82,6 +82,12 @@ public:
         >
         Max_t;
 
+    typedef std::variant<std::monostate, // default (unused/unavailable)
+        float,                           // FLOAT
+        int                              // INT
+        >
+        Step_t;
+
     typedef std::variant<std::monostate,               // default (unused/unavailable)
         megamol::core::view::KeyCode,                  // BUTTON
         EnumStorage_t,                                 // ENUM
@@ -97,6 +103,7 @@ public:
         std::string default_value;
         Min_t minval;
         Max_t maxval;
+        Step_t stepsize;
         Storage_t storage;
         bool gui_visibility;
         bool gui_read_only;
@@ -126,8 +133,8 @@ public:
 
     // ----------------------------
 
-    Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minval, Max_t maxval, const std::string& param_name,
-        const std::string& description);
+    Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minval, Max_t maxval, Step_t step,
+        const std::string& param_name, const std::string& description);
 
     ~Parameter() override;
 
@@ -205,17 +212,22 @@ public:
     }
 
     template<typename T>
-    const T& GetMinValue() const {
+    T const& GetMinValue() const {
         return std::get<T>(this->minval);
     }
 
     template<typename T>
-    const T& GetMaxValue() const {
+    T const& GetMaxValue() const {
         return std::get<T>(this->maxval);
     }
 
     template<typename T>
-    const T& GetStorage() const {
+    T const& GetStepSize() const {
+        return std::get<T>(this->stepsize);
+    }
+
+    template<typename T>
+    T const& GetStorage() const {
         return std::get<T>(this->storage);
     }
 
@@ -262,6 +274,9 @@ public:
     void SetMaxValue(T maxv);
 
     template<typename T>
+    void SetStepSize(T step);
+
+    template<typename T>
     void SetStorage(T store);
 
     inline void SetExtended(bool extended) {
@@ -281,6 +296,7 @@ private:
 
     Min_t minval;
     Max_t maxval;
+    Step_t stepsize;
     Storage_t storage;
     Value_t value;
 
@@ -292,10 +308,11 @@ private:
     const std::string gui_float_format;
     std::string gui_help;
     std::string gui_tooltip_text;
-    std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> gui_widget_store;
+    std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> gui_widget_value;
+    Step_t gui_widget_stepsize;
     unsigned int gui_set_focus;
     bool gui_state_dirty;
-    bool gui_show_minmax;
+    bool gui_show_minmaxstep;
     FileBrowserWidget gui_file_browser;
     HoverToolTip gui_tooltip;
     ImageWidget gui_image_widget;
@@ -324,14 +341,14 @@ private:
     bool widget_filepath(
         WidgetScope scope, const std::string& label, std::filesystem::path& val, const FilePathStorage_t& store);
     bool widget_ternary(WidgetScope scope, const std::string& label, vislib::math::Ternary& val);
-    bool widget_int(WidgetScope scope, const std::string& label, int& val, int minv, int maxv);
-    bool widget_float(WidgetScope scope, const std::string& label, float& val, float minv, float maxv);
+    bool widget_int(WidgetScope scope, const std::string& label, int& val, int minv, int maxv, int& step);
+    bool widget_float(WidgetScope scope, const std::string& label, float& val, float minv, float maxv, float& step);
     bool widget_vector2f(WidgetScope scope, const std::string& label, glm::vec2& val, glm::vec2 minv, glm::vec2 maxv);
     bool widget_vector3f(WidgetScope scope, const std::string& label, glm::vec3& val, glm::vec3 minv, glm::vec3 maxv);
     bool widget_vector4f(WidgetScope scope, const std::string& label, glm::vec4& val, glm::vec4 minv, glm::vec4 maxv);
     bool widget_pinvaluetomouse(WidgetScope scope, const std::string& label, const std::string& val);
     bool widget_transfer_function_editor(WidgetScope scope);
-    bool widget_knob(WidgetScope scope, const std::string& label, float& val, float minv, float maxv);
+    bool widget_knob(WidgetScope scope, const std::string& label, float& val, float minv, float maxv, float step);
     bool widget_rotation_axes(
         WidgetScope scope, const std::string& label, glm::vec4& val, glm::vec4 minv, glm::vec4 maxv);
     bool widget_rotation_direction(
@@ -401,6 +418,20 @@ void Parameter::SetMaxValue(T maxv) {
 
     if (std::holds_alternative<T>(this->maxval)) {
         this->maxval = maxv;
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
+}
+
+template<typename T>
+void Parameter::SetStepSize(T step) {
+
+    if (std::holds_alternative<T>(this->stepsize)) {
+        if (std::get<T>(this->stepsize) != step) {
+            this->stepsize = step;
+            this->value_dirty = true;
+        }
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);

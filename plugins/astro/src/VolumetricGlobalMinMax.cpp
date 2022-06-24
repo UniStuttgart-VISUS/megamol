@@ -6,7 +6,6 @@
  */
 
 #include "VolumetricGlobalMinMax.h"
-#include "stdafx.h"
 
 #include "mmcore/utility/log/Log.h"
 

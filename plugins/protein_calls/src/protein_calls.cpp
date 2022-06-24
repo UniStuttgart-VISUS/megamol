@@ -8,15 +8,16 @@
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "protein_calls/BindingSiteCall.h"
-#include "protein_calls/CallMouseInput.h"
 #include "protein_calls/CrystalStructureDataCall.h"
 #include "protein_calls/DiagramCall.h"
 #include "protein_calls/IntSelectionCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/PerAtomFloatCall.h"
+#include "protein_calls/RamachandranDataCall.h"
 #include "protein_calls/ResidueSelectionCall.h"
 #include "protein_calls/SplitMergeCall.h"
 #include "protein_calls/TunnelResidueDataCall.h"
+#include "protein_calls/UncertaintyDataCall.h"
 #include "protein_calls/VTIDataCall.h"
 #include "protein_calls/VariantMatchDataCall.h"
 
@@ -46,9 +47,10 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::SplitMergeCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::VariantMatchDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::VTIDataCall>();
-        this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::CallMouseInput>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::PerAtomFloatCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::TunnelResidueDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::RamachandranDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::protein_calls::UncertaintyDataCall>();
     }
 };
 } // namespace megamol::protein_calls

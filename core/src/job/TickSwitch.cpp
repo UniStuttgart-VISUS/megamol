@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "TickSwitch.h"
-#include "stdafx.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/job/TickCall.h"

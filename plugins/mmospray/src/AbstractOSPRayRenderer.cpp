@@ -11,15 +11,14 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "mmcore/view/light/AmbientLight.h"
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore/view/light/HDRILight.h"
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/view/light/QuadLight.h"
 #include "mmcore/view/light/SpotLight.h"
-#include "stdafx.h"
 #include "vislib/sys/Path.h"
+#include "vislib/sys/SystemInformation.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -354,9 +353,9 @@ void AbstractOSPRayRenderer::RendererSettings(glm::vec4 bg_color) {
     _renderer->setParam("maxPathLength", this->_rd_maxRecursion.Param<core::param::IntParam>()->Value());
 
     if (this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value() != "") {
-        ::ospray::cpp::Texture bkgnd_tex =
+        ::ospray::cpp::Texture background_tex =
             this->TextureFromFile(this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value().string().c_str());
-        _renderer->setParam("map_backplate", bkgnd_tex);
+        _renderer->setParam("map_backplate", background_tex);
     } else {
         _renderer->setParam("backgroundColor", convertToVec4f(bg_color));
     }

@@ -11,7 +11,6 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "stdafx.h"
 
 using namespace megamol::core::view::light;
 
@@ -42,11 +41,11 @@ TriDirectionalLighting::TriDirectionalLighting(void)
     this->MakeSlotAvailable(&this->m_in_view_space);
 
     this->m_key_direction.Parameter()->SetGUIPresentation(
-        core::param::AbstractParamPresentation::Presentation::Rotation);
+        core::param::AbstractParamPresentation::Presentation::Direction);
     this->m_fill_direction.Parameter()->SetGUIPresentation(
-        core::param::AbstractParamPresentation::Presentation::Rotation);
+        core::param::AbstractParamPresentation::Presentation::Direction);
     this->m_back_direction.Parameter()->SetGUIPresentation(
-        core::param::AbstractParamPresentation::Presentation::Rotation);
+        core::param::AbstractParamPresentation::Presentation::Direction);
 }
 
 /*

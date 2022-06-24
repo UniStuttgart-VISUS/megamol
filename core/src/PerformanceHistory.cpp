@@ -42,5 +42,5 @@ double PerformanceHistory::operator[](int index) const {
 
 int PerformanceHistory::offset(const int index, const int offset) {
     auto o = offset % buffer_length;
-    return (index + offset + buffer_length) % megamol::core::PerformanceHistory::buffer_length;
+    return (index + offset + buffer_length) % buffer_length;
 }

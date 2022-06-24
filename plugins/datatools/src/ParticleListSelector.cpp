@@ -6,7 +6,6 @@
  */
 #include "ParticleListSelector.h"
 #include "mmcore/param/IntParam.h"
-#include "stdafx.h"
 
 using namespace megamol;
 

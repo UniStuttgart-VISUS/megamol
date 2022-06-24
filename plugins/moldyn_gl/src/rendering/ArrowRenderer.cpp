@@ -6,7 +6,6 @@
  */
 
 #include "ArrowRenderer.h"
-#include "stdafx.h"
 
 #include "mmcore/view/light/DistantLight.h"
 
@@ -389,7 +388,7 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 fal = glGetAttribLocationARB(this->arrowShader, "flags");
                 glEnableVertexAttribArrayARB(fal);
                 // TODO highly unclear whether this works fine
-                glBindBuffer(GL_ARRAY_BUFFER, flags->flags->getName());
+                flags->flags->bind(GL_ARRAY_BUFFER);
                 //flags->flags->bindAs(GL_ARRAY_BUFFER);
                 glVertexAttribIPointer(fal, 1, GL_UNSIGNED_INT, 0, nullptr);
             }

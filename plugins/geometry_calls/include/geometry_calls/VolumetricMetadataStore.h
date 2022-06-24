@@ -10,8 +10,6 @@
 #include <array>
 #include <vector>
 
-#include "mmcore/api/MegaMolCore.std.h"
-
 #include "geometry_calls/VolumetricDataCallTypes.h"
 
 

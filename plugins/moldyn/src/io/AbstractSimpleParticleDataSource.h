@@ -10,7 +10,6 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
 
 
@@ -20,7 +19,7 @@ namespace megamol::datatools::io {
 /**
  * Abstract base class for simple particle loaders (single time step = no animation)
  */
-class MEGAMOLCORE_API AbstractSimpleParticleDataSource : public core::Module {
+class AbstractSimpleParticleDataSource : public core::Module {
 public:
 protected:
     /** Ctor. */

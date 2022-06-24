@@ -8,7 +8,6 @@
 #include "glm/glm.hpp"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "stdafx.h"
 
 using namespace megamol;
 

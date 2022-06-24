@@ -15,6 +15,7 @@
 #include "ImagePresentationEntryPoints.h"
 #include "KeyboardMouse_Events.h"
 #include "OpenGL_Context.h"
+#include "PerformanceManager.h"
 #include "ProjectLoader.h"
 #include "RuntimeConfig.h"
 #include "ScriptPaths.h"
@@ -61,7 +62,11 @@ bool GUI_Service::init(const Config& config) {
         "RuntimeConfig",                              // 10 - resource paths
         "optional<WindowManipulation>",               // 11 - GLFW window pointer
         frontend_resources::CommandRegistry_Req_Name, // 12 - Command registry
-        "ImagePresentationEntryPoints"                // 13 - Entry point
+        "ImagePresentationEntryPoints",               // 13 - Entry point
+        "ExecuteLuaScript",                           // 14 - Execute Lua Scripts (from Console)
+#ifdef PROFILING
+        frontend_resources::PerformanceManager_Req_Name // 15 - Performance Manager
+#endif
     };
 
     this->m_gui = std::make_shared<megamol::gui::GUIManager>();
@@ -83,9 +88,6 @@ bool GUI_Service::init(const Config& config) {
     this->m_providedStateResource.provide_gui_scale = [&](float scale) -> void {
         return this->resource_provide_gui_scale(scale);
     };
-    this->resource_provide_gui_visibility(m_config.gui_show);
-    this->resource_provide_gui_scale(m_config.gui_scale);
-
     this->m_providedRegisterWindowResource.register_window =
         [&](const std::string& name, std::function<void(megamol::gui::AbstractWindow::BasicConfig&)> func) -> void {
         this->resource_register_window(name, func);
@@ -99,8 +101,9 @@ bool GUI_Service::init(const Config& config) {
         this->resource_register_notification(name, open, message);
     };
 
-    this->m_gui->SetVisibility(m_config.gui_show);
-    this->m_gui->SetScale(m_config.gui_scale);
+    // NB: Config values are applied before project file values and therefore overwritten by project settings
+    this->resource_provide_gui_visibility(m_config.gui_show);
+    this->resource_provide_gui_scale(m_config.gui_scale);
 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully");
 
@@ -272,7 +275,7 @@ void GUI_Service::preGraphRender() {
         // Synchronise changes between core graph and gui graph
         if ((this->m_megamol_graph != nullptr) && (this->m_config.core_instance != nullptr)) {
             // Requires enabled OpenGL context, e.g. for textures used in parameters
-            this->m_gui->SynchronizeRunningGraph((*this->m_megamol_graph), (*this->m_config.core_instance));
+            this->m_gui->GraphSynchronization((*this->m_megamol_graph), (*this->m_config.core_instance));
         }
         this->m_gui->PreDraw(this->m_framebuffer_size, this->m_window_size, this->m_time);
     }
@@ -350,13 +353,30 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     auto& image_presentation = const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
         this->m_requestedResourceReferences[13]
             .getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
+    const std::string gui_entry_point_name = "GUI_Service";
     bool view_presentation_ok = image_presentation.add_entry_point(
-        "GUI_Service", {static_cast<void*>(this->m_gui.get()), std::function{gui_rendering_execution},
-                           std::function{get_gui_runtime_resources_requests}});
+        gui_entry_point_name, {static_cast<void*>(this->m_gui.get()), std::function{gui_rendering_execution},
+                                  std::function{get_gui_runtime_resources_requests}});
+    view_presentation_ok &= image_presentation.set_entry_point_priority(
+        gui_entry_point_name, 100); // render after views (default priority is 0)
     if (!view_presentation_ok) {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "GUI_Service: error adding graph entry point ... image presentation service rejected GUI Service.");
     }
+
+    m_exec_lua = const_cast<megamol::frontend_resources::common_types::lua_func_type*>(
+        &m_requestedResourceReferences[14].getResource<frontend_resources::common_types::lua_func_type>());
+    m_gui->SetLuaFunc(m_exec_lua);
+
+#ifdef PROFILING
+    // PerformanceManager
+    perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
+        &this->m_requestedResourceReferences[15].getResource<megamol::frontend_resources::PerformanceManager>());
+    // this needs to happen before the first (gui) module is spawned to help it look up the timers
+    m_gui->SetPerformanceManager(perf_manager);
+    perf_manager->subscribe_to_updates(
+        [&](const frontend_resources::PerformanceManager::frame_info& fi) { m_gui->AppendPerformanceData(fi); });
+#endif
 }
 
 

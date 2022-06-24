@@ -30,7 +30,7 @@ bool megamol::gui::PickableCube::Draw(unsigned int picking_id, int& inout_select
 
     // Create texture once
     if (!this->image_up_arrow.IsLoaded()) {
-        this->image_up_arrow.LoadTextureFromFile(GUI_VIEWCUBE_UP_ARROW);
+        this->image_up_arrow.LoadTextureFromFile(GUI_FILENAME_TEXTURE_VIEWCUBE_UP_ARROW);
     }
 
     // Create shader once -----------------------------------------------------
@@ -466,7 +466,7 @@ bool megamol::gui::PickableTexture::Draw(unsigned int picking_id, int selected_f
 
     // Create texture once
     if (!this->image_rotation_arrow.IsLoaded()) {
-        this->image_rotation_arrow.LoadTextureFromFile(GUI_VIEWCUBE_ROTATION_ARROW);
+        this->image_rotation_arrow.LoadTextureFromFile(GUI_FILENAME_TEXTURE_VIEWCUBE_ROTATION_ARROW);
     }
 
     // Create shader once -----------------------------------------------------

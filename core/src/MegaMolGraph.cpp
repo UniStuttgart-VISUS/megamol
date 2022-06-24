@@ -1,20 +1,15 @@
-#include <iostream>
-
 #include "mmcore/MegaMolGraph.h"
-#include "stdafx.h"
-
 #include "mmcore/AbstractSlot.h"
-
+#include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/view/AbstractView_EventConsumption.h"
 
 #include <algorithm>
 #include <cctype>
+#include <iostream>
 #include <numeric> // std::accumulate
 #include <string>
 
-#include "mmcore/param/ButtonParam.h"
-
-#include "mmcore/view/AbstractView_EventConsumption.h"
 
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
 static std::vector<std::string> splitPathName(std::string const& path) {
@@ -397,7 +392,11 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(
     this->provided_resources_lookup = {resources};
 
     auto [success, graph_resources] = provided_resources_lookup.get_requested_resources(
-        {"ImagePresentationEntryPoints", megamol::frontend_resources::CommandRegistry_Req_Name});
+        {"ImagePresentationEntryPoints", megamol::frontend_resources::CommandRegistry_Req_Name,
+#ifdef PROFILING
+            megamol::frontend_resources::PerformanceManager_Req_Name
+#endif
+        });
 
     if (!success)
         return false;
@@ -408,6 +407,11 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(
     m_command_registry = &const_cast<megamol::frontend_resources::CommandRegistry&>(
         graph_resources[1].getResource<megamol::frontend_resources::CommandRegistry>());
 
+#ifdef PROFILING
+    m_perf_manager = &const_cast<frontend_resources::PerformanceManager&>(
+        graph_resources[2].getResource<megamol::frontend_resources::PerformanceManager>());
+#endif
+
     return true;
 }
 
@@ -416,10 +420,10 @@ megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenienc
 }
 
 void megamol::core::MegaMolGraph::Clear() {
-    // currently entry points are expected to be graph modules, i.e. views
-    // therefore it is ok for us to clear all entry points if the graph shuts down
     call_list_.clear();
-    m_image_presentation->clear_entry_points();
+    for (auto& m : module_list_)
+        if (m.isGraphEntryPoint)
+            m_image_presentation->remove_entry_point(m.request.id);
     graph_entry_points.clear();
     module_list_.clear();
 }
@@ -595,7 +599,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
             if (!slots.empty()) {
                 slot_names = "";
                 for (auto x = 0; x < slots.size() - 1; ++x) {
-                    slot_names += slots[x]->Name();
+                    slot_names += slots[x]->Name() + ", ";
                 }
                 slot_names += slots[slots.size() - 1]->Name();
             }
@@ -615,7 +619,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
             if (!slots.empty()) {
                 slot_names = "";
                 for (auto x = 0; x < slots.size() - 1; ++x) {
-                    slot_names += slots[x]->Name();
+                    slot_names += slots[x]->Name() + ", ";
                 }
                 slot_names += slots[slots.size() - 1]->Name();
             }
@@ -654,6 +658,17 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 
     log("create call: " + request.from + " -> " + request.to + " (" + std::string(call_description->ClassName()) + ")");
     this->call_list_.emplace_front(CallInstance_t{call, request});
+#ifdef PROFILING
+    auto the_call = call.get();
+    //printf("adding timers for @ %p = %s \n", reinterpret_cast<void*>(the_call), the_call->GetDescriptiveText().c_str());
+    the_call->cpu_queries =
+        m_perf_manager->add_timers(the_call, frontend_resources::PerformanceManager::query_api::CPU);
+    if (the_call->GetCapabilities().OpenGLRequired()) {
+        the_call->gl_queries =
+            m_perf_manager->add_timers(the_call, frontend_resources::PerformanceManager::query_api::OPENGL);
+    }
+    the_call->perf_man = m_perf_manager;
+#endif
 
     return true;
 }
@@ -743,6 +758,14 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
                   std::string(call_it->callPtr->ClassName()) + "\n(" + request.from + " -> " + request.to + ")");
         return false;
     }
+
+#ifdef PROFILING
+    auto the_call = call_it->callPtr;
+    m_perf_manager->remove_timers(the_call->cpu_queries);
+    if (the_call->GetCapabilities().OpenGLRequired()) {
+        m_perf_manager->remove_timers(the_call->gl_queries);
+    }
+#endif
 
     source->SetCleanupMark(true);
     source->DisconnectCalls();

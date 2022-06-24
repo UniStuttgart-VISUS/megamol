@@ -19,7 +19,7 @@ static std::filesystem::path getHomeDir() {
 // find megamol executable path
 static std::filesystem::path getExecutableDirectory() {
     std::filesystem::path path;
-#ifdef WIN32
+#ifdef _WIN32
     std::vector<wchar_t> filename;
     DWORD length;
     do {
@@ -102,15 +102,18 @@ static std::string disable_opengl_option = "nogl";
 static std::string vsync_option = "vsync";
 static std::string window_option = "w,window";
 static std::string fullscreen_option = "f,fullscreen";
+static std::string force_window_size_option = "force-window-size";
 static std::string nodecoration_option = "nodecoration";
 static std::string topmost_option = "topmost";
 static std::string nocursor_option = "nocursor";
+static std::string hidden_option = "hidden";
 static std::string interactive_option = "i,interactive";
 static std::string guishow_option = "guishow";
 static std::string nogui_option = "nogui";
 static std::string guiscale_option = "guiscale";
 static std::string privacynote_option = "privacynote";
 static std::string versionnote_option = "versionnote";
+static std::string profile_log_option = "profiling-log";
 static std::string param_option = "param";
 static std::string remote_head_option = "headnode";
 static std::string remote_render_option = "rendernode";
@@ -123,6 +126,7 @@ static std::string remote_headnode_broadcast_project_option = "headnode-broadcas
 static std::string remote_headnode_connect_at_start_option = "headnode-connect-at-start";
 static std::string framebuffer_option = "framebuffer";
 static std::string viewport_tile_option = "tile";
+static std::string vr_service_option = "vr";
 static std::string help_option = "h,help";
 
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
@@ -164,6 +168,11 @@ static void versionnote_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.show_version_note = parsed_options[option_name].as<bool>();
 };
+
+static void profile_log_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.profiling_output_file = parsed_options[option_name].as<std::string>();
+}
 
 static void remote_head_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
@@ -379,6 +388,10 @@ static void no_opengl_handler(
     config.no_opengl = parsed_options[option_name].as<bool>();
 #endif
 };
+static void force_window_size_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.force_window_size = parsed_options[option_name].as<bool>();
+};
 static void fullscreen_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::fullscreen;
@@ -395,6 +408,11 @@ static void nocursor_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::nocursor;
 };
+static void hidden_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::hidden;
+};
+
 
 static void interactive_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
@@ -463,6 +481,32 @@ static void viewport_tile_handler(
     }
 };
 
+static void vr_service_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    auto string = parsed_options[option_name].as<std::string>();
+    // --vr=[off|unitykolab]
+
+    std::vector<std::pair<std::string, RuntimeConfig::VRMode>> options = {
+        {"off", RuntimeConfig::VRMode::Off},
+#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+        {"unitykolab", RuntimeConfig::VRMode::UnityKolab},
+#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+    };
+
+    auto match = [&](std::string const& string) -> RuntimeConfig::VRMode {
+        auto find = std::find_if(options.begin(), options.end(), [&](auto const& opt) { return opt.first == string; });
+
+        if (find != options.end())
+            return find->second;
+
+        exit("vr service cli option needs to be one of the following: " +
+             std::accumulate(options.begin(), options.end(), std::string{},
+                 [](auto const& a, auto const& b) { return a + "  " + b.first; }));
+    };
+
+    config.vr_mode = match(string);
+};
+
 using OptionsListEntry = std::tuple<std::string, std::string, std::shared_ptr<cxxopts::Value>,
     std::function<void(std::string const&, cxxopts::ParseResult const&, megamol::frontend::RuntimeConfig&)>>;
 
@@ -496,10 +540,14 @@ std::vector<OptionsListEntry> cli_options_list =
             no_opengl_handler},
         {window_option, "Set the window size and position, syntax: --window WIDTHxHEIGHT[+POSX+POSY]",
             cxxopts::value<std::string>(), window_handler},
+        {force_window_size_option,
+            "Force size of the window, otherwise the given size is only a recommendation for the window manager",
+            cxxopts::value<bool>(), force_window_size_handler},
         {fullscreen_option, "Open maximized window", cxxopts::value<bool>(), fullscreen_handler},
         {nodecoration_option, "Open window without decorations", cxxopts::value<bool>(), nodecoration_handler},
         {topmost_option, "Open window that stays on top of all others", cxxopts::value<bool>(), topmost_handler},
         {nocursor_option, "Do not show mouse cursor inside window", cxxopts::value<bool>(), nocursor_handler},
+        {hidden_option, "Do not show the window", cxxopts::value<bool>(), hidden_handler},
         {interactive_option, "Run MegaMol even if some project file failed to load", cxxopts::value<bool>(),
             interactive_handler},
         {project_files_option, "Project file(s) to load at startup", cxxopts::value<std::vector<std::string>>(),
@@ -511,7 +559,13 @@ std::vector<OptionsListEntry> cli_options_list =
         {privacynote_option, "Show privacy note when taking screenshot, use '=false' to disable",
             cxxopts::value<bool>(), privacynote_handler},
         {versionnote_option, "Show version warning when loading a project, use '=false' to disable",
-            cxxopts::value<bool>(), versionnote_handler},
+            cxxopts::value<bool>(), versionnote_handler}
+#ifdef PROFILING
+        ,
+        {profile_log_option, "Enable performance counters and set output to file", cxxopts::value<std::string>(),
+            profile_log_handler}
+#endif
+        ,
         {param_option, "Set MegaMol Graph parameter to value: --param param=value",
             cxxopts::value<std::vector<std::string>>(), param_handler},
         {remote_head_option, "Start HeadNode server and run Remote_Service test ", cxxopts::value<bool>(),
@@ -541,6 +595,8 @@ std::vector<OptionsListEntry> cli_options_list =
             "LWIDTHxLHEIGHT is the local framebuffer resolution, "
             "GWIDTHxGHEIGHT is the global framebuffer resolution",
             cxxopts::value<std::string>(), viewport_tile_handler},
+        {vr_service_option, "VR Service mode: --vr=[off|unitykolab], off by default", cxxopts::value<std::string>(),
+            vr_service_handler},
         {help_option, "Print help message", cxxopts::value<bool>(), empty_handler}};
 
 static std::string loong(std::string const& option) {

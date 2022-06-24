@@ -7,7 +7,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "stdafx.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
@@ -91,10 +90,6 @@ SplitMergeRenderer::~SplitMergeRenderer(void) {
  * SplitMergeRenderer::create
  */
 bool SplitMergeRenderer::create() {
-
-    if (isExtAvailable("GL_NV_path_rendering") != GL_TRUE) {
-        return false;
-    }
 
     this->numChars = 256; // 0x110000;
     this->fontBase = glGenPathsNV(numChars);

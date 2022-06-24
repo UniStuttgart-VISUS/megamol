@@ -9,16 +9,14 @@
 //
 
 #include "ComparativeMolSurfaceRenderer.h"
-#include "stdafx.h"
 
 //#define USE_TIMER
 //#define VERBOSE
 
-#include "DiffusionSolver.h"
-#include "RMS.h"
 #include "VBODataCall.h"
 #include "ogl_error_check.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/RMSD.h"
 #include "protein_calls/VTIDataCall.h"
 
 #include "mmcore/CoreInstance.h"
@@ -26,8 +24,10 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/AbstractCallRender3D.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include <algorithm>
 // For profiling
@@ -36,7 +36,7 @@
 #include <cmath>
 #include <sstream>
 
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;
@@ -130,7 +130,7 @@ void ComparativeMolSurfaceRenderer::computeDensityBBox(
  * ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer
  */
 ComparativeMolSurfaceRenderer::ComparativeMolSurfaceRenderer(void)
-        : Renderer3DModuleDS()
+        : Renderer3DModuleGL()
         , vboSlaveSlot1("vboOut1", "Provides access to the vbo containing data for data set #1")
         , vboSlaveSlot2("vboOut2", "Provides access to the vbo containing data for data set #2")
         , molDataSlot1("molIn1", "Input molecule #1")
@@ -685,9 +685,9 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
     int rc = cqs->calc_map(mol->AtomCount(), &this->gridDataPos.Peek()[0],
         NULL,  // Pointer to 'color' array
         false, // Do not use 'color' array
-        (float*)&this->volOrg, (int*)&this->volDim, this->maxAtomRad,
+        CUDAQuickSurf::VolTexFormat::RGB3F, (float*)&this->volOrg, (int*)&this->volDim, this->maxAtomRad,
         this->qsRadScl, // Radius scaling
-        this->qsGridDelta, this->qsIsoVal, this->qsGaussLim);
+        this->qsGridDelta, this->qsIsoVal, this->qsGaussLim, false);
 
     //    printf("QUICKSURF PARAMETERS");
     //    printf("Particle count %u\n", mol->AtomCount());
@@ -722,7 +722,7 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
  * ComparativeMolSurfaceRenderer::create
  */
 bool ComparativeMolSurfaceRenderer::create(void) {
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     // Create quicksurf objects
     if (!this->cudaqsurf1) {
@@ -733,39 +733,25 @@ bool ComparativeMolSurfaceRenderer::create(void) {
     }
 
     // Init extensions
-    if (!ogl_IsVersionGEQ(2, 0) || !isExtAvailable("GL_EXT_texture3D") ||
+    /*if (!ogl_IsVersionGEQ(2, 0) || !isExtAvailable("GL_EXT_texture3D") ||
         !isExtAvailable("GL_EXT_framebuffer_object") || !isExtAvailable("GL_ARB_multitexture") ||
         !isExtAvailable("GL_ARB_draw_buffers") || !isExtAvailable("GL_ARB_copy_buffer") ||
         !isExtAvailable("GL_ARB_vertex_buffer_object")) {
         return false;
-    }
-
-    if (!DeformableGPUSurfaceMT::InitExtensions()) {
-        return false;
-    }
-
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
+    }*/
 
     // Load shader sources
     ShaderSource vertSrc, fragSrc, geomSrc;
 
-    core::CoreInstance* ci = this->GetCoreInstance();
-    if (!ci) {
-        return false;
-    }
-
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load shader for per pixel lighting of the surface
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::vertex", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertex", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::fragment", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragment", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
@@ -781,15 +767,13 @@ bool ComparativeMolSurfaceRenderer::create(void) {
     }
 
     // Load shader for per pixel lighting of the surface
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::vertexMapped", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertexMapped", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::fragmentMapped", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragmentMapped", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
@@ -805,15 +789,13 @@ bool ComparativeMolSurfaceRenderer::create(void) {
     }
 
     // Load shader for per pixel lighting of the surface
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::vertexWithFlag", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertexWithFlag", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::fragmentWithFlag", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragmentWithFlag", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
@@ -830,15 +812,13 @@ bool ComparativeMolSurfaceRenderer::create(void) {
     }
 
     // Load shader for per pixel lighting of the surface
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::vertexUncertainty", vertSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertexUncertainty", vertSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::fragmentUncertainty", fragSrc)) {
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragmentUncertainty", fragSrc)) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
@@ -881,8 +861,8 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
             uint posCnt1 = 0, posCnt2 = 0;
 
             // (Re)-allocate memory if necessary
-            this->rmsPosVec1.Validate(mol1->AtomCount() * 3);
-            this->rmsPosVec2.Validate(mol2->AtomCount() * 3);
+            this->rmsPosVec1.resize(mol1->AtomCount());
+            this->rmsPosVec2.resize(mol2->AtomCount());
 
             // Extracting protein atoms from mol 1
             for (uint sec = 0; sec < mol1->SecondaryStructureCount(); ++sec) {
@@ -897,12 +877,8 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
                         return false;
                     }
                     for (uint at = 0; at < aminoAcid->AtomCount(); ++at) {
-                        this->rmsPosVec1.Peek()[3 * posCnt1 + 0] =
-                            mol1->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 0];
-                        this->rmsPosVec1.Peek()[3 * posCnt1 + 1] =
-                            mol1->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 1];
-                        this->rmsPosVec1.Peek()[3 * posCnt1 + 2] =
-                            mol1->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 2];
+                        this->rmsPosVec1[posCnt1] =
+                            glm::make_vec3(&mol1->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 0]);
                         posCnt1++;
                     }
                 }
@@ -921,12 +897,8 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
                         return false;
                     }
                     for (uint at = 0; at < aminoAcid->AtomCount(); ++at) {
-                        this->rmsPosVec2.Peek()[3 * posCnt2 + 0] =
-                            mol2->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 0];
-                        this->rmsPosVec2.Peek()[3 * posCnt2 + 1] =
-                            mol2->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 1];
-                        this->rmsPosVec2.Peek()[3 * posCnt2 + 2] =
-                            mol2->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 2];
+                        this->rmsPosVec2[posCnt2] =
+                            glm::make_vec3(&mol2->AtomPositions()[3 * (aminoAcid->FirstAtomIndex() + at) + 0]);
                         posCnt2++;
                     }
                 }
@@ -943,8 +915,8 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
 
         } else if (this->fittingMode == RMS_BACKBONE) { // Use backbone atoms for RMS fitting
             // (Re)-allocate memory if necessary
-            this->rmsPosVec1.Validate(mol1->AtomCount() * 3);
-            this->rmsPosVec2.Validate(mol2->AtomCount() * 3);
+            this->rmsPosVec1.resize(mol1->AtomCount());
+            this->rmsPosVec2.resize(mol2->AtomCount());
 
             uint posCnt1 = 0, posCnt2 = 0;
 
@@ -974,21 +946,13 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
 
                     //                    printf("c alpha idx %u, cCarbIdx %u, o idx %u, n idx %u\n",
                     //                            cAlphaIdx, cCarbIdx, oIdx, nIdx); // DEBUG
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 0] = mol1->AtomPositions()[3 * cAlphaIdx + 0];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 1] = mol1->AtomPositions()[3 * cAlphaIdx + 1];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 2] = mol1->AtomPositions()[3 * cAlphaIdx + 2];
+                    this->rmsPosVec1[posCnt1] = glm::make_vec3(&mol1->AtomPositions()[3 * cAlphaIdx]);
                     posCnt1++;
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 0] = mol1->AtomPositions()[3 * cCarbIdx + 0];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 1] = mol1->AtomPositions()[3 * cCarbIdx + 1];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 2] = mol1->AtomPositions()[3 * cCarbIdx + 2];
+                    this->rmsPosVec1[posCnt1] = glm::make_vec3(&mol1->AtomPositions()[3 * cCarbIdx]);
                     posCnt1++;
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 0] = mol1->AtomPositions()[3 * oIdx + 0];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 1] = mol1->AtomPositions()[3 * oIdx + 1];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 2] = mol1->AtomPositions()[3 * oIdx + 2];
+                    this->rmsPosVec1[posCnt1] = glm::make_vec3(&mol1->AtomPositions()[3 * oIdx]);
                     posCnt1++;
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 0] = mol1->AtomPositions()[3 * nIdx + 0];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 1] = mol1->AtomPositions()[3 * nIdx + 1];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 2] = mol1->AtomPositions()[3 * nIdx + 2];
+                    this->rmsPosVec1[posCnt1] = glm::make_vec3(&mol1->AtomPositions()[3 * nIdx]);
                     posCnt1++;
                 }
             }
@@ -1017,21 +981,13 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
                             ->OIndex();
                     //                    printf("amino acid idx %u, c alpha idx %u, cCarbIdx %u, o idx %u, n idx %u\n", secStructure.
                     //                            FirstAminoAcidIndex()+acid, cAlphaIdx, cCarbIdx, oIdx, nIdx);
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 0] = mol2->AtomPositions()[3 * cAlphaIdx + 0];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 1] = mol2->AtomPositions()[3 * cAlphaIdx + 1];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 2] = mol2->AtomPositions()[3 * cAlphaIdx + 2];
+                    this->rmsPosVec2[posCnt2] = glm::make_vec3(&mol2->AtomPositions()[3 * cAlphaIdx]);
                     posCnt2++;
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 0] = mol2->AtomPositions()[3 * cCarbIdx + 0];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 1] = mol2->AtomPositions()[3 * cCarbIdx + 1];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 2] = mol2->AtomPositions()[3 * cCarbIdx + 2];
+                    this->rmsPosVec2[posCnt2] = glm::make_vec3(&mol2->AtomPositions()[3 * cCarbIdx]);
                     posCnt2++;
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 0] = mol2->AtomPositions()[3 * oIdx + 0];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 1] = mol2->AtomPositions()[3 * oIdx + 1];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 2] = mol2->AtomPositions()[3 * oIdx + 2];
+                    this->rmsPosVec2[posCnt2] = glm::make_vec3(&mol2->AtomPositions()[3 * oIdx]);
                     posCnt2++;
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 0] = mol2->AtomPositions()[3 * nIdx + 0];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 1] = mol2->AtomPositions()[3 * nIdx + 1];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 2] = mol2->AtomPositions()[3 * nIdx + 2];
+                    this->rmsPosVec2[posCnt2] = glm::make_vec3(&mol2->AtomPositions()[3 * nIdx]);
                     posCnt2++;
                 }
             }
@@ -1060,8 +1016,8 @@ atoms instead.",
             posCnt = posCnt1;
         } else if (this->fittingMode == RMS_C_ALPHA) { // Use C alpha atoms for RMS fitting
             // (Re)-allocate memory if necessary
-            this->rmsPosVec1.Validate(mol1->AtomCount() * 3);
-            this->rmsPosVec2.Validate(mol2->AtomCount() * 3);
+            this->rmsPosVec1.resize(mol1->AtomCount());
+            this->rmsPosVec2.resize(mol2->AtomCount());
 
             uint posCnt1 = 0, posCnt2 = 0;
 
@@ -1098,9 +1054,7 @@ atoms instead.",
                 const MolecularDataCall::Residue* residue = mol1->Residues()[res];
                 if (residue->Identifier() == MolecularDataCall::Residue::AMINOACID) {
                     uint cAlphaIdx = ((const MolecularDataCall::AminoAcid*)(residue))->CAlphaIndex();
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 0] = mol1->AtomPositions()[3 * cAlphaIdx + 0];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 1] = mol1->AtomPositions()[3 * cAlphaIdx + 1];
-                    this->rmsPosVec1.Peek()[3 * posCnt1 + 2] = mol1->AtomPositions()[3 * cAlphaIdx + 2];
+                    this->rmsPosVec1[posCnt1] = glm::make_vec3(&mol1->AtomPositions()[3 * cAlphaIdx]);
                     //                    printf("ADDING ATOM POS 1 %f %f %f\n",
                     //                            this->rmsPosVec1.Peek()[3*posCnt1+0],
                     //                            this->rmsPosVec1.Peek()[3*posCnt1+1],
@@ -1136,9 +1090,7 @@ atoms instead.",
                 const MolecularDataCall::Residue* residue = mol2->Residues()[res];
                 if (residue->Identifier() == MolecularDataCall::Residue::AMINOACID) {
                     uint cAlphaIdx = ((const MolecularDataCall::AminoAcid*)(residue))->CAlphaIndex();
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 0] = mol2->AtomPositions()[3 * cAlphaIdx + 0];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 1] = mol2->AtomPositions()[3 * cAlphaIdx + 1];
-                    this->rmsPosVec2.Peek()[3 * posCnt2 + 2] = mol2->AtomPositions()[3 * cAlphaIdx + 2];
+                    this->rmsPosVec2[posCnt2] = glm::make_vec3(&mol2->AtomPositions()[3 * cAlphaIdx]);
                     //                    printf("ADDING ATOM POS 2 %f %f %f\n",
                     //                            this->rmsPosVec2.Peek()[3*posCnt2+0],
                     //                            this->rmsPosVec2.Peek()[3*posCnt2+1],
@@ -1179,8 +1131,7 @@ atoms instead.",
 
         // Compute centroid
         for (int cnt = 0; cnt < static_cast<int>(posCnt); ++cnt) {
-            this->rmsCentroid += Vec3f(this->rmsPosVec2.Peek()[cnt * 3 + 0], this->rmsPosVec2.Peek()[cnt * 3 + 1],
-                this->rmsPosVec2.Peek()[cnt * 3 + 2]);
+            this->rmsCentroid += Vec3f(this->rmsPosVec2[cnt].x, this->rmsPosVec2[cnt].y, this->rmsPosVec2[cnt].z);
         }
         this->rmsCentroid /= static_cast<float>(posCnt);
         //        printf("posCnt %u\n", posCnt);
@@ -1199,37 +1150,19 @@ atoms instead.",
         //                this->rmsCentroid.PeekComponents()[2]);
 
         // Do actual RMSD calculations
-        this->rmsMask.Validate(posCnt);
-        this->rmsWeights.Validate(posCnt);
-#pragma omp parallel for
-        for (int a = 0; a < static_cast<int>(posCnt); ++a) {
-            this->rmsMask.Peek()[a] = 1;
-            this->rmsWeights.Peek()[a] = 1.0f;
-        }
+        auto rmsres = protein_calls::CalculateRMSD(this->rmsPosVec2, this->rmsPosVec1, RMSDMode::RMSD_CALC_MATRICES);
+        this->rmsValue = rmsres.rmsdValue;
 
-        float rotation[3][3], translation[3];
-
-        this->rmsValue = CalculateRMS(posCnt, // Number of positions in each vector
-            true,                             // Do fit positions
-            2,                                // Save rotation/translation
-            this->rmsWeights.Peek(),          // Weights for the particles
-            this->rmsMask.Peek(),             // Which particles should be considered
-            this->rmsPosVec2.Peek(),          // Vector to be fitted
-            this->rmsPosVec1.Peek(),          // Vector
-            rotation,                         // Saves the rotation matrix
-            translation                       // Saves the translation vector
-        );
-
-        this->rmsTranslation.Set(translation[0], translation[1], translation[2]);
-        this->rmsRotation.SetAt(0, 0, rotation[0][0]);
-        this->rmsRotation.SetAt(0, 1, rotation[0][1]);
-        this->rmsRotation.SetAt(0, 2, rotation[0][2]);
-        this->rmsRotation.SetAt(1, 0, rotation[1][0]);
-        this->rmsRotation.SetAt(1, 1, rotation[1][1]);
-        this->rmsRotation.SetAt(1, 2, rotation[1][2]);
-        this->rmsRotation.SetAt(2, 0, rotation[2][0]);
-        this->rmsRotation.SetAt(2, 1, rotation[2][1]);
-        this->rmsRotation.SetAt(2, 2, rotation[2][2]);
+        this->rmsTranslation.Set(rmsres.translationVector.x, rmsres.translationVector.y, rmsres.translationVector.z);
+        this->rmsRotation.SetAt(0, 0, rmsres.rotationMatrix[0][0]);
+        this->rmsRotation.SetAt(0, 1, rmsres.rotationMatrix[0][1]);
+        this->rmsRotation.SetAt(0, 2, rmsres.rotationMatrix[0][2]);
+        this->rmsRotation.SetAt(1, 0, rmsres.rotationMatrix[1][0]);
+        this->rmsRotation.SetAt(1, 1, rmsres.rotationMatrix[1][1]);
+        this->rmsRotation.SetAt(1, 2, rmsres.rotationMatrix[1][2]);
+        this->rmsRotation.SetAt(2, 0, rmsres.rotationMatrix[2][0]);
+        this->rmsRotation.SetAt(2, 1, rmsres.rotationMatrix[2][1]);
+        this->rmsRotation.SetAt(2, 2, rmsres.rotationMatrix[2][2]);
 
         //        printf("translation %.10f %.10f %.10f\n", translation[0],translation[1],translation[2]);
         //        printf("rotation %.10f %.10f %.10f \n %.10f %.10f %.10f \n %.10f %.10f %.10f\n",
@@ -1237,17 +1170,17 @@ atoms instead.",
         //                rotation[1][0], rotation[1][1], rotation[1][2],
         //                rotation[2][0], rotation[2][1], rotation[2][2]);
 
-        this->rmsRotationMatrix.SetAt(0, 0, rotation[0][0]);
-        this->rmsRotationMatrix.SetAt(0, 1, rotation[0][1]);
-        this->rmsRotationMatrix.SetAt(0, 2, rotation[0][2]);
+        this->rmsRotationMatrix.SetAt(0, 0, rmsRotation.GetAt(0, 0));
+        this->rmsRotationMatrix.SetAt(0, 1, rmsRotation.GetAt(0, 1));
+        this->rmsRotationMatrix.SetAt(0, 2, rmsRotation.GetAt(0, 2));
         this->rmsRotationMatrix.SetAt(0, 3, 0.0f);
-        this->rmsRotationMatrix.SetAt(1, 0, rotation[1][0]);
-        this->rmsRotationMatrix.SetAt(1, 1, rotation[1][1]);
-        this->rmsRotationMatrix.SetAt(1, 2, rotation[1][2]);
+        this->rmsRotationMatrix.SetAt(1, 0, rmsRotation.GetAt(1, 0));
+        this->rmsRotationMatrix.SetAt(1, 1, rmsRotation.GetAt(1, 1));
+        this->rmsRotationMatrix.SetAt(1, 2, rmsRotation.GetAt(1, 2));
         this->rmsRotationMatrix.SetAt(2, 3, 0.0f);
-        this->rmsRotationMatrix.SetAt(2, 0, rotation[2][0]);
-        this->rmsRotationMatrix.SetAt(2, 1, rotation[2][1]);
-        this->rmsRotationMatrix.SetAt(2, 2, rotation[2][2]);
+        this->rmsRotationMatrix.SetAt(2, 0, rmsRotation.GetAt(2, 0));
+        this->rmsRotationMatrix.SetAt(2, 1, rmsRotation.GetAt(2, 1));
+        this->rmsRotationMatrix.SetAt(2, 2, rmsRotation.GetAt(2, 2));
         this->rmsRotationMatrix.SetAt(2, 3, 0.0f);
         this->rmsRotationMatrix.SetAt(3, 3, 1.0f);
     }
@@ -1306,7 +1239,7 @@ atoms instead.",
 /*
  * ComparativeMolSurfaceRenderer::GetExtents
  */
-bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
+bool ComparativeMolSurfaceRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL) {
         return false;
@@ -1361,7 +1294,7 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     //    core::BoundingBoxes bboxPotential0 = cmd0->AccessBoundingBoxes();
     core::BoundingBoxes bboxPotential1 = cmd1->AccessBoundingBoxes();
 
-    core::BoundingBoxes bbox_external1, bbox_external2;
+    core::BoundingBoxes_2 bbox_external1, bbox_external2;
     if (ren1 != NULL) {
         bbox_external1 = ren1->AccessBoundingBoxes();
     }
@@ -1377,10 +1310,10 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     bboxTmp = mol0->AccessBoundingBoxes().ObjectSpaceBBox();
     bboxTmp.Union(mol1->AccessBoundingBoxes().ObjectSpaceBBox());
     if (ren1 != NULL) {
-        bboxTmp.Union(bbox_external1.ObjectSpaceBBox());
+        bboxTmp.Union(bbox_external1.BoundingBox());
     }
     if (ren2 != NULL) {
-        bboxTmp.Union(bbox_external2.ObjectSpaceBBox());
+        bboxTmp.Union(bbox_external2.BoundingBox());
     }
     this->bbox.SetObjectSpaceBBox(bboxTmp);
 
@@ -1389,10 +1322,10 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     bboxTmp = mol0->AccessBoundingBoxes().ObjectSpaceClipBox();
     bboxTmp.Union(mol1->AccessBoundingBoxes().ObjectSpaceClipBox());
     if (ren1 != NULL) {
-        bboxTmp.Union(bbox_external1.ObjectSpaceClipBox());
+        bboxTmp.Union(bbox_external1.ClipBox());
     }
     if (ren2 != NULL) {
-        bboxTmp.Union(bbox_external2.ObjectSpaceClipBox());
+        bboxTmp.Union(bbox_external2.ClipBox());
     }
     this->bbox.SetObjectSpaceClipBox(bboxTmp);
 
@@ -1401,10 +1334,10 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     bboxTmp = mol0->AccessBoundingBoxes().WorldSpaceBBox();
     bboxTmp.Union(mol1->AccessBoundingBoxes().WorldSpaceBBox());
     if (ren1 != NULL) {
-        bboxTmp.Union(bbox_external1.WorldSpaceBBox());
+        bboxTmp.Union(bbox_external1.BoundingBox());
     }
     if (ren2 != NULL) {
-        bboxTmp.Union(bbox_external2.WorldSpaceBBox());
+        bboxTmp.Union(bbox_external2.BoundingBox());
     }
     this->bbox.SetWorldSpaceBBox(bboxTmp);
 
@@ -1413,35 +1346,19 @@ bool ComparativeMolSurfaceRenderer::GetExtents(core::Call& call) {
     bboxTmp = mol0->AccessBoundingBoxes().WorldSpaceClipBox();
     bboxTmp.Union(mol1->AccessBoundingBoxes().WorldSpaceClipBox());
     if (ren1 != NULL) {
-        bboxTmp.Union(bbox_external1.WorldSpaceClipBox());
+        bboxTmp.Union(bbox_external1.ClipBox());
     }
     if (ren2 != NULL) {
-        bboxTmp.Union(bbox_external2.WorldSpaceClipBox());
+        bboxTmp.Union(bbox_external2.ClipBox());
     }
     this->bbox.SetWorldSpaceClipBox(bboxTmp);
 
-    float scale;
-    if (!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-
-    float scale2;
-    if (!vislib::math::IsEqual(mol0->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale2 = 2.0f / mol0->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale2 = 1.0f;
-    }
-
     this->bbox.SetObjectSpaceBBox(mol0->AccessBoundingBoxes().ObjectSpaceBBox());
-    this->bbox.MakeScaledWorld(scale2);
 #ifndef USE_PROCEDURAL_DATA
     cr3d->AccessBoundingBoxes() = mol0->AccessBoundingBoxes();
 #else  // USE_PROCEDURAL DATA
     cr3d->AccessBoundingBoxes().SetObjectSpaceBBox(this->bboxParticles);
 #endif // USE_PROCEDURAL DATA
-    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale2);
 
     // The available frame count is determined by the 'compareFrames' parameter
     if (this->cmpMode == COMPARE_1_1) {
@@ -1714,11 +1631,6 @@ void ComparativeMolSurfaceRenderer::release(void) {
     CudaSafeCall(this->surfAttribTex1_D.Release());
     CudaSafeCall(this->surfAttribTex2_D.Release());
 
-    this->rmsPosVec1.Release();
-    this->rmsPosVec2.Release();
-    this->rmsWeights.Release();
-    this->rmsMask.Release();
-
     this->atomPosFitted.Release();
 
     this->gvf.Release();
@@ -1728,7 +1640,7 @@ void ComparativeMolSurfaceRenderer::release(void) {
 /*
  *  ComparativeMolSurfaceRenderer::Render
  */
-bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
+bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) {
     using namespace vislib::math;
 
 #ifdef USE_TIMER
@@ -1738,13 +1650,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     // Update parameters if necessary
     this->updateParams();
 
-    // Get render call
-    core::view::AbstractCallRender3D* cr3d = dynamic_cast<core::view::AbstractCallRender3D*>(&call);
-    if (cr3d == NULL) {
-        return false;
-    }
-
-    float calltime = cr3d->Time();
+    float calltime = call.Time();
 
     if (this->oldCalltime != calltime) {
         this->triggerRMSFit = true;
@@ -2513,7 +2419,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     }
 
     // Get camera information
-    this->cameraInfo = dynamic_cast<core::view::AbstractCallRender3D*>(&call)->GetCameraParameters();
+    this->cameraInfo = call.GetCamera();
 
     /* Rendering of scene objects */
 
@@ -2540,13 +2446,13 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     core::view::CallRender3D* ren1 = this->rendererCallerSlot1.CallAs<core::view::CallRender3D>();
     if (ren1 != NULL) {
         // Call additional renderer
-        ren1->SetCameraParameters(this->cameraInfo);
+        ren1->SetCamera(this->cameraInfo);
         ren1->SetTime(static_cast<float>(frameIdx1));
         glPushMatrix();
         // Revert scaling done by external renderer in advance
         float scaleRevert;
-        if (!vislib::math::IsEqual(ren1->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-            scaleRevert = 2.0f / ren1->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        if (!vislib::math::IsEqual(ren1->AccessBoundingBoxes().BoundingBox().LongestEdge(), 0.0f)) {
+            scaleRevert = 2.0f / ren1->AccessBoundingBoxes().BoundingBox().LongestEdge();
         } else {
             scaleRevert = 1.0f;
         }
@@ -2561,7 +2467,7 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
     core::view::CallRender3D* ren2 = this->rendererCallerSlot2.CallAs<core::view::CallRender3D>();
     if (ren2 != NULL) {
         // Call additional renderer
-        ren2->SetCameraParameters(this->cameraInfo);
+        ren2->SetCamera(this->cameraInfo);
         ren2->SetTime(static_cast<float>(frameIdx2));
         glPushMatrix();
 
@@ -2574,8 +2480,8 @@ bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
 
         // Revert scaling done by external renderer in advance
         float scaleRevert;
-        if (!vislib::math::IsEqual(ren2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-            scaleRevert = 2.0f / ren2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
+        if (!vislib::math::IsEqual(ren2->AccessBoundingBoxes().BoundingBox().LongestEdge(), 0.0f)) {
+            scaleRevert = 2.0f / ren2->AccessBoundingBoxes().BoundingBox().LongestEdge();
         } else {
             scaleRevert = 1.0f;
         }

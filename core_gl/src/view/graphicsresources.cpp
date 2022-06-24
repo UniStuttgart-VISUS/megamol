@@ -6,7 +6,6 @@
  */
 
 #include "mmcore_gl/view/graphicsresources.h"
-#include "stdafx.h"
 #include "vislib_gl/graphics/gl/OutlineFont.h"
 #include "vislib_gl/graphics/gl/Verdana.inc"
 
@@ -30,8 +29,7 @@ static const vislib::graphics::AbstractFont& __openGLVerdanaOutline(void) {
 /*
  * megamol::core::view::GetGlobalFont
  */
-MEGAMOLCORE_API const vislib::graphics::AbstractFont& megamol::core::view::GetGlobalFont(
-    megamol::core::view::FontPurpose purpose) {
+const vislib::graphics::AbstractFont& megamol::core::view::GetGlobalFont(megamol::core::view::FontPurpose purpose) {
     switch (purpose) {
     case FONTPURPOSE_OPENGL_DEFAULT:
         return __openGLVerdanaOutline();

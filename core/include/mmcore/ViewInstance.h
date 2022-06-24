@@ -11,12 +11,18 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/ApiHandle.h"
 #include "mmcore/ModuleNamespace.h"
-#include "mmcore/api/MegaMolCore.h"
 #include "mmcore/view/AbstractView.h"
 #include "vislib/assert.h"
 #include "vislib/forceinline.h"
+
+/**
+ * Function pointer type for view close requests.
+ * TODO Moved here from deleted mmcore/api/MegaMolCore.h as only used here
+ *
+ * @param data The user specified pointer.
+ */
+typedef void (*mmcViewCloseRequestFunction)(void* data);
 
 
 namespace megamol {
@@ -26,7 +32,7 @@ namespace core {
 /**
  * class of view instances.
  */
-class ViewInstance : public ModuleNamespace, public ApiHandle {
+class ViewInstance : public ModuleNamespace {
 public:
     /**
      * Ctor.

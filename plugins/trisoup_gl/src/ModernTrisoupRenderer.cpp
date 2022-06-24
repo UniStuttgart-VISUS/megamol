@@ -434,6 +434,8 @@ bool ModernTrisoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
         bool performLighting = lightingParam_.Param<core::param::BoolParam>()->Value() && !has_external_fbo;
         meshShader_->setUniform("enable_lighting", performLighting);
 
+        meshShader_->setUniform("has_colors", has_colors);
+
         if (has_vertIds) {
             glDrawElements(GL_TRIANGLES, triCount * 3, GL_UNSIGNED_INT, nullptr);
         } else {
@@ -445,7 +447,9 @@ bool ModernTrisoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
         glDisable(GL_DEPTH_TEST);
 
         glFrontFace(frontFace);
-        // TODO reset polygon modes properly
+        glPolygonMode(GL_FRONT, GL_FILL);
+        glPolygonMode(GL_BACK, GL_FILL);
+        glDisable(GL_CULL_FACE);
     }
 
     // reset to old fbo

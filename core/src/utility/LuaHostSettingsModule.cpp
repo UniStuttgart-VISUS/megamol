@@ -3,7 +3,6 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/AutoLock.h"
 #include <cassert>

@@ -11,6 +11,7 @@
 
 
 #include "AbstractWindow.h"
+#include "CommonTypes.h"
 #include "mmcore/utility/log/StreamTarget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
@@ -35,12 +36,22 @@ public:
 
     int sync() override;
 
-    inline const std::vector<LogEntry>& log() const {
+    inline std::vector<LogEntry> const& log() const {
         return this->messages;
+    }
+
+    inline std::vector<size_t> const& warn_log_indices() const {
+        return this->warn_msg_indices;
+    }
+
+    inline std::vector<size_t> const& error_log_indices() const {
+        return this->error_msg_indices;
     }
 
 private:
     std::vector<LogEntry> messages;
+    std::vector<size_t> warn_msg_indices;
+    std::vector<size_t> error_msg_indices;
 };
 
 
@@ -49,6 +60,18 @@ private:
  */
 class LogConsole : public AbstractWindow {
 public:
+    using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
+
+    struct InputSharedData {
+        bool move_cursor_to_end;
+        std::vector<std::pair<std::string, std::string>> commands; // command, parameter hint
+        std::vector<std::pair<std::string, std::string>> autocomplete_candidates;
+        bool open_autocomplete_popup;
+        std::vector<std::string> history;
+        size_t history_index;
+        std::string param_hint;
+    };
+
     explicit LogConsole(const std::string& window_name);
     ~LogConsole();
 
@@ -57,6 +80,8 @@ public:
 
     void SpecificStateFromJSON(const nlohmann::json& in_json) override;
     void SpecificStateToJSON(nlohmann::json& inout_json) override;
+
+    void SetLuaFunc(lua_func_type* func);
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -76,11 +101,16 @@ private:
     // Widgets
     HoverToolTip tooltip;
 
+    // Input
+    std::shared_ptr<InputSharedData> input_shared_data;
+    bool input_reclaim_focus;
+    std::string input_buffer;
+    // where would I get this from? and the autocomplete stuff?
+    lua_func_type* input_lua_func;
+    bool is_autocomplete_popup_open;
+
     // FUNCTIONS --------------------------------------------------------------
-
     bool connect_log();
-
-    void print_message(const LogBuffer::LogEntry& entry, unsigned int global_log_level) const;
 };
 
 

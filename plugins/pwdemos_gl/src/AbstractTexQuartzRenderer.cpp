@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "AbstractTexQuartzRenderer.h"
-#include "stdafx.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <vector>
 

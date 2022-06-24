@@ -10,17 +10,18 @@
 #include <sstream>
 
 #include "GenericParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
 
 namespace megamol::core::param {
 
-class MEGAMOLCORE_API IntParam : public GenericParam<int, AbstractParamPresentation::ParamType::INT> {
+class IntParam : public GenericParam<int, AbstractParamPresentation::ParamType::INT> {
 public:
     IntParam(int initVal) : Super(initVal) {}
 
     IntParam(int initVal, int minVal) : Super(initVal, minVal) {}
 
     IntParam(int initVal, int minVal, int maxVal) : Super(initVal, minVal, maxVal) {}
+
+    IntParam(int initVal, int minVal, int maxVal, int stepSize) : Super(initVal, minVal, maxVal, stepSize) {}
 
     virtual ~IntParam() = default;
 
@@ -29,6 +30,7 @@ public:
         outDef << "MMINTR";
         outDef.write(reinterpret_cast<char const*>(&MinValue()), sizeof(MinValue()));
         outDef.write(reinterpret_cast<char const*>(&MaxValue()), sizeof(MaxValue()));
+        outDef.write(reinterpret_cast<char const*>(&StepSize()), sizeof(StepSize()));
 
         return outDef.str();
     }

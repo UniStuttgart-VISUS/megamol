@@ -13,7 +13,7 @@ in vec3 viewRay;
 in mat3 rotate_world_into_tensor;
 in mat3 rotate_points;
 
-out layout(location = 0) vec3 albedo_out;
+out layout(location = 0) vec4 albedo_out;
 out layout(location = 1) vec3 normal_out;
 out layout(location = 2) float depth_out;
 
@@ -68,7 +68,7 @@ void main() {
     //out_frag_color = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
     //out_frag_color = vec4(LocalLighting(ray, normalize(sphereintersection), lightPos.xyz, color), 1.0);
 
-    albedo_out = mix(dirColor, vertColor.rgb, colorInterpolation);
+    albedo_out = vec4(mix(dirColor, vertColor.rgb, colorInterpolation), 1.0);
     normal_out = normal;
 
     sphereintersection += objPos.xyz;

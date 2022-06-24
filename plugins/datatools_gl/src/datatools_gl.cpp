@@ -7,18 +7,17 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
+#include "datatools_gl/io/STLDataSource.h"
+
 #include "MeshTranslateRotateScale.h"
 #include "io/PLYDataSource.h"
 #include "io/PlyWriter.h"
-#include "io/STLDataSource.h"
 #include "io/TriMeshSTLWriter.h"
 #include "misc/AddClusterColours.h"
 #include "misc/ParticleDensityOpacityModule.h"
 #include "misc/ParticleInspector.h"
 #include "misc/ParticleListMergeModule.h"
 #include "misc/ParticleWorker.h"
-#include "table/TableFlagFilter.h"
-#include "table/TableSelectionTx.h"
 
 
 namespace megamol::datatools_gl {
@@ -37,8 +36,6 @@ public:
 
         // register modules
 
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::table::TableFlagFilter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::table::TableSelectionTx>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::misc::ParticleDensityOpacityModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::misc::ParticleInspector>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools_gl::misc::ParticleListMergeModule>();

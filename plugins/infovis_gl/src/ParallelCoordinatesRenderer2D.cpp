@@ -1,11 +1,16 @@
+/**
+ * MegaMol
+ * Copyright (c) 2017, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "ParallelCoordinatesRenderer2D.h"
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <json.hpp>
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CoreInstance.h"
@@ -15,337 +20,644 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/utility/ColourParser.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "vislib/graphics/InputModifiers.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-
-//#define FUCK_THE_PIPELINE
-//#define USE_TESSELLATION
-//#define REMOVE_TEXT
 
 using namespace megamol;
 using namespace megamol::infovis_gl;
 using namespace megamol::datatools;
+using megamol::core::utility::log::Log;
 
-ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
+ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         : Renderer2D()
-        , getDataSlot("getdata", "Float table input")
-        , getTFSlot("getTF", "connects to the transfer function")
-        , readFlagsSlot("readFlags", "reads the flag storage")
-        , writeFlagsSlot("writeFlags", "writes the flag storage")
-        , currentHash(0xFFFFFFFF)
-        , currentFlagsVersion(0)
-        , densityFBO()
-        , drawModeSlot("drawMode", "Draw mode")
-        , drawSelectedItemsSlot("drawSelectedItems", "Draw selected items")
-        , selectedItemsColorSlot("selectedItemsColor", "Color for selected items")
-        , drawOtherItemsSlot("drawOtherItems", "Draw other (e.g., non-selected) items")
-        , otherItemsColorSlot("otherItemsColor", "Color for other items (e.g., non-selected)")
-        , otherItemsAttribSlot("otherItemsAttrib", "attribute to use for TF lookup and item coloring")
-        , drawAxesSlot("drawAxes", "Draw dimension axes")
-        , axesColorSlot("axesColor", "Color for dimension axes")
-        , filterIndicatorColorSlot("filterIndicatorCol", "Color for filter indicators")
-        , selectionModeSlot("selectionMode", "Selection mode")
-        , drawSelectionIndicatorSlot("drawSelectionIndicator", "Draw selection indicator")
-        , selectionIndicatorColorSlot("selectionIndicatorColor", "Color for selection indicator")
-        , pickRadiusSlot("pickRadius", "Picking radius in object-space")
-        , scaleToFitSlot("scaleToFit", "fit the diagram in the viewport")
-        , glDepthTestSlot("glEnableDepthTest", "Toggle GLDEPTHTEST")
-        , glLineSmoothSlot("glEnableLineSmooth", "Toggle GLLINESMOOTH")
-        , glLineWidthSlot("glLineWidth", "Value for glLineWidth")
-        , sqrtDensitySlot("sqrtDensity", "map root of density to transfer function (instead of linear mapping)")
-        //, resetFlagsSlot("resetFlags", "Reset item flags to initial state")
-        , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
-        , filterStateSlot("filterState", "stores filter state for serialization")
-        , triangleModeSlot("triangleMode", "Enables triangles instead of GL_LINES")
-        , lineThicknessSlot("lineThickness", "Float value to incease line thickness")
-        , axesLineThicknessSlot("axesLineThickness", "Float value to incease line thickness of Axes and Indicators")
-        , numTicks(5)
-        , columnCount(0)
-        , itemCount(0)
-        , dataBuffer(0)
-        , minimumsBuffer(0)
-        , maximumsBuffer(0)
-        , axisIndirectionBuffer(0)
-        , filtersBuffer(0)
-        , minmaxBuffer(0)
-        , interactionState(InteractionState::NONE)
-        , pickedAxis(-1)
-        , pickedIndicatorAxis(-1)
-        , pickedIndicatorIndex(-1)
-        , strokeStartX(0)
-        , strokeStartY(0)
-        , strokeEndX(0)
-        , strokeEndY(0)
-        , needSelectionUpdate(false)
-        , needFlagsUpdate(false)
-        , lastTimeStep(0)
-        , font(core::utility::SDFFont::PRESET_EVOLVENTA_SANS, core::utility::SDFFont::RENDERMODE_FILL) {
+        , dataSlot_("getData", "Float table input")
+        , tfSlot_("getTransferFunction", "Transfer function input")
+        , readFlagsSlot_("readFlagStorage", "Flag storage read input")
+        , writeFlagsSlot_("writeFlagStorage", "Flag storage write input")
+        , drawModeParam_("drawMode", "Draw mode")
+        , normalizeDensityParam_("normalizeDensity", "Normalize the range of the density values to [0, 1]")
+        , sqrtDensityParam_("sqrtDensity", "Map root of density to transfer function (instead of linear mapping)")
+        , triangleModeParam_("triangleMode", "Draw items with triangle lines")
+        , lineWidthParam_("lineWidth", "Line width of data points")
+        , dimensionNameParam_("dimensionName", "Dimension name of the attribute to use for TF lookup and item coloring")
+        , useLineWidthInPixelsParam_("ui::useLineWidthInPixels", "Line width is given in pixel size.")
+        , drawItemsParam_("ui::drawItems", "Draw (non-selected) items")
+        , drawSelectedItemsParam_("ui::drawSelectedItems", "Draw selected items")
+        , ignoreTransferFunctionParam_("ui::ignoreTransferFunction", "Use static color instead of TF color lookup")
+        , itemsColorParam_("ui::itemsColor", "Color for (non-selected) items")
+        , selectedItemsColorParam_("ui::selectedItemsColor", "Color for selected items")
+        , drawAxesParam_("ui::drawAxes", "Draw dimension axes")
+        , axesLineWidthParam_("ui::axesLineWidth", "Width of the axes and indicators lines")
+        , axesColorParam_("ui::axesColor", "Color for axes lines and text")
+        , filterIndicatorColorParam_("ui::filterIndicatorColor", "Color for filter indicators")
+        , smoothFontParam_("ui::smoothFont", "Font rendering with smooth edges")
+        , selectionModeParam_("ui::selectionMode", "Selection mode")
+        , pickRadiusParam_("ui::pickRadius", "Picking radius in object-space")
+        , drawSelectionIndicatorParam_("ui::drawSelectionIndicator", "Draw selection indicator")
+        , selectionIndicatorColorParam_("ui::selectionIndicatorColor", "Color for selection indicator")
+        , scaleToFitParam_("ui::scaleToFit", "fit the diagram in the viewport")
+        , resetFiltersParam_("filter::resetFilters", "Reset dimension filters to initial state")
+        , filterStateParam_("filter::filterState", "stores filter state for serialization")
+        , currentTableDataHash_(std::numeric_limits<std::size_t>::max())
+        , currentTableFrameId_(std::numeric_limits<unsigned int>::max())
+        , dimensionCount_(0)
+        , itemCount_(0)
+        , densityMinMaxInit_{std::numeric_limits<uint32_t>::max(), 0}
+        , marginX_(0.0f)
+        , marginY_(0.0f)
+        , axisDistance_(0.0f)
+        , axisHeight_(0.0f)
+        , numTicks_(5)
+        , tickLength_(4.0f)
+        , fontSize_(1.0f)
+        , font_(core::utility::SDFFont::PRESET_EVOLVENTA_SANS, core::utility::SDFFont::RENDERMODE_FILL)
+        , mouseX_(0.0f)
+        , mouseY_(0.0f)
+        , interactionState_(InteractionState::NONE)
+        , pickedAxis_(-1)
+        , pickedIndicatorAxis_(-1)
+        , pickedIndicatorIndex_(-1)
+        , strokeStart_(glm::vec2(0.0f))
+        , strokeEnd_(glm::vec2(0.0f))
+        , needAxisUpdate_(false)
+        , needFilterUpdate_(false)
+        , needSelectionUpdate_(false)
+        , needFlagsUpdate_(false)
+        , filterWorkgroupSize_()
+        , selectPickWorkgroupSize_()
+        , selectStrokeWorkgroupSize_()
+        , densityMinMaxWorkgroupSize_()
+        , maxWorkgroupCount_()
+        , cameraCopy_(std::nullopt)
+        , viewRes_(glm::ivec2(1, 1)) {
 
-    this->getDataSlot.SetCompatibleCall<table::TableDataCallDescription>();
-    this->MakeSlotAvailable(&this->getDataSlot);
+    dataSlot_.SetCompatibleCall<table::TableDataCallDescription>();
+    MakeSlotAvailable(&dataSlot_);
 
-    this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
-    this->MakeSlotAvailable(&this->getTFSlot);
+    tfSlot_.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    MakeSlotAvailable(&tfSlot_);
 
-    this->readFlagsSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
-    this->MakeSlotAvailable(&this->readFlagsSlot);
-    this->writeFlagsSlot.SetCompatibleCall<core_gl::FlagCallWrite_GLDescription>();
-    this->MakeSlotAvailable(&this->writeFlagsSlot);
+    readFlagsSlot_.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    MakeSlotAvailable(&readFlagsSlot_);
+
+    writeFlagsSlot_.SetCompatibleCall<core_gl::FlagCallWrite_GLDescription>();
+    MakeSlotAvailable(&writeFlagsSlot_);
 
     auto drawModes = new core::param::EnumParam(DRAW_DISCRETE);
-    drawModes->SetTypePair(DRAW_DISCRETE, "Discrete");
-    drawModes->SetTypePair(DRAW_CONTINUOUS, "Continuous");
-    drawModes->SetTypePair(DRAW_HISTOGRAM, "Histogram");
-    drawModeSlot.SetParameter(drawModes);
-    this->MakeSlotAvailable(&drawModeSlot);
+    drawModes->SetTypePair(DRAW_DISCRETE, "Kernel Blending");
+    drawModes->SetTypePair(DRAW_DENSITY, "Kernel Density Estimation");
+    drawModeParam_.SetParameter(drawModes);
+    MakeSlotAvailable(&drawModeParam_);
 
-    drawSelectedItemsSlot << new core::param::BoolParam(true);
-    this->MakeSlotAvailable(&drawSelectedItemsSlot);
+    normalizeDensityParam_ << new core::param::BoolParam(true);
+    MakeSlotAvailable(&normalizeDensityParam_);
 
-    selectedItemsColorSlot << new core::param::ColorParam("red");
-    this->MakeSlotAvailable(&selectedItemsColorSlot);
+    sqrtDensityParam_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&sqrtDensityParam_);
 
-    drawOtherItemsSlot << new core::param::BoolParam(true);
-    this->MakeSlotAvailable(&drawOtherItemsSlot);
+    triangleModeParam_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&triangleModeParam_);
 
-    otherItemsColorSlot << new core::param::ColorParam("gray");
-    this->MakeSlotAvailable(&otherItemsColorSlot);
-    otherItemsAttribSlot << new core::param::FlexEnumParam("undef");
-    this->MakeSlotAvailable(&this->otherItemsAttribSlot);
+    lineWidthParam_ << new core::param::FloatParam(1.5f, 0.0f);
+    MakeSlotAvailable(&lineWidthParam_);
 
-    drawAxesSlot << new core::param::BoolParam(true);
-    this->MakeSlotAvailable(&drawAxesSlot);
+    dimensionNameParam_ << new core::param::FlexEnumParam("[none]");
+    MakeSlotAvailable(&dimensionNameParam_);
 
-    axesColorSlot << new core::param::ColorParam("white");
-    this->MakeSlotAvailable(&axesColorSlot);
+    useLineWidthInPixelsParam_ << new core::param::BoolParam(true);
+    MakeSlotAvailable(&useLineWidthInPixelsParam_);
 
-    filterIndicatorColorSlot << new core::param::ColorParam("orange");
-    this->MakeSlotAvailable(&filterIndicatorColorSlot);
+    drawItemsParam_ << new core::param::BoolParam(true);
+    MakeSlotAvailable(&drawItemsParam_);
 
-    drawSelectionIndicatorSlot << new core::param::BoolParam(true);
-    this->MakeSlotAvailable(&drawSelectionIndicatorSlot);
+    drawSelectedItemsParam_ << new core::param::BoolParam(true);
+    MakeSlotAvailable(&drawSelectedItemsParam_);
 
-    selectionIndicatorColorSlot << new core::param::ColorParam("MegaMolBlue");
-    this->MakeSlotAvailable(&selectionIndicatorColorSlot);
+    ignoreTransferFunctionParam_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&ignoreTransferFunctionParam_);
+
+    itemsColorParam_ << new core::param::ColorParam("gray");
+    MakeSlotAvailable(&itemsColorParam_);
+
+    selectedItemsColorParam_ << new core::param::ColorParam("red");
+    MakeSlotAvailable(&selectedItemsColorParam_);
+
+    drawAxesParam_ << new core::param::BoolParam(true);
+    MakeSlotAvailable(&drawAxesParam_);
+
+    axesLineWidthParam_ << new core::param::FloatParam(2.0f);
+    MakeSlotAvailable(&axesLineWidthParam_);
+
+    axesColorParam_ << new core::param::ColorParam("white");
+    MakeSlotAvailable(&axesColorParam_);
+
+    filterIndicatorColorParam_ << new core::param::ColorParam("orange");
+    MakeSlotAvailable(&filterIndicatorColorParam_);
+
+    smoothFontParam_ << new core::param::BoolParam(true);
+    MakeSlotAvailable(&smoothFontParam_);
 
     auto pickModes = new core::param::EnumParam(SELECT_STROKE);
     pickModes->SetTypePair(SELECT_PICK, "Pick");
     pickModes->SetTypePair(SELECT_STROKE, "Stroke");
-    selectionModeSlot.SetParameter(pickModes);
-    this->MakeSlotAvailable(&selectionModeSlot);
+    selectionModeParam_.SetParameter(pickModes);
+    MakeSlotAvailable(&selectionModeParam_);
 
-    pickRadiusSlot << new core::param::FloatParam(0.1f, 0.01f, 10.0f);
-    this->MakeSlotAvailable(&pickRadiusSlot);
+    pickRadiusParam_ << new core::param::FloatParam(1.0f, 0.01f, 10.0f);
+    MakeSlotAvailable(&pickRadiusParam_);
 
-    scaleToFitSlot << new core::param::BoolParam(false);
-    scaleToFitSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::scalingChangedCallback);
-    this->MakeSlotAvailable(&scaleToFitSlot);
+    drawSelectionIndicatorParam_ << new core::param::BoolParam(true);
+    MakeSlotAvailable(&drawSelectionIndicatorParam_);
 
-    glDepthTestSlot << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&glDepthTestSlot);
+    selectionIndicatorColorParam_ << new core::param::ColorParam("MegaMolBlue");
+    MakeSlotAvailable(&selectionIndicatorColorParam_);
 
-    glLineSmoothSlot << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&glLineSmoothSlot);
+    scaleToFitParam_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&scaleToFitParam_);
 
-    glLineWidthSlot << new core::param::FloatParam(1.0f, 0.1f);
-    this->MakeSlotAvailable(&glLineWidthSlot);
+    resetFiltersParam_ << new core::param::ButtonParam();
+    MakeSlotAvailable(&resetFiltersParam_);
 
-    sqrtDensitySlot << new core::param::BoolParam(true);
-    this->MakeSlotAvailable(&sqrtDensitySlot);
-
-    // resetFlagsSlot << new core::param::ButtonParam();
-    // resetFlagsSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFlagsSlotCallback);
-    // this->MakeSlotAvailable(&resetFlagsSlot);
-
-    resetFiltersSlot << new core::param::ButtonParam();
-    resetFiltersSlot.SetUpdateCallback(this, &ParallelCoordinatesRenderer2D::resetFiltersSlotCallback);
-    this->MakeSlotAvailable(&resetFiltersSlot);
-
-    filterStateSlot << new ::core::param::StringParam("");
-    // filterStateSlot.Param<core::param::StringParam>()->SetGUIVisible(false);
-    this->MakeSlotAvailable(&filterStateSlot);
-
-    this->triangleModeSlot << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&triangleModeSlot);
-
-    this->lineThicknessSlot << new core::param::FloatParam(1.5);
-    this->MakeSlotAvailable(&lineThicknessSlot);
-
-    this->axesLineThicknessSlot << new core::param::FloatParam(1.0);
-    this->MakeSlotAvailable(&axesLineThicknessSlot);
-
-    fragmentMinMax.resize(2);
+    filterStateParam_ << new ::core::param::StringParam("");
+    MakeSlotAvailable(&filterStateParam_);
 }
 
-ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D(void) {
-    this->Release();
+ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D() {
+    Release();
 }
 
-bool ParallelCoordinatesRenderer2D::enableProgramAndBind(std::unique_ptr<glowl::GLSLProgram>& program) {
-    program->use();
-    // bindbuffer?
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, dataBuffer);
-    auto flags = this->readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
-    flags->getData()->validateFlagCount(this->itemCount);
-    flags->getData()->flags->bind(1);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, minimumsBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, maximumsBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, axisIndirectionBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, filtersBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, minmaxBuffer);
-
-    glUniform2f(program->getUniformLocation("scaling"), 1.0f, 1.0f); // scaling, whatever
-    glUniformMatrix4fv(
-        program->getUniformLocation("modelView"), 1, GL_FALSE, glm::value_ptr(camera_cpy.getViewMatrix()));
-    glUniformMatrix4fv(
-        program->getUniformLocation("projection"), 1, GL_FALSE, glm::value_ptr(camera_cpy.getProjectionMatrix()));
-    glUniform1ui(program->getUniformLocation("dimensionCount"), this->columnCount);
-    glUniform1ui(program->getUniformLocation("itemCount"), this->itemCount);
-
-    glUniform2f(program->getUniformLocation("margin"), this->marginX, this->marginY);
-    glUniform1f(program->getUniformLocation("axisDistance"), this->axisDistance);
-    glUniform1f(program->getUniformLocation("axisHeight"), this->axisHeight);
-
-    return true;
-}
-
-bool ParallelCoordinatesRenderer2D::create(void) {
-    glGenBuffers(1, &dataBuffer);
-    glGenBuffers(1, &minimumsBuffer);
-    glGenBuffers(1, &maximumsBuffer);
-    glGenBuffers(1, &axisIndirectionBuffer);
-    glGenBuffers(1, &filtersBuffer);
-    glGenBuffers(1, &minmaxBuffer);
-    glGenBuffers(1, &counterBuffer);
-
-#ifndef REMOVE_TEXT
-    if (!font.Initialise(this->GetCoreInstance()))
+bool ParallelCoordinatesRenderer2D::create() {
+    if (!font_.Initialise(GetCoreInstance())) {
         return false;
-    font.SetBatchDrawMode(true);
-#endif
+    }
+    font_.SetBatchDrawMode(true);
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
 
     try {
-        drawAxesProgram = core::utility::make_glowl_shader("pc_axes_draw_axes", shader_options,
-            "infovis_gl/pc_axes_draw_axes.vert.glsl", "infovis_gl/pc_axes_draw_axes.frag.glsl");
+        filterProgram_ =
+            core::utility::make_glowl_shader("pc_filter", shader_options, "infovis_gl/pc/filter.comp.glsl");
 
-        drawScalesProgram = core::utility::make_glowl_shader("pc_axes_draw_scales", shader_options,
-            "infovis_gl/pc_axes_draw_scales.vert.glsl", "infovis_gl/pc_axes_draw_scales.frag.glsl");
+        selectPickProgram_ =
+            core::utility::make_glowl_shader("pc_select_pick", shader_options, "infovis_gl/pc/select.comp.glsl");
 
-        drawFilterIndicatorsProgram = core::utility::make_glowl_shader("pc_axes_draw_filterindicators", shader_options,
-            "infovis_gl/pc_axes_draw_filterindicators.vert.glsl", "infovis_gl/pc_axes_draw_filterindicators.frag.glsl");
+        auto shader_options_stroke = shader_options;
+        shader_options_stroke.addDefinition("STROKE");
+        selectStrokeProgram_ = core::utility::make_glowl_shader(
+            "pc_select_stroke", shader_options_stroke, "infovis_gl/pc/select.comp.glsl");
 
-        drawStrokeIndicatorProgram = core::utility::make_glowl_shader("pc_item_stroke_indicator", shader_options,
-            "infovis_gl/pc_item_stroke_indicator.vert.glsl", "infovis_gl/pc_item_stroke_indicator.frag.glsl");
+        densityMinMaxProgram_ = core::utility::make_glowl_shader(
+            "pc_density_min_max", shader_options, "infovis_gl/pc/density_min_max.comp.glsl");
 
-        drawPickIndicatorProgram = core::utility::make_glowl_shader("pc_item_pick_indicator", shader_options,
-            "infovis_gl/pc_item_pick_indicator.vert.glsl", "infovis_gl/pc_item_pick_indicator.frag.glsl");
+        drawItemsLineProgram_ = core::utility::make_glowl_shader(
+            "pc_items_line", shader_options, "infovis_gl/pc/items.vert.glsl", "infovis_gl/pc/items.frag.glsl");
 
-        drawItemsDiscreteProgram = core::utility::make_glowl_shader("pc_item_draw_discrete", shader_options,
-            "infovis_gl/pc_item_draw_discrete.vert.glsl", "infovis_gl/pc_item_draw_discrete.frag.glsl");
+        auto shader_options_triangles = shader_options;
+        shader_options_triangles.addDefinition("TRIANGLES");
+        drawItemsTriangleProgram_ = core::utility::make_glowl_shader("pc_items_triangle", shader_options_triangles,
+            "infovis_gl/pc/items.vert.glsl", "infovis_gl/pc/items.frag.glsl");
 
-        drawItemsTriangleProgram = core::utility::make_glowl_shader("pc_item_draw_discreteT", shader_options,
-            "infovis_gl/pc_item_draw_discreteT.vert.glsl", "infovis_gl/pc_item_draw_discreteT.frag.glsl");
+        drawItemsDensityProgram_ = core::utility::make_glowl_shader(
+            "pc_items_density", shader_options, "infovis_gl/pc/density.vert.glsl", "infovis_gl/pc/density.frag.glsl");
 
-        traceItemsDiscreteProgram = core::utility::make_glowl_shader("pc_item_draw_muhaha", shader_options,
-            "infovis_gl/pc_item_draw_muhaha.vert.glsl", "infovis_gl/pc_item_draw_muhaha.frag.glsl");
+        drawAxesProgram_ = core::utility::make_glowl_shader(
+            "pc_axes", shader_options, "infovis_gl/pc/axes.vert.glsl", "infovis_gl/pc/axes.frag.glsl");
 
-        drawItemsDiscreteTessProgram = core::utility::make_glowl_shader("pc_item_draw_discTess", shader_options,
-            "infovis_gl/pc_item_draw_discTess.vert.glsl", "infovis_gl/pc_item_draw_discTess.tesc.glsl",
-            "infovis_gl/pc_item_draw_discTess.tese.glsl", "infovis_gl/pc_item_draw_discTess.frag.glsl");
+        drawIndicatorPickProgram_ = core::utility::make_glowl_shader("pc_indicator_pick", shader_options,
+            "infovis_gl/pc/indicator_pick.vert.glsl", "infovis_gl/pc/indicator_pick.frag.glsl");
 
-        drawItemContinuousProgram = core::utility::make_glowl_shader("pc_fragment_count", shader_options,
-            "infovis_gl/pc_fragment_count.vert.glsl", "infovis_gl/pc_fragment_count.frag.glsl");
-
-        minMaxProgram = core::utility::make_glowl_shader(
-            "pc_fragment_count", shader_options, "infovis_gl/pc_fragment_count.comp.glsl");
-
-        drawItemsHistogramProgram = core::utility::make_glowl_shader("pc_item_draw_histogram", shader_options,
-            "infovis_gl/pc_item_draw_histogram.vert.glsl", "infovis_gl/pc_item_draw_histogram.frag.glsl");
-
-        filterProgram =
-            core::utility::make_glowl_shader("pc_item_filter", shader_options, "infovis_gl/pc_item_filter.comp.glsl");
-
-        pickProgram =
-            core::utility::make_glowl_shader("pc_item_pick", shader_options, "infovis_gl/pc_item_pick.comp.glsl");
-
-        strokeProgram =
-            core::utility::make_glowl_shader("pc_item_stroke", shader_options, "infovis_gl/pc_item_stroke.comp.glsl");
-
+        drawIndicatorStrokeProgram_ = core::utility::make_glowl_shader("pc_indicator_stroke", shader_options,
+            "infovis_gl/pc/indicator_stroke.vert.glsl", "infovis_gl/pc/indicator_stroke.frag.glsl");
     } catch (std::exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            ("ParallelCoordinatesRenderer2D: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(("ParallelCoordinatesRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }
 
-    glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &this->maxAxes); // TODO we should reject data with more axes!
-    this->isoLinesPerInvocation = maxAxes; // warning: for tesslevel n there are JUST n lines!!! not n+1 !!
+    glGetProgramiv(filterProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, filterWorkgroupSize_.data());
+    glGetProgramiv(selectPickProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, selectPickWorkgroupSize_.data());
+    glGetProgramiv(selectStrokeProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, selectStrokeWorkgroupSize_.data());
+    glGetProgramiv(densityMinMaxProgram_->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, densityMinMaxWorkgroupSize_.data());
 
-    glGetProgramiv(filterProgram->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, filterWorkgroupSize);
-    glGetProgramiv(minMaxProgram->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, counterWorkgroupSize);
-    glGetProgramiv(pickProgram->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, pickWorkgroupSize);
-    glGetProgramiv(strokeProgram->getHandle(), GL_COMPUTE_WORK_GROUP_SIZE, strokeWorkgroupSize);
-
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount[0]);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
-    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount[2]);
-
-    // this->filterStateSlot.ForceSetDirty();
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &maxWorkgroupCount_[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount_[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount_[2]);
 
     return true;
 }
 
-void ParallelCoordinatesRenderer2D::release(void) {
-    glDeleteBuffers(1, &dataBuffer);
-    glDeleteBuffers(1, &minimumsBuffer);
-    glDeleteBuffers(1, &maximumsBuffer);
-    glDeleteBuffers(1, &axisIndirectionBuffer);
-    glDeleteBuffers(1, &filtersBuffer);
-    glDeleteBuffers(1, &minmaxBuffer);
-    glDeleteBuffers(1, &counterBuffer);
+void ParallelCoordinatesRenderer2D::release() {}
+
+bool ParallelCoordinatesRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
+    if (!assertData(call)) {
+        return false;
+    }
+
+    call.AccessBoundingBoxes() = bounds_;
+
+    return true;
+}
+
+bool ParallelCoordinatesRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
+    // This check must be first. GetExtent does the same check and we need to be sure, that the outside world has seen
+    // an extent before we continue. Otherwise, i.e. the view has not initialized the camera.
+    if (!assertData(call)) {
+        return false;
+    }
+
+    if (needAxisUpdate_) {
+        needAxisUpdate_ = false;
+        axisIndirectionBuffer_->rebuffer(axisIndirection_);
+    }
+
+    if (needFilterUpdate_) {
+        needFilterUpdate_ = false;
+        filtersBuffer_->rebuffer(filters_);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        storeFilters();
+
+        useProgramAndBindCommon(filterProgram_);
+
+        std::array<GLuint, 3> groupCounts{};
+        computeDispatchSizes(itemCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
+        glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+        needFlagsUpdate_ = true;
+    }
+
+    // Do stroking/picking
+    if (needSelectionUpdate_) {
+        needSelectionUpdate_ = false;
+
+        switch (selectionModeParam_.Param<core::param::EnumParam>()->Value()) {
+        case SELECT_STROKE:
+            doStroking(strokeStart_, strokeEnd_);
+            break;
+        case SELECT_PICK:
+            doPicking(strokeEnd_, pickRadiusParam_.Param<megamol::core::param::FloatParam>()->Value());
+            break;
+        }
+
+        needFlagsUpdate_ = true;
+    }
+
+    if (needFlagsUpdate_) {
+        needFlagsUpdate_ = false;
+
+        auto readFlagsCall = readFlagsSlot_.CallAs<core_gl::FlagCallRead_GL>();
+        auto writeFlagsCall = writeFlagsSlot_.CallAs<core_gl::FlagCallWrite_GL>();
+        if (readFlagsCall != nullptr && writeFlagsCall != nullptr) {
+            writeFlagsCall->setData(readFlagsCall->getData(), readFlagsCall->version() + 1);
+            (*writeFlagsCall)(core_gl::FlagCallWrite_GL::CallGetData);
+        }
+    }
+
+
+    // get camera
+    core::view::Camera cam = call.GetCamera();
+    cameraCopy_ = cam;
+    viewRes_ = call.GetViewResolution();
+
+    const auto viewMx = cam.getViewMatrix();
+    const auto projMx = cam.getProjectionMatrix();
+    const glm::mat4 orthoMx = projMx * viewMx;
+
+    // Draw
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Draw items
+    const auto& drawmode = drawModeParam_.Param<core::param::EnumParam>()->Value();
+    switch (drawmode) {
+    case DRAW_DISCRETE:
+        drawDiscrete(!ignoreTransferFunctionParam_.Param<core::param::BoolParam>()->Value(),
+            glm::make_vec4(itemsColorParam_.Param<core::param::ColorParam>()->Value().data()),
+            glm::make_vec4(selectedItemsColorParam_.Param<core::param::ColorParam>()->Value().data()));
+        break;
+    case DRAW_DENSITY:
+        drawDensity(call.GetFramebuffer());
+        break;
+    }
+
+    // Draw stroking/picking indicator
+    if (drawSelectionIndicatorParam_.Param<core::param::BoolParam>()->Value()) {
+        const glm::vec4 indicatorColor =
+            glm::make_vec4<float>(selectionIndicatorColorParam_.Param<core::param::ColorParam>()->Value().data());
+        switch (selectionModeParam_.Param<core::param::EnumParam>()->Value()) {
+        case SELECT_PICK:
+            drawIndicatorPick(glm::vec2(mouseX_, mouseY_),
+                pickRadiusParam_.Param<megamol::core::param::FloatParam>()->Value(), indicatorColor);
+            break;
+        case SELECT_STROKE:
+            if (interactionState_ == InteractionState::INTERACTION_SELECT) {
+                drawIndicatorStroke(strokeStart_, strokeEnd_, indicatorColor);
+            }
+            break;
+        }
+    }
+
+    if (drawAxesParam_.Param<core::param::BoolParam>()->Value()) {
+        drawAxes(orthoMx);
+    }
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
+
+    return true;
+}
+
+bool ParallelCoordinatesRenderer2D::OnMouseButton(
+    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+
+    // Ignore everything which is not left mouse button.
+    if (button != core::view::MouseButton::BUTTON_LEFT) {
+        return false;
+    }
+
+    // Any up/down event stops interaction, but only down changes selection.
+    interactionState_ = InteractionState::NONE;
+
+    // If control is pressed, event is meant for view. Nevertheless, the interaction state is set to none before this
+    // check, to avoid locking into a state in case CTRL is pressed while an interaction state is active.
+    if (mods.test(core::view::Modifier::CTRL)) {
+        return false;
+    }
+
+    if (action == core::view::MouseButtonAction::PRESS) {
+        pickedAxis_ = -1;
+        pickedIndicatorAxis_ = -1;
+        pickedIndicatorIndex_ = -1;
+
+        if (mods.test(core::view::Modifier::ALT)) {
+            pickedAxis_ = mouseXtoAxis(mouseX_);
+            if (pickedAxis_ != -1) {
+                interactionState_ = InteractionState::INTERACTION_DRAG;
+            }
+            return true;
+        }
+
+        if (mods.test(core::view::Modifier::SHIFT)) {
+            const auto axis = mouseXtoAxis(mouseX_);
+            if (axis != -1) {
+                const float base = marginY_ * 0.5f - fontSize_ * 0.5f;
+                if ((mouseY_ > base && mouseY_ < base + fontSize_) ||
+                    (mouseY_ > base + marginY_ + axisHeight_ && mouseY_ < base + marginY_ + axisHeight_ + fontSize_)) {
+                    std::swap(filters_[axis].min, filters_[axis].max);
+                    needFilterUpdate_ = true;
+                    return true;
+                }
+            }
+
+            mouseToFilterIndicator(mouseX_, mouseY_, pickedIndicatorAxis_, pickedIndicatorIndex_);
+            if (pickedIndicatorAxis_ != -1) {
+                interactionState_ = InteractionState::INTERACTION_FILTER;
+            }
+            return true;
+        }
+
+        interactionState_ = InteractionState::INTERACTION_SELECT;
+        strokeStart_ = glm::vec2(mouseX_, mouseY_);
+        strokeEnd_ = glm::vec2(mouseX_, mouseY_);
+        needSelectionUpdate_ = true;
+        return true;
+    }
+
+    return false;
+}
+
+bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
+    // mouseCoordsToWorld requires a valid camera and cameraCopy_ is initialized on first render. Before anything is
+    // draw, interaction probably is not needed anyway, but this event could be triggered independently.
+    if (!cameraCopy_.has_value()) {
+        return false;
+    }
+
+    auto const& [world_x, world_y] = mouseCoordsToWorld(x, y, cameraCopy_.value(), viewRes_.x, viewRes_.y);
+
+    mouseX_ = static_cast<float>(world_x);
+    mouseY_ = static_cast<float>(world_y);
+
+    if (interactionState_ == InteractionState::INTERACTION_DRAG) {
+        int currAxis = mouseXtoAxis(mouseX_);
+        if (currAxis != pickedAxis_ && currAxis >= 0 && currAxis < static_cast<int>(dimensionCount_)) {
+            auto pickedAxisIt = std::find(axisIndirection_.begin(), axisIndirection_.end(), pickedAxis_);
+            auto pickedIdx = std::distance(axisIndirection_.begin(), pickedAxisIt);
+            axisIndirection_.erase(pickedAxisIt);
+
+            auto currAxisIt = std::find(axisIndirection_.begin(), axisIndirection_.end(), currAxis);
+            auto currIdx = std::distance(axisIndirection_.begin(), currAxisIt);
+            if (pickedIdx <= currIdx) {
+                currAxisIt++;
+            }
+            axisIndirection_.insert(currAxisIt, pickedAxis_);
+
+            needAxisUpdate_ = true;
+        }
+
+        return true;
+    }
+
+    if (interactionState_ == InteractionState::INTERACTION_FILTER) {
+        const auto& range = dimensionRanges_[pickedIndicatorAxis_];
+        float val = ((mouseY_ - marginY_) / axisHeight_) * (range.max - range.min) + range.min;
+        val = std::clamp(val, range.min, range.max);
+        if (pickedIndicatorIndex_ == 0) {
+            filters_[pickedIndicatorAxis_].min = val;
+        } else {
+            filters_[pickedIndicatorAxis_].max = val;
+        }
+        needFilterUpdate_ = true;
+
+        return true;
+    }
+
+    if (interactionState_ == InteractionState::INTERACTION_SELECT) {
+        if (mouseX_ != strokeEnd_.x || mouseY_ != strokeEnd_.y) {
+            strokeEnd_.x = mouseX_;
+            strokeEnd_.y = mouseY_;
+            needSelectionUpdate_ = true;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+bool ParallelCoordinatesRenderer2D::assertData(core_gl::view::CallRender2DGL& call) {
+    auto floatTableCall = dataSlot_.CallAs<megamol::datatools::table::TableDataCall>();
+    if (floatTableCall == nullptr) {
+        return false;
+    }
+    auto tfCall = tfSlot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    if (tfCall == nullptr) {
+        Log::DefaultLog.WriteError("ParallelCoordinatesRenderer2D requires a transfer function!");
+        return false;
+    }
+    auto readFlagsCall = readFlagsSlot_.CallAs<core_gl::FlagCallRead_GL>();
+    if (readFlagsCall == nullptr) {
+        Log::DefaultLog.WriteError("ParallelCoordinatesRenderer2D requires a read flag storage!");
+        return false;
+    }
+    auto writeFlagsCall = writeFlagsSlot_.CallAs<core_gl::FlagCallWrite_GL>();
+    if (writeFlagsCall == nullptr) {
+        Log::DefaultLog.WriteError("ParallelCoordinatesRenderer2D requires a write flag storage!");
+        return false;
+    }
+
+    floatTableCall->SetFrameID(static_cast<unsigned int>(call.Time()));
+    (*floatTableCall)(1);
+    (*floatTableCall)(0);
+    call.SetTimeFramesCount(floatTableCall->GetFrameCount());
+    const auto hash = floatTableCall->DataHash();
+    const auto frameId = floatTableCall->GetFrameID();
+    const bool dataChanged = currentTableDataHash_ != hash || currentTableFrameId_ != frameId;
+
+    (*tfCall)(0);
+
+    (*readFlagsCall)(core_gl::FlagCallRead_GL::CallGetData);
+
+    if (dataChanged) {
+        dimensionCount_ = floatTableCall->GetColumnsCount();
+        itemCount_ = floatTableCall->GetRowsCount();
+        names_.resize(dimensionCount_);
+        dimensionRanges_.resize(dimensionCount_);
+        axisIndirection_.resize(dimensionCount_);
+        filters_.resize(dimensionCount_);
+
+        dimensionIndex_.clear();
+        auto* dimensionNameParam = dimensionNameParam_.Param<core::param::FlexEnumParam>();
+        dimensionNameParam->ClearValues();
+        dimensionNameParam->AddValue("[none]");
+        for (int i = 0; i < dimensionCount_; i++) {
+            const auto& colInfo = floatTableCall->GetColumnsInfos()[i];
+            names_[i] = colInfo.Name();
+            dimensionRanges_[i].min = colInfo.MinimumValue();
+            dimensionRanges_[i].max = colInfo.MaximumValue();
+            if (dimensionRanges_[i].max - dimensionRanges_[i].min < 0.001f) {
+                dimensionRanges_[i].max = dimensionRanges_[i].min + 0.001f;
+            }
+            axisIndirection_[i] = i;
+            dimensionIndex_[colInfo.Name()] = i;
+            dimensionNameParam->AddValue(colInfo.Name());
+            filters_[i] = dimensionRanges_[i];
+        }
+
+        dataBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, floatTableCall->GetData(),
+            dimensionCount_ * itemCount_ * sizeof(float), GL_DYNAMIC_DRAW);
+        dimensionRangesBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, dimensionRanges_);
+        axisIndirectionBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, axisIndirection_);
+        filtersBuffer_ = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, filters_);
+        densityMinMaxBuffer_ =
+            std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, densityMinMaxInit_, GL_STATIC_COPY);
+
+        currentTableDataHash_ = hash;
+        currentTableFrameId_ = frameId;
+
+        needFlagsUpdate_ = true;
+    }
+
+    if (dataChanged || scaleToFitParam_.IsDirty()) {
+        scaleToFitParam_.ResetDirty();
+        calcSizes();
+    }
+
+    if (dataChanged || dimensionNameParam_.IsDirty() || drawModeParam_.IsDirty()) {
+        drawModeParam_.ResetDirty();
+        dimensionNameParam_.ResetDirty();
+
+        if (drawModeParam_.Param<core::param::EnumParam>()->Value() == DrawMode::DRAW_DISCRETE) {
+            const auto& dimensionName = dimensionNameParam_.Param<core::param::FlexEnumParam>()->Value();
+            try {
+                const auto dimIdx = dimensionIndex_.at(dimensionName);
+                tfCall->SetRange({dimensionRanges_[dimIdx].min, dimensionRanges_[dimIdx].max});
+            } catch (std::out_of_range& ex) {
+                Log::DefaultLog.WriteWarn(
+                    "ParallelCoordinatesRenderer2D: tried to color lines by non-existing dimension '%s'",
+                    dimensionName.c_str());
+                tfCall->SetRange({0.0f, 1.0f});
+            }
+        } else {
+            tfCall->SetRange({0.0f, 1.0f});
+        }
+    }
+
+    if (filterStateParam_.IsDirty()) {
+        filterStateParam_.ResetDirty();
+
+        loadFilters();
+        needFilterUpdate_ = true;
+    }
+
+    if (resetFiltersParam_.IsDirty()) {
+        resetFiltersParam_.ResetDirty();
+
+        for (int i = 0; i < dimensionCount_; i++) {
+            filters_[i] = dimensionRanges_[i];
+        }
+        needFilterUpdate_ = true;
+    }
+
+    return true;
+}
+
+void ParallelCoordinatesRenderer2D::calcSizes() {
+    marginX_ = 20.0f;
+    marginY_ = 20.0f;
+    axisDistance_ = 40.0f;
+    fontSize_ = axisDistance_ / 10.0f;
+    auto left = 0.0f;
+    auto right = 2.0f * marginX_ + axisDistance_ * static_cast<float>(dimensionCount_ - 1);
+    auto width = right - left;
+
+    if (scaleToFitParam_.Param<core::param::BoolParam>()->Value() && cameraCopy_.has_value()) {
+        float requiredHeight =
+            width / cameraCopy_.value().get<core::view::Camera::OrthographicParameters>().aspect.value();
+        axisHeight_ = requiredHeight - 3.0f * marginY_;
+    } else {
+        axisHeight_ = 80.0f;
+    }
+    auto bottom = 0.0f;
+    auto top = 3.0f * marginY_ + axisHeight_;
+
+    bounds_.SetBoundingBox(left, bottom, 0, right, top, 0);
 }
 
 int ParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
-    float f = (x - this->marginX) / this->axisDistance;
-    float frac = f - static_cast<long>(f);
-    int integral = static_cast<int>(std::round(f));
-    if (integral >= static_cast<int>(this->columnCount) || integral < 0)
-        return -1;
-    if (frac > 0.7 || frac < 0.3) {
-        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i",
-        // axisIndirection[integral], integral);
-        return axisIndirection[integral];
-    } else {
-        return -1;
+    const float f = (x - marginX_) / axisDistance_;
+    const float frac = f - std::floor(f);
+    const int integral = static_cast<int>(std::round(f));
+    if (integral >= 0 && integral < static_cast<int>(dimensionCount_) && (frac < 0.3f || frac > 0.7f)) {
+        return axisIndirection_[integral];
     }
+    return -1;
 }
 
-void ParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, int& index) {
+void ParallelCoordinatesRenderer2D::mouseToFilterIndicator(float x, float y, int& axis, int& index) {
     axis = mouseXtoAxis(x);
     index = -1;
     if (axis != -1) {
         // calculate position of click and filters in [0, 1] range of axis height
-        float pickPos = (y - this->marginY) / this->axisHeight;
-        float upperPos = (this->filters[axis].upper - minimums[axis]) / (maximums[axis] - minimums[axis]);
-        float lowerPos = (this->filters[axis].lower - minimums[axis]) / (maximums[axis] - minimums[axis]);
+        const float pickPos = (y - marginY_) / axisHeight_;
+        const auto& range = dimensionRanges_[axis];
+        float upperPos = (filters_[axis].max - range.min) / (range.max - range.min);
+        float lowerPos = (filters_[axis].min - range.min) / (range.max - range.min);
 
         // Add small epsilon for better UI feeling because indicator is drawn only to one side.
         // This also handles intuitive selection if upper and lower filter are set to the same value.
         upperPos += 0.01;
         lowerPos -= 0.01;
 
-        float distUpper = fabs(upperPos - pickPos);
-        float distLower = fabs(lowerPos - pickPos);
+        const float distUpper = std::fabs(upperPos - pickPos);
+        const float distLower = std::fabs(lowerPos - pickPos);
 
-        float thresh = 0.1f;
+        const float thresh = 0.1f;
         if (distUpper < thresh && distUpper < distLower) {
             index = 1;
         } else if (distLower < thresh) {
@@ -357,813 +669,273 @@ void ParallelCoordinatesRenderer2D::pickIndicator(float x, float y, int& axis, i
     }
 }
 
-bool ParallelCoordinatesRenderer2D::scalingChangedCallback(core::param::ParamSlot& caller) {
-    this->computeScaling();
-    return true;
-}
+bool ParallelCoordinatesRenderer2D::useProgramAndBindCommon(std::unique_ptr<glowl::GLSLProgram> const& program) {
+    program->use();
 
-// bool ParallelCoordinatesRenderer2D::resetFlagsSlotCallback(core::param::ParamSlot& caller) { return true; }
+    dataBuffer_->bind(0);
+    auto readFlagsCall = readFlagsSlot_.CallAs<core_gl::FlagCallRead_GL>();
+    readFlagsCall->getData()->validateFlagCount(static_cast<int32_t>(itemCount_));
+    readFlagsCall->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 1);
+    dimensionRangesBuffer_->bind(2);
+    axisIndirectionBuffer_->bind(3);
+    filtersBuffer_->bind(4);
+    densityMinMaxBuffer_->bind(5);
 
-bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamSlot& caller) {
-    for (GLuint i = 0; i < this->columnCount; i++) {
-        this->filters[i].lower = minimums[i];
-        this->filters[i].upper = maximums[i];
-    }
-    this->needFlagsUpdate = true;
-    return true;
-}
-
-bool ParallelCoordinatesRenderer2D::assertData(core_gl::view::CallRender2DGL& call) {
-    auto floats = getDataSlot.CallAs<megamol::datatools::table::TableDataCall>();
-    if (floats == nullptr)
-        return false;
-    auto tc = getTFSlot.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
-    if (tc == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "ParallelCoordinatesRenderer2D requires a transfer function!");
-        return false;
-    }
-    auto flagsc = readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
-    if (flagsc == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "ParallelCoordinatesRenderer2D requires a flag storage!");
-        return false;
-    }
-
-    floats->SetFrameID(static_cast<unsigned int>(call.Time()));
-    (*floats)(1);
-    (*floats)(0);
-    call.SetTimeFramesCount(floats->GetFrameCount());
-    auto hash = floats->DataHash();
-    (*flagsc)(core_gl::FlagCallRead_GL::CallGetData);
-    if (flagsc->hasUpdate()) {
-        this->currentFlagsVersion = flagsc->version();
-    }
-
-    if (hash != this->currentHash || this->lastTimeStep != static_cast<unsigned int>(call.Time()) ||
-        this->otherItemsAttribSlot.IsDirty()) {
-        // set minmax for TF only when frame or hash changes
-        try {
-            auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
-            tc->SetRange(
-                {floats->GetColumnsInfos()[colcol].MinimumValue(), floats->GetColumnsInfos()[colcol].MaximumValue()});
-            this->otherItemsAttribSlot.ResetDirty();
-        } catch (std::out_of_range& ex) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "ParallelCoordinatesRenderer2D: tried to color lines by non-existing column '%s'",
-                this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value().c_str());
-        }
-    }
-
-    if (hash != this->currentHash || this->lastTimeStep != static_cast<unsigned int>(call.Time())) {
-
-        this->computeScaling();
-
-        this->columnCount = static_cast<GLuint>(floats->GetColumnsCount());
-        this->itemCount = static_cast<GLuint>(floats->GetRowsCount());
-        this->axisIndirection.resize(columnCount);
-        this->filters.resize(columnCount);
-        this->minimums.resize(columnCount);
-        this->maximums.resize(columnCount);
-        this->names.resize(columnCount);
-        this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->ClearValues();
-        this->columnIndex.clear();
-        for (GLuint x = 0; x < columnCount; x++) {
-            axisIndirection[x] = x;
-            filters[x].dimension = 0;
-            filters[x].flags = 0;
-            minimums[x] = floats->GetColumnsInfos()[x].MinimumValue();
-            maximums[x] = floats->GetColumnsInfos()[x].MaximumValue();
-            if (maximums[x] - minimums[x] < 0.001f) {
-                maximums[x] = minimums[x] + 1.f;
-            }
-            names[x] = floats->GetColumnsInfos()[x].Name();
-            filters[x].lower = minimums[x];
-            filters[x].upper = maximums[x];
-            this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->AddValue(
-                floats->GetColumnsInfos()[x].Name());
-            this->columnIndex[floats->GetColumnsInfos()[x].Name()] = x;
-        }
-
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, dataBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * this->itemCount * sizeof(float), floats->GetData(),
-            GL_STATIC_DRAW); // TODO: huh.
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, minimumsBuffer);
-        glBufferData(
-            GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(GLfloat), this->minimums.data(), GL_STATIC_DRAW);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, maximumsBuffer);
-        glBufferData(
-            GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(GLfloat), this->maximums.data(), GL_STATIC_DRAW);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
-        glBufferData(
-            GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(GLuint), axisIndirection.data(), GL_STATIC_DRAW);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, filtersBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, this->columnCount * sizeof(DimensionFilter), this->filters.data(),
-            GL_STATIC_DRAW);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, minmaxBuffer);
-        glBufferData(
-            GL_SHADER_STORAGE_BUFFER, 2 * sizeof(GLfloat), fragmentMinMax.data(), GL_DYNAMIC_READ); // TODO: huh.
-        this->currentHash = hash;
-        this->lastTimeStep = static_cast<unsigned int>(call.Time());
-    }
-
-    (*tc)(0);
-
-    makeDebugLabel(GL_BUFFER, DEBUG_NAME(dataBuffer));
-    makeDebugLabel(GL_BUFFER, DEBUG_NAME(minimumsBuffer));
-    makeDebugLabel(GL_BUFFER, DEBUG_NAME(maximumsBuffer));
-    makeDebugLabel(GL_BUFFER, DEBUG_NAME(axisIndirectionBuffer));
-    makeDebugLabel(GL_BUFFER, DEBUG_NAME(filtersBuffer));
-    makeDebugLabel(GL_BUFFER, DEBUG_NAME(minmaxBuffer));
-
-    return true;
-}
-
-void ParallelCoordinatesRenderer2D::computeScaling(void) {
-    auto fc = getDataSlot.CallAs<megamol::datatools::table::TableDataCall>();
-    if (fc == nullptr)
-        return;
-
-    this->marginX = 20.f;
-    this->marginY = 20.f;
-    this->axisDistance = 40.0f;
-    this->fontSize = this->axisDistance / 10.0f;
-    auto left = 0.0f;
-    auto right = 2.0f * marginX + this->axisDistance * (fc->GetColumnsCount() - 1);
-    auto width = right - left;
-
-    if (this->scaleToFitSlot.Param<core::param::BoolParam>()->Value()) {
-        // scale to fit
-        float requiredHeight = width / camera_cpy.get<core::view::Camera::OrthographicParameters>().aspect;
-        this->axisHeight = requiredHeight - 3.0f * marginY;
+    if (cameraCopy_.has_value()) {
+        program->setUniform("projMx", cameraCopy_.value().getProjectionMatrix());
+        program->setUniform("viewMx", cameraCopy_.value().getViewMatrix());
     } else {
-        this->axisHeight = 80.0f;
-    }
-    auto bottom = 0.0f;
-    auto top = 3.0f * marginY + this->axisHeight;
-
-    bounds.SetBoundingBox(left, bottom, 0, right, top, 0);
-}
-
-bool ParallelCoordinatesRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
-
-    if (!this->assertData(call)) {
-        return false;
+        static const glm::mat4 one(1.0f);
+        program->setUniform("projMx", one);
+        program->setUniform("viewMx", one);
     }
 
-    call.AccessBoundingBoxes() = this->bounds;
+    program->setUniform("dimensionCount", static_cast<GLuint>(dimensionCount_));
+    program->setUniform("itemCount", static_cast<GLuint>(itemCount_));
+
+    program->setUniform("margin", marginX_, marginY_);
+    program->setUniform("axisDistance", axisDistance_);
+    program->setUniform("axisHeight", axisHeight_);
 
     return true;
 }
 
-bool ParallelCoordinatesRenderer2D::OnMouseButton(
-    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+void ParallelCoordinatesRenderer2D::doPicking(glm::vec2 pos, float pickRadius) {
+    useProgramAndBindCommon(selectPickProgram_);
+    selectPickProgram_->setUniform("mouse", pos);
+    selectPickProgram_->setUniform("pickRadius", pickRadius);
 
-    if (this->ctrlDown) {
-        // these clicks go to the view
-        return false;
-    }
+    std::array<GLuint, 3> groupCounts{};
+    computeDispatchSizes(itemCount_, selectPickWorkgroupSize_, maxWorkgroupCount_, groupCounts);
+    glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-    // TODO could values from mouse move be updated from other threads? otherwise this copy is useless
-    float mousePressedX = this->mouseX;
-    float mousePressedY = this->mouseY;
-
-    if (button != core::view::MouseButton::BUTTON_LEFT) {
-        // ignore everything which is not left mouse button
-        return false;
-    }
-
-    // any up/down event stops interaction, but only down changes selection
-    this->interactionState = InteractionState::NONE;
-    if (action == core::view::MouseButtonAction::PRESS) {
-        this->pickedAxis = -1;
-        this->pickedIndicatorAxis = -1;
-        this->pickedIndicatorIndex = -1;
-
-        if (this->altDown) {
-            this->pickedAxis = mouseXtoAxis(mousePressedX);
-            if (this->pickedAxis != -1) {
-                this->interactionState = InteractionState::INTERACTION_DRAG;
-            }
-            return true;
-        }
-
-        if (this->shiftDown) {
-
-            auto axis = mouseXtoAxis(mousePressedX);
-            if (axis != -1) {
-                float base = this->marginY * 0.5f - fontSize * 0.5f;
-                if ((mousePressedY > base && mousePressedY < base + fontSize) ||
-                    (mousePressedY > base + this->marginY + this->axisHeight &&
-                        mousePressedY < base + this->marginY + this->axisHeight + fontSize)) {
-                    std::swap(this->filters[axis].lower, this->filters[axis].upper);
-                    this->needFlagsUpdate = true;
-                    return true;
-                }
-            }
-
-            pickIndicator(mousePressedX, mousePressedY, this->pickedIndicatorAxis, this->pickedIndicatorIndex);
-            if (this->pickedIndicatorAxis != -1) {
-                this->interactionState = InteractionState::INTERACTION_FILTER;
-            }
-            return true;
-        }
-
-        this->interactionState = InteractionState::INTERACTION_SELECT;
-        this->strokeStartX = mousePressedX;
-        this->strokeStartY = mousePressedY;
-        this->strokeEndX = mousePressedX;
-        this->strokeEndY = mousePressedY;
-        this->needSelectionUpdate = true;
-        return true;
-    }
-
-    return true;
+    glUseProgram(0);
 }
 
-bool ParallelCoordinatesRenderer2D::OnMouseMove(double x, double y) {
-    // Make the following a convenience function in the future
-    auto cam_pose = camera_cpy.get<core::view::Camera::Pose>();
-    auto cam_intrinsics = camera_cpy.get<core::view::Camera::OrthographicParameters>();
-    float world_x, world_y;
-    world_x = ((x * 2.0f / static_cast<float>(viewRes.x)) - 1.0f);
-    world_y = 1.0f - (y * 2.0f / static_cast<float>(viewRes.y));
-    world_x = world_x * 0.5f * cam_intrinsics.frustrum_height * cam_intrinsics.aspect + cam_pose.position.x;
-    world_y = world_y * 0.5f * cam_intrinsics.frustrum_height + cam_pose.position.y;
+void ParallelCoordinatesRenderer2D::doStroking(glm::vec2 start, glm::vec2 end) {
+    useProgramAndBindCommon(selectStrokeProgram_);
+    selectStrokeProgram_->setUniform("strokeStart", start);
+    selectStrokeProgram_->setUniform("strokeEnd", end);
 
-    this->mouseX = world_x;
-    this->mouseY = world_y;
+    std::array<GLuint, 3> groupCounts{};
+    computeDispatchSizes(itemCount_, selectStrokeWorkgroupSize_, maxWorkgroupCount_, groupCounts);
+    glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-    if (this->ctrlDown) {
-        // these clicks go to the view
-        return false;
-    }
-
-    if (this->interactionState == InteractionState::INTERACTION_DRAG) {
-        int currAxis = mouseXtoAxis(this->mouseX);
-        if (currAxis != this->pickedAxis && currAxis >= 0 && currAxis < static_cast<int>(this->columnCount)) {
-            auto pickedAxisIt = std::find(this->axisIndirection.begin(), this->axisIndirection.end(), this->pickedAxis);
-            int pickedIdx = std::distance(this->axisIndirection.begin(), pickedAxisIt);
-            this->axisIndirection.erase(pickedAxisIt);
-
-            auto currAxisIt = std::find(this->axisIndirection.begin(), this->axisIndirection.end(), currAxis);
-            int currIdx = std::distance(this->axisIndirection.begin(), currAxisIt);
-            if (pickedIdx <= currIdx) {
-                currAxisIt++;
-            }
-            this->axisIndirection.insert(currAxisIt, this->pickedAxis);
-
-            this->needFlagsUpdate = true;
-        }
-
-        return true;
-    }
-
-    if (this->interactionState == InteractionState::INTERACTION_FILTER) {
-        float val = ((this->mouseY - this->marginY) / this->axisHeight) *
-                        (maximums[this->pickedIndicatorAxis] - minimums[this->pickedIndicatorAxis]) +
-                    minimums[this->pickedIndicatorAxis];
-        if (this->pickedIndicatorIndex == 0) {
-            val = std::clamp(val, minimums[this->pickedIndicatorAxis], maximums[this->pickedIndicatorAxis]);
-            this->filters[this->pickedIndicatorAxis].lower = val;
-        } else {
-            val = std::clamp(val, minimums[this->pickedIndicatorAxis], maximums[this->pickedIndicatorAxis]);
-            this->filters[this->pickedIndicatorAxis].upper = val;
-        }
-        this->needFlagsUpdate = true;
-
-        return true;
-    }
-
-    if (this->interactionState == InteractionState::INTERACTION_SELECT) {
-        if (this->mouseX != this->strokeEndX || this->mouseY != this->strokeEndY) {
-            this->strokeEndX = this->mouseX;
-            this->strokeEndY = this->mouseY;
-            this->needSelectionUpdate = true;
-        }
-
-        return true;
-    }
-
-    return false;
+    glUseProgram(0);
 }
 
-bool ParallelCoordinatesRenderer2D::OnKey(
-    core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
-    ctrlDown = mods.test(core::view::Modifier::CTRL);
-    altDown = mods.test(core::view::Modifier::ALT);
-    shiftDown = mods.test(core::view::Modifier::SHIFT);
-    return false;
+void ParallelCoordinatesRenderer2D::drawItemLines(
+    uint32_t testMask, uint32_t passMask, bool useTf, glm::vec4 const& color) {
+    auto tfCall = tfSlot_.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
+    const bool triangleMode = triangleModeParam_.Param<core::param::BoolParam>()->Value();
+
+    int colorDimension = -1;
+    try {
+        colorDimension = dimensionIndex_.at(dimensionNameParam_.Param<core::param::FlexEnumParam>()->Value());
+    } catch (std::out_of_range& ex) {}
+
+    auto& prog = triangleMode ? drawItemsTriangleProgram_ : drawItemsLineProgram_;
+
+    useProgramAndBindCommon(prog);
+    tfCall->BindConvenience(prog, GL_TEXTURE5, 5);
+    prog->setUniform("useTransferFunction", static_cast<int>(useTf));
+    prog->setUniform("itemColor", color);
+    prog->setUniform("colorDimensionIdx", colorDimension);
+    prog->setUniform("itemTestMask", testMask);
+    prog->setUniform("itemPassMask", passMask);
+    prog->setUniform(
+        "useLineWidthInPixels", static_cast<int>(useLineWidthInPixelsParam_.Param<core::param::BoolParam>()->Value()));
+    prog->setUniform("lineWidth", lineWidthParam_.Param<core::param::FloatParam>()->Value());
+    prog->setUniform("viewSize", viewRes_);
+
+    glEnable(GL_CLIP_DISTANCE0);
+    if (triangleMode) {
+        glDrawArraysInstanced(
+            GL_TRIANGLE_STRIP, 0, 2 * static_cast<int>(dimensionCount_), static_cast<int>(itemCount_));
+    } else {
+        glDrawArraysInstanced(GL_LINE_STRIP, 0, static_cast<int>(dimensionCount_), static_cast<int>(itemCount_));
+    }
+    glDisable(GL_CLIP_DISTANCE0);
+    glUseProgram(0);
+}
+
+void ParallelCoordinatesRenderer2D::drawDiscrete(bool useTf, glm::vec4 const& color, glm::vec4 selectedColor) {
+    using fst = core::FlagStorageTypes;
+    using bits = fst::flag_bits;
+
+    constexpr auto testMask = fst::to_integral(bits::ENABLED | bits::FILTERED | bits::SELECTED);
+
+    if (drawItemsParam_.Param<core::param::BoolParam>()->Value()) {
+        constexpr auto passMask = fst::to_integral(bits::ENABLED);
+        drawItemLines(testMask, passMask, useTf, color);
+    }
+    if (drawSelectedItemsParam_.Param<core::param::BoolParam>()->Value()) {
+        constexpr auto passMask = fst::to_integral(bits::ENABLED | bits::SELECTED);
+        drawItemLines(testMask, passMask, false, selectedColor);
+    }
+}
+
+void ParallelCoordinatesRenderer2D::drawDensity(std::shared_ptr<glowl::FramebufferObject> const& fbo) {
+    const int fboWidth = fbo->getWidth();
+    const int fboHeight = fbo->getHeight();
+
+    if (densityFbo_ == nullptr || densityFbo_->getWidth() != fboWidth || densityFbo_->getHeight() != fboHeight) {
+        densityFbo_ = std::make_unique<glowl::FramebufferObject>(
+            "densityFbo", fboWidth, fboHeight, glowl::FramebufferObject::NONE);
+        densityFbo_->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);
+        densityFbo_->createColorAttachment(GL_R8, GL_RED, GL_UNSIGNED_BYTE);
+    }
+    densityFbo_->bind();
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glBlendFunc(GL_ONE, GL_ONE);
+    static const glm::vec4 red(1.0f, 0.0f, 0.0f, 1.0);
+    static const glm::vec4 red_green(1.0f, 1.0f, 0.0f, 1.0);
+    drawDiscrete(false, red, red_green);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    fbo->bind();
+
+    const bool normalizeDensity = normalizeDensityParam_.Param<core::param::BoolParam>()->Value();
+    if (normalizeDensity) {
+        densityMinMaxBuffer_->rebuffer(densityMinMaxInit_);
+
+        static const GLuint blockSize = 16; // Each compute shader invocation will check blockSize * blockSize pixels.
+        glm::uvec2 invocations((fboWidth + blockSize - 1) / blockSize, (fboHeight + blockSize - 1) / blockSize);
+        std::array<GLuint, 3> groupCounts{
+            (invocations.x + densityMinMaxWorkgroupSize_[0] - 1) / densityMinMaxWorkgroupSize_[0],
+            (invocations.y + densityMinMaxWorkgroupSize_[1] - 1) / densityMinMaxWorkgroupSize_[1], 1};
+
+        useProgramAndBindCommon(densityMinMaxProgram_);
+        glActiveTexture(GL_TEXTURE1);
+        densityFbo_->bindColorbuffer(0);
+        densityMinMaxProgram_->setUniform("fragmentCountTex", 1);
+        densityMinMaxProgram_->setUniform("resolution", fboWidth, fboHeight);
+        densityMinMaxProgram_->setUniform("blockSize", blockSize);
+        glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
+        glUseProgram(0);
+
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    }
+
+    auto tfCall = tfSlot_.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
+
+    useProgramAndBindCommon(drawItemsDensityProgram_);
+    glActiveTexture(GL_TEXTURE1);
+    densityFbo_->bindColorbuffer(0);
+    drawItemsDensityProgram_->setUniform("fragmentCountTex", 1);
+    glActiveTexture(GL_TEXTURE2);
+    densityFbo_->bindColorbuffer(1);
+    drawItemsDensityProgram_->setUniform("selectionFlagTex", 2);
+    tfCall->BindConvenience(drawItemsDensityProgram_, GL_TEXTURE5, 5);
+    drawItemsDensityProgram_->setUniform("normalizeDensity", normalizeDensity ? 1 : 0);
+    drawItemsDensityProgram_->setUniform(
+        "sqrtDensity", sqrtDensityParam_.Param<core::param::BoolParam>()->Value() ? 1 : 0);
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glUseProgram(0);
 }
 
 void ParallelCoordinatesRenderer2D::drawAxes(glm::mat4 ortho) {
-    debugPush(1, "drawAxes");
-    if (this->columnCount > 0) {
-        this->enableProgramAndBind(this->drawAxesProgram);
-        glUniform4fv(this->drawAxesProgram->getUniformLocation("color"), 1,
-            this->axesColorSlot.Param<core::param::ColorParam>()->Value().data());
-        glUniform1i(this->drawAxesProgram->getUniformLocation("pickedAxis"), pickedAxis);
-        glUniform1i(this->drawAxesProgram->getUniformLocation("width"), viewRes.x);
-        glUniform1i(this->drawAxesProgram->getUniformLocation("height"), viewRes.y);
-        glUniform1f(this->drawAxesProgram->getUniformLocation("axesThickness"),
-            axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, this->columnCount);
+    if (dimensionCount_ > 0) {
+        useProgramAndBindCommon(drawAxesProgram_);
+        drawAxesProgram_->setUniform("lineWidth", axesLineWidthParam_.Param<core::param::FloatParam>()->Value());
+        drawAxesProgram_->setUniform("viewSize", viewRes_);
+        drawAxesProgram_->setUniform("numTicks", static_cast<GLuint>(numTicks_));
+        drawAxesProgram_->setUniform("tickLength", tickLength_);
+        drawAxesProgram_->setUniform("pickedAxis", pickedAxis_);
+        drawAxesProgram_->setUniform("pickedFilter", pickedIndicatorAxis_, pickedIndicatorIndex_);
+        const glm::vec4 axesColor =
+            glm::make_vec4<float>(axesColorParam_.Param<core::param::ColorParam>()->Value().data());
+        drawAxesProgram_->setUniform("axesColor", axesColor);
+        const glm::vec4 filterColor =
+            glm::make_vec4<float>(filterIndicatorColorParam_.Param<core::param::ColorParam>()->Value().data());
+        drawAxesProgram_->setUniform("filterColor", filterColor);
+        glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<int>(dimensionCount_) * (1 + 4 + numTicks_));
         glUseProgram(0);
 
-        this->enableProgramAndBind(this->drawScalesProgram);
-        glUniform4fv(this->drawScalesProgram->getUniformLocation("color"), 1,
-            this->axesColorSlot.Param<core::param::ColorParam>()->Value().data());
-        glUniform1ui(this->drawScalesProgram->getUniformLocation("numTicks"), this->numTicks);
-        glUniform1f(this->drawScalesProgram->getUniformLocation("axisHalfTick"), 2.0f);
-        glUniform1i(this->drawScalesProgram->getUniformLocation("pickedAxis"), pickedAxis);
-        glUniform1i(this->drawScalesProgram->getUniformLocation("width"), viewRes.x);
-        glUniform1i(this->drawScalesProgram->getUniformLocation("height"), viewRes.y);
-        glUniform1f(this->drawScalesProgram->getUniformLocation("axesThickness"),
-            axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, this->columnCount * this->numTicks);
-        glUseProgram(0);
-
-        this->enableProgramAndBind(this->drawFilterIndicatorsProgram);
-        glUniform4fv(this->drawFilterIndicatorsProgram->getUniformLocation("color"), 1,
-            this->filterIndicatorColorSlot.Param<core::param::ColorParam>()->Value().data());
-        glUniform1f(this->drawFilterIndicatorsProgram->getUniformLocation("axisHalfTick"), 2.0f);
-        glUniform2i(this->drawFilterIndicatorsProgram->getUniformLocation("pickedIndicator"), pickedIndicatorAxis,
-            pickedIndicatorIndex);
-        glUniform1i(this->drawFilterIndicatorsProgram->getUniformLocation("width"), viewRes.x);
-        glUniform1i(this->drawFilterIndicatorsProgram->getUniformLocation("height"), viewRes.y);
-        glUniform1f(this->drawFilterIndicatorsProgram->getUniformLocation("axesThickness"),
-            axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 12, this->columnCount * 2);
-        glUseProgram(0);
-        float red[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+        const float red[4] = {1.0f, 0.0f, 0.0f, 1.0f};
         const float* color;
-#ifndef REMOVE_TEXT
+
         glActiveTexture(GL_TEXTURE0);
-        font.ClearBatchDrawCache();
-        for (unsigned int c = 0; c < this->columnCount; c++) {
-            unsigned int realCol = this->axisIndirection[c];
-            if (this->pickedAxis == realCol) {
+        font_.ClearBatchDrawCache();
+        font_.SetSmoothMode(smoothFontParam_.Param<core::param::BoolParam>()->Value());
+        for (int axisIdx = 0; axisIdx < dimensionCount_; axisIdx++) {
+            const int dimIdx = axisIndirection_[axisIdx];
+            if (pickedAxis_ == dimIdx) {
                 color = red;
             } else {
-                color = this->axesColorSlot.Param<core::param::ColorParam>()->Value().data();
-            }
-            float x = this->marginX + this->axisDistance * c;
-#if 0
-            this->font.DrawString(ortho, color, x, this->marginY * 0.5f                   , fontSize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(ortho, color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-#else
-            float bottom = filters[realCol].lower;
-            // bottom *= (maximums[realCol] - minimums[realCol]);
-            // bottom += minimums[realCol];
-            float top = filters[realCol].upper;
-            // top *= (maximums[realCol] - minimums[realCol]);
-            // top += minimums[realCol];
-            this->font.DrawString(ortho, color, x, this->marginY * 0.5f, fontSize, false,
-                std::to_string(bottom).c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
-            this->font.DrawString(ortho, color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false,
-                std::to_string(top).c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
-#endif
-            this->font.DrawString(ortho, color, x,
-                this->marginY * (2.0f + static_cast<float>(c % 2) * 0.5f) + this->axisHeight, fontSize * 2.0f, false,
-                names[realCol].c_str(), core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
-        }
-        this->font.BatchDrawString(ortho);
-#endif
-    }
-    debugPop();
-}
-
-void ParallelCoordinatesRenderer2D::drawDiscrete(
-    const float otherColor[4], const float selectedColor[4], float tfColorFactor, glm::ivec2 const& viewRes) {
-
-    constexpr core::FlagStorageTypes::flag_item_type testMask = core::FlagStorageTypes::to_integral(
-        core::FlagStorageTypes::flag_bits::ENABLED | core::FlagStorageTypes::flag_bits::FILTERED |
-        core::FlagStorageTypes::flag_bits::SELECTED);
-
-    if (this->drawOtherItemsSlot.Param<core::param::BoolParam>()->Value()) {
-        constexpr core::FlagStorageTypes::flag_item_type passMask =
-            core::FlagStorageTypes::to_integral(core::FlagStorageTypes::flag_bits::ENABLED);
-        this->drawItemsDiscrete(testMask, passMask, otherColor, tfColorFactor, viewRes);
-    }
-    if (this->drawSelectedItemsSlot.Param<core::param::BoolParam>()->Value()) {
-        constexpr core::FlagStorageTypes::flag_item_type passMask = core::FlagStorageTypes::to_integral(
-            core::FlagStorageTypes::flag_bits::ENABLED | core::FlagStorageTypes::flag_bits::SELECTED);
-        this->drawItemsDiscrete(testMask, passMask, selectedColor, tfColorFactor, viewRes);
-    }
-}
-
-void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
-    uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor, glm::ivec2 const& viewRes) {
-    auto tf = this->getTFSlot.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
-    if (tf == nullptr)
-        return;
-
-    debugPush(2, "drawItemsDiscrete");
-
-#ifdef FUCK_THE_PIPELINE
-    std::unique_ptr<glowl::GLSLProgram>& prog = this->traceItemsDiscreteProgram;
-#else
-#ifdef USE_TESSELLATION
-    std::unique_ptr<glowl::GLSLProgram>& prog = this->drawItemsDiscreteTessProgram;
-#else
-    std::unique_ptr<glowl::GLSLProgram>& prog = this->triangleModeSlot.Param<core::param::BoolParam>()->Value()
-                                                    ? this->drawItemsTriangleProgram
-                                                    : this->drawItemsDiscreteProgram;
-#endif
-#endif
-
-    this->enableProgramAndBind(prog);
-    tf->BindConvenience(prog, GL_TEXTURE5, 5);
-    glUniform4fv(prog->getUniformLocation("color"), 1, color);
-    glUniform1f(prog->getUniformLocation("tfColorFactor"), tfColorFactor);
-    glUniform1i(prog->getUniformLocation("widthR"), viewRes.x);
-    glUniform1i(prog->getUniformLocation("heightR"), viewRes.y);
-    try {
-        auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
-        glUniform1i(prog->getUniformLocation("colorColumn"), colcol);
-    } catch (std::out_of_range& ex) {
-        // megamol::core::utility::log::Log::DefaultLog.WriteError(
-        //    "ParallelCoordinatesRenderer2D: tried to color lines by non-existing column '%s'",
-        //    this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value().c_str());
-        glUniform1i(prog->getUniformLocation("colorColumn"), -1);
-    }
-    glUniform1ui(prog->getUniformLocation("fragmentTestMask"), testMask);
-    glUniform1ui(prog->getUniformLocation("fragmentPassMask"), passMask);
-
-    glUniform1f(prog->getUniformLocation("thicknessP"), lineThicknessSlot.Param<core::param::FloatParam>()->Value());
-
-    glEnable(GL_CLIP_DISTANCE0);
-#ifdef FUCK_THE_PIPELINE
-    glDrawArrays(GL_TRIANGLES, 0, 6 * ((this->itemCount / 128) + 1));
-#else
-#ifdef USE_TESSELLATION
-    glUniform1i(prog->getUniformLocation("isoLinesPerInvocation"), isoLinesPerInvocation);
-    glPatchParameteri(GL_PATCH_VERTICES, 1);
-    glDrawArrays(GL_PATCHES, 0, (this->itemCount / isoLinesPerInvocation) + 1);
-#else
-    // glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
-    // glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, this->columnCount * 2, this->itemCount);
-    if (this->triangleModeSlot.Param<core::param::BoolParam>()->Value()) {
-        glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
-    } else {
-        glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
-    }
-
-#endif
-#endif
-    glUseProgram(0);
-    glDisable(GL_CLIP_DISTANCE0);
-    debugPop();
-}
-
-void ParallelCoordinatesRenderer2D::drawPickIndicator(float x, float y, float pickRadius, const float color[4]) {
-    auto& program = this->drawPickIndicatorProgram;
-
-    this->enableProgramAndBind(program);
-
-    glUniform2f(program->getUniformLocation("mouse"), x, y);
-    glUniform1f(program->getUniformLocation("pickRadius"), pickRadius);
-
-    glUniform4fv(program->getUniformLocation("indicatorColor"), 1, color);
-    glDisable(GL_DEPTH_TEST);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glUseProgram(0);
-}
-
-void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, float x1, float y1, const float color[4]) {
-    auto& prog = this->drawStrokeIndicatorProgram;
-
-    this->enableProgramAndBind(prog);
-
-    glUniform2f(prog->getUniformLocation("mousePressed"), x0, y0);
-    glUniform2f(prog->getUniformLocation("mouseReleased"), x1, y1);
-
-    glUniform1i(prog->getUniformLocation("width"), viewRes.x);
-    glUniform1i(prog->getUniformLocation("height"), viewRes.y);
-    glUniform1f(prog->getUniformLocation("thickness"), axesLineThicknessSlot.Param<core::param::FloatParam>()->Value());
-
-    glUniform4fv(prog->getUniformLocation("indicatorColor"), 1, color);
-    glDisable(GL_DEPTH_TEST);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glUseProgram(0);
-}
-
-void ParallelCoordinatesRenderer2D::doPicking(float x, float y, float pickRadius) {
-    debugPush(3, "doPicking");
-
-    this->enableProgramAndBind(pickProgram);
-
-    glUniform2f(pickProgram->getUniformLocation("mouse"), x, y);
-    glUniform1f(pickProgram->getUniformLocation("pickRadius"), pickRadius);
-
-    GLuint groupCounts[3];
-    computeDispatchSizes(itemCount, pickWorkgroupSize, maxWorkgroupCount, groupCounts);
-
-    glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
-    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-    glUseProgram(0);
-    debugPop();
-}
-
-void ParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, float y1) {
-    debugPush(3, "doStroking");
-
-    this->enableProgramAndBind(strokeProgram);
-
-    glUniform2f(strokeProgram->getUniformLocation("mousePressed"), x0, y0);
-    glUniform2f(strokeProgram->getUniformLocation("mouseReleased"), x1, y1);
-
-    GLuint groupCounts[3];
-    computeDispatchSizes(itemCount, strokeWorkgroupSize, maxWorkgroupCount, groupCounts);
-
-    glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
-    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-    glUseProgram(0);
-    debugPop();
-}
-
-void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
-    debugPush(4, "doFragmentCount");
-    int invocations[] = {
-        static_cast<int>(std::ceil(fbo->getWidth() / 16)), static_cast<int>(std::ceil(fbo->getHeight() / 16))};
-    GLuint invocationCount = invocations[0] * invocations[1];
-
-    size_t bytes = sizeof(uint32_t) * 2 * invocationCount;
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, counterBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bytes, nullptr, GL_STATIC_COPY);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, counterBuffer);
-
-    makeDebugLabel(GL_BUFFER, DEBUG_NAME(counterBuffer));
-
-    glActiveTexture(GL_TEXTURE1);
-    densityFBO.BindColourTexture();
-
-    GLuint groupCounts[3] = {
-        static_cast<GLuint>((std::max)(1.0f, std::ceil(float(invocations[0]) / counterWorkgroupSize[0]))),
-        static_cast<GLuint>((std::max)(1.0f, std::ceil(float(invocations[1]) / counterWorkgroupSize[1]))), 1};
-
-    this->enableProgramAndBind(minMaxProgram);
-
-    // uniforms invocationcount etc.
-    glUniform1ui(minMaxProgram->getUniformLocation("invocationCount"), invocationCount);
-    glUniform4fv(minMaxProgram->getUniformLocation("clearColor"), 1, backgroundColor);
-    glUniform2ui(minMaxProgram->getUniformLocation("resolution"), fbo->getWidth(), fbo->getHeight());
-    glUniform2ui(minMaxProgram->getUniformLocation("fragmentCountStepSize"), invocations[0], invocations[1]);
-
-
-    glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
-
-    glUseProgram(0);
-
-    // todo read back minmax and check for plausibility!
-    debugPop();
-}
-
-void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
-    auto tf = this->getTFSlot.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
-    if (tf == nullptr)
-        return;
-    debugPush(6, "drawItemsContinuous");
-    doFragmentCount();
-    this->enableProgramAndBind(drawItemContinuousProgram);
-    // glUniform2f(drawItemContinuousProgram.ParameterLocation("bottomLeft"), 0.0f, 0.0f);
-    // glUniform2f(drawItemContinuousProgram.ParameterLocation("topRight"), windowWidth, windowHeight);
-    densityFBO.BindColourTexture();
-    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("setting tf range to [%f, %f]", tf->Range()[0],
-    // tf->Range()[1]);
-    tf->BindConvenience(drawItemContinuousProgram, GL_TEXTURE5, 5);
-    glUniform1i(this->drawItemContinuousProgram->getUniformLocation("fragmentCount"), 1);
-    glUniform4fv(this->drawItemContinuousProgram->getUniformLocation("clearColor"), 1, backgroundColor);
-    glUniform1i(this->drawItemContinuousProgram->getUniformLocation("sqrtDensity"),
-        this->sqrtDensitySlot.Param<core::param::BoolParam>()->Value() ? 1 : 0);
-    glEnable(GL_CLIP_DISTANCE0);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glUseProgram(0);
-    glDisable(GL_CLIP_DISTANCE0);
-    debugPop();
-}
-
-void ParallelCoordinatesRenderer2D::drawItemsHistogram(void) {
-    debugPush(7, "drawItemsHistogram");
-    doFragmentCount();
-    this->enableProgramAndBind(drawItemsHistogramProgram);
-    glActiveTexture(GL_TEXTURE1);
-    densityFBO.BindColourTexture();
-    glUniform4fv(this->drawItemContinuousProgram->getUniformLocation("clearColor"), 1, backgroundColor);
-    glEnable(GL_CLIP_DISTANCE0);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glUseProgram(0);
-    glDisable(GL_CLIP_DISTANCE0);
-    debugPop();
-}
-
-void ParallelCoordinatesRenderer2D::drawParcos(glm::ivec2 const& viewRes) {
-
-    // TODO only when filters changed!
-    GLuint groups = this->itemCount / (filterWorkgroupSize[0] * filterWorkgroupSize[1] * filterWorkgroupSize[2]);
-    GLuint groupCounts[3] = {(groups % maxWorkgroupCount[0]) + 1, (groups / maxWorkgroupCount[0]) + 1, 1};
-    this->enableProgramAndBind(this->filterProgram);
-    glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
-    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-    const float red[] = {1.0f, 0.0f, 0.0f, 1.0};
-    const float moreRed[] = {10.0f, 0.0f, 0.0f, 1.0};
-
-    auto drawmode = this->drawModeSlot.Param<core::param::EnumParam>()->Value();
-
-    switch (drawmode) {
-    case DRAW_DISCRETE:
-        this->drawDiscrete(this->otherItemsColorSlot.Param<core::param::ColorParam>()->Value().data(),
-            this->selectedItemsColorSlot.Param<core::param::ColorParam>()->Value().data(), 1.0f, viewRes);
-        break;
-    case DRAW_CONTINUOUS:
-    case DRAW_HISTOGRAM:
-        bool ok = true;
-        if (!this->densityFBO.IsValid() || this->densityFBO.GetWidth() != fbo->getWidth() ||
-            this->densityFBO.GetHeight() != fbo->getHeight()) {
-            densityFBO.Release();
-            ok = densityFBO.Create(fbo->getWidth(), fbo->getHeight(), GL_R32F, GL_RED, GL_FLOAT);
-            makeDebugLabel(GL_TEXTURE, densityFBO.GetColourTextureID(), "densityFBO");
-        }
-        if (ok) {
-            densityFBO.Enable();
-            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            //::glDisable(GL_ALPHA_TEST);
-            glDisable(GL_DEPTH_TEST);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_ONE, GL_ONE);
-            glBlendEquation(GL_FUNC_ADD);
-            this->drawDiscrete(red, moreRed, 0.0f, viewRes);
-            densityFBO.Disable();
-            glDisable(GL_BLEND);
-
-            if (drawmode == DRAW_CONTINUOUS) {
-                this->drawItemsContinuous();
-            } else if (drawmode == DRAW_HISTOGRAM) {
-                this->drawItemsHistogram();
+                color = axesColorParam_.Param<core::param::ColorParam>()->Value().data();
             }
 
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("could not create FBO");
+            const float posX = marginX_ + axisDistance_ * static_cast<float>(axisIdx);
+            const float posY_bottom = marginY_ * 0.5f;
+            const float posY_top = marginY_ * 1.5f + axisHeight_;
+            const float posY_label = marginY_ * (2.0f + static_cast<float>(axisIdx % 2) * 0.5f) + axisHeight_;
+
+            const std::string bottom = std::to_string(filters_[dimIdx].min);
+            const std::string top = std::to_string(filters_[dimIdx].max);
+            font_.DrawString(ortho, color, posX, posY_bottom, fontSize_, false, bottom.c_str(),
+                core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
+            font_.DrawString(ortho, color, posX, posY_top, fontSize_, false, top.c_str(),
+                core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
+            font_.DrawString(ortho, color, posX, posY_label, fontSize_ * 2.0f, false, names_[dimIdx].c_str(),
+                core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
         }
-        break;
+        font_.BatchDrawString(ortho);
     }
 }
 
-void ParallelCoordinatesRenderer2D::store_filters() {
-    nlohmann::json jf, jf_array;
-    for (auto& f : this->filters) {
-        DimensionFilter::to_json(jf, f);
-        jf_array.push_back(jf);
-    }
-    auto js = jf_array.dump();
-    this->filterStateSlot.Param<core::param::StringParam>()->SetValue(js.c_str());
+void ParallelCoordinatesRenderer2D::drawIndicatorPick(glm::vec2 pos, float pickRadius, glm::vec4 const& color) {
+    useProgramAndBindCommon(drawIndicatorPickProgram_);
+    drawIndicatorPickProgram_->setUniform("mouse", pos);
+    drawIndicatorPickProgram_->setUniform("pickRadius", pickRadius);
+    drawIndicatorPickProgram_->setUniform("indicatorColor", color);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glUseProgram(0);
 }
 
-void ParallelCoordinatesRenderer2D::load_filters() {
+void ParallelCoordinatesRenderer2D::drawIndicatorStroke(glm::vec2 start, glm::vec2 end, glm::vec4 const& color) {
+    useProgramAndBindCommon(drawIndicatorStrokeProgram_);
+    drawIndicatorStrokeProgram_->setUniform("strokeStart", start);
+    drawIndicatorStrokeProgram_->setUniform("strokeEnd", end);
+    drawIndicatorStrokeProgram_->setUniform("viewSize", viewRes_);
+    drawIndicatorStrokeProgram_->setUniform("lineWidth", axesLineWidthParam_.Param<core::param::FloatParam>()->Value());
+    drawIndicatorStrokeProgram_->setUniform("indicatorColor", color);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glUseProgram(0);
+}
+
+void ParallelCoordinatesRenderer2D::storeFilters() {
+    nlohmann::json jf_array;
+    for (auto& f : filters_) {
+        jf_array.push_back(nlohmann::json{{"lower", f.min}, {"upper", f.max}});
+    }
+    const auto js = jf_array.dump();
+    filterStateParam_.Param<core::param::StringParam>()->SetValue(js.c_str());
+}
+
+void ParallelCoordinatesRenderer2D::loadFilters() {
     try {
-        auto j = nlohmann::json::parse(this->filterStateSlot.Param<core::param::StringParam>()->Value());
+        auto j = nlohmann::json::parse(filterStateParam_.Param<core::param::StringParam>()->Value());
         int i = 0;
         for (auto& f : j) {
-            if (i < this->filters.size()) {
-                DimensionFilter::from_json(f, this->filters[i]);
+            if (i < filters_.size()) {
+                f.at("lower").get_to(filters_[i].min);
+                f.at("upper").get_to(filters_[i].max);
+                filters_[i].min = std::clamp(filters_[i].min, dimensionRanges_[i].min, dimensionRanges_[i].max);
+                filters_[i].max = std::clamp(filters_[i].max, dimensionRanges_[i].min, dimensionRanges_[i].max);
             } else {
                 break;
             }
             i++;
         }
-    } catch (nlohmann::json::exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
+    } catch (nlohmann::json::exception const& e) {
+        Log::DefaultLog.WriteError(
             "ParallelCoordinatesRenderer2D: could not parse serialized filters (exception %i)!", e.id);
         return;
     }
-}
-
-bool ParallelCoordinatesRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
-
-    // get camera
-    core::view::Camera cam = call.GetCamera();
-    auto view = cam.getViewMatrix();
-    auto proj = cam.getProjectionMatrix();
-    auto cam_intrinsics =
-        cam.get<core::view::Camera::OrthographicParameters>(); // don't you dare using a perspective cam here...
-    fbo = call.GetFramebuffer();
-    camera_cpy = cam;
-    viewRes = call.GetViewResolution();
-
-    // maintainer comment: assuming this wants to know the aspect of the full window, i.e. not onlyof the current image
-    // tile
-
-
-    // maintainer comment: assuming this now here wants to know about the current tile's resolution
-
-
-    auto bg = call.BackgroundColor();
-
-    backgroundColor[0] = bg[0];
-    backgroundColor[1] = bg[1];
-    backgroundColor[2] = bg[2];
-    backgroundColor[3] = bg[3];
-
-    glm::mat4 ortho = proj * view;
-
-    if (!this->assertData(call)) {
-        return false;
-    }
-
-    glDisable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
-
-    if (this->filterStateSlot.IsDirty()) {
-        load_filters();
-        this->filterStateSlot.ResetDirty();
-        this->needFlagsUpdate = true;
-    }
-
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, axisIndirectionBuffer);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(GLuint), axisIndirection.data());
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, filtersBuffer);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, this->columnCount * sizeof(DimensionFilter), this->filters.data());
-
-    // Do stroking/picking
-    if (this->needSelectionUpdate) {
-        this->needSelectionUpdate = false;
-
-        switch (selectionModeSlot.Param<core::param::EnumParam>()->Value()) {
-        case SELECT_STROKE:
-            this->doStroking(this->strokeStartX, this->strokeStartY, this->strokeEndX, this->strokeEndY);
-            break;
-        case SELECT_PICK:
-            this->doPicking(this->strokeEndX, this->strokeEndY,
-                this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value());
-            break;
-        }
-
-        this->needFlagsUpdate = true;
-    }
-    drawParcos(call.GetViewResolution());
-
-    // Draw stroking/picking indicator
-    if (this->drawSelectionIndicatorSlot.Param<core::param::BoolParam>()->Value()) {
-        switch (selectionModeSlot.Param<core::param::EnumParam>()->Value()) {
-        case SELECT_STROKE:
-            if (this->interactionState == InteractionState::INTERACTION_SELECT) {
-                this->drawStrokeIndicator(this->strokeStartX, this->strokeStartY, this->strokeEndX, this->strokeEndY,
-                    this->selectionIndicatorColorSlot.Param<core::param::ColorParam>()->Value().data());
-            }
-            break;
-        case SELECT_PICK:
-            this->drawPickIndicator(this->mouseX, this->mouseY,
-                this->pickRadiusSlot.Param<megamol::core::param::FloatParam>()->Value(),
-                this->selectionIndicatorColorSlot.Param<core::param::ColorParam>()->Value().data());
-            break;
-        }
-    }
-
-    if (needFlagsUpdate) {
-        needFlagsUpdate = false;
-        this->store_filters();
-
-        this->currentFlagsVersion++;
-        // HAZARD: downloading everything over and over is slowish
-        auto readFlags = readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
-        auto writeFlags = writeFlagsSlot.CallAs<core_gl::FlagCallWrite_GL>();
-        if (readFlags != nullptr && writeFlags != nullptr) {
-            writeFlags->setData(readFlags->getData(), this->currentFlagsVersion);
-            (*writeFlags)(core_gl::FlagCallWrite_GL::CallGetData);
-#if 0
-            auto flags = readFlags->getData()->flags;
-            std::vector<core::FlagStorage::FlagItemType> f(flags->getByteSize()/sizeof(core::FlagStorage::FlagItemType));
-            flags->bind();
-            glGetBufferSubData(
-                GL_SHADER_STORAGE_BUFFER, 0, flags->getByteSize(), f.data());
-
-            core::FlagStorage::FlagVectorType::size_type numFiltered = 0, numEnabled = 0, numSelected = 0,
-                                                         numSoftSelected = 0;
-            for (unsigned int& i : f) {
-                if ((i & core::FlagStorage::FILTERED) > 0) numFiltered++;
-                if ((i & core::FlagStorage::ENABLED) > 0) numEnabled++;
-                if ((i & core::FlagStorage::SELECTED) > 0) numSelected++;
-                if ((i & core::FlagStorage::SOFTSELECTED) > 0) numSoftSelected++;
-            }
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "ParallelCoordinateRenderer2D: %lu items: %lu enabled, %lu filtered, %lu selected, %lu "
-                "soft-selected.",
-                f.size(), numEnabled, numFiltered, numSelected, numSoftSelected);
-#endif
-        }
-    }
-
-
-    if (this->drawAxesSlot.Param<core::param::BoolParam>()->Value()) {
-        drawAxes(ortho);
-    }
-
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    glDepthMask(GL_TRUE);
-
-    return true;
 }

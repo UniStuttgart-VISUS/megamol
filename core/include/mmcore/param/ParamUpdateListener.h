@@ -25,7 +25,7 @@ namespace param {
 /**
  * Abstract base class for all parameter objects
  */
-class MEGAMOLCORE_API ParamUpdateListener {
+class ParamUpdateListener {
 public:
     using param_updates_vec_t = std::vector<std::pair<std::string, std::string>>;
 

@@ -7,9 +7,8 @@
 
 #include "mmcore/view/AnimDataModule.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/Thread.h"
-#include "stdafx.h"
 #include "vislib/assert.h"
+#include "vislib/sys/Thread.h"
 #include <chrono>
 
 using namespace megamol::core;

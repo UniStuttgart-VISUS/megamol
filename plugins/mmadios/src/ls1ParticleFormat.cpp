@@ -13,7 +13,6 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "stdafx.h"
 #include <numeric>
 
 
@@ -256,7 +255,7 @@ bool ls1ParticleFormat::getDataCallback(core::Call& call) {
     // transferfunction stuff
     core::view::CallGetTransferFunction* ctf = transferfunctionSlot.CallAs<core::view::CallGetTransferFunction>();
     if (ctf != nullptr) {
-        std::array<float, 2> range = {0, num_plists - 1};
+        std::array<float, 2> range = {0.0f, static_cast<float>(num_plists - 1)};
         ctf->SetRange(range);
         if (!(*ctf)()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(

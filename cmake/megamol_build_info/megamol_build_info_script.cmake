@@ -2,7 +2,7 @@
 # Copyright (c) 2021, MegaMol Dev Team
 # All rights reserved.
 #
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 # Functions
 function(write_file_if_changed filename content)
@@ -78,12 +78,6 @@ execute_process(COMMAND
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 write_file_if_changed(${INFO_RESOURCES_DIR}/MEGAMOL_GIT_DIFF "${GIT_DIFF}")
 write_file_if_changed(${INFO_RESOURCES_DIR}/MEGAMOL_GIT_IS_DIRTY "${GIT_IS_DIRTY}")
-
-# Time
-string(TIMESTAMP BUILD_TIMESTAMP "%s" UTC)
-string(TIMESTAMP BUILD_TIME "" UTC)
-write_file_if_changed(${INFO_RESOURCES_DIR}/MEGAMOL_BUILD_TIMESTAMP "${BUILD_TIMESTAMP}")
-write_file_if_changed(${INFO_RESOURCES_DIR}/MEGAMOL_BUILD_TIME "${BUILD_TIME}")
 
 # License
 configure_file(${PROJECT_DIR}/LICENSE ${INFO_RESOURCES_DIR}/MEGAMOL_LICENSE COPYONLY)

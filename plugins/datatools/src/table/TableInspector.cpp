@@ -1,5 +1,4 @@
 #include "TableInspector.h"
-#include "stdafx.h"
 
 #include "imgui.h"
 #include "imgui_internal.h"

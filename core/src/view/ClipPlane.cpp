@@ -12,7 +12,6 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "stdafx.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"

@@ -14,16 +14,15 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/VTIDataCall.h"
 #include "protein_calls/VTKImageData.h"
-#include "stdafx.h"
 //#include "vislib_vector_typedefs.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 
-#include "CUDAQuickSurf.h"
 #include "PotentialCalculator.cuh"
 #include "cuda_error_check.h"
+#include "quicksurf/CUDAQuickSurf.h"
 
 // TODO
 // + CUDAQuicksurf segfaults on release because vertex buffer object extension
@@ -346,11 +345,12 @@ bool PotentialCalculator::computeChargeDistribution(const MolecularDataCall* mol
         &this->particlePos.Peek()[0],     // Pointer to 'particle positions
         &this->particleCharges.Peek()[0], // Pointer to 'color' array
         true,                             // Do not use 'color' array
-        (float*)&this->chargesGrid.minC[0], (int*)&this->chargesGrid.size[0], this->maxParticleRad,
+        CUDAQuickSurf::VolTexFormat::RGB3F, (float*)&this->chargesGrid.minC[0], (int*)&this->chargesGrid.size[0],
+        this->maxParticleRad,
         5.0f, // Radius scale
         this->chargesGrid.delta[0],
-        0.5f,   // Isovalue
-        20.0f); // Cut off for Gaussian
+        0.5f,          // Isovalue
+        20.0f, false); // Cut off for Gaussian
 
     if (rc != 0) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Quicksurf class returned val != 0\n", this->ClassName());

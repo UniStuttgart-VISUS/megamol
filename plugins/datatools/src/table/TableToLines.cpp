@@ -1,5 +1,4 @@
 #include "TableToLines.h"
-#include "stdafx.h"
 
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"

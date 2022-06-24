@@ -6,7 +6,6 @@
  */
 
 #include "cinematic/Keyframe.h"
-#include "stdafx.h"
 
 
 using namespace megamol::cinematic;

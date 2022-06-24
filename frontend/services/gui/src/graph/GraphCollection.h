@@ -48,8 +48,6 @@ public:
     }
     GraphPtr_t GetRunningGraph();
 
-    bool LoadModuleStock(const megamol::core::CoreInstance& core_instance);
-    bool LoadCallStock(const megamol::core::CoreInstance& core_instance);
     inline const ModuleStockVector_t& GetModulesStock() {
         return this->modules_stock;
     }
@@ -71,9 +69,10 @@ public:
      *
      * @return                 True on success, false otherwise.
      */
-    bool LoadUpdateProjectFromCore(ImGuiID in_graph_uid, megamol::core::MegaMolGraph& megamol_graph);
+    bool SyncRunningGUIGraphWithCoreGraph(
+        megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
 
-    bool LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
+    bool LoadOrAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
 
     bool SaveProjectToFile(ImGuiID in_graph_uid, const std::string& project_filename, const std::string& state_json);
 
@@ -82,6 +81,13 @@ public:
     void RequestNewRunningGraph(ImGuiID graph_uid) {
         this->change_running_graph(graph_uid);
     }
+
+#ifdef PROFILING
+    void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
+        this->perf_manager = perf_manager;
+    }
+    void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi);
+#endif
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -96,7 +102,10 @@ private:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool add_update_project_from_core(ImGuiID in_graph_uid, megamol::core::MegaMolGraph& megamol_graph, bool use_stock);
+    bool update_running_graph_from_core(megamol::core::MegaMolGraph& megamol_graph, bool use_stock);
+
+    bool load_module_stock(const megamol::core::CoreInstance& core_instance);
+    bool load_call_stock(const megamol::core::CoreInstance& core_instance);
 
     std::string get_state(ImGuiID graph_id, const std::string& filename);
 
@@ -123,6 +132,12 @@ private:
     bool save_graph_dialog(ImGuiID graph_uid, bool& open_dialog);
 
     bool change_running_graph(ImGuiID graph_uid);
+
+#ifdef PROFILING
+    std::unordered_map<void*, std::weak_ptr<megamol::gui::Call>> call_to_call;
+    std::unordered_map<void*, std::weak_ptr<megamol::gui::Module>> module_to_module;
+    frontend_resources::PerformanceManager* perf_manager = nullptr;
+#endif
 };
 
 

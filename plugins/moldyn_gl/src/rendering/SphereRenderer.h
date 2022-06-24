@@ -10,6 +10,7 @@
 
 #include "misc/MDAOVolumeGenerator.h"
 
+#include "PerformanceManager.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
@@ -24,8 +25,8 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/FlagCallsGL.h"
-#include "mmcore_gl/UniFlagStorage.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
+#include "mmcore_gl/flags/UniFlagStorage.h"
 #include "mmcore_gl/utility/SSBOBufferArray.h"
 #include "mmcore_gl/utility/SSBOStreamer.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
@@ -176,16 +177,13 @@ public:
         return retval;
     }
 
-    /**
-     * The get extents callback. The module should set the members of
-     * 'call' to tell the caller the extents of its data (bounding boxes
-     * and times).
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
+#ifdef PROFILING
+    std::vector<std::string> requested_lifetime_resources() override {
+        std::vector<std::string> resources = ModuleGL::requested_lifetime_resources();
+        resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
+        return resources;
+    }
+#endif
 
     /** Ctor. */
     SphereRenderer(void);
@@ -214,6 +212,17 @@ protected:
      * @return The return value of the function.
      */
     virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
+
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
 private:
     /*********************************************************************/
@@ -254,7 +263,6 @@ private:
     glm::vec4 curClipCol;
     glm::vec4 curlightDir;
     glm::vec4 curCamUp;
-    float curCamNearClip;
     glm::vec4 curCamView;
     glm::vec4 curCamRight;
     glm::vec4 curCamPos;
@@ -305,6 +313,11 @@ private:
     bool triggerRebuildGBuffer;
 
     //TimeMeasure                            timer;
+
+#ifdef PROFILING
+    frontend_resources::PerformanceManager::handle_vector timers;
+    frontend_resources::PerformanceManager* perf_manager = nullptr;
+#endif
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
     GLuint singleBufferCreationBits;

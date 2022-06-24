@@ -6,4 +6,3 @@
  */
 
 #include "mmcore/view/CallRender3D.h"
-#include "stdafx.h"

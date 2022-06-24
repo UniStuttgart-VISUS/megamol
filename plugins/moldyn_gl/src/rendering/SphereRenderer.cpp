@@ -7,10 +7,9 @@
  */
 
 #include "SphereRenderer.h"
-#include "stdafx.h"
 
 #include "mmcore/view/light/DistantLight.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 
 #include "OpenGL_Context.h"
 
@@ -330,12 +329,25 @@ bool SphereRenderer::create(void) {
     // timer.SetSummaryFileName("summary.csv");
     // timer.SetMaximumFrames(20, 100);
 
+#ifdef PROFILING
+    perf_manager = const_cast<frontend_resources::PerformanceManager*>(
+        &frontend_resources.get<frontend_resources::PerformanceManager>());
+    frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer;
+    upload_timer.name = "upload";
+    upload_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    render_timer.name = "render";
+    render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+    timers = perf_manager->add_timers(this, {upload_timer, render_timer});
+#endif
+
     return true;
 }
 
 
 void SphereRenderer::release(void) {
-
+#ifdef PROFILING
+    perf_manager->remove_timers(timers);
+#endif
     this->resetResources();
 }
 
@@ -1121,14 +1133,12 @@ bool SphereRenderer::Render(core_gl::view::CallRender3DGL& call) {
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
     auto cam_pose = cam.get<core::view::Camera::Pose>();
-    auto cam_intrinsics = cam.get<core::view::Camera::PerspectiveParameters>();
     auto fbo = call.GetFramebuffer();
 
     this->curCamPos = glm::vec4(cam_pose.position, 1.0);
     this->curCamView = glm::vec4(cam_pose.direction, 1.0);
     this->curCamUp = glm::vec4(cam_pose.up, 1.0);
     this->curCamRight = glm::vec4(glm::cross(cam_pose.direction, cam_pose.up), 1.0);
-    this->curCamNearClip = cam_intrinsics.near_plane;
 
     this->curMVinv = glm::inverse(view);
     this->curMVtransp = glm::transpose(view);
@@ -1306,7 +1316,13 @@ bool SphereRenderer::renderSimple(core_gl::view::CallRender3DGL& call, MultiPart
             this->enableBufferData(this->sphereShader, parts, 0, parts.GetVertexData(), 0, parts.GetColourData());
         }
 
+#ifdef PROFILING
+        perf_manager->start_timer(timers[1], this->GetCoreInstance()->GetFrameID());
+#endif
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
+#ifdef PROFILING
+        perf_manager->stop_timer(timers[1]);
+#endif
 
         if (this->renderMode == RenderMode::SIMPLE_CLUSTERED) {
             if (parts.IsVAO()) {
@@ -2220,7 +2236,7 @@ bool SphereRenderer::enableFlagStorage(const vislib_gl::graphics::gl::GLSLShader
             flagc->getData()->validateFlagCount(partsCount);
         }
     }
-    flagc->getData()->flags->bind(SSBOflagsBindingPoint);
+    flagc->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, SSBOflagsBindingPoint);
     this->flags_enabled = true;
 
     return true;
@@ -2362,20 +2378,27 @@ bool SphereRenderer::makeVertexString(const MultiParticleDataCall::Particles& pa
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
-        outDeclaration = "    double posX; double posY; double posZ;\n";
+        outDeclaration = "    uint posX1; uint posX2; uint posY1; uint posY2; uint posZ1; uint posZ2;\n";
         if (interleaved) {
-            outCode =
-                "    inPosition = vec4(float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
-                "                 float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY),\n"
-                "                 float(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ), 1.0); \n"
-                "    rad = constRad;";
+            outCode = "    uvec2 thex = uvec2(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX1, "
+                      "theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX2);\n"
+                      "    uvec2 they = uvec2(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY1, "
+                      "theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY2);\n"
+                      "    uvec2 thez = uvec2(theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ1, "
+                      "theBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ2);\n"
+                      "    inPosition = inPosition = vec4(float(packDouble2x32(thex)), float(packDouble2x32(they)), "
+                      "float(packDouble2x32(thez)), 1.0);\n"
+                      "    rad = constRad;";
         } else {
-            outCode =
-                "    inPosition = vec4(float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX),\n"
-                "                 float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY),\n"
-                "                 float(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE
-                " + instanceOffset].posZ), 1.0); \n"
-                "    rad = constRad;";
+            outCode = "    uvec2 thex = uvec2(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX1, "
+                      "thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posX2);\n"
+                      "    uvec2 they = uvec2(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY1, "
+                      "thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posY2);\n"
+                      "    uvec2 thez = uvec2(thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ1, "
+                      "thePosBuffer[" SSBO_GENERATED_SHADER_INSTANCE " + instanceOffset].posZ2);\n"
+                      "    inPosition = inPosition = vec4(float(packDouble2x32(thex)), float(packDouble2x32(they)), "
+                      "float(packDouble2x32(thez)), 1.0);\n"
+                      "    rad = constRad;";
         }
         break;
     case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
@@ -2468,8 +2491,6 @@ std::shared_ptr<vislib_gl::graphics::gl::GLSLShader> SphereRenderer::generateSha
             decl += "layout(" SSBO_GENERATED_SHADER_ALIGNMENT ", binding = " + std::to_string(SSBOvertexBindingPoint) +
                     ") buffer shader_data {\n"
                     "    SphereParams theBuffer[];\n"
-                    // flat float version
-                    //"    float theBuffer[];\n"
                     "};\n";
 
         } else {

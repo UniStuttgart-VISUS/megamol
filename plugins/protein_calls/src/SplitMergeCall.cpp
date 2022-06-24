@@ -1,5 +1,4 @@
 #include "protein_calls/SplitMergeCall.h"
-#include "stdafx.h"
 
 namespace megamol {
 namespace protein_calls {

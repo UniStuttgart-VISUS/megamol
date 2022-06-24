@@ -6,7 +6,6 @@
  */
 
 #include "DifferenceVolume.h"
-#include "stdafx.h"
 
 #include <limits>
 

@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/utility/FileUtils.h"
-#include "stdafx.h"
 
 
 using namespace megamol::core::utility;

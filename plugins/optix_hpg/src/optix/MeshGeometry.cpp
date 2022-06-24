@@ -1,5 +1,4 @@
 #include "MeshGeometry.h"
-#include "stdafx.h"
 
 #include "optix/CallGeometry.h"
 

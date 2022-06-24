@@ -107,19 +107,21 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
     using LuaFuncType = std::function<std::tuple<bool, std::string>(std::string const&)>;
     const LuaFuncType& execute_lua = m_requestedResourceReferences[0].getResource<LuaFuncType>();
 
-    auto result = execute_lua(script);
-    bool script_ok = std::get<0>(result);
-    std::string script_error = std::get<1>(result);
-
     // TODO: remove this resource from Lua when project-centric struture is in place
     using SetScriptPath = std::function<void(std::string const&)>;
     const SetScriptPath& set_script_path = m_requestedResourceReferences[1].getResource<SetScriptPath>();
 
+    set_script_path(filename.generic_u8string());
+
+    auto result = execute_lua(script);
+    bool script_ok = std::get<0>(result);
+    std::string script_error = std::get<1>(result);
+
     if (!script_ok) {
         log_error("failed to load file " + filename.generic_u8string() + "\n\t" + script_error);
+        set_script_path("");
         return false;
     }
-    set_script_path(filename.generic_u8string());
 
     log("loaded file " + filename.generic_u8string() + ((script_error.size()) ? "\n\t" + script_error : ""));
     return true;

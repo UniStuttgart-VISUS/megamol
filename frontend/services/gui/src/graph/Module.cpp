@@ -11,6 +11,12 @@
 #include "CallSlot.h"
 #include "InterfaceSlot.h"
 
+#ifdef PROFILING
+#include "ProfilingUtils.h"
+#include "implot.h"
+#define MODULE_PROFILING_PLOT_HEIGHT (150.0f * megamol::gui::gui_scaling.Get())
+#define MODULE_PROFILING_WINDOW_WIDTH (300.0f * megamol::gui::gui_scaling.Get())
+#endif // PROFILING
 
 using namespace megamol;
 using namespace megamol::gui;
@@ -38,8 +44,21 @@ megamol::gui::Module::Module(ImGuiID uid, const std::string& class_name, const s
         , gui_set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
         , gui_set_selected_slot_position(false)
         , gui_hidden(false)
+        , gui_other_item_hovered(false)
         , gui_tooltip()
-        , gui_rename_popup() {
+        , gui_rename_popup()
+#ifdef PROFILING
+        , cpu_perf_history()
+        , gl_perf_history()
+        , profiling_parent_pointer(nullptr)
+        , profiling_window_height(1.0f)
+        , show_profiling_data(false)
+        , gui_profiling_button()
+        , gui_profiling_run_button()
+        , pause_profiling_history_update(false)
+        , profiling_button_position()
+#endif // PROFILING
+{
 
     this->callslots.emplace(megamol::gui::CallSlotType::CALLER, CallSlotPtrVector_t());
     this->callslots.emplace(megamol::gui::CallSlotType::CALLEE, CallSlotPtrVector_t());
@@ -304,8 +323,11 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 }
 
                 // Hover Tooltip
-                if ((state.interact.module_hovered_uid == this->uid) && !state.interact.module_show_label) {
+                if ((state.interact.module_hovered_uid == this->uid) && !state.interact.module_show_label &&
+                    !this->gui_other_item_hovered) {
+                    ImGui::PushFont(state.canvas.gui_font_ptr);
                     this->gui_tooltip.ToolTip(this->name, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
+                    ImGui::PopFont();
                 } else {
                     this->gui_tooltip.Reset();
                 }
@@ -396,11 +418,17 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 float text_width;
                 ImVec2 text_pos_left_upper;
                 const float line_height = ImGui::GetTextLineHeightWithSpacing();
-                bool other_item_hovered = false;
                 bool graph_entry_button = this->is_view;
                 bool parameter_button = (!this->parameters.empty());
-                bool any_option_button = (graph_entry_button || parameter_button);
+                bool profiling_button = false;
+#ifdef PROFILING
+                profiling_button = true;
+#endif // PROFILING
+                unsigned int button_count = (graph_entry_button) ? (1) : (0);
+                button_count += (parameter_button) ? (1) : (0);
+                button_count += (profiling_button) ? (1) : (0);
 
+                this->gui_other_item_hovered = false;
                 if (state.interact.module_show_label) {
 
                     auto header_color = (this->gui_selected) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
@@ -416,21 +444,41 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
 
                     text_width = ImGui::CalcTextSize(this->name.c_str()).x;
                     text_pos_left_upper = module_center - ImVec2((text_width / 2.0f),
-                                                              ((any_option_button) ? (line_height * 0.6f) : (0.0f)));
+                                                              ((button_count > 0) ? (line_height * 0.6f) : (0.0f)));
+#ifdef PROFILING
+                    /*
+                    /// Draw profiling data inplace
+                    if (this->show_profiling_data) {
+                        text_pos_left_upper = ImVec2(module_center.x - (text_width / 2.0f),
+                            module_rect_min.y + (1.0f * ImGui::GetFrameHeightWithSpacing()));
+                    }
+                    */
+#endif // PROFILING
                     draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name.c_str());
                 }
 
-                if (any_option_button) {
-                    float item_y_offset = (line_height / 2.0f);
+                if (button_count > 0) {
                     float item_x_offset = (ImGui::GetFrameHeight() / 2.0f);
+                    float item_y_offset = (line_height / 2.0f);
                     if (!state.interact.module_show_label) {
                         item_y_offset = -(line_height / 2.0f);
                     }
-                    if (graph_entry_button && parameter_button) {
+                    if (button_count == 2) {
                         item_x_offset = ImGui::GetFrameHeight() + (0.5f * style.ItemSpacing.x * state.canvas.zooming);
+                    } else if (button_count == 3) {
+                        item_x_offset = (0.5 * ImGui::GetFrameHeight()) + ImGui::GetFrameHeight() +
+                                        (style.ItemSpacing.x * state.canvas.zooming);
                     }
                     ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
-
+#ifdef PROFILING
+                    /*
+                    /// Draw profiling data inplace
+                    if (this->show_profiling_data) {
+                        ImGui::SetCursorScreenPos(ImVec2(module_center.x - item_x_offset,
+                            module_rect_min.y + (2.0f * ImGui::GetFrameHeightWithSpacing())));
+                    }
+                    */
+#endif // PROFILING
                     if (graph_entry_button) {
                         bool is_graph_entry = this->IsGraphEntry();
                         if (ImGui::RadioButton("###graph_entry_switch", is_graph_entry)) {
@@ -448,7 +496,9 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             } else {
                                 tooltip_label = "No Graph Entry";
                             }
-                            other_item_hovered = other_item_hovered || this->gui_tooltip.ToolTip(tooltip_label);
+                            ImGui::PushFont(state.canvas.gui_font_ptr);
+                            this->gui_other_item_hovered |= this->gui_tooltip.ToolTip(tooltip_label);
+                            ImGui::PopFont();
                         }
                         ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
                     }
@@ -475,9 +525,65 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         }
                         ImGui::SetItemAllowOverlap();
                         if (hovered) {
-                            other_item_hovered |= this->gui_tooltip.ToolTip("Parameters");
+                            ImGui::PushFont(state.canvas.gui_font_ptr);
+                            this->gui_other_item_hovered |= this->gui_tooltip.ToolTip("Parameters");
+                            ImGui::PopFont();
+                        }
+                        ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
+                    }
+#ifdef PROFILING
+                    // Profiling Button
+                    if (profiling_button) {
+                        // Lazy loading of performance button texture
+                        if (!this->gui_profiling_button.IsLoaded()) {
+                            this->gui_profiling_button.LoadTextureFromFile(GUI_FILENAME_TEXTURE_PROFILING_BUTTON);
+                        }
+                        auto button_size = ImGui::GetFrameHeight();
+                        this->profiling_button_position =
+                            ImVec2(ImGui::GetCursorScreenPos().x + button_size / 2.0f, module_rect_max.y);
+                        if (this->gui_profiling_button.Button("", ImVec2(button_size, button_size))) {
+                            this->show_profiling_data = !this->show_profiling_data;
+                            this->gui_update = true;
+                            if (this->show_profiling_data) {
+                                state.interact.profiling_show = true;
+                            }
+                        }
+                        if (hovered) {
+                            ImGui::PushFont(state.canvas.gui_font_ptr);
+                            this->gui_other_item_hovered |= this->gui_tooltip.ToolTip("Profiling");
+                            ImGui::PopFont();
+                        }
+                        if (this->show_profiling_data) {
+                            this->pause_profiling_history_update = state.interact.profiling_pause_update;
+                            /*
+                            /// Draw profiling data inplace
+                            ImVec2 profiling_child_pos = ImGui::GetCursorScreenPos();
+                            profiling_child_pos.x = module_rect_min.x + (1.5f * GUI_SLOT_RADIUS * state.canvas.zooming);
+                            ImGui::SetCursorScreenPos(profiling_child_pos);
+                            ImGui::BeginChild("module_profiling_info",
+                                ImVec2((MODULE_PROFILING_WINDOW_WIDTH * state.canvas.zooming),
+                                    (this->profiling_window_height * state.canvas.zooming)),
+                                true,
+                                ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove |
+                                    ImGuiWindowFlags_NoScrollbar);
+                            ImGui::TextUnformatted("Profiling");
+                            ImGui::SameLine();
+                            // Lazy loading of run button textures
+                            if (!this->gui_profiling_run_button.IsLoaded()) {
+                                this->gui_profiling_run_button.LoadTextureFromFile(
+                                    GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE,
+                                    GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY);
+                            }
+                            this->gui_profiling_run_button.ToggleButton(state.interact.profiling_pause_update,
+                                "Pause update of profiling values globally", "Continue updating of profiling values",
+                                ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()));
+                            ImGui::TextDisabled("Region Name:");
+                            this->DrawProfiling(state);
+                            ImGui::EndChild();
+                            */
                         }
                     }
+#endif // PROFILING
                 }
 
                 // Draw Outline
@@ -521,6 +627,17 @@ void megamol::gui::Module::Update(const GraphItemsState_t& state) {
     ImGuiStyle& style = ImGui::GetStyle();
 
     // WIDTH
+    bool graph_entry_button = this->is_view;
+    bool parameter_button = (!this->parameters.empty());
+    bool profiling_button = false;
+#ifdef PROFILING
+    profiling_button = true;
+#endif // PROFILING
+    float button_count = (graph_entry_button) ? (1.0f) : (0.0f);
+    button_count += (parameter_button) ? (1.0f) : (0.0f);
+    button_count += (profiling_button) ? (1.0f) : (0.0f);
+    float button_width = button_count * (ImGui::GetTextLineHeightWithSpacing() + style.ItemSpacing.x);
+
     float class_width = 0.0f;
     float max_label_length = 0.0f;
     if (state.interact.module_show_label) {
@@ -528,8 +645,7 @@ void megamol::gui::Module::Update(const GraphItemsState_t& state) {
         float name_length = ImGui::CalcTextSize(this->name.c_str()).x;
         max_label_length = name_length;
     }
-    float button_width =
-        ((this->is_view) ? (2.0f) : (1.0f)) * ImGui::GetTextLineHeightWithSpacing() + style.ItemSpacing.x;
+
     max_label_length = std::max(max_label_length, button_width);
     max_label_length /= state.canvas.zooming;
     float max_slot_name_length = 0.0f;
@@ -556,9 +672,20 @@ void megamol::gui::Module::Update(const GraphItemsState_t& state) {
     float text_button_height = (line_height * ((state.interact.module_show_label) ? (4.0f) : (1.0f)));
     float module_height = std::max(module_slot_height, text_button_height);
 
+#ifdef PROFILING
+    /*
+    /// Draw profiling data inplace
+    if (this->show_profiling_data) {
+        module_width = std::max(module_width, (MODULE_PROFILING_WINDOW_WIDTH) + (3.0f * GUI_SLOT_RADIUS));
+        module_height = std::max(module_height, (3.0f * ImGui::GetFrameHeightWithSpacing() / state.canvas.zooming) +
+                                                    (this->profiling_window_height) + (1.5f * GUI_SLOT_RADIUS));
+    }
+    */
+#endif // PROFILING
+
     // Clamp to minimum size
-    this->gui_size = ImVec2(std::max(module_width, (100.0f * megamol::gui::gui_scaling.Get())),
-        std::max(module_height, (50.0f * megamol::gui::gui_scaling.Get())));
+    this->gui_size = ImVec2(std::max(module_width, (2.0f * megamol::gui::gui_scaling.Get())),
+        std::max(module_height, (1.0f * megamol::gui::gui_scaling.Get())));
 
     // UPDATE all Call Slots ---------------------
     for (auto& slot_pair : this->CallSlots()) {
@@ -616,3 +743,77 @@ bool megamol::gui::Module::StateFromJSON(const nlohmann::json& in_json) {
     }
     return retval;
 }
+
+
+#ifdef PROFILING
+
+void megamol::gui::Module::AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
+    const frontend_resources::PerformanceManager::timer_entry& entry) {
+    if (!this->pause_profiling_history_update) {
+        switch (entry.api) {
+        case frontend_resources::PerformanceManager::query_api::CPU:
+            this->cpu_perf_history[entry.handle].push_sample(frame, entry.frame_index,
+                std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+            break;
+        case frontend_resources::PerformanceManager::query_api::OPENGL:
+            this->gl_perf_history[entry.handle].push_sample(frame, entry.frame_index,
+                std::chrono::duration<double, std::milli>(entry.timestamp.time_since_epoch()).count());
+            break;
+        }
+    }
+}
+
+
+void megamol::gui::Module::DrawProfiling(GraphItemsState_t& state) {
+
+    ImGui::BeginTabBar("profiling", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyScroll);
+    ProfilingUtils::ProxyVector histories;
+    histories.append(this->cpu_perf_history);
+    histories.append(this->gl_perf_history);
+    for (size_t i = 0; i < histories.size(); i++) {
+        auto& tab_label = histories[i].get_name();
+        if (ImGui::BeginTabItem(tab_label.c_str(), nullptr, ImGuiTabItemFlags_None)) {
+
+            static ProfilingUtils::MetricType display_idx = ProfilingUtils::MetricType::MINMAXAVG;
+            static ImPlotAxisFlags y_flags = ImPlotAxisFlags_AutoFit;
+            ProfilingUtils::MetricDropDown(display_idx, y_flags);
+
+            if (ImGui::BeginTable(("table_" + tab_label).c_str(), 2,
+                    ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableColumnFlags_NoResize,
+                    ImVec2(0.0f, 0.0f))) {
+                ImGui::TableSetupColumn(("column_" + tab_label).c_str(), ImGuiTableColumnFlags_WidthStretch);
+
+                ProfilingUtils::PrintTableRow(
+                    "Min Time", histories[i].window_statistics(core::MultiPerformanceHistory::metric_type::MIN,
+                                    core::MultiPerformanceHistory::metric_type::MIN));
+                ProfilingUtils::PrintTableRow(
+                    "Average Time", histories[i].window_statistics(core::MultiPerformanceHistory::metric_type::AVERAGE,
+                                        core::MultiPerformanceHistory::metric_type::AVERAGE));
+                ProfilingUtils::PrintTableRow(
+                    "Max Time", histories[i].window_statistics(core::MultiPerformanceHistory::metric_type::MAX,
+                                    core::MultiPerformanceHistory::metric_type::MAX));
+                ProfilingUtils::PrintTableRow("Max Samples / Frame",
+                    static_cast<int>(histories[i].window_statistics(core::MultiPerformanceHistory::metric_type::MAX,
+                        core::MultiPerformanceHistory::metric_type::COUNT)));
+                ProfilingUtils::PrintTableRow("Num Samples", static_cast<int>(histories[i].samples()));
+
+                ImGui::EndTable();
+            }
+
+            ProfilingUtils::DrawPlot("History", ImVec2(ImGui::GetContentRegionAvail().x, MODULE_PROFILING_PLOT_HEIGHT),
+                y_flags, display_idx, histories[i]);
+
+            ImGui::EndTabItem();
+            y_flags = 0;
+        }
+    }
+    ImGui::EndTabBar();
+
+    auto new_profiling_window_height = std::max(1.0f, ImGui::GetCursorPosY());
+    if (this->profiling_window_height != new_profiling_window_height) {
+        this->profiling_window_height = new_profiling_window_height;
+        this->gui_update = true;
+    }
+}
+
+#endif // PROFILING

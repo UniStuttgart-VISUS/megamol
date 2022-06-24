@@ -8,7 +8,6 @@
 #include "mmcore/utility/ProjectParser.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/factories/ModuleDescriptionManager.h"
-#include "stdafx.h"
 #include "vislib/VersionNumber.h"
 #include "vislib/assert.h"
 #include "vislib/memutils.h"
