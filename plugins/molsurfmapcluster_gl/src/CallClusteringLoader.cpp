@@ -36,12 +36,16 @@ CallClusteringLoader::~CallClusteringLoader(void) {
 /*
  * CallPNGPics::Count
  */
-SIZE_T CallClusteringLoader::Count(void) const { return this->numberofleaves; }
+SIZE_T CallClusteringLoader::Count(void) const {
+    return this->numberofleaves;
+}
 
 /*
  * CallPNGPics::getPNGPictures
  */
-HierarchicalClustering::CLUSTERNODE* CallClusteringLoader::getLeaves(void) const { return this->nodes; }
+HierarchicalClustering::CLUSTERNODE* CallClusteringLoader::getLeaves(void) const {
+    return this->nodes;
+}
 
 /*
  * CallPNGPics::SetData

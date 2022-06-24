@@ -7,8 +7,8 @@
 
 #include "ImageLoader.h"
 #include "JpegBitmapCodec.h"
-#include "vislib/graphics/PngBitmapCodec.h"
 #include "vislib/graphics/BitmapCodecCollection.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 
 #include "image_calls/Image2DCall.h"
 #include "mmcore/param/BoolParam.h"

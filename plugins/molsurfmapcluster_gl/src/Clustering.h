@@ -9,15 +9,15 @@
 #ifndef MOLSURFMAPCLUSTER_CLUSTERING_INCLUDED
 #define MOLSURFMAPCLUSTER_CLUSTERING_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <vector>
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "png.h"
+#include <vector>
 
 #include "vislib/String.h"
 #include "vislib/math/Cuboid.h"
@@ -45,7 +45,9 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "Clustering"; }
+    static const char* ClassName(void) {
+        return "Clustering";
+    }
 
     /**
      * Gets a human readable description of the module.
@@ -54,7 +56,9 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) { return "Clusters PNG-Pictures"; }
+    static const char* Description(void) {
+        return "Clusters PNG-Pictures";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -63,7 +67,9 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Constructor */
     Clustering(void);
@@ -75,7 +81,8 @@ private:
     /**
      * Ensures that the data is loaded
      */
-    void clusterData(image_calls::Image2DCall*, image_calls::Image2DCall* = nullptr, image_calls::Image2DCall* = nullptr);
+    void clusterData(
+        image_calls::Image2DCall*, image_calls::Image2DCall* = nullptr, image_calls::Image2DCall* = nullptr);
     void clusterData(CallClusteringLoader*);
 
     /**
@@ -117,9 +124,10 @@ private:
 
     void fillPictureDataVector(image_calls::Image2DCall& imc);
 
-    void loadValueImageForGivenPicture(const std::filesystem::path& originalPicture, std::vector<float>& outValueImage); 
+    void loadValueImageForGivenPicture(const std::filesystem::path& originalPicture, std::vector<float>& outValueImage);
 
-    bool loadFeatureVectorFromFile(const std::filesystem::path& filePath, std::map<std::string, std::vector<float>>& outFeatureMap);
+    bool loadFeatureVectorFromFile(
+        const std::filesystem::path& filePath, std::map<std::string, std::vector<float>>& outFeatureMap);
 
     /** The slot for requesting data. */
     core::CalleeSlot outSlot;
@@ -187,7 +195,7 @@ enum LinkageMode { CENTROIDE = 1, SINGLE = CENTROIDE + 1, AVARAGE = SINGLE + 1 }
 
 enum MomentsMethode { IMAGE = 1, COLOR = IMAGE + 1, AIFEATURES = COLOR + 1 };
 
-} // namespace MolSurfMapCluster
+} // namespace molsurfmapcluster
 } /* end namespace megamol */
 
 #endif /*  MOLSURFMAPCLUSTER_CLUSTERING_INCLUDED */

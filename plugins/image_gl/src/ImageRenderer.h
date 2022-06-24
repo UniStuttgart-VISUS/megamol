@@ -261,7 +261,7 @@ private:
     bool new_tiles_;
 };
 
-} /* end namespace imageviewer */
+} // namespace image_gl
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_IMAGEVIEWER_H_INCLUDED */

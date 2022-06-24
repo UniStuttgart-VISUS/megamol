@@ -24,7 +24,6 @@
 #include <math.h>
 
 #include "mmcore/CoreInstance.h"
-#include "vislib/graphics/PngBitmapCodec.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -34,6 +33,7 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
@@ -2699,7 +2699,7 @@ bool UncertaintySequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
 
     } // dataPrepared
 
-    
+
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);

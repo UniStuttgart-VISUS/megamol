@@ -200,8 +200,7 @@ bool ClusterHierarchieRenderer::create(void) {
             core::utility::log::Log::LEVEL_ERROR, "Unable to load vertex shader source for passthrough Vertex Shader");
         return false;
     }
-    if (!ssf->MakeShaderSource(
-            "molsurfPassthrough::fragment", texFragShader)) {
+    if (!ssf->MakeShaderSource("molsurfPassthrough::fragment", texFragShader)) {
         core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
             "Unable to load fragment shader source for passthrough Fragment Shader");
         return false;
@@ -235,7 +234,7 @@ bool ClusterHierarchieRenderer::create(void) {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) (3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -488,7 +487,7 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
             if (this->rightmarked) {
                 rightsubstr = rightmarked->pic->pdbid.substr(0, 4);
             }
-            
+
             if (substr.compare(leftsubstr) && substr.compare(rightsubstr)) {
                 this->theFont.DrawString(mvp, black.data(), posx, yp, height, false, stringToDraw,
                     core::utility::SDFFont::Alignment::ALIGN_CENTER_MIDDLE);
@@ -748,8 +747,8 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
 bool ClusterHierarchieRenderer::OnMouseMove(double x, double y) {
     // Only save actual Mouse Position
 
-    this->mouseX = (float) static_cast<int>(x);
-    this->mouseY = (float) static_cast<int>(y);
+    this->mouseX = (float)static_cast<int>(x);
+    this->mouseY = (float)static_cast<int>(y);
 
     if (this->clustering == nullptr)
         return false;
@@ -837,8 +836,9 @@ void ClusterHierarchieRenderer::renderPopup(glm::mat4 mvp) {
             auto lineWidth = theFont.LineWidth(fontSize, stringToDraw);
 
             std::array<float, 4> color = {0.0f, 0.0f, 0.0f, 1.0f};
-            this->theFont.DrawString(mvp, color.data(), this->x + shiftx + width * 0.5f, this->y + shifty + height * 0.5f,
-                fontSize, false, stringToDraw, core::utility::SDFFont::Alignment::ALIGN_CENTER_MIDDLE);
+            this->theFont.DrawString(mvp, color.data(), this->x + shiftx + width * 0.5f,
+                this->y + shifty + height * 0.5f, fontSize, false, stringToDraw,
+                core::utility::SDFFont::Alignment::ALIGN_CENTER_MIDDLE);
         }
         if (this->showEnzymeClassesParam.Param<param::BoolParam>()->Value()) {
             auto classes =
@@ -896,7 +896,7 @@ double ClusterHierarchieRenderer::checkposition(HierarchicalClustering::CLUSTERN
         }
 
     } else {
-        
+
         posLeft = checkposition(node->left, x, y, minheight, minwidth, spacey, spacex, distanceX, distanceY);
         posRight = checkposition(node->right, x, y, minheight, minwidth, spacey, spacex, distanceX, distanceY);
 

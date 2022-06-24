@@ -9,7 +9,7 @@
 #ifndef MOLSURFMAPCLUSTER_CLUSTERING_CALL_INCLUDED
 #define MOLSURFMAPCLUSTER_CLUSTERING_CALL_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
@@ -43,7 +43,9 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "CallClustering"; }
+    static const char* ClassName(void) {
+        return "CallClustering";
+    }
 
     /**
      * Gets a human readable description of the module.
@@ -52,7 +54,9 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) { return "Call to get Clustering"; }
+    static const char* Description(void) {
+        return "Call to get Clustering";
+    }
 
     /**
      * Answer the number of functions used for this call.
@@ -61,7 +65,9 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return core::AbstractGetData3DCall::FunctionCount(); }
+    static unsigned int FunctionCount(void) {
+        return core::AbstractGetData3DCall::FunctionCount();
+    }
 
     /**
      * Answer the name of the function used for this call.
@@ -72,7 +78,9 @@ public:
      * @param idx The index of the function to return it's name.
      * @return The name of the requested function.
      */
-    static const char* FunctionName(unsigned int idx) { return core::AbstractGetData3DCall::FunctionName(idx); }
+    static const char* FunctionName(unsigned int idx) {
+        return core::AbstractGetData3DCall::FunctionName(idx);
+    }
 
     /** Constructor */
     CallClustering(void);
@@ -103,7 +111,7 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<CallClustering> CallClusteringDescription;
 
-} // namespace MolSurfMapCluster
+} // namespace molsurfmapcluster
 } /* end namespace megamol */
 
 #endif

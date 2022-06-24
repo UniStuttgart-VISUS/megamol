@@ -186,14 +186,14 @@ void Clustering::clusterData(
     mode = mode > 4 ? mode - 4 : mode;
 
     if (cpp2 == nullptr && cpp3 == nullptr) {
-        this->clustering = new HierarchicalClustering(this->picdata, this->picturecount, this->slot1Features, this->distanceMatrix, mode, bla,
-            this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
+        this->clustering = new HierarchicalClustering(this->picdata, this->picturecount, this->slot1Features,
+            this->distanceMatrix, mode, bla, this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
             this->momentsmethode.Param<core::param::EnumParam>()->Value());
     } else {
-        this->clustering =
-            new HierarchicalClustering(this->picdata, this->slot1Features, this->slot2Features, this->slot3Features, this->distanceMatrix,
-                cpp, cpp2, cpp3, mode, bla, this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
-                this->momentsmethode.Param<core::param::EnumParam>()->Value());
+        this->clustering = new HierarchicalClustering(this->picdata, this->slot1Features, this->slot2Features,
+            this->slot3Features, this->distanceMatrix, cpp, cpp2, cpp3, mode, bla,
+            this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
+            this->momentsmethode.Param<core::param::EnumParam>()->Value());
         this->picturecount = this->picdata.size();
     }
     core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO, "Clustering finished");

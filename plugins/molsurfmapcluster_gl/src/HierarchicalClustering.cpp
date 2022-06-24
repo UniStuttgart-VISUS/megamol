@@ -43,8 +43,8 @@ HierarchicalClustering::~HierarchicalClustering() {}
 
 HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pics, SIZE_T picturecount,
     const std::map<std::string, std::vector<float>>& features,
-    const std::map<std::string, std::map<std::string, double>>& distmatrix,
-    int method, int mode, int linkage, int moments) {
+    const std::map<std::string, std::map<std::string, double>>& distmatrix, int method, int mode, int linkage,
+    int moments) {
 
     // Initalize Variables
     this->cluster = new std::vector<CLUSTERNODE*>();
@@ -90,8 +90,10 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pics, S
 
     // Getting Features of Pictures
     for (CLUSTERNODE* node : *this->cluster) {
-        if (this->momentsmethode == 1) HierarchicalClustering::calculateImageMomentsValue(node);
-        if (this->momentsmethode == 2) HierarchicalClustering::calculateColorMomentsValue(node);
+        if (this->momentsmethode == 1)
+            HierarchicalClustering::calculateImageMomentsValue(node);
+        if (this->momentsmethode == 2)
+            HierarchicalClustering::calculateColorMomentsValue(node);
         if (this->momentsmethode == 3) {
             if (features.count(node->pic->pdbid) > 0) {
                 const std::vector<float>& feat = features.at(node->pic->pdbid);
@@ -108,8 +110,7 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
     const std::map<std::string, std::vector<float>>& features1,
     const std::map<std::string, std::vector<float>>& features2,
     const std::map<std::string, std::vector<float>>& features3,
-    const std::map<std::string, std::map<std::string, double>>& distmatrix,
-    image_calls::Image2DCall* call1,
+    const std::map<std::string, std::map<std::string, double>>& distmatrix, image_calls::Image2DCall* call1,
     image_calls::Image2DCall* call2, image_calls::Image2DCall* call3, int method, int mode, int linkage, int moments) {
 
     // Initalize Variables
@@ -132,7 +133,8 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
     bool first = true;
 
     for (const auto call : calls) {
-        if (call.second == nullptr) continue;
+        if (call.second == nullptr)
+            continue;
         pictures.clear();
         pictures.shrink_to_fit(); // force to clear everything
 
@@ -174,8 +176,10 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
             pictures[id].minValue = minmax.first;
             pictures[id].maxValue = minmax.second;
 
-            if (minmax.first < globalmin) globalmin = minmax.first;
-            if (minmax.second > globalmax) globalmax = minmax.second;
+            if (minmax.first < globalmin)
+                globalmin = minmax.first;
+            if (minmax.second > globalmax)
+                globalmax = minmax.second;
 
             if (first) {
                 CLUSTERNODE* node = new CLUSTERNODE();
@@ -218,8 +222,10 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
 
         // add features to the feature vectors
         for (CLUSTERNODE* node : *this->cluster) {
-            if (this->momentsmethode == 1) HierarchicalClustering::calculateImageMomentsValue(node);
-            if (this->momentsmethode == 2) HierarchicalClustering::calculateColorMomentsValue(node);
+            if (this->momentsmethode == 1)
+                HierarchicalClustering::calculateImageMomentsValue(node);
+            if (this->momentsmethode == 2)
+                HierarchicalClustering::calculateColorMomentsValue(node);
             if (this->momentsmethode == 3) {
                 switch (call.first) {
                 case 0: {
@@ -273,8 +279,8 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
 }
 
 HierarchicalClustering::HierarchicalClustering(HierarchicalClustering::CLUSTERNODE* node,
-    const std::map<std::string, std::map<std::string, double>>& distmatrix, SIZE_T picturecount, int method, int mode, int linkage,
-    int moments) {
+    const std::map<std::string, std::map<std::string, double>>& distmatrix, SIZE_T picturecount, int method, int mode,
+    int linkage, int moments) {
 
     // Initalize Variables
     this->cluster = new std::vector<CLUSTERNODE*>();
@@ -458,7 +464,8 @@ std::vector<double>* HierarchicalClustering::gray_scale_image(PictureData* pic) 
 }
 
 double HierarchicalClustering::distance(std::vector<double>* X, std::vector<double>* Y, int r) {
-    if (X == nullptr || Y == nullptr) return 1.0;
+    if (X == nullptr || Y == nullptr)
+        return 1.0;
 
     double distance = 0.0;
     switch (r) {
@@ -735,7 +742,9 @@ PictureData* HierarchicalClustering::findNearestPicture(std::vector<double>* fea
     return pic;
 }
 
-void HierarchicalClustering::dump_dot() { dump_dot("D://default.dot"); }
+void HierarchicalClustering::dump_dot() {
+    dump_dot("D://default.dot");
+}
 
 std::string HierarchicalClustering::getFeaturesString(std::vector<double>* features) {
     std::string featurestring = "";
@@ -750,7 +759,8 @@ void HierarchicalClustering::dump_dot(const std::filesystem::path& filename) {
     std::ofstream file;
     file.open(filename);
 
-    core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO, "Creating .dot File at %s", filename);
+    core::utility::log::Log::DefaultLog.WriteMsg(
+        core::utility::log::Log::LEVEL_INFO, "Creating .dot File at %s", filename);
 
     file << "graph g {" << std::endl;
 
@@ -817,7 +827,9 @@ void HierarchicalClustering::dump_pca(const vislib::TString& filename) {
     file.close();
 }
 
-bool HierarchicalClustering::finished() { return this->clusteringfinished; }
+bool HierarchicalClustering::finished() {
+    return this->clusteringfinished;
+}
 
 void HierarchicalClustering::reanalyse(void) {
 
@@ -829,8 +841,10 @@ void HierarchicalClustering::reanalyse(void) {
 
     // Getting Features of Pictures
     for (CLUSTERNODE* node : *this->cluster) {
-        if (this->momentsmethode == 1) HierarchicalClustering::calculateImageMomentsValue(node);
-        if (this->momentsmethode == 2) HierarchicalClustering::calculateColorMomentsValue(node);
+        if (this->momentsmethode == 1)
+            HierarchicalClustering::calculateImageMomentsValue(node);
+        if (this->momentsmethode == 2)
+            HierarchicalClustering::calculateColorMomentsValue(node);
     }
 
     // Cluster the Data
@@ -841,7 +855,7 @@ void HierarchicalClustering::clusterthedata() {
 
     this->clusteringfinished = false;
 
-   core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO,
+    core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO,
         "Set up the Clustering with: Mode: %i, Distance: %i, Similarity: %i, Linkage: %i, Moments: %i", this->mode,
         this->distancemethod, this->similaritymethod, this->linkagemethod, this->momentsmethode);
 
@@ -946,15 +960,22 @@ void HierarchicalClustering::setSimilarityMethod(unsigned int method) {
     }
 }
 
-void HierarchicalClustering::changeModeTo(short int mode) { this->mode = mode; }
+void HierarchicalClustering::changeModeTo(short int mode) {
+    this->mode = mode;
+}
 
-void HierarchicalClustering::setMoments(short int moments) { this->momentsmethode = moments; }
+void HierarchicalClustering::setMoments(short int moments) {
+    this->momentsmethode = moments;
+}
 
-std::vector<HierarchicalClustering::CLUSTERNODE*>* HierarchicalClustering::getLeaves() { return this->leaves; }
+std::vector<HierarchicalClustering::CLUSTERNODE*>* HierarchicalClustering::getLeaves() {
+    return this->leaves;
+}
 
 double HierarchicalClustering::similarity(std::vector<double>* X, std::vector<double>* Y, int method) {
 
-    if (X == nullptr || Y == nullptr) return 0.0f;
+    if (X == nullptr || Y == nullptr)
+        return 0.0f;
 
     double similar = 0.0;
     switch (method) {
@@ -1031,7 +1052,9 @@ double HierarchicalClustering::similarity(std::vector<double>* X, std::vector<do
     return std::abs(similar);
 }
 
-HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::getRoot() { return (*this->root)[0]; }
+HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::getRoot() {
+    return (*this->root)[0];
+}
 
 std::vector<HierarchicalClustering::CLUSTERNODE*>* HierarchicalClustering::getLeavesOfNode(
     HierarchicalClustering::CLUSTERNODE* node) {
@@ -1059,7 +1082,9 @@ HierarchicalClustering::CLUSTERNODE* HierarchicalClustering::getRootOfNode(Hiera
     return tmp;
 }
 
-void HierarchicalClustering::setLinkageMethod(unsigned int method) { this->linkagemethod = method; }
+void HierarchicalClustering::setLinkageMethod(unsigned int method) {
+    this->linkagemethod = method;
+}
 
 void HierarchicalClustering::calculatePCA(std::vector<HierarchicalClustering::CLUSTERNODE*>* X) {
 
@@ -1205,12 +1230,15 @@ double HierarchicalClustering::getMaxDistanceOfLeavesToRoot() {
     double max = DBL_MAX * -1;
     for (CLUSTERNODE* node1 : *this->leaves) {
         double dist = this->nodeDistance(node1, this->getRoot());
-        if (max < dist) max = dist;
+        if (max < dist)
+            max = dist;
     }
     return max;
 }
 
-void HierarchicalClustering::setDistanceMultiplier(float multiplier) { this->distancemultiplier = multiplier; }
+void HierarchicalClustering::setDistanceMultiplier(float multiplier) {
+    this->distancemultiplier = multiplier;
+}
 
 std::pair<float, float> HierarchicalClustering::loadValueImage(
     const std::filesystem::path& originalPicture, std::vector<float>& outValueImage) {

@@ -112,7 +112,8 @@ private:
     void calcImageMomentsForValueImage(
         std::vector<float> const& val_image, std::vector<float>& OUT_feature_vector) const;
 
-    void calcFeatureVectorForNonLeaf(std::vector<int64_t> const& leaf_node_ids, std::vector<float>& OUT_feature_vector) const;
+    void calcFeatureVectorForNonLeaf(
+        std::vector<int64_t> const& leaf_node_ids, std::vector<float>& OUT_feature_vector) const;
 
     float calcNodeNodeDistance(ClusterNode_2 const& node1, ClusterNode_2 const& node2) const;
 

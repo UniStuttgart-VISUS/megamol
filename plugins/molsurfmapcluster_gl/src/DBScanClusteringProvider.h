@@ -1,13 +1,13 @@
 #pragma once
 
+#include "mmcore/CoreInstance.h"
+#include "mmcore/utility/ResourceWrapper.h"
 #include <array>
 #include <filesystem>
 #include <fstream>
 #include <map>
 #include <string>
 #include <vector>
-#include "mmcore/CoreInstance.h"
-#include "mmcore/utility/ResourceWrapper.h"
 
 namespace megamol {
 namespace molsurfmapcluster {

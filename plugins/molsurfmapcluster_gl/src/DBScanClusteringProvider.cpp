@@ -1,7 +1,7 @@
 #include "DBScanClusteringProvider.h"
 
-#include <sstream>
 #include "mmcore/utility/log/Log.h"
+#include <sstream>
 
 using namespace megamol;
 using namespace megamol::molsurfmapcluster;

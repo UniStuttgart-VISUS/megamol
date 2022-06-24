@@ -4213,15 +4213,14 @@ bool MapGenerator::Render(core_gl::view::CallRender3DGL& call) {
         auto path = this->store_png_path.Param<param::FilePathParam>()->Value();
         path /= pdbname.string();
         path.replace_extension("png");
-        
+
         this->store_png_image.Image() =
             new vislib::graphics::BitmapImage(this->store_png_fbo.GetWidth(), this->store_png_fbo.GetHeight(), 3U,
                 vislib::graphics::BitmapImage::CHANNELTYPE_BYTE, static_cast<const void*>(&this->store_png_data[0]));
         this->store_png_image.Image()->FlipVertical();
         if (this->store_png_image.Save(path.c_str())) {
             core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO,
-                "%s: Stored molecular surface map to file: %s", this->ClassName(),
-                path.c_str());
+                "%s: Stored molecular surface map to file: %s", this->ClassName(), path.c_str());
 
         } else {
             core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
@@ -4794,8 +4793,8 @@ std::vector<std::string> MapGenerator::splitString(
 /*
  * MapGenerator::writeValueImage
  */
-void MapGenerator::writeValueImage(const std::filesystem::path& path_to_image, const geocalls_gl::CallTriMeshDataGL& ctmd,
-    vislib::Array<unsigned char>& input_image) {
+void MapGenerator::writeValueImage(const std::filesystem::path& path_to_image,
+    const geocalls_gl::CallTriMeshDataGL& ctmd, vislib::Array<unsigned char>& input_image) {
 
     auto attribcnt = ctmd.Objects()[0].GetVertexAttribCount();
     // find float attribute

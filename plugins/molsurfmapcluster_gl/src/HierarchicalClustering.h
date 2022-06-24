@@ -9,7 +9,7 @@
 #ifndef MOLSURFMAPCLUSTER_HIERARCHICALCLUSTERING_INCLUDED
 #define MOLSURFMAPCLUSTER_HIERARCHICALCLUSTERING_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <array>
@@ -70,15 +70,13 @@ public:
     /** Constructor */
     HierarchicalClustering(void);
     HierarchicalClustering(std::vector<PictureData>&, SIZE_T, const std::map<std::string, std::vector<float>>&,
-        const std::map<std::string, std::map<std::string, double>>&, int = 2,
-        int = 1, int = 1,
+        const std::map<std::string, std::map<std::string, double>>&, int = 2, int = 1, int = 1,
         int = 1); // Standard Euclidian Distance, Avarage Linkage, Imge-Moments
 
     HierarchicalClustering(std::vector<PictureData>&, const std::map<std::string, std::vector<float>>&,
         const std::map<std::string, std::vector<float>>&, const std::map<std::string, std::vector<float>>&,
-        const std::map<std::string, std::map<std::string, double>>&,
-        image_calls::Image2DCall* = nullptr, image_calls::Image2DCall* = nullptr, image_calls::Image2DCall* = nullptr,
-        int = 2, int = 1, int = 1, int = 1);
+        const std::map<std::string, std::map<std::string, double>>&, image_calls::Image2DCall* = nullptr,
+        image_calls::Image2DCall* = nullptr, image_calls::Image2DCall* = nullptr, int = 2, int = 1, int = 1, int = 1);
 
     HierarchicalClustering(HierarchicalClustering::CLUSTERNODE*,
         const std::map<std::string, std::map<std::string, double>>&, SIZE_T, int = 2, int = 1, int = 1, int = 1);
@@ -105,7 +103,9 @@ public:
     void changeModeTo(short int);
     void setMoments(short int);
 
-    std::vector<HierarchicalClustering::CLUSTERNODE*>* getAllNodes(void) { return this->cluster; }
+    std::vector<HierarchicalClustering::CLUSTERNODE*>* getAllNodes(void) {
+        return this->cluster;
+    }
     bool parentIs(HierarchicalClustering::CLUSTERNODE*, HierarchicalClustering::CLUSTERNODE*);
     std::vector<CLUSTERNODE*>* getLeaves(void);
     std::vector<HierarchicalClustering::CLUSTERNODE*>* getLeavesOfNode(HierarchicalClustering::CLUSTERNODE*);
@@ -149,7 +149,8 @@ private:
     void calculatePCA(std::vector<HierarchicalClustering::CLUSTERNODE*>*);
     std::map<std::string, std::map<std::string, double>> distanceMatrix;
 
-    std::pair<float, float> loadValueImage(const std::filesystem::path& originalPicture, std::vector<float>& outValueImage);
+    std::pair<float, float> loadValueImage(
+        const std::filesystem::path& originalPicture, std::vector<float>& outValueImage);
 
     static uint32_t bla;
 };
@@ -158,4 +159,3 @@ private:
 } // namespace megamol
 
 #endif
-

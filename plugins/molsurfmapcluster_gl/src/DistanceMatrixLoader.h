@@ -1,12 +1,12 @@
 #pragma once
 
-#include <map>
-#include <vector>
-#include <istream>
-#include <fstream>
-#include <sstream>
 #include <filesystem>
+#include <fstream>
+#include <istream>
+#include <map>
+#include <sstream>
 #include <utility>
+#include <vector>
 
 namespace megamol {
 namespace molsurfmapcluster {

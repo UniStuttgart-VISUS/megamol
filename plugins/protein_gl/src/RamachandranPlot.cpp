@@ -542,7 +542,7 @@ bool RamachandranPlot::locateInPolygon(const std::vector<glm::vec2>& polyVector,
 float RamachandranPlot::dihedralAngle(
     const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3, const glm::vec3& v4) const {
     /*
-     *	Code from https://github.com/biopython/biopython/blob/9fa26d5efb38e7398f82f4b4e028ca84b7eeaa58/Bio/PDB/Vector.py
+     *  Code from https://github.com/biopython/biopython/blob/9fa26d5efb38e7398f82f4b4e028ca84b7eeaa58/Bio/PDB/Vector.py
      */
     const auto ab = v1 - v2;
     const auto cb = v3 - v2;

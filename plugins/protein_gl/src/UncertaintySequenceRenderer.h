@@ -476,7 +476,7 @@ private:
     vislib::Array<vislib::math::Vector<float, 4>> dsspStructEnergy;
     /** THe 4 PROSIGN threshold values per amino-acid */
     vislib::Array<vislib::math::Vector<float, 6>> prosignStructThreshold;
-    
+
     // color table
     std::vector<glm::vec3> colorTable;
     std::vector<glm::vec3> fileColorTable;
@@ -520,7 +520,7 @@ private:
     vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource> fragment;
 };
 
-} /* end namespace protein_uncertainty */
+} // namespace protein_gl
 } /* end namespace megamol */
 
 #endif // MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYSEQUENCERENDERER_H_INCLUDED

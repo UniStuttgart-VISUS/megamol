@@ -30,18 +30,23 @@ CallClustering::CallClustering(void) : clustering(nullptr) {}
  * CallClustering::~CallSpheres
  */
 CallClustering::~CallClustering(void) {
-    if (this->clustering != nullptr) this->clustering->~HierarchicalClustering();
+    if (this->clustering != nullptr)
+        this->clustering->~HierarchicalClustering();
 }
 
 /*
  * CallClustering::setClustering
  */
-void CallClustering::setClustering(HierarchicalClustering* clustering) { this->clustering = clustering; }
+void CallClustering::setClustering(HierarchicalClustering* clustering) {
+    this->clustering = clustering;
+}
 
 /*
  * CallClustering::getClustering
  */
-HierarchicalClustering* CallClustering::getClustering(void) { return this->clustering; }
+HierarchicalClustering* CallClustering::getClustering(void) {
+    return this->clustering;
+}
 
 /*
  * CallClustering::operator=

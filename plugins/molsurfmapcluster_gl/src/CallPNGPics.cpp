@@ -36,12 +36,16 @@ CallPNGPics::~CallPNGPics(void) {
 /*
  * CallPNGPics::Count
  */
-SIZE_T CallPNGPics::Count(void) const { return this->numberofpictures; }
+SIZE_T CallPNGPics::Count(void) const {
+    return this->numberofpictures;
+}
 
 /*
  * CallPNGPics::getPNGPictures
  */
-PNGPicLoader::PNGPIC* CallPNGPics::getPNGPictures(void) const { return this->pngpictures; }
+PNGPicLoader::PNGPIC* CallPNGPics::getPNGPictures(void) const {
+    return this->pngpictures;
+}
 
 /*
  * CallPNGPics::SetData

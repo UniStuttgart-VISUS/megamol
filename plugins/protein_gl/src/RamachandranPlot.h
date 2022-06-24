@@ -124,7 +124,7 @@ private:
     void computePolygonPositions(void);
 
     /**
-     *	Tells whether a given point lies inside a given polygon
+     *  Tells whether a given point lies inside a given polygon
      *
      * @param polyVector A vector containing all points of the polygon ordererd clockwise or counterclockwise
      * @param inputPos The position to test against the polygon

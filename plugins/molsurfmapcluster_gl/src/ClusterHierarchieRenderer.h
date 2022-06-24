@@ -8,20 +8,20 @@
 #ifndef MOLSURFMAPCLUSTER_CLUSTERHIERARCHIERENDERER_INCLUDED
 #define MOLSURFMAPCLUSTER_CLUSTERHIERARCHIERENDERER_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
-#include "mmcore/param/ParamSlot.h"
 
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
-#include "vislib/math/Rectangle.h"
 #include "vislib/Array.h"
+#include "vislib/math/Rectangle.h"
 
 #include "CallCluster.h"
 #include "ClusterRenderer.h"
@@ -40,21 +40,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ClusterHierarchieRenderer"; }
+    static const char* ClassName(void) {
+        return "ClusterHierarchieRenderer";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Render the Hierarchie of the given Clustering"; }
+    static const char* Description(void) {
+        return "Render the Hierarchie of the given Clustering";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     ClusterHierarchieRenderer(void);
@@ -105,11 +111,7 @@ private:
      * variables
      **********************************************************************/
 
-    enum class DistanceColorMode {
-        NONE = 0,
-        BRENDA = 1,
-        TMSCORE = 2
-    };
+    enum class DistanceColorMode { NONE = 0, BRENDA = 1, TMSCORE = 2 };
 
     /** Parameters */
     core::param::ParamSlot showEnzymeClassesParam;
@@ -198,7 +200,8 @@ private:
         std::vector<std::tuple<HierarchicalClustering::CLUSTERNODE*, ClusterRenderer::RGBCOLOR*>*>*);
     void renderPopup(glm::mat4);
     void renderMap(glm::mat4 mvp, glm::vec2 lowerleft, glm::vec2 upperright, PictureData* data);
-    double checkposition(HierarchicalClustering::CLUSTERNODE*, float, float, double, double, double, double, double = 5.0, double = 5.0);
+    double checkposition(
+        HierarchicalClustering::CLUSTERNODE*, float, float, double, double, double, double, double = 5.0, double = 5.0);
     float enzymeClassDistance(const std::array<int, 4>& arr1, const std::array<int, 4>& arr2);
 
 
@@ -216,7 +219,7 @@ private:
     std::set<std::string> dbscancluster;
 };
 
-} // namespace MolSurfMapCluster
+} // namespace molsurfmapcluster
 } // namespace megamol
 
 #endif /*MOLSURFMAPCLUSTER_CLUSTERHIERARCHIERENDERER_INCLUDED*/

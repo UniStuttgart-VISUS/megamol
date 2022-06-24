@@ -37,12 +37,16 @@ CallClusterPosition::~CallClusterPosition(void) {
 /*
  * CallClustering::setClustering
  */
-void CallClusterPosition::setPosition(HierarchicalClustering::CLUSTERNODE* position) { this->position = position; }
+void CallClusterPosition::setPosition(HierarchicalClustering::CLUSTERNODE* position) {
+    this->position = position;
+}
 
 /*
  * CallClustering::getClustering
  */
-HierarchicalClustering::CLUSTERNODE* CallClusterPosition::getPosition(void) { return this->position; }
+HierarchicalClustering::CLUSTERNODE* CallClusterPosition::getPosition(void) {
+    return this->position;
+}
 
 /*
  * CallClustering::getClusterColors

@@ -13,11 +13,11 @@
 #include "helper_includes/helper_cuda.h"
 #include "helper_includes/helper_math.h"
 
-#include "vislib/math/Vector.h"
 #include "vislib/math/Matrix.h"
+#include "vislib/math/Vector.h"
 
-#include <vector>
 #include <map>
+#include <vector>
 
 // Typedefs used by MolecularMaps.
 typedef vislib::math::Vector<float, 2> vec2f;

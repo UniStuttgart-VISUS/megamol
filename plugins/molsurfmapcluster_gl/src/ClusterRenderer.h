@@ -8,18 +8,18 @@
 #ifndef MOLSURFMAPCLUSTER_CLUSTERRENDERER_INCLUDED
 #define MOLSURFMAPCLUSTER_CLUSTERRENDERER_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/view/CallRender2DGL.h"
 #include "mmcore_gl/view/Renderer2DModuleGL.h"
-#include "mmcore/param/ParamSlot.h"
 
+#include "glowl/glowl.h"
 #include "vislib/Array.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "glowl/glowl.h"
 
 #include "CallCluster.h"
 
@@ -37,21 +37,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "ClusterRenderer"; }
+    static const char* ClassName(void) {
+        return "ClusterRenderer";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Renders a set of PNG-Pictures in their Clusters"; }
+    static const char* Description(void) {
+        return "Renders a set of PNG-Pictures in their Clusters";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) { return true; }
+    static bool IsAvailable(void) {
+        return true;
+    }
 
     /** Ctor. */
     ClusterRenderer(void);
@@ -203,7 +209,7 @@ private:
     std::vector<glm::uvec4> colortab;
 };
 
-} // namespace MolSurfMapCluster
+} // namespace molsurfmapcluster
 } // namespace megamol
 
 #endif /*MOLSURFMAPCLUSTER_CLUSTERRENDERER_INCLUDED*/

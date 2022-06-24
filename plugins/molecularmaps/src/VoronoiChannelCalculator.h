@@ -18,8 +18,8 @@
 #include "vislib/math/Plane.h"
 #include "vislib/math/Vector.h"
 
-#include <mutex>
 #include <Eigen/Dense>
+#include <mutex>
 
 namespace megamol {
 namespace molecularmaps {
