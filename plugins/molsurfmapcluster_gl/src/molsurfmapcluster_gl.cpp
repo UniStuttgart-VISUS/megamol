@@ -22,7 +22,7 @@
 #include "PNGPicLoader.h"
 #include "ProteinViewRenderer.h"
 
-namespace megamol::molsurfmapcluster {
+namespace megamol::molsurfmapcluster_gl {
 class ProteinCallsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(ProteinCallsPluginInstance)
 
@@ -55,4 +55,4 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster_gl::CallClustering_2>();
     }
 };
-} // namespace megamol::molsurfmapcluster
+} // namespace megamol::molsurfmapcluster_gl
