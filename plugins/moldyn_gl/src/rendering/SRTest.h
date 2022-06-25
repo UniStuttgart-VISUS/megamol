@@ -161,7 +161,9 @@ static auto dc_muzic = [](unsigned int num_points, std::vector<uint32_t> const& 
     /*glDrawElementsBaseVertex(GL_TRIANGLE_STRIP, num_points*6-2, GL_UNSIGNED_INT, indices.data(), 0);
     glDrawElementsBaseVertex(GL_TRIANGLE_STRIP, num_points*6-2, GL_UNSIGNED_INT, indices.data(), num_points);*/
 };
-static draw_cmd_t dc_mesh = [](unsigned int num_points) { glDrawMeshTasksNV(0, num_points / MESH_WARP_SIZE + 1); };
+static draw_cmd_t dc_mesh = [](unsigned int num_points) {
+    glDrawMeshTasksNV(0, num_points / MESH_WARP_SIZE + 1);
+};
 
 class ssbo_rt : public ssbo_shader_task {
 public:
@@ -317,13 +319,14 @@ private:
         MESH_ALTN,
         MESH_GEO,
         MESH_GEO_TASK,
-        MESH_GEO_ALTN
+        MESH_GEO_ALTN,
+        MESH_GEO_CAM
     };
 
     using method_ut = std::underlying_type_t<method_e>;
 
-    std::array<std::string, 15> method_strings = {"VAO", "TEX", "COPY", "COPY_VERT", "SSBO", "SSBO_GEO", "SSBO_VERT",
-        "SSBO_QUAD", "SSBO_STRIP", "SSBO_MUZIC", "MESH", "MESH_ALTN", "MESH_GEO", "MESH_GEO_TASK", "MESH_GEO_ALTN"};
+    std::array<std::string, 16> method_strings = {"VAO", "TEX", "COPY", "COPY_VERT", "SSBO", "SSBO_GEO", "SSBO_VERT",
+        "SSBO_QUAD", "SSBO_STRIP", "SSBO_MUZIC", "MESH", "MESH_ALTN", "MESH_GEO", "MESH_GEO_TASK", "MESH_GEO_ALTN", "MESH_GEO_CAM"};
 
     bool Render(core_gl::view::CallRender3DGL& call) override;
 

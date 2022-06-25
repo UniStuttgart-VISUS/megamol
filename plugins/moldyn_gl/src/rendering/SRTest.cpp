@@ -10,7 +10,8 @@
 
 
 #define SCALE 0.0001f
-
+//#define __SRTEST_CON_RAS__
+//#define __SRTEST_CAM_ALIGNED__
 
 megamol::moldyn_gl::rendering::SRTest::SRTest()
         : data_in_slot_("inData", "")
@@ -43,6 +44,7 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO), "MESH_GEO");
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO_TASK), "MESH_GEO_TASK");
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO_ALTN), "MESH_GEO_ALTN");
+    ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO_CAM), "MESH_GEO_CAM");
     method_slot_ << ep;
     MakeSlotAvailable(&method_slot_);
 
@@ -67,7 +69,7 @@ megamol::moldyn_gl::rendering::SRTest::~SRTest() {
     this->Release();
 }
 
-#define __SRTEST_CAM_ALIGNED__
+
 bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
     try {
         auto shdr_vao_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
@@ -127,6 +129,14 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         shdr_mesh_geo_altn_options.addDefinition("__SRTEST_MESH_GEO_ALTN__");
         shdr_mesh_geo_altn_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
         auto mode = static_cast<upload_mode>(upload_mode_slot_.Param<core::param::EnumParam>()->Value());
+
+        auto shdr_mesh_geo_cam_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        shdr_mesh_geo_cam_options.addDefinition("__SRTEST_MESH_GEO__");
+        shdr_mesh_geo_cam_options.addDefinition("__SRTEST_CAM_ALIGNED__");
+        shdr_mesh_geo_cam_options.addDefinition("__SRTEST_MESH_GEO__");
+        shdr_mesh_geo_cam_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
+
+
         switch (mode) {
         case upload_mode::FULL_SEP: {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
@@ -138,6 +148,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
             shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
             shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
+            shdr_mesh_geo_cam_options.addDefinition("__SRTEST_UPLOAD_FULL_SEP__");
         } break;
         case upload_mode::VEC3_SEP: {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
@@ -149,6 +160,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
             shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
             shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
+            shdr_mesh_geo_cam_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
         } break;
         case upload_mode::NO_SEP: {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
@@ -160,6 +172,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
             shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
             shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
+            shdr_mesh_geo_cam_options.addDefinition("__SRTEST_UPLOAD_VEC3_SEP__");
         } break;
         case upload_mode::BUFFER_ARRAY: {
             shdr_ssbo_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
@@ -171,6 +184,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
             shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
             shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
+            shdr_mesh_geo_cam_options.addDefinition("__SRTEST_UPLOAD_BUFFER_ARRAY__");
         } break;
         case upload_mode::POS_COL_SEP:
         default: {
@@ -183,6 +197,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
             shdr_mesh_altn_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_mesh_geo_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
             shdr_mesh_geo_altn_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
+            shdr_mesh_geo_cam_options.addDefinition("__SRTEST_UPLOAD_POS_COL_SEP__");
         }
         }
 
@@ -216,6 +231,9 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
             std::make_pair(method_e::MESH_GEO, std::make_shared<mesh_geo_rt>(mode, shdr_mesh_geo_options)));
         rendering_tasks_.insert(
             std::make_pair(method_e::MESH_GEO_TASK, std::make_shared<mesh_geo_task_rt>(mode, shdr_mesh_geo_options)));
+
+        rendering_tasks_.insert(
+            std::make_pair(method_e::MESH_GEO_CAM, std::make_shared<mesh_geo_rt>(mode, shdr_mesh_geo_cam_options)));
 
         rendering_tasks_.insert(std::make_pair(
             method_e::MESH_GEO_ALTN, std::make_shared<mesh_geo_altn_rt>(mode, shdr_mesh_geo_altn_options)));
@@ -459,6 +477,12 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
         // clip_thres_slot_.ResetDirty();
     }
 
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+#ifdef __SRTEST_CON_RAS__
+    glEnable(GL_CONSERVATIVE_RASTERIZATION_NV);
+#endif
 #ifdef PROFILING
     // glQueryCounter(queryID[1], GL_TIMESTAMP);
     pm.set_transient_comment(timing_handles_[1], method_strings[static_cast<method_ut>(method)] + std::string(" ") +
@@ -474,6 +498,12 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
     glDisable(GL_STENCIL_TEST);*/
 #ifdef PROFILING
     pm.stop_timer(timing_handles_[1]);
+#endif
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glDisable(GL_PROGRAM_POINT_SIZE);
+#ifdef __SRTEST_CON_RAS__
+    glDisable(GL_CONSERVATIVE_RASTERIZATION_NV);
 #endif
 
     // glQueryCounter(queryID[2], GL_TIMESTAMP);

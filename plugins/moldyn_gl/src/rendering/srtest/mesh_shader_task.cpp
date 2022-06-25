@@ -7,7 +7,8 @@ megamol::moldyn_gl::rendering::mesh_shader_task::~mesh_shader_task() {
 
 
 bool megamol::moldyn_gl::rendering::mesh_shader_task::render(GLuint ubo) {
-    glEnable(GL_DEPTH_TEST);
+    /*glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CONSERVATIVE_RASTERIZATION_NV);*/
     auto program = get_program();
     program->use();
 
@@ -62,7 +63,8 @@ bool megamol::moldyn_gl::rendering::mesh_shader_task::render(GLuint ubo) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     glUseProgram(0);
-    glDisable(GL_DEPTH_TEST);
+    /*glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CONSERVATIVE_RASTERIZATION_NV);*/
 
     return true;
 }
