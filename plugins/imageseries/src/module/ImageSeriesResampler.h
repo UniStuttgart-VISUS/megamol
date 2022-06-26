@@ -119,6 +119,7 @@ private:
     // TODO store transformation matrix as separate parameter
     std::unique_ptr<registration::AsyncImageRegistrator> registrator;
     glm::mat3x2 cachedTransformMatrix;
+    bool suppressed = false;
 
     util::LRUCache<AsyncImageData2D::Hash, AsyncImageData2D> imageCache;
 

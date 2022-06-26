@@ -101,6 +101,11 @@ void ImageSeriesResampler::release() {
 }
 
 bool ImageSeriesResampler::getDataCallback(core::Call& caller) {
+    if (suppressed) {
+        updateTransformationMatrix();
+        return false;
+    }
+
     if (auto* call = dynamic_cast<ImageSeries2DCall*>(&caller)) {
         if (auto* getInput = getInputCaller.CallAs<ImageSeries::ImageSeries2DCall>()) {
             auto input = call->GetInput();
@@ -110,14 +115,6 @@ bool ImageSeriesResampler::getDataCallback(core::Call& caller) {
                 auto output = transformMetadata(getInput->GetOutput());
 
                 if (imageRegistrationParam.Param<core::param::BoolParam>()->Value() && output.imageData) {
-                    // Update registrator parameters
-                    if (registrator->isActive()) {
-                        float keyTimeReference = keyTimeReference1Param.Param<core::param::FloatParam>()->Value();
-                        float keyTimeInput = keyTimeInput1Param.Param<core::param::FloatParam>()->Value();
-                        registrator->setReferenceImage(fetchImage(getReferenceCaller, keyTimeReference));
-                        registrator->setInputImage(fetchImage(getInputCaller, keyTimeInput));
-                    }
-
                     updateTransformationMatrix();
 
                     if (cachedTransformMatrix != glm::mat3x2(1, 0, 0, 1, 0, 0)) {
@@ -151,8 +148,10 @@ bool ImageSeriesResampler::getMetaDataCallback(core::Call& caller) {
 bool ImageSeriesResampler::getTransformCallback(core::Call& caller) {
     if (auto* call = dynamic_cast<AffineTransform2DCall*>(&caller)) {
         updateTransformationMatrix();
-        call->SetOutput({cachedTransformMatrix});
-        return true;
+        if (!registrator->isActive()) {
+            call->SetOutput({cachedTransformMatrix});
+            return true;
+        }
     }
     return false;
 }
@@ -209,11 +208,24 @@ void ImageSeriesResampler::updateTransformationMatrix() {
     glm::mat3x2 matrix(1, 0, 0, 1, 0, 0);
 
     if (registrator->isActive()) {
+        float keyTimeReference = keyTimeReference1Param.Param<core::param::FloatParam>()->Value();
+        float keyTimeInput = keyTimeInput1Param.Param<core::param::FloatParam>()->Value();
+        registrator->setReferenceImage(fetchImage(getReferenceCaller, keyTimeReference));
+        registrator->setInputImage(fetchImage(getInputCaller, keyTimeInput));
+
         matrix = registrator->getTransform();
+
+        if (registrator->getStepsSinceLastImprovement() > 50) {
+            imageRegistrationAutoParam.Param<core::param::BoolParam>()->SetValue(false);
+            registrator->setActive(false);
+        }
     } else if (getTransformCaller.GetStatus() == megamol::core::AbstractSlot::STATUS_CONNECTED) {
         if (auto* getTransform = getTransformCaller.CallAs<ImageSeries::AffineTransform2DCall>()) {
             if ((*getTransform)()) {
                 matrix = getTransform->GetOutput().matrix;
+                suppressed = false;
+            } else {
+                suppressed = true;
             }
         }
     } else {

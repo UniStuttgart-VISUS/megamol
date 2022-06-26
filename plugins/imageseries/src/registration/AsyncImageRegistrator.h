@@ -26,6 +26,8 @@ public:
 
     float getMeanSquareError() const;
 
+    int getStepsSinceLastImprovement() const;
+
     void setActive(bool active);
     bool isActive() const;
 
@@ -36,6 +38,8 @@ private:
     AsyncImagePtr referenceImage;
     glm::mat3x2 transform;
     float meanSquareError = 0.f;
+    int stepsSinceLastImprovement = 0;
+    bool resetPending = false;
 
     std::atomic_bool active = ATOMIC_VAR_INIT(false);
     std::unique_ptr<std::thread> thread;

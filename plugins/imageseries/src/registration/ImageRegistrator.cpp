@@ -16,12 +16,14 @@ void ImageRegistrator::setInputImage(AsyncImagePtr image) {
         // Blue input image
         filter::Convolution2DFilter::Input blurInput;
         blurInput.image = this->inputImage;
-        blurInput.kernelX = filter::Convolution2DFilter::makeGaussianKernel(5, 10);
+        blurInput.kernelX = filter::Convolution2DFilter::makeGaussianKernel(8, 20);
         blurInput.kernelY = blurInput.kernelX;
 
         auto blurredImage =
             std::make_shared<AsyncImageData2D>(filter::Convolution2DFilter(blurInput), image->getMetadata());
         this->inputDerivative = filter::DerivativeFilter(blurredImage)();
+        this->biasedAverageMeanSquareError = -1.f;
+        this->stepsSinceLastImprovement = 0;
     }
 }
 
@@ -65,6 +67,16 @@ float ImageRegistrator::getMeanSquareError() const {
     return meanSquareError;
 }
 
+void ImageRegistrator::reset() {
+    this->biasedAverageMeanSquareError = -1.f;
+    this->stepsSinceLastImprovement = 0;
+    this->transform = glm::mat3x2(1, 0, 0, 1, 0, 0);
+}
+
+int ImageRegistrator::getStepsSinceLastImprovement() const {
+    return stepsSinceLastImprovement;
+}
+
 void ImageRegistrator::step() {
     auto referenceData = referenceImage ? referenceImage->getImageData() : nullptr;
     auto inputData = inputImage ? inputImage->getImageData() : nullptr;
@@ -103,10 +115,24 @@ void ImageRegistrator::step() {
         }
     }
 
+    auto limitVectorLength = [](glm::vec2 vec, float maxLength) {
+        float length = glm::length(vec);
+        return length > maxLength ? vec / length * maxLength : vec;
+    };
+
     if (sampleCount != 0) {
-        transform += glm::mat3x2(sum[0] * (convergenceRateLinear / sampleCount),
-            sum[1] * (convergenceRateLinear / sampleCount), sum[2] * (convergenceRateAffine / sampleCount));
         meanSquareError = squareErrorSum / sampleCount;
+        if (biasedAverageMeanSquareError < 0.f) {
+            biasedAverageMeanSquareError = meanSquareError;
+        } else if (meanSquareError < biasedAverageMeanSquareError) {
+            biasedAverageMeanSquareError = (biasedAverageMeanSquareError + meanSquareError) * 0.5f;
+            stepsSinceLastImprovement = 0;
+        } else {
+            stepsSinceLastImprovement++;
+        }
+        transform += glm::mat3x2(sum[0] * (convergenceRateLinear * biasedAverageMeanSquareError),
+            sum[1] * (convergenceRateLinear * biasedAverageMeanSquareError),
+            limitVectorLength(sum[2] * (convergenceRateAffine * biasedAverageMeanSquareError), 2.f));
     }
 }
 

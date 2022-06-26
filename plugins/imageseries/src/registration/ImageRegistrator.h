@@ -36,6 +36,9 @@ public:
 
     float getMeanSquareError() const;
 
+    void reset();
+    int getStepsSinceLastImprovement() const;
+
     void step();
 
 private:
@@ -46,6 +49,8 @@ private:
     float convergenceRateLinear = 0.0001f;
     float convergenceRateAffine = 100.f;
     float meanSquareError = 0.f;
+    float biasedAverageMeanSquareError = -1.f;
+    int stepsSinceLastImprovement = 0;
 };
 
 } // namespace megamol::ImageSeries::registration

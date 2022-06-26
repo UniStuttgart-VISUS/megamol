@@ -98,7 +98,7 @@ glm::vec2 ImageDisplay2D::getImageSize() const {
         float width = std::max<float>(texture->getWidth(), 1) / std::max<float>(texture->getHeight(), 1) * height;
         return glm::vec2(width, height);
     } else {
-        return glm::vec2(1.f, 1.f);
+        return glm::vec2(2448.f, 2050.f);
     }
 }
 

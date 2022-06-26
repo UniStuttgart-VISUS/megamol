@@ -8,7 +8,10 @@ namespace megamol::ImageSeries::registration {
 
 AsyncImageRegistrator::AsyncImageRegistrator()
         : registrator(std::make_shared<ImageRegistrator>())
-        , transform(1, 0, 0, 1, 0, 0) {}
+        , transform(1, 0, 0, 1, 0, 0) {
+    registrator->setConvergenceRateLinear(0.00000001f);
+    registrator->setConvergenceRateAffine(0.05f);
+}
 
 AsyncImageRegistrator::~AsyncImageRegistrator() {
     setActive(false);
@@ -44,9 +47,18 @@ float AsyncImageRegistrator::getMeanSquareError() const {
     return this->meanSquareError;
 }
 
+int AsyncImageRegistrator::getStepsSinceLastImprovement() const {
+    std::unique_lock<std::mutex> lock(mutex);
+    return this->stepsSinceLastImprovement;
+}
+
 void AsyncImageRegistrator::setActive(bool active) {
     if (active && !thread) {
         this->active = true;
+
+        this->registrator->reset();
+        this->stepsSinceLastImprovement = 0;
+
         thread = std::make_unique<std::thread>([this]() {
             auto nextUpdate = std::chrono::high_resolution_clock::now();
             while (this->active) {
@@ -54,15 +66,16 @@ void AsyncImageRegistrator::setActive(bool active) {
                 auto now = std::chrono::high_resolution_clock::now();
                 if (now > nextUpdate) {
                     std::unique_lock<std::mutex> lock(mutex);
+                    if (this->resetPending) {}
                     this->registrator->setInputImage(inputImage);
                     this->registrator->setReferenceImage(referenceImage);
 
                     this->transform = this->registrator->getTransform();
                     this->meanSquareError = this->registrator->getMeanSquareError();
+                    this->stepsSinceLastImprovement = this->registrator->getStepsSinceLastImprovement();
                     nextUpdate = now + 200ms;
                 }
                 registrator->step();
-                // TODO auto-stop once conditions are met
             }
 
             // Push final update
