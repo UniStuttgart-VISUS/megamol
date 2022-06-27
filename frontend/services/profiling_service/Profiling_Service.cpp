@@ -1,5 +1,7 @@
 #include "Profiling_Service.hpp"
 
+#include "LuaCallbacksCollection.h"
+
 namespace megamol {
 namespace frontend {
 
@@ -31,6 +33,12 @@ bool Profiling_Service::init(void* configPtr) {
         });
     }
 #endif
+
+    this->_requestedResourcesNames = {"RegisterLuaCallbacks"};
+
+    distro_ = std::uniform_int_distribution<int64_t>(1);
+    rng_ = std::mt19937_64(42);
+
     return true;
 }
 
@@ -48,6 +56,66 @@ void Profiling_Service::updateProvidedResources() {
 
 void Profiling_Service::resetProvidedResources() {
     _perf_man.endFrame();
+    notify_timer_queries();
+}
+
+void Profiling_Service::fill_lua_callbacks() {
+    frontend_resources::LuaCallbacksCollection callbacks;
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::LongResult>("mmCreateTimeQuery",
+        "(void)\n\tCreates a time query to time a specified number of frames.\n\tReturn UID of the query.",
+        {[&]() -> frontend_resources::LuaCallbacksCollection::LongResult {
+            auto uid = distro_(rng_);
+            auto fit = timer_map_.find(uid);
+            if (fit != timer_map_.end()) {
+                return frontend_resources::LuaCallbacksCollection::LongResult(0);
+            }
+            timer_map_[uid] = std::tuple<int, int64_t, int64_t>(-1, -1, -1);
+            return frontend_resources::LuaCallbacksCollection::LongResult(uid);
+        }});
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::LongResult, int64_t, int>("mmStartTimeQuery",
+        "(long UID, int num_frames)\n\tStart the query specified by the UID. After num_frames a timestamp is "
+        "recorded.\n\tReturns timestamp at start of query.",
+        {[&](int64_t uid, int num_frames) -> frontend_resources::LuaCallbacksCollection::LongResult {
+            auto fit = timer_map_.find(uid);
+            if (fit != timer_map_.end()) {
+                std::get<0>(fit->second) = num_frames;
+                std::get<1>(fit->second) = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+                std::get<2>(fit->second) = -1;
+                return frontend_resources::LuaCallbacksCollection::LongResult(std::get<1>(fit->second));
+            }
+            return frontend_resources::LuaCallbacksCollection::LongResult(-1);
+        }});
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::LongResult, int64_t>("mmPokeTimeQuery",
+        "(long UID)\n\tPokes the query specified by UID if num_frames have passed.\n\tReturns timestamp at end of "
+        "query.",
+        {[&](int64_t uid) -> frontend_resources::LuaCallbacksCollection::LongResult {
+            auto fit = timer_map_.find(uid);
+            if (fit != timer_map_.end() && std::get<0>(fit->second) == 0) {
+                auto val = std::get<2>(fit->second);
+                timer_map_.erase(fit->first);
+                return frontend_resources::LuaCallbacksCollection::LongResult(val);
+            }
+            return frontend_resources::LuaCallbacksCollection::LongResult(-1);
+        }});
+
+    auto& register_callbacks =
+        _requestedResourcesReferences[0]
+            .getResource<std::function<void(frontend_resources::LuaCallbacksCollection const&)>>();
+
+    register_callbacks(callbacks);
+}
+
+void Profiling_Service::notify_timer_queries() {
+    for (auto& query : timer_map_) {
+        if (std::get<0>(query.second) == 0) {
+            std::get<2>(query.second) = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        } else if (std::get<0>(query.second) > 0) {
+            --std::get<0>(query.second);
+        }
+    }
 }
 } // namespace frontend
 } // namespace megamol
