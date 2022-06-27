@@ -8,8 +8,8 @@
 #pragma once
 
 #include <fstream>
-#include <tuple>
 #include <random>
+#include <tuple>
 
 #include "AbstractFrontendService.hpp"
 #include "PerformanceManager.h"
