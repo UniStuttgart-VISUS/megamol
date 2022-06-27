@@ -250,6 +250,7 @@ protected:
     std::unique_ptr<glowl::GLSLProgram> drawIndicatorStrokeProgram_;
     std::unique_ptr<glowl::GLSLProgram> dualProgram_;
     std::unique_ptr<glowl::GLSLProgram> dualDisplayProgram_;
+    std::unique_ptr<glowl::GLSLProgram> dualAltDisplayProgram_;
 
     std::array<GLint, 3> filterWorkgroupSize_;
     std::array<GLint, 3> dualWorkgroupSize_;

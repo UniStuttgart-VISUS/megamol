@@ -239,6 +239,9 @@ bool ParallelCoordinatesRenderer2D::create() {
         dualDisplayProgram_
         = core::utility::make_glowl_shader(
             "pc_dualDisplay", shader_options, "infovis_gl/pc/dual.vert.glsl", "infovis_gl/pc/dual.frag.glsl");
+
+        dualAltDisplayProgram_ = core::utility::make_glowl_shader(
+            "pc_dualAltDisplay", shader_options, "infovis_gl/pc/dualAlt.vert.glsl", "infovis_gl/pc/dualAlt.frag.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteError(("ParallelCoordinatesRenderer2D: " + std::string(e.what())).c_str());
         return false;
@@ -857,6 +860,7 @@ void ParallelCoordinatesRenderer2D::drawDensity(std::shared_ptr<glowl::Framebuff
 }
 
 void ParallelCoordinatesRenderer2D::drawDual() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     useProgramAndBindCommon(dualProgram_);
     int axes_pixel_height = (cameraCopy_.value().getViewMatrix() * cameraCopy_.value().getProjectionMatrix() * glm::vec4(0, 1.0, 0, 0)).y *
@@ -864,7 +868,7 @@ void ParallelCoordinatesRenderer2D::drawDual() {
 
     if (dualTexture_ == nullptr || dualTexture_->getHeigth() != axes_pixel_height +1) {
         dualTexture_ = std::make_unique<glowl::Texture2DArray>("o_dualtex",
-            glowl::TextureLayout(GL_R32UI, axes_pixel_height+1, axes_pixel_height+1, dimensionCount_, GL_RED, GL_UNSIGNED_INT, 1,
+            glowl::TextureLayout(GL_R32UI, axes_pixel_height + 1, axes_pixel_height + 1, dimensionCount_, GL_RED, GL_UNSIGNED_INT, 1,
                 {
                     {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER},
                     {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
@@ -874,20 +878,34 @@ void ParallelCoordinatesRenderer2D::drawDual() {
                 },
                 {}),
             nullptr);
-    }
+        dualTexture_->bindImage(7, GL_WRITE_ONLY);
 
+        std::array<GLuint, 3> groupCounts{};
+        dualProgram_->setUniform("axesHeight", axes_pixel_height);
+        computeDispatchSizes(itemCount_ * dimensionCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
+        glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
+        
+    }
+    //const std::vector<uint32_t> zeroData((axes_pixel_height + 1) * (axes_pixel_height + 1), 0);
     
-    std::array<GLuint, 3> groupCounts{};
-    dualTexture_->bindImage(7, GL_WRITE_ONLY);
-    dualProgram_->setUniform("axesHeight", axes_pixel_height);
-    computeDispatchSizes(itemCount_ * dimensionCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
-    glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
+    
+
 
     useProgramAndBindCommon(dualDisplayProgram_);
+    glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA);
+    //glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     dualTexture_->bindImage(7, GL_READ_ONLY);
     dualDisplayProgram_->setUniform("axesHeight", axes_pixel_height);
     glDrawArraysInstanced(GL_LINES, 0, 2, dimensionCount_ * axes_pixel_height * axes_pixel_height);
 
+    /*
+    useProgramAndBindCommon(dualAltDisplayProgram_);
+    dualTexture_->bindImage(7, GL_READ_ONLY);
+    dualDisplayProgram_->setUniform("axesHeight", axes_pixel_height);
+    auto tfCall = tfSlot_.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
+    tfCall->BindConvenience(dualAltDisplayProgram_, GL_TEXTURE5, 5);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    */
     glUseProgram(0);
 }
 

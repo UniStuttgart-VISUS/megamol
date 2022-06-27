@@ -1,8 +1,11 @@
 #version 450
 #include "common/common.inc.glsl"
+#include "core/tflookup.inc.glsl"
+#include "core/tfconvenience.inc.glsl"
 out vec2 uvCoords;
 layout (binding=7, r32ui) uniform uimage2DArray imgRead;
 uniform int axesHeight;
+out vec4 color;
 
 void main() {
     int right = (gl_InstanceID % axesHeight);
@@ -20,7 +23,8 @@ void main() {
         ycoordinate = (compMx * vec4(0, ycoordinate, 0, 1)).y;
         float xcoordinate = margin.x + (gl_VertexID + cDim) * axisDistance;
         xcoordinate = (compMx * vec4(xcoordinate, 0, 0, 1)).x;
-
+        color = tflookup(imageLoad(imgRead, ivec3(left, right, cDim)).x);
+        color.a = float(imageLoad(imgRead, ivec3(left, right, cDim)).x) / 5000.0;
         gl_Position = vec4(xcoordinate, ycoordinate, 0.0f, 1.0f);
     }else{
         gl_Position = vec4(-100, -100, -1.0, 0.0);
