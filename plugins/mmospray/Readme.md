@@ -36,9 +36,9 @@ The current dependencies are: [rkcommon](https://github.com/ospray/rkcommon), [o
     - Make sure you enable the plugin in CMake by checking the option `BUILD_MMOSPRAY_PLUGIN`.
     Either use `-DBUILD_MMOSPRAY_PLUGIN` as configuration argument or use the graphical user interface `ccmake`.
     - If OSPRay is not automatically found during configuration of MegaMol, set the appropriate `ospray_DIR`.  
-    *Hint:* The CMake configuration files of OSPRay are usually found in a subdirectory of the install directory: `<megamol_build_dir>/install/ospray/lib/cmake/...`
-    - CMake subsequently asks for the build files of the following dependencies:
-        - rkcommon: `<megamol_build_dir>/install/rkcommon/lib/cmake/...`
+    *Hint:* The CMake configuration files of OSPRay are usually found in a subdirectory of the install directory: `<ospray_build_dir>/install/ospray/lib/cmake/<ospray-version>`
+    - CMake subsequently asks for the config files of the following dependencies:
+        - rkcommon: `<ospray_build_dir>/install/rkcommon/lib/cmake/<rkcommon-version>`
     - Build and install MegaMol. 
     - In order to test OSPRay, start MegaMol using the example project file `<megamol_build_dir>/install/examples/testspheres_ospray_megamol.lua`.
 
