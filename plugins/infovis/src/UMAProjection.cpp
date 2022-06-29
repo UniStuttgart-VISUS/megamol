@@ -236,7 +236,7 @@ bool megamol::infovis::UMAProjection::project(megamol::datatools::table::TableDa
     auto nNeighbors = this->nNeighborsSlot.Param<core::param::IntParam>()->Value();
 
     // Load data in a column-major input array.
-    double* inputData = new double[columnCount * rowsCount];
+    std::vector<double> inputData(columnCount * rowsCount, 0.0);
     for (int col = 0; col < columnCount; col++) {
         for (int row = 0; row < rowsCount; row++) {
             inputData[col * rowsCount + row] = inData[row * columnCount + col];
@@ -244,7 +244,7 @@ bool megamol::infovis::UMAProjection::project(megamol::datatools::table::TableDa
     }
 
     // Allocate a column-major embedding array.
-    double* embeddingData = new double[nDims * rowsCount];
+    std::vector<double> embeddingData(nDims * rowsCount, 0.0);
 
     // Run UMAP algorithm.
     Umap umap;
@@ -262,11 +262,11 @@ bool megamol::infovis::UMAProjection::project(megamol::datatools::table::TableDa
     umap.set_initialize(static_cast<umappp::InitMethod>(initialize));
     umap.set_negative_sample_rate(negativeSampleRate);
     umap.set_num_neighbors(nNeighbors);
-    umap.run(rowsCount, columnCount, inputData, nDims, embeddingData, 0);
+    umap.run(rowsCount, columnCount, inputData.data(), nDims, embeddingData.data(), 0);
 
     // Search extreme values.
-    double* minimas = new double[nDims];
-    double* maximas = new double[nDims];
+    std::vector<double> minimas(nDims, 0.0);
+    std::vector<double> maximas(nDims, 0.0);
     for (int dim = 0; dim < nDims; dim++) {
         minimas[dim] = maximas[dim] = embeddingData[dim * rowsCount];
     }
@@ -317,11 +317,6 @@ bool megamol::infovis::UMAProjection::project(megamol::datatools::table::TableDa
     initializeSlot.ResetDirty();
     negativeSampleRateSlot.ResetDirty();
     nNeighborsSlot.ResetDirty();
-
-    delete[] maximas;
-    delete[] minimas;
-    delete[] embeddingData;
-    delete[] inputData;
 
     return true;
 }
