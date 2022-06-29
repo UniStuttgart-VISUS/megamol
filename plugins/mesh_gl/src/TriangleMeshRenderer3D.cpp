@@ -202,7 +202,8 @@ bool TriangleMeshRenderer3D::get_input_data() {
         this->mesh_data_hash = mdc_ptr->DataHash();
     }
 
-    if (mdc_ptr != nullptr && (!this->data_set.Param<core::param::FlexEnumParam>()->Value().empty() && this->data_set.IsDirty())) {
+    if (mdc_ptr != nullptr &&
+        (!this->data_set.Param<core::param::FlexEnumParam>()->Value().empty() && this->data_set.IsDirty())) {
         this->render_data.values = mdc_ptr->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
 
         this->data_set.ResetDirty();
