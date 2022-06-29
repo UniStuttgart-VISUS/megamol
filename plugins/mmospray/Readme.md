@@ -25,7 +25,7 @@ The current dependencies are: [rkcommon](https://github.com/ospray/rkcommon), [o
     - In order to speed up the build process, uncheck the option `BUILD_EMBREE_FROM_SOURCE` since the binary version of Embree is sufficient.
     - Since MegaMol also uses TBB, you need to point OSPRay to the TBB inside the MegaMol build to avoid conflicts (in ```<megamol_build_dir>/_deps/tbb-install```)
     - Build OSPRay following further instructions for the CMake Superbuild
-    - We have found the following to work quickest (on Windows, for Linux adapt the environment setting and slashes to ```export``` etc.):
+    - We have found the following to work quickest (on Windows, for Linux adapt the environment setting and slashes to ```export``` etc.). We *highly recommend* you install CMake Support in Visual Studio, which also includes ninja and results in the quickest build. Just use the x64 Native Tools Command prompt for the below commands.
 ```bash
     set TBB_ROOT=<megamol_build_dir>\_deps\tbb-install
     cmake -S scripts/superbuild -B build/super -D DOWNLOAD_TBB=false -D BUILD_EMBREE_FROM_SOURCE=false -D CMAKE_INSTALL_PREFIX=build/super/install -D CMAKE_BUILD_TYPE=Release -G Ninja
