@@ -754,13 +754,13 @@ function(require_external NAME)
       LIBRARY ${ZMQ_LIB}
       DEBUG_SUFFIX gd)
 
-    set_target_properties(libzmq PROPERTIES
-      INTERFACE_COMPILE_DEFINITIONS "ZMQ_STATIC"
-      INTERFACE_LINK_LIBRARIES "-lpthread;-lrt")
+    set_target_properties(libzmq PROPERTIES INTERFACE_COMPILE_DEFINITIONS "ZMQ_STATIC")
 
     # TODO libzmq cmake does a lot more checks and options. This will probably work only in some configurations.
     if (WIN32)
       target_link_libraries(libzmq INTERFACE ws2_32 iphlpapi)
+    elseif(UNIX)
+      set_target_properties(libzmq PROPERTIES INTERFACE_LINK_LIBRARIES "-lpthread;-lrt")
     endif ()
 
     add_external_headeronly_project(libcppzmq
