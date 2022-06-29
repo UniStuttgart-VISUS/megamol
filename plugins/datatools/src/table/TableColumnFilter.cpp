@@ -25,6 +25,7 @@ TableColumnFilter::TableColumnFilter(void)
         , dataInSlot("dataIn", "Input")
         , selectionStringSlot("selection", "Select columns by name separated by \";\"")
         , frameID(-1)
+        , inDatahash(std::numeric_limits<unsigned long>::max())
         , datahash(std::numeric_limits<unsigned long>::max()) {
 
     this->dataInSlot.SetCompatibleCall<TableDataCallDescription>();
@@ -64,8 +65,9 @@ bool TableColumnFilter::processData(core::Call& c) {
         if (!(*inCall)())
             return false;
 
-        if (this->datahash != inCall->DataHash() || this->frameID != inCall->GetFrameID() ||
+        if (this->inDatahash != inCall->DataHash() || this->frameID != inCall->GetFrameID() ||
             this->selectionStringSlot.IsDirty()) {
+            this->inDatahash = inCall->DataHash();
             this->datahash++;
             this->selectionStringSlot.ResetDirty();
             this->frameID = inCall->GetFrameID();
@@ -77,7 +79,7 @@ bool TableColumnFilter::processData(core::Call& c) {
 
             auto selectionString =
                 vislib::TString(this->selectionStringSlot.Param<core::param::StringParam>()->Value().c_str());
-            selectionString.Remove(vislib::TString(" "));
+            //selectionString.Remove(vislib::TString(" "));
             auto st = vislib::StringTokeniserW(selectionString, vislib::TString(";"));
             auto selectors = st.Split(selectionString, vislib::TString(";"));
 
