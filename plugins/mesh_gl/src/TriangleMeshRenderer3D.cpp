@@ -202,7 +202,7 @@ bool TriangleMeshRenderer3D::get_input_data() {
         this->mesh_data_hash = mdc_ptr->DataHash();
     }
 
-    if (mdc_ptr != nullptr && !this->data_set.Param<core::param::FlexEnumParam>()->Value().empty()) {
+    if (mdc_ptr != nullptr && (!this->data_set.Param<core::param::FlexEnumParam>()->Value().empty() && this->data_set.IsDirty())) {
         this->render_data.values = mdc_ptr->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
 
         this->data_set.ResetDirty();
@@ -219,6 +219,7 @@ bool TriangleMeshRenderer3D::get_input_data() {
 
         const auto& color = this->default_color.Param<core::param::ColorParam>()->Value();
         this->default_color.ResetDirty();
+        this->data_set.ResetDirty();
 
         std::stringstream ss;
         ss << "{\"Interpolation\":\"LINEAR\",\"Nodes\":["
