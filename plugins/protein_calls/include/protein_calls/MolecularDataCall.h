@@ -1107,7 +1107,7 @@ public:
      *
      * @return The atom b-factor array.
      */
-    float* AtomBFactors(void) const {
+    const float* AtomBFactors(void) const {
         return atomBFactors;
     }
 
@@ -1421,7 +1421,8 @@ public:
      * @param occupancies   The atom occupancies.
      */
     void SetAtoms(unsigned int atomCnt, unsigned int atomTypeCnt, const unsigned int* typeIdx, const float* pos,
-        const AtomType* types, const int* residueIdx, float* bfactor, const float* charge, const float* occupancy);
+        const AtomType* types, const int* residueIdx, const float* bfactor, const float* charge,
+        const float* occupancy);
 
     void SetAtomPositions(const float* atomPositions) {
         atomPos = atomPositions;
@@ -1689,12 +1690,7 @@ public:
         this->atomSolventResCount = s.atomSolventResCount;
         this->atomType = s.atomType;
         this->ownsBFactorMemory = s.ownsBFactorMemory;
-        if (!this->ownsBFactorMemory) {
-            this->atomBFactors = s.atomBFactors;
-        } else {
-            this->atomBFactors = new float[this->atomCount];
-            memcpy(this->atomBFactors, s.atomBFactors, sizeof(float) * this->atomCount);
-        }
+        this->atomBFactors = s.atomBFactors;
         this->atomCharges = s.atomCharges;
         this->atomOccupancies = s.atomOccupancies;
         this->minBFactor = s.minBFactor;
@@ -1807,7 +1803,7 @@ private:
     const unsigned int* connections;
 
     /** The array of b-factors */
-    float* atomBFactors;
+    const float* atomBFactors;
     /** Flag whether the call owns the B-factor memory */
     bool ownsBFactorMemory;
     /** The minimum bfactor */

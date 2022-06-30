@@ -110,6 +110,71 @@ inline vislib::math::Vector<float, 3> EstimateBindingSitePosition(
 }
 
 /**
+ * Gets the preset protein color as glm vec3
+ *
+ * @param atomName The element of the atom stored as string
+ * @return The color representing the element as glm vec3
+ */
+inline glm::vec3 GetElementColorPreset(std::string const& atomName) {
+    if (atomName == "H") {
+        return glm::vec3(240.0f, 240.0f, 240.0f) / 255.0f;
+    }
+    if (atomName == "C") {
+        return glm::vec3(90.0f, 90.0f, 90.0f) / 255.0f;
+    }
+    if (atomName == "N") {
+        return glm::vec3(37.0f, 136.0f, 195.0f) / 255.0f;
+    }
+    if (atomName == "O") {
+        return glm::vec3(206.0f, 34.0f, 34.0f) / 255.0f;
+    }
+    if (atomName == "S") {
+        return glm::vec3(255.0f, 215.0f, 0.0f) / 255.0f;
+    }
+    if (atomName == "P") {
+        return glm::vec3(255.0f, 128.0f, 64.0f) / 255.0f;
+    }
+    if (atomName == "M") {
+        return glm::vec3(90.0f, 90.0f, 90.0f) / 255.0f;
+    }
+
+    // special values for a SFB Demo
+    if (atomName == "Po") { // Pore
+        return glm::vec3(149.0f, 149.0f, 149.0f) / 255.0f;
+    }
+    if (atomName == "P1") { // Pore (coarse)
+        return glm::vec3(149.0f, 149.0f, 149.0f) / 255.0f;
+    }
+    if (atomName == "XX") { // CL
+        return glm::vec3(154.0f, 205.0f, 50.0f) / 255.0f;
+    }
+    if (atomName == "YY") { // NA
+        return glm::vec3(255.0f, 215.0f, 20.0f) / 255.0f;
+    }
+    if (atomName == "ZZ") { // DNA center
+        return glm::vec3(240.0f, 240.0f, 240.0f) / 255.0f;
+    }
+    if (atomName == "QQ") { // DNA base
+        return glm::vec3(240.0f, 80.0f, 50.0f) / 255.0f;
+    }
+
+    // default grey
+    return glm::vec3(191.0f) / 255.0f;
+}
+
+/**
+ * Gets the preset protein color as a unsigned char vislib vector
+ *
+ * @param atomName The element of the atom stored as string
+ * @return The color representing the element as vislib unsigned char vector
+ */
+inline vislib::math::Vector<unsigned char, 3> GetElementColorPresetVislib(std::string const& atomName) {
+    auto const v = GetElementColorPreset(atomName) * 255.0f;
+    return vislib::math::Vector<unsigned char, 3>(
+        static_cast<unsigned char>(v.x), static_cast<unsigned char>(v.y), static_cast<unsigned char>(v.z));
+}
+
+/**
  * Gets the one letter amino acid code for a given three letter code
  *
  * @param resName The 3 letter code of the amino acid
