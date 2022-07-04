@@ -161,6 +161,25 @@ public:
         PrimitiveType primitive_type;
 
         // TODO interleaved flag?
+
+        std::vector<std::vector<unsigned int>> getFormattedAttributeIndices() const {
+            auto retval = std::vector<std::vector<unsigned int>>();
+
+            for (unsigned int attrib_idx = 0; attrib_idx < attributes.size(); ++attrib_idx) {
+                bool attrib_added = false;
+                for (auto& val : retval) {
+                    if (attributes[attrib_idx].data == attributes[val.front()].data) {
+                        val.push_back(attrib_idx);
+                        attrib_added = true;
+                    }
+                }
+                if (!attrib_added) {
+                    retval.push_back({attrib_idx});
+                }
+            }
+
+            return retval;
+        }
     };
 
     MeshDataAccessCollection() = default;
@@ -168,14 +187,19 @@ public:
 
     void addMesh(std::string const& identifier, std::vector<VertexAttribute> const& attribs, IndexData const& indices,
         PrimitiveType primitive_type = TRIANGLES);
+
     void addMesh(std::string const& identifier, std::vector<VertexAttribute>&& attribs, IndexData const& indices,
         PrimitiveType primitive_type = TRIANGLES);
 
+    void addMesh(std::string const& identifier, Mesh const& mesh);
+
+    void append(MeshDataAccessCollection const& mesh_collection);
+
     void deleteMesh(std::string const& identifier);
 
-    std::unordered_map<std::string, Mesh>& accessMeshes();
+    std::unordered_map<std::string, Mesh> const& accessMeshes() const;
 
-    Mesh const& accessMesh(std::string const& identifier);
+    Mesh const& accessMesh(std::string const& identifier) const;
 
     /**
      * Get attributes of a mesh grouped by vertex buffer format (non-interleaved vs interleaved mostly).
@@ -186,7 +210,7 @@ public:
      * @return Returns indices into attribute array. Inner vector contains indices of attributes that use the same
      * data buffer. Outer vector contains all groups of indices.
      */
-    std::vector<std::vector<unsigned int>> getFormattedAttributeIndices(std::string const& identifier);
+    std::vector<std::vector<unsigned int>> getFormattedAttributeIndices(std::string const& identifier) const;
 
 private:
     std::unordered_map<std::string, Mesh> meshes;
@@ -202,6 +226,16 @@ inline void MeshDataAccessCollection::addMesh(std::string const& identifier, std
     meshes.insert({identifier, {attribs, indices, primitive_type}});
 }
 
+inline void MeshDataAccessCollection::addMesh(std::string const& identifier, Mesh const& mesh) {
+    meshes.insert({identifier, mesh});
+}
+
+inline void MeshDataAccessCollection::append(MeshDataAccessCollection const& mesh_collection) {
+    for (auto const& mesh : mesh_collection.accessMeshes()) {
+        meshes.insert({mesh.first,mesh.second});
+    }
+}
+
 inline void MeshDataAccessCollection::deleteMesh(std::string const& identifier) {
     auto query = meshes.find(identifier);
 
@@ -212,11 +246,11 @@ inline void MeshDataAccessCollection::deleteMesh(std::string const& identifier) 
     }
 }
 
-inline std::unordered_map<std::string, MeshDataAccessCollection::Mesh>& MeshDataAccessCollection::accessMeshes() {
+inline std::unordered_map<std::string, MeshDataAccessCollection::Mesh> const& MeshDataAccessCollection::accessMeshes() const {
     return meshes;
 }
 
-inline MeshDataAccessCollection::Mesh const& MeshDataAccessCollection::accessMesh(std::string const& identifier) {
+inline MeshDataAccessCollection::Mesh const& MeshDataAccessCollection::accessMesh(std::string const& identifier) const {
     auto retval = MeshDataAccessCollection::Mesh({{}, 0, 0});
 
     auto query = meshes.find(identifier);
@@ -231,24 +265,13 @@ inline MeshDataAccessCollection::Mesh const& MeshDataAccessCollection::accessMes
 }
 
 inline std::vector<std::vector<unsigned int>> MeshDataAccessCollection::getFormattedAttributeIndices(
-    std::string const& identifier) {
+    std::string const& identifier) const {
     auto retval = std::vector<std::vector<unsigned int>>();
 
     auto query = meshes.find(identifier);
 
     if (query != meshes.end()) {
-        for (unsigned int attrib_idx = 0; attrib_idx < query->second.attributes.size(); ++attrib_idx) {
-            bool attrib_added = false;
-            for (auto& val : retval) {
-                if (query->second.attributes[attrib_idx].data == query->second.attributes[val.front()].data) {
-                    val.push_back(attrib_idx);
-                    attrib_added = true;
-                }
-            }
-            if (!attrib_added) {
-                retval.push_back({attrib_idx});
-            }
-        }
+        retval = query->second.getFormattedAttributeIndices();
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError("accessMesh error: identifier not found.");
     }

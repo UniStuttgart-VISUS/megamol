@@ -182,7 +182,7 @@ bool RenderMDIMesh::Render(core_gl::view::CallRender3DGL& call) {
 
     auto const& gpu_render_tasks = task_call->getData();
 
-    for (auto const& rt_collection : gpu_render_tasks) {
+    for (auto const& rt_collection : (*gpu_render_tasks)) {
         auto const& per_frame_buffers = rt_collection->getPerFrameBuffers();
 
         for (auto const& buffer : per_frame_buffers) {

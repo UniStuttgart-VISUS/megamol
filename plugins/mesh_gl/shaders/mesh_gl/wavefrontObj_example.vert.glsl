@@ -1,4 +1,7 @@
+#version 430
 #extension GL_ARB_shader_draw_parameters : require
+
+//#include "commondefines.glsl"
 
 struct MeshShaderParams
 {

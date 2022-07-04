@@ -37,7 +37,7 @@ bool megamol::mesh_gl::GlTFRenderTasksDataSource::getDataCallback(core::Call& ca
 
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<GPURenderTaskCollection>> gpu_render_tasks;
+    auto gpu_render_tasks = std::make_shared<std::vector<std::shared_ptr<GPURenderTaskCollection>>>();
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
@@ -47,7 +47,7 @@ bool megamol::mesh_gl::GlTFRenderTasksDataSource::getDataCallback(core::Call& ca
         }
         gpu_render_tasks = rhs_rtc->getData();
     }
-    gpu_render_tasks.push_back(m_rendertask_collection.first);
+    gpu_render_tasks->push_back(m_rendertask_collection.first);
 
     CallGPUMeshData* mc = this->m_mesh_slot.CallAs<CallGPUMeshData>();
     mesh::CallGlTFData* gltf_call = this->m_glTF_callerSlot.CallAs<mesh::CallGlTFData>();
@@ -107,7 +107,7 @@ bool megamol::mesh_gl::GlTFRenderTasksDataSource::getDataCallback(core::Call& ca
                                                           std::to_string(primitive_idx);
 
                         GPUMeshCollection::SubMeshData sub_mesh;
-                        for (auto const& gpu_mesh_collection : gpu_mesh_storage) {
+                        for (auto const& gpu_mesh_collection : (*gpu_mesh_storage)) {
                             sub_mesh = gpu_mesh_collection->getSubMesh(sub_mesh_identifier);
 
                             if (sub_mesh.mesh != nullptr) {

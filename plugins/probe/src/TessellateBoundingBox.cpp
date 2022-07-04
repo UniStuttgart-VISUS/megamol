@@ -81,17 +81,16 @@ bool megamol::probe::TessellateBoundingBox::getMeshDataCallback(core::Call& call
         return false;
     }
 
-    syncMeshAccessCollection(lhs_mesh_call, rhs_mesh_call);
+    auto mesh_access_collections = std::make_shared<mesh::MeshDataAccessCollection>();
 
-    // if there is a mesh connection to the right, pass on the mesh collection
-    if (rhs_mesh_call != NULL) {
+    if (rhs_mesh_call != nullptr) {
         if (!(*rhs_mesh_call)(0)) {
             return false;
         }
         if (rhs_mesh_call->hasUpdate()) {
             ++_version;
-            rhs_mesh_call->getData();
         }
+        auto mesh_access_collections = rhs_mesh_call->getData();
     }
 
     adios::CallADIOSData* bboxc = this->_bounding_box_rhs_slot.CallAs<adios::CallADIOSData>();
@@ -299,7 +298,8 @@ bool megamol::probe::TessellateBoundingBox::getMeshDataCallback(core::Call& call
         }
     }
 
-    lhs_mesh_call->setData(m_mesh_access_collection.first, _version);
+    mesh_access_collections->append(*m_mesh_access_collection.first);
+    lhs_mesh_call->setData(mesh_access_collections, _version);
 
     return true;
 }

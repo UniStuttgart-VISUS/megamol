@@ -116,7 +116,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
     mesh_gl::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh_gl::CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>> gpu_render_tasks;
+    auto gpu_render_tasks = std::make_shared<std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>>>();
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
@@ -126,7 +126,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         }
         gpu_render_tasks = rhs_rtc->getData();
     }
-    gpu_render_tasks.push_back(m_rendertask_collection.first);
+    gpu_render_tasks->push_back(m_rendertask_collection.first);
 
     mesh_gl::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh_gl::CallGPUMaterialData>();
     if (mtlc == NULL)
@@ -243,8 +243,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
             // use precomputed textures if available
 
             mesh_gl::GPUMaterialCollection::Material mat;
-            for (int i = 0; i < gpu_mtl_storage.size(); ++i) {
-                auto query = gpu_mtl_storage[i]->getMaterial("ProbeBillboard_Textured");
+            for (int i = 0; i < gpu_mtl_storage->size(); ++i) {
+                auto query = (*gpu_mtl_storage)[i]->getMaterial("ProbeBillboard_Textured");
                 if (mat.shader_program != nullptr) {
                     mat = query;
                     break;
@@ -255,7 +255,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
 
                     assert(probe_cnt <=
-                           (gpu_mtl_storage.front()->getMaterial("ProbeBillboard_Textured").textures.size() * 2048));
+                           (gpu_mtl_storage->front()->getMaterial("ProbeBillboard_Textured").textures.size() * 2048));
 
                     auto generic_probe = probes->getGenericProbe(probe_idx);
 
@@ -757,26 +757,26 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
     std::shared_ptr<glowl::GLSLProgram> clusterID_shader(nullptr);
 
     auto gpu_mtl_storage = mtlc->getData();
-    for (int i = 0; i < gpu_mtl_storage.size(); ++i) {
-        auto textured_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_Textured");
-        auto scalar_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_Scalar");
-        auto scalar_distribution_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_ScalarDistribution");
-        auto vector_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_Vector");
-        auto clusterID_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_ClusterID");
+    for (int i = 0; i < gpu_mtl_storage->size(); ++i) {
+        auto textured_query = (*gpu_mtl_storage)[i]->getMaterials().find("ProbeBillboard_Textured");
+        auto scalar_query = (*gpu_mtl_storage)[i]->getMaterials().find("ProbeBillboard_Scalar");
+        auto scalar_distribution_query = (*gpu_mtl_storage)[i]->getMaterials().find("ProbeBillboard_ScalarDistribution");
+        auto vector_query = (*gpu_mtl_storage)[i]->getMaterials().find("ProbeBillboard_Vector");
+        auto clusterID_query = (*gpu_mtl_storage)[i]->getMaterials().find("ProbeBillboard_ClusterID");
 
-        if (textured_query != gpu_mtl_storage[i]->getMaterials().end()) {
+        if (textured_query != (*gpu_mtl_storage)[i]->getMaterials().end()) {
             textured_shader = textured_query->second.shader_program;
         }
-        if (scalar_query != gpu_mtl_storage[i]->getMaterials().end()) {
+        if (scalar_query != (*gpu_mtl_storage)[i]->getMaterials().end()) {
             scalar_shader = scalar_query->second.shader_program;
         }
-        if (scalar_distribution_query != gpu_mtl_storage[i]->getMaterials().end()) {
+        if (scalar_distribution_query != (*gpu_mtl_storage)[i]->getMaterials().end()) {
             scalar_distribution_shader = scalar_distribution_query->second.shader_program;
         }
-        if (vector_query != gpu_mtl_storage[i]->getMaterials().end()) {
+        if (vector_query != (*gpu_mtl_storage)[i]->getMaterials().end()) {
             vector_shader = vector_query->second.shader_program;
         }
-        if (clusterID_query != gpu_mtl_storage[i]->getMaterials().end()) {
+        if (clusterID_query != (*gpu_mtl_storage)[i]->getMaterials().end()) {
             clusterID_shader = clusterID_query->second.shader_program;
         }
     }

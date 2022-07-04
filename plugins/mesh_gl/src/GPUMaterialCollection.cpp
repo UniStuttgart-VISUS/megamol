@@ -8,6 +8,7 @@
 #include "mesh_gl/GPUMaterialCollection.h"
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
@@ -78,6 +79,40 @@ void GPUMaterialCollection::addMaterial(megamol::core::CoreInstance* mm_core_ins
     }
 
     addMaterial(identifier, shader, textures);
+}
+
+void GPUMaterialCollection::addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string const& identifier,
+    std::vector<std::filesystem::path> const& shader_filepaths,
+    std::vector<std::shared_ptr<glowl::Texture>> const& textures) {
+
+    msf::LineTranslator translator;
+    auto const shader_options = ::msf::ShaderFactoryOptionsOpenGL(mm_core_inst->GetShaderPaths());
+
+    try {
+
+        glowl::GLSLProgram::ShaderSourceList shader_src_list;
+
+        for (auto const& shader_filepath : shader_filepaths) {
+            shader_src_list.emplace_back(
+                core::utility::make_glowl_shader_source(shader_filepath, shader_options, translator));
+            if (static_cast<unsigned int>(shader_src_list.back().first) == 0) {
+                throw std::exception("Invalid shader type");
+            }
+        }
+
+        auto program = std::make_shared<glowl::GLSLProgram>(shader_src_list);
+        program->setDebugLabel(identifier);
+
+        addMaterial(identifier, program, textures);
+
+    } catch (glowl::GLSLProgramException const& ex) {
+        throw glowl::GLSLProgramException("GPUMaterialCollection - Error building shader program \"" + identifier +
+                                          "\":\n" + translator.translateErrorLog(ex.what()));
+    }
+    catch (std::exception const& ex) {
+        throw glowl::GLSLProgramException("GPUMaterialCollection - Error adding material \"" + identifier +
+                                          "\":\n" + translator.translateErrorLog(ex.what()));
+    }
 }
 
 void GPUMaterialCollection::addMaterial(std::string const& identifier, std::shared_ptr<Shader> const& shader,

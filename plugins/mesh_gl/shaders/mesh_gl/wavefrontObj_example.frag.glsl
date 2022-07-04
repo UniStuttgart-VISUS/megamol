@@ -1,3 +1,7 @@
+#version 430
+
+//#include "commondefines.glsl"
+
 out layout(location = 0) vec4 frag_colour;
 
 void main(void) {

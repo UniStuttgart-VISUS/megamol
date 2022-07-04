@@ -47,7 +47,7 @@ bool megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(c
 
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<GPURenderTaskCollection>> gpu_render_tasks;
+    auto gpu_render_tasks = std::make_shared<std::vector<std::shared_ptr<GPURenderTaskCollection>>>();
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
@@ -57,7 +57,7 @@ bool megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(c
         }
         gpu_render_tasks = rhs_rtc->getData();
     }
-    gpu_render_tasks.push_back(m_rendertask_collection.first);
+    gpu_render_tasks->push_back(m_rendertask_collection.first);
 
     CallGPUMeshData* mc = this->m_mesh_slot.CallAs<CallGPUMeshData>();
     if (mc == NULL)
@@ -110,28 +110,28 @@ bool megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(c
                     per_obj_data[0].color = {1.0f, 0.0f, 0.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[0].first = gpu_mesh_storage[0]->getSubMesh("axisX_arrow");
+                    m_UI_template_elements[0].first = (*gpu_mesh_storage)[0]->getSubMesh("axisX_arrow");
                     m_UI_template_elements[0].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "axisY_arrow") {
                     per_obj_data[0].color = {0.0f, 1.0f, 0.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[1].first = gpu_mesh_storage[0]->getSubMesh("axisY_arrow");
+                    m_UI_template_elements[1].first = (*gpu_mesh_storage)[0]->getSubMesh("axisY_arrow");
                     m_UI_template_elements[1].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "axisZ_arrow") {
                     per_obj_data[0].color = {0.0f, 0.0f, 1.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[2].first = gpu_mesh_storage[0]->getSubMesh("axisZ_arrow");
+                    m_UI_template_elements[2].first = (*gpu_mesh_storage)[0]->getSubMesh("axisZ_arrow");
                     m_UI_template_elements[2].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "slider_arrow") {
                     per_obj_data[0].color = {1.0f, 0.0f, 1.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[3].first = gpu_mesh_storage[0]->getSubMesh("slider_arrow");
+                    m_UI_template_elements[3].first = (*gpu_mesh_storage)[0]->getSubMesh("slider_arrow");
                     m_UI_template_elements[3].second = per_obj_data;
                 }
             }

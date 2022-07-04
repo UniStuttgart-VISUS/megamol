@@ -51,9 +51,13 @@ public:
     }
 };
 
-class CallMesh : public core::GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData> {
+class CallMesh
+        : public core::GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>,
+              core::Spatial3DMetaData> {
 public:
-    CallMesh() : GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData>() {}
+    CallMesh()
+            : GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>,
+                  core::Spatial3DMetaData>() {}
     ~CallMesh(){};
 
     static const char* ClassName(void) {
