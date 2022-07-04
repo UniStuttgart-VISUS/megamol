@@ -116,7 +116,7 @@ UMAProjection::UMAProjection(void)
     initializeSlot.Param<param::EnumParam>()->SetTypePair(0, "spectral (fallback: random)");
     initializeSlot.Param<param::EnumParam>()->SetTypePair(1, "spectral (fallback: existing)");
     initializeSlot.Param<param::EnumParam>()->SetTypePair(2, "random");
-    initializeSlot.Param<param::EnumParam>()->SetTypePair(3, "existing");
+    //initializeSlot.Param<param::EnumParam>()->SetTypePair(3, "existing");
     this->MakeSlotAvailable(&initializeSlot);
 
     negativeSampleRateSlot << new ::megamol::core::param::FloatParam(Umap::Defaults::negative_sample_rate);
@@ -262,7 +262,10 @@ bool megamol::infovis::UMAProjection::project(megamol::datatools::table::TableDa
     umap.set_initialize(static_cast<umappp::InitMethod>(initialize));
     umap.set_negative_sample_rate(negativeSampleRate);
     umap.set_num_neighbors(nNeighbors);
-    umap.run(rowsCount, columnCount, inputData.data(), nDims, embeddingData.data(), 0);
+    auto status = umap.run(columnCount, rowsCount, inputData.data(), nDims, embeddingData.data(), 0);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        _T("Epoch %d of %d; a: %lf b: %lf, obs: %d\n"),
+        status.epoch(), status.num_epochs(), status.a, status.b, status.nobs());
 
     // Search extreme values.
     std::vector<double> minimas(nDims, 0.0);
