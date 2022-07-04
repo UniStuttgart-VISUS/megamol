@@ -213,9 +213,8 @@ bool megamol::infovis::UMAProjection::project(megamol::datatools::table::TableDa
         }
     }
 
-    auto columnCount = inCall->GetColumnsCount();
-    auto columnInfos = inCall->GetColumnsInfos();
-    auto rowsCount = inCall->GetRowsCount();
+    auto dimCount = inCall->GetColumnsCount();
+    auto obsCount = inCall->GetRowsCount();
     auto inData = inCall->GetData();
 
     // Fetch parameters.
@@ -235,16 +234,16 @@ bool megamol::infovis::UMAProjection::project(megamol::datatools::table::TableDa
     auto negativeSampleRate = this->negativeSampleRateSlot.Param<core::param::FloatParam>()->Value();
     auto nNeighbors = this->nNeighborsSlot.Param<core::param::IntParam>()->Value();
 
-    // Load data in a column-major input array.
-    std::vector<double> inputData(columnCount * rowsCount, 0.0);
-    for (int col = 0; col < columnCount; col++) {
-        for (int row = 0; row < rowsCount; row++) {
-            inputData[col * rowsCount + row] = inData[row * columnCount + col];
+    // Transform row-major to column-major format.
+    std::vector<double> inputData(dimCount * obsCount, 0.0);
+    for (int dim = 0; dim < dimCount; dim++) {
+        for (int obs = 0; obs < obsCount; obs++) {
+            inputData[dim * obsCount + obs] = inData[obs * dimCount + dim];
         }
     }
 
     // Allocate a column-major embedding array.
-    std::vector<double> embeddingData(nDims * rowsCount, 0.0);
+    std::vector<double> embeddingData(nDims * obsCount, 0.0);
 
     // Run UMAP algorithm.
     Umap umap;
@@ -262,7 +261,7 @@ bool megamol::infovis::UMAProjection::project(megamol::datatools::table::TableDa
     umap.set_initialize(static_cast<umappp::InitMethod>(initialize));
     umap.set_negative_sample_rate(negativeSampleRate);
     umap.set_num_neighbors(nNeighbors);
-    auto status = umap.run(columnCount, rowsCount, inputData.data(), nDims, embeddingData.data(), 0);
+    auto status = umap.run(dimCount, obsCount, inputData.data(), nDims, embeddingData.data(), 0);
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         _T("Epoch %d of %d; a: %lf b: %lf, obs: %d\n"),
         status.epoch(), status.num_epochs(), status.a, status.b, status.nobs());
@@ -271,11 +270,11 @@ bool megamol::infovis::UMAProjection::project(megamol::datatools::table::TableDa
     std::vector<double> minimas(nDims, 0.0);
     std::vector<double> maximas(nDims, 0.0);
     for (int dim = 0; dim < nDims; dim++) {
-        minimas[dim] = maximas[dim] = embeddingData[dim * rowsCount];
+        minimas[dim] = maximas[dim] = embeddingData[dim * obsCount];
     }
     for (int dim = 0; dim < nDims; dim++) {
-        for (int obs = 1; obs < rowsCount; obs++) {
-            auto value = embeddingData[dim * rowsCount + obs];
+        for (int obs = 1; obs < obsCount; obs++) {
+            auto value = embeddingData[dim * obsCount + obs];
             if (maximas[dim] < value)
                 maximas[dim] = value;
             if (minimas[dim] > value)
@@ -296,10 +295,10 @@ bool megamol::infovis::UMAProjection::project(megamol::datatools::table::TableDa
 
     // Copy embedding to output.
     this->data.clear();
-    this->data.reserve(rowsCount * nDims);
-    for (int obs = 0; obs < rowsCount; obs++) {
+    this->data.reserve(obsCount * nDims);
+    for (int obs = 0; obs < obsCount; obs++) {
         for (int dim = 0; dim < nDims; dim++) {
-            this->data.push_back(embeddingData[dim * rowsCount + obs]);
+            this->data.push_back(static_cast<float>(embeddingData[dim * obsCount + obs]));
         }
     }
 
