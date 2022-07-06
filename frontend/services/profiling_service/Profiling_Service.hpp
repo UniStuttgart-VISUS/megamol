@@ -55,6 +55,8 @@ public:
 private:
     void fill_lua_callbacks();
 
+    void start_timer_queries();
+
     void notify_timer_queries();
 
     std::unordered_map<int64_t, std::tuple<int, int64_t, int64_t>> timer_map_;
@@ -62,6 +64,8 @@ private:
     std::mt19937_64 rng_;
 
     std::uniform_int_distribution<int64_t> distro_;
+
+    int64_t timer_id_ = 0;
 };
 
 } // namespace frontend

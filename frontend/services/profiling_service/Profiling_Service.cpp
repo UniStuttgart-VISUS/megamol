@@ -52,6 +52,7 @@ void Profiling_Service::close() {
 
 void Profiling_Service::updateProvidedResources() {
     _perf_man.startFrame();
+    start_timer_queries();
 }
 
 void Profiling_Service::resetProvidedResources() {
@@ -65,7 +66,8 @@ void Profiling_Service::fill_lua_callbacks() {
     callbacks.add<frontend_resources::LuaCallbacksCollection::LongResult>("mmCreateTimeQuery",
         "(void)\n\tCreates a time query to time a specified number of frames.\n\tReturn UID of the query.",
         {[&]() -> frontend_resources::LuaCallbacksCollection::LongResult {
-            auto uid = distro_(rng_);
+            //auto uid = distro_(rng_);
+            auto uid = ++timer_id_;
             auto fit = timer_map_.find(uid);
             if (fit != timer_map_.end()) {
                 return frontend_resources::LuaCallbacksCollection::LongResult(0);
@@ -74,23 +76,34 @@ void Profiling_Service::fill_lua_callbacks() {
             return frontend_resources::LuaCallbacksCollection::LongResult(uid);
         }});
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::LongResult, int64_t, int>("mmStartTimeQuery",
+    callbacks.add<frontend_resources::LuaCallbacksCollection::BoolResult, int64_t, int>("mmStartTimeQuery",
         "(long UID, int num_frames)\n\tStart the query specified by the UID. After num_frames a timestamp is "
-        "recorded.\n\tReturns timestamp at start of query.",
-        {[&](int64_t uid, int num_frames) -> frontend_resources::LuaCallbacksCollection::LongResult {
+        "recorded.\n\tReturns true if successful.",
+        {[&](int64_t uid, int num_frames) -> frontend_resources::LuaCallbacksCollection::BoolResult {
             auto fit = timer_map_.find(uid);
             if (fit != timer_map_.end()) {
                 std::get<0>(fit->second) = num_frames;
-                std::get<1>(fit->second) = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-                std::get<2>(fit->second) = -1;
-                return frontend_resources::LuaCallbacksCollection::LongResult(std::get<1>(fit->second));
+                /*std::get<1>(fit->second) = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+                std::get<2>(fit->second) = -1;*/
+                return frontend_resources::LuaCallbacksCollection::BoolResult(true);
             }
-            return frontend_resources::LuaCallbacksCollection::LongResult(-1);
+            return frontend_resources::LuaCallbacksCollection::BoolResult(false);
         }});
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::LongResult, int64_t>("mmPokeTimeQuery",
-        "(long UID)\n\tPokes the query specified by UID if num_frames have passed.\n\tReturns timestamp at end of "
-        "query.",
+    callbacks.add<frontend_resources::LuaCallbacksCollection::BoolResult, int64_t>("mmPokeTimeQuery",
+        "(long UID)\n\tPokes the query specified by UID if num_frames have passed.",
+        {[&](int64_t uid) -> frontend_resources::LuaCallbacksCollection::BoolResult {
+            auto fit = timer_map_.find(uid);
+            if (fit != timer_map_.end() && std::get<0>(fit->second) == 0) {
+                /*auto val = std::get<2>(fit->second);
+                timer_map_.erase(fit->first);*/
+                return frontend_resources::LuaCallbacksCollection::BoolResult(true);
+            }
+            return frontend_resources::LuaCallbacksCollection::BoolResult(false);
+        }});
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::LongResult, int64_t>("mmEndTimeQuery",
+        "(long UID)\n\tDestroys the query.\n\tReturns timestamp at end of query.",
         {[&](int64_t uid) -> frontend_resources::LuaCallbacksCollection::LongResult {
             auto fit = timer_map_.find(uid);
             if (fit != timer_map_.end() && std::get<0>(fit->second) == 0) {
@@ -106,6 +119,14 @@ void Profiling_Service::fill_lua_callbacks() {
             .getResource<std::function<void(frontend_resources::LuaCallbacksCollection const&)>>();
 
     register_callbacks(callbacks);
+}
+
+void Profiling_Service::start_timer_queries() {
+    for (auto& query : timer_map_) {
+        if (std::get<0>(query.second) != 0 && std::get<1>(query.second) == -1) {
+            std::get<1>(query.second) = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        }
+    }
 }
 
 void Profiling_Service::notify_timer_queries() {
