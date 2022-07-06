@@ -8,6 +8,8 @@
 #pragma once
 
 #include <fstream>
+#include <random>
+#include <tuple>
 
 #include "AbstractFrontendService.hpp"
 #include "PerformanceManager.h"
@@ -39,13 +41,31 @@ public:
     const std::vector<std::string> getRequestedResourceNames() const override {
         return _requestedResourcesNames;
     }
-    void setRequestedResources(std::vector<FrontendResource> resources) override {}
+    void setRequestedResources(std::vector<FrontendResource> resources) override {
+        _requestedResourcesReferences = resources;
+    }
 
     std::vector<FrontendResource> _providedResourceReferences;
     std::vector<std::string> _requestedResourcesNames;
+    std::vector<FrontendResource> _requestedResourcesReferences;
 
     megamol::frontend_resources::PerformanceManager _perf_man;
     std::ofstream log_file;
+
+private:
+    void fill_lua_callbacks();
+
+    void start_timer_queries();
+
+    void notify_timer_queries();
+
+    std::unordered_map<int64_t, std::tuple<int, int64_t, int64_t>> timer_map_;
+
+    std::mt19937_64 rng_;
+
+    std::uniform_int_distribution<int64_t> distro_;
+
+    int64_t timer_id_ = 0;
 };
 
 } // namespace frontend
