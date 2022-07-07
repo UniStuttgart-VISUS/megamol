@@ -1,5 +1,10 @@
 #include "Profiling_Service.hpp"
 
+#include <chrono>
+#include <sstream>
+
+#include "LuaCallbacksCollection.h"
+
 namespace megamol {
 namespace frontend {
 
@@ -31,6 +36,8 @@ bool Profiling_Service::init(void* configPtr) {
         });
     }
 #endif
+    _requestedResourcesNames = {"RegisterLuaCallbacks"};
+
     return true;
 }
 
@@ -49,5 +56,31 @@ void Profiling_Service::updateProvidedResources() {
 void Profiling_Service::resetProvidedResources() {
     _perf_man.endFrame();
 }
+
+void Profiling_Service::fill_lua_callbacks() {
+    frontend_resources::LuaCallbacksCollection callbacks;
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult>("mmGetTimeStamp",
+        "(void)\n\tReturns a timestamp in ISO format.",
+        {[&]() -> frontend_resources::LuaCallbacksCollection::StringResult {
+            auto const tp = std::chrono::system_clock::now();
+
+            auto const t = std::chrono::system_clock::to_time_t(tp);
+            auto const lt = std::localtime(&t);
+            auto const fs = std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch()).count() % 1000;
+            std::stringstream str;
+            str << std::to_string(1900 + lt->tm_year) << "-" << std::to_string(1 + lt->tm_mon) << "-"
+                << std::to_string(lt->tm_mday) << "T" << std::to_string(lt->tm_hour) << ":"
+                << std::to_string(lt->tm_min) << ":" << std::to_string(lt->tm_sec) << "." << std::to_string(fs);
+            return frontend_resources::LuaCallbacksCollection::StringResult(str.str());
+        }});
+
+    auto& register_callbacks =
+        _requestedResourcesReferences[0]
+            .getResource<std::function<void(frontend_resources::LuaCallbacksCollection const&)>>();
+
+    register_callbacks(callbacks);
+}
+
 } // namespace frontend
 } // namespace megamol
