@@ -13,13 +13,13 @@ void main(){
     float relY = uvCoords.y;
     int result = 0;
     for (int i = 0; i <= axesHeight; i++){
-        float checkheight = float(i) / float(axesHeight);
+        float checkheight = (float(i) + 0.5) / float(axesHeight);
         float deltaY = checkheight - relY;
         float deltaX = 0.0f - relX;
-        float targetY = checkheight + deltaY / deltaX;
+        float targetY = axesHeight * deltaY / deltaX;
         int targetPixel = int(targetY * axesHeight);
         if(targetPixel < axesHeight && targetPixel > 0){
-            result += int(imageLoad(imgRead, ivec3(i, targetY * axesHeight, cdim)).x);
+            result += int(imageLoad(imgRead, ivec3(i, axesHeight - (targetY - checkheight) * axesHeight, cdim)).x);
         }
     }
     if(result > 0){
