@@ -249,7 +249,7 @@ private:
     bool getString(int i, std::string& out);
 
     /** interpret string log levels */
-    static UINT parseLevelAttribute(const std::string attr);
+    //static utility::log::Log::log_level parseLevelAttribute(const std::string attr);
 
     /** the one Lua state */
     LuaInterpreter<LuaState> theLua;

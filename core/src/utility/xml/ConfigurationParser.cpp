@@ -371,8 +371,8 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
         logSettings->logLevelValid = false;
         logSettings->echoLevelValid = false;
         logSettings->logFileNameValue.clear();
-        logSettings->logLevelValue = megamol::core::utility::log::Log::LEVEL_ERROR;
-        logSettings->echoLevelValue = megamol::core::utility::log::Log::LEVEL_ERROR;
+        logSettings->logLevelValue = megamol::core::utility::log::Log::log_level::error;
+        logSettings->echoLevelValue = megamol::core::utility::log::Log::log_level::error;
 
         // check attributs
         for (int i = 0; attrib[i]; i += 2) {
@@ -398,7 +398,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
                     // allowed to set the value
                     logSettings->logLevelValid = true;
                     logSettings->logLevelValue =
-                        this->parseLevelAttribute(attrib[i + 1], megamol::core::utility::log::Log::LEVEL_ERROR);
+                        this->parseLevelAttribute(attrib[i + 1], megamol::core::utility::log::Log::log_level::error);
                 }
 
             } else if (MMXML_STRING("echolevel").Equals(attrib[i])) {
@@ -407,7 +407,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
                     // allowed to set the value
                     logSettings->echoLevelValid = true;
                     logSettings->echoLevelValue =
-                        this->parseLevelAttribute(attrib[i + 1], megamol::core::utility::log::Log::LEVEL_ERROR);
+                        this->parseLevelAttribute(attrib[i + 1], megamol::core::utility::log::Log::log_level::error);
                 }
             } else {
                 this->WarnUnexpectedAttribut(name, attrib[i]);
@@ -423,7 +423,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
                 megamol::core::utility::log::Log::DefaultLog.SetLevel(logSettings->logLevelValue);
             }
             if ((!megamol::core::utility::Configuration::logFilenameLocked) && (logSettings->logFileNameValid)) {
-                megamol::core::utility::log::Log::DefaultLog.SetLogFileName(
+                megamol::core::utility::log::Log::DefaultLog.AddFileTarget(
                     logSettings->logFileNameValue.c_str(), false);
             }
         }
@@ -626,30 +626,31 @@ void ConfigurationParser::Completed(void) {
 /*
  * ConfigurationParser::parseLevelAttribute
  */
-UINT ConfigurationParser::parseLevelAttribute(const XML_Char* attr, UINT def) {
-    UINT retval = def;
+megamol::core::utility::log::Log::log_level ConfigurationParser::parseLevelAttribute(
+    const XML_Char* attr, megamol::core::utility::log::Log::log_level def) {
+    megamol::core::utility::log::Log::log_level retval = def;
     if (MMXML_STRING("error").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_ERROR;
+        retval = megamol::core::utility::log::Log::log_level::error;
     } else if (MMXML_STRING("warn").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_WARN;
+        retval = megamol::core::utility::log::Log::log_level::warn;
     } else if (MMXML_STRING("warning").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_WARN;
+        retval = megamol::core::utility::log::Log::log_level::warn;
     } else if (MMXML_STRING("info").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_INFO;
+        retval = megamol::core::utility::log::Log::log_level::info;
     } else if (MMXML_STRING("none").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_NONE;
+        retval = megamol::core::utility::log::Log::log_level::none;
     } else if (MMXML_STRING("null").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_NONE;
+        retval = megamol::core::utility::log::Log::log_level::none;
     } else if (MMXML_STRING("zero").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_NONE;
+        retval = megamol::core::utility::log::Log::log_level::none;
     } else if (MMXML_STRING("all").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_ALL;
+        retval = megamol::core::utility::log::Log::log_level::all;
     } else if (MMXML_STRING("*").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_ALL;
-    } else {
+        retval = megamol::core::utility::log::Log::log_level::all;
+    } /*else {
         try {
             retval = vislib::CharTraits<XML_Char>::ParseInt(attr);
         } catch (...) { retval = def; }
-    }
+    }*/
     return retval;
 }

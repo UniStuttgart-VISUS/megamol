@@ -219,14 +219,18 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
         , input_buffer()
         , input_lua_func(nullptr)
         , is_autocomplete_popup_open(false) {
+    auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(this->echo_log_stream);
+    sink->set_pattern(core::utility::log::Log::std_pattern);
+    sink->set_level(spdlog::level::level_enum::info);
+    megamol::core::utility::log::Log::DefaultLog.AddEchoTarget(sink);
 
-    auto logger = spdlog::get(core::utility::log::Log::logger_name);
+    /*auto logger = spdlog::get(core::utility::log::Log::logger_name);
     if (logger) {
         auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(this->echo_log_stream);
         sink->set_pattern(core::utility::log::Log::std_pattern);
         sink->set_level(spdlog::level::level_enum::info);
         logger->sinks().push_back(sink);
-    }
+    }*/
 
     this->connect_log();
 
@@ -485,10 +489,10 @@ bool megamol::gui::LogConsole::connect_log() {
     /// Note: A second log console is temporarily created when "GUIView" module is loaded in configurator for complete
     /// module list. For this "GUIView" module NO log is connected, because the main LogConsole instance is already
     /// connected and the taget is not the default OfflineTarget.
-    if (this->echo_log_target != nullptr) {
+    /*if (this->echo_log_target != nullptr) {
         megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(this->echo_log_target);
         megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
-    }
+    }*/
 
     return true;
 }

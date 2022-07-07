@@ -482,10 +482,10 @@ private:
         std::string logFileNameValue;
 
         /** log level */
-        unsigned int logLevelValue;
+        megamol::core::utility::log::Log::log_level logLevelValue;
 
         /** echo level */
-        unsigned int echoLevelValue;
+        megamol::core::utility::log::Log::log_level echoLevelValue;
     };
 
     /**

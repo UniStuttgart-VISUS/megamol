@@ -40,6 +40,9 @@ public:
     /** Name of default logger in spdlog */
     static const char logger_name[23];
 
+    /** Name of echo logger in spdlog */
+    static const char echo_logger_name[20];
+
     /** type for time stamps */
     using TimeStamp = time_t;
 
@@ -49,7 +52,21 @@ public:
     /** unsigned int alias */
     using UINT = unsigned int;
 
-    enum class log_level : UINT { info, warn, error };
+    enum class log_level : UINT { none, info, warn, error, all = info };
+
+    static std::string print_log_level(log_level level) {
+        switch (level) {
+        case log_level::none:
+            return "none";
+        case log_level::warn:
+            return "warn";
+        case log_level::error:
+            return "error";
+        case log_level::all:
+        default:
+            return "info";
+        }
+    }
 
     /**
      * Set this level to log all messages. If you use this constant for
@@ -86,7 +103,7 @@ public:
     /**
      * Parse accepted log level attributes from string to UINT
      */
-    static UINT ParseLevelAttribute(const std::string value);
+    //static UINT ParseLevelAttribute(const std::string value);
 
     /** The default log object. */
     static Log& DefaultLog;
@@ -174,7 +191,7 @@ public:
      * @param msgbufsize The number of messages that will be stored in
      *                   memory if no physical log file is available.
      */
-    Log(UINT level = 1, unsigned int msgbufsize = 10);
+    Log(log_level level = log_level::info, unsigned int msgbufsize = 10);
 
     /**
      * Ctor. Constructs a new log file with the specified physical file.
@@ -186,7 +203,7 @@ public:
      *                  the name of the computer name, the current date and
      *                  time.
      */
-    Log(UINT level, const char* filename, bool addSuffix);
+    Log(log_level level, const char* filename, bool addSuffix);
 
     /** Dtor. */
     ~Log(void);
@@ -231,38 +248,38 @@ public:
     /** Flushes the physical log file. */
     void FlushLog(void);
 
-    /**
-     * Answer the current echo level. Messages above this level will be
-     * ignored, while the other messages will be echoed to the echo output
-     * stream.
-     *
-     * @return The current echo level.
-     */
-    UINT GetEchoLevel(void) const;
+    ///**
+    // * Answer the current echo level. Messages above this level will be
+    // * ignored, while the other messages will be echoed to the echo output
+    // * stream.
+    // *
+    // * @return The current echo level.
+    // */
+    //UINT GetEchoLevel(void) const;
 
-    /**
-     * Answer the current log level. Messages above this level will be
-     * ignored.
-     *
-     * @return The current log level.
-     */
-    UINT GetLevel(void) const;
+    ///**
+    // * Answer the current log level. Messages above this level will be
+    // * ignored.
+    // *
+    // * @return The current log level.
+    // */
+    //UINT GetLevel(void) const;
 
-    /**
-     * Answer the current echo level. Messages above this level will be
-     * ignored, while the other messages will be echoed to the echo output
-     * stream.
-     *
-     * @return The current echo level.
-     */
-    UINT GetFileLevel(void) const;
+    ///**
+    // * Answer the current echo level. Messages above this level will be
+    // * ignored, while the other messages will be echoed to the echo output
+    // * stream.
+    // *
+    // * @return The current echo level.
+    // */
+    //UINT GetFileLevel(void) const;
 
-    /**
-     * Answer the file name of the log file as ANSI string.
-     *
-     * @return The name of the current physical log file as ANSI string.
-     */
-    std::string GetLogFileNameA(void) const;
+    ///**
+    // * Answer the file name of the log file as ANSI string.
+    // *
+    // * @return The name of the current physical log file as ANSI string.
+    // */
+    //std::string GetLogFileNameA(void) const;
 
     /**
      * Answer the state of the autoflush flag.
@@ -290,28 +307,31 @@ public:
      *
      * @param level The new echo level.
      */
-    void SetEchoLevel(UINT level);
+    void SetEchoLevel(log_level level);
 
     /**
      * Sets the new echo log target
      *
      * @param The new echo log target
      */
-    void SetEchoTarget(std::shared_ptr<Target> target);
+    //void SetEchoTarget(std::shared_ptr<Target> target);
+
+    template <typename T>
+    void AddEchoTarget(std::shared_ptr<T> target);
 
     /**
      * Set a new log level. Messages above this level will be ignored.
      *
      * @param level The new log level.
      */
-    void SetLevel(UINT level);
+    void SetLevel(log_level level);
 
     /**
      * Set a new log file level. Messages above this level will be ignored.
      *
      * @param level The new log level.
      */
-    void SetFileLevel(UINT level);
+    //void SetFileLevel(UINT level);
 
     /**
      * Specifies the location of the physical log file. Any physical log
@@ -328,14 +348,28 @@ public:
      * @return true if the log file name had been successfully changes,
      *         false otherwise.
      */
-    bool SetLogFileName(const char* filename, bool addSuffix);
+    //bool SetLogFileName(const char* filename, bool addSuffix);
+
+    /**
+     * Adds file target to the loggger.
+     *
+     * @param filename The name of the physical log file. If this parameter
+     *                 is NULL, the current physical log file is closed,
+     *                 but no new file will be opened.
+     * @param addSuffix If true a automatically generated suffix is added
+     *                  to the name of the physical log file, consisting of
+     *                  the name of the computer name, the current date and
+     *                  time.
+     * @param level Set log level of the file target.
+     */
+    void AddFileTarget(const char* filename, bool addSuffix, log_level level = log_level::info);
 
     /**
      * Sets the new main log target
      *
      * @param The new main log target
      */
-    void SetMainTarget(std::shared_ptr<Target> target);
+    //void SetMainTarget(std::shared_ptr<Target> target);
 
     /**
      * Writes a formatted error message to the log. The level will be
@@ -410,6 +444,8 @@ public:
      */
     Log& operator=(const Log& rhs);
 
+    static megamol::core::utility::log::Log::log_level ParseLevelAttribute(const std::string attr,
+        megamol::core::utility::log::Log::log_level def = megamol::core::utility::log::Log::log_level::error);
 private:
     /**
      * Writes a pre-formatted message with specified log level, time stamp
@@ -445,15 +481,17 @@ private:
     /** The log file target */
     //std::shared_ptr<Target> fileTarget;
 
-    UINT mt_level_;
+    /*UINT mt_level_;
 
     UINT et_level_;
 
-    UINT ft_level_;
+    UINT ft_level_;*/
 
     /** Flag whether or not to flush any targets after each message */
     bool autoflush;
 };
+
+#include "Log.inl"
 
 } // namespace log
 } // namespace utility
