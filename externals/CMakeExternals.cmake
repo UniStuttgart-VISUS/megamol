@@ -242,7 +242,8 @@ function(require_external NAME)
       GIT_TAG "8aeac6cb34b00898ae725bd76eb3bb2c7cffcf86"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}" "<INSTALL_DIR>/${BLEND2D_LIB}"
       CMAKE_ARGS
-        -DASMJIT_DIR=${SOURCE_DIR})
+        -DASMJIT_DIR=${SOURCE_DIR}
+        -DBLEND2D_STATIC=ON)
 
     add_external_library(blend2d
       DEPENDS asmjit
