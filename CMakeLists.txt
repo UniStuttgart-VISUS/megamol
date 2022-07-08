@@ -12,6 +12,28 @@ if (POLICY CMP0104)
   cmake_policy(SET CMP0104 NEW) # CUDA architectures
 endif ()
 
+# vcpkg
+include(FetchContent)
+mark_as_advanced(FORCE
+  FETCHCONTENT_BASE_DIR
+  FETCHCONTENT_FULLY_DISCONNECTED
+  FETCHCONTENT_QUIET
+  FETCHCONTENT_UPDATES_DISCONNECTED)
+
+FetchContent_Declare(vcpkg-download
+  GIT_REPOSITORY https://github.com/microsoft/vcpkg
+  GIT_TAG 2022.06.16.1)
+FetchContent_GetProperties(vcpkg-download)
+if (NOT vcpkg-download_POPULATED)
+  message(STATUS "Fetch vcpkg ...")
+  FetchContent_Populate(vcpkg-download)
+  mark_as_advanced(FORCE
+    FETCHCONTENT_SOURCE_DIR_VCPKG-DOWNLOAD
+    FETCHCONTENT_UPDATES_DISCONNECTED_VCPKG-DOWNLOAD)
+endif ()
+
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-download-src/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+
 # Disable in source build
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
