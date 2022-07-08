@@ -45,7 +45,7 @@ UniFlagStorage::~UniFlagStorage() {
 
 
 bool UniFlagStorage::create() {
-    const int num = 10;
+    const int num = 1;
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (!ogl_ctx.isVersionGEQ(4, 3))

@@ -51,7 +51,7 @@ FlagStorage::~FlagStorage() {
 
 
 bool FlagStorage::create() {
-    const int num = 10;
+    const int num = 1;
 
     this->theCPUData = std::make_shared<FlagCollection_CPU>();
     this->theCPUData->flags = std::make_shared<FlagStorageTypes::flag_vector_type>(
@@ -204,19 +204,18 @@ void FlagStorage::deserializeCPUData() {
 
     try {
         auto j = nlohmann::json::parse(this->serializedFlags.Param<core::param::StringParam>()->Value());
-        FlagStorageTypes::index_type num_flags = 10;
+        FlagStorageTypes::index_type max_flag_index = 0;
         // reset all flags
         if (j.contains("enabled")) {
-            num_flags = std::max(array_max(j["enabled"]), num_flags);
+            max_flag_index = std::max(array_max(j["enabled"]), max_flag_index);
         }
         if (j.contains("filtered")) {
-            num_flags = std::max(array_max(j["filtered"]), num_flags);
+            max_flag_index = std::max(array_max(j["filtered"]), max_flag_index);
         }
         if (j.contains("selected")) {
-            num_flags = std::max(array_max(j["selected"]), num_flags);
+            max_flag_index = std::max(array_max(j["selected"]), max_flag_index);
         }
-        theCPUData->flags->resize(num_flags + 1, 0);
-        //theCPUData->flags->assign(theCPUData->flags->size(), 0);
+        theCPUData->validateFlagCount(max_flag_index + 1);
         if (j.contains("enabled")) {
             array_to_bits(j["enabled"], FlagStorageTypes::flag_bits::ENABLED);
         } else {

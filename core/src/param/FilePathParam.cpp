@@ -108,7 +108,7 @@ FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& 
 
     try {
         FilePathParam::Flags_t retval = 0;
-        if (f != FilePathParam::Flag_Any) {
+        if ((f & FilePathParam::Flag_Any) != FilePathParam::Flag_Any) {
             if ((f & FilePathParam::Flag_File) && std::filesystem::is_directory(p)) {
                 retval |= FilePathParam::Flag_File;
             }
