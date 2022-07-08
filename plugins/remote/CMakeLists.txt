@@ -7,6 +7,7 @@ megamol_plugin(remote
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
     mmstd
+    cluster
     image_calls
   DEPENDS_EXTERNALS
     glm
