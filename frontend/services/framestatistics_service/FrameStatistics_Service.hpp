@@ -72,6 +72,8 @@ private:
     void start_frame();
     void finish_frame();
 
+    void fill_lua_callbacks();
+
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<FrontendResource> m_requestedResourceReferences;

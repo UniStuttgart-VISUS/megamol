@@ -41,7 +41,6 @@ public:
     }
     void setRequestedResources(std::vector<FrontendResource> resources) override {
         _requestedResourcesReferences = resources;
-        fill_lua_callbacks();
     }
 
     std::vector<FrontendResource> _providedResourceReferences;
@@ -50,9 +49,6 @@ public:
 
     megamol::frontend_resources::PerformanceManager _perf_man;
     std::ofstream log_file;
-
-private:
-    void fill_lua_callbacks();
 };
 
 } // namespace frontend
