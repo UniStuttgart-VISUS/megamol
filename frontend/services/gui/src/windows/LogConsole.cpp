@@ -350,11 +350,14 @@ bool megamol::gui::LogConsole::Draw() {
             ImGui::GetWindowHeight() - (3.0f * ImGui::GetFrameHeightWithSpacing()) - (3.0f * style.FramePadding.y)),
         true, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-    auto message_count = this->echo_log_buffer.log().size();
-    if (this->win_log_level == megamol::core::utility::log::Log::log_level::warn) {
-        message_count = this->echo_log_buffer.warn_log_indices().size();
-    } else if (this->win_log_level == megamol::core::utility::log::Log::log_level::error) {
-        message_count = this->echo_log_buffer.error_log_indices().size();
+    auto message_count = 0ull;
+    if (this->win_log_level != megamol::core::utility::log::Log::log_level::none) {
+        message_count = this->echo_log_buffer.log().size();
+        if (this->win_log_level == megamol::core::utility::log::Log::log_level::warn) {
+            message_count = this->echo_log_buffer.warn_log_indices().size();
+        } else if (this->win_log_level == megamol::core::utility::log::Log::log_level::error) {
+            message_count = this->echo_log_buffer.error_log_indices().size();
+        }
     }
     const int modified_count = std::min<int>(static_cast<int>(message_count), 14000000);
 
