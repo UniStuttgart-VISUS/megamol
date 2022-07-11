@@ -1,16 +1,5 @@
 #version 450
 
-struct MeshShaderParams
-{
-    mat4 transform;
-    vec4 color;
-    int id;
-    int highlighted;
-
-    float padding0;
-    float padding1;
-};
-
 struct LightParams
 {
     float x,y,z,intensity;
@@ -18,13 +7,11 @@ struct LightParams
 
 layout(std430, binding = 1) readonly buffer LightParamsBuffer { LightParams light_params[]; };
 
-in vec3 worldPos;
-in vec3 normal;
-in vec3 colour;
-in flat int id;
+layout(location = 0) in vec3 worldPos;
+layout(location = 1) in vec3 normal;
+layout(location = 2) in vec3 colour;
 
 out layout(location = 0) vec4 frag_colour;
-out layout(location = 1) int frag_id;
 
 void main(void) {
     vec3 out_colour = vec3(0.0);
@@ -43,5 +30,4 @@ void main(void) {
     out_colour = pow( out_colour, vec3(1.0/2.2) );
 
     frag_colour = vec4(out_colour,1.0);
-    frag_id = id;
 }

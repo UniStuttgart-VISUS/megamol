@@ -22,7 +22,7 @@
 
 bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
 
-    mesh_gl::AbstractGPURenderTaskDataSource::create();
+    auto retval = mesh_gl::AbstractGPURenderTaskDataSource::create();
 
     // Create local copy of transfer function texture (for compatibility with material pipeline)
     glowl::TextureLayout tex_layout;
@@ -47,7 +47,60 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
     // TODO intialize with value indicating that no transfer function is connected
     this->m_transfer_function->makeResident();
 
-    return true;
+
+    m_material_collection = std::make_shared<mesh_gl::GPUMaterialCollection>();
+    // textured glyph shader program
+    try {
+        std::vector<std::filesystem::path> shaderfiles = {
+            "glyphs/textured_probe_glyph.vert.glsl", "glyphs/textured_probe_glyph.frag.glsl"};
+        m_material_collection->addMaterial(this->instance(), "TexturedProbeGlyph", shaderfiles);
+    } catch (const std::exception& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
+        retval = false;
+    }
+    // scalar glyph shader program
+    try {
+        std::vector<std::filesystem::path> shaderfiles = {
+            "glyphs/scalar_probe_glyph_v2.vert.glsl", "glyphs/scalar_probe_glyph_v2.frag.glsl"};
+        m_material_collection->addMaterial(this->instance(), "ScalarProbeGlyph", shaderfiles);
+    } catch (const std::exception& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
+        retval = false;
+    }
+    // scalar distribution glyph shader program
+    try {
+        std::vector<std::filesystem::path> shaderfiles = {
+            "glyphs/scalar_distribution_probe_glyph_v2.vert.glsl", "glyphs/scalar_distribution_probe_glyph.frag.glsl"};
+        m_material_collection->addMaterial(this->instance(), "ScalarDistributionProbeGlyph", shaderfiles);
+    } catch (const std::exception& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
+        retval = false;
+    }
+    // vector glyph shader program
+    try {
+        std::vector<std::filesystem::path> shaderfiles = {
+            "glyphs/vector_probe_glyph.vert.glsl", "glyphs/vector_probe_glyph.frag.glsl"};
+        m_material_collection->addMaterial(this->instance(), "VectorProbeGlyph", shaderfiles);
+    } catch (const std::exception& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
+        retval = false;
+    }
+    // cluster ID glyph shader program
+    try {
+        std::vector<std::filesystem::path> shaderfiles = {
+            "glyphs/clusterID_probe_glyph.vert.glsl", "glyphs/clusterID_probe_glyph.frag.glsl"};
+        m_material_collection->addMaterial(this->instance(), "ClusterIDProbeGlyph", shaderfiles);
+    } catch (const std::exception& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
+        retval = false;
+    }
+
+    return retval;
 }
 
 void megamol::probe_gl::ProbeBillboardGlyphRenderTasks::release() {}
@@ -58,7 +111,6 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
         , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
         , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
         , m_event_slot("GetProbeEvents", "")
-        , m_material_slot("GetProbeGlyphMaterials", "")
         , m_billboard_dummy_mesh(nullptr)
         , m_billboard_size_slot("BillBoardSize", "Sets the scaling factor of the texture billboards")
         , m_rendering_mode_slot("RenderingMode", "Glyph rendering mode")
@@ -73,9 +125,6 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
 
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->m_probes_slot);
-
-    this->m_material_slot.SetCompatibleCall<mesh_gl::CallGPUMaterialDataDescription>();
-    this->MakeSlotAvailable(&this->m_material_slot);
 
     this->m_event_slot.SetCompatibleCall<megamol::core::CallEventDescription>();
     this->MakeSlotAvailable(&this->m_event_slot);
@@ -128,12 +177,6 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     }
     gpu_render_tasks->push_back(m_rendertask_collection.first);
 
-    mesh_gl::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh_gl::CallGPUMaterialData>();
-    if (mtlc == NULL)
-        return false;
-    if (!(*mtlc)(0))
-        return false;
-
     // create an empty dummy mesh, actual billboard geometry will be build in vertex shader
     if (m_billboard_dummy_mesh == nullptr) {
         std::vector<void const*> data_ptrs = {};
@@ -158,14 +201,13 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         ((*tfc)(0));
     }
 
-    bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() || this->m_billboard_size_slot.IsDirty() ||
+    bool something_has_changed = pc->hasUpdate() || this->m_billboard_size_slot.IsDirty() ||
                                  this->m_rendering_mode_slot.IsDirty();
 
     if (something_has_changed) {
         ++m_version;
 
         this->m_rendering_mode_slot.ResetDirty();
-        auto gpu_mtl_storage = mtlc->getData();
         auto probes = pc->getData();
 
         auto visitor = [this](auto&& arg) {
@@ -242,20 +284,11 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         if (m_rendering_mode_slot.Param<core::param::EnumParam>()->Value() == 0) {
             // use precomputed textures if available
 
-            mesh_gl::GPUMaterialCollection::Material mat;
-            for (int i = 0; i < gpu_mtl_storage->size(); ++i) {
-                auto query = (*gpu_mtl_storage)[i]->getMaterial("ProbeBillboard_Textured");
-                if (mat.shader_program != nullptr) {
-                    mat = query;
-                    break;
-                }
-            }
-
-            if (mat.textures.size() > 0) {
+            auto mat = m_material_collection->getMaterial("TexturedProbeGlyph");
+            if (mat.shader_program != nullptr && mat.textures.size() > 0) {
                 for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
 
-                    assert(probe_cnt <=
-                           (gpu_mtl_storage->front()->getMaterial("ProbeBillboard_Textured").textures.size() * 2048));
+                    assert(probe_cnt <= (mat.textures.size() * 2048));
 
                     auto generic_probe = probes->getGenericProbe(probe_idx);
 
@@ -744,11 +777,6 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getMetaDataCallback(core
 }
 
 bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
-    mesh_gl::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh_gl::CallGPUMaterialData>();
-    if (mtlc == NULL)
-        return false;
-    if (!(*mtlc)(0))
-        return false;
 
     std::shared_ptr<glowl::GLSLProgram> textured_shader(nullptr);
     std::shared_ptr<glowl::GLSLProgram> scalar_shader(nullptr);
@@ -756,54 +784,52 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
     std::shared_ptr<glowl::GLSLProgram> vector_shader(nullptr);
     std::shared_ptr<glowl::GLSLProgram> clusterID_shader(nullptr);
 
-    auto gpu_mtl_storage = mtlc->getData();
-    for (int i = 0; i < gpu_mtl_storage->size(); ++i) {
-        auto textured_query = (*gpu_mtl_storage)[i]->getMaterials().find("ProbeBillboard_Textured");
-        auto scalar_query = (*gpu_mtl_storage)[i]->getMaterials().find("ProbeBillboard_Scalar");
-        auto scalar_distribution_query = (*gpu_mtl_storage)[i]->getMaterials().find("ProbeBillboard_ScalarDistribution");
-        auto vector_query = (*gpu_mtl_storage)[i]->getMaterials().find("ProbeBillboard_Vector");
-        auto clusterID_query = (*gpu_mtl_storage)[i]->getMaterials().find("ProbeBillboard_ClusterID");
+    auto textured_query = m_material_collection->getMaterials().find("TexturedProbeGlyph");
+    auto scalar_query = m_material_collection->getMaterials().find("ScalarProbeGlyph");
+    auto scalar_distribution_query = m_material_collection->getMaterials().find("ScalarDistributionProbeGlyph");
+    auto vector_query = m_material_collection->getMaterials().find("VectorProbeGlyph");
+    auto clusterID_query = m_material_collection->getMaterials().find("ClusterIDProbeGlyph");
 
-        if (textured_query != (*gpu_mtl_storage)[i]->getMaterials().end()) {
-            textured_shader = textured_query->second.shader_program;
-        }
-        if (scalar_query != (*gpu_mtl_storage)[i]->getMaterials().end()) {
-            scalar_shader = scalar_query->second.shader_program;
-        }
-        if (scalar_distribution_query != (*gpu_mtl_storage)[i]->getMaterials().end()) {
-            scalar_distribution_shader = scalar_distribution_query->second.shader_program;
-        }
-        if (vector_query != (*gpu_mtl_storage)[i]->getMaterials().end()) {
-            vector_shader = vector_query->second.shader_program;
-        }
-        if (clusterID_query != (*gpu_mtl_storage)[i]->getMaterials().end()) {
-            clusterID_shader = clusterID_query->second.shader_program;
-        }
+    if (textured_query != m_material_collection->getMaterials().end()) {
+        textured_shader = textured_query->second.shader_program;
     }
+    if (scalar_query != m_material_collection->getMaterials().end()) {
+        scalar_shader = scalar_query->second.shader_program;
+    }
+    if (scalar_distribution_query != m_material_collection->getMaterials().end()) {
+        scalar_distribution_shader = scalar_distribution_query->second.shader_program;
+    }
+    if (vector_query != m_material_collection->getMaterials().end()) {
+        vector_shader = vector_query->second.shader_program;
+    }
+    if (clusterID_query != m_material_collection->getMaterials().end()) {
+        clusterID_shader = clusterID_query->second.shader_program;
+    }
+
 
     if (textured_shader == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Could not get ProbeBillboard_Textured material, identifier not found. [%s, %s, line %d]\n", __FILE__,
+            "Could not get TexturedProbeGlyph material, identifier not found. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
     }
     if (scalar_shader == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Could not get ProbeBillboard_Scalar material, identifier not found. [%s, %s, line %d]\n", __FILE__,
+            "Could not get ScalarProbeGlyph material, identifier not found. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
     }
     if (scalar_distribution_shader == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Could not get ProbeBillboard_Scalar_Distribution material, identifier not found. [%s, %s, line %d]\n",
+            "Could not get ScalarDistributionProbeGlyphe material, identifier not found. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
     }
     if (vector_shader == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Could not get ProbeBillboard_Vector material, identifier not found. [%s, %s, line %d]\n", __FILE__,
+            "Could not get VectorProbeGlyph material, identifier not found. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
     }
     if (clusterID_shader == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Could not get ProbeBillboard_ClusterID material, identifier not found. [%s, %s, line %d]\n", __FILE__,
+            "Could not get ClusterIDProbeGlyph material, identifier not found. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
     }
 

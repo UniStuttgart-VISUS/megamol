@@ -3,20 +3,32 @@
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 15) out; // 3 original + 4 per line
 
-in vec3 vColour[3];
+layout(location = 0) in vec3 vWorldPos[3];
+layout(location = 1) in vec3 vNormal[3];
 
-out vec3 colour;
+layout(location = 0) out vec3 worldPos;
+layout(location = 1) out vec3 normal;
+layout(location = 2) out vec3 colour;
 
 void main() 
 {    
     gl_Position = gl_in[0].gl_Position;
-    colour = vColour[0];
+    //colour = vColour[0];
+    worldPos = vWorldPos[0];
+    normal = vNormal[0];
+    colour = vec3(0.4,0.4,0.4);
     EmitVertex();
     gl_Position = gl_in[1].gl_Position;
-    colour = vColour[1];
+    //colour = vColour[1];
+    worldPos = vWorldPos[1];
+    normal = vNormal[1];
+    colour = vec3(0.4,0.4,0.4);
     EmitVertex();
     gl_Position = gl_in[2].gl_Position;
-    colour = vColour[2];
+    //colour = vColour[2];
+    worldPos = vWorldPos[2];
+    normal = vNormal[2];
+    colour = vec3(0.4,0.4,0.4);
     EmitVertex();
     EndPrimitive();
 
@@ -33,50 +45,74 @@ void main()
     vec4 e12 =  gl_in[2].gl_Position - gl_in[1].gl_Position;
     vec4 offset2 = vec4(normalize(cross(vec3(e02),vec3(e12))),0.0f);
 
-    offset0 *= 0.00005f;
-    offset1 *= 0.00005f;
-    offset2 *= 0.00005f;
+    offset0 *= -0.00005f;
+    offset1 *= -0.00005f;
+    offset2 *= -0.00005f;
 
     float line_width = 0.01f;
 
     gl_Position = gl_in[0].gl_Position + offset2;
+    worldPos = vWorldPos[0] + offset2.xyz;
+    normal = vNormal[0];
     colour = vec3(1.0f);
     EmitVertex();
     gl_Position = gl_in[0].gl_Position + e02 * line_width + offset2;
+    worldPos = vWorldPos[0]  + e02.xyz * line_width + offset2.xyz;
+    normal = vNormal[0];
     colour = vec3(1.0f);
     EmitVertex();
     gl_Position = gl_in[1].gl_Position + offset2;
+    worldPos = vWorldPos[1]  + offset2.xyz;
+    normal = vNormal[1];
     colour = vec3(1.0f);
     EmitVertex();
     gl_Position = gl_in[1].gl_Position + e12 * line_width + offset2;
+    worldPos = vWorldPos[1]  + e12.xyz * line_width + offset2.xyz;
+    normal = vNormal[1];
     colour = vec3(1.0f);
     EmitVertex();
     EndPrimitive();
 
     gl_Position = gl_in[1].gl_Position + offset0;
+    worldPos = vWorldPos[1] + offset0.xyz;
+    normal = vNormal[1];
     colour = vec3(1.0f);
     EmitVertex();
     gl_Position = gl_in[1].gl_Position + e10 * line_width + offset0;
+    worldPos = vWorldPos[1] + e10.xyz * line_width + offset0.xyz;
+    normal = vNormal[1];
     colour = vec3(1.0f);
     EmitVertex();
     gl_Position = gl_in[2].gl_Position + offset0;
+    worldPos = vWorldPos[2] + offset0.xyz;
+    normal = vNormal[2];
     colour = vec3(1.0f);
     EmitVertex();
     gl_Position = gl_in[2].gl_Position + e20 * line_width + offset0;
+    worldPos = vWorldPos[2] + e20.xyz * line_width + offset0.xyz;
+    normal = vNormal[2];
     colour = vec3(1.0f);
     EmitVertex();
     EndPrimitive();
 
     gl_Position = gl_in[2].gl_Position + offset1;
+    worldPos = vWorldPos[2] + offset1.xyz;
+    normal = vNormal[2];
     colour = vec3(1.0f);
     EmitVertex();
     gl_Position = gl_in[2].gl_Position + e21 * line_width + offset1;
+    worldPos = vWorldPos[2] + e21.xyz * line_width + offset1.xyz;
+    normal = vNormal[2];
     colour = vec3(1.0f);
     EmitVertex();
     gl_Position = gl_in[0].gl_Position + offset1;
+    worldPos = vWorldPos[0] + offset1.xyz;
+    normal = vNormal[0];
     colour = vec3(1.0f);
     EmitVertex();
     gl_Position = gl_in[0].gl_Position + e01 * line_width + offset1;
+    worldPos = vWorldPos[0] + e01.xyz * line_width + offset1.xyz;
+    normal = vNormal[0];
     colour = vec3(1.0f);
     EmitVertex();
     EndPrimitive();

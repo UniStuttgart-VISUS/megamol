@@ -34,7 +34,8 @@ bool megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource::create(void) {
     AbstractGPURenderTaskDataSource::create();
 
     m_material_collection = std::make_shared<GPUMaterialCollection>();
-    m_material_collection->addMaterial(this->instance(), "3DUI", "3DUI");
+    std::vector<std::filesystem::path> shaderfiles = {"mesh_gl / 3DUI_vertex.glsl", "mesh_gl/3DUI_geometry.glsl", "mesh_gl/3DUI_fragment.glsl"};
+    m_material_collection->addMaterial(this->instance(), "3DUI", shaderfiles);
 
     return true;
 }

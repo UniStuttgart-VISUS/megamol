@@ -18,25 +18,35 @@
 #include "mesh/MeshCalls.h"
 
 bool megamol::probe_gl::ProbeHullRenderTasks::create() {
-
-    m_rendertask_collection.first = std::make_shared<mesh_gl::GPURenderTaskCollection>();
+    auto retval = AbstractGPURenderTaskDataSource::create();
 
     struct PerFrameData {
         int shading_mode;
     };
-
     std::array<PerFrameData, 1> per_frame_data;
     per_frame_data[0].shading_mode = m_shading_mode_slot.Param<core::param::EnumParam>()->Value();
-
     m_rendertask_collection.first->addPerFrameDataBuffer("", per_frame_data, 1);
 
     m_material_collection = std::make_shared<mesh_gl::GPUMaterialCollection>();
-    m_material_collection->addMaterial(this->instance(), "ProbeHull", "ProbeHull");
+    try {
+        std::vector<std::filesystem::path> shaderfiles = {"hull/dfr_hull_patch.vert.glsl",
+            "hull/dfr_hull.frag.glsl", "hull/dfr_hull.tesc.glsl", "hull/dfr_hull.tese.glsl"};
+        m_material_collection->addMaterial(this->instance(), "ProbeHull", shaderfiles);
+    } catch (const std::exception& ex){
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
+        retval = false;
+    }
+    try {
+        std::vector<std::filesystem::path> shaderfiles = {"hull/dfr_hull_tri.vert.glsl", "hull/dfr_hull.frag.glsl"};
+        m_material_collection->addMaterial(this->instance(), "ProbeTriangleHull", shaderfiles);
+    } catch (const std::exception& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
+        retval = false;
+    }
 
-    m_material_collection->addMaterial(this->instance(), "ProbeTriangleHull", "ProbeTriangleHull");
-    //TODO add other shader for e.g. triangle-based meshes ? switch automatically of course
-
-    return true;
+    return retval;
 }
 
 megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks()

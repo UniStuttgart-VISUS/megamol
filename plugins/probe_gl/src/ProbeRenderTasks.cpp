@@ -27,12 +27,20 @@ megamol::probe_gl::ProbeRenderTasks::ProbeRenderTasks()
 megamol::probe_gl::ProbeRenderTasks::~ProbeRenderTasks() {}
 
 bool megamol::probe_gl::ProbeRenderTasks::create() {
-    AbstractGPURenderTaskDataSource::create();
+    auto retval = AbstractGPURenderTaskDataSource::create();
 
     m_material_collection = std::make_shared<mesh_gl::GPUMaterialCollection>();
-    m_material_collection->addMaterial(this->instance(), "ProbeInteraction", "ProbeInteraction");
+    try {
+        std::vector<std::filesystem::path> shaderfiles = {
+            "probes/dfr_interaction_probe.vert.glsl", "probes/dfr_interaction_probe.frag.glsl"};
+        m_material_collection->addMaterial(this->instance(), "ProbeInteraction", shaderfiles);
+    } catch (std::runtime_error const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
+        retval = false;
+    }
 
-    return true;
+    return retval;
 }
 
 bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {

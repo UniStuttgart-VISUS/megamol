@@ -33,7 +33,7 @@ void main()
     world_pos = v_position;
     
     mat4 object_transform = mesh_shader_params[gl_DrawIDARB].transform;
-    //gl_Position =  proj_mx * view_mx * object_transform * vec4(v_position,1.0);
+    gl_Position =  proj_mx * view_mx * object_transform * vec4(v_position,1.0);
     //gl_Position =  object_transform * vec4(v_position,1.0);
-    gl_Position =  vec4(v_position,1.0);
+    //gl_Position =  vec4(v_position,1.0);
 }

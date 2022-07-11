@@ -9,24 +9,28 @@
 megamol::mesh_gl::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
         : m_version(0)
         , m_glTF_callerSlot("gltfModels", "Connects a collection of loaded glTF files")
-        , m_material_collection(nullptr)
-        , m_btf_name_slot("BTF name", "Overload default gltf shader") {
+        , m_material_collection(nullptr) {
     this->m_glTF_callerSlot.SetCompatibleCall<mesh::CallGlTFDataDescription>();
     this->MakeSlotAvailable(&this->m_glTF_callerSlot);
-
-    this->m_btf_name_slot << new core::param::StringParam("dfr_gltfExample");
-    this->MakeSlotAvailable(&this->m_btf_name_slot);
 }
 
 megamol::mesh_gl::GlTFRenderTasksDataSource::~GlTFRenderTasksDataSource() {}
 
 bool megamol::mesh_gl::GlTFRenderTasksDataSource::create(void) {
-    AbstractGPURenderTaskDataSource::create();
+    auto retval = AbstractGPURenderTaskDataSource::create();
 
     m_material_collection = std::make_shared<GPUMaterialCollection>();
-    m_material_collection->addMaterial(this->instance(), "dfr_gltfExample", "dfr_gltfExample");
+    try {
+        std::vector<std::filesystem::path> shaderfiles = {"mesh_gl/gltf_example.vert.glsl",
+            /*"mesh_gl/gltf_example_geom.glsl",*/ "mesh_gl/dfr_gltf_example.frag.glsl"};
+        m_material_collection->addMaterial(this->instance(), "dfr_gltfExample", shaderfiles);
+    } catch (std::runtime_error const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
+        retval = false;
+    }
 
-    return true;
+    return retval;
 }
 
 bool megamol::mesh_gl::GlTFRenderTasksDataSource::getDataCallback(core::Call& caller) {
@@ -63,15 +67,8 @@ bool megamol::mesh_gl::GlTFRenderTasksDataSource::getDataCallback(core::Call& ca
 
         auto gpu_mesh_storage = mc->getData();
 
-        if (gltf_call->hasUpdate() || this->m_btf_name_slot.IsDirty()) {
+        if (gltf_call->hasUpdate()) {
             ++m_version;
-
-            if (this->m_btf_name_slot.IsDirty()) {
-                m_btf_name_slot.ResetDirty();
-                auto filename = m_btf_name_slot.Param<core::param::StringParam>()->Value();
-                m_material_collection->clear();
-                m_material_collection->addMaterial(this->instance(), filename, filename);
-            }
 
             clearRenderTaskCollection();
 

@@ -41,9 +41,6 @@ public:
     };
 
     void addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string const& identifier,
-        std::string const& shader_btf_name, std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
-
-    void addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string const& identifier,
         std::vector<std::filesystem::path> const& shader_filepaths,
         std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
 
