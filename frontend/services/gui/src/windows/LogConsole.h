@@ -108,9 +108,6 @@ private:
     bool is_autocomplete_popup_open;
 
     std::size_t sink_idx_;
-
-    // FUNCTIONS --------------------------------------------------------------
-    bool connect_log();
 };
 
 

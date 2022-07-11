@@ -224,16 +224,6 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
     sink->set_level(spdlog::level::level_enum::info);
     sink_idx_ = megamol::core::utility::log::Log::DefaultLog.AddEchoTarget(sink);
 
-    /*auto logger = spdlog::get(core::utility::log::Log::logger_name);
-    if (logger) {
-        auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(this->echo_log_stream);
-        sink->set_pattern(core::utility::log::Log::std_pattern);
-        sink->set_level(spdlog::level::level_enum::info);
-        logger->sinks().push_back(sink);
-    }*/
-
-    this->connect_log();
-
     // Configure CONSOLE Window
     this->win_config.size = ImVec2(500.0f * megamol::gui::gui_scaling.Get(), 50.0f * megamol::gui::gui_scaling.Get());
     this->win_config.reset_size = this->win_config.size;
@@ -252,13 +242,6 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
 
 LogConsole::~LogConsole() {
     megamol::core::utility::log::Log::DefaultLog.RemoveEchoTarget(sink_idx_);
-
-
-    // Reset echo target only if log target of this class instance is used
-    /*if (megamol::core::utility::log::Log::DefaultLog.AccessEchoTarget() == this->echo_log_target) {
-        megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(nullptr);
-    }*/
-    //this->echo_log_target.reset();
 }
 
 
@@ -481,23 +464,6 @@ bool megamol::gui::LogConsole::Draw() {
 }
 
 
-bool megamol::gui::LogConsole::connect_log() {
-
-    //auto current_echo_target = megamol::core::utility::log::Log::DefaultLog.AccessEchoTarget();
-
-    // Only connect if echo target is still default OfflineTarget
-    /// Note: A second log console is temporarily created when "GUIView" module is loaded in configurator for complete
-    /// module list. For this "GUIView" module NO log is connected, because the main LogConsole instance is already
-    /// connected and the taget is not the default OfflineTarget.
-    /*if (this->echo_log_target != nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(this->echo_log_target);
-        megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
-    }*/
-
-    return true;
-}
-
-
 void LogConsole::SetLuaFunc(lua_func_type* func) {
     this->input_lua_func = func;
 
@@ -519,6 +485,7 @@ void LogConsole::SetLuaFunc(lua_func_type* func) {
         }
     }
 }
+
 
 void LogConsole::SpecificStateFromJSON(const nlohmann::json& in_json) {
 

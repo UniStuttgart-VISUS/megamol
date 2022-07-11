@@ -74,42 +74,43 @@ public:
         }
     }
 
-    /**
-     * Set this level to log all messages. If you use this constant for
-     * logging itself, the messages will only be logged, if LEVEL_ALL is
-     * also set as current log level.
-     */
-    static const UINT LEVEL_ALL;
+    ///**
+    // * Set this level to log all messages. If you use this constant for
+    // * logging itself, the messages will only be logged, if LEVEL_ALL is
+    // * also set as current log level.
+    // */
+    //static const UINT LEVEL_ALL;
+
+    ///**
+    // * Use this for logging errors. The value of this constant is 1, i. e.
+    // * messages with LEVEL_ERROR will always be logged, if any logging is
+    // * enabled.
+    // */
+    //static const UINT LEVEL_ERROR;
+
+    ///**
+    // * Use this for informative messages. The value of this constant
+    // * is 200.
+    // */
+    //static const UINT LEVEL_INFO;
+
+    ///**
+    // * Use this for disabling logging. The value is 0. It cannot be used
+    // * for logging itself, but only for the current log level.
+    // */
+    //static const UINT LEVEL_NONE;
+
+    ///**
+    // * Use this for warning messages. The value of this constant
+    // * is 100.
+    // */
+    //static const UINT LEVEL_WARN;
 
     /**
-     * Use this for logging errors. The value of this constant is 1, i. e.
-     * messages with LEVEL_ERROR will always be logged, if any logging is
-     * enabled.
+     * Parse accepted log level attributes from string to log_level
      */
-    static const UINT LEVEL_ERROR;
-
-    /**
-     * Use this for informative messages. The value of this constant
-     * is 200.
-     */
-    static const UINT LEVEL_INFO;
-
-    /**
-     * Use this for disabling logging. The value is 0. It cannot be used
-     * for logging itself, but only for the current log level.
-     */
-    static const UINT LEVEL_NONE;
-
-    /**
-     * Use this for warning messages. The value of this constant
-     * is 100.
-     */
-    static const UINT LEVEL_WARN;
-
-    /**
-     * Parse accepted log level attributes from string to UINT
-     */
-    //static UINT ParseLevelAttribute(const std::string value);
+    static megamol::core::utility::log::Log::log_level ParseLevelAttribute(const std::string attr,
+        megamol::core::utility::log::Log::log_level def = megamol::core::utility::log::Log::log_level::error);
 
     /** The default log object. */
     static Log& DefaultLog;
@@ -131,64 +132,64 @@ public:
     /**
      * Abstract base class for log targets
      */
-    class Target {
-    public:
-        /** Dtor */
-        virtual ~Target(void);
+    //class Target {
+    //public:
+    //    /** Dtor */
+    //    virtual ~Target(void);
 
-        /** Flushes any buffer */
-        virtual void Flush(void);
+    //    /** Flushes any buffer */
+    //    virtual void Flush(void);
 
-        /**
-         * Answer the log level of this target
-         *
-         * @return The log level of this target
-         */
-        inline UINT Level(void) const {
-            return this->level;
-        }
+    //    /**
+    //     * Answer the log level of this target
+    //     *
+    //     * @return The log level of this target
+    //     */
+    //    inline UINT Level(void) const {
+    //        return this->level;
+    //    }
 
-        /**
-         * Writes a message to the log target
-         *
-         * @param level The level of the message
-         * @param time The time stamp of the message
-         * @param sid The object id of the source of the message
-         * @param msg The message text itself
-         */
-        virtual void Msg(UINT level, TimeStamp time, SourceID sid, const char* msg) = 0;
+    //    /**
+    //     * Writes a message to the log target
+    //     *
+    //     * @param level The level of the message
+    //     * @param time The time stamp of the message
+    //     * @param sid The object id of the source of the message
+    //     * @param msg The message text itself
+    //     */
+    //    virtual void Msg(UINT level, TimeStamp time, SourceID sid, const char* msg) = 0;
 
-        /**
-         * Writes a message to the log target
-         *
-         * @param level The level of the message
-         * @param time The time stamp of the message
-         * @param sid The object id of the source of the message
-         * @param msg The message text itself
-         */
-        virtual void Msg(UINT level, TimeStamp time, SourceID sid, std::string const& msg) = 0;
+    //    /**
+    //     * Writes a message to the log target
+    //     *
+    //     * @param level The level of the message
+    //     * @param time The time stamp of the message
+    //     * @param sid The object id of the source of the message
+    //     * @param msg The message text itself
+    //     */
+    //    virtual void Msg(UINT level, TimeStamp time, SourceID sid, std::string const& msg) = 0;
 
-        /**
-         * Sets the log level for this target
-         *
-         * @param level The new log level
-         */
-        inline void SetLevel(UINT level) {
-            this->level = level;
-        }
+    //    /**
+    //     * Sets the log level for this target
+    //     *
+    //     * @param level The new log level
+    //     */
+    //    inline void SetLevel(UINT level) {
+    //        this->level = level;
+    //    }
 
-    protected:
-        /**
-         * Ctor
-         *
-         * @param level The log level for this target
-         */
-        Target(UINT level = 1);
+    //protected:
+    //    /**
+    //     * Ctor
+    //     *
+    //     * @param level The log level for this target
+    //     */
+    //    Target(UINT level = 1);
 
-    private:
-        /** The log level for this target */
-        UINT level;
-    };
+    //private:
+    //    /** The log level for this target */
+    //    UINT level;
+    //};
 
     /**
      * Ctor. Constructs a new log file without a physical file.
@@ -451,8 +452,6 @@ public:
      */
     Log& operator=(const Log& rhs);
 
-    static megamol::core::utility::log::Log::log_level ParseLevelAttribute(const std::string attr,
-        megamol::core::utility::log::Log::log_level def = megamol::core::utility::log::Log::log_level::error);
 
 private:
     /**
