@@ -60,59 +60,6 @@ std::shared_ptr<spdlog::sinks::basic_file_sink_mt> create_file_sink(std::string 
 
 /*****************************************************************************/
 
-///*
-// * megamol::core::utility::log::Log::Target::~Target
-// */
-//megamol::core::utility::log::Log::Target::~Target(void) {
-//    // intentionally empty
-//}
-//
-//
-///*
-// * megamol::core::utility::log::Log::Target::Target
-// */
-//megamol::core::utility::log::Log::Target::Target(UINT level) : level(level) {
-//    // intentionally empty
-//}
-//
-//
-///*
-// * megamol::core::utility::log::Log::Target::Flush
-// */
-//void megamol::core::utility::log::Log::Target::Flush(void) {
-//    // intentionally empty
-//}
-//
-//
-///*
-// * megamol::core::utility::log::Log::LEVEL_ALL
-// */
-//const UINT megamol::core::utility::log::Log::LEVEL_ALL = UINT_MAX;
-//
-//
-///*
-// * megamol::core::utility::log::Log::LEVEL_ERROR
-// */
-//const UINT megamol::core::utility::log::Log::LEVEL_ERROR = 1;
-//
-//
-///*
-// * megamol::core::utility::log::Log::LEVEL_INFO
-// */
-//const UINT megamol::core::utility::log::Log::LEVEL_INFO = 200;
-//
-//
-///*
-// * megamol::core::utility::log::Log::LEVEL_NONE
-// */
-//const UINT megamol::core::utility::log::Log::LEVEL_NONE = 0;
-//
-//
-///*
-// * megamol::core::utility::log::Log::LEVEL_WARN
-// */
-//const UINT megamol::core::utility::log::Log::LEVEL_WARN = 100;
-
 
 /*
  * __vl_log_defaultlog
@@ -124,22 +71,6 @@ static megamol::core::utility::log::Log __vl_log_defaultlog;
  * megamol::core::utility::log::Log::DefaultLog
  */
 megamol::core::utility::log::Log& megamol::core::utility::log::Log::DefaultLog(__vl_log_defaultlog);
-
-
-///*
-// * megamol::core::utility::log::Log::CurrentTimeStamp
-// */
-//megamol::core::utility::log::Log::TimeStamp megamol::core::utility::log::Log::CurrentTimeStamp(void) {
-//    return time(nullptr);
-//}
-//
-//
-///*
-// * megamol::core::utility::log::Log::CurrentSourceID
-// */
-//megamol::core::utility::log::Log::SourceID megamol::core::utility::log::Log::CurrentSourceID(void) {
-//    return spdlog::details::os::thread_id();
-//}
 
 
 spdlog::level::level_enum translate_level(megamol::core::utility::log::Log::log_level level) {
@@ -214,41 +145,6 @@ void megamol::core::utility::log::Log::FlushLog(void) {
 }
 
 
-///*
-// * megamol::core::utility::log::Log::GetEchoLevel
-// */
-//UINT megamol::core::utility::log::Log::GetEchoLevel(void) const {
-//    return et_level_;
-//}
-//
-//
-///*
-// * megamol::core::utility::log::Log::GetLevel
-// */
-//UINT megamol::core::utility::log::Log::GetLevel(void) const {
-//    return mt_level_;
-//}
-//
-//
-///*
-// * megamol::core::utility::log::Log::GetFileLevel
-// */
-//UINT megamol::core::utility::log::Log::GetFileLevel(void) const {
-//    return ft_level_;
-//}
-//
-//
-///*
-// * megamol::core::utility::log::Log::GetLogFileNameA
-// */
-//std::string megamol::core::utility::log::Log::GetLogFileNameA(void) const {
-//    /*const std::shared_ptr<FileTarget> ft = std::dynamic_pointer_cast<FileTarget>(this->mainTarget);
-//    return (ft != nullptr) ? ft->Filename() : std::string();*/
-//
-//    return std::string();
-//}
-
-
 /*
  * megamol::core::utility::log::Log::SetEchoLevel
  */
@@ -260,21 +156,6 @@ void megamol::core::utility::log::Log::SetEchoLevel(log_level level) {
         }
     }
 }
-
-
-///*
-// * megamol::core::utility::log::Log::SetEchoTarget
-// */
-//void megamol::core::utility::log::Log::SetEchoTarget(std::shared_ptr<megamol::core::utility::log::Log::Target> target) {
-//    /*std::shared_ptr<Target> oet = this->echoTarget;
-//
-//    this->echoTarget = target;
-//    if (this->echoTarget != nullptr) {
-//        if (oet != nullptr) {
-//            this->echoTarget->SetLevel(oet->Level());
-//        }
-//    }*/
-//}
 
 
 std::size_t megamol::core::utility::log::Log::AddEchoTarget(std::shared_ptr<spdlog::sinks::sink> target) {
@@ -312,34 +193,6 @@ void megamol::core::utility::log::Log::SetLevel(log_level level) {
         }
     }
 }
-//
-//
-///*
-// * megamol::core::utility::log::Log::SetFileLevel
-// */
-//void megamol::core::utility::log::Log::SetFileLevel(UINT level) {
-//    ft_level_ = level;
-//}
-
-
-///*
-// * megamol::core::utility::log::Log::SetLogFileName
-// */
-//bool megamol::core::utility::log::Log::SetLogFileName(const char* filename, bool addSuffix) {
-//    if (filename != nullptr) {
-//        std::string path(filename);
-//        if (addSuffix) {
-//            path += this->getFileNameSuffix();
-//        }
-//        auto logger = spdlog::get(logger_name);
-//        if (logger) {
-//            auto sink = create_file_sink(path);
-//            logger->sinks().push_back(sink);
-//        }
-//    }
-//
-//    return true;
-//}
 
 
 /*
@@ -361,17 +214,6 @@ void megamol::core::utility::log::Log::AddFileTarget(const char* filename, bool 
 }
 
 
-///*
-// * megamol::core::utility::log::Log::SetMainTarget
-// */
-//void megamol::core::utility::log::Log::SetMainTarget(std::shared_ptr<megamol::core::utility::log::Log::Target> target) {
-//    //std::shared_ptr<Target> omt = this->mainTarget;
-//
-//    //this->mainTarget = target;
-//    //this->mainTarget->SetLevel(omt->Level());
-//}
-
-
 /*
  * megamol::core::utility::log::Log::WriteError
  */
@@ -384,17 +226,6 @@ void megamol::core::utility::log::Log::WriteError(const char* fmt, ...) {
 
 
 /*
- * megamol::core::utility::log::Log::WriteError
- */
-//void megamol::core::utility::log::Log::WriteError(int lvlOff, const char* fmt, ...) {
-//    va_list argptr;
-//    va_start(argptr, fmt);
-//    this->writeMessageVaA(log_level::error, fmt, argptr);
-//    va_end(argptr);
-//}
-
-
-/*
  * megamol::core::utility::log::Log::WriteInfo
  */
 void megamol::core::utility::log::Log::WriteInfo(const char* fmt, ...) {
@@ -403,17 +234,6 @@ void megamol::core::utility::log::Log::WriteInfo(const char* fmt, ...) {
     this->writeMessageVaA(log_level::info, fmt, argptr);
     va_end(argptr);
 }
-
-
-/*
- * megamol::core::utility::log::Log::WriteInfo
- */
-//void megamol::core::utility::log::Log::WriteInfo(int lvlOff, const char* fmt, ...) {
-//    va_list argptr;
-//    va_start(argptr, fmt);
-//    this->writeMessageVaA(log_level::info, fmt, argptr);
-//    va_end(argptr);
-//}
 
 
 /*
@@ -492,24 +312,9 @@ void megamol::core::utility::log::Log::WriteWarn(const char* fmt, ...) {
 
 
 /*
- * megamol::core::utility::log::Log::WriteWarn
- */
-//void megamol::core::utility::log::Log::WriteWarn(int lvlOff, const char* fmt, ...) {
-//    va_list argptr;
-//    va_start(argptr, fmt);
-//    this->writeMessageVaA(log_level::warn, fmt, argptr);
-//    va_end(argptr);
-//}
-
-
-/*
  * megamol::core::utility::log::Log::operator=
  */
 megamol::core::utility::log::Log& megamol::core::utility::log::Log::operator=(const Log& rhs) {
-    /*this->mt_level_ = rhs.mt_level_;
-    this->et_level_ = rhs.et_level_;
-    this->ft_level_ = rhs.ft_level_;*/
-    //this->autoflush = rhs.autoflush;
     return *this;
 }
 
@@ -538,36 +343,6 @@ inline static bool iequals(const std::string& one, const std::string& other) {
             std::equal(one.begin(), one.end(), other.begin(),
                 [](const char& c1, const char& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); }));
 }
-
-
-//UINT megamol::core::utility::log::Log::ParseLevelAttribute(const std::string attr) {
-//
-//    UINT retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::error);
-//    if (iequals(attr, "error")) {
-//        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::error);
-//    } else if (iequals(attr, "warn")) {
-//        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::warn);
-//    } else if (iequals(attr, "warning")) {
-//        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::warn);
-//    } else if (iequals(attr, "info")) {
-//        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::info);
-//    } else if (iequals(attr, "none")) {
-//        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::info);
-//    } else if (iequals(attr, "null")) {
-//        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::info);
-//    } else if (iequals(attr, "zero")) {
-//        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::info);
-//    } else if (iequals(attr, "all")) {
-//        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::info);
-//    } else if (iequals(attr, "*")) {
-//        retval = static_cast<UINT>(megamol::core::utility::log::Log::log_level::info);
-//    } else {
-//        retval = std::stoi(attr);
-//        // dont catch stoi exceptions
-//        // let exception be handled by the one who called me
-//    }
-//    return retval;
-//}
 
 
 megamol::core::utility::log::Log::log_level megamol::core::utility::log::Log::ParseLevelAttribute(
@@ -599,12 +374,6 @@ megamol::core::utility::log::Log::log_level megamol::core::utility::log::Log::Pa
         retval = megamol::core::utility::log::Log::log_level::all;
     } else if (iequals(attr, "*")) {
         retval = megamol::core::utility::log::Log::log_level::all;
-    } /*else {
-        try {
-            retval = std::stoi(attr);
-        } catch (...) {
-            retval = megamol::core::utility::log::Log::LEVEL_ERROR;
-        }
-    }*/
+    }
     return retval;
 }
