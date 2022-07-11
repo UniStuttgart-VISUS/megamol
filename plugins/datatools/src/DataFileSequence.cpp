@@ -440,7 +440,7 @@ bool datatools::DataFileSequence::onFileNameTemplateChanged(core::param::ParamSl
             break;
         }
         if (errMsg != NULL) {
-            Log::DefaultLog.WriteError( "Parser Error at character %u: %s", i, errMsg);
+            Log::DefaultLog.WriteError("Parser Error at character %u: %s", i, errMsg);
             state = 0;
         }
     }
@@ -453,7 +453,8 @@ bool datatools::DataFileSequence::onFileNameTemplateChanged(core::param::ParamSl
         this->fileNumberStepSlot.Param<core::param::IntParam>()->SetValue(stepVal);
 
     this->fileNameTemplate = fnt;
-    Log::DefaultLog.WriteInfo( "Parsed file name template to \"%s\"", vislib::StringA(this->fileNameTemplate).PeekBuffer());
+    Log::DefaultLog.WriteInfo(
+        "Parsed file name template to \"%s\"", vislib::StringA(this->fileNameTemplate).PeekBuffer());
     this->needDataUpdate = true;
     return true;
 }
@@ -517,13 +518,13 @@ void datatools::DataFileSequence::assertData(void) {
 
     core::param::ParamSlot* fnSlot = this->findFileNameSlot();
     if (fnSlot == NULL) {
-        Log::DefaultLog.WriteError( "Unable to connect to file name slot");
+        Log::DefaultLog.WriteError("Unable to connect to file name slot");
         return;
     }
 
     core::AbstractGetData3DCall* gdc = this->inDataSlot.CallAs<core::AbstractGetData3DCall>();
     if (gdc == NULL) {
-        Log::DefaultLog.WriteError( "Unable to get input data call");
+        Log::DefaultLog.WriteError("Unable to get input data call");
         return;
     }
 
@@ -537,7 +538,7 @@ void datatools::DataFileSequence::assertData(void) {
         }
     }
     if (this->frameCnt == 0) {
-        Log::DefaultLog.WriteError( "DataFileSequence: No data files found");
+        Log::DefaultLog.WriteError("DataFileSequence: No data files found");
         return;
     }
 
@@ -547,7 +548,7 @@ void datatools::DataFileSequence::assertData(void) {
     gdc->SetFrameID(0);
     if (!(*gdc)(1)) {
         this->frameCnt = 0;
-        Log::DefaultLog.WriteError( "DataFileSequence: Unable to clipping box of file %u (#1)", this->fileNumMin);
+        Log::DefaultLog.WriteError("DataFileSequence: Unable to clipping box of file %u (#1)", this->fileNumMin);
         return;
     }
     this->clipbox = gdc->AccessBoundingBoxes().ClipBox();
@@ -559,7 +560,7 @@ void datatools::DataFileSequence::assertData(void) {
         gdc->SetFrameID(0);
         if (!(*gdc)(1)) {
             this->frameCnt = 0;
-            Log::DefaultLog.WriteError( "DataFileSequence: Unable to clipping box of file %u (#2)", idx);
+            Log::DefaultLog.WriteError("DataFileSequence: Unable to clipping box of file %u (#2)", idx);
             return;
         }
         this->clipbox.Union(gdc->AccessBoundingBoxes().ClipBox());
@@ -570,7 +571,7 @@ void datatools::DataFileSequence::assertData(void) {
             gdc->SetFrameID(0);
             if (!(*gdc)(1)) {
                 this->frameCnt = 0;
-                Log::DefaultLog.WriteError( "DataFileSequence: Unable to clipping box of file %u (#3)", idx);
+                Log::DefaultLog.WriteError("DataFileSequence: Unable to clipping box of file %u (#3)", idx);
                 return;
             }
             this->clipbox.Union(gdc->AccessBoundingBoxes().ClipBox());

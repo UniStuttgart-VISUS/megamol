@@ -37,7 +37,7 @@ bool ImageSpaceAmortization2D::createImpl(const msf::ShaderFactoryOptionsOpenGL&
             "mmstd_gl/upscaling/image_space_amortization.vert.glsl",
             "mmstd_gl/upscaling/image_space_amortization.frag.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteError( ("ImageSpaceAmortization2D: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(("ImageSpaceAmortization2D: " + std::string(e.what())).c_str());
         return false;
     }
 

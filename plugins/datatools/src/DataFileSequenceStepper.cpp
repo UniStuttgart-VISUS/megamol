@@ -92,13 +92,13 @@ bool megamol::datatools::DataFileSequenceStepper::GetFilename(
     core::param::StringParam* sp = slot.Param<core::param::StringParam>();
     core::param::FilePathParam* fpp = slot.Param<core::param::FilePathParam>();
     if ((sp == NULL) && (fpp == NULL)) {
-        Log::DefaultLog.WriteError( "Parameter \"%s\" is not of a compatible type.",
+        Log::DefaultLog.WriteError("Parameter \"%s\" is not of a compatible type.",
             this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());
         return false;
     }
     outName = vislib::TString((sp == NULL) ? fpp->Value().generic_u8string().c_str() : sp->Value().c_str());
     if (outName.IsEmpty()) {
-        Log::DefaultLog.WriteWarn( "Value of parameter \"%s\" is empty.",
+        Log::DefaultLog.WriteWarn("Value of parameter \"%s\" is empty.",
             this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());
         return false;
     }
@@ -142,7 +142,7 @@ bool megamol::datatools::DataFileSequenceStepper::onNextFile(core::param::ParamS
     using megamol::core::utility::log::Log;
     core::param::ParamSlot* fnps = this->findFilenameSlot();
     if (fnps == NULL) {
-        Log::DefaultLog.WriteError( "Cannot find parameter slot \"%s\"",
+        Log::DefaultLog.WriteError("Cannot find parameter slot \"%s\"",
             this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());
         return true;
     }
@@ -157,12 +157,12 @@ bool megamol::datatools::DataFileSequenceStepper::onNextFile(core::param::ParamS
     vislib::TString fn;
     fn.Format(fnf, val);
     if (vislib::sys::File::Exists(fn)) {
-        Log::DefaultLog.WriteInfo( "Switching to file \"%s\"", vislib::StringA(fn).PeekBuffer());
+        Log::DefaultLog.WriteInfo("Switching to file \"%s\"", vislib::StringA(fn).PeekBuffer());
         this->SetFilename(*fnps, fn);
         return true;
     }
 
-    Log::DefaultLog.WriteInfo( "Next file not found. Going to start of series.");
+    Log::DefaultLog.WriteInfo("Next file not found. Going to start of series.");
     // search for last existing file
     while (val >= 0) {
         val--;
@@ -171,8 +171,8 @@ bool megamol::datatools::DataFileSequenceStepper::onNextFile(core::param::ParamS
             break;
     }
     if (val < 0) {
-        Log::DefaultLog.WriteError( "File name series \"%s\" does not seem to exist at all.",
-            vislib::StringA(fnf).PeekBuffer());
+        Log::DefaultLog.WriteError(
+            "File name series \"%s\" does not seem to exist at all.", vislib::StringA(fnf).PeekBuffer());
         return true;
     }
     while (val >= 0) {
@@ -184,12 +184,13 @@ bool megamol::datatools::DataFileSequenceStepper::onNextFile(core::param::ParamS
     val++;
     fn.Format(fnf, val);
     if (vislib::sys::File::Exists(fn)) {
-        Log::DefaultLog.WriteInfo( "Switching to file \"%s\"", vislib::StringA(fn).PeekBuffer());
+        Log::DefaultLog.WriteInfo("Switching to file \"%s\"", vislib::StringA(fn).PeekBuffer());
         this->SetFilename(*fnps, fn);
         return true;
     }
 
-    Log::DefaultLog.WriteError( "File name series \"%s\" does not seem to exist at all.", vislib::StringA(fnf).PeekBuffer());
+    Log::DefaultLog.WriteError(
+        "File name series \"%s\" does not seem to exist at all.", vislib::StringA(fnf).PeekBuffer());
 
     return true;
 }
@@ -203,7 +204,7 @@ bool megamol::datatools::DataFileSequenceStepper::onPrevFile(core::param::ParamS
     const int MAX_FILE_NUM = 10000000;
     core::param::ParamSlot* fnps = this->findFilenameSlot();
     if (fnps == NULL) {
-        Log::DefaultLog.WriteError( "Cannot find parameter slot \"%s\"",
+        Log::DefaultLog.WriteError("Cannot find parameter slot \"%s\"",
             this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());
         return true;
     }
@@ -219,13 +220,13 @@ bool megamol::datatools::DataFileSequenceStepper::onPrevFile(core::param::ParamS
     if (val > 0) {
         fn.Format(fnf, val);
         if (vislib::sys::File::Exists(fn)) {
-            Log::DefaultLog.WriteInfo( "Switching to file \"%s\"", vislib::StringA(fn).PeekBuffer());
+            Log::DefaultLog.WriteInfo("Switching to file \"%s\"", vislib::StringA(fn).PeekBuffer());
             this->SetFilename(*fnps, fn);
             return true;
         }
     }
 
-    Log::DefaultLog.WriteInfo( "Previous file not found. Going to end of series.");
+    Log::DefaultLog.WriteInfo("Previous file not found. Going to end of series.");
     // search for first existing file
     while (val < MAX_FILE_NUM) {
         val++;
@@ -234,8 +235,8 @@ bool megamol::datatools::DataFileSequenceStepper::onPrevFile(core::param::ParamS
             break;
     }
     if (val >= MAX_FILE_NUM) {
-        Log::DefaultLog.WriteError( "File name series \"%s\" does not seem to exist at all.",
-            vislib::StringA(fnf).PeekBuffer());
+        Log::DefaultLog.WriteError(
+            "File name series \"%s\" does not seem to exist at all.", vislib::StringA(fnf).PeekBuffer());
         return true;
     }
     while (val < MAX_FILE_NUM) {
@@ -247,12 +248,13 @@ bool megamol::datatools::DataFileSequenceStepper::onPrevFile(core::param::ParamS
     val--;
     fn.Format(fnf, val);
     if (vislib::sys::File::Exists(fn)) {
-        Log::DefaultLog.WriteInfo( "Switching to file \"%s\"", vislib::StringA(fn).PeekBuffer());
+        Log::DefaultLog.WriteInfo("Switching to file \"%s\"", vislib::StringA(fn).PeekBuffer());
         this->SetFilename(*fnps, fn);
         return true;
     }
 
-    Log::DefaultLog.WriteError( "File name series \"%s\" does not seem to exist at all.", vislib::StringA(fnf).PeekBuffer());
+    Log::DefaultLog.WriteError(
+        "File name series \"%s\" does not seem to exist at all.", vislib::StringA(fnf).PeekBuffer());
 
     return true;
 }
@@ -275,7 +277,7 @@ bool megamol::datatools::DataFileSequenceStepper::SetFilename(
     core::param::StringParam* sp = slot.Param<core::param::StringParam>();
     core::param::FilePathParam* fpp = slot.Param<core::param::FilePathParam>();
     if ((sp == NULL) && (fpp == NULL)) {
-        Log::DefaultLog.WriteError( "Parameter \"%s\" is not of a compatible type.",
+        Log::DefaultLog.WriteError("Parameter \"%s\" is not of a compatible type.",
             this->filenameSlotNameSlot.Param<core::param::StringParam>()->Value().c_str());
         return false;
     }

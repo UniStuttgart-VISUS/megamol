@@ -162,14 +162,14 @@ void SolPathDataSource::loadData(void) {
 
     if (file.Open(this->filenameslot.Param<param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY) == false) {
-        Log::DefaultLog.WriteError( "Unable to open data file %s",
+        Log::DefaultLog.WriteError("Unable to open data file %s",
             this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
         return;
     }
 
     vislib::StringA headerID;
     if (file.Read(headerID.AllocateBuffer(7), 7) != 7) {
-        Log::DefaultLog.WriteError( "Unable to read data file %s",
+        Log::DefaultLog.WriteError("Unable to read data file %s",
             this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
         return;
     }
@@ -180,12 +180,12 @@ void SolPathDataSource::loadData(void) {
     if (headerID.Equals("SolPath")) {
         unsigned int version;
         if (file.Read(&version, 4) != 4) {
-            Log::DefaultLog.WriteError( "Unable to read data file %s",
+            Log::DefaultLog.WriteError("Unable to read data file %s",
                 this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
             return;
         }
         if (version > 1) {
-            Log::DefaultLog.WriteError( "Data file %s uses unsupported version %u",
+            Log::DefaultLog.WriteError("Data file %s uses unsupported version %u",
                 this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str(), version);
             return;
         }
@@ -220,7 +220,7 @@ void SolPathDataSource::loadData(void) {
         }
     }
     if (blockInfo == NULL) {
-        Log::DefaultLog.WriteError( "File %s does not contain a path line data block",
+        Log::DefaultLog.WriteError("File %s does not contain a path line data block",
             this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
         return;
     }
@@ -272,7 +272,7 @@ void SolPathDataSource::loadData(void) {
         }
     }
 
-    Log::DefaultLog.WriteInfo( "Finished solpath file IO");
+    Log::DefaultLog.WriteInfo("Finished solpath file IO");
 
     // calculate pointers, bounding data, and speed values
     SIZE_T off = 0;
@@ -280,9 +280,9 @@ void SolPathDataSource::loadData(void) {
         off += this->pathlines[p].length;
     }
     if (off < this->vertices.Count()) {
-        Log::DefaultLog.WriteWarn( "Path data inconsistent: too many vertices");
+        Log::DefaultLog.WriteWarn("Path data inconsistent: too many vertices");
     } else if (off > this->vertices.Count()) {
-        Log::DefaultLog.WriteError( "Path data inconsistent: too few vertices");
+        Log::DefaultLog.WriteError("Path data inconsistent: too few vertices");
         this->clear();
         return;
     }

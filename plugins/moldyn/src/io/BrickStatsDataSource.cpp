@@ -66,7 +66,8 @@ BrickStatsDataSource::~BrickStatsDataSource(void) {
 bool BrickStatsDataSource::create(void) {
     using megamol::core::utility::log::Log;
     if (BrickStatsCall::GetTypeSize() != sizeof(BrickStatsCall::BrickStatsType)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "BrickStatsCall::BrickStatsType has different size across object files!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "BrickStatsCall::BrickStatsType has different size across object files!");
         return false;
     }
     return true;
@@ -108,7 +109,7 @@ bool BrickStatsDataSource::filenameChanged(param::ParamSlot& slot) {
 
     if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to open MMPLD-File \"%s\".",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open MMPLD-File \"%s\".",
             this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
 
         SAFE_DELETE(this->file);
@@ -128,7 +129,8 @@ bool BrickStatsDataSource::filenameChanged(param::ParamSlot& slot) {
 
         auto arr = vislib::StringTokeniserA::Split(line, ',');
         if (arr.Count() != 14) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to parse line %lu: not enough fields (%u)", lineNum, arr.Count());
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to parse line %lu: not enough fields (%u)", lineNum, arr.Count());
             continue;
         }
         try {
@@ -166,7 +168,7 @@ bool BrickStatsDataSource::filenameChanged(param::ParamSlot& slot) {
             this->bbox.GrowToPoint(minX, minY, minZ);
             this->bbox.GrowToPoint(maxX, maxY, maxZ);
         } catch (vislib::FormatException) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "parse error in line %lu", lineNum);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("parse error in line %lu", lineNum);
         }
     }
 

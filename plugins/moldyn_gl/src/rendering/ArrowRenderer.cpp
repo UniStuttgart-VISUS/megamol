@@ -79,21 +79,20 @@ bool ArrowRenderer::create(void) {
 
     try {
         if (!this->arrowShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile arrow shader: Unknown error\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile arrow shader: Unknown error\n");
             return false;
         }
 
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile arrow shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile arrow shader (@%s): %s\n",
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile arrow shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile arrow shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile arrow shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile arrow shader: Unknown exception\n");
         return false;
     }
 

@@ -89,7 +89,8 @@ bool utility::ProjectParser::CheckBaseTag(const utility::xml::XmlReader& reader)
         return false;
     }
     if (!versionValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("base tag attribute \"version\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "base tag attribute \"version\" not present or invalid.");
         return false;
     }
 

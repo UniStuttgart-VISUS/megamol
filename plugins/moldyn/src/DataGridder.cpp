@@ -200,7 +200,8 @@ bool DataGridder::getData(megamol::core::Call& call) {
 
             case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
             default:
-                megamol::core::utility::log::Log::DefaultLog.WriteError( "Internal Error at %s[%d]\n", __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "Internal Error at %s[%d]\n", __FILE__, __LINE__);
                 throw vislib::Exception("Internal Error\n", __FILE__, __LINE__);
                 break;
             }

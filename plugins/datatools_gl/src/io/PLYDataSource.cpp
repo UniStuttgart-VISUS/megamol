@@ -243,8 +243,7 @@ bool io::PLYDataSource::assertData() {
     instream.close();
     instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
     if (instream.fail()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to open PLY File \"%s\".",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open PLY File \"%s\".",
             filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         return true;
     }
@@ -666,7 +665,7 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
     instream.close();
     instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
     if (instream.fail()) {
-        Log::DefaultLog.WriteError( "Unable to open PLY File \"%s\".",
+        Log::DefaultLog.WriteError("Unable to open PLY File \"%s\".",
             filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         this->clearAllFields();
         return true;
@@ -745,9 +744,9 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
         property_index = 0;
         element_size = 0;
-        Log::DefaultLog.WriteInfo( "element: %s, %u bytes", e.name.c_str(), e.size);
+        Log::DefaultLog.WriteInfo("element: %s, %u bytes", e.name.c_str(), e.size);
         for (auto p : e.properties) {
-            Log::DefaultLog.WriteInfo( "    property: %s %s %i", p.name.c_str(),
+            Log::DefaultLog.WriteInfo("    property: %s %s %i", p.name.c_str(),
                 tinyply::PropertyTable[p.propertyType].str.c_str(), tinyply::PropertyTable[p.propertyType].stride);
             this->xPropSlot.Param<core::param::FlexEnumParam>()->AddValue(p.name);
             this->yPropSlot.Param<core::param::FlexEnumParam>()->AddValue(p.name);
@@ -887,7 +886,7 @@ bool io::PLYDataSource::fileUpdate(core::param::ParamSlot& slot) {
     instream.close();
     instream.open(filename.Param<core::param::FilePathParam>()->Value(), std::ios::binary);
     if (instream.fail()) {
-        Log::DefaultLog.WriteError( "Unable to open PLY File \"%s\".",
+        Log::DefaultLog.WriteError("Unable to open PLY File \"%s\".",
             filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         this->clearAllFields();
         return true;

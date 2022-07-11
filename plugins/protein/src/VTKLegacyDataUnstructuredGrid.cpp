@@ -60,7 +60,7 @@ VTKLegacyDataUnstructuredGrid::~VTKLegacyDataUnstructuredGrid() {
  */
 const AbstractVTKLegacyData::AttributeArray* VTKLegacyDataUnstructuredGrid::PeekPointDataByIndex(size_t idx) const {
     if (idx >= this->pointData.Count()) {
-        Log::DefaultLog.WriteError( "Requested idx out of bound, returning NULL.");
+        Log::DefaultLog.WriteError("Requested idx out of bound, returning NULL.");
         return NULL;
     } else {
         return &this->pointData[idx];
@@ -86,7 +86,7 @@ const AbstractVTKLegacyData::AttributeArray* VTKLegacyDataUnstructuredGrid::Peek
 
     // If the id is not in use: return null
     if (!isUsed) {
-        Log::DefaultLog.WriteError( "Requested id '%s' not in use, returning NULL.", name.PeekBuffer());
+        Log::DefaultLog.WriteError("Requested id '%s' not in use, returning NULL.", name.PeekBuffer());
         return NULL;
     } else { // else: return the data array
         return &this->pointData[idx];

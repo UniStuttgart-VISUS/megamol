@@ -46,18 +46,19 @@ bool io::MMGDDWriter::run(void) {
     vislib::TString filename(
         this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
     if (filename.IsEmpty()) {
-        Log::DefaultLog.WriteError( "No file name specified. Abort.");
+        Log::DefaultLog.WriteError("No file name specified. Abort.");
         return false;
     }
 
     GraphDataCall* gdc = this->dataSlot.CallAs<GraphDataCall>();
     if (gdc == nullptr) {
-        Log::DefaultLog.WriteError( "No data source connected. Abort.");
+        Log::DefaultLog.WriteError("No data source connected. Abort.");
         return false;
     }
 
     if (vislib::sys::File::Exists(filename)) {
-        Log::DefaultLog.WriteWarn( "File %s already exists and will be overwritten.", vislib::StringA(filename).PeekBuffer());
+        Log::DefaultLog.WriteWarn(
+            "File %s already exists and will be overwritten.", vislib::StringA(filename).PeekBuffer());
     }
 
     gdc->SetFrameID(0);
@@ -69,7 +70,8 @@ bool io::MMGDDWriter::run(void) {
     vislib::sys::FastFile file;
     if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
             vislib::sys::File::CREATE_OVERWRITE)) {
-        Log::DefaultLog.WriteError( "Unable to create output file \"%s\". Abort.", vislib::StringA(filename).PeekBuffer());
+        Log::DefaultLog.WriteError(
+            "Unable to create output file \"%s\". Abort.", vislib::StringA(filename).PeekBuffer());
         gdc->Unlock();
         return false;
     }
@@ -95,7 +97,7 @@ bool io::MMGDDWriter::run(void) {
         gdc->SetFrameID(i);
         unsigned char flags = 0;
         if (!(*gdc)(GraphDataCall::GET_DATA)) {
-            Log::DefaultLog.WriteError( "Unable to fetch data for frame %u. skipping.", i);
+            Log::DefaultLog.WriteError("Unable to fetch data for frame %u. skipping.", i);
             file.Write(&flags, 1);
             continue;
         }

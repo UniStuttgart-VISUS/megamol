@@ -55,16 +55,14 @@ void AbstractTriMeshLoader::assertData(void) {
                 "Unexpected exception: %s at (%s, %d)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
             retval = false;
         } catch (...) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unexpected exception: unkown exception\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unexpected exception: unkown exception\n");
             retval = false;
         }
         if (retval) {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "Loaded file \"%s\"",
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Loaded file \"%s\"",
                 this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Failed to load file \"%s\"",
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to load file \"%s\"",
                 this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
             // ensure there is no partial data
             this->objs.Clear();

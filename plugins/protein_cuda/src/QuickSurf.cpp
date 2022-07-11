@@ -126,12 +126,13 @@ bool QuickSurf::create(void) {
             std::filesystem::path("protein_cuda/quicksurf/qsurf_mesh.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "[QuickSurf] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[QuickSurf] %s", ex.what());
     } catch (std::exception const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[QuickSurf] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "[QuickSurf] Unable to compile shader: Unknown exception.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[QuickSurf] Unable to compile shader: Unknown exception.");
     }
 
     deferredProvider_.setup(this->GetCoreInstance());

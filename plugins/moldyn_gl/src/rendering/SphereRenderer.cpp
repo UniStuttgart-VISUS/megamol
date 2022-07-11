@@ -975,7 +975,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
     }
 
     if (!silent && !warnstr.empty()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn( warnstr.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(warnstr.c_str());
     }
 
     return (warnstr.empty());
@@ -1034,7 +1034,7 @@ bool SphereRenderer::isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snipp
     out_flag_snippet = new ShaderSource::StringSnippet(flag_snippet_str.c_str());
 
     if (!warnstr.empty()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn( warnstr.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(warnstr.c_str());
         return false;
     }
     return true;

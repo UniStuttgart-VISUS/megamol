@@ -204,16 +204,15 @@ bool SecStructRenderer2D::create(void) {
             throw vislib::Exception("Could not link line shader", __FILE__, __LINE__);
         }
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile line shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile line shader (@%s): %s\n",
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile line shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile line shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile line shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile line shader: Unknown exception\n");
         return false;
     }
 
@@ -250,16 +249,15 @@ bool SecStructRenderer2D::create(void) {
             throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
         }
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile tube shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile tube shader (@%s): %s\n",
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile tube shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile tube shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile tube shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile tube shader: Unknown exception\n");
         return false;
     }
 
@@ -300,9 +298,9 @@ bool SecStructRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
     if (pdc->DataHash() != this->lastPlaneHash) {
         if (pdc->GetPlaneCnt() > 0) {
             auto plane = pdc->GetPlaneData()[0];
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "Plane set to p=(%f %f %f) n=(%f %f %f)", plane.Point()[0], plane.Point()[1], plane.Point()[2],
-                plane.Normal()[0], plane.Normal()[1], plane.Normal()[2]);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Plane set to p=(%f %f %f) n=(%f %f %f)",
+                plane.Point()[0], plane.Point()[1], plane.Point()[2], plane.Normal()[0], plane.Normal()[1],
+                plane.Normal()[2]);
             this->transformationMatrix = this->rotatePlaneToXY(plane);
         } else {
             this->transformationMatrix.SetIdentity();

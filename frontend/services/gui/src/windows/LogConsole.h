@@ -94,7 +94,7 @@ private:
     float last_window_height;
 
     core::utility::log::Log::log_level win_log_level; // [SAVED] Log level used in log window
-    bool win_log_force_open;    // [SAVED] flag indicating if log window should be forced open on warnings and errors
+    bool win_log_force_open; // [SAVED] flag indicating if log window should be forced open on warnings and errors
 
     // Widgets
     HoverToolTip tooltip;

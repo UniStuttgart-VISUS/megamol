@@ -443,8 +443,8 @@ bool ConditionalParser::evaluateCondition(
     using megamol::core::utility::log::Log;
 
     if (tokenCount == 0) {
-        Log::DefaultLog.WriteError( "Error in expression \"%s\": internal error (empty token list)\n",
-            expression.PeekBuffer());
+        Log::DefaultLog.WriteError(
+            "Error in expression \"%s\": internal error (empty token list)\n", expression.PeekBuffer());
         return false;
     }
 
@@ -465,7 +465,7 @@ bool ConditionalParser::evaluateCondition(
             if (v != NULL) {
                 return *v;
             } else {
-                Log::DefaultLog.WriteError( "Error in expression \"%s\": unknown identifier \"%s\"\n",
+                Log::DefaultLog.WriteError("Error in expression \"%s\": unknown identifier \"%s\"\n",
                     expression.PeekBuffer(), tokenz[0].PeekBuffer());
                 return false;
             }
@@ -517,7 +517,7 @@ bool ConditionalParser::evaluateCondition(
         }
 
         if (obc != cbc) {
-            Log::DefaultLog.WriteError( "Error in expression \"%s\": brackets mismatch\n", expression.PeekBuffer());
+            Log::DefaultLog.WriteError("Error in expression \"%s\": brackets mismatch\n", expression.PeekBuffer());
             return false;
         }
 #ifdef DO_SOME_BULB_TEXT
@@ -574,8 +574,7 @@ bool ConditionalParser::evaluateCondition(
             seq.Append(" ");
             seq.Append(tokenz[i]);
         }
-        Log::DefaultLog.WriteError(
-            "Error in expression \"%s\": internal error (basic sequence of wrong length: %s)\n",
+        Log::DefaultLog.WriteError("Error in expression \"%s\": internal error (basic sequence of wrong length: %s)\n",
             expression.PeekBuffer(), seq.PeekBuffer());
         return false;
     }
@@ -631,8 +630,8 @@ bool ConditionalParser::evaluateCondition(
     } else if (tokenz[1].Equals("||")) {
         return this->evaluateCondition(expression, tokenz, 1) || this->evaluateCondition(expression, tokenz + 2, 1);
     } else {
-        Log::DefaultLog.WriteError( "Error in expression \"%s\": invalid binary operator %s\n",
-            expression.PeekBuffer(), tokenz[1].PeekBuffer());
+        Log::DefaultLog.WriteError("Error in expression \"%s\": invalid binary operator %s\n", expression.PeekBuffer(),
+            tokenz[1].PeekBuffer());
         return false;
     }
 

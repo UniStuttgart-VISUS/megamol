@@ -173,9 +173,8 @@ void TetraVoxelizer::CollectCell(
             vislib::math::Point<unsigned int, 4> p = cellFIFO.First();
             cellFIFO.RemoveFirst();
 #ifdef ULTRADEBUG
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[%08u] growing    (%04u, %04u, %04u)[%u]\n", vislib::sys::Thread::CurrentID(), p.X(), p.Y(), p.Z(),
-                p.W());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[%08u] growing    (%04u, %04u, %04u)[%u]\n",
+                vislib::sys::Thread::CurrentID(), p.X(), p.Y(), p.Z(), p.W());
 #endif /* ULTRADEBUG */
             growSurfaceFromTriangle(theVolume, p.X(), p.Y(), p.Z(), p.W(), surf);
         }

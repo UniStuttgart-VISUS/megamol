@@ -310,7 +310,7 @@ void MMPLDDataSource::loadFrame(AnimDataModule::Frame* frame, unsigned int idx) 
     this->file->Seek(this->frameIdx[idx]);
     if (!f->LoadFrame(this->file, idx, this->frameIdx[idx + 1] - this->frameIdx[idx], this->fileVersion)) {
         // failed
-        Log::DefaultLog.WriteError( "Unable to read frame %d from MMPLD file\n", idx);
+        Log::DefaultLog.WriteError("Unable to read frame %d from MMPLD file\n", idx);
     }
 }
 
@@ -350,7 +350,7 @@ bool MMPLDDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to open MMPLD-File \"%s\".",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open MMPLD-File \"%s\".",
             this->filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
 
         SAFE_DELETE(this->file);
@@ -361,7 +361,7 @@ bool MMPLDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     }
 
 #define _ERROR_OUT(MSG)                                    \
-    Log::DefaultLog.WriteError( MSG);       \
+    Log::DefaultLog.WriteError(MSG);                       \
     SAFE_DELETE(this->file);                               \
     this->setFrameCount(1);                                \
     this->initFrameCache(1);                               \
@@ -420,12 +420,12 @@ bool MMPLDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn( msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo( msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg);
     }
 
     this->setFrameCount(frmCnt);

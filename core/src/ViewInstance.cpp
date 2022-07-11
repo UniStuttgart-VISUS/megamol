@@ -92,7 +92,7 @@ void ViewInstance::ClearCleanupMark(void) {
 void ViewInstance::PerformCleanup(void) {
     if (this->CleanupMark()) {
         // this should never happen!
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn( "Internal Error: ViewInstance marked for cleanup.\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Internal Error: ViewInstance marked for cleanup.\n");
     }
     ModuleNamespace::PerformCleanup();
 }

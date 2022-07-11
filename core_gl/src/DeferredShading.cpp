@@ -81,8 +81,8 @@ bool DeferredShading::Render(core_gl::view::CallRender3DGL& call) {
             m_deferred_shading_prgm->Create(
                 vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
         } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to compile %s (@%s):\n%s\n", shader_base_name.PeekBuffer(),
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile %s (@%s):\n%s\n",
+                shader_base_name.PeekBuffer(),
                 vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
                 ce.GetMsgA());
             // return false;

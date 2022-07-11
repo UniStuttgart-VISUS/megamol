@@ -276,7 +276,8 @@ static const std::string accepted_log_level_strings =
 
 static void loglevel_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.log_level = megamol::core::utility::log::Log::ParseLevelAttribute(parsed_options[option_name].as<std::string>());
+    config.log_level =
+        megamol::core::utility::log::Log::ParseLevelAttribute(parsed_options[option_name].as<std::string>());
 };
 
 static void echolevel_handler(

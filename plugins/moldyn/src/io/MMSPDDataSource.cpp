@@ -911,7 +911,7 @@ void MMSPDDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsign
     }
     if (!res) {
         // failed
-        Log::DefaultLog.WriteError( "Unable to read frame %d from MMSPD file: %s", idx, errMsg.PeekBuffer());
+        Log::DefaultLog.WriteError("Unable to read frame %d from MMSPD file: %s", idx, errMsg.PeekBuffer());
     }
 }
 
@@ -950,7 +950,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void* userdata) {
     }
     f.Seek(that->frameIdx
                [0]); // lock not required, because i know the main thread is currently waiting to load the first frame
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo( "Frame index generation started.");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Frame index generation started.");
 
     const SIZE_T MAX_BUFFER_SIZE = 1024 * 1024;
     char* buffer = new char[MAX_BUFFER_SIZE];
@@ -1347,7 +1347,7 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to open MMSPD-File \"%s\".",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open MMSPD-File \"%s\".",
             this->filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
 
         SAFE_DELETE(this->file);
@@ -1357,12 +1357,12 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         return true;
     }
 
-#define _ERROR_OUT(MSG)                                  \
-    {                                                    \
-        Log::DefaultLog.WriteError( MSG); \
-        SAFE_DELETE(this->file);                         \
-        this->clearData();                               \
-        return true;                                     \
+#define _ERROR_OUT(MSG)                  \
+    {                                    \
+        Log::DefaultLog.WriteError(MSG); \
+        SAFE_DELETE(this->file);         \
+        this->clearData();               \
+        return true;                     \
     }
 #define _ASSERT_READFILE(BUFFER, BUFFERSIZE)                            \
     {                                                                   \

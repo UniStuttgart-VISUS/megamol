@@ -73,23 +73,23 @@ DWORD job::DataWriterJob::Run(void* userData) {
     DataWriterCtrlCall* dwcc = this->writerSlot.CallAs<DataWriterCtrlCall>();
 
     if (dwcc == NULL) {
-        Log::DefaultLog.WriteWarn( "Data writer job not connected to any data writer module\n");
+        Log::DefaultLog.WriteWarn("Data writer job not connected to any data writer module\n");
         return -1;
     }
 
     if (!(*dwcc)(DataWriterCtrlCall::CALL_GETCAPABILITIES)) {
-        Log::DefaultLog.WriteWarn( "Unable to query data writer capabilities");
+        Log::DefaultLog.WriteWarn("Unable to query data writer capabilities");
     } else {
         this->abortable = dwcc->IsAbortable();
     }
 
-    Log::DefaultLog.WriteInfo( "Starting DataWriterJob \"%s\"", this->FullName().PeekBuffer());
+    Log::DefaultLog.WriteInfo("Starting DataWriterJob \"%s\"", this->FullName().PeekBuffer());
 
     if ((*dwcc)(DataWriterCtrlCall::CALL_RUN)) {
-        Log::DefaultLog.WriteInfo( "DataWriterJob \"%s\" complete", this->FullName().PeekBuffer());
+        Log::DefaultLog.WriteInfo("DataWriterJob \"%s\" complete", this->FullName().PeekBuffer());
 
     } else {
-        Log::DefaultLog.WriteWarn( "DataWriterJob \"%s\" terminated with false", this->FullName().PeekBuffer());
+        Log::DefaultLog.WriteWarn("DataWriterJob \"%s\" terminated with false", this->FullName().PeekBuffer());
         return -2;
     }
 

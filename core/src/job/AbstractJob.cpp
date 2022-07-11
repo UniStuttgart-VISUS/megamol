@@ -54,7 +54,7 @@ void job::AbstractJob::signalStart(void) {
         name = ano->Name();
     }
 
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo( "Job \"%s\" started ...\n", name.PeekBuffer());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Job \"%s\" started ...\n", name.PeekBuffer());
 }
 
 

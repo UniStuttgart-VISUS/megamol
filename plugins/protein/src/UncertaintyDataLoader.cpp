@@ -234,14 +234,15 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
 
     // check if file ending matches ".uid"
     if (!filenameA.Contains(".uid")) {
-        Log::DefaultLog.WriteError( "Wrong file ending detected, must be \".uid\": \"%s\"", filenameA.PeekBuffer()); // ERROR
+        Log::DefaultLog.WriteError(
+            "Wrong file ending detected, must be \".uid\": \"%s\"", filenameA.PeekBuffer()); // ERROR
         return false;
     }
 
     // Try to load the file
     if (file.LoadFile(filename.c_str())) {
 
-        Log::DefaultLog.WriteInfo( "Reading uncertainty input data file: \"%s\"", filenameA.PeekBuffer()); // INFO
+        Log::DefaultLog.WriteInfo("Reading uncertainty input data file: \"%s\"", filenameA.PeekBuffer()); // INFO
 
         // Reset array size
         // (maximum number of entries in data arrays is ~9 less than line count of file)
@@ -612,12 +613,12 @@ bool UncertaintyDataLoader::ReadInputFile(const std::filesystem::path& filename)
 
         // Clear ascii file buffer
         file.Clear();
-        Log::DefaultLog.WriteInfo( "Retrieved secondary structure assignments for %i amino-acids.",
+        Log::DefaultLog.WriteInfo("Retrieved secondary structure assignments for %i amino-acids.",
             this->pdbIndex.Count()); // INFO
 
         return true;
     } else {
-        Log::DefaultLog.WriteError( "Coudn't find uncertainty input data file: \"%s\"", T2A(filename.c_str())); // ERROR
+        Log::DefaultLog.WriteError("Coudn't find uncertainty input data file: \"%s\"", T2A(filename.c_str())); // ERROR
         return false;
     }
 }
@@ -1494,7 +1495,7 @@ bool UncertaintyDataLoader::CalculateUncertaintyExtended(void) {
         this->sortedSecStructAssignment[uncMethod].Add(ssa);
         this->uncertainty.Add(unc);
     }
-    Log::DefaultLog.WriteInfo( "Calculated uncertainty for secondary structure.", this->pdbIndex.Count()); // INFO
+    Log::DefaultLog.WriteInfo("Calculated uncertainty for secondary structure.", this->pdbIndex.Count()); // INFO
     return true;
 }
 
@@ -1587,7 +1588,8 @@ bool UncertaintyDataLoader::CalculateUncertaintyAverage(void) {
         this->uncertainty.Add(unc);
     }
 
-    Log::DefaultLog.WriteInfo( "Calculated AVERAGE uncertainty for secondary structure.", this->pdbIndex.Count()); // INFO
+    Log::DefaultLog.WriteInfo(
+        "Calculated AVERAGE uncertainty for secondary structure.", this->pdbIndex.Count()); // INFO
 
     return true;
 }

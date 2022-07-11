@@ -50,17 +50,17 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
     using megamol::core::utility::log::Log;
 
     if (filename.IsEmpty()) {
-        Log::DefaultLog.WriteInfo( "Filename is empty");
+        Log::DefaultLog.WriteInfo("Filename is empty");
         return true;
     }
     if (!vislib::sys::File::Exists(filename)) {
-        Log::DefaultLog.WriteError( "Specified file does not exist");
+        Log::DefaultLog.WriteError("Specified file does not exist");
         return false;
     }
 
     vislib::sys::ASCIIFileBuffer linesA(vislib::sys::ASCIIFileBuffer::PARSING_WORDS);
     if (!linesA.LoadFile(filename)) {
-        Log::DefaultLog.WriteError( "Unable to load file");
+        Log::DefaultLog.WriteError("Unable to load file");
         return false;
     }
 
@@ -68,7 +68,7 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
     this->mats.Clear();
     this->lines.clear();
 
-    Log::DefaultLog.WriteInfo( "Start loading \"%s\"\n", vislib::StringA(filename).PeekBuffer());
+    Log::DefaultLog.WriteInfo("Start loading \"%s\"\n", vislib::StringA(filename).PeekBuffer());
     double startTime = vislib::sys::PerformanceCounter::QueryMillis();
 
     vislib::TString path = vislib::sys::Path::GetDirectoryName(filename);
@@ -340,8 +340,9 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
             }
 
         } catch (vislib::Exception ex) {
-            Log::DefaultLog.WriteError( "Error parsing line %u: %s (%s, %d)", li, ex.GetMsgA(), ex.GetFile(), ex.GetLine());
-        } catch (...) { Log::DefaultLog.WriteError( "Error parsing line %u: unexpected exception", li); }
+            Log::DefaultLog.WriteError(
+                "Error parsing line %u: %s (%s, %d)", li, ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+        } catch (...) { Log::DefaultLog.WriteError("Error parsing line %u: unexpected exception", li); }
     }
     if (lineVerts.Count() > 0) {
         for (size_t loop = 0; loop < lineVerts.Count(); loop++) {
@@ -351,7 +352,7 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
     }
 
     double parseTime = (vislib::sys::PerformanceCounter::QueryMillis() - startTime) * 0.001;
-    Log::DefaultLog.WriteInfo( "Parsing file completed after %f seconds\n", parseTime);
+    Log::DefaultLog.WriteInfo("Parsing file completed after %f seconds\n", parseTime);
 
     if (!this->lines.empty()) {
         float minV[] = {FLT_MAX, FLT_MAX, FLT_MAX};
@@ -419,19 +420,20 @@ void WavefrontObjDataSource::loadMaterialLibrary(
     ASSERT(names.Count() == this->mats.Count());
 
     if (filename.IsEmpty()) {
-        Log::DefaultLog.WriteInfo( "Material library filename is empty");
+        Log::DefaultLog.WriteInfo("Material library filename is empty");
         return;
     }
     if (!vislib::sys::File::Exists(filename)) {
-        Log::DefaultLog.WriteError( "Material library \"%s\" file does not exist", vislib::StringA(filename).PeekBuffer());
+        Log::DefaultLog.WriteError(
+            "Material library \"%s\" file does not exist", vislib::StringA(filename).PeekBuffer());
         return;
     }
     vislib::sys::ASCIIFileBuffer linesA(vislib::sys::ASCIIFileBuffer::PARSING_WORDS);
     if (!linesA.LoadFile(filename)) {
-        Log::DefaultLog.WriteError( "Unable to load material library \"%s\"", vislib::StringA(filename).PeekBuffer());
+        Log::DefaultLog.WriteError("Unable to load material library \"%s\"", vislib::StringA(filename).PeekBuffer());
         return;
     }
-    Log::DefaultLog.WriteInfo( "Loading material library \"%s\"", vislib::StringA(filename).PeekBuffer());
+    Log::DefaultLog.WriteInfo("Loading material library \"%s\"", vislib::StringA(filename).PeekBuffer());
 
     vislib::TString path = vislib::sys::Path::GetDirectoryName(filename);
     Material* mat = NULL;
@@ -495,8 +497,9 @@ void WavefrontObjDataSource::loadMaterialLibrary(
             }
 
         } catch (vislib::Exception ex) {
-            Log::DefaultLog.WriteError( "Error parsing line %u: %s (%s, %d)", li, ex.GetMsgA(), ex.GetFile(), ex.GetLine());
-        } catch (...) { Log::DefaultLog.WriteError( "Error parsing line %u: unexpected exception", li); }
+            Log::DefaultLog.WriteError(
+                "Error parsing line %u: %s (%s, %d)", li, ex.GetMsgA(), ex.GetFile(), ex.GetLine());
+        } catch (...) { Log::DefaultLog.WriteError("Error parsing line %u: unexpected exception", li); }
     }
 
     ASSERT(names.Count() == this->mats.Count());

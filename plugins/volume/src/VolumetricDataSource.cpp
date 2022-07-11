@@ -286,14 +286,13 @@ bool megamol::volume::VolumetricDataSource::onFileNameChanged(core::param::Param
 
         case DR_GRID_TETRAHEDRAL:
             this->metadata.GridType = VolumetricDataCall::GridType::TETRAHEDRAL;
-            Log::DefaultLog.WriteWarn( _T("The grid is tetrahedral. ")
-                                         _T("Tetrahedral grids are currently not supported."));
+            Log::DefaultLog.WriteWarn(_T("The grid is tetrahedral. ")
+                                      _T("Tetrahedral grids are currently not supported."));
             break;
 
         default:
-            Log::DefaultLog.WriteError(
-                _T("The data set uses the ")
-                _T("unexpected grid type %d."),
+            Log::DefaultLog.WriteError(_T("The data set uses the ")
+                                       _T("unexpected grid type %d."),
                 this->fileInfo->gridType);
         case DR_GRID_NONE:
             this->metadata.GridType = VolumetricDataCall::GridType::NONE;
@@ -393,9 +392,8 @@ bool megamol::volume::VolumetricDataSource::onFileNameChanged(core::param::Param
         }
 
     } else {
-        Log::DefaultLog.WriteError(
-            _T("Failed to read and parse dat file ")
-            _T("%hs."),
+        Log::DefaultLog.WriteError(_T("Failed to read and parse dat file ")
+                                   _T("%hs."),
             fileName.PeekBuffer());
         SAFE_DELETE(this->fileInfo);
     }
@@ -586,9 +584,8 @@ bool megamol::volume::VolumetricDataSource::onGetData(core::Call& call) {
 
                 } else {
                     /* We do not have buffers left, which is a fatal error. */
-                    Log::DefaultLog.WriteError(
-                        _T("There are insufficient ")
-                        _T("buffers for loading the frame with ID %u."),
+                    Log::DefaultLog.WriteError(_T("There are insufficient ")
+                                               _T("buffers for loading the frame with ID %u."),
                         c.FrameID());
                     retval = false;
                 }
@@ -673,11 +670,11 @@ bool megamol::volume::VolumetricDataSource::onGetData(core::Call& call) {
             }     /* end if (this->paramLoadAsync.Param<BoolParam>()->Value()) */
 
         } catch (vislib::Exception& e) {
-            Log::DefaultLog.WriteError( e.GetMsg());
+            Log::DefaultLog.WriteError(e.GetMsg());
             retval = false;
         } catch (...) {
-            Log::DefaultLog.WriteError( _T("Unexpected exception in callback ")
-                                          _T("onGetData (please check the call)."));
+            Log::DefaultLog.WriteError(_T("Unexpected exception in callback ")
+                                       _T("onGetData (please check the call)."));
             retval = false;
         }
 
@@ -756,11 +753,11 @@ bool megamol::volume::VolumetricDataSource::onGetExtents(core::Call& call) {
         return true;
 
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError( e.GetMsg());
+        Log::DefaultLog.WriteError(e.GetMsg());
         return false;
     } catch (...) {
-        Log::DefaultLog.WriteError( _T("Unexpected exception in callback ")
-                                      _T("onGetExtents (please check the call)."));
+        Log::DefaultLog.WriteError(_T("Unexpected exception in callback ")
+                                   _T("onGetExtents (please check the call)."));
         return false;
     }
 }
@@ -791,11 +788,11 @@ bool megamol::volume::VolumetricDataSource::onGetMetadata(core::Call& call) {
         c.SetMetadata(&this->metadata);
         return true;
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError( e.GetMsg());
+        Log::DefaultLog.WriteError(e.GetMsg());
         return false;
     } catch (...) {
-        Log::DefaultLog.WriteError( _T("Unexpected exception in callback ")
-                                      _T("onGetMetadata (please check the call)."));
+        Log::DefaultLog.WriteError(_T("Unexpected exception in callback ")
+                                   _T("onGetMetadata (please check the call)."));
         return false;
     }
 }
@@ -866,11 +863,11 @@ bool megamol::volume::VolumetricDataSource::onTryGetData(core::Call& call) {
         }
 
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError( e.GetMsg());
+        Log::DefaultLog.WriteError(e.GetMsg());
         retval = false;
     } catch (...) {
-        Log::DefaultLog.WriteError( _T("Unexpected exception in callback ")
-                                      _T("onTryGetData (please check the call)."));
+        Log::DefaultLog.WriteError(_T("Unexpected exception in callback ")
+                                   _T("onTryGetData (please check the call)."));
         retval = false;
     }
 
@@ -1012,13 +1009,13 @@ void megamol::volume::VolumetricDataSource::release(void) {
             this->stopAsyncLoad(true);
         }
         ASSERT(!this->loaderThread.IsRunning());
-    } catch (vislib::Exception e) { Log::DefaultLog.WriteError( e.GetMsg()); } catch (...) {
-        Log::DefaultLog.WriteError( _T("Unexpected exception while ")
-                                      _T("stopping volume loader thread during release of data source."));
+    } catch (vislib::Exception e) { Log::DefaultLog.WriteError(e.GetMsg()); } catch (...) {
+        Log::DefaultLog.WriteError(_T("Unexpected exception while ")
+                                   _T("stopping volume loader thread during release of data source."));
     }
 
     if (this->fileInfo != nullptr) {
-        Log::DefaultLog.WriteInfo( _T("Releasing dat file..."));
+        Log::DefaultLog.WriteInfo(_T("Releasing dat file..."));
         ::datRaw_close(this->fileInfo);
         ::datRaw_freeInfo(this->fileInfo);
         SAFE_DELETE(this->fileInfo);
@@ -1053,7 +1050,7 @@ bool megamol::volume::VolumetricDataSource::startAsyncLoad(void) {
         }
         return true;
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError( e.GetMsg());
+        Log::DefaultLog.WriteError(e.GetMsg());
         return false;
     }
 }
@@ -1072,7 +1069,7 @@ void megamol::volume::VolumetricDataSource::stopAsyncLoad(const bool isWait) {
             this->loaderThread.Join();
             ASSERT(this->loaderStatus.load() == LOADER_STATUS_STOPPED);
         }
-    } catch (vislib::Exception e) { Log::DefaultLog.WriteError( e.GetMsg()); }
+    } catch (vislib::Exception e) { Log::DefaultLog.WriteError(e.GetMsg()); }
 }
 
 
@@ -1202,12 +1199,12 @@ DWORD megamol::volume::VolumetricDataSource::loadAsync(void* userData) {
         Log::DefaultLog.WriteInfo(_T("The asynchronous loading thread of ")
                                   _T("VolumetricDataSource is exiting..."));
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError( e.GetMsg());
+        Log::DefaultLog.WriteError(e.GetMsg());
         retval = 1;
     } catch (...) {
-        Log::DefaultLog.WriteError( _T("Unexpected exception in ")
-                                      _T("asynchronous loader thread. Most likely, there is not enough")
-                                      _T("memory available for storing the data set."));
+        Log::DefaultLog.WriteError(_T("Unexpected exception in ")
+                                   _T("asynchronous loader thread. Most likely, there is not enough")
+                                   _T("memory available for storing the data set."));
         retval = 2;
     }
 
@@ -1299,10 +1296,10 @@ size_t megamol::volume::VolumetricDataSource::assertBuffersUnsafe(size_t cntFram
         }
 
         retval = this->buffers.Count();
-    } catch (vislib::Exception e) { Log::DefaultLog.WriteError( e.GetMsg()); } catch (...) {
-        Log::DefaultLog.WriteError( _T("Unexpected exception while ")
-                                      _T("preparing data buffers. Not all of the requested memory ")
-                                      _T("might be available."));
+    } catch (vislib::Exception e) { Log::DefaultLog.WriteError(e.GetMsg()); } catch (...) {
+        Log::DefaultLog.WriteError(_T("Unexpected exception while ")
+                                   _T("preparing data buffers. Not all of the requested memory ")
+                                   _T("might be available."));
     }
 
     return retval;

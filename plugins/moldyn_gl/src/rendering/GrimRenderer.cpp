@@ -150,7 +150,8 @@ bool GrimRenderer::create(void) {
         //    vert.WholeCode().PeekBuffer(),
         //    frag.WholeCode().PeekBuffer());
         if (!this->sphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile %s: Unknown error\n", shaderName);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
@@ -162,7 +163,8 @@ bool GrimRenderer::create(void) {
             return false;
         }
         if (!this->vanillaSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile %s: Unknown error\n", shaderName);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
@@ -174,7 +176,8 @@ bool GrimRenderer::create(void) {
             return false;
         }
         if (!this->initDepthShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile %s: Unknown error\n", shaderName);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
@@ -186,7 +189,8 @@ bool GrimRenderer::create(void) {
             return false;
         }
         if (!this->initDepthMapShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile %s: Unknown error\n", shaderName);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
@@ -198,7 +202,8 @@ bool GrimRenderer::create(void) {
             return false;
         }
         if (!this->depthMipShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile %s: Unknown error\n", shaderName);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
@@ -210,7 +215,8 @@ bool GrimRenderer::create(void) {
             return false;
         }
         if (!this->pointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile %s: Unknown error\n", shaderName);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
@@ -222,7 +228,8 @@ bool GrimRenderer::create(void) {
             return false;
         }
         if (!this->initDepthPointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile %s: Unknown error\n", shaderName);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
@@ -234,7 +241,8 @@ bool GrimRenderer::create(void) {
             return false;
         }
         if (!this->vertCntShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile %s: Unknown error\n", shaderName);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
@@ -246,7 +254,8 @@ bool GrimRenderer::create(void) {
             return false;
         }
         if (!this->vertCntShade2r.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile %s: Unknown error\n", shaderName);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
@@ -259,7 +268,8 @@ bool GrimRenderer::create(void) {
             return false;
         }
         if (!this->deferredSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile %s: Unknown error\n", shaderName);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
@@ -271,7 +281,8 @@ bool GrimRenderer::create(void) {
             return false;
         }
         if (!this->deferredVanillaSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile %s: Unknown error\n", shaderName);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
@@ -283,7 +294,8 @@ bool GrimRenderer::create(void) {
             return false;
         }
         if (!this->deferredPointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile %s: Unknown error\n", shaderName);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
@@ -295,14 +307,14 @@ bool GrimRenderer::create(void) {
             return false;
         }
         if (!this->deferredShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile %s: Unknown error\n", shaderName);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
 
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile %s shader (@%s): %s\n", shaderName,
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile %s shader (@%s): %s\n", shaderName,
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
@@ -562,7 +574,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     throw vislib::Exception("dsFBO.Create failed\n", __FILE__, __LINE__);
                 }
             } catch (vislib::Exception ex) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError( "Failed to created dsFBO: %s", ex.GetMsgA());
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to created dsFBO: %s", ex.GetMsgA());
             }
         }
         glPopDebugGroup();
@@ -703,7 +715,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                 glGetError();
                 glGenBuffersARB(2, ci.data);
                 if (glGetError() != GL_NO_ERROR) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError( "glGenBuffersARB failed");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("glGenBuffersARB failed");
                     throw vislib::Exception("glGenBuffersARB failed", __FILE__, __LINE__);
                 }
                 vramUploadQuota--;
@@ -713,7 +725,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, vbpp * parts.GetCount(), parts.GetVertexData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError( "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
@@ -728,7 +740,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, cbpp * parts.GetCount(), parts.GetColourData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError( "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
@@ -879,7 +891,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                 glGetError();
                 glGenBuffersARB(2, ci.data);
                 if (glGetError() != GL_NO_ERROR) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError( "glGenBuffersARB failed");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("glGenBuffersARB failed");
                     throw vislib::Exception("glGenBuffersARB failed", __FILE__, __LINE__);
                 }
                 vramUploadQuota--;
@@ -889,7 +901,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, vbpp * parts.GetCount(), parts.GetVertexData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError( "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
@@ -904,7 +916,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, cbpp * parts.GetCount(), parts.GetColourData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError( "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {

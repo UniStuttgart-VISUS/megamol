@@ -110,7 +110,7 @@ bool TableSampler::handleCall(core::Call& call) {
     }
 
     if (tableInCall == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "TableSampler requires a table!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("TableSampler requires a table!");
         return false;
     }
 

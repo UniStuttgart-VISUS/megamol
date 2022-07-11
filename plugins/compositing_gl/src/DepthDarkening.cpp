@@ -67,7 +67,7 @@ bool megamol::compositing::DepthDarkening::create() {
             "dd_darken", shdr_options, std::filesystem::path("compositing_gl/depth_darkening.comp.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "[DepthDarkening] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[DepthDarkening] %s", ex.what());
     } catch (std::exception const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[DepthDarkening] Unable to compile shader: Unknown exception: %s", ex.what());

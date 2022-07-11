@@ -704,12 +704,12 @@ if (!this->parseHeaderAndFrameIndices(this->filename.Param<param::FilePathParam>
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn( msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo( msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg);
     }
 
     this->initFrameCache(cacheSize);

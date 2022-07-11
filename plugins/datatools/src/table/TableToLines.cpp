@@ -539,11 +539,11 @@ bool TableToLines::getLineData(core::Call& call) {
 
         return true;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(e.GetMsg());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( _T("Unexpected exception ")
-                                                                   _T("in callback getMultiParticleData."));
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Unexpected exception ")
+                                                                _T("in callback getMultiParticleData."));
         return false;
     }
 }
@@ -572,11 +572,11 @@ bool TableToLines::getLineDataExtent(core::Call& call) {
         c.SetUnlocker(NULL);
         return true;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(e.GetMsg());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( _T("Unexpected exception ")
-                                                                   _T("in callback getLineDataExtend."));
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Unexpected exception ")
+                                                                _T("in callback getLineDataExtend."));
         return false;
     }
 }

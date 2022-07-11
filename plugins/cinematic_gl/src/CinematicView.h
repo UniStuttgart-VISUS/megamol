@@ -155,7 +155,7 @@ private:
      * @param msg The error message
      */
     static void PNGAPI pngWarn(png_structp pngPtr, png_const_charp msg) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn( "Png-Warning: %s\n", msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Png-Warning: %s\n", msg);
     }
 
     /**

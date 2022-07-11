@@ -186,12 +186,12 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
 
     // Test whether the filename is invalid or empty
     if (filename.IsEmpty()) {
-        Log::DefaultLog.WriteInfo( "%s: No file to load (filename empty)", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: No file to load (filename empty)", this->ClassName());
         return true;
     }
 
     if (!file.LoadFile(filename)) {
-        Log::DefaultLog.WriteError( "%s: Unable to open file '%s'", this->ClassName(), filename.PeekBuffer());
+        Log::DefaultLog.WriteError("%s: Unable to open file '%s'", this->ClassName(), filename.PeekBuffer());
         return false;
     }
 
@@ -199,8 +199,7 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
 
     time_t t = clock(); // DEBUG
 
-    Log::DefaultLog.WriteInfo( "%s: Parsing file '%s' (%u Bytes) ...", this->ClassName(),
-        filename.PeekBuffer(),
+    Log::DefaultLog.WriteInfo("%s: Parsing file '%s' (%u Bytes) ...", this->ClassName(), filename.PeekBuffer(),
         fileSize); // DEBUG
 
     // File successfully loaded, get extent spacing and origin
@@ -294,7 +293,7 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
     this->imgdata.SetPointData(
         (const char*)this->data.Peek(), min, max, protein_calls::VTKImageData::DataArray::VTI_FLOAT, "vmddata", 1, 0);
 
-    Log::DefaultLog.WriteInfo( "%s: ... done (%f s)", this->ClassName(),
+    Log::DefaultLog.WriteInfo("%s: ... done (%f s)", this->ClassName(),
         (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
     return true;
@@ -381,7 +380,7 @@ void VMDDXLoader::scanFolder() {
             }
         }
 
-        Log::DefaultLog.WriteInfo( "%s: %u frame files found", this->ClassName(), this->nFrames);
+        Log::DefaultLog.WriteInfo("%s: %u frame files found", this->ClassName(), this->nFrames);
     } else { // Single file
         this->nFrames = 1;
     }

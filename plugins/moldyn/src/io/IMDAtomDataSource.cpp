@@ -934,8 +934,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
             this->defCol[2] =
                 static_cast<unsigned char>(vislib::math::Clamp<int>(static_cast<int>(b * 255.0f), 0, 255));
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to parse default colour \"%s\"\n",
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to parse default colour \"%s\"\n",
                 this->colourSlot.Param<core::param::StringParam>()->Value().c_str());
         }
     }
@@ -958,8 +957,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
             this->dirdefCol[2] =
                 static_cast<unsigned char>(vislib::math::Clamp<int>(static_cast<int>(b * 255.0f), 0, 255));
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to parse default dir::colour \"%s\"\n",
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to parse default dir::colour \"%s\"\n",
                 this->dircolourSlot.Param<core::param::StringParam>()->Value().c_str());
         }
     }
@@ -1138,7 +1136,7 @@ void IMDAtomDataSource::assertData(void) {
     // this->datahash = static_cast<SIZE_T>(filename.HashCode());
     if (!file.Open(filename.native().c_str(), vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
             vislib::sys::File::OPEN_ONLY)) {
-        Log::DefaultLog.WriteError( "Unable to open imd file %s\n", filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteError("Unable to open imd file %s\n", filename.generic_u8string().c_str());
         return;
     }
 
@@ -1194,7 +1192,7 @@ void IMDAtomDataSource::assertData(void) {
                                        : this->readData<AtomReaderFloatSwitched>(file, header, loadDir, splitLoadDir);
         break;
     default:
-        Log::DefaultLog.WriteError( "Unable to read imd file: Illegal format\n");
+        Log::DefaultLog.WriteError("Unable to read imd file: Illegal format\n");
         break;
     }
 
@@ -1255,7 +1253,7 @@ bool IMDAtomDataSource::readHeader(vislib::sys::File& file, IMDAtomDataSource::H
         file.SeekToBegin();
         line = vislib::sys::ReadLineFromFileA(file);
         if (line[0] != '#') {
-            Log::DefaultLog.WriteError( "Failed to parse IMD header: Illegal first line character %c\n", line[0]);
+            Log::DefaultLog.WriteError("Failed to parse IMD header: Illegal first line character %c\n", line[0]);
             return false;
         }
 
@@ -1275,7 +1273,7 @@ bool IMDAtomDataSource::readHeader(vislib::sys::File& file, IMDAtomDataSource::H
             linePos++;
 
             if (line[0] != '#') {
-                Log::DefaultLog.WriteWarn( "Line %d has illegal first character: %c\n", linePos, line[0]);
+                Log::DefaultLog.WriteWarn("Line %d has illegal first character: %c\n", linePos, line[0]);
                 warnCnt++;
                 if (warnCnt == 10) {
                     throw new vislib::Exception("Too many warnings", __FILE__, __LINE__);
@@ -1388,12 +1386,14 @@ bool IMDAtomDataSource::readHeader(vislib::sys::File& file, IMDAtomDataSource::H
                     cnt += header.pos + header.vel + header.dat;
                     int hcnt = static_cast<int>(header.captions.Count());
                     if (hcnt < cnt) {
-                        Log::DefaultLog.WriteWarn( "Too few data column captions specified (%d instead of %d)", hcnt, cnt);
+                        Log::DefaultLog.WriteWarn(
+                            "Too few data column captions specified (%d instead of %d)", hcnt, cnt);
                         for (; hcnt < cnt; hcnt++) {
                             header.captions.Add("unnamed");
                         }
                     } else if (hcnt > cnt) {
-                        Log::DefaultLog.WriteWarn( "Too many data column captions specified (%d instead of %d)", hcnt, cnt);
+                        Log::DefaultLog.WriteWarn(
+                            "Too many data column captions specified (%d instead of %d)", hcnt, cnt);
                         header.captions.Erase(cnt, hcnt - cnt);
                     }
                 }
@@ -1401,11 +1401,11 @@ bool IMDAtomDataSource::readHeader(vislib::sys::File& file, IMDAtomDataSource::H
                 return true;
             }
         }
-        Log::DefaultLog.WriteError( "Failed to parse IMD header: unexpected end of file\n");
+        Log::DefaultLog.WriteError("Failed to parse IMD header: unexpected end of file\n");
 
     } catch (vislib::Exception ex) {
-        Log::DefaultLog.WriteError( "Failed to parse IMD header: %s\n", ex.GetMsgA());
-    } catch (...) { Log::DefaultLog.WriteError( "Failed to parse IMD header: unexpected exception\n"); }
+        Log::DefaultLog.WriteError("Failed to parse IMD header: %s\n", ex.GetMsgA());
+    } catch (...) { Log::DefaultLog.WriteError("Failed to parse IMD header: unexpected exception\n"); }
 
     return false;
 }

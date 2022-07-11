@@ -128,7 +128,8 @@ bool ConfigurationParser::CheckBaseTag(const XmlReader& reader) {
         return false;
     }
     if (!versionValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("base tag attribute \"version\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "base tag attribute \"version\" not present or invalid.");
         return false;
     }
     if (this->xmlVersion < vislib::VersionNumber(1, 2)) {
@@ -583,7 +584,7 @@ void ConfigurationParser::Completed(void) {
 
         // make shader paths absolute
         if (this->config.shaderDirs.Count() == 0) {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo( "No shader directories configured");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("No shader directories configured");
 
         } else
             for (SIZE_T i = 0; i < this->config.shaderDirs.Count(); i++) {
@@ -600,7 +601,7 @@ void ConfigurationParser::Completed(void) {
 
         // make resource paths absolute
         if (this->config.resourceDirs.Count() == 0) {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo( "No resource directories configured");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("No resource directories configured");
 
         } else
             for (SIZE_T i = 0; i < this->config.resourceDirs.Count(); i++) {

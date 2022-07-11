@@ -45,7 +45,8 @@ MDDriverConnector::MDDriverConnector(void)
         this->socket.Create(
             vislib::net::Socket::FAMILY_INET, vislib::net::Socket::TYPE_STREAM, vislib::net::Socket::PROTOCOL_TCP);
     } catch (vislib::net::SocketException e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "Socket Exception during startup/create: %s", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Socket Exception during startup/create: %s", e.GetMsgA());
     }
 }
 
@@ -131,7 +132,7 @@ DWORD MDDriverConnector::Run(void* config) {
                 // end the connection
                 this->socket.Close();
             } catch (vislib::net::SocketException e) {
-                Log::DefaultLog.WriteError( "Socket Exception during disconnect: %s", e.GetMsgA());
+                Log::DefaultLog.WriteError("Socket Exception during disconnect: %s", e.GetMsgA());
             }
             break; // leave the loop
         }
@@ -230,7 +231,7 @@ void MDDriverConnector::GetCoordinates(int count, float* atomPos) {
     } else if (this->atomCount == 0) {
         // do nothing - no data received yet, but it's coming, so no error message needed
     } else {
-        Log::DefaultLog.WriteError( "Atom count mismatch between plugin and MDDriver.");
+        Log::DefaultLog.WriteError("Atom count mismatch between plugin and MDDriver.");
         //printf("MDDriver Says: %d \n PDB Loader says: %d\n", this->atomCount, count);
     }
 }
@@ -250,34 +251,34 @@ bool MDDriverConnector::startSocket(const vislib::TString& host, int port) {
 
         // handshake: receive a header
         if (this->socket.Receive(&this->header, sizeof(MDDHeader), TIMEOUT, 0, true) != sizeof(MDDHeader)) {
-            Log::DefaultLog.WriteError( "Handshake: did not receive full header to initiate.");
+            Log::DefaultLog.WriteError("Handshake: did not receive full header to initiate.");
             return false;
         }
         // handshake: check that header type (byte swapped) is handshake (failure could indicate wrong endian)
         if (this->byteSwap(this->header.type) != MDD_HANDSHAKE) {
-            Log::DefaultLog.WriteError( "Handshake: unexpected header type - expected %d, received %d",
-                MDD_HANDSHAKE, this->byteSwap(this->header.type));
+            Log::DefaultLog.WriteError("Handshake: unexpected header type - expected %d, received %d", MDD_HANDSHAKE,
+                this->byteSwap(this->header.type));
             return false;
         }
         // handshake: check that length (not byte swapped) gives the correct MDDriver version (failure could indicate wrong endian)
         if (this->header.length != MDD_VERSION) {
-            Log::DefaultLog.WriteError( "Handshake: unexpected MDD version - expected %d, received %d",
-                MDD_VERSION, this->header.length);
+            Log::DefaultLog.WriteError(
+                "Handshake: unexpected MDD version - expected %d, received %d", MDD_VERSION, this->header.length);
             return false;
         }
         // handshake: send a go signal to complete the handshake
         this->header.type = this->byteSwap(MDD_GO);
         this->header.length = 0;
         if (this->socket.Send(&this->header, sizeof(MDDHeader), TIMEOUT, 0, true) != sizeof(MDDHeader)) {
-            Log::DefaultLog.WriteError( "Handshake: did not send full header to initiate.");
+            Log::DefaultLog.WriteError("Handshake: did not send full header to initiate.");
             return false;
         }
     } catch (vislib::net::SocketException e) {
-        Log::DefaultLog.WriteError( "Socket Exception during connect/handshake: %s", e.GetMsgA());
+        Log::DefaultLog.WriteError("Socket Exception during connect/handshake: %s", e.GetMsgA());
         return false;
     }
 
-    Log::DefaultLog.WriteInfo( "MDDriver socket connection successfully started and configured.");
+    Log::DefaultLog.WriteInfo("MDDriver socket connection successfully started and configured.");
     socketValidity = true; // flag the socket as being functional
     return true;
 }
@@ -290,7 +291,7 @@ void MDDriverConnector::release(void) {
     try {
         vislib::net::Socket::Cleanup();
     } catch (vislib::net::SocketException e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "Socket Exception during cleanup: %s", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Socket Exception during cleanup: %s", e.GetMsgA());
     }
 }
 
@@ -307,7 +308,7 @@ bool MDDriverConnector::getData(void) {
     if (this->header.type == MDD_DISCONNECT) {
         // MDDriver sent a disconnect signal - end the connection
         if (this->terminateRequested == false) {
-            Log::DefaultLog.WriteInfo( "MDDriver disconnect signal received - closing socket connection.");
+            Log::DefaultLog.WriteInfo("MDDriver disconnect signal received - closing socket connection.");
         }
         return false;
 
@@ -327,7 +328,7 @@ bool MDDriverConnector::getData(void) {
                     // This branch will only occur if MDDriver has already reached its reset attempts this thread AND the thread is not being asked to terminate
                     // In other words, this branch only occurs if the thread thinks it should be running but MDDriver has failed for some reason.
                     // The return false here should trigger a terminate request for the thread.
-                    Log::DefaultLog.WriteError( "Socket Exception during atom coordinates receive: %s", e.GetMsgA());
+                    Log::DefaultLog.WriteError("Socket Exception during atom coordinates receive: %s", e.GetMsgA());
                 }
             }
             retval = false;
@@ -339,7 +340,7 @@ bool MDDriverConnector::getData(void) {
         // verify that the energies are coming by checking that the length is 1 (number assigned by MDDriver)
         if (this->header.length != 1) {
             if (this->terminateRequested == false) {
-                Log::DefaultLog.WriteError( "Energy table 'length' mismatch between plugin and MDDriver.");
+                Log::DefaultLog.WriteError("Energy table 'length' mismatch between plugin and MDDriver.");
             }
             retval = false;
         } else {
@@ -352,7 +353,7 @@ bool MDDriverConnector::getData(void) {
                         // This branch will only occur if MDDriver has already reached its reset attempts this thread AND the thread is not being asked to terminate
                         // In other words, this branch only occurs if the thread thinks it should be running but MDDriver has failed for some reason.
                         // The return false here should trigger a terminate request for the thread.
-                        Log::DefaultLog.WriteError( "Socket Exception during energies receive: %s", e.GetMsgA());
+                        Log::DefaultLog.WriteError("Socket Exception during energies receive: %s", e.GetMsgA());
                     }
                 }
                 retval = false;
@@ -362,7 +363,8 @@ bool MDDriverConnector::getData(void) {
     } else {
         // communication failed without a disconnect being received - terminate
         if (this->terminateRequested == false) {
-            Log::DefaultLog.WriteError( "MDDriver communication lost - sending disconnect signal and closing connection.");
+            Log::DefaultLog.WriteError(
+                "MDDriver communication lost - sending disconnect signal and closing connection.");
         }
         retval = false;
     }
@@ -389,7 +391,7 @@ bool MDDriverConnector::sendForces(void) {
     try {
         this->socket.Send(this->forceIDs.PeekElements(), this->forcesCount * sizeof(unsigned int), TIMEOUT, 0, true);
     } catch (vislib::net::SocketException e) {
-        Log::DefaultLog.WriteError( "Socket Exception during forces (atom indices) send: %s", e.GetMsgA());
+        Log::DefaultLog.WriteError("Socket Exception during forces (atom indices) send: %s", e.GetMsgA());
         retval = false;
     }
 
@@ -397,7 +399,7 @@ bool MDDriverConnector::sendForces(void) {
     try {
         this->socket.Send(this->forceList.PeekElements(), this->forcesCount * 3 * sizeof(float), TIMEOUT, 0, true);
     } catch (vislib::net::SocketException e) {
-        Log::DefaultLog.WriteError( "Socket Exception during forces (force list) send: %s", e.GetMsgA());
+        Log::DefaultLog.WriteError("Socket Exception during forces (force list) send: %s", e.GetMsgA());
         retval = false;
     }
 
@@ -451,12 +453,12 @@ bool MDDriverConnector::getHeader(void) {
         if (errorlevel != sizeof(MDDHeader)) {
             if (errorlevel == 0) {
                 // no data was received at all - the simulation probably failed catastrophically without warning
-                Log::DefaultLog.WriteError( "getHeader: received no header - MDDriver or the simulation "
-                                                           "may have failed catastrophically without warning.");
+                Log::DefaultLog.WriteError("getHeader: received no header - MDDriver or the simulation "
+                                           "may have failed catastrophically without warning.");
                 return false;
             } else {
                 // partial header was received -- one fix here might be to loop the socket receive instruction until it receives a full header
-                Log::DefaultLog.WriteError( "getHeader: received only partial header.");
+                Log::DefaultLog.WriteError("getHeader: received only partial header.");
                 return false;
             }
         }
@@ -467,7 +469,7 @@ bool MDDriverConnector::getHeader(void) {
         if (this->reset >= RESET_ATTEMPTS) {
             // if MDDriver has already reached its reset attempts this thread, go ahead and print error messages (otherwise attempt a reset)
             if (this->terminateRequested == false) {
-                Log::DefaultLog.WriteError( "Socket Exception during header receive: %s", e.GetMsgA());
+                Log::DefaultLog.WriteError("Socket Exception during header receive: %s", e.GetMsgA());
                 return false;
             }
         }
@@ -489,16 +491,16 @@ bool MDDriverConnector::sendHeader(void) {
         if (errorlevel != sizeof(MDDHeader)) {
             if (errorlevel == 0) {
                 // no data was able to be sent at all - possible that socket was not set up correctly
-                Log::DefaultLog.WriteError( "sendHeader: unable to send any header data.");
+                Log::DefaultLog.WriteError("sendHeader: unable to send any header data.");
                 return false;
             } else {
                 // partial header was sent - might need to loop the socket send instruction until full header is sent
-                Log::DefaultLog.WriteError( "sendHeader: sent only partial header.");
+                Log::DefaultLog.WriteError("sendHeader: sent only partial header.");
                 return false;
             }
         }
     } catch (vislib::net::SocketException e) {
-        Log::DefaultLog.WriteError( "Socket Exception during send: %s", e.GetMsgA());
+        Log::DefaultLog.WriteError("Socket Exception during send: %s", e.GetMsgA());
         return false;
     }
     return true; // default

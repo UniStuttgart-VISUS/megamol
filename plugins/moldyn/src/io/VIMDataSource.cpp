@@ -91,12 +91,12 @@ bool VIMDataSource::Frame::LoadFrame(
     vislib::StringA startLine = vislib::sys::ReadLineFromFileA(*file);
 
     if (startLine[0] != '#') {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "Invalid Start Line Parsed");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Invalid Start Line Parsed");
         return false;
     }
 
     if (startLine[1] == '#') {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn( "Unexpected End of Data");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Unexpected End of Data");
         return false;
     }
 
@@ -584,8 +584,7 @@ bool VIMDataSource::filenameChanged(core::param::ParamSlot& slot) {
     if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value().native().c_str(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         vislib::sys::SystemMessage err(::GetLastError());
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to open VIM-File \"%s\": %s",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open VIM-File \"%s\": %s",
             this->filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
             static_cast<const char*>(err));
 
@@ -629,12 +628,12 @@ bool VIMDataSource::filenameChanged(core::param::ParamSlot& slot) {
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn( msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo( msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg);
     }
 
     this->initFrameCache(cacheSize);

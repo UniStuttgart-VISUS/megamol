@@ -64,7 +64,7 @@ bool BaseHistogramRenderer2D::create() {
         calcMaxBinProgram_ = core::utility::make_glowl_shader(
             "histo_base_axes", shaderOptions, "infovis_gl/histo/base_max_bin.comp.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteError( ("BaseHistogramRenderer2D: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(("BaseHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -109,7 +109,7 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
 
     auto tfCall = transferFunctionCallerSlot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
     if (tfCall == nullptr) {
-        Log::DefaultLog.WriteError( "BaseHistogramRenderer2D requires a transfer function!");
+        Log::DefaultLog.WriteError("BaseHistogramRenderer2D requires a transfer function!");
         return false;
     }
     (*tfCall)(0);

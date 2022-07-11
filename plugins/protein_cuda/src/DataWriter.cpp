@@ -197,7 +197,7 @@ bool protein_cuda::DataWriter::PutStatistics(unsigned int frameIdx0, unsigned in
         // Compute ti atom displacement
         if (!this->CalcMapTiDisplAvg(dc, avgOffs, 1, 1.0f, 1.0f, 1.0f)) {
             this->jobDone = true;
-            Log::DefaultLog.WriteError( "%s: Unable to calculate dipole map\n", this->ClassName());
+            Log::DefaultLog.WriteError("%s: Unable to calculate dipole map\n", this->ClassName());
             return false;
         }
 
@@ -275,7 +275,7 @@ bool protein_cuda::DataWriter::WriteFrame2VTI(std::string filePrefix, vislib::TS
     std::ofstream outfile;
     outfile.open(filename.c_str(), std::ios::out | std::ios::binary);
     if (!outfile.good()) {
-        Log::DefaultLog.WriteError( "%s: Unable to open file %s\n", this->ClassName(), filename.data());
+        Log::DefaultLog.WriteError("%s: Unable to open file %s\n", this->ClassName(), filename.data());
         return false;
     }
 
@@ -391,13 +391,13 @@ bool protein_cuda::DataWriter::WriteDipoleToVTI(unsigned int frameIdx0, unsigned
     griddata = new float[this->numvoxels[0] * this->numvoxels[1] * this->numvoxels[2] * 3];
 
     for (unsigned int fr = frameIdx0; fr <= frameIdx1; fr++) {
-        Log::DefaultLog.WriteInfo( "%s: FRAME %i | Computing grid\n", this->ClassName(), fr);
+        Log::DefaultLog.WriteInfo("%s: FRAME %i | Computing grid\n", this->ClassName(), fr);
 
         // Calculate dipole moment for this frame
         dc->SetFrameID(fr, true);
         if (!this->CalcMapDipoleAvg(dc, avgOffs, 1, 1.0f, 1.0f, 1.0f)) {
             this->jobDone = true;
-            Log::DefaultLog.WriteError( "%s: Unable to calculate dipole map\n", this->ClassName());
+            Log::DefaultLog.WriteError("%s: Unable to calculate dipole map\n", this->ClassName());
             delete[] griddata;
             return false;
         }
@@ -409,7 +409,7 @@ bool protein_cuda::DataWriter::WriteDipoleToVTI(unsigned int frameIdx0, unsigned
             this->numvoxels[0] * this->numvoxels[1] * this->numvoxels[2] * 3 * sizeof(float), cudaMemcpyDeviceToHost));
 
         //printf("CUDA copy done. (%f %f %f)\n", griddata[0], griddata[1], griddata[2]); // DEBUG
-        Log::DefaultLog.WriteInfo( "%s: FRAME %i | Writing to file\n", this->ClassName(), fr);
+        Log::DefaultLog.WriteInfo("%s: FRAME %i | Writing to file\n", this->ClassName(), fr);
         // Write frame data to *.vti file
         float step[] = {1.0f, 1.0f, 1.0f};
         std::stringstream ss;
@@ -417,7 +417,7 @@ bool protein_cuda::DataWriter::WriteDipoleToVTI(unsigned int frameIdx0, unsigned
         if (!this->WriteFrame2VTI(
                 ss.str(), vislib::TString("Dipole"), this->origin, step, this->numvoxels, fr, griddata)) {
             this->jobDone = true;
-            Log::DefaultLog.WriteError( "%s: Unable to write file\n", this->ClassName());
+            Log::DefaultLog.WriteError("%s: Unable to write file\n", this->ClassName());
             delete[] griddata;
             return false;
         }
@@ -477,13 +477,13 @@ bool protein_cuda::DataWriter::WriteTiDisplVTI(unsigned int frameIdx0, unsigned 
     griddata = new float[this->numvoxels[0] * this->numvoxels[1] * this->numvoxels[2] * 3];
 
     for (unsigned int fr = frameIdx0; fr <= frameIdx1; fr++) {
-        Log::DefaultLog.WriteInfo( "%s: FRAME %i | Computing grid\n", this->ClassName(), fr);
+        Log::DefaultLog.WriteInfo("%s: FRAME %i | Computing grid\n", this->ClassName(), fr);
 
         // Calculate displacement for this frame
         dc->SetFrameID(fr, true);
         if (!this->CalcMapTiDisplAvg(dc, avgOffs, 1, 1.0f, 1.0f, 1.0f)) {
             this->jobDone = true;
-            Log::DefaultLog.WriteError( "%s: Unable to calculate displacement map\n", this->ClassName());
+            Log::DefaultLog.WriteError("%s: Unable to calculate displacement map\n", this->ClassName());
             delete[] griddata;
             return false;
         }
@@ -495,7 +495,7 @@ bool protein_cuda::DataWriter::WriteTiDisplVTI(unsigned int frameIdx0, unsigned 
             this->numvoxels[0] * this->numvoxels[1] * this->numvoxels[2] * 3 * sizeof(float), cudaMemcpyDeviceToHost));
 
         //printf("CUDA copy done. (%f %f %f)\n", griddata[0], griddata[1], griddata[2]); // DEBUG
-        Log::DefaultLog.WriteInfo( "%s: FRAME %i | Writing to file\n", this->ClassName(), fr);
+        Log::DefaultLog.WriteInfo("%s: FRAME %i | Writing to file\n", this->ClassName(), fr);
         // Write frame data to *.vti file
         float step[] = {1.0f, 1.0f, 1.0f};
         std::stringstream ss;
@@ -503,7 +503,7 @@ bool protein_cuda::DataWriter::WriteTiDisplVTI(unsigned int frameIdx0, unsigned 
         if (!this->WriteFrame2VTI(
                 ss.str(), vislib::TString("TiDispl"), this->origin, step, this->numvoxels, fr, griddata)) {
             this->jobDone = true;
-            Log::DefaultLog.WriteError( "%s: Unable to write file\n", this->ClassName());
+            Log::DefaultLog.WriteError("%s: Unable to write file\n", this->ClassName());
             delete[] griddata;
             return false;
         }
@@ -850,8 +850,8 @@ bool protein_cuda::DataWriter::create(void) {
     // Create OpenGL interoperable CUDA device.
     //cudaGLSetGLDevice(cudaUtilGetMaxGflopsDeviceId());
     //printf("cudaGLSetGLDevice: %s\n", cudaGetErrorString(cudaGetLastError()));
-    Log::DefaultLog.WriteInfo( "Thrust Version: %d.%d.%d\n", THRUST_MAJOR_VERSION, THRUST_MINOR_VERSION,
-        THRUST_SUBMINOR_VERSION);
+    Log::DefaultLog.WriteInfo(
+        "Thrust Version: %d.%d.%d\n", THRUST_MAJOR_VERSION, THRUST_MINOR_VERSION, THRUST_SUBMINOR_VERSION);
 
     // Create quicksurf object
     if (!this->cudaqsurf) {
@@ -891,7 +891,7 @@ bool protein_cuda::DataWriter::writeFrame2VTKLegacy(
 
     outfile.open(fileName.PeekBuffer(), std::ios::out | std::ios::binary);
     if (!outfile.good()) {
-        Log::DefaultLog.WriteError( "%s: Unable to open file %s\n", this->ClassName(), fileName.PeekBuffer());
+        Log::DefaultLog.WriteError("%s: Unable to open file %s\n", this->ClassName(), fileName.PeekBuffer());
         return false;
     }
 

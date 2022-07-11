@@ -238,7 +238,7 @@ bool MoleculeSESRenderer::create(void) {
             std::filesystem::path("protein_gl/moleculeses/mses_spherical_triangle.vert.glsl"),
             std::filesystem::path("protein_gl/moleculeses/mses_spherical_triangle.frag.glsl"));
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "[MoleculeSESRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[MoleculeSESRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[MoleculeSESRenderer] Unable to compile shader: Unknown exception: %s", ex.what());

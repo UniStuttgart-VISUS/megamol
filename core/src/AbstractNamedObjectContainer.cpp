@@ -31,7 +31,7 @@ AbstractNamedObjectContainer::~AbstractNamedObjectContainer(void) {
         }
         msg.Format(
             "Possible memory problem detected: NamedObjectContainer (%s) with children destructed", name.PeekBuffer());
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn( msg.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.PeekBuffer());
         this->children.clear();
     }
     // The child list should already be empty at this time

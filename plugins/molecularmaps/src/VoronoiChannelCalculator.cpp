@@ -295,9 +295,8 @@ bool VoronoiChannelCalculator::constructVoronoiDiagram(MolecularDataCall* mdc) {
     }
 
     if (!this->initVertexFound) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "No initial Voronoi vertex could be found!"
-            "\nPlease contact the developer to fix this.\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("No initial Voronoi vertex could be found!"
+                                                                "\nPlease contact the developer to fix this.\n");
         return false;
     }
 

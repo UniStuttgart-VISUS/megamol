@@ -37,7 +37,7 @@ bool NullParticleWriter::run(void) {
 
     MultiParticleDataCall* mpdc = this->dataSlot.CallAs<MultiParticleDataCall>();
     if (mpdc == nullptr) {
-        Log::DefaultLog.WriteError( "No data source connected. Abort.");
+        Log::DefaultLog.WriteError("No data source connected. Abort.");
         return false;
     }
 
@@ -46,7 +46,7 @@ bool NullParticleWriter::run(void) {
     if ((*mpdc)(1)) {
         frameCnt = mpdc->FrameCount();
         if (frameCnt == 0) {
-            Log::DefaultLog.WriteError( "Data source counts zero frames. Abort.");
+            Log::DefaultLog.WriteError("Data source counts zero frames. Abort.");
             mpdc->Unlock();
             return false;
         }
@@ -61,13 +61,13 @@ bool NullParticleWriter::run(void) {
         do {
             mpdc->SetFrameID(i, true);
             if (!(*mpdc)(0)) {
-                Log::DefaultLog.WriteError( "Cannot get data frame %u. Abort.\n", i);
+                Log::DefaultLog.WriteError("Cannot get data frame %u. Abort.\n", i);
                 return false;
             }
 
             if (mpdc->FrameID() != i) {
                 if ((missCnt % 10) == 0) {
-                    Log::DefaultLog.WriteWarn( "Frame %u returned on request for frame %u\n", mpdc->FrameID(), i);
+                    Log::DefaultLog.WriteWarn("Frame %u returned on request for frame %u\n", mpdc->FrameID(), i);
                 }
                 ++missCnt;
 
@@ -81,7 +81,7 @@ bool NullParticleWriter::run(void) {
         } while (mpdc->FrameID() != i);
     }
 
-    Log::DefaultLog.WriteInfo( "All frames touched");
+    Log::DefaultLog.WriteInfo("All frames touched");
 
     return true;
 }

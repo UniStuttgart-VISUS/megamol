@@ -323,15 +323,15 @@ bool VolumeMeshRenderer::create(void) {
 
     // Load normal shader
     if (!ssf->MakeShaderSource("volumemesh::normalVertex", vertSrc)) {
-        Log::DefaultLog.WriteError( "Unable to load vertex shader source for normal shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for normal shader");
         return false;
     }
     if (!ssf->MakeShaderSource("volumemesh::normalGeometry", geomSrc)) {
-        Log::DefaultLog.WriteError( "Unable to load geometry shader source for normal shader");
+        Log::DefaultLog.WriteError("Unable to load geometry shader source for normal shader");
         return false;
     }
     if (!ssf->MakeShaderSource("volumemesh::normalFragment", fragSrc)) {
-        Log::DefaultLog.WriteError( "Unable to load fragment shader source for normal shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for normal shader");
         return false;
     }
     try {
@@ -346,7 +346,7 @@ bool VolumeMeshRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError( "Unable to create normal shader: %s\n", e.GetMsgA());
+        Log::DefaultLog.WriteError("Unable to create normal shader: %s\n", e.GetMsgA());
         return false;
     }
 
@@ -365,12 +365,14 @@ bool VolumeMeshRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError( "%s: Unable to create per pixel lighting shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to create per pixel lighting shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     if (!ssf->MakeShaderSource("protein_cuda::halo::GenerateVertex", vertSrc)) {
-        Log::DefaultLog.WriteError( "%s: Unable to load vertex shader source for halo generation shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to load vertex shader source for halo generation shader", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("protein_cuda::halo::GenerateFragment", fragSrc)) {
@@ -383,7 +385,7 @@ bool VolumeMeshRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError( "%s: Unable to create halo generation shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create halo generation shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
@@ -475,8 +477,8 @@ bool VolumeMeshRenderer::create(void) {
     //}
 
     // log thrust version
-    Log::DefaultLog.WriteInfo( "Thrust Version: %d.%d.%d\n", THRUST_MAJOR_VERSION, THRUST_MINOR_VERSION,
-        THRUST_SUBMINOR_VERSION);
+    Log::DefaultLog.WriteInfo(
+        "Thrust Version: %d.%d.%d\n", THRUST_MAJOR_VERSION, THRUST_MINOR_VERSION, THRUST_SUBMINOR_VERSION);
 
     // Allocate CUDA memory for labeling.
     CUDA_VERIFY(cudaMalloc(&modified, sizeof(bool)));
@@ -520,9 +522,7 @@ void VolumeMeshRenderer::release(void) {
             CUDA_VERIFY(cudaFree(modified));
         if (segmentsRemoved)
             CUDA_VERIFY(cudaFree(segmentsRemoved));
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError( "Unable to release CUDA resources: %s\n", e.GetMsgA());
-    }
+    } catch (vislib::Exception e) { Log::DefaultLog.WriteError("Unable to release CUDA resources: %s\n", e.GetMsgA()); }
 }
 
 /*
@@ -816,7 +816,7 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
         }
         lastTime = time;
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError( "UpdateMesh failed: %s, %i \n", e.GetMsgA(), e.GetLine());
+        Log::DefaultLog.WriteError("UpdateMesh failed: %s, %i \n", e.GetMsgA(), e.GetLine());
         return false;
     }
     // -------- END create mesh -----
@@ -2488,7 +2488,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
             //printf( "Time to compute center line for feature %3i (%5i tria):      %.5f\n\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
         }
         INT64 t1 = perf.Difference();
-        Log::DefaultLog.WriteInfo( "Time to compute centerline for feature %3i (%5i tria): %.5f", fCnt, fLength,
+        Log::DefaultLog.WriteInfo("Time to compute centerline for feature %3i (%5i tria): %.5f", fCnt, fLength,
             (vislib::sys::PerformanceCounter::ToMillis(t1) + time) / 1000.0);
     }
 #endif

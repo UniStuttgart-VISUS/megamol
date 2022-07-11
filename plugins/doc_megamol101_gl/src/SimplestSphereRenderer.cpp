@@ -75,7 +75,7 @@ bool SimplestSphereRenderer::create() {
                 "megamol101_gl/pretty_points.geom.glsl", "megamol101_gl/pretty_points.frag.glsl");
 
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteError( ("SimplestSphereRenderer: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(("SimplestSphereRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 

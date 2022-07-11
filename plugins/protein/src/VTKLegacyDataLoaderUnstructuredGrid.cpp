@@ -123,8 +123,8 @@ bool VTKLegacyDataLoaderUnstructuredGrid::getData(core::Call& call) {
     if (dc != NULL) {
         if (dc->FrameID() >= this->FrameCount()) {
 #ifdef VERBOSE
-            Log::DefaultLog.WriteError( "%s: Frame %u requested (nFrames %u)", this->ClassName(),
-                dc->FrameID(), this->FrameCount());
+            Log::DefaultLog.WriteError(
+                "%s: Frame %u requested (nFrames %u)", this->ClassName(), dc->FrameID(), this->FrameCount());
 #endif
             return false;
         }
@@ -356,7 +356,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
     /* Test whether the filename is invalid or empty */
 
     if (filename.IsEmpty()) {
-        Log::DefaultLog.WriteInfo( "%s: No file to load (filename empty)", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: No file to load (filename empty)", this->ClassName());
         return true;
     }
 
@@ -405,7 +405,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 #else
             frameFileShortPath = frameFile.Substring(frameFile.FindLast('/') + 1, frameFile.Length() - 1);
 #endif
-            Log::DefaultLog.WriteInfo( "%s: checking for  '%s'", this->ClassName(),
+            Log::DefaultLog.WriteInfo("%s: checking for  '%s'", this->ClassName(),
                 frameFileShortPath.PeekBuffer()); // DEBUG
 #endif                                            // defined(VERBOSE)
 
@@ -418,7 +418,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
         }
     }
 
-    Log::DefaultLog.WriteInfo( "%s: found %i frame files", this->ClassName(),
+    Log::DefaultLog.WriteInfo("%s: found %i frame files", this->ClassName(),
         this->nFrames); // DEBUG
 
     // Set number of frames
@@ -762,7 +762,7 @@ void VTKLegacyDataLoaderUnstructuredGrid::loadFrame(core::view::AnimDataModule::
 #else
     frameFileShortPath = frameFile.Substring(frameFile.FindLast('/') + 1, frameFile.Length() - 1);
 #endif
-    Log::DefaultLog.WriteInfo( "%s: done loading '%s' (%u Bytes, %f s)", this->ClassName(),
+    Log::DefaultLog.WriteInfo("%s: done loading '%s' (%u Bytes, %f s)", this->ClassName(),
         frameFileShortPath.PeekBuffer(), fileSize,
         (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 #endif                                                   // defined(VERBOSE)
@@ -927,7 +927,7 @@ void VTKLegacyDataLoaderUnstructuredGrid::readHeaderData(char*& buffPt, core::vi
     } else if (line == "BINARY") {
         fr->SetEncoding(AbstractVTKLegacyData::BINARY);
     } else {
-        Log::DefaultLog.WriteError( "%s: invalid file syntax",
+        Log::DefaultLog.WriteError("%s: invalid file syntax",
             this->ClassName()); // DEBUG
         return;
     }
@@ -940,7 +940,7 @@ void VTKLegacyDataLoaderUnstructuredGrid::readHeaderData(char*& buffPt, core::vi
     vislib::StringA topologyStr = line.Substring(8);
     //    printf("%s\n", topologyStr.PeekBuffer());
     if (!(topologyStr == "UNSTRUCTURED_GRID")) {
-        Log::DefaultLog.WriteError( "%s: data is not of type 'UNSTRUCTURED_GRID'",
+        Log::DefaultLog.WriteError("%s: data is not of type 'UNSTRUCTURED_GRID'",
             this->ClassName()); // DEBUG
         return;
     } else {

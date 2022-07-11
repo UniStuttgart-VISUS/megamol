@@ -51,7 +51,7 @@ DWORD job::JobThread::Run(void* userData) {
 
     // this->GetCoreInstance()->Log().WriteInfo(
     //     "JobThread started (CoreLog)");
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo( "JobThread started (DefaultLog)");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("JobThread started (DefaultLog)");
 
     // TODO: Implement
 
@@ -64,7 +64,7 @@ DWORD job::JobThread::Run(void* userData) {
 
     // this->GetCoreInstance()->Log().WriteInfo(
     //     "JobThread finished (CoreLog)");
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo( "JobThread finished (DefaultLog)");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("JobThread finished (DefaultLog)");
 
     this->signalEnd(this->shouldTerminate());
     return 0;

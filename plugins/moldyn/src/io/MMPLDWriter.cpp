@@ -88,25 +88,26 @@ bool MMPLDWriter::run(void) {
     vislib::TString filename(
         this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
     if (filename.IsEmpty()) {
-        Log::DefaultLog.WriteError( "No file name specified. Abort.");
+        Log::DefaultLog.WriteError("No file name specified. Abort.");
         return false;
     }
 
     geocalls::MultiParticleDataCall* mpdc = this->dataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (mpdc == NULL) {
-        Log::DefaultLog.WriteError( "No data source connected. Abort.");
+        Log::DefaultLog.WriteError("No data source connected. Abort.");
         return false;
     }
 
     if (vislib::sys::File::Exists(filename)) {
-        Log::DefaultLog.WriteWarn( "File %s already exists and will be overwritten.", vislib::StringA(filename).PeekBuffer());
+        Log::DefaultLog.WriteWarn(
+            "File %s already exists and will be overwritten.", vislib::StringA(filename).PeekBuffer());
     }
 
     vislib::math::Cuboid<float> bbox;
     vislib::math::Cuboid<float> cbox;
     UINT32 frameCnt = 1;
     if (!(*mpdc)(1)) {
-        Log::DefaultLog.WriteWarn( "Unable to query data extents.");
+        Log::DefaultLog.WriteWarn("Unable to query data extents.");
         bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     } else {
@@ -123,13 +124,13 @@ bool MMPLDWriter::run(void) {
                 cbox = mpdc->AccessBoundingBoxes().ObjectSpaceBBox();
             }
         } else {
-            Log::DefaultLog.WriteWarn( "Object space bounding boxes not valid. Using defaults");
+            Log::DefaultLog.WriteWarn("Object space bounding boxes not valid. Using defaults");
             bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
             cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         }
         frameCnt = mpdc->FrameCount();
         if (frameCnt == 0) {
-            Log::DefaultLog.WriteError( "Data source counts zero frames. Abort.");
+            Log::DefaultLog.WriteError("Data source counts zero frames. Abort.");
             mpdc->Unlock();
             return false;
         }
@@ -148,17 +149,18 @@ bool MMPLDWriter::run(void) {
     vislib::sys::FastFile file;
     if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
             vislib::sys::File::CREATE_OVERWRITE)) {
-        Log::DefaultLog.WriteError( "Unable to create output file \"%s\". Abort.", vislib::StringA(filename).PeekBuffer());
+        Log::DefaultLog.WriteError(
+            "Unable to create output file \"%s\". Abort.", vislib::StringA(filename).PeekBuffer());
         mpdc->Unlock();
         return false;
     }
 
-#define ASSERT_WRITEOUT(A, S)                                                   \
-    if (file.Write((A), (S)) != (S)) {                                          \
-        Log::DefaultLog.WriteError( "Write error %d", __LINE__); \
-        file.Close();                                                           \
-        mpdc->Unlock();                                                         \
-        return false;                                                           \
+#define ASSERT_WRITEOUT(A, S)                                   \
+    if (file.Write((A), (S)) != (S)) {                          \
+        Log::DefaultLog.WriteError("Write error %d", __LINE__); \
+        file.Close();                                           \
+        mpdc->Unlock();                                         \
+        return false;                                           \
     }
 
     vislib::StringA magicID("MMPLD");
@@ -182,25 +184,25 @@ bool MMPLDWriter::run(void) {
         ASSERT_WRITEOUT(&frameOffset, 8);
         file.Seek(frameOffset);
 
-        Log::DefaultLog.WriteInfo( "Started writing data frame %u\n", i);
+        Log::DefaultLog.WriteInfo("Started writing data frame %u\n", i);
 
         int missCnt = -9;
         do {
             mpdc->Unlock();
             mpdc->SetFrameID(i, true);
             if (!(*mpdc)(1)) {
-                Log::DefaultLog.WriteError( "Cannot request frame %u. Abort.\n", i);
+                Log::DefaultLog.WriteError("Cannot request frame %u. Abort.\n", i);
                 file.Close();
                 return false;
             }
             if (!(*mpdc)(0)) {
-                Log::DefaultLog.WriteError( "Cannot get data frame %u. Abort.\n", i);
+                Log::DefaultLog.WriteError("Cannot get data frame %u. Abort.\n", i);
                 file.Close();
                 return false;
             }
             if (mpdc->FrameID() != i) {
                 if ((missCnt % 10) == 0) {
-                    Log::DefaultLog.WriteWarn( "Frame %u returned on request for frame %u\n", mpdc->FrameID(), i);
+                    Log::DefaultLog.WriteWarn("Frame %u returned on request for frame %u\n", mpdc->FrameID(), i);
                 }
                 ++missCnt;
                 vislib::sys::Thread::Sleep(static_cast<DWORD>(1 + std::max<int>(missCnt, 0) * 100));
@@ -209,7 +211,7 @@ bool MMPLDWriter::run(void) {
 
         if (!this->writeFrame(file, *mpdc)) {
             mpdc->Unlock();
-            Log::DefaultLog.WriteError( "Cannot write data frame %u. Abort.\n", i);
+            Log::DefaultLog.WriteError("Cannot write data frame %u. Abort.\n", i);
             file.Close();
             return false;
         }
@@ -226,7 +228,7 @@ bool MMPLDWriter::run(void) {
 
     file.Seek(frameOffset);
 
-    Log::DefaultLog.WriteInfo( "Completed writing data\n");
+    Log::DefaultLog.WriteInfo("Completed writing data\n");
     file.Close();
 
 #undef ASSERT_WRITEOUT
@@ -247,11 +249,11 @@ bool MMPLDWriter::getCapabilities(core::DataWriterCtrlCall& call) {
  * MMPLDWriter::writeFrame
  */
 bool MMPLDWriter::writeFrame(vislib::sys::File& file, geocalls::MultiParticleDataCall& data) {
-#define ASSERT_WRITEOUT(A, S)                                                   \
-    if (file.Write((A), (S)) != (S)) {                                          \
-        Log::DefaultLog.WriteError( "Write error %d", __LINE__); \
-        file.Close();                                                           \
-        return false;                                                           \
+#define ASSERT_WRITEOUT(A, S)                                   \
+    if (file.Write((A), (S)) != (S)) {                          \
+        Log::DefaultLog.WriteError("Write error %d", __LINE__); \
+        file.Close();                                           \
+        return false;                                           \
     }
     using megamol::core::utility::log::Log;
     uint8_t const alpha = 255;

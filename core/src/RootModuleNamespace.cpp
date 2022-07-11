@@ -99,7 +99,7 @@ ModuleNamespace::ptr_type RootModuleNamespace::FindNamespace(
 
             } else {
                 if (!quiet) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError( "name conflicts with a namespace object\n");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("name conflicts with a namespace object\n");
                 }
                 return NULL;
             }

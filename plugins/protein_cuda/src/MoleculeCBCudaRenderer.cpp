@@ -132,7 +132,7 @@ bool MoleculeCBCudaRenderer::create(void) {
             std::filesystem::path("protein_cuda/molecule_cb/mcbc_sphericaltriangle.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "[MoleculeCBCudaRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[MoleculeCBCudaRenderer] %s", ex.what());
         return false;
     } catch (std::exception const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

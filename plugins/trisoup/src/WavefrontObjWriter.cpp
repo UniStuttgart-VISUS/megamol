@@ -65,13 +65,13 @@ bool trisoup::WavefrontObjWriter::run(void) {
     using megamol::core::utility::log::Log;
     auto filename = this->filenameSlot.Param<param::FilePathParam>()->Value();
     if (filename.empty()) {
-        Log::DefaultLog.WriteError( "No file name specified. Abort.");
+        Log::DefaultLog.WriteError("No file name specified. Abort.");
         return false;
     }
 
     megamol::geocalls::LinesDataCall* ldc = this->dataSlot.CallAs<megamol::geocalls::LinesDataCall>();
     if (ldc == NULL) {
-        Log::DefaultLog.WriteError( "No data source connected. Abort.");
+        Log::DefaultLog.WriteError("No data source connected. Abort.");
         return false;
     }
 
@@ -105,7 +105,7 @@ bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* l
     ldc->SetFrameID(myFrame, true);*/
 
     if (!(*ldc)(1)) {
-        Log::DefaultLog.WriteWarn( "Unable to query data extents.");
+        Log::DefaultLog.WriteWarn("Unable to query data extents.");
         bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     } else {
@@ -122,13 +122,13 @@ bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* l
                 cbox = ldc->AccessBoundingBoxes().ObjectSpaceBBox();
             }
         } else {
-            Log::DefaultLog.WriteWarn( "Object space bounding boxes not valid. Using defaults");
+            Log::DefaultLog.WriteWarn("Object space bounding boxes not valid. Using defaults");
             bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
             cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         }
         frameCnt = ldc->FrameCount();
         if (frameCnt == 0) {
-            Log::DefaultLog.WriteError( "WavefronObjWriter: Data source counts zero frames. Abort.");
+            Log::DefaultLog.WriteError("WavefronObjWriter: Data source counts zero frames. Abort.");
             ldc->Unlock();
             return false;
         }
@@ -149,36 +149,36 @@ bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* l
                                       vislib::TString(std::to_string(myFrame).c_str()) + vislib::TString(".obj");
         if (!file.Open(outFilename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
                 vislib::sys::File::CREATE_OVERWRITE)) {
-            Log::DefaultLog.WriteError( "Unable to create output file \"%s\". Abort.",
-                vislib::StringA(outFilename).PeekBuffer());
+            Log::DefaultLog.WriteError(
+                "Unable to create output file \"%s\". Abort.", vislib::StringA(outFilename).PeekBuffer());
             ldc->Unlock();
             return false;
         }
 
-        Log::DefaultLog.WriteInfo( "Started writing data for frame %u\n", myFrame);
+        Log::DefaultLog.WriteInfo("Started writing data for frame %u\n", myFrame);
         int missCnt = -9;
         do {
             ldc->Unlock();
             ldc->SetFrameID(myFrame, true);
             if (!(*ldc)(0)) {
-                Log::DefaultLog.WriteError( "Cannot get data frame %u. Abort.\n", myFrame);
+                Log::DefaultLog.WriteError("Cannot get data frame %u. Abort.\n", myFrame);
                 file.Close();
                 return false;
             }
             if (ldc->FrameID() != myFrame) {
                 if ((missCnt % 10) == 0) {
-                    Log::DefaultLog.WriteWarn( "Frame %u returned on request for frame %u\n", ldc->FrameID(), myFrame);
+                    Log::DefaultLog.WriteWarn("Frame %u returned on request for frame %u\n", ldc->FrameID(), myFrame);
                 }
                 ++missCnt;
                 std::this_thread::sleep_for(std::chrono::milliseconds(1 + std::max<int>(missCnt, 0) * 100));
             }
         } while (ldc->FrameID() != myFrame);
 
-#define ASSERT_WRITEOUT(A, S)                                                   \
-    if (file.Write((A), (S)) != (S)) {                                          \
-        Log::DefaultLog.WriteError( "Write error %d", __LINE__); \
-        file.Close();                                                           \
-        return false;                                                           \
+#define ASSERT_WRITEOUT(A, S)                                   \
+    if (file.Write((A), (S)) != (S)) {                          \
+        Log::DefaultLog.WriteError("Write error %d", __LINE__); \
+        file.Close();                                           \
+        return false;                                           \
     }
 
         std::string header = "# OBJ file created by the MegaMol WavefrontObjWriter\n#\n";
@@ -203,7 +203,7 @@ bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* l
 
             if (line.VertexArrayDataType() != megamol::geocalls::LinesDataCall::Lines::DT_FLOAT &&
                 line.VertexArrayDataType() != megamol::geocalls::LinesDataCall::Lines::DT_DOUBLE) {
-                Log::DefaultLog.WriteWarn( "Skipping base line with index %u due to missing vertex data\n", i);
+                Log::DefaultLog.WriteWarn("Skipping base line with index %u due to missing vertex data\n", i);
                 continue;
             }
 
@@ -291,7 +291,7 @@ bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* l
         file.Close();
     }
 
-    Log::DefaultLog.WriteInfo( "WavefrontObjWriter: Completed writing data\n");
+    Log::DefaultLog.WriteInfo("WavefrontObjWriter: Completed writing data\n");
 
     return true;
 }

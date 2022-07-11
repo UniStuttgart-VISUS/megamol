@@ -59,7 +59,7 @@ static void PNGAPI myPngError(png_structp pngPtr, png_const_charp msg) {
  * @param msg The error message
  */
 static void PNGAPI myPngWarn(png_structp pngPtr, png_const_charp msg) {
-    megamol::core::utility::log::Log::DefaultLog.WriteWarn( "Png-Warning: %s\n", msg);
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn("Png-Warning: %s\n", msg);
 }
 
 /**
@@ -137,7 +137,7 @@ static DWORD myPngStoreData(void* d) {
     BYTE* buffer = new BYTE[data->imgWidth * data->bpp]; // 1 scanline at a time
 
     if (buffer == NULL) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to allocate scanline buffer");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to allocate scanline buffer");
         return -1;
     }
 
@@ -411,28 +411,29 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
     data.pngPtr = NULL;
 
     if ((data.tileWidth == 0) || (data.tileHeight == 0)) {
-        Log::DefaultLog.WriteError( "Failed to create Screenshot: Illegal tile size %u x %u",
-            data.tileWidth, data.tileHeight);
+        Log::DefaultLog.WriteError(
+            "Failed to create Screenshot: Illegal tile size %u x %u", data.tileWidth, data.tileHeight);
         return;
     }
     if ((data.imgWidth == 0) || (data.imgHeight == 0)) {
-        Log::DefaultLog.WriteError( "Failed to create Screenshot: Illegal image size %u x %u", data.imgWidth, data.imgHeight);
+        Log::DefaultLog.WriteError(
+            "Failed to create Screenshot: Illegal image size %u x %u", data.imgWidth, data.imgHeight);
         return;
     }
     if (filename.IsEmpty()) {
-        Log::DefaultLog.WriteError( "Failed to create Screenshot: You must specify a file name to save the image");
+        Log::DefaultLog.WriteError("Failed to create Screenshot: You must specify a file name to save the image");
         return;
     }
 
     data.tmpFiles[0] = vislib::sys::File::CreateTempFile();
     if (data.tmpFiles[0] == NULL) {
-        Log::DefaultLog.WriteError( "Failed to create Screenshot: Unable to create first temporary file.");
+        Log::DefaultLog.WriteError("Failed to create Screenshot: Unable to create first temporary file.");
         return;
     }
     data.tmpFiles[1] = vislib::sys::File::CreateTempFile();
     if (data.tmpFiles[1] == NULL) {
         delete data.tmpFiles[0];
-        Log::DefaultLog.WriteError( "Failed to create Screenshot: Unable to create second temporary file.");
+        Log::DefaultLog.WriteError("Failed to create Screenshot: Unable to create second temporary file.");
         return;
     }
 
@@ -607,7 +608,7 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
             if (xSteps * ySteps == 0) {
                 throw vislib::Exception("No tiles scheduled for rendering", __FILE__, __LINE__);
             }
-            Log::DefaultLog.WriteInfo( "%d tile(s) scheduled for rendering", xSteps * ySteps);
+            Log::DefaultLog.WriteInfo("%d tile(s) scheduled for rendering", xSteps * ySteps);
 
             int vp[4];
             glGetIntegerv(GL_VIEWPORT, vp);
@@ -855,11 +856,11 @@ void view::special::ScreenShooter::BeforeRender(core::view::AbstractView* view) 
         } /* end if */
 
     } catch (vislib::Exception ex) {
-        Log::DefaultLog.WriteError( "Failed to create screenshot image: %s (%s, %d)", ex.GetMsgA(),
-            ex.GetFile(), ex.GetLine());
+        Log::DefaultLog.WriteError(
+            "Failed to create screenshot image: %s (%s, %d)", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
         rollback = true;
     } catch (...) {
-        Log::DefaultLog.WriteError( "Failed to create screenshot image: Unexpected exception");
+        Log::DefaultLog.WriteError("Failed to create screenshot image: Unexpected exception");
         rollback = true;
     }
 
@@ -960,7 +961,7 @@ bool view::special::ScreenShooter::triggerButtonClicked(core::param::ParamSlot& 
     ASSERT(&slot == &this->triggerButtonSlot);
 
     vislib::StringA mvn(this->viewNameSlot.Param<core::param::StringParam>()->Value().c_str());
-    Log::DefaultLog.WriteInfo( "ScreenShot of \"%s\" requested", mvn.PeekBuffer());
+    Log::DefaultLog.WriteInfo("ScreenShot of \"%s\" requested", mvn.PeekBuffer());
 
     vislib::sys::AutoLock lock(this->ModuleGraphLock());
     {

@@ -64,7 +64,7 @@ void DeferredRenderingProvider::setup(core::CoreInstance* coreIntstance) {
             std::filesystem::path("protein_gl/deferred/lighting.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "[DeferredRenderingProvider] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[DeferredRenderingProvider] %s", ex.what());
     } catch (std::exception const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[DeferredRenderingProvider] Unable to compile shader: Unknown exception: %s", ex.what());

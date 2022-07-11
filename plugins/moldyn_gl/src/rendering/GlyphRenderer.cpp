@@ -120,11 +120,11 @@ bool GlyphRenderer::makeShader(
     ShaderSource fragSrc;
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     if (!ssf->MakeShaderSource(vertexName.c_str(), vertSrc)) {
-        Log::DefaultLog.WriteError( "GlyphRenderer: unable to load vertex shader source: %s", vertexName.c_str());
+        Log::DefaultLog.WriteError("GlyphRenderer: unable to load vertex shader source: %s", vertexName.c_str());
         return false;
     }
     if (!ssf->MakeShaderSource(fragmentName.c_str(), fragSrc)) {
-        Log::DefaultLog.WriteError( "GlyphRenderer: unable to load fragment shader source: %s", fragmentName.c_str());
+        Log::DefaultLog.WriteError("GlyphRenderer: unable to load fragment shader source: %s", fragmentName.c_str());
         return false;
     }
     try {
@@ -134,8 +134,7 @@ bool GlyphRenderer::makeShader(
             return false;
         }
     } catch (AbstractOpenGLShader::CompileException& ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "GlyphRenderer: unable to compile shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("GlyphRenderer: unable to compile shader (@%s): %s\n",
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;

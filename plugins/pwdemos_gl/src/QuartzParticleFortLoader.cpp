@@ -295,7 +295,7 @@ void ParticleFortLoader::assertData(void) {
                     attributes.Add(q4); // qw (real term)
                 }
 
-                Log::DefaultLog.WriteInfo( "Particle radii: %f ... %f\n", minRad, maxRad);
+                Log::DefaultLog.WriteInfo("Particle radii: %f ... %f\n", minRad, maxRad);
 
                 file.Close();
             } else {

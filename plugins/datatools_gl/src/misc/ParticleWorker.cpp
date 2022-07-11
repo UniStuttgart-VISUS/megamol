@@ -84,7 +84,8 @@ bool ParticleWorker::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError( "%s: Unable to create work_on_clusters shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to create work_on_clusters shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 

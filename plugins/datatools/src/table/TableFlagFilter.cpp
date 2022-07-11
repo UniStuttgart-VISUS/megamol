@@ -89,12 +89,12 @@ bool TableFlagFilter::handleCall(core::Call& call) {
     }
 
     if (tableInCall == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "TableFlagFilter requires a table!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("TableFlagFilter requires a table!");
         return false;
     }
 
     if (flagsInCall == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "TableFlagFilter requires a flag storage!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("TableFlagFilter requires a flag storage!");
         return false;
     }
 

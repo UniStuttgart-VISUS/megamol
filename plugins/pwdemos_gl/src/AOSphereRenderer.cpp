@@ -187,8 +187,8 @@ bool AOSphereRenderer::create(void) {
         }
 
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile sphere shader (%s) (@%s): %s\n", shaderName.PeekBuffer(),
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile sphere shader (%s) (@%s): %s\n",
+            shaderName.PeekBuffer(),
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;

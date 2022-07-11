@@ -79,7 +79,7 @@ protected:
                 std::filesystem::path("core/simple_compositing.vert.glsl"),
                 std::filesystem::path("core/simple_compositing.frag.glsl"));
         } catch (glowl::GLSLProgramException const& ex) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError( "[ContextToGL] %s", ex.what());
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[ContextToGL] %s", ex.what());
         } catch (...) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[ContextToGL] Unable to compile shader: Unknown exception");

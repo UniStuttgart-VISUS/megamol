@@ -407,7 +407,7 @@ bool datatools::CSVFileSequence::onFileNameTemplateChanged(core::param::ParamSlo
             break;
         }
         if (errMsg != NULL) {
-            Log::DefaultLog.WriteError( "Parser Error at character %u: %s", i, errMsg);
+            Log::DefaultLog.WriteError("Parser Error at character %u: %s", i, errMsg);
             state = 0;
         }
     }
@@ -420,7 +420,8 @@ bool datatools::CSVFileSequence::onFileNameTemplateChanged(core::param::ParamSlo
         this->fileNumberStepSlot.Param<core::param::IntParam>()->SetValue(stepVal);
 
     this->fileNameTemplate = fnt;
-    Log::DefaultLog.WriteInfo( "Parsed file name template to \"%s\"", vislib::StringA(this->fileNameTemplate).PeekBuffer());
+    Log::DefaultLog.WriteInfo(
+        "Parsed file name template to \"%s\"", vislib::StringA(this->fileNameTemplate).PeekBuffer());
     this->needDataUpdate = true;
     return true;
 }
@@ -484,13 +485,13 @@ void datatools::CSVFileSequence::assertData(void) {
 
     core::param::ParamSlot* fnSlot = this->findFileNameSlot();
     if (fnSlot == NULL) {
-        Log::DefaultLog.WriteError( "Unable to connect to file name slot");
+        Log::DefaultLog.WriteError("Unable to connect to file name slot");
         return;
     }
 
     table::TableDataCall* gdc = this->inDataSlot.CallAs<table::TableDataCall>();
     if (gdc == NULL) {
-        Log::DefaultLog.WriteError( "Unable to get input data call");
+        Log::DefaultLog.WriteError("Unable to get input data call");
         return;
     }
 
@@ -504,7 +505,7 @@ void datatools::CSVFileSequence::assertData(void) {
         }
     }
     if (this->frameCnt == 0) {
-        Log::DefaultLog.WriteError( "CSVFileSequence: No data files found");
+        Log::DefaultLog.WriteError("CSVFileSequence: No data files found");
         return;
     }
 
@@ -514,7 +515,7 @@ void datatools::CSVFileSequence::assertData(void) {
     gdc->SetFrameID(0);
     if (!(*gdc)(1)) {
         this->frameCnt = 0;
-        Log::DefaultLog.WriteError( "CSVFileSequence: Unable to clipping box of file %u (#1)", this->fileNumMin);
+        Log::DefaultLog.WriteError("CSVFileSequence: Unable to clipping box of file %u (#1)", this->fileNumMin);
         return;
     }
 

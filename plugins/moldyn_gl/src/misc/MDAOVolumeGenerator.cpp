@@ -79,7 +79,7 @@ bool MDAOVolumeGenerator::Init(frontend_resources::OpenGL_Context const& ogl_ctx
     std::stringstream outmsg;
     outmsg << "[MDAOVolumeGenerator] Voxelization Features enabled: Compute Shader " << computeAvailable
            << ", Clear Texture " << clearAvailable << std::endl;
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo( outmsg.str().c_str());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(outmsg.str().c_str());
 
     if (computeAvailable) {
         // Try to initialize the compute shader
@@ -94,7 +94,7 @@ bool MDAOVolumeGenerator::Init(frontend_resources::OpenGL_Context const& ogl_ctx
                    << vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
                           ce.FailedAction())
                    << ": " << ce.GetMsgA() << std::endl;
-            megamol::core::utility::log::Log::DefaultLog.WriteError( outmsg.str().c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteError(outmsg.str().c_str());
             return false;
         }
     }

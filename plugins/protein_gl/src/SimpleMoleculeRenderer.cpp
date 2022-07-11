@@ -229,7 +229,7 @@ bool SimpleMoleculeRenderer::create(void) {
             std::filesystem::path("protein_gl/simplemolecule/sm_line.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError( "[SimpleMoleculeRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SimpleMoleculeRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception: %s", ex.what());

@@ -60,13 +60,13 @@ bool io::PlyWriter::run(void) {
     using megamol::core::utility::log::Log;
     auto filename = this->filenameSlot.Param<param::FilePathParam>()->Value();
     if (filename.empty()) {
-        Log::DefaultLog.WriteError( "No file name specified. Abort.");
+        Log::DefaultLog.WriteError("No file name specified. Abort.");
         return false;
     }
 
     CallTriMeshDataGL* ctd = this->meshDataSlot.CallAs<CallTriMeshDataGL>();
     if (ctd == nullptr) {
-        Log::DefaultLog.WriteError( "No data source connected. Abort.");
+        Log::DefaultLog.WriteError("No data source connected. Abort.");
         return false;
     }
 
@@ -234,16 +234,16 @@ bool io::PlyWriter::run(void) {
     vislib::sys::FastFile file;
     if (!file.Open(filename.native().c_str(), vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
             vislib::sys::File::CREATE_OVERWRITE)) {
-        Log::DefaultLog.WriteError( "Unable to create output file \"%s\". Abort.", filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteError("Unable to create output file \"%s\". Abort.", filename.generic_u8string().c_str());
         return false;
     }
 
 
-#define ASSERT_WRITEOUT(A, S)                                                   \
-    if (file.Write((A), (S)) != (S)) {                                          \
-        Log::DefaultLog.WriteError( "Write error %d", __LINE__); \
-        file.Close();                                                           \
-        return false;                                                           \
+#define ASSERT_WRITEOUT(A, S)                                   \
+    if (file.Write((A), (S)) != (S)) {                          \
+        Log::DefaultLog.WriteError("Write error %d", __LINE__); \
+        file.Close();                                           \
+        return false;                                           \
     }
 
     // header
