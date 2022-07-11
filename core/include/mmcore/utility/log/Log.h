@@ -317,7 +317,9 @@ public:
     //void SetEchoTarget(std::shared_ptr<Target> target);
 
     template <typename T>
-    void AddEchoTarget(std::shared_ptr<T> target);
+    std::size_t AddEchoTarget(std::shared_ptr<T> target);
+
+    void RemoveEchoTarget(std::size_t idx);
 
     /**
      * Set a new log level. Messages above this level will be ignored.

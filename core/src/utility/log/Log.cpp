@@ -28,6 +28,7 @@
 
 #include "spdlog/details/os.h"
 #include "spdlog/spdlog.h"
+#include "spdlog/sinks/null_sink.h"
 
 
 const char megamol::core::utility::log::Log::std_pattern[12] = "%^(%l)|%v%$";
@@ -275,6 +276,17 @@ void megamol::core::utility::log::Log::SetEchoLevel(log_level level) {
 //        }
 //    }*/
 //}
+
+
+void megamol::core::utility::log::Log::RemoveEchoTarget(std::size_t idx) {
+    auto logger = spdlog::get(echo_logger_name);
+    if (logger) {
+        auto& sinks = logger->sinks();
+        if (idx < sinks.size()) {
+            sinks[idx] = std::make_shared<spdlog::sinks::null_sink_mt>();
+        }
+    }
+}
 
 
 /*
@@ -553,11 +565,17 @@ megamol::core::utility::log::Log::log_level megamol::core::utility::log::Log::Pa
     megamol::core::utility::log::Log::log_level retval = megamol::core::utility::log::Log::log_level::info;
     if (iequals(attr, "error")) {
         retval = megamol::core::utility::log::Log::log_level::error;
+    } else if (iequals(attr, "(error)")) {
+        retval = megamol::core::utility::log::Log::log_level::error;
     } else if (iequals(attr, "warn")) {
+        retval = megamol::core::utility::log::Log::log_level::warn;
+    } else if (iequals(attr, "(warn)")) {
         retval = megamol::core::utility::log::Log::log_level::warn;
     } else if (iequals(attr, "warning")) {
         retval = megamol::core::utility::log::Log::log_level::warn;
     } else if (iequals(attr, "info")) {
+        retval = megamol::core::utility::log::Log::log_level::info;
+    } else if (iequals(attr, "(info)")) {
         retval = megamol::core::utility::log::Log::log_level::info;
     } else if (iequals(attr, "none")) {
         retval = megamol::core::utility::log::Log::log_level::none;

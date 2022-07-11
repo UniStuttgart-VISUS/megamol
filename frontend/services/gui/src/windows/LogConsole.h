@@ -30,7 +30,7 @@ public:
     ~LogBuffer() override = default;
 
     struct LogEntry {
-        unsigned int level;
+        core::utility::log::Log::log_level level;
         std::string message;
     };
 
@@ -108,6 +108,8 @@ private:
     // where would I get this from? and the autocomplete stuff?
     lua_func_type* input_lua_func;
     bool is_autocomplete_popup_open;
+
+    std::size_t sink_idx_;
 
     // FUNCTIONS --------------------------------------------------------------
     bool connect_log();
