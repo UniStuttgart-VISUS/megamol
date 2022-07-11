@@ -2488,7 +2488,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
             //printf( "Time to compute center line for feature %3i (%5i tria):      %.5f\n\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
         }
         INT64 t1 = perf.Difference();
-        Log::DefaultLog.WriteInfo(1, "Time to compute centerline for feature %3i (%5i tria): %.5f", fCnt, fLength,
+        Log::DefaultLog.WriteInfo( "Time to compute centerline for feature %3i (%5i tria): %.5f", fCnt, fLength,
             (vislib::sys::PerformanceCounter::ToMillis(t1) + time) / 1000.0);
     }
 #endif

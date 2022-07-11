@@ -950,7 +950,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void* userdata) {
     }
     f.Seek(that->frameIdx
                [0]); // lock not required, because i know the main thread is currently waiting to load the first frame
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo(50, "Frame index generation started.");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo( "Frame index generation started.");
 
     const SIZE_T MAX_BUFFER_SIZE = 1024 * 1024;
     char* buffer = new char[MAX_BUFFER_SIZE];
@@ -1261,7 +1261,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void* userdata) {
         if ((begin == 0) || (end == 0)) {
             throw vislib::Exception("Frame index incomplete", __FILE__, __LINE__);
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(50,
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Frame index of %u frames completed with ~%u bytes per frame", static_cast<unsigned int>(frameCount),
                 static_cast<unsigned int>((end - begin) / frameCount));
 
@@ -1269,7 +1269,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void* userdata) {
             //that->frameIdxLock.Lock();
             //if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
             //for (unsigned int i = 0; i <= frameCount; i++) {
-            //    megamol::core::utility::log::Log::DefaultLog.WriteInfo(250, "    frame %u: %lu", i, that->frameIdx[i]);
+            //    megamol::core::utility::log::Log::DefaultLog.WriteInfo( "    frame %u: %lu", i, that->frameIdx[i]);
             //}
             //that->frameIdxLock.Unlock();
 #endif /* DEBUG || _DEBUG */

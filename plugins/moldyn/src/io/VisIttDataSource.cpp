@@ -305,7 +305,7 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsig
         }
     }
 
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo(100, "Frame %u loaded", idx);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo( "Frame %u loaded", idx);
 }
 
 

@@ -386,12 +386,12 @@ void megamol::core::utility::log::Log::WriteError(const char* fmt, ...) {
 /*
  * megamol::core::utility::log::Log::WriteError
  */
-void megamol::core::utility::log::Log::WriteError(int lvlOff, const char* fmt, ...) {
-    va_list argptr;
-    va_start(argptr, fmt);
-    this->writeMessageVaA(log_level::error, fmt, argptr);
-    va_end(argptr);
-}
+//void megamol::core::utility::log::Log::WriteError(int lvlOff, const char* fmt, ...) {
+//    va_list argptr;
+//    va_start(argptr, fmt);
+//    this->writeMessageVaA(log_level::error, fmt, argptr);
+//    va_end(argptr);
+//}
 
 
 /*
@@ -408,12 +408,12 @@ void megamol::core::utility::log::Log::WriteInfo(const char* fmt, ...) {
 /*
  * megamol::core::utility::log::Log::WriteInfo
  */
-void megamol::core::utility::log::Log::WriteInfo(int lvlOff, const char* fmt, ...) {
-    va_list argptr;
-    va_start(argptr, fmt);
-    this->writeMessageVaA(log_level::info, fmt, argptr);
-    va_end(argptr);
-}
+//void megamol::core::utility::log::Log::WriteInfo(int lvlOff, const char* fmt, ...) {
+//    va_list argptr;
+//    va_start(argptr, fmt);
+//    this->writeMessageVaA(log_level::info, fmt, argptr);
+//    va_end(argptr);
+//}
 
 
 /*
@@ -494,12 +494,12 @@ void megamol::core::utility::log::Log::WriteWarn(const char* fmt, ...) {
 /*
  * megamol::core::utility::log::Log::WriteWarn
  */
-void megamol::core::utility::log::Log::WriteWarn(int lvlOff, const char* fmt, ...) {
-    va_list argptr;
-    va_start(argptr, fmt);
-    this->writeMessageVaA(log_level::warn, fmt, argptr);
-    va_end(argptr);
-}
+//void megamol::core::utility::log::Log::WriteWarn(int lvlOff, const char* fmt, ...) {
+//    va_list argptr;
+//    va_start(argptr, fmt);
+//    this->writeMessageVaA(log_level::warn, fmt, argptr);
+//    va_end(argptr);
+//}
 
 
 /*
@@ -582,6 +582,8 @@ megamol::core::utility::log::Log::log_level megamol::core::utility::log::Log::Pa
     } else if (iequals(attr, "(warn)")) {
         retval = megamol::core::utility::log::Log::log_level::warn;
     } else if (iequals(attr, "warning")) {
+        retval = megamol::core::utility::log::Log::log_level::warn;
+    } else if (iequals(attr, "(warning)")) {
         retval = megamol::core::utility::log::Log::log_level::warn;
     } else if (iequals(attr, "info")) {
         retval = megamol::core::utility::log::Log::log_level::info;

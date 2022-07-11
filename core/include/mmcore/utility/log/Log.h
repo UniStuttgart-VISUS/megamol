@@ -395,7 +395,7 @@ public:
      * @param fmt The log message
      * @param lvlOff The log level offset
      */
-    void WriteError(int lvlOff, const char* fmt, ...);
+    //void WriteError(int lvlOff, const char* fmt, ...);
 
     /**
      * Writes a formatted error message to the log. The level will be
@@ -412,7 +412,7 @@ public:
      * @param fmt The log message
      * @param lvlOff The log level offset
      */
-    void WriteInfo(int lvlOff, const char* fmt, ...);
+    //void WriteInfo(int lvlOff, const char* fmt, ...);
 
     /**
      * Writes a formatted messages with the specified log level to the log
@@ -441,7 +441,7 @@ public:
      * @param fmt The log message
      * @param lvlOff The log level offset
      */
-    void WriteWarn(int lvlOff, const char* fmt, ...);
+    //void WriteWarn(int lvlOff, const char* fmt, ...);
 
     /**
      * Assignment operator

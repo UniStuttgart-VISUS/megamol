@@ -1134,7 +1134,7 @@ void IMDAtomDataSource::assertData(void) {
 
     vislib::sys::FastFile file;
     auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
-    //    Log::DefaultLog.WriteInfo(50, _T("Loading \"%s\""), filename.PeekBuffer());
+    //    Log::DefaultLog.WriteInfo( _T("Loading \"%s\""), filename.PeekBuffer());
     // this->datahash = static_cast<SIZE_T>(filename.HashCode());
     if (!file.Open(filename.native().c_str(), vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
             vislib::sys::File::OPEN_ONLY)) {
