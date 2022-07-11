@@ -10,7 +10,7 @@ find_package(Git REQUIRED)
 if (NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
   message(STATUS "Downloading external scripts")
   execute_process(COMMAND
-    ${GIT_EXECUTABLE} clone -b v2.5 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
+    ${GIT_EXECUTABLE} clone -b v2.6 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif ()
@@ -258,7 +258,7 @@ function(require_external NAME)
     if (WIN32)
       set(CHEMFILES_LIB "lib/chemfiles.lib")
     else ()
-      set(CHEMFILES_LIB "lib/chemfiles.a")
+      set(CHEMFILES_LIB "lib/libchemfiles.a")
     endif ()
 
     add_external_project(chemfiles STATIC

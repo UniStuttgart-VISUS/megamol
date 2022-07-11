@@ -16,10 +16,6 @@
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 
-#ifdef MEGAMOL_NG_MESH
-#include "ng_mesh/CallNGMeshRenderBatches.h"
-#endif
-
 #include <memory>
 #include <string>
 #include <vector>
@@ -71,6 +67,12 @@ protected:
     virtual bool create() override;
 
     /// <summary>
+    /// Read in file and store data
+    /// </summary>
+    /// <returns>Success</returns>
+    bool get_input();
+
+    /// <summary>
     /// Callback function for requesting information
     /// </summary>
     /// <param name="caller">Call for this request</param>
@@ -84,15 +86,6 @@ protected:
     /// <returns>True on success; false otherwise</returns>
     virtual bool get_mesh_data_callback(core::Call& caller);
 
-#ifdef MEGAMOL_NG_MESH
-    /// <summary>
-    /// Callback function for requesting data
-    /// </summary>
-    /// <param name="caller">Call for this request</param>
-    /// <returns>True on success; false otherwise</returns>
-    virtual bool get_ngmesh_data_callback(core::Call& caller);
-#endif
-
     /// <summary>
     /// Release the module
     /// </summary>
@@ -102,7 +95,7 @@ private:
     /// <summary>
     /// States for the ascii parser
     /// </summary>
-    enum parser_states_t {
+    enum class parser_states_t {
         EXPECT_SOLID,
         EXPECT_NAME,
         EXPECT_FACET_OR_ENDSOLID,
@@ -148,14 +141,15 @@ private:
     /// <param name="filename">File name of the STL file</param>
     void read_ascii(const std::string& filename);
 
+    /// File name
+    core::param::ParamSlot filename_slot;
+
+protected:
     /// <summary>
     /// Calculate the data hash
     /// </summary>
     /// <returns>Data hash</returns>
     uint32_t hash() const;
-
-    /// File name
-    core::param::ParamSlot filename_slot;
 
     /// Output
     core::CalleeSlot mesh_output_slot;
@@ -163,24 +157,13 @@ private:
     /// Mesh data
     geocalls_gl::CallTriMeshDataGL::Mesh mesh;
 
-#ifdef MEGAMOL_NG_MESH
-    /// Shader file name
-    core::param::ParamSlot shader_filename_slot;
-
-    /// Output
-    core::CalleeSlot ngmesh_output_slot;
-
-    /// Batch data for rendering
-    std::unique_ptr<ngmesh::CallNGMeshRenderBatches::RenderBatchesData> batch_data;
-#endif
-
     /// Buffers to store vertices and normals, and indices
     uint32_t num_triangles;
 
     float min_x, min_y, min_z, max_x, max_y, max_z;
 
-    std::vector<uint8_t> vertex_normal_buffer;
-    std::vector<unsigned int> index_buffer;
+    std::shared_ptr<std::vector<float>> vertex_buffer, normal_buffer;
+    std::shared_ptr<std::vector<unsigned int>> index_buffer;
 };
 } // namespace io
 } // namespace datatools_gl

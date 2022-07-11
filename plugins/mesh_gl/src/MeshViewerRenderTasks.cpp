@@ -5,7 +5,6 @@
  * All rights reserved.
  */
 
-
 #include "MeshViewerRenderTasks.h"
 
 #include "mesh_gl/MeshCalls_gl.h"

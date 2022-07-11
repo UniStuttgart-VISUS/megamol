@@ -16,9 +16,13 @@ if(BUILD_FRONTEND)
   # Collect source files
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
+  set (resource_files "")
+  if (MSVC)
+    set(resource_files "${CMAKE_CURRENT_SOURCE_DIR}/extra/metadata.rc")
+  endif()
 
   # Add target
-  add_executable(${BINARY_NAME} ${header_files} ${source_files})
+  add_executable(${BINARY_NAME} ${header_files} ${source_files} "${resource_files}")
   target_include_directories(${BINARY_NAME} PRIVATE "src" "include")
   target_link_libraries(${BINARY_NAME} PRIVATE core frontend_services libcxxopts)
   target_link_libraries(${BINARY_NAME} PRIVATE ${CMAKE_DL_LIBS})
@@ -40,15 +44,6 @@ if(BUILD_FRONTEND)
       install(FILES $<TARGET_PDB_FILE:${BINARY_NAME}> DESTINATION bin OPTIONAL)
     endif()
   endif ()
-  
-  if(UNIX)
-    include(GNUInstallDirs)
-    set(cfg_LIB_PATH "../lib") # relative path from bin to lib dir
-    set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
-    configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
-  endif()  
-
 endif()
 
 if(ENABLE_GL)

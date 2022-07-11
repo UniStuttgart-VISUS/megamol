@@ -43,6 +43,13 @@ else ()
   message(FATAL_ERROR "Unsupported compiler specified: '${CMAKE_CXX_COMPILER_ID}'")
 endif ()
 
+# Set RPath to "../lib" on binary install
+if (UNIX)
+  set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+  set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+endif ()
+
 # Dependencies
 
 # OpenMP
@@ -78,6 +85,22 @@ if (ENABLE_MPI)
     target_compile_definitions(MPI::MPI_C INTERFACE "-DWITH_MPI")
   endif ()
 endif ()
+
+# CGAL
+option(ENABLE_CGAL "Enable CGAL support" OFF)
+if (ENABLE_CGAL)
+  add_compile_definitions(WITH_CGAL)
+  find_package(CGAL REQUIRED)
+
+  if (NOT TARGET CGAL::CGAL)
+    message(FATAL_ERROR "Target for CGAL not found")
+  endif ()
+
+  if (TARGET CGAL)
+    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_MINSIZEREL Release)
+    set_target_properties(CGAL PROPERTIES MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
+  endif ()
+endif()
 
 # Profiling
 cmake_dependent_option(ENABLE_PROFILING "Enable profiling code" OFF "ENABLE_GL" OFF)

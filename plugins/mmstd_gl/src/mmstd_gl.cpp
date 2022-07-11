@@ -7,6 +7,8 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
+#include "PlaneRenderer.h"
+
 #include "upscaling/ImageSpaceAmortization2D.h"
 #include "upscaling/ResolutionScaler2D.h"
 #include "upscaling/ResolutionScaler3D.h"
@@ -25,6 +27,7 @@ public:
 
         // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::mmstd_gl::ImageSpaceAmortization2D>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mmstd_gl::PlaneRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::mmstd_gl::ResolutionScaler2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::mmstd_gl::ResolutionScaler3D>();
 

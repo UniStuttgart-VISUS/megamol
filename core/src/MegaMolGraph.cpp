@@ -420,10 +420,10 @@ megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenienc
 }
 
 void megamol::core::MegaMolGraph::Clear() {
-    // currently entry points are expected to be graph modules, i.e. views
-    // therefore it is ok for us to clear all entry points if the graph shuts down
     call_list_.clear();
-    m_image_presentation->clear_entry_points();
+    for (auto& m : module_list_)
+        if (m.isGraphEntryPoint)
+            m_image_presentation->remove_entry_point(m.request.id);
     graph_entry_points.clear();
     module_list_.clear();
 }
