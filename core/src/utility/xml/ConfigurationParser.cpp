@@ -78,7 +78,7 @@ ConfigurationParser::~ConfigurationParser(void) {}
  */
 bool ConfigurationParser::CheckBaseTag(const XmlReader& reader) {
     if (!reader.BaseTag().Equals(MMXML_STRING("MegaMol"), false)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, "Config file does not specify <MegaMol> as base tag");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Config file does not specify <MegaMol> as base tag");
         return false;
     }
 
@@ -124,12 +124,11 @@ bool ConfigurationParser::CheckBaseTag(const XmlReader& reader) {
     }
 
     if (!typeValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, "base tag attribute \"type\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("base tag attribute \"type\" not present or invalid.");
         return false;
     }
     if (!versionValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            1, "base tag attribute \"version\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("base tag attribute \"version\" not present or invalid.");
         return false;
     }
     if (this->xmlVersion < vislib::VersionNumber(1, 2)) {

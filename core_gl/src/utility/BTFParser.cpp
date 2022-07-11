@@ -106,7 +106,7 @@ void utility::BTFParser::Comment(unsigned int level, const XML_Char* text, XmlRe
  */
 bool utility::BTFParser::CheckBaseTag(const XmlReader& reader) {
     if (!reader.BaseTag().Equals(MMXML_STRING("btf"))) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, "BTF file does not specify <btf/> as base tag");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("BTF file does not specify <btf/> as base tag");
         return false;
     }
 
@@ -147,17 +147,17 @@ bool utility::BTFParser::CheckBaseTag(const XmlReader& reader) {
     }
 
     if (!typeValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, "base tag attribute \"type\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("base tag attribute \"type\" not present or invalid.");
         return false;
     }
     if (!versionValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            1, "base tag attribute \"version\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "base tag attribute \"version\" not present or invalid.");
         return false;
     }
     if (!nmspcValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            1, "base tag attribute \"namespace\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "base tag attribute \"namespace\" not present or invalid.");
         return false;
     }
 

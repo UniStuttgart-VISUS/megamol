@@ -60,58 +60,58 @@ std::shared_ptr<spdlog::sinks::basic_file_sink_mt> create_file_sink(std::string 
 
 /*****************************************************************************/
 
-/*
- * megamol::core::utility::log::Log::Target::~Target
- */
-megamol::core::utility::log::Log::Target::~Target(void) {
-    // intentionally empty
-}
-
-
-/*
- * megamol::core::utility::log::Log::Target::Target
- */
-megamol::core::utility::log::Log::Target::Target(UINT level) : level(level) {
-    // intentionally empty
-}
-
-
-/*
- * megamol::core::utility::log::Log::Target::Flush
- */
-void megamol::core::utility::log::Log::Target::Flush(void) {
-    // intentionally empty
-}
-
-
-/*
- * megamol::core::utility::log::Log::LEVEL_ALL
- */
-const UINT megamol::core::utility::log::Log::LEVEL_ALL = UINT_MAX;
-
-
-/*
- * megamol::core::utility::log::Log::LEVEL_ERROR
- */
-const UINT megamol::core::utility::log::Log::LEVEL_ERROR = 1;
-
-
-/*
- * megamol::core::utility::log::Log::LEVEL_INFO
- */
-const UINT megamol::core::utility::log::Log::LEVEL_INFO = 200;
-
-
-/*
- * megamol::core::utility::log::Log::LEVEL_NONE
- */
-const UINT megamol::core::utility::log::Log::LEVEL_NONE = 0;
-
-
-/*
- * megamol::core::utility::log::Log::LEVEL_WARN
- */
-const UINT megamol::core::utility::log::Log::LEVEL_WARN = 100;
+///*
+// * megamol::core::utility::log::Log::Target::~Target
+// */
+//megamol::core::utility::log::Log::Target::~Target(void) {
+//    // intentionally empty
+//}
+//
+//
+///*
+// * megamol::core::utility::log::Log::Target::Target
+// */
+//megamol::core::utility::log::Log::Target::Target(UINT level) : level(level) {
+//    // intentionally empty
+//}
+//
+//
+///*
+// * megamol::core::utility::log::Log::Target::Flush
+// */
+//void megamol::core::utility::log::Log::Target::Flush(void) {
+//    // intentionally empty
+//}
+//
+//
+///*
+// * megamol::core::utility::log::Log::LEVEL_ALL
+// */
+//const UINT megamol::core::utility::log::Log::LEVEL_ALL = UINT_MAX;
+//
+//
+///*
+// * megamol::core::utility::log::Log::LEVEL_ERROR
+// */
+//const UINT megamol::core::utility::log::Log::LEVEL_ERROR = 1;
+//
+//
+///*
+// * megamol::core::utility::log::Log::LEVEL_INFO
+// */
+//const UINT megamol::core::utility::log::Log::LEVEL_INFO = 200;
+//
+//
+///*
+// * megamol::core::utility::log::Log::LEVEL_NONE
+// */
+//const UINT megamol::core::utility::log::Log::LEVEL_NONE = 0;
+//
+//
+///*
+// * megamol::core::utility::log::Log::LEVEL_WARN
+// */
+//const UINT megamol::core::utility::log::Log::LEVEL_WARN = 100;
 
 
 /*
@@ -472,10 +472,10 @@ void megamol::core::utility::log::Log::writeMessageVaA(log_level level, const ch
 /*
  * megamol::core::utility::log::Log::WriteMsg
  */
-void megamol::core::utility::log::Log::WriteMsg(const UINT level, const char* fmt, ...) {
+void megamol::core::utility::log::Log::WriteMsg(const log_level level, const char* fmt, ...) {
     va_list argptr;
     va_start(argptr, fmt);
-    this->writeMessageVaA(log_level::info, fmt, argptr);
+    this->writeMessageVaA(level, fmt, argptr);
     va_end(argptr);
 }
 

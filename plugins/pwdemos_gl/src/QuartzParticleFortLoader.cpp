@@ -316,7 +316,7 @@ void ParticleFortLoader::assertData(void) {
             }
             typeList.Sort(&vislib::DiffComparator<int>);
 
-            Log::DefaultLog.WriteMsg(350, "Loaded files %u particles and %u types\n", types.Count(), typeList.Count());
+            Log::DefaultLog.WriteInfo("Loaded files %u particles and %u types\n", types.Count(), typeList.Count());
 
             this->partTypes = new unsigned int[typeList.Count()];
             this->partCnts = new unsigned int[typeList.Count()];

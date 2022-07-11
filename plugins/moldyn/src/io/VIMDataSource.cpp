@@ -133,7 +133,7 @@ bool VIMDataSource::Frame::LoadFrame(
             try {
                 this->parseParticleLine(line, type, x, y, z, qx, qy, qz, qw);
             } catch (...) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(50, "Unable to parse particle line");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to parse particle line");
                 continue;
             }
             unsigned int idx = 0;
@@ -798,7 +798,7 @@ bool VIMDataSource::readHeader(const vislib::TString& filename) {
                     types.Last() = *element;
                 }
                 element = NULL;
-            } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteMsg(50, "Error parsing type line."); }
+            } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteError("Error parsing type line."); }
             SAFE_DELETE(element);
         } else if (line[0] == '>') {
             // very extream file redirection

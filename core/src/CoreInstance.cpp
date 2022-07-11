@@ -1751,7 +1751,7 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo( "Loading project file \"%s\"", filename.PeekBuffer());
             if (!this->lua->RunString(content.PeekBuffer(), result, filename.PeekBuffer())) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(megamol::core::utility::log::Log::LEVEL_INFO,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
             } else {
                 this->loadedLuaProjects.Add(vislib::Pair<vislib::StringA, vislib::StringA>(filename, content));
@@ -1763,7 +1763,7 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
             megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(filename.PeekBuffer());
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.c_str());
         if (!this->lua->RunString(content.c_str(), result, filename.PeekBuffer())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(megamol::core::utility::log::Log::LEVEL_INFO,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
         } else {
             this->loadedLuaProjects.Add(vislib::Pair<vislib::StringA, vislib::StringA>(filename, content.c_str()));
@@ -1795,7 +1795,7 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Loading project file \"%s\"", vislib::StringA(filename).PeekBuffer());
             if (!this->lua->RunString(content.PeekBuffer(), result)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(megamol::core::utility::log::Log::LEVEL_INFO,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Failed loading project file \"%s\": %s", vislib::StringA(filename).PeekBuffer(), result.c_str());
             } else {
                 this->loadedLuaProjects.Add(
@@ -1808,7 +1808,7 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
             megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(W2A(filename.PeekBuffer()));
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.c_str());
         if (!this->lua->RunString(content.c_str(), result, W2A(filename.PeekBuffer()))) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(megamol::core::utility::log::Log::LEVEL_INFO,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Failed loading project file \"%s\": %s", filename.PeekBuffer(), result.c_str());
         } else {
             this->loadedLuaProjects.Add(vislib::Pair<vislib::StringA, vislib::StringA>(filename, content.c_str()));
@@ -2934,19 +2934,17 @@ void megamol::core::CoreInstance::loadPlugin(
     const std::shared_ptr<utility::plugins::AbstractPluginDescriptor>& pluginDescriptor) {
 
     // select log level for plugin loading errors
-    unsigned int loadFailedLevel = megamol::core::utility::log::Log::LEVEL_ERROR;
+    utility::log::Log::log_level loadFailedLevel = megamol::core::utility::log::Log::log_level::error;
     if (this->config.IsConfigValueSet("PluginLoadFailMsg")) {
         try {
             const vislib::StringW& v = this->config.ConfigValue("PluginLoadFailMsg");
             if (v.Equals(L"error", false) || v.Equals(L"err", false) || v.Equals(L"e", false)) {
-                loadFailedLevel = megamol::core::utility::log::Log::LEVEL_ERROR;
+                loadFailedLevel = megamol::core::utility::log::Log::log_level::error;
             } else if (v.Equals(L"warning", false) || v.Equals(L"warn", false) || v.Equals(L"w", false)) {
-                loadFailedLevel = megamol::core::utility::log::Log::LEVEL_WARN;
+                loadFailedLevel = megamol::core::utility::log::Log::log_level::warn;
             } else if (v.Equals(L"information", false) || v.Equals(L"info", false) || v.Equals(L"i", false) ||
                        v.Equals(L"message", false) || v.Equals(L"msg", false) || v.Equals(L"m", false)) {
-                loadFailedLevel = megamol::core::utility::log::Log::LEVEL_INFO;
-            } else {
-                loadFailedLevel = vislib::CharTraitsW::ParseInt(v.PeekBuffer());
+                loadFailedLevel = megamol::core::utility::log::Log::log_level::info;
             }
         } catch (...) {}
     }

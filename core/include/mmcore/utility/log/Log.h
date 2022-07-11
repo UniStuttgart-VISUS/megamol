@@ -423,7 +423,7 @@ public:
      * @param level The log level of the message.
      * @param fmt The log message.
      */
-    void WriteMsg(UINT level, const char* fmt, ...);
+    void WriteMsg(log_level level, const char* fmt, ...);
 
     /**
      * Writes a formatted error message to the log. The level will be

@@ -211,7 +211,7 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
         , scroll_down(2)
         , scroll_up(0)
         , last_window_height(0.0f)
-        , win_log_level(static_cast<int>(megamol::core::utility::log::Log::LEVEL_WARN))
+        , win_log_level(megamol::core::utility::log::Log::log_level::warn)
         , win_log_force_open(true)
         , tooltip()
         , input_shared_data(nullptr)
@@ -290,31 +290,36 @@ bool megamol::gui::LogConsole::Draw() {
         ImGui::TextUnformatted("Show Log Level");
         ImGui::SameLine();
         if (ImGui::RadioButton(
-                "Error (<= 1)", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_ERROR))) {
-            if (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_ERROR) {
-                this->win_log_level = megamol::core::utility::log::Log::LEVEL_NONE;
+                "Error", (this->win_log_level == megamol::core::utility::log::Log::log_level::error ||
+                             this->win_log_level == megamol::core::utility::log::Log::log_level::warn ||
+                             this->win_log_level == megamol::core::utility::log::Log::log_level::info))) {
+            if (this->win_log_level == megamol::core::utility::log::Log::log_level::error ||
+                this->win_log_level == megamol::core::utility::log::Log::log_level::warn ||
+                this->win_log_level == megamol::core::utility::log::Log::log_level::info) {
+                this->win_log_level = megamol::core::utility::log::Log::log_level::none;
             } else {
-                this->win_log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
+                this->win_log_level = megamol::core::utility::log::Log::log_level::error;
             }
             this->scroll_down = 3;
         }
         ImGui::SameLine();
         if (ImGui::RadioButton(
-                "Warnings (<= 100)", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
-            if (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN) {
-                this->win_log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
+                "Warnings", (this->win_log_level == megamol::core::utility::log::Log::log_level::warn ||
+                                this->win_log_level == megamol::core::utility::log::Log::log_level::info))) {
+            if (this->win_log_level == megamol::core::utility::log::Log::log_level::warn ||
+                this->win_log_level == megamol::core::utility::log::Log::log_level::info) {
+                this->win_log_level = megamol::core::utility::log::Log::log_level::error;
             } else {
-                this->win_log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+                this->win_log_level = megamol::core::utility::log::Log::log_level::warn;
             }
             this->scroll_down = 3;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton(
-                "Infos (<= 200)", (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
-            if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ALL) {
-                this->win_log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+        if (ImGui::RadioButton("Infos", (this->win_log_level == megamol::core::utility::log::Log::log_level::info))) {
+            if (this->win_log_level == megamol::core::utility::log::Log::log_level::info) {
+                this->win_log_level = megamol::core::utility::log::Log::log_level::warn;
             } else {
-                this->win_log_level = megamol::core::utility::log::Log::LEVEL_ALL;
+                this->win_log_level = megamol::core::utility::log::Log::log_level::info;
             }
             this->scroll_down = 3;
         }
@@ -346,9 +351,9 @@ bool megamol::gui::LogConsole::Draw() {
         true, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
     auto message_count = this->echo_log_buffer.log().size();
-    if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_WARN) {
+    if (this->win_log_level == megamol::core::utility::log::Log::log_level::warn) {
         message_count = this->echo_log_buffer.warn_log_indices().size();
-    } else if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ERROR) {
+    } else if (this->win_log_level == megamol::core::utility::log::Log::log_level::error) {
         message_count = this->echo_log_buffer.error_log_indices().size();
     }
     const int modified_count = std::min<int>(static_cast<int>(message_count), 14000000);
@@ -359,9 +364,9 @@ bool megamol::gui::LogConsole::Draw() {
         for (auto row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row) {
 
             auto index = static_cast<size_t>(row);
-            if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_WARN) {
+            if (this->win_log_level == megamol::core::utility::log::Log::log_level::warn) {
                 index = this->echo_log_buffer.warn_log_indices()[row];
-            } else if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ERROR) {
+            } else if (this->win_log_level == megamol::core::utility::log::Log::log_level::error) {
                 index = this->echo_log_buffer.error_log_indices()[row];
             }
             auto entry = this->echo_log_buffer.log()[index];
@@ -495,8 +500,10 @@ void LogConsole::SpecificStateFromJSON(const nlohmann::json& in_json) {
                 if (config_item.key() == this->Name()) {
                     auto config_values = config_item.value();
 
+                    auto win_log_level_val = static_cast<unsigned int>(
+                        std::underlying_type_t<core::utility::log::Log::log_level>(this->win_log_level));
                     megamol::core::utility::get_json_value<unsigned int>(
-                        config_values, {"log_level"}, &this->win_log_level);
+                        config_values, {"log_level"}, &win_log_level_val);
                     megamol::core::utility::get_json_value<bool>(
                         config_values, {"log_force_open"}, &this->win_log_force_open);
                 }
