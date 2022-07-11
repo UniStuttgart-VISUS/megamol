@@ -12,7 +12,6 @@
 
 #include "AbstractWindow.h"
 #include "CommonTypes.h"
-#include "mmcore/utility/log/StreamTarget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
 
@@ -88,7 +87,6 @@ private:
 
     LogBuffer echo_log_buffer;
     std::ostream echo_log_stream;
-    std::shared_ptr<megamol::core::utility::log::StreamTarget> echo_log_target;
 
     size_t log_msg_count;
     unsigned int scroll_down;

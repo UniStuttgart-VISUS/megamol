@@ -19,6 +19,12 @@
 #define LOGMESSAGE_GUI_POPUP_START_TAG "<<<<<"
 #define LOGMESSAGE_GUI_POPUP_END_TAG ">>>>>"
 
+namespace spdlog {
+namespace sinks {
+class sink;
+}
+} // namespace spdlog
+
 
 namespace megamol {
 namespace core {
@@ -236,14 +242,14 @@ public:
     //}
 
     /** Disable the autoflush flag. */
-    inline void DisableAutoFlush(void) {
+    /*inline void DisableAutoFlush(void) {
         this->SetAutoFlush(false);
-    }
+    }*/
 
     /** Enables the autoflush flag. */
-    inline void EnableAutoFlush(void) {
+    /*inline void EnableAutoFlush(void) {
         this->SetAutoFlush(true);
-    }
+    }*/
 
     /** Flushes the physical log file. */
     void FlushLog(void);
@@ -286,9 +292,9 @@ public:
      *
      * @return The state of the autoflush flag.
      */
-    inline bool IsAutoFlushEnabled(void) const {
+    /*inline bool IsAutoFlushEnabled(void) const {
         return this->autoflush;
-    }
+    }*/
 
     /**
      * Sets or clears the autoflush flag. If the autoflush flag is set
@@ -297,9 +303,9 @@ public:
      *
      * @param enable New value for the autoflush flag.
      */
-    inline void SetAutoFlush(bool enable) {
+    /*inline void SetAutoFlush(bool enable) {
         this->autoflush = enable;
-    }
+    }*/
 
     /**
      * Set a new echo level. Messages above this level will be ignored,
@@ -316,8 +322,7 @@ public:
      */
     //void SetEchoTarget(std::shared_ptr<Target> target);
 
-    template <typename T>
-    std::size_t AddEchoTarget(std::shared_ptr<T> target);
+    std::size_t AddEchoTarget(std::shared_ptr<spdlog::sinks::sink> target);
 
     void RemoveEchoTarget(std::size_t idx);
 
@@ -448,6 +453,7 @@ public:
 
     static megamol::core::utility::log::Log::log_level ParseLevelAttribute(const std::string attr,
         megamol::core::utility::log::Log::log_level def = megamol::core::utility::log::Log::log_level::error);
+
 private:
     /**
      * Writes a pre-formatted message with specified log level, time stamp
@@ -490,10 +496,8 @@ private:
     UINT ft_level_;*/
 
     /** Flag whether or not to flush any targets after each message */
-    bool autoflush;
+    //bool autoflush;
 };
-
-#include "Log.inl"
 
 } // namespace log
 } // namespace utility

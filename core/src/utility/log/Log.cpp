@@ -23,12 +23,11 @@
 #include <sys/stat.h>
 #endif /* _WIN32 */
 
-#include "mmcore/utility/log/DefaultTarget.h"
-#include "mmcore/utility/log/FileTarget.h"
-
 #include "spdlog/details/os.h"
-#include "spdlog/spdlog.h"
+#include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/null_sink.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/spdlog.h"
 
 
 const char megamol::core::utility::log::Log::std_pattern[12] = "%^(%l)|%v%$";
@@ -161,7 +160,7 @@ spdlog::level::level_enum translate_level(megamol::core::utility::log::Log::log_
 /*
  * megamol::core::utility::log::Log::Log
  */
-megamol::core::utility::log::Log::Log(log_level level, unsigned int msgbufsize) : autoflush(true) {
+megamol::core::utility::log::Log::Log(log_level level, unsigned int msgbufsize) {
     // Intentionally empty
     auto logger = spdlog::get(logger_name);
     if (logger == nullptr) {
@@ -176,7 +175,7 @@ megamol::core::utility::log::Log::Log(log_level level, unsigned int msgbufsize) 
 /*
  * megamol::core::utility::log::Log::Log
  */
-megamol::core::utility::log::Log::Log(log_level level, const char* filename, bool addSuffix) : autoflush(true) {
+megamol::core::utility::log::Log::Log(log_level level, const char* filename, bool addSuffix) {
     auto logger = spdlog::get(logger_name);
     if (logger == nullptr) {
         auto sink = create_default_sink();
@@ -276,6 +275,19 @@ void megamol::core::utility::log::Log::SetEchoLevel(log_level level) {
 //        }
 //    }*/
 //}
+
+
+std::size_t megamol::core::utility::log::Log::AddEchoTarget(std::shared_ptr<spdlog::sinks::sink> target) {
+    auto logger = spdlog::get(echo_logger_name);
+    if (logger) {
+        logger->sinks().push_back(target);
+        return logger->sinks().size() - 1;
+    } else {
+        logger = std::make_shared<spdlog::logger>(echo_logger_name, target);
+        spdlog::register_logger(logger);
+        return 0;
+    }
+}
 
 
 void megamol::core::utility::log::Log::RemoveEchoTarget(std::size_t idx) {
@@ -423,14 +435,12 @@ void megamol::core::utility::log::Log::writeMessage(log_level level, const std::
     switch (level) {
     case log_level::error: {
         logger->error("{}", msg);
-        (echo_logger ? echo_logger->error("{}", msg): (void)(0));
-    }
-        break;
+        (echo_logger ? echo_logger->error("{}", msg) : (void)(0));
+    } break;
     case log_level::warn: {
         logger->warn("{}", msg);
         (echo_logger ? echo_logger->warn("{}", msg) : (void)(0));
-    }
-        break;
+    } break;
     case log_level::info:
     default: {
         logger->info("{}", msg);
@@ -499,7 +509,7 @@ megamol::core::utility::log::Log& megamol::core::utility::log::Log::operator=(co
     /*this->mt_level_ = rhs.mt_level_;
     this->et_level_ = rhs.et_level_;
     this->ft_level_ = rhs.ft_level_;*/
-    this->autoflush = rhs.autoflush;
+    //this->autoflush = rhs.autoflush;
     return *this;
 }
 

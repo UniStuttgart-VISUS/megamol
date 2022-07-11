@@ -1,7 +1,6 @@
 #include "CLIConfigParsing.h"
 #include "mmcore/LuaAPI.h"
 
-#include "mmcore/utility/log/DefaultTarget.h"
 #include "mmcore/utility/log/Log.h"
 
 #include "mmcore/CoreInstance.h"

@@ -11,6 +11,8 @@
 
 #include <regex>
 
+#include "spdlog/sinks/ostream_sink.h"
+
 using namespace megamol::gui;
 
 
@@ -205,7 +207,6 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
         : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_LOGCONSOLE)
         , echo_log_buffer()
         , echo_log_stream(&this->echo_log_buffer)
-        , echo_log_target(nullptr)
         , log_msg_count(0)
         , scroll_down(2)
         , scroll_up(0)
@@ -257,7 +258,7 @@ LogConsole::~LogConsole() {
     /*if (megamol::core::utility::log::Log::DefaultLog.AccessEchoTarget() == this->echo_log_target) {
         megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(nullptr);
     }*/
-    this->echo_log_target.reset();
+    //this->echo_log_target.reset();
 }
 
 
