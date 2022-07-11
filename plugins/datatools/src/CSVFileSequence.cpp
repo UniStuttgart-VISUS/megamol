@@ -407,7 +407,7 @@ bool datatools::CSVFileSequence::onFileNameTemplateChanged(core::param::ParamSlo
             break;
         }
         if (errMsg != NULL) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Parser Error at character %u: %s", i, errMsg);
+            Log::DefaultLog.WriteError( "Parser Error at character %u: %s", i, errMsg);
             state = 0;
         }
     }
@@ -420,8 +420,7 @@ bool datatools::CSVFileSequence::onFileNameTemplateChanged(core::param::ParamSlo
         this->fileNumberStepSlot.Param<core::param::IntParam>()->SetValue(stepVal);
 
     this->fileNameTemplate = fnt;
-    Log::DefaultLog.WriteMsg(
-        Log::LEVEL_INFO, "Parsed file name template to \"%s\"", vislib::StringA(this->fileNameTemplate).PeekBuffer());
+    Log::DefaultLog.WriteInfo( "Parsed file name template to \"%s\"", vislib::StringA(this->fileNameTemplate).PeekBuffer());
     this->needDataUpdate = true;
     return true;
 }
@@ -435,7 +434,7 @@ bool datatools::CSVFileSequence::onFileNameSlotNameChanged(core::param::ParamSlo
     this->ModuleGraphLock().LockExclusive();
     core::param::StringParam* P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
     if ((P != NULL) && (this->findFileNameSlot() == NULL)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to connect to file name parameter slot \"%s\". Parameter resetted.", P->Value().c_str());
         P->SetValue("", false);
     }
@@ -485,13 +484,13 @@ void datatools::CSVFileSequence::assertData(void) {
 
     core::param::ParamSlot* fnSlot = this->findFileNameSlot();
     if (fnSlot == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to connect to file name slot");
+        Log::DefaultLog.WriteError( "Unable to connect to file name slot");
         return;
     }
 
     table::TableDataCall* gdc = this->inDataSlot.CallAs<table::TableDataCall>();
     if (gdc == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to get input data call");
+        Log::DefaultLog.WriteError( "Unable to get input data call");
         return;
     }
 
@@ -505,7 +504,7 @@ void datatools::CSVFileSequence::assertData(void) {
         }
     }
     if (this->frameCnt == 0) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "CSVFileSequence: No data files found");
+        Log::DefaultLog.WriteError( "CSVFileSequence: No data files found");
         return;
     }
 
@@ -515,8 +514,7 @@ void datatools::CSVFileSequence::assertData(void) {
     gdc->SetFrameID(0);
     if (!(*gdc)(1)) {
         this->frameCnt = 0;
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "CSVFileSequence: Unable to clipping box of file %u (#1)", this->fileNumMin);
+        Log::DefaultLog.WriteError( "CSVFileSequence: Unable to clipping box of file %u (#1)", this->fileNumMin);
         return;
     }
 

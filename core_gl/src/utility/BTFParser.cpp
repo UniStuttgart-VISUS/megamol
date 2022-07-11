@@ -209,7 +209,7 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level, const XM
             }
         }
         if (filename != NULL) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 150,
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Including BTF \"%s\" ...", vislib::StringA(filename).PeekBuffer());
             if (!this->factory.LoadBTF(vislib::StringA(filename))) {
                 vislib::StringA msg;

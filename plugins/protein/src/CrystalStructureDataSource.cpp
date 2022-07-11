@@ -174,14 +174,14 @@ bool protein::CrystalStructureDataSource::getData(core::Call& call) {
 
     if ((this->dSource == CHKPT_SOURCE) || (this->dSource == VECFIELD_PROC)) {
         if (dc->FrameID() > 0) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: unable to load frame %u (no of frames is %u)",
+            Log::DefaultLog.WriteError( "%s: unable to load frame %u (no of frames is %u)",
                 this->ClassName(), dc->FrameID(), 1);
             return false;
         }
     }
 
     if (dc->FrameID() >= this->frameCnt) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: unable to load frame %u (no of frames is %u)",
+        Log::DefaultLog.WriteError( "%s: unable to load frame %u (no of frames is %u)",
             this->ClassName(), dc->FrameID(), dc->FrameCount());
         return false;
     }
@@ -319,7 +319,7 @@ bool protein::CrystalStructureDataSource::loadFiles() {
     fileAtoms.open(this->fileAtomsSlot.Param<core::param::FilePathParam>()->Value(), std::ios::in | std::ios::binary);
 
     if (!fileAtoms.is_open()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Could not open file %s", this->ClassName(),
+        Log::DefaultLog.WriteError( "%s: Could not open file %s", this->ClassName(),
             this->fileAtomsSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         return false;
     }
@@ -353,7 +353,7 @@ bool protein::CrystalStructureDataSource::loadFiles() {
     fileFrames.open(this->fileFramesSlot.Param<core::param::FilePathParam>()->Value(), std::ios::in | std::ios::binary);
 
     if (!fileFrames) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Could not open file %s", this->ClassName(),
+        Log::DefaultLog.WriteError( "%s: Could not open file %s", this->ClassName(),
             this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         return false;
     }
@@ -374,7 +374,7 @@ bool protein::CrystalStructureDataSource::loadFiles() {
     this->cells = new int[this->cellCnt * 15];
     fileCells.open(this->fileCellsSlot.Param<core::param::FilePathParam>()->Value(), std::ios::in | std::ios::binary);
     if (!fileCells) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Could not open file %s", this->ClassName(),
+        Log::DefaultLog.WriteError( "%s: Could not open file %s", this->ClassName(),
             this->fileCellsSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         return false;
     }
@@ -385,19 +385,18 @@ bool protein::CrystalStructureDataSource::loadFiles() {
 
     //printf("  cells done ...\n"); // DEBUG
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Number of atoms       %u", this->ClassName(), this->atomCnt);
+    Log::DefaultLog.WriteInfo( "%s: Number of atoms       %u", this->ClassName(), this->atomCnt);
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Number of frames      %u", this->ClassName(), this->frameCnt);
+    Log::DefaultLog.WriteInfo( "%s: Number of frames      %u", this->ClassName(), this->frameCnt);
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Number of cells       %u", this->ClassName(), this->cellCnt);
+    Log::DefaultLog.WriteInfo( "%s: Number of cells       %u", this->ClassName(), this->cellCnt);
 
 
     // Init frame cache and start loading thread
     this->setFrameCount(this->frameCnt);        // Number of frames in the dataset
     this->initFrameCache(this->frameCacheSize); // Number of frames in the cache
 
-    Log::DefaultLog.WriteMsg(
-        Log::LEVEL_INFO, "%s: Loading thread started (cache size %u)", this->ClassName(), this->frameCacheSize);
+    Log::DefaultLog.WriteInfo( "%s: Loading thread started (cache size %u)", this->ClassName(), this->frameCacheSize);
 
     delete[] bufferAtoms;
 
@@ -412,7 +411,7 @@ bool protein::CrystalStructureDataSource::loadFiles() {
 
     // TODO chkpt source
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: time for loading files %f", this->ClassName(),
+    Log::DefaultLog.WriteInfo( "%s: time for loading files %f", this->ClassName(),
         (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
     return true;
@@ -448,7 +447,7 @@ void protein::CrystalStructureDataSource::loadFrame(core::view::AnimDataModule::
     CrystalStructureDataSource::Frame* fr = dynamic_cast<CrystalStructureDataSource::Frame*>(frame);
     fr->SetFrameIdx(idx);
     if (!this->WriteFrameData(fr)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Could not write frame data.", this->ClassName());
+        Log::DefaultLog.WriteError( "%s: Could not write frame data.", this->ClassName());
     }
     //printf("Frame %u loaded into cache\n", idx); // DEBUG
 }
@@ -475,8 +474,7 @@ void protein::CrystalStructureDataSource::updateParams() {
         this->resetFrameCache();                    // Restart loading thread
         this->setFrameCount(this->frameCnt);        // Number of frames in the dataset
         this->initFrameCache(this->frameCacheSize); // Number of frames in the cache
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_INFO, "%s: Loading thread (re)started (cache size %u)", this->ClassName(), this->frameCacheSize);
+        Log::DefaultLog.WriteInfo( "%s: Loading thread (re)started (cache size %u)", this->ClassName(), this->frameCacheSize);
     }
     // Displacement offset
     if (this->displOffsParam.IsDirty()) {
@@ -485,8 +483,7 @@ void protein::CrystalStructureDataSource::updateParams() {
         this->resetFrameCache();                    // Restart loading thread
         this->setFrameCount(this->frameCnt);        // Number of frames in the dataset
         this->initFrameCache(this->frameCacheSize); // Number of frames in the cache
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_INFO, "%s: Loading thread (re)started (frame offset %i)", this->ClassName(), this->displOffs);
+        Log::DefaultLog.WriteInfo( "%s: Loading thread (re)started (frame offset %i)", this->ClassName(), this->displOffs);
     }
 
     // Dipole source
@@ -559,8 +556,7 @@ void protein::CrystalStructureDataSource::updateParams() {
         this->initFrameCache(this->frameCacheSize); // Number of frames in the cache
 
 
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_INFO, "%s: Loading thread (re)started (dipole source changed)", this->ClassName());
+        Log::DefaultLog.WriteInfo( "%s: Loading thread (re)started (dipole source changed)", this->ClassName());
     }
 
     //printf("  done.\n"); // DEBUG
@@ -582,7 +578,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
 
         file.open(this->fileFramesSlot.Param<core::param::FilePathParam>()->Value(), std::ios::in | std::ios::binary);
         if (!file.good()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "CrystalStructureDataSource::Frame: Could not open file %s",
+            Log::DefaultLog.WriteError( "CrystalStructureDataSource::Frame: Could not open file %s",
                 this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
             return false;
         }
@@ -598,7 +594,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
         file.seekg(this->atomCnt * 3 * sizeof(float) * displFrameIdx, std::ios::beg);
 
         if (!file.good()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            Log::DefaultLog.WriteError(
                 "CrystalStructureDataSource::Frame: Could not parse file %s (invalid filepointer %i)",
                 this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
                 static_cast<int>(file.tellg()));
@@ -639,7 +635,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
 
         file.open(this->fileFramesSlot.Param<core::param::FilePathParam>()->Value(), std::ios::in | std::ios::binary);
         if (!file.good()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "CrystalStructureDataSource::Frame: Could not open file %s",
+            Log::DefaultLog.WriteError( "CrystalStructureDataSource::Frame: Could not open file %s",
                 this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
             return false;
         }
@@ -655,7 +651,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
         file.seekg(this->atomCnt * 3 * sizeof(float) * displFrameIdx, std::ios::beg);
 
         if (!file.good()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            Log::DefaultLog.WriteError(
                 "CrystalStructureDataSource::Frame: Could not parse file %s (invalid filepointer %i)",
                 this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str(),
                 static_cast<int>(file.tellg()));
@@ -701,7 +697,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
         // Read atom positions
         file.open(this->fileFramesSlot.Param<core::param::FilePathParam>()->Value(), std::ios::in | std::ios::binary);
         if (!file.good()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "CrystalStructureDataSource::Frame: Could not open file %s",
+            Log::DefaultLog.WriteError( "CrystalStructureDataSource::Frame: Could not open file %s",
                 this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
             return false;
         }
@@ -866,7 +862,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
         // Read atom positions
         file.open(this->fileFramesSlot.Param<core::param::FilePathParam>()->Value(), std::ios::in | std::ios::binary);
         if (!file.good()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "CrystalStructureDataSource::Frame: Could not open file %s",
+            Log::DefaultLog.WriteError( "CrystalStructureDataSource::Frame: Could not open file %s",
                 this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
             return false;
         }
@@ -932,7 +928,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
         // Read atom positions
         file.open(this->fileFramesSlot.Param<core::param::FilePathParam>()->Value(), std::ios::in | std::ios::binary);
         if (!file.good()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "CrystalStructureDataSource::Frame: Could not open file %s",
+            Log::DefaultLog.WriteError( "CrystalStructureDataSource::Frame: Could not open file %s",
                 this->fileFramesSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
             return false;
         }
@@ -1006,7 +1002,7 @@ bool protein::CrystalStructureDataSource::WriteFrameData(CrystalStructureDataSou
     //          this->dipole[at*3+1], this->dipole[at*3+2]);
     //} // DEBUG
 
-    /*Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    /*Log::DefaultLog.WriteInfo(
             "%s: time for loading frame %f",
             this->ClassName(),
             (double(clock()-t)/double(CLOCKS_PER_SEC)));*/ // DEBUG

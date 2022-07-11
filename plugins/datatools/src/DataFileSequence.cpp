@@ -440,7 +440,7 @@ bool datatools::DataFileSequence::onFileNameTemplateChanged(core::param::ParamSl
             break;
         }
         if (errMsg != NULL) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Parser Error at character %u: %s", i, errMsg);
+            Log::DefaultLog.WriteError( "Parser Error at character %u: %s", i, errMsg);
             state = 0;
         }
     }
@@ -453,8 +453,7 @@ bool datatools::DataFileSequence::onFileNameTemplateChanged(core::param::ParamSl
         this->fileNumberStepSlot.Param<core::param::IntParam>()->SetValue(stepVal);
 
     this->fileNameTemplate = fnt;
-    Log::DefaultLog.WriteMsg(
-        Log::LEVEL_INFO, "Parsed file name template to \"%s\"", vislib::StringA(this->fileNameTemplate).PeekBuffer());
+    Log::DefaultLog.WriteInfo( "Parsed file name template to \"%s\"", vislib::StringA(this->fileNameTemplate).PeekBuffer());
     this->needDataUpdate = true;
     return true;
 }
@@ -468,7 +467,7 @@ bool datatools::DataFileSequence::onFileNameSlotNameChanged(core::param::ParamSl
     this->ModuleGraphLock().LockExclusive();
     core::param::StringParam* P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
     if ((P != NULL) && (this->findFileNameSlot() == NULL)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to connect to file name parameter slot \"%s\". Parameter resetted.", P->Value().c_str());
         P->SetValue("", false);
     }
@@ -518,13 +517,13 @@ void datatools::DataFileSequence::assertData(void) {
 
     core::param::ParamSlot* fnSlot = this->findFileNameSlot();
     if (fnSlot == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to connect to file name slot");
+        Log::DefaultLog.WriteError( "Unable to connect to file name slot");
         return;
     }
 
     core::AbstractGetData3DCall* gdc = this->inDataSlot.CallAs<core::AbstractGetData3DCall>();
     if (gdc == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to get input data call");
+        Log::DefaultLog.WriteError( "Unable to get input data call");
         return;
     }
 
@@ -538,7 +537,7 @@ void datatools::DataFileSequence::assertData(void) {
         }
     }
     if (this->frameCnt == 0) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "DataFileSequence: No data files found");
+        Log::DefaultLog.WriteError( "DataFileSequence: No data files found");
         return;
     }
 
@@ -548,8 +547,7 @@ void datatools::DataFileSequence::assertData(void) {
     gdc->SetFrameID(0);
     if (!(*gdc)(1)) {
         this->frameCnt = 0;
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "DataFileSequence: Unable to clipping box of file %u (#1)", this->fileNumMin);
+        Log::DefaultLog.WriteError( "DataFileSequence: Unable to clipping box of file %u (#1)", this->fileNumMin);
         return;
     }
     this->clipbox = gdc->AccessBoundingBoxes().ClipBox();
@@ -561,7 +559,7 @@ void datatools::DataFileSequence::assertData(void) {
         gdc->SetFrameID(0);
         if (!(*gdc)(1)) {
             this->frameCnt = 0;
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "DataFileSequence: Unable to clipping box of file %u (#2)", idx);
+            Log::DefaultLog.WriteError( "DataFileSequence: Unable to clipping box of file %u (#2)", idx);
             return;
         }
         this->clipbox.Union(gdc->AccessBoundingBoxes().ClipBox());
@@ -572,8 +570,7 @@ void datatools::DataFileSequence::assertData(void) {
             gdc->SetFrameID(0);
             if (!(*gdc)(1)) {
                 this->frameCnt = 0;
-                Log::DefaultLog.WriteMsg(
-                    Log::LEVEL_ERROR, "DataFileSequence: Unable to clipping box of file %u (#3)", idx);
+                Log::DefaultLog.WriteError( "DataFileSequence: Unable to clipping box of file %u (#3)", idx);
                 return;
             }
             this->clipbox.Union(gdc->AccessBoundingBoxes().ClipBox());

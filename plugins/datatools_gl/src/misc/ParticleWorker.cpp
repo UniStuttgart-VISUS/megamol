@@ -75,7 +75,7 @@ bool ParticleWorker::create(void) {
     ShaderSource compSrc;
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     if (!ssf->MakeShaderSource("::particleWorkerCompute::work_on_clusters", compSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
             "%s: Unable to load compute shader source for work_on_clusters shader", this->ClassName());
         return false;
     }
@@ -84,8 +84,7 @@ bool ParticleWorker::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create work_on_clusters shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError( "%s: Unable to create work_on_clusters shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 

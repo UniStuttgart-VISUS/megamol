@@ -125,13 +125,12 @@ bool ModernTrisoupRenderer::create(void) {
             std::filesystem::path("trisoup_gl/trisoup.vert.glsl"),
             std::filesystem::path("trisoup_gl/trisoup.frag.glsl"));
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[ModernTrisoupRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError( "[ModernTrisoupRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[ModernTrisoupRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[ModernTrisoupRenderer] Unable to compile shader: Unknown exception.");
     }
 

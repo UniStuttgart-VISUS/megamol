@@ -78,24 +78,24 @@ protected:
         using megamol::core::utility::log::Log;
         vislib::TString filename(this->filenameSlot.template Param<param::FilePathParam>()->Value());
         if (filename.IsEmpty()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
+            Log::DefaultLog.WriteError( "No file name specified. Abort.");
             return false;
         }
 
         T* d = this->inData.template CallAs<T>();
         if (d == NULL) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No data source connected. Abort.");
+            Log::DefaultLog.WriteError( "No data source connected. Abort.");
             return false;
         }
 
         if (vislib::sys::File::Exists(filename)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "File %s already exists and will be overwritten.",
+            Log::DefaultLog.WriteWarn( "File %s already exists and will be overwritten.",
                 vislib::StringA(filename).PeekBuffer());
         }
 
         // fetch extents
         if (!(*d)(1)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Get extend failed.");
+            Log::DefaultLog.WriteError( "Get extend failed.");
             return false;
         }
 
@@ -103,7 +103,7 @@ protected:
         if (!file.Open(filename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
                 vislib::sys::File::CREATE_OVERWRITE)) {
             d->Unlock();
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create output file \"%s\". Abort.",
+            Log::DefaultLog.WriteError( "Unable to create output file \"%s\". Abort.",
                 vislib::StringA(filename).PeekBuffer());
             return false;
         }
@@ -116,7 +116,7 @@ protected:
             do {
                 d->SetFrameID(idx, true);
                 if (!(*d)(0)) {
-                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Get data failed. Abort.");
+                    Log::DefaultLog.WriteError( "Get data failed. Abort.");
                     missCnt = UINT_MAX;
                     break;
                 }
@@ -124,8 +124,7 @@ protected:
                     d->Unlock();
                     missCnt++;
                     if (missCnt > 10) {
-                        Log::DefaultLog.WriteMsg(
-                            Log::LEVEL_ERROR + 50, "Unable to fetch requested frame %u. Abort.", idx);
+                        Log::DefaultLog.WriteError( "Unable to fetch requested frame %u. Abort.", idx);
                         break;
                     }
                     vislib::sys::Thread::Sleep(100);

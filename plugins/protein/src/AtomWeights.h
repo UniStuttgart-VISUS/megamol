@@ -38,8 +38,7 @@ static float getElementWeightByProtonCount(unsigned int protonCount) {
 
     // TODO extend to whole periodic table
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-        megamol::core::utility::log::Log::LEVEL_WARN, "Unknown element detected (%u)", protonCount);
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn( "Unknown element detected (%u)", protonCount);
     return 0.0f;
 }
 
@@ -70,8 +69,7 @@ static float getElementWeightBySymbolString(const vislib::StringA& elementString
     // TODO extend to whole periodic table
     // TODO use switch with constexpr (only possible with VS 2015)
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-        megamol::core::utility::log::Log::LEVEL_WARN, "Unknown element detected (%c)", es.PeekBuffer());
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn( "Unknown element detected (%c)", es.PeekBuffer());
     return 0.0f;
 }
 

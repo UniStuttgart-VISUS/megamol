@@ -260,13 +260,12 @@ bool UncertaintyCartoonRenderer::loadTubeShader(void) {
             std::filesystem::path("protein_gl/uncertaintycartoon/uncertain.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[UncertaintyCartoonRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError( "[UncertaintyCartoonRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[UncertaintyCartoonRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[UncertaintyCartoonRenderer] Unable to compile shader: Unknown exception.");
     }
 

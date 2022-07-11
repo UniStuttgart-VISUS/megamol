@@ -83,7 +83,7 @@ vislib::Array<float> protein_cuda::CritPoints::GetCritPoints(
         }
     }
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Time for computing critical points %f",
+    Log::DefaultLog.WriteInfo( "Time for computing critical points %f",
         (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
     return critPoints;

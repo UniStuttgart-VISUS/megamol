@@ -353,7 +353,7 @@ bool PotentialCalculator::computeChargeDistribution(const MolecularDataCall* mol
         20.0f, false); // Cut off for Gaussian
 
     if (rc != 0) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Quicksurf class returned val != 0\n", this->ClassName());
+        Log::DefaultLog.WriteError( "%s: Quicksurf class returned val != 0\n", this->ClassName());
         return false;
     }
 
@@ -390,7 +390,7 @@ bool PotentialCalculator::computePotentialMap(const MolecularDataCall* mol) {
         if (!this->computePotentialMapDCS(mol, 100.0f)) {
             return false;
         }
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+        Log::DefaultLog.WriteInfo(
             "Time for computing potential map (Direct Coulomb Summation, CPU): %fs",
             (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
         break;

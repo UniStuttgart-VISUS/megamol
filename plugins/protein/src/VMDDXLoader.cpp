@@ -99,7 +99,7 @@ bool VMDDXLoader::getData(core::Call& call) {
     if (dc == NULL)
         return false;
 
-    //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Frame requested: %u",
+    //    Log::DefaultLog.WriteInfo( "%s: Frame requested: %u",
     //            this->ClassName(),
     //            dc->FrameID()); // DEBUG
 
@@ -186,13 +186,12 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
 
     // Test whether the filename is invalid or empty
     if (filename.IsEmpty()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: No file to load (filename empty)", this->ClassName());
+        Log::DefaultLog.WriteInfo( "%s: No file to load (filename empty)", this->ClassName());
         return true;
     }
 
     if (!file.LoadFile(filename)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to open file '%s'", this->ClassName(), filename.PeekBuffer());
+        Log::DefaultLog.WriteError( "%s: Unable to open file '%s'", this->ClassName(), filename.PeekBuffer());
         return false;
     }
 
@@ -200,7 +199,7 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
 
     time_t t = clock(); // DEBUG
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Parsing file '%s' (%u Bytes) ...", this->ClassName(),
+    Log::DefaultLog.WriteInfo( "%s: Parsing file '%s' (%u Bytes) ...", this->ClassName(),
         filename.PeekBuffer(),
         fileSize); // DEBUG
 
@@ -295,7 +294,7 @@ bool VMDDXLoader::loadFile(const vislib::StringA& filename) {
     this->imgdata.SetPointData(
         (const char*)this->data.Peek(), min, max, protein_calls::VTKImageData::DataArray::VTI_FLOAT, "vmddata", 1, 0);
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: ... done (%f s)", this->ClassName(),
+    Log::DefaultLog.WriteInfo( "%s: ... done (%f s)", this->ClassName(),
         (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
     return true;
@@ -349,7 +348,7 @@ void VMDDXLoader::scanFolder() {
     // Determine number of frames if necessary
     if (filename.Find('.') != filename.FindLast('.')) { // File name contains at least two '.', file series is assumed
         this->filenamesDigits = filename.Length() - 2 - this->filenamesPrefix.Length() - this->filenamesSuffix.Length();
-        //        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Generated filename pattern %s %u DIGITS %s", // TODO
+        //        Log::DefaultLog.WriteInfo( "%s: Generated filename pattern %s %u DIGITS %s", // TODO
         //                this->ClassName(), this->filenamesPrefix.PeekBuffer(), this->filenamesDigits,
         //                this->filenamesSuffix.PeekBuffer());
 
@@ -382,7 +381,7 @@ void VMDDXLoader::scanFolder() {
             }
         }
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: %u frame files found", this->ClassName(), this->nFrames);
+        Log::DefaultLog.WriteInfo( "%s: %u frame files found", this->ClassName(), this->nFrames);
     } else { // Single file
         this->nFrames = 1;
     }

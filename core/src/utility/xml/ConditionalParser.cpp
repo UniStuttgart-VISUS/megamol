@@ -407,7 +407,7 @@ bool ConditionalParser::evaluateCondition(const XML_Char* expression) const {
         }
 
         if (error) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Syntax error while evaluating expression \"%s\" on position \"%d\"."
                 "Setting result to 'false'.\n",
                 exp.PeekBuffer(), pos);
@@ -443,7 +443,7 @@ bool ConditionalParser::evaluateCondition(
     using megamol::core::utility::log::Log;
 
     if (tokenCount == 0) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error in expression \"%s\": internal error (empty token list)\n",
+        Log::DefaultLog.WriteError( "Error in expression \"%s\": internal error (empty token list)\n",
             expression.PeekBuffer());
         return false;
     }
@@ -465,7 +465,7 @@ bool ConditionalParser::evaluateCondition(
             if (v != NULL) {
                 return *v;
             } else {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error in expression \"%s\": unknown identifier \"%s\"\n",
+                Log::DefaultLog.WriteError( "Error in expression \"%s\": unknown identifier \"%s\"\n",
                     expression.PeekBuffer(), tokenz[0].PeekBuffer());
                 return false;
             }
@@ -517,8 +517,7 @@ bool ConditionalParser::evaluateCondition(
         }
 
         if (obc != cbc) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "Error in expression \"%s\": brackets mismatch\n", expression.PeekBuffer());
+            Log::DefaultLog.WriteError( "Error in expression \"%s\": brackets mismatch\n", expression.PeekBuffer());
             return false;
         }
 #ifdef DO_SOME_BULB_TEXT
@@ -575,7 +574,7 @@ bool ConditionalParser::evaluateCondition(
             seq.Append(" ");
             seq.Append(tokenz[i]);
         }
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
             "Error in expression \"%s\": internal error (basic sequence of wrong length: %s)\n",
             expression.PeekBuffer(), seq.PeekBuffer());
         return false;
@@ -632,7 +631,7 @@ bool ConditionalParser::evaluateCondition(
     } else if (tokenz[1].Equals("||")) {
         return this->evaluateCondition(expression, tokenz, 1) || this->evaluateCondition(expression, tokenz + 2, 1);
     } else {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Error in expression \"%s\": invalid binary operator %s\n",
+        Log::DefaultLog.WriteError( "Error in expression \"%s\": invalid binary operator %s\n",
             expression.PeekBuffer(), tokenz[1].PeekBuffer());
         return false;
     }

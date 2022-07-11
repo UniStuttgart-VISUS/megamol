@@ -222,13 +222,13 @@ unsigned int CallTriMeshDataGL::Material::loadTexture(vislib::TString& filename)
             throw vislib::Exception("No suitable codec found", __FILE__, __LINE__);
         }
     } catch (vislib::Exception ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to load texture \"%s\": %s (%s, %d)\n", vislib::StringA(filename).PeekBuffer(), ex.GetMsgA(),
             ex.GetFile(), ex.GetLine());
         filename.Clear();
         return 0;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to load texture \"%s\": unexpected exception\n", vislib::StringA(filename).PeekBuffer());
         filename.Clear();
         return 0;

@@ -77,18 +77,16 @@ bool megamol::compositing::TextureCombine::create() {
             return false;
 
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to compile shader (@%s): %s\n",
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError( "Unable to compile shader: Unknown exception\n");
         return false;
     }
 

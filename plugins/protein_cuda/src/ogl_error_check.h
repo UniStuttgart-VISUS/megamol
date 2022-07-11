@@ -30,8 +30,7 @@ inline bool checkForGLError(const char* file, const int line) {
     GLenum err;
     err = glGetError();
     if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "%s(%d) glError: %s", file, line, gluErrorString(err));
+        megamol::core::utility::log::Log::DefaultLog.WriteError( "%s(%d) glError: %s", file, line, gluErrorString(err));
         return false;
     }
 #endif
@@ -50,8 +49,7 @@ inline bool checkForGLError(const char* file, const int line) {
 inline bool glSafeCall(GLenum err, const char* file, const int line) {
 #ifdef OGL_ERROR_CHECK
     if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "%s(%d) glError: %s", file, line, gluErrorString(err));
+        megamol::core::utility::log::Log::DefaultLog.WriteError( "%s(%d) glError: %s", file, line, gluErrorString(err));
         return true;
     }
 #endif

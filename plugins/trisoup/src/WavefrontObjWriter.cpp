@@ -65,18 +65,18 @@ bool trisoup::WavefrontObjWriter::run(void) {
     using megamol::core::utility::log::Log;
     auto filename = this->filenameSlot.Param<param::FilePathParam>()->Value();
     if (filename.empty()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
+        Log::DefaultLog.WriteError( "No file name specified. Abort.");
         return false;
     }
 
     megamol::geocalls::LinesDataCall* ldc = this->dataSlot.CallAs<megamol::geocalls::LinesDataCall>();
     if (ldc == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No data source connected. Abort.");
+        Log::DefaultLog.WriteError( "No data source connected. Abort.");
         return false;
     }
 
     /*if (vislib::sys::File::Exists(filename.native().c_str())) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
+        Log::DefaultLog.WriteWarn(
             "File %s already exists and will be overwritten.",
             filename.generic_u8string().c_str());
     }*/
@@ -105,7 +105,7 @@ bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* l
     ldc->SetFrameID(myFrame, true);*/
 
     if (!(*ldc)(1)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to query data extents.");
+        Log::DefaultLog.WriteWarn( "Unable to query data extents.");
         bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     } else {
@@ -122,20 +122,20 @@ bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* l
                 cbox = ldc->AccessBoundingBoxes().ObjectSpaceBBox();
             }
         } else {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Object space bounding boxes not valid. Using defaults");
+            Log::DefaultLog.WriteWarn( "Object space bounding boxes not valid. Using defaults");
             bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
             cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         }
         frameCnt = ldc->FrameCount();
         if (frameCnt == 0) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "WavefronObjWriter: Data source counts zero frames. Abort.");
+            Log::DefaultLog.WriteError( "WavefronObjWriter: Data source counts zero frames. Abort.");
             ldc->Unlock();
             return false;
         }
     }
 
     /*if (myFrame >= frameCnt) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
             "The requested frame does not exist. Abort.");
         ldc->Unlock();
         return false;
@@ -149,26 +149,25 @@ bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* l
                                       vislib::TString(std::to_string(myFrame).c_str()) + vislib::TString(".obj");
         if (!file.Open(outFilename, vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
                 vislib::sys::File::CREATE_OVERWRITE)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create output file \"%s\". Abort.",
+            Log::DefaultLog.WriteError( "Unable to create output file \"%s\". Abort.",
                 vislib::StringA(outFilename).PeekBuffer());
             ldc->Unlock();
             return false;
         }
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Started writing data for frame %u\n", myFrame);
+        Log::DefaultLog.WriteInfo( "Started writing data for frame %u\n", myFrame);
         int missCnt = -9;
         do {
             ldc->Unlock();
             ldc->SetFrameID(myFrame, true);
             if (!(*ldc)(0)) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot get data frame %u. Abort.\n", myFrame);
+                Log::DefaultLog.WriteError( "Cannot get data frame %u. Abort.\n", myFrame);
                 file.Close();
                 return false;
             }
             if (ldc->FrameID() != myFrame) {
                 if ((missCnt % 10) == 0) {
-                    Log::DefaultLog.WriteMsg(
-                        Log::LEVEL_WARN, "Frame %u returned on request for frame %u\n", ldc->FrameID(), myFrame);
+                    Log::DefaultLog.WriteWarn( "Frame %u returned on request for frame %u\n", ldc->FrameID(), myFrame);
                 }
                 ++missCnt;
                 std::this_thread::sleep_for(std::chrono::milliseconds(1 + std::max<int>(missCnt, 0) * 100));
@@ -177,7 +176,7 @@ bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* l
 
 #define ASSERT_WRITEOUT(A, S)                                                   \
     if (file.Write((A), (S)) != (S)) {                                          \
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Write error %d", __LINE__); \
+        Log::DefaultLog.WriteError( "Write error %d", __LINE__); \
         file.Close();                                                           \
         return false;                                                           \
     }
@@ -197,15 +196,14 @@ bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* l
         for (unsigned int i = 0; i < ldc->Count(); i++) {
             auto line = theLines[i];
             if (line.Count() < 2) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_WARN,
+                Log::DefaultLog.WriteWarn(
                     "Skipping base line with index %u because of having too few vertices (%u)\n", i, line.Count());
                 continue;
             }
 
             if (line.VertexArrayDataType() != megamol::geocalls::LinesDataCall::Lines::DT_FLOAT &&
                 line.VertexArrayDataType() != megamol::geocalls::LinesDataCall::Lines::DT_DOUBLE) {
-                Log::DefaultLog.WriteMsg(
-                    Log::LEVEL_WARN, "Skipping base line with index %u due to missing vertex data\n", i);
+                Log::DefaultLog.WriteWarn( "Skipping base line with index %u due to missing vertex data\n", i);
                 continue;
             }
 
@@ -293,7 +291,7 @@ bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* l
         file.Close();
     }
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "WavefrontObjWriter: Completed writing data\n");
+    Log::DefaultLog.WriteInfo( "WavefrontObjWriter: Completed writing data\n");
 
     return true;
 }

@@ -1133,7 +1133,7 @@ bool SDFFont::loadFontShader(megamol::core::CoreInstance* core_instance_ptr) {
             "vertcol", shader_options, "core/sdffont/sdffont.vert.glsl", "core/sdffont/sdffont.frag.glsl");
 
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("SimplestSphereRenderer: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError( ("SimplestSphereRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 

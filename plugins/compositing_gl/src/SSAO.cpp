@@ -378,8 +378,7 @@ bool megamol::compositing::SSAO::create() {
             core::utility::make_glowl_shader("simple_blur", shader_options, "comp/simple_blur.comp.glsl");
 
     } catch (std::exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, ("SSAO: " + std::string(e.what())).c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError( ("SSAO: " + std::string(e.what())).c_str());
     }
 
     depth_buffer_viewspace_linear_layout_ = glowl::TextureLayout(GL_R16F, 1, 1, 1, GL_RED, GL_HALF_FLOAT, 1);

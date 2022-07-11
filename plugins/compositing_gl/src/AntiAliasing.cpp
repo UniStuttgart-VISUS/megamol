@@ -185,8 +185,7 @@ bool megamol::compositing_gl::AntiAliasing::create() {
         smaa_neighborhood_blending_prgm_ = core::utility::make_glowl_shader(
             "smaa_neighborhood_blending", shader_options, "comp/AntiAliasing/smaa_neighborhood_blending.comp.glsl");
     } catch (std::exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, ("AntiAliasing: " + std::string(e.what())).c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError( ("AntiAliasing: " + std::string(e.what())).c_str());
     }
 
     // init all textures

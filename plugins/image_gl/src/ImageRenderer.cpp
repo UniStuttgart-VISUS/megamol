@@ -136,7 +136,7 @@ bool image_gl::ImageRenderer::create(void) {
         theShader = core::utility::make_glowl_shader(
             "imageviewer", shader_options, "image_gl/imageviewer.vert.glsl", "image_gl/imageviewer.frag.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("ImageRenderer: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError( ("ImageRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 

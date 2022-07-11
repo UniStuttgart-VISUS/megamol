@@ -97,7 +97,7 @@ void view::AnimDataModule::initFrameCache(unsigned int cacheSize) {
         // XXX Reduced for faster module creation, because called in ctor.
         vislib::sys::Thread::Sleep(10);
     } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to create frame data cache ('constructFrame' returned 'NULL').");
     }
 }
@@ -148,8 +148,7 @@ view::AnimDataModule::Frame* view::AnimDataModule::requestLockedFrame(unsigned i
         //printf("======== %u frames locked\n", clcf);
 
         if ((clcf == this->cacheSize) && (this->cacheSize > 2)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Possible data frame cache deadlock detected!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError( "Possible data frame cache deadlock detected!");
             deadlockwarning = false;
         }
     }
@@ -277,7 +276,7 @@ DWORD view::AnimDataModule::loaderFunction(void* userData) {
         if (j >= This->cacheSize) {
             if (j >= This->frameCnt) {
                 ASSERT(This->frameCnt == This->cacheSize);
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "All frames of the dataset loaded into cache. Terminating loading Thread.");
                 break;
             }

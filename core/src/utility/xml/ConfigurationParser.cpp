@@ -133,7 +133,7 @@ bool ConfigurationParser::CheckBaseTag(const XmlReader& reader) {
         return false;
     }
     if (this->xmlVersion < vislib::VersionNumber(1, 2)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "config file version %s marked deprecated. Upgrade to config file version 1.2",
             this->xmlVersion.ToStringA().PeekBuffer());
     }
@@ -261,7 +261,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
                     this->FatalError("Internal Error while parsing directory tag.");
                     break;
                 }
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50,
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "Directory \"%s\" set to \"%s\"", pathA, W2A(pathW));
             }
             return true;
@@ -295,7 +295,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
             }
             if (path != NULL) {
                 this->config.AddShaderDirectory(path);
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50,
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "Path \"%s\" added as shader search path.", vislib::StringA(path).PeekBuffer());
 
             } else {
@@ -314,7 +314,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
             }
             if (path != NULL) {
                 this->config.AddResourceDirectory(path);
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50,
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "Path \"%s\" added as resource search path.", vislib::StringA(path).PeekBuffer());
 
             } else {
@@ -584,8 +584,7 @@ void ConfigurationParser::Completed(void) {
 
         // make shader paths absolute
         if (this->config.shaderDirs.Count() == 0) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO, "No shader directories configured");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo( "No shader directories configured");
 
         } else
             for (SIZE_T i = 0; i < this->config.shaderDirs.Count(); i++) {
@@ -593,8 +592,7 @@ void ConfigurationParser::Completed(void) {
                     this->config.shaderDirs[i] =
                         vislib::sys::Path::Resolve(this->config.shaderDirs[i], this->config.appDir);
                     if (!vislib::sys::File::IsDirectory(this->config.shaderDirs[i])) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                            megamol::core::utility::log::Log::LEVEL_WARN,
+                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                             "Configured shader directory \"%s\" does not exist",
                             vislib::StringA(this->config.shaderDirs[i]).PeekBuffer());
                     }
@@ -603,8 +601,7 @@ void ConfigurationParser::Completed(void) {
 
         // make resource paths absolute
         if (this->config.resourceDirs.Count() == 0) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO, "No resource directories configured");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo( "No resource directories configured");
 
         } else
             for (SIZE_T i = 0; i < this->config.resourceDirs.Count(); i++) {
@@ -612,8 +609,7 @@ void ConfigurationParser::Completed(void) {
                     this->config.resourceDirs[i] =
                         vislib::sys::Path::Resolve(this->config.resourceDirs[i], this->config.appDir);
                     if (!vislib::sys::File::IsDirectory(this->config.resourceDirs[i])) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                            megamol::core::utility::log::Log::LEVEL_WARN,
+                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                             "Configured resource directory \"%s\" does not exist",
                             vislib::StringA(this->config.resourceDirs[i]).PeekBuffer());
                     }

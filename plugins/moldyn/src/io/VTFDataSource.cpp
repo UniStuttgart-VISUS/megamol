@@ -477,7 +477,7 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
     if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value().native().c_str(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         vislib::sys::SystemMessage err(::GetLastError());
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to open VTF-File \"%s\": %s",
             this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str(),
             static_cast<const char*>(err));
@@ -491,7 +491,7 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
 
     if (!this->parseHeaderAndFrameIndices(
             this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to read VTF-Header from file \"%s\". Wrong format?",
             this->filename.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
 
@@ -520,12 +520,12 @@ bool io::VTFDataSource::filenameChanged(param::ParamSlot& slot) {
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn( msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo( msg);
     }
 
     this->initFrameCache(cacheSize);
