@@ -1,8 +1,7 @@
-/*
- * Renderer3DModule.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -10,9 +9,7 @@
 #include "mmstd/renderer/CallRender3D.h"
 #include "mmstd/renderer/RendererModule.h"
 
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 /**
  * New and improved base class of rendering graph 3D renderer modules.
@@ -20,10 +17,10 @@ namespace view {
 class Renderer3DModule : public view::RendererModule<CallRender3D, Module> {
 public:
     /** Ctor. */
-    Renderer3DModule(void);
+    Renderer3DModule();
 
     /** Dtor. */
-    virtual ~Renderer3DModule(void);
+    virtual ~Renderer3DModule();
 
 protected:
     /**
@@ -78,6 +75,4 @@ private:
     // TODO events
 };
 
-} // namespace view
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::view

@@ -1,9 +1,9 @@
-/*
- * AbstractStreamProvider.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #pragma once
 
 #include "mmcore/CallerSlot.h"
@@ -11,8 +11,7 @@
 
 #include <iostream>
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Provides a stream.
@@ -64,5 +63,4 @@ private:
     CallerSlot inputSlot;
 };
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core

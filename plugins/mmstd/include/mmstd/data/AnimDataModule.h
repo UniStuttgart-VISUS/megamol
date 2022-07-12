@@ -1,15 +1,10 @@
-/*
- * AnimDataModule.h
- *
- * Copyright (C) 2008 - 2009 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOL_ANIMDATAMODULE_H_INCLUDED
-#define MEGAMOL_ANIMDATAMODULE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <atomic>
 
@@ -18,9 +13,7 @@
 #include "vislib/sys/Thread.h"
 
 
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 /**
  * Abstract base class for data sources for time-dependent data sets.
@@ -28,14 +21,14 @@ namespace view {
 class AnimDataModule : public Module {
 public:
     /** Dtor. */
-    virtual ~AnimDataModule(void);
+    virtual ~AnimDataModule();
 
     /**
      * Answer the number of time frames of the dataset.
      *
      * @return The number of time frames of the dataset.
      */
-    inline unsigned int FrameCount(void) const {
+    inline unsigned int FrameCount() const {
         return this->frameCnt;
     }
 
@@ -70,7 +63,7 @@ protected:
          *
          * @return The number of the loaded frame.
          */
-        inline unsigned int FrameNumber(void) const {
+        inline unsigned int FrameNumber() const {
             return this->frame;
         }
 
@@ -79,7 +72,7 @@ protected:
          *
          * @return 'true' if this frame is locked, 'false' otherwise.
          */
-        inline bool IsLocked(void) const {
+        inline bool IsLocked() const {
             return (this->state == STATE_INUSE);
         }
 
@@ -89,7 +82,7 @@ protected:
          * After you unlocked the frame, it's content is no longer
          * guaranteed to be stable.
          */
-        inline void Unlock(void) {
+        inline void Unlock() {
             if (this->state == STATE_INUSE) {
                 owner.unlock(this);
             }
@@ -110,14 +103,14 @@ protected:
     /**
      * hidden ctor. Derived classes should use a ctor with similar syntax!
      */
-    AnimDataModule(void);
+    AnimDataModule();
 
     /**
      * Answer the size of the cache
      *
      * @return The size of the cache
      */
-    inline unsigned int CacheSize(void) const {
+    inline unsigned int CacheSize() const {
         return this->cacheSize;
     }
 
@@ -127,7 +120,7 @@ protected:
      *
      * @return The newly created frame object.
      */
-    virtual Frame* constructFrame(void) const = 0;
+    virtual Frame* constructFrame() const = 0;
 
     /**
      * Initialises the frame cache to the given size. 'setFrameCount'
@@ -171,7 +164,7 @@ protected:
      * 'ctor' returned. You must call 'setFrameCount' and 'initFrameCache'
      * again before you can use the module.
      */
-    void resetFrameCache(void);
+    void resetFrameCache();
 
     /**
      * Sets the number of time frames of the dataset. Must not be called
@@ -232,9 +225,4 @@ private:
 #endif /* _WIN32 */
 };
 
-
-} // namespace view
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_ANIMDATAMODULE_H_INCLUDED */
+} // namespace megamol::core::view

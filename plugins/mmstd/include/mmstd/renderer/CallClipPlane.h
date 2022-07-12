@@ -1,26 +1,17 @@
-/*
- * CallClipPlane.h
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_CALLCLIPPLANE_H_INCLUDED
-#define MEGAMOLCORE_CALLCLIPPLANE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Vector.h"
 
-
-namespace megamol {
-namespace core {
-namespace view {
-
+namespace megamol::core::view {
 
 /**
  * Call transporting a clipping plane. Only data in the positive
@@ -33,7 +24,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallClipPlane";
     }
 
@@ -42,7 +33,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for a clipping plane";
     }
 
@@ -51,7 +42,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -72,10 +63,10 @@ public:
     }
 
     /** Ctor. */
-    CallClipPlane(void);
+    CallClipPlane();
 
     /** Dtor. */
-    virtual ~CallClipPlane(void);
+    virtual ~CallClipPlane();
 
     /**
      * Calculates the coordinate system of the clipping plane
@@ -103,7 +94,7 @@ public:
      *
      * @return Pointer to 4 bytes holding the colour of the clipping plane
      */
-    inline const unsigned char* GetColour(void) const {
+    inline const unsigned char* GetColour() const {
         return this->col;
     }
 
@@ -112,7 +103,7 @@ public:
      *
      * @return The clipping plane
      */
-    inline const vislib::math::Plane<float>& GetPlane(void) const {
+    inline const vislib::math::Plane<float>& GetPlane() const {
         return this->plane;
     }
 
@@ -156,9 +147,4 @@ private:
 /** Description class typedef */
 typedef factories::CallAutoDescription<CallClipPlane> CallClipPlaneDescription;
 
-
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_CALLCLIPPLANE_H_INCLUDED */
+} // namespace megamol::core::view

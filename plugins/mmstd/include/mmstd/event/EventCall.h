@@ -1,20 +1,17 @@
-/*
- * EventCall.h
- *
- * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOL_EVENT_CALL_H_INCLUDED
-#define MEGAMOL_EVENT_CALL_H_INCLUDED
+#pragma once
 
 #include <memory>
 
 #include "DoubleBufferedEventCollection.h"
 #include "mmstd/generic/CallGeneric.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 class CallEvent
         : public core::GenericVersionedCall<std::shared_ptr<DoubleBufferedEventCollection>, core::EmptyMetaData> {
@@ -22,10 +19,10 @@ public:
     CallEvent() = default;
     ~CallEvent() = default;
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallEvent";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call that transports a DoubleBufferedEventCollection for read-write access";
     }
 };
@@ -33,7 +30,4 @@ public:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<CallEvent> CallEventDescription;
 
-} // namespace core
-} // namespace megamol
-
-#endif // !MEGAMOL_EVENT_CALL_H_INCLUDED
+} // namespace megamol::core

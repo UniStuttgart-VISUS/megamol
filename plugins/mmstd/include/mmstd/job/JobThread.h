@@ -1,25 +1,15 @@
-/*
- * JobThread.h
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_JOBTHREAD_H_INCLUDED
-#define MEGAMOLCORE_JOBTHREAD_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-
 
 #include "mmcore/Module.h"
 #include "mmcore/job/AbstractThreadedJob.h"
 
-
-namespace megamol {
-namespace core {
-namespace job {
-
+namespace megamol::core::job {
 
 /**
  * Class implementing a simple thread for the job.
@@ -31,7 +21,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "JobThread";
     }
 
@@ -40,7 +30,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Job thread controller";
     }
 
@@ -49,7 +39,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -58,7 +48,7 @@ public:
      *
      * @return false
      */
-    static bool SupportQuickstart(void) {
+    static bool SupportQuickstart() {
         return false;
     }
 
@@ -78,12 +68,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    virtual bool create();
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    virtual void release();
 
 private:
     /**
@@ -98,9 +88,4 @@ private:
     virtual DWORD Run(void* userData);
 };
 
-
-} /* end namespace job */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_JOBTHREAD_H_INCLUDED */
+} // namespace megamol::core::job

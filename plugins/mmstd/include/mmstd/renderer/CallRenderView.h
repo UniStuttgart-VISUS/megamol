@@ -1,8 +1,7 @@
-/*
- * CallRenderView.h
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -12,10 +11,7 @@
 #include "mmcore/view/Input.h"
 #include "mmstd/renderer/AbstractCallRenderView.h"
 
-
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 inline constexpr char callrenderview_name[] = "CallRenderView";
 
@@ -26,7 +22,4 @@ using CallRenderView = AbstractCallRenderView<CPUFramebuffer, callrenderview_nam
 /** Description class typedef */
 typedef factories::CallAutoDescription<CallRenderView> CallRenderViewDescription;
 
-
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::view

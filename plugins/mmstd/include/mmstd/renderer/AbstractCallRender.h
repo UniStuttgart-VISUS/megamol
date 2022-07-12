@@ -1,27 +1,19 @@
-/*
- * AbstractCallRender.h
- *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTCALLRENDER_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTCALLRENDER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <glm/glm.hpp>
 
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/view/Camera.h"
 #include "mmcore/view/InputCall.h"
 #include "vislib/Array.h"
-#include <glm/glm.hpp>
 
-
-namespace megamol {
-namespace core {
-namespace view {
-
+namespace megamol::core::view {
 
 /**
  * Abstract base class of rendering graph calls
@@ -38,7 +30,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         ASSERT(FnRender == InputCall::FunctionCount() && "Enum has bad magic number");
         ASSERT(FnGetExtents == InputCall::FunctionCount() + 1 && "Enum has bad magic number");
         return InputCall::FunctionCount() + 2;
@@ -65,7 +57,7 @@ public:
     }
 
     /** Dtor. */
-    virtual ~AbstractCallRender(void) = default;
+    virtual ~AbstractCallRender() = default;
 
 
     /**
@@ -73,7 +65,7 @@ public:
      *
      * @return The instance time code
      */
-    inline double InstanceTime(void) const {
+    inline double InstanceTime() const {
         return this->_instTime;
     }
 
@@ -84,7 +76,7 @@ public:
      *
      * @return The flag for in situ timing
      */
-    inline bool IsInSituTime(void) const {
+    inline bool IsInSituTime() const {
         return this->_isInSituTime;
     }
 
@@ -134,7 +126,7 @@ public:
      *
      * @return The time frame code of the frame to render.
      */
-    inline float Time(void) const {
+    inline float Time() const {
         return _time;
     }
 
@@ -143,7 +135,7 @@ public:
      *
      * @return The number of time frames of the data the callee can render.
      */
-    inline unsigned int TimeFramesCount(void) const {
+    inline unsigned int TimeFramesCount() const {
         return this->_cntTimeFrames;
     }
 
@@ -152,7 +144,7 @@ public:
      *
      * @return The time required to render the last frame
      */
-    inline double LastFrameTime(void) const {
+    inline double LastFrameTime() const {
         return this->_lastFrameTime;
     }
 
@@ -179,7 +171,7 @@ public:
      *
      * @return The stored background color
      */
-    inline glm::vec4 BackgroundColor(void) const {
+    inline glm::vec4 BackgroundColor() const {
         return _backgroundCol;
     }
 
@@ -189,7 +181,7 @@ public:
      *
      * @return The bounding boxes of the output of the callee.
      */
-    inline BoundingBoxes_2& AccessBoundingBoxes(void) {
+    inline BoundingBoxes_2& AccessBoundingBoxes() {
         return this->_bboxs;
     }
 
@@ -199,7 +191,7 @@ public:
      *
      * @return The bounding boxes of the output of the callee.
      */
-    inline const BoundingBoxes_2& GetBoundingBoxes(void) const {
+    inline const BoundingBoxes_2& GetBoundingBoxes() const {
         return this->_bboxs;
     }
 
@@ -211,7 +203,7 @@ public:
      *
      * @return A camera object containing the minimal state transferred by this call.
      */
-    inline const Camera GetCamera(void) const {
+    inline const Camera GetCamera() const {
         return this->_camera;
     }
 
@@ -244,7 +236,7 @@ public:
      *
      * @return 2D integer vector with horizontal (width) und vertical (height) resolution in x and y respectively
      */
-    inline const glm::ivec2 GetViewResolution(void) const {
+    inline const glm::ivec2 GetViewResolution() const {
         return this->_viewResoltion;
     }
 
@@ -269,7 +261,7 @@ public:
 
 protected:
     /** Ctor. */
-    AbstractCallRender(void);
+    AbstractCallRender();
 
 private:
     /** The number of time frames available to render */
@@ -326,7 +318,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return NAME;
     }
     //{ return "CallRender3D"; }
@@ -336,7 +328,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return DESC;
     }
     //{ return "CPU Rendering call"; }
@@ -346,7 +338,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return AbstractCallRender::FunctionCount();
     }
     /**
@@ -361,10 +353,10 @@ public:
     }
 
     /** Ctor. */
-    BaseCallRender(void) {}
+    BaseCallRender() {}
 
     /** Dtor. */
-    ~BaseCallRender(void) {}
+    ~BaseCallRender() {}
 
     /**
      * Assignment operator
@@ -400,9 +392,4 @@ private:
     std::shared_ptr<FBO> _framebuffer;
 };
 
-
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTCALLRENDER_H_INCLUDED */
+} // namespace megamol::core::view

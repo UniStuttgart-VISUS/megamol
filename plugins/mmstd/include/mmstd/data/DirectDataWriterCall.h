@@ -1,19 +1,18 @@
-/*
- * DirectDataWriterCall.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
-#pragma once
 
-#include "mmcore/factories/CallAutoDescription.h"
-#include "mmstd/generic/AbstractCallbackCall.h"
+#pragma once
 
 #include <functional>
 #include <iostream>
 
-namespace megamol {
-namespace core {
+#include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/generic/AbstractCallbackCall.h"
+
+namespace megamol::core {
 
 /**
  * Call transporting a callback delivering an ostream object for writing data.
@@ -60,5 +59,4 @@ public:
     }
 };
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core

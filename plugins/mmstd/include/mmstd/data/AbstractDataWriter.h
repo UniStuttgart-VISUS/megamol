@@ -1,15 +1,10 @@
-/*
- * AbstractDataWriter.h
- *
- * Copyright (C) 2010 by Universitaet Stuttgart (VISUS)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTDATAWRITER_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTDATAWRITER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
@@ -17,8 +12,7 @@
 #include "mmstd/data/DataWriterCtrlCall.h"
 
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Abstract base class for data writer modules
@@ -26,10 +20,10 @@ namespace core {
 class AbstractDataWriter : public Module {
 public:
     /** Ctor. */
-    AbstractDataWriter(void);
+    AbstractDataWriter();
 
     /** Dtor. */
-    virtual ~AbstractDataWriter(void);
+    virtual ~AbstractDataWriter();
 
 protected:
     /**
@@ -37,7 +31,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool run(void) = 0;
+    virtual bool run() = 0;
 
     /**
      * Function querying the writers capabilities
@@ -53,7 +47,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool abort(void);
+    virtual bool abort();
 
 private:
     /**
@@ -97,7 +91,4 @@ private:
     param::ParamSlot manualRunSlot;
 };
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTDATAWRITER_H_INCLUDED */
+} // namespace megamol::core

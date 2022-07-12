@@ -1,20 +1,16 @@
-/*
- * AbstractView.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_BASEVIEW_H_INCLUDED
-#define MEGAMOLCORE_BASEVIEW_H_INCLUDED
+#pragma once
 
 #include "mmcore/param/BoolParam.h"
 #include "mmstd/renderer/AbstractCallRenderView.h"
 #include "mmstd/view/AbstractView.h"
 
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 template<typename VIEWCALL_TYPE, typename CAM_CONTROLLER_TYPE, typename ABSTRACTVIEW_TYPE>
 class BaseView : public ABSTRACTVIEW_TYPE {
@@ -394,8 +390,4 @@ inline bool BaseView<VIEWCALL_TYPE, CAM_CONTROLLER_TYPE, ABSTRACTVIEW_TYPE>::OnM
     return true;
 }
 
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_BASEVIEW_H_INCLUDED */
+} // namespace megamol::core::view

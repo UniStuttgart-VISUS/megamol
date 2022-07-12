@@ -1,20 +1,17 @@
-/*
- * CallGeneric.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef CALL_GENERIC_H_INCLUDED
-#define CALL_GENERIC_H_INCLUDED
+#pragma once
 
 #include <type_traits>
 
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmstd/data/AbstractGetDataCall.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Meta data for spatial 3D data communicates the data bounding box as well as frame count
@@ -92,7 +89,4 @@ public:
     }
 };
 
-} // namespace core
-} // namespace megamol
-
-#endif // !CALL_GENERIC_H_INCLUDED
+} // namespace megamol::core

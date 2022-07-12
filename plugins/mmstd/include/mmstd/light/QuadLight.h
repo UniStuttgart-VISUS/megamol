@@ -1,16 +1,14 @@
-/*
- * QuadLight.h
- * Copyright (C) 2009-2017 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #pragma once
 
 #include "mmstd/light/AbstractLight.h"
 
-namespace megamol {
-namespace core {
-namespace view {
-namespace light {
+namespace megamol::core::view::light {
 
 struct QuadLightType : public BaseLightType {
     std::array<float, 3> position;
@@ -25,7 +23,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QuadLight";
     }
 
@@ -34,7 +32,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Configuration module for a quad light source.";
     }
 
@@ -43,7 +41,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -53,10 +51,10 @@ public:
     void addLight(LightCollection& light_collection);
 
     /** Ctor. */
-    QuadLight(void);
+    QuadLight();
 
     /** Dtor. */
-    virtual ~QuadLight(void);
+    virtual ~QuadLight();
 
 private:
     core::param::ParamSlot position;
@@ -67,7 +65,4 @@ private:
     virtual void readParams();
 };
 
-} // namespace light
-} // namespace view
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::view::light

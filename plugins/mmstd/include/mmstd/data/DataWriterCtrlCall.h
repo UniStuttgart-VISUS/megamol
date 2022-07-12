@@ -1,21 +1,14 @@
-/*
- * DataWriterCtrlCall.h
- *
- * Copyright (C) 2010 by Universitaet Stuttgart (VISUS)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_DATAWRITERCTRLCALL_H_INCLUDED
-#define MEGAMOLCORE_DATAWRITERCTRLCALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 
-
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Call to control data writer modules
@@ -36,7 +29,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DataWriterCtrlCall";
     }
 
@@ -45,7 +38,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to control a data writer";
     }
 
@@ -54,7 +47,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 3;
     }
 
@@ -79,17 +72,17 @@ public:
     }
 
     /** Ctor. */
-    DataWriterCtrlCall(void);
+    DataWriterCtrlCall();
 
     /** Dtor. */
-    virtual ~DataWriterCtrlCall(void);
+    virtual ~DataWriterCtrlCall();
 
     /**
      * Answer the abortable capability flag
      *
      * @return The abortable capability flag
      */
-    inline bool IsAbortable(void) const {
+    inline bool IsAbortable() const {
         return this->abortable;
     }
 
@@ -116,7 +109,4 @@ private:
     bool abortable;
 };
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_DATAWRITERCTRLCALL_H_INCLUDED */
+} // namespace megamol::core

@@ -1,8 +1,7 @@
-/*
- * AbstractTransferFunction.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -13,17 +12,14 @@
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmstd/renderer/CallGetTransferFunction.h"
 
-namespace megamol {
-namespace core {
-namespace view {
-
+namespace megamol::core::view {
 
 /**
  * Module defining a transfer function.
  */
 class AbstractTransferFunction {
 public:
-    AbstractTransferFunction(void)
+    AbstractTransferFunction()
             : getTFSlot("gettransferfunction", "Provides the transfer function")
             , tfParam("TransferFunction", "The transfer function serialized as JSON string.")
             , texSize(1)
@@ -35,7 +31,7 @@ public:
             , last_frame_id(0) {}
 
 
-    virtual ~AbstractTransferFunction(void) {}
+    virtual ~AbstractTransferFunction() {}
 
 protected:
     /**
@@ -77,7 +73,4 @@ protected:
     uint32_t last_frame_id;
 };
 
-
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::view

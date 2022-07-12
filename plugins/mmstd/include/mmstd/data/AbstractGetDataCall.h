@@ -1,24 +1,16 @@
-/*
- * AbstractGetDataCall.h
- *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTGETDATACALL_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTGETDATACALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-
-namespace megamol {
-namespace core {
-
+namespace megamol::core {
 
 /**
  * Abstract base class for calls for data
@@ -33,25 +25,25 @@ public:
     class Unlocker {
     public:
         /** ctor. */
-        Unlocker(void) {
+        Unlocker() {
             // intentionally empty
         }
 
         /** dtor. */
-        virtual ~Unlocker(void) {
+        virtual ~Unlocker() {
             // intentionally empty
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void) = 0;
+        virtual void Unlock() = 0;
     };
 
 
     /** Ctor. */
-    AbstractGetDataCall(void);
+    AbstractGetDataCall();
 
     /** Dtor. */
-    virtual ~AbstractGetDataCall(void);
+    virtual ~AbstractGetDataCall();
 
     /**
      * Answer the unique hash number of the returned data, or zero if such
@@ -59,7 +51,7 @@ public:
      *
      * @return The unique hash number of the returned data
      */
-    inline SIZE_T DataHash(void) const {
+    inline SIZE_T DataHash() const {
         return this->datahash;
     }
 
@@ -68,7 +60,7 @@ public:
      *
      * @return The unlocker
      */
-    inline Unlocker* GetUnlocker(void) const {
+    inline Unlocker* GetUnlocker() const {
         return this->unlocker;
     }
 
@@ -105,7 +97,7 @@ public:
      * This must be called after the data is no longer used to avoid
      * deadlocks in the out-of-core streaming mechanism.
      */
-    inline void Unlock(void) {
+    inline void Unlock() {
         if (this->unlocker != NULL) {
             this->unlocker->Unlock();
             SAFE_DELETE(this->unlocker);
@@ -129,7 +121,7 @@ protected:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -159,7 +151,4 @@ private:
     Unlocker* unlocker;
 };
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTGETDATACALL_H_INCLUDED */
+} // namespace megamol::core

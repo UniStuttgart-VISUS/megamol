@@ -1,16 +1,15 @@
-/*
- * AbstractCallbackCall.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #pragma once
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Call transporting a callback for writing data.
@@ -50,5 +49,4 @@ private:
     FunctionT callback;
 };
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core

@@ -1,25 +1,16 @@
-/*
- * CallTimeControl.h
- *
- * Copyright (C) 2012 by CGV (TU Dresden)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2012, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_CALLTIMECONTROL_H_INCLUDED
-#define MEGAMOLCORE_CALLTIMECONTROL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmstd/renderer/TimeControl.h"
 
-
-namespace megamol {
-namespace core {
-namespace view {
-
+namespace megamol::core::view {
 
 /**
  * Call connecting time control objects
@@ -31,7 +22,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallTimeControl";
     }
 
@@ -40,7 +31,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call connecting time control objects";
     }
 
@@ -49,7 +40,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -70,17 +61,17 @@ public:
     }
 
     /** Ctor. */
-    CallTimeControl(void);
+    CallTimeControl();
 
     /** Dtor. */
-    virtual ~CallTimeControl(void);
+    virtual ~CallTimeControl();
 
     /**
      * Answer the master time control
      *
      * @return The master time control
      */
-    inline TimeControl* Master(void) const {
+    inline TimeControl* Master() const {
         return this->m;
     }
 
@@ -102,9 +93,4 @@ private:
 /** Description class typedef */
 typedef factories::CallAutoDescription<CallTimeControl> CallTimeControlDescription;
 
-
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_CALLTIMECONTROL_H_INCLUDED */
+} // namespace megamol::core::view

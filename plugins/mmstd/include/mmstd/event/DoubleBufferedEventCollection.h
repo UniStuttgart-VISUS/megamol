@@ -1,20 +1,17 @@
-/*
- * DoubleBufferedEventCollection.h
- *
- * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef DOUBLE_BUFFERED_EVENT_COLLECTION_H_INCLUDED
-#define DOUBLE_BUFFERED_EVENT_COLLECTION_H_INCLUDED
+#pragma once
 
 #include <array>
 #include <memory>
 
 #include "EventCollection.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 class DoubleBufferedEventCollection {
 public:
@@ -77,8 +74,4 @@ inline std::vector<EventType> DoubleBufferedEventCollection::consume() {
     return retval;
 }
 
-} // namespace core
-} // namespace megamol
-
-
-#endif // !DOUBLE_BUFFERED_EVENT_COLLECTION_H_INCLUDED
+} // namespace megamol::core

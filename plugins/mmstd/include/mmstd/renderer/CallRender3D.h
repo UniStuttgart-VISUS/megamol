@@ -1,8 +1,7 @@
-/*
- * CallRender3D.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -13,9 +12,7 @@
 #include "mmcore/view/CPUFramebuffer.h"
 #include "mmstd/renderer/AbstractCallRender.h"
 
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 inline constexpr char callrender3d_name[] = "CallRender3D";
 
@@ -26,6 +23,4 @@ using CallRender3D = BaseCallRender<CPUFramebuffer, callrender3d_name, callrende
 /** Description class typedef */
 typedef factories::CallAutoDescription<CallRender3D> CallRender3DDescription;
 
-} // namespace view
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::view

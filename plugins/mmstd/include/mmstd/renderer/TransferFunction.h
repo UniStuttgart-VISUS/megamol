@@ -1,8 +1,7 @@
-/*
- * TransferFunction.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -10,11 +9,7 @@
 #include "mmcore/Module.h"
 #include "mmstd/renderer/AbstractTransferFunction.h"
 
-
-namespace megamol {
-namespace core {
-namespace view {
-
+namespace megamol::core::view {
 
 /**
  * Module defining a transfer function.
@@ -26,7 +21,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TransferFunction";
     }
 
@@ -35,7 +30,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module defining a piecewise linear transfer function";
     }
 
@@ -44,15 +39,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    TransferFunction(void);
+    TransferFunction();
 
     /** Dtor. */
-    virtual ~TransferFunction(void) {
+    virtual ~TransferFunction() {
         this->Release();
     }
 
@@ -64,14 +59,14 @@ private:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void) {
+    virtual bool create() {
         return true;
     }
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void) {}
+    virtual void release() {}
 
     /**
      * Callback called when the transfer function is requested.
@@ -86,7 +81,4 @@ private:
     bool ignore_project_range = true;
 };
 
-
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::view

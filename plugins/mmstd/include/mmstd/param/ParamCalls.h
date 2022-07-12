@@ -61,4 +61,5 @@ public:
 };
 
 using IntParamCallDescription = core::factories::CallAutoDescription<IntParamCall>;
+
 } // namespace megamol::core::param

@@ -1,18 +1,16 @@
-/*
- * AbstractTickJob.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #pragma once
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 
-namespace megamol {
-namespace core {
-namespace job {
+namespace megamol::core::job {
 
 /**
  * Module for propagating a tick.
@@ -64,6 +62,4 @@ private:
     CalleeSlot tickSlot;
 };
 
-} // namespace job
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::job

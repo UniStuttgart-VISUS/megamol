@@ -1,10 +1,8 @@
-/*
- * CallGetTransferFunction.h
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
-
 
 #pragma once
 
@@ -15,10 +13,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol {
-namespace core {
-namespace view {
-
+namespace megamol::core::view {
 
 /**
  * Call for accessing a transfer function.
@@ -29,7 +24,7 @@ public:
     enum TextureFormat { TEXTURE_FORMAT_RGB, TEXTURE_FORMAT_RGBA };
 
     /** Ctor. */
-    AbstractCallGetTransferFunction(void)
+    AbstractCallGetTransferFunction()
             : Call()
             , texSize(1)
             , texData(NULL)
@@ -38,7 +33,7 @@ public:
             , range_updated(false) {}
 
     /** Dtor. */
-    virtual ~AbstractCallGetTransferFunction(void) {}
+    virtual ~AbstractCallGetTransferFunction() {}
 
     /**
      * Answer whether the connected transferfunction is dirty
@@ -95,7 +90,7 @@ public:
      *
      * @return The texture data
      */
-    inline float const* GetTextureData(void) const {
+    inline float const* GetTextureData() const {
         return this->texData;
     }
 
@@ -104,7 +99,7 @@ public:
      *
      * @return The size of the texture
      */
-    inline unsigned int TextureSize(void) const {
+    inline unsigned int TextureSize() const {
         return this->texSize;
     }
 
@@ -113,7 +108,7 @@ public:
      *
      * @return The format of the texture
      */
-    inline TextureFormat TFTextureFormat(void) const {
+    inline TextureFormat TFTextureFormat() const {
         return this->texFormat;
     }
 
@@ -123,7 +118,7 @@ public:
      *
      * @return The (min, max) pair.
      */
-    inline std::array<float, 2> Range(void) const {
+    inline std::array<float, 2> Range() const {
         return this->range;
     }
 
@@ -155,7 +150,7 @@ public:
     /**
      * Check for updated range value and consume triggered update
      */
-    bool ConsumeRangeUpdate(void) {
+    bool ConsumeRangeUpdate() {
         bool consume = this->range_updated;
         this->range_updated = false;
         return consume;
@@ -164,7 +159,7 @@ public:
     /**
      * Check for updated range value
      */
-    bool UpdateRange(void) {
+    bool UpdateRange() {
         return this->range_updated;
     }
 
@@ -188,6 +183,4 @@ protected:
     uint32_t usedTFVersion = 0;
 };
 
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::view

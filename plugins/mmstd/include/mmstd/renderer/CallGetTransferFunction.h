@@ -1,19 +1,14 @@
-/*
- * AbstractCallGetTransferFunction.h
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
-
 
 #pragma once
 
 #include "AbstractCallGetTransferFunction.h"
 
-namespace megamol {
-namespace core {
-namespace view {
-
+namespace megamol::core::view {
 
 /**
  * Call for accessing a transfer function.
@@ -25,7 +20,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallGetTransferFunction";
     }
 
@@ -34,7 +29,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for a 1D transfer function";
     }
 
@@ -43,7 +38,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -64,17 +59,14 @@ public:
     }
 
     /** Ctor. */
-    CallGetTransferFunction(void) : AbstractCallGetTransferFunction() {}
+    CallGetTransferFunction() : AbstractCallGetTransferFunction() {}
 
     /** Dtor. */
-    virtual ~CallGetTransferFunction(void) {}
+    virtual ~CallGetTransferFunction() {}
 };
 
 
 /** Description class typedef */
 typedef core::factories::CallAutoDescription<CallGetTransferFunction> CallGetTransferFunctionDescription;
 
-
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::view

@@ -1,26 +1,17 @@
-/*
- * TimeControl.h
- *
- * Copyright (C) 2011 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2011, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_TIMECONTROL_H_INCLUDED
-#define MEGAMOLCORE_TIMECONTROL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-
-namespace megamol {
-namespace core {
-namespace view {
-
+namespace megamol::core::view {
 
 /**
  * Class implementing time control
@@ -28,10 +19,10 @@ namespace view {
 class TimeControl {
 public:
     /** Ctor. */
-    TimeControl(void);
+    TimeControl();
 
     /** Dtor. */
-    virtual ~TimeControl(void);
+    virtual ~TimeControl();
 
     /**
      * Gets the idx'th slot
@@ -112,7 +103,7 @@ private:
      *
      * @return The connected master or NULL
      */
-    TimeControl* getMaster(void) const;
+    TimeControl* getMaster() const;
 
     /** Bool parameter to play/stop the animation */
     mutable param::ParamSlot animPlaySlot;
@@ -148,9 +139,4 @@ private:
     mutable double instOffset;
 };
 
-
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_TIMECONTROL_H_INCLUDED */
+} // namespace megamol::core::view

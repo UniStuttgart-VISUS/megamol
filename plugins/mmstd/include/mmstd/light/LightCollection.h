@@ -1,12 +1,10 @@
-/*
- * LightCollection.h
- *
- * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef LIGHT_COLLECTION_H_INCLUDED
-#define LIGHT_COLLECTION_H_INCLUDED
+#pragma once
 
 #include <array>
 #include <memory>
@@ -14,10 +12,7 @@
 #include <typeindex>
 #include <unordered_map>
 
-namespace megamol {
-namespace core {
-namespace view {
-namespace light {
+namespace megamol::core::view::light {
 
 struct BaseLightType {
     std::array<float, 4> colour;
@@ -77,9 +72,4 @@ inline void LightCollection::add(std::shared_ptr<LightType>&& light) {
     m_lights.emplace(std::type_index(typeid(LightType)), std::forward<std::shared_ptr<LightType>>(light));
 }
 
-} // namespace light
-} // namespace view
-} // namespace core
-} // namespace megamol
-
-#endif // !LIGHT_COLLECTION_H_INCLUDED
+} // namespace megamol::core::view::light

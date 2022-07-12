@@ -1,24 +1,16 @@
-/*
- * AbstractGetData3DCall.h
- *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTGETDATA3DCALL_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTGETDATA3DCALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmstd/data/AbstractGetDataCall.h"
 
-
-namespace megamol {
-namespace core {
-
+namespace megamol::core {
 
 /**
  * Abstract base class for calls for data
@@ -26,17 +18,17 @@ namespace core {
 class AbstractGetData3DCall : public AbstractGetDataCall {
 public:
     /** Ctor. */
-    AbstractGetData3DCall(void);
+    AbstractGetData3DCall();
 
     /** Dtor. */
-    virtual ~AbstractGetData3DCall(void);
+    virtual ~AbstractGetData3DCall();
 
     /**
      * Answers the bounding box of the data set
      *
      * @return The bounding box of the data set
      */
-    inline BoundingBoxes& AccessBoundingBoxes(void) {
+    inline BoundingBoxes& AccessBoundingBoxes() {
         return this->bboxs;
     }
 
@@ -45,7 +37,7 @@ public:
      *
      * @return The frame count.
      */
-    inline unsigned int FrameCount(void) const {
+    inline unsigned int FrameCount() const {
         return this->frameCnt;
     }
 
@@ -54,7 +46,7 @@ public:
      *
      * @return the frameID
      */
-    inline unsigned int FrameID(void) const {
+    inline unsigned int FrameID() const {
         return this->frameID;
     }
 
@@ -63,7 +55,7 @@ public:
      *
      * @return The bounding box of the data set
      */
-    inline const BoundingBoxes& GetBoundingBoxes(void) const {
+    inline const BoundingBoxes& GetBoundingBoxes() const {
         return this->bboxs;
     }
 
@@ -76,7 +68,7 @@ public:
      *
      * @return The flag if the frame is forced
      */
-    inline bool IsFrameForced(void) const {
+    inline bool IsFrameForced() const {
         return this->forceFrame;
     }
 
@@ -153,7 +145,7 @@ protected:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 2;
     }
 
@@ -188,7 +180,4 @@ private:
     BoundingBoxes bboxs;
 };
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTGETDATA3DCALL_H_INCLUDED */
+} // namespace megamol::core

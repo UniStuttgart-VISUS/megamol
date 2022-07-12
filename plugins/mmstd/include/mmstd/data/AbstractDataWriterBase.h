@@ -1,15 +1,12 @@
-/*
- * AbstractDataWriterBase.h
- *
- * Copyright (C) 2010 by Universitaet Stuttgart (VISUS)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTDATAWRITERBASE_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTDATAWRITERBASE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <climits>
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -19,11 +16,8 @@
 #include "mmstd/data/AbstractDataWriter.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/Thread.h"
-#include <climits>
 
-
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Abstract base class for data writer modules
@@ -36,7 +30,7 @@ template<class T, class D = factories::CallAutoDescription<T>>
 class AbstractDataWriterBase : public AbstractDataWriter {
 public:
     /** Ctor. */
-    AbstractDataWriterBase(void)
+    AbstractDataWriterBase()
             : AbstractDataWriter()
             , inData("inData", "Get the data")
             , filenameSlot("filename", "The path to the MMPGD file to be written") {
@@ -47,7 +41,7 @@ public:
     }
 
     /** Dtor. */
-    virtual ~AbstractDataWriterBase(void) {
+    virtual ~AbstractDataWriterBase() {
         this->Release();
     }
 
@@ -57,7 +51,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void) {
+    virtual bool create() {
         // intentionally empty
         return true;
     }
@@ -65,7 +59,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void) {
+    virtual void release() {
         // intentionally empty
     }
 
@@ -74,7 +68,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool run(void) {
+    virtual bool run() {
         using megamol::core::utility::log::Log;
         vislib::TString filename(this->filenameSlot.template Param<param::FilePathParam>()->Value());
         if (filename.IsEmpty()) {
@@ -190,7 +184,4 @@ private:
     param::ParamSlot filenameSlot;
 };
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTDATAWRITER_H_INCLUDED */
+} // namespace megamol::core

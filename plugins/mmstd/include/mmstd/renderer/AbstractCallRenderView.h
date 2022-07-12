@@ -1,8 +1,7 @@
-/*
- * AbstractCallRenderView.h
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -11,10 +10,7 @@
 #include "mmcore/view/Input.h"
 #include "mmstd/renderer/CallRender3D.h"
 
-
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 /**
  * Call for rendering visual elements (from separate sources) into a single target, i.e.,
@@ -39,7 +35,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return NAME;
     }
 
@@ -48,7 +44,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return DESC;
     }
 
@@ -57,7 +53,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         ASSERT(CALL_RESETVIEW == AbstractCallRender::FunctionCount() && "Enum has bad magic number");
         return AbstractCallRender::FunctionCount() + 1;
     }
@@ -120,6 +116,4 @@ private:
     std::shared_ptr<FBO_TYPE> _framebuffer;
 };
 
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::view

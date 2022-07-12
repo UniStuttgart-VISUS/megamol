@@ -1,17 +1,15 @@
-/*
- * TickCall.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
+
 #pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmstd/data/AbstractGetDataCall.h"
 
-namespace megamol {
-namespace core {
-namespace job {
+namespace megamol::core::job {
 
 /**
  * Call for propagating a tick.
@@ -56,6 +54,4 @@ public:
     }
 };
 
-} // namespace job
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::job

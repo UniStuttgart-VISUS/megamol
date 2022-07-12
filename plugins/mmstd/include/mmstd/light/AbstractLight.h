@@ -1,7 +1,7 @@
-/*
- * AbstractLight.h
- * Copyright (C) 2009-2017 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 #pragma once
 
@@ -11,18 +11,15 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/light/CallLight.h"
 
-namespace megamol {
-namespace core {
-namespace view {
-namespace light {
+namespace megamol::core::view::light {
 
 class AbstractLight : public core::Module {
 protected:
     /** Ctor. */
-    AbstractLight(void);
+    AbstractLight();
 
     /** Dtor. */
-    virtual ~AbstractLight(void);
+    virtual ~AbstractLight();
 
     virtual bool create();
     virtual void release();
@@ -49,7 +46,5 @@ private:
     core::CallerSlot getLightSlot;
     core::CalleeSlot deployLightSlot;
 };
-} // namespace light
-} // namespace view
-} // namespace core
-} // namespace megamol
+
+} // namespace megamol::core::view::light

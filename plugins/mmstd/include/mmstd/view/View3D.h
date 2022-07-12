@@ -1,8 +1,7 @@
-/*
- * View3D.h
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -13,9 +12,7 @@
 #include "mmstd/view/AbstractView.h"
 #include "mmstd/view/BaseView.h"
 
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 inline constexpr auto cpu_fbo_resize = [](std::shared_ptr<CPUFramebuffer>& fbo, int width, int height) -> void {
     fbo->width = width;
@@ -31,7 +28,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "View3D";
     }
 
@@ -40,15 +37,15 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "View 3D module";
     }
 
     /** Ctor. */
-    View3D(void);
+    View3D();
 
     /** Dtor. */
-    virtual ~View3D(void);
+    virtual ~View3D();
 
     /**
      * Renders this AbstractView3D in the currently active OpenGL context.
@@ -72,9 +69,7 @@ public:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    virtual bool create();
 };
 
-} // namespace view
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::view

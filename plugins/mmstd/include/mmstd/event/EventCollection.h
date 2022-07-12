@@ -1,12 +1,10 @@
-/*
- * EventCollection.h
- *
- * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOL_EVENT_COLLECTION_H_INCLUDED
-#define MEGAMOL_EVENT_COLLECTION_H_INCLUDED
+#pragma once
 
 #include <atomic>
 #include <memory>
@@ -15,8 +13,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 class EventCollection {
 private:
@@ -105,8 +102,4 @@ inline void EventCollection::clear() {
     m_events.clear();
 }
 
-} // namespace core
-} // namespace megamol
-
-
-#endif // !MEGAMOL_EVENT_COLLECTION_H_INCLUDED
+} // namespace megamol::core
