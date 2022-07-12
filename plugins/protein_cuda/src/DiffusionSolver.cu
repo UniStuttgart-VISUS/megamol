@@ -497,7 +497,7 @@ bool DiffusionSolver::CalcGVF(
 
     // Init constant device parameters
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 DiffusionSolver::ClassName());
         return false;
@@ -588,7 +588,7 @@ bool DiffusionSolver::CalcTwoWayGVF(
 
     // Init constant device parameters
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 DiffusionSolver::ClassName());
         return false;

@@ -45,7 +45,7 @@ bool TableHistogramRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenGL&
         selectionProgram_ = core::utility::make_glowl_shader(
             "histo_table_select", shaderOptions, "infovis_gl/histo/table_select.comp.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("TableHistogramRenderer2D: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(("TableHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -71,12 +71,12 @@ bool TableHistogramRenderer2D::handleCall(mmstd_gl::CallRender2DGL& call) {
     }
     auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<mmstd_gl::FlagCallRead_GL>();
     if (readFlagsCall == nullptr) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TableHistogramRenderer2D requires a read flag storage!");
+        Log::DefaultLog.WriteError("TableHistogramRenderer2D requires a read flag storage!");
         return false;
     }
     auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<mmstd_gl::FlagCallWrite_GL>();
     if (writeFlagsCall == nullptr) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TableHistogramRenderer2D requires a write flag storage!");
+        Log::DefaultLog.WriteError("TableHistogramRenderer2D requires a write flag storage!");
         return false;
     }
 
@@ -112,7 +112,7 @@ bool TableHistogramRenderer2D::handleCall(mmstd_gl::CallRender2DGL& call) {
     }
 
     if (dataChanged || readFlagsCall->hasUpdate() || binsChanged()) {
-        // Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Calculate Histogram");
+        // Log::DefaultLog.WriteInfo( "Calculate Histogram");
 
         resetHistogramBuffers();
 

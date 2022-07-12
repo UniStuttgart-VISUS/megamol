@@ -132,15 +132,14 @@ bool MoleculeCBCudaRenderer::create(void) {
             std::filesystem::path("protein_cuda/molecule_cb/mcbc_sphericaltriangle.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[MoleculeCBCudaRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[MoleculeCBCudaRenderer] %s", ex.what());
         return false;
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[MoleculeCBCudaRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[MoleculeCBCudaRenderer] Unable to compile shader: Unknown exception.");
         return false;
     }
@@ -196,7 +195,7 @@ bool MoleculeCBCudaRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // try to initialize CUDA
     if (!this->cudaInitalized) {
         cudaInitalized = this->initCuda(mol, 16, &call);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "%s: CUDA initialization: %i", this->ClassName(), cudaInitalized);
     }
 

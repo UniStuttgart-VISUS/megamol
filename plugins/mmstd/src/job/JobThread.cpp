@@ -49,10 +49,9 @@ void job::JobThread::release(void) {
  */
 DWORD job::JobThread::Run(void* userData) {
 
-    // this->GetCoreInstance()->Log().WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+    // this->GetCoreInstance()->Log().WriteInfo(
     //     "JobThread started (CoreLog)");
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-        megamol::core::utility::log::Log::LEVEL_INFO, "JobThread started (DefaultLog)");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("JobThread started (DefaultLog)");
 
     // TODO: Implement
 
@@ -63,10 +62,9 @@ DWORD job::JobThread::Run(void* userData) {
         vislib::sys::Thread::Sleep(sleepTime);
     }
 
-    // this->GetCoreInstance()->Log().WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+    // this->GetCoreInstance()->Log().WriteInfo(
     //     "JobThread finished (CoreLog)");
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-        megamol::core::utility::log::Log::LEVEL_INFO, "JobThread finished (DefaultLog)");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("JobThread finished (DefaultLog)");
 
     this->signalEnd(this->shouldTerminate());
     return 0;

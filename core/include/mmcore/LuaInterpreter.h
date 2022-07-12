@@ -315,9 +315,9 @@ template <class T> megamol::core::LuaInterpreter<T>::LuaInterpreter(T* t, std::s
     RegisterCallback<LuaInterpreter, &LuaInterpreter::logInfo>(MMC_LUA_MMDEBUGPRINT, "(...)\n\tLog to MegaMol console with LOGINFO level.");
     RegisterCallback<LuaInterpreter, &LuaInterpreter::help>(MMC_LUA_MMHELP, "()\n\tShow this help.");
 
-    RegisterConstant("LOGINFO", megamol::core::utility::log::Log::LEVEL_INFO);
-    RegisterConstant("LOGWARNING", megamol::core::utility::log::Log::LEVEL_WARN);
-    RegisterConstant("LOGERROR", megamol::core::utility::log::Log::LEVEL_ERROR);
+    RegisterConstant("LOGINFO", static_cast<uint32_t>(megamol::core::utility::log::Log::log_level::info));
+    RegisterConstant("LOGWARNING", static_cast<uint32_t>(megamol::core::utility::log::Log::log_level::warn));
+    RegisterConstant("LOGERROR", static_cast<uint32_t>(megamol::core::utility::log::Log::log_level::error));
 }
 
 
@@ -534,14 +534,14 @@ template <class T> int megamol::core::LuaInterpreter<T>::log(lua_State* L) {
             break;
         }
     }
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(static_cast<unsigned int>(level), "%s", out.str().c_str());
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(static_cast<megamol::core::utility::log::Log::log_level>(level), "%s", out.str().c_str());
     return 0;
 }
 
 
 template <class T> int megamol::core::LuaInterpreter<T>::logInfo(lua_State* L) {
     USES_CHECK_LUA;
-    lua_pushinteger(L, megamol::core::utility::log::Log::LEVEL_INFO);
+    lua_pushinteger(L, static_cast<uint32_t>(megamol::core::utility::log::Log::log_level::info));
     lua_insert(L, 1); // prepend info level to arguments
     lua_getglobal(L, "mmLog");
     lua_insert(L, 1);                                 // prepend mmLog function to all arguments

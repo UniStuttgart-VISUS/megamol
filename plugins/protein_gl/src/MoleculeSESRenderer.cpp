@@ -238,13 +238,12 @@ bool MoleculeSESRenderer::create(void) {
             std::filesystem::path("protein_gl/moleculeses/mses_spherical_triangle.vert.glsl"),
             std::filesystem::path("protein_gl/moleculeses/mses_spherical_triangle.frag.glsl"));
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[MoleculeSESRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[MoleculeSESRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[MoleculeSESRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[MoleculeSESRenderer] Unable to compile shader: Unknown exception.");
     }
 
@@ -466,7 +465,7 @@ bool MoleculeSESRenderer::Render(mmstd_gl::CallRender3DGL& call) {
                 }
             }
         }
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "%s: RS computed in: %f s\n", this->ClassName(), (double(clock() - t) / double(CLOCKS_PER_SEC)));
     }
     // update the data / the RS

@@ -331,7 +331,7 @@ bool ScatterplotMatrixRenderer2D::create() {
             "splom_screen", shader_options, "infovis_gl/splom/screen.vert.glsl", "infovis_gl/splom/screen.frag.glsl");
         pickProgram = core::utility::make_glowl_shader("splom_pick", shader_options, "infovis_gl/splom/pick.comp.glsl");
     } catch (std::exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             ("ScatterplotMatrixRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }

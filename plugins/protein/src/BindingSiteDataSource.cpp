@@ -241,7 +241,7 @@ void BindingSiteDataSource::loadPDBFile(const std::string& filename) {
             this->bindingSiteColors[i] = this->colorLookupTable[i % this->colorLookupTable.size()];
         }
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Bindings Site count: %i", bindingSiteNames.Count()); // DEBUG
+        Log::DefaultLog.WriteInfo("Bindings Site count: %i", bindingSiteNames.Count()); // DEBUG
     }
 }
 

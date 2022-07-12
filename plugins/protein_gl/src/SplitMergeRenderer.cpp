@@ -173,7 +173,7 @@ bool SplitMergeRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
                     float tmp = (y - 1) / -seriesSpacing;
                     int series = static_cast<int>(tmp);
                     if (series >= 0 && series < (int)sortedSeries.Count() && (tmp - static_cast<int>(tmp)) < 0.5f) {
-                        // Log::DefaultLog.WriteInfo(0, "I hit series %s",
+                        // Log::DefaultLog.WriteInfo( "I hit series %s",
                         // diagram->GetSeries(sortedSeries[series])->GetName());
                         consumeEvent = true;
                         selectedSeries = diagram->GetSeries(sortedSeries[series]);

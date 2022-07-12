@@ -162,13 +162,12 @@ bool CartoonTessellationRenderer::create(void) {
             std::filesystem::path("protein_gl/cartoontessellation/ctess_splineline.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[CartoonTessellationRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[CartoonTessellationRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[CartoonTessellationRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[CartoonTessellationRenderer] Unable to compile shader: Unknown exception.");
     }
 

@@ -113,14 +113,12 @@ void cluster::ClusterController::SendUserMsg(const UINT32 msgType, const BYTE* m
     try {
         UINT rv = this->discoveryService.SendUserMessage(msgType, msgBody, msgSize);
         if (rv != 0) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            Log::DefaultLog.WriteError(
                 "Failed to send user message %u: failed after %u communication trails\n", msgType, rv);
         }
     } catch (vislib::Exception ex) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to send user message %u: %s\n", msgType, ex.GetMsgA());
-    } catch (...) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to send user message %u: unknown exception\n", msgType);
-    }
+        Log::DefaultLog.WriteError("Failed to send user message %u: %s\n", msgType, ex.GetMsgA());
+    } catch (...) { Log::DefaultLog.WriteError("Failed to send user message %u: unknown exception\n", msgType); }
 }
 
 
@@ -133,14 +131,12 @@ void cluster::ClusterController::SendUserMsg(const cluster::ClusterController::P
     try {
         UINT rv = this->discoveryService.SendUserMessage(hPeer, msgType, msgBody, msgSize);
         if (rv != 0) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            Log::DefaultLog.WriteError(
                 "Failed to send user message %u: failed after %u communication trails\n", msgType, rv);
         }
     } catch (vislib::Exception ex) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to send user message %u: %s\n", msgType, ex.GetMsgA());
-    } catch (...) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to send user message %u: unknown exception\n", msgType);
-    }
+        Log::DefaultLog.WriteError("Failed to send user message %u: %s\n", msgType, ex.GetMsgA());
+    } catch (...) { Log::DefaultLog.WriteError("Failed to send user message %u: unknown exception\n", msgType); }
 }
 
 
@@ -169,8 +165,8 @@ bool cluster::ClusterController::create(void) {
             this->cdsPortSlot.Param<param::IntParam>()->SetValue(
                 vislib::CharTraitsW::ParseInt(port.Substring(pos + 1)));
         } catch (...) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to parse configuration value \"cdsaddress\" as port int. "
-                                                      "Configuration value ignored.");
+            Log::DefaultLog.WriteWarn("Unable to parse configuration value \"cdsaddress\" as port int. "
+                                      "Configuration value ignored.");
         }
     }
     if (cfg.IsConfigValueSet("cdsport")) {
@@ -178,8 +174,8 @@ bool cluster::ClusterController::create(void) {
             this->cdsPortSlot.Param<param::IntParam>()->SetValue(
                 vislib::CharTraitsW::ParseInt(cfg.ConfigValue("cdsport")));
         } catch (...) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to parse configuration value \"cdsport\" as int. "
-                                                      "Configuration value ignored.");
+            Log::DefaultLog.WriteWarn("Unable to parse configuration value \"cdsport\" as int. "
+                                      "Configuration value ignored.");
         }
     }
     if (cfg.IsConfigValueSet("cdsrun")) {
@@ -187,8 +183,8 @@ bool cluster::ClusterController::create(void) {
             this->cdsRunSlot.Param<param::BoolParam>()->SetValue(
                 vislib::CharTraitsW::ParseBool(cfg.ConfigValue("cdsrun")));
         } catch (...) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to parse configuration value \"cdsrun\" as boolean. "
-                                                      "Configuration value ignored.");
+            Log::DefaultLog.WriteWarn("Unable to parse configuration value \"cdsrun\" as boolean. "
+                                      "Configuration value ignored.");
         }
     }
 
@@ -282,7 +278,7 @@ DWORD cluster::ClusterController::Run(void* userData) {
                     }
 
                     if (cfg.IsNull()) {
-                        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to choose identifing network adapter.\n");
+                        Log::DefaultLog.WriteError("Unable to choose identifing network adapter.\n");
                         this->cdsRunSlot.Param<param::BoolParam>()->SetValue(false, false);
 
                     } else {
@@ -295,8 +291,8 @@ DWORD cluster::ClusterController::Run(void* userData) {
                         vislib::sys::Thread::Sleep(125);
 
                         if (this->discoveryService.IsRunning()) {
-                            Log::DefaultLog.WriteMsg(
-                                Log::LEVEL_INFO, "Cluster \"%s\" discovery service is running.\n", name.PeekBuffer());
+                            Log::DefaultLog.WriteInfo(
+                                "Cluster \"%s\" discovery service is running.\n", name.PeekBuffer());
 
                             vislib::sys::AutoLock(this->clientsLock);
                             vislib::SingleLinkedList<ClusterControllerClient*>::Iterator iter =
@@ -309,20 +305,18 @@ DWORD cluster::ClusterController::Run(void* userData) {
                             }
 
                         } else {
-                            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                            Log::DefaultLog.WriteError(
                                 "Cluster \"%s\" discovery service is not running after start.\n", name.PeekBuffer());
                             this->cdsRunSlot.Param<param::BoolParam>()->SetValue(false, false);
                         }
                     }
 
                 } catch (vislib::Exception ex) {
-                    Log::DefaultLog.WriteMsg(
-                        Log::LEVEL_ERROR, "Failed to start cluster discovery service: %s\n", ex.GetMsgA());
+                    Log::DefaultLog.WriteError("Failed to start cluster discovery service: %s\n", ex.GetMsgA());
                     this->cdsRunSlot.Param<param::BoolParam>()->SetValue(false, false);
 
                 } catch (...) {
-                    Log::DefaultLog.WriteMsg(
-                        Log::LEVEL_ERROR, "Failed to start cluster discovery service: unknown exception\n");
+                    Log::DefaultLog.WriteError("Failed to start cluster discovery service: unknown exception\n");
                     this->cdsRunSlot.Param<param::BoolParam>()->SetValue(false, false);
                 }
             }
@@ -340,8 +334,7 @@ DWORD cluster::ClusterController::Run(void* userData) {
  * cluster::ClusterController::OnNodeFound
  */
 void cluster::ClusterController::OnNodeFound(DiscoveryService& src, const DiscoveryService::PeerHandle& hPeer) throw() {
-    Log::DefaultLog.WriteMsg(
-        Log::LEVEL_INFO, "Cluster Node found: %s\n", src.GetDiscoveryAddress4(hPeer).ToStringA().PeekBuffer());
+    Log::DefaultLog.WriteInfo("Cluster Node found: %s\n", src.GetDiscoveryAddress4(hPeer).ToStringA().PeekBuffer());
     vislib::sys::AutoLock lock(this->clientsLock);
     vislib::SingleLinkedList<ClusterControllerClient*>::Iterator iter = this->clients.GetIterator();
     while (iter.HasNext()) {
@@ -358,8 +351,7 @@ void cluster::ClusterController::OnNodeFound(DiscoveryService& src, const Discov
  */
 void cluster::ClusterController::OnNodeLost(DiscoveryService& src, const DiscoveryService::PeerHandle& hPeer,
     const DiscoveryListener::NodeLostReason reason) throw() {
-    Log::DefaultLog.WriteMsg(
-        Log::LEVEL_INFO, "Cluster Node lost: %s\n", src.GetDiscoveryAddress4(hPeer).ToStringA().PeekBuffer());
+    Log::DefaultLog.WriteInfo("Cluster Node lost: %s\n", src.GetDiscoveryAddress4(hPeer).ToStringA().PeekBuffer());
     vislib::sys::AutoLock lock(this->clientsLock);
     vislib::SingleLinkedList<ClusterControllerClient*>::Iterator iter = this->clients.GetIterator();
     while (iter.HasNext()) {
@@ -378,7 +370,7 @@ void cluster::ClusterController::OnUserMessage(vislib::net::cluster::DiscoverySe
     const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer, const bool isClusterMember, const UINT32 msgType,
     const BYTE* msgBody) throw() {
     try {
-        //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Cluster User Message: from %s\n",
+        //Log::DefaultLog.WriteInfo( "Cluster User Message: from %s\n",
         //    src.GetDiscoveryAddress4(hPeer).ToStringA().PeekBuffer());
         vislib::sys::AutoLock lock(this->clientsLock);
         vislib::SingleLinkedList<ClusterControllerClient*>::Iterator iter = this->clients.GetIterator();
@@ -408,9 +400,9 @@ UINT16 cluster::ClusterController::defaultPort(void) {
 void cluster::ClusterController::stopDiscoveryService(void) {
     if (this->discoveryService.IsRunning()) {
         if (this->discoveryService.Stop()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "CDS stopped");
+            Log::DefaultLog.WriteInfo("CDS stopped");
         } else {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Failed to stop CDS");
+            Log::DefaultLog.WriteWarn("Failed to stop CDS");
         }
     }
 }

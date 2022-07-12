@@ -46,7 +46,7 @@ bool TextureHistogramRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenG
         selectionProgram_ = core::utility::make_glowl_shader(
             "histo_tex_select", shaderOptions, "infovis_gl/histo/tex_select.comp.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("TextureHistogramRenderer2D: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(("TextureHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -75,12 +75,12 @@ bool TextureHistogramRenderer2D::handleCall(mmstd_gl::CallRender2DGL& call) {
 
     auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<mmstd_gl::FlagCallRead_GL>();
     if (readFlagsCall == nullptr) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TextureHistogramRenderer2D requires a read flag storage!");
+        Log::DefaultLog.WriteError("TextureHistogramRenderer2D requires a read flag storage!");
         return false;
     }
     auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<mmstd_gl::FlagCallWrite_GL>();
     if (writeFlagsCall == nullptr) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TextureHistogramRenderer2D requires a write flag storage!");
+        Log::DefaultLog.WriteError("TextureHistogramRenderer2D requires a write flag storage!");
         return false;
     }
 

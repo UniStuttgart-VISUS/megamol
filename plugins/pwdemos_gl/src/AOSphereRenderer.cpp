@@ -187,29 +187,29 @@ bool AOSphereRenderer::create(void) {
         }
 
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile sphere shader (%s) (@%s): %s\n", shaderName.PeekBuffer(),
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile sphere shader (%s) (@%s): %s\n",
+            shaderName.PeekBuffer(),
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to compile sphere shader (%s): %s\n", shaderName.PeekBuffer(), e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to compile sphere shader (%s): Unknown exception\n", shaderName.PeekBuffer());
         return false;
     }
 
     // Load volume texture generation shader
     if (!ssf->MakeShaderSource("AOSphere::volume::updateVolumeVertex", vert)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%: Unable to load vertex shader source for volume texture update shader", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("AOSphere::volume::updateVolumeFragment", frag)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to load fragment shader source for volume texture update shader", this->ClassName());
         return false;
     }
@@ -218,7 +218,7 @@ bool AOSphereRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to create volume texture update shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
