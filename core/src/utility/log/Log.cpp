@@ -46,7 +46,7 @@ std::shared_ptr<spdlog::sinks::stdout_color_sink_mt> create_default_sink() {
 #ifdef _WIN32
     stdout_sink->set_color(spdlog::level::level_enum::info, 15);
 #else
-    stdout_sink->set_color(spdlog::level::level_enum::info, _stdout_sink->white);
+    stdout_sink->set_color(spdlog::level::level_enum::info, stdout_sink->white);
 #endif
     stdout_sink->set_pattern(megamol::core::utility::log::Log::std_pattern);
     return stdout_sink;
