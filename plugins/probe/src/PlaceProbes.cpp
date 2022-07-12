@@ -540,7 +540,8 @@ void megamol::probe::PlaceProbes::vertexNormalSampling(mesh::MeshDataAccessColle
 
 void PlaceProbes::faceNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute const& vertices,
     mesh::MeshDataAccessCollection::VertexAttribute const& normals,
-    mesh::MeshDataAccessCollection::VertexAttribute const& probe_ids, mesh::MeshDataAccessCollection::IndexData const& indices) {
+    mesh::MeshDataAccessCollection::VertexAttribute const& probe_ids,
+    mesh::MeshDataAccessCollection::IndexData const& indices) {
 
     auto vertex_accessor = reinterpret_cast<float*>(vertices.data);
     auto vertex_step = vertices.stride / sizeof(float);

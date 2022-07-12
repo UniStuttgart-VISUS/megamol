@@ -141,8 +141,8 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller) {
         this->m_rcv_IPAddr_slot.ResetDirty();
 
         try {
-            vislib::net::IPAddress server_addr(
-                static_cast<const char*>(m_rcv_IPAddr_slot.Param<megamol::core::param::StringParam>()->Value().c_str()));
+            vislib::net::IPAddress server_addr(static_cast<const char*>(
+                m_rcv_IPAddr_slot.Param<megamol::core::param::StringParam>()->Value().c_str()));
             unsigned short server_port =
                 static_cast<unsigned short>(m_rcv_port_slot.Param<megamol::core::param::IntParam>()->Value());
             server_addr = server_addr.Create();
@@ -162,8 +162,8 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller) {
         this->m_snd_IPAddr_slot.ResetDirty();
 
         try {
-            vislib::net::IPAddress server_addr(
-                static_cast<const char*>(m_snd_IPAddr_slot.Param<megamol::core::param::StringParam>()->Value().c_str()));
+            vislib::net::IPAddress server_addr(static_cast<const char*>(
+                m_snd_IPAddr_slot.Param<megamol::core::param::StringParam>()->Value().c_str()));
             unsigned short server_port =
                 static_cast<unsigned short>(m_snd_port_slot.Param<megamol::core::param::IntParam>()->Value());
             server_addr = server_addr.Create();

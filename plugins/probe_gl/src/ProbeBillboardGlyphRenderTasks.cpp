@@ -201,8 +201,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         ((*tfc)(0));
     }
 
-    bool something_has_changed = pc->hasUpdate() || this->m_billboard_size_slot.IsDirty() ||
-                                 this->m_rendering_mode_slot.IsDirty();
+    bool something_has_changed =
+        pc->hasUpdate() || this->m_billboard_size_slot.IsDirty() || this->m_rendering_mode_slot.IsDirty();
 
     if (something_has_changed) {
         ++m_version;
@@ -819,8 +819,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
     }
     if (scalar_distribution_shader == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Could not get ScalarDistributionProbeGlyphe material, identifier not found. [%s, %s, line %d]\n",
-            __FILE__, __FUNCTION__, __LINE__);
+            "Could not get ScalarDistributionProbeGlyphe material, identifier not found. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
     }
     if (vector_shader == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

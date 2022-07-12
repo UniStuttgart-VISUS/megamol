@@ -29,10 +29,10 @@ bool megamol::probe_gl::ProbeHullRenderTasks::create() {
 
     m_material_collection = std::make_shared<mesh_gl::GPUMaterialCollection>();
     try {
-        std::vector<std::filesystem::path> shaderfiles = {"hull/dfr_hull_patch.vert.glsl",
-            "hull/dfr_hull.frag.glsl", "hull/dfr_hull.tesc.glsl", "hull/dfr_hull.tese.glsl"};
+        std::vector<std::filesystem::path> shaderfiles = {"hull/dfr_hull_patch.vert.glsl", "hull/dfr_hull.frag.glsl",
+            "hull/dfr_hull.tesc.glsl", "hull/dfr_hull.tese.glsl"};
         m_material_collection->addMaterial(this->instance(), "ProbeHull", shaderfiles);
-    } catch (const std::exception& ex){
+    } catch (const std::exception& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
         retval = false;

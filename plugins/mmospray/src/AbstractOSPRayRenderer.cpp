@@ -889,7 +889,8 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
                         uint32_t mesh_index = 0;
                         for (auto const& mesh : mesh_collection->accessMeshes()) {
 
-                            _baseStructures[entry.first].emplace_back(ospNewGeometry("mesh"), structureTypeEnum::GEOMETRY);
+                            _baseStructures[entry.first].emplace_back(
+                                ospNewGeometry("mesh"), structureTypeEnum::GEOMETRY);
 
                             auto mesh_type = mesh.second.primitive_type;
 
@@ -921,13 +922,14 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
                                     ::ospray::cpp::SharedData colorData;
                                     if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT) {
-                                        auto count = attrib.byte_size /
-                                                     (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
-                                                         attrib.component_cnt);
+                                        auto count = attrib.byte_size / (mesh::MeshDataAccessCollection::getByteSize(
+                                                                             attrib.component_type) *
+                                                                            attrib.component_cnt);
                                         auto osp_type = OSP_VEC3F;
                                         if (attrib.component_cnt == 4)
                                             osp_type = OSP_VEC4F;
-                                        colorData = ::ospray::cpp::SharedData(attrib.data, osp_type, count, attrib.stride);
+                                        colorData =
+                                            ::ospray::cpp::SharedData(attrib.data, osp_type, count, attrib.stride);
                                     } else {
                                         core::utility::log::Log::DefaultLog.WriteError(
                                             "[OSPRayRenderer][MESH] Color type not supported.");
@@ -942,7 +944,8 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
                                     auto count = attrib.byte_size /
                                                  (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
                                                      attrib.component_cnt);
-                                    auto texData = ::ospray::cpp::SharedData(attrib.data, OSP_VEC2F, count, attrib.stride);
+                                    auto texData =
+                                        ::ospray::cpp::SharedData(attrib.data, OSP_VEC2F, count, attrib.stride);
                                     texData.commit();
                                     std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
                                         .setParam("vertex.texcoord", texData);
@@ -1024,7 +1027,6 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
                             }
                             mesh_index++;
                         }
-                    
                     }
                 }
             } break;

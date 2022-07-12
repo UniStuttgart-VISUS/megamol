@@ -278,67 +278,67 @@ inline void GPUMeshCollection::addMesh(std::string const& identifier, SubMeshDat
 inline void GPUMeshCollection::addMesh(
     std::string const& identifier, mesh::MeshDataAccessCollection::Mesh const& mesh) {
 
-        // check if primtives type
-        GLenum primitive_type = GL_NONE;
-        switch (mesh.primitive_type) {
-        case 0:
-            primitive_type = GL_TRIANGLES;
-            break;
-        case 1:
-            primitive_type = GL_PATCHES;
-            break;
-        case 2:
-            primitive_type = GL_LINES;
-            break;
-        case 3:
-            primitive_type = GL_LINE_STRIP;
-            break;
-        case 4:
-            primitive_type = GL_TRIANGLE_FAN;
-            break;
-        default:
-            core::utility::log::Log::DefaultLog.WriteError("GPUMeshCollection::addMeshes - No matching primitive type found!");
+    // check if primtives type
+    GLenum primitive_type = GL_NONE;
+    switch (mesh.primitive_type) {
+    case 0:
+        primitive_type = GL_TRIANGLES;
+        break;
+    case 1:
+        primitive_type = GL_PATCHES;
+        break;
+    case 2:
+        primitive_type = GL_LINES;
+        break;
+    case 3:
+        primitive_type = GL_LINE_STRIP;
+        break;
+    case 4:
+        primitive_type = GL_TRIANGLE_FAN;
+        break;
+    default:
+        core::utility::log::Log::DefaultLog.WriteError(
+            "GPUMeshCollection::addMeshes - No matching primitive type found!");
+    }
+
+    std::vector<glowl::VertexLayout> vb_layouts;
+    std::vector<std::pair<uint8_t*, uint8_t*>> vb_iterators;
+    std::pair<uint8_t*, uint8_t*> ib_iterators;
+
+    ib_iterators = {mesh.indices.data, mesh.indices.data + mesh.indices.byte_size};
+
+    auto formated_attrib_indices = mesh.getFormattedAttributeIndices();
+
+    for (auto vb_attribs : formated_attrib_indices) {
+
+        // for each set of attribute indices, create a vertex buffer layout and set data pointers
+        // using the first attribute (could be any from the set, data pointer and stride should be equal)
+        auto first_attrib = mesh.attributes[vb_attribs.front()];
+        vb_layouts.push_back(glowl::VertexLayout(first_attrib.stride, {}));
+        vb_iterators.push_back({first_attrib.data, first_attrib.data + first_attrib.byte_size});
+
+        // for each attribute in the set, add it to the attributes of the vertex buffer layout
+        for (auto const& attrib_idx : vb_attribs) {
+            auto const& attrib = mesh.attributes[attrib_idx];
+            vb_layouts.back().attributes.push_back(glowl::VertexLayout::Attribute(attrib.component_cnt,
+                mesh::MeshDataAccessCollection::convertToGLType(attrib.component_type), GL_FALSE /*ToDO*/,
+                attrib.offset));
         }
+    }
 
-        std::vector<glowl::VertexLayout> vb_layouts;
-        std::vector<std::pair<uint8_t*, uint8_t*>> vb_iterators;
-        std::pair<uint8_t*, uint8_t*> ib_iterators;
+    try {
+        addMesh(identifier, vb_layouts, vb_iterators, ib_iterators,
+            mesh::MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, primitive_type, true);
+    } catch (glowl::MeshException const& exc) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Failed to add GPU mesh \"%s\": %s. [%s, %s, line %d]\n", identifier.c_str(), exc.what(), __FILE__,
+            __FUNCTION__, __LINE__);
 
-        ib_iterators = {mesh.indices.data, mesh.indices.data + mesh.indices.byte_size};
-
-        auto formated_attrib_indices = mesh.getFormattedAttributeIndices();
-
-        for (auto vb_attribs : formated_attrib_indices) {
-
-            // for each set of attribute indices, create a vertex buffer layout and set data pointers
-            // using the first attribute (could be any from the set, data pointer and stride should be equal)
-            auto first_attrib = mesh.attributes[vb_attribs.front()];
-            vb_layouts.push_back(glowl::VertexLayout(first_attrib.stride, {}));
-            vb_iterators.push_back({first_attrib.data, first_attrib.data + first_attrib.byte_size});
-
-            // for each attribute in the set, add it to the attributes of the vertex buffer layout
-            for (auto const& attrib_idx : vb_attribs) {
-                auto const& attrib = mesh.attributes[attrib_idx];
-                vb_layouts.back().attributes.push_back(glowl::VertexLayout::Attribute(attrib.component_cnt,
-                    mesh::MeshDataAccessCollection::convertToGLType(attrib.component_type), GL_FALSE /*ToDO*/,
-                    attrib.offset));
-            }
-        }
-
-        try {
-            addMesh(identifier, vb_layouts, vb_iterators, ib_iterators,
-                mesh::MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW,
-                primitive_type, true);
-        } catch (glowl::MeshException const& exc) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Failed to add GPU mesh \"%s\": %s. [%s, %s, line %d]\n", identifier.c_str(), exc.what(), __FILE__,
-                __FUNCTION__, __LINE__);
-
-        } catch (glowl::BufferObjectException const& exc) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Failed to add GPU mesh \"%s\": %s. [%s, %s, line %d]\n", identifier.c_str(), exc.what(), __FILE__,
-                __FUNCTION__, __LINE__);
-        }
+    } catch (glowl::BufferObjectException const& exc) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Failed to add GPU mesh \"%s\": %s. [%s, %s, line %d]\n", identifier.c_str(), exc.what(), __FILE__,
+            __FUNCTION__, __LINE__);
+    }
 }
 
 inline void GPUMeshCollection::deleteSubMesh(std::string const& identifier) {

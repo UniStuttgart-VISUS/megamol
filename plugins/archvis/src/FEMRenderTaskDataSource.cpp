@@ -20,7 +20,8 @@ bool megamol::archvis::FEMRenderTaskDataSource::create(void) {
     mesh_gl::AbstractGPURenderTaskDataSource::create();
 
     m_material_collection = std::make_shared<mesh_gl::GPUMaterialCollection>();
-    std::vector<std::filesystem::path> shaderfiles = {"archvis/FEM/fem_vert.glsl", "archvis/FEM/fem_geom.glsl", "archvis/FEM/fem_frag.glsl"};
+    std::vector<std::filesystem::path> shaderfiles = {
+        "archvis/FEM/fem_vert.glsl", "archvis/FEM/fem_geom.glsl", "archvis/FEM/fem_frag.glsl"};
     m_material_collection->addMaterial(this->instance(), "ArchVisFEM", shaderfiles);
 
     return true;

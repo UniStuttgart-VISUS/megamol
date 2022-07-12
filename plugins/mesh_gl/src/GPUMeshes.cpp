@@ -20,7 +20,7 @@ bool megamol::mesh_gl::GPUMeshes::getDataCallback(core::Call& caller) {
     if (lhs_mesh_call == nullptr) {
         return false;
     }
-    
+
     auto gpu_mesh_collection = std::make_shared<std::vector<std::shared_ptr<GPUMeshCollection>>>();
     // if there is a mesh connection to the right, pass on the mesh collection
     if (rhs_mesh_call != nullptr) {
@@ -52,7 +52,7 @@ bool megamol::mesh_gl::GPUMeshes::getDataCallback(core::Call& caller) {
             auto meshes = mesh_collection->accessMeshes();
 
             for (auto& mesh : meshes) {
-                m_mesh_collection.first->addMesh(mesh.first,mesh.second);
+                m_mesh_collection.first->addMesh(mesh.first, mesh.second);
                 m_mesh_collection.second.push_back(mesh.first);
             }
         }

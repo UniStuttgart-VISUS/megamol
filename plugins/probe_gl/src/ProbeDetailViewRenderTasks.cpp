@@ -65,7 +65,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
             "probes/dfr_probeDetailView.frag.glsl", "probes/dfr_probeDetailView.tesc.glsl",
             "probes/dfr_probeDetailView.tese.glsl"};
         m_material_collection->addMaterial(this->instance(), "ProbeDetailView", shaderfiles);
-    } catch (const std::exception& ex){
+    } catch (const std::exception& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
         retval = false;

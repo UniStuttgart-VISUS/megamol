@@ -232,7 +232,7 @@ inline void MeshDataAccessCollection::addMesh(std::string const& identifier, Mes
 
 inline void MeshDataAccessCollection::append(MeshDataAccessCollection const& mesh_collection) {
     for (auto const& mesh : mesh_collection.accessMeshes()) {
-        meshes.insert({mesh.first,mesh.second});
+        meshes.insert({mesh.first, mesh.second});
     }
 }
 
@@ -246,7 +246,8 @@ inline void MeshDataAccessCollection::deleteMesh(std::string const& identifier) 
     }
 }
 
-inline std::unordered_map<std::string, MeshDataAccessCollection::Mesh> const& MeshDataAccessCollection::accessMeshes() const {
+inline std::unordered_map<std::string, MeshDataAccessCollection::Mesh> const&
+MeshDataAccessCollection::accessMeshes() const {
     return meshes;
 }
 

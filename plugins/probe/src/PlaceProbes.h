@@ -89,7 +89,8 @@ private:
         mesh::MeshDataAccessCollection::VertexAttribute& probe_ids);
     void faceNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute const& vertices,
         mesh::MeshDataAccessCollection::VertexAttribute const& normals,
-        mesh::MeshDataAccessCollection::VertexAttribute const& probe_ids, mesh::MeshDataAccessCollection::IndexData const& indices);
+        mesh::MeshDataAccessCollection::VertexAttribute const& probe_ids,
+        mesh::MeshDataAccessCollection::IndexData const& indices);
     bool placeProbes();
     bool placeByCenterline(uint32_t lei, mesh::MeshDataAccessCollection::VertexAttribute& centerline);
     bool placeByCenterpoint();

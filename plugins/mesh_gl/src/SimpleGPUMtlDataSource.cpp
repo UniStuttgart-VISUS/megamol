@@ -57,7 +57,7 @@ bool megamol::mesh_gl::SimpleGPUMtlDataSource::getDataCallback(core::Call& calle
 
         ++m_version;
 
-        //TODO only clear 
+        //TODO only clear
         clearMaterialCollection();
 
         bool vert_available = false;
@@ -92,7 +92,6 @@ bool megamol::mesh_gl::SimpleGPUMtlDataSource::getDataCallback(core::Call& calle
                     "Error during shader program creation of \"%s\": %s. [%s, %s, line %d]\n", this->FullName(),
                     exc.what(), __FILE__, __FUNCTION__, __LINE__);
             }
-            
         }
     }
 

@@ -43,8 +43,8 @@ void GPUMaterialCollection::addMaterial(megamol::core::CoreInstance* mm_core_ins
         program->setDebugLabel(identifier);
         addMaterial(identifier, program, textures);
     } catch (glowl::GLSLProgramException const& ex) {
-        throw std::runtime_error("GPUMaterialCollection - Error creating GLSLprogram \"" + identifier +
-                                          "\":\n" + translator.translateErrorLog(ex.what()));
+        throw std::runtime_error("GPUMaterialCollection - Error creating GLSLprogram \"" + identifier + "\":\n" +
+                                 translator.translateErrorLog(ex.what()));
     }
 }
 

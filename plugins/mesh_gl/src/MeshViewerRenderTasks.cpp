@@ -89,9 +89,7 @@ bool megamol::mesh_gl::MeshViewerRenderTasks::getDataCallback(core::Call& caller
                     }
                 }
                 // just take the first available shader as shader selection will eventually be integrated into this module
-                if (gpu_mtl_collections->size() > 0 && gpu_mtl_collections->front()->getMaterials().size() > 0) {
-
-                }
+                if (gpu_mtl_collections->size() > 0 && gpu_mtl_collections->front()->getMaterials().size() > 0) {}
                 for (int i = 0; i < batch_meshes.size(); ++i) {
                     auto const& shader = gpu_mtl_collections->front()->getMaterials().begin()->second.shader_program;
                     m_rendertask_collection.first->addRenderTasks(
@@ -100,8 +98,8 @@ bool megamol::mesh_gl::MeshViewerRenderTasks::getDataCallback(core::Call& caller
                 }
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "Nullpointer given for mesh or material data to \"%s\" [%s, %s, line %d]\n", this->FullName(), __FILE__,
-                    __FUNCTION__, __LINE__);
+                    "Nullpointer given for mesh or material data to \"%s\" [%s, %s, line %d]\n", this->FullName(),
+                    __FILE__, __FUNCTION__, __LINE__);
             }
         }
     } else {
