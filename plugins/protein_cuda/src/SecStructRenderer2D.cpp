@@ -102,7 +102,7 @@ const GLuint SSBOBindingPoint = 2;
 //        severityText = "Unknown";
 //        break;
 //    }
-//    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
+//    megamol::core::utility::log::Log::DefaultLog.WriteError( "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
 //}
 
 /*
@@ -204,18 +204,15 @@ bool SecStructRenderer2D::create(void) {
             throw vislib::Exception("Could not link line shader", __FILE__, __LINE__);
         }
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile line shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile line shader (@%s): %s\n",
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile line shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile line shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile line shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile line shader: Unknown exception\n");
         return false;
     }
 
@@ -252,18 +249,15 @@ bool SecStructRenderer2D::create(void) {
             throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
         }
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile tube shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile tube shader (@%s): %s\n",
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tube shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile tube shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tube shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile tube shader: Unknown exception\n");
         return false;
     }
 
@@ -304,9 +298,9 @@ bool SecStructRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
     if (pdc->DataHash() != this->lastPlaneHash) {
         if (pdc->GetPlaneCnt() > 0) {
             auto plane = pdc->GetPlaneData()[0];
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-                "Plane set to p=(%f %f %f) n=(%f %f %f)", plane.Point()[0], plane.Point()[1], plane.Point()[2],
-                plane.Normal()[0], plane.Normal()[1], plane.Normal()[2]);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Plane set to p=(%f %f %f) n=(%f %f %f)",
+                plane.Point()[0], plane.Point()[1], plane.Point()[2], plane.Normal()[0], plane.Normal()[1],
+                plane.Normal()[2]);
             this->transformationMatrix = this->rotatePlaneToXY(plane);
         } else {
             this->transformationMatrix.SetIdentity();
@@ -647,7 +641,7 @@ bool SecStructRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
                 glVertex4f(cAlphas[idx].pos[0], cAlphas[idx].pos[1], 0.0f, 1.0f);
             }
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "One needs to have fake hydrogen bonds to render them correctly");
         }
 

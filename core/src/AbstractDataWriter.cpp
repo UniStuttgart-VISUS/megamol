@@ -84,7 +84,7 @@ bool AbstractDataWriter::triggerManualRun(param::ParamSlot& slot) {
     using megamol::core::utility::log::Log;
     ASSERT(&slot == &this->manualRunSlot);
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Manual start initiated ...");
+    Log::DefaultLog.WriteInfo("Manual start initiated ...");
 
     if (!this->run()) {
         return false;

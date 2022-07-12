@@ -13,7 +13,7 @@ bool checkForCudaError(const char* file, const int line) {
 #ifdef CUDA_ERROR_CHECK
     cudaError err = cudaGetLastError();
     if (cudaSuccess != err) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "cudaSafeCall() failed at %s:%i : %s", file, line, cudaGetErrorString(err));
         return false;
     }
@@ -25,7 +25,7 @@ bool checkForCudaErrorSync(const char* file, const int line) {
 #ifdef CUDA_ERROR_CHECK
     cudaError err = cudaDeviceSynchronize();
     if (cudaSuccess != err) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "cudaSafeCall() failed with sync at %s:%i : %s", file, line, cudaGetErrorString(err));
         return false;
     }
@@ -36,7 +36,7 @@ bool checkForCudaErrorSync(const char* file, const int line) {
 bool cudaSafeCall(cudaError err, const char* file, const int line) {
 #ifdef CUDA_ERROR_CHECK
     if (cudaSuccess != err) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "cudaSafeCall() failed at %s:%i : %s", file, line, cudaGetErrorString(err));
         return false;
     }

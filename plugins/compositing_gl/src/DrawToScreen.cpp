@@ -49,17 +49,17 @@ bool megamol::compositing::DrawToScreen::create() {
         m_drawToScreen_prgm->Create(
             vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile %s (@%s):\n%s\n", shader_base_name.PeekBuffer(),
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile %s (@%s):\n%s\n",
+            shader_base_name.PeekBuffer(),
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         // return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to compile %s:\n%s\n", shader_base_name.PeekBuffer(), e.GetMsgA());
         // return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to compile %s: Unknown exception\n", shader_base_name.PeekBuffer());
         // return false;
     }

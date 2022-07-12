@@ -73,8 +73,8 @@ ArchVisMSMDataSource::ArchVisMSMDataSource()
         this->m_snd_socket.Create(vislib::net::Socket::ProtocolFamily::FAMILY_INET,
             vislib::net::Socket::Type::TYPE_STREAM, vislib::net::Socket::Protocol::PROTOCOL_TCP);
     } catch (vislib::net::SocketException e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, ("Socket Exception during startup/create: %s", e.GetMsgA()));
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            ("Socket Exception during startup/create: %s", e.GetMsgA()));
     }
 
     //std::cout << "Socket Endpoint: " << endpoint.ToStringA() << std::endl;
@@ -154,8 +154,8 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller) {
             std::string greeting("Hello, my name is MegaMol");
             this->m_rcv_socket.Send(greeting.c_str(), greeting.length());
         } catch (vislib::net::SocketException e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, ("Socket Exception during connection: %s", e.GetMsgA()));
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                ("Socket Exception during connection: %s", e.GetMsgA()));
             return false;
         }
     }
@@ -176,8 +176,8 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller) {
             std::string greeting("Hello, my name is MegaMol");
             //this->m_snd_socket.Send(greeting.c_str(), greeting.length());
         } catch (vislib::net::SocketException e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, ("Socket Exception during connection: %s", e.GetMsgA()));
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                ("Socket Exception during connection: %s", e.GetMsgA()));
             return false;
         }
     }
