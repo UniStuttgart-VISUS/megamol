@@ -19,18 +19,12 @@ if(BUILD_CORE)
 
   # Target definition
   add_library(${PROJECT_NAME} OBJECT ${public_header_files} ${header_files} ${source_files} ${shader_files})
-  target_compile_definitions(${PROJECT_NAME} PRIVATE MEGAMOLCORE_EXPORTS)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
   target_link_libraries(${PROJECT_NAME} 
-    PUBLIC core vislib_gl glowl megamol-shader-factory frontend_resources  
+    PUBLIC core vislib_gl glowl megamol-shader-factory frontend_resources OpenMP::OpenMP_CXX
     PRIVATE abstract_frontend_service) # abstract render api used by MegaMolGraph
-
-  if(WIN32)
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-      LINK_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DYNAMICBASE:NO")
-  endif()
 
   # Install shaders
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ DESTINATION "share/shaders")

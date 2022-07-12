@@ -9,10 +9,14 @@
 
 #include "MeshBakery.h"
 #include "ObjWriter.h"
+#include "STLWriter.h"
+#include "SimplifyMesh.h"
 #include "UIElement.h"
 #include "WavefrontObjLoader.h"
 #include "gltf/glTFFileLoader.h"
 #include "mesh/MeshCalls.h"
+#include "mesh/MeshDataCall.h"
+#include "mesh/TriangleMeshCall.h"
 
 namespace megamol::mesh {
 class MeshPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -39,6 +43,8 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGlTFData>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallMesh>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallImage>();
+        this->call_descriptions.RegisterAutoDescription<megamol::mesh::MeshDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::mesh::TriangleMeshCall>();
     }
 };
 } // namespace megamol::mesh

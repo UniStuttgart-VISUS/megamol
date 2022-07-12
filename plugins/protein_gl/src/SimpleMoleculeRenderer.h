@@ -11,15 +11,15 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "DeferredRenderingProvider.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/light/CallLight.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "protein/Color.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
+#include "protein_gl/DeferredRenderingProvider.h"
 
 #include "glowl/BufferObject.hpp"
 #include "glowl/FramebufferObject.hpp"
@@ -186,8 +186,6 @@ private:
     megamol::core::CallerSlot bsDataCallerSlot;
     /** Slot to get the lights */
     megamol::core::CallerSlot getLightsSlot;
-    /** Slot to get the framebuffer */
-    megamol::core::CallerSlot getFramebufferSlot;
 
     /** camera information */
     core::view::Camera cam;
@@ -243,13 +241,6 @@ private:
     std::shared_ptr<glowl::GLSLProgram> cylinderShader_;
     std::shared_ptr<glowl::GLSLProgram> lineShader_;
 
-    // the local fbo
-    std::shared_ptr<glowl::FramebufferObject> usedFramebufferObj_;
-    uint32_t fbo_version_;
-
-    std::vector<LightParams> pointLights_;
-    std::vector<LightParams> directionalLights_;
-
     // buffer objects
     enum class Buffers : GLuint {
         POSITION = 0,
@@ -265,40 +256,44 @@ private:
     std::array<std::unique_ptr<glowl::BufferObject>, static_cast<int>(Buffers::BUFF_COUNT)> buffers_;
 
     /** The current coloring mode */
-    protein::Color::ColoringMode currentColoringMode0;
-    protein::Color::ColoringMode currentColoringMode1;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode0;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode1;
 
     /** The color lookup table (for chains, amino acids,...) */
-    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+    std::vector<glm::vec3> colorLookupTable_;
+    /** The color lookup table read from file */
+    std::vector<glm::vec3> fileColorTable_;
     /** The color lookup table which stores the rainbow colors */
-    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+    std::vector<glm::vec3> rainbowColors_;
+
+    bool tableFromFile_;
 
     /** The atom color table for rendering */
-    vislib::Array<float> atomColorTable;
+    std::vector<glm::vec3> atomColorTable_;
 
     /** The current rendering mode */
     RenderMode currentRenderMode;
 
     /** vertex array for spheres */
-    vislib::Array<float> vertSpheres;
+    std::vector<glm::vec4> vertSpheres_;
     /** vertex array for cylinders */
-    vislib::Array<float> vertCylinders;
+    std::vector<glm::vec4> vertCylinders_;
     /** attribute array for quaterinons of the cylinders */
-    vislib::Array<float> quatCylinders;
+    std::vector<glm::vec4> quatCylinders_;
     /** attribute array for inParam of the cylinders (radius and length) */
-    vislib::Array<float> inParaCylinders;
+    std::vector<glm::vec2> inParaCylinders_;
     /** first color array for cylinder */
-    vislib::Array<float> color1Cylinders;
+    std::vector<glm::vec3> color1Cylinders_;
     /** second color array for cylinder */
-    vislib::Array<float> color2Cylinders;
+    std::vector<glm::vec3> color2Cylinders_;
     /** Connections filter */
-    vislib::Array<int> conFilter;
+    std::vector<int> conFilter_;
     /** vertex array for points */
-    vislib::Array<float> vertPoints;
+    std::vector<glm::vec4> vertPoints_;
     /** vertex array for lines */
-    vislib::Array<float> vertLines;
+    std::vector<glm::vec4> vertLines_;
     /** color array for the lines */
-    vislib::Array<float> colorLines;
+    std::vector<glm::vec3> colorLines_;
 
     // the list of molecular indices
     vislib::Array<vislib::StringA> molIdxList;

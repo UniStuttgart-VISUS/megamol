@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 #include "glTFFileLoader.h"
 
 #include "mmcore/param/FilePathParam.h"

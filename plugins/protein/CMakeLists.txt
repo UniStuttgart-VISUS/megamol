@@ -10,6 +10,7 @@ megamol_plugin(protein
     protein_calls
     geometry_calls
   DEPENDS_EXTERNALS
+    chemfiles
     nanoflann)
 
 if (protein_PLUGIN_ENABLED)

@@ -11,10 +11,9 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/Thread.h"
-#include "stdafx.h"
 #include "vislib/String.h"
 #include "vislib/sys/FastFile.h"
+#include "vislib/sys/Thread.h"
 #include "vislib/sys/sysfunctions.h"
 
 using namespace megamol;
@@ -83,13 +82,13 @@ bool SIFFWriter::run(void) {
 
     auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
     if (filename.empty()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
+        Log::DefaultLog.WriteError("No file name specified. Abort.");
         return false;
     }
 
     geocalls::MultiParticleDataCall* mpdc = this->dataSlot.CallAs<geocalls::MultiParticleDataCall>();
     if (mpdc == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No data source connected. Abort.");
+        Log::DefaultLog.WriteError("No data source connected. Abort.");
         return false;
     }
 
@@ -97,26 +96,25 @@ bool SIFFWriter::run(void) {
 
     int version = this->versionSlot.Param<core::param::EnumParam>()->Value();
     if ((version != 100) && (version != 101)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unsupported version requested. Abort.");
+        Log::DefaultLog.WriteError("Unsupported version requested. Abort.");
         return false;
     }
 
     if (vislib::sys::File::Exists(filename.native().c_str())) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_WARN, "File %s already exists and will be overwritten.", filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteWarn(
+            "File %s already exists and will be overwritten.", filename.generic_u8string().c_str());
     }
 
     mpdc->SetFrameID(0, true);
     if (!(*mpdc)(0)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Could not get data (Frame 0). Abort.");
+        Log::DefaultLog.WriteError("Could not get data (Frame 0). Abort.");
         return false;
     }
 
     vislib::sys::FastFile file;
     if (!file.Open(filename.native().c_str(), vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
             vislib::sys::File::CREATE_OVERWRITE)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "Unable to create output file \"%s\". Abort.", filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteError("Unable to create output file \"%s\". Abort.", filename.generic_u8string().c_str());
         return false;
     }
 
@@ -241,7 +239,7 @@ bool SIFFWriter::run(void) {
             }
         }
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Completed writing data\n");
+        Log::DefaultLog.WriteInfo("Completed writing data\n");
     } catch (Exception ex) {
         Log::DefaultLog.WriteError("Failed to write: %s (%s, %d)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
     } catch (...) { Log::DefaultLog.WriteError("Failed to write: unexpected exception\n"); }

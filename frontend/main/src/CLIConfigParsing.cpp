@@ -19,7 +19,7 @@ static std::filesystem::path getHomeDir() {
 // find megamol executable path
 static std::filesystem::path getExecutableDirectory() {
     std::filesystem::path path;
-#ifdef WIN32
+#ifdef _WIN32
     std::vector<wchar_t> filename;
     DWORD length;
     do {
@@ -102,9 +102,11 @@ static std::string disable_opengl_option = "nogl";
 static std::string vsync_option = "vsync";
 static std::string window_option = "w,window";
 static std::string fullscreen_option = "f,fullscreen";
+static std::string force_window_size_option = "force-window-size";
 static std::string nodecoration_option = "nodecoration";
 static std::string topmost_option = "topmost";
 static std::string nocursor_option = "nocursor";
+static std::string hidden_option = "hidden";
 static std::string interactive_option = "i,interactive";
 static std::string guishow_option = "guishow";
 static std::string nogui_option = "nogui";
@@ -253,33 +255,17 @@ static void logfile_handler(
 
 static const std::string accepted_log_level_strings =
     "('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')";
-static unsigned int parse_log_level(std::string const& value) {
-    if (value.front() == '-')
-        exit("log level value must be positive. seems to be negative: " + value);
-
-    unsigned int value_as_uint = 0;
-
-    try {
-        if (std::string(value).find_first_of("0123456789") != std::string::npos) {
-            value_as_uint = std::stoi(value);
-        } else {
-            value_as_uint = megamol::core::utility::log::Log::ParseLevelAttribute(value);
-        }
-    } catch (...) {
-        exit("Could not parse valid log level string or positive integer from argument \"" + value + "\"");
-    }
-
-    return value_as_uint;
-}
 
 static void loglevel_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.log_level = parse_log_level(parsed_options[option_name].as<std::string>());
+    config.log_level =
+        megamol::core::utility::log::Log::ParseLevelAttribute(parsed_options[option_name].as<std::string>());
 };
 
 static void echolevel_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.echo_level = parse_log_level(parsed_options[option_name].as<std::string>());
+    config.echo_level =
+        megamol::core::utility::log::Log::ParseLevelAttribute(parsed_options[option_name].as<std::string>());
 };
 
 static void project_handler(
@@ -386,6 +372,10 @@ static void no_opengl_handler(
     config.no_opengl = parsed_options[option_name].as<bool>();
 #endif
 };
+static void force_window_size_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.force_window_size = parsed_options[option_name].as<bool>();
+};
 static void fullscreen_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::fullscreen;
@@ -402,6 +392,11 @@ static void nocursor_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::nocursor;
 };
+static void hidden_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::hidden;
+};
+
 
 static void interactive_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
@@ -529,10 +524,14 @@ std::vector<OptionsListEntry> cli_options_list =
             no_opengl_handler},
         {window_option, "Set the window size and position, syntax: --window WIDTHxHEIGHT[+POSX+POSY]",
             cxxopts::value<std::string>(), window_handler},
+        {force_window_size_option,
+            "Force size of the window, otherwise the given size is only a recommendation for the window manager",
+            cxxopts::value<bool>(), force_window_size_handler},
         {fullscreen_option, "Open maximized window", cxxopts::value<bool>(), fullscreen_handler},
         {nodecoration_option, "Open window without decorations", cxxopts::value<bool>(), nodecoration_handler},
         {topmost_option, "Open window that stays on top of all others", cxxopts::value<bool>(), topmost_handler},
         {nocursor_option, "Do not show mouse cursor inside window", cxxopts::value<bool>(), nocursor_handler},
+        {hidden_option, "Do not show the window", cxxopts::value<bool>(), hidden_handler},
         {interactive_option, "Run MegaMol even if some project file failed to load", cxxopts::value<bool>(),
             interactive_handler},
         {project_files_option, "Project file(s) to load at startup", cxxopts::value<std::vector<std::string>>(),

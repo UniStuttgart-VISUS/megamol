@@ -41,7 +41,7 @@ class CoreInstance;
  * string, table, math, package, and os (see LUA_FULL_ENVIRONMENT define).
  * Lua constants LOGINFO, LOGWARNING, LOGERROR are provided for MegaMol log output.
  */
-class MEGAMOLCORE_API LuaState {
+class LuaState {
 public:
     static const std::string MEGAMOL_ENV;
 
@@ -247,9 +247,6 @@ private:
 
     /** gets a string from the stack position i. returns false if it's not a string */
     bool getString(int i, std::string& out);
-
-    /** interpret string log levels */
-    static UINT parseLevelAttribute(const std::string attr);
 
     /** the one Lua state */
     LuaInterpreter<LuaState> theLua;

@@ -7,7 +7,6 @@
 #include "AbstractOSPRayMaterial.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmospray/CallOSPRayMaterial.h"
-#include "stdafx.h"
 
 
 using namespace megamol::ospray;

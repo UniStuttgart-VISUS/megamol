@@ -38,6 +38,7 @@ struct EntryPoint {
 
     EntryPointExecutionCallback execute;
     ImageWrapper execution_result_image;
+    int priority = 0; // entry points with smaller priority get presented first
 };
 
 } /* end namespace frontend_resources */

@@ -17,10 +17,11 @@
 #include "mmcore/view/Camera.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "protein/Color.h"
 #include "protein/ReducedSurface.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
+#include "protein_gl/DeferredRenderingProvider.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include "vislib/math/Quaternion.h"
@@ -42,9 +43,6 @@ namespace protein_gl {
  */
 class MoleculeSESRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
-    /** postprocessing modi */
-    enum PostprocessingMode { NONE = 0, AMBIENT_OCCLUSION = 1, SILHOUETTE = 2, TRANSPARENCY = 3 };
-
     /** render modi */
     enum RenderMode {
         GPU_RAYCASTING = 0,
@@ -106,15 +104,6 @@ public:
         probeRadius = rad;
     };
 
-    /** set the color of the silhouette */
-    void SetSilhouetteColor(float r, float g, float b) {
-        silhouetteColor.Set(r, g, b);
-        codedSilhouetteColor = int(r * 255.0f) * 1000000 + int(g * 255.0f) * 1000 + int(b * 255.0f);
-    };
-    void SetSilhouetteColor(vislib::math::Vector<float, 3> color) {
-        SetSilhouetteColor(color.GetX(), color.GetY(), color.GetZ());
-    };
-
 protected:
     /**
      * Implementation of 'Create'.
@@ -127,22 +116,6 @@ protected:
      * Implementation of 'release'.
      */
     virtual void release(void);
-
-    /**
-     * Render atoms as spheres using GLSL Raycasting shaders.
-     *
-     * @param protein The protein data interface.
-     * @param scale The scale factor for the atom radius.
-     */
-    void RenderAtomsGPU(const megamol::protein_calls::MolecularDataCall* mol, const float scale = 1.0f);
-
-    /**
-     * Renders the probe atom at position 'm'.
-     *
-     * @param m The probe position.
-     */
-    // void RenderProbe(const vislib::math::Vector<float, 3> m);
-    void RenderProbeGPU(const vislib::math::Vector<float, 3> m);
 
     /**
      * Compute all vertex, attribute and color arrays used for ray casting
@@ -180,46 +153,11 @@ protected:
     vislib::math::Vector<float, 3> DecodeColor(int codedColor) const;
 
     /**
-     * Creates the frame buffer object and textures needed for offscreen rendering.
-     */
-    void CreateFBO();
-
-    /**
      * Render the molecular surface using GPU raycasting.
      *
      * @param protein Pointer to the protein data interface.
      */
     void RenderSESGpuRaycasting(const megamol::protein_calls::MolecularDataCall* mol);
-
-    /**
-     * Render debug stuff --- THIS IS ONLY FOR DEBUGGING PURPOSES, REMOVE IN FINAL VERSION!!!
-     *
-     * @param protein Pointer to the protein data interface.
-     */
-    void RenderDebugStuff(const megamol::protein_calls::MolecularDataCall* mol);
-
-    /**
-     * Postprocessing: use screen space ambient occlusion
-     */
-    void PostprocessingSSAO();
-
-    /**
-     * Postprocessing: use silhouette shader
-     */
-    void PostprocessingSilhouette();
-
-    /**
-     * Postprocessing: transparency (blend two images)
-     */
-    void PostprocessingTransparency(float transparency);
-
-    /**
-     * returns the color of the atom 'idx' for the current coloring mode
-     *
-     * @param idx The index of the atom.
-     * @return The color of the atom with the index 'idx'.
-     */
-    vislib::math::Vector<float, 3> GetProteinAtomColor(unsigned int idx);
 
     /**
      * Create the singularity textureS which stores for every RS-edge (of all
@@ -283,13 +221,11 @@ private:
     core::view::Camera camera;
 
     /** framebuffer information */
-    std::shared_ptr<glowl::FramebufferObject> fbo;
+    std::shared_ptr<glowl::FramebufferObject> fbo_;
 
     // camera information
     // vislib::SmartPtr<vislib::graphics::CameraParameters> MoleculeSESRenderercameraInfo;
     core::view::Camera MoleculeSESRenderercameraInfo;
-
-    megamol::core::param::ParamSlot postprocessingParam;
 
     /** parameter slot for coloring mode */
     megamol::core::param::ParamSlot coloringModeParam0;
@@ -297,17 +233,12 @@ private:
     megamol::core::param::ParamSlot coloringModeParam1;
     /** parameter slot for coloring mode weighting*/
     megamol::core::param::ParamSlot cmWeightParam;
-    megamol::core::param::ParamSlot silhouettecolorParam;
-    megamol::core::param::ParamSlot sigmaParam;
-    megamol::core::param::ParamSlot lambdaParam;
     /** parameter slot for min color of gradient color mode */
     megamol::core::param::ParamSlot minGradColorParam;
     /** parameter slot for mid color of gradient color mode */
     megamol::core::param::ParamSlot midGradColorParam;
     /** parameter slot for max color of gradient color mode */
     megamol::core::param::ParamSlot maxGradColorParam;
-    megamol::core::param::ParamSlot fogstartParam;
-    megamol::core::param::ParamSlot debugParam;
     megamol::core::param::ParamSlot drawSESParam;
     megamol::core::param::ParamSlot drawSASParam;
     megamol::core::param::ParamSlot molIdxListParam;
@@ -317,7 +248,6 @@ private:
     megamol::core::param::ParamSlot probeRadiusSlot;
 
 
-    bool drawRS;
     bool drawSES;
     bool drawSAS;
 
@@ -327,30 +257,9 @@ private:
     /** the reduced surface(s) */
     std::vector<protein::ReducedSurface*> reducedSurface;
 
-    // shader for the cylinders (raycasting view)
-    vislib_gl::graphics::gl::GLSLShader cylinderShader;
-    // shader for the spheres (raycasting view)
-    vislib_gl::graphics::gl::GLSLShader sphereShader;
-    // shader for the spheres with clipped interior (raycasting view)
-    vislib_gl::graphics::gl::GLSLShader sphereClipInteriorShader;
-    // shader for per pixel lighting (polygonal view)
-    vislib_gl::graphics::gl::GLSLShader lightShader;
-    // shader for 1D gaussian filtering (postprocessing)
-    vislib_gl::graphics::gl::GLSLShader hfilterShader;
-    vislib_gl::graphics::gl::GLSLShader vfilterShader;
-    // shader for silhouette drawing (postprocessing)
-    vislib_gl::graphics::gl::GLSLShader silhouetteShader;
-    // shader for cheap transparency (postprocessing/blending)
-    vislib_gl::graphics::gl::GLSLShader transparencyShader;
-
     std::shared_ptr<glowl::GLSLProgram> torusShader_;
     std::shared_ptr<glowl::GLSLProgram> sphereShader_;
     std::shared_ptr<glowl::GLSLProgram> sphericalTriangleShader_;
-
-    /**
-     * updates and uploads all arrays according to the incoming light information
-     */
-    void UpdateLights();
 
     ////////////
 
@@ -363,18 +272,17 @@ private:
     // radius of the probe atom
     float probeRadius;
 
-    vislib::Array<float> atomColorTable;
+    std::vector<glm::vec3> atomColorTable;
     unsigned int currentArray;
 
     /** 'true' if the data for the current render mode is computed, 'false' otherwise */
     bool preComputationDone;
 
+    uint32_t atomCount_;
 
     /** The current coloring mode */
-    protein::Color::ColoringMode currentColoringMode0;
-    protein::Color::ColoringMode currentColoringMode1;
-    /** postprocessing mode */
-    PostprocessingMode postprocessing;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode0;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode1;
 
     /** vertex and attribute arrays for raycasting the tori */
     std::vector<vislib::Array<float>> torusVertexArray;
@@ -399,29 +307,15 @@ private:
     std::vector<vislib::Array<float>> sphereVertexArray;
     std::vector<vislib::Array<float>> sphereColors;
 
-    // FBOs and textures for postprocessing
-    GLuint colorFBO;
-    GLuint blendFBO;
-    GLuint horizontalFilterFBO;
-    GLuint verticalFilterFBO;
-    GLuint texture0;
-    GLuint depthTex0;
-    GLuint texture1;
-    GLuint depthTex1;
-    GLuint hFilter;
-    GLuint vFilter;
     // width and height of view
     unsigned int width;
     unsigned int height;
-    // sigma factor for screen space ambient occlusion
-    float sigma;
-    // lambda factor for screen space ambient occlusion
-    float lambda;
 
     /** The color lookup table (for chains, amino acids,...) */
-    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+    std::vector<glm::vec3> colorLookupTable;
+    std::vector<glm::vec3> fileLookupTable;
     /** The color lookup table which stores the rainbow colors */
-    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+    std::vector<glm::vec3> rainbowColors;
 
     // texture for singularity handling (concave triangles)
     std::vector<GLuint> singularityTexture;
@@ -440,11 +334,6 @@ private:
     // silhouette color
     vislib::math::Vector<float, 3> silhouetteColor;
     int codedSilhouetteColor;
-
-    // start value for fogging
-    float fogStart;
-    // transparency value
-    float transparency;
 
     // the list of molecular indices
     vislib::Array<vislib::StringA> molIdxList;
@@ -486,12 +375,7 @@ private:
     GLuint vertexArrayTorus_;
     GLuint vertexArrayTria_;
 
-    struct LightParams {
-        float x, y, z, intensity;
-    };
-
-    std::vector<LightParams> pointLights_;
-    std::vector<LightParams> directionalLights_;
+    DeferredRenderingProvider deferredProvider_;
 };
 
 } // namespace protein_gl

@@ -8,7 +8,7 @@
 namespace megamol {
 namespace core {
 
-class MEGAMOLCORE_API MegaMolGraph_Convenience {
+class MegaMolGraph_Convenience {
 public:
     // parameter groups hold requests for new parameter values
     // values are applied to the graph upon request at once

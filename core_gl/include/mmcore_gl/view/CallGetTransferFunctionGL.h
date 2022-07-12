@@ -32,7 +32,7 @@ namespace view {
  * - Use `vec color = tflookup(tfTexture, tfRange, value);`
  * - Or, conveniently `vec color = tflookup(value);`
  */
-class MEGAMOLCORE_API CallGetTransferFunctionGL : public core::view::AbstractCallGetTransferFunction {
+class CallGetTransferFunctionGL : public core::view::AbstractCallGetTransferFunction {
 public:
     /**
      * Answer the name of the objects of this description.

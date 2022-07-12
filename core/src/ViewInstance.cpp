@@ -4,11 +4,10 @@
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 
+#include "mmcore/ViewInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/ModuleNamespace.h"
-#include "mmcore/ViewInstance.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/AutoLock.h"
 
@@ -18,12 +17,7 @@ using namespace megamol::core;
 /*
  * ViewInstance::ViewInstance
  */
-ViewInstance::ViewInstance(void)
-        : ModuleNamespace("")
-        , ApiHandle()
-        , view(NULL)
-        , closeRequestCallback(NULL)
-        , closeRequestData(NULL) {
+ViewInstance::ViewInstance(void) : ModuleNamespace(""), view(NULL), closeRequestCallback(NULL), closeRequestData(NULL) {
     // intentionally empty
 }
 
@@ -98,8 +92,7 @@ void ViewInstance::ClearCleanupMark(void) {
 void ViewInstance::PerformCleanup(void) {
     if (this->CleanupMark()) {
         // this should never happen!
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_WARN, "Internal Error: ViewInstance marked for cleanup.\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Internal Error: ViewInstance marked for cleanup.\n");
     }
     ModuleNamespace::PerformCleanup();
 }

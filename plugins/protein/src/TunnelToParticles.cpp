@@ -4,7 +4,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "TunnelToParticles.h"
-#include "stdafx.h"
 
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "protein_calls/TunnelResidueDataCall.h"

@@ -5,18 +5,18 @@
  * All Rights reserved.
  */
 
-#include "stdafx.h"
 
 #include "SecStructRenderer2D.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/graphics/gl/SimpleFont.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Vector.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 #include <limits>
 #include <map>
 
@@ -102,14 +102,14 @@ const GLuint SSBOBindingPoint = 2;
 //        severityText = "Unknown";
 //        break;
 //    }
-//    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
+//    megamol::core::utility::log::Log::DefaultLog.WriteError( "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
 //}
 
 /*
  * SecStructRenderer2D::SecStructRenderer2D
  */
 SecStructRenderer2D::SecStructRenderer2D(void)
-        : Renderer2DModule()
+        : Renderer2DModuleGL()
         , dataInSlot("getData", "Connects the secondary structure renderer with data storage.")
         , planeInSlot("getPlane", "Connect the secondary structure renderer with a plane source.")
         , coilWidthParam("Dimensions::coilWidth", "Screen width of random coil.")
@@ -168,14 +168,7 @@ SecStructRenderer2D::~SecStructRenderer2D(void) {
  */
 bool SecStructRenderer2D::create(void) {
     using namespace vislib::sys;
-    using namespace vislib::graphics::gl;
-
-    if (!GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
-    if (!GLSLTesselationShader::InitialiseExtensions()) {
-        return false;
-    }
+    using namespace vislib_gl::graphics::gl;
 
     /**************************** Line Shader ********************************/
     vislib::SmartPtr<ShaderSource> vert, tessCont, tessEval, geom, frag;
@@ -184,19 +177,20 @@ bool SecStructRenderer2D::create(void) {
     tessEval = new ShaderSource();
     geom = new ShaderSource();
     frag = new ShaderSource();
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("linetessellation::vertex", *vert)) {
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    if (!ssf->MakeShaderSource("linetessellation::vertex", *vert)) {
         return false;
     }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("linetessellation::tesscontrol", *tessCont)) {
+    if (!ssf->MakeShaderSource("linetessellation::tesscontrol", *tessCont)) {
         return false;
     }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("linetessellation::tesseval", *tessEval)) {
+    if (!ssf->MakeShaderSource("linetessellation::tesseval", *tessEval)) {
         return false;
     }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("linetessellation::geometry", *geom)) {
+    if (!ssf->MakeShaderSource("linetessellation::geometry", *geom)) {
         return false;
     }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("linetessellation::fragment", *frag)) {
+    if (!ssf->MakeShaderSource("linetessellation::fragment", *frag)) {
         return false;
     }
     try {
@@ -209,19 +203,16 @@ bool SecStructRenderer2D::create(void) {
         if (!this->lineShader.Link()) {
             throw vislib::Exception("Could not link line shader", __FILE__, __LINE__);
         }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile line shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile line shader (@%s): %s\n",
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile line shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile line shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile line shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile line shader: Unknown exception\n");
         return false;
     }
 
@@ -232,19 +223,19 @@ bool SecStructRenderer2D::create(void) {
     tessEval = new ShaderSource();
     geom = new ShaderSource();
     frag = new ShaderSource();
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("tubetessellation::vertex", *vert)) {
+    if (!ssf->MakeShaderSource("tubetessellation::vertex", *vert)) {
         return false;
     }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("tubetessellation::tesscontrol", *tessCont)) {
+    if (!ssf->MakeShaderSource("tubetessellation::tesscontrol", *tessCont)) {
         return false;
     }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("tubetessellation::tesseval", *tessEval)) {
+    if (!ssf->MakeShaderSource("tubetessellation::tesseval", *tessEval)) {
         return false;
     }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("tubetessellation::geometry", *geom)) {
+    if (!ssf->MakeShaderSource("tubetessellation::geometry", *geom)) {
         return false;
     }
-    if (!instance()->ShaderSourceFactory().MakeShaderSource("tubetessellation::fragment", *frag)) {
+    if (!ssf->MakeShaderSource("tubetessellation::fragment", *frag)) {
         return false;
     }
     try {
@@ -257,19 +248,16 @@ bool SecStructRenderer2D::create(void) {
         if (!this->tubeShader.Link()) {
             throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
         }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile tube shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile tube shader (@%s): %s\n",
+            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tube shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile tube shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile tube shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile tube shader: Unknown exception\n");
         return false;
     }
 
@@ -286,7 +274,7 @@ void SecStructRenderer2D::release(void) {
 /*
  * SecStructRenderer2D::GetExtents
  */
-bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
+bool SecStructRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
 
     MolecularDataCall* mdc = this->dataInSlot.CallAs<MolecularDataCall>();
     if (mdc == nullptr)
@@ -310,9 +298,9 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
     if (pdc->DataHash() != this->lastPlaneHash) {
         if (pdc->GetPlaneCnt() > 0) {
             auto plane = pdc->GetPlaneData()[0];
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-                "Plane set to p=(%f %f %f) n=(%f %f %f)", plane.Point()[0], plane.Point()[1], plane.Point()[2],
-                plane.Normal()[0], plane.Normal()[1], plane.Normal()[2]);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Plane set to p=(%f %f %f) n=(%f %f %f)",
+                plane.Point()[0], plane.Point()[1], plane.Point()[2], plane.Normal()[0], plane.Normal()[1],
+                plane.Normal()[2]);
             this->transformationMatrix = this->rotatePlaneToXY(plane);
         } else {
             this->transformationMatrix.SetIdentity();
@@ -470,7 +458,8 @@ bool SecStructRenderer2D::GetExtents(view::CallRender2D& call) {
 
     float ar = static_cast<float>(this->bbRect.AspectRatio());
 
-    call.SetBoundingBox(vislib::math::Rectangle<float>(-1.0f * ar, -1.0f, 1.0f * ar, 1.0f));
+    // TODO Karsten set bounding box
+    //call.SetBoundingBox(vislib::math::Rectangle<float>(-1.0f * ar, -1.0f, 1.0f * ar, 1.0f));
 
     return true;
 }
@@ -488,7 +477,7 @@ bool SecStructRenderer2D::MouseEvent(float x, float y, view::MouseFlags flags) {
 /*
  * SecStructRenderer2D::Render
  */
-bool SecStructRenderer2D::Render(view::CallRender2D& call) {
+bool SecStructRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
 
     MolecularDataCall* mdc = this->dataInSlot.CallAs<MolecularDataCall>();
     if (mdc == nullptr)
@@ -652,7 +641,7 @@ bool SecStructRenderer2D::Render(view::CallRender2D& call) {
                 glVertex4f(cAlphas[idx].pos[0], cAlphas[idx].pos[1], 0.0f, 1.0f);
             }
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "One needs to have fake hydrogen bonds to render them correctly");
         }
 

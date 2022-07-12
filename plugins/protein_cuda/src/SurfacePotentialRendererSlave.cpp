@@ -13,8 +13,9 @@
 #include "VBODataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "ogl_error_check.h"
-#include "stdafx.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;
@@ -25,7 +26,7 @@ using namespace megamol::core::utility::log;
  * SurfacePotentialRendererSlave::SurfacePotentialRendererSlave
  */
 SurfacePotentialRendererSlave::SurfacePotentialRendererSlave(void)
-        : Renderer3DModuleDS()
+        : Renderer3DModuleGL()
         , vboSlot("vboIn", "Caller slot to obtain vbo data and extent")
         , surfAlphaSclSlot("alphaScl", "Transparency scale factor") {
 
@@ -52,19 +53,16 @@ SurfacePotentialRendererSlave::~SurfacePotentialRendererSlave(void) {
  */
 bool SurfacePotentialRendererSlave::create(void) {
 
-    using namespace vislib::graphics::gl;
+    using namespace vislib_gl::graphics::gl;
 
     // Init extensions
-    if (!ogl_IsVersionGEQ(2, 0) || !areExtsAvailable("\
+    /*if (!ogl_IsVersionGEQ(2, 0) || !areExtsAvailable("\
             GL_EXT_texture3D \
             GL_EXT_framebuffer_object \
             GL_ARB_draw_buffers \
             GL_ARB_vertex_buffer_object")) {
         return false;
-    }
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
+    }*/
 
     // Load shader sources
     ShaderSource vertSrc, fragSrc, geomSrc;
@@ -74,18 +72,15 @@ bool SurfacePotentialRendererSlave::create(void) {
         return false;
     }
 
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load shader for per pixel lighting of the surface
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertex", vertSrc)) {
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
-    if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-            "electrostatics::pplsurface::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
+    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragment", fragSrc)) {
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     try {
@@ -93,8 +88,7 @@ bool SurfacePotentialRendererSlave::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception& e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create the ppl shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create the ppl shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
@@ -105,13 +99,7 @@ bool SurfacePotentialRendererSlave::create(void) {
 /*
  * SurfacePotentialRendererSlave::GetExtents
  */
-bool SurfacePotentialRendererSlave::GetExtents(core::Call& call) {
-
-    core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr3d == NULL) {
-        return false;
-    }
-
+bool SurfacePotentialRendererSlave::GetExtents(core_gl::view::CallRender3DGL& call) {
     VBODataCall* c = this->vboSlot.CallAs<VBODataCall>();
     if (c == NULL) {
         return false;
@@ -124,8 +112,8 @@ bool SurfacePotentialRendererSlave::GetExtents(core::Call& call) {
     // Note: WS bbox hass already been scaled in master renderer so it does not
     // need to be scaled again
     this->bbox = c->GetBBox();
-    cr3d->AccessBoundingBoxes() = this->bbox;
-    cr3d->SetTimeFramesCount(c->GetFrameCnt());
+    call.AccessBoundingBoxes() = this->bbox;
+    call.SetTimeFramesCount(c->GetFrameCnt());
 
     //    printf("Slave Call3d Object Space BBOX %f %f %f, %f %f %f\n",
     //            cr3d->AccessBoundingBoxes().ObjectSpaceBBox().Left(),
@@ -174,7 +162,7 @@ void SurfacePotentialRendererSlave::release(void) {
 /*
  * SurfacePotentialRendererSlave::Render
  */
-bool SurfacePotentialRendererSlave::Render(core::Call& call) {
+bool SurfacePotentialRendererSlave::Render(core_gl::view::CallRender3DGL& call) {
 
     VBODataCall* c = this->vboSlot.CallAs<VBODataCall>();
     if (c == NULL) {
@@ -187,16 +175,6 @@ bool SurfacePotentialRendererSlave::Render(core::Call& call) {
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-
-    // Apply scaling based on combined bounding box
-    float scale;
-    if (!vislib::math::IsEqual(this->bbox.ObjectSpaceBBox().LongestEdge(), 0.0f)) {
-        scale = 2.0f / this->bbox.ObjectSpaceBBox().LongestEdge();
-    } else {
-        scale = 1.0f;
-    }
-    //printf("scale slave %f\n", scale);
-    glScalef(scale, scale, scale);
 
     //    // DEBUG Print modelview matrix
     //    GLfloat matrix[16];

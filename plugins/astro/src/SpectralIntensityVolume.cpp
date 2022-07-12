@@ -1,5 +1,4 @@
 #include "SpectralIntensityVolume.h"
-#include "stdafx.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -12,7 +11,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
-#include "mmcore/utility/sys/ConsoleProgressBar.h"
+#include "vislib/sys/ConsoleProgressBar.h"
 
 #include "omp.h"
 

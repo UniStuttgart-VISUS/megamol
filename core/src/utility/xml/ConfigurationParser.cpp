@@ -4,7 +4,6 @@
  * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 
 #include "mmcore/utility/xml/ConfigurationParser.h"
 #include "vislib/Array.h"
@@ -79,7 +78,7 @@ ConfigurationParser::~ConfigurationParser(void) {}
  */
 bool ConfigurationParser::CheckBaseTag(const XmlReader& reader) {
     if (!reader.BaseTag().Equals(MMXML_STRING("MegaMol"), false)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, "Config file does not specify <MegaMol> as base tag");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Config file does not specify <MegaMol> as base tag");
         return false;
     }
 
@@ -125,16 +124,16 @@ bool ConfigurationParser::CheckBaseTag(const XmlReader& reader) {
     }
 
     if (!typeValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, "base tag attribute \"type\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("base tag attribute \"type\" not present or invalid.");
         return false;
     }
     if (!versionValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            1, "base tag attribute \"version\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "base tag attribute \"version\" not present or invalid.");
         return false;
     }
     if (this->xmlVersion < vislib::VersionNumber(1, 2)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "config file version %s marked deprecated. Upgrade to config file version 1.2",
             this->xmlVersion.ToStringA().PeekBuffer());
     }
@@ -262,7 +261,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
                     this->FatalError("Internal Error while parsing directory tag.");
                     break;
                 }
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50,
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "Directory \"%s\" set to \"%s\"", pathA, W2A(pathW));
             }
             return true;
@@ -296,7 +295,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
             }
             if (path != NULL) {
                 this->config.AddShaderDirectory(path);
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50,
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "Path \"%s\" added as shader search path.", vislib::StringA(path).PeekBuffer());
 
             } else {
@@ -315,7 +314,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
             }
             if (path != NULL) {
                 this->config.AddResourceDirectory(path);
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50,
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "Path \"%s\" added as resource search path.", vislib::StringA(path).PeekBuffer());
 
             } else {
@@ -372,8 +371,8 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
         logSettings->logLevelValid = false;
         logSettings->echoLevelValid = false;
         logSettings->logFileNameValue.clear();
-        logSettings->logLevelValue = megamol::core::utility::log::Log::LEVEL_ERROR;
-        logSettings->echoLevelValue = megamol::core::utility::log::Log::LEVEL_ERROR;
+        logSettings->logLevelValue = megamol::core::utility::log::Log::log_level::error;
+        logSettings->echoLevelValue = megamol::core::utility::log::Log::log_level::error;
 
         // check attributs
         for (int i = 0; attrib[i]; i += 2) {
@@ -399,7 +398,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
                     // allowed to set the value
                     logSettings->logLevelValid = true;
                     logSettings->logLevelValue =
-                        this->parseLevelAttribute(attrib[i + 1], megamol::core::utility::log::Log::LEVEL_ERROR);
+                        this->parseLevelAttribute(attrib[i + 1], megamol::core::utility::log::Log::log_level::error);
                 }
 
             } else if (MMXML_STRING("echolevel").Equals(attrib[i])) {
@@ -408,7 +407,7 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
                     // allowed to set the value
                     logSettings->echoLevelValid = true;
                     logSettings->echoLevelValue =
-                        this->parseLevelAttribute(attrib[i + 1], megamol::core::utility::log::Log::LEVEL_ERROR);
+                        this->parseLevelAttribute(attrib[i + 1], megamol::core::utility::log::Log::log_level::error);
                 }
             } else {
                 this->WarnUnexpectedAttribut(name, attrib[i]);
@@ -424,8 +423,8 @@ bool ConfigurationParser::StartTag(unsigned int num, unsigned int level, const X
                 megamol::core::utility::log::Log::DefaultLog.SetLevel(logSettings->logLevelValue);
             }
             if ((!megamol::core::utility::Configuration::logFilenameLocked) && (logSettings->logFileNameValid)) {
-                megamol::core::utility::log::Log::DefaultLog.SetLogFileName(
-                    logSettings->logFileNameValue.c_str(), USE_LOG_SUFFIX);
+                megamol::core::utility::log::Log::DefaultLog.AddFileTarget(
+                    logSettings->logFileNameValue.c_str(), false);
             }
         }
         delete logSettings;
@@ -585,8 +584,7 @@ void ConfigurationParser::Completed(void) {
 
         // make shader paths absolute
         if (this->config.shaderDirs.Count() == 0) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO, "No shader directories configured");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("No shader directories configured");
 
         } else
             for (SIZE_T i = 0; i < this->config.shaderDirs.Count(); i++) {
@@ -594,8 +592,7 @@ void ConfigurationParser::Completed(void) {
                     this->config.shaderDirs[i] =
                         vislib::sys::Path::Resolve(this->config.shaderDirs[i], this->config.appDir);
                     if (!vislib::sys::File::IsDirectory(this->config.shaderDirs[i])) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                            megamol::core::utility::log::Log::LEVEL_WARN,
+                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                             "Configured shader directory \"%s\" does not exist",
                             vislib::StringA(this->config.shaderDirs[i]).PeekBuffer());
                     }
@@ -604,8 +601,7 @@ void ConfigurationParser::Completed(void) {
 
         // make resource paths absolute
         if (this->config.resourceDirs.Count() == 0) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO, "No resource directories configured");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("No resource directories configured");
 
         } else
             for (SIZE_T i = 0; i < this->config.resourceDirs.Count(); i++) {
@@ -613,8 +609,7 @@ void ConfigurationParser::Completed(void) {
                     this->config.resourceDirs[i] =
                         vislib::sys::Path::Resolve(this->config.resourceDirs[i], this->config.appDir);
                     if (!vislib::sys::File::IsDirectory(this->config.resourceDirs[i])) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                            megamol::core::utility::log::Log::LEVEL_WARN,
+                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                             "Configured resource directory \"%s\" does not exist",
                             vislib::StringA(this->config.resourceDirs[i]).PeekBuffer());
                     }
@@ -627,30 +622,31 @@ void ConfigurationParser::Completed(void) {
 /*
  * ConfigurationParser::parseLevelAttribute
  */
-UINT ConfigurationParser::parseLevelAttribute(const XML_Char* attr, UINT def) {
-    UINT retval = def;
+megamol::core::utility::log::Log::log_level ConfigurationParser::parseLevelAttribute(
+    const XML_Char* attr, megamol::core::utility::log::Log::log_level def) {
+    megamol::core::utility::log::Log::log_level retval = def;
     if (MMXML_STRING("error").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_ERROR;
+        retval = megamol::core::utility::log::Log::log_level::error;
     } else if (MMXML_STRING("warn").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_WARN;
+        retval = megamol::core::utility::log::Log::log_level::warn;
     } else if (MMXML_STRING("warning").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_WARN;
+        retval = megamol::core::utility::log::Log::log_level::warn;
     } else if (MMXML_STRING("info").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_INFO;
+        retval = megamol::core::utility::log::Log::log_level::info;
     } else if (MMXML_STRING("none").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_NONE;
+        retval = megamol::core::utility::log::Log::log_level::none;
     } else if (MMXML_STRING("null").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_NONE;
+        retval = megamol::core::utility::log::Log::log_level::none;
     } else if (MMXML_STRING("zero").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_NONE;
+        retval = megamol::core::utility::log::Log::log_level::none;
     } else if (MMXML_STRING("all").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_ALL;
+        retval = megamol::core::utility::log::Log::log_level::all;
     } else if (MMXML_STRING("*").Equals(attr, false)) {
-        retval = megamol::core::utility::log::Log::LEVEL_ALL;
-    } else {
+        retval = megamol::core::utility::log::Log::log_level::all;
+    } /*else {
         try {
             retval = vislib::CharTraits<XML_Char>::ParseInt(attr);
         } catch (...) { retval = def; }
-    }
+    }*/
     return retval;
 }

@@ -67,6 +67,8 @@ bool ImagePresentation_Service::init(const Config& config) {
                                                            EntryPointRenderFunctions const& entry_point) -> bool {
         return add_entry_point(name, entry_point) && tell_subscribers(ev::Add, {name, entry_point});
     };
+    m_entry_points_registry_resource.set_entry_point_priority =
+        [&](std::string const& name, const int priority) -> bool { return set_entry_point_priority(name, priority); };
     m_entry_points_registry_resource.remove_entry_point = [&](std::string const& name) -> bool {
         return remove_entry_point(name) && tell_subscribers(ev::Remove, {name});
     };
@@ -317,10 +319,33 @@ bool ImagePresentation_Service::add_entry_point(std::string const& name, EntryPo
     }
 
     m_entry_points.emplace_back(EntryPoint{
-        name, module_ptr, resources,
+        name,
+        module_ptr,
+        resources,
         std::move(unique_data), // render inputs and their update
-        execute_etry, {name}    // image
+        execute_etry,
+        {name}, // image
+        0,
     });
+
+    // ensure sorting of entry points according to priorities
+    set_entry_point_priority(name, 0);
+
+    return true;
+}
+
+bool ImagePresentation_Service::set_entry_point_priority(std::string const& name, const int priority) {
+    auto ep_it =
+        std::find_if(m_entry_points.begin(), m_entry_points.end(), [&](auto& ep) { return ep.moduleName == name; });
+
+    if (ep_it == m_entry_points.end()) {
+        log_error("could not find entry point to set priority: " + name);
+        return false;
+    }
+
+    ep_it->priority = priority;
+
+    m_entry_points.sort([](auto const& left, auto const& right) { return left.priority < right.priority; });
 
     return true;
 }

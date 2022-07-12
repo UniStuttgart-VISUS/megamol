@@ -6,7 +6,6 @@
  */
 
 #include "geometry_calls/VolumetricMetadataStore.h"
-#include "stdafx.h"
 
 #include <cassert>
 #include <iterator>

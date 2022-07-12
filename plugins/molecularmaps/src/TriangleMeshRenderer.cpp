@@ -5,7 +5,6 @@
  */
 
 #include "TriangleMeshRenderer.h"
-#include "stdafx.h"
 
 #define SHADER_BASED
 

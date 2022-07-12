@@ -27,14 +27,12 @@
 namespace megamol {
 namespace protein {
 
-#define Pi M_PI
 #define Eps 0.000001
 #define Minimum(x, y) ((x) < (y) ? x : y)
 #define Maximum(x, y) ((x) < (y) ? y : x)
-#define Sign(x) ((x) < 0 ? -1 : 1)
 #define IN_STRIDE(x, target, range) ((x >= (target - range)) && (x <= (target + range)))
-#define RAD(x) (x) * Pi / 180.0
-#define DEG(x) (x) * 180.0 / Pi
+#define RAD(x) (x) * M_PI / 180.0
+#define DEG(x) (x) * 180.0 / M_PI
 #define RADDEG 57.2958
 #define BREAKDIST 2.5
 #define SSDIST 3.0

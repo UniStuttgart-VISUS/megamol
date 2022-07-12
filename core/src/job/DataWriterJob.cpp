@@ -9,7 +9,6 @@
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 
 using namespace megamol::core;
 
@@ -74,24 +73,23 @@ DWORD job::DataWriterJob::Run(void* userData) {
     DataWriterCtrlCall* dwcc = this->writerSlot.CallAs<DataWriterCtrlCall>();
 
     if (dwcc == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Data writer job not connected to any data writer module\n");
+        Log::DefaultLog.WriteWarn("Data writer job not connected to any data writer module\n");
         return -1;
     }
 
     if (!(*dwcc)(DataWriterCtrlCall::CALL_GETCAPABILITIES)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to query data writer capabilities");
+        Log::DefaultLog.WriteWarn("Unable to query data writer capabilities");
     } else {
         this->abortable = dwcc->IsAbortable();
     }
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Starting DataWriterJob \"%s\"", this->FullName().PeekBuffer());
+    Log::DefaultLog.WriteInfo("Starting DataWriterJob \"%s\"", this->FullName().PeekBuffer());
 
     if ((*dwcc)(DataWriterCtrlCall::CALL_RUN)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "DataWriterJob \"%s\" complete", this->FullName().PeekBuffer());
+        Log::DefaultLog.WriteInfo("DataWriterJob \"%s\" complete", this->FullName().PeekBuffer());
 
     } else {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_WARN, "DataWriterJob \"%s\" terminated with false", this->FullName().PeekBuffer());
+        Log::DefaultLog.WriteWarn("DataWriterJob \"%s\" terminated with false", this->FullName().PeekBuffer());
         return -2;
     }
 

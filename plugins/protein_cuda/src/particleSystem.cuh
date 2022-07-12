@@ -13,6 +13,8 @@
  * 
  */
 
+#include "particles_kernel.cuh"
+
 extern "C"
 {
 void sortParticles(uint *dGridParticleHash, uint *dGridParticleIndex, uint numParticles);

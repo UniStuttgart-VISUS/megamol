@@ -5,7 +5,6 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 
 #include "mmcore/EventCall.h"
 #include "mmcore/param/ColorParam.h"

@@ -6,7 +6,6 @@
  */
 
 #include "geometry_calls/BezierCurvesListDataCall.h"
-#include "stdafx.h"
 
 namespace megamol::geocalls {
 

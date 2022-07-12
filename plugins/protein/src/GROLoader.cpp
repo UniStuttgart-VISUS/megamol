@@ -12,14 +12,13 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
-#include "stdafx.h"
 #include "vislib/ArrayAllocator.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/types.h"
 #include <ctime>
@@ -745,9 +744,6 @@ GROLoader::GROLoader(void)
     this->xtcFilenameSlot << new param::FilePathParam("");
     this->MakeSlotAvailable(&this->xtcFilenameSlot);
 
-    this->forceDataCallerSlot.SetCompatibleCall<ForceDataCallDescription>();
-    this->MakeSlotAvailable(&this->forceDataCallerSlot);
-
     this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(),
         MolecularDataCall::FunctionName(MolecularDataCall::CallForGetData), &GROLoader::getData);
     this->dataOutSlot.SetCallback(MolecularDataCall::ClassName(),
@@ -886,17 +882,6 @@ bool GROLoader::getData(core::Call& call) {
         if (mdd->IsSocketFunctional() && this->mDDGoSlot.Param<core::param::BoolParam>()->Value() == true) {
             this->mdd->GetCoordinates(this->data[0]->AtomCount(), const_cast<float*>(this->data[0]->AtomPositions()));
         }
-
-        // get pointer to ForceDataCall
-        ForceDataCall* force = this->forceDataCallerSlot.CallAs<ForceDataCall>();
-        if (force != NULL) {
-
-            if ((*force)(ForceDataCall::CallForGetForceData)) {
-
-                // send force data to MDDriver
-                this->mdd->RequestForces(force->ForceCount(), force->AtomIDs(), force->Forces());
-            }
-        }
     } // mdd != NULL
 
     dc->SetDataHash(this->datahash);
@@ -962,7 +947,7 @@ bool GROLoader::getData(core::Call& call) {
         this->stride = new Stride(dc);
         this->stride->WriteToInterface(dc);
         this->secStructAvailable = true;
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Secondary Structure computed via STRIDE in %f seconds.",
+        Log::DefaultLog.WriteInfo("Secondary Structure computed via STRIDE in %f seconds.",
             (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
     } else if (this->strideFlagSlot.Param<param::BoolParam>()->Value()) {
         this->stride->WriteToInterface(dc);
@@ -1176,7 +1161,7 @@ void GROLoader::loadFile(const vislib::TString& filename) {
             // read number of atoms
             totalAtomCnt = atoi(file[1]);
         }
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Atom count: %i", totalAtomCnt); // DEBUG
+        Log::DefaultLog.WriteInfo("Atom count: %i", totalAtomCnt); // DEBUG
 
         // Init atom filter array with 1 (= 'visible')
         if (!this->atomVisibility.IsEmpty())
@@ -1217,7 +1202,7 @@ void GROLoader::loadFile(const vislib::TString& filename) {
             line = file[atomCnt + 2];
             this->parseAtomEntry(line, atomCnt, frameCnt, solventResidueNames);
         }
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Time for parsing first frame: %f",
+        Log::DefaultLog.WriteInfo("Time for parsing first frame: %f",
             (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
         this->molecule.AssertCapacity(this->residue.Count());
@@ -1267,8 +1252,8 @@ void GROLoader::loadFile(const vislib::TString& filename) {
             this->molecule.Last().SetConnectionRange(
                 firstConIdx, (static_cast<unsigned int>(this->connectivity.Count()) - firstConIdx) / 2);
         }
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_INFO, "Time for finding all bonds: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
+        Log::DefaultLog.WriteInfo(
+            "Time for finding all bonds: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
         // search for CA, C, O and N in amino acids
         MolecularDataCall::AminoAcid* aminoacid;
@@ -1294,8 +1279,7 @@ void GROLoader::loadFile(const vislib::TString& filename) {
         }
 
         //Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading file %s: %f", T2A( filename), ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_INFO, "Time for loading file: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
+        Log::DefaultLog.WriteInfo("Time for loading file: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
 
         // if xtc-filename has been set
@@ -1304,7 +1288,7 @@ void GROLoader::loadFile(const vislib::TString& filename) {
             // bounding box
             this->readNumXTCFrames();
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Number of XTC-frames: %u", this->numXTCFrames); // DEBUG
+            Log::DefaultLog.WriteInfo("Number of XTC-frames: %u", this->numXTCFrames); // DEBUG
 
             //float box[3][3];
             char tmpByte;
@@ -1317,8 +1301,7 @@ void GROLoader::loadFile(const vislib::TString& filename) {
                 this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value(), std::ios::in | std::ios::binary);
 
             if (!xtcFile) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "Could not load XTC-file."); // DEBUG
+                Log::DefaultLog.WriteError("Could not load XTC-file."); // DEBUG
                 xtcFileValid = false;
             } else {
 
@@ -1338,9 +1321,8 @@ void GROLoader::loadFile(const vislib::TString& filename) {
                 // check whether the pdb-file and the xtc-file contain the
                 // same number of atoms
                 if (nAtoms != totalAtomCnt) {
-                    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                        "XTC-File and given PDB-file not matching (XTC-file has"
-                        "%i atom entries, PDB-file has %i atom entries).",
+                    Log::DefaultLog.WriteError("XTC-File and given PDB-file not matching (XTC-file has"
+                                               "%i atom entries, PDB-file has %i atom entries).",
                         nAtoms, totalAtomCnt); // DEBUG
                     xtcFileValid = false;
                     xtcFile.close();
@@ -1363,7 +1345,7 @@ void GROLoader::loadFile(const vislib::TString& filename) {
 
 
     } else {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Could not load file %s", (const char*)T2A(filename)); // DEBUG
+        Log::DefaultLog.WriteError("Could not load file %s", (const char*)T2A(filename)); // DEBUG
     }
 }
 
@@ -1933,8 +1915,7 @@ bool GROLoader::readNumXTCFrames() {
     this->XTCFrameOffset.RemoveLast();
     this->numXTCFrames--;
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-        "Time for parsing the XTC-file: %f",
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Time for parsing the XTC-file: %f",
         (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
     return true;
@@ -1953,7 +1934,7 @@ void GROLoader::writeToXtcFile(const vislib::TString& filename) {
     float maxFloats[3];
 
     if (data.Count() == 1) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "The PDB-file only contains one frame. No XTC-file has been"
             " written.");
         return;
@@ -1964,8 +1945,7 @@ void GROLoader::writeToXtcFile(const vislib::TString& filename) {
 
     // if the file could not be opened return
     if (!outfile) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Could not create file.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Could not create file.");
         return;
     }
 

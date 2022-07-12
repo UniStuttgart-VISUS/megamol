@@ -130,10 +130,8 @@ if(BUILD_FRONTEND_SERVICES)
   
   # GLFW
   if (ENABLE_GL)
-    if(USE_GLFW)
-      require_external(glfw)
-      target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
-    endif()
+    require_external(glfw)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
   endif()
 
   if(ENABLE_VR_SERVICE_UNITY_KOLABBW)

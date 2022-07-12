@@ -15,6 +15,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 //#include "vislib_vector_typedefs.h"
+#include "vislib/String.h"
+
 #include <cmath>
 
 namespace megamol {

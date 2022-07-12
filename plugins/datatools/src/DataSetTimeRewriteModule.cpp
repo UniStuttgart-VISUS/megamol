@@ -10,7 +10,6 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/param/IntParam.h"
-#include "stdafx.h"
 #include <algorithm>
 
 using namespace megamol;

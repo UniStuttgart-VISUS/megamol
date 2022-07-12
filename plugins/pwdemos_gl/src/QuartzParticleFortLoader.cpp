@@ -4,19 +4,18 @@
  * Copyright (C) 2018 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #define _USE_MATH_DEFINES
-#include "QuartzParticleDataCall.h"
 #include "QuartzParticleFortLoader.h"
+#include "QuartzParticleDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/String.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/memutils.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/utils.h"
 #include <cmath>
 
@@ -296,7 +295,7 @@ void ParticleFortLoader::assertData(void) {
                     attributes.Add(q4); // qw (real term)
                 }
 
-                Log::DefaultLog.WriteInfo(100, "Particle radii: %f ... %f\n", minRad, maxRad);
+                Log::DefaultLog.WriteInfo("Particle radii: %f ... %f\n", minRad, maxRad);
 
                 file.Close();
             } else {
@@ -317,7 +316,7 @@ void ParticleFortLoader::assertData(void) {
             }
             typeList.Sort(&vislib::DiffComparator<int>);
 
-            Log::DefaultLog.WriteMsg(350, "Loaded files %u particles and %u types\n", types.Count(), typeList.Count());
+            Log::DefaultLog.WriteInfo("Loaded files %u particles and %u types\n", types.Count(), typeList.Count());
 
             this->partTypes = new unsigned int[typeList.Count()];
             this->partCnts = new unsigned int[typeList.Count()];

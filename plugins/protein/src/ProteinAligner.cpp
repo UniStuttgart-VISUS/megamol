@@ -7,8 +7,7 @@
  */
 
 #include "ProteinAligner.h"
-#include "RMS.h"
-#include "stdafx.h"
+#include "protein_calls/RMSD.h"
 
 #include "mmcore/param/BoolParam.h"
 #include <glm/glm.hpp>
@@ -131,52 +130,27 @@ bool ProteinAligner::getExtents(core::Call& call) {
  * ProteinAligner::alignPositions
  */
 bool ProteinAligner::alignPositions(const MolecularDataCall& input, const MolecularDataCall& ref) {
-    std::vector<float> inputCAlphas, refCAlphas;
+    std::vector<glm::vec3> inputCAlphas, refCAlphas;
     this->getCAlphaPosList(input, inputCAlphas);
     this->getCAlphaPosList(ref, refCAlphas);
     auto atomCount = std::min(inputCAlphas.size() / 3, refCAlphas.size() / 3);
 
-    std::vector<float> mass(atomCount, 1.0f);
-    std::vector<int> mask(atomCount, 1);
-    float rotation[3][3], translation[3];
-    auto result = CalculateRMS(static_cast<unsigned int>(atomCount), true, 2, mass.data(), mask.data(),
-        inputCAlphas.data(), refCAlphas.data(), rotation, translation);
+    const auto rmsres = CalculateRMSD(inputCAlphas, refCAlphas, protein_calls::RMSDMode::RMSD_CALC_MATRICES);
 
     this->alignedPositions.resize(static_cast<size_t>(input.AtomCount()) * 3);
     std::memcpy(this->alignedPositions.data(), input.AtomPositions(), this->alignedPositions.size() * sizeof(float));
 
-    glm::mat3 rotmat = glm::mat3(glm::make_vec3(rotation[0]), glm::make_vec3(rotation[1]), glm::make_vec3(rotation[2]));
-    glm::vec3 trans = glm::make_vec3(translation);
+    glm::mat3 rotmat = rmsres.rotationMatrix;
+    glm::vec3 transvec = rmsres.translationVector;
+    glm::vec3 refcenter = rmsres.referenceCenter;
+    glm::vec3 center = rmsres.toFitCenter;
 
-    // the rotation and translation has to be performed in a two step process as there are some problems with the values
-    // we have now
-
-    // the rotation matrix is fixed by transposing it:
-    rotmat = glm::transpose(rotmat);
-
+    this->boundingBox.Set(refcenter.x, refcenter.y, refcenter.z, refcenter.x, refcenter.y, refcenter.z);
     for (size_t i = 0; i < input.AtomCount(); ++i) {
         glm::vec3 pos = glm::make_vec3(&this->alignedPositions[3 * i]);
+        pos -= center;
         pos = rotmat * pos;
-        std::memcpy(&this->alignedPositions[3 * i], &pos.x, sizeof(float) * 3);
-    }
-
-    // as the resulting transpose vector of the CalculateRMS-method is complete and utter bullcrap, we calculate the
-    // midpoint of each of the two proteins and move the onto each other
-    glm::vec3 inputCenter(0.0f, 0.0f, 0.0f), refCenter(0.0f, 0.0f, 0.0f);
-    for (size_t i = 0; i < input.AtomCount(); ++i) {
-        glm::vec3 pos = glm::make_vec3(&alignedPositions[3 * i]);
-        inputCenter += pos;
-    }
-    for (size_t i = 0; i < ref.AtomCount(); ++i) {
-        glm::vec3 pos = glm::make_vec3(&ref.AtomPositions()[3 * i]);
-        refCenter += pos;
-    }
-    inputCenter /= static_cast<float>(input.AtomCount());
-    refCenter /= static_cast<float>(ref.AtomCount());
-    this->boundingBox.Set(refCenter.x, refCenter.y, refCenter.z, refCenter.x, refCenter.y, refCenter.z);
-    for (size_t i = 0; i < input.AtomCount(); ++i) {
-        glm::vec3 pos = glm::make_vec3(&this->alignedPositions[3 * i]);
-        pos += refCenter - inputCenter;
+        pos += refcenter;
         std::memcpy(&this->alignedPositions[3 * i], &pos.x, sizeof(float) * 3);
         this->boundingBox.GrowToPoint(vislib::math::Point<float, 3>(pos.x, pos.y, pos.z));
     }
@@ -188,7 +162,7 @@ bool ProteinAligner::alignPositions(const MolecularDataCall& input, const Molecu
 /*
  * ProteinAligner::getCAlphaPosList
  */
-void ProteinAligner::getCAlphaPosList(const MolecularDataCall& input, std::vector<float>& cAlphaPositions) {
+void ProteinAligner::getCAlphaPosList(const MolecularDataCall& input, std::vector<glm::vec3>& cAlphaPositions) {
     auto resCnt = input.ResidueCount();
     cAlphaPositions.clear();
     for (unsigned int res = 0; res < resCnt; ++res) {
@@ -199,8 +173,6 @@ void ProteinAligner::getCAlphaPosList(const MolecularDataCall& input, std::vecto
             continue;
         }
         auto ca = amino->CAlphaIndex();
-        cAlphaPositions.push_back(input.AtomPositions()[3 * ca + 0]);
-        cAlphaPositions.push_back(input.AtomPositions()[3 * ca + 1]);
-        cAlphaPositions.push_back(input.AtomPositions()[3 * ca + 2]);
+        cAlphaPositions.push_back(glm::make_vec3(&input.AtomPositions()[3 * ca]));
     }
 }

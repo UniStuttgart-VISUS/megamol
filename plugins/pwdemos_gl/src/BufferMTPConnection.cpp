@@ -6,7 +6,6 @@
  */
 
 #include "BufferMTPConnection.h"
-#include "stdafx.h"
 
 
 /*

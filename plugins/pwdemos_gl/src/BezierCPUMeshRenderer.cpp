@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #define _USE_MATH_DEFINES
 #include "BezierCPUMeshRenderer.h"
 #include "geometry_calls/BezierCurvesListDataCall.h"

@@ -1,5 +1,4 @@
 #include "GPUMeshes.h"
-#include "stdafx.h"
 
 #include "mesh_gl/MeshCalls_gl.h"
 

@@ -6,7 +6,6 @@
  */
 
 #include "protein/BSpline.h"
-#include "stdafx.h"
 
 using namespace megamol;
 

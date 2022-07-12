@@ -10,9 +10,6 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "mmcore/utility/sys/SystemInformation.h"
-#include "stdafx.h"
 #include "vislib/ArrayAllocator.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/PtrArray.h"
@@ -24,9 +21,11 @@
 #include "vislib/VersionNumber.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/memutils.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/File.h"
 #include "vislib/sys/MemoryFile.h"
+#include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/utils.h"
 
@@ -912,8 +911,7 @@ void MMSPDDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsign
     }
     if (!res) {
         // failed
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "Unable to read frame %d from MMSPD file: %s", idx, errMsg.PeekBuffer());
+        Log::DefaultLog.WriteError("Unable to read frame %d from MMSPD file: %s", idx, errMsg.PeekBuffer());
     }
 }
 
@@ -952,7 +950,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void* userdata) {
     }
     f.Seek(that->frameIdx
                [0]); // lock not required, because i know the main thread is currently waiting to load the first frame
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo(50, "Frame index generation started.");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Frame index generation started.");
 
     const SIZE_T MAX_BUFFER_SIZE = 1024 * 1024;
     char* buffer = new char[MAX_BUFFER_SIZE];
@@ -1263,7 +1261,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void* userdata) {
         if ((begin == 0) || (end == 0)) {
             throw vislib::Exception("Frame index incomplete", __FILE__, __LINE__);
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(50,
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Frame index of %u frames completed with ~%u bytes per frame", static_cast<unsigned int>(frameCount),
                 static_cast<unsigned int>((end - begin) / frameCount));
 
@@ -1271,7 +1269,7 @@ DWORD MMSPDDataSource::buildFrameIndex(void* userdata) {
             //that->frameIdxLock.Lock();
             //if (that->frameIdx == NULL) { that->frameIdxLock.Unlock(); throw vislib::Exception("aborted", __FILE__, __LINE__); }
             //for (unsigned int i = 0; i <= frameCount; i++) {
-            //    megamol::core::utility::log::Log::DefaultLog.WriteInfo(250, "    frame %u: %lu", i, that->frameIdx[i]);
+            //    megamol::core::utility::log::Log::DefaultLog.WriteInfo( "    frame %u: %lu", i, that->frameIdx[i]);
             //}
             //that->frameIdxLock.Unlock();
 #endif /* DEBUG || _DEBUG */
@@ -1349,7 +1347,7 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMSPD-File \"%s\".",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open MMSPD-File \"%s\".",
             this->filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
 
         SAFE_DELETE(this->file);
@@ -1359,12 +1357,12 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         return true;
     }
 
-#define _ERROR_OUT(MSG)                                  \
-    {                                                    \
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG); \
-        SAFE_DELETE(this->file);                         \
-        this->clearData();                               \
-        return true;                                     \
+#define _ERROR_OUT(MSG)                  \
+    {                                    \
+        Log::DefaultLog.WriteError(MSG); \
+        SAFE_DELETE(this->file);         \
+        this->clearData();               \
+        return true;                     \
     }
 #define _ASSERT_READFILE(BUFFER, BUFFERSIZE)                            \
     {                                                                   \

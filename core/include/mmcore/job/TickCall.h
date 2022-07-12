@@ -18,7 +18,7 @@ namespace job {
  *
  * @author Alexander Straub
  */
-class MEGAMOLCORE_API TickCall : public core::AbstractGetDataCall {
+class TickCall : public core::AbstractGetDataCall {
 public:
     typedef core::factories::CallAutoDescription<TickCall> TickCallDescription;
 

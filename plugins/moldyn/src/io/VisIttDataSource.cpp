@@ -13,11 +13,10 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/SystemInformation.h"
-#include "stdafx.h"
 #include "vislib/String.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/sys/FastFile.h"
+#include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/sysfunctions.h"
 #include <algorithm>
 #include <climits>
@@ -306,7 +305,7 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsig
         }
     }
 
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo(100, "Frame %u loaded", idx);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Frame %u loaded", idx);
 }
 
 
@@ -486,12 +485,12 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg);
     }
     if (this->frameTable.Count() > 0) {
         // refine bounding box using more frames

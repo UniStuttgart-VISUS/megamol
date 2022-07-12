@@ -10,7 +10,6 @@
 
 
 #include "CrystalStructureVolumeRenderer.h"
-#include "stdafx.h"
 
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 
@@ -768,7 +767,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
             gausslim);
 
         if (rc != 0) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            Log::DefaultLog.WriteError(
                 "%s::CalcDensityTex: Quicksurf class returned val (number of data points %u)!= 0\n", this->ClassName(),
                 gridPos.Count() / 4);
             return false;
@@ -818,12 +817,11 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
         // Check for opengl error
         GLenum err = glGetError();
         if (err != GL_NO_ERROR) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s::CalcDensityMap: glError %s\n", this->ClassName(), gluErrorString(err));
+            Log::DefaultLog.WriteError("%s::CalcDensityMap: glError %s\n", this->ClassName(), gluErrorString(err));
             return false;
         }
 
-        //        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: time for computing density map: %f",
+        //        Log::DefaultLog.WriteInfo( "%s: time for computing density map: %f",
         //                this->ClassName(),
         //                (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
 
@@ -921,9 +919,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
 
     cudaErr = protein_cuda::CUDASetCurlParams(&this->params);
     if (cudaErr != cudaSuccess) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s::CalcMagCurlTex: unable to copy grid params to device memory (%s)\n", this->ClassName(),
-            cudaGetErrorString(cudaErr));
+        Log::DefaultLog.WriteError("%s::CalcMagCurlTex: unable to copy grid params to device memory (%s)\n",
+            this->ClassName(), cudaGetErrorString(cudaErr));
         return false;
     }
 
@@ -935,7 +932,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
         cqs->getColorMap(), this->gridCurlD, this->gridCurlMagD, nVoxels, this->gridSpacing);
 
     if (cudaErr != cudaSuccess) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s::CalcMagCurlTex: unable to compute curl vector magnitude (%s)\n",
+        Log::DefaultLog.WriteError("%s::CalcMagCurlTex: unable to compute curl vector magnitude (%s)\n",
             this->ClassName(), cudaGetErrorString(cudaErr));
         return false;
     }
@@ -965,15 +962,15 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
     glBindTexture(GL_TEXTURE_3D, 0);
     glDisable(GL_TEXTURE_3D);
 
-    //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: time for computing curl: %f",
+    //    Log::DefaultLog.WriteInfo( "%s: time for computing curl: %f",
     //            this->ClassName(),
     //            (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
 
     // Check for opengl error
     glErr = glGetError();
     if (glErr != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s::CalcMagCurlTex: unable to setup curl texture (glError %s)\n",
-            this->ClassName(), gluErrorString(glErr));
+        Log::DefaultLog.WriteError("%s::CalcMagCurlTex: unable to setup curl texture (glError %s)\n", this->ClassName(),
+            gluErrorString(glErr));
         return false;
     }
 
@@ -1094,8 +1091,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid(
 
 
     if (rc != 0) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s::CalcUniGrid: Quicksurf class returned val != 0\n", this->ClassName());
+        Log::DefaultLog.WriteError("%s::CalcUniGrid: Quicksurf class returned val != 0\n", this->ClassName());
         this->recalcGrid = false;
         return false;
     }
@@ -1115,7 +1111,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid(
         }
     }*/
 
-    //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    //    Log::DefaultLog.WriteInfo(
     //            "%s: time for computing uni grid %f",
     //            this->ClassName(),
     //            (double(clock()-t)/double(CLOCKS_PER_SEC))); // DEBUG
@@ -1141,8 +1137,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid(
     // Check for opengl error
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s::CalcUniGrid: glError %s\n", this->ClassName(), gluErrorString(err));
+        Log::DefaultLog.WriteError("%s::CalcUniGrid: glError %s\n", this->ClassName(), gluErrorString(err));
 
         delete[] gridDataPos;
         delete[] gridData;
@@ -1242,7 +1237,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::ApplyPosFilter(const protein_
 
     this->recalcArrowData = true;
 
-    //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    //    Log::DefaultLog.WriteInfo(
     //            "%s: done filtering - #atoms %u, #edges %u",
     //            this->ClassName(),
     //            this->visAtomIdx.Count(),
@@ -1283,26 +1278,25 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
         return false;
 
     if (!ci->ShaderSourceFactory().MakeShaderSource("scivis::slice::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source", this->ClassName());
         return false;
     }
     if (!ci->ShaderSourceFactory().MakeShaderSource("scivis::slice::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load fragment shader source", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load fragment shader source", this->ClassName());
         return false;
     }
     try {
         if (!this->vrShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load sphere vertex shader
     if (!ssf->MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
 
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for sphere shader", this->ClassName());
         return false;
     }
     // Load sphere fragment shader
@@ -1310,8 +1304,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
          //MakeShaderSource("protein_cuda::std::sphereFragmentFog", fragSrc)) {
          MakeShaderSource("protein_cuda::std::sphereFragment", fragSrc)) {
 
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for sphere shader", this->ClassName());
         return false;
     }
     try {
@@ -1319,21 +1312,20 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load raycasting vertex shader
     if (!ssf->MakeShaderSource("scivis::raycasting::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
     // Load raycasting fragment shader
     if (!ssf->MakeShaderSource("scivis::raycasting::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
     try {
@@ -1341,21 +1333,20 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load raycasting vertex shader
     if (!ssf->MakeShaderSource("scivis::raycasting::vertexDebug", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
     // Load raycasting fragment shader
     if (!ssf->MakeShaderSource("scivis::raycasting::fragmentDebug", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
         return false;
     }
     try {
@@ -1363,22 +1354,21 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load alternative arrow shader (uses geometry shader)
     if (!ssf->MakeShaderSource("protein_cuda::std::arrowVertexGeom", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for arrow shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for arrow shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein_cuda::std::arrowGeom", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for arrow shader");
+        Log::DefaultLog.WriteError("Unable to load geometry shader source for arrow shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein_cuda::std::arrowFragmentGeom", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for arrow shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for arrow shader");
         return false;
     }
     this->arrowShader.Compile(
@@ -1387,12 +1377,12 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
 
     // Load cylinder vertex shader
     if (!ssf->MakeShaderSource("protein_cuda::std::cylinderVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for cylinder shader");
         return false;
     }
     // Load cylinder fragment shader
     if (!ssf->MakeShaderSource("protein_cuda::std::cylinderFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cylinder shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for cylinder shader");
         return false;
     }
     try {
@@ -1400,22 +1390,20 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create cylinder shader: %s\n", e.GetMsgA());
+        Log::DefaultLog.WriteError("Unable to create cylinder shader: %s\n", e.GetMsgA());
         return false;
     }
 
     // Load per pixel lighting shader
     if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightVertex", vertSrc)) {
 
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
         return false;
     }
 
     if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightFragment", fragSrc)) {
 
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
         return false;
     }
     try {
@@ -1423,8 +1411,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create shader for per pixel lighting: %s\n",
-            this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to create shader for per pixel lighting: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
@@ -1432,15 +1420,13 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
     // TODO
     if (!ssf->MakeShaderSource("scivis::ppl::perpixellightVertex", vertSrc)) {
 
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
         return false;
     }
 
     if (!ssf->MakeShaderSource("scivis::ppl::perpixellightFragment", fragSrc)) {
 
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
         return false;
     }
     try {
@@ -1448,8 +1434,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create shader for per pixel lighting: %s\n",
-            this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to create shader for per pixel lighting: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
@@ -1466,8 +1452,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CreateFbo(UINT width, UINT he
     using namespace vislib::sys;
     using namespace vislib_gl::graphics::gl;
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-        megamol::core::utility::log::Log::LEVEL_INFO, "%s: (re)creating raycasting fbo.", this->ClassName());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("%s: (re)creating raycasting fbo.", this->ClassName());
 
     glEnable(GL_TEXTURE_2D);
 
@@ -1502,8 +1487,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CreateSrcFbo(size_t width, si
     using namespace vislib::sys;
     using namespace vislib_gl::graphics::gl;
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-        megamol::core::utility::log::Log::LEVEL_INFO, "%s: (re)creating source fbo.", this->ClassName());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("%s: (re)creating source fbo.", this->ClassName());
 
     glEnable(GL_TEXTURE_2D);
 
@@ -1790,7 +1774,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::InitLIC() {
     // Check for opengl error
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s::InitLIC: glError %s\n", this->ClassName(), gluErrorString(err));
+        Log::DefaultLog.WriteError("%s::InitLIC: glError %s\n", this->ClassName(), gluErrorString(err));
         return false;
     }
 
@@ -1852,7 +1836,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
 
     // Update parameters if necessary
     if (!this->UpdateParams(dc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to update parameters", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to update parameters", this->ClassName());
         return false;
     }
 
@@ -2026,7 +2010,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
         0) {
 
         if (!this->InitLIC()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to setup random texture", this->ClassName());
+            Log::DefaultLog.WriteError("%s: Unable to setup random texture", this->ClassName());
             return false;
         }
     }
@@ -2087,7 +2071,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     // Render arrow glyphs representing the vector field
     if (this->vecRM == VEC_ARROWS) {
         if (!this->RenderVecFieldArrows(dc, this->posInter.PeekElements(), this->atomColor.PeekElements())) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to render arrow glyphs", this->ClassName());
+            Log::DefaultLog.WriteError("%s: Unable to render arrow glyphs", this->ClassName());
         }
     }
 
@@ -2346,7 +2330,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     // Note: uses depth and color buffer the rest of the scene has been rendered to
     if (this->volShow) {
         if (!this->RenderVolume()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to render volume\n", this->ClassName());
+            Log::DefaultLog.WriteError("%s: Unable to render volume\n", this->ClassName());
             return false;
         }
     }
@@ -2354,7 +2338,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core::Call& call) {
     // Check for opengl error
     err = glGetError();
     if (err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s::Render: glError %s\n", this->ClassName(), gluErrorString(err));
+        Log::DefaultLog.WriteError("%s::Render: glError %s\n", this->ClassName(), gluErrorString(err));
         return false;
     }
 
@@ -3094,7 +3078,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
             NULL,   // Output
             nVerticesMC); // Maximum number of vertices*/
 
-    //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    //Log::DefaultLog.WriteInfo(
     //      "Time for computing isosurface by CUDA marching cubes %f",
     //          (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
     //t = clock();
@@ -3108,7 +3092,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
     checkCudaErrors(cudaMemcpy(this->mcNormOut, this->mcNormOut_D, this->cudaMC->GetVertexCount() * 3 * sizeof(float),
         cudaMemcpyDeviceToHost));
 
-    /* Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    /* Log::DefaultLog.WriteInfo(
              "Time for CUDA memcopy %f",
              (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
      t = clock();*/
@@ -3140,7 +3124,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
 
     glColor4f(1.0, 1.0f, 1.0f, 1.0f);
 
-    /*Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    /*Log::DefaultLog.WriteInfo(
             "Time for rendering marching cubes triangles %f",
             (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG*/
 
@@ -3432,8 +3416,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
     // Check for opengl error
     err = glGetError();
     if (err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s:RenderVolume:: glError %s \n", this->ClassName(), gluErrorString(err));
+        Log::DefaultLog.WriteError("%s:RenderVolume:: glError %s \n", this->ClassName(), gluErrorString(err));
         return false;
     }
 

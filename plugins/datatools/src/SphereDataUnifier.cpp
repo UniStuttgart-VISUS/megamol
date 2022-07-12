@@ -7,7 +7,6 @@
 
 #include "SphereDataUnifier.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "stdafx.h"
 #include "vislib/RawStorage.h"
 
 using namespace megamol;

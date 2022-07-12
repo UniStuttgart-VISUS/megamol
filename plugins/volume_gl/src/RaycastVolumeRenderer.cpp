@@ -55,7 +55,7 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
         , m_volumetricData_callerSlot("getData", "Connects the volume renderer with a voluemtric data source")
         , m_lights_callerSlot("lights", "Lights are retrieved over this slot.")
         , m_transferFunction_callerSlot(
-              "getTranfserFunction", "Connects the volume renderer with a transfer function") {
+              "getTransferFunction", "Connects the volume renderer with a transfer function") {
 
     this->m_renderer_callerSlot.SetCompatibleCall<megamol::core_gl::view::CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->m_renderer_callerSlot);
@@ -140,8 +140,7 @@ bool RaycastVolumeRenderer::create() {
             std::filesystem::path("RaycastVolumeRenderer-Vertex.vert.glsl"),
             std::filesystem::path("RaycastVolumeRenderer-Fragment-Aggr.frag.glsl"));
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: Unknown exception\n");
         return false;
     }
 
@@ -368,13 +367,13 @@ bool RaycastVolumeRenderer::Render(megamol::core_gl::view::CallRender3DGL& cr) {
         this->m_material_color.Param<core::param::ColorParam>()->Value()[2]);
 
     /*    auto const arv = std::dynamic_pointer_cast<core::view::AbstractView const>(cr.PeekCallerSlot()->Parent());
-    std::array<float, 4> bkgndCol = {1.0f, 1.0f, 1.0f, 1.0f};
+    std::array<float, 4> bgCol = {1.0f, 1.0f, 1.0f, 1.0f};
     if (arv != nullptr) {
-        auto const ptr = arv->BkgndColour();
-        bkgndCol[0] = ptr[0];
-        bkgndCol[1] = ptr[1];
-        bkgndCol[2] = ptr[2];
-        bkgndCol[3] = 1.0f;
+        auto const ptr = arv->BackgroundColor();
+        bgCol[0] = ptr[0];
+        bgCol[1] = ptr[1];
+        bgCol[2] = ptr[2];
+        bgCol[3] = 1.0f;
     }*/
     compute_shdr->setUniform("background", cr.BackgroundColor());
 
@@ -495,6 +494,8 @@ bool RaycastVolumeRenderer::Render(megamol::core_gl::view::CallRender3DGL& cr) {
     }
 
     // copy image to framebuffer
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     bool state_depth_test = glIsEnabled(GL_DEPTH_TEST);
     bool state_blend = glIsEnabled(GL_BLEND);
 

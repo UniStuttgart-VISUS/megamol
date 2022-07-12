@@ -64,7 +64,7 @@ bool BaseHistogramRenderer2D::create() {
         calcMaxBinProgram_ = core::utility::make_glowl_shader(
             "histo_base_axes", shaderOptions, "infovis_gl/histo/base_max_bin.comp.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("BaseHistogramRenderer2D: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(("BaseHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -109,7 +109,7 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
 
     auto tfCall = transferFunctionCallerSlot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
     if (tfCall == nullptr) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "BaseHistogramRenderer2D requires a transfer function!");
+        Log::DefaultLog.WriteError("BaseHistogramRenderer2D requires a transfer function!");
         return false;
     }
     (*tfCall)(0);
@@ -118,11 +118,9 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
         needMaxBinValueUpdate_ = false;
 
         GLuint maxBinValueBuffer;
-        glGenBuffers(1, &maxBinValueBuffer);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, maxBinValueBuffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLint), nullptr, GL_STATIC_COPY);
+        glCreateBuffers(1, &maxBinValueBuffer);
         GLint zero = 0;
-        glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32I, GL_RED, GL_INT, &zero);
+        glNamedBufferStorage(maxBinValueBuffer, sizeof(GLint), &zero, GL_DYNAMIC_STORAGE_BIT | GL_CLIENT_STORAGE_BIT);
 
         calcMaxBinProgram_->use();
         bindCommon(calcMaxBinProgram_);
@@ -133,8 +131,7 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
         // Download max bin value for text label.
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, maxBinValueBuffer);
-        glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLint), &maxBinValue_);
+        glGetNamedBufferSubData(maxBinValueBuffer, 0, sizeof(GLint), &maxBinValue_);
 
         glDeleteBuffers(1, &maxBinValueBuffer);
     }
@@ -145,23 +142,14 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
         updateSelection(selectionMode_, selectedComponent_, selectedBin_);
     }
 
-    // this is the apex of suck and must die
-    GLfloat modelViewMatrix_column[16];
-    GLfloat projMatrix_column[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    // end suck
-
     // get camera
     core::view::Camera cam = call.GetCamera();
-    auto view = cam.getViewMatrix();
-    auto proj = cam.getProjectionMatrix();
-    std::copy(glm::value_ptr(view), glm::value_ptr(view) + 16, &modelViewMatrix_column[0]);
-    std::copy(glm::value_ptr(proj), glm::value_ptr(proj) + 16, &projMatrix_column[0]);
+    const auto viewMx = cam.getViewMatrix();
+    const auto projMx = cam.getProjectionMatrix();
 
     drawHistogramProgram_->use();
-    glUniformMatrix4fv(drawHistogramProgram_->getUniformLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
-    glUniformMatrix4fv(drawHistogramProgram_->getUniformLocation("projection"), 1, GL_FALSE, projMatrix_column);
+    drawHistogramProgram_->setUniform("modelView", viewMx);
+    drawHistogramProgram_->setUniform("projection", projMx);
 
     bindCommon(drawHistogramProgram_);
     tfCall->BindConvenience(drawHistogramProgram_, GL_TEXTURE0, 0);
@@ -179,8 +167,8 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
     glUseProgram(0);
 
     drawAxesProgram_->use();
-    glUniformMatrix4fv(drawAxesProgram_->getUniformLocation("modelView"), 1, GL_FALSE, modelViewMatrix_column);
-    glUniformMatrix4fv(drawAxesProgram_->getUniformLocation("projection"), 1, GL_FALSE, projMatrix_column);
+    drawAxesProgram_->setUniform("modelView", viewMx);
+    drawAxesProgram_->setUniform("projection", projMx);
     drawAxesProgram_->setUniform("componentTotalSize", 12.0f, 14.0f);
     drawAxesProgram_->setUniform("componentDrawSize", 10.0f, 10.0f);
     drawAxesProgram_->setUniform("componentDrawOffset", 1.0f, 2.0f);
@@ -197,7 +185,7 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
 
     float white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
-    glm::mat4 ortho = glm::make_mat4(projMatrix_column) * glm::make_mat4(modelViewMatrix_column);
+    glm::mat4 ortho = projMx * viewMx;
 
     for (std::size_t c = 0; c < numComponents_; ++c) {
         float posX = 12.0f * static_cast<float>(c) + 6.0f;
@@ -265,13 +253,7 @@ bool BaseHistogramRenderer2D::OnMouseButton(
 }
 
 bool BaseHistogramRenderer2D::OnMouseMove(double x, double y) {
-    auto cam_pose = camera_.get<core::view::Camera::Pose>();
-    auto cam_intrinsics = camera_.get<core::view::Camera::OrthographicParameters>();
-    float world_x = ((static_cast<float>(x) * 2.0f / static_cast<float>(viewRes_.x)) - 1.0f);
-    float world_y = 1.0f - (static_cast<float>(y) * 2.0f / static_cast<float>(viewRes_.y));
-    world_x = world_x * 0.5f * cam_intrinsics.frustrum_height * cam_intrinsics.aspect + cam_pose.position.x;
-    world_y = world_y * 0.5f * cam_intrinsics.frustrum_height + cam_pose.position.y;
-
+    auto const& [world_x, world_y] = mouseCoordsToWorld(x, y, camera_, viewRes_.x, viewRes_.y);
     mouseX_ = world_x;
     mouseY_ = world_y;
     return false;

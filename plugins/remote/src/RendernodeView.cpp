@@ -1,5 +1,4 @@
 #include "RendernodeView.h"
-#include "stdafx.h"
 
 #include <array>
 #include <chrono>
@@ -12,8 +11,8 @@
 #include "mmcore/cluster/SyncDataSourcesCall.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/RawStorageSerialiser.h"
+#include "vislib/sys/SystemInformation.h"
 
 //#define RV_DEBUG_OUTPUT = 1
 
@@ -266,7 +265,7 @@ void megamol::remote::RendernodeView::Render(double time, double instanceTime) {
             }
         }
         this->_fbo->Enable();
-        auto bgcol = this->BkgndColour();
+        auto bgcol = this->BackgroundColor();
         glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

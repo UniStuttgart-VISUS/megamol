@@ -5,7 +5,6 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 
 #include "mmvtkm_gl/mmvtkmMeshRenderTasks.h"
 

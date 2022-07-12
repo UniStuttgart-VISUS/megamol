@@ -4,7 +4,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "protein_calls/TunnelResidueDataCall.h"
-#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::core;

@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 
 #define _USE_MATH_DEFINES 1
 
@@ -18,19 +17,18 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/Camera.h"
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "protein/CallColor.h"
-#include "protein/Color.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
 #include "vislib/math/Quaternion.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/File.h"
 #include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
@@ -67,7 +65,6 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
         , stickRadiusParam("stickRadius", "The radius for stick rendering")
         , interpolParam("posInterpolation", "Enable positional interpolation between frames")
         , compareParam("comparison::compare", "Enable comparing between two different molecules")
-        , molColorCallerSlot("getcolor", "Connects the protein rendering with the color computation module")
         , proteinOnlyParam("proteinOnly", "Render only the protein")
         , tubeRadiusParam("tubeScl", "Scale factor for the tubes when rendering in tubes only mode.")
         , recomputeAlwaysParam("alwaysRecompute", "Shall the positions be recomputed every frame?")
@@ -88,31 +85,28 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->bsDataCallerSlot);
 
-    this->molColorCallerSlot.SetCompatibleCall<CallColorDescription>();
-    // this->MakeSlotAvailable(&this->molColorCallerSlot);
-
     // fill color table with default values and set the filename param
     std::string filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
+    ProteinColor::ReadColorTableFromFile(filename, this->fileLookupTable);
     this->colorTableFileParam.SetParameter(
         new param::FilePathParam(filename, core::param::FilePathParam::FilePathFlags_::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // coloring modes
-    this->currentColoringMode0 = Color::ColoringMode::CHAIN;
-    this->currentColoringMode1 = Color::ColoringMode::STRUCTURE;
+    this->currentColoringMode0 = ProteinColor::ColoringMode::CHAIN;
+    this->currentColoringMode1 = ProteinColor::ColoringMode::SECONDARY_STRUCTURE;
     param::EnumParam* cm0 = new param::EnumParam(int(this->currentColoringMode0));
     param::EnumParam* cm1 = new param::EnumParam(int(this->currentColoringMode1));
-    param::EnumParam* scm = new param::EnumParam(int(Color::ColoringMode::ELEMENT));
+    param::EnumParam* scm = new param::EnumParam(int(ProteinColor::ColoringMode::ELEMENT));
     MolecularDataCall* mol = new MolecularDataCall();
     BindingSiteCall* bs = new BindingSiteCall();
     unsigned int cCnt;
-    Color::ColoringMode cMode;
-    for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
-        cMode = Color::GetModeByIndex(mol, bs, cCnt);
-        cm0->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
-        cm1->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
-        scm->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
+    ProteinColor::ColoringMode cMode;
+    for (cCnt = 0; cCnt < static_cast<int>(ProteinColor::ColoringMode::MODE_COUNT); ++cCnt) {
+        cMode = static_cast<ProteinColor::ColoringMode>(cCnt);
+        cm0->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
+        cm1->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
+        scm->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
     }
     delete mol;
     delete bs;
@@ -131,7 +125,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     // SetRenderMode(CARTOON);
     // SetRenderMode(CARTOON_SIMPLE);
     // SetRenderMode(CartoonRenderMode::CARTOON_LINE);
-    SetRenderMode(CartoonRenderMode::CARTOON_GPU);
+    this->currentRenderMode = CartoonRenderMode::CARTOON_GPU;
     param::EnumParam* rm = new param::EnumParam(int(this->currentRenderMode));
     rm->SetTypePair(static_cast<int>(CartoonRenderMode::CARTOON), "Cartoon Hybrid");
     rm->SetTypePair(static_cast<int>(CartoonRenderMode::CARTOON_SIMPLE), "Cartoon Hybrid (simple)");
@@ -195,7 +189,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     this->numberOfTubeSeg = 6;
 
     // fill rainbow color table
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors);
 
     // en-/disable positional interpolation
     this->interpolParam.SetParameter(new param::BoolParam(true));
@@ -249,15 +243,15 @@ bool MoleculeCartoonRenderer::create(void) {
 
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     if (!ssf->MakeShaderSource("protein::cartoon::cartoon::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for cartoon shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::cartoon::geometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load geometry shader source for cartoon shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::cartoon::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for cartoon shader");
         return false;
     }
     this->cartoonShader.Compile(
@@ -276,15 +270,15 @@ bool MoleculeCartoonRenderer::create(void) {
     // load the shader sources for the tube shader //
     /////////////////////////////////////////////////
     if (!ssf->MakeShaderSource("protein::cartoon::cartoon::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for cartoon shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::tubeGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for tube shader");
+        Log::DefaultLog.WriteError("Unable to load geometry shader source for tube shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::cartoon::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for cartoon shader");
         return false;
     }
     this->tubeShader.Compile(
@@ -298,15 +292,15 @@ bool MoleculeCartoonRenderer::create(void) {
     // load the shader sources for the arrow shader //
     //////////////////////////////////////////////////
     if (!ssf->MakeShaderSource("protein::cartoon::cartoon::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for cartoon shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::arrowGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for arrow shader");
+        Log::DefaultLog.WriteError("Unable to load geometry shader source for arrow shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::cartoon::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for cartoon shader");
         return false;
     }
     this->arrowShader.Compile(
@@ -320,15 +314,15 @@ bool MoleculeCartoonRenderer::create(void) {
     // load the shader sources for the helix shader //
     /////////////////////////////////////////////////
     if (!ssf->MakeShaderSource("protein::cartoon::cartoon::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for cartoon shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::helixGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for helix shader");
+        Log::DefaultLog.WriteError("Unable to load geometry shader source for helix shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::cartoon::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for cartoon shader");
         return false;
     }
     this->helixShader.Compile(
@@ -342,15 +336,15 @@ bool MoleculeCartoonRenderer::create(void) {
     // load the shader sources for the tube shader //
     /////////////////////////////////////////////////
     if (!ssf->MakeShaderSource("protein::cartoon::simple::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for simple cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for simple cartoon shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::simple::tubeGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for simple tube shader");
+        Log::DefaultLog.WriteError("Unable to load geometry shader source for simple tube shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::simple::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for simple cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for simple cartoon shader");
         return false;
     }
     this->tubeSimpleShader.Compile(
@@ -364,15 +358,15 @@ bool MoleculeCartoonRenderer::create(void) {
     // load the shader sources for the arrow shader //
     //////////////////////////////////////////////////
     if (!ssf->MakeShaderSource("protein::cartoon::simple::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for simple cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for simple cartoon shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::simple::arrowGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for simple arrow shader");
+        Log::DefaultLog.WriteError("Unable to load geometry shader source for simple arrow shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::simple::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for simple cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for simple cartoon shader");
         return false;
     }
     this->arrowSimpleShader.Compile(
@@ -386,15 +380,15 @@ bool MoleculeCartoonRenderer::create(void) {
     // load the shader sources for the helix shader //
     /////////////////////////////////////////////////
     if (!ssf->MakeShaderSource("protein::cartoon::simple::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for simple cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for simple cartoon shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::simple::helixGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for simple helix shader");
+        Log::DefaultLog.WriteError("Unable to load geometry shader source for simple helix shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::simple::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for simple cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for simple cartoon shader");
         return false;
     }
     this->helixSimpleShader.Compile(
@@ -408,15 +402,15 @@ bool MoleculeCartoonRenderer::create(void) {
     // load the shader sources for the spline arrow shader //
     /////////////////////////////////////////////////////////
     if (!ssf->MakeShaderSource("protein::cartoon::spline::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for spline cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for spline cartoon shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::spline::arrowGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for spline arrow shader");
+        Log::DefaultLog.WriteError("Unable to load geometry shader source for spline arrow shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::spline::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for spline cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for spline cartoon shader");
         return false;
     }
     this->arrowSplineShader.Compile(
@@ -430,15 +424,15 @@ bool MoleculeCartoonRenderer::create(void) {
     // load the shader sources for the spline tube shader //
     ////////////////////////////////////////////////////////
     if (!ssf->MakeShaderSource("protein::cartoon::spline::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for spline cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for spline cartoon shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::spline::tubeGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for spline tube shader");
+        Log::DefaultLog.WriteError("Unable to load geometry shader source for spline tube shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::spline::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for spline cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for spline cartoon shader");
         return false;
     }
     this->tubeSplineShader.Compile(
@@ -452,15 +446,15 @@ bool MoleculeCartoonRenderer::create(void) {
     // load the shader sources for the spline helix shader //
     ////////////////////////////////////////////////////////
     if (!ssf->MakeShaderSource("protein::cartoon::spline::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for spline cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for spline cartoon shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::spline::helixGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for spline helix shader");
+        Log::DefaultLog.WriteError("Unable to load geometry shader source for spline helix shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::spline::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for spline cartoon shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for spline cartoon shader");
         return false;
     }
     this->helixSplineShader.Compile(
@@ -475,11 +469,11 @@ bool MoleculeCartoonRenderer::create(void) {
     //////////////////////////////////////////////////////
     // vertex shader
     if (!ssf->MakeShaderSource("protein::cartoon::perpixellight::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for perpixellight shader");
         return false;
     }
     if (!ssf->MakeShaderSource("protein::cartoon::perpixellight::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for perpixellight shader");
         return false;
     }
     this->lightShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count());
@@ -496,18 +490,17 @@ bool MoleculeCartoonRenderer::create(void) {
             std::filesystem::path("protein_gl/simplemolecule/sm_cylinder.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[SimpleMoleculeRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SimpleMoleculeRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception.");
     }
 
     if (!this->tubeShader.Link()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to link the streamtube shader");
+        Log::DefaultLog.WriteError("Unable to link the streamtube shader");
         return false;
     }
 
@@ -737,55 +730,41 @@ bool MoleculeCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
     // ... interpolate between frames
 
-    CallColor* col = this->molColorCallerSlot.CallAs<CallColor>(); // Try to get color call pointer
-
     // check if the frame has changed
     if (this->currentFrameId != mol->FrameID()) {
         this->currentFrameId = mol->FrameID();
         this->RecomputeAll();
-
-        if (col != NULL) {
-            col->SetDirty(true);
-        }
     }
     // check if the call time has changed
     if (this->oldCallTime != callTime) {
         this->oldCallTime = callTime;
         this->RecomputeAll();
-        if (col != NULL) {
-            col->SetDirty(true);
-        }
     }
 
     // check last atom count with current atom count
     if (this->atomCount != mol->AtomCount()) {
         this->atomCount = mol->AtomCount();
         this->RecomputeAll();
-        if (col != NULL) {
-            col->SetDirty(true);
-        }
     }
 
     if (this->recomputeAlwaysParam.Param<param::BoolParam>()->Value()) {
         this->atomCount = mol->AtomCount();
         this->RecomputeAll();
-        if (col != NULL) {
-            col->SetDirty(true);
-        }
     }
 
     // force recomputation
     // this->RecomputeAll();
 
+    this->colorLookupTable = {glm::make_vec3(this->minGradColorParam.Param<param::ColorParam>()->Value().data()),
+        glm::make_vec3(this->midGradColorParam.Param<param::ColorParam>()->Value().data()),
+        glm::make_vec3(this->maxGradColorParam.Param<param::ColorParam>()->Value().data())};
+
     // recompute colors
     // TODO Why is this done in every frame?
-    Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
+    ProteinColor::MakeWeightedColorTable(*mol, this->currentColoringMode0, this->currentColoringMode1,
         cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
         1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-        this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-        this->minGradColorParam.Param<param::ColorParam>()->Value(),
-        this->midGradColorParam.Param<param::ColorParam>()->Value(),
-        this->maxGradColorParam.Param<param::ColorParam>()->Value(), false, bs);
+        this->atomColorTable, this->colorLookupTable, this->fileLookupTable, this->rainbowColors, bs);
 
     // parameter refresh
     // Note this also recomputes the atom color table using the color call if necessary
@@ -866,26 +845,22 @@ bool MoleculeCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     if (!this->proteinOnlyParam.Param<param::BoolParam>()->Value()) {
         // coloring mode for other molecules
-        Color::MakeColorTable(mol,
-            static_cast<Color::ColoringMode>(int(this->stickColoringModeParam.Param<param::EnumParam>()->Value())),
-            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::ColorParam>()->Value(),
-            this->midGradColorParam.Param<param::ColorParam>()->Value(),
-            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs);
+        ProteinColor::MakeColorTable(*mol,
+            static_cast<ProteinColor::ColoringMode>(
+                int(this->stickColoringModeParam.Param<param::EnumParam>()->Value())),
+            this->atomColorTable, this->colorLookupTable, this->fileLookupTable, this->rainbowColors, bs, nullptr,
+            true);
         // render rest as stick
         this->RenderStick(mol, posInter, bs);
         // reset coloring mode
         this->currentColoringMode0 =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
+            static_cast<ProteinColor::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
         this->currentColoringMode1 =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
-        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
-            cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
-            1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::ColorParam>()->Value(),
-            this->midGradColorParam.Param<param::ColorParam>()->Value(),
-            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs);
+            static_cast<ProteinColor::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
+        ProteinColor::MakeWeightedColorTable(*mol, this->currentColoringMode0, this->currentColoringMode1,
+            cmWeightParam.Param<param::FloatParam>()->Value(), 1.0f - cmWeightParam.Param<param::FloatParam>()->Value(),
+            this->atomColorTable, this->colorLookupTable, this->fileLookupTable, this->rainbowColors, bs, nullptr,
+            true);
     }
 
     delete[] pos0;
@@ -905,14 +880,14 @@ void MoleculeCartoonRenderer::UpdateParameters(
     MolecularDataCall* mol, unsigned int frameID, const BindingSiteCall* bs) {
     // color table param
     if (this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorLookupTable);
+        ProteinColor::ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->fileLookupTable);
         this->colorTableFileParam.ResetDirty();
     }
     // parameter refresh
     if (this->renderingModeParam.IsDirty()) {
-        this->SetRenderMode(
-            static_cast<CartoonRenderMode>(int(this->renderingModeParam.Param<param::EnumParam>()->Value())));
+        this->currentRenderMode =
+            static_cast<CartoonRenderMode>(int(this->renderingModeParam.Param<param::EnumParam>()->Value()));
         this->renderingModeParam.ResetDirty();
     }
 
@@ -920,51 +895,23 @@ void MoleculeCartoonRenderer::UpdateParameters(
         this->prepareCartoonHybrid = true;
         this->tubeRadiusParam.ResetDirty();
     }
-    // ask the color module if a param is dirty
-    CallColor* col = this->molColorCallerSlot.CallAs<CallColor>();
-    bool colDirty = false;
-    if (col != NULL) {
-        (*col)(1); // GetExtents
-        colDirty = col->IsDirty();
-        col->SetDirty(false);
-    }
-
     if (this->coloringModeParam0.IsDirty() || this->coloringModeParam1.IsDirty() || this->cmWeightParam.IsDirty() ||
-        this->compareParam.IsDirty() || colDirty) {
+        this->compareParam.IsDirty()) {
 
         this->currentColoringMode0 =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
+            static_cast<ProteinColor::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
         this->currentColoringMode1 =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
+            static_cast<ProteinColor::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
         this->compare = this->compareParam.Param<param::BoolParam>()->Value();
         RecomputeAll();
 
         if (!this->compare) {
-            Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
-                cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
-                1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-                this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-                this->minGradColorParam.Param<param::ColorParam>()->Value(),
-                this->midGradColorParam.Param<param::ColorParam>()->Value(),
-                this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs);
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO, "Recomputing atom color table WITHOUT color module!");
-        } else if (col != nullptr) {
-            col->SetColoringTarget(mol);
-            col->SetAtomColorTable(&this->atomColorTable);
-            col->SetColorLookupTable(&this->colorLookupTable);
-            col->SetRainbowColorTable(&this->rainbowColors);
-            col->SetBindingSiteCall(bs);
-            col->SetWeighted(true);
-            col->SetForceRecompute(true);
-            col->SetComparisonEnabled(true); // enable comparison
-            col->SetNumEntries(100);
-            col->SetFrameID(frameID);
-
-            (*col)(0); // getColor
-            // this->atomColorTable =  *col->GetAtomColorTable();
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO, "Recomputing atom color table using color module!");
+            ProteinColor::MakeWeightedColorTable(*mol, this->currentColoringMode0, this->currentColoringMode1,
+                cmWeightParam.Param<param::FloatParam>()->Value(),
+                1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), this->atomColorTable, this->colorLookupTable,
+                this->fileLookupTable, this->rainbowColors, bs, nullptr, true);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "Recomputing atom color table WITHOUT color module!");
         }
 
         this->coloringModeParam0.ResetDirty();
@@ -1059,9 +1006,9 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid(const MolecularDataCall* mol, 
                     controlPoints.push_back(vecCA);
 
                     // add the color of the C-alpha atom to the color vector
-                    colorVec.SetX(this->atomColorTable[3 * idx]);
-                    colorVec.SetY(this->atomColorTable[3 * idx + 1]);
-                    colorVec.SetZ(this->atomColorTable[3 * idx + 2]);
+                    colorVec.SetX(this->atomColorTable[idx].x);
+                    colorVec.SetY(this->atomColorTable[idx].y);
+                    colorVec.SetZ(this->atomColorTable[idx].z);
                     cartoonColor[cntChain].push_back(colorVec);
 
                     // get the index of the C atom
@@ -1458,9 +1405,9 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(const MolecularDataCall* mol, flo
                     controlPoints.push_back(vecCA);
 
                     // add the color of the C-alpha atom to the color vector
-                    colorVec.SetX(this->atomColorTable[3 * idx]);
-                    colorVec.SetY(this->atomColorTable[3 * idx + 1]);
-                    colorVec.SetZ(this->atomColorTable[3 * idx + 2]);
+                    colorVec.SetX(this->atomColorTable[idx].x);
+                    colorVec.SetY(this->atomColorTable[idx].y);
+                    colorVec.SetZ(this->atomColorTable[idx].z);
                     cartoonColorCPU[cntChain].push_back(colorVec);
 
                     // get the index of the C atom
@@ -2186,9 +2133,9 @@ void MoleculeCartoonRenderer::RenderCartoonLineCPU(const MolecularDataCall* mol,
                     controlPoints.push_back(vecCA);
 
                     // add the color of the C-alpha atom to the color vector
-                    colorVec.SetX(this->atomColorTable[3 * idx]);
-                    colorVec.SetY(this->atomColorTable[3 * idx + 1]);
-                    colorVec.SetZ(this->atomColorTable[3 * idx + 2]);
+                    colorVec.SetX(this->atomColorTable[idx].x);
+                    colorVec.SetY(this->atomColorTable[idx].y);
+                    colorVec.SetZ(this->atomColorTable[idx].z);
                     cartoonColorCPU[cntChain].push_back(colorVec);
                 }
             }
@@ -2311,8 +2258,8 @@ void MoleculeCartoonRenderer::RenderCartoonGPU(const MolecularDataCall* mol, flo
                 n1 *= flip;
                 aminoacid = (MolecularDataCall::AminoAcid*)(mol->Residues()[cntAA + 2]);
                 idx = aminoacid->CAlphaIndex();
-                glSecondaryColor3f(this->atomColorTable[3 * idx], this->atomColorTable[3 * idx + 1],
-                    this->atomColorTable[3 * idx + 2]);
+                glSecondaryColor3f(
+                    this->atomColorTable[idx].x, this->atomColorTable[idx].y, this->atomColorTable[idx].z);
                 glColor3fv(n1.PeekComponents());
                 glVertex3fv(v1.PeekComponents());
 
@@ -2479,9 +2426,9 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly(const MolecularDataCall* 
                     controlPoints.push_back(vecCA);
 
                     // add the color of the C-alpha atom to the color vector
-                    colorVec.SetX(this->atomColorTable[3 * idx]);
-                    colorVec.SetY(this->atomColorTable[3 * idx + 1]);
-                    colorVec.SetZ(this->atomColorTable[3 * idx + 2]);
+                    colorVec.SetX(this->atomColorTable[idx].x);
+                    colorVec.SetY(this->atomColorTable[idx].y);
+                    colorVec.SetZ(this->atomColorTable[idx].z);
                     cartoonColor[cntChain].push_back(colorVec);
 
                     // get the index of the C atom
@@ -2654,7 +2601,7 @@ void MoleculeCartoonRenderer::RecomputeAll() {
     this->prepareCartoonCPU = true;
     this->prepareCartoonLine = true;
 
-    this->atomColorTable.Clear();
+    this->atomColorTable.clear();
 }
 
 
@@ -2713,9 +2660,9 @@ void MoleculeCartoonRenderer::RenderStick(
                 vertSpheres[4 * totalAtomCnt + 1] = atomPos[3 * atomCnt + 1];
                 vertSpheres[4 * totalAtomCnt + 2] = atomPos[3 * atomCnt + 2];
                 vertSpheres[4 * totalAtomCnt + 3] = this->stickRadiusParam.Param<param::FloatParam>()->Value();
-                colorSpheres[3 * totalAtomCnt + 0] = this->atomColorTable[3 * atomCnt];
-                colorSpheres[3 * totalAtomCnt + 1] = this->atomColorTable[3 * atomCnt + 1];
-                colorSpheres[3 * totalAtomCnt + 2] = this->atomColorTable[3 * atomCnt + 2];
+                colorSpheres[3 * totalAtomCnt + 0] = this->atomColorTable[atomCnt].x;
+                colorSpheres[3 * totalAtomCnt + 1] = this->atomColorTable[atomCnt].y;
+                colorSpheres[3 * totalAtomCnt + 2] = this->atomColorTable[atomCnt].z;
                 this->atomVisible[atomCnt] = true;
                 totalAtomCnt++;
             }
@@ -2757,9 +2704,9 @@ void MoleculeCartoonRenderer::RenderStick(
                                     vertSpheres[4 * totalAtomCnt + 3] =
                                         this->stickRadiusParam.Param<param::FloatParam>()->Value();
                                     // color
-                                    colorSpheres[3 * totalAtomCnt + 0] = this->atomColorTable[3 * atomIdx];
-                                    colorSpheres[3 * totalAtomCnt + 1] = this->atomColorTable[3 * atomIdx + 1];
-                                    colorSpheres[3 * totalAtomCnt + 2] = this->atomColorTable[3 * atomIdx + 2];
+                                    colorSpheres[3 * totalAtomCnt + 0] = this->atomColorTable[atomIdx].x;
+                                    colorSpheres[3 * totalAtomCnt + 1] = this->atomColorTable[atomIdx].y;
+                                    colorSpheres[3 * totalAtomCnt + 2] = this->atomColorTable[atomIdx].z;
                                     // set visiblity
                                     this->atomVisible[atomIdx] = true;
                                     totalAtomCnt++;
@@ -2819,13 +2766,13 @@ void MoleculeCartoonRenderer::RenderStick(
             quatCylinders[4 * totalCylinderCnt + 2] = quatC.GetZ();
             quatCylinders[4 * totalCylinderCnt + 3] = quatC.GetW();
 
-            color1Cylinders[3 * totalCylinderCnt + 0] = this->atomColorTable[3 * idx0];
-            color1Cylinders[3 * totalCylinderCnt + 1] = this->atomColorTable[3 * idx0 + 1];
-            color1Cylinders[3 * totalCylinderCnt + 2] = this->atomColorTable[3 * idx0 + 2];
+            color1Cylinders[3 * totalCylinderCnt + 0] = this->atomColorTable[idx0].x;
+            color1Cylinders[3 * totalCylinderCnt + 1] = this->atomColorTable[idx0].y;
+            color1Cylinders[3 * totalCylinderCnt + 2] = this->atomColorTable[idx0].z;
 
-            color2Cylinders[3 * totalCylinderCnt + 0] = this->atomColorTable[3 * idx1];
-            color2Cylinders[3 * totalCylinderCnt + 1] = this->atomColorTable[3 * idx1 + 1];
-            color2Cylinders[3 * totalCylinderCnt + 2] = this->atomColorTable[3 * idx1 + 2];
+            color2Cylinders[3 * totalCylinderCnt + 0] = this->atomColorTable[idx1].x;
+            color2Cylinders[3 * totalCylinderCnt + 1] = this->atomColorTable[idx1].y;
+            color2Cylinders[3 * totalCylinderCnt + 2] = this->atomColorTable[idx1].z;
 
             vertCylinders[4 * totalCylinderCnt + 0] = position.X();
             vertCylinders[4 * totalCylinderCnt + 1] = position.Y();

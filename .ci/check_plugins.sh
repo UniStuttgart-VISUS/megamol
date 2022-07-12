@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+set -o pipefail
 
 EXIT_CODE=0
 
@@ -17,6 +19,17 @@ for pdir in *; do
   if [[ "$pdir" = "doc_template" ]]; then
     pname="megamolplugin"
   fi
+
+  # Check main dirs for being lower casing
+  for dir in "include" "src" "shaders" "resources"; do
+    found_dir=$(find "$pdir" -maxdepth 1 -type d -iname "$dir")
+    if [[ -d "$found_dir" ]]; then
+      if [[ $found_dir != "$pdir/$dir" ]]; then
+        EXIT_CODE=1
+        echo "The directory \"$found_dir\" must be all lower case!"
+      fi
+    fi
+  done
 
   # Check include dir has exactly one subdir <plugin-name>
   if [[ -d "$pdir/include" ]]; then

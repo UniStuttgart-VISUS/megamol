@@ -11,10 +11,9 @@
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/Thread.h"
-#include "stdafx.h"
 #include "vislib/String.h"
 #include "vislib/sys/FastFile.h"
+#include "vislib/sys/Thread.h"
 
 using namespace megamol::moldyn::io;
 using namespace megamol::moldyn;
@@ -66,26 +65,26 @@ bool MMPGDWriter::run(void) {
     using megamol::core::utility::log::Log;
     auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
     if (filename.empty()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
+        Log::DefaultLog.WriteError("No file name specified. Abort.");
         return false;
     }
 
     ParticleGridDataCall* pgdc = this->dataSlot.CallAs<ParticleGridDataCall>();
     if (pgdc == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No data source connected. Abort.");
+        Log::DefaultLog.WriteError("No data source connected. Abort.");
         return false;
     }
 
     if (vislib::sys::File::Exists(filename.native().c_str())) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_WARN, "File %s already exists and will be overwritten.", filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteWarn(
+            "File %s already exists and will be overwritten.", filename.generic_u8string().c_str());
     }
 
     vislib::math::Cuboid<float> bbox;
     vislib::math::Cuboid<float> cbox;
     UINT32 frameCnt = 1;
     if (!(*pgdc)(1)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Unable to query data extents.");
+        Log::DefaultLog.WriteWarn("Unable to query data extents.");
         bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     } else {
@@ -102,13 +101,13 @@ bool MMPGDWriter::run(void) {
                 cbox = pgdc->AccessBoundingBoxes().ObjectSpaceBBox();
             }
         } else {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Object space bounding boxes not valid. Using defaults");
+            Log::DefaultLog.WriteWarn("Object space bounding boxes not valid. Using defaults");
             bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
             cbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         }
         frameCnt = pgdc->FrameCount();
         if (frameCnt == 0) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Data source counts zero frames. Abort.");
+            Log::DefaultLog.WriteError("Data source counts zero frames. Abort.");
             return false;
         }
     }
@@ -116,16 +115,15 @@ bool MMPGDWriter::run(void) {
     vislib::sys::FastFile file;
     if (!file.Open(filename.native().c_str(), vislib::sys::File::WRITE_ONLY, vislib::sys::File::SHARE_EXCLUSIVE,
             vislib::sys::File::CREATE_OVERWRITE)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "Unable to create output file \"%s\". Abort.", filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteError("Unable to create output file \"%s\". Abort.", filename.generic_u8string().c_str());
         return false;
     }
 
-#define ASSERT_WRITEOUT(A, S)                                                   \
-    if (file.Write((A), (S)) != (S)) {                                          \
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Write error %d", __LINE__); \
-        file.Close();                                                           \
-        return false;                                                           \
+#define ASSERT_WRITEOUT(A, S)                                   \
+    if (file.Write((A), (S)) != (S)) {                          \
+        Log::DefaultLog.WriteError("Write error %d", __LINE__); \
+        file.Close();                                           \
+        return false;                                           \
     }
 
     vislib::StringA magicID("MMPGD");
@@ -148,20 +146,19 @@ bool MMPGDWriter::run(void) {
         ASSERT_WRITEOUT(&frameOffset, 8);
         file.Seek(frameOffset);
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Started writing data frame %u\n", i);
+        Log::DefaultLog.WriteInfo("Started writing data frame %u\n", i);
 
         unsigned int missCnt = 0;
         do {
             pgdc->SetFrameID(i, true);
             if (!(*pgdc)(0)) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot get data frame %u. Abort.\n", i);
+                Log::DefaultLog.WriteError("Cannot get data frame %u. Abort.\n", i);
                 file.Close();
                 return false;
             }
             if (pgdc->FrameID() != i) {
                 if ((missCnt % 10) == 0) {
-                    Log::DefaultLog.WriteMsg(
-                        Log::LEVEL_WARN, "Frame %u returned on request for frame %u\n", pgdc->FrameID(), i);
+                    Log::DefaultLog.WriteWarn("Frame %u returned on request for frame %u\n", pgdc->FrameID(), i);
                 }
                 missCnt++;
                 vislib::sys::Thread::Sleep(missCnt * 100);
@@ -170,7 +167,7 @@ bool MMPGDWriter::run(void) {
 
         if (!this->writeFrame(file, *pgdc)) {
             pgdc->Unlock();
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot write data frame %u. Abort.\n", i);
+            Log::DefaultLog.WriteError("Cannot write data frame %u. Abort.\n", i);
             file.Close();
             return false;
         }
@@ -187,7 +184,7 @@ bool MMPGDWriter::run(void) {
 
     file.Seek(frameOffset);
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Completed writing data\n");
+    Log::DefaultLog.WriteInfo("Completed writing data\n");
     file.Close();
 
     return true;

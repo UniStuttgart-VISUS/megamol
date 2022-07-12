@@ -5,7 +5,6 @@
  * All rights reserved.
  */
 
-#include "stdafx.h"
 
 #define _USE_MATH_DEFINES 1
 
@@ -21,18 +20,16 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "mmcore/view/light/DistantLight.h"
-#include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "protein/Color.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include <GL/glu.h>
 #include <omp.h>
 
@@ -42,7 +39,6 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::core_gl;
-using namespace megamol::protein;
 using namespace megamol::protein_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::core::utility::log;
@@ -55,7 +51,6 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , getLightsSlot("getLights", "Connects the molecule rendering with availabel light sources")
-        , getFramebufferSlot("getFramebuffer", "Connects the molecule rendering to an optional external framebuffer")
         , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
         , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
         , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
@@ -74,9 +69,8 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         , clipPlaneDurationParam("clipPlane::Duration", "...")
         , useNeighborColors("color::neighborhood", "Add the color of the neighborhood to the own")
         , currentZClipPos(-20)
-        , fbo_version_(0)
         , vertex_array_(0)
-        , usedFramebufferObj_(nullptr) {
+        , tableFromFile_(false) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->molDataCallerSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->molDataCallerSlot);
@@ -85,32 +79,26 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->MakeSlotAvailable(&this->getLightsSlot);
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->bsDataCallerSlot);
-    this->getFramebufferSlot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
-    this->MakeSlotAvailable(&this->getFramebufferSlot);
 
     // fill color table with default values and set the filename param
     std::string filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, this->colorLookupTable);
+    tableFromFile_ = ProteinColor::ReadColorTableFromFile(filename, this->fileColorTable_);
     this->colorTableFileParam.SetParameter(
         new param::FilePathParam(filename, core::param::FilePathParam::FilePathFlags_::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
     // coloring modes
-    this->currentColoringMode0 = Color::ColoringMode::CHAIN;
-    this->currentColoringMode1 = Color::ColoringMode::ELEMENT;
+    this->currentColoringMode0 = ProteinColor::ColoringMode::CHAIN;
+    this->currentColoringMode1 = ProteinColor::ColoringMode::ELEMENT;
     param::EnumParam* cm0 = new param::EnumParam(int(this->currentColoringMode0));
     param::EnumParam* cm1 = new param::EnumParam(int(this->currentColoringMode1));
-    MolecularDataCall* mol = new MolecularDataCall();
-    BindingSiteCall* bs = new BindingSiteCall();
     unsigned int cCnt;
-    Color::ColoringMode cMode;
-    for (cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol, bs); ++cCnt) {
-        cMode = Color::GetModeByIndex(mol, bs, cCnt);
-        cm0->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
-        cm1->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
+    ProteinColor::ColoringMode cMode;
+    for (cCnt = 0; cCnt < static_cast<unsigned int>(ProteinColor::ColoringMode::MODE_COUNT); ++cCnt) {
+        cMode = static_cast<ProteinColor::ColoringMode>(cCnt);
+        cm0->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
+        cm1->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
     }
-    delete mol;
-    delete bs;
     this->coloringModeParam0 << cm0;
     this->coloringModeParam1 << cm1;
     this->MakeSlotAvailable(&this->coloringModeParam0);
@@ -175,7 +163,7 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->MakeSlotAvailable(&this->interpolParam);
 
     // make the rainbow color table
-    Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors_);
 
     // Toggle Z-Clipping
     this->toggleZClippingParam.SetParameter(new param::BoolParam(false));
@@ -194,6 +182,11 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
         this->MakeSlotAvailable(param);
     }
 
+    this->colorLookupTable_.clear();
+    this->colorLookupTable_ = {glm::make_vec3(this->minGradColorParam.Param<param::ColorParam>()->Value().data()),
+        glm::make_vec3(this->midGradColorParam.Param<param::ColorParam>()->Value().data()),
+        glm::make_vec3(this->maxGradColorParam.Param<param::ColorParam>()->Value().data())};
+
     this->lastDataHash = 0;
 }
 
@@ -201,7 +194,6 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
  * protein::SimpleMoleculeRenderer::~SimpleMoleculeRenderer (DTOR)
  */
 SimpleMoleculeRenderer::~SimpleMoleculeRenderer(void) {
-    usedFramebufferObj_.reset();
     this->Release();
 }
 
@@ -237,13 +229,12 @@ bool SimpleMoleculeRenderer::create(void) {
             std::filesystem::path("protein_gl/simplemolecule/sm_line.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[SimpleMoleculeRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SimpleMoleculeRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception.");
     }
 
@@ -337,7 +328,6 @@ bool SimpleMoleculeRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
  * protein::SimpleMoleculeRenderer::Render
  */
 bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
-    ++fbo_version_;
     auto call_fbo = call.GetFramebuffer();
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -348,23 +338,14 @@ bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     deferredProvider_.setFramebufferExtents(call_fbo->getWidth(), call_fbo->getHeight());
 
-    call_fbo->bind(); // reset to default behavior
+    call_fbo->bind(); // set to default behavior
 
-
-    // if there is a fbo connected, use the connected one
+    // if there is a fbo of appropriate size connected, draw to it.
+    // if not, we handle the lighting
     bool externalfbo = false;
-    auto cfbo = getFramebufferSlot.CallAs<compositing::CallFramebufferGL>();
-    if (cfbo != nullptr) {
-        cfbo->operator()(compositing::CallFramebufferGL::CallGetMetaData);
-        cfbo->operator()(compositing::CallFramebufferGL::CallGetData);
-        auto fbo = cfbo->getData();
-        if (fbo != nullptr) {
-            externalfbo = true;
-            usedFramebufferObj_ = fbo;
-            usedFramebufferObj_->bind();
-        } else {
-            deferredProvider_.bindDeferredFramebufferToDraw();
-        }
+    auto cfbo = call.GetFramebuffer();
+    if (cfbo != nullptr && cfbo->getNumColorAttachments() == 3) {
+        externalfbo = true;
     } else {
         deferredProvider_.bindDeferredFramebufferToDraw();
     }
@@ -442,7 +423,7 @@ bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
                           vislib::math::Min(mol->AccessBoundingBoxes().ObjectSpaceBBox().Height(),
                               mol->AccessBoundingBoxes().ObjectSpaceBBox().Depth())) *
                       0.75f;
-#pragma omp parallel for
+
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
         if (std::sqrt(std::pow(pos0[3 * cnt + 0] - pos1[3 * cnt + 0], 2) +
                       std::pow(pos0[3 * cnt + 1] - pos1[3 * cnt + 1], 2) +
@@ -465,17 +446,13 @@ bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
     this->UpdateParameters(mol, bs);
 
     // recompute color table, if necessary
-    if (this->atomColorTable.Count() / 3 < mol->AtomCount()) {
+    if (this->atomColorTable_.size() < mol->AtomCount()) {
 
         // Mix two coloring modes
-        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
-            cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
-            1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::ColorParam>()->Value(),
-            this->midGradColorParam.Param<param::ColorParam>()->Value(),
-            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs,
-            this->useNeighborColors.Param<param::BoolParam>()->Value());
+        ProteinColor::MakeWeightedColorTable(*mol, this->currentColoringMode0, this->currentColoringMode1,
+            cmWeightParam.Param<param::FloatParam>()->Value(), 1.0f - cmWeightParam.Param<param::FloatParam>()->Value(),
+            this->atomColorTable_, this->colorLookupTable_, this->fileColorTable_, this->rainbowColors_, bs, nullptr,
+            true, this->useNeighborColors.Param<param::BoolParam>()->Value());
     }
 
     // ---------- special color handling ... -----------
@@ -489,9 +466,7 @@ bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
             aidx = mol->Residues()[ri]->FirstAtomIndex();
             acnt = aidx + mol->Residues()[ri]->AtomCount();
             for (unsigned int ai = aidx; ai < acnt; ++ai) {
-                this->atomColorTable[3 * ai + 0] = specCol[0];
-                this->atomColorTable[3 * ai + 1] = specCol[1];
-                this->atomColorTable[3 * ai + 2] = specCol[2];
+                this->atomColorTable_[ai] = glm::make_vec3(specCol.data());
             }
         }
     }
@@ -536,7 +511,7 @@ bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
 
     // perform the lighing pass only if no framebuffer is attached
-    if (cfbo == nullptr) {
+    if (!externalfbo) {
         deferredProvider_.draw(call, this->getLightsSlot.CallAs<core::view::light::CallLight>(),
             this->currentRenderMode == LINES || this->currentRenderMode == LINES_FILTER);
     }
@@ -552,25 +527,21 @@ bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
  */
 void SimpleMoleculeRenderer::RenderLines(
     const MolecularDataCall* mol, const float* atomPos, bool useFiltering, bool useClipplane) {
-    this->vertPoints.SetCount(mol->AtomCount() * 4);
+    vertPoints_.resize(mol->AtomCount());
     // will be drawn as GL_LINES so each line needs 2*4 input coordinates and 2 * 3 input color values
-    this->vertLines.SetCount(mol->ConnectionCount() * 8);
-    this->colorLines.SetCount(mol->ConnectionCount() * 6);
+    vertLines_.resize(mol->ConnectionCount() * 2);
+    colorLines_.resize(mol->ConnectionCount() * 2);
 
     for (int cnt = 0; cnt < mol->AtomCount(); ++cnt) {
-        this->vertPoints[4 * cnt + 0] = atomPos[3 * cnt + 0];
-        this->vertPoints[4 * cnt + 1] = atomPos[3 * cnt + 1];
-        this->vertPoints[4 * cnt + 2] = atomPos[3 * cnt + 2];
-        this->vertPoints[4 * cnt + 3] = 1.0f;
+        vertPoints_[cnt] = glm::vec4(glm::make_vec3(&atomPos[3 * cnt]), 1.0f);
     }
 
     glPointSize(5.0f);
     glLineWidth(2.0f);
     // ----- draw atoms as points -----
-    buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
-        vertPoints.PeekElements(), vertPoints.Count() * sizeof(float));
+    buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(vertPoints_.data(), vertPoints_.size() * sizeof(glm::vec4));
     buffers_[static_cast<int>(Buffers::COLOR)]->rebuffer(
-        atomColorTable.PeekElements(), atomColorTable.Count() * sizeof(float));
+        atomColorTable_.data(), atomColorTable_.size() * 3 * sizeof(float));
 
     glBindVertexArray(vertex_array_);
     lineShader_->use();
@@ -594,24 +565,13 @@ void SimpleMoleculeRenderer::RenderLines(
                 .Length() > 3.0f)
             continue;
 
-        vertLines[8 * cnt + 0] = atomPos[atomIdx0 * 3 + 0];
-        vertLines[8 * cnt + 1] = atomPos[atomIdx0 * 3 + 1];
-        vertLines[8 * cnt + 2] = atomPos[atomIdx0 * 3 + 2];
-        vertLines[8 * cnt + 3] = 1.0;
-        vertLines[8 * cnt + 4] = atomPos[atomIdx1 * 3 + 0];
-        vertLines[8 * cnt + 5] = atomPos[atomIdx1 * 3 + 1];
-        vertLines[8 * cnt + 6] = atomPos[atomIdx1 * 3 + 2];
-        vertLines[8 * cnt + 7] = 1.0;
-        colorLines[6 * cnt + 0] = atomColorTable[atomIdx0 * 3 + 0];
-        colorLines[6 * cnt + 1] = atomColorTable[atomIdx0 * 3 + 1];
-        colorLines[6 * cnt + 2] = atomColorTable[atomIdx0 * 3 + 2];
-        colorLines[6 * cnt + 3] = atomColorTable[atomIdx1 * 3 + 0];
-        colorLines[6 * cnt + 4] = atomColorTable[atomIdx1 * 3 + 1];
-        colorLines[6 * cnt + 5] = atomColorTable[atomIdx1 * 3 + 2];
+        vertLines_[2 * cnt + 0] = glm::vec4(glm::make_vec3(&atomPos[atomIdx0 * 3]), 1.0);
+        vertLines_[2 * cnt + 1] = glm::vec4(glm::make_vec3(&atomPos[atomIdx1 * 3]), 1.0);
+        colorLines_[2 * cnt + 0] = atomColorTable_[atomIdx0];
+        colorLines_[2 * cnt + 1] = atomColorTable_[atomIdx1];
     }
-    buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
-        vertLines.PeekElements(), vertLines.Count() * sizeof(float));
-    buffers_[static_cast<int>(Buffers::COLOR)]->rebuffer(colorLines.PeekElements(), colorLines.Count() * sizeof(float));
+    buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(vertLines_.data(), vertLines_.size() * sizeof(glm::vec4));
+    buffers_[static_cast<int>(Buffers::COLOR)]->rebuffer(colorLines_.data(), colorLines_.size() * sizeof(glm::vec3));
 
     glDrawArrays(GL_LINES, 0, mol->ConnectionCount() * 2);
 
@@ -627,23 +587,20 @@ void SimpleMoleculeRenderer::RenderLines(
 void SimpleMoleculeRenderer::RenderStick(
     const MolecularDataCall* mol, const float* atomPos, bool useFiltering, bool useClipplane) {
     // ----- prepare stick raycasting -----
-    this->vertSpheres.SetCount(mol->AtomCount() * 4);
-    this->vertCylinders.SetCount(mol->ConnectionCount() * 4);
-    this->quatCylinders.SetCount(mol->ConnectionCount() * 4);
-    this->inParaCylinders.SetCount(mol->ConnectionCount() * 2);
-    this->color1Cylinders.SetCount(mol->ConnectionCount() * 3);
-    this->color2Cylinders.SetCount(mol->ConnectionCount() * 3);
-    this->conFilter.SetCount(mol->ConnectionCount());
+    vertSpheres_.resize(mol->AtomCount());
+    vertCylinders_.resize(mol->ConnectionCount());
+    quatCylinders_.resize(mol->ConnectionCount());
+    inParaCylinders_.resize(mol->ConnectionCount());
+    color1Cylinders_.resize(mol->ConnectionCount());
+    color2Cylinders_.resize(mol->ConnectionCount());
+    conFilter_.resize(mol->ConnectionCount());
 
     int cnt;
 
     // copy atom pos and radius to vertex array
-#pragma omp parallel for
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
-        this->vertSpheres[4 * cnt + 0] = atomPos[3 * cnt + 0];
-        this->vertSpheres[4 * cnt + 1] = atomPos[3 * cnt + 1];
-        this->vertSpheres[4 * cnt + 2] = atomPos[3 * cnt + 2];
-        this->vertSpheres[4 * cnt + 3] = this->stickRadiusParam.Param<param::FloatParam>()->Value();
+        vertSpheres_[cnt] =
+            glm::vec4(glm::make_vec3(&atomPos[3 * cnt]), this->stickRadiusParam.Param<param::FloatParam>()->Value());
     }
 
     unsigned int idx0, idx1;
@@ -652,7 +609,6 @@ void SimpleMoleculeRenderer::RenderStick(
     vislib::math::Vector<float, 3> tmpVec, ortho, dir, position;
     float angle;
     // loop over all connections and compute cylinder parameters
-#pragma omp parallel for private(idx0, idx1, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
     for (cnt = 0; cnt < int(mol->ConnectionCount()); ++cnt) {
         idx0 = mol->Connection()[2 * cnt];
         idx1 = mol->Connection()[2 * cnt + 1];
@@ -667,9 +623,9 @@ void SimpleMoleculeRenderer::RenderStick(
 
         // Set filter information for this connection
         if ((mol->Filter()[idx0] == 1) && (mol->Filter()[idx1] == 1))
-            this->conFilter[cnt] = 1;
+            conFilter_[cnt] = 1;
         else
-            this->conFilter[cnt] = 0;
+            conFilter_[cnt] = 0;
 
         // compute the quaternion for the rotation of the cylinder
         dir = secondAtomPos - firstAtomPos;
@@ -681,33 +637,19 @@ void SimpleMoleculeRenderer::RenderStick(
         // compute the absolute position 'position' of the cylinder (center point)
         position = firstAtomPos + (dir / 2.0f);
 
-        this->inParaCylinders[2 * cnt] = this->stickRadiusParam.Param<param::FloatParam>()->Value();
-
-        this->inParaCylinders[2 * cnt + 1] = (firstAtomPos - secondAtomPos).Length();
+        inParaCylinders_[cnt].x = this->stickRadiusParam.Param<param::FloatParam>()->Value();
+        inParaCylinders_[cnt].y = (firstAtomPos - secondAtomPos).Length();
 
         // thomasbm: hotfix for jumping molecules near bounding box
-        if (this->inParaCylinders[2 * cnt + 1] > mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() +
-                                                     mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius()) {
-            this->inParaCylinders[2 * cnt + 1] = 0;
+        if (inParaCylinders_[cnt].y > mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() +
+                                          mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius()) {
+            inParaCylinders_[cnt].y = 0;
         }
 
-        this->quatCylinders[4 * cnt + 0] = quatC.GetX();
-        this->quatCylinders[4 * cnt + 1] = quatC.GetY();
-        this->quatCylinders[4 * cnt + 2] = quatC.GetZ();
-        this->quatCylinders[4 * cnt + 3] = quatC.GetW();
-
-        this->color1Cylinders[3 * cnt + 0] = this->atomColorTable[3 * idx0 + 0];
-        this->color1Cylinders[3 * cnt + 1] = this->atomColorTable[3 * idx0 + 1];
-        this->color1Cylinders[3 * cnt + 2] = this->atomColorTable[3 * idx0 + 2];
-
-        this->color2Cylinders[3 * cnt + 0] = this->atomColorTable[3 * idx1 + 0];
-        this->color2Cylinders[3 * cnt + 1] = this->atomColorTable[3 * idx1 + 1];
-        this->color2Cylinders[3 * cnt + 2] = this->atomColorTable[3 * idx1 + 2];
-
-        this->vertCylinders[4 * cnt + 0] = position.X();
-        this->vertCylinders[4 * cnt + 1] = position.Y();
-        this->vertCylinders[4 * cnt + 2] = position.Z();
-        this->vertCylinders[4 * cnt + 3] = 0.0f;
+        quatCylinders_[cnt] = glm::vec4(quatC.GetX(), quatC.GetY(), quatC.GetZ(), quatC.GetW());
+        color1Cylinders_[cnt] = this->atomColorTable_[idx0];
+        color2Cylinders_[cnt] = this->atomColorTable_[idx1];
+        vertCylinders_[cnt] = glm::vec4(position.X(), position.Y(), position.Z(), 0.0f);
     }
 
     // ---------- upload lists --------------
@@ -715,17 +657,17 @@ void SimpleMoleculeRenderer::RenderStick(
     // The only information not uploaded are the cylinder vertex positions, as the sphere vertex positions use the same
     // buffer
     buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
-        this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
+        vertSpheres_.data(), vertSpheres_.size() * sizeof(glm::vec4));
     buffers_[static_cast<int>(Buffers::COLOR)]->rebuffer(
-        this->atomColorTable.PeekElements(), this->atomColorTable.Count() * sizeof(float));
+        this->atomColorTable_.data(), this->atomColorTable_.size() * sizeof(glm::vec3));
     buffers_[static_cast<int>(Buffers::CYL_PARAMS)]->rebuffer(
-        this->inParaCylinders.PeekElements(), this->inParaCylinders.Count() * sizeof(float));
+        inParaCylinders_.data(), inParaCylinders_.size() * sizeof(glm::vec2));
     buffers_[static_cast<int>(Buffers::CYL_QUAT)]->rebuffer(
-        this->quatCylinders.PeekElements(), this->quatCylinders.Count() * sizeof(float));
+        quatCylinders_.data(), quatCylinders_.size() * sizeof(glm::vec4));
     buffers_[static_cast<int>(Buffers::CYL_COL1)]->rebuffer(
-        this->color1Cylinders.PeekElements(), this->color1Cylinders.Count() * sizeof(float));
+        color1Cylinders_.data(), color1Cylinders_.size() * sizeof(glm::vec3));
     buffers_[static_cast<int>(Buffers::CYL_COL2)]->rebuffer(
-        this->color2Cylinders.PeekElements(), this->color2Cylinders.Count() * sizeof(float));
+        color2Cylinders_.data(), color2Cylinders_.size() * sizeof(glm::vec3));
     buffers_[static_cast<int>(Buffers::FILTER)]->rebuffer(mol->Filter(), mol->AtomCount() * sizeof(int));
 
     // ---------- actual rendering ----------
@@ -771,9 +713,8 @@ void SimpleMoleculeRenderer::RenderStick(
 
     // upload cylinder vertices
     buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
-        this->vertCylinders.PeekElements(), this->vertCylinders.Count() * sizeof(float));
-    buffers_[static_cast<int>(Buffers::FILTER)]->rebuffer(
-        this->conFilter.PeekElements(), this->conFilter.Count() * sizeof(int));
+        vertCylinders_.data(), vertCylinders_.size() * sizeof(glm::vec4));
+    buffers_[static_cast<int>(Buffers::FILTER)]->rebuffer(conFilter_.data(), conFilter_.size() * sizeof(int));
     glBindVertexArray(vertex_array_);
 
     // enable cylinder shader
@@ -807,22 +748,19 @@ void SimpleMoleculeRenderer::RenderStick(
  */
 void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, const float* atomPos) {
     // ----- prepare stick raycasting -----
-    this->vertSpheres.SetCount(mol->AtomCount() * 4);
-    this->vertCylinders.SetCount(mol->ConnectionCount() * 4);
-    this->quatCylinders.SetCount(mol->ConnectionCount() * 4);
-    this->inParaCylinders.SetCount(mol->ConnectionCount() * 2);
-    this->color1Cylinders.SetCount(mol->ConnectionCount() * 3);
-    this->color2Cylinders.SetCount(mol->ConnectionCount() * 3);
+    vertSpheres_.resize(mol->AtomCount());
+    vertCylinders_.resize(mol->ConnectionCount());
+    quatCylinders_.resize(mol->ConnectionCount());
+    inParaCylinders_.resize(mol->ConnectionCount());
+    color1Cylinders_.resize(mol->ConnectionCount());
+    color2Cylinders_.resize(mol->ConnectionCount());
 
     int cnt;
 
     // copy atom pos and radius to vertex array
-#pragma omp parallel for
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
-        this->vertSpheres[4 * cnt + 0] = atomPos[3 * cnt + 0];
-        this->vertSpheres[4 * cnt + 1] = atomPos[3 * cnt + 1];
-        this->vertSpheres[4 * cnt + 2] = atomPos[3 * cnt + 2];
-        this->vertSpheres[4 * cnt + 3] = this->stickRadiusParam.Param<param::FloatParam>()->Value();
+        vertSpheres_[cnt] =
+            glm::vec4(glm::make_vec3(&atomPos[3 * cnt]), this->stickRadiusParam.Param<param::FloatParam>()->Value());
     }
 
     unsigned int idx0, idx1;
@@ -831,7 +769,6 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
     vislib::math::Vector<float, 3> tmpVec, ortho, dir, position;
     float angle;
     // loop over all connections and compute cylinder parameters
-#pragma omp parallel for private(idx0, idx1, firstAtomPos, secondAtomPos, quatC, tmpVec, ortho, dir, position, angle)
     for (cnt = 0; cnt < int(mol->ConnectionCount()); ++cnt) {
         idx0 = mol->Connection()[2 * cnt];
         idx1 = mol->Connection()[2 * cnt + 1];
@@ -854,32 +791,19 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
         // compute the absolute position 'position' of the cylinder (center point)
         position = firstAtomPos + (dir / 2.0f);
 
-        this->inParaCylinders[2 * cnt] = this->stickRadiusParam.Param<param::FloatParam>()->Value() / 3.0f;
-        this->inParaCylinders[2 * cnt + 1] = (firstAtomPos - secondAtomPos).Length();
+        inParaCylinders_[cnt].x = this->stickRadiusParam.Param<param::FloatParam>()->Value() / 3.0f;
+        inParaCylinders_[cnt].y = (firstAtomPos - secondAtomPos).Length();
 
         // thomasbm: hotfix for jumping molecules near bounding box
-        if (this->inParaCylinders[2 * cnt + 1] > mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() +
-                                                     mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius()) {
-            this->inParaCylinders[2 * cnt + 1] = 0;
+        if (inParaCylinders_[cnt].y > mol->AtomTypes()[mol->AtomTypeIndices()[idx0]].Radius() +
+                                          mol->AtomTypes()[mol->AtomTypeIndices()[idx1]].Radius()) {
+            inParaCylinders_[cnt].y = 0;
         }
 
-        this->quatCylinders[4 * cnt + 0] = quatC.GetX();
-        this->quatCylinders[4 * cnt + 1] = quatC.GetY();
-        this->quatCylinders[4 * cnt + 2] = quatC.GetZ();
-        this->quatCylinders[4 * cnt + 3] = quatC.GetW();
-
-        this->color1Cylinders[3 * cnt + 0] = this->atomColorTable[3 * idx0 + 0];
-        this->color1Cylinders[3 * cnt + 1] = this->atomColorTable[3 * idx0 + 1];
-        this->color1Cylinders[3 * cnt + 2] = this->atomColorTable[3 * idx0 + 2];
-
-        this->color2Cylinders[3 * cnt + 0] = this->atomColorTable[3 * idx1 + 0];
-        this->color2Cylinders[3 * cnt + 1] = this->atomColorTable[3 * idx1 + 1];
-        this->color2Cylinders[3 * cnt + 2] = this->atomColorTable[3 * idx1 + 2];
-
-        this->vertCylinders[4 * cnt + 0] = position.X();
-        this->vertCylinders[4 * cnt + 1] = position.Y();
-        this->vertCylinders[4 * cnt + 2] = position.Z();
-        this->vertCylinders[4 * cnt + 3] = 0.0f;
+        quatCylinders_[cnt] = glm::vec4(quatC.GetX(), quatC.GetY(), quatC.GetZ(), quatC.GetW());
+        color1Cylinders_[cnt] = atomColorTable_[idx0];
+        color2Cylinders_[cnt] = atomColorTable_[idx1];
+        vertCylinders_[cnt] = glm::vec4(position.X(), position.Y(), position.Z(), 0.0f);
     }
 
     // ---------- upload lists --------------
@@ -887,17 +811,17 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
     // The only information not uploaded are the cylinder vertex positions, as the sphere vertex positions use the same
     // buffer
     buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
-        this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
+        vertSpheres_.data(), vertSpheres_.size() * sizeof(glm::vec4));
     buffers_[static_cast<int>(Buffers::COLOR)]->rebuffer(
-        this->atomColorTable.PeekElements(), this->atomColorTable.Count() * sizeof(float));
+        this->atomColorTable_.data(), this->atomColorTable_.size() * sizeof(glm::vec3));
     buffers_[static_cast<int>(Buffers::CYL_PARAMS)]->rebuffer(
-        this->inParaCylinders.PeekElements(), this->inParaCylinders.Count() * sizeof(float));
+        inParaCylinders_.data(), inParaCylinders_.size() * sizeof(glm::vec2));
     buffers_[static_cast<int>(Buffers::CYL_QUAT)]->rebuffer(
-        this->quatCylinders.PeekElements(), this->quatCylinders.Count() * sizeof(float));
+        quatCylinders_.data(), quatCylinders_.size() * sizeof(glm::vec4));
     buffers_[static_cast<int>(Buffers::CYL_COL1)]->rebuffer(
-        this->color1Cylinders.PeekElements(), this->color1Cylinders.Count() * sizeof(float));
+        color1Cylinders_.data(), color1Cylinders_.size() * sizeof(glm::vec3));
     buffers_[static_cast<int>(Buffers::CYL_COL2)]->rebuffer(
-        this->color2Cylinders.PeekElements(), this->color2Cylinders.Count() * sizeof(float));
+        color2Cylinders_.data(), color2Cylinders_.size() * sizeof(glm::vec3));
 
     // ---------- actual rendering ----------
 
@@ -938,7 +862,7 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
 
     // upload cylinder vertices
     buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
-        this->vertCylinders.PeekElements(), this->vertCylinders.Count() * sizeof(float));
+        vertCylinders_.data(), vertCylinders_.size() * sizeof(glm::vec4));
     glBindVertexArray(vertex_array_);
 
     // enable cylinder shader
@@ -966,23 +890,20 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
 void SimpleMoleculeRenderer::RenderSpacefilling(
     const MolecularDataCall* mol, const float* atomPos, bool useFiltering, bool useClipplane) {
 
-    this->vertSpheres.SetCount(mol->AtomCount() * 4);
+    vertSpheres_.resize(mol->AtomCount());
 
     int cnt;
 
     // copy atom pos and radius to vertex array
-#pragma omp parallel for
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
-        this->vertSpheres[4 * cnt + 0] = atomPos[3 * cnt + 0];
-        this->vertSpheres[4 * cnt + 1] = atomPos[3 * cnt + 1];
-        this->vertSpheres[4 * cnt + 2] = atomPos[3 * cnt + 2];
-        this->vertSpheres[4 * cnt + 3] = mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius();
+        vertSpheres_[cnt] =
+            glm::vec4(glm::make_vec3(&atomPos[3 * cnt]), mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius());
     }
 
     buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
-        this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
+        vertSpheres_.data(), vertSpheres_.size() * sizeof(glm::vec4));
     buffers_[static_cast<int>(Buffers::COLOR)]->rebuffer(
-        this->atomColorTable.PeekElements(), this->atomColorTable.Count() * sizeof(float));
+        this->atomColorTable_.data(), this->atomColorTable_.size() * sizeof(glm::vec3));
     buffers_[static_cast<int>(Buffers::FILTER)]->rebuffer(mol->Filter(), mol->AtomCount() * sizeof(int));
 
     // ---------- actual rendering ----------
@@ -1032,24 +953,21 @@ void SimpleMoleculeRenderer::RenderSpacefilling(
  */
 void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float* atomPos) {
     // ----- prepare stick raycasting -----
-    this->vertSpheres.SetCount(mol->AtomCount() * 4);
+    vertSpheres_.resize(mol->AtomCount());
 
     int cnt;
 
     // copy atom pos and radius to vertex array
-#pragma omp parallel for
     for (cnt = 0; cnt < int(mol->AtomCount()); ++cnt) {
-        this->vertSpheres[4 * cnt + 0] = atomPos[3 * cnt + 0];
-        this->vertSpheres[4 * cnt + 1] = atomPos[3 * cnt + 1];
-        this->vertSpheres[4 * cnt + 2] = atomPos[3 * cnt + 2];
-        this->vertSpheres[4 * cnt + 3] = mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius() +
-                                         this->probeRadiusParam.Param<param::FloatParam>()->Value();
+        vertSpheres_[cnt] = glm::vec4(
+            glm::make_vec3(&atomPos[3 * cnt]), mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius() +
+                                                   this->probeRadiusParam.Param<param::FloatParam>()->Value());
     }
 
     buffers_[static_cast<int>(Buffers::POSITION)]->rebuffer(
-        this->vertSpheres.PeekElements(), this->vertSpheres.Count() * sizeof(float));
+        vertSpheres_.data(), vertSpheres_.size() * sizeof(glm::vec4));
     buffers_[static_cast<int>(Buffers::COLOR)]->rebuffer(
-        this->atomColorTable.PeekElements(), this->atomColorTable.Count() * sizeof(float));
+        this->atomColorTable_.data(), this->atomColorTable_.size() * 3 * sizeof(float));
 
     // ---------- actual rendering ----------
 
@@ -1095,8 +1013,8 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
     // color table param
     bool updatedColorTable = false;
     if (this->colorTableFileParam.IsDirty()) {
-        Color::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorLookupTable);
+        this->tableFromFile_ = ProteinColor::ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->fileColorTable_);
         this->colorTableFileParam.ResetDirty();
         updatedColorTable = true;
     }
@@ -1106,33 +1024,24 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
         updatedColorTable || this->minGradColorParam.IsDirty() || this->midGradColorParam.IsDirty() ||
         this->maxGradColorParam.IsDirty() || this->specialColorParam.IsDirty()) {
 
+        this->colorLookupTable_.clear();
+        this->colorLookupTable_ = {glm::make_vec3(this->minGradColorParam.Param<param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->midGradColorParam.Param<param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->maxGradColorParam.Param<param::ColorParam>()->Value().data())};
+
         lastDataHash = mol->DataHash();
 
         this->currentColoringMode0 =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
+            static_cast<ProteinColor::ColoringMode>(int(this->coloringModeParam0.Param<param::EnumParam>()->Value()));
 
         this->currentColoringMode1 =
-            static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
+            static_cast<ProteinColor::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
 
         // Mix two coloring modes
-        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
-            cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
-            1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::ColorParam>()->Value(),
-            this->midGradColorParam.Param<param::ColorParam>()->Value(),
-            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true, bs,
-            this->useNeighborColors.Param<param::BoolParam>()->Value());
-
-        // Use one coloring mode
-        /*Color::MakeColorTable( mol,
-         this->currentColoringMode0,
-         this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-         this->minGradColorParam.Param<param::StringParam>()->Value(),
-         this->midGradColorParam.Param<param::StringParam>()->Value(),
-         this->maxGradColorParam.Param<param::StringParam>()->Value(),
-         true, nullptr,
-         this->useNeighborColors.Param<param::BoolParam>()->Value());*/
+        ProteinColor::MakeWeightedColorTable(*mol, this->currentColoringMode0, this->currentColoringMode1,
+            cmWeightParam.Param<param::FloatParam>()->Value(), 1.0f - cmWeightParam.Param<param::FloatParam>()->Value(),
+            this->atomColorTable_, this->colorLookupTable_, this->fileColorTable_, this->rainbowColors_, bs, nullptr,
+            true, this->useNeighborColors.Param<param::BoolParam>()->Value());
 
         this->coloringModeParam0.ResetDirty();
         this->coloringModeParam1.ResetDirty();

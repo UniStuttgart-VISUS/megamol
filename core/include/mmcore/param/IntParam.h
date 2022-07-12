@@ -10,11 +10,10 @@
 #include <sstream>
 
 #include "GenericParam.h"
-#include "mmcore/api/MegaMolCore.std.h"
 
 namespace megamol::core::param {
 
-class MEGAMOLCORE_API IntParam : public GenericParam<int, AbstractParamPresentation::ParamType::INT> {
+class IntParam : public GenericParam<int, AbstractParamPresentation::ParamType::INT> {
 public:
     IntParam(int initVal) : Super(initVal) {}
 

@@ -1,31 +1,21 @@
-/*
- * SDFFont.h
- *
- * Copyright (C) 2006 - 2018 by Visualisierungsinstitut Universitaet Stuttgart.
- * Alle Rechte vorbehalten.
- *
- * This implementation is based on "vislib/graphics/OutlinetFont.h"
+/**
+ * MegaMol
+ * Copyright (c) 2006, MegaMol Dev Team
+ * All rights reserved.
  */
+// This implementation is based on "vislib/graphics/OutlinetFont.h"
 
-#ifndef MEGAMOL_SDFFONT_H_INCLUDED
-#define MEGAMOL_SDFFONT_H_INCLUDED
-
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <memory>
+
+#include <glm/glm.hpp>
+#include <glowl/glowl.h>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/RenderUtils.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
-#include <glm/glm.hpp>
-
-
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 /**
  * -----------------------------------------------------------------------------------------------------------------
@@ -125,7 +115,7 @@ namespace utility {
  * -----------------------------------------------------------------------------------------------------------------
  */
 
-class MEGAMOLCORE_API SDFFont {
+class SDFFont {
 public:
     // clang-format off
 
@@ -248,28 +238,28 @@ public:
 
         // mvp col x y size flipy txt (align)
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float size, bool flipY, const char* txt,  Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(glm::mat4(), mvp, col, x, y, size, flipY, txt, align);
+            this->DrawString(glm::mat4(1.0f), mvp, col, x, y, size, flipY, txt, align);
         }
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvp, col, x, y, size, flipY, this->to_string(txt).c_str(), align);
         }
         // mvp col x y z size flipy txt (align)
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float z, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(glm::mat4(), mvp, col, x, y, z, size, flipY, txt, align);
+            this->DrawString(glm::mat4(1.0f), mvp, col, x, y, z, size, flipY, txt, align);
         }
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float z, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvp, col, x, y, z, size, flipY, this->to_string(txt).c_str(), align);
         }
         // mvp col x y w h size flipy txt (align)
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(glm::mat4(), mvp, col, x, y, w, h, size, flipY, txt, align);
+            this->DrawString(glm::mat4(1.0f), mvp, col, x, y, w, h, size, flipY, txt, align);
         }
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvp, col, x, y, w, h, size, flipY, this->to_string(txt).c_str(), align);
         }
         // mvp col x y w h z size flipy txt (align)
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const {
-            this->DrawString(glm::mat4(), mvp, col, x, y, z, w, h, size, flipY, txt, align);
+            this->DrawString(glm::mat4(1.0f), mvp, col, x, y, z, w, h, size, flipY, txt, align);
         }
         void DrawString(const glm::mat4& mvp, const float col[4], float x, float y, float z, float w, float h, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const {
             this->DrawString(mvp, col, x, y, z, w, h, size, flipY, this->to_string(txt).c_str(), align);
@@ -328,6 +318,14 @@ public:
          */
         inline bool GetBatchDrawMode(void) const {
             return this->batchDrawMode;
+        }
+
+        inline void SetSmoothMode(bool state) {
+            this->smoothMode = state;
+        }
+
+        inline bool GetSmoothMode() const {
+            return this->smoothMode;
         }
 
         /**
@@ -462,9 +460,8 @@ public:
         * @param a The rotation angle in degrees.
         * @param v The rotation axis.
         */
-        /// TODO XXX FIXME Currently not working ...
         inline void SetRotation(float a, glm::vec3 v) {
-            this->rotation = glm::quat(glm::radians(a), v.x, v.y, v.z);
+            this->rotation = glm::angleAxis(glm::radians(a), v);
         }
 
         inline void SetRotation(float a, float x, float y, float z) {
@@ -558,6 +555,9 @@ public:
         /** String batch cache status. */
         bool batchDrawMode;
 
+        /** Smooth mode. TODO 'off' only works with renderMode filled. */
+        bool smoothMode;
+
         /** Quaternion for font rotation. */
         glm::quat rotation;
 
@@ -574,8 +574,8 @@ public:
         // Render data --------------------------------------------------------
 
         /** The shaders of the font for different color modes. */
-        vislib_gl::graphics::gl::GLSLShader shaderglobcol;
-        vislib_gl::graphics::gl::GLSLShader shadervertcol;
+        std::shared_ptr<glowl::GLSLProgram> shaderglobcol;
+        std::shared_ptr<glowl::GLSLProgram> shadervertcol;
 
         /** The texture of the font. */
         std::shared_ptr<glowl::Texture2D> texture;
@@ -649,7 +649,7 @@ public:
 
         bool loadFontInfo(vislib::StringW filename);
 
-        bool loadFontShader(megamol::core_gl::utility::ShaderSourceFactory &shader_factory);
+        bool loadFontShader(megamol::core::CoreInstance* core_instance_ptr);
 
         /**
         * Answer the number of lines in the glyph run
@@ -723,12 +723,7 @@ public:
             return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wstr);
         }
 
-        //clang-format on
-    };
+    // clang-format on
+};
 
-} /* end namespace utility */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_SDFFONT_H_INCLUDED */
-
+} // namespace megamol::core::utility

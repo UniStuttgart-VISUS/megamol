@@ -4,7 +4,6 @@
  * Copyright (C) 2010 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 
 #include "SolPathRenderer.h"
 #include "mmcore/CoreInstance.h"
@@ -54,24 +53,24 @@ bool SolPathRenderer::create(void) {
         vislib_gl::graphics::gl::ShaderSource fragSrc;
 
         if (!ssf->MakeShaderSource("solpath::pathline::vert", vertSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load pathline vertex shader source");
+            Log::DefaultLog.WriteError("Unable to load pathline vertex shader source");
             return false;
         }
         if (!ssf->MakeShaderSource("solpath::pathline::frag", fragSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load pathline fragment shader source");
+            Log::DefaultLog.WriteError("Unable to load pathline fragment shader source");
             return false;
         }
 
         if (!this->pathlineShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create pathline shader");
+            Log::DefaultLog.WriteError("Unable to create pathline shader");
             return false;
         }
 
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create pathline shader: %s", e.GetMsgA());
+        Log::DefaultLog.WriteError("Unable to create pathline shader: %s", e.GetMsgA());
         return false;
     } catch (...) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create pathline shader");
+        Log::DefaultLog.WriteError("Unable to create pathline shader");
         return false;
     }
 
@@ -80,24 +79,24 @@ bool SolPathRenderer::create(void) {
         vislib_gl::graphics::gl::ShaderSource fragSrc;
 
         if (!ssf->MakeShaderSource("solpath::dots::vert", vertSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load dots vertex shader source");
+            Log::DefaultLog.WriteError("Unable to load dots vertex shader source");
             return false;
         }
         if (!ssf->MakeShaderSource("solpath::dots::frag", fragSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load dots fragment shader source");
+            Log::DefaultLog.WriteError("Unable to load dots fragment shader source");
             return false;
         }
 
         if (!this->dotsShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create dots shader");
+            Log::DefaultLog.WriteError("Unable to create dots shader");
             return false;
         }
 
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create dots shader: %s", e.GetMsgA());
+        Log::DefaultLog.WriteError("Unable to create dots shader: %s", e.GetMsgA());
         return false;
     } catch (...) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create dots shader");
+        Log::DefaultLog.WriteError("Unable to create dots shader");
         return false;
     }
 

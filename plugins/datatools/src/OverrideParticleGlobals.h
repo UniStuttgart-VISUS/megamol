@@ -13,7 +13,7 @@
 
 #include "datatools/AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
-
+#include <limits>
 
 namespace megamol {
 namespace datatools {
@@ -67,17 +67,23 @@ private:
     /** Activates overriding the radius */
     core::param::ParamSlot overrideRadiusSlot;
 
-    /** The new radius value */
-    core::param::ParamSlot radiusSlot;
-
     /** Activates overriding the color */
     core::param::ParamSlot overrideColorSlot;
+
+    /** Activates overriding the intensity range */
+    core::param::ParamSlot overrideIntensityRangeSlot;
 
     /** The new color value */
     core::param::ParamSlot colorSlot;
 
-    /** Activates overriding the intensity range */
-    core::param::ParamSlot overrideIntensityRangeSlot;
+    /** The new radius */
+    core::param::ParamSlot radiusSlot;
+
+    bool anythingDirty();
+
+    void resetAllDirty();
+
+    SIZE_T myHash = std::numeric_limits<SIZE_T>::max();
 
     /** the new range */
     core::param::ParamSlot minIntSlot;

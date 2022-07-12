@@ -7,7 +7,6 @@
 
 #include "mmvtkm_gl/mmvtkmRenderer.h"
 #include "mmvtkm/mmvtkmDataCall.h"
-#include "stdafx.h"
 
 #include "mmcore/param/EnumParam.h"
 

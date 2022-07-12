@@ -3,7 +3,6 @@
  * Copyright (c) 2021, MegaMol Dev Team
  * All rights reserved.
  */
-#include "stdafx.h"
 
 #include "UncertaintyCartoonRenderer.h"
 
@@ -29,8 +28,8 @@
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
 
-#include "protein/RMSF.h"
-#include "protein/UncertaintyColor.h"
+#include "protein_calls/ProteinColor.h"
+#include "protein_calls/RMSF.h"
 
 #include "vislib/assert.h"
 #include "vislib/math/Matrix.h"
@@ -41,87 +40,7 @@ using namespace megamol::core;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_gl;
 
-// #define DEBUG_GL
-
 const GLuint SSBObindingPoint = 2;
-
-/*
- * MyFunkyDebugCallback
- */
-// typedef void (APIENTRY *GLDEBUGPROC)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar
-// *message,const void *userParam);
-void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
-    const GLchar* message, const GLvoid* userParam) {
-    const char *sourceText, *typeText, *severityText;
-    switch (source) {
-    case GL_DEBUG_SOURCE_API:
-        sourceText = "API";
-        break;
-    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
-        sourceText = "Window System";
-        break;
-    case GL_DEBUG_SOURCE_SHADER_COMPILER:
-        sourceText = "Shader Compiler";
-        break;
-    case GL_DEBUG_SOURCE_THIRD_PARTY:
-        sourceText = "Third Party";
-        break;
-    case GL_DEBUG_SOURCE_APPLICATION:
-        sourceText = "Application";
-        break;
-    case GL_DEBUG_SOURCE_OTHER:
-        sourceText = "Other";
-        break;
-    default:
-        sourceText = "Unknown";
-        break;
-    }
-    switch (type) {
-    case GL_DEBUG_TYPE_ERROR:
-        typeText = "Error";
-        break;
-    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-        typeText = "Deprecated Behavior";
-        break;
-    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-        typeText = "Undefined Behavior";
-        break;
-    case GL_DEBUG_TYPE_PORTABILITY:
-        typeText = "Portability";
-        break;
-    case GL_DEBUG_TYPE_PERFORMANCE:
-        typeText = "Performance";
-        break;
-    case GL_DEBUG_TYPE_OTHER:
-        typeText = "Other";
-        break;
-    case GL_DEBUG_TYPE_MARKER:
-        typeText = "Marker";
-        break;
-    default:
-        typeText = "Unknown";
-        break;
-    }
-    switch (severity) {
-    case GL_DEBUG_SEVERITY_HIGH:
-        severityText = "High";
-        break;
-    case GL_DEBUG_SEVERITY_MEDIUM:
-        severityText = "Medium";
-        break;
-    case GL_DEBUG_SEVERITY_LOW:
-        severityText = "Low";
-        break;
-    case GL_DEBUG_SEVERITY_NOTIFICATION:
-        severityText = "Notification";
-        break;
-    default:
-        severityText = "Unknown";
-        break;
-    }
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-        "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
-}
 
 /*
  * UncertaintyCartoonRenderer::UncertaintyCartoonRenderer (CTOR)
@@ -301,8 +220,8 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void)
     vislib::StringA filename("colors.txt");
     this->colorTableFileParam.SetParameter(new param::FilePathParam(A2T(filename)));
     this->MakeSlotAvailable(&this->colorTableFileParam);
-    vislib::StringA pat(this->colorTableFileParam.Param<param::FilePathParam>()->Value().c_str());
-    protein::UncertaintyColor::ReadColorTableFromFile(pat, this->colorTable);
+    auto pat = this->colorTableFileParam.Param<param::FilePathParam>()->Value();
+    ProteinColor::ReadColorTableFromFile(pat, this->colorTable);
 
     this->bFactorAsUncertaintyParam << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&this->bFactorAsUncertaintyParam);
@@ -341,13 +260,12 @@ bool UncertaintyCartoonRenderer::loadTubeShader(void) {
             std::filesystem::path("protein_gl/uncertaintycartoon/uncertain.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[UncertaintyCartoonRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[UncertaintyCartoonRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[UncertaintyCartoonRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[UncertaintyCartoonRenderer] Unable to compile shader: Unknown exception.");
     }
 
@@ -360,10 +278,6 @@ bool UncertaintyCartoonRenderer::loadTubeShader(void) {
 bool UncertaintyCartoonRenderer::create(void) {
     using namespace vislib::sys;
     using namespace vislib_gl::graphics::gl;
-
-#ifdef DEBUG_GL
-    glDebugMessageCallback(MyFunkyDebugCallback, nullptr);
-#endif
 
     // load tube shader
     if (!this->loadTubeShader()) {
@@ -509,11 +423,11 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall* udc, Mo
     this->pdbIndex.Clear();
     this->pdbIndex.AssertCapacity(this->aminoAcidCount);
 
-    this->chainColors.Clear();
-    this->chainColors.AssertCapacity(this->aminoAcidCount);
+    this->chainColors.clear();
+    this->chainColors.resize(this->aminoAcidCount);
 
-    this->aminoAcidColors.Clear();
-    this->aminoAcidColors.AssertCapacity(this->aminoAcidCount);
+    this->aminoAcidColors.clear();
+    this->aminoAcidColors.resize(this->aminoAcidCount);
 
     // get secondary structure type colors
     for (unsigned int i = 0; i < static_cast<unsigned int>(UncertaintyDataCall::secStructure::NOE); i++) {
@@ -548,11 +462,11 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall* udc, Mo
             cCnt++;
         }
         // number of different chains: [A-Z] + [a-z] = 52
-        this->chainColors.Add(this->colorTable[(cCnt % this->colorTable.Count())]);
+        this->chainColors.push_back(this->colorTable[(cCnt % this->colorTable.size())]);
 
         // set colors for amino-acids [A-Z] +'?' = 27
         unsigned int tmpAA = static_cast<unsigned int>(udc->GetAminoAcidOneLetterCode(aa));
-        this->aminoAcidColors.Add(this->colorTable[(tmpAA % this->colorTable.Count())]);
+        this->aminoAcidColors.push_back(this->colorTable[(tmpAA % this->colorTable.size())]);
     }
 
 
@@ -633,18 +547,13 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall* udc, Mo
  */
 bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
-#ifdef DEBUG_GL
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-#endif
-
     // get new data from the MolecularDataCall
     MolecularDataCall* mol = this->GetData(static_cast<unsigned int>(call.Time()));
     if (mol == nullptr)
         return false;
 
     if (this->showRMSFParam.Param<megamol::core::param::BoolParam>()->Value()) {
-        firstframe = protein::computeRMSF(mol);
+        firstframe = protein_calls::computeRMSF(mol);
         if (firstframe) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Successfully computed RMSF (min: %.3f, max: %.3f).", mol->MinimumBFactor(), mol->MaximumBFactor());
@@ -735,9 +644,8 @@ bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
     }
     // read and update the color table, if necessary
     if (this->colorTableFileParam.IsDirty()) {
-        protein::UncertaintyColor::ReadColorTableFromFile(
-            vislib::StringA(this->colorTableFileParam.Param<param::FilePathParam>()->Value().c_str()),
-            this->colorTable);
+        ProteinColor::ReadColorTableFromFile(
+            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorTable);
         this->colorTableFileParam.ResetDirty();
     }
     // get lighting position
@@ -1136,11 +1044,6 @@ bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
     // reset stuff
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-#ifdef DEBUG_GL
-    glDisable(GL_DEBUG_OUTPUT);
-    glDisable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-#endif
 
     //  timer.EndFrame();
 

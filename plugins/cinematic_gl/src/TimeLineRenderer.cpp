@@ -13,7 +13,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 
 
 using namespace megamol;
@@ -105,25 +104,17 @@ bool TimeLineRenderer::create(void) {
     // Load texture
     std::string texture_shortfilename = "arrow.png";
     bool loaded_texture = false;
-    if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
-        auto fullfilename = megamol::core::utility::ResourceWrapper::getFileName(
-            this->GetCoreInstance()->Configuration(), vislib::StringA(texture_shortfilename.c_str()));
-        std::wstring texture_filename = std::wstring(fullfilename.PeekBuffer());
-        loaded_texture = this->utils.LoadTextureFromFile(
-            this->texture_id, megamol::core::utility::WChar2Utf8String(texture_filename));
-    } else {
-        std::string texture_filepath;
-        auto resource_directories =
-            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>().resource_directories;
-        for (auto& resource_directory : resource_directories) {
-            auto found_filepath =
-                megamol::core::utility::FileUtils::SearchFileRecursive(resource_directory, texture_shortfilename);
-            if (!found_filepath.empty()) {
-                texture_filepath = found_filepath;
-            }
+    std::string texture_filepath;
+    auto resource_directories =
+        frontend_resources.get<megamol::frontend_resources::RuntimeConfig>().resource_directories;
+    for (auto& resource_directory : resource_directories) {
+        auto found_filepath =
+            megamol::core::utility::FileUtils::SearchFileRecursive(resource_directory, texture_shortfilename);
+        if (!found_filepath.empty()) {
+            texture_filepath = found_filepath;
         }
-        loaded_texture = this->utils.LoadTextureFromFile(this->texture_id, texture_filepath);
     }
+    loaded_texture = this->utils.LoadTextureFromFile(this->texture_id, texture_filepath);
 
     if (!loaded_texture) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -148,7 +139,6 @@ bool TimeLineRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
 bool TimeLineRenderer::Render(core_gl::view::CallRender2DGL& call) {
 
     auto lhsFbo = call.GetFramebuffer();
-    lhsFbo->bind();
 
     // Get camera
     view::Camera camera = call.GetCamera();
@@ -492,9 +482,9 @@ bool TimeLineRenderer::Render(core_gl::view::CallRender2DGL& call) {
     default:
         break;
     }
-    strWidth = this->utils.GetTextLineWidth(caption);
     /// TODO Fix SDFFont text rotation...
     /*
+    strWidth = this->utils.GetTextLineWidth(caption);
     this->utils.SetTextRotation(70.0f, cam_view);
     this->utils.Push2DText(ortho, caption,
         this->axes[Axis::X].startPos.y + this->axes[Axis::Y].length / 2.0f - strWidth / 2.0f, // x
@@ -525,8 +515,6 @@ bool TimeLineRenderer::Render(core_gl::view::CallRender2DGL& call) {
 
     // Draw all ---------------------------------------------------------------
     this->utils.DrawAll(ortho, this->viewport);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return true;
 }
@@ -564,6 +552,7 @@ bool TimeLineRenderer::recalcAxesData(void) {
         unsigned int animPot = 0;
         unsigned int refine = 1;
         while (refine != 0) {
+
             float div = 5.0f;
             if (refine % 2 == 1) {
                 div = 2.0f;
@@ -592,7 +581,9 @@ bool TimeLineRenderer::recalcAxesData(void) {
             this->axes[i].segmSize =
                 this->axes[i].length / this->axes[i].maxValue * this->axes[i].segmValue * this->axes[i].scaleFactor;
 
-            if (this->axes[i].segmSize < maxSegmSize) {
+            if (maxSegmSize == 0) {
+                break;
+            } else if (this->axes[i].segmSize < maxSegmSize) {
                 this->axes[i].segmValue *= div;
                 this->axes[i].segmSize =
                     this->axes[i].length / this->axes[i].maxValue * this->axes[i].segmValue * this->axes[i].scaleFactor;

@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "ForceCubicCBoxModule.h"
-#include "stdafx.h"
 
 using namespace megamol;
 

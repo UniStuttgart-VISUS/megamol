@@ -64,7 +64,7 @@ struct InputEvent {
 /**
  * Base class of input calls
  */
-class MEGAMOLCORE_API InputCall : public Call {
+class InputCall : public Call {
 public:
     static const unsigned int FnOnKey = 0;
     static const unsigned int FnOnChar = 1;

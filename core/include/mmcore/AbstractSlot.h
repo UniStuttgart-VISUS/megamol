@@ -13,7 +13,6 @@
 
 #include "factories/CallDescription.h"
 #include "mmcore/AbstractNamedObject.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
 
@@ -30,7 +29,7 @@ namespace core {
  * owner in the ctor would require the use of 'this' in the initialisation
  * list, which is not allowed.
  */
-class MEGAMOLCORE_API AbstractSlot : public AbstractNamedObject {
+class AbstractSlot : public AbstractNamedObject {
 public:
     /**
      * interface class for listener objects

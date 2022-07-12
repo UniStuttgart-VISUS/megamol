@@ -12,11 +12,11 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "stdafx.h"
 
 
 using namespace megamol;
 using namespace megamol::protein;
+using namespace megamol::protein_calls;
 using namespace megamol::geocalls;
 using namespace megamol::protein_calls;
 
@@ -47,21 +47,21 @@ MoleculeBallifier::MoleculeBallifier(void)
     this->MakeSlotAvailable(&this->outDataSlot);
 
     std::string filename("colors.txt");
-    Color::ReadColorTableFromFile(filename, colorLookupTable_);
+    ProteinColor::ReadColorTableFromFile(filename, fileLookupTable_);
     colorTableFileParam_.SetParameter(
         new core::param::FilePathParam(filename, core::param::FilePathParam::FilePathFlags_::Flag_File_ToBeCreated));
     this->MakeSlotAvailable(&colorTableFileParam_);
 
-    curColoringMode0_ = Color::ColoringMode::ELEMENT;
-    curColoringMode1_ = Color::ColoringMode::ELEMENT;
+    curColoringMode0_ = ProteinColor::ColoringMode::ELEMENT;
+    curColoringMode1_ = ProteinColor::ColoringMode::ELEMENT;
     core::param::EnumParam* cm0 = new core::param::EnumParam(static_cast<int>(curColoringMode0_));
     core::param::EnumParam* cm1 = new core::param::EnumParam(static_cast<int>(curColoringMode1_));
     MolecularDataCall* mol = new MolecularDataCall();
-    Color::ColoringMode cMode;
-    for (uint32_t cCnt = 0; cCnt < Color::GetNumOfColoringModes(mol); ++cCnt) {
-        cMode = Color::GetModeByIndex(mol, cCnt);
-        cm0->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
-        cm1->SetTypePair(static_cast<int>(cMode), Color::GetName(cMode).c_str());
+    ProteinColor::ColoringMode cMode;
+    for (uint32_t cCnt = 0; cCnt < static_cast<uint32_t>(ProteinColor::ColoringMode::MODE_COUNT); ++cCnt) {
+        cMode = static_cast<ProteinColor::ColoringMode>(cCnt);
+        cm0->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
+        cm1->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
     }
     delete mol;
     coloringModeParam0_ << cm0;
@@ -84,7 +84,7 @@ MoleculeBallifier::MoleculeBallifier(void)
     specialColorParam_.SetParameter(new core::param::ColorParam("#228B22"));
     this->MakeSlotAvailable(&specialColorParam_);
 
-    Color::MakeRainbowColorTable(100, rainbowColors_);
+    ProteinColor::MakeRainbowColorTable(100, rainbowColors_);
 }
 
 
@@ -128,13 +128,15 @@ bool MoleculeBallifier::getData(core::Call& c) {
 
     // Transfer frame ID plus force flag
     oc->SetFrameID(ic->FrameID(), ic->IsFrameForced());
-    curColoringMode0_ = static_cast<Color::ColoringMode>(coloringModeParam0_.Param<core::param::EnumParam>()->Value());
-    curColoringMode1_ = static_cast<Color::ColoringMode>(coloringModeParam1_.Param<core::param::EnumParam>()->Value());
+    curColoringMode0_ =
+        static_cast<ProteinColor::ColoringMode>(coloringModeParam0_.Param<core::param::EnumParam>()->Value());
+    curColoringMode1_ =
+        static_cast<ProteinColor::ColoringMode>(coloringModeParam1_.Param<core::param::EnumParam>()->Value());
 
     bool updatedColorTable = false;
     if (colorTableFileParam_.IsDirty()) {
-        Color::ReadColorTableFromFile(
-            colorTableFileParam_.Param<core::param::FilePathParam>()->Value(), colorLookupTable_);
+        ProteinColor::ReadColorTableFromFile(
+            colorTableFileParam_.Param<core::param::FilePathParam>()->Value(), fileLookupTable_);
         colorTableFileParam_.ResetDirty();
         updatedColorTable = true;
     }
@@ -158,19 +160,22 @@ bool MoleculeBallifier::getData(core::Call& c) {
             this->frameOld = static_cast<int>(oc->FrameID());
             this->outHash++;
 
-            colorArray_.Clear();
+            colorArray_.clear();
 
             unsigned int cnt = oc->AtomCount();
-            colorArray_.Resize(3 * cnt);
+            colorArray_.resize(cnt);
             this->data.AssertSize(sizeof(float) * 7 * cnt);
             float* fData = this->data.As<float>();
 
-            Color::MakeColorTable(oc, curColoringMode0_, curColoringMode1_,
+            this->colorLookupTable_ = {
+                glm::make_vec3(this->minGradColorParam_.Param<core::param::ColorParam>()->Value().data()),
+                glm::make_vec3(this->midGradColorParam_.Param<core::param::ColorParam>()->Value().data()),
+                glm::make_vec3(this->maxGradColorParam_.Param<core::param::ColorParam>()->Value().data())};
+
+            ProteinColor::MakeWeightedColorTable(*oc, curColoringMode0_, curColoringMode1_,
                 cmWeightParam_.Param<core::param::FloatParam>()->Value(),
                 1.0f - cmWeightParam_.Param<core::param::FloatParam>()->Value(), colorArray_, colorLookupTable_,
-                rainbowColors_, minGradColorParam_.Param<core::param::ColorParam>()->Value(),
-                midGradColorParam_.Param<core::param::ColorParam>()->Value(),
-                maxGradColorParam_.Param<core::param::ColorParam>()->Value());
+                fileLookupTable_, rainbowColors_, nullptr, nullptr, true);
 
             for (unsigned int i = 0; i < cnt; i++, fData += 7) {
                 fData[0] = oc->AtomPositions()[i * 3 + 0];
@@ -178,9 +183,9 @@ bool MoleculeBallifier::getData(core::Call& c) {
                 fData[2] = oc->AtomPositions()[i * 3 + 2];
                 fData[3] = oc->AtomTypes()[oc->AtomTypeIndices()[i]].Radius();
 
-                fData[4] = colorArray_[i * 3 + 0];
-                fData[5] = colorArray_[i * 3 + 1];
-                fData[6] = colorArray_[i * 3 + 2];
+                fData[4] = colorArray_[i].x;
+                fData[5] = colorArray_[i].y;
+                fData[6] = colorArray_[i].z;
             }
         }
 

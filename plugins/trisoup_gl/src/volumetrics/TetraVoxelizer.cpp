@@ -2,7 +2,6 @@
 #include "VoluMetricJob.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "trisoup/volumetrics/JobStructures.h"
 #include "trisoup/volumetrics/MarchingCubeTables.h"
 #include "vislib/math/ShallowPoint.h"
@@ -66,7 +65,7 @@ vislib::math::Point<int, 3> TetraVoxelizer::moreNeighbors[6] = {
 };
 
 void TetraVoxelizer::debugPrintTriangle(vislib::math::ShallowShallowTriangle<float, 3>& tri) {
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         "[%08u] (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f)",
         vislib::sys::Thread::CurrentID(), tri.PeekCoordinates()[0][0], tri.PeekCoordinates()[0][1],
         tri.PeekCoordinates()[0][2], tri.PeekCoordinates()[1][0], tri.PeekCoordinates()[1][1],
@@ -75,7 +74,7 @@ void TetraVoxelizer::debugPrintTriangle(vislib::math::ShallowShallowTriangle<flo
 }
 
 void TetraVoxelizer::debugPrintTriangle(vislib::math::ShallowShallowTriangle<double, 3>& tri) {
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         "[%08u] (%03.3lf, %03.3lf, %03.3lf), (%03.3lf, %03.3lf, %03.3lf), (%03.3lf, %03.3lf, %03.3lf)",
         vislib::sys::Thread::CurrentID(), tri.PeekCoordinates()[0][0], tri.PeekCoordinates()[0][1],
         tri.PeekCoordinates()[0][2], tri.PeekCoordinates()[1][0], tri.PeekCoordinates()[1][1],
@@ -145,7 +144,7 @@ void TetraVoxelizer::CollectCell(
 
     //vislib::math::ShallowShallowTriangle<float, 3> sst2(cell.triangles);
 #ifdef ULTRADEBUG
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         "[%08u] collecting (%04u, %04u, %04u)\n", vislib::sys::Thread::CurrentID(), x, y, z);
 #endif /* ULTRADEBUG */
     for (unsigned int triIdx = 0; triIdx < cell.numTriangles; triIdx++) {
@@ -167,16 +166,15 @@ void TetraVoxelizer::CollectCell(
 
         cellFIFO.Append(vislib::math::Point<unsigned int, 4>(x, y, z, triIdx));
 #ifdef ULTRADEBUG
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "[%08u] appending  (%04u, %04u, %04u)[%u]\n", vislib::sys::Thread::CurrentID(), x, y, z, l);
 #endif /* ULTRADEBUG */
         while (cellFIFO.Count() > 0) {
             vislib::math::Point<unsigned int, 4> p = cellFIFO.First();
             cellFIFO.RemoveFirst();
 #ifdef ULTRADEBUG
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-                "[%08u] growing    (%04u, %04u, %04u)[%u]\n", vislib::sys::Thread::CurrentID(), p.X(), p.Y(), p.Z(),
-                p.W());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[%08u] growing    (%04u, %04u, %04u)[%u]\n",
+                vislib::sys::Thread::CurrentID(), p.X(), p.Y(), p.Z(), p.W());
 #endif /* ULTRADEBUG */
             growSurfaceFromTriangle(theVolume, p.X(), p.Y(), p.Z(), p.W(), surf);
         }
@@ -244,7 +242,7 @@ trisoup::volumetrics::VoxelizerFloat TetraVoxelizer::growVolume(trisoup::volumet
                 cell.consumedTriangles = -2;
 
 #ifdef ULTRADEBUG
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[%08u] grew to (%04u, %04u, %04u)", vislib::sys::Thread::CurrentID(), p.X(), p.Y(), p.Z());
 #endif /* ULTRADEBUG */
 
@@ -277,7 +275,7 @@ trisoup::volumetrics::VoxelizerFloat TetraVoxelizer::growVolume(trisoup::volumet
 
 #ifdef ULTRADEBUG
     if (cells > 0) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "[%08u] grew volume from (%04u, %04u, %04u) yielding %u cells and a volume of %f",
             vislib::sys::Thread::CurrentID(), x, y, z, cells, cells * sjd->CellSize * sjd->CellSize * sjd->CellSize);
     }
@@ -390,7 +388,7 @@ void TetraVoxelizer::growSurfaceFromTriangle(trisoup::volumetrics::FatVoxel* the
 
                 Triangle neighbTriangle(neighbCell.triangles + 3 * 3 * niTriIdx);
 #ifdef ULTRADEBUG
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "[%08u] comparing with (%04u, %04u, %04u)[%u/%u]", vislib::sys::Thread::CurrentID(), neighbCrd.X(),
                     neighbCrd.Y(), neighbCrd.Z(), niTriIdx, neighbCell.numTriangles);
                 debugPrintTriangle(neighbTriangle);
@@ -398,7 +396,7 @@ void TetraVoxelizer::growSurfaceFromTriangle(trisoup::volumetrics::FatVoxel* the
 #endif /* ULTRADEBUG */
                 if (trisoup::volumetrics::Dowel::HaveCommonEdge(neighbTriangle, triangle)) {
 #ifdef ULTRADEBUG
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                         "[%08u] -> has common edge", vislib::sys::Thread::CurrentID());
 #endif /* ULTRADEBUG */
                     /*if (!(neighbCell.consumedTriangles & (1 << niTriIdx)))*/
@@ -472,7 +470,7 @@ VISLIB_FORCEINLINE void TetraVoxelizer::ProcessTriangle(
         tmpTriangle = triangle;
     }
 #ifdef ULTRADEBUG
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         "[%08u] consuming  (%04u, %04u, %04u)[%u/%u]"
         " (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f), (%03.3f, %03.3f, %03.3f)\n",
         vislib::sys::Thread::CurrentID(), x, y, z, triIdx, MarchingCubeTables::a2ucTriangleConnectionCount[n->mcCase],

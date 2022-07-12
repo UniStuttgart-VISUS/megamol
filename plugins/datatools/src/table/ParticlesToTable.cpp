@@ -1,5 +1,4 @@
 #include "ParticlesToTable.h"
-#include "stdafx.h"
 
 #include "geometry_calls//EllipsoidalDataCall.h"
 #include "mmcore/param/EnumParam.h"

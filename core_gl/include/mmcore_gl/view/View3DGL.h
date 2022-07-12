@@ -7,7 +7,6 @@
 
 #pragma once
 #include "mmcore/view/BaseView.h"
-#include "vislib/graphics/Cursor2D.h"
 
 #include "mmcore/view/CameraControllers.h"
 #include "mmcore_gl/view/AbstractTileViewGL.h"
@@ -19,8 +18,7 @@ namespace megamol {
 namespace core_gl {
 namespace view {
 
-class MEGAMOLCORE_API View3DGL
-        : public core::view::BaseView<CallRenderViewGL, core::view::Camera3DController, AbstractViewGL> {
+class View3DGL : public core::view::BaseView<CallRenderViewGL, core::view::Camera3DController, AbstractViewGL> {
 
 public:
     /**

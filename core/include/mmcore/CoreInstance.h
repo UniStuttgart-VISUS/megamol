@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractSlot.h"
-#include "mmcore/ApiHandle.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/JobDescription.h"
 #include "mmcore/JobInstance.h"
@@ -23,8 +22,6 @@
 #include "mmcore/ViewDescription.h"
 #include "mmcore/ViewInstance.h"
 #include "mmcore/ViewInstanceRequest.h"
-#include "mmcore/api/MegaMolCore.h"
-#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/AbstractObjectFactoryInstance.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/CallDescriptionManager.h"
@@ -35,7 +32,6 @@
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamUpdateListener.h"
 #include "mmcore/utility/Configuration.h"
-#include "mmcore/utility/LogEchoTarget.h"
 #include "mmcore/utility/plugins/PluginDescriptor.h"
 
 #include "mmcore/utility/log/Log.h"
@@ -78,19 +74,11 @@ class ServiceManager;
 /**
  * class of core instances.
  */
-class MEGAMOLCORE_API CoreInstance : public ApiHandle, public factories::AbstractObjectFactoryInstance {
+class CoreInstance : public factories::AbstractObjectFactoryInstance {
 public:
     friend class megamol::core::LuaState;
 
     typedef std::unordered_map<std::string, size_t> ParamHashMap_t;
-
-    /**
-     * Deallocator for view handles.
-     *
-     * @param data Must point to the CoreInstance which created this object.
-     * @param obj A view object.
-     */
-    static void ViewJobHandleDalloc(void* data, ApiHandle* obj);
 
     /** ctor */
     CoreInstance(void);
@@ -148,23 +136,7 @@ public:
      * @throws vislib::IllegalStateException if the instance already is
      *         initialised.
      */
-    void Initialise(bool mmconsole_frontend_compatible = true);
-
-    /**
-     * Sets an initialisation value.
-     *
-     * @param key Specifies which value to set.
-     * @param type Specifies the value type of 'value'.
-     * @param value The value to set the initialisation value to. The type
-     *              of the variable specified depends on 'type'.
-     *
-     * @return 'MMC_ERR_NO_ERROR' on success or an nonzero error code if
-     *         the function fails.
-     *
-     * @throw vislib::IllegalStateException if the instance already is
-     *        initialised.
-     */
-    mmcErrorCode SetInitValue(mmcInitValue key, mmcValueType type, const void* value);
+    void Initialise();
 
     /**
      * Returns the configuration object of this instance.
@@ -184,18 +156,6 @@ public:
      *         not found.
      */
     std::shared_ptr<const ViewDescription> FindViewDescription(const char* name);
-
-    /**
-     * Enumerates all view descriptions. The callback function is called for each
-     * view description.
-     *
-     * @param func The callback function.
-     * @param data The user specified pointer to be passed to the callback
-     *             function.
-     * @param getBuiltinToo true to also retreive the builtin view descriptions
-     *                      else false
-     */
-    void EnumViewDescriptions(mmcEnumStringAFunction func, void* data, bool getBuiltinToo = false);
 
     /**
      * Searches for an view description object with the given name.
@@ -424,16 +384,6 @@ public:
     std::string SerializeGraph();
 
     /**
-     * Enumerates all parameters. The callback function is called for each
-     * parameter slot.
-     *
-     * @param cb The callback function.
-     */
-    inline void GOES_INTO_GRAPH EnumParameters(std::function<void(const Module&, param::ParamSlot&)> cb) const {
-        this->enumParameters(this->namespaceRoot, cb);
-    }
-
-    /**
      * Enumerates all modules of the graph, calling cb for each encountered module.
      * If entry_point is specified, the graph is traversed starting from that module or namespace,
      * otherwise, it is traversed from the root.
@@ -457,7 +407,7 @@ public:
             }
         }
         if (!success) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "EnumModulesNoLock: Unable to find module nor namespace \"%s\" as entry point", entry_point.c_str());
         }
     }
@@ -492,7 +442,7 @@ public:
             cb(vi);
             return true;
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to find module \"%s\" for processing", module_name.c_str());
             return false;
         }
@@ -522,11 +472,11 @@ public:
                 }
             }
             if (!found) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Unable to find a ParamSlot in module \"%s\" for processing", module_name.c_str());
             }
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to find module \"%s\" for processing", module_name.c_str());
         }
         return found;
@@ -561,33 +511,16 @@ public:
                 }
             }
             if (!found) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Unable to find a CallerSlot in module \"%s\" for processing", module_name.c_str());
             }
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to find module \"%s\" for processing", module_name.c_str());
         }
         return found;
     }
 
-    /**
-     * Enumerates all parameters. The callback function is called for each
-     * parameter name.
-     *
-     * @param func The callback function.
-     * @param data The user specified pointer to be passed to the callback
-     *             function.
-     */
-    inline void EnumParameters(mmcEnumStringAFunction func, void* data) const {
-        auto toStringFunction = [func, data](const Module& mod, const param::ParamSlot& slot) {
-            vislib::StringA name(mod.FullName());
-            name.Append("::");
-            name.Append(slot.Name());
-            func(name.PeekBuffer(), data);
-        };
-        this->enumParameters(this->namespaceRoot, toStringFunction);
-    }
 
     /**
      * Updates global parameter hash and returns it.
@@ -822,13 +755,6 @@ public:
      */
     inline void SetFrameID(uint32_t frameID) {
         this->frameID = frameID;
-    }
-
-    /**
-     * Return flag indicating if current usage of core instance is compatible with mmconsole fronted.
-     */
-    inline bool IsmmconsoleFrontendCompatible(void) const {
-        return this->mmconsoleFrontendCompatible;
     }
 
     /**
@@ -1094,18 +1020,6 @@ private:
     void GOES_INTO_GRAPH getGlobalParameterHash(ModuleNamespace::const_ptr_type path, ParamHashMap_t& map) const;
 
     /**
-     * Enumerates all parameters. The callback function is called for each
-     * parameter name.
-     *
-     * @param path The current module namespace
-     * @param func The callback function.
-     * @param data The user specified pointer to be passed to the callback
-     *             function.
-     */
-    void GOES_INTO_TRASH enumParameters(
-        ModuleNamespace::const_ptr_type path, std::function<void(const Module&, param::ParamSlot&)> cb) const;
-
-    /**
      * Answer the full name of the paramter 'param' if it is bound to a
      * parameter slot of an active module.
      *
@@ -1354,9 +1268,6 @@ private:
     /** Global hash of all parameters (is increased if any parameter defintion changes) */
     size_t GOES_INTO_GRAPH parameterHash;
 #endif
-
-    /** Flag indicates if usage of core instance is compatible with mmconsole frontend. */
-    bool mmconsoleFrontendCompatible;
 
 #ifdef _WIN32
 #pragma warning(default : 4251)

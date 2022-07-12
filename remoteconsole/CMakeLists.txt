@@ -1,7 +1,6 @@
-#
-# MegaMol™ Remote Console
-# Copyright 2017, by MegaMol Team
-# Alle Rechte vorbehalten. All rights reserved.
+# MegaMol
+# Copyright (c) 2017, MegaMol Dev Team
+# All rights reserved.
 #
 
 option(BUILD_REMOTECONSOLE "Build remote Lua console" ON)
@@ -13,15 +12,14 @@ if(BUILD_REMOTECONSOLE)
   require_external(libcppzmq)
   require_external(libcxxopts)
 
-  # Glob remote console files.
+  # Glob source files.
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
 
   # Setup target.
   add_executable(${PROJECT_NAME} ${header_files} ${source_files})
   target_include_directories(${PROJECT_NAME} 
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    PUBLIC "include" "src")
+    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
   target_link_libraries(${PROJECT_NAME} PRIVATE libzmq libcppzmq libcxxopts)
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
@@ -29,13 +27,5 @@ if(BUILD_REMOTECONSOLE)
   source_group("Source Files" FILES ${source_files})
 
   # Installation rules for generated files
-  if(UNIX)
-    include(GNUInstallDirs)
-    set(cfg_LIB_PATH "../lib") # relative path from bin to lib dir
-    set(MEGAMOL_REMOTECONSOLE_SCRIPT "remoteconsole.sh")
-    configure_file(extra/remoteconsole.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_REMOTECONSOLE_SCRIPT} @ONLY)
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_REMOTECONSOLE_SCRIPT} DESTINATION "bin")
-  endif()
-  
   install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
 endif(BUILD_REMOTECONSOLE)

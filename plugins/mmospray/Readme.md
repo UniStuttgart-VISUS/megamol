@@ -40,8 +40,7 @@ The current dependencies are: [rkcommon](https://github.com/ospray/rkcommon), [o
     - CMake subsequently asks for the build files of the following dependencies:
         - rkcommon: `<megamol_build_dir>/install/rkcommon/lib/cmake/...`
     - Build and install MegaMol. 
-    - In order to test OSPRay, start MegaMol using the example project file `<megamol_build_dir>/install/examples/testspheres_ospray_megamol.lua`.  
-    *Note:* On Linux, you have to run MegaMol using the `megamol.sh` script in order to additionally set the required path to the shared libraries of OSPRay.
+    - In order to test OSPRay, start MegaMol using the example project file `<megamol_build_dir>/install/examples/testspheres_ospray_megamol.lua`.
 
 ## Modules
 

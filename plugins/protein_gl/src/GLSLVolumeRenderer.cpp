@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 
 #define _USE_MATH_DEFINES 1
 
@@ -19,10 +18,9 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "protein/Color.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
@@ -30,6 +28,7 @@
 #include "vislib/assert.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/File.h"
 #include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
@@ -100,14 +99,14 @@ protein_gl::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
     this->MakeSlotAvailable(&this->protRendererCallerSlot);
 
     // --- set the coloring mode ---
-    this->SetColoringMode(protein::Color::ColoringMode::ELEMENT);
+    this->SetColoringMode(protein_calls::ProteinColor::ColoringMode::ELEMENT);
     param::EnumParam* cm = new param::EnumParam(int(this->currentColoringMode));
     MolecularDataCall* mol = new MolecularDataCall();
     unsigned int cCnt;
-    protein::Color::ColoringMode cMode;
-    for (cCnt = 0; cCnt < protein::Color::GetNumOfColoringModes(mol); ++cCnt) {
-        cMode = protein::Color::GetModeByIndex(mol, cCnt);
-        cm->SetTypePair(static_cast<int>(cMode), protein::Color::GetName(cMode).c_str());
+    protein_calls::ProteinColor::ColoringMode cMode;
+    for (cCnt = 0; cCnt < static_cast<uint32_t>(ProteinColor::ColoringMode::MODE_COUNT); ++cCnt) {
+        cMode = static_cast<ProteinColor::ColoringMode>(cCnt);
+        cm->SetTypePair(static_cast<int>(cMode), ProteinColor::GetName(cMode).c_str());
     }
     delete mol;
     this->coloringModeParam << cm;
@@ -149,7 +148,7 @@ protein_gl::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
 
     // fill color table with default values and set the filename param
     std::string filename("colors.txt");
-    protein::Color::ReadColorTableFromFile(filename, this->colorLookupTable);
+    ProteinColor::ReadColorTableFromFile(filename, this->fileColorTable);
     this->colorTableFileParam.SetParameter(new param::StringParam(filename));
     this->MakeSlotAvailable(&this->colorTableFileParam);
 
@@ -174,7 +173,7 @@ protein_gl::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
     this->MakeSlotAvailable(&this->renderProteinParam);
 
     // fill rainbow color table
-    protein::Color::MakeRainbowColorTable(100, this->rainbowColors);
+    ProteinColor::MakeRainbowColorTable(100, this->rainbowColors);
 
     // initialize vertex and color array for tests
     c = new float[3 * NUM];
@@ -224,13 +223,11 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
     // Load sphere shader
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     if (!ssf->MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for sphere shader", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("protein::std::sphereFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load fragment shader source for sphere shader", this->ClassName());
         return false;
     }
     try {
@@ -238,20 +235,19 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load clipped sphere shader
     if (!ssf->MakeShaderSource("protein::std::sphereClipPlaneVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for clipped sphere shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to load vertex shader source for clipped sphere shader", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("protein::std::sphereClipPlaneFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for clipped sphere shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to load fragment shader source for clipped sphere shader", this->ClassName());
         return false;
     }
     try {
@@ -259,20 +255,17 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create clipped sphere shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create clipped sphere shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load cylinder shader
     if (!ssf->MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%: Unable to load vertex shader source for cylinder shader", this->ClassName());
+        Log::DefaultLog.WriteError("%: Unable to load vertex shader source for cylinder shader", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("protein::std::cylinderFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for cylinder shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load fragment shader source for cylinder shader", this->ClassName());
         return false;
     }
     try {
@@ -280,19 +273,18 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create cylinder shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create cylinder shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load volume texture generation shader
     if (!ssf->MakeShaderSource("volume::std::updateVolumeVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
             "%: Unable to load vertex shader source for volume texture update shader", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("volume::std::updateVolumeFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
             "%s: Unable to load fragment shader source for volume texture update shader", this->ClassName());
         return false;
     }
@@ -301,20 +293,18 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create volume texture update shader: %s\n",
-            this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to create volume texture update shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load ray start shader
     if (!ssf->MakeShaderSource("volume::std::rayStartVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray start shader", this->ClassName());
+        Log::DefaultLog.WriteError("%: Unable to load vertex shader source for ray start shader", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("volume::std::rayStartFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray start shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load fragment shader source for ray start shader", this->ClassName());
         return false;
     }
     try {
@@ -322,20 +312,19 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create ray start shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create ray start shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load ray start eye shader
     if (!ssf->MakeShaderSource("volume::std::rayStartEyeVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray start eye shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%: Unable to load vertex shader source for ray start eye shader", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("volume::std::rayStartEyeFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray start eye shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to load fragment shader source for ray start eye shader", this->ClassName());
         return false;
     }
     try {
@@ -343,20 +332,18 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create ray start eye shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create ray start eye shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load ray length shader (uses same vertex shader as ray start shader)
     if (!ssf->MakeShaderSource("volume::std::rayStartVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray length shader", this->ClassName());
+        Log::DefaultLog.WriteError("%: Unable to load vertex shader source for ray length shader", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("volume::std::rayLengthFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray length shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to load fragment shader source for ray length shader", this->ClassName());
         return false;
     }
     try {
@@ -364,20 +351,19 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create ray length shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create ray length shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load volume rendering shader
     if (!ssf->MakeShaderSource("volume::std::volumeVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%: Unable to load vertex shader source for volume rendering shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%: Unable to load vertex shader source for volume rendering shader", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("volume::std::volumeFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for volume rendering shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to load vertex shader source for volume rendering shader", this->ClassName());
         return false;
     }
     try {
@@ -385,20 +371,20 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create volume rendering shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to create volume rendering shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Write a uniform color to all fragments
     if (!ssf->MakeShaderSource("volume::std::colorWriterVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%: Unable to load vertex shader source for color writing shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%: Unable to load vertex shader source for color writing shader", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("volume::std::colorWriterFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for color writing shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to load vertex shader source for color writing shader", this->ClassName());
         return false;
     }
     try {
@@ -406,8 +392,7 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create color writing shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create color writing shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
@@ -657,10 +642,12 @@ bool protein_gl::GLSLVolumeRenderer::Render(core_gl::view::CallRender3DGL& call)
         if (mol->AtomCount() == 0)
             return true;
 
-        protein::Color::MakeColorTable(mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
-            this->rainbowColors, this->minGradColorParam.Param<param::ColorParam>()->Value(),
-            this->midGradColorParam.Param<param::ColorParam>()->Value(),
-            this->maxGradColorParam.Param<param::ColorParam>()->Value(), true);
+        this->colorLookupTable = {glm::make_vec3(this->minGradColorParam.Param<param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->midGradColorParam.Param<param::ColorParam>()->Value().data()),
+            glm::make_vec3(this->maxGradColorParam.Param<param::ColorParam>()->Value().data())};
+
+        ProteinColor::MakeColorTable(*mol, this->currentColoringMode, this->atomColorTable, this->colorLookupTable,
+            this->fileColorTable, this->rainbowColors, nullptr, nullptr, true);
     }
 
 
@@ -773,7 +760,7 @@ void protein_gl::GLSLVolumeRenderer::ParameterRefresh(core_gl::view::CallRender3
     // parameter refresh
     if (this->coloringModeParam.IsDirty()) {
         this->SetColoringMode(
-            static_cast<protein::Color::ColoringMode>(int(this->coloringModeParam.Param<param::EnumParam>()->Value())));
+            static_cast<ProteinColor::ColoringMode>(int(this->coloringModeParam.Param<param::EnumParam>()->Value())));
         this->coloringModeParam.ResetDirty();
         this->forceUpdateVolumeTexture = true;
     }
@@ -892,7 +879,7 @@ void protein_gl::GLSLVolumeRenderer::ParameterRefresh(core_gl::view::CallRender3
 
     // update color table
     if (this->colorTableFileParam.IsDirty()) {
-        protein::Color::ReadColorTableFromFile(
+        ProteinColor::ReadColorTableFromFile(
             this->colorTableFileParam.Param<param::StringParam>()->Value(), this->colorLookupTable);
         this->colorTableFileParam.ResetDirty();
         this->forceUpdateVolumeTexture = true;
@@ -1020,7 +1007,7 @@ void protein_gl::GLSLVolumeRenderer::UpdateVolumeTexture(MolecularDataCall* mol)
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     glVertexPointer(4, GL_FLOAT, 0, atoms);
-    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
+    glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.data());
     for (z = 0; z < this->volumeSize; ++z) {
         // attach texture slice to FBO
         glFramebufferTexture3DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volumeTex, 0, z);

@@ -10,7 +10,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "moldyn/ParticleGridDataCall.h"
-#include "stdafx.h"
 #include "vislib/Array.h"
 #include "vislib/Pair.h"
 #include "vislib/PtrArray.h"
@@ -161,7 +160,7 @@ bool DataGridder::getData(megamol::core::Call& call) {
             auto& p = mpdc->AccessParticles(i);
 
             if (p.GetVertexDataType() == geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[Critical] Unable to grid already quantized data!\n");
                 throw vislib::Exception("Critical Error: Unable to grid already quantized data!\n", __FILE__, __LINE__);
             }
@@ -201,8 +200,8 @@ bool DataGridder::getData(megamol::core::Call& call) {
 
             case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
             default:
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                    megamol::core::utility::log::Log::LEVEL_ERROR, "Internal Error at %s[%d]\n", __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "Internal Error at %s[%d]\n", __FILE__, __LINE__);
                 throw vislib::Exception("Internal Error\n", __FILE__, __LINE__);
                 break;
             }
@@ -293,7 +292,7 @@ bool DataGridder::getData(megamol::core::Call& call) {
 
                 case geocalls::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
                 default:
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Internal Error at %s[%d]\n", __FILE__, __LINE__);
                     throw vislib::Exception("Internal Error\n", __FILE__, __LINE__);
                     break;
@@ -406,7 +405,7 @@ bool DataGridder::getData(megamol::core::Call& call) {
                     break;
                 case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     vertSize = 4;
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                         "Unable to quantize radius for type %u; using %f\n", j, this->types[j].GetGlobalRadius());
                     break;
                 default:

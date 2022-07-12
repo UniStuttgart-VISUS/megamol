@@ -6,7 +6,6 @@
  */
 
 #include "mmcore_gl/view/AbstractOverrideViewGL.h"
-#include "stdafx.h"
 
 using namespace megamol::core_gl;
 using namespace megamol::frontend_resources;

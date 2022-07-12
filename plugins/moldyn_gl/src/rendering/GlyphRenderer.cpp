@@ -16,10 +16,9 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "stdafx.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/assert.h"
@@ -121,33 +120,30 @@ bool GlyphRenderer::makeShader(
     ShaderSource fragSrc;
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     if (!ssf->MakeShaderSource(vertexName.c_str(), vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "GlyphRenderer: unable to load vertex shader source: %s", vertexName.c_str());
+        Log::DefaultLog.WriteError("GlyphRenderer: unable to load vertex shader source: %s", vertexName.c_str());
         return false;
     }
     if (!ssf->MakeShaderSource(fragmentName.c_str(), fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "GlyphRenderer: unable to load fragment shader source: %s", fragmentName.c_str());
+        Log::DefaultLog.WriteError("GlyphRenderer: unable to load fragment shader source: %s", fragmentName.c_str());
         return false;
     }
     try {
         if (!shader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "GlyphRenderer: unable to compile shader: unknown error\n");
             return false;
         }
     } catch (AbstractOpenGLShader::CompileException& ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "GlyphRenderer: unable to compile shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("GlyphRenderer: unable to compile shader (@%s): %s\n",
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "GlyphRenderer: unable to compile shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "GlyphRenderer: unable to compile shader: unknown exception\n");
         return false;
     }
@@ -409,7 +405,7 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
         // TODO HAZARD BUG this is not in sync with the buffer arrays for all other attributes and a design flaw of the
         // flag storage!!!!
-        flags->flags->bind(4);
+        flags->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 4);
         //glBindBufferRange(
         //    GL_SHADER_STORAGE_BUFFER, 4, this->flags_buffer.GetHandle(0), 0, num_total_glyphs * sizeof(GLuint));
     }

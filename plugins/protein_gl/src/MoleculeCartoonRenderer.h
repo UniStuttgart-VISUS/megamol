@@ -18,10 +18,9 @@
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein/BSpline.h"
-#include "protein/CallColor.h"
-#include "protein/Color.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
+#include "protein_calls/ProteinColor.h"
 #include "vislib/Array.h"
 #include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
@@ -110,46 +109,6 @@ public:
     /**********************************************************************
      * 'set'-functions
      **********************************************************************/
-
-    /** Set current render mode */
-    void SetRenderMode(CartoonRenderMode rm) {
-        currentRenderMode = rm;
-        protein::CallColor* col =
-            this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
-        if (col != NULL) {
-            col->SetDirty(true);
-        }
-    };
-
-    /** Set current coloring mode */
-    void SetColoringMode0(protein::Color::ColoringMode cm) {
-        currentColoringMode0 = cm;
-        protein::CallColor* col =
-            this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
-        if (col != NULL) {
-            col->SetDirty(true);
-        }
-    };
-
-    /** Set current coloring mode */
-    void SetColoringMode1(protein::Color::ColoringMode cm) {
-        currentColoringMode1 = cm;
-        protein::CallColor* col =
-            this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
-        if (col != NULL) {
-            col->SetDirty(true);
-        }
-    };
-
-    /** Set radius for cartoon rendering mode */
-    inline void SetRadiusCartoon(float rad) {
-        radiusCartoon = rad;
-        protein::CallColor* col =
-            this->molColorCallerSlot.CallAs<protein::CallColor>(); // Try to get color call pointer
-        if (col != NULL) {
-            col->SetDirty(true);
-        }
-    };
 
     /** Set number of spline segments per amino acid for cartoon rendering mode */
     inline void SetNumberOfSplineSegments(unsigned int numSeg) {
@@ -266,8 +225,6 @@ private:
     megamol::core::CallerSlot molRendererCallerSlot;
     /** BindingSiteCall caller slot */
     megamol::core::CallerSlot bsDataCallerSlot;
-    // caller slot for protein coloring
-    megamol::core::CallerSlot molColorCallerSlot;
     // caller slot for light input
     megamol::core::CallerSlot getLightsSlot;
 
@@ -354,8 +311,8 @@ private:
     // current render mode
     CartoonRenderMode currentRenderMode;
     /** The current coloring mode */
-    protein::Color::ColoringMode currentColoringMode0;
-    protein::Color::ColoringMode currentColoringMode1;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode0;
+    protein_calls::ProteinColor::ColoringMode currentColoringMode1;
     // smooth coloring of cartoon mode
     bool smoothCartoonColoringMode;
 
@@ -391,12 +348,13 @@ private:
     float radiusCartoon;
 
     /** The color lookup table (for chains, amino acids,...) */
-    vislib::Array<vislib::math::Vector<float, 3>> colorLookupTable;
+    std::vector<glm::vec3> colorLookupTable;
+    std::vector<glm::vec3> fileLookupTable;
     /** The color lookup table which stores the rainbow colors */
-    vislib::Array<vislib::math::Vector<float, 3>> rainbowColors;
+    std::vector<glm::vec3> rainbowColors;
 
     /** The atom color table for rendering */
-    vislib::Array<float> atomColorTable;
+    std::vector<glm::vec3> atomColorTable;
 
     // the Id of the current frame (for dynamic data)
     unsigned int currentFrameId;

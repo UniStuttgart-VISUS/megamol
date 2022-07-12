@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include <type_traits>
 
@@ -14,7 +15,7 @@ public:
     static inline const std::array<std::string, 2> MetricNames = {"Min/Max+Avg", "Sum"};
 
     template<std::size_t sz>
-    static constexpr std::array<core::MultiPerformanceHistory::perf_type, sz> range() {
+    static std::array<core::MultiPerformanceHistory::perf_type, sz> range() {
         std::array<core::MultiPerformanceHistory::perf_type, sz> arr{0.0};
         std::iota(arr.begin(), arr.end(), 0.0);
         return arr;

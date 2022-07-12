@@ -12,9 +12,6 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/ConsoleProgressBar.h"
-#include "mmcore/utility/sys/SystemInformation.h"
-#include "stdafx.h"
 #include "vislib/PtrArray.h"
 #include "vislib/RawStorageWriter.h"
 #include "vislib/String.h"
@@ -23,8 +20,10 @@
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/ShallowQuaternion.h"
 #include "vislib/math/ShallowVector.h"
+#include "vislib/sys/ConsoleProgressBar.h"
 #include "vislib/sys/DirectoryIterator.h"
 #include "vislib/sys/Path.h"
+#include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/error.h"
 #include "vislib/sys/sysfunctions.h"
 #include <cstdint>
@@ -663,7 +662,7 @@ ASSERT(this->filename.Param<param::FilePathParam>() != NULL);
 if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value(),
         vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
     vislib::sys::SystemMessage err(::GetLastError());
-    this->GetCoreInstance()->Log().WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+    this->GetCoreInstance()->Log().WriteError(
         "Unable to open VTF-File \"%s\": %s", vislib::StringA(
         this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer(),
         static_cast<const char*>(err));
@@ -676,7 +675,7 @@ if (!this->file->Open(this->filename.Param<param::FilePathParam>()->Value(),
 }
 
 if (!this->parseHeaderAndFrameIndices(this->filename.Param<param::FilePathParam>()->Value())) {
-    this->GetCoreInstance()->Log().WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+    this->GetCoreInstance()->Log().WriteError(
         "Unable to read VTF-Header from file \"%s\". Wrong format?", vislib::StringA(
         this->filename.Param<param::FilePathParam>()->Value()).PeekBuffer());
 
@@ -705,12 +704,12 @@ if (!this->parseHeaderAndFrameIndices(this->filename.Param<param::FilePathParam>
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg);
     }
 
     this->initFrameCache(cacheSize);

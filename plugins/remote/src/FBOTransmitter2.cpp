@@ -1,5 +1,4 @@
 #include "FBOTransmitter2.h"
-#include "stdafx.h"
 
 #include <array>
 
@@ -17,10 +16,10 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "vislib/Trace.h"
+#include "vislib/sys/SystemInformation.h"
 
 #ifdef __unix__
 #include <limits.h>
@@ -192,7 +191,7 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
             "FBOTransmitter2: Simple IceT commit at rank %d\n", mpiRank);
 #endif
         std::array<float, 4> backgroundColor = {0.0f, 0.0f, 0.0f, 1.0f};
-        this->extractBkgndColor(backgroundColor);
+        this->extractBackgroundColor(backgroundColor);
 
         int tilevp[4] = {xoff, yoff, tile_width, tile_height}; // define current valid pixel viewport for icet
 #if _DEBUG
@@ -412,14 +411,13 @@ bool megamol::remote::FBOTransmitter2::triggerButtonClicked(megamol::core::param
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Transmission of \"%s\" requested", mvn.c_str());
+    Log::DefaultLog.WriteInfo("Transmission of \"%s\" requested", mvn.c_str());
 
     // this->ModuleGraphLock().LockExclusive();
     const auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::view::AbstractView>(
         mvn, [this](megamol::core::view::AbstractView* vi) { vi->RegisterHook(this); });
     if (!ret) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "FBOTransmitter2: Unable to find VIEW \"%s\" for transmission", mvn.c_str());
+        Log::DefaultLog.WriteError("FBOTransmitter2: Unable to find VIEW \"%s\" for transmission", mvn.c_str());
         success = false;
     }
     // this->ModuleGraphLock().UnlockExclusive();
@@ -530,7 +528,7 @@ bool megamol::remote::FBOTransmitter2::extractViewport(int vvpt[6]) {
 }
 
 
-bool megamol::remote::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& bkgnd_color) {
+bool megamol::remote::FBOTransmitter2::extractBackgroundColor(std::array<float, 4>& bg_color) {
     using megamol::core::utility::log::Log;
 
     bool success = true;
@@ -538,13 +536,13 @@ bool megamol::remote::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& b
 
     // this->ModuleGraphLock().LockExclusive();
     const auto ret = this->GetCoreInstance()->FindModuleNoLock<core::view::AbstractView>(
-        mvn, [&bkgnd_color](core::view::AbstractView* arv) {
-            auto bkgndCol = arv->BkgndColour();
-            if (bkgndCol != glm::vec4(0, 0, 0, 0)) {
-                bkgnd_color[0] = bkgndCol[0];
-                bkgnd_color[1] = bkgndCol[1];
-                bkgnd_color[2] = bkgndCol[2];
-                bkgnd_color[3] = 1.0f;
+        mvn, [&bg_color](core::view::AbstractView* arv) {
+            auto bgCol = arv->BackgroundColor();
+            if (bgCol != glm::vec4(0, 0, 0, 0)) {
+                bg_color[0] = bgCol[0];
+                bg_color[1] = bgCol[1];
+                bg_color[2] = bgCol[2];
+                bg_color[3] = 1.0f;
             }
         });
 
@@ -753,13 +751,12 @@ bool megamol::remote::FBOTransmitter2::renderCompChanged(core::param::ParamSlot&
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "FBOTransmitter2: Rendering to of \"%s\" requested", mvn.c_str());
+    Log::DefaultLog.WriteInfo("FBOTransmitter2: Rendering to of \"%s\" requested", mvn.c_str());
 
     const auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::view::AbstractView>(
         mvn, [this](megamol::core::view::AbstractView* vi) { vi->RegisterHook(this); });
     if (!ret) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "FBOTransmitter2: Unable to find VIEW \"%s\" for transmission", mvn.c_str());
+        Log::DefaultLog.WriteError("FBOTransmitter2: Unable to find VIEW \"%s\" for transmission", mvn.c_str());
         success = false;
     }
 

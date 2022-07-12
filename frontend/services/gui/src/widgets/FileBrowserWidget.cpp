@@ -274,20 +274,22 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
             ImGui::SetCursorScreenPos(cursor_pos + ImVec2(0.0f, max_log_lines * ImGui::GetTextLineHeightWithSpacing()));
 
             // File name ------------------------
-            if (!(flags & FilePathParam::Flag_NoExistenceCheck)) {
+            if (!(flags & FilePathParam::Internal_NoExistenceCheck)) {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
             auto last_file_name_str = this->current_file_str;
 
             std::string input_label = "File Name";
-            if (flags & FilePathParam::Flag_Directory) {
+            if ((flags & FilePathParam::Flag_Any) == FilePathParam::Flag_Any) {
+                input_label = "File or Directory Name";
+            } else if (flags & FilePathParam::Flag_Directory) {
                 input_label = "Directory Name";
             }
             if (ImGui::InputText(input_label.c_str(), &this->current_file_str,
                     ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                 apply = true;
             }
-            if (!(flags & FilePathParam::Flag_NoExistenceCheck)) {
+            if (!(flags & FilePathParam::Internal_NoExistenceCheck)) {
                 ImGui::PopItemFlag();
             }
             if (last_file_name_str != this->current_file_str) {
@@ -330,7 +332,12 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                 auto dir = std::filesystem::u8path(this->current_directory_str);
                 auto file = std::filesystem::u8path(this->current_file_str);
                 std::filesystem::path tmp_path;
-                if (flags & FilePathParam::Flag_File) {
+                if (flags & FilePathParam::Flag_Any) {
+                    tmp_path = dir / file;
+                    if (dir.stem() == file.stem()) {
+                        tmp_path = dir;
+                    }
+                } else if (flags & FilePathParam::Flag_File) {
                     // Assemble final file name
                     this->current_file_str += this->append_ending_str;
                     tmp_path = dir / std::filesystem::u8path(this->current_file_str);
@@ -384,10 +391,18 @@ bool megamol::gui::FileBrowserWidget::validate_split_path(
             out_path = std::filesystem::current_path();
         }
 
-        if (flags & FilePathParam::Flag_File) {
+        if (flags & FilePathParam::Flag_Any) {
             if ((status_known(status(out_path)) && is_directory(out_path))) {
                 out_dir = out_path.generic_u8string();
-                if (!(flags & FilePathParam::Flag_NoExistenceCheck)) {
+                out_file = out_path.filename().generic_u8string();
+            } else {
+                out_dir = out_path.parent_path().generic_u8string();
+                out_file = out_path.filename().generic_u8string();
+            }
+        } else if (flags & FilePathParam::Flag_File) {
+            if ((status_known(status(out_path)) && is_directory(out_path))) {
+                out_dir = out_path.generic_u8string();
+                if (!(flags & FilePathParam::Internal_NoExistenceCheck)) {
                     out_file.clear();
                 }
             } else {
@@ -460,10 +475,10 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
         if (error_flags & FilePathParam::Flag_Directory) {
             this->file_errors += "Expecting directory.\n";
         }
-        if (error_flags & FilePathParam::Flag_NoExistenceCheck) {
+        if (error_flags & FilePathParam::Internal_NoExistenceCheck) {
             this->file_errors += "Path does not exist.\n";
         }
-        if (error_flags & FilePathParam::Flag_RestrictExtension) {
+        if (error_flags & FilePathParam::Internal_RestrictExtension) {
             std::string log_exts;
             FilePathParam::Extensions_t tmp_exts;
             for (auto& ext : extensions) {
@@ -485,7 +500,8 @@ void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMod
             }
         }
 
-        if ((flags & FilePathParam::Flag_NoExistenceCheck) && this->file_errors.empty()) {
+        if ((mode == DIALOGMODE_SAVE) && (flags & FilePathParam::Internal_NoExistenceCheck) &&
+            this->file_errors.empty()) {
             if (flags & FilePathParam::Flag_File) {
                 // Warn if file already exists
                 tmp_filepath = dir / std::filesystem::u8path(file_str + this->append_ending_str);

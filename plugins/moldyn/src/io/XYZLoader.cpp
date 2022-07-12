@@ -10,7 +10,6 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "stdafx.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/TextFileReader.h"

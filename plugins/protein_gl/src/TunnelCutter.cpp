@@ -4,7 +4,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "TunnelCutter.h"
-#include "stdafx.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/IntParam.h"
@@ -472,7 +471,7 @@ bool TunnelCutter::cutMeshEqually(CallTriMeshDataGL* meshCall, CallTriMeshDataGL
         return false;
     }
 
-    auto bspos = protein::EstimateBindingSitePosition(molCall, bsCall);
+    auto bspos = protein_calls::EstimateBindingSitePosition(molCall, bsCall);
 
     // search for the vertex closest to the given position
     float minDist = FLT_MAX;

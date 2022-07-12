@@ -35,7 +35,7 @@ namespace megamol::geocalls {
  * point at.
  */
 
-class MEGAMOLCORE_API CalloutImageCall : public core::Call {
+class CalloutImageCall : public core::Call {
 public:
     /**
      * Answer the name of the objects of this description.

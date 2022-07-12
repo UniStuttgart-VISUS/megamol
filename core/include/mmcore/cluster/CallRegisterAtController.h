@@ -13,6 +13,7 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include <vislib/String.h>
 
 
 namespace megamol {

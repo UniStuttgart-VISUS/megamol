@@ -10,7 +10,7 @@ find_package(Git REQUIRED)
 if (NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
   message(STATUS "Downloading external scripts")
   execute_process(COMMAND
-    ${GIT_EXECUTABLE} clone -b v2.3 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
+    ${GIT_EXECUTABLE} clone -b v2.6 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif ()
@@ -84,7 +84,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(glowl
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "d7aa3d4c5c9568b8bb275c8cfaee1d6c5d7049b5"
+      GIT_TAG "dafee75f11c5d759df30ff651d6763e4e674dd0e"
       INCLUDE_DIR "include")
     target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD2)
 
@@ -249,6 +249,28 @@ function(require_external NAME)
       INCLUDE_DIR "include"
       LIBRARY ${BLEND2D_LIB})
 
+  # chemfiles
+  elseif(NAME STREQUAL "chemfiles")
+    if (TARGET chemfiles)
+      return()
+    endif()
+
+    if (WIN32)
+      set(CHEMFILES_LIB "lib/chemfiles.lib")
+    else ()
+      set(CHEMFILES_LIB "lib/libchemfiles.a")
+    endif ()
+
+    add_external_project(chemfiles STATIC
+      GIT_REPOSITORY https://github.com/chemfiles/chemfiles.git
+      GIT_TAG "0.10.2"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${CHEMFILES_LIB}"
+    )
+
+    add_external_library(chemfiles
+      INCLUDE_DIR "include"
+      LIBRARY ${CHEMFILES_LIB})
+
   # Corsair CUE SDK
   elseif (NAME STREQUAL "CUESDK")
     if (TARGET CUESDK)
@@ -299,31 +321,6 @@ function(require_external NAME)
 
     add_external_library(expat
       LIBRARY ${EXPAT_LIB}
-      DEBUG_SUFFIX "d")
-
-  # fmt
-  elseif (NAME STREQUAL "fmt")
-    if (TARGET fmt)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(FMT_LIB "lib/fmt<SUFFIX>.lib")
-    else ()
-      set(FMT_LIB "${CMAKE_INSTALL_LIBDIR}/libfmt<SUFFIX>.a")
-    endif ()
-
-    add_external_project(fmt STATIC
-      GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-      GIT_TAG "6.2.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${FMT_LIB}"
-      DEBUG_SUFFIX "d"
-      CMAKE_ARGS
-        -DFMT_DOC=OFF
-        -DFMT_TEST=OFF)
-
-    add_external_library(fmt
-      LIBRARY ${FMT_LIB}
       DEBUG_SUFFIX "d")
 
   # glad
@@ -571,6 +568,9 @@ function(require_external NAME)
     add_external_project(libpng STATIC
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/libpng.git
       GIT_TAG "v1.6.34"
+      # libpng CMake executes awk, if available on the system, which fails on Windows if "scripts/pnglibconf.dfa" has CR LF line endings,
+      # see https://github.com/glennrp/libpng/issues/363
+      GIT_CONFIG "core.autocrlf=false;core.eol=lf"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${LIBPNG_LIB}"
       DEBUG_SUFFIX d
       DEPENDS zlib
@@ -633,7 +633,8 @@ function(require_external NAME)
       DEBUG_SUFFIX gd)
 
     set_target_properties(libzmq PROPERTIES
-      INTERFACE_COMPILE_DEFINITIONS "ZMQ_STATIC")
+      INTERFACE_COMPILE_DEFINITIONS "ZMQ_STATIC"
+      INTERFACE_LINK_LIBRARIES "-lpthread;-lrt")
 
     # TODO libzmq cmake does a lot more checks and options. This will probably work only in some configurations.
     if (WIN32)
@@ -687,7 +688,7 @@ function(require_external NAME)
 
     add_external_project(megamol-shader-factory STATIC
       GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-      GIT_TAG "v0.5"
+      GIT_TAG "v0.8"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
       DEPENDS glad)
 
@@ -789,34 +790,27 @@ function(require_external NAME)
       return()
     endif ()
 
-    require_external(fmt)
-
     if (WIN32)
       set(SPDLOG_LIB "lib/spdlog<SUFFIX>.lib")
     else ()
       set(SPDLOG_LIB "${CMAKE_INSTALL_LIBDIR}/libspdlog<SUFFIX>.a")
     endif ()
 
-    external_get_property(fmt BINARY_DIR)
-
     add_external_project(spdlog STATIC
       GIT_REPOSITORY https://github.com/gabime/spdlog.git
-      GIT_TAG "v1.7.0"
-      DEPENDS fmt
+      GIT_TAG "v1.10.0"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${SPDLOG_LIB}"
       DEBUG_SUFFIX "d"
       CMAKE_ARGS
         -DSPDLOG_BUILD_EXAMPLE=OFF
         -DSPDLOG_BUILD_TESTS=OFF
-        -DSPDLOG_FMT_EXTERNAL=ON
-        -Dfmt_DIR=${BINARY_DIR})
+        -DSPDLOG_FMT_EXTERNAL=OFF)
 
     add_external_library(spdlog
       LIBRARY ${SPDLOG_LIB}
-      DEBUG_SUFFIX "d"
-      DEPENDS fmt)
+      DEBUG_SUFFIX "d")
 
-    target_compile_definitions(spdlog INTERFACE SPDLOG_FMT_EXTERNAL;SPDLOG_COMPILED_LIB)
+    target_compile_definitions(spdlog INTERFACE SPDLOG_COMPILED_LIB SPDLOG_EOL="\\n")
 
   # tbb
   elseif (NAME STREQUAL "tbb")

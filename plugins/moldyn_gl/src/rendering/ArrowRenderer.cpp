@@ -6,7 +6,6 @@
  */
 
 #include "ArrowRenderer.h"
-#include "stdafx.h"
 
 #include "mmcore/view/light/DistantLight.h"
 
@@ -80,24 +79,20 @@ bool ArrowRenderer::create(void) {
 
     try {
         if (!this->arrowShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile arrow shader: Unknown error\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile arrow shader: Unknown error\n");
             return false;
         }
 
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile arrow shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile arrow shader (@%s): %s\n",
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile arrow shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile arrow shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile arrow shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile arrow shader: Unknown exception\n");
         return false;
     }
 
@@ -389,7 +384,7 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 fal = glGetAttribLocationARB(this->arrowShader, "flags");
                 glEnableVertexAttribArrayARB(fal);
                 // TODO highly unclear whether this works fine
-                glBindBuffer(GL_ARRAY_BUFFER, flags->flags->getName());
+                flags->flags->bind(GL_ARRAY_BUFFER);
                 //flags->flags->bindAs(GL_ARRAY_BUFFER);
                 glVertexAttribIPointer(fal, 1, GL_UNSIGNED_INT, 0, nullptr);
             }

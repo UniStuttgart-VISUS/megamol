@@ -8,7 +8,7 @@
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore_gl/FlagCallsGL.h"
+#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 using namespace megamol::infovis_gl;
@@ -45,7 +45,7 @@ bool TableHistogramRenderer2D::createImpl(const msf::ShaderFactoryOptionsOpenGL&
         selectionProgram_ = core::utility::make_glowl_shader(
             "histo_table_select", shaderOptions, "infovis_gl/histo/table_select.comp.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("TableHistogramRenderer2D: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(("TableHistogramRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -71,12 +71,12 @@ bool TableHistogramRenderer2D::handleCall(core_gl::view::CallRender2DGL& call) {
     }
     auto readFlagsCall = flagStorageReadCallerSlot_.CallAs<core_gl::FlagCallRead_GL>();
     if (readFlagsCall == nullptr) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TableHistogramRenderer2D requires a read flag storage!");
+        Log::DefaultLog.WriteError("TableHistogramRenderer2D requires a read flag storage!");
         return false;
     }
     auto writeFlagsCall = flagStorageWriteCallerSlot_.CallAs<core_gl::FlagCallWrite_GL>();
     if (writeFlagsCall == nullptr) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "TableHistogramRenderer2D requires a write flag storage!");
+        Log::DefaultLog.WriteError("TableHistogramRenderer2D requires a write flag storage!");
         return false;
     }
 
@@ -112,7 +112,7 @@ bool TableHistogramRenderer2D::handleCall(core_gl::view::CallRender2DGL& call) {
     }
 
     if (dataChanged || readFlagsCall->hasUpdate() || binsChanged()) {
-        // Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Calculate Histogram");
+        // Log::DefaultLog.WriteInfo( "Calculate Histogram");
 
         resetHistogramBuffers();
 
@@ -122,7 +122,7 @@ bool TableHistogramRenderer2D::handleCall(core_gl::view::CallRender2DGL& call) {
 
         bindCommon(calcHistogramProgram_);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, floatDataBuffer_);
-        readFlagsCall->getData()->flags->bind(5);
+        readFlagsCall->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 5);
 
         calcHistogramProgram_->setUniform("numRows", static_cast<GLuint>(numRows_));
 
@@ -146,7 +146,7 @@ void TableHistogramRenderer2D::updateSelection(SelectionMode selectionMode, int 
 
         bindCommon(selectionProgram_);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, floatDataBuffer_);
-        readFlagsCall->getData()->flags->bind(5);
+        readFlagsCall->getData()->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 5);
 
         selectionProgram_->setUniform("numRows", static_cast<GLuint>(numRows_));
         selectionProgram_->setUniform(

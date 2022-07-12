@@ -11,7 +11,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 #ifdef _WIN32
-#include "mmcore/utility/sys/MemmappedFile.h"
+#include "vislib/sys/MemmappedFile.h"
 #else
 #include "vislib/sys/BufferedFile.h"
 #endif

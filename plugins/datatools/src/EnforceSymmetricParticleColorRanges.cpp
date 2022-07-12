@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "EnforceSymmetricParticleColorRanges.h"
-#include "stdafx.h"
 #include <algorithm>
 #include <cstdint>
 

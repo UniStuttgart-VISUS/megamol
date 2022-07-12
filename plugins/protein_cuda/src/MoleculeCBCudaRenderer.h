@@ -10,24 +10,21 @@
 #pragma once
 #endif /* (_MSC_VER > 1000) */
 
+#include "glowl/BufferObject.hpp"
+#include "glowl/GLSLProgram.hpp"
+#include "glowl/Texture2D.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "vislib/graphics/FpsCounter.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/SimpleFont.h"
-#include "vislib/math/Quaternion.h"
-#include <algorithm>
-#include <list>
-#include <set>
+#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include <memory>
 #include <vector>
 
 #include "cuda_runtime_api.h"
 #include "particles_kernel.cuh"
 #include "vector_functions.h"
-//#include "cudpp/cudpp.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -37,7 +34,7 @@ namespace protein_cuda {
  * Computes and renders the solvent excluded (Connolly) surface
  * using the Contour-Buildup Algorithm by Totrov & Abagyan.
  */
-class MoleculeCBCudaRenderer : public megamol::core::view::Renderer3DModule {
+class MoleculeCBCudaRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -63,8 +60,7 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-        //return true;
-        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+        return true;
     }
 
     /** ctor */
@@ -107,7 +103,7 @@ protected:
     /**
      * Initialize CUDA
      */
-    bool initCuda(megamol::protein_calls::MolecularDataCall* mol, uint gridDim, core::view::CallRender3D* cr3d);
+    bool initCuda(megamol::protein_calls::MolecularDataCall* mol, uint gridDim, core_gl::view::CallRender3DGL* cr3d);
 
     /**
      * Write atom positions and radii to an array for processing in CUDA
@@ -156,7 +152,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core::Call& call);
+    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * Open GL Render call.
@@ -164,7 +160,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core::Call& call);
+    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
 
     /**
      * CUDA version of contour buildup algorithm
@@ -173,14 +169,6 @@ private:
      *
      */
     void ContourBuildupCuda(megamol::protein_calls::MolecularDataCall* mol);
-
-    /**
-     * CPU version of contour buildup algorithm
-     *
-     * TODO
-     *
-     */
-    void ContourBuildupCPU(megamol::protein_calls::MolecularDataCall* mol);
 
     /**
      * Update all parameter slots.
@@ -208,14 +196,15 @@ private:
     megamol::core::param::ParamSlot stepsParam;
 
     // camera information
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera cameraInfo;
 
-    // shader for the sphere raycasting
-    vislib::graphics::gl::GLSLShader sphereShader;
-    // shader for the spherical triangle raycasting
-    vislib::graphics::gl::GLSLShader sphericalTriangleShader;
-    // shader for the torus raycasting
-    vislib::graphics::gl::GLSLShader torusShader;
+    std::shared_ptr<glowl::GLSLProgram> sphereShader_;
+    std::shared_ptr<glowl::GLSLProgram> torusShader_;
+    std::shared_ptr<glowl::GLSLProgram> sphericalTriangleShader_;
+
+    GLuint sphereVAO_;
+    GLuint torusVAO_;
+    GLuint sphericalTriangleVAO_;
 
     // the bounding box of the protein
     vislib::math::Cuboid<float> bBox;
@@ -226,13 +215,6 @@ private:
     // max number of neighbors per atom
     const unsigned int atomNeighborCount;
 
-    // CUDA Radix sort
-    //CUDPPHandle sortHandle;
-    // CUDA Scan
-    //CUDPPHandle scanHandle;
-    // CUDA Radix sort
-    //CUDPPHandle probeSortHandle;
-
     // params
     bool cudaInitalized;
     uint numAtoms;
@@ -241,17 +223,7 @@ private:
     uint numGridCells;
 
     // CPU data
-    float* m_hPos;          // particle positions
-    uint* m_hNeighborCount; // atom neighbor count
-    uint* m_hNeighbors;     // atom neighbor count
-    float* m_hSmallCircles; // small circles
-    uint* m_hParticleHash;
-    uint* m_hParticleIndex;
-    uint* m_hCellStart;
-    uint* m_hCellEnd;
-    float* m_hArcs;
-    uint* m_hArcCount;
-    uint* m_hArcCountScan;
+    std::vector<glm::vec4> hPos_;
 
     // GPU data
     float* m_dPos;
@@ -275,42 +247,31 @@ private:
     uint* m_dCellStart;         // index of start of each cell in sorted list
     uint* m_dCellEnd;           // index of end of cell
     uint gridSortBits;
-    uint m_colorVBO;       // vertex buffer object for colors
-    float* m_cudaPosVBO;   // these are the CUDA deviceMem Pos
-    float* m_cudaColorVBO; // these are the CUDA deviceMem Color
 
-
-    vislib::Array<vislib::Array<vislib::math::Vector<float, 3>>> smallCircles;
-    vislib::Array<vislib::Array<float>> smallCircleRadii;
-    vislib::Array<vislib::Array<unsigned int>> neighbors;
-
-    // VBO for all atoms
-    GLuint atomPosVBO;
-    // VBO for probe positions
-    GLuint probePosVBO;
-    // VBO for spherical triangle vector 1
-    GLuint sphereTriaVec1VBO;
-    // VBO for spherical triangle vector 2
-    GLuint sphereTriaVec2VBO;
-    // VBO for spherical triangle vector 3
-    GLuint sphereTriaVec3VBO;
-    // VBO for torus center
-    GLuint torusPosVBO;
-    // VBO for torus visibility sphere
-    GLuint torusVSVBO;
-    // VBO for torus axis
-    GLuint torusAxisVBO;
+    enum class Buffers : GLuint {
+        PROBE_POS = 0,
+        SPHERE_TRIA_VEC_1 = 1,
+        SPHERE_TRIA_VEC_2 = 2,
+        SPHERE_TRIA_VEC_3 = 3,
+        TORUS_POS = 4,
+        TORUS_VS = 5,
+        TORUS_AXIS = 6,
+        SING_TEX = 7,
+        TEX_COORD = 8,
+        ATOM_POS = 9,
+        BUFF_COUNT = 10
+    };
+    std::array<std::unique_ptr<glowl::BufferObject>, static_cast<int>(Buffers::BUFF_COUNT)> buffers_;
 
     // singularity texture
-    GLuint singTex;
-    // singularity texture pixel buffer object
-    GLuint singTexPBO;
-    // texture coordinates
-    GLuint texCoordVBO;
+    std::unique_ptr<glowl::Texture2D> singTex_;
+
     // maximum number of probe neighbors
     uint probeNeighborCount;
     unsigned int texHeight;
     unsigned int texWidth;
+    unsigned int width;
+    unsigned int height;
 
     bool setCUDAGLDevice;
 };

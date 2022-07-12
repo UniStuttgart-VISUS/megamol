@@ -8,7 +8,6 @@
 // Author     : scharnkn
 //
 
-#include "stdafx.h"
 #include "GPUSurfaceMT.h"
 
 #include "cuda_error_check.h"
@@ -18,7 +17,7 @@
 
 #include <algorithm>
 #include <cuda_runtime.h>
-#include "vislib/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #define WGL_NV_gpu_affinity
 #include <cuda_gl_interop.h>
 
@@ -847,7 +846,7 @@ bool GPUSurfaceMT::ComputeTriangleNeighbors(
     const uint blocksize = 256;
 
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -1983,7 +1982,7 @@ bool GPUSurfaceMT::ComputeConnectivity(
     /// Init grid parameters for all files ///
 
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -1994,7 +1993,7 @@ bool GPUSurfaceMT::ComputeConnectivity(
     CheckForCudaErrorSync();
 
     if (!CudaSafeCall(vertexNeighbours_D.Validate(this->vertexCnt*18))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+        Log::DefaultLog.WriteInfo(
                 "%s: could not allocate device memory",
                 this->ClassName());
         return false;
@@ -2002,7 +2001,7 @@ bool GPUSurfaceMT::ComputeConnectivity(
     CheckForCudaErrorSync();
     //if (!CudaSafeCall(vertexNeighbours_D.Set(-1))) {
     if (!CudaSafeCall(vertexNeighbours_D.Set(0xff))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+        Log::DefaultLog.WriteInfo(
                 "%s: could not init device memory",
                 this->ClassName());
         return false;
@@ -2064,7 +2063,7 @@ bool GPUSurfaceMT::ComputeEdgeList(
     /* Init grid parameters for all files */
 
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName(),
                 __FILE__,
@@ -2084,7 +2083,7 @@ bool GPUSurfaceMT::ComputeEdgeList(
 #endif
 
     if (this->cubeMap_D.GetCount() != this->activeCellCnt) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: need cube map to compute edges (%s:%i)",
                 this->ClassName(),
                 __FILE__,
@@ -2094,7 +2093,7 @@ bool GPUSurfaceMT::ComputeEdgeList(
 
     //(Re-)allocate memory to count number of edges per cell
     if (!CudaSafeCall(this->edgesPerTetrahedron_D.Validate(this->activeCellCnt*6))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not allocate device memory (%s:%i)",
                 this->ClassName(),
                 __FILE__,
@@ -2103,7 +2102,7 @@ bool GPUSurfaceMT::ComputeEdgeList(
     }
     // Init with zero
     if (!CudaSafeCall(this->edgesPerTetrahedron_D.Set(0x00))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init device memory (%s:%i)",
                 this->ClassName(),
                 __FILE__,
@@ -2136,7 +2135,7 @@ bool GPUSurfaceMT::ComputeEdgeList(
 
     //(Re-)allocate memory to count number of edges per cell
     if (!CudaSafeCall(this->tetraEdgeIdxOffsets_D.Validate(this->activeCellCnt*6))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not allocate device memory (%s:%i)",
                 this->ClassName(),
                 __FILE__,
@@ -2187,7 +2186,7 @@ bool GPUSurfaceMT::ComputeEdgeList(
 
     //(Re-)allocate memory to count number of edges per cell
     if (!CudaSafeCall(this->edges_D.Validate(edgeCnt*2))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not allocate device memory (%s:%i)",
                 this->ClassName(),
                 __FILE__,
@@ -2196,7 +2195,7 @@ bool GPUSurfaceMT::ComputeEdgeList(
     }
     // Init with zero
     if (!CudaSafeCall(this->edges_D.Set(0x00))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init device memory (%s:%i)",
                 this->ClassName(),
                 __FILE__,
@@ -2258,7 +2257,7 @@ bool GPUSurfaceMT::ComputeNormals(
     using megamol::core::utility::log::Log;
 
     if (!this->triangleIdxReady) { // We need the triangles mesh info
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: triangles not computed",
                 this->ClassName());
         return false;
@@ -2268,7 +2267,7 @@ bool GPUSurfaceMT::ComputeNormals(
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -2283,7 +2282,7 @@ bool GPUSurfaceMT::ComputeNormals(
             &this->vertexDataResource, this->vboVtxData,
             cudaGraphicsMapFlagsNone))) {
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not register vertex buffer",
                 this->ClassName());
 
@@ -2294,7 +2293,7 @@ bool GPUSurfaceMT::ComputeNormals(
     float *vboPt_D;
     size_t vboSize;
     if (!CudaSafeCall(cudaGraphicsMapResources(1, &this->vertexDataResource, 0))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not map resources",
                 this->ClassName());
         return false;
@@ -2303,7 +2302,7 @@ bool GPUSurfaceMT::ComputeNormals(
             reinterpret_cast<void**>(&vboPt_D), // The mapped pointer
             &vboSize,             // The size of the accessible data
             this->vertexDataResource))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not acquire mapped pointer",
                 this->ClassName());
         return false;
@@ -2346,13 +2345,13 @@ bool GPUSurfaceMT::ComputeNormals(
 
     // Unmap CUDA graphics resource
     if (!CudaSafeCall(cudaGraphicsUnmapResources(1, &this->vertexDataResource))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not unmap resources",
                 this->ClassName());
         return false;
     }
     if (!CudaSafeCall(cudaGraphicsUnregisterResource(this->vertexDataResource))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not unregister buffers",
                 this->ClassName());
         return false;
@@ -2501,7 +2500,7 @@ bool GPUSurfaceMT::ComputeTriangles(
     /// Init grid parameters ///
 
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -2761,7 +2760,7 @@ bool GPUSurfaceMT::ComputeVertexPositions(
     /// Init grid parameters ///
 
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
