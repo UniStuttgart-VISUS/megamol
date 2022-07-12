@@ -88,7 +88,7 @@ bool BoundingBoxRenderer::create() {
             "mmstd_gl/boundingbox/viewcube.vert.glsl", "mmstd_gl/boundingbox/viewcube.frag.glsl");
 
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("BoundingBoxRenderer: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError("BoundingBoxRenderer: {}", e.what());
         return false;
     }
 
