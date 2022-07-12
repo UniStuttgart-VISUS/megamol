@@ -87,7 +87,7 @@ bool megamol::mesh_gl::SimpleGPUMtlDataSource::getDataCallback(core::Call& calle
                 m_material_collection.first->addMaterial(
                     this->instance(), std::string(this->FullName()), shader_filepaths);
                 m_material_collection.second.push_back(std::string(this->FullName()));
-            } catch (glowl::GLSLProgramException const& exc) {
+            } catch (std::runtime_error const& exc) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Error during shader program creation of \"%s\": %s. [%s, %s, line %d]\n", this->FullName(),
                     exc.what(), __FILE__, __FUNCTION__, __LINE__);
