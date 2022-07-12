@@ -6,12 +6,13 @@
  */
 
 #include "LogConsole.h"
-#include "imgui_stdlib.h"
-#include "widgets/ButtonWidgets.h"
 
 #include <regex>
 
-#include "spdlog/sinks/ostream_sink.h"
+#include <imgui_stdlib.h>
+#include <spdlog/sinks/ostream_sink.h>
+
+#include "widgets/ButtonWidgets.h"
 
 using namespace megamol::gui;
 
@@ -161,7 +162,6 @@ int megamol::gui::LogBuffer::sync() {
                 bool extracted_new_message = false;
                 auto seperator_index = new_message.find('|');
                 if (seperator_index != std::string::npos) {
-                    //unsigned int log_level = megamol::core::utility::log::Log::LEVEL_NONE;
                     auto level_str = new_message.substr(0, seperator_index);
                     auto log_level = core::utility::log::Log::ParseLevelAttribute(level_str);
                     if (log_level != megamol::core::utility::log::Log::log_level::none) {

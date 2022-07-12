@@ -9,26 +9,19 @@
 
 #include "mmcore/utility/log/Log.h"
 
-#include "vislib/sys/SystemInformation.h"
 #include <algorithm>
 #include <climits>
 #include <cstdio>
-#include <ctime>
-#include <fcntl.h>
 #include <iomanip>
 #include <sstream>
-#ifdef _WIN32
-#include <io.h>
-#include <share.h>
-#include <sys/stat.h>
-#endif /* _WIN32 */
 
-#include "spdlog/details/os.h"
-#include "spdlog/sinks/basic_file_sink.h"
-#include "spdlog/sinks/null_sink.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include "spdlog/spdlog.h"
+#include <spdlog/details/os.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/null_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 
+#include "vislib/sys/SystemInformation.h"
 
 const char megamol::core::utility::log::Log::std_pattern[12] = "%^(%l)|%v%$";
 
@@ -127,7 +120,7 @@ megamol::core::utility::log::Log::Log(log_level level, const char* filename, boo
 /*
  * megamol::core::utility::log::Log::~Log
  */
-megamol::core::utility::log::Log::~Log(void) {
+megamol::core::utility::log::Log::~Log() {
     // Intentionally empty
 }
 
@@ -135,7 +128,7 @@ megamol::core::utility::log::Log::~Log(void) {
 /*
  * megamol::core::utility::log::Log::FlushLog
  */
-void megamol::core::utility::log::Log::FlushLog(void) {
+void megamol::core::utility::log::Log::FlushLog() {
     auto logger = spdlog::get(logger_name);
     if (logger)
         logger->flush();
@@ -322,7 +315,7 @@ megamol::core::utility::log::Log& megamol::core::utility::log::Log::operator=(co
 /*
  * megamol::core::utility::log::Log::getFileNameSuffix
  */
-std::string megamol::core::utility::log::Log::getFileNameSuffix(void) {
+std::string megamol::core::utility::log::Log::getFileNameSuffix() {
     auto t = spdlog::details::os::localtime();
 
     t.tm_mon += 1;

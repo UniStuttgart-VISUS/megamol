@@ -458,37 +458,6 @@ int megamol::core::LuaState::GetEnvValue(lua_State* L) {
 }
 
 
-//megamol::core::utility::log::Log::log_level megamol::core::LuaState::parseLevelAttribute(const std::string attr) {
-//    megamol::core::utility::log::Log::log_level retval = megamol::core::utility::log::Log::log_level::info;
-//    if (iequals(attr, "error")) {
-//        retval = megamol::core::utility::log::Log::log_level::error;
-//    } else if (iequals(attr, "warn")) {
-//        retval = megamol::core::utility::log::Log::log_level::warn;
-//    } else if (iequals(attr, "warning")) {
-//        retval = megamol::core::utility::log::Log::log_level::warn;
-//    } else if (iequals(attr, "info")) {
-//        retval = megamol::core::utility::log::Log::log_level::info;
-//    } else if (iequals(attr, "none")) {
-//        retval = megamol::core::utility::log::Log::log_level::none;
-//    } else if (iequals(attr, "null")) {
-//        retval = megamol::core::utility::log::Log::log_level::none;
-//    } else if (iequals(attr, "zero")) {
-//        retval = megamol::core::utility::log::Log::log_level::none;
-//    } else if (iequals(attr, "all")) {
-//        retval = megamol::core::utility::log::Log::log_level::all;
-//    } else if (iequals(attr, "*")) {
-//        retval = megamol::core::utility::log::Log::log_level::all;
-//    } /*else {
-//        try {
-//            retval = std::stoi(attr);
-//        } catch (...) {
-//            retval = megamol::core::utility::log::Log::LEVEL_ERROR;
-//        }
-//    }*/
-//    return retval;
-//}
-
-
 int megamol::core::LuaState::GetProcessID(lua_State* L) {
     //    if (this->checkRunning("mmGetProcessID")) {
     vislib::StringA str;

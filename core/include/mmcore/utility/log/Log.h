@@ -19,16 +19,11 @@
 #define LOGMESSAGE_GUI_POPUP_START_TAG "<<<<<"
 #define LOGMESSAGE_GUI_POPUP_END_TAG ">>>>>"
 
-namespace spdlog {
-namespace sinks {
+namespace spdlog::sinks {
 class sink;
-}
-} // namespace spdlog
+} // namespace spdlog::sinks
 
-namespace megamol {
-namespace core {
-namespace utility {
-namespace log {
+namespace megamol::core::utility::log {
 
 
 /**
@@ -104,10 +99,10 @@ public:
     Log(log_level level, const char* filename, bool addSuffix);
 
     /** Dtor. */
-    ~Log(void);
+    ~Log();
 
     /** Flushes the physical log file. */
-    void FlushLog(void);
+    void FlushLog();
 
     /**
      * Sets or clears the autoflush flag. If the autoflush flag is set
@@ -241,10 +236,7 @@ private:
      *
      * @return A file name suffix for log files
      */
-    std::string getFileNameSuffix(void);
+    std::string getFileNameSuffix();
 };
 
-} // namespace log
-} // namespace utility
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::utility::log

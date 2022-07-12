@@ -255,24 +255,6 @@ static void logfile_handler(
 
 static const std::string accepted_log_level_strings =
     "('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')";
-//static unsigned int parse_log_level(std::string const& value) {
-//    if (value.front() == '-')
-//        exit("log level value must be positive. seems to be negative: " + value);
-//
-//    unsigned int value_as_uint = 0;
-//
-//    try {
-//        if (std::string(value).find_first_of("0123456789") != std::string::npos) {
-//            value_as_uint = std::stoi(value);
-//        } else {
-//            value_as_uint = megamol::core::utility::log::Log::ParseLevelAttribute(value);
-//        }
-//    } catch (...) {
-//        exit("Could not parse valid log level string or positive integer from argument \"" + value + "\"");
-//    }
-//
-//    return value_as_uint;
-//}
 
 static void loglevel_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {

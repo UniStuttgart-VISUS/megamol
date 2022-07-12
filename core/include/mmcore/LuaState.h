@@ -248,9 +248,6 @@ private:
     /** gets a string from the stack position i. returns false if it's not a string */
     bool getString(int i, std::string& out);
 
-    /** interpret string log levels */
-    //static utility::log::Log::log_level parseLevelAttribute(const std::string attr);
-
     /** the one Lua state */
     LuaInterpreter<LuaState> theLua;
 
