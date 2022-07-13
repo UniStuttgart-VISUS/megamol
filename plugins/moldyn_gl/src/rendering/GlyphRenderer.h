@@ -135,7 +135,6 @@ private:
     std::shared_ptr<glowl::GLSLProgram> arrow_prgm_;
     std::shared_ptr<glowl::GLSLProgram> superquadric_prgm_;
     std::shared_ptr<glowl::GLSLProgram> gizmo_arrowglyph_prgm_;
-    std::shared_ptr<glowl::GLSLProgram> gizmo_line_prgm_;
 
     std::vector<core::utility::SSBOBufferArray> position_buffers_;
     std::vector<core::utility::SSBOBufferArray> radius_buffers_;
@@ -157,6 +156,7 @@ private:
     megamol::core::param::ParamSlot min_radius_param_;
     megamol::core::param::ParamSlot color_mode_param_;
     megamol::core::param::ParamSlot superquadric_exponent_param_;
+    megamol::core::param::ParamSlot gizmo_arrow_thickness_;
 
     SIZE_T last_hash_ = -1;
     uint32_t last_frame_id_ = -1;

@@ -53,7 +53,8 @@ GlyphRenderer::GlyphRenderer(void)
               "colorInterpolation", "Interpolate between directional coloring (0) and glyph color (1)")
         , min_radius_param_("minRadius", "Sets the minimum radius length. Applied to each axis.")
         , color_mode_param_("colorMode", "Switch between global glyph and per axis color")
-        , superquadric_exponent_param_("exponent", "Sets the exponent used in the implicit superquadric equation") {
+        , superquadric_exponent_param_("exponent", "Sets the exponent used in the implicit superquadric equation")
+        , gizmo_arrow_thickness_("Thickness", "Sets the arrow thickness of the gizmo arrows") {
 
     this->get_data_slot_.SetCompatibleCall<geocalls::EllipsoidalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->get_data_slot_);
@@ -72,8 +73,7 @@ GlyphRenderer::GlyphRenderer(void)
     gp->SetTypePair(Glyph::ELLIPSOID, "Ellipsoid");
     gp->SetTypePair(Glyph::ARROW, "Arrow");
     gp->SetTypePair(Glyph::SUPERQUADRIC, "Superquadric");
-    gp->SetTypePair(Glyph::GIZMO_ARROWGLYPH, "Gizmo");
-    gp->SetTypePair(Glyph::GIZMO_LINE, "Line");
+    gp->SetTypePair(Glyph::GIZMO_ARROWGLYPH, "GizmoArrow");
     this->glyph_param_ << gp;
     this->MakeSlotAvailable(&this->glyph_param_);
 
@@ -109,6 +109,9 @@ GlyphRenderer::GlyphRenderer(void)
 
     superquadric_exponent_param_ << new param::FloatParam(1.0f, -100.0f, 100.0f, 0.1f);
     this->MakeSlotAvailable(&this->superquadric_exponent_param_);
+
+    gizmo_arrow_thickness_ << new param::FloatParam(0.1f, 0.0f, 2.0f, 0.01f);
+    this->MakeSlotAvailable(&this->gizmo_arrow_thickness_);
 }
 
 
@@ -150,9 +153,6 @@ bool GlyphRenderer::create(void) {
 
         gizmo_arrowglyph_prgm_ = core::utility::make_glowl_shader(
             "gizmo_arrowglyph", shader_options, "glyph_renderer/gizmo_arrowglyph.vert.glsl", "glyph_renderer/gizmo_arrowglyph.frag.glsl");
-
-        gizmo_line_prgm_ = core::utility::make_glowl_shader(
-            "gizmo_line", shader_options, "glyph_renderer/gizmo_line.vert.glsl", "glyph_renderer/gizmo_line.frag.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, ("GlyphRenderer: " + std::string(e.what())).c_str());
@@ -382,31 +382,31 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
         shader = this->box_prgm_;
         orientation_param_.Param<core::param::EnumParam>()->SetGUIVisible(false);
         superquadric_exponent_param_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        gizmo_arrow_thickness_.Param<core::param::FloatParam>()->SetGUIVisible(false);
         break;
     case Glyph::ELLIPSOID:
         shader = this->ellipsoid_prgm_;
         orientation_param_.Param<core::param::EnumParam>()->SetGUIVisible(false);
         superquadric_exponent_param_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        gizmo_arrow_thickness_.Param<core::param::FloatParam>()->SetGUIVisible(false);
         break;
     case Glyph::ARROW:
         shader = this->arrow_prgm_;
         orientation_param_.Param<core::param::EnumParam>()->SetGUIVisible(true);
         superquadric_exponent_param_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        gizmo_arrow_thickness_.Param<core::param::FloatParam>()->SetGUIVisible(false);
         break;
     case Glyph::SUPERQUADRIC:
         shader = this->superquadric_prgm_;
         orientation_param_.Param<core::param::EnumParam>()->SetGUIVisible(false);
         superquadric_exponent_param_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        gizmo_arrow_thickness_.Param<core::param::FloatParam>()->SetGUIVisible(false);
         break;
     case Glyph::GIZMO_ARROWGLYPH:
         shader = this->gizmo_arrowglyph_prgm_;
         orientation_param_.Param<core::param::EnumParam>()->SetGUIVisible(false);
         superquadric_exponent_param_.Param<core::param::FloatParam>()->SetGUIVisible(false);
-        break;
-    case Glyph::GIZMO_LINE:
-        shader = this->gizmo_line_prgm_;
-        orientation_param_.Param<core::param::EnumParam>()->SetGUIVisible(false);
-        superquadric_exponent_param_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        gizmo_arrow_thickness_.Param<core::param::FloatParam>()->SetGUIVisible(true);
         break;
     default:;
         shader = this->ellipsoid_prgm_;
@@ -609,10 +609,9 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actual_items) * 3);
                 break;
             case Glyph::GIZMO_ARROWGLYPH:
+                glUniform1f(shader->getUniformLocation("arrow_thickness"),
+                    gizmo_arrow_thickness_.Param<core::param::FloatParam>()->Value());
                 glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actual_items) * 3);
-                break;
-            case Glyph::GIZMO_LINE:
-                glDrawArraysInstanced(GL_LINES, 0, 2, static_cast<GLsizei>(actual_items) * 3);
                 break;
             default:;
             }

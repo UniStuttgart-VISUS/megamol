@@ -4,13 +4,13 @@
  * All rights reserved.
  */
 
-out vec4 obj_pos; //
-out vec3 cam_pos; //
-out mat3 rotate_world_into_tensor; //
+out vec4 obj_pos;
+out vec3 cam_pos;
+out mat3 rotate_world_into_tensor;
+out flat vec3 radii;
 out vec3 absradii;
 
 out vec4 vert_color;
-out flat vec3 dir_color;
 
 // this re-activates the old code that draws the whole box and costs ~50% performance for box glyphs
 // note that you need the single-strip-per-box instancing call in the Renderer for this (14 * #glyphs)
@@ -31,7 +31,7 @@ void main() {
     // inst represents the box instance, i.e. the box currently being rendered
     uint inst = gl_InstanceID / 3;
     uint face = gl_InstanceID % 3;
-    // gl_VertexID should be between 0 and 3 (since count = 4 in glDrawArraysInstanced)
+    // gl_VertexID should be between 0 and 3 (since count = 4 in glDrawArrasInstanced)
     uint corner = gl_VertexID;
     vec3 normal = cube_face_normals[face];
     vec4 corner_pos = vec4(cube_faces[face][corner], 0.0);
@@ -40,6 +40,7 @@ void main() {
     // get the current glyphs (center) position
     obj_pos = vec4(pos_array[inst].x, pos_array[inst].y, pos_array[inst].z, 1.0);
 
+
     // get the current glyphs orientation (represented by its quaternion)
     vec4 quat_c = vec4(quat_array[inst].x, quat_array[inst].y, quat_array[inst].z, quat_array[inst].w); //quat[inst];
 
@@ -47,9 +48,11 @@ void main() {
     rotate_world_into_tensor = quaternion_to_matrix(quat_c);
     mat3 rotate_points = transpose(rotate_world_into_tensor);
 
+
     // all about the glyphs radii
     bool ignore_radii = (options & OPTIONS_IGNORE_RADII) > 0;
-    vec3 radii = vec3(rad_array[inst].x, rad_array[inst].y, rad_array[inst].z); //rad[inst];
+    radii = vec3(rad_array[inst].x, rad_array[inst].y, rad_array[inst].z); //rad[inst];
+
 
     if (ignore_radii) {
         radii = vec3(1.0);
@@ -60,7 +63,6 @@ void main() {
         radii.z = radii.z < min_radius ? min_radius : radii.z;
     }
     absradii = abs(radii) * scaling;
-
 
     // shift, rotate, and scale cam
     cam_pos = rotate_world_into_tensor * (cam.xyz - obj_pos.xyz);
@@ -77,12 +79,6 @@ void main() {
         corner_pos = -corner_pos;
     }
 #endif
-
-    // color stuff
-    // TODO: rework
-    vec3 dir_color1 = max(vec3(0), normal * sign(radii));
-    vec3 dir_color2 = vec3(1) + normal * sign(radii);
-    dir_color = any(lessThan(dir_color2, vec3(0.5))) ? dir_color2 * vec3(0.5) : dir_color1;
 
     uint flag = FLAG_ENABLED;
     bool flags_available = (options & OPTIONS_USE_FLAGS) > 0;
