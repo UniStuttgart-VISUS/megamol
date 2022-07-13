@@ -543,7 +543,7 @@ bool ScatterplotMatrixRenderer2D::validate(core_gl::view::CallRender2DGL& call, 
         this->transferFunction->ResetDirty();
     }
     if (hasDirtyData()) {
-        // Update transfer fucntion range
+        // Update transfer function range
         map.valueIdx =
             nameToIndex(this->floatTable, this->valueSelectorParam.Param<core::param::FlexEnumParam>()->Value());
         map.labelIdx =
@@ -596,10 +596,18 @@ void ScatterplotMatrixRenderer2D::updateColumns() {
     for (GLuint y = 0; y < columnCount; ++y) {
         GLfloat offsetY = (invertY ? (columnCount - y - 1) : y) * (size + margin);
         for (GLuint x = 0; x < y; ++x) {
-            plots.push_back({x, y, x * (size + margin), offsetY, size, size, columnInfos[x].MinimumValue(),
-                columnInfos[y].MinimumValue(), columnInfos[x].MaximumValue(), columnInfos[y].MaximumValue(),
-                rangeToSmallStep(columnInfos[x].MinimumValue(), columnInfos[x].MaximumValue()),
-                rangeToSmallStep(columnInfos[y].MinimumValue(), columnInfos[y].MaximumValue())});
+            auto minXValue = columnInfos[x].MinimumValue();
+            auto minYValue = columnInfos[y].MinimumValue();
+            auto maxXValue = columnInfos[x].MaximumValue();
+            auto maxYValue = columnInfos[y].MaximumValue();
+            if (maxXValue - minXValue < 0.00001f) {
+                maxXValue = minXValue + 0.00001f;
+            }
+            if (maxYValue - minYValue < 0.00001f) {
+                maxYValue = minYValue + 0.00001f;
+            }
+            plots.push_back({x, y, x * (size + margin), offsetY, size, size, minXValue, minYValue, maxXValue, maxYValue,
+                rangeToSmallStep(minXValue, maxXValue), rangeToSmallStep(minYValue, maxYValue)});
         }
     }
 
