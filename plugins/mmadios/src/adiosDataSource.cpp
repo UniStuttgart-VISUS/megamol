@@ -276,8 +276,9 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             std::replace(fname.begin(), fname.end(), '/', '\\');
 #endif
 
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Opening File '%s'", fname.c_str());
-            if (! std::filesystem::exists(fname)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[adiosDataSource] Opening File '%s'", fname.c_str());
+            if (!std::filesystem::exists(fname)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("[adiosDataSource] File does not exist.");
                 return false;
             }
