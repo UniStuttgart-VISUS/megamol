@@ -54,8 +54,7 @@ void job::AbstractJob::signalStart(void) {
         name = ano->Name();
     }
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-        megamol::core::utility::log::Log::LEVEL_INFO, "Job \"%s\" started ...\n", name.PeekBuffer());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Job \"%s\" started ...\n", name.PeekBuffer());
 }
 
 
@@ -69,7 +68,7 @@ void job::AbstractJob::signalEnd(bool wasTerminated) {
         name = ano->Name();
     }
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         "Job \"%s\" %s\n", name.PeekBuffer(), wasTerminated ? "terminated" : "finished");
 
     // Informing the core about job termination is not required because the

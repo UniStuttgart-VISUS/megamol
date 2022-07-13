@@ -137,11 +137,11 @@ public:
         HDC dc = ::wglGetCurrentDC();
         HGLRC rc = ::wglGetCurrentContext();
         if (dc == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[SphereRenderer] There is no OpenGL rendering context available.");
         }
         if (rc == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[SphereRenderer] There is no current OpenGL rendering context available from the calling thread.");
         }
         ASSERT(dc != nullptr);
@@ -161,14 +161,14 @@ public:
             major = std::atoi(glslVerStr.substr(0, 1).c_str());
             minor = std::atoi(glslVerStr.substr(found + 1, 1).c_str());
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[SphereRenderer] No valid GL_SHADING_LANGUAGE_VERSION string: %s", glslVerStr.c_str());
         }
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "[SphereRenderer] Found GLSL version %d.%d (%s).", major, minor, glslVerStr.c_str());
         if ((major < (int)(SPHERE_MIN_GLSL_MAJOR)) ||
             (major == (int)(SPHERE_MIN_GLSL_MAJOR) && minor < (int)(SPHERE_MIN_GLSL_MINOR))) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[SphereRenderer] No render mode available. OpenGL "
                 "Shading Language version 1.3 or greater is required.");
             retval = false;

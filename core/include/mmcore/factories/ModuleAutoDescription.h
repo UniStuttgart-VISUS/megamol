@@ -106,14 +106,11 @@ protected:
             m->SetClassName(this->ClassName());
             return m;
         } catch (vislib::Exception& ex) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "Exception while creating module %s: %s\n", C::ClassName(), ex.GetMsgA());
+            Log::DefaultLog.WriteError("Exception while creating module %s: %s\n", C::ClassName(), ex.GetMsgA());
         } catch (std::exception& ex) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "Exception while creating module %s: %s\n", C::ClassName(), ex.what());
+            Log::DefaultLog.WriteError("Exception while creating module %s: %s\n", C::ClassName(), ex.what());
         } catch (...) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "Exception while creating module %s: Unknown exception\n", C::ClassName());
+            Log::DefaultLog.WriteError("Exception while creating module %s: Unknown exception\n", C::ClassName());
         }
         return nullptr;
     }

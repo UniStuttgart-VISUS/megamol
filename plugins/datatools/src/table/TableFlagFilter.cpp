@@ -89,14 +89,12 @@ bool TableFlagFilter::handleCall(core::Call& call) {
     }
 
     if (tableInCall == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "TableFlagFilter requires a table!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("TableFlagFilter requires a table!");
         return false;
     }
 
     if (flagsInCall == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "TableFlagFilter requires a flag storage!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("TableFlagFilter requires a flag storage!");
         return false;
     }
 
@@ -107,7 +105,7 @@ bool TableFlagFilter::handleCall(core::Call& call) {
 
     if (this->tableInFrameCount != tableInCall->GetFrameCount() || this->tableInDataHash != tableInCall->DataHash() ||
         flagsInCall->hasUpdate()) {
-        // megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "TableFlagFilter: Filter table.");
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo( "TableFlagFilter: Filter table.");
 
         this->dataHash++;
 

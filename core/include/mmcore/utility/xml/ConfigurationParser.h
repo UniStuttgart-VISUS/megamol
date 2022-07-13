@@ -142,7 +142,8 @@ private:
      *
      * @return The level value.
      */
-    UINT parseLevelAttribute(const XML_Char* attr, UINT def);
+    megamol::core::utility::log::Log::log_level parseLevelAttribute(
+        const XML_Char* attr, megamol::core::utility::log::Log::log_level def);
 
     /** to configuration to be loaded */
     Configuration& config;

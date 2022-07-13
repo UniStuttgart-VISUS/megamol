@@ -396,14 +396,14 @@ ShaderSource vertSrc;
 ShaderSource fragSrc;
 if (!this->GetCoreInstance()->ShaderSourceFactory()
                                .MakeShaderSource("simplePoints::vertex", vertSrc)) {
-    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, 
+    Log::DefaultLog.WriteError( 
                             "Unable to load vertex shader source for simple points");
     return false;
 }
 
 if (!this->GetCoreInstance()->ShaderSourceFactory()
                                .MakeShaderSource("simplePoints::fragment", fragSrc)) {
-    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, 
+    Log::DefaultLog.WriteError( 
                             "Unable to load fragment shader source for simple points");
     return false;
 }
@@ -413,7 +413,7 @@ try {
         throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
 } catch (vislib::Exception e) {
-    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, 
+    Log::DefaultLog.WriteError( 
                              "Unable to create point shader: %s\n", e.GetMsgA());
     return false;
 }

@@ -10,7 +10,7 @@ find_package(Git REQUIRED)
 if (NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
   message(STATUS "Downloading external scripts")
   execute_process(COMMAND
-    ${GIT_EXECUTABLE} clone -b v2.5 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
+    ${GIT_EXECUTABLE} clone -b v2.6 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif ()
@@ -321,31 +321,6 @@ function(require_external NAME)
 
     add_external_library(expat
       LIBRARY ${EXPAT_LIB}
-      DEBUG_SUFFIX "d")
-
-  # fmt
-  elseif (NAME STREQUAL "fmt")
-    if (TARGET fmt)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(FMT_LIB "lib/fmt<SUFFIX>.lib")
-    else ()
-      set(FMT_LIB "${CMAKE_INSTALL_LIBDIR}/libfmt<SUFFIX>.a")
-    endif ()
-
-    add_external_project(fmt STATIC
-      GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-      GIT_TAG "6.2.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${FMT_LIB}"
-      DEBUG_SUFFIX "d"
-      CMAKE_ARGS
-        -DFMT_DOC=OFF
-        -DFMT_TEST=OFF)
-
-    add_external_library(fmt
-      LIBRARY ${FMT_LIB}
       DEBUG_SUFFIX "d")
 
   # glad
@@ -815,34 +790,27 @@ function(require_external NAME)
       return()
     endif ()
 
-    require_external(fmt)
-
     if (WIN32)
       set(SPDLOG_LIB "lib/spdlog<SUFFIX>.lib")
     else ()
       set(SPDLOG_LIB "${CMAKE_INSTALL_LIBDIR}/libspdlog<SUFFIX>.a")
     endif ()
 
-    external_get_property(fmt BINARY_DIR)
-
     add_external_project(spdlog STATIC
       GIT_REPOSITORY https://github.com/gabime/spdlog.git
-      GIT_TAG "v1.7.0"
-      DEPENDS fmt
+      GIT_TAG "v1.10.0"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${SPDLOG_LIB}"
       DEBUG_SUFFIX "d"
       CMAKE_ARGS
         -DSPDLOG_BUILD_EXAMPLE=OFF
         -DSPDLOG_BUILD_TESTS=OFF
-        -DSPDLOG_FMT_EXTERNAL=ON
-        -Dfmt_DIR=${BINARY_DIR})
+        -DSPDLOG_FMT_EXTERNAL=OFF)
 
     add_external_library(spdlog
       LIBRARY ${SPDLOG_LIB}
-      DEBUG_SUFFIX "d"
-      DEPENDS fmt)
+      DEBUG_SUFFIX "d")
 
-    target_compile_definitions(spdlog INTERFACE SPDLOG_FMT_EXTERNAL;SPDLOG_COMPILED_LIB)
+    target_compile_definitions(spdlog INTERFACE SPDLOG_COMPILED_LIB SPDLOG_EOL="\\n")
 
   # tbb
   elseif (NAME STREQUAL "tbb")

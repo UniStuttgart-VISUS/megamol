@@ -18,7 +18,7 @@ if(BUILD_VISLIB)
 
   target_link_libraries(vislib 
     PRIVATE ${CMAKE_THREAD_LIBS_INIT} libpng
-    PUBLIC spdlog fmt)
+    PUBLIC spdlog)
 
   # Word size
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -29,7 +29,7 @@ if(BUILD_VISLIB)
 
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
   target_compile_definitions(vislib
-    PUBLIC SPDLOG_FMT_EXTERNAL WIN32_LEAN_AND_MEAN "_LIN${BITS}"
+    PUBLIC WIN32_LEAN_AND_MEAN "_LIN${BITS}"
     PRIVATE _GNU_SOURCE)
 
   if(UNIX)
