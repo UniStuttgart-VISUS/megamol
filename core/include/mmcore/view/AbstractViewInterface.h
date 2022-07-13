@@ -15,7 +15,14 @@ namespace megamol::core::view {
 
 class AbstractViewInterface : public Module, public megamol::frontend_resources::AbstractInputScope {
 public:
-    AbstractViewInterface();
+    enum class ViewDimension {
+        NONE,
+        VIEW_2D,
+        VIEW_3D,
+        OTHER,
+    };
+
+    explicit AbstractViewInterface(ViewDimension dim);
 
     virtual float DefaultTime(double instTime) const = 0;
 
@@ -24,6 +31,10 @@ public:
     virtual void SetCamera(Camera camera, bool isMutable = true) = 0;
 
     virtual Camera GetCamera() const = 0;
+
+    ViewDimension const& GetViewDimension() const {
+        return viewDimension_;
+    }
 
     /**
      * Renders this AbstractView.
@@ -36,6 +47,9 @@ public:
     virtual ImageWrapper Render(double time, double instanceTime) = 0;
 
     virtual ImageWrapper GetRenderingResult() const = 0;
+
+protected:
+    ViewDimension viewDimension_;
 };
 
 } // namespace megamol::core::view

@@ -37,13 +37,6 @@ class AbstractView : public AbstractViewInterface {
 
 
 public:
-    enum class ViewDimension {
-        NONE,
-        VIEW_2D,
-        VIEW_3D,
-        OTHER,
-    };
-
     /**
      * Interfaces class for hooking into view processes
      */
@@ -125,10 +118,6 @@ public:
      * ...
      */
     virtual void CalcCameraClippingPlanes(float border);
-
-    ViewDimension const& GetViewDimension() const {
-        return viewDimension_;
-    }
 
     /**
      * Returns the current Bounding Box extents
@@ -329,8 +318,6 @@ protected:
 
     /** A flag that decides whether the camera is controllable by the view */
     bool _cameraIsMutable;
-
-    ViewDimension viewDimension_;
 
     /** Slot containing the settings of the currently stored camera */
     param::ParamSlot _cameraSettingsSlot;

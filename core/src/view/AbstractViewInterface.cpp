@@ -6,4 +6,4 @@
 
 #include "mmcore/view/AbstractViewInterface.h"
 
-megamol::core::view::AbstractViewInterface::AbstractViewInterface() : Module() {}
+megamol::core::view::AbstractViewInterface::AbstractViewInterface(ViewDimension dim) : Module(), viewDimension_(dim) {}

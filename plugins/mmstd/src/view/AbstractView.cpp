@@ -28,10 +28,9 @@ using megamol::core::utility::log::Log;
  * view::AbstractView::AbstractView
  */
 view::AbstractView::AbstractView(ViewDimension dim)
-        : AbstractViewInterface()
+        : AbstractViewInterface(dim)
         , _firstImg(false)
         , _cameraIsMutable(true)
-        , viewDimension_(dim)
         , _rhsRenderSlot("rendering", "Connects the view to a Renderer")
         , _lhsRenderSlot("render", "Connects modules requesting renderings")
         , _cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")
