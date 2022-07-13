@@ -8,16 +8,21 @@
 uniform mat4 view_mx;
 uniform mat4 proj_mx;
 
-// Any additional data needed in a shader needs to be put into shader storage buffers (SSBOs)
-// I recommend using a struct that keeps all data needed by a render task, i.e. per draw executed
-// by MultiDrawIndirect draw call in RenderMDIMesh.
-// Note: It is possible to use multiple SSBOs. The binding point index is set according to the order
-// in which buffers were added to a render task starting at 0.
+// Any additional data needed in a shader needs to be put into shader storage buffers (SSBOs).
+// Each render task binds an SSBO to binding point 0. I recommend using an array of structs for
+// this render task data, using a struct that keeps all data needed by each indirect draw executed
+// by MultiDrawIndirect in RenderMDIMesh as part of the render task.
 struct MeshShaderParams
 {
     mat4 transform;
 };
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
+
+// You can store addtional per frame data in multiple additional SSBOs. These will be bound once per frame
+// and can be accessed by all render tasks and draw calls. Used binding points are user defined. You have
+// to make sure yourself that shader and control code match.
+//struct PerFrameData { float d; };
+//layout(std430, binding = 1) readonly buffer PerFrameDataBuffer { PerFrameData[] per_frame_data; };
 
 // Vertex shader inputs need to match your mesh data, there is no fixed vertex layout used by mesh plugin
 layout(location = 0) in vec3 v_position;
@@ -28,7 +33,7 @@ out vec3 world_normal;
 
 void main()
 {
-   // Use gl_DrawIDARB to access per render task data, e.g. objects transforms
+   // Use gl_DrawIDARB to access per draw data, e.g. objects transforms
    mat4 object_transform = mesh_shader_params[gl_DrawIDARB].transform;
    // Deferred rendering and post processing modules of compositing_gl plugin expect world space normals
    world_normal = inverse(transpose(mat3(object_transform))) * v_normal;
