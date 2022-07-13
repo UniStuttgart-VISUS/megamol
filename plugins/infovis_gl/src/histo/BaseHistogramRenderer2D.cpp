@@ -22,7 +22,10 @@ BaseHistogramRenderer2D::BaseHistogramRenderer2D()
         , transferFunctionCallerSlot_("getTransferFunction", "Transfer function input")
         , binsParam_("numberOfBins", "Number of bins")
         , logPlotParam_("logPlot", "Logarithmic scale")
-        , selectionColorParam_("selectionColorParam", "Color of selection")
+        , useTransferFunctionParam_("ui::useTransferFunction", "Use TF instead of static bar color")
+        , barColorParam_("ui::barColor", "Color for (non-selected) bars, if TF is not used")
+        , selectionColorParam_("ui::selectionColor", "Color of selection")
+        , axesColorParam_("ui::axesColor", "Color for axes lines and text")
         , numBins_(10)
         , numComponents_(0)
         , maxBinValue_(0)
@@ -44,8 +47,17 @@ BaseHistogramRenderer2D::BaseHistogramRenderer2D()
     logPlotParam_ << new core::param::BoolParam(false);
     MakeSlotAvailable(&logPlotParam_);
 
+    useTransferFunctionParam_ << new core::param::BoolParam(true);
+    MakeSlotAvailable(&useTransferFunctionParam_);
+
+    barColorParam_ << new core::param::ColorParam("gray");
+    MakeSlotAvailable(&barColorParam_);
+
     selectionColorParam_ << new core::param::ColorParam("red");
     MakeSlotAvailable(&selectionColorParam_);
+
+    axesColorParam_ << new core::param::ColorParam("white");
+    MakeSlotAvailable(&axesColorParam_);
 }
 
 bool BaseHistogramRenderer2D::create() {
@@ -154,11 +166,16 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
     bindCommon(drawHistogramProgram_);
     tfCall->BindConvenience(drawHistogramProgram_, GL_TEXTURE0, 0);
 
+    const bool logPlot = logPlotParam_.Param<core::param::BoolParam>()->Value();
+    const bool useTf = useTransferFunctionParam_.Param<core::param::BoolParam>()->Value();
+    const glm::vec4 barColor = glm::make_vec4<float>(barColorParam_.Param<core::param::ColorParam>()->Value().data());
+    const glm::vec4 selectionColor =
+        glm::make_vec4<float>(selectionColorParam_.Param<core::param::ColorParam>()->Value().data());
     drawHistogramProgram_->setUniform("maxBinValue", static_cast<GLuint>(maxBinValue_));
-    drawHistogramProgram_->setUniform(
-        "logPlot", static_cast<int>(logPlotParam_.Param<core::param::BoolParam>()->Value()));
-    glUniform4fv(drawHistogramProgram_->getUniformLocation("selectionColor"), 1,
-        selectionColorParam_.Param<core::param::ColorParam>()->Value().data());
+    drawHistogramProgram_->setUniform("logPlot", static_cast<int>(logPlot));
+    drawHistogramProgram_->setUniform("useTransferFunction", static_cast<int>(useTf));
+    drawHistogramProgram_->setUniform("barColor", barColor);
+    drawHistogramProgram_->setUniform("selectionColor", selectionColor);
 
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(numBins_ * numComponents_));
 
@@ -172,6 +189,8 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
     drawAxesProgram_->setUniform("componentTotalSize", 12.0f, 14.0f);
     drawAxesProgram_->setUniform("componentDrawSize", 10.0f, 10.0f);
     drawAxesProgram_->setUniform("componentDrawOffset", 1.0f, 2.0f);
+    const glm::vec4 axesColor = glm::make_vec4<float>(axesColorParam_.Param<core::param::ColorParam>()->Value().data());
+    drawAxesProgram_->setUniform("axesColor", axesColor);
 
     drawAxesProgram_->setUniform("mode", 0);
     glDrawArraysInstanced(GL_LINES, 0, 2, static_cast<GLsizei>(numComponents_));
@@ -183,22 +202,21 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
 
     font_.ClearBatchDrawCache();
 
-    float white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-
     glm::mat4 ortho = projMx * viewMx;
 
     for (std::size_t c = 0; c < numComponents_; ++c) {
         float posX = 12.0f * static_cast<float>(c) + 6.0f;
-        font_.DrawString(ortho, white, posX, 13.0f, 1.0f, false, componentNames_[c].c_str(),
+        font_.DrawString(ortho, glm::value_ptr(axesColor), posX, 13.0f, 1.0f, false, componentNames_[c].c_str(),
             core::utility::SDFFont::ALIGN_CENTER_MIDDLE);
-        font_.DrawString(ortho, white, posX - 5.0f, 2.0f, 1.0f, false, std::to_string(componentMinimums_[c]).c_str(),
-            core::utility::SDFFont::ALIGN_LEFT_TOP);
-        font_.DrawString(ortho, white, posX + 5.0f, 2.0f, 1.0f, false, std::to_string(componentMaximums_[c]).c_str(),
-            core::utility::SDFFont::ALIGN_RIGHT_TOP);
+        font_.DrawString(ortho, glm::value_ptr(axesColor), posX - 5.0f, 2.0f, 1.0f, false,
+            std::to_string(componentMinimums_[c]).c_str(), core::utility::SDFFont::ALIGN_LEFT_TOP);
+        font_.DrawString(ortho, glm::value_ptr(axesColor), posX + 5.0f, 2.0f, 1.0f, false,
+            std::to_string(componentMaximums_[c]).c_str(), core::utility::SDFFont::ALIGN_RIGHT_TOP);
     }
-    font_.DrawString(ortho, white, 1.0f, 12.0f, 1.0f, false, std::to_string(maxBinValue_).c_str(),
+    font_.DrawString(ortho, glm::value_ptr(axesColor), 1.0f, 12.0f, 1.0f, false, std::to_string(maxBinValue_).c_str(),
         core::utility::SDFFont::ALIGN_RIGHT_TOP);
-    font_.DrawString(ortho, white, 1.0f, 2.0f, 1.0f, false, "0", core::utility::SDFFont::ALIGN_RIGHT_BOTTOM);
+    font_.DrawString(
+        ortho, glm::value_ptr(axesColor), 1.0f, 2.0f, 1.0f, false, "0", core::utility::SDFFont::ALIGN_RIGHT_BOTTOM);
 
     font_.BatchDrawString(ortho);
 
