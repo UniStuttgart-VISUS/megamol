@@ -10,7 +10,6 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "stdafx.h"
 
 namespace megamol {
 namespace demos_gl {

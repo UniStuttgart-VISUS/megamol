@@ -32,7 +32,7 @@ OverlayRenderer::OverlayRenderer()
         : view::RendererModule<core_gl::view::CallRender3DGL, core_gl::ModuleGL>()
         , megamol::core_gl::utility::RenderUtils()
         , paramMode("mode", "Overlay mode.")
-        , paramAnchor("anchor", "Anchor of overlay.")
+        , paramAnchor("anchor", "Anchor of overlay. NOTE: Hide GUI menu to see overlay anchored on the top.")
         , paramCustomPosition("position_offset", "Custom relative position offset in respect to selected anchor.")
         , paramFileName("texture::file_name", "The file name of the texture.")
         , paramRelativeWidth("texture::relative_width", "Relative screen space width of texture.")
@@ -161,6 +161,11 @@ OverlayRenderer::OverlayRenderer()
 
     this->paramFontColor << new param::ColorParam(0.5f, 0.5f, 0.5f, 1.0f);
     this->MakeSlotAvailable(&this->paramFontColor);
+
+    // init state
+    this->m_state.icon = TranspCtrlIcon::NONE_COUNT;
+    this->m_state.current_anim_time = 0.0f;
+    this->m_state.start_real_time = std::chrono::system_clock::now();
 }
 
 
@@ -179,6 +184,14 @@ void OverlayRenderer::release() {
 
 
 bool OverlayRenderer::create() {
+
+    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(
+        this->GetCoreInstance()->Configuration().ShaderDirectories());
+    if (!this->InitPrimitiveRendering(*ssf)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
 
     return this->onToggleMode(this->paramMode);
 }
@@ -437,7 +450,6 @@ bool OverlayRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
     // Framebuffer object
     auto const lhsFBO = call.GetFramebuffer();
-    lhsFBO->bind();
 
     auto cr3d_out = this->chainRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
     if (cr3d_out != nullptr) {
@@ -454,7 +466,6 @@ bool OverlayRenderer::Render(core_gl::view::CallRender3DGL& call) {
         this->onTriggerRecalcRectangle(this->paramMode);
     }
 
-    glViewport(0, 0, lhsFBO->getWidth(), lhsFBO->getHeight());
     glm::mat4 ortho = glm::ortho(0.0f, this->m_viewport.x, 0.0f, this->m_viewport.y, -1.0f, 1.0f);
 
     // Draw mode dependent stuff
@@ -483,6 +494,9 @@ bool OverlayRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 current_anim_time = float_param->Value();
             }
         }
+
+        /// XXX Since delta_time might not have changed significantly compared to last frame,
+        /// this leads to flickering for high framerate (>~1000fps)
         float delta_time = current_anim_time - this->m_state.current_anim_time;
         this->m_state.current_anim_time = current_anim_time;
 
@@ -505,11 +519,10 @@ bool OverlayRenderer::Render(core_gl::view::CallRender3DGL& call) {
         if (current_icon != this->m_state.icon) {
             this->m_state.icon = current_icon;
             this->onTriggerRecalcRectangle(this->paramCustomPosition);
-            // this->m_state.start_anim_time = current_time;
             this->m_state.start_real_time = std::chrono::system_clock::now();
         }
+
         float duration = this->paramDuration.Param<param::FloatParam>()->Value();
-        // if ((duration > 0.0f) && (duration < (current_time - this->m_state.start_anim_time))) {
         std::chrono::duration<double> diff = (std::chrono::system_clock::now() - this->m_state.start_real_time);
         if ((duration > 0.0f) && (diff.count() > static_cast<double>(duration))) {
             current_icon = TranspCtrlIcon::NONE_COUNT;
@@ -591,8 +604,6 @@ bool OverlayRenderer::Render(core_gl::view::CallRender3DGL& call) {
     } break;
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     return true;
 }
 
@@ -618,6 +629,7 @@ void OverlayRenderer::drawScreenSpaceText(glm::mat4 ortho, megamol::core::utilit
 
     switch (anchor) {
     case (Anchor::ALIGN_LEFT_TOP): {
+        // y -= size;
     } break;
     case (Anchor::ALIGN_LEFT_MIDDLE): {
         y = rectangle.top + (rectangle.bottom - rectangle.top) / 2.0f;

@@ -1,5 +1,4 @@
 #include "PhaseSeparator.h"
-#include "stdafx.h"
 
 #include <cmath>
 #include <numeric>

@@ -18,7 +18,6 @@
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "stdafx.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/assert.h"
@@ -154,8 +153,8 @@ bool GlyphRenderer::create(void) {
         gizmo_arrowglyph_prgm_ = core::utility::make_glowl_shader(
             "gizmo_arrowglyph", shader_options, "glyph_renderer/gizmo_arrowglyph.vert.glsl", "glyph_renderer/gizmo_arrowglyph.frag.glsl");
     } catch (std::exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, ("GlyphRenderer: " + std::string(e.what())).c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to compile glyph shader: %s. [%s, %s, line %d]\n", std::string(e.what())).c_str(), __FILE__, __FUNCTION__, __LINE__);
     }
 
     glEnable(GL_TEXTURE_1D);

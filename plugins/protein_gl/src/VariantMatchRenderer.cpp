@@ -11,7 +11,6 @@
 #include "VariantMatchRenderer.h"
 #include "ogl_error_check.h"
 #include "protein_calls/VariantMatchDataCall.h"
-#include "stdafx.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
@@ -81,12 +80,12 @@ bool VariantMatchRenderer::create(void) {
     // Try to load the ssao shader
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     if (!ssf->MakeShaderSource("2dplot::variantMatrix::vertex", vertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to load variant matrix vertex shader source", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("2dplot::variantMatrix::fragment", fragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to load variant matrix fragment shader source", this->ClassName());
         return false;
     }
@@ -94,19 +93,19 @@ bool VariantMatchRenderer::create(void) {
         if (!this->matrixTexShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     } catch (vislib::Exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Try to load the ssao shader
     if (!ssf->MakeShaderSource("2dplot::variantMatrix::vertexCM", vertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to load variant matrix vertex shader source", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("2dplot::variantMatrix::fragmentCM", fragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to load variant matrix fragment shader source", this->ClassName());
         return false;
     }
@@ -114,7 +113,7 @@ bool VariantMatchRenderer::create(void) {
         if (!this->colorMapShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     } catch (vislib::Exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }

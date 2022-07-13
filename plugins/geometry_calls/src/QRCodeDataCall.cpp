@@ -1,5 +1,4 @@
 #include "geometry_calls/QRCodeDataCall.h"
-#include "stdafx.h"
 
 namespace megamol::geocalls {
 

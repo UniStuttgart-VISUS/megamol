@@ -9,6 +9,5 @@
 //
 
 #include "protein_calls/Interpol.h"
-#include "stdafx.h"
 
 // EMPTY

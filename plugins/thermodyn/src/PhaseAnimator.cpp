@@ -1,5 +1,4 @@
 #include "PhaseAnimator.h"
-#include "stdafx.h"
 
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/FloatParam.h"

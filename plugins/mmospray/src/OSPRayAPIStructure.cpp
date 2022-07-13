@@ -8,7 +8,6 @@
 #include "mmcore/Call.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmospray/CallOSPRayAPIObject.h"
-#include "stdafx.h"
 
 
 using namespace megamol::ospray;

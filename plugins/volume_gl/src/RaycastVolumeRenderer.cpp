@@ -140,8 +140,7 @@ bool RaycastVolumeRenderer::create() {
             std::filesystem::path("RaycastVolumeRenderer-Vertex.vert.glsl"),
             std::filesystem::path("RaycastVolumeRenderer-Fragment-Aggr.frag.glsl"));
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: Unknown exception\n");
         return false;
     }
 

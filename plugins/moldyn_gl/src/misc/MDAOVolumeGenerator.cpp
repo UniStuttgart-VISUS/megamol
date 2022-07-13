@@ -1,4 +1,3 @@
-#include "stdafx.h"
 
 #include "misc/MDAOVolumeGenerator.h"
 #include "mmcore/utility/log/Log.h"
@@ -73,21 +72,39 @@ bool MDAOVolumeGenerator::Init(frontend_resources::OpenGL_Context const& ogl_ctx
     clear_available_ = ogl_ctx.isExtAvailable("GL_ARB_clear_texture");
 
     std::stringstream outmsg;
+<<<<<<< HEAD
     outmsg << "[MDAOVolumeGenerator] Voxelization Features enabled: Compute Shader " << compute_available_
            << ", Clear Texture " << clear_available_ << std::endl;
     megamol::core::utility::log::Log::DefaultLog.WriteMsg(
         megamol::core::utility::log::Log::LEVEL_INFO, outmsg.str().c_str());
+=======
+    outmsg << "[MDAOVolumeGenerator] Voxelization Features enabled: Compute Shader " << computeAvailable
+           << ", Clear Texture " << clearAvailable << std::endl;
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(outmsg.str().c_str());
+>>>>>>> upstream/master
 
     // create shader programs
     if (compute_available_) {
         // Try to initialize the compute shader
         try {
+<<<<<<< HEAD
             mipmap_prgm_ = core::utility::make_glowl_shader("mipmap", *shader_options_,
                 "mdao_volume_generator/mdao_mipmap_compute_main.comp.glsl");
         } catch (std::exception& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                 megamol::core::utility::log::Log::LEVEL_ERROR, ("MDAOVolumeGenerator: " + std::string(e.what())).c_str());
 
+=======
+            mipmapShader.Compile(mipmapSrc->PeekCode());
+            mipmapShader.Link();
+        } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException& ce) {
+            outmsg.str("");
+            outmsg << "[MDAOVolumeGenerator] Could not compile volume mipmapping shader "
+                   << vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+                          ce.FailedAction())
+                   << ": " << ce.GetMsgA() << std::endl;
+            megamol::core::utility::log::Log::DefaultLog.WriteError(outmsg.str().c_str());
+>>>>>>> upstream/master
             return false;
         }
     }
@@ -98,9 +115,42 @@ bool MDAOVolumeGenerator::Init(frontend_resources::OpenGL_Context const& ogl_ctx
         volume_prgm_ = core::utility::make_glowl_shader("volume", *shader_options_, "mdao_volume_generator/mdao_volume.vert.glsl",
                 "mdao_volume_generator/mdao_volume.geom.glsl", "mdao_volume_generator/mdao_volume.frag.glsl");
 
+<<<<<<< HEAD
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, ("MDAOVolumeGenerator: " + std::string(e.what())).c_str());
+=======
+        // Try to make the geometry shader
+        if (!this->factory->MakeShaderSource("sphere_mdao_volume::geometry", geom)) {
+            std::cerr << "[MDAOVolumeGenerator] Error loading geometry shader!" << std::endl;
+            return false;
+        }
+
+        // Try to make the fragment shader
+        if (!this->factory->MakeShaderSource("sphere_mdao_volume::fragment", frag)) {
+            std::cerr << "[MDAOVolumeGenerator] Error loading fragment shader!" << std::endl;
+            return false;
+        }
+
+        // Compile and Link
+        if (!this->volumeShader.Compile(
+                vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[MDAOVolumeGenerator] Unable to compile shader: Unknown error\n");
+            return false;
+        }
+
+        if (!this->volumeShader.Link()) {
+            std::cerr << "[MDAOVolumeGenerator] Error linking!" << std::endl;
+            return false;
+        }
+
+    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        std::cerr << "[MDAOVolumeGenerator]  Could not compile shader "
+                  << vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+                         ce.FailedAction())
+                  << ": " << ce.GetMsgA() << std::endl;
+>>>>>>> upstream/master
 
         return false;
     }

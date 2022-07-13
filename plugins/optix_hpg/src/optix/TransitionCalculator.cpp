@@ -1,5 +1,4 @@
 #include "TransitionCalculator.h"
-#include "stdafx.h"
 
 #include "glm/glm.hpp"
 

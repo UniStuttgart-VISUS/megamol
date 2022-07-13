@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/job/AbstractJob.h"
-#include "mmcore/utility/sys/Thread.h"
 #include "vislib/SmartPtr.h"
+#include "vislib/sys/Thread.h"
 
 
 namespace megamol {

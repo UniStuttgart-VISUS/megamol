@@ -12,14 +12,13 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
-#include "stdafx.h"
 #include "vislib/ArrayAllocator.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
+#include "vislib/sys/MemmappedFile.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/types.h"
 #include <ctime>
@@ -940,7 +939,7 @@ bool PDBLoader::getData(core::Call& call) {
         this->stride = new Stride(dc);
         this->stride->WriteToInterface(dc);
         this->secStructAvailable = true;
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Secondary Structure computed via STRIDE in %f seconds.",
+        Log::DefaultLog.WriteInfo("Secondary Structure computed via STRIDE in %f seconds.",
             (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
     } else if (this->strideFlagSlot.Param<param::BoolParam>()->Value()) {
         this->stride->WriteToInterface(dc);
@@ -1101,7 +1100,7 @@ void PDBLoader::loadFile(const vislib::TString& filename) {
     SIZE_T frameCapacity = 10000;
     atomEntries.AssertCapacity(atomEntriesCapacity);
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Loading PDB file: %s", T2A(filename.PeekBuffer())); // DEBUG
+    Log::DefaultLog.WriteInfo("Loading PDB file: %s", T2A(filename.PeekBuffer())); // DEBUG
     // try to load the file
     bool file_loaded = false;
     if (file.LoadFile(T2A(filename))) {
@@ -1153,7 +1152,7 @@ void PDBLoader::loadFile(const vislib::TString& filename) {
             // next line
             lineCnt++;
         }
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Atom count: %i", atomEntries.Count()); // DEBUG
+        Log::DefaultLog.WriteInfo("Atom count: %i", atomEntries.Count()); // DEBUG
     } else {
 #ifdef WITH_CURL
         auto seperator_list_linux = vislib::StringTokeniserA::Split(filename, "/");
@@ -1185,11 +1184,11 @@ void PDBLoader::loadFile(const vislib::TString& filename) {
             // next line
             lineCnt++;
         }
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Atom count: %i", atomEntries.Count()); // DEBUG
+        Log::DefaultLog.WriteInfo("Atom count: %i", atomEntries.Count()); // DEBUG
 #endif
     }
     if (!file_loaded) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Could not load file %s", (const char*)T2A(filename)); // DEBUG
+        Log::DefaultLog.WriteError("Could not load file %s", (const char*)T2A(filename)); // DEBUG
         return;
     }
     // Init atom filter array with 1 (= 'visible')
@@ -1232,8 +1231,8 @@ void PDBLoader::loadFile(const vislib::TString& filename) {
     for (atomCnt = 0; atomCnt < atomEntries.Count(); ++atomCnt) {
         this->parseAtomEntry(atomEntries[atomCnt], atomCnt, frameCnt, solventResidueNames);
     }
-    Log::DefaultLog.WriteMsg(
-        Log::LEVEL_INFO, "Time for parsing first frame: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
+    Log::DefaultLog.WriteInfo(
+        "Time for parsing first frame: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
     this->molecule.AssertCapacity(this->residue.Count());
     //this->chain.AssertCapacity( this->residue.Count()); ?????
@@ -1283,8 +1282,8 @@ void PDBLoader::loadFile(const vislib::TString& filename) {
             this->molecule.Last().SetConnectionRange(
                 firstConIdx, (static_cast<unsigned int>(this->connectivity.Count()) - firstConIdx) / 2);
         }
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_INFO, "Time for finding all bonds: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
+        Log::DefaultLog.WriteInfo(
+            "Time for finding all bonds: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
     } else {
         /*
          * Add one chain covering every molecule in the data.
@@ -1325,8 +1324,7 @@ void PDBLoader::loadFile(const vislib::TString& filename) {
     }
 
     //Log::DefaultLog.WriteMsg( Log::LEVEL_INFO, "Time for loading file %s: %f", T2A( filename), ( double( clock() - t) / double( CLOCKS_PER_SEC) )); // DEBUG
-    Log::DefaultLog.WriteMsg(
-        Log::LEVEL_INFO, "Time for loading file: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
+    Log::DefaultLog.WriteInfo("Time for loading file: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
 
     // if no xtc-filename has been set
@@ -1367,13 +1365,13 @@ void PDBLoader::loadFile(const vislib::TString& filename) {
             lineCnt++;
         }
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Time for parsing %i frames: %f", this->data.Count(),
+        Log::DefaultLog.WriteInfo("Time for parsing %i frames: %f", this->data.Count(),
             (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
         // all information loaded, delete file
         file.Clear();
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_INFO, "Time for clearing the file: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
+        Log::DefaultLog.WriteInfo(
+            "Time for clearing the file: %f", (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
         // DEBUG
         writeToXtcFile(vislib::TString("data.xtc"));
@@ -1383,7 +1381,7 @@ void PDBLoader::loadFile(const vislib::TString& filename) {
         // bounding box
         this->readNumXTCFrames();
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Number of XTC-frames: %u", this->numXTCFrames); // DEBUG
+        Log::DefaultLog.WriteInfo("Number of XTC-frames: %u", this->numXTCFrames); // DEBUG
 
         //float box[3][3];
         char tmpByte;
@@ -1396,8 +1394,7 @@ void PDBLoader::loadFile(const vislib::TString& filename) {
             this->xtcFilenameSlot.Param<core::param::FilePathParam>()->Value(), std::ios::in | std::ios::binary);
 
         if (!xtcFile) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                "Could not load XTC-file."); // DEBUG
+            Log::DefaultLog.WriteError("Could not load XTC-file."); // DEBUG
             xtcFileValid = false;
         } else {
 
@@ -1417,9 +1414,8 @@ void PDBLoader::loadFile(const vislib::TString& filename) {
             // check whether the pdb-file and the xtc-file contain the
             // same number of atoms
             if (nAtoms != atomEntries.Count()) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                    "XTC-File and given PDB-file not matching (XTC-file has"
-                    "%i atom entries, PDB-file has %i atom entries).",
+                Log::DefaultLog.WriteError("XTC-File and given PDB-file not matching (XTC-file has"
+                                           "%i atom entries, PDB-file has %i atom entries).",
                     nAtoms, atomEntries.Count()); // DEBUG
                 xtcFileValid = false;
                 xtcFile.close();
@@ -1447,7 +1443,7 @@ void PDBLoader::loadFile(const vislib::TString& filename) {
 void PDBLoader::loadFileCap(const vislib::TString& filename) {
     using megamol::core::utility::log::Log;
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Loading CAP file: %s", T2A(filename.PeekBuffer())); // DEBUG
+    Log::DefaultLog.WriteInfo("Loading CAP file: %s", T2A(filename.PeekBuffer())); // DEBUG
 
     vislib::sys::ASCIIFileBuffer file;
     vislib::StringA line;
@@ -2164,8 +2160,7 @@ bool PDBLoader::readNumXTCFrames() {
     this->XTCFrameOffset.RemoveLast();
     this->numXTCFrames--;
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-        "Time for parsing the XTC-file: %f",
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Time for parsing the XTC-file: %f",
         (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
     return true;
@@ -2184,7 +2179,7 @@ void PDBLoader::writeToXtcFile(const vislib::TString& filename) {
     float maxFloats[3];
 
     if (data.Count() == 1) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "The PDB-file only contains one frame. No XTC-file has been"
             " written.");
         return;
@@ -2195,8 +2190,7 @@ void PDBLoader::writeToXtcFile(const vislib::TString& filename) {
 
     // if the file could not be opened return
     if (!outfile) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Could not create file.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Could not create file.");
         return;
     }
 

@@ -4,7 +4,6 @@
  * Copyright (C) 2009-2021 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 
 #define _USE_MATH_DEFINES 1
 
@@ -19,7 +18,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
@@ -30,6 +28,7 @@
 #include "vislib/StringTokeniser.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/File.h"
 #include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
@@ -239,13 +238,12 @@ bool MoleculeSESRenderer::create(void) {
             std::filesystem::path("protein_gl/moleculeses/mses_spherical_triangle.vert.glsl"),
             std::filesystem::path("protein_gl/moleculeses/mses_spherical_triangle.frag.glsl"));
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[MoleculeSESRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[MoleculeSESRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[MoleculeSESRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[MoleculeSESRenderer] Unable to compile shader: Unknown exception.");
     }
 
@@ -467,7 +465,7 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 }
             }
         }
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "%s: RS computed in: %f s\n", this->ClassName(), (double(clock() - t) / double(CLOCKS_PER_SEC)));
     }
     // update the data / the RS

@@ -12,7 +12,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include <algorithm>
 #include <fstream>
 
@@ -602,18 +601,18 @@ void Contest2019DataLoader::loadFrame(view::AnimDataModule::Frame* frame, unsign
     }
     if (!filename.empty()) {
         if (!f->LoadFrame(filename, frameID, redshift)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from file\n", idx);
+            Log::DefaultLog.WriteError("Unable to read frame %d from file\n", idx);
         }
     }
     bool calcDerivatives = this->calculateDerivatives.Param<param::BoolParam>()->Value();
     if (!filenameBefore.empty() && calcDerivatives) {
         if (!fbefore->LoadFrame(filenameBefore, frameIDBefore, redshiftBefore)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame before frame %d from file\n", idx);
+            Log::DefaultLog.WriteError("Unable to read frame before frame %d from file\n", idx);
         }
     }
     if (!filenameAfter.empty() && calcDerivatives) {
         if (!fafter->LoadFrame(filenameAfter, frameIDAfter, redshiftAfter)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame after frame %d from file\n", idx);
+            Log::DefaultLog.WriteError("Unable to read frame after frame %d from file\n", idx);
         }
     }
     f->ZeroDerivatives();

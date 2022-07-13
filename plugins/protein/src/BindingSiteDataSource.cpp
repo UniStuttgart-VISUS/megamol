@@ -1,14 +1,13 @@
 #include "BindingSiteDataSource.h"
-#include "stdafx.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/ProteinColor.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
 #include <math.h>
@@ -242,7 +241,7 @@ void BindingSiteDataSource::loadPDBFile(const std::string& filename) {
             this->bindingSiteColors[i] = this->colorLookupTable[i % this->colorLookupTable.size()];
         }
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Bindings Site count: %i", bindingSiteNames.Count()); // DEBUG
+        Log::DefaultLog.WriteInfo("Bindings Site count: %i", bindingSiteNames.Count()); // DEBUG
     }
 }
 

@@ -1,5 +1,4 @@
 #include "AddParticleColors.h"
-#include "stdafx.h"
 
 #include "mmcore/view/CallGetTransferFunction.h"
 

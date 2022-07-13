@@ -1,6 +1,5 @@
 #include "DiagramRenderer.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -9,7 +8,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ResourceWrapper.h"
-#include "stdafx.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/sys/BufferedFile.h"
@@ -1224,7 +1223,7 @@ void DiagramRenderer::dump() {
             } else if (m->GetType() == protein_calls::DiagramCall::DIAGRAM_MARKER_SPLIT && m->GetUserData() != NULL) {
                 vislib::Array<int>* partners = reinterpret_cast<vislib::Array<int>*>(m->GetUserData());
                 for (int p = 0; p < (int)partners->Count(); p++) {
-                    // Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "#F %u[%u]=>%u[%u] %u", s + 1, m->GetIndex(),
+                    // Log::DefaultLog.WriteInfo( "#F %u[%u]=>%u[%u] %u", s + 1, m->GetIndex(),
                     // (*partners)[p] + 1, m->GetIndex() + 1, 3);
                     int idx = localXIndexToGlobal[s][m->GetIndex()];
                     vislib::sys::WriteFormattedLineToFile(

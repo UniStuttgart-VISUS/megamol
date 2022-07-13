@@ -6,7 +6,6 @@
  */
 
 #include "GrimRenderer.h"
-#include "stdafx.h"
 
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/view/light/DistantLight.h"
@@ -138,46 +137,46 @@ bool GrimRenderer::create(void) {
     try {
         sphere_shader_ = core::utility::make_glowl_shader(
             "sphere_shader", shader_options, "grim_renderer/sphere.vert.glsl", "grim_renderer/sphere.frag.glsl");
-        
+
         vanilla_sphere_shader_ = core::utility::make_glowl_shader(
             "vanilla_sphere_shader", shader_options, "grim_renderer/vanilla_sphere.vert.glsl", "grim_renderer/vanilla_sphere.frag.glsl");
-        
+
         init_depth_shader_ = core::utility::make_glowl_shader("init_depth_shader", shader_options,
             "grim_renderer/init_depth.vert.glsl", "grim_renderer/init_depth.frag.glsl");
-        
+
         init_depth_map_shader_ = core::utility::make_glowl_shader("init_depth_map_shader", shader_options,
             "grim_renderer/init_depth_map.vert.glsl", "grim_renderer/init_depth_map.frag.glsl");
-        
+
         depth_mip_shader_ = core::utility::make_glowl_shader("depth_mip_shader", shader_options,
             "grim_renderer/depth_mip.vert.glsl", "grim_renderer/depth_mip.frag.glsl");
-        
+
         point_shader_ = core::utility::make_glowl_shader("point_shader", shader_options,
             "grim_renderer/point.vert.glsl", "grim_renderer/point.frag.glsl");
-        
+
         init_depth_point_shader_ = core::utility::make_glowl_shader("init_depth_point_shader", shader_options,
             "grim_renderer/init_depth_point.vert.glsl", "grim_renderer/init_depth_point.frag.glsl");
-        
+
         vert_cnt_shader_ = core::utility::make_glowl_shader("vert_cnt_shader", shader_options,
             "grim_renderer/vert_cnt.vert.glsl", "grim_renderer/vert_cnt.frag.glsl");
-        
+
         vert_cnt_shader_2_ = core::utility::make_glowl_shader("vert_cnt_shader_2", shader_options,
             "grim_renderer/vert_cnt_2.vert.glsl", "grim_renderer/vert_cnt_2.frag.glsl");
-        
+
         deferred_sphere_shader_ = core::utility::make_glowl_shader("deferred_sphere_shader", shader_options,
             "grim_renderer/deferred_sphere.vert.glsl", "grim_renderer/deferred_sphere.frag.glsl");
-        
+
         deferred_vanilla_sphere_shader_ = core::utility::make_glowl_shader("deferred_vanilla_sphere_shader", shader_options,
             "grim_renderer/deferred_vanilla_sphere.vert.glsl", "grim_renderer/deferred_vanilla_sphere.frag.glsl");
-        
+
         deferred_point_shader_ = core::utility::make_glowl_shader("deferred_point_shader", shader_options,
             "grim_renderer/deferred_point.vert.glsl", "grim_renderer/deferred_point.frag.glsl");
-        
+
         deferred_shader_ = core::utility::make_glowl_shader("deferred_shader", shader_options,
             "grim_renderer/deferred.vert.glsl", "grim_renderer/deferred.frag.glsl");
-        
+
     } catch (std::exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, ("GrimRenderer: " + std::string(e.what())).c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to compile grim shader: %s. [%s, %s, line %d]\n", std::string(e.what())).c_str(), __FILE__, __FUNCTION__, __LINE__);
     }
 
     // Fallback transfer function texture
@@ -417,8 +416,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     throw vislib::Exception("ds_fbo_.Create failed\n", __FILE__, __LINE__);
                 }
             } catch (vislib::Exception ex) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                    megamol::core::utility::log::Log::LEVEL_ERROR, "Failed to created ds_fbo_: %s", ex.GetMsgA());
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to created ds_fbo_: %s", ex.GetMsgA());
             }
         }
         glPopDebugGroup();
@@ -559,8 +557,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                 glGetError();
                 glGenBuffersARB(2, ci.data);
                 if (glGetError() != GL_NO_ERROR) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                        megamol::core::utility::log::Log::LEVEL_ERROR, "glGenBuffersARB failed");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("glGenBuffersARB failed");
                     throw vislib::Exception("glGenBuffersARB failed", __FILE__, __LINE__);
                 }
                 vram_upload_quota--;
@@ -570,12 +567,11 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, vbpp * parts.GetCount(), parts.GetVertexData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                            megamol::core::utility::log::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Currently only data without stride is supported for caching");
                     throw vislib::Exception(
                         "Currently only data without stride is supported for caching", __FILE__, __LINE__);
@@ -586,12 +582,11 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, cbpp * parts.GetCount(), parts.GetColourData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                            megamol::core::utility::log::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Currently only data without stride is supported for caching");
                     throw vislib::Exception(
                         "Currently only data without stride is supported for caching", __FILE__, __LINE__);
@@ -738,8 +733,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                 glGetError();
                 glGenBuffersARB(2, ci.data);
                 if (glGetError() != GL_NO_ERROR) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                        megamol::core::utility::log::Log::LEVEL_ERROR, "glGenBuffersARB failed");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("glGenBuffersARB failed");
                     throw vislib::Exception("glGenBuffersARB failed", __FILE__, __LINE__);
                 }
                 vram_upload_quota--;
@@ -749,12 +743,11 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, vbpp * parts.GetCount(), parts.GetVertexData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                            megamol::core::utility::log::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Currently only data without stride is supported for caching");
                     throw vislib::Exception(
                         "Currently only data without stride is supported for caching", __FILE__, __LINE__);
@@ -765,12 +758,11 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, cbpp * parts.GetCount(), parts.GetColourData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                            megamol::core::utility::log::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Currently only data without stride is supported for caching");
                     throw vislib::Exception(
                         "Currently only data without stride is supported for caching", __FILE__, __LINE__);

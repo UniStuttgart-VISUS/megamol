@@ -4,19 +4,18 @@
  * Copyright (C) 2010 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 #define _USE_MATH_DEFINES 1
 #include "SolPathDataSource.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/ShallowVector.h"
 #include "vislib/math/Vector.h"
+#include "vislib/sys/MemmappedFile.h"
 #include <cfloat>
 #include <climits>
 #include <cmath>
@@ -163,14 +162,14 @@ void SolPathDataSource::loadData(void) {
 
     if (file.Open(this->filenameslot.Param<param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY) == false) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open data file %s",
+        Log::DefaultLog.WriteError("Unable to open data file %s",
             this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
         return;
     }
 
     vislib::StringA headerID;
     if (file.Read(headerID.AllocateBuffer(7), 7) != 7) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read data file %s",
+        Log::DefaultLog.WriteError("Unable to read data file %s",
             this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
         return;
     }
@@ -181,12 +180,12 @@ void SolPathDataSource::loadData(void) {
     if (headerID.Equals("SolPath")) {
         unsigned int version;
         if (file.Read(&version, 4) != 4) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read data file %s",
+            Log::DefaultLog.WriteError("Unable to read data file %s",
                 this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
             return;
         }
         if (version > 1) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Data file %s uses unsupported version %u",
+            Log::DefaultLog.WriteError("Data file %s uses unsupported version %u",
                 this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str(), version);
             return;
         }
@@ -221,7 +220,7 @@ void SolPathDataSource::loadData(void) {
         }
     }
     if (blockInfo == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "File %s does not contain a path line data block",
+        Log::DefaultLog.WriteError("File %s does not contain a path line data block",
             this->filenameslot.Param<param::FilePathParam>()->Value().generic_u8string().c_str());
         return;
     }
@@ -273,7 +272,7 @@ void SolPathDataSource::loadData(void) {
         }
     }
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 1000, "Finished solpath file IO");
+    Log::DefaultLog.WriteInfo("Finished solpath file IO");
 
     // calculate pointers, bounding data, and speed values
     SIZE_T off = 0;
@@ -281,9 +280,9 @@ void SolPathDataSource::loadData(void) {
         off += this->pathlines[p].length;
     }
     if (off < this->vertices.Count()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "Path data inconsistent: too many vertices");
+        Log::DefaultLog.WriteWarn("Path data inconsistent: too many vertices");
     } else if (off > this->vertices.Count()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Path data inconsistent: too few vertices");
+        Log::DefaultLog.WriteError("Path data inconsistent: too few vertices");
         this->clear();
         return;
     }

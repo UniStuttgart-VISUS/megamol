@@ -5,7 +5,6 @@
  */
 
 #include "factories/CallClassRegistry.h"
-#include "stdafx.h"
 
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/factories/CallDescription.h"

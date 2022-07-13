@@ -6,8 +6,8 @@
 
 #include "ImageRenderer.h"
 #include "JpegBitmapCodec.h"
-#include "mmcore/misc/PngBitmapCodec.h"
-#include "mmcore/utility/graphics/BitmapCodecCollection.h"
+#include "vislib/graphics/BitmapCodecCollection.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
@@ -21,10 +21,10 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
+#include "vislib/sys/SystemInformation.h"
 //#include <cmath>
 
 using namespace megamol::core;
@@ -136,7 +136,7 @@ bool image_gl::ImageRenderer::create(void) {
         theShader = core::utility::make_glowl_shader(
             "imageviewer", shader_options, "image_gl/imageviewer.vert.glsl", "image_gl/imageviewer.frag.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("ImageRenderer: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(("ImageRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 

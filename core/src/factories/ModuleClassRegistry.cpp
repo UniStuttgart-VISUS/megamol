@@ -5,7 +5,6 @@
  */
 
 #include "factories/ModuleClassRegistry.h"
-#include "stdafx.h"
 
 #include "mmcore/factories/ModuleAutoDescription.h"
 #include "mmcore/factories/ModuleDescription.h"

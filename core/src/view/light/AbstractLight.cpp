@@ -13,7 +13,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 
 using namespace megamol::core::view::light;
 

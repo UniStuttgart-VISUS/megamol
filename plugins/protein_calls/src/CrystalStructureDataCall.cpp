@@ -8,7 +8,6 @@
  */
 
 #include "protein_calls/CrystalStructureDataCall.h"
-#include "stdafx.h"
 
 using namespace megamol;
 

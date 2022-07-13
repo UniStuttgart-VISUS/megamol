@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "ArxelBuffer.h"
-#include "stdafx.h"
 #include "vislib/memutils.h"
 
 #include <climits>

@@ -1,7 +1,6 @@
 #include "CLIConfigParsing.h"
 #include "mmcore/LuaAPI.h"
 
-#include "mmcore/utility/log/DefaultTarget.h"
 #include "mmcore/utility/log/Log.h"
 
 #include "mmcore/CoreInstance.h"
@@ -49,14 +48,10 @@ int main(const int argc, const char** argv) {
     const bool with_gl = !config.no_opengl;
 
     // setup log
-    megamol::core::utility::log::Log::DefaultLog.SetLevel(config.echo_level);
+    megamol::core::utility::log::Log::DefaultLog.SetLevel(config.log_level);
     megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(config.echo_level);
-    megamol::core::utility::log::Log::DefaultLog.SetFileLevel(config.log_level);
-    megamol::core::utility::log::Log::DefaultLog.SetOfflineMessageBufferSize(100);
-    megamol::core::utility::log::Log::DefaultLog.SetMainTarget(
-        std::make_shared<megamol::core::utility::log::DefaultTarget>());
     if (!config.log_file.empty())
-        megamol::core::utility::log::Log::DefaultLog.SetLogFileName(config.log_file.data(), false);
+        megamol::core::utility::log::Log::DefaultLog.AddFileTarget(config.log_file.data(), false);
 
     log(config.as_string());
     log(global_value_store.as_string());

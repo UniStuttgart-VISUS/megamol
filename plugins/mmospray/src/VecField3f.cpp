@@ -6,7 +6,6 @@
 //
 
 
-#include "stdafx.h"
 #if (defined(WITH_CUDA) && (WITH_CUDA))
 #define _USE_MATH_DEFINES 1
 

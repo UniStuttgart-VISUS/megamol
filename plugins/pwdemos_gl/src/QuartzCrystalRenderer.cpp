@@ -11,7 +11,6 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
-#include "stdafx.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include <glm/ext.hpp>

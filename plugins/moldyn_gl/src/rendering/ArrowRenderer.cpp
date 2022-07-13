@@ -6,7 +6,6 @@
  */
 
 #include "ArrowRenderer.h"
-#include "stdafx.h"
 
 #include "mmcore/view/light/DistantLight.h"
 
@@ -87,8 +86,8 @@ bool ArrowRenderer::create(void) {
         arrow_pgrm_ = core::utility::make_glowl_shader(
             "arrow", shader_options, "arrow_renderer/arrow.vert.glsl", "arrow_renderer/arrow.frag.glsl");
     } catch (std::exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, ("ArrowRenderer: " + std::string(e.what())).c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to compile arrow shader: %s. [%s, %s, line %d]\n", std::string(e.what())).c_str(), __FILE__, __FUNCTION__, __LINE__);
     }
 
 
@@ -373,7 +372,7 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
                     "ArrowRenderer: cannot render arrows without directional data!");
                 continue;
             }
-            
+
             unsigned int fal = 0;
             if (use_flags) {
                 (*cflags)(core_gl::FlagCallRead_GL::CallGetData);

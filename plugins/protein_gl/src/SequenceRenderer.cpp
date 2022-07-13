@@ -1,9 +1,7 @@
 #include "SequenceRenderer.h"
-#include "stdafx.h"
 
 #include "SequenceRenderer.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -11,6 +9,7 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "protein_calls/ProteinColor.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"

@@ -9,7 +9,6 @@
 //
 
 #include "ComparativeMolSurfaceRenderer.h"
-#include "stdafx.h"
 
 //#define USE_TIMER
 //#define VERBOSE
@@ -37,7 +36,7 @@
 #include <cmath>
 #include <sstream>
 
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;
@@ -712,7 +711,7 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(
     printf("CUDA time for 'quicksurf':                             %.10f sec\n", dt_ms / 1000.0f);
 #endif // USE_TIMER
     if (rc != 0) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Quicksurf class returned val != 0\n", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Quicksurf class returned val != 0\n", this->ClassName());
         return false;
     }
 
@@ -747,14 +746,12 @@ bool ComparativeMolSurfaceRenderer::create(void) {
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load shader for per pixel lighting of the surface
     if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
     if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     try {
@@ -762,21 +759,18 @@ bool ComparativeMolSurfaceRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception& e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create the ppl shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create the ppl shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load shader for per pixel lighting of the surface
     if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertexMapped", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
     if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragmentMapped", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     try {
@@ -784,21 +778,18 @@ bool ComparativeMolSurfaceRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception& e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create the ppl shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create the ppl shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load shader for per pixel lighting of the surface
     if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertexWithFlag", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
     if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragmentWithFlag", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     try {
@@ -807,21 +798,19 @@ bool ComparativeMolSurfaceRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create the ppl shader (vertex flag): %s\n",
-            this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to create the ppl shader (vertex flag): %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Load shader for per pixel lighting of the surface
     if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertexUncertainty", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
     if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragmentUncertainty", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     try {
@@ -830,8 +819,8 @@ bool ComparativeMolSurfaceRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create the ppl shader (vertex flag): %s\n",
-            this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to create the ppl shader (vertex flag): %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
@@ -871,7 +860,7 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
                     const MolecularDataCall::AminoAcid* aminoAcid = dynamic_cast<const MolecularDataCall::AminoAcid*>(
                         (mol1->Residues()[mol1->SecondaryStructures()[sec].FirstAminoAcidIndex() + acid]));
                     if (aminoAcid == NULL) {
-                        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        Log::DefaultLog.WriteError(
                             "%s: Unable to perform RMSD fitting using all protein atoms (residue mislabeled as 'amino "
                             "acid')",
                             this->ClassName(), posCnt1, posCnt2);
@@ -891,7 +880,7 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
                     const MolecularDataCall::AminoAcid* aminoAcid = dynamic_cast<const MolecularDataCall::AminoAcid*>(
                         (mol2->Residues()[mol2->SecondaryStructures()[sec].FirstAminoAcidIndex() + acid]));
                     if (aminoAcid == NULL) {
-                        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                        Log::DefaultLog.WriteError(
                             "%s: Unable to perform RMSD fitting using all protein atoms (residue mislabeled as 'amino "
                             "acid')",
                             this->ClassName(), posCnt1, posCnt2);
@@ -906,7 +895,7 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
             }
 
             if (posCnt1 != posCnt2) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+                Log::DefaultLog.WriteError(
                     "%s: Unable to perform RMSD fitting using all protein atoms (non-equal atom count (%u vs. %u), try "
                     "backbone instead)",
                     this->ClassName(), posCnt1, posCnt2);
@@ -1008,7 +997,7 @@ bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall* mol1, Mole
             //            }
 
             if (posCnt1 != posCnt2) {
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to perform RMSD fitting using backbone \
+                Log::DefaultLog.WriteError("%s: Unable to perform RMSD fitting using backbone \
 atoms (non-equal atom count, %u vs. %u), try C alpha \
 atoms instead.",
                     this->ClassName(), posCnt1, posCnt2);
@@ -1756,14 +1745,14 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 
         if (!this->fitMoleculeRMS(mol1, mol2)) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not compute RMSD fitting", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute RMSD fitting", this->ClassName());
 
             return false;
         }
 
 #ifdef USE_TIMER
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: Time for RMS fitting: %.6f s", this->ClassName(),
-            (double(clock() - t) / double(CLOCKS_PER_SEC)));
+        Log::DefaultLog.WriteInfo(
+            "%s: Time for RMS fitting: %.6f s", this->ClassName(), (double(clock() - t) / double(CLOCKS_PER_SEC)));
 #endif
 
         // (Re)-compute bounding box
@@ -1779,22 +1768,21 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 
         if (!this->computeDensityMap(mol1->AtomPositions(), mol1, (CUDAQuickSurf*)this->cudaqsurf1)) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not compute density map #1", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute density map #1", this->ClassName());
 
             return false;
         }
 
         if (!this->computeDensityMap(this->atomPosFitted.Peek(), mol2, (CUDAQuickSurf*)this->cudaqsurf2)) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not compute density map #2", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute density map #2", this->ClassName());
 
             return false;
         }
 
 #ifdef USE_PROCEDURAL_DATA
         if (!this->initProcFieldData()) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: could not compute procedural field data", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute procedural field data", this->ClassName());
             return false;
         }
 #endif
@@ -1816,24 +1804,24 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
         this->datahashPotential2 = vti2->DataHash();
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: init potential texture #1", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: init potential texture #1", this->ClassName());
 #endif // VERBOSE
         if (!this->initPotentialMap(vti1, this->gridPotential1, this->surfAttribTex1, this->surfAttribTex1_D,
                 this->texDim1, this->texOrg1, this->texDelta1)) {
 
 #ifdef VERBOSE
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not init potential map #1", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not init potential map #1", this->ClassName());
 #endif // VERBOSE
             return false;
         }
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: init potential texture #2", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: init potential texture #2", this->ClassName());
 #endif // VERBOSE
         if (!this->initPotentialMap(vti2, this->gridPotential2, this->surfAttribTex2, this->surfAttribTex2_D,
                 this->texDim2, this->texOrg2, this->texDelta2)) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not init potential map #2", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not init potential map #2", this->ClassName());
 
             return false;
         }
@@ -1844,7 +1832,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
     if (this->triggerComputeSurfacePoints1) {
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: compute surface points #1", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: compute surface points #1", this->ClassName());
 #endif // VERBOSE
         ::CheckForCudaErrorSync();
 
@@ -1859,7 +1847,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 #endif //  USE_PROCEDURAL_DATA
                 this->volDim, this->volOrg, this->volDelta, this->qsIsoVal)) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not compute vertex positions #1", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute vertex positions #1", this->ClassName());
 
             return false;
         }
@@ -1882,7 +1870,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
         ::CheckForCudaErrorSync();
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: compute triangles #1", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: compute triangles #1", this->ClassName());
 #endif // VERBOSE
         // Build triangle mesh from vertices
         if (!this->deformSurf1.ComputeTriangles(
@@ -1893,7 +1881,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 #endif //  USE_PROCEDURAL_DATA
                 this->volDim, this->volOrg, this->volDelta, this->qsIsoVal)) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not compute vertex triangles #1", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute vertex triangles #1", this->ClassName());
 
             return false;
         }
@@ -1901,7 +1889,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
         CheckForCudaErrorSync();
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: compute connectivity points #1", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: compute connectivity points #1", this->ClassName());
 #endif // VERBOSE
         // Compute vertex connectivity
         if (!this->deformSurf1.ComputeConnectivity(
@@ -1912,8 +1900,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 #endif //  USE_PROCEDURAL_DATA
                 this->volDim, this->volOrg, this->volDelta, this->qsIsoVal)) {
 
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: could not compute vertex connectivity #1", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute vertex connectivity #1", this->ClassName());
 
             return false;
         }
@@ -1921,7 +1908,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
         CheckForCudaErrorSync();
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: regularize surface #1", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: regularize surface #1", this->ClassName());
 #endif // VERBOSE
         // Regularize the mesh of surface #1
         if (!this->deformSurf1.MorphToVolumeGradient(
@@ -1934,7 +1921,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
                 this->surfregMinDisplScl, this->regSpringStiffness, this->regForcesScl,
                 this->regExternalForcesWeight)) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not regularize surface #1", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not regularize surface #1", this->ClassName());
 
             return false;
         }
@@ -1942,7 +1929,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
         CheckForCudaErrorSync();
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: compute normals #1", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: compute normals #1", this->ClassName());
 #endif // VERBOSE
         // Compute vertex normals
         if (!this->deformSurf1.ComputeNormals(
@@ -1953,7 +1940,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 #endif //  USE_PROCEDURAL_DATA
                 this->volDim, this->volOrg, this->volDelta, this->qsIsoVal)) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not compute normals #1", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute normals #1", this->ClassName());
 
             return false;
         }
@@ -1961,12 +1948,12 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
         CheckForCudaErrorSync();
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: compute texture coordinates #1", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: compute texture coordinates #1", this->ClassName());
 #endif // VERBOSE
         // Compute texture coordinates
         if (!this->deformSurf1.ComputeTexCoords(this->gridPotential1.minC, this->gridPotential1.maxC)) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not compute tex coords #1", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute tex coords #1", this->ClassName());
 
             return false;
         }
@@ -1978,7 +1965,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
     if (this->triggerComputeSurfacePoints2) {
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: compute vertex positions #2", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: compute vertex positions #2", this->ClassName());
 #endif // VERBOSE
         /* Surface #2 */
 
@@ -1991,13 +1978,13 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 #endif //  USE_PROCEDURAL_DATA
                 this->volDim, this->volOrg, this->volDelta, this->qsIsoVal)) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not compute vertex positions #2", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute vertex positions #2", this->ClassName());
 
             return false;
         }
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: compute triangles #2", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: compute triangles #2", this->ClassName());
 #endif // VERBOSE
         // Build triangle mesh from vertices
         if (!this->deformSurf2.ComputeTriangles(
@@ -2008,13 +1995,13 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 #endif //  USE_PROCEDURAL_DATA
                 this->volDim, this->volOrg, this->volDelta, this->qsIsoVal)) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not compute triangles #2", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute triangles #2", this->ClassName());
 
             return false;
         }
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: compute vertex connectivity #2", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: compute vertex connectivity #2", this->ClassName());
 #endif // VERBOSE
         // Compute vertex connectivity
         if (!this->deformSurf2.ComputeConnectivity(
@@ -2025,8 +2012,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 #endif //  USE_PROCEDURAL_DATA
                 this->volDim, this->volOrg, this->volDelta, this->qsIsoVal)) {
 
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: could not compute vertex connectivity #2", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute vertex connectivity #2", this->ClassName());
 
             return false;
         }
@@ -2039,8 +2025,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 #endif //  USE_PROCEDURAL_DATA
                 this->volDim, this->volOrg, this->volDelta, this->qsIsoVal)) {
 
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: could not compute triangle neighborsd #2", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute triangle neighborsd #2", this->ClassName());
             return false;
         }
 
@@ -2053,13 +2038,13 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 #endif //  USE_PROCEDURAL_DATA
                 this->qsIsoVal, this->volDim, this->volOrg, this->volDelta)) {
 #ifdef VERBOSE
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not compute edge list", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute edge list", this->ClassName());
 #endif // VERBOSE
             return false;
         }
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: regularize surface #2", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: regularize surface #2", this->ClassName());
 #endif // VERBOSE
         // Regularize the mesh of surface #2
         if (!this->deformSurf2.MorphToVolumeGradient(
@@ -2072,7 +2057,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
                 this->surfregMinDisplScl, this->regSpringStiffness, this->regForcesScl,
                 this->regExternalForcesWeight)) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not regularize surface #2", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not regularize surface #2", this->ClassName());
 
             return false;
         }
@@ -2082,7 +2067,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
         //        // END DEBUG
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: compute normals #2", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: compute normals #2", this->ClassName());
 #endif // VERBOSE
         // Compute vertex normals
         if (!this->deformSurf2.ComputeNormals(
@@ -2093,13 +2078,13 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 #endif //  USE_PROCEDURAL_DATA
                 this->volDim, this->volOrg, this->volDelta, this->qsIsoVal)) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not compute vertex normals #2", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute vertex normals #2", this->ClassName());
 
             return false;
         }
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: compute texture coordinates #2", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: compute texture coordinates #2", this->ClassName());
 #endif // VERBOSE
         // Compute texture coordinates
         Mat3f rmsRotInv(this->rmsRotation);
@@ -2111,7 +2096,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
                 this->gridPotential2.maxC, this->rmsCentroid.PeekComponents(), rmsRotInv.PeekComponents(),
                 this->rmsTranslation.PeekComponents())) {
 
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not compute tex coords #2", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute tex coords #2", this->ClassName());
 
             return false;
         }
@@ -2130,7 +2115,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
         if (this->surfMappedExtForce == GVF) {
 
 #ifdef VERBOSE
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: morph to volume gvf", this->ClassName());
+            Log::DefaultLog.WriteInfo("%s: morph to volume gvf", this->ClassName());
 #endif // VERBOSE
             // Morph surface #2 to shape #1 using GVF
             if (!this->deformSurfMapped.MorphToVolumeGVF(
@@ -2150,14 +2135,14 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
                     this->surfMappedMinDisplScl, this->surfMappedSpringStiffness, this->surfaceMappingForcesScl,
                     this->surfaceMappingExternalForcesWeightScl, this->surfMappedGVFScl, this->surfMappedGVFIt)) {
 
-                Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not compute GVF deformation", this->ClassName());
+                Log::DefaultLog.WriteError("%s: could not compute GVF deformation", this->ClassName());
 
                 return false;
             }
         } else if (this->surfMappedExtForce == METABALLS) {
 
 #ifdef VERBOSE
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: morph to volume meta balls", this->ClassName());
+            Log::DefaultLog.WriteInfo("%s: morph to volume meta balls", this->ClassName());
 #endif // VERBOSE
             // Morph surface #2 to shape #1 using implicit molecular surface
             if (!this->deformSurfMapped.MorphToVolumeGradient(
@@ -2171,15 +2156,14 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
                     this->surfMappedMinDisplScl, this->surfMappedSpringStiffness, this->surfaceMappingForcesScl,
                     this->surfaceMappingExternalForcesWeightScl)) {
 
-                Log::DefaultLog.WriteMsg(
-                    Log::LEVEL_ERROR, "%s: could not compute metaballs deformation", this->ClassName());
+                Log::DefaultLog.WriteError("%s: could not compute metaballs deformation", this->ClassName());
 
                 return false;
             }
         } else if (this->surfMappedExtForce == METABALLS_DISTFIELD) {
 
 #ifdef VERBOSE
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: morph to volume distfield", this->ClassName());
+            Log::DefaultLog.WriteInfo("%s: morph to volume distfield", this->ClassName());
 #endif // VERBOSE
             // Morph surface #2 to shape #1 using implicit molecular surface + distance field
             if (!this->deformSurfMapped.MorphToVolumeDistfield(
@@ -2193,15 +2177,14 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
                     this->surfMappedMinDisplScl, this->surfMappedSpringStiffness, this->surfaceMappingForcesScl,
                     this->surfaceMappingExternalForcesWeightScl, this->distFieldThresh)) {
 
-                Log::DefaultLog.WriteMsg(
-                    Log::LEVEL_ERROR, "%s: could not compute metaballs/distfield deformation", this->ClassName());
+                Log::DefaultLog.WriteError("%s: could not compute metaballs/distfield deformation", this->ClassName());
 
                 return false;
             }
         } else if (this->surfMappedExtForce == TWO_WAY_GVF) {
 
 #ifdef VERBOSE
-            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: morph to volume two-way-gvf", this->ClassName());
+            Log::DefaultLog.WriteInfo("%s: morph to volume two-way-gvf", this->ClassName());
 #endif // VERBOSE
             // Morph surface #2 to shape #1 using Two-Way-GVF
 
@@ -2244,8 +2227,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
                     this->surfaceMappingExternalForcesWeightScl, this->surfMappedGVFScl, this->surfMappedGVFIt, true,
                     true)) {
 
-                Log::DefaultLog.WriteMsg(
-                    Log::LEVEL_ERROR, "%s: could not compute Two-Way-GVF deformation", this->ClassName());
+                Log::DefaultLog.WriteError("%s: could not compute Two-Way-GVF deformation", this->ClassName());
 
                 return false;
             }
@@ -2263,7 +2245,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
         }
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: compute normals of mapped surface", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: compute normals of mapped surface", this->ClassName());
 #endif // VERBOSE
         // Perform subdivision with subsequent deformation to create a fine
         // target mesh enough
@@ -2285,7 +2267,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 
                     if (newTris < 0) {
 
-                        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not refine mesh", this->ClassName());
+                        Log::DefaultLog.WriteError("%s: could not refine mesh", this->ClassName());
 
                         return false;
                     }
@@ -2313,8 +2295,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
                             this->surfaceMappingExternalForcesWeightScl, this->surfMappedGVFScl, this->surfMappedGVFIt,
                             false, false)) {
 
-                        Log::DefaultLog.WriteMsg(
-                            Log::LEVEL_ERROR, "%s: could not compute Two-Way-GVF deformation", this->ClassName());
+                        Log::DefaultLog.WriteError("%s: could not compute Two-Way-GVF deformation", this->ClassName());
 
                         return false;
                     }
@@ -2329,7 +2310,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
                 this->procField1D.Peek(),
 #endif //  USE_PROCEDURAL_DATA
                 this->deformSurf1.PeekCubeStates(), volDim, volOrg, volDelta, this->qsIsoVal)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not flag corrupt triangles", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not flag corrupt triangles", this->ClassName());
 
             return false;
         }
@@ -2394,14 +2375,12 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
         }
 
 #ifdef VERBOSE
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_INFO, "%s: compute texture coordinates of mapped surface", this->ClassName());
+        Log::DefaultLog.WriteInfo("%s: compute texture coordinates of mapped surface", this->ClassName());
 #endif // vERBOSE
         // Compute texture coordinates
         if (!this->deformSurfMapped.ComputeTexCoords(this->gridPotential1.minC, this->gridPotential1.maxC)) {
 
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: could not compute tex coords of mapped surface", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute tex coords of mapped surface", this->ClassName());
 
             return false;
         }
@@ -2409,8 +2388,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
         // Compute vertex normals
         if (!this->deformSurfMapped.ComputeNormalsSubdiv()) {
 
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: could not compute normals of mapped surface", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not compute normals of mapped surface", this->ClassName());
 
             return false;
         }
@@ -2515,7 +2493,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 
     //    // DEBUG Render external forces as lines
     //    if (!this->renderExternalForces()) {
-    //        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+    //        Log::DefaultLog.WriteError(
     //                "%s: could not render external forces",
     //                this->ClassName());
     //        return false;
@@ -2526,7 +2504,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 
         // Sort triangles by camera distance
         if (!this->deformSurf1.SortTrianglesByCamDist(camPos)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not sort triangles #1", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not sort triangles #1", this->ClassName());
             return false;
         }
 
@@ -2535,7 +2513,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
                 this->deformSurf1.GetTriangleIdxVBO(), static_cast<uint>(this->deformSurf1.GetTriangleCnt() * 3),
                 this->surface1RM, this->surface1ColorMode, this->surfAttribTex1, this->uniformColorSurf1,
                 this->surf1AlphaScl)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not render surface #1", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not render surface #1", this->ClassName());
             return false;
         }
     }
@@ -2543,7 +2521,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
     if (this->surface2RM != SURFACE_NONE) {
         // Sort triangles by camera distance
         if (!this->deformSurf2.SortTrianglesByCamDist(camPos)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not sort triangles #2", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not sort triangles #2", this->ClassName());
             return false;
         }
 
@@ -2552,7 +2530,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
                 this->deformSurf2.GetTriangleIdxVBO(), static_cast<uint>(this->deformSurf2.GetTriangleCnt() * 3),
                 this->surface2RM, this->surface2ColorMode, this->surfAttribTex2, this->uniformColorSurf2,
                 this->surf2AlphaScl)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not render surface #2", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not render surface #2", this->ClassName());
             return false;
         }
 
@@ -2569,7 +2547,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
         //                 this->deformSurf2.GetTriangleCnt()*3,
         //                this->surface2RM,
         //                this->surfaceMappedColorMode)) {
-        //            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        //            Log::DefaultLog.WriteError(
         //                    "%s: could not render mapped surface",
         //                    this->ClassName());
         //            return false;
@@ -2580,8 +2558,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
 
         // Sort triangles by camera distance
         if (!this->deformSurfMapped.SortTrianglesByCamDist(camPos)) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s: could not sort triangles of mapped surface", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not sort triangles of mapped surface", this->ClassName());
             return false;
         }
 
@@ -2590,7 +2567,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
                 static_cast<uint>(this->deformSurfMapped.GetVertexCnt()), this->deformSurfMapped.GetTriangleIdxVBO(),
                 static_cast<uint>(this->deformSurfMapped.GetTriangleCnt() * 3), this->surfaceMappedRM,
                 this->surfaceMappedColorMode)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: could not render mapped surface", this->ClassName());
+            Log::DefaultLog.WriteError("%s: could not render mapped surface", this->ClassName());
             return false;
         }
 
@@ -2605,7 +2582,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
         //                this->surfAttribTex2,
         //                this->uniformColorSurf2,
         //                this->surf2AlphaScl)) {
-        //            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        //            Log::DefaultLog.WriteError(
         //                    "%s: could not render mapped surface",
         //                    this->ClassName());
         //            return false;
@@ -2678,7 +2655,7 @@ bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) 
     //
     //    // DEBUG render grid
     //    if (!this->renderGrid(this->deformSurfMapped)) {
-    //        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+    //        Log::DefaultLog.WriteError(
     //                "%s: could not render grid",
     //                this->ClassName());
     //        return false;

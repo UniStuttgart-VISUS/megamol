@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "mmcore/ViewDescription.h"
-#include "stdafx.h"
 
 
 /*

@@ -9,7 +9,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "protein_calls/PerAtomFloatCall.h"
-#include "stdafx.h"
 #include "vislib/assert.h"
 #include <cfloat>
 #include <climits>

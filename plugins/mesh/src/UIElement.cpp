@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 #include "UIElement.h"
 
 megamol::mesh::UIElement::UIElement()

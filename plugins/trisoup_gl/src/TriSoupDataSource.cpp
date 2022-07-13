@@ -7,11 +7,10 @@
  */
 #include "TriSoupDataSource.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
-#include "stdafx.h"
 #include "vislib/assert.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
+#include "vislib/sys/MemmappedFile.h"
 
 using namespace megamol;
 using namespace megamol::trisoup_gl;
@@ -41,10 +40,10 @@ bool TriSoupDataSource::load(const vislib::TString& filename) {
     using vislib::sys::File;
     using vislib::sys::MemmappedFile;
 
-#define FILE_READ(A, B)                                                                     \
-    if ((B) != file.Read((A), (B))) {                                                       \
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load file: data corruption"); \
-        return false;                                                                       \
+#define FILE_READ(A, B)                                                     \
+    if ((B) != file.Read((A), (B))) {                                       \
+        Log::DefaultLog.WriteError("Unable to load file: data corruption"); \
+        return false;                                                       \
     }
 
     File::FileSize r;
@@ -58,19 +57,19 @@ bool TriSoupDataSource::load(const vislib::TString& filename) {
 
     if (filename.IsEmpty()) {
         // no file to load
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "No file to load (filename empty)");
+        Log::DefaultLog.WriteInfo("No file to load (filename empty)");
         return true;
     }
 
     if (!file.Open(filename, File::READ_ONLY, File::SHARE_READ, File::OPEN_ONLY)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open file");
+        Log::DefaultLog.WriteError("Unable to open file");
         return false;
     }
 
     r = file.Read(rb, sizeof(theHeader) - 1);
     if (memcmp(rb, theHeader, sizeof(theHeader) - 1) != 0) {
         file.Close();
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load file: Wrong format header");
+        Log::DefaultLog.WriteError("Unable to load file: Wrong format header");
         return false;
     }
 

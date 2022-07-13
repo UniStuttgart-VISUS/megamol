@@ -6,7 +6,6 @@
  */
 
 #include "CSVDataSource.h"
-#include "stdafx.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -16,8 +15,8 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 
-#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/StringTokeniser.h"
+#include "vislib/sys/ASCIIFileBuffer.h"
 #include <limits>
 #include <list>
 #include <map>

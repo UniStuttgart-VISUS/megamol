@@ -10,7 +10,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
 #include "vislib/VersionNumber.h"
@@ -79,11 +78,11 @@ void SIFFDataSource::release(void) {
 #ifdef SIFFREAD
 #error WTF? Why is SIFFREAD already defined?
 #endif
-#define SIFFREAD(BUF, SIZE, LINE)                                             \
-    if (file.Read(BUF, SIZE) != SIZE) {                                       \
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "SIFF-IO-Error@%d", LINE); \
-        file.Close();                                                         \
-        return true;                                                          \
+#define SIFFREAD(BUF, SIZE, LINE)                             \
+    if (file.Read(BUF, SIZE) != SIZE) {                       \
+        Log::DefaultLog.WriteError("SIFF-IO-Error@%d", LINE); \
+        file.Close();                                         \
+        return true;                                          \
     }
 
 /*
@@ -96,7 +95,7 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     if (!file.Open(this->filenameSlot.Param<core::param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open file \"%s\"",
+        Log::DefaultLog.WriteError("Unable to open file \"%s\"",
             this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         return true; // reset dirty flag!
     }
@@ -106,7 +105,7 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     SIFFREAD(header, 5, __LINE__);
     if (!vislib::StringA(header, 4).Equals("SIFF")) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "SIFF-Header-Error");
+        Log::DefaultLog.WriteError("SIFF-Header-Error");
         file.Close();
         return true;
     }
@@ -122,7 +121,7 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
         } else if (version == 101) {
             this->verNum = 101;
         } else {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "SIFF-Version-Error");
+            Log::DefaultLog.WriteError("SIFF-Version-Error");
             file.Close();
             return true;
         }
@@ -133,7 +132,7 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
         //  version 1.1 body:  3*floats (xyz) = 12 Bytes pro Sphere
         File::FileSize size = file.GetSize() - 9; // remaining bytes
         if ((size % bpp) != 0) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_WARN, "SIFF-Size not aligned, ignoring last %d bytes", (size % bpp));
+            Log::DefaultLog.WriteWarn("SIFF-Size not aligned, ignoring last %d bytes", (size % bpp));
             size -= (size % bpp);
         }
         this->data.EnforceSize(static_cast<SIZE_T>(size));
@@ -150,7 +149,7 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
         } else if (version == vislib::VersionNumber(1, 1)) {
             this->verNum = 101;
         } else {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "SIFF-Version-Error");
+            Log::DefaultLog.WriteError("SIFF-Version-Error");
             file.Close();
             return true;
         }
@@ -290,13 +289,13 @@ bool SIFFDataSource::filenameChanged(core::param::ParamSlot& slot) {
         // with parsing:
         //  scanf:              Loaded 6265625 spheres in 78893 milliseconds
         //                      Loaded 0 spheres in      115283 milliseconds
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Loaded %u spheres in %u milliseconds", cnt, t2 - t1);
+        Log::DefaultLog.WriteInfo("Loaded %u spheres in %u milliseconds", cnt, t2 - t1);
 
         this->data.EnforceSize(cnt * bpp, true);
 
     } else {
         // unknown siff
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "SIFF-Header-Error: Unknown subformat");
+        Log::DefaultLog.WriteError("SIFF-Header-Error: Unknown subformat");
     }
 
     // calc bounding box

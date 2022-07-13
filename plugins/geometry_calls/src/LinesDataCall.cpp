@@ -6,7 +6,6 @@
  */
 
 #include "geometry_calls/LinesDataCall.h"
-#include "stdafx.h"
 
 using namespace megamol;
 using namespace megamol::core;

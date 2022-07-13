@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/param/TernaryParam.h"
-#include "stdafx.h"
 
 using namespace megamol::core::param;
 

@@ -6,7 +6,6 @@
  */
 
 #include "io/MMSPDFrameData.h"
-#include "stdafx.h"
 
 using namespace megamol::moldyn::io;
 

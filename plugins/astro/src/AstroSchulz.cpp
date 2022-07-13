@@ -6,7 +6,6 @@
  */
 
 #include "AstroSchulz.h"
-#include "stdafx.h"
 
 #include <array>
 

@@ -7,7 +7,6 @@
 
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/FileUtils.h"
-#include "stdafx.h"
 
 
 using namespace megamol::core::param;
@@ -66,11 +65,11 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
                     "[FilePathParam] Omitting value '%s'. Expected directory but file is given.",
                     new_value.generic_u8string().c_str());
             }
-            if (error_flags & Flag_NoExistenceCheck) {
+            if (error_flags & Internal_NoExistenceCheck) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "[FilePathParam] Omitting value '%s'. File does not exist.", new_value.generic_u8string().c_str());
             }
-            if (error_flags & Flag_RestrictExtension) {
+            if (error_flags & Internal_RestrictExtension) {
                 std::string log_exts;
                 for (auto& ext : this->extensions) {
                     log_exts += "'." + ext + "' ";
@@ -109,16 +108,18 @@ FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& 
 
     try {
         FilePathParam::Flags_t retval = 0;
-        if ((f & FilePathParam::Flag_File) && std::filesystem::is_directory(p)) {
-            retval |= FilePathParam::Flag_File;
+        if ((f & FilePathParam::Flag_Any) != FilePathParam::Flag_Any) {
+            if ((f & FilePathParam::Flag_File) && std::filesystem::is_directory(p)) {
+                retval |= FilePathParam::Flag_File;
+            }
+            if ((f & FilePathParam::Flag_Directory) && std::filesystem::is_regular_file(p)) {
+                retval |= FilePathParam::Flag_Directory;
+            }
         }
-        if ((f & FilePathParam::Flag_Directory) && std::filesystem::is_regular_file(p)) {
-            retval |= FilePathParam::Flag_Directory;
+        if (!(f & Internal_NoExistenceCheck) && !std::filesystem::exists(p)) {
+            retval |= FilePathParam::Internal_NoExistenceCheck;
         }
-        if (!(f & Flag_NoExistenceCheck) && !std::filesystem::exists(p)) {
-            retval |= FilePathParam::Flag_NoExistenceCheck;
-        }
-        if (f & FilePathParam::Flag_RestrictExtension) {
+        if (f & FilePathParam::Internal_RestrictExtension) {
             bool valid_ext = false;
             for (auto& ext : e) {
                 if (p.extension().generic_u8string() == std::string("." + ext)) {
@@ -126,7 +127,7 @@ FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& 
                 }
             }
             if (!valid_ext) {
-                retval |= FilePathParam::Flag_RestrictExtension;
+                retval |= FilePathParam::Internal_RestrictExtension;
             }
         }
         return retval;

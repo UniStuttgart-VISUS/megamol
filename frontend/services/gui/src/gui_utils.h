@@ -383,16 +383,16 @@ public:
     }
 
     /**
-     * Returns true if both strings equal each other case insensitively up to position of shorter string.
+     * Returns true if check string is contained in reference string case insensitively.
      *
-     * @param source   One string.
-     * @param search   Second string.
+     * @param ref_str   Reference string.
+     * @param chk_str   String to check if contained in reference string.
      */
-    static bool CaseInsensitiveStringCompare(std::string const& str1, std::string const& str2) {
+    static bool CaseInsensitiveStringContain(std::string const& ref_str, std::string const& chk_str) {
 
-        auto short_str = (str1.size() < str2.size()) ? (str1) : (str2);
-        auto longer_str = (str1.size() >= str2.size()) ? (str1) : (str2);
-        return std::equal(short_str.begin(), short_str.end(), longer_str.begin(),
+        if (ref_str.size() < chk_str.size())
+            return false;
+        return std::equal(chk_str.begin(), chk_str.end(), ref_str.begin(),
             [](char const& c1, char const& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); });
     }
 

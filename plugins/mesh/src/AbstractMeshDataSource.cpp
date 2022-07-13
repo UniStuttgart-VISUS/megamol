@@ -1,7 +1,4 @@
-#include "stdafx.h"
-
 #include "mesh/AbstractMeshDataSource.h"
-
 
 megamol::mesh::AbstractMeshDataSource::AbstractMeshDataSource()
         : core::Module()

@@ -4,13 +4,11 @@
  * Copyright (C) 2006 - 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
-#include "stdafx.h"
 
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/utility/xml/ConfigurationParser.h"
 #include "mmcore/utility/xml/XmlReader.h"
 
-#include "mmcore/utility/log/Console.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/NoSuchElementException.h"
 #include "vislib/String.h"
@@ -332,13 +330,13 @@ void megamol::core::utility::Configuration::LoadConfig(void) {
                     return;
             } else {
                 // log error
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Configuration specified by MEGAMOLCONFIG seams to be no "
                     "File or Directory.");
             }
         } else {
             // log error
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Configuration specified by MEGAMOLCONFIG does not exist.");
         }
     }
@@ -401,8 +399,7 @@ void megamol::core::utility::Configuration::LoadConfig(void) {
 
     // no configuration file was found
     // log warning
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-        megamol::core::utility::log::Log::LEVEL_WARN, "No configuration file was found. Using default values.");
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn("No configuration file was found. Using default values.");
     this->setDefaultValues();
 }
 
@@ -426,13 +423,12 @@ void megamol::core::utility::Configuration::LoadConfig(const vislib::StringW& se
                     return;
             } else {
                 // log error
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Configuration %s seems to be no File or Directory.", W2A(sName));
             }
         } else {
             // log error
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Configuration %s does not exist.", W2A(sName));
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Configuration %s does not exist.", W2A(sName));
         }
     }
 
@@ -483,8 +479,8 @@ void megamol::core::utility::Configuration::loadConfigFromFile(const vislib::Str
     while (it.HasNext()) {
         vislib::StringW& i = it.Next();
         if (file.Equals(i, false)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Cyclic configuration redirection detected. Aborting.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Cyclic configuration redirection detected. Aborting.");
             this->criticalParserError = true;
             return;
         }
@@ -509,41 +505,38 @@ void megamol::core::utility::Configuration::loadConfigFromFile(const vislib::Str
 
         if (vislib::sys::Path::IsRelative(this->appDir)) {
             this->appDir = vislib::sys::Path::Resolve(this->appDir);
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50,
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Directory \"application\" resolved to \"%s\"", W2A(this->appDir));
         } else {
             this->appDir = vislib::sys::Path::Canonicalise(this->appDir);
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 150,
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Directory \"application\" is \"%s\"", W2A(this->appDir));
         }
 
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "Configuration sucessfully loaded from \"%s\"", W2A(this->cfgFileName));
 
     } else {
         // XML-based config file
         // TODO: deprecate
         try {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO + 10, "Parsing configuration file \"%s\"", W2A(filename));
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Parsing configuration file \"%s\"", W2A(filename));
 
             megamol::core::utility::xml::XmlReader reader;
             reader.OpenFile(filename);
             megamol::core::utility::xml::ConfigurationParser parser(*this);
 
             if (!parser.Parse(reader)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Unable to parse config file \"%s\"\n", W2A(filename));
                 this->criticalParserError = true;
             }
 
             if (parser.MessagesPresent()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                    megamol::core::utility::log::Log::LEVEL_WARN, "Parser Messages:");
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Parser Messages:");
                 vislib::SingleLinkedList<vislib::StringA>::Iterator msgs = parser.Messages();
                 while (msgs.HasNext()) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                        megamol::core::utility::log::Log::LEVEL_WARN, "    %s", msgs.Next().PeekBuffer());
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn("    %s", msgs.Next().PeekBuffer());
                 }
             }
 
@@ -556,39 +549,37 @@ void megamol::core::utility::Configuration::loadConfigFromFile(const vislib::Str
 
             if (vislib::sys::Path::IsRelative(this->appDir)) {
                 this->appDir = vislib::sys::Path::Resolve(this->appDir);
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50,
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "Directory \"application\" resolved to \"%s\"", W2A(this->appDir));
             } else {
                 this->appDir = vislib::sys::Path::Canonicalise(this->appDir);
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                    megamol::core::utility::log::Log::LEVEL_INFO + 150, "Directory \"application\" is \"%s\"",
-                    W2A(this->appDir));
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "Directory \"application\" is \"%s\"", W2A(this->appDir));
             }
 
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Configuration sucessfully loaded from \"%s\"", W2A(this->cfgFileName));
 
         } catch (megamol::core::utility::xml::ConfigurationParser ::RedirectedConfigurationException rde) {
             // log info
             redirect =
                 vislib::sys::Path::Resolve(rde.GetRedirectedConfiguration(), vislib::sys::Path::GetDirectoryName(file));
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO + 10, "Configuration redirected to \"%s\"", W2A(redirect));
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Configuration redirected to \"%s\"", W2A(redirect));
 
         } catch (std::bad_alloc ba) {
             // log error
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Memory allocation error while parsing xml configuration file");
             this->criticalParserError = true;
         } catch (vislib::Exception e) {
             // log error
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Exception while parsing xml configuration file: %s", e.GetMsgA());
             this->criticalParserError = true;
         } catch (...) {
             // log error
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Generic Error while parsing xml configuration file");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Generic Error while parsing xml configuration file");
             this->criticalParserError = true;
         }
 
@@ -602,22 +593,20 @@ void megamol::core::utility::Configuration::loadConfigFromFile(const vislib::Str
                 } else if (vislib::sys::File::IsDirectory(redirect)) {
                     if (!this->searchConfigFile(redirect)) {
                         // log error
-                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                            megamol::core::utility::log::Log::LEVEL_ERROR,
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "No Configuration file found at redirected location.");
                         this->criticalParserError = true;
                     }
                 } else {
                     // log error
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "Redirected Configuration seams to be no File or "
                         "Directory.");
                     this->criticalParserError = true;
                 }
             } else {
                 // log error
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                    megamol::core::utility::log::Log::LEVEL_ERROR, "Redirected Configuration not found.");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Redirected Configuration not found.");
                 this->criticalParserError = true;
             }
         }
@@ -727,7 +716,7 @@ const void* megamol::core::utility::Configuration::GetValue(
  * megamol::core::utility::Configuration::setConfigValue
  */
 void megamol::core::utility::Configuration::setConfigValue(const wchar_t* name, const wchar_t* value) {
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 50,
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         "Configuration value \"%s\" set to \"%s\".\n", W2A(name), W2A(value));
     this->configValues[name] = value;
 }

@@ -11,15 +11,15 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/utility/net/AbstractSimpleMessage.h"
-#include "mmcore/utility/net/SimpleMessageDispatchListener.h"
-#include "mmcore/utility/net/SimpleMessageDispatcher.h"
-#include "mmcore/utility/sys/RunnableThread.h"
 #include "vislib/Listenable.h"
 #include "vislib/SmartRef.h"
 #include "vislib/String.h"
 #include "vislib/macro_utils.h"
 #include "vislib/net/AbstractCommChannel.h"
+#include "vislib/net/AbstractSimpleMessage.h"
+#include "vislib/net/SimpleMessageDispatchListener.h"
+#include "vislib/net/SimpleMessageDispatcher.h"
+#include "vislib/sys/RunnableThread.h"
 
 
 namespace megamol {

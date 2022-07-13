@@ -1,5 +1,4 @@
 #include "TableToParticles.h"
-#include "stdafx.h"
 
 #include "geometry_calls/EllipsoidalDataCall.h"
 #include "mmcore/param/EnumParam.h"
@@ -685,11 +684,11 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
         }
         return true;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(e.GetMsg());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
-                                                                   _T("in callback getMultiParticleData."));
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Unexpected exception ")
+                                                                _T("in callback getMultiParticleData."));
         return false;
     }
 }
@@ -739,11 +738,11 @@ bool TableToParticles::getMultiparticleExtent(core::Call& call) {
         }
         return true;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(e.GetMsg());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
-                                                                   _T("in callback getMultiparticleExtent."));
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Unexpected exception ")
+                                                                _T("in callback getMultiparticleExtent."));
         return false;
     }
 }

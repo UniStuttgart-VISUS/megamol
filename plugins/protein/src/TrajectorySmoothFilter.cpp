@@ -9,7 +9,6 @@
 //
 
 
-#include "stdafx.h"
 #include <omp.h>
 
 #include "mmcore/CalleeSlot.h"

@@ -290,6 +290,13 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
             return DoubleResult{frame_statistics.last_rendered_frame_time_milliseconds};
         }});
 
+    callbacks.add<DoubleResult>("mmLastRenderedFramesCount",
+        "()\n\tReturns the number of rendered frames up until to the last frame.", {[&]() -> DoubleResult {
+            auto& frame_statistics =
+                m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FrameStatistics>();
+            return DoubleResult{static_cast<double>(frame_statistics.rendered_frames_count)};
+        }});
+
 
     auto maybe_window_manipulation =
         m_requestedResourceReferences[3].getOptionalResource<megamol::frontend_resources::WindowManipulation>();

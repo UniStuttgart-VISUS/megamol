@@ -7,7 +7,6 @@
  */
 
 #include "SphereRenderer.h"
-#include "stdafx.h"
 
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore_gl/flags/FlagCallsGL.h"
@@ -260,23 +259,23 @@ bool SphereRenderer::create(void) {
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (ogl_ctx.isVersionGEQ(1, 4) == 0) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[SphereRenderer] No render mode available. OpenGL version 1.4 or greater is required.");
         return false;
     }
     if (!ogl_ctx.isExtAvailable("GL_ARB_explicit_attrib_location")) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SphereRenderer] No render mode is available. Extension "
             "GL_ARB_explicit_attrib_location is not available.");
         return false;
     }
     if (!ogl_ctx.isExtAvailable("GL_ARB_conservative_depth")) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SphereRenderer] No render mode is available. Extension GL_ARB_conservative_depth is not available.");
         return false;
     }
     if (!ogl_ctx.areExtAvailable(GLSLShader::RequiredExtensions())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[SphereRenderer] No render mode is available. Shader extensions are not available.");
         return false;
     }
@@ -320,8 +319,8 @@ bool SphereRenderer::create(void) {
     this->MakeSlotAvailable(&this->render_mode_param_);
 
     // Check initial render mode
-    if (!this->isRenderModeAvailable(this->render_mode_)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+    if (!this->isRenderModeAvailable(this->renderMode)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SphereRenderer] Render mode '%s' is not available - falling back to render mode '%s'.",
             (this->getRenderModeString(this->render_mode_)).c_str(),
             (this->getRenderModeString(RenderMode::SIMPLE)).c_str());
@@ -467,16 +466,16 @@ bool SphereRenderer::createResources() {
 
     this->state_invalid_ = true;
 
-    if (!this->isRenderModeAvailable(this->render_mode_)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+    if (!this->isRenderModeAvailable(this->renderMode)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SphereRenderer] Render mode: '%s' is not available - falling back to render mode '%s'.",
             (this->getRenderModeString(this->render_mode_)).c_str(),
             (this->getRenderModeString(RenderMode::SIMPLE)).c_str());
         this->render_mode_ = RenderMode::SIMPLE; // Fallback render mode ...
         return false;
     } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-            "[SphereRenderer] Using render mode '%s'.", (this->getRenderModeString(this->render_mode_)).c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "[SphereRenderer] Using render mode '%s'.", (this->getRenderModeString(this->renderMode)).c_str());
     }
 
     // Fallback transfer function texture
@@ -494,7 +493,7 @@ bool SphereRenderer::createResources() {
     // create shader programs
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
     shader_options_flags_ = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shader_options);
-    
+
     std::string flags_shader_snippet;
     if (this->flags_available_) {
         shader_options_flags_->addDefinition("flags_available");
@@ -566,7 +565,7 @@ bool SphereRenderer::createResources() {
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 0, "inPosition");
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 1, "inColor");
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 2, "inColIdx");
-            
+
             glGenVertexArrays(1, &this->vert_array_);
             glBindVertexArray(this->vert_array_);
             glGenBuffers(1, &this->the_single_buffer_);
@@ -578,7 +577,7 @@ bool SphereRenderer::createResources() {
             glBindVertexArray(0);
         }
         break;
-        
+
         case (RenderMode::AMBIENT_OCCLUSION):
         {
             this->enable_lighting_slot_.Param<param::BoolParam>()->SetGUIVisible(true);
@@ -670,8 +669,8 @@ bool SphereRenderer::createResources() {
             return false;
         }
     } catch (std::exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, ("SphereRenderer: " + std::string(e.what())).c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", std::string(e.what())).c_str(), __FILE__, __FUNCTION__, __LINE__);
     }
 
     return true;
@@ -838,8 +837,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
     }
 
     if (!silent && !warnstr.empty()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_WARN, warnstr.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(warnstr.c_str());
     }
 
     return (warnstr.empty());
@@ -886,8 +884,7 @@ bool SphereRenderer::isFlagStorageAvailable() {
     }
 
     if (!warnstr.empty()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_WARN, warnstr.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(warnstr.c_str());
         return false;
     }
 
@@ -1488,7 +1485,7 @@ bool SphereRenderer::renderSplat(core_gl::view::CallRender3DGL& call, MultiParti
                 curr_col += verts_this_time * col_stride;
             }
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[SphereRenderer] Splat mode does not support not interleaved data so far ...");
         }
 
@@ -1591,7 +1588,7 @@ bool SphereRenderer::renderBufferArray(core_gl::view::CallRender3DGL& call, Mult
                 curr_col += verts_this_time * col_stride;
             }
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[SphereRenderer] BufferArray mode does not support not interleaved data so far ...");
         }
 
@@ -2194,8 +2191,8 @@ std::shared_ptr<glowl::GLSLProgram> SphereRenderer::makeShader(
         sh = core::utility::make_glowl_shader(prgm_name, shader_options, vert_path, frag_path);
     }
     catch (std::exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, ("SphereRenderer: " + std::string(e.what())).c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", std::string(e.what())).c_str(), __FILE__, __FUNCTION__, __LINE__);
     }
 
 
@@ -2271,7 +2268,7 @@ void SphereRenderer::getGLSLVersion(int& out_major, int& out_minor) const {
         out_major = std::atoi(glslVerStr.substr(0, 1).c_str());
         out_minor = std::atoi(glslVerStr.substr(found + 1, 1).c_str());
     } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN,
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SphereRenderer] No valid GL_SHADING_LANGUAGE_VERSION string found: %s", glslVerStr.c_str());
     }
 }
@@ -2351,7 +2348,7 @@ bool SphereRenderer::rebuildGBuffer() {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->g_buffer_.depth, 0);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Framebuffer not complete. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 

@@ -14,7 +14,6 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/view/CallRender3DGL.h"
-#include "stdafx.h"
 #include "trisoup/trisoupVolumetricDataCall.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
@@ -22,10 +21,10 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib/sys/MemmappedFile.h"
 
 #include <glm/ext.hpp>
 

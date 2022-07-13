@@ -1,5 +1,4 @@
 #include "CenterLineGenerator.h"
-#include "stdafx.h"
 #include "vislib/Array.h"
 #include "vislib/sys/PerformanceCounter.h"
 #include <float.h>

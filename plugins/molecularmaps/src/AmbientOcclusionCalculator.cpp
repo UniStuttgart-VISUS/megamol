@@ -6,7 +6,6 @@
 
 #include "AmbientOcclusionCalculator.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "vislib/math/AbstractPolynomImpl.h"
 #include "vislib/math/ShallowVector.h"
 
@@ -412,23 +411,22 @@ bool AmbientOcclusionCalculator::loadShaders(core::CoreInstance* instance) {
 
     try {
         if (!this->aoComputeShader.Compile(compute.Code(), compute.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile aocompute shader: Unknown error\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to compile aocompute shader: Unknown error\n");
             return false;
         }
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile aocompute shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile aocompute shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile aocompute shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to compile aocompute shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile aocompute shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to compile aocompute shader: Unknown exception\n");
         return false;
     }
     this->shaderChanged = true;

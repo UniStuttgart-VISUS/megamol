@@ -9,7 +9,6 @@
 
 #include "LIC.h"
 #include "UniGrid3D.h"
-#include "stdafx.h"
 
 #include "helper_math.h"
 
@@ -213,7 +212,7 @@ bool protein_cuda::LIC::CalcLicX(UniGrid3D<float3>& grid, UniGrid3D<float>& rand
     }
     printf("min %f, max %f\n", min, max);*/ // DEBUG
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Time for computing LIC texture (x-Plane) : %f",
+    Log::DefaultLog.WriteInfo("Time for computing LIC texture (x-Plane) : %f",
         (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
     return true;
@@ -415,7 +414,7 @@ bool protein_cuda::LIC::CalcLicY(UniGrid3D<float3>& grid, UniGrid3D<float>& rand
     }
     printf("min %f, max %f\n", min, max);*/ // DEBUG
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Time for computing LIC texture (y-Plane) : %f",
+    Log::DefaultLog.WriteInfo("Time for computing LIC texture (y-Plane) : %f",
         (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
     return true;
@@ -617,7 +616,7 @@ bool protein_cuda::LIC::CalcLicZ(UniGrid3D<float3>& grid, UniGrid3D<float>& rand
     }
     printf("min %f, max %f\n", min, max);*/ // DEBUG
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Time for computing LIC texture (z-Plane) : %f",
+    Log::DefaultLog.WriteInfo("Time for computing LIC texture (z-Plane) : %f",
         (double(clock() - t) / double(CLOCKS_PER_SEC))); // DEBUG
 
     return true;

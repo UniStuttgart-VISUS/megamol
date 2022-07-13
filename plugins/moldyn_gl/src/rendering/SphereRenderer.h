@@ -136,11 +136,11 @@ public:
         HDC dc = ::wglGetCurrentDC();
         HGLRC rc = ::wglGetCurrentContext();
         if (dc == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[SphereRenderer] There is no OpenGL rendering context available.");
         }
         if (rc == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[SphereRenderer] There is no current OpenGL rendering context available from the calling thread.");
         }
         ASSERT(dc != nullptr);
@@ -160,14 +160,14 @@ public:
             major = std::atoi(glsl_ver_str.substr(0, 1).c_str());
             minor = std::atoi(glsl_ver_str.substr(found + 1, 1).c_str());
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "[SphereRenderer] No valid GL_SHADING_LANGUAGE_VERSION string: %s", glsl_ver_str.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[SphereRenderer] No valid GL_SHADING_LANGUAGE_VERSION string: %s", glslVerStr.c_str());
         }
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-            "[SphereRenderer] Found GLSL version %d.%d (%s).", major, minor, glsl_ver_str.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "[SphereRenderer] Found GLSL version %d.%d (%s).", major, minor, glslVerStr.c_str());
         if ((major < (int)(SPHERE_MIN_GLSL_MAJOR)) ||
             (major == (int)(SPHERE_MIN_GLSL_MAJOR) && minor < (int)(SPHERE_MIN_GLSL_MINOR))) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[SphereRenderer] No render mode available. OpenGL "
                 "Shading Language version 1.3 or greater is required.");
             retval = false;
@@ -274,7 +274,7 @@ private:
 
     // --------------------------------------------------------------------
     std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> shader_options_flags_;
-    
+
     bool init_resources_;
     RenderMode render_mode_;
     GLuint grey_tf_;
@@ -507,7 +507,7 @@ private:
 
     /**
      * Enable flag storage.
-     * 
+     *
      * @param prgm             The current program.
      * @param parts            The current particles of a list.
      *

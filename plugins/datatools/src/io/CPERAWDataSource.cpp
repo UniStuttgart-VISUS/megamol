@@ -6,7 +6,6 @@
  */
 
 #include "CPERAWDataSource.h"
-#include "stdafx.h"
 
 #include <chrono>
 #include <fstream>
@@ -68,13 +67,13 @@ bool CPERAWDataSource::assertData() {
     const char* fname = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str();
 
     FILE* f;
-#ifdef WIN32
+#ifdef _WIN32
     auto const err = fopen_s(&f, fname, "rb");
 #else
     auto const err = fopen(fname, "rb");
 #endif
     if (err == 0) {
-#ifdef WIN32
+#ifdef _WIN32
         struct _stat64 fs {};
         _fstat64(_fileno(f), &fs);
         len = fs.st_size;

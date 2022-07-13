@@ -11,7 +11,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "stdafx.h"
 #include "trisoup/volumetrics/MarchingCubeTables.h"
 #include "vislib/RawStorageWriter.h"
 #include "vislib/math/Plane.h"

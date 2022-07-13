@@ -6,7 +6,6 @@
  */
 
 #include "mmcore/BoundingBoxes_2.h"
-#include "stdafx.h"
 #include "vislib/math/mathfunctions.h"
 
 using namespace megamol::core;

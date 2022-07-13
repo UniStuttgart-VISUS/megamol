@@ -7,7 +7,6 @@
 
 #include "mmcore_gl/utility/BTFParser.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "stdafx.h"
 #include "vislib/CharTraits.h"
 #include "vislib/assert.h"
 //#include "vislib/memutils.h"
@@ -107,7 +106,7 @@ void utility::BTFParser::Comment(unsigned int level, const XML_Char* text, XmlRe
  */
 bool utility::BTFParser::CheckBaseTag(const XmlReader& reader) {
     if (!reader.BaseTag().Equals(MMXML_STRING("btf"))) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, "BTF file does not specify <btf/> as base tag");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("BTF file does not specify <btf/> as base tag");
         return false;
     }
 
@@ -148,17 +147,17 @@ bool utility::BTFParser::CheckBaseTag(const XmlReader& reader) {
     }
 
     if (!typeValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, "base tag attribute \"type\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("base tag attribute \"type\" not present or invalid.");
         return false;
     }
     if (!versionValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            1, "base tag attribute \"version\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "base tag attribute \"version\" not present or invalid.");
         return false;
     }
     if (!nmspcValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            1, "base tag attribute \"namespace\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "base tag attribute \"namespace\" not present or invalid.");
         return false;
     }
 
@@ -210,7 +209,7 @@ bool utility::BTFParser::StartTag(unsigned int num, unsigned int level, const XM
             }
         }
         if (filename != NULL) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 150,
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "Including BTF \"%s\" ...", vislib::StringA(filename).PeekBuffer());
             if (!this->factory.LoadBTF(vislib::StringA(filename))) {
                 vislib::StringA msg;

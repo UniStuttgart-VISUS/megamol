@@ -9,7 +9,11 @@
 // you should also delete the FAQ comments in these template files after you read and understood them
 #include "FrameStatistics_Service.hpp"
 
+#include <chrono>
 #include <numeric>
+#include <sstream>
+
+#include "LuaCallbacksCollection.h"
 
 
 // local logging wrapper for your convenience until central MegaMol logger established
@@ -38,9 +42,8 @@ bool FrameStatistics_Service::init(void* configPtr) {
 
 bool FrameStatistics_Service::init(const Config& config) {
 
-    this->m_requestedResourcesNames = {
-        //"IOpenGL_Context", // for GL-specific measures?
-    };
+    this->m_requestedResourcesNames = {//"IOpenGL_Context", // for GL-specific measures?
+        "RegisterLuaCallbacks"};
 
     m_program_start_time = std::chrono::high_resolution_clock::now();
 
@@ -62,6 +65,7 @@ const std::vector<std::string> FrameStatistics_Service::getRequestedResourceName
 
 void FrameStatistics_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     this->m_requestedResourceReferences = resources;
+    fill_lua_callbacks();
 }
 
 void FrameStatistics_Service::updateProvidedResources() {
@@ -104,6 +108,31 @@ void FrameStatistics_Service::finish_frame() {
     m_statistics.last_averaged_mspf = std::accumulate(m_frame_times_micro.begin(), m_frame_times_micro.end(), 0) /
                                       m_frame_times_micro.size() / static_cast<double>(1000);
     m_statistics.last_averaged_fps = 1000.0 / m_statistics.last_averaged_mspf;
+}
+
+void FrameStatistics_Service::fill_lua_callbacks() {
+    frontend_resources::LuaCallbacksCollection callbacks;
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult>("mmGetTimeStamp",
+        "(void)\n\tReturns a timestamp in ISO format.",
+        {[&]() -> frontend_resources::LuaCallbacksCollection::StringResult {
+            auto const tp = std::chrono::system_clock::now();
+
+            auto const t = std::chrono::system_clock::to_time_t(tp);
+            auto const lt = std::localtime(&t);
+            auto const fs = std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch()).count() % 1000;
+            std::stringstream str;
+            str << std::to_string(1900 + lt->tm_year) << "-" << std::to_string(1 + lt->tm_mon) << "-"
+                << std::to_string(lt->tm_mday) << "T" << std::to_string(lt->tm_hour) << ":"
+                << std::to_string(lt->tm_min) << ":" << std::to_string(lt->tm_sec) << "." << std::to_string(fs);
+            return frontend_resources::LuaCallbacksCollection::StringResult(str.str());
+        }});
+
+    auto& register_callbacks =
+        m_requestedResourceReferences[0]
+            .getResource<std::function<void(frontend_resources::LuaCallbacksCollection const&)>>();
+
+    register_callbacks(callbacks);
 }
 
 } // namespace frontend

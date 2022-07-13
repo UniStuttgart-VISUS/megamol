@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#include "stdafx.h"
 #if (_MSC_VER > 1000)
 #pragma warning(disable : 4996)
 #endif /* (_MSC_VER > 1000) */
@@ -29,11 +28,11 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/LuaAPI.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Environment.h"
 #include "vislib/sys/Path.h"
+#include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/sysfunctions.h"
 
 #include "lua.hpp"
