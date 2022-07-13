@@ -136,20 +136,23 @@ void RenderMDIMesh::release() {
 bool RenderMDIMesh::GetExtents(core_gl::view::CallRender3DGL& call) {
 
     megamol::core_gl::view::CallRender3DGL* cr = &call; // dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
-    if (cr == NULL)
+    if (cr == nullptr) {
         return false;
+    }
 
     CallGPURenderTaskData* rtc = this->m_render_task_callerSlot.CallAs<CallGPURenderTaskData>();
 
-    if (rtc == NULL)
+    if (rtc == nullptr) {
         return false;
+    }
 
     auto meta_data = rtc->getMetaData();
     meta_data.m_frame_ID = static_cast<int>(cr->Time());
     rtc->setMetaData(meta_data);
 
-    if (!(*rtc)(1))
+    if (!(*rtc)(1)) {
         return false;
+    }
 
     meta_data = rtc->getMetaData();
 
@@ -162,8 +165,9 @@ bool RenderMDIMesh::GetExtents(core_gl::view::CallRender3DGL& call) {
 bool RenderMDIMesh::Render(core_gl::view::CallRender3DGL& call) {
 
     megamol::core_gl::view::CallRender3DGL* cr = &call; //dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
-    if (cr == NULL)
+    if (cr == nullptr) {
         return false;
+    }
 
     // obtain camera information
     core::view::Camera cam = call.GetCamera();
@@ -172,13 +176,13 @@ bool RenderMDIMesh::Render(core_gl::view::CallRender3DGL& call) {
 
     CallGPURenderTaskData* task_call = this->m_render_task_callerSlot.CallAs<CallGPURenderTaskData>();
 
-    if (task_call == NULL)
+    if (task_call == nullptr) {
         return false;
+    }
 
-    if ((!(*task_call)(0)))
+    if ((!(*task_call)(0))) {
         return false;
-
-    //megamol::core::utility::log::Log::DefaultLog.WriteError("Hey listen!");
+    }
 
     auto const& gpu_render_tasks = task_call->getData();
 
@@ -186,7 +190,14 @@ bool RenderMDIMesh::Render(core_gl::view::CallRender3DGL& call) {
         auto const& per_frame_buffers = rt_collection->getPerFrameBuffers();
 
         for (auto const& buffer : per_frame_buffers) {
-            std::get<0>(buffer)->bind(std::get<1>(buffer));
+            uint32_t binding_point = std::get<1>(buffer);
+            if (binding_point != 0) {
+                std::get<0>(buffer)->bind(binding_point);
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "Binding point 0 reserved for render task data buffer. \"%s\". [%s, %s, line %d]\n",
+                    this->FullName(), __FILE__, __FUNCTION__, __LINE__);
+            }
         }
 
         // loop through "registered" render batches
@@ -212,28 +223,6 @@ bool RenderMDIMesh::Render(core_gl::view::CallRender3DGL& call) {
 
             glMultiDrawElementsIndirect(render_task->mesh->getPrimitiveType(), render_task->mesh->getIndexType(),
                 (GLvoid*)0, render_task->draw_cnt, 0);
-
-            //CallmeshRenderBatches::RenderBatchesData::DrawCommandData::glowl::DrawElementsCommand command_buffer;
-            //command_buffer.cnt = 3;
-            //command_buffer.instance_cnt = 1;
-            //command_buffer.first_idx = 0;
-            //command_buffer.base_vertex = 0;
-            //command_buffer.base_instance = 0;
-
-            //glowl::DrawElementsCommand command_buffer;
-            //command_buffer.cnt = 3;
-            //command_buffer.instance_cnt = 1;
-            //command_buffer.first_idx = 0;
-            //command_buffer.base_vertex = 0;
-            //command_buffer.base_instance = 0;
-            //
-            //glDrawElementsIndirect(render_batch.mesh->getPrimitiveType(),
-            //  render_batch.mesh->getIndicesType(),
-            //  &command_buffer);
-
-            //GLenum err = glGetError();
-            //std::cout << "Error: " << err << std::endl;
-
 
             // Reset previously set GLStates
             render_task->reset_states();
