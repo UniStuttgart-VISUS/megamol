@@ -10,10 +10,10 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/light/DistantLight.h"
-#include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/light/DistantLight.h"
+#include "mmstd/light/PointLight.h"
 
 using namespace megamol;
 using namespace megamol::protein_gl;
@@ -123,7 +123,7 @@ void DeferredRenderingProvider::refreshLights(core::view::light::CallLight* ligh
 }
 
 void DeferredRenderingProvider::draw(
-    core_gl::view::CallRender3DGL& call, core::view::light::CallLight* lightCall, bool noShading) {
+    mmstd_gl::CallRender3DGL& call, core::view::light::CallLight* lightCall, bool noShading) {
 
     bool no_lighting = !this->enableShadingParam.Param<core::param::BoolParam>()->Value();
     if (noShading) {

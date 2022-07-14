@@ -1,3 +1,6 @@
+#ifndef MMSTD_GL_QUAD_VERTICES_INC_GLSL
+#define MMSTD_GL_QUAD_VERTICES_INC_GLSL
+
 /**
  * Returns position of a vertex based on gl_VertexID assuming the following draw call:
  * glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -15,3 +18,5 @@
 vec2 quadVertexPosition() {
     return vec2(float(gl_VertexID % 2), float((gl_VertexID % 4) / 2));
 }
+
+#endif // MMSTD_GL_QUAD_VERTICES_INC_GLSL

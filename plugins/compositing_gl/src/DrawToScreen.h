@@ -12,8 +12,8 @@
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 #include "glowl/BufferObject.hpp"
 #include "glowl/Texture2D.hpp"
@@ -24,7 +24,7 @@ namespace compositing {
 /**
  * TODO
  */
-class DrawToScreen : public megamol::core_gl::view::Renderer3DModuleGL {
+class DrawToScreen : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -82,7 +82,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core_gl::view::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -91,14 +91,14 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core_gl::view::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Method that gets called before the rendering is started for all changed modules
      *
      * @param call The rendering call that contains the camera
      */
-    void PreRender(core_gl::view::CallRender3DGL& call);
+    void PreRender(mmstd_gl::CallRender3DGL& call);
 
 private:
     typedef vislib_gl::graphics::gl::GLSLShader GLSLShader;

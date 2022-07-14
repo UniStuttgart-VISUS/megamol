@@ -16,7 +16,7 @@
 #include "VolumeMeshRenderer.cuh"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/DiagramCall.h"
 #include "protein_calls/MolecularDataCall.h"
@@ -36,7 +36,7 @@ namespace protein_cuda {
 /**
  * Volume Mesh Renderer class
  */
-class VolumeMeshRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+class VolumeMeshRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     enum PolygonMode { POINT, LINE, FILL };
 
@@ -101,7 +101,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -109,7 +109,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Calculate the density map and surface.

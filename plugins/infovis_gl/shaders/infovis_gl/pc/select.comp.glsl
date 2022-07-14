@@ -4,7 +4,7 @@ layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
 #include "common/common.inc.glsl"
 #include "common/invocation_index.inc.glsl"
-#include "core/bitflags.inc.glsl"
+#include "mmstd_gl/flags/bitflags.inc.glsl"
 
 #ifdef STROKE
 uniform vec2 strokeStart = vec2(0.0f, 0.0f);

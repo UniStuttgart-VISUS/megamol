@@ -10,8 +10,8 @@
 #define MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED
 #pragma once
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include "vislib/assert.h"

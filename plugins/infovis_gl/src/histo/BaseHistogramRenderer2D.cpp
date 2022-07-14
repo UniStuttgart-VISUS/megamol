@@ -38,7 +38,7 @@ BaseHistogramRenderer2D::BaseHistogramRenderer2D()
         , selectionMode_(SelectionMode::PICK)
         , selectedComponent_(-1)
         , selectedBin_(-1) {
-    transferFunctionCallerSlot_.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    transferFunctionCallerSlot_.SetCompatibleCall<mmstd_gl::CallGetTransferFunctionGLDescription>();
     MakeSlotAvailable(&transferFunctionCallerSlot_);
 
     binsParam_ << new core::param::IntParam(static_cast<int>(numBins_), 1);
@@ -99,7 +99,7 @@ void BaseHistogramRenderer2D::release() {
     releaseImpl();
 }
 
-bool BaseHistogramRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool BaseHistogramRenderer2D::GetExtents(mmstd_gl::CallRender2DGL& call) {
     if (!handleCall(call)) {
         return false;
     }
@@ -110,7 +110,7 @@ bool BaseHistogramRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
     return true;
 }
 
-bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
+bool BaseHistogramRenderer2D::Render(mmstd_gl::CallRender2DGL& call) {
     // store cam and view info for input transformation
     camera_ = call.GetCamera();
     viewRes_ = call.GetViewResolution();
@@ -119,7 +119,7 @@ bool BaseHistogramRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
         return false;
     }
 
-    auto tfCall = transferFunctionCallerSlot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    auto tfCall = transferFunctionCallerSlot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     if (tfCall == nullptr) {
         Log::DefaultLog.WriteError("BaseHistogramRenderer2D requires a transfer function!");
         return false;

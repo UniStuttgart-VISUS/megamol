@@ -74,7 +74,7 @@ class ServiceManager;
 /**
  * class of core instances.
  */
-class CoreInstance : public factories::AbstractObjectFactoryInstance {
+class CoreInstance {
 public:
     friend class megamol::core::LuaState;
 
@@ -302,7 +302,7 @@ public:
      *
      * @return The instantiated view module
      */
-    view::AbstractView* instantiateSubView(ViewDescription* vd);
+    view::AbstractViewInterface* instantiateSubView(ViewDescription* vd);
 
     /**
      * Instantiates the next pending job, if there is one.
@@ -592,7 +592,7 @@ public:
      * @param data The serialized graph description (Pointer to an
      *             vislib::net::AbstractSimpleMessage)
      */
-    void GOES_INTO_GRAPH SetupGraphFromNetwork(const void* data);
+    //void GOES_INTO_GRAPH SetupGraphFromNetwork(const void* data);
 
     /**
      * Instantiates a call.

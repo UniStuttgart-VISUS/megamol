@@ -14,7 +14,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 #include "protein_calls/DiagramCall.h"
 #include "protein_calls/IntSelectionCall.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
@@ -24,7 +24,7 @@
 namespace megamol {
 namespace protein_gl {
 
-class DiagramRenderer : public megamol::core_gl::view::Renderer2DModuleGL {
+class DiagramRenderer : public megamol::mmstd_gl::Renderer2DModuleGL {
 public:
     enum DiagramTypes {
         DIAGRAM_TYPE_LINE = 0,
@@ -128,7 +128,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender2DGL& call);
 
     VISLIB_FORCEINLINE bool isCategoricalMappable(const protein_calls::DiagramCall::DiagramMappable* dm) const {
         return (dm->IsCategoricalAbscissa(0));
@@ -152,7 +152,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender2DGL& call);
+    virtual bool Render(mmstd_gl::CallRender2DGL& call);
 
     /**********************************************************************
      * variables

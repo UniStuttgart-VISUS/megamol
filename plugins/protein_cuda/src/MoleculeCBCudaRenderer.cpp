@@ -150,7 +150,7 @@ bool MoleculeCBCudaRenderer::create(void) {
 /*
  * MoleculeCBCudaRenderer::GetExtents
  */
-bool MoleculeCBCudaRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
+bool MoleculeCBCudaRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
         return false;
@@ -167,7 +167,7 @@ bool MoleculeCBCudaRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& 
 /*
  * MoleculeCBCudaRenderer::Render
  */
-bool MoleculeCBCudaRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
+bool MoleculeCBCudaRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // get camera information
     this->cameraInfo = call.GetCamera();
     this->width = call.GetViewResolution().x;
@@ -533,7 +533,7 @@ void MoleculeCBCudaRenderer::deinitialise(void) {}
 /*
  * Initialize CUDA
  */
-bool MoleculeCBCudaRenderer::initCuda(MolecularDataCall* mol, uint gridDim, core_gl::view::CallRender3DGL* cr3d) {
+bool MoleculeCBCudaRenderer::initCuda(MolecularDataCall* mol, uint gridDim, mmstd_gl::CallRender3DGL* cr3d) {
     // set number of atoms
     this->numAtoms = mol->AtomCount();
 

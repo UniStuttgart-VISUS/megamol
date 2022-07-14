@@ -1,8 +1,8 @@
 #version 450
 
 #include "common/common.inc.glsl"
-#include "core/tflookup.inc.glsl"
-#include "core/tfconvenience.inc.glsl"
+#include "mmstd_gl/common/tflookup.inc.glsl"
+#include "mmstd_gl/common/tfconvenience.inc.glsl"
 
 layout(binding = 1) uniform sampler2D fragmentCountTex;
 layout(binding = 2) uniform sampler2D selectionFlagTex;

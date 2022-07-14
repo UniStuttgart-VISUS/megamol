@@ -7,7 +7,7 @@
 
 #include "ArrowRenderer.h"
 
-#include "mmcore/view/light/DistantLight.h"
+#include "mmstd/light/DistantLight.h"
 
 #include <glm/ext.hpp>
 
@@ -23,7 +23,7 @@ using namespace megamol::moldyn_gl::rendering;
 
 
 ArrowRenderer::ArrowRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , getDataSlot("getdata", "Connects to the data source")
         , getTFSlot("gettransferfunction", "Connects to the transfer function module")
         , getFlagsSlot("getflags", "connects to a FlagStorage")
@@ -37,10 +37,10 @@ ArrowRenderer::ArrowRenderer(void)
     this->getDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->getTFSlot.SetCompatibleCall<mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
-    this->getFlagsSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    this->getFlagsSlot.SetCompatibleCall<mmstd_gl::FlagCallRead_GLDescription>();
     this->MakeSlotAvailable(&this->getFlagsSlot);
 
     this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
@@ -111,7 +111,7 @@ bool ArrowRenderer::create(void) {
 }
 
 
-bool ArrowRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool ArrowRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     MultiParticleDataCall* c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if ((c2 != nullptr) && ((*c2)(1))) {
@@ -134,7 +134,7 @@ void ArrowRenderer::release(void) {
 }
 
 
-bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     MultiParticleDataCall* c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if (c2 != nullptr) {
@@ -148,7 +148,7 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
         return false;
     }
 
-    auto* cflags = this->getFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
+    auto* cflags = this->getFlagsSlot.CallAs<mmstd_gl::FlagCallRead_GL>();
 
     float lengthScale = this->lengthScaleSlot.Param<param::FloatParam>()->Value();
     float lengthFilter = this->lengthFilterSlot.Param<param::FloatParam>()->Value();
@@ -321,8 +321,8 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 }
 
                 glEnable(GL_TEXTURE_1D);
-                core_gl::view::CallGetTransferFunctionGL* cgtf =
-                    this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+                mmstd_gl::CallGetTransferFunctionGL* cgtf =
+                    this->getTFSlot.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
                 if ((cgtf != nullptr) && ((*cgtf)())) {
                     glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                     colTabSize = cgtf->TextureSize();
@@ -378,7 +378,7 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
             unsigned int fal = 0;
             if (useFlags) {
-                (*cflags)(core_gl::FlagCallRead_GL::CallGetData);
+                (*cflags)(mmstd_gl::FlagCallRead_GL::CallGetData);
                 cflags->getData()->validateFlagCount(parts.GetCount());
                 auto flags = cflags->getData();
                 fal = glGetAttribLocationARB(this->arrowShader, "flags");

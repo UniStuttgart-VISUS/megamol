@@ -8,7 +8,7 @@
 #ifndef ARCHVIS_CALLS_H_INCLUDED
 #define ARCHVIS_CALLS_H_INCLUDED
 
-#include "mmcore/CallGeneric.h"
+#include "mmstd/generic/CallGeneric.h"
 
 #include "FEMModel.h"
 #include "ScaleModel.h"

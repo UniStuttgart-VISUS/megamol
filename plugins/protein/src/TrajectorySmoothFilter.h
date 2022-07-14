@@ -18,7 +18,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmstd/renderer/Renderer3DModule.h"
 #include "protein_calls/MolecularDataCall.h"
 
 #include "HostArr.h"

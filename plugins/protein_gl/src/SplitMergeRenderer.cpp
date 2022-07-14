@@ -31,7 +31,7 @@ protein_calls::SplitMergeCall* SplitMergeRenderer::FastMapWrapper::diagram;
  * SplitMergeRenderer::SplitMergeRenderer (CTOR)
  */
 SplitMergeRenderer::SplitMergeRenderer(void)
-        : core_gl::view::Renderer2DModuleGL()
+        : mmstd_gl::Renderer2DModuleGL()
         , dataCallerSlot("getData", "Connects the diagram rendering with data storage.")
         , selectionCallerSlot("getSelection", "Connects the diagram rendering with selection storage.")
         , hiddenCallerSlot("getHidden", "Connects the diagram rendering with visibility storage.")
@@ -147,7 +147,7 @@ void SplitMergeRenderer::calcExtents() {
     this->bounds.Set(minX, -1.0f - (sortedSeries.Count() - 1) * seriesSpacing, maxX, 1.0f);
 }
 
-bool SplitMergeRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool SplitMergeRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
     // set the bounding box to 0..1
 
     if (diagram == NULL) {
@@ -228,7 +228,7 @@ void SplitMergeRenderer::closePath(protein_calls::SplitMergeCall::SplitMergeMapp
 /*
  * SplitMergeRenderer::Render
  */
-bool SplitMergeRenderer::Render(core_gl::view::CallRender2DGL& call) {
+bool SplitMergeRenderer::Render(mmstd_gl::CallRender2DGL& call) {
     // get pointer to Diagram2DCall
     diagram = this->dataCallerSlot.CallAs<protein_calls::SplitMergeCall>();
     if (diagram == NULL)

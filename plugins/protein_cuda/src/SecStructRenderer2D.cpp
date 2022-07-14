@@ -274,7 +274,7 @@ void SecStructRenderer2D::release(void) {
 /*
  * SecStructRenderer2D::GetExtents
  */
-bool SecStructRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool SecStructRenderer2D::GetExtents(mmstd_gl::CallRender2DGL& call) {
 
     MolecularDataCall* mdc = this->dataInSlot.CallAs<MolecularDataCall>();
     if (mdc == nullptr)
@@ -477,7 +477,7 @@ bool SecStructRenderer2D::MouseEvent(float x, float y, view::MouseFlags flags) {
 /*
  * SecStructRenderer2D::Render
  */
-bool SecStructRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
+bool SecStructRenderer2D::Render(mmstd_gl::CallRender2DGL& call) {
 
     MolecularDataCall* mdc = this->dataInSlot.CallAs<MolecularDataCall>();
     if (mdc == nullptr)
