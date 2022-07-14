@@ -13,6 +13,8 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/utility/LongestEdgeCameraSamples.h"
+#include "mmcore/utility/OrbitalCameraSamples.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/CallRenderView.h"
 #include "vislib/UnsupportedOperationException.h"
@@ -239,8 +241,20 @@ void megamol::core::view::AbstractView::CalcCameraClippingPlanes(float border) {
     }
 }
 
-std::string megamol::core::view::AbstractView::SampleCameraScenes(unsigned int num_samples) const {
-    auto [cam_positions, cam_directions] = utility::orbital_camera_samples(GetBoundingBoxes(), num_samples);
+std::string megamol::core::view::AbstractView::SampleCameraScenes(
+    std::string camera_path_pattern, unsigned int num_samples) const {
+    std::function<std::tuple<std::vector<glm::vec3>, std::vector<glm::vec3>>(core::BoundingBoxes_2, unsigned int)>
+        sampler;
+    if (camera_path_pattern == "orbit") {
+        sampler = &utility::orbital_camera_samples;
+    } else if (camera_path_pattern == "longest_edge") {
+        sampler = &utility::longest_edge_camera_samples;
+    } else {
+        return std::string();
+    }
+
+    //auto [cam_positions, cam_directions] = utility::orbital_camera_samples(GetBoundingBoxes(), num_samples);
+    auto [cam_positions, cam_directions] = sampler(GetBoundingBoxes(), num_samples);
 
     auto cam = GetCamera();
 

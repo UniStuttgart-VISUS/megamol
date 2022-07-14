@@ -20,7 +20,6 @@
 #include "ScriptPaths.h"
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/OrbitalCameraSamples.h"
 #include "mmcore/view/Camera.h"
 #include "mmcore/view/CameraSerializer.h"
 #include "mmcore/view/TimeControl.h"
@@ -126,7 +125,7 @@ public:
      */
     virtual void CalcCameraClippingPlanes(float border);
 
-    virtual std::string SampleCameraScenes(unsigned int num_samples) const;
+    std::string SampleCameraScenes(std::string camera_path_pattern, unsigned int num_samples) const;
 
     /**
      * Renders this AbstractView.

@@ -75,7 +75,7 @@ void Profiling_Service::fill_lua_callbacks() {
             auto view = std::dynamic_pointer_cast<core::view::AbstractView>(entry);
             if (!view)
                 return frontend_resources::LuaCallbacksCollection::Error{"requested entrypoint is not a view"};
-            auto camera_samples = view->SampleCameraScenes(num_samples);
+            auto camera_samples = view->SampleCameraScenes(camera_path_pattern, num_samples);
             if (camera_samples.empty())
                 return frontend_resources::LuaCallbacksCollection::Error{"could not sample camera"};
             return frontend_resources::LuaCallbacksCollection::StringResult{camera_samples};
