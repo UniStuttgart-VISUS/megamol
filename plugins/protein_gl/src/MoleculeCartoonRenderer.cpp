@@ -18,9 +18,9 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/Camera.h"
-#include "mmcore/view/light/DistantLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/light/DistantLight.h"
 #include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
@@ -47,7 +47,7 @@ using namespace megamol::protein_calls;
  * MoleculeCartoonRenderer::MoleculeCartoonRenderer (CTOR)
  */
 MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , molDataCallerSlot("getdata", "Connects the protein rendering with protein data storage")
         , getLightsSlot("getlights", "Connects the protein rendering with light sources")
         , molRendererCallerSlot("renderMolecule", "Connects the cartoon rendering with another molecule renderer")
@@ -78,7 +78,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     this->getLightsSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getLightsSlot);
 
-    this->molRendererCallerSlot.SetCompatibleCall<core_gl::view::CallRender3DGLDescription>();
+    this->molRendererCallerSlot.SetCompatibleCall<mmstd_gl::CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->molRendererCallerSlot);
 
 
@@ -572,7 +572,7 @@ bool MoleculeCartoonRenderer::create(void) {
 /*
  * MoleculeCartoonRenderer::GetExtents
  */
-bool MoleculeCartoonRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool MoleculeCartoonRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     core::view::AbstractCallRender* cr3d = dynamic_cast<core::view::AbstractCallRender*>(&call);
     if (cr3d == NULL)
         return false;
@@ -598,7 +598,7 @@ bool MoleculeCartoonRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     // Get the pointer to CallRender3D (protein renderer) or CallRenderDeferred3D
     // if offscreen rendering is enabled
 
-    core_gl::view::CallRender3DGL* molrencr3d = this->molRendererCallerSlot.CallAs<core_gl::view::CallRender3DGL>();
+    mmstd_gl::CallRender3DGL* molrencr3d = this->molRendererCallerSlot.CallAs<mmstd_gl::CallRender3DGL>();
     if (molrencr3d) {
         (*molrencr3d)(core::view::AbstractCallRender::FnGetExtents);
     }
@@ -614,7 +614,7 @@ bool MoleculeCartoonRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * MoleculeCartoonRenderer::Render
  */
-bool MoleculeCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool MoleculeCartoonRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // cast the call to Render3D
     core::view::AbstractCallRender* cr3d = dynamic_cast<core::view::AbstractCallRender*>(&call);
     if (cr3d == NULL)

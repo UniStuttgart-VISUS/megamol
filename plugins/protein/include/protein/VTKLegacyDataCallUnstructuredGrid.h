@@ -14,8 +14,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "protein/VTKLegacyDataUnstructuredGrid.h"
 #include "protein_calls/Interpol.h"
 #include "vislib/Array.h"

@@ -26,14 +26,14 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector2fParam.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/flags/FlagCallsGL.h"
-#include "mmcore_gl/flags/UniFlagStorage.h"
 #include "mmcore_gl/utility/SSBOBufferArray.h"
 #include "mmcore_gl/utility/SSBOStreamer.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd/renderer/CallClipPlane.h"
+#include "mmstd_gl/flags/FlagCallsGL.h"
+#include "mmstd_gl/flags/UniFlagStorage.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 #include "vislib/assert.h"
 #include "vislib/math/Cuboid.h"
@@ -103,7 +103,7 @@ using namespace vislib_gl::graphics::gl;
 /**
  * Renderer for simple sphere glyphs.
  */
-class SphereRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+class SphereRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -210,7 +210,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool Render(megamol::mmstd_gl::CallRender3DGL& call);
 
     /**
      * The get extents callback. The module should set the members of
@@ -221,7 +221,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(megamol::mmstd_gl::CallRender3DGL& call);
 
 private:
     /*********************************************************************/
@@ -436,13 +436,13 @@ private:
      *
      * @return           True if success, false otherwise.
      */
-    bool renderSimple(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-    bool renderGeometryShader(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-    bool renderSSBO(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-    bool renderSplat(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-    bool renderBufferArray(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-    bool renderAmbientOcclusion(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-    bool renderOutline(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+    bool renderSimple(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+    bool renderGeometryShader(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+    bool renderSSBO(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+    bool renderSplat(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+    bool renderBufferArray(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+    bool renderAmbientOcclusion(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+    bool renderOutline(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
 
     /**
      * Set pointers to vertex and color buffers and corresponding shader variables.
@@ -625,7 +625,7 @@ private:
      * @param mpdc    ...
      * @param prgm    ...
      */
-    void rebuildWorkingData(megamol::core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc,
+    void rebuildWorkingData(megamol::mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc,
         const std::shared_ptr<glowl::GLSLProgram> prgm);
 
     /**
@@ -633,7 +633,7 @@ private:
      *
      * @param cr3d  ...
      */
-    void renderDeferredPass(megamol::core_gl::view::CallRender3DGL& cr3d);
+    void renderDeferredPass(megamol::mmstd_gl::CallRender3DGL& cr3d);
 
     /**
      * Currently not in use.

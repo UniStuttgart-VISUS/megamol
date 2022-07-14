@@ -149,7 +149,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call&
         return false;
     }
 
-    std::vector<std::shared_ptr<mesh_gl::GPUMaterialCollection>> gpu_mtl_collections;
+    auto gpu_mtl_collections = std::make_shared<std::vector<std::shared_ptr<mesh_gl::GPUMaterialCollection>>>();
     // if there is a material connection to the right, issue callback
     if (rhs_mtl_call != nullptr) {
         (*rhs_mtl_call)(0);
@@ -158,7 +158,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call&
         }
         gpu_mtl_collections = rhs_mtl_call->getData();
     }
-    gpu_mtl_collections.push_back(m_material_collection.first);
+    gpu_mtl_collections->push_back(m_material_collection.first);
 
     mesh::CallImage* ic = this->m_glyph_images_slot.CallAs<mesh::CallImage>();
     if (ic != NULL) {

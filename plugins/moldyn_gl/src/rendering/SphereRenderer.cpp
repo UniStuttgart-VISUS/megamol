@@ -8,8 +8,8 @@
 
 #include "SphereRenderer.h"
 
-#include "mmcore/view/light/DistantLight.h"
-#include "mmcore_gl/flags/FlagCallsGL.h"
+#include "mmstd/light/DistantLight.h"
+#include "mmstd_gl/flags/FlagCallsGL.h"
 
 #include "vislib_gl/graphics/gl/GLSLGeometryShader.h" // only for RequiredExtensions
 
@@ -36,7 +36,7 @@ const GLuint ssbo_vertex_binding_point = 3;
 const GLuint ssbo_color_binding_point = 4;
 
 SphereRenderer::SphereRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , get_data_slot_("getdata", "Connects to the data source")
         , get_tf_slot_("gettransferfunction", "The slot for the transfer function module")
         , get_clip_plane_slot_("getclipplane", "The slot for the clipping plane module")
@@ -129,7 +129,7 @@ SphereRenderer::SphereRenderer(void)
     this->get_data_slot_.SetNecessity(AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->get_data_slot_);
 
-    this->get_tf_slot_.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->get_tf_slot_.SetCompatibleCall<mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->get_tf_slot_.SetNecessity(AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->get_tf_slot_);
 
@@ -140,7 +140,7 @@ SphereRenderer::SphereRenderer(void)
     this->get_clip_plane_slot_.SetCompatibleCall<view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->get_clip_plane_slot_);
 
-    this->read_flags_slot_.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    this->read_flags_slot_.SetCompatibleCall<mmstd_gl::FlagCallRead_GLDescription>();
     this->MakeSlotAvailable(&this->read_flags_slot_);
 
     // Initialising enum param with all possible modes (needed for configurator)
@@ -216,7 +216,7 @@ SphereRenderer::~SphereRenderer(void) {
 }
 
 
-bool SphereRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool SphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     auto cr = &call;
     if (cr == nullptr)
@@ -839,7 +839,7 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
 bool SphereRenderer::isFlagStorageAvailable() {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
 
-    auto flagc = this->read_flags_slot_.CallAs<core_gl::FlagCallRead_GL>();
+    auto flagc = this->read_flags_slot_.CallAs<mmstd_gl::FlagCallRead_GL>();
 
     // Update parameter visibility
     this->select_color_param_.Param<param::ColorParam>()->SetGUIVisible((bool)(flagc != nullptr));
@@ -922,10 +922,10 @@ std::string SphereRenderer::getRenderModeString(RenderMode rm) {
 }
 
 
-bool SphereRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool SphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // timer.BeginFrame();
 
-    auto cgtf = this->get_tf_slot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    auto cgtf = this->get_tf_slot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
 
     // Get data
     float scaling = 1.0f;
@@ -1105,7 +1105,7 @@ bool SphereRenderer::Render(core_gl::view::CallRender3DGL& call) {
 }
 
 
-bool SphereRenderer::renderSimple(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSimple(mmstd_gl::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphere_prgm_->use();
     this->enableFlagStorage(this->sphere_prgm_, mpdc);
@@ -1185,7 +1185,7 @@ bool SphereRenderer::renderSimple(core_gl::view::CallRender3DGL& call, MultiPart
 }
 
 
-bool SphereRenderer::renderSSBO(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSSBO(mmstd_gl::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
 #ifdef CHRONOTIMING
     std::vector<std::chrono::steady_clock::time_point> deltas;
@@ -1369,7 +1369,7 @@ bool SphereRenderer::renderSSBO(core_gl::view::CallRender3DGL& call, MultiPartic
 }
 
 
-bool SphereRenderer::renderSplat(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderSplat(mmstd_gl::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     // Set OpenGL state -----------------------------------------------
     glDisable(GL_DEPTH_TEST);
@@ -1497,7 +1497,7 @@ bool SphereRenderer::renderSplat(core_gl::view::CallRender3DGL& call, MultiParti
 }
 
 
-bool SphereRenderer::renderBufferArray(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderBufferArray(mmstd_gl::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphere_prgm_->use();
     this->enableFlagStorage(this->sphere_prgm_, mpdc);
@@ -1601,7 +1601,7 @@ bool SphereRenderer::renderBufferArray(core_gl::view::CallRender3DGL& call, Mult
 }
 
 
-bool SphereRenderer::renderGeometryShader(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderGeometryShader(mmstd_gl::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
@@ -1676,7 +1676,7 @@ bool SphereRenderer::renderGeometryShader(core_gl::view::CallRender3DGL& call, M
 }
 
 
-bool SphereRenderer::renderAmbientOcclusion(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderAmbientOcclusion(mmstd_gl::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     // We need to regenerate the shader if certain settings are changed
     if (this->enable_lighting_slot_.IsDirty() || this->ao_cone_apex_slot_.IsDirty()) {
@@ -1767,7 +1767,7 @@ bool SphereRenderer::renderAmbientOcclusion(core_gl::view::CallRender3DGL& call,
 }
 
 
-bool SphereRenderer::renderOutline(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
+bool SphereRenderer::renderOutline(mmstd_gl::CallRender3DGL& call, MultiParticleDataCall* mpdc) {
 
     this->sphere_prgm_->use();
     this->enableFlagStorage(this->sphere_prgm_, mpdc);
@@ -2037,8 +2037,7 @@ bool SphereRenderer::disableShaderData(void) {
 
 bool SphereRenderer::enableTransferFunctionTexture(std::shared_ptr<glowl::GLSLProgram> prgm) {
 
-    core_gl::view::CallGetTransferFunctionGL* cgtf =
-        this->get_tf_slot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    mmstd_gl::CallGetTransferFunctionGL* cgtf = this->get_tf_slot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     if ((cgtf != nullptr) && (*cgtf)(0)) {
         // TODO: how to do with unique?
         //cgtf->BindConvenience(prgm, GL_TEXTURE0, 0);
@@ -2055,8 +2054,7 @@ bool SphereRenderer::enableTransferFunctionTexture(std::shared_ptr<glowl::GLSLPr
 
 bool SphereRenderer::disableTransferFunctionTexture(void) {
 
-    core_gl::view::CallGetTransferFunctionGL* cgtf =
-        this->get_tf_slot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    mmstd_gl::CallGetTransferFunctionGL* cgtf = this->get_tf_slot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     if (cgtf != nullptr) {
         cgtf->UnbindConvenience();
     } else {
@@ -2076,11 +2074,11 @@ bool SphereRenderer::enableFlagStorage(const std::shared_ptr<glowl::GLSLProgram>
 
     this->flags_enabled_ = false;
 
-    auto flagc = this->read_flags_slot_.CallAs<core_gl::FlagCallRead_GL>();
+    auto flagc = this->read_flags_slot_.CallAs<mmstd_gl::FlagCallRead_GL>();
     if (flagc == nullptr)
         return false;
 
-    if ((*flagc)(core_gl::FlagCallRead_GL::CallGetData)) {
+    if ((*flagc)(mmstd_gl::FlagCallRead_GL::CallGetData)) {
         if (flagc->hasUpdate()) {
             uint32_t parts_count = 0;
             uint32_t part_list_count = static_cast<uint32_t>(mpdc->GetParticleListCount());
@@ -2363,7 +2361,7 @@ bool SphereRenderer::rebuildGBuffer() {
 
 
 void SphereRenderer::rebuildWorkingData(
-    core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc, const std::shared_ptr<glowl::GLSLProgram> prgm) {
+    mmstd_gl::CallRender3DGL& call, MultiParticleDataCall* mpdc, const std::shared_ptr<glowl::GLSLProgram> prgm) {
 
     // Upload new data if neccessary
     if (this->state_invalid_) {
@@ -2457,7 +2455,7 @@ void SphereRenderer::rebuildWorkingData(
 }
 
 
-void SphereRenderer::renderDeferredPass(core_gl::view::CallRender3DGL& call) {
+void SphereRenderer::renderDeferredPass(mmstd_gl::CallRender3DGL& call) {
 
     bool enable_lighting = this->enable_lighting_slot_.Param<param::BoolParam>()->Value();
     bool high_precision = this->use_hp_textures_slot_.Param<param::BoolParam>()->Value();

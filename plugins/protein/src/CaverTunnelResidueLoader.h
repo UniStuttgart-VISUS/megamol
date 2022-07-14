@@ -13,7 +13,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 
 #include "protein_calls/TunnelResidueDataCall.h"
 

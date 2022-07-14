@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mmcore/view/RendererModule.h"
+#include "mmstd/renderer/RendererModule.h"
 
 #include "CallRender3DCUDA.h"
 

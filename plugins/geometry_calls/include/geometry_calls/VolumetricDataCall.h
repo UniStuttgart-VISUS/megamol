@@ -8,9 +8,9 @@
 #pragma once
 
 #include "geometry_calls/VolumetricDataCallTypes.h"
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 
 
 namespace megamol::geocalls {

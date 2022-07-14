@@ -7,7 +7,7 @@
 
 #include "ArrowRenderer.h"
 
-#include "mmcore/view/light/DistantLight.h"
+#include "mmstd/light/DistantLight.h"
 
 #include <glm/ext.hpp>
 
@@ -23,7 +23,7 @@ using namespace megamol::moldyn_gl::rendering;
 
 
 ArrowRenderer::ArrowRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , get_data_slot_("getdata", "Connects to the data source")
         , get_tf_slot_("gettransferfunction", "Connects to the transfer function module")
         , get_flags_slot_("getflags", "connects to a FlagStorage")
@@ -37,10 +37,10 @@ ArrowRenderer::ArrowRenderer(void)
     this->get_data_slot_.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->get_data_slot_);
 
-    this->get_tf_slot_.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->get_tf_slot_.SetCompatibleCall<mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->get_tf_slot_);
 
-    this->get_flags_slot_.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    this->get_flags_slot_.SetCompatibleCall<mmstd_gl::FlagCallRead_GLDescription>();
     this->MakeSlotAvailable(&this->get_flags_slot_);
 
     this->get_clip_plane_slot_.SetCompatibleCall<view::CallClipPlaneDescription>();
@@ -109,7 +109,7 @@ bool ArrowRenderer::create(void) {
 }
 
 
-bool ArrowRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool ArrowRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     MultiParticleDataCall* c2 = this->get_data_slot_.CallAs<MultiParticleDataCall>();
     if ((c2 != nullptr) && ((*c2)(1))) {
@@ -134,7 +134,7 @@ void ArrowRenderer::release(void) {
 }
 
 
-bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     MultiParticleDataCall* c2 = this->get_data_slot_.CallAs<MultiParticleDataCall>();
     if (c2 != nullptr) {
@@ -148,7 +148,7 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
         return false;
     }
 
-    auto* cflags = this->get_flags_slot_.CallAs<core_gl::FlagCallRead_GL>();
+    auto* cflags = this->get_flags_slot_.CallAs<mmstd_gl::FlagCallRead_GL>();
 
     float length_scale = this->length_scale_slot_.Param<param::FloatParam>()->Value();
     float length_filter = this->length_filter_slot_.Param<param::FloatParam>()->Value();
@@ -321,8 +321,8 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 }
 
                 glEnable(GL_TEXTURE_1D);
-                core_gl::view::CallGetTransferFunctionGL* cgtf =
-                    this->get_tf_slot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+                mmstd_gl::CallGetTransferFunctionGL* cgtf =
+                    this->get_tf_slot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
                 if ((cgtf != nullptr) && ((*cgtf)())) {
                     glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                     col_tab_size = cgtf->TextureSize();
@@ -380,7 +380,7 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
 
             unsigned int fal = 0;
             if (use_flags) {
-                (*cflags)(core_gl::FlagCallRead_GL::CallGetData);
+                (*cflags)(mmstd_gl::FlagCallRead_GL::CallGetData);
                 cflags->getData()->validateFlagCount(parts.GetCount());
                 auto flags = cflags->getData();
                 fal = glGetAttribLocationARB(this->arrow_pgrm_->getHandle(), "flags");

@@ -8,7 +8,7 @@
 #ifndef MESH_CALLS_H_INCLUDED
 #define MESH_CALLS_H_INCLUDED
 
-#include "mmcore/CallGeneric.h"
+#include "mmstd/generic/CallGeneric.h"
 
 #include "tiny_gltf.h"
 #include <memory>

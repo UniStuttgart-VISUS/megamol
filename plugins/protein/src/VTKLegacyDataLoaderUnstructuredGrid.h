@@ -14,11 +14,11 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "protein/VTKLegacyDataCallUnstructuredGrid.h"
 #include "protein/VTKLegacyDataUnstructuredGrid.h"
 #include "vislib/math/Cuboid.h"

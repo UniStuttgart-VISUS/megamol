@@ -4,4 +4,6 @@
 #
 
 megamol_plugin(geometry_calls
-  BUILD_DEFAULT ON)
+  BUILD_DEFAULT ON
+  DEPENDS_PLUGINS
+    mmstd)

@@ -18,10 +18,10 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/light/DistantLight.h"
-#include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/light/DistantLight.h"
+#include "mmstd/light/PointLight.h"
 #include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/StringConverter.h"
@@ -369,7 +369,7 @@ bool MoleculeSESRenderer::create(void) {
 /*
  * MoleculeSESRenderer::GetExtents
  */
-bool MoleculeSESRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool MoleculeSESRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
@@ -386,7 +386,7 @@ bool MoleculeSESRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * MoleculeSESRenderer::Render
  */
-bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool MoleculeSESRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // temporary variables
     unsigned int cntRS = 0;
 

@@ -11,9 +11,9 @@
 
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/CallRenderViewGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/CallRenderViewGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 #include "cinematic_gl/CinematicUtils.h"
 #include "cinematic_gl/KeyframeManipulators.h"
@@ -25,7 +25,7 @@ namespace cinematic_gl {
 /**
  * Tracking shot rendering.
  */
-class TrackingShotRenderer : public core_gl::view::Renderer3DModuleGL {
+class TrackingShotRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Gets the name of this module.
@@ -91,7 +91,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -100,7 +100,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The mouse button pressed/released callback.

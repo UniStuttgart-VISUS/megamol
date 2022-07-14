@@ -10,7 +10,7 @@
 #include "geometry_calls/BezierCurvesListDataCall.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/light/PointLight.h"
+#include "mmstd/light/PointLight.h"
 #include "vislib/math/BezierCurve.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowPoint.h"
@@ -63,7 +63,7 @@ BezierCPUMeshRenderer::~BezierCPUMeshRenderer(void) {
 /*
  * BezierCPUMeshRenderer::render
  */
-bool BezierCPUMeshRenderer::render(megamol::core_gl::view::CallRender3DGL& call) {
+bool BezierCPUMeshRenderer::render(mmstd_gl::CallRender3DGL& call) {
     using geocalls::BezierCurvesListDataCall;
     BezierCurvesListDataCall* data = this->getDataSlot.CallAs<BezierCurvesListDataCall>();
     if (data == nullptr)

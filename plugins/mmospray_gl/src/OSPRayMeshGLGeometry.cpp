@@ -68,7 +68,7 @@ bool OSPRayMeshGLGeometry::readData(megamol::core::Call& call) {
             return false;
 
         meshStructure ms;
-        ms.mesh = std::make_shared<mesh::MeshDataAccessCollection>();
+        ms.mesh = std::make_shared<std::vector<std::shared_ptr<mesh::MeshDataAccessCollection>>>();
 
 
         unsigned int triangleCount = 0;
@@ -200,7 +200,7 @@ bool OSPRayMeshGLGeometry::readData(megamol::core::Call& call) {
                 }
             }
             std::string identifier = std::string(FullName()) + "_object_" + std::to_string(i);
-            ms.mesh->addMesh(identifier, attrib, index);
+            ms.mesh->back()->addMesh(identifier, attrib, index);
 
         } // end for
 

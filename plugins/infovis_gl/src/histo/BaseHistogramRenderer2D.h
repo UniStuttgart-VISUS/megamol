@@ -12,7 +12,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 
 #include "Renderer2D.h"
 
@@ -52,7 +52,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core_gl::view::CallRender2DGL& call) final;
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) final;
 
     /**
      * The OpenGL Render callback.
@@ -61,7 +61,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core_gl::view::CallRender2DGL& call) final;
+    bool Render(mmstd_gl::CallRender2DGL& call) final;
 
     bool OnMouseButton(
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) final;
@@ -90,7 +90,7 @@ protected:
 
     virtual void releaseImpl() = 0;
 
-    virtual bool handleCall(core_gl::view::CallRender2DGL& call) = 0;
+    virtual bool handleCall(mmstd_gl::CallRender2DGL& call) = 0;
 
     virtual void updateSelection(SelectionMode selectionMode, int selectedComponent, int selectedBin) = 0;
 
@@ -99,7 +99,10 @@ private:
 
     core::param::ParamSlot binsParam_;
     core::param::ParamSlot logPlotParam_;
+    core::param::ParamSlot useTransferFunctionParam_;
+    core::param::ParamSlot barColorParam_;
     core::param::ParamSlot selectionColorParam_;
+    core::param::ParamSlot axesColorParam_;
 
     std::size_t numBins_;
     std::size_t numComponents_;

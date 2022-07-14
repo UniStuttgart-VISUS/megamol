@@ -8,7 +8,7 @@
 #include "GrimRenderer.h"
 
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/view/light/DistantLight.h"
+#include "mmstd/light/DistantLight.h"
 
 #include <glm/ext.hpp>
 
@@ -52,7 +52,7 @@ GrimRenderer::CellInfo::~CellInfo(void) {
 // GrimRenderer
 
 GrimRenderer::GrimRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , sphere_shader_()
         , vanilla_sphere_shader_()
         , init_depth_shader_()
@@ -85,7 +85,7 @@ GrimRenderer::GrimRenderer(void)
     this->get_data_slot_.SetCompatibleCall<moldyn::ParticleGridDataCallDescription>();
     this->MakeSlotAvailable(&this->get_data_slot_);
 
-    this->get_tf_slot_.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->get_tf_slot_.SetCompatibleCall<mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->get_tf_slot_);
 
     this->get_lights_slot_.SetCompatibleCall<core::view::light::CallLightDescription>();
@@ -201,7 +201,7 @@ bool GrimRenderer::create(void) {
 }
 
 
-bool GrimRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
+bool GrimRenderer::GetExtents(megamol::mmstd_gl::CallRender3DGL& call) {
 
     auto cr = &call;
     if (cr == NULL)
@@ -246,7 +246,7 @@ void GrimRenderer::set_cam_uniforms(std::shared_ptr<glowl::GLSLProgram> shader, 
 }
 
 
-bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
+bool GrimRenderer::Render(megamol::mmstd_gl::CallRender3DGL& call) {
 
     auto cr = &call;
     if (cr == NULL)
@@ -1356,8 +1356,8 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
 
                     // Bind transfer function texture
                     glEnable(GL_TEXTURE_1D);
-                    core_gl::view::CallGetTransferFunctionGL* cgtf =
-                        this->get_tf_slot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+                    mmstd_gl::CallGetTransferFunctionGL* cgtf =
+                        this->get_tf_slot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
                     if ((cgtf != NULL) && ((*cgtf)())) {
                         glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                         col_tab_size = cgtf->TextureSize();
@@ -1544,8 +1544,8 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
 
                         // Bind transfer function texture
                         glEnable(GL_TEXTURE_1D);
-                        core_gl::view::CallGetTransferFunctionGL* cgtf =
-                            this->get_tf_slot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+                        mmstd_gl::CallGetTransferFunctionGL* cgtf =
+                            this->get_tf_slot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
                         if ((cgtf != NULL) && ((*cgtf)())) {
                             glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                             col_tab_size = cgtf->TextureSize();

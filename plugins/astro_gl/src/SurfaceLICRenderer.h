@@ -12,7 +12,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
@@ -27,7 +27,7 @@
 namespace megamol {
 namespace astro_gl {
 
-class SurfaceLICRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+class SurfaceLICRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -81,7 +81,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call) override;
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -90,7 +90,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call) override;
+    virtual bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /** utility functions */

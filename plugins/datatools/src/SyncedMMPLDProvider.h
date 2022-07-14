@@ -8,8 +8,8 @@
 #pragma once
 
 #include "StaticMMPLDProvider.h"
+#include "cluster/SyncDataSourcesCall.h"
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/cluster/SyncDataSourcesCall.h"
 #include "mmcore/param/ParamSlot.h"
 
 namespace megamol {

@@ -13,9 +13,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 
 namespace megamol {
 namespace protein_calls {

@@ -9,7 +9,7 @@
 
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataAccessCollection.h"
-#include "mmcore/AbstractDataWriter.h"
+#include "mmstd/data/AbstractDataWriter.h"
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"

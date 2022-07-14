@@ -11,9 +11,9 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/CameraSerializer.h"
+#include "mmstd/view/AbstractView.h"
+#include "mmstd_gl/renderer/CallRenderViewGL.h"
 #include "vislib/RawStorageSerialiser.h"
 
 //#include "mmcore/param/Vector4fParam.h"

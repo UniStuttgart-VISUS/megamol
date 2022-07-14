@@ -5,7 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 #include "MPIParticleCollector.h"
-#include "mmcore/cluster/mpi/MpiCall.h"
+#include "cluster/mpi/MpiCall.h"
 #include "vislib/sys/SystemInformation.h"
 
 using namespace megamol;

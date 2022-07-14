@@ -7,6 +7,8 @@ megamol_plugin(astro_gl
   BUILD_DEFAULT OFF
   DEPENDS_GL
   DEPENDS_PLUGINS
+    mmstd
+    mmstd_gl
     datatools
     geometry_calls
   DEPENDS_EXTERNALS

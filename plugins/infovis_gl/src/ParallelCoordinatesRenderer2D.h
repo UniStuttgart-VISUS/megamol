@@ -17,11 +17,11 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/flags/FlagStorage.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/SDFFont.h"
-#include "mmcore_gl/view/CallRender2DGL.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmstd/flags/FlagStorage.h"
+#include "mmstd_gl/renderer/CallRender2DGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 
 namespace megamol::infovis_gl {
 
@@ -88,7 +88,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core_gl::view::CallRender2DGL& call) override;
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * The OpenGL Render callback.
@@ -97,7 +97,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core_gl::view::CallRender2DGL& call) override;
+    bool Render(mmstd_gl::CallRender2DGL& call) override;
 
     bool OnMouseButton(
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
@@ -127,7 +127,7 @@ protected:
         float max;
     };
 
-    bool assertData(core_gl::view::CallRender2DGL& call);
+    bool assertData(mmstd_gl::CallRender2DGL& call);
 
     void calcSizes();
 

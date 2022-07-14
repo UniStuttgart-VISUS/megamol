@@ -18,7 +18,7 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/utility/DataHash.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 
 #include "mmcore_gl/utility/ShaderFactory.h"
 
@@ -285,7 +285,7 @@ bool TriangleMeshRenderer3D::getDataCallback(core::Call& call) {
     // Get render task from rhs
     auto rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<GPURenderTaskCollection>> rt_collections;
+    auto rt_collections = std::make_shared<std::vector<std::shared_ptr<GPURenderTaskCollection>>>();
 
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
@@ -315,7 +315,7 @@ bool TriangleMeshRenderer3D::getDataCallback(core::Call& call) {
             return false;
         }
 
-        rt_collections.push_back(this->m_rendertask_collection.first);
+        rt_collections->push_back(this->m_rendertask_collection.first);
 
         const std::string identifier("triangle_mesh");
 
