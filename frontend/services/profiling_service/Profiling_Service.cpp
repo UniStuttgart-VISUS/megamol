@@ -84,7 +84,8 @@ void Profiling_Service::fill_lua_callbacks() {
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string, std::string, int>("mmProfile",
         "(string entrypoint, string cameras, unsigned int num_frames)",
-        {[&graph, &render_next_frame](std::string entrypoint, std::string cameras, int num_frames) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+        {[&graph, &render_next_frame](std::string entrypoint, std::string cameras,
+             int num_frames) -> frontend_resources::LuaCallbacksCollection::VoidResult {
             auto entry = graph.FindModule(entrypoint);
             if (!entry)
                 return frontend_resources::LuaCallbacksCollection::Error{"could not find entrypoint"};
