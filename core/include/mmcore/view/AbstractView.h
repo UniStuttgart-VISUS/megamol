@@ -142,6 +142,7 @@ public:
                 pose.direction = dir;
                 pose.up = glm::vec3(0, 1, 0);
                 pose.right = glm::normalize(glm::cross(pose.up, dir));
+                pose.up = glm::normalize(glm::cross(pose.right, dir));
                 cam.setPose(pose);
                 return cam;
             });
