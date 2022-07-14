@@ -239,6 +239,32 @@ void megamol::core::view::AbstractView::CalcCameraClippingPlanes(float border) {
     }
 }
 
+std::string megamol::core::view::AbstractView::SampleCameraScenes(unsigned int num_samples) const {
+    auto [cam_positions, cam_directions] = utility::orbital_camera_samples(GetBoundingBoxes(), num_samples);
+
+    auto cam = GetCamera();
+
+    auto const base_pose = cam.getPose();
+
+    std::vector<core::view::Camera> cameras(cam_positions.size());
+
+    std::transform(cam_positions.begin(), cam_positions.end(), cam_directions.begin(), cameras.begin(),
+        [&base_pose, &cam](auto const& pos, auto const& dir) {
+            auto pose = base_pose;
+            pose.position = pos;
+            pose.direction = dir;
+            pose.up = glm::vec3(0, 1, 0);
+            pose.right = glm::normalize(glm::cross(pose.up, dir));
+            pose.up = glm::normalize(glm::cross(pose.right, dir));
+            cam.setPose(pose);
+            return cam;
+        });
+
+    auto serializer = core::view::CameraSerializer();
+
+    return serializer.serialize(cameras);
+}
+
 /*
  * view::AbstractView::OnRenderView
  */
