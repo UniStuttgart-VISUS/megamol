@@ -138,8 +138,8 @@ bool GrimRenderer::create(void) {
         sphere_shader_ = core::utility::make_glowl_shader(
             "sphere_shader", shader_options, "grim_renderer/sphere.vert.glsl", "grim_renderer/sphere.frag.glsl");
 
-        vanilla_sphere_shader_ = core::utility::make_glowl_shader(
-            "vanilla_sphere_shader", shader_options, "grim_renderer/vanilla_sphere.vert.glsl", "grim_renderer/vanilla_sphere.frag.glsl");
+        vanilla_sphere_shader_ = core::utility::make_glowl_shader("vanilla_sphere_shader", shader_options,
+            "grim_renderer/vanilla_sphere.vert.glsl", "grim_renderer/vanilla_sphere.frag.glsl");
 
         init_depth_shader_ = core::utility::make_glowl_shader("init_depth_shader", shader_options,
             "grim_renderer/init_depth.vert.glsl", "grim_renderer/init_depth.frag.glsl");
@@ -150,14 +150,14 @@ bool GrimRenderer::create(void) {
         depth_mip_shader_ = core::utility::make_glowl_shader("depth_mip_shader", shader_options,
             "grim_renderer/depth_mip.vert.glsl", "grim_renderer/depth_mip.frag.glsl");
 
-        point_shader_ = core::utility::make_glowl_shader("point_shader", shader_options,
-            "grim_renderer/point.vert.glsl", "grim_renderer/point.frag.glsl");
+        point_shader_ = core::utility::make_glowl_shader(
+            "point_shader", shader_options, "grim_renderer/point.vert.glsl", "grim_renderer/point.frag.glsl");
 
         init_depth_point_shader_ = core::utility::make_glowl_shader("init_depth_point_shader", shader_options,
             "grim_renderer/init_depth_point.vert.glsl", "grim_renderer/init_depth_point.frag.glsl");
 
-        vert_cnt_shader_ = core::utility::make_glowl_shader("vert_cnt_shader", shader_options,
-            "grim_renderer/vert_cnt.vert.glsl", "grim_renderer/vert_cnt.frag.glsl");
+        vert_cnt_shader_ = core::utility::make_glowl_shader(
+            "vert_cnt_shader", shader_options, "grim_renderer/vert_cnt.vert.glsl", "grim_renderer/vert_cnt.frag.glsl");
 
         vert_cnt_shader_2_ = core::utility::make_glowl_shader("vert_cnt_shader_2", shader_options,
             "grim_renderer/vert_cnt_2.vert.glsl", "grim_renderer/vert_cnt_2.frag.glsl");
@@ -165,14 +165,15 @@ bool GrimRenderer::create(void) {
         deferred_sphere_shader_ = core::utility::make_glowl_shader("deferred_sphere_shader", shader_options,
             "grim_renderer/deferred_sphere.vert.glsl", "grim_renderer/deferred_sphere.frag.glsl");
 
-        deferred_vanilla_sphere_shader_ = core::utility::make_glowl_shader("deferred_vanilla_sphere_shader", shader_options,
-            "grim_renderer/deferred_vanilla_sphere.vert.glsl", "grim_renderer/deferred_vanilla_sphere.frag.glsl");
+        deferred_vanilla_sphere_shader_ =
+            core::utility::make_glowl_shader("deferred_vanilla_sphere_shader", shader_options,
+                "grim_renderer/deferred_vanilla_sphere.vert.glsl", "grim_renderer/deferred_vanilla_sphere.frag.glsl");
 
         deferred_point_shader_ = core::utility::make_glowl_shader("deferred_point_shader", shader_options,
             "grim_renderer/deferred_point.vert.glsl", "grim_renderer/deferred_point.frag.glsl");
 
-        deferred_shader_ = core::utility::make_glowl_shader("deferred_shader", shader_options,
-            "grim_renderer/deferred.vert.glsl", "grim_renderer/deferred.frag.glsl");
+        deferred_shader_ = core::utility::make_glowl_shader(
+            "deferred_shader", shader_options, "grim_renderer/deferred.vert.glsl", "grim_renderer/deferred.frag.glsl");
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -500,8 +501,8 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
     printf("[initd1");
 #endif
     this->init_depth_point_shader_->use();
-    set_cam_uniforms(this->init_depth_point_shader_, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
-        mvp_matrix_inv, cam_pos, curlight_dir);
+    set_cam_uniforms(this->init_depth_point_shader_, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+        mvp_matrix_transp, mvp_matrix_inv, cam_pos, curlight_dir);
     glPointSize(1.0f);
     for (int i = cell_cnt - 1; i >= 0; i--) { // front to back
         unsigned int idx = dists[i].First();
@@ -782,8 +783,8 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                 continue;
             case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                 glEnableClientState(GL_VERTEX_ARRAY);
-                glUniform4f(
-                    this->init_depth_shader_->getUniformLocation("inConsts1"), ptype.GetGlobalRadius(), 0.0f, 0.0f, 0.0f);
+                glUniform4f(this->init_depth_shader_->getUniformLocation("inConsts1"), ptype.GetGlobalRadius(), 0.0f,
+                    0.0f, 0.0f);
                 if (ci.data[0] != 0) {
                     glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
                     glVertexPointer(3, GL_FLOAT, 0, NULL);
@@ -966,8 +967,8 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
         int ls = vislib::math::Min(lh, lw);
 
         this->depth_mip_shader_->use();
-        set_cam_uniforms(this->depth_mip_shader_, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
-            mvp_matrix_inv, cam_pos, curlight_dir);
+        set_cam_uniforms(this->depth_mip_shader_, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+            mvp_matrix_transp, mvp_matrix_inv, cam_pos, curlight_dir);
         this->depth_mip_shader_->setUniform("datex", 0);
         this->depth_mip_shader_->setUniform("src", 0, 0);
         this->depth_mip_shader_->setUniform("dst", 0, ly);
@@ -1169,8 +1170,8 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                 case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                     glEnableClientState(GL_VERTEX_ARRAY);
                     if (use_vert_cull) {
-                        glUniform4f(this->vert_cnt_shader_2_->getUniformLocation("inConsts1"), ptype.GetGlobalRadius(), min_c,
-                            max_c, float(col_tab_size));
+                        glUniform4f(this->vert_cnt_shader_2_->getUniformLocation("inConsts1"), ptype.GetGlobalRadius(),
+                            min_c, max_c, float(col_tab_size));
                     }
                     if (ci.data[0] != 0) {
                         glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
@@ -1244,7 +1245,8 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
             UINT oldlevel = vislib::Trace::GetInstance().GetLevel();
             vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_NONE);
 #endif
-            this->ds_fbo_.EnableMultiple(3, GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_COLOR_ATTACHMENT2_EXT);
+            this->ds_fbo_.EnableMultiple(
+                3, GL_COLOR_ATTACHMENT0_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_COLOR_ATTACHMENT2_EXT);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClearDepth(1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // not sure about this one
@@ -1391,7 +1393,8 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     break;
                 case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                     glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4f(da_point_shader->getUniformLocation("inConsts1"), -1.0f, min_c, max_c, float(col_tab_size));
+                    glUniform4f(
+                        da_point_shader->getUniformLocation("inConsts1"), -1.0f, min_c, max_c, float(col_tab_size));
                     if (ci.data[0] != 0) {
                         glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
                         glVertexPointer(3, GL_FLOAT, 16, NULL);
@@ -1568,8 +1571,7 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                     case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                         glEnableClientState(GL_VERTEX_ARRAY);
                         glUniform4f(da_sphere_shader->getUniformLocation("inConsts1"), ptype.GetGlobalRadius(), min_c,
-                            max_c,
-                            float(col_tab_size));
+                            max_c, float(col_tab_size));
                         if (ci.data[0] != 0) {
                             glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
                             glVertexPointer(3, GL_FLOAT, 0, NULL);
@@ -1579,8 +1581,8 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
                         break;
                     case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                         glEnableClientState(GL_VERTEX_ARRAY);
-                        glUniform4f(
-                            da_sphere_shader->getUniformLocation("inConsts1"), -1.0f, min_c, max_c, float(col_tab_size));
+                        glUniform4f(da_sphere_shader->getUniformLocation("inConsts1"), -1.0f, min_c, max_c,
+                            float(col_tab_size));
                         if (ci.data[0] != 0) {
                             glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
                             glVertexPointer(4, GL_FLOAT, 0, NULL);
@@ -1735,7 +1737,8 @@ bool GrimRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
         this->deferred_shader_->setUniform("lightDir", curlight_dir);
 
         up *= sinf(half_aperture_angle);
-        right *= sinf(half_aperture_angle) * static_cast<float>(fbo_->getWidth()) / static_cast<float>(fbo_->getHeight());
+        right *=
+            sinf(half_aperture_angle) * static_cast<float>(fbo_->getWidth()) / static_cast<float>(fbo_->getHeight());
 
         this->deferred_shader_->setUniform("ray", glm::vec3(cam_view.x, cam_view.y, cam_view.z));
 

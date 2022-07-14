@@ -106,7 +106,8 @@ SphereRenderer::SphereRenderer(void)
               "forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.")
         , use_local_bbox_param_("useLocalBbox", "Enforce usage of local bbox for camera setup")
         , select_color_param_("flag storage::selectedColor", "Color for selected spheres in flag storage.")
-        , soft_select_color_param_("flag storage::softSelectedColor", "Color for soft selected spheres in flag storage.")
+        , soft_select_color_param_(
+              "flag storage::softSelectedColor", "Color for soft selected spheres in flag storage.")
         , alpha_scaling_param_("splat::alphaScaling", "Splat: Scaling factor for particle alpha.")
         , attenuate_subpixel_param_(
               "splat::attenuateSubpixel", "Splat: Attenuate alpha of points that should have subpixel size.")
@@ -120,7 +121,8 @@ SphereRenderer::SphereRenderer(void)
         , ao_offset_slot_("ambient occlusion::offset", "Ambient Occlusion: Offset from Surface")
         , ao_strength_slot_("ambient occlusion::strength", "Ambient Occlusion: Strength")
         , ao_cone_length_slot_("ambient occlusion::coneLength", "Ambient Occlusion: Cone length")
-        , use_hp_textures_slot_("ambient occlusion::highPrecisionTexture", "Ambient Occlusion: Use high precision textures")
+        , use_hp_textures_slot_(
+              "ambient occlusion::highPrecisionTexture", "Ambient Occlusion: Use high precision textures")
         , outline_width_slot_("outline::width", "Width of the outline in pixels") {
 
     this->get_data_slot_.SetCompatibleCall<MultiParticleDataCallDescription>();
@@ -222,7 +224,8 @@ bool SphereRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 
     MultiParticleDataCall* c2 = this->get_data_slot_.CallAs<MultiParticleDataCall>();
     if ((c2 != nullptr)) {
-        c2->SetFrameID(static_cast<unsigned int>(cr->Time()), this->force_time_slot_.Param<param::BoolParam>()->Value());
+        c2->SetFrameID(
+            static_cast<unsigned int>(cr->Time()), this->force_time_slot_.Param<param::BoolParam>()->Value());
         if (!(*c2)(1))
             return false;
         cr->SetTimeFramesCount(c2->FrameCount());
@@ -503,8 +506,7 @@ bool SphereRenderer::createResources() {
         switch (this->render_mode_) {
 
         case (RenderMode::SIMPLE):
-        case (RenderMode::SIMPLE_CLUSTERED):
-        {
+        case (RenderMode::SIMPLE_CLUSTERED): {
             sphere_prgm_.reset();
             sphere_prgm_ = core::utility::make_glowl_shader("sphere_simple", *shader_options_flags_,
                 "sphere_renderer/sphere_simple.vert.glsl", "sphere_renderer/sphere_simple.frag.glsl");
@@ -512,34 +514,28 @@ bool SphereRenderer::createResources() {
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 0, "inPosition");
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 1, "inColor");
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 2, "inColIdx");
-        }
-        break;
+        } break;
 
-        case (RenderMode::GEOMETRY_SHADER):
-        {
+        case (RenderMode::GEOMETRY_SHADER): {
             sphere_geometry_prgm_.reset();
             sphere_geometry_prgm_ = core::utility::make_glowl_shader("sphere_geometry", *shader_options_flags_,
-                "sphere_renderer/sphere_geometry.vert.glsl",
-                    "sphere_renderer/sphere_geometry.geom.glsl", "sphere_renderer/sphere_geometry.frag.glsl");
+                "sphere_renderer/sphere_geometry.vert.glsl", "sphere_renderer/sphere_geometry.geom.glsl",
+                "sphere_renderer/sphere_geometry.frag.glsl");
 
             glBindAttribLocation(this->sphere_geometry_prgm_->getHandle(), 0, "inPosition");
             glBindAttribLocation(this->sphere_geometry_prgm_->getHandle(), 1, "inColor");
             glBindAttribLocation(this->sphere_geometry_prgm_->getHandle(), 2, "inColIdx");
-        }
-        break;
+        } break;
 
-        case (RenderMode::SSBO_STREAM):
-        {
+        case (RenderMode::SSBO_STREAM): {
             this->use_static_data_param_.Param<param::BoolParam>()->SetGUIVisible(true);
 
             glGenVertexArrays(1, &this->vert_array_);
             glBindVertexArray(this->vert_array_);
             glBindVertexArray(0);
-        }
-        break;
+        } break;
 
-        case (RenderMode::SPLAT):
-        {
+        case (RenderMode::SPLAT): {
             this->alpha_scaling_param_.Param<param::FloatParam>()->SetGUIVisible(true);
             this->attenuate_subpixel_param_.Param<param::BoolParam>()->SetGUIVisible(true);
 
@@ -553,11 +549,9 @@ bool SphereRenderer::createResources() {
                 this->the_single_buffer_, 0, this->buf_size_ * this->num_buffers_, single_buffer_mapping_bits_);
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
             glBindVertexArray(0);
-        }
-        break;
+        } break;
 
-        case (RenderMode::BUFFER_ARRAY):
-        {
+        case (RenderMode::BUFFER_ARRAY): {
             sphere_prgm_.reset();
             sphere_prgm_ = core::utility::make_glowl_shader("sphere_bufferarray", *shader_options_flags_,
                 "sphere_renderer/sphere_bufferarray.vert.glsl", "sphere_renderer/sphere_bufferarray.frag.glsl");
@@ -570,16 +564,15 @@ bool SphereRenderer::createResources() {
             glBindVertexArray(this->vert_array_);
             glGenBuffers(1, &this->the_single_buffer_);
             glBindBuffer(GL_ARRAY_BUFFER, this->the_single_buffer_);
-            glBufferStorage(GL_ARRAY_BUFFER, this->buf_size_ * this->num_buffers_, nullptr, single_buffer_creation_bits_);
+            glBufferStorage(
+                GL_ARRAY_BUFFER, this->buf_size_ * this->num_buffers_, nullptr, single_buffer_creation_bits_);
             this->the_single_mapped_mem_ = glMapNamedBufferRange(
                 this->the_single_buffer_, 0, this->buf_size_ * this->num_buffers_, single_buffer_mapping_bits_);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
             glBindVertexArray(0);
-        }
-        break;
+        } break;
 
-        case (RenderMode::AMBIENT_OCCLUSION):
-        {
+        case (RenderMode::AMBIENT_OCCLUSION): {
             this->enable_lighting_slot_.Param<param::BoolParam>()->SetGUIVisible(true);
             this->enable_geometry_shader_.Param<param::BoolParam>()->SetGUIVisible(true);
             this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(true);
@@ -648,11 +641,9 @@ bool SphereRenderer::createResources() {
             }
 
             this->trigger_rebuild_g_buffer_ = true;
-        }
-        break;
+        } break;
 
-        case RenderMode::OUTLINE:
-        {
+        case RenderMode::OUTLINE: {
             this->outline_width_slot_.Param<param::FloatParam>()->SetGUIVisible(true);
 
             // Create the sphere shader
@@ -662,15 +653,15 @@ bool SphereRenderer::createResources() {
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 0, "inPosition");
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 1, "inColor");
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 2, "inColIdx");
-        }
-        break;
+        } break;
 
         default:
             return false;
         }
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(), __FILE__, __FUNCTION__, __LINE__);
+            "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(), __FILE__,
+            __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -959,7 +950,7 @@ bool SphereRenderer::Render(core_gl::view::CallRender3DGL& call) {
     // Update current state variables -----------------------------------------
 
     // Update data set range_ (only if new data set was loaded, not on frame loading)
-    if (hash != this->old_hash_) {                            // or (this->state_invalid_) {
+    if (hash != this->old_hash_) {                           // or (this->state_invalid_) {
         this->range_[0] = std::numeric_limits<float>::max(); // min
         this->range_[1] = std::numeric_limits<float>::min(); // max
         for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
@@ -1123,8 +1114,8 @@ bool SphereRenderer::renderSimple(core_gl::view::CallRender3DGL& call, MultiPart
     glUniform3fv(this->sphere_prgm_->getUniformLocation("camIn"), 1, glm::value_ptr(this->cur_cam_view_));
     glUniform3fv(this->sphere_prgm_->getUniformLocation("camRight"), 1, glm::value_ptr(this->cur_cam_right_));
     glUniform3fv(this->sphere_prgm_->getUniformLocation("camUp"), 1, glm::value_ptr(this->cur_cam_up_));
-    glUniform1f(
-        this->sphere_prgm_->getUniformLocation("scaling"), this->radius_scaling_param_.Param<param::FloatParam>()->Value());
+    glUniform1f(this->sphere_prgm_->getUniformLocation("scaling"),
+        this->radius_scaling_param_.Param<param::FloatParam>()->Value());
     glUniform4fv(this->sphere_prgm_->getUniformLocation("clipDat"), 1, glm::value_ptr(this->cur_clip_dat_));
     glUniform4fv(this->sphere_prgm_->getUniformLocation("clipCol"), 1, glm::value_ptr(this->cur_clip_col_));
     glUniform4fv(this->sphere_prgm_->getUniformLocation("lightDir"), 1, glm::value_ptr(this->cur_light_dir_));
@@ -1132,7 +1123,8 @@ bool SphereRenderer::renderSimple(core_gl::view::CallRender3DGL& call, MultiPart
     glUniformMatrix4fv(
         this->sphere_prgm_->getUniformLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(this->cur_mv_transp_));
     glUniformMatrix4fv(this->sphere_prgm_->getUniformLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_));
-    glUniformMatrix4fv(this->sphere_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
+    glUniformMatrix4fv(
+        this->sphere_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
     glUniformMatrix4fv(
         this->sphere_prgm_->getUniformLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_transp_));
 
@@ -1291,8 +1283,8 @@ bool SphereRenderer::renderSSBO(core_gl::view::CallRender3DGL& call, MultiPartic
                     // dstOff, dstLen);
                     glUniform1i(this->new_shader_->getUniformLocation("instanceOffset"), 0);
                     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-                    glBindBufferRange(
-                        GL_SHADER_STORAGE_BUFFER, ssbo_vertex_binding_point, this->streamer_.GetHandle(), dst_off, dst_len);
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, ssbo_vertex_binding_point, this->streamer_.GetHandle(),
+                        dst_off, dst_len);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(num_items));
                     this->streamer_.SignalCompletion(sync);
                 }
@@ -1305,8 +1297,8 @@ bool SphereRenderer::renderSSBO(core_gl::view::CallRender3DGL& call, MultiPartic
                     buf_a.SetDataWithSize(parts.GetVertexData(), vert_stride, vert_stride, parts.GetCount(),
                         (GLuint)(2 * 1024 * 1024 * 1024 - 1));
                     // 2 GB - khronos: Most implementations will let you allocate a size up to the limit of GPU memory.
-                    col_a.SetDataWithItems(
-                        parts.GetColourData(), col_stride, col_stride, parts.GetCount(), buf_a.GetMaxNumItemsPerChunk());
+                    col_a.SetDataWithItems(parts.GetColourData(), col_stride, col_stride, parts.GetCount(),
+                        buf_a.GetMaxNumItemsPerChunk());
                 }
                 const GLuint num_chunks = buf_a.GetNumChunks();
 
@@ -1328,8 +1320,8 @@ bool SphereRenderer::renderSSBO(core_gl::view::CallRender3DGL& call, MultiPartic
             } else {
                 const GLuint num_chunks = this->streamer_.SetDataWithSize(
                     parts.GetVertexData(), vert_stride, vert_stride, parts.GetCount(), 3, (GLuint)(32 * 1024 * 1024));
-                const GLuint col_size = this->col_streamer_.SetDataWithItems(parts.GetColourData(), col_stride, col_stride,
-                    parts.GetCount(), 3, this->streamer_.GetMaxNumItemsPerChunk());
+                const GLuint col_size = this->col_streamer_.SetDataWithItems(parts.GetColourData(), col_stride,
+                    col_stride, parts.GetCount(), 3, this->streamer_.GetMaxNumItemsPerChunk());
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->streamer_.GetHandle());
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ssbo_vertex_binding_point, this->streamer_.GetHandle());
                 glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->col_streamer_.GetHandle());
@@ -1343,10 +1335,10 @@ bool SphereRenderer::renderSSBO(core_gl::view::CallRender3DGL& call, MultiPartic
                     ASSERT(num_items == num_items2);
                     glUniform1i(this->new_shader_->getUniformLocation("instanceOffset"), 0);
                     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-                    glBindBufferRange(
-                        GL_SHADER_STORAGE_BUFFER, ssbo_vertex_binding_point, this->streamer_.GetHandle(), dst_off, dst_len);
-                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, ssbo_color_binding_point, this->col_streamer_.GetHandle(),
-                        dst_off2, dst_len2);
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, ssbo_vertex_binding_point, this->streamer_.GetHandle(),
+                        dst_off, dst_len);
+                    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, ssbo_color_binding_point,
+                        this->col_streamer_.GetHandle(), dst_off2, dst_len2);
                     glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(num_items));
                     this->streamer_.SignalCompletion(sync);
                     this->col_streamer_.SignalCompletion(sync2);
@@ -1514,8 +1506,8 @@ bool SphereRenderer::renderBufferArray(core_gl::view::CallRender3DGL& call, Mult
     glUniform3fv(this->sphere_prgm_->getUniformLocation("camIn"), 1, glm::value_ptr(this->cur_cam_view_));
     glUniform3fv(this->sphere_prgm_->getUniformLocation("camRight"), 1, glm::value_ptr(this->cur_cam_right_));
     glUniform3fv(this->sphere_prgm_->getUniformLocation("camUp"), 1, glm::value_ptr(this->cur_cam_up_));
-    glUniform1f(
-        this->sphere_prgm_->getUniformLocation("scaling"), this->radius_scaling_param_.Param<param::FloatParam>()->Value());
+    glUniform1f(this->sphere_prgm_->getUniformLocation("scaling"),
+        this->radius_scaling_param_.Param<param::FloatParam>()->Value());
     glUniform4fv(this->sphere_prgm_->getUniformLocation("clipDat"), 1, glm::value_ptr(this->cur_clip_dat_));
     glUniform4fv(this->sphere_prgm_->getUniformLocation("clipCol"), 1, glm::value_ptr(this->cur_clip_col_));
     glUniform4fv(this->sphere_prgm_->getUniformLocation("lightDir"), 1, glm::value_ptr(this->cur_light_dir_));
@@ -1523,7 +1515,8 @@ bool SphereRenderer::renderBufferArray(core_gl::view::CallRender3DGL& call, Mult
     glUniformMatrix4fv(
         this->sphere_prgm_->getUniformLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(this->cur_mv_transp_));
     glUniformMatrix4fv(this->sphere_prgm_->getUniformLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_));
-    glUniformMatrix4fv(this->sphere_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
+    glUniformMatrix4fv(
+        this->sphere_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
     glUniformMatrix4fv(
         this->sphere_prgm_->getUniformLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_transp_));
 
@@ -1558,7 +1551,8 @@ bool SphereRenderer::renderBufferArray(core_gl::view::CallRender3DGL& call, Mult
             vert_counter = 0;
             while (vert_counter < parts.GetCount()) {
                 // GLuint vb = this->theBuffers[curr_buf_];
-                void* mem = static_cast<char*>(this->the_single_mapped_mem_) + num_verts * vert_stride * this->curr_buf_;
+                void* mem =
+                    static_cast<char*>(this->the_single_mapped_mem_) + num_verts * vert_stride * this->curr_buf_;
                 curr_col = col_stride == 0 ? curr_vert : curr_col;
                 // currCol = currCol == 0 ? currVert : currCol;
                 const char* whence = curr_vert < curr_col ? curr_vert : curr_col;
@@ -1623,7 +1617,8 @@ bool SphereRenderer::renderGeometryShader(core_gl::view::CallRender3DGL& call, M
     this->enableFlagStorage(this->sphere_geometry_prgm_, mpdc);
 
     // Set shader variables
-    glUniform4fv(this->sphere_geometry_prgm_->getUniformLocation("viewAttr"), 1, glm::value_ptr(this->cur_view_attrib_));
+    glUniform4fv(
+        this->sphere_geometry_prgm_->getUniformLocation("viewAttr"), 1, glm::value_ptr(this->cur_view_attrib_));
     glUniform3fv(this->sphere_geometry_prgm_->getUniformLocation("camIn"), 1, glm::value_ptr(this->cur_cam_view_));
     glUniform3fv(this->sphere_geometry_prgm_->getUniformLocation("camRight"), 1, glm::value_ptr(this->cur_cam_right_));
     glUniform3fv(this->sphere_geometry_prgm_->getUniformLocation("camUp"), 1, glm::value_ptr(this->cur_cam_up_));
@@ -1636,11 +1631,12 @@ bool SphereRenderer::renderGeometryShader(core_gl::view::CallRender3DGL& call, M
         this->sphere_geometry_prgm_->getUniformLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mv_inv_));
     glUniformMatrix4fv(
         this->sphere_geometry_prgm_->getUniformLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(this->cur_mv_transp_));
-    glUniformMatrix4fv(this->sphere_geometry_prgm_->getUniformLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_));
+    glUniformMatrix4fv(
+        this->sphere_geometry_prgm_->getUniformLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_));
     glUniformMatrix4fv(
         this->sphere_geometry_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
-    glUniformMatrix4fv(
-        this->sphere_geometry_prgm_->getUniformLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_transp_));
+    glUniformMatrix4fv(this->sphere_geometry_prgm_->getUniformLocation("MVPtransp"), 1, GL_FALSE,
+        glm::value_ptr(this->cur_mvp_transp_));
 
     GLuint flag_parts_count = 0;
     for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
@@ -1723,7 +1719,8 @@ bool SphereRenderer::renderAmbientOcclusion(core_gl::view::CallRender3DGL& call,
     glUniformMatrix4fv(the_shader->getUniformLocation("MVinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mv_inv_));
     glUniformMatrix4fv(the_shader->getUniformLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(this->cur_mv_transp_));
     glUniformMatrix4fv(the_shader->getUniformLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_transp_));
-    glUniform1f(the_shader->getUniformLocation("scaling"), this->radius_scaling_param_.Param<param::FloatParam>()->Value());
+    glUniform1f(
+        the_shader->getUniformLocation("scaling"), this->radius_scaling_param_.Param<param::FloatParam>()->Value());
     glUniform4fv(the_shader->getUniformLocation("viewAttr"), 1, glm::value_ptr(this->cur_view_attrib_));
     glUniform3fv(the_shader->getUniformLocation("camRight"), 1, glm::value_ptr(this->cur_cam_right_));
     glUniform3fv(the_shader->getUniformLocation("camUp"), 1, glm::value_ptr(this->cur_cam_up_));
@@ -1779,8 +1776,8 @@ bool SphereRenderer::renderOutline(core_gl::view::CallRender3DGL& call, MultiPar
     glUniform3fv(this->sphere_prgm_->getUniformLocation("camIn"), 1, glm::value_ptr(this->cur_cam_view_));
     glUniform3fv(this->sphere_prgm_->getUniformLocation("camRight"), 1, glm::value_ptr(this->cur_cam_right_));
     glUniform3fv(this->sphere_prgm_->getUniformLocation("camUp"), 1, glm::value_ptr(this->cur_cam_up_));
-    glUniform1f(
-        this->sphere_prgm_->getUniformLocation("scaling"), this->radius_scaling_param_.Param<param::FloatParam>()->Value());
+    glUniform1f(this->sphere_prgm_->getUniformLocation("scaling"),
+        this->radius_scaling_param_.Param<param::FloatParam>()->Value());
     glUniform4fv(this->sphere_prgm_->getUniformLocation("clipDat"), 1, glm::value_ptr(this->cur_clip_dat_));
     glUniform4fv(this->sphere_prgm_->getUniformLocation("clipCol"), 1, glm::value_ptr(this->cur_clip_col_));
     glUniform4fv(this->sphere_prgm_->getUniformLocation("lightDir"), 1, glm::value_ptr(this->cur_light_dir_));
@@ -1788,7 +1785,8 @@ bool SphereRenderer::renderOutline(core_gl::view::CallRender3DGL& call, MultiPar
     glUniformMatrix4fv(
         this->sphere_prgm_->getUniformLocation("MVtransp"), 1, GL_FALSE, glm::value_ptr(this->cur_mv_transp_));
     glUniformMatrix4fv(this->sphere_prgm_->getUniformLocation("MVP"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_));
-    glUniformMatrix4fv(this->sphere_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
+    glUniformMatrix4fv(
+        this->sphere_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
     glUniformMatrix4fv(
         this->sphere_prgm_->getUniformLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_transp_));
 
@@ -2039,7 +2037,8 @@ bool SphereRenderer::disableShaderData(void) {
 
 bool SphereRenderer::enableTransferFunctionTexture(std::shared_ptr<glowl::GLSLProgram> prgm) {
 
-    core_gl::view::CallGetTransferFunctionGL* cgtf = this->get_tf_slot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    core_gl::view::CallGetTransferFunctionGL* cgtf =
+        this->get_tf_slot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
     if ((cgtf != nullptr) && (*cgtf)(0)) {
         // TODO: how to do with unique?
         //cgtf->BindConvenience(prgm, GL_TEXTURE0, 0);
@@ -2056,7 +2055,8 @@ bool SphereRenderer::enableTransferFunctionTexture(std::shared_ptr<glowl::GLSLPr
 
 bool SphereRenderer::disableTransferFunctionTexture(void) {
 
-    core_gl::view::CallGetTransferFunctionGL* cgtf = this->get_tf_slot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    core_gl::view::CallGetTransferFunctionGL* cgtf =
+        this->get_tf_slot_.CallAs<core_gl::view::CallGetTransferFunctionGL>();
     if (cgtf != nullptr) {
         cgtf->UnbindConvenience();
     } else {
@@ -2253,9 +2253,9 @@ void SphereRenderer::getBytesAndStride(const MultiParticleDataCall::Particles& p
     out_vert_stride = out_vert_stride < out_vert_bytes ? out_vert_bytes : out_vert_stride;
 
     out_interleaved = (std::abs(reinterpret_cast<const ptrdiff_t>(parts.GetColourData()) -
-                               reinterpret_cast<const ptrdiff_t>(parts.GetVertexData())) <= out_vert_stride &&
-                         out_vert_stride == out_col_stride) ||
-                     out_col_stride == 0;
+                                reinterpret_cast<const ptrdiff_t>(parts.GetVertexData())) <= out_vert_stride &&
+                          out_vert_stride == out_col_stride) ||
+                      out_col_stride == 0;
 }
 
 
@@ -2319,23 +2319,24 @@ bool SphereRenderer::rebuildGBuffer() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->cur_vp_width_, this->cur_vp_height_, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGB, this->cur_vp_width_, this->cur_vp_height_, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
     glBindTexture(GL_TEXTURE_2D, this->g_buffer_.normals);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, high_precision ? GL_RGBA32F : GL_RGBA, this->cur_vp_width_, this->cur_vp_height_, 0, GL_RGB,
-        GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, high_precision ? GL_RGBA32F : GL_RGBA, this->cur_vp_width_, this->cur_vp_height_, 0,
+        GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
     glBindTexture(GL_TEXTURE_2D, this->g_buffer_.depth);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->cur_vp_width_, this->cur_vp_height_, 0, GL_DEPTH_COMPONENT,
-        GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, this->cur_vp_width_, this->cur_vp_height_, 0,
+        GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -2361,8 +2362,8 @@ bool SphereRenderer::rebuildGBuffer() {
 }
 
 
-void SphereRenderer::rebuildWorkingData(core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc,
-    const std::shared_ptr<glowl::GLSLProgram> prgm) {
+void SphereRenderer::rebuildWorkingData(
+    core_gl::view::CallRender3DGL& call, MultiParticleDataCall* mpdc, const std::shared_ptr<glowl::GLSLProgram> prgm) {
 
     // Upload new data if neccessary
     if (this->state_invalid_) {
@@ -2446,8 +2447,8 @@ void SphereRenderer::rebuildWorkingData(core_gl::view::CallRender3DGL& call, Mul
             if (mpdc->AccessParticles(i).GetVertexDataType() != MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
                 global_radius = mpdc->AccessParticles(i).GetGlobalRadius();
 
-            this->vol_gen_->InsertParticles(static_cast<unsigned int>(mpdc->AccessParticles(i).GetCount()), global_radius,
-                this->gpu_data_[i].vertex_array);
+            this->vol_gen_->InsertParticles(static_cast<unsigned int>(mpdc->AccessParticles(i).GetCount()),
+                global_radius, this->gpu_data_[i].vertex_array);
         }
         this->vol_gen_->EndInsertion();
 
@@ -2484,7 +2485,8 @@ void SphereRenderer::renderDeferredPass(core_gl::view::CallRender3DGL& call) {
 
     this->lighting_prgm_->setUniform("inWidth", static_cast<float>(this->cur_vp_width_));
     this->lighting_prgm_->setUniform("inHeight", static_cast<float>(this->cur_vp_height_));
-    glUniformMatrix4fv(this->lighting_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
+    glUniformMatrix4fv(
+        this->lighting_prgm_->getUniformLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(this->cur_mvp_inv_));
     this->lighting_prgm_->setUniform("inUseHighPrecision", high_precision);
     if (enable_lighting) {
         this->lighting_prgm_->setUniform("inObjLightDir", glm::vec3(this->cur_light_dir_));
@@ -2554,8 +2556,8 @@ std::string SphereRenderer::generateDirectionShaderArrayString(
     std::transform(upper_dir_name.begin(), upper_dir_name.end(), upper_dir_name.begin(), ::toupper);
 
     result << "\n#define NUM_" << upper_dir_name << " " << directions.size() << std::endl;
-    result << "\nconst vec4 " << directions_name << "[NUM_" << upper_dir_name << "] = vec4[NUM_" << upper_dir_name << "]("
-           << std::endl;
+    result << "\nconst vec4 " << directions_name << "[NUM_" << upper_dir_name << "] = vec4[NUM_" << upper_dir_name
+           << "](" << std::endl;
 
     for (auto iter = directions.begin(); iter != directions.end(); iter++) {
         result << "\tvec4(" << (*iter)[0] << ", " << (*iter)[1] << ", " << (*iter)[2] << ", " << (*iter)[3] << ")";
