@@ -154,7 +154,10 @@ bool GlyphRenderer::create(void) {
             "gizmo_arrowglyph", shader_options, "glyph_renderer/gizmo_arrowglyph.vert.glsl", "glyph_renderer/gizmo_arrowglyph.frag.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile glyph shader: %s. [%s, %s, line %d]\n", std::string(e.what())).c_str(), __FILE__, __FUNCTION__, __LINE__);
+            "Unable to compile glyph shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(), __FILE__,
+            __FUNCTION__, __LINE__);
+
+        return false;
     }
 
     glEnable(GL_TEXTURE_1D);

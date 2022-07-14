@@ -87,7 +87,10 @@ bool ArrowRenderer::create(void) {
             "arrow", shader_options, "arrow_renderer/arrow.vert.glsl", "arrow_renderer/arrow.frag.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile arrow shader: %s. [%s, %s, line %d]\n", std::string(e.what())).c_str(), __FILE__, __FUNCTION__, __LINE__);
+            "Unable to compile arrow shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(),
+            __FILE__, __FUNCTION__, __LINE__);
+
+        return false;
     }
 
 

@@ -161,10 +161,10 @@ public:
             minor = std::atoi(glsl_ver_str.substr(found + 1, 1).c_str());
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[SphereRenderer] No valid GL_SHADING_LANGUAGE_VERSION string: %s", glslVerStr.c_str());
+                "[SphereRenderer] No valid GL_SHADING_LANGUAGE_VERSION string: %s", glsl_ver_str.c_str());
         }
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[SphereRenderer] Found GLSL version %d.%d (%s).", major, minor, glslVerStr.c_str());
+            "[SphereRenderer] Found GLSL version %d.%d (%s).", major, minor, glsl_ver_str.c_str());
         if ((major < (int)(SPHERE_MIN_GLSL_MAJOR)) ||
             (major == (int)(SPHERE_MIN_GLSL_MAJOR) && minor < (int)(SPHERE_MIN_GLSL_MINOR))) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(

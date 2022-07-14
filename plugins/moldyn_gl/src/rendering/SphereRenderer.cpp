@@ -319,7 +319,7 @@ bool SphereRenderer::create(void) {
     this->MakeSlotAvailable(&this->render_mode_param_);
 
     // Check initial render mode
-    if (!this->isRenderModeAvailable(this->renderMode)) {
+    if (!this->isRenderModeAvailable(this->render_mode_)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SphereRenderer] Render mode '%s' is not available - falling back to render mode '%s'.",
             (this->getRenderModeString(this->render_mode_)).c_str(),
@@ -466,7 +466,7 @@ bool SphereRenderer::createResources() {
 
     this->state_invalid_ = true;
 
-    if (!this->isRenderModeAvailable(this->renderMode)) {
+    if (!this->isRenderModeAvailable(this->render_mode_)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SphereRenderer] Render mode: '%s' is not available - falling back to render mode '%s'.",
             (this->getRenderModeString(this->render_mode_)).c_str(),
@@ -475,7 +475,7 @@ bool SphereRenderer::createResources() {
         return false;
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[SphereRenderer] Using render mode '%s'.", (this->getRenderModeString(this->renderMode)).c_str());
+            "[SphereRenderer] Using render mode '%s'.", (this->getRenderModeString(this->render_mode_)).c_str());
     }
 
     // Fallback transfer function texture
@@ -642,7 +642,7 @@ bool SphereRenderer::createResources() {
             this->vol_gen_ = new misc::MDAOVolumeGenerator();
             this->vol_gen_->SetShaderSourceFactory(&lighting_so);
             if (!this->vol_gen_->Init(frontend_resources.get<frontend_resources::OpenGL_Context>())) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
@@ -670,7 +670,8 @@ bool SphereRenderer::createResources() {
         }
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", std::string(e.what())).c_str(), __FILE__, __FUNCTION__, __LINE__);
+            "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
 
     return true;
@@ -2189,10 +2190,10 @@ std::shared_ptr<glowl::GLSLProgram> SphereRenderer::makeShader(
         std::string frag_path = "sphere_renderer/" + prgm_name + ".frag.glsl";
 
         sh = core::utility::make_glowl_shader(prgm_name, shader_options, vert_path, frag_path);
-    }
-    catch (std::exception& e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", std::string(e.what())).c_str(), __FILE__, __FUNCTION__, __LINE__);
+            "Unable to compile sphere shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(), __FILE__,
+            __FUNCTION__, __LINE__);
     }
 
 

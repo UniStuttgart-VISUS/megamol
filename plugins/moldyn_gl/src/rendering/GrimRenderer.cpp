@@ -176,7 +176,10 @@ bool GrimRenderer::create(void) {
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile grim shader: %s. [%s, %s, line %d]\n", std::string(e.what())).c_str(), __FILE__, __FUNCTION__, __LINE__);
+            "Unable to compile grim shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(), __FILE__,
+            __FUNCTION__, __LINE__);
+
+        return false;
     }
 
     // Fallback transfer function texture
