@@ -460,8 +460,7 @@ private:
      * @return 'True' on success, 'false' otherwise.
      */
     bool enableBufferData(const std::shared_ptr<glowl::GLSLProgram> prgm, const MultiParticleDataCall::Particles& parts,
-        GLuint vert_buf,
-        const void* vert_ptr, GLuint col_buf, const void* col_ptr, bool create_buffer_data = false);
+        GLuint vert_buf, const void* vert_ptr, GLuint col_buf, const void* col_ptr, bool create_buffer_data = false);
 
     /**
      * Unset pointers to vertex and color buffers.
@@ -535,7 +534,8 @@ private:
      * @param interleaved  ...
      */
     void getBytesAndStride(const MultiParticleDataCall::Particles& parts, unsigned int& out_col_bytes,
-        unsigned int& out_vert_bytes, unsigned int& out_col_stride, unsigned int& out_vert_stride, bool& out_interleaved);
+        unsigned int& out_vert_bytes, unsigned int& out_col_stride, unsigned int& out_vert_stride,
+        bool& out_interleaved);
 
     /**
      * Make SSBO vertex shader color string.

@@ -87,8 +87,8 @@ bool ArrowRenderer::create(void) {
             "arrow", shader_options, "arrow_renderer/arrow.vert.glsl", "arrow_renderer/arrow.frag.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile arrow shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(),
-            __FILE__, __FUNCTION__, __LINE__);
+            "Unable to compile arrow shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(), __FILE__,
+            __FUNCTION__, __LINE__);
 
         return false;
     }
@@ -353,12 +353,14 @@ bool ArrowRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 break;
             case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                 glEnableClientState(GL_VERTEX_ARRAY);
-                glUniform4f(this->arrow_pgrm_->getUniformLocation("inConsts1"), -1.0f, min_c, max_c, float(col_tab_size));
+                glUniform4f(
+                    this->arrow_pgrm_->getUniformLocation("inConsts1"), -1.0f, min_c, max_c, float(col_tab_size));
                 glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                 break;
             case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
                 glEnableClientState(GL_VERTEX_ARRAY);
-                glUniform4f(this->arrow_pgrm_->getUniformLocation("inConsts1"), -1.0f, min_c, max_c, float(col_tab_size));
+                glUniform4f(
+                    this->arrow_pgrm_->getUniformLocation("inConsts1"), -1.0f, min_c, max_c, float(col_tab_size));
                 glVertexPointer(3, GL_DOUBLE, parts.GetVertexDataStride(), parts.GetVertexData());
             default:
                 continue;

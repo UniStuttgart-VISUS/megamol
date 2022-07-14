@@ -140,18 +140,20 @@ bool GlyphRenderer::create(void) {
 
     try {
         // TODO: use std::filesystem::path?
-        box_prgm_ = core::utility::make_glowl_shader("box", shader_options, "glyph_renderer/box.vert.glsl", "glyph_renderer/box.frag.glsl");
+        box_prgm_ = core::utility::make_glowl_shader(
+            "box", shader_options, "glyph_renderer/box.vert.glsl", "glyph_renderer/box.frag.glsl");
 
-        ellipsoid_prgm_ =
-            core::utility::make_glowl_shader("ellipsoid", shader_options, "glyph_renderer/ellipsoid.vert.glsl", "glyph_renderer/ellipsoid.frag.glsl");
+        ellipsoid_prgm_ = core::utility::make_glowl_shader(
+            "ellipsoid", shader_options, "glyph_renderer/ellipsoid.vert.glsl", "glyph_renderer/ellipsoid.frag.glsl");
 
-        arrow_prgm_ = core::utility::make_glowl_shader("arrow", shader_options, "glyph_renderer/arrow.vert.glsl", "glyph_renderer/arrow.frag.glsl");
+        arrow_prgm_ = core::utility::make_glowl_shader(
+            "arrow", shader_options, "glyph_renderer/arrow.vert.glsl", "glyph_renderer/arrow.frag.glsl");
 
-        superquadric_prgm_ = core::utility::make_glowl_shader(
-            "superquadric", shader_options, "glyph_renderer/superquadric.vert.glsl", "glyph_renderer/superquadric.frag.glsl");
+        superquadric_prgm_ = core::utility::make_glowl_shader("superquadric", shader_options,
+            "glyph_renderer/superquadric.vert.glsl", "glyph_renderer/superquadric.frag.glsl");
 
-        gizmo_arrowglyph_prgm_ = core::utility::make_glowl_shader(
-            "gizmo_arrowglyph", shader_options, "glyph_renderer/gizmo_arrowglyph.vert.glsl", "glyph_renderer/gizmo_arrowglyph.frag.glsl");
+        gizmo_arrowglyph_prgm_ = core::utility::make_glowl_shader("gizmo_arrowglyph", shader_options,
+            "glyph_renderer/gizmo_arrowglyph.vert.glsl", "glyph_renderer/gizmo_arrowglyph.frag.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to compile glyph shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(), __FILE__,

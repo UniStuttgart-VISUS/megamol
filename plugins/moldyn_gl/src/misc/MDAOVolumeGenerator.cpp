@@ -1,8 +1,8 @@
 
 #include "misc/MDAOVolumeGenerator.h"
-#include "mmcore/utility/log/Log.h"
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <algorithm>
 #include <fstream>
@@ -25,7 +25,11 @@ using namespace megamol::moldyn_gl::misc;
     }
 
 
-MDAOVolumeGenerator::MDAOVolumeGenerator() : shader_options_(nullptr), fbo_handle_(0), volume_handle_(0), data_version_(0) {
+MDAOVolumeGenerator::MDAOVolumeGenerator()
+        : shader_options_(nullptr)
+        , fbo_handle_(0)
+        , volume_handle_(0)
+        , data_version_(0) {
     clear_buffer_ = nullptr;
 }
 
@@ -80,12 +84,12 @@ bool MDAOVolumeGenerator::Init(frontend_resources::OpenGL_Context const& ogl_ctx
     if (compute_available_) {
         // Try to initialize the compute shader
         try {
-            mipmap_prgm_ = core::utility::make_glowl_shader("mipmap", *shader_options_,
-                "mdao_volume_generator/mdao_mipmap_compute_main.comp.glsl");
+            mipmap_prgm_ = core::utility::make_glowl_shader(
+                "mipmap", *shader_options_, "mdao_volume_generator/mdao_mipmap_compute_main.comp.glsl");
         } catch (std::exception& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to compile mdao volume generator shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(), __FILE__,
-                __FUNCTION__, __LINE__);
+                "Unable to compile mdao volume generator shader: %s. [%s, %s, line %d]\n",
+                std::string(e.what()).c_str(), __FILE__, __FUNCTION__, __LINE__);
 
             return false;
         }
@@ -94,7 +98,8 @@ bool MDAOVolumeGenerator::Init(frontend_resources::OpenGL_Context const& ogl_ctx
     // Initialize our shader
     try {
         // Try to make the volume shader
-        volume_prgm_ = core::utility::make_glowl_shader("volume", *shader_options_, "mdao_volume_generator/mdao_volume.vert.glsl",
+        volume_prgm_ =
+            core::utility::make_glowl_shader("volume", *shader_options_, "mdao_volume_generator/mdao_volume.vert.glsl",
                 "mdao_volume_generator/mdao_volume.geom.glsl", "mdao_volume_generator/mdao_volume.frag.glsl");
 
     } catch (std::exception& e) {
@@ -165,8 +170,8 @@ void MDAOVolumeGenerator::StartInsertion(const vislib::math::Cuboid<float>& obb,
     volume_prgm_->setUniform(
         "inBoundsSizeInverse", glm::vec3(this->bounds_size_inverse_.GetWidth(), this->bounds_size_inverse_.GetHeight(),
                                    this->bounds_size_inverse_.GetDepth()));
-    volume_prgm_->setUniform(
-        "inVolumeSize", glm::vec3(this->volume_res_.GetWidth(), this->volume_res_.GetHeight(), this->volume_res_.GetDepth()));
+    volume_prgm_->setUniform("inVolumeSize",
+        glm::vec3(this->volume_res_.GetWidth(), this->volume_res_.GetHeight(), this->volume_res_.GetDepth()));
     volume_prgm_->setUniform("clip_dat_", clip_dat_);
 }
 
@@ -185,8 +190,8 @@ void MDAOVolumeGenerator::ClearVolume() {
     glBindTexture(GL_TEXTURE_3D, this->volume_handle_);
     checkGLError;
     glTexImage3D(GL_TEXTURE_3D, 0, GL_R8, static_cast<GLsizei>(volume_res_.Width()),
-        static_cast<GLsizei>(volume_res_.Height()), static_cast<GLsizei>(volume_res_.Depth()), 0, GL_RED, GL_UNSIGNED_BYTE,
-        clear_buffer_);
+        static_cast<GLsizei>(volume_res_.Height()), static_cast<GLsizei>(volume_res_.Depth()), 0, GL_RED,
+        GL_UNSIGNED_BYTE, clear_buffer_);
     checkGLError;
     glBindTexture(GL_TEXTURE_3D, 0);
     checkGLError;
