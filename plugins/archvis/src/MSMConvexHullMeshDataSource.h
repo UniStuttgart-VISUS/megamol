@@ -13,12 +13,12 @@
 
 #include "mmcore/CallerSlot.h"
 
-#include "mesh/AbstractGPUMeshDataSource.h"
+#include "mesh_gl/AbstractGPUMeshDataSource.h"
 
 namespace megamol {
 namespace archvis {
 
-class MSMConvexHullDataSource : public mesh::AbstractGPUMeshDataSource {
+class MSMConvexHullDataSource : public mesh_gl::AbstractGPUMeshDataSource {
 public:
     /**
      * Answer the name of this module.

@@ -11,12 +11,12 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mesh/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 
 namespace megamol {
 namespace archvis {
 
-class MSMRenderTaskDataSource : public mesh::AbstractGPURenderTaskDataSource {
+class MSMRenderTaskDataSource : public mesh_gl::AbstractGPURenderTaskDataSource {
 public:
     /**
      * Answer the name of this module.
@@ -57,7 +57,7 @@ private:
     megamol::core::CallerSlot m_MSM_callerSlot;
 
     /** In-place material collection (initialized with msm btf) */
-    std::shared_ptr<mesh::GPUMaterialCollection> m_material_collection;
+    std::shared_ptr<mesh_gl::GPUMaterialCollection> m_material_collection;
 
     uint32_t m_version;
 };

@@ -55,20 +55,14 @@ protected:
     virtual void release();
 
     /**
-     * Syncs the mesh access collection of this module with the lefthand side (lhs) and righthand side (rhs)
-     * connections if available. Takes over materials from previously used to collection if lhs connection changes.
-     */
-    void syncMeshAccessCollection(CallMesh* lhs_call, CallMesh* rhs_call);
-
-    /**
      * Clears all mesh access entries made by this module from the used material collection.
      */
     void clearMeshAccessCollection();
 
     /**
-     * Mesh collection that is used with a list of identifier strings of meshs accesses that this module added to
-     * the mesh collection. Needed to delete/update submeshes if the collection is shared across a chain of data
-     * sources modules.
+     * Local mesh collection that is used with a list of identifier strings of meshs accesses that this module added to
+     * the mesh collection.
+     * Append this each frame to the mesh collection passing trough the calls.
      */
     std::pair<std::shared_ptr<MeshDataAccessCollection>, std::vector<std::string>> m_mesh_access_collection;
 

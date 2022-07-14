@@ -30,7 +30,7 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
 
     mesh_gl::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh_gl::CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>> gpu_render_tasks;
+    auto gpu_render_tasks = std::make_shared<std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>>>();
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
@@ -40,7 +40,7 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
         }
         gpu_render_tasks = rhs_rtc->getData();
     }
-    gpu_render_tasks.push_back(m_rendertask_collection.first);
+    gpu_render_tasks->push_back(m_rendertask_collection.first);
 
     mesh_gl::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh_gl::CallGPUMaterialData>();
     mesh_gl::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh_gl::CallGPUMeshData>();
@@ -76,7 +76,7 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
             std::shared_ptr<glowl::Mesh> ghost_batch_mesh;
             bool has_ghostplane = false;
 
-            for (auto& gpu_mesh_collection : gpu_mesh_collections) {
+            for (auto& gpu_mesh_collection : *gpu_mesh_collections) {
                 for (auto& sub_mesh : gpu_mesh_collection->getSubMeshData()) {
                     auto const& gpu_batch_mesh = sub_mesh.second.mesh->mesh;
 
@@ -122,7 +122,7 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
                 batch_meshes.push_back(ghost_batch_mesh);
             }
 
-            for (auto& gpu_mtl_collection : gpu_mtl_collections) {
+            for (auto& gpu_mtl_collection : *gpu_mtl_collections) {
                 for (int i = 0; i < batch_meshes.size(); ++i) {
                     auto const& shader = gpu_mtl_collection->getMaterials().begin()->second.shader_program;
 

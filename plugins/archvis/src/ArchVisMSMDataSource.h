@@ -17,7 +17,7 @@
 
 #include "vislib/net/Socket.h"
 
-#include "mmcore/utility/SDFFont.h"
+#include "mmcore_gl/utility/SDFFont.h"
 
 #include "mmcore/param/ParamSlot.h"
 

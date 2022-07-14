@@ -7,6 +7,7 @@ megamol_plugin(archvis
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
     mesh
+    mesh_gl
     datatools)
 
 #if (archvis_PLUGIN_ENABLED)

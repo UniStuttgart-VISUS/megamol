@@ -98,7 +98,6 @@ bool megamol::mesh::ObjWriter::run() {
         ++affix;
     }
 
-
     return true;
 }
 
