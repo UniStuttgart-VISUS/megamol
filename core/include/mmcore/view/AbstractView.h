@@ -125,6 +125,10 @@ public:
      */
     virtual void CalcCameraClippingPlanes(float border);
 
+    virtual std::string SampleCameraScenes(unsigned int num_samples) const {
+        return std::string();
+    }
+
     /**
      * Renders this AbstractView.
      * The View will use its own camera and framebuffer for the rendering exectuion

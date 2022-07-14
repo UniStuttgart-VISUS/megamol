@@ -41,7 +41,11 @@ public:
     }
     void setRequestedResources(std::vector<FrontendResource> resources) override {
         _requestedResourcesReferences = resources;
+        fill_lua_callbacks();
     }
+
+private:
+    void fill_lua_callbacks();
 
     std::vector<FrontendResource> _providedResourceReferences;
     std::vector<std::string> _requestedResourcesNames;

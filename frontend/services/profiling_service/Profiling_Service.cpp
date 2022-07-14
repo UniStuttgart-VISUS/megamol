@@ -1,5 +1,9 @@
 #include "Profiling_Service.hpp"
 
+#include "mmcore/MegaMolGraph.h"
+#include "mmcore/view/AbstractView.h"
+
+#include "LuaCallbacksCollection.h"
 
 namespace megamol {
 namespace frontend {
@@ -33,6 +37,8 @@ bool Profiling_Service::init(void* configPtr) {
     }
 #endif
 
+    _requestedResourcesNames = {"RegisterLuaCallbacks", "MegaMolGraph"};
+
     return true;
 }
 
@@ -50,6 +56,36 @@ void Profiling_Service::updateProvidedResources() {
 
 void Profiling_Service::resetProvidedResources() {
     _perf_man.endFrame();
+}
+
+void Profiling_Service::fill_lua_callbacks() {
+    frontend_resources::LuaCallbacksCollection callbacks;
+
+    auto& graph = const_cast<core::MegaMolGraph&>(_requestedResourcesReferences[1].getResource<core::MegaMolGraph>());
+
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, unsigned int>(
+        "mmGenerateCameraPositions", "(string entrypoint, string camera_path_pattern, uint num_samples)",
+        {[graph](std::string entrypoint, std::string camera_path_pattern,
+             unsigned int num_samples) -> frontend_resources::LuaCallbacksCollection::StringResult {
+            auto entry = graph.FindModule(entrypoint);
+            if (!entry)
+                return frontend_resources::LuaCallbacksCollection::Error{"could not find entrypoint"};
+            auto view = std::dynamic_pointer_cast<core::view::AbstractView>(entry);
+            if (!view)
+                return frontend_resources::LuaCallbacksCollection::Error{"requested entrypoint is not a view"};
+            auto camera_samples = view->SampleCameraScenes(num_samples);
+            if (camera_samples.empty())
+                return frontend_resources::LuaCallbacksCollection::Error{"could not sample camera"};
+            return frontend_resources::LuaCallbacksCollection::StringResult(camera_samples);
+        }});
+
+
+    auto& register_callbacks =
+        _requestedResourcesReferences[0]
+            .getResource<std::function<void(frontend_resources::LuaCallbacksCollection const&)>>();
+
+    register_callbacks(callbacks);
 }
 
 } // namespace frontend
