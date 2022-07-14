@@ -49,7 +49,6 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
         flags_size = fcr->getData()->flags->size();
     }
 
-    this->structureContainer.dataChanged = false;
     if (cd == NULL)
         return false;
     cd->SetTimeStamp(os->getTime());

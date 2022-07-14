@@ -23,7 +23,7 @@ enum structureTypeEnum { UNINITIALIZED, GEOMETRY, VOLUME, OSPRAY_API_STRUCTURES 
 
 enum geometryTypeEnum { SPHERES, MESH, LINES, CURVES, CYLINDERS, TEST };
 
-enum volumeTypeEnum { STRUCTUREDVOLUME, BLOCKBRICKEDVOLUME, GHOSTBLOCKBRICKEDVOLUME };
+enum volumeTypeEnum { STRUCTUREDVOLUME, BLOCKBRICKEDVOLUME, GHOSTBLOCKBRICKEDVOLUME, SPHERICALVOLUME };
 
 enum volumeRepresentationType { VOLUMEREP, ISOSURFACE, SLICE };
 
@@ -45,12 +45,13 @@ struct sphereStructure {
     std::shared_ptr<ParticleDataAccessCollection> spheres;
 };
 
-struct structuredVolumeStructure {
+struct volumeStructure {
     std::shared_ptr<std::vector<float>> tfRGB;
     std::shared_ptr<std::vector<float>> tfA;
     std::array<float, 2> valueRange;
 
     const void* voxels;
+    std::shared_ptr<std::vector<float>> voxels_shared;
     std::array<float, 3> gridOrigin;
     std::array<float, 3> gridSpacing;
     std::array<int, 3> dimensions;
@@ -107,7 +108,7 @@ struct OSPRayStructureContainer {
     ClippingPlane clippingPlane;
     bool clippingPlaneChanged = false;
 
-    std::variant<sphereStructure, structuredVolumeStructure, meshStructure, apiStructure, curveStructure> structure;
+    std::variant<sphereStructure, volumeStructure, meshStructure, apiStructure, curveStructure> structure;
 };
 
 
@@ -123,8 +124,8 @@ public:
 
 
 class CallOSPRayStructure;
-typedef std::map<CallOSPRayStructure*, OSPRayStructureContainer> OSPRayStrcutrureMap;
-typedef std::map<CallOSPRayStructure*, OSPRayExtendContainer> OSPRayExtendMap;
+typedef std::map<CallOSPRayStructure*, OSPRayStructureContainer*> OSPRayStrcutrureMap;
+typedef std::map<CallOSPRayStructure*, OSPRayExtendContainer*> OSPRayExtendMap;
 
 
 class CallOSPRayStructure : public megamol::core::Call {
@@ -190,11 +191,11 @@ public:
     CallOSPRayStructure& operator=(const CallOSPRayStructure& rhs);
 
     void setStructureMap(OSPRayStrcutrureMap* sm);
-    void addStructure(OSPRayStructureContainer& sc);
+    void addStructure(OSPRayStructureContainer* sc);
     bool fillStructureMap();
 
     void setExtendMap(OSPRayExtendMap* em);
-    void addExtend(OSPRayExtendContainer& ec);
+    void addExtend(OSPRayExtendContainer* ec);
     bool fillExtendMap();
 
     void setTime(float time);

@@ -76,7 +76,6 @@ bool OSPRayStructuredVolume::readData(core::Call& call) {
     auto cd = this->getDataSlot.CallAs<geocalls::VolumetricDataCall>();
     auto const cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
 
-    this->structureContainer.dataChanged = false;
     if (cd == nullptr)
         return false;
     if (cgtf == nullptr) {
@@ -211,7 +210,7 @@ bool OSPRayStructuredVolume::readData(core::Call& call) {
 
     this->structureContainer.type = structureTypeEnum::VOLUME;
     this->structureContainer.volumeType = volumeTypeEnum::STRUCTUREDVOLUME;
-    structuredVolumeStructure svs;
+    volumeStructure svs;
 
     svs.volRepType = (volumeRepresentationType)this->repType.Param<core::param::EnumParam>()->Value();
     svs.voxels = cd->GetData();

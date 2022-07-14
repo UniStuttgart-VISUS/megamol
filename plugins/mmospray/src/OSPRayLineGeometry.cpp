@@ -56,7 +56,6 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
     curveStructure cs;
     if (cm != nullptr) {
         auto meta_data = cm->getMetaData();
-        this->structureContainer.dataChanged = false;
         if (os->getTime() > meta_data.m_frame_cnt) {
             meta_data.m_frame_ID = meta_data.m_frame_cnt - 1;
         } else {
@@ -80,7 +79,6 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
     } else {
 
         geocalls::LinesDataCall* cd = this->getDataSlot.CallAs<geocalls::LinesDataCall>();
-        this->structureContainer.dataChanged = false;
         if (cd == NULL)
             return false;
         cd->SetTime(os->getTime());

@@ -40,12 +40,12 @@ CallOSPRayStructure& CallOSPRayStructure::operator=(const CallOSPRayStructure& r
 }
 
 void CallOSPRayStructure::setStructureMap(OSPRayStrcutrureMap* sm) {
-    this->structureMap = sm;
+    structureMap = sm;
 }
 
 
-void CallOSPRayStructure::addStructure(OSPRayStructureContainer& sc) {
-    if (sc.isValid) {
+void CallOSPRayStructure::addStructure(OSPRayStructureContainer* sc) {
+    if (sc->isValid) {
         if (this->structureMap != NULL) {
             //this->structureMap->insert_or_assign(this, sc); // C++17
             this->structureMap->operator[](this) = sc;
@@ -65,8 +65,8 @@ void CallOSPRayStructure::setExtendMap(OSPRayExtendMap* em) {
 }
 
 
-void CallOSPRayStructure::addExtend(OSPRayExtendContainer& ec) {
-    if (this->extendMap != NULL) {
+void CallOSPRayStructure::addExtend(OSPRayExtendContainer* ec) {
+    if (extendMap != nullptr) {
         //this->extendMap->insert_or_assign(this, ec); // C++17
         this->extendMap->operator[](this) = ec;
     } else {

@@ -31,7 +31,6 @@ bool OSPRayAPIStructure::readData(megamol::core::Call& call) {
     CallOSPRayAPIObject* cd = this->getDataSlot.CallAs<CallOSPRayAPIObject>();
 
 
-    this->structureContainer.dataChanged = false;
     if (cd == NULL)
         return false;
     if (!(*cd)(2))

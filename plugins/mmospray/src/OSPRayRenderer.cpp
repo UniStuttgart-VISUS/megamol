@@ -114,16 +114,16 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
     _clipping_geo_changed = false;
     for (auto element : this->_structureMap) {
         auto structure = element.second;
-        if (structure.dataChanged) {
+        if (structure->dataChanged) {
             _data_has_changed = true;
         }
-        if (structure.materialChanged) {
+        if (structure->materialChanged) {
             _material_has_changed = true;
         }
-        if (structure.transformationChanged) {
+        if (structure->transformationChanged) {
             _transformation_has_changed = true;
         }
-        if (structure.clippingPlaneChanged) {
+        if (structure->clippingPlaneChanged) {
             _clipping_geo_changed = true;
         }
     }
@@ -441,42 +441,42 @@ bool OSPRayRenderer::GetExtents(megamol::core::view::CallRender3D& cr) {
         auto element = pair.second;
 
         if (frameCnt == 0) {
-            if (element.boundingBox->IsBoundingBoxValid()) {
-                finalBox.SetBoundingBox(element.boundingBox->BoundingBox());
-            } else if (element.boundingBox->IsClipBoxValid()) {
-                finalBox.SetBoundingBox(element.boundingBox->ClipBox());
+            if (element->boundingBox->IsBoundingBoxValid()) {
+                finalBox.SetBoundingBox(element->boundingBox->BoundingBox());
+            } else if (element->boundingBox->IsClipBoxValid()) {
+                finalBox.SetBoundingBox(element->boundingBox->ClipBox());
             } else {
                 finalBox.SetBoundingBox(vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f));
             }
-            if (element.boundingBox->IsClipBoxValid()) {
-                finalBox.SetClipBox(element.boundingBox->ClipBox());
-            } else if (element.boundingBox->IsBoundingBoxValid()) {
-                finalBox.SetClipBox(element.boundingBox->BoundingBox());
+            if (element->boundingBox->IsClipBoxValid()) {
+                finalBox.SetClipBox(element->boundingBox->ClipBox());
+            } else if (element->boundingBox->IsBoundingBoxValid()) {
+                finalBox.SetClipBox(element->boundingBox->BoundingBox());
             } else {
                 finalBox.SetClipBox(vislib::math::Cuboid<float>(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f));
             }
 
         } else {
-            if (element.boundingBox->IsBoundingBoxValid()) {
+            if (element->boundingBox->IsBoundingBoxValid()) {
                 vislib::math::Cuboid<float> box(finalBox.BoundingBox());
-                box.Union(element.boundingBox->BoundingBox());
+                box.Union(element->boundingBox->BoundingBox());
                 finalBox.SetBoundingBox(box);
-            } else if (element.boundingBox->IsClipBoxValid()) {
+            } else if (element->boundingBox->IsClipBoxValid()) {
                 vislib::math::Cuboid<float> box(finalBox.BoundingBox());
-                box.Union(element.boundingBox->BoundingBox());
+                box.Union(element->boundingBox->BoundingBox());
                 finalBox.SetBoundingBox(box);
             }
-            if (element.boundingBox->IsClipBoxValid()) {
+            if (element->boundingBox->IsClipBoxValid()) {
                 vislib::math::Cuboid<float> box(finalBox.ClipBox());
-                box.Union(element.boundingBox->ClipBox());
+                box.Union(element->boundingBox->ClipBox());
                 finalBox.SetClipBox(box);
-            } else if (element.boundingBox->IsBoundingBoxValid()) {
+            } else if (element->boundingBox->IsBoundingBoxValid()) {
                 vislib::math::Cuboid<float> box(finalBox.ClipBox());
-                box.Union(element.boundingBox->BoundingBox());
+                box.Union(element->boundingBox->BoundingBox());
                 finalBox.SetClipBox(box);
             }
         }
-        frameCnt = vislib::math::Max(frameCnt, element.timeFramesCount);
+        frameCnt = vislib::math::Max(frameCnt, element->timeFramesCount);
     }
     cr.SetTimeFramesCount(frameCnt);
 
