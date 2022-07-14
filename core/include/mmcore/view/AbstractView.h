@@ -140,6 +140,8 @@ public:
                 auto pose = base_pose;
                 pose.position = pos;
                 pose.direction = dir;
+                pose.up = glm::vec3(0, 1, 0);
+                pose.right = glm::normalize(glm::cross(pose.up, dir));
                 cam.setPose(pose);
                 return cam;
             });
