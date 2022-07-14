@@ -403,7 +403,7 @@ bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The camera output file path could not be determined. This is probably due to the usage of .mmprj project "
             "files. Please use a .lua project file instead");
-        return false;
+        return true;
     }
 
     if (!this->_overrideCamSettingsSlot.Param<param::BoolParam>()->Value()) {
@@ -415,7 +415,7 @@ bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
                 "The camera output file path already contains a camera file with the name '%s'. Override mode is "
                 "deactivated, so no camera is stored",
                 path.c_str());
-            return false;
+            return true;
         }
     }
 
@@ -430,7 +430,7 @@ bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The camera output file could not be written to '%s' because the file could not be opened.", path.c_str());
-        return false;
+        return true;
     }
 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
@@ -446,7 +446,7 @@ bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
         std::string camstring(this->_cameraSettingsSlot.Param<param::StringParam>()->Value());
         Camera cam;
         if (!this->_cameraSerializer.deserialize(cam, camstring)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "The entered camera string was not valid. No change of the camera has been performed");
         } else {
             this->_camera = cam;
@@ -459,7 +459,7 @@ bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The camera file path could not be determined. This is probably due to the usage of .mmprj project "
             "files. Please use a .lua project file instead");
-        return false;
+        return true;
     }
 
     std::ifstream file(path);
@@ -469,14 +469,14 @@ bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The camera output file at '%s' could not be opened.", path.c_str());
-        return false;
+        return true;
     }
     auto copy = this->_savedCameras;
     bool success = this->_cameraSerializer.deserialize(copy, text);
     if (!success) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The reading of the camera parameters did not work properly. No changes were made.");
-        return false;
+        return true;
     }
     this->_savedCameras = copy;
     if (this->_savedCameras.back().second) {
