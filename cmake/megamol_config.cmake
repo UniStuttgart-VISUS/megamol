@@ -87,8 +87,7 @@ if (ENABLE_MPI)
 endif ()
 
 # CGAL
-option(ENABLE_CGAL "Enable CGAL support" OFF)
-if (ENABLE_CGAL)
+if (MEGAMOL_USE_CGAL)
   add_compile_definitions(WITH_CGAL)
   find_package(CGAL REQUIRED)
 

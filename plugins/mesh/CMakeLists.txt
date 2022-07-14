@@ -17,7 +17,7 @@ if (mesh_PLUGIN_ENABLED)
   endif ()
 
   # Use CGAL
-  if (ENABLE_CGAL)
+  if (MEGAMOL_USE_CGAL)
     target_link_libraries(mesh PRIVATE CGAL::CGAL)
   endif ()
 endif ()

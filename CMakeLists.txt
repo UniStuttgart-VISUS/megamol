@@ -32,6 +32,12 @@ if (NOT vcpkg-download_POPULATED)
     FETCHCONTENT_UPDATES_DISCONNECTED_VCPKG-DOWNLOAD)
 endif ()
 
+option(MEGAMOL_USE_CGAL "Enable CGAL support" OFF)
+if (MEGAMOL_USE_CGAL)
+  list(APPEND VCPKG_MANIFEST_FEATURES "use-cgal")
+endif ()
+
+set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics") # Disable Telemetry
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-download-src/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 
 # Disable in source build
