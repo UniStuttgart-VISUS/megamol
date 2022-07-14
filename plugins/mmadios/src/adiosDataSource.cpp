@@ -259,7 +259,8 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
     if (cad == nullptr)
         return false;
 
-    if (dataHashChanged || loadedFrameID != cad->getFrameIDtoLoad()) {
+    if (dataHashChanged || loadedFrameID != cad->getFrameIDtoLoad() || this->filenameSlot.IsDirty()) {
+        this->filenameSlot.ResetDirty();
         if (loadedFrameID != cad->getFrameIDtoLoad())
             this->dataMap.clear();
 
@@ -275,8 +276,12 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             std::replace(fname.begin(), fname.end(), '/', '\\');
 #endif
 
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Opening File %s", fname.c_str());
-
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[adiosDataSource] Opening File '%s'", fname.c_str());
+            if (!std::filesystem::exists(fname)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("[adiosDataSource] File does not exist.");
+                return false;
+            }
             if (this->reader && dataHashChanged) {
                 this->reader->Close();
                 io->RemoveAllVariables();

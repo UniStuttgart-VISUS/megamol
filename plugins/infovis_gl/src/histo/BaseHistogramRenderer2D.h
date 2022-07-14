@@ -99,7 +99,10 @@ private:
 
     core::param::ParamSlot binsParam_;
     core::param::ParamSlot logPlotParam_;
+    core::param::ParamSlot useTransferFunctionParam_;
+    core::param::ParamSlot barColorParam_;
     core::param::ParamSlot selectionColorParam_;
+    core::param::ParamSlot axesColorParam_;
 
     std::size_t numBins_;
     std::size_t numComponents_;

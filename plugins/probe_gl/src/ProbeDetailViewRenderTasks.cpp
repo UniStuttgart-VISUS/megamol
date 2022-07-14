@@ -33,7 +33,7 @@ megamol::probe_gl::ProbeDetailViewRenderTasks::~ProbeDetailViewRenderTasks() {}
 
 bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
 
-    AbstractGPURenderTaskDataSource::create();
+    auto retval = AbstractGPURenderTaskDataSource::create();
 
     // Create local copy of transfer function texture (for compatibility with material pipeline)
     glowl::TextureLayout tex_layout;
@@ -50,16 +50,26 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
         {GL_TEXTURE_MIN_FILTER, GL_NEAREST}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}, {GL_TEXTURE_WRAP_S, GL_CLAMP}};
     try {
         this->m_transfer_function = std::make_shared<glowl::Texture2D>("ProbeTransferFunction", tex_layout, nullptr);
+        // TODO intialize with value indicating that no transfer function is connected
+        this->m_transfer_function->makeResident();
     } catch (glowl::TextureException const& exc) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error on transfer texture view pre-creation: %s. [%s, %s, line %d]\n", exc.what(), __FILE__, __FUNCTION__,
             __LINE__);
+        retval = false;
     }
-    // TODO intialize with value indicating that no transfer function is connected
-    this->m_transfer_function->makeResident();
 
     m_material_collection = std::make_shared<mesh_gl::GPUMaterialCollection>();
-    m_material_collection->addMaterial(this->instance(), "ProbeDetailView", "ProbeDetailView");
+    try {
+        std::vector<std::filesystem::path> shaderfiles = {"probes/dfr_probeDetailView.vert.glsl",
+            "probes/dfr_probeDetailView.frag.glsl", "probes/dfr_probeDetailView.tesc.glsl",
+            "probes/dfr_probeDetailView.tese.glsl"};
+        m_material_collection->addMaterial(this->instance(), "ProbeDetailView", shaderfiles);
+    } catch (const std::exception& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
+        retval = false;
+    }
 
     // TODO ui mesh
     {
@@ -101,10 +111,11 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
     std::vector<uint32_t> indices = {0, 1, 2, 3, 4, 5};
     std::vector<glowl::VertexLayout> vertex_layout = {};
 
+    //TODO try catch
     m_probes_mesh = std::make_shared<glowl::Mesh>(
         data_ptrs, byte_sizes, vertex_layout, indices.data(), 6 * 4, GL_UNSIGNED_INT, GL_TRIANGLES, GL_STATIC_DRAW);
 
-    return true; 
+    return retval; 
 }
 
 void megamol::probe_gl::ProbeDetailViewRenderTasks::release() {}
@@ -119,7 +130,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
     // if there is a render task connection to the right, pass on the render task collection
     mesh_gl::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh_gl::CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>> gpu_render_tasks;
+    auto gpu_render_tasks = std::make_shared<std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>>>();
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
@@ -129,7 +140,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         }
         gpu_render_tasks = rhs_rtc->getData();
     }
-    gpu_render_tasks.push_back(m_rendertask_collection.first);
+    gpu_render_tasks->push_back(m_rendertask_collection.first);
 
     // check/get mesh data 
     mesh_gl::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh_gl::CallGPUMeshData>();
