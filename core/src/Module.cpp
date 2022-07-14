@@ -69,8 +69,8 @@ bool Module::Create(std::vector<megamol::frontend::FrontendResource> resources) 
         if (p2 || p3 || p3_2)
             glPopDebugGroup();
 #endif
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 350, "%s module \"%s\"\n",
-            ((this->created) ? "Created" : "Failed to create"), typeid(*this).name());
+        Log::DefaultLog.WriteInfo(
+            "%s module \"%s\"\n", ((this->created) ? "Created" : "Failed to create"), typeid(*this).name());
     }
     if (this->created) {
         // Now reregister parents at children
@@ -121,7 +121,7 @@ void Module::Release(std::vector<megamol::frontend::FrontendResource> resources)
     if (this->created) {
         this->release();
         this->created = false;
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 350, "Released module \"%s\"\n", typeid(*this).name());
+        Log::DefaultLog.WriteInfo("Released module \"%s\"\n", typeid(*this).name());
     }
 }
 

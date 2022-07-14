@@ -2,8 +2,8 @@
 
 #include <array>
 
-#include "mesh/GPUMeshCollection.h"
-#include "mesh/MeshCalls.h"
+#include "mesh_gl/GPUMeshCollection.h"
+#include "mesh_gl/MeshCalls_gl.h"
 
 #include "ArchVisCalls.h"
 
@@ -17,14 +17,14 @@ megamol::archvis::MSMRenderTaskDataSource::MSMRenderTaskDataSource()
 megamol::archvis::MSMRenderTaskDataSource::~MSMRenderTaskDataSource() {}
 
 bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& caller) {
-    mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
+    mesh_gl::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == nullptr) {
         return false;
     }
 
-    mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
+    mesh_gl::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh_gl::CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<mesh::GPURenderTaskCollection>> gpu_render_tasks;
+    auto gpu_render_tasks = std::make_shared<std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>>>();
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
@@ -34,10 +34,10 @@ bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& call
         }
         gpu_render_tasks = rhs_rtc->getData();
     }
-    gpu_render_tasks.push_back(m_rendertask_collection.first);
+    gpu_render_tasks->push_back(m_rendertask_collection.first);
 
 
-    mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
+    mesh_gl::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh_gl::CallGPUMeshData>();
     if (mc == nullptr) {
         return false;
     }
@@ -75,9 +75,9 @@ bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& call
         for (int i = 0; i < elem_cnt; ++i) {
             auto elem_tpye = msm->getElementType(i);
 
-            mesh::GPUMeshCollection::SubMeshData sub_mesh;
+            mesh_gl::GPUMeshCollection::SubMeshData sub_mesh;
             if (elem_tpye == ScaleModel::STRUT) {
-                for (auto const& gpu_mesh_collection : gpu_mesh_storage) {
+                for (auto const& gpu_mesh_collection : *gpu_mesh_storage) {
                     sub_mesh = gpu_mesh_collection->getSubMesh("strut");
 
                     if (sub_mesh.mesh != nullptr) {
@@ -85,7 +85,7 @@ bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& call
                     }
                 }
             } else if (elem_tpye == ScaleModel::DIAGONAL) {
-                for (auto const& gpu_mesh_collection : gpu_mesh_storage) {
+                for (auto const& gpu_mesh_collection : *gpu_mesh_storage) {
                     sub_mesh = gpu_mesh_collection->getSubMesh("diagonal");
 
                     if (sub_mesh.mesh != nullptr) {
@@ -93,7 +93,7 @@ bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& call
                     }
                 }
             } else if (elem_tpye == ScaleModel::FLOOR) {
-                for (auto const& gpu_mesh_collection : gpu_mesh_storage) {
+                for (auto const& gpu_mesh_collection : *gpu_mesh_storage) {
                     sub_mesh = gpu_mesh_collection->getSubMesh("floor");
 
                     if (sub_mesh.mesh != nullptr) {
@@ -147,7 +147,7 @@ bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& call
 }
 
 bool megamol::archvis::MSMRenderTaskDataSource::getMetaDataCallback(core::Call& caller) {
-    megamol::mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<megamol::mesh::CallGPURenderTaskData*>(&caller);
+    megamol::mesh_gl::CallGPURenderTaskData* lhs_rtc = dynamic_cast<megamol::mesh_gl::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL)
         return false;
 

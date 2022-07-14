@@ -75,14 +75,12 @@ bool SurfacePotentialRendererSlave::create(void) {
     auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     // Load shader for per pixel lighting of the surface
     if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     // Load ppl fragment shader
     if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
         return false;
     }
     try {
@@ -90,8 +88,7 @@ bool SurfacePotentialRendererSlave::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception& e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create the ppl shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create the ppl shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 

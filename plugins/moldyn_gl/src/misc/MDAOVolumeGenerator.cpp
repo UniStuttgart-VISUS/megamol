@@ -79,8 +79,7 @@ bool MDAOVolumeGenerator::Init(frontend_resources::OpenGL_Context const& ogl_ctx
     std::stringstream outmsg;
     outmsg << "[MDAOVolumeGenerator] Voxelization Features enabled: Compute Shader " << computeAvailable
            << ", Clear Texture " << clearAvailable << std::endl;
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-        megamol::core::utility::log::Log::LEVEL_INFO, outmsg.str().c_str());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(outmsg.str().c_str());
 
     if (computeAvailable) {
         // Try to initialize the compute shader
@@ -95,8 +94,7 @@ bool MDAOVolumeGenerator::Init(frontend_resources::OpenGL_Context const& ogl_ctx
                    << vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
                           ce.FailedAction())
                    << ": " << ce.GetMsgA() << std::endl;
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_ERROR, outmsg.str().c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteError(outmsg.str().c_str());
             return false;
         }
     }
@@ -125,7 +123,7 @@ bool MDAOVolumeGenerator::Init(frontend_resources::OpenGL_Context const& ogl_ctx
         // Compile and Link
         if (!this->volumeShader.Compile(
                 vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[MDAOVolumeGenerator] Unable to compile shader: Unknown error\n");
             return false;
         }

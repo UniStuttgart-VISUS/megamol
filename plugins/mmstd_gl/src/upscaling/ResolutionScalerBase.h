@@ -105,7 +105,7 @@ protected:
             fsr_rcas_upsample_prgm_ = core::utility::make_glowl_shader(
                 "fsr_upscale_rcas", so_rcas, "mmstd_gl/upscaling/resolution_scaler_fsr.comp.glsl");
         } catch (std::exception& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 ("ResolutionScalerBase: " + std::string(e.what())).c_str());
         }
 

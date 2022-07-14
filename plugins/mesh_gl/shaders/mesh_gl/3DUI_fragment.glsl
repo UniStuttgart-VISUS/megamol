@@ -1,3 +1,5 @@
+#version 450
+
 struct MeshShaderParams
 {
     mat4 transform;

@@ -407,7 +407,7 @@ public:
             }
         }
         if (!success) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "EnumModulesNoLock: Unable to find module nor namespace \"%s\" as entry point", entry_point.c_str());
         }
     }
@@ -442,7 +442,7 @@ public:
             cb(vi);
             return true;
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to find module \"%s\" for processing", module_name.c_str());
             return false;
         }
@@ -472,11 +472,11 @@ public:
                 }
             }
             if (!found) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Unable to find a ParamSlot in module \"%s\" for processing", module_name.c_str());
             }
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to find module \"%s\" for processing", module_name.c_str());
         }
         return found;
@@ -511,11 +511,11 @@ public:
                 }
             }
             if (!found) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Unable to find a CallerSlot in module \"%s\" for processing", module_name.c_str());
             }
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to find module \"%s\" for processing", module_name.c_str());
         }
         return found;
