@@ -37,7 +37,7 @@ bool Profiling_Service::init(void* configPtr) {
     }
 #endif
 
-    _requestedResourcesNames = {"RegisterLuaCallbacks", "MegaMolGraph"};
+    _requestedResourcesNames = {"RegisterLuaCallbacks", "MegaMolGraph", "RenderNextFrame"};
 
     return true;
 }
@@ -62,12 +62,13 @@ void Profiling_Service::fill_lua_callbacks() {
     frontend_resources::LuaCallbacksCollection callbacks;
 
     auto& graph = const_cast<core::MegaMolGraph&>(_requestedResourcesReferences[1].getResource<core::MegaMolGraph>());
+    auto& render_next_frame = _requestedResourcesReferences[2].getResource<std::function<bool()>>();
 
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, unsigned int>(
+    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, int>(
         "mmGenerateCameraPositions", "(string entrypoint, string camera_path_pattern, uint num_samples)",
-        {[graph](std::string entrypoint, std::string camera_path_pattern,
-             unsigned int num_samples) -> frontend_resources::LuaCallbacksCollection::StringResult {
+        {[&graph](std::string entrypoint, std::string camera_path_pattern,
+             int num_samples) -> frontend_resources::LuaCallbacksCollection::StringResult {
             auto entry = graph.FindModule(entrypoint);
             if (!entry)
                 return frontend_resources::LuaCallbacksCollection::Error{"could not find entrypoint"};
@@ -77,7 +78,36 @@ void Profiling_Service::fill_lua_callbacks() {
             auto camera_samples = view->SampleCameraScenes(num_samples);
             if (camera_samples.empty())
                 return frontend_resources::LuaCallbacksCollection::Error{"could not sample camera"};
-            return frontend_resources::LuaCallbacksCollection::StringResult(camera_samples);
+            return frontend_resources::LuaCallbacksCollection::StringResult{camera_samples};
+        }});
+
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, std::string, std::string, int>("mmProfile",
+        "(string entrypoint, string cameras, unsigned int num_frames)",
+        {[&graph, &render_next_frame](std::string entrypoint, std::string cameras, int num_frames) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            auto entry = graph.FindModule(entrypoint);
+            if (!entry)
+                return frontend_resources::LuaCallbacksCollection::Error{"could not find entrypoint"};
+            auto view = std::dynamic_pointer_cast<core::view::AbstractView>(entry);
+            if (!view)
+                return frontend_resources::LuaCallbacksCollection::Error{"requested entrypoint is not a view"};
+
+            auto serializer = core::view::CameraSerializer();
+            std::vector<core::view::Camera> cams;
+            serializer.deserialize(cams, cameras);
+
+            auto const old_cam = view->GetCamera();
+
+            for (auto const& cam : cams) {
+                view->SetCamera(cam);
+                for (unsigned int f_idx = 0; f_idx < num_frames; ++f_idx) {
+                    render_next_frame();
+                }
+            }
+
+            view->SetCamera(old_cam);
+
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
         }});
 
 

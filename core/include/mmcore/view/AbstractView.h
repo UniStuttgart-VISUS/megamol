@@ -20,6 +20,7 @@
 #include "ScriptPaths.h"
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/OrbitalCameraSamples.h"
 #include "mmcore/view/Camera.h"
 #include "mmcore/view/CameraSerializer.h"
 #include "mmcore/view/TimeControl.h"
@@ -126,7 +127,26 @@ public:
     virtual void CalcCameraClippingPlanes(float border);
 
     virtual std::string SampleCameraScenes(unsigned int num_samples) const {
-        return std::string();
+        auto [cam_positions, cam_directions] = utility::orbital_camera_samples(GetBoundingBoxes(), num_samples);
+
+        auto cam = GetCamera();
+
+        auto const base_pose = cam.getPose();
+
+        std::vector<core::view::Camera> cameras(cam_positions.size());
+
+        std::transform(cam_positions.begin(), cam_positions.end(), cam_directions.begin(), cameras.begin(),
+            [&base_pose, &cam](auto const& pos, auto const& dir) {
+                auto pose = base_pose;
+                pose.position = pos;
+                pose.direction = dir;
+                cam.setPose(pose);
+                return cam;
+            });
+
+        auto serializer = core::view::CameraSerializer();
+
+        return serializer.serialize(cameras);
     }
 
     /**
