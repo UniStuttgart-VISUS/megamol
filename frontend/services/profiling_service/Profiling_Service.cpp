@@ -1,7 +1,7 @@
 #include "Profiling_Service.hpp"
 
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmstd/view/AbstractView.h"
 
 #include "LuaCallbacksCollection.h"
 
