@@ -17,8 +17,9 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/SSBOBufferArray.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
+
+#include "glowl/glowl.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 namespace megamol {
 namespace moldyn_gl {
@@ -57,6 +58,14 @@ public:
         return true;
     }
 
+#ifdef PROFILING
+    std::vector<std::string> requested_lifetime_resources() override {
+        std::vector<std::string> resources = ModuleGL::requested_lifetime_resources();
+        resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
+        return resources;
+    }
+#endif
+
     /** Ctor. */
     GlyphRenderer(void);
 
@@ -70,8 +79,6 @@ protected:
      * @return 'true' on success, 'false' otherwise.
      */
     bool create(void) override;
-
-    bool makeShader(std::string vertexName, std::string fragmentName, vislib_gl::graphics::gl::GLSLShader& shader);
 
     /**
      * The get extents callback. The module should set the members of
@@ -100,14 +107,21 @@ protected:
     bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
+#ifdef PROFILING
+    frontend_resources::PerformanceManager::handle_vector timers_;
+    frontend_resources::PerformanceManager* perf_manager_ = nullptr;
+#endif
+
     enum Glyph {
         BOX = 0,
         ELLIPSOID = 1,
         ARROW = 2,
         SUPERQUADRIC = 3,
+        GIZMO_ARROWGLYPH = 4,
+        GIZMO_LINE = 5,
     };
 
-    enum glyph_options {
+    enum GlyphOptions {
         USE_GLOBAL = 1 << 0,
         USE_TRANSFER_FUNCTION = 1 << 1,
         USE_FLAGS = 1 << 2,
@@ -116,28 +130,38 @@ private:
     };
 
     /**The ellipsoid shader*/
-    vislib_gl::graphics::gl::GLSLShader ellipsoidShader;
-    vislib_gl::graphics::gl::GLSLShader boxShader;
+    std::shared_ptr<glowl::GLSLProgram> box_prgm_;
+    std::shared_ptr<glowl::GLSLProgram> ellipsoid_prgm_;
+    std::shared_ptr<glowl::GLSLProgram> arrow_prgm_;
+    std::shared_ptr<glowl::GLSLProgram> superquadric_prgm_;
+    std::shared_ptr<glowl::GLSLProgram> gizmo_arrowglyph_prgm_;
 
-    std::vector<core::utility::SSBOBufferArray> position_buffers;
-    std::vector<core::utility::SSBOBufferArray> radius_buffers;
-    std::vector<core::utility::SSBOBufferArray> direction_buffers;
-    std::vector<core::utility::SSBOBufferArray> color_buffers;
+    std::vector<core::utility::SSBOBufferArray> position_buffers_;
+    std::vector<core::utility::SSBOBufferArray> radius_buffers_;
+    std::vector<core::utility::SSBOBufferArray> direction_buffers_;
+    std::vector<core::utility::SSBOBufferArray> color_buffers_;
 
     /** The slot to fetch the data */
-    megamol::core::CallerSlot getDataSlot;
-    megamol::core::CallerSlot getTFSlot;
-    megamol::core::CallerSlot getClipPlaneSlot;
-    megamol::core::CallerSlot readFlagsSlot;
+    megamol::core::CallerSlot get_data_slot_;
+    megamol::core::CallerSlot get_tf_slot_;
+    megamol::core::CallerSlot get_clip_plane_slot_;
+    megamol::core::CallerSlot read_flags_slot_;
 
-    megamol::core::param::ParamSlot glyphParam;
-    megamol::core::param::ParamSlot scaleParam;
-    megamol::core::param::ParamSlot colorInterpolationParam;
-    megamol::core::param::ParamSlot colorModeParam;
+    megamol::core::param::ParamSlot glyph_param_;
+    megamol::core::param::ParamSlot scale_param_;
+    megamol::core::param::ParamSlot radius_scale_param_;
+    megamol::core::param::ParamSlot orientation_param_;
+    megamol::core::param::ParamSlot length_filter_param_;
+    megamol::core::param::ParamSlot color_interpolation_param_;
+    megamol::core::param::ParamSlot min_radius_param_;
+    megamol::core::param::ParamSlot color_mode_param_;
+    megamol::core::param::ParamSlot superquadric_exponent_param_;
+    megamol::core::param::ParamSlot gizmo_arrow_thickness_;
 
-    SIZE_T lastHash = -1;
-    uint32_t lastFrameID = -1;
-    GLuint greyTF;
+    SIZE_T last_hash_ = -1;
+    uint32_t last_frame_id_ = -1;
+    // TODO: glowl/Texture1D?
+    GLuint grey_tf_;
 };
 
 } // namespace rendering
