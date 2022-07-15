@@ -1,8 +1,8 @@
 #version 430
 
-#include "core/tflookup.inc.glsl"
-#include "core/tfconvenience.inc.glsl"
-#include "core/bitflags.inc.glsl"
+#include "mmstd_gl/common/tflookup.inc.glsl"
+#include "mmstd_gl/common/tfconvenience.inc.glsl"
+#include "mmstd_gl/flags/bitflags.inc.glsl"
 #include "common/mapping.inc.glsl"
 
 uniform int kernelType;

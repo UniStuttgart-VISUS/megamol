@@ -538,9 +538,10 @@ void megamol::probe::PlaceProbes::vertexNormalSampling(mesh::MeshDataAccessColle
     }
 }
 
-void PlaceProbes::faceNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
-    mesh::MeshDataAccessCollection::VertexAttribute& normals,
-    mesh::MeshDataAccessCollection::VertexAttribute& probe_ids, mesh::MeshDataAccessCollection::IndexData& indices) {
+void PlaceProbes::faceNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute const& vertices,
+    mesh::MeshDataAccessCollection::VertexAttribute const& normals,
+    mesh::MeshDataAccessCollection::VertexAttribute const& probe_ids,
+    mesh::MeshDataAccessCollection::IndexData const& indices) {
 
     auto vertex_accessor = reinterpret_cast<float*>(vertices.data);
     auto vertex_step = vertices.stride / sizeof(float);
@@ -668,7 +669,7 @@ bool megamol::probe::PlaceProbes::placeProbes() {
         }
     } else if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 5) {
 
-        for (auto& mesh : _mesh->accessMeshes()) {
+        for (auto const& mesh : _mesh->accessMeshes()) {
 
             for (auto& attribute : mesh.second.attributes) {
                 if (attribute.semantic == mesh::MeshDataAccessCollection::POSITION) {

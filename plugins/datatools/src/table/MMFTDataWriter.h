@@ -8,9 +8,9 @@
 #pragma once
 
 #include "datatools/table/TableDataCall.h"
-#include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd/data/AbstractDataWriter.h"
 
 namespace megamol::datatools::table {
 

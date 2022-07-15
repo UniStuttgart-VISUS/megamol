@@ -8,8 +8,8 @@
 #pragma once
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
@@ -20,7 +20,7 @@ namespace volume_gl {
 /**
  * Renders one slice of a volume (slow)
  */
-class VolumeSliceRenderer : public core_gl::view::Renderer3DModuleGL {
+class VolumeSliceRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -74,7 +74,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call) override;
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -83,7 +83,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call) override;
+    virtual bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /** The call for data */

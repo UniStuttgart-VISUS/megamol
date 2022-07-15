@@ -8,9 +8,9 @@
 
 #include "mmcore/utility/log/Log.h"
 
+#include "cluster/mpi/MpiCall.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -411,14 +411,13 @@ bool megamol::remote::FBOTransmitter2::triggerButtonClicked(megamol::core::param
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Transmission of \"%s\" requested", mvn.c_str());
+    Log::DefaultLog.WriteInfo("Transmission of \"%s\" requested", mvn.c_str());
 
     // this->ModuleGraphLock().LockExclusive();
     const auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::view::AbstractView>(
         mvn, [this](megamol::core::view::AbstractView* vi) { vi->RegisterHook(this); });
     if (!ret) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "FBOTransmitter2: Unable to find VIEW \"%s\" for transmission", mvn.c_str());
+        Log::DefaultLog.WriteError("FBOTransmitter2: Unable to find VIEW \"%s\" for transmission", mvn.c_str());
         success = false;
     }
     // this->ModuleGraphLock().UnlockExclusive();
@@ -752,13 +751,12 @@ bool megamol::remote::FBOTransmitter2::renderCompChanged(core::param::ParamSlot&
     bool success = true;
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
 
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "FBOTransmitter2: Rendering to of \"%s\" requested", mvn.c_str());
+    Log::DefaultLog.WriteInfo("FBOTransmitter2: Rendering to of \"%s\" requested", mvn.c_str());
 
     const auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::view::AbstractView>(
         mvn, [this](megamol::core::view::AbstractView* vi) { vi->RegisterHook(this); });
     if (!ret) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "FBOTransmitter2: Unable to find VIEW \"%s\" for transmission", mvn.c_str());
+        Log::DefaultLog.WriteError("FBOTransmitter2: Unable to find VIEW \"%s\" for transmission", mvn.c_str());
         success = false;
     }
 

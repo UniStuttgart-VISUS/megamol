@@ -8,8 +8,8 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 
-#include "mmcore/cluster/SyncDataSourcesCall.h"
-#include "mmcore/cluster/mpi/MpiCall.h"
+#include "cluster/SyncDataSourcesCall.h"
+#include "cluster/mpi/MpiCall.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/RawStorageSerialiser.h"
 #include "vislib/sys/SystemInformation.h"

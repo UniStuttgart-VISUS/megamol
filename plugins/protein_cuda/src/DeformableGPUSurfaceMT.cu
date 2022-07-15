@@ -2011,7 +2011,7 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -2303,7 +2303,7 @@ bool DeformableGPUSurfaceMT::initExtForcesGradient(float *volTarget_D,
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -2311,7 +2311,7 @@ bool DeformableGPUSurfaceMT::initExtForcesGradient(float *volTarget_D,
 
     // Allocate memory
     if (!CudaSafeCall(this->externalForces_D.Validate(volSize*4))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not allocate memory",
                 this->ClassName());
         return false;
@@ -2319,7 +2319,7 @@ bool DeformableGPUSurfaceMT::initExtForcesGradient(float *volTarget_D,
 
     // Init with zero
     if (!CudaSafeCall(this->externalForces_D.Set(0))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init memory",
                 this->ClassName());
         return false;
@@ -2371,7 +2371,7 @@ bool DeformableGPUSurfaceMT::initExtForcesDistfield(
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -2454,7 +2454,7 @@ bool DeformableGPUSurfaceMT::initExtForcesGVF(
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -2523,7 +2523,7 @@ bool DeformableGPUSurfaceMT::initExtForcesTwoWayGVF(
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -2584,7 +2584,7 @@ bool DeformableGPUSurfaceMT::initExtForcesTwoWayGVF(
         cudaEventSynchronize(event1);
         cudaEventSynchronize(event2);
         cudaEventElapsedTime(&dt_ms, event1, event2);
-//        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//        Log::DefaultLog.WriteInfo(
 //                "%s: Time for bi-directional diffusion %f\n",
 //                "DeformableGPUSurfaceMT", dt_ms/1000.0f);
     //#endif
@@ -3435,7 +3435,7 @@ float DeformableGPUSurfaceMT::IntUncertaintyOverCorruptSurfArea(
 //
 //    // Init constant device params
 //    if (!initGridParams(volDim, volOrg, volDelta)) {
-//        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+//        Log::DefaultLog.WriteError(
 //                "%s: could not init constant device params",
 //                this->ClassName());
 //        return false;
@@ -3724,7 +3724,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGradient(
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -3880,7 +3880,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeDistfield(
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -4045,7 +4045,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -4219,7 +4219,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVFBM(
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -4406,7 +4406,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -4591,7 +4591,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVFSubdiv(
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -6453,7 +6453,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return -1;
@@ -6465,7 +6465,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
             &cudaTokens[0], this->vboVtxData,
             cudaGraphicsMapFlagsNone))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could register buffer",
                 this->ClassName());
         return -1;
@@ -6474,14 +6474,14 @@ int DeformableGPUSurfaceMT::RefineMesh(
     if (!CudaSafeCall(cudaGraphicsGLRegisterBuffer(
             &cudaTokens[1], this->vboTriangleIdx,
             cudaGraphicsMapFlagsNone))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not register buffer",
                 this->ClassName());
         return -1;
     }
 
     if (!CudaSafeCall(cudaGraphicsMapResources(2, cudaTokens))) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not map recources",
                 this->ClassName());
         return -1;
@@ -6494,7 +6494,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
             reinterpret_cast<void**>(&vboPt), // The mapped pointer
             &vboSize,              // The size of the accessible data
             cudaTokens[0]))) {                 // The mapped resource
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not obtain device pointer",
                 this->ClassName());
         return -1;
@@ -6507,7 +6507,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
             reinterpret_cast<void**>(&vboTriIdxPt), // The mapped pointer
             &vboTriSize,              // The size of the accessible data
             cudaTokens[1]))) {                 // The mapped resource
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not obtain device pointer",
                 this->ClassName());
         return -1;
@@ -6539,7 +6539,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
     }
     // Check whether triangle neighbors have been computed
     if (this->triangleNeighbors_D.GetCount() != this->triangleCnt*3) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: need triangle neighbors",
                 this->ClassName());
         return -1;
@@ -6749,7 +6749,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
     /* 4. Build triangle-edge-list */
 
     if (this->triangleNeighbors_D.GetCount() != this->triangleCnt*3) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: need triangle neighbors",
                 this->ClassName());
         // !! Unmap/registers vbos because they will be reinitialized
@@ -7410,7 +7410,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -7616,7 +7616,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
 //            cudaEventSynchronize(eventEnd);
 //            cudaEventSynchronize(eventStart);
 //            cudaEventElapsedTime(&dt_ms, eventStart, eventEnd);
-////            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+////            Log::DefaultLog.WriteInfo(
 ////                    "%s: Time for iteration (%u vertices): %f sec\n",
 ////                    "DeformableGPUSurfaceMT",
 ////                    this->vertexCnt,
@@ -7635,7 +7635,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
 //            cudaEventSynchronize(eventEnd);
 //            cudaEventSynchronize(eventStart);
 //            cudaEventElapsedTime(&dt_ms, eventStart, eventEnd);
-//            Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+//            Log::DefaultLog.WriteInfo(
 //                    "%s: Time for thrust::reduce (%u vertices): %f sec\n",
 //                    "DeformableGPUSurfaceMT",
 //                    this->vertexCnt,
@@ -7657,7 +7657,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
     cudaEventSynchronize(event1);
     cudaEventSynchronize(event2);
     cudaEventElapsedTime(&dt_ms, event1, event2);
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    Log::DefaultLog.WriteInfo(
             "%s: Time for mapping (%u iterations, %u vertices): %f sec\n",
             "DeformableGPUSurfaceMT",
             iterationsNeeded, this->vertexCnt, dt_ms/1000.0f);
@@ -7694,7 +7694,7 @@ bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -7885,7 +7885,7 @@ bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
     cudaEventSynchronize(event1);
     cudaEventSynchronize(event2);
     cudaEventElapsedTime(&dt_ms, event1, event2);
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    Log::DefaultLog.WriteInfo(
             "%s: Time for mapping (%u iterations, %u vertices): %f sec\n",
             "DeformableGPUSurfaceMT",
             iterationsNeeded, this->vertexCnt, dt_ms/1000.0f);
@@ -8157,7 +8157,7 @@ bool DeformableGPUSurfaceMT::ComputeVtxDiffValue(
 
     // Init CUDA grid for texture #0
     if (!initGridParams(texDim0, texOrg0, texDelta0)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 DeformableGPUSurfaceMT::ClassName());
         return false;
@@ -8189,7 +8189,7 @@ bool DeformableGPUSurfaceMT::ComputeVtxDiffValue(
 
     // Init CUDA grid for texture #1
     if (!initGridParams(texDim1, texOrg1, texDelta1)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 DeformableGPUSurfaceMT::ClassName());
         return false;
@@ -8303,7 +8303,7 @@ bool DeformableGPUSurfaceMT::ComputeVtxDiffValueFitted(
 
     // Init CUDA grid for texture #0
     if (!initGridParams(texDim0, texOrg0, texDelta0)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 DeformableGPUSurfaceMT::ClassName());
         return false;
@@ -8335,7 +8335,7 @@ bool DeformableGPUSurfaceMT::ComputeVtxDiffValueFitted(
 
     // Init CUDA grid for texture #1
     if (!initGridParams(texDim1, texOrg1, texDelta1)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 DeformableGPUSurfaceMT::ClassName());
         return false;
@@ -8447,7 +8447,7 @@ bool DeformableGPUSurfaceMT::ComputeVtxSignDiffValue(
 
     // Init CUDA grid for texture #0
     if (!initGridParams(texDim0, texOrg0, texDelta0)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 DeformableGPUSurfaceMT::ClassName());
         return false;
@@ -8479,7 +8479,7 @@ bool DeformableGPUSurfaceMT::ComputeVtxSignDiffValue(
 
     // Init CUDA grid for texture #1
     if (!initGridParams(texDim1, texOrg1, texDelta1)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 DeformableGPUSurfaceMT::ClassName());
         return false;
@@ -8594,7 +8594,7 @@ bool DeformableGPUSurfaceMT::ComputeVtxSignDiffValueFitted(
 
     // Init CUDA grid for texture #0
     if (!initGridParams(texDim0, texOrg0, texDelta0)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 DeformableGPUSurfaceMT::ClassName());
         return false;
@@ -8626,7 +8626,7 @@ bool DeformableGPUSurfaceMT::ComputeVtxSignDiffValueFitted(
 
     // Init CUDA grid for texture #1
     if (!initGridParams(texDim1, texOrg1, texDelta1)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 DeformableGPUSurfaceMT::ClassName());
         return false;
@@ -8932,7 +8932,7 @@ bool DeformableGPUSurfaceMT::TrackPathSubdivVertices(
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 this->ClassName());
         return false;
@@ -9304,7 +9304,7 @@ bool DeformableGPUSurfaceMT::ComputeSurfAttribSignDiff(
     // Init grid params
     // Init CUDA grid for texture #0
     if (!initGridParams(texDim0, texOrg0, texDelta0)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 DeformableGPUSurfaceMT::ClassName());
         return false;
@@ -9329,7 +9329,7 @@ bool DeformableGPUSurfaceMT::ComputeSurfAttribSignDiff(
     // Init grid params
     // Init CUDA grid for texture #0
     if (!initGridParams(texDim1, texOrg1, texDelta1)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 DeformableGPUSurfaceMT::ClassName());
         return false;
@@ -9542,7 +9542,7 @@ bool DeformableGPUSurfaceMT::ComputeSurfAttribDiff(
     // Init grid params
     // Init CUDA grid for texture #0
     if (!initGridParams(texDim0, texOrg0, texDelta0)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 DeformableGPUSurfaceMT::ClassName());
         return false;
@@ -9567,7 +9567,7 @@ bool DeformableGPUSurfaceMT::ComputeSurfAttribDiff(
     // Init grid params
     // Init CUDA grid for texture #1
     if (!initGridParams(texDim1, texOrg1, texDelta1)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
                 "%s: could not init constant device params",
                 DeformableGPUSurfaceMT::ClassName());
         return false;

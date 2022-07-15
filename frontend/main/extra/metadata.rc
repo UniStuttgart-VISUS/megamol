@@ -1,0 +1,26 @@
+#include <winresrc.h>
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+IDI_ICON1 ICON "icon.ico"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION 0,0,0,0
+PRODUCTVERSION 0,0,0,0
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "040904B0"
+        {
+            VALUE "CompanyName",      "Visualization Research Center (VISUS), University of Stuttgart\0"
+            VALUE "FileDescription",  "MegaMol\0"
+            VALUE "FileVersion",      "0.0.0.0\0"
+            VALUE "LegalCopyright",   "MegaMol Dev Team\0"
+            VALUE "ProductName",      "MegaMol\0"
+            VALUE "ProductVersion",   "0.0.0.0\0"
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x409, 1200
+    }
+}

@@ -15,6 +15,7 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/view/Camera.h"
+#include "vislib/math/Cuboid.h"
 #include <glm/glm.hpp>
 
 

@@ -14,7 +14,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "vislib/RawStorage.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/File.h"

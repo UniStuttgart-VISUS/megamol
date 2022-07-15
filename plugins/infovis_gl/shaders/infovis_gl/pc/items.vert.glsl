@@ -1,9 +1,9 @@
 #version 450
 
 #include "common/common.inc.glsl"
-#include "core/bitflags.inc.glsl"
-#include "core/tflookup.inc.glsl"
-#include "core/tfconvenience.inc.glsl"
+#include "mmstd_gl/common/tflookup.inc.glsl"
+#include "mmstd_gl/common/tfconvenience.inc.glsl"
+#include "mmstd_gl/flags/bitflags.inc.glsl"
 
 uniform bool useTransferFunction = true;
 uniform vec4 itemColor = vec4(1.0f);

@@ -71,7 +71,7 @@ void GPURenderTaskCollection::deleteRenderTask(std::string const& identifier) {
                 }
 
             } catch (glowl::BufferObjectException const& e) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Error during GPU render task deletion: %s\n", e.what());
             }
         }

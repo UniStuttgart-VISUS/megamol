@@ -54,7 +54,7 @@ private:
 
     void releaseImpl() override;
 
-    bool handleCall(core_gl::view::CallRender2DGL& call) override;
+    bool handleCall(mmstd_gl::CallRender2DGL& call) override;
 
     void updateSelection(SelectionMode selectionMode, int selectedComponent, int selectedBin) override;
 

@@ -110,8 +110,7 @@ bool TableSampler::handleCall(core::Call& call) {
     }
 
     if (tableInCall == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "TableSampler requires a table!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("TableSampler requires a table!");
         return false;
     }
 
@@ -121,7 +120,7 @@ bool TableSampler::handleCall(core::Call& call) {
 
     if (this->tableInFrameCount != tableInCall->GetFrameCount() || this->tableInDataHash != tableInCall->DataHash() ||
         doResampling) {
-        //megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "TableSampler: Sample table.");
+        //megamol::core::utility::log::Log::DefaultLog.WriteInfo( "TableSampler: Sample table.");
 
         this->dataHash++;
         this->doResampling = false;

@@ -4,6 +4,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include "KeyboardMouseInput.h"
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -19,6 +21,13 @@
 namespace megamol {
 namespace core {
 namespace view {
+
+using megamol::frontend_resources::Key;
+using megamol::frontend_resources::KeyAction;
+using megamol::frontend_resources::Modifier;
+using megamol::frontend_resources::Modifiers;
+using megamol::frontend_resources::MouseButton;
+using megamol::frontend_resources::MouseButtonAction;
 
 class Camera3DController {
 public:
@@ -363,7 +372,16 @@ public:
     }
 
     void applyParameterSlotsToCamera(BoundingBoxes_2 const& bboxs) {
-        // set pose
+        // Set default view and reset camera if params are dirty
+        // Note: Has lowest priority, i.e. if other camera parameters are dirty in the same frame, they
+        // will overwrite the reseted camera. Important for expected behaviour when loading project files.
+        if (_cameraSetOrientationChooserParam.IsDirty() || _cameraSetViewChooserParam.IsDirty()) {
+            _cameraSetOrientationChooserParam.ResetDirty();
+            _cameraSetViewChooserParam.ResetDirty();
+            reset(bboxs, _target_camera->get<Camera::AspectRatio>());
+        }
+
+        // Set pose
         auto cam_pose = _target_camera->get<Camera::Pose>();
         if (this->_cameraPositionParam.IsDirty()) {
             auto val = this->_cameraPositionParam.Param<param::Vector3fParam>()->Value();
@@ -378,7 +396,7 @@ public:
         }
         _target_camera->setPose(cam_pose);
 
-        // set intrinsics
+        // Set intrinsics
         if (_target_camera->get<Camera::ProjectionType>() != Camera::UNKNOWN) {
             auto curr_proj_type = _target_camera->get<Camera::ProjectionType>();
             auto cam_pose = _target_camera->get<Camera::Pose>();
@@ -400,12 +418,22 @@ public:
                 fovy = std::atan(vertical_height / orbitalAltitude);
             }
 
-            // if set to auto
+            if (true) // TODO
             {
                 // compute auto-adjusted near far plane
                 auto min_max_dist = get_min_max_dist_to_bbox(bboxs);
                 far_plane = std::max(0.0f, min_max_dist.y);
                 near_plane = std::max(far_plane / 10000.0f, min_max_dist.x);
+            } else {
+                // set near far based on UI param input
+                if (_cameraNearPlaneParam.IsDirty()) {
+                    near_plane = _cameraNearPlaneParam.Param<param::FloatParam>()->Value();
+                    _cameraNearPlaneParam.ResetDirty();
+                }
+                if (_cameraFarPlaneParam.IsDirty()) {
+                    far_plane = _cameraFarPlaneParam.Param<param::FloatParam>()->Value();
+                    _cameraFarPlaneParam.ResetDirty();
+                }
             }
 
             if (_cameraHalfApertureDegreesParam.IsDirty()) {
@@ -418,6 +446,7 @@ public:
             if (this->_cameraProjectionTypeParam.IsDirty()) {
                 this->_cameraProjectionTypeParam.ResetDirty();
             }
+
             auto proj_type = static_cast<Camera::ProjectionType>(
                 this->_cameraProjectionTypeParam.Param<param::EnumParam>()->Value());
             if (proj_type == Camera::PERSPECTIVE) {
@@ -440,57 +469,7 @@ public:
                 *_target_camera = Camera(cam_pose, cam_intrinsics);
             }
         }
-
-        if (_cameraSetOrientationChooserParam.IsDirty() || _cameraSetViewChooserParam.IsDirty()) {
-            _cameraSetOrientationChooserParam.ResetDirty();
-            _cameraSetViewChooserParam.ResetDirty();
-            reset(bboxs, _target_camera->get<Camera::AspectRatio>());
-        }
-
-        //// setting of near plane and far plane might make no sense as we are setting them new each frame
-        /// anyway
-        // if (this->cameraNearPlaneParam.IsDirty()) {
-        //    auto val = this->cameraNearPlaneParam.Param<param::FloatParam>()->Value();
-        //    this->_camera.near_clipping_plane(val);
-        //    this->cameraNearPlaneParam.ResetDirty();
-        //    result = true;
-        //}
-        // if (this->cameraFarPlaneParam.IsDirty()) {
-        //    auto val = this->cameraFarPlaneParam.Param<param::FloatParam>()->Value();
-        //    this->_camera.far_clipping_plane(val);
-        //    this->cameraFarPlaneParam.ResetDirty();
-        //    result = true;
-        //}
-        //  if (this->_cameraHalfApertureDegreesParam.IsDirty()) {
-        //      auto val = this->_cameraHalfApertureDegreesParam.Param<param::FloatParam>()->Value();
-        //      this->_camera.half_aperture_angle_radians(val * M_PI / 180.0f);
-        //      this->_cameraHalfApertureDegreesParam.ResetDirty();
-        //      result = true;
-        //  }
     }
-
-    //  bool cameraOvrCallback(
-    //      param::ParamSlot& p) {
-    //      auto up_vis = this->_cameraOvrUpParam.Param<param::Vector3fParam>()->Value();
-    //      auto lookat_vis = this->_cameraOvrLookatParam.Param<param::Vector3fParam>()->Value();
-    //
-    //      glm::vec3 up(up_vis.X(), up_vis.Y(), up_vis.Z());
-    //      up = glm::normalize(up);
-    //      glm::vec3 lookat(lookat_vis.X(), lookat_vis.Y(), lookat_vis.Z());
-    //
-    //      auto cam_pose = this->_camera.get<Camera::Pose>();
-    //      glm::mat3 view;
-    //      view[2] = -glm::normalize(lookat - cam_pose.position);
-    //      view[0] = glm::normalize(glm::cross(up, view[2]));
-    //      view[1] = glm::normalize(glm::cross(view[2], view[0]));
-    //
-    //      auto orientation = glm::quat_cast(view);
-    //
-    //      this->_camera.setPose(Camera::Pose(cam_pose.position, orientation));
-    //      this->_rotCenter = lookat;
-    //
-    //      return true;
-    //  }
 
     /**
      * This event handler can be reimplemented to receive key code events.

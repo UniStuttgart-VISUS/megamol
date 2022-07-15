@@ -6,6 +6,9 @@
  */
 
 #include "mmcore/Module.h"
+
+#include <typeinfo>
+
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
@@ -13,12 +16,11 @@
 #include "vislib/IllegalStateException.h"
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"
-#include <typeinfo>
 
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #endif
 
@@ -28,7 +30,7 @@ using namespace megamol::core;
 /*
  * Module::Module
  */
-Module::Module(void) : AbstractNamedObjectContainer(), created(false) {
+Module::Module() : AbstractNamedObjectContainer(), created(false) {
     // intentionally empty ATM
 }
 
@@ -36,7 +38,7 @@ Module::Module(void) : AbstractNamedObjectContainer(), created(false) {
 /*
  * Module::~Module
  */
-Module::~Module(void) {
+Module::~Module() {
     if (this->created == true) {
         throw vislib::IllegalStateException(
             "You must release all resources in the proper derived dtor.", __FILE__, __LINE__);
@@ -56,7 +58,7 @@ bool Module::Create(std::vector<megamol::frontend::FrontendResource> resources) 
     if (!this->created) {
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         auto p3 = dynamic_cast<core::view::Renderer3DModule*>(this);
-        auto p3_2 = dynamic_cast<core_gl::view::Renderer3DModuleGL*>(this);
+        auto p3_2 = dynamic_cast<mmstd_gl::Renderer3DModuleGL*>(this);
         auto p2 = dynamic_cast<core::view::Renderer2DModule*>(this);
         if (p2 || p3 || p3_2) {
             std::string output = this->ClassName();
@@ -69,8 +71,8 @@ bool Module::Create(std::vector<megamol::frontend::FrontendResource> resources) 
         if (p2 || p3 || p3_2)
             glPopDebugGroup();
 #endif
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 350, "%s module \"%s\"\n",
-            ((this->created) ? "Created" : "Failed to create"), typeid(*this).name());
+        Log::DefaultLog.WriteInfo(
+            "%s module \"%s\"\n", ((this->created) ? "Created" : "Failed to create"), typeid(*this).name());
     }
     if (this->created) {
         // Now reregister parents at children
@@ -90,13 +92,13 @@ AbstractSlot* Module::FindSlot(const vislib::StringA& name) {
     end = this->ChildList_End();
     for (; iter != end; ++iter) {
         AbstractSlot* slot = dynamic_cast<AbstractSlot*>(iter->get());
-        if (slot == NULL)
+        if (slot == nullptr)
             continue;
         if (slot->Name().Equals(name, false)) {
             return slot;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 
@@ -121,7 +123,7 @@ void Module::Release(std::vector<megamol::frontend::FrontendResource> resources)
     if (this->created) {
         this->release();
         this->created = false;
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 350, "Released module \"%s\"\n", typeid(*this).name());
+        Log::DefaultLog.WriteInfo("Released module \"%s\"\n", typeid(*this).name());
     }
 }
 
@@ -129,7 +131,7 @@ void Module::Release(std::vector<megamol::frontend::FrontendResource> resources)
 /*
  * Module::ClearCleanupMark
  */
-void Module::ClearCleanupMark(void) {
+void Module::ClearCleanupMark() {
     if (!this->CleanupMark())
         return;
 
@@ -152,7 +154,7 @@ void Module::ClearCleanupMark(void) {
 /*
  * Module::PerformCleanup
  */
-void Module::PerformCleanup(void) {
+void Module::PerformCleanup() {
     // Do not proceed into the children, because they will be deleted
     // automatically
     AbstractNamedObject::PerformCleanup();
@@ -200,7 +202,7 @@ vislib::StringA Module::getRelevantConfigValue(vislib::StringA name) {
  * Module::MakeSlotAvailable
  */
 void Module::MakeSlotAvailable(AbstractSlot* slot) {
-    if (slot == NULL) {
+    if (slot == nullptr) {
         throw vislib::IllegalParamException("slot", __FILE__, __LINE__);
     }
     if (slot->GetStatus() != AbstractSlot::STATUS_UNAVAILABLE) {
@@ -215,7 +217,7 @@ void Module::MakeSlotAvailable(AbstractSlot* slot) {
 }
 
 void Module::SetSlotUnavailable(AbstractSlot* slot) {
-    if (slot == NULL) {
+    if (slot == nullptr) {
         throw vislib::IllegalParamException("slot", __FILE__, __LINE__);
     }
     if (slot->GetStatus() == AbstractSlot::STATUS_CONNECTED) {

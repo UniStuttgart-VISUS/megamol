@@ -5,6 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
+#include "vk_platform.h"
+
 #ifndef MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED
 #define MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED
 
@@ -24,23 +26,19 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector2fParam.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/flags/FlagCallsGL.h"
-#include "mmcore_gl/flags/UniFlagStorage.h"
 #include "mmcore_gl/utility/SSBOBufferArray.h"
 #include "mmcore_gl/utility/SSBOStreamer.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd/renderer/CallClipPlane.h"
+#include "mmstd_gl/flags/FlagCallsGL.h"
+#include "mmstd_gl/flags/UniFlagStorage.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 #include "vislib/assert.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/types.h"
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -63,7 +61,8 @@
 #include <string>
 #include <vector>
 
-//#include "TimeMeasure.h"
+#include "glowl/glowl.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 
 // Minimum GLSL version for all render modes
@@ -104,7 +103,7 @@ using namespace vislib_gl::graphics::gl;
 /**
  * Renderer for simple sphere glyphs.
  */
-class SphereRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+class SphereRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -137,11 +136,11 @@ public:
         HDC dc = ::wglGetCurrentDC();
         HGLRC rc = ::wglGetCurrentContext();
         if (dc == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[SphereRenderer] There is no OpenGL rendering context available.");
         }
         if (rc == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[SphereRenderer] There is no current OpenGL rendering context available from the calling thread.");
         }
         ASSERT(dc != nullptr);
@@ -153,22 +152,22 @@ public:
 
         // (OpenGL Version and GLSL Version might not correlate, see Mesa 3D on Stampede ...)
 
-        std::string glslVerStr((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
-        std::size_t found = glslVerStr.find(".");
+        std::string glsl_ver_str((char*)glGetString(GL_SHADING_LANGUAGE_VERSION));
+        std::size_t found = glsl_ver_str.find(".");
         int major = -1;
         int minor = -1;
         if (found != std::string::npos) {
-            major = std::atoi(glslVerStr.substr(0, 1).c_str());
-            minor = std::atoi(glslVerStr.substr(found + 1, 1).c_str());
+            major = std::atoi(glsl_ver_str.substr(0, 1).c_str());
+            minor = std::atoi(glsl_ver_str.substr(found + 1, 1).c_str());
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "[SphereRenderer] No valid GL_SHADING_LANGUAGE_VERSION string: %s", glslVerStr.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[SphereRenderer] No valid GL_SHADING_LANGUAGE_VERSION string: %s", glsl_ver_str.c_str());
         }
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-            "[SphereRenderer] Found GLSL version %d.%d (%s).", major, minor, glslVerStr.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "[SphereRenderer] Found GLSL version %d.%d (%s).", major, minor, glsl_ver_str.c_str());
         if ((major < (int)(SPHERE_MIN_GLSL_MAJOR)) ||
             (major == (int)(SPHERE_MIN_GLSL_MAJOR) && minor < (int)(SPHERE_MIN_GLSL_MINOR))) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[SphereRenderer] No render mode available. OpenGL "
                 "Shading Language version 1.3 or greater is required.");
             retval = false;
@@ -211,7 +210,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool Render(megamol::mmstd_gl::CallRender3DGL& call);
 
     /**
      * The get extents callback. The module should set the members of
@@ -222,7 +221,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(megamol::mmstd_gl::CallRender3DGL& call);
 
 private:
     /*********************************************************************/
@@ -240,10 +239,10 @@ private:
         OUTLINE = 7
     };
 
-    typedef std::map<std::tuple<int, int, bool>, std::shared_ptr<GLSLShader>> shaderMap;
+    typedef std::map<std::tuple<int, int, bool>, std::shared_ptr<glowl::GLSLProgram>> shader_map;
 
     struct gpuParticleDataType {
-        GLuint vertexVBO, colorVBO, vertexArray;
+        GLuint vertex_vbo, color_vbo, vertex_array;
     };
 
     struct gBufferDataType {
@@ -253,126 +252,123 @@ private:
 
     // Current Render State -----------------------------------------------
 
-    int curVpWidth;
-    int curVpHeight;
-    int lastVpWidth;
-    int lastVpHeight;
-    glm::vec4 curViewAttrib;
-    glm::vec4 curClipDat;
-    glm::vec4 oldClipDat;
-    glm::vec4 curClipCol;
-    glm::vec4 curlightDir;
-    glm::vec4 curCamUp;
-    glm::vec4 curCamView;
-    glm::vec4 curCamRight;
-    glm::vec4 curCamPos;
-    glm::mat4 curMVinv;
-    glm::mat4 curMVtransp;
-    glm::mat4 curMVP;
-    glm::mat4 curMVPinv;
-    glm::mat4 curMVPtransp;
-    vislib::math::Cuboid<float> curClipBox;
+    int cur_vp_width_;
+    int cur_vp_height_;
+    int last_vp_width_;
+    int last_vp_height_;
+    glm::vec4 cur_view_attrib_;
+    glm::vec4 cur_clip_dat_;
+    glm::vec4 old_clip_dat_;
+    glm::vec4 cur_clip_col_;
+    glm::vec4 cur_light_dir_;
+    glm::vec4 cur_cam_up_;
+    glm::vec4 cur_cam_view_;
+    glm::vec4 cur_cam_right_;
+    glm::vec4 cur_cam_pos_;
+    glm::mat4 cur_mv_inv_;
+    glm::mat4 cur_mv_transp_;
+    glm::mat4 cur_mvp_;
+    glm::mat4 cur_mvp_inv_;
+    glm::mat4 cur_mvp_transp_;
+    vislib::math::Cuboid<float> cur_clip_box_;
 
     // --------------------------------------------------------------------
+    std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> shader_options_flags_;
 
-    bool init_resources;
-    RenderMode renderMode;
-    GLuint greyTF;
-    std::array<float, 2> range;
+    bool init_resources_;
+    RenderMode render_mode_;
+    GLuint grey_tf_;
+    std::array<float, 2> range_;
 
-    bool flags_enabled;
-    bool flags_available;
+    bool flags_enabled_;
+    bool flags_available_;
 
-    GLSLShader sphereShader;
-    GLSLGeometryShader sphereGeometryShader;
-    GLSLShader lightingShader;
+    std::shared_ptr<glowl::GLSLProgram> sphere_prgm_;
+    std::shared_ptr<glowl::GLSLProgram> sphere_geometry_prgm_;
+    std::shared_ptr<glowl::GLSLProgram> lighting_prgm_;
 
-    std::shared_ptr<ShaderSource> vertShader;
-    std::shared_ptr<ShaderSource> fragShader;
-    std::shared_ptr<ShaderSource> geoShader;
+    std::unique_ptr<glowl::BufferObject> ao_dir_ubo_;
 
-    GLuint vertArray;
-    SimpleSphericalParticles::ColourDataType colType;
-    SimpleSphericalParticles::VertexDataType vertType;
-    std::shared_ptr<GLSLShader> newShader;
-    shaderMap theShaders;
+    GLuint vert_array_;
+    SimpleSphericalParticles::ColourDataType col_type_;
+    SimpleSphericalParticles::VertexDataType vert_type_;
+    std::shared_ptr<glowl::GLSLProgram> new_shader_;
+    shader_map the_shaders_;
 
-    GLuint theSingleBuffer;
-    unsigned int currBuf;
-    GLsizeiptr bufSize;
-    int numBuffers;
-    void* theSingleMappedMem;
+    GLuint the_single_buffer_;
+    unsigned int curr_buf_;
+    GLsizeiptr buf_size_;
+    int num_buffers_;
+    void* the_single_mapped_mem_;
 
-    std::vector<gpuParticleDataType> gpuData;
-    gBufferDataType gBuffer;
-    SIZE_T oldHash;
-    unsigned int oldFrameID;
-    bool stateInvalid;
-    glm::vec2 ambConeConstants;
-    misc::MDAOVolumeGenerator* volGen;
-    bool triggerRebuildGBuffer;
-
-    //TimeMeasure                            timer;
+    std::vector<gpuParticleDataType> gpu_data_;
+    gBufferDataType g_buffer_;
+    SIZE_T old_hash_;
+    unsigned int old_frame_id_;
+    bool state_invalid_;
+    glm::vec2 amb_cone_constants_;
+    misc::MDAOVolumeGenerator* vol_gen_;
+    bool trigger_rebuild_g_buffer_;
 
 #ifdef PROFILING
-    frontend_resources::PerformanceManager::handle_vector timers;
-    frontend_resources::PerformanceManager* perf_manager = nullptr;
+    frontend_resources::PerformanceManager::handle_vector timers_;
+    frontend_resources::PerformanceManager* perf_manager_ = nullptr;
 #endif
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
-    GLuint singleBufferCreationBits;
-    GLuint singleBufferMappingBits;
-    std::vector<GLsync> fences;
+    GLuint single_buffer_creation_bits_;
+    GLuint single_buffer_mapping_bits_;
+    std::vector<GLsync> fences_;
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
 #ifdef SPHERE_MIN_OGL_SSBO_STREAM
-    megamol::core::utility::SSBOStreamer streamer;
-    megamol::core::utility::SSBOStreamer colStreamer;
-    std::vector<megamol::core::utility::SSBOBufferArray> bufArray;
-    std::vector<megamol::core::utility::SSBOBufferArray> colBufArray;
+    megamol::core::utility::SSBOStreamer streamer_;
+    megamol::core::utility::SSBOStreamer col_streamer_;
+    std::vector<megamol::core::utility::SSBOBufferArray> buf_array_;
+    std::vector<megamol::core::utility::SSBOBufferArray> col_buf_array_;
 #endif // SPHERE_MIN_OGL_SSBO_STREAM
 
     /*********************************************************************/
     /* SLOTS                                                             */
     /*********************************************************************/
 
-    megamol::core::CallerSlot getDataSlot;
-    megamol::core::CallerSlot getClipPlaneSlot;
-    megamol::core::CallerSlot getTFSlot;
-    megamol::core::CallerSlot readFlagsSlot;
-    megamol::core::CallerSlot getLightsSlot;
+    megamol::core::CallerSlot get_data_slot_;
+    megamol::core::CallerSlot get_clip_plane_slot_;
+    megamol::core::CallerSlot get_tf_slot_;
+    megamol::core::CallerSlot read_flags_slot_;
+    megamol::core::CallerSlot get_lights_slot_;
 
     /*********************************************************************/
     /* PARAMETERS                                                        */
     /*********************************************************************/
 
-    megamol::core::param::ParamSlot renderModeParam;
-    megamol::core::param::ParamSlot radiusScalingParam;
-    megamol::core::param::ParamSlot forceTimeSlot;
-    megamol::core::param::ParamSlot useLocalBBoxParam;
-    megamol::core::param::ParamSlot selectColorParam;
-    megamol::core::param::ParamSlot softSelectColorParam;
+    megamol::core::param::ParamSlot render_mode_param_;
+    megamol::core::param::ParamSlot radius_scaling_param_;
+    megamol::core::param::ParamSlot force_time_slot_;
+    megamol::core::param::ParamSlot use_local_bbox_param_;
+    megamol::core::param::ParamSlot select_color_param_;
+    megamol::core::param::ParamSlot soft_select_color_param_;
 
     // Affects only Splat rendering ---------------------------------------
 
-    core::param::ParamSlot alphaScalingParam;
-    core::param::ParamSlot attenuateSubpixelParam;
-    core::param::ParamSlot useStaticDataParam;
+    core::param::ParamSlot alpha_scaling_param_;
+    core::param::ParamSlot attenuate_subpixel_param_;
+    core::param::ParamSlot use_static_data_param_;
 
     // Affects only Ambient Occlusion rendering: --------------------------
 
-    megamol::core::param::ParamSlot enableLightingSlot;
-    megamol::core::param::ParamSlot enableGeometryShader;
-    megamol::core::param::ParamSlot aoVolSizeSlot;
-    megamol::core::param::ParamSlot aoConeApexSlot;
-    megamol::core::param::ParamSlot aoOffsetSlot;
-    megamol::core::param::ParamSlot aoStrengthSlot;
-    megamol::core::param::ParamSlot aoConeLengthSlot;
-    megamol::core::param::ParamSlot useHPTexturesSlot;
+    megamol::core::param::ParamSlot enable_lighting_slot_;
+    megamol::core::param::ParamSlot enable_geometry_shader_;
+    megamol::core::param::ParamSlot ao_vol_size_slot_;
+    megamol::core::param::ParamSlot ao_cone_apex_slot_;
+    megamol::core::param::ParamSlot ao_offset_slot_;
+    megamol::core::param::ParamSlot ao_strength_slot_;
+    megamol::core::param::ParamSlot ao_cone_length_slot_;
+    megamol::core::param::ParamSlot use_hp_textures_slot_;
 
     // Affects only Outline rendering: --------------------------
 
-    megamol::core::param::ParamSlot outlineWidthSlot;
+    megamol::core::param::ParamSlot outline_width_slot_;
 
     /*********************************************************************/
     /* FUNCTIONS                                                         */
@@ -391,7 +387,7 @@ private:
      *
      * @return Pointer to MultiParticleDataCall ...
      */
-    MultiParticleDataCall* getData(unsigned int t, float& outScaling);
+    MultiParticleDataCall* getData(unsigned int t, float& out_scaling);
 
     /**
      * Return clipping information.
@@ -399,7 +395,7 @@ private:
      * @param clipDat  Points to four floats ...
      * @param clipCol  Points to four floats ....
      */
-    void getClipData(glm::vec4& out_clipDat, glm::vec4& out_clipCol);
+    void getClipData(glm::vec4& out_clip_dat, glm::vec4& out_clip_col);
 
     /**
      * Check if specified render mode or all render mode are available.
@@ -414,11 +410,9 @@ private:
     /**
      * Check if specified render mode or all render mode are available.
      *
-     * @param out_flag_snippet   The vertex shader snippet defining the usage of the flag storage depending on its availability.
-     *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool isFlagStorageAvailable(vislib::SmartPtr<ShaderSource::Snippet>& out_flag_snippet);
+    bool isFlagStorageAvailable();
 
     /**
      * Create shaders for given render mode.
@@ -442,18 +436,18 @@ private:
      *
      * @return           True if success, false otherwise.
      */
-    bool renderSimple(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-    bool renderGeometryShader(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-    bool renderSSBO(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-    bool renderSplat(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-    bool renderBufferArray(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-    bool renderAmbientOcclusion(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
-    bool renderOutline(core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+    bool renderSimple(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+    bool renderGeometryShader(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+    bool renderSSBO(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+    bool renderSplat(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+    bool renderBufferArray(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+    bool renderAmbientOcclusion(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
+    bool renderOutline(mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc);
 
     /**
      * Set pointers to vertex and color buffers and corresponding shader variables.
      *
-     * @param shader           The current shader.
+     * @param prgm             The current program.
      * @param parts            The current particles of a list.
      * @param vertBuf          ...
      * @param vertPtr          ...
@@ -465,27 +459,27 @@ private:
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool enableBufferData(const GLSLShader& shader, const MultiParticleDataCall::Particles& parts, GLuint vertBuf,
-        const void* vertPtr, GLuint colBuf, const void* colPtr, bool createBufferData = false);
+    bool enableBufferData(const std::shared_ptr<glowl::GLSLProgram> prgm, const MultiParticleDataCall::Particles& parts,
+        GLuint vert_buf, const void* vert_ptr, GLuint col_buf, const void* col_ptr, bool create_buffer_data = false);
 
     /**
      * Unset pointers to vertex and color buffers.
      *
-     * @param shader  The current shader.
+     * @param prgm  The current program.
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool disableBufferData(const GLSLShader& shader);
+    bool disableBufferData(const std::shared_ptr<glowl::GLSLProgram> prgm);
 
     /**
      * Set pointers to vertex and color buffers and corresponding shader variables.
      *
-     * @param shader           The current shader.
+     * @param prgm             The current program.
      * @param parts            The current particles of a list.
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool enableShaderData(GLSLShader& shader, const MultiParticleDataCall::Particles& parts);
+    bool enableShaderData(std::shared_ptr<glowl::GLSLProgram> prgm, const MultiParticleDataCall::Particles& parts);
 
     /**
      * Unset pointers to vertex and color buffers.
@@ -497,11 +491,11 @@ private:
     /**
      * Enables the transfer function texture.
      *
-     * @param shader    The current shader.
+     * @param prgm    The current program.
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool enableTransferFunctionTexture(GLSLShader& shader);
+    bool enableTransferFunctionTexture(std::shared_ptr<glowl::GLSLProgram> prgm);
 
     /**
      * Disables the transfer function texture.
@@ -513,21 +507,21 @@ private:
     /**
      * Enable flag storage.
      *
-     * @param shader           The current shader.
+     * @param prgm             The current program.
      * @param parts            The current particles of a list.
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool enableFlagStorage(const GLSLShader& shader, MultiParticleDataCall* mpdc);
+    bool enableFlagStorage(const std::shared_ptr<glowl::GLSLProgram> prgm, MultiParticleDataCall* mpdc);
 
     /**
      * Enable flag storage.
      *
-     * @param shader           The current shader.
+     * @param prgm             The current program.
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool disableFlagStorage(const GLSLShader& shader);
+    bool disableFlagStorage(const std::shared_ptr<glowl::GLSLProgram> prgm);
 
     /**
      * Get bytes and stride.
@@ -539,8 +533,9 @@ private:
      * @param vertStride   ...
      * @param interleaved  ...
      */
-    void getBytesAndStride(const MultiParticleDataCall::Particles& parts, unsigned int& outColBytes,
-        unsigned int& outVertBytes, unsigned int& outColStride, unsigned int& outVertStride, bool& outInterleaved);
+    void getBytesAndStride(const MultiParticleDataCall::Particles& parts, unsigned int& out_col_bytes,
+        unsigned int& out_vert_bytes, unsigned int& out_col_stride, unsigned int& out_vert_stride,
+        bool& out_interleaved);
 
     /**
      * Make SSBO vertex shader color string.
@@ -552,8 +547,8 @@ private:
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool makeColorString(const MultiParticleDataCall::Particles& parts, std::string& outCode,
-        std::string& outDeclaration, bool interleaved);
+    bool makeColorString(const MultiParticleDataCall::Particles& parts, std::string& out_code,
+        std::string& out_declaration, bool interleaved, msf::ShaderFactoryOptionsOpenGL& shader_options);
 
     /**
      * Make SSBO vertex shader position string.
@@ -565,19 +560,18 @@ private:
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool makeVertexString(const MultiParticleDataCall::Particles& parts, std::string& outCode,
-        std::string& outDeclaration, bool interleaved);
+    bool makeVertexString(const MultiParticleDataCall::Particles& parts, std::string& out_code,
+        std::string& out_declaration, bool interleaved, msf::ShaderFactoryOptionsOpenGL& shader_options);
 
     /**
      * Make SSBO shaders.
      *
-     * @param vert  ...
-     * @param frag  ...
+     * @param prgm  ...
      *
      * @return ...
      */
-    std::shared_ptr<GLSLShader> makeShader(
-        const std::shared_ptr<ShaderSource> vert, const std::shared_ptr<ShaderSource> frag);
+    std::shared_ptr<glowl::GLSLProgram> makeShader(
+        const std::string& prgm_name, const msf::ShaderFactoryOptionsOpenGL& shader_options);
 
     /**
      * Generate SSBO shaders.
@@ -586,7 +580,8 @@ private:
      *
      * @return ...
      */
-    std::shared_ptr<GLSLShader> generateShader(const MultiParticleDataCall::Particles& parts);
+    std::shared_ptr<glowl::GLSLProgram> generateShader(
+        const MultiParticleDataCall::Particles& parts, const std::string& prgm_name);
 
     /**
      * Returns GLSL minor and major version.
@@ -594,7 +589,7 @@ private:
      * @param major The major version of the currently available GLSL version.
      * @param minor The minor version of the currently available GLSL version.
      */
-    void getGLSLVersion(int& outMajor, int& outMinor) const;
+    void getGLSLVersion(int& out_major, int& out_minor) const;
 
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
@@ -603,14 +598,14 @@ private:
      *
      * @param syncObj  ...
      */
-    void lockSingle(GLsync& outSyncObj);
+    void lockSingle(GLsync& out_sync_obj);
 
     /**
      * Wait single.
      *
      * @param syncObj  ...
      */
-    void waitSingle(const GLsync& syncObj);
+    void waitSingle(const GLsync& sync_obj);
 
 #endif // defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
 
@@ -628,19 +623,20 @@ private:
      *
      * @param cr3d    ...
      * @param mpdc    ...
-     * @param shader  ...
+     * @param prgm    ...
      */
-    void rebuildWorkingData(
-        megamol::core_gl::view::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc, const GLSLShader& shader);
+    void rebuildWorkingData(megamol::mmstd_gl::CallRender3DGL& cr3d, MultiParticleDataCall* mpdc,
+        const std::shared_ptr<glowl::GLSLProgram> prgm);
 
     /**
      * Render deferred pass.
      *
      * @param cr3d  ...
      */
-    void renderDeferredPass(megamol::core_gl::view::CallRender3DGL& cr3d);
+    void renderDeferredPass(megamol::mmstd_gl::CallRender3DGL& cr3d);
 
     /**
+     * Currently not in use.
      * Generate direction shader array string.
      *
      * @param directions      ...
@@ -649,7 +645,7 @@ private:
      * @return ...
      */
     std::string generateDirectionShaderArrayString(
-        const std::vector<glm::vec4>& directions, const std::string& directionsName);
+        const std::vector<glm::vec4>& directions, const std::string& directions_name);
 
     /**
      * Generate 3 cone directions.
@@ -657,7 +653,7 @@ private:
      * @param directions  ...
      * @param apex        ...
      */
-    void generate3ConeDirections(std::vector<glm::vec4>& outDirections, float apex);
+    void generate3ConeDirections(std::vector<glm::vec4>& out_directions, float apex);
 };
 
 } /* end namespace rendering */

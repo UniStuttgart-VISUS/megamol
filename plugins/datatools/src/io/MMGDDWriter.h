@@ -10,9 +10,9 @@
 #pragma once
 
 #include "datatools/GraphDataCall.h"
-#include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd/data/AbstractDataWriter.h"
 #include "vislib/sys/File.h"
 
 

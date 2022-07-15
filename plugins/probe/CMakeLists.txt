@@ -6,6 +6,7 @@
 megamol_plugin(probe
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
+    mmstd
     mmadios
     mesh
     datatools

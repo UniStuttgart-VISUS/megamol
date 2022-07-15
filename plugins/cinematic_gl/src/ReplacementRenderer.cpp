@@ -20,7 +20,7 @@ using namespace vislib;
 
 
 ReplacementRenderer::ReplacementRenderer(void)
-        : megamol::core::view::RendererModule<megamol::core_gl::view::CallRender3DGL, core_gl::ModuleGL>()
+        : megamol::core::view::RendererModule<mmstd_gl::CallRender3DGL, mmstd_gl::ModuleGL>()
         , alphaParam("alpha", "The alpha value of the replacement rendering.")
         , replacementRenderingParam("replacement", "Show/hide replacement rendering for chained renderer.")
         , toggleReplacementParam("toggleReplacement", "Toggle replacement rendering.")
@@ -68,9 +68,9 @@ bool ReplacementRenderer::create(void) {
 }
 
 
-bool ReplacementRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
+bool ReplacementRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
-    auto cr3d_out = this->chainRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
+    auto cr3d_out = this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>();
     if (cr3d_out != nullptr) {
         *cr3d_out = call;
         if ((*cr3d_out)(view::AbstractCallRender::FnGetExtents)) {
@@ -89,7 +89,7 @@ bool ReplacementRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& cal
 }
 
 
-bool ReplacementRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
+bool ReplacementRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     if (this->replacementRenderingParam.IsDirty()) {
         this->replacementRenderingParam.ResetDirty();
@@ -150,7 +150,7 @@ bool ReplacementRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     } else {
 
-        auto cr3d_out = this->chainRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
+        auto cr3d_out = this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>();
         if (cr3d_out != nullptr) {
             *cr3d_out = call;
             return (*cr3d_out)(core::view::AbstractCallRender::FnRender);

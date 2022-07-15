@@ -9,7 +9,7 @@
 
 #include "AbstractQuartzModule.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 
 
 namespace megamol {
