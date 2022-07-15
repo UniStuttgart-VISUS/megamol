@@ -7,6 +7,9 @@ megamol_plugin(image_gl
   BUILD_DEFAULT OFF
   DEPENDS_GL
   DEPENDS_PLUGINS
+    mmstd
+    mmstd_gl
+    cluster
     image_calls)
 
 if (image_gl_PLUGIN_ENABLED)

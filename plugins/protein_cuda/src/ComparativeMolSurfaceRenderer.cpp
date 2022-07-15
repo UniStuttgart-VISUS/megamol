@@ -24,8 +24,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/CallRender3D.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/renderer/CallRender3D.h"
 
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
@@ -1229,7 +1229,7 @@ atoms instead.",
 /*
  * ComparativeMolSurfaceRenderer::GetExtents
  */
-bool ComparativeMolSurfaceRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool ComparativeMolSurfaceRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL) {
         return false;
@@ -1630,7 +1630,7 @@ void ComparativeMolSurfaceRenderer::release(void) {
 /*
  *  ComparativeMolSurfaceRenderer::Render
  */
-bool ComparativeMolSurfaceRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool ComparativeMolSurfaceRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     using namespace vislib::math;
 
 #ifdef USE_TIMER

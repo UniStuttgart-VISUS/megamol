@@ -7,6 +7,8 @@ megamol_plugin(mesh_gl
   BUILD_DEFAULT ON
   DEPENDS_GL
   DEPENDS_PLUGINS
+    mmstd
+    mmstd_gl
     mesh
     compositing_gl
     datatools_gl

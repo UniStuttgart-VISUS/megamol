@@ -11,7 +11,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/ModuleGL.h"
+#include "mmstd_gl/ModuleGL.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
 
@@ -26,7 +26,7 @@ namespace megamol::datatools_gl::misc {
  * Module to filter calls with multiple particle lists by list index
  */
 // TODO this module looks quite broken and will probably not work at all for particles having a direction
-class ParticleWorker : public core_gl::ModuleGL {
+class ParticleWorker : public mmstd_gl::ModuleGL {
 public:
     class VAOUnlocker : public core::AbstractGetDataCall::Unlocker {
     public:

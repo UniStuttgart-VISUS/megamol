@@ -6,6 +6,7 @@
 megamol_plugin(mmvtkm
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
+    mmstd
     PUBLIC mesh
     PRIVATE mmadios
   DEPENDS_EXTERNALS

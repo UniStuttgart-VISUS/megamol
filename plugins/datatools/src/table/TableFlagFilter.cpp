@@ -5,9 +5,9 @@
  */
 
 #include "TableFlagFilter.h"
-#include "mmcore/flags/FlagCalls.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmstd/flags/FlagCalls.h"
 
 using namespace megamol::datatools;
 using namespace megamol::datatools::table;

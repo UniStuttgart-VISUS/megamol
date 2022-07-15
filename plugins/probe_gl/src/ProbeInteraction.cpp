@@ -4,7 +4,7 @@
 #include "compositing_gl/CompositingCalls.h"
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/EventCall.h"
+#include "mmstd/event/EventCall.h"
 
 #include "ProbeEvents.h"
 
@@ -128,13 +128,13 @@ bool megamol::probe_gl::ProbeInteraction::create() {
 
 void megamol::probe_gl::ProbeInteraction::release() {}
 
-bool megamol::probe_gl::ProbeInteraction::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool megamol::probe_gl::ProbeInteraction::GetExtents(mmstd_gl::CallRender3DGL& call) {
     return true;
 }
 
-bool megamol::probe_gl::ProbeInteraction::Render(core_gl::view::CallRender3DGL& call) {
+bool megamol::probe_gl::ProbeInteraction::Render(mmstd_gl::CallRender3DGL& call) {
 
-    core_gl::view::CallRender3DGL* cr = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
+    mmstd_gl::CallRender3DGL* cr = dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (cr == NULL)
         return false;
 

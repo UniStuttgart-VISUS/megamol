@@ -6,6 +6,8 @@
 megamol_plugin(mmadios
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
+    mmstd
+    cluster
     datatools
     geometry_calls)
 

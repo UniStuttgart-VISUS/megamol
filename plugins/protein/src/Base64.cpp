@@ -10,6 +10,7 @@
 
 #include "Base64.h"
 
+#include <cstring>
 #include <memory>
 
 using namespace megamol::protein;

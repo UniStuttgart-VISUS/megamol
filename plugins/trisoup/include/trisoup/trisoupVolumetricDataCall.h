@@ -9,8 +9,8 @@
 
 #pragma once
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include "vislib/assert.h"

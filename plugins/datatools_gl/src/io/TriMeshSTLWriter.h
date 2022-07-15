@@ -10,7 +10,7 @@
 
 #include "datatools/io/AbstractSTLWriter.h"
 
-#include "mmcore/AbstractGetData3DCall.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 

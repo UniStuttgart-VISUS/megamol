@@ -18,8 +18,8 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/Renderer3DModuleDS.h"
+#include "mmstd/renderer/CallRender3D.h"
 
 #include "mmcore/BoundingBoxes.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"

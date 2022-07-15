@@ -12,8 +12,6 @@
 #include <iomanip>
 #include <sstream>
 
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/Verdana.inc"
 #include "vislib/net/SocketException.h"
 
 #include "mmcore/param/FilePathParam.h"
@@ -106,18 +104,18 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller) {
         this->m_elements_slot.ResetDirty();
 
         auto vislib_partsList_filename = m_partsList_slot.Param<megamol::core::param::FilePathParam>()->Value();
-        std::string partsList_filename(vislib_partsList_filename.PeekBuffer());
+        std::string partsList_filename(vislib_partsList_filename.string());
 
         auto vislib_nodesElement_filename =
             m_nodeElement_table_slot.Param<megamol::core::param::FilePathParam>()->Value();
-        std::string nodesElement_filename(vislib_nodesElement_filename.PeekBuffer());
+        std::string nodesElement_filename(vislib_nodesElement_filename.string());
 
 
         auto vislib_nodes_filename = m_nodes_slot.Param<megamol::core::param::FilePathParam>()->Value();
-        std::string nodes_filename(vislib_nodes_filename.PeekBuffer());
+        std::string nodes_filename(vislib_nodes_filename.string());
 
         auto vislib_elements_filename = m_elements_slot.Param<megamol::core::param::FilePathParam>()->Value();
-        std::string elements_filename(vislib_elements_filename.PeekBuffer());
+        std::string elements_filename(vislib_elements_filename.string());
 
         // Load scale model data
         std::vector<Vec3> node_positions;
@@ -143,8 +141,8 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller) {
         this->m_rcv_IPAddr_slot.ResetDirty();
 
         try {
-            vislib::net::IPAddress server_addr(
-                static_cast<const char*>(m_rcv_IPAddr_slot.Param<megamol::core::param::StringParam>()->Value()));
+            vislib::net::IPAddress server_addr(static_cast<const char*>(
+                m_rcv_IPAddr_slot.Param<megamol::core::param::StringParam>()->Value().c_str()));
             unsigned short server_port =
                 static_cast<unsigned short>(m_rcv_port_slot.Param<megamol::core::param::IntParam>()->Value());
             server_addr = server_addr.Create();
@@ -164,8 +162,8 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller) {
         this->m_snd_IPAddr_slot.ResetDirty();
 
         try {
-            vislib::net::IPAddress server_addr(
-                static_cast<const char*>(m_snd_IPAddr_slot.Param<megamol::core::param::StringParam>()->Value()));
+            vislib::net::IPAddress server_addr(static_cast<const char*>(
+                m_snd_IPAddr_slot.Param<megamol::core::param::StringParam>()->Value().c_str()));
             unsigned short server_port =
                 static_cast<unsigned short>(m_snd_port_slot.Param<megamol::core::param::IntParam>()->Value());
             server_addr = server_addr.Create();

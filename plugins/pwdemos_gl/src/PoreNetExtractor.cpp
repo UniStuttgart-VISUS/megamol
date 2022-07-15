@@ -14,8 +14,8 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd/renderer/CallClipPlane.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "vislib/Array.h"
 #include "vislib/Exception.h"
 #include "vislib/String.h"
@@ -40,7 +40,7 @@ namespace demos_gl {
  * PoreNetExtractor::PoreNetExtractor
  */
 PoreNetExtractor::PoreNetExtractor(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , AbstractQuartzModule()
         , typeTexture(0)
         , bbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0)
@@ -131,7 +131,7 @@ PoreNetExtractor::~PoreNetExtractor(void) {
 /*
  * PoreNetExtractor::GetExtents
  */
-bool PoreNetExtractor::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool PoreNetExtractor::GetExtents(mmstd_gl::CallRender3DGL& call) {
     call.AccessBoundingBoxes().SetBoundingBox(this->bbox);
     call.AccessBoundingBoxes().SetClipBox(this->cbox);
     call.SetTimeFramesCount(1);
@@ -143,7 +143,7 @@ bool PoreNetExtractor::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * PoreNetExtractor::Render
  */
-bool PoreNetExtractor::Render(core_gl::view::CallRender3DGL& call) {
+bool PoreNetExtractor::Render(mmstd_gl::CallRender3DGL& call) {
     if (this->isExtractionRunning()) {
         this->performExtraction();
     } else if (this->saveFile) {

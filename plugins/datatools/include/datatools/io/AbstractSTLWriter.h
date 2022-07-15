@@ -8,11 +8,11 @@
 #define MEGAMOL_DATATOOLS_IO_ABSTRACTSTLWRITER_H_INCLUDED
 #pragma once
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 
 #include "mmcore/factories/CallDescription.h"
 

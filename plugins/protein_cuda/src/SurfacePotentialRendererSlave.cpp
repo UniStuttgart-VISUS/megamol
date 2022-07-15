@@ -99,7 +99,7 @@ bool SurfacePotentialRendererSlave::create(void) {
 /*
  * SurfacePotentialRendererSlave::GetExtents
  */
-bool SurfacePotentialRendererSlave::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool SurfacePotentialRendererSlave::GetExtents(mmstd_gl::CallRender3DGL& call) {
     VBODataCall* c = this->vboSlot.CallAs<VBODataCall>();
     if (c == NULL) {
         return false;
@@ -162,7 +162,7 @@ void SurfacePotentialRendererSlave::release(void) {
 /*
  * SurfacePotentialRendererSlave::Render
  */
-bool SurfacePotentialRendererSlave::Render(core_gl::view::CallRender3DGL& call) {
+bool SurfacePotentialRendererSlave::Render(mmstd_gl::CallRender3DGL& call) {
 
     VBODataCall* c = this->vboSlot.CallAs<VBODataCall>();
     if (c == NULL) {

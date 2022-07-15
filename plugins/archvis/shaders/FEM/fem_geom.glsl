@@ -1,3 +1,5 @@
+#version 450
+
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 15) out; // 3 original + 4 per line
 

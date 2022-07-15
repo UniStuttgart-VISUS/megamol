@@ -21,8 +21,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
-#include "mmcore/cluster/ClusterController.h"
-#include "mmcore/job/JobThread.h"
+//#include "mmcore/cluster/ClusterController.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
@@ -45,8 +44,6 @@
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/PerformanceCounter.h"
 
-#include "factories/CallClassRegistry.h"
-#include "factories/ModuleClassRegistry.h"
 #include "utility/ServiceManager.h"
 
 #include "mmcore/utility/log/Log.h"
@@ -102,8 +99,7 @@ extern HMODULE mmCoreModuleHandle;
  * megamol::core::CoreInstance::CoreInstance
  */
 megamol::core::CoreInstance::CoreInstance(void)
-        : factories::AbstractObjectFactoryInstance()
-        , preInit(new PreInit)
+        : preInit(new PreInit)
         , config()
         , lua(nullptr)
         , builtinViewDescs()
@@ -136,12 +132,6 @@ megamol::core::CoreInstance::CoreInstance(void)
 
     profiler::Manager::Instance().SetCoreInstance(this);
     this->namespaceRoot->SetCoreInstance(*this);
-    factories::register_module_classes(this->module_descriptions);
-    factories::register_call_classes(this->call_descriptions);
-    for (auto md : this->module_descriptions)
-        this->all_module_descriptions.Register(md);
-    for (auto cd : this->call_descriptions)
-        this->all_call_descriptions.Register(cd);
 
     // megamol::core::utility::LuaHostService::ID =
     //    this->InstallService<megamol::core::utility::LuaHostService>();
@@ -200,8 +190,6 @@ megamol::core::CoreInstance::~CoreInstance(void) {
     // then factories
     this->all_module_descriptions.Shutdown();
     this->all_call_descriptions.Shutdown();
-    this->module_descriptions.Shutdown();
-    this->call_descriptions.Shutdown();
     // finally plugins
     this->plugins.clear();
 
@@ -1260,7 +1248,7 @@ megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePe
 
     std::shared_ptr<ModuleNamespace> preViewInst = NULL;
     bool hasErrors = false;
-    view::AbstractView *view = NULL, *fallbackView = NULL;
+    view::AbstractViewInterface *view = NULL, *fallbackView = NULL;
     vislib::StringA viewFullPath =
         this->namespaceRoot->FullNamespace(request.Name(), request.Description()->ViewModuleID());
 
@@ -1304,7 +1292,7 @@ megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePe
             continue;
 
         } else {
-            view::AbstractView* av = dynamic_cast<view::AbstractView*>(mod.get());
+            view::AbstractViewInterface* av = dynamic_cast<view::AbstractViewInterface*>(mod.get());
             if (av != NULL) {
                 // view module instantiated.
                 if (fullName.Equals(viewFullPath)) {
@@ -1380,12 +1368,13 @@ megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePe
 /*
  * megamol::core::CoreInstance::instantiateSubView
  */
-megamol::core::view::AbstractView* megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription* vd) {
+megamol::core::view::AbstractViewInterface* megamol::core::CoreInstance::instantiateSubView(
+    megamol::core::ViewDescription* vd) {
     using megamol::core::utility::log::Log;
     vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     bool hasErrors = false;
-    view::AbstractView *view = NULL, *fallbackView = NULL;
+    view::AbstractViewInterface *view = NULL, *fallbackView = NULL;
 
     // instantiate modules
     for (unsigned int idx = 0; idx < vd->ModuleCount(); idx++) {
@@ -1407,7 +1396,7 @@ megamol::core::view::AbstractView* megamol::core::CoreInstance::instantiateSubVi
             continue;
 
         } else {
-            view::AbstractView* av = dynamic_cast<view::AbstractView*>(mod.get());
+            view::AbstractViewInterface* av = dynamic_cast<view::AbstractViewInterface*>(mod.get());
             if (av != NULL) {
                 // view module instantiated.
                 if (fullName.Equals(vd->ViewModuleID())) {
@@ -2107,6 +2096,7 @@ void megamol::core::CoreInstance::Shutdown(void) {
 /*
  * megamol::core::CoreInstance::SetupGraphFromNetwork
  */
+/*
 void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
     using megamol::core::utility::log::Log;
     using vislib::net::AbstractSimpleMessage;
@@ -2225,6 +2215,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
         Log::DefaultLog.WriteError("Failed to setup module graph from network message: unexpected exception\n");
     }
 }
+*/
 
 
 /*

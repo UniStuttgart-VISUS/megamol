@@ -13,10 +13,10 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/view/light/DistantLight.h"
-#include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/light/DistantLight.h"
+#include "mmstd/light/PointLight.h"
 
 using namespace megamol;
 using namespace megamol::trisoup_gl;
@@ -181,7 +181,7 @@ void ModernTrisoupRenderer::release(void) {
     }
 }
 
-bool ModernTrisoupRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool ModernTrisoupRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     auto ctmd = this->getDataSlot_.CallAs<geocalls_gl::CallTriMeshDataGL>();
     if (ctmd == nullptr) {
@@ -199,7 +199,7 @@ bool ModernTrisoupRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-bool ModernTrisoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool ModernTrisoupRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     auto call_fbo = call.GetFramebuffer();
     auto cam = call.GetCamera();
 

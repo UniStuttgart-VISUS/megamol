@@ -15,10 +15,10 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmstd/renderer/CallClipPlane.h"
+#include "mmstd_gl/flags/FlagCallsGL.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/assert.h"
@@ -35,7 +35,7 @@ using namespace megamol::moldyn_gl::rendering;
 //const uint32_t max_ssbo_size = 2 * 1024 * 1024 * 1024;
 
 GlyphRenderer::GlyphRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , getDataSlot("getData", "The slot to fetch the data")
         , getTFSlot("getTF", "the slot for the transfer function")
         , getClipPlaneSlot("getClipPlane", "the slot for the clip plane")
@@ -49,13 +49,13 @@ GlyphRenderer::GlyphRenderer(void)
     this->getDataSlot.SetCompatibleCall<geocalls::EllipsoidalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->getTFSlot.SetCompatibleCall<mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
     this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->getClipPlaneSlot);
 
-    this->readFlagsSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    this->readFlagsSlot.SetCompatibleCall<mmstd_gl::FlagCallRead_GLDescription>();
     this->MakeSlotAvailable(&this->readFlagsSlot);
 
     param::EnumParam* gp = new param::EnumParam(0);
@@ -150,7 +150,7 @@ bool GlyphRenderer::makeShader(
     return true;
 }
 
-bool GlyphRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool GlyphRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     auto* epdc = this->getDataSlot.CallAs<geocalls::EllipsoidalParticleDataCall>();
     if ((epdc != NULL) && ((*epdc)(1))) {
@@ -283,7 +283,7 @@ bool megamol::moldyn_gl::rendering::GlyphRenderer::validateData(geocalls::Ellips
     return true;
 }
 
-bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool GlyphRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     auto* epdc = this->getDataSlot.CallAs<geocalls::EllipsoidalParticleDataCall>();
     if (epdc == nullptr)
         return false;
@@ -299,8 +299,8 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
     if (!this->validateData(epdc))
         return false;
 
-    auto* tfc = this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
-    auto* flagsc = this->readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
+    auto* tfc = this->getTFSlot.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
+    auto* flagsc = this->readFlagsSlot.CallAs<mmstd_gl::FlagCallRead_GL>();
     bool use_flags = (flagsc != nullptr);
 
     bool use_clip = false;
@@ -395,7 +395,7 @@ bool GlyphRenderer::Render(core_gl::view::CallRender3DGL& call) {
         glEnable(GL_CLIP_DISTANCE0);
     }
     if (use_flags) {
-        (*flagsc)(core_gl::FlagCallRead_GL::CallGetData);
+        (*flagsc)(mmstd_gl::FlagCallRead_GL::CallGetData);
         auto flags = flagsc->getData();
         //if (flags->flags->getByteSize() / sizeof(core::FlagStorage::FlagVectorType) < num_total_glyphs) {
         //    megamol::core::utility::log::Log::DefaultLog.WriteError("Not enough flags in storage for proper selection!");

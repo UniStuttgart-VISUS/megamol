@@ -6,10 +6,10 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/view/light/CallLight.h"
-#include "mmcore/view/light/DistantLight.h"
-#include "mmcore/view/light/PointLight.h"
-#include "mmcore/view/light/TriDirectionalLighting.h"
+#include "mmstd/light/CallLight.h"
+#include "mmstd/light/DistantLight.h"
+#include "mmstd/light/PointLight.h"
+#include "mmstd/light/TriDirectionalLighting.h"
 
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 

@@ -9,7 +9,7 @@
 #define MMVTKM_MESH_RENDER_TASKS_H_INCLUDED
 
 #include "mesh_gl/AbstractGPURenderTaskDataSource.h"
-#include "mmcore/CallGeneric.h"
+#include "mmstd/generic/CallGeneric.h"
 
 namespace megamol {
 namespace mmvtkm_gl {

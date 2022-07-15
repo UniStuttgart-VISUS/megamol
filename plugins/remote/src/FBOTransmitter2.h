@@ -13,7 +13,7 @@
 #include "FBOCommFabric.h"
 #include "FBOProto.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmstd/view/AbstractView.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
 #ifdef WITH_MPI

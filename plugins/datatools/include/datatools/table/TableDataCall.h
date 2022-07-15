@@ -9,8 +9,8 @@
 #define MEGAMOL_DATATOOLS_TABLEDATACALL_H_INCLUDED
 #pragma once
 
-#include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetDataCall.h"
 #include "vislib/String.h"
 #include "vislib/macro_utils.h"
 #include <string>

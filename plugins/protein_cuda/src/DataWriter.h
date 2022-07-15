@@ -16,7 +16,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/job/AbstractJob.h"
-#include "mmcore/view/TimeControl.h"
+#include "mmstd/renderer/TimeControl.h"
 
 #include "protein_calls/CrystalStructureDataCall.h"
 

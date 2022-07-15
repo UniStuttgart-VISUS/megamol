@@ -24,6 +24,8 @@
 #include "mmcore_gl/utility/SDFFont.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib/graphics/PngBitmapCodec.h"
+#include "vislib/math/Point.h"
+#include "vislib/math/Vector.h"
 
 
 namespace megamol::core_gl::utility {

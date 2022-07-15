@@ -15,8 +15,7 @@
 #include "ViewRenderInputs.h"
 
 #include "mmcore/Module.h"
-#include "mmcore/view/View3D.h"
-#include "mmcore_gl/view/View3DGL.h"
+#include "mmcore/view/AbstractViewInterface.h"
 #endif // WITH_VR_SERVICE_UNITY_KOLABBW
 
 #include "mmcore/MegaMolGraph.h"
@@ -485,12 +484,10 @@ bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& 
     }
 
     // if the entry point is not a 3d view there is no point in doing stereo for it
-    auto* view3d = dynamic_cast<megamol::core::view::View3D*>(ptr);
-    auto* view3dgl = dynamic_cast<megamol::core_gl::view::View3DGL*>(ptr);
-    if (!view3d && !view3dgl) {
-        log_error(
-            "entry point " + entry_point_name +
-            " does not seem to be a supported View Type (View3D or View3DGL). Not using it for stereo rendering.");
+    const auto* view = dynamic_cast<megamol::core::view::AbstractViewInterface*>(ptr);
+    if (view == nullptr || view->GetViewDimension() != ViewDimension::VIEW_3D) {
+        log_error("entry point " + entry_point_name +
+                  " does not seem to be a supported 3D View Type. Not using it for stereo rendering.");
         return false;
     }
 
