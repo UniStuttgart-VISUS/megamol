@@ -88,19 +88,6 @@ function(require_external NAME)
       INCLUDE_DIR "include")
     target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD2)
 
-  # json
-  elseif (NAME STREQUAL "json")
-    if (TARGET json)
-      return()
-    endif ()
-
-    # The repo at https://github.com/nlohmann/json is too big, add local copy to avoid very slow download!
-    add_external_headeronly_project(json
-      SOURCE_DIR json)
-    if (MSVC)
-      target_sources(json INTERFACE "${CMAKE_SOURCE_DIR}/externals/json/nlohmann_json.natvis")
-    endif ()
-
   # libcxxopts
   elseif (NAME STREQUAL "libcxxopts")
     if (TARGET libcxxopts)

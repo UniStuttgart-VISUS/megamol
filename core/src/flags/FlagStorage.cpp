@@ -6,7 +6,7 @@
 
 #include "mmcore/flags/FlagStorage.h"
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
 #include "FlagStorageBitsChecker.h"
 #include "mmcore/CoreInstance.h"

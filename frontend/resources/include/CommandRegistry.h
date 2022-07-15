@@ -6,14 +6,16 @@
  */
 
 #pragma once
+
 #include <functional>
 #include <regex>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 #include "KeyboardMouseInput.h"
-#include <json.hpp>
 
 #ifdef CUESDK_ENABLED
 #include "CUESDK.h"

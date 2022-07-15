@@ -8,9 +8,9 @@
 project(frontend_resources)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+find_package(nlohmann_json CONFIG REQUIRED)
 require_external(glm)
 
-require_external(json)
 if (ENABLE_CUESDK)
   require_external(CUESDK)
 endif()
@@ -33,7 +33,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   #$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
   #$<INSTALL_INTERFACE:include/>
 )
-target_link_libraries(${PROJECT_NAME} PUBLIC json glm)
+target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json glm)
 if (ENABLE_CUESDK)
   target_link_libraries(${PROJECT_NAME} PUBLIC CUESDK)
 endif()
