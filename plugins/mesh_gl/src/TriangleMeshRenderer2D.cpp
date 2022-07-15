@@ -1,29 +1,25 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "TriangleMeshRenderer2D.h"
 
-#include "mesh/MeshDataCall.h"
-#include "mesh/TriangleMeshCall.h"
+#include <exception>
+#include <sstream>
+#include <stdexcept>
 
+#include "mesh/TriangleMeshCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
-#include "mmcore/view/MouseFlags.h"
-
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/view/CallRender2DGL.h"
 
-#include <glowl/glowl.h>
+namespace megamol::mesh_gl {
 
-#include <exception>
-#include <memory>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <vector>
-
-namespace megamol {
-namespace mesh_gl {
 TriangleMeshRenderer2D::TriangleMeshRenderer2D()
         : render_input_slot("render_input_slot", "Render input slot")
         , triangle_mesh_slot("get_triangle_mesh", "Triangle mesh input")
@@ -37,7 +33,7 @@ TriangleMeshRenderer2D::TriangleMeshRenderer2D()
         , wireframe("wireframe", "Render as wireframe instead of filling the triangles") {
 
     // Connect input slots
-    this->render_input_slot.SetCompatibleCall<core_gl::view::CallRender2DGLDescription>();
+    this->render_input_slot.SetCompatibleCall<mmstd_gl::CallRender2DGLDescription>();
     this->MakeSlotAvailable(&this->render_input_slot);
 
     this->triangle_mesh_slot.SetCompatibleCall<mesh::TriangleMeshCall::triangle_mesh_description>();
@@ -92,13 +88,11 @@ void TriangleMeshRenderer2D::release() {
 
         glDeleteTextures(1, &this->render_data.tf);
     }
-
-    return;
 }
 
-bool TriangleMeshRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
+bool TriangleMeshRenderer2D::Render(mmstd_gl::CallRender2DGL& call) {
     // Call input renderer, if connected
-    auto* input_renderer = this->render_input_slot.CallAs<core_gl::view::CallRender2DGL>();
+    auto* input_renderer = this->render_input_slot.CallAs<mmstd_gl::CallRender2DGL>();
 
     if (input_renderer != nullptr && (*input_renderer)(core::view::AbstractCallRender::FnRender)) {
         (*input_renderer) = call;
@@ -335,7 +329,7 @@ bool TriangleMeshRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
     return true;
 }
 
-bool TriangleMeshRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool TriangleMeshRenderer2D::GetExtents(mmstd_gl::CallRender2DGL& call) {
     // Get and set bounding rectangle (connection mandatory)
     auto get_triangles = this->triangle_mesh_slot.CallAs<mesh::TriangleMeshCall>();
 
@@ -353,7 +347,7 @@ bool TriangleMeshRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
     this->bounds = get_triangles->get_bounding_rectangle();
 
     // Get bounding rectangle of input renderer, if available
-    auto* input_renderer = this->render_input_slot.CallAs<core_gl::view::CallRender2DGL>();
+    auto* input_renderer = this->render_input_slot.CallAs<mmstd_gl::CallRender2DGL>();
 
     if (input_renderer != nullptr && (*input_renderer)(core::view::AbstractCallRender::FnGetExtents)) {
         this->bounds.SetLeft(std::min(this->bounds.Left(), input_renderer->GetBoundingBoxes().BoundingBox().Left()));
@@ -411,7 +405,7 @@ bool TriangleMeshRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
 }
 
 bool TriangleMeshRenderer2D::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
-    auto* input_renderer = this->render_input_slot.template CallAs<core_gl::view::CallRender2DGL>();
+    auto* input_renderer = this->render_input_slot.template CallAs<mmstd_gl::CallRender2DGL>();
     if (input_renderer == nullptr)
         return false;
 
@@ -426,7 +420,7 @@ bool TriangleMeshRenderer2D::OnKey(core::view::Key key, core::view::KeyAction ac
 }
 
 bool TriangleMeshRenderer2D::OnChar(unsigned int codePoint) {
-    auto* input_renderer = this->render_input_slot.template CallAs<core_gl::view::CallRender2DGL>();
+    auto* input_renderer = this->render_input_slot.template CallAs<mmstd_gl::CallRender2DGL>();
     if (input_renderer == nullptr)
         return false;
 
@@ -440,7 +434,7 @@ bool TriangleMeshRenderer2D::OnChar(unsigned int codePoint) {
 
 bool TriangleMeshRenderer2D::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
-    auto* input_renderer = this->render_input_slot.template CallAs<core_gl::view::CallRender2DGL>();
+    auto* input_renderer = this->render_input_slot.template CallAs<mmstd_gl::CallRender2DGL>();
     if (input_renderer == nullptr)
         return false;
 
@@ -455,7 +449,7 @@ bool TriangleMeshRenderer2D::OnMouseButton(
 }
 
 bool TriangleMeshRenderer2D::OnMouseMove(double x, double y) {
-    auto* input_renderer = this->render_input_slot.template CallAs<core_gl::view::CallRender2DGL>();
+    auto* input_renderer = this->render_input_slot.template CallAs<mmstd_gl::CallRender2DGL>();
     if (input_renderer == nullptr)
         return false;
 
@@ -469,7 +463,7 @@ bool TriangleMeshRenderer2D::OnMouseMove(double x, double y) {
 }
 
 bool TriangleMeshRenderer2D::OnMouseScroll(double dx, double dy) {
-    auto* input_renderer = this->render_input_slot.template CallAs<core_gl::view::CallRender2DGL>();
+    auto* input_renderer = this->render_input_slot.template CallAs<mmstd_gl::CallRender2DGL>();
     if (input_renderer == nullptr)
         return false;
 
@@ -481,5 +475,4 @@ bool TriangleMeshRenderer2D::OnMouseScroll(double dx, double dy) {
     input_renderer->SetInputEvent(evt);
     return (*input_renderer)(core::view::InputCall::FnOnMouseScroll);
 }
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl

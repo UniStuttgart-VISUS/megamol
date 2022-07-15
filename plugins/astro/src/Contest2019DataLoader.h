@@ -14,7 +14,7 @@
 #include "astro/AstroDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "vislib/math/Cuboid.h"
 #include <map>
 

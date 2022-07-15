@@ -1695,7 +1695,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::FilterVecField(
 /*
  * protein_cuda::CrystalStructureVolumeRenderer::GetExtents
  */
-bool protein_cuda::CrystalStructureVolumeRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool protein_cuda::CrystalStructureVolumeRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     protein_calls::CrystalStructureDataCall* dc =
         this->dataCallerSlot.CallAs<protein_calls::CrystalStructureDataCall>();
     if (dc == NULL)
@@ -1789,7 +1789,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::release(void) {
 /*
  * protein_cuda::CrystalStructureVolumeRenderer::Render
  */
-bool protein_cuda::CrystalStructureVolumeRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool protein_cuda::CrystalStructureVolumeRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     using namespace vislib::math;
     GLenum err;
 

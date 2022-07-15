@@ -10,7 +10,7 @@
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 #include <map>
 
 namespace megamol {

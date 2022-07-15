@@ -5,7 +5,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "vislib/String.h"
 #include "vislib/math/Cuboid.h"
 #include <adios2.h>

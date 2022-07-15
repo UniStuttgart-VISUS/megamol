@@ -15,7 +15,7 @@
 #include "mesh_gl/MeshCalls_gl.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/light/CallLight.h"
+#include "mmstd/light/CallLight.h"
 
 namespace megamol {
 namespace mesh_gl {

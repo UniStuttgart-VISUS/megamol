@@ -6,6 +6,7 @@
 megamol_plugin(archvis
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
+    mmstd
     mesh
     mesh_gl
     datatools)

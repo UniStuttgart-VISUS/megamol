@@ -5,6 +5,8 @@
 
 megamol_plugin(cinematic
   BUILD_DEFAULT ON
+  DEPENDS_PLUGINS
+    mmstd
   DEPENDS_EXTERNALS
     libpng
     imgui)

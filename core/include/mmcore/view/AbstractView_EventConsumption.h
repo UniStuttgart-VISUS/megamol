@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "AbstractView.h"
+#include "AbstractViewInterface.h"
 #include "FrontendResource.h"
 
 #include "ImageWrapper.h"
@@ -22,10 +22,10 @@ namespace view {
 // note that starting the actual rendering of a frame is handled via a callback to 'view_poke_rendering'
 // and from the perspective of the MegaMolGreaph does not look different from consumption of rendering resources or input events
 
-void view_consume_keyboard_events(AbstractView& view, megamol::frontend::FrontendResource const& resource);
-void view_consume_mouse_events(AbstractView& view, megamol::frontend::FrontendResource const& resource);
-void view_consume_window_events(AbstractView& view, megamol::frontend::FrontendResource const& resource);
-void view_poke_rendering(AbstractView& view, megamol::frontend_resources::RenderInput const& render_input,
+void view_consume_keyboard_events(AbstractViewInterface& view, megamol::frontend::FrontendResource const& resource);
+void view_consume_mouse_events(AbstractViewInterface& view, megamol::frontend::FrontendResource const& resource);
+void view_consume_window_events(AbstractViewInterface& view, megamol::frontend::FrontendResource const& resource);
+void view_poke_rendering(AbstractViewInterface& view, megamol::frontend_resources::RenderInput const& render_input,
     megamol::frontend_resources::ImageWrapper& result_image);
 
 // to do this right we should be able to as a view object which runtime resources it expects (keyboard inputs, gl context)

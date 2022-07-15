@@ -7,8 +7,8 @@
 
 #include "datatools_gl/io/STLDataSource.h"
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/Call.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/DataHash.h"

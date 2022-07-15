@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include <cstdint>
 
 namespace megamol::geocalls {

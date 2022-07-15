@@ -14,8 +14,8 @@
 #include "mmcore/utility/log/Log.h"
 #include "vislib/forceinline.h"
 
-#include "mmcore/view/CallClipPlane.h"
 #include "mmospray/CallOSPRayAPIObject.h"
+#include "mmstd/renderer/CallClipPlane.h"
 #include "ospray/ospray_cpp.h"
 
 namespace megamol {

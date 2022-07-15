@@ -21,7 +21,7 @@ using namespace megamol;
 using namespace megamol::mesh_gl;
 
 RenderMDIMesh::RenderMDIMesh()
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , m_render_task_callerSlot("renderTasks", "Connects the renderer with a render task data source")
         , m_framebuffer_slot("framebuffer",
               "Connects the renderer to an (optional) framebuffer render target from the calling module") {
@@ -133,9 +133,9 @@ void RenderMDIMesh::release() {
     m_per_frame_data.reset();
 }
 
-bool RenderMDIMesh::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool RenderMDIMesh::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
-    megamol::core_gl::view::CallRender3DGL* cr = &call; // dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
+    mmstd_gl::CallRender3DGL* cr = &call; // dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (cr == nullptr) {
         return false;
     }
@@ -162,9 +162,9 @@ bool RenderMDIMesh::GetExtents(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-bool RenderMDIMesh::Render(core_gl::view::CallRender3DGL& call) {
+bool RenderMDIMesh::Render(mmstd_gl::CallRender3DGL& call) {
 
-    megamol::core_gl::view::CallRender3DGL* cr = &call; //dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
+    mmstd_gl::CallRender3DGL* cr = &call; //dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (cr == nullptr) {
         return false;
     }

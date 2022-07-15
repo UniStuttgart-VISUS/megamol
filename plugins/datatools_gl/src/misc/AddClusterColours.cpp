@@ -8,7 +8,7 @@
 #include "AddClusterColours.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/param/ButtonParam.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageWriter.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
@@ -69,7 +69,7 @@ AddClusterColours::AddClusterColours(void)
     this->getDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getTFSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->getTFSlot.SetCompatibleCall<mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
     this->rebuildButtonSlot << new core::param::ButtonParam();
@@ -150,8 +150,8 @@ bool AddClusterColours::getDataCallback(core::Call& caller) {
 
                 vislib::RawStorage texDat;
 
-                core_gl::view::CallGetTransferFunctionGL* cgtf =
-                    this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+                mmstd_gl::CallGetTransferFunctionGL* cgtf =
+                    this->getTFSlot.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
                 if ((cgtf != NULL) && ((*cgtf)(0))) {
                     ::glGetError();
                     ::glEnable(GL_TEXTURE_1D);

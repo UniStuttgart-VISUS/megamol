@@ -25,7 +25,7 @@ namespace demos_gl {
  * QuartzPlaneRenderer::QuartzPlaneRenderer
  */
 QuartzPlaneRenderer::QuartzPlaneRenderer(void)
-        : core_gl::view::Renderer2DModuleGL()
+        : mmstd_gl::Renderer2DModuleGL()
         , AbstractMultiShaderQuartzRenderer()
         , useClipColSlot("useClipCol", "Use clipping plane or grain colour for grains") {
 
@@ -91,7 +91,7 @@ bool QuartzPlaneRenderer::create(void) {
 /*
  * QuartzPlaneRenderer::QuartzPlaneRenderer
  */
-bool QuartzPlaneRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool QuartzPlaneRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
     ParticleGridDataCall* pgdc = this->getParticleData();
     core::view::CallClipPlane* ccp = this->getClipPlaneData();
     if ((pgdc != NULL) && (ccp != NULL)) {
@@ -219,7 +219,7 @@ void QuartzPlaneRenderer::release(void) {
 /*
  * QuartzPlaneRenderer::Render
  */
-bool QuartzPlaneRenderer::Render(core_gl::view::CallRender2DGL& call) {
+bool QuartzPlaneRenderer::Render(mmstd_gl::CallRender2DGL& call) {
     ParticleGridDataCall* pgdc = this->getParticleData();
     CrystalDataCall* tdc = this->getCrystaliteData();
     core::view::CallClipPlane* ccp = this->getClipPlaneData();

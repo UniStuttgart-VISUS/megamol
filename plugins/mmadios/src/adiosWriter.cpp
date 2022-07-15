@@ -1,5 +1,5 @@
 #include "adiosWriter.h"
-#include "mmcore/cluster/mpi/MpiCall.h"
+#include "cluster/mpi/MpiCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"

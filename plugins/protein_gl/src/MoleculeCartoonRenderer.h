@@ -15,8 +15,8 @@
 #include "glowl/GLSLProgram.hpp"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein/BSpline.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
@@ -40,7 +40,7 @@ namespace protein_gl {
  * - add RenderMode CARTOON_GPU
  */
 
-class MoleculeCartoonRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+class MoleculeCartoonRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -147,7 +147,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -155,7 +155,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Render protein in hybrid CARTOON mode using the Geometry Shader.

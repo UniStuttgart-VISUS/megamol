@@ -18,7 +18,7 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/utility/DataHash.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 
 #include "mmcore_gl/utility/ShaderFactory.h"
 
