@@ -10,7 +10,7 @@ constexpr double pi = 3.14159265359;
 
 // http://corysimon.github.io/articles/uniformdistn-on-sphere/
 template<typename T>
-glm::vec<3, T> sample_on_sphere(T r, std::uniform_real_distribution<T> const& distr, std::mt19937& rng) {
+glm::vec<3, T> sample_on_sphere(T r, std::uniform_real_distribution<T>& distr, std::mt19937& rng) {
     float theta = static_cast<T>(2.0) * pi * distr(rng);
     float phi = std::acos(static_cast<T>(1.0) - static_cast<T>(2.0) * distr(rng));
     float x = r * std::sin(phi) * std::cos(theta);
