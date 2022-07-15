@@ -904,7 +904,7 @@ void ParallelCoordinatesRenderer2D::drawDual() {
     useProgramAndBindCommon(dualAltDisplayProgram_);
     dualTexture_->bindImage(7, GL_READ_ONLY);
     dualDisplayProgram_->setUniform("axesHeight", axes_pixel_height);
-    auto tfCall = tfSlot_.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
+    auto tfCall = tfSlot_.CallAs<megamol::mmstd_gl::CallGetTransferFunctionGL>();
     tfCall->BindConvenience(dualAltDisplayProgram_, GL_TEXTURE5, 5);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
