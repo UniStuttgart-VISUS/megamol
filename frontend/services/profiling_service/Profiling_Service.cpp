@@ -83,10 +83,10 @@ void Profiling_Service::fill_lua_callbacks() {
         }});
 
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, int>("mmProfile",
-        "(string entrypoint, string cameras, unsigned int num_frames)",
-        {[&graph, &render_next_frame](std::string entrypoint, std::string cameras,
-             int num_frames) -> frontend_resources::LuaCallbacksCollection::StringResult {
+    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, int, bool>(
+        "mmProfile", "(string entrypoint, string cameras, unsigned int num_frames, bool pretty)",
+        {[&graph, &render_next_frame](std::string entrypoint, std::string cameras, int num_frames,
+             bool pretty) -> frontend_resources::LuaCallbacksCollection::StringResult {
             auto entry = graph.FindModule(entrypoint);
             if (!entry)
                 return frontend_resources::LuaCallbacksCollection::Error{"could not find entrypoint"};
@@ -120,9 +120,15 @@ void Profiling_Service::fill_lua_callbacks() {
             auto const time_per_frame = static_cast<float>(time_in_ms) / static_cast<float>(tot_num_frames);
 
             std::stringstream sstr;
-            sstr << "Total Number of Frames: " << tot_num_frames
-                 << "; Elapsed Time (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()
-                 << "; Time per Frame (ms): " << time_per_frame;
+            if (pretty) {
+                sstr << "Total Number of Frames: " << tot_num_frames << "; Elapsed Time (ms): "
+                     << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()
+                     << "; Time per Frame (ms): " << time_per_frame;
+            } else {
+                sstr << tot_num_frames << ", "
+                     << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() << ", "
+                     << time_per_frame;
+            }
 
             return frontend_resources::LuaCallbacksCollection::StringResult{sstr.str()};
         }});
