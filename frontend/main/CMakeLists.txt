@@ -46,7 +46,7 @@ if(BUILD_FRONTEND)
   endif ()
 endif()
 
-if(ENABLE_GL)
+if(MEGAMOL_USE_OPENGL)
     set(CONFIG_GL_COMMENT "")
 else()
     set(CONFIG_GL_COMMENT "--")

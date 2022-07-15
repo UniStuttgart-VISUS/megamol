@@ -27,7 +27,7 @@ set(IMGUI_BACKEND_SOURCES
   backends/imgui_impl_generic.cpp
 )
 
-if (ENABLE_GL)
+if (MEGAMOL_USE_OPENGL)
   set(IMGUI_BACKEND_HEADERS ${IMGUI_BACKEND_HEADERS}
     backends/imgui_impl_opengl3.h
     backends/imgui_impl_glfw.h

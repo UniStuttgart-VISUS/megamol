@@ -36,7 +36,12 @@ option(MEGAMOL_USE_CGAL "Enable CGAL support" OFF)
 if (MEGAMOL_USE_CGAL)
   list(APPEND VCPKG_MANIFEST_FEATURES "use-cgal")
 endif ()
+option(MEGAMOL_USE_OPENGL "Enable OpenGL support" ON)
+if (MEGAMOL_USE_OPENGL)
+  list(APPEND VCPKG_MANIFEST_FEATURES "use-opengl")
+endif ()
 
+set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_ports")
 set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics") # Disable Telemetry
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-download-src/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 
@@ -84,13 +89,13 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/frontend/services)
 
 # Vislib
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vislib)
-if (ENABLE_GL)
+if (MEGAMOL_USE_OPENGL)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vislib_gl)
 endif ()
 
 # Core
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/core)
-if (ENABLE_GL)
+if (MEGAMOL_USE_OPENGL)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/core_gl)
 endif ()
 
@@ -103,7 +108,7 @@ add_subdirectory(remoteconsole)
 # Plugins
 add_subdirectory(plugins)
 if (BUILD_FRONTEND)
-  if (ENABLE_GL)
+  if (MEGAMOL_USE_OPENGL)
     target_link_libraries(plugins INTERFACE core_gl)
     target_sources(plugins INTERFACE $<TARGET_OBJECTS:core_gl>)
   endif ()

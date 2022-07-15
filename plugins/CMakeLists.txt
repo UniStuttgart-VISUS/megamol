@@ -43,7 +43,7 @@ function(megamol_plugin PLUGIN_NAME)
 
   # Check GL
   if (MMPLUGIN_ARGS_DEPENDS_GL)
-    if (NOT ENABLE_GL)
+    if (NOT MEGAMOL_USE_OPENGL)
       set(REQUIREMENTS_AVAILABLE FALSE)
     endif ()
   endif ()
@@ -110,7 +110,7 @@ function(megamol_plugin PLUGIN_NAME)
     target_link_libraries(${PLUGIN_NAME}
       PUBLIC OpenMP::OpenMP_CXX
       PRIVATE core)
-    if (ENABLE_GL)
+    if (MEGAMOL_USE_OPENGL)
       target_link_libraries(${PLUGIN_NAME} PRIVATE core_gl)
     endif ()
     target_link_libraries(${PLUGIN_NAME}

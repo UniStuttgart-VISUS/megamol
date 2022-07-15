@@ -11,6 +11,12 @@
       "dependencies": [
         "cgal"
       ]
+    },
+    "use-opengl": {
+      "description": "Use OpenGL",
+      "dependencies": [
+        "megamol-shader-factory"
+      ]
     }
   }
 }

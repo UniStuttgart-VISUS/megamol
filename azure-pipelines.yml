@@ -18,7 +18,7 @@ variables:
     -DBUILD_PLUGIN_REMOTE=OFF
   nonGlConfig: >-
     -DMEGAMOL_WARNING_LEVEL="Off"
-    -DENABLE_GL=OFF
+    -DMEGAMOL_USE_OPENGL=OFF
 
 jobs:
 - job: Windows

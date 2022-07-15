@@ -60,8 +60,7 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 # OpenGL
-option(ENABLE_GL "Enable GL support" ON)
-if (ENABLE_GL)
+if (MEGAMOL_USE_OPENGL)
   add_compile_definitions(WITH_GL)
   find_package(OpenGL REQUIRED)
 endif ()
@@ -102,13 +101,13 @@ if (MEGAMOL_USE_CGAL)
 endif()
 
 # Profiling
-cmake_dependent_option(ENABLE_PROFILING "Enable profiling code" OFF "ENABLE_GL" OFF)
+cmake_dependent_option(ENABLE_PROFILING "Enable profiling code" OFF "MEGAMOL_USE_OPENGL" OFF)
 if (ENABLE_PROFILING)
   add_compile_definitions(PROFILING)
 endif ()
 
 # VR Service / mwk-mint, interop, Spout2
-cmake_dependent_option(ENABLE_VR_SERVICE_UNITY_KOLABBW "Enable KolabBW-Unity-Interop in VR Service" OFF "ENABLE_GL" OFF)
+cmake_dependent_option(ENABLE_VR_SERVICE_UNITY_KOLABBW "Enable KolabBW-Unity-Interop in VR Service" OFF "MEGAMOL_USE_OPENGL" OFF)
 if (ENABLE_VR_SERVICE_UNITY_KOLABBW)
   add_compile_definitions(WITH_VR_SERVICE_UNITY_KOLABBW)
 endif ()

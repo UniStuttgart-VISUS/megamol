@@ -399,7 +399,7 @@ function(require_external NAME)
       return()
     endif ()
 
-    if (ENABLE_GL)
+    if (MEGAMOL_USE_OPENGL)
       require_external(glfw)
       external_get_property(glfw INSTALL_DIR)
       set(glfw_include_dir "${INSTALL_DIR}/include")
@@ -437,7 +437,7 @@ function(require_external NAME)
       CMAKE_ARGS
         -DGLAD_INCLUDE_DIR:PATH=${glad_include_dir}
         -DGLFW_INCLUDE_DIR:PATH=${glfw_include_dir}
-        -DENABLE_GL=${ENABLE_GL})
+        -DMEGAMOL_USE_OPENGL=${MEGAMOL_USE_OPENGL})
 
     add_external_library(imgui
       LIBRARY ${IMGUI_LIB})
