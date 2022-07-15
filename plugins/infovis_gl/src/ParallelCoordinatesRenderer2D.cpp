@@ -233,15 +233,18 @@ bool ParallelCoordinatesRenderer2D::create() {
         drawIndicatorStrokeProgram_ = core::utility::make_glowl_shader("pc_indicator_stroke", shader_options,
             "infovis_gl/pc/indicator_stroke.vert.glsl", "infovis_gl/pc/indicator_stroke.frag.glsl");
 
+        //dualProgram_
+        //= core::utility::make_glowl_shader("pc_dual", shader_options, "infovis_gl/pc/dualM.comp.glsl");
         dualProgram_
-        = core::utility::make_glowl_shader("pc_dual", shader_options, "infovis_gl/pc/dualM.comp.glsl");
+        = core::utility::make_glowl_shader("pc_dual", shader_options, "infovis_gl/pc/dual.comp.glsl");
 
         dualDisplayProgram_
         = core::utility::make_glowl_shader(
             "pc_dualDisplay", shader_options, "infovis_gl/pc/dual.vert.glsl", "infovis_gl/pc/dual.frag.glsl");
 
         dualAltDisplayProgram_ = core::utility::make_glowl_shader(
-            "pc_dualAltDisplay", shader_options, "infovis_gl/pc/dualM.vert.glsl", "infovis_gl/pc/dualM.frag.glsl");
+            //"pc_dualAltDisplay", shader_options, "infovis_gl/pc/dualM.vert.glsl", "infovis_gl/pc/dualM.frag.glsl");
+            "pc_dualAltDisplay", shader_options, "infovis_gl/pc/dualAlt.vert.glsl", "infovis_gl/pc/dualAlt.frag.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteError(("ParallelCoordinatesRenderer2D: " + std::string(e.what())).c_str());
         return false;

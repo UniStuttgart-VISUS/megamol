@@ -15,6 +15,6 @@ void main(){
     float right = pc_dataValueNormalized(itemID, dimID + 1);
 
     //imageAtomicAdd(o_dualtex, ivec3(left * axisHeight, right* axisHeight, dimID), 1);
-    imageAtomicAdd(o_dualtex, ivec3(left * axesHeight, axesHeight + (left-right) * axesHeight, dimID), 1);
+    imageAtomicAdd(o_dualtex, ivec3(left * axesHeight, axesHeight + (right-left) * axesHeight, dimID), 1);
     // write to texture at (left, right) atomically
 }
