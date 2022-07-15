@@ -32,6 +32,8 @@ public:
 
     virtual Camera GetCamera() const = 0;
 
+    virtual std::string SampleCameraScenes(std::string camera_path_pattern, unsigned int num_samples) const = 0;
+
     ViewDimension const& GetViewDimension() const {
         return viewDimension_;
     }

@@ -1,7 +1,8 @@
 #include "Profiling_Service.hpp"
 
 #include "mmcore/MegaMolGraph.h"
-#include "mmstd/view/AbstractView.h"
+#include "mmcore/view/AbstractViewInterface.h"
+#include "mmcore/view/CameraSerializer.h"
 
 #include "LuaCallbacksCollection.h"
 
@@ -72,7 +73,7 @@ void Profiling_Service::fill_lua_callbacks() {
             auto entry = graph.FindModule(entrypoint);
             if (!entry)
                 return frontend_resources::LuaCallbacksCollection::Error{"could not find entrypoint"};
-            auto view = std::dynamic_pointer_cast<core::view::AbstractView>(entry);
+            auto view = std::dynamic_pointer_cast<core::view::AbstractViewInterface>(entry);
             if (!view)
                 return frontend_resources::LuaCallbacksCollection::Error{"requested entrypoint is not a view"};
             auto camera_samples = view->SampleCameraScenes(camera_path_pattern, num_samples);
@@ -89,7 +90,7 @@ void Profiling_Service::fill_lua_callbacks() {
             auto entry = graph.FindModule(entrypoint);
             if (!entry)
                 return frontend_resources::LuaCallbacksCollection::Error{"could not find entrypoint"};
-            auto view = std::dynamic_pointer_cast<core::view::AbstractView>(entry);
+            auto view = std::dynamic_pointer_cast<core::view::AbstractViewInterface>(entry);
             if (!view)
                 return frontend_resources::LuaCallbacksCollection::Error{"requested entrypoint is not a view"};
 

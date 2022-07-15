@@ -119,7 +119,7 @@ public:
      */
     virtual void CalcCameraClippingPlanes(float border);
 
-    std::string SampleCameraScenes(std::string camera_path_pattern, unsigned int num_samples) const;
+    std::string SampleCameraScenes(std::string camera_path_pattern, unsigned int num_samples) const override;
 
     /**
      * Returns the current Bounding Box extents
