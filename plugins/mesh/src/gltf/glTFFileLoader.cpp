@@ -176,10 +176,32 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
                         attrib_byte_stride, attrib_byte_offset, attrib_semantic});
                 }
 
+                MeshDataAccessCollection::PrimitiveType primitive_type;
+
+                switch (model->meshes[mesh_idx].primitives[primitive_idx].mode) {
+                case TINYGLTF_MODE_LINE:
+                    primitive_type = MeshDataAccessCollection::PrimitiveType::LINES;
+                    break;
+                case TINYGLTF_MODE_LINE_STRIP:
+                    primitive_type = MeshDataAccessCollection::PrimitiveType::LINE_STRIP;
+                    break;
+                case TINYGLTF_MODE_TRIANGLES:
+                    primitive_type = MeshDataAccessCollection::PrimitiveType::TRIANGLES;
+                    break;
+                case TINYGLTF_MODE_TRIANGLE_STRIP:
+                    primitive_type = MeshDataAccessCollection::PrimitiveType::TRIANGLE_STRIP;
+                    break;
+                case TINYGLTF_MODE_TRIANGLE_FAN:
+                    primitive_type = MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN;
+                    break;
+                default:
+                    break;
+                }
+
                 std::string identifier =
                     m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value().generic_u8string() +
                     model->meshes[mesh_idx].name + "_" + std::to_string(primitive_idx);
-                m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices);
+                m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices, primitive_type);
                 m_mesh_access_collection.second.push_back(identifier);
 
                 auto max_data =
