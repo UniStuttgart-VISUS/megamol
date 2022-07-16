@@ -478,15 +478,15 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
             glm::vec4 tmp1(quatC.x, quatC.y, quatC.z, quatC.w);
             tmp1 *= quatC.w;
             tmp1.w = -quatConst.z;
-            rotMatT0.xyz() = tmp1.wzy() * quatConst.xxy() + tmp.wxy(); // matrix0 <- (ww-0.5, xy+zw, xz-yw, %)
+            rotMatT0 = tmp1.wzy() * quatConst.xxy() + tmp.wxy(); // matrix0 <- (ww-0.5, xy+zw, xz-yw, %)
             rotMatT0.x = quatC.x * quatC.x + rotMatT0.x;               // matrix0 <- (ww+x*x-0.5, xy+zw, xz-yw, %)
             rotMatT0 = rotMatT0 + rotMatT0; // matrix0 <- (2(ww+x*x)-1, 2(xy+zw), 2(xz-yw), %)
 
-            rotMatT1.xyz() = tmp1.zwx() * quatConst.yxx() + tmp.xwz(); // matrix1 <- (xy-zw, ww-0.5, yz+xw, %)
+            rotMatT1 = tmp1.zwx() * quatConst.yxx() + tmp.xwz(); // matrix1 <- (xy-zw, ww-0.5, yz+xw, %)
             rotMatT1.y = quatC.y * quatC.y + rotMatT1.y;               // matrix1 <- (xy-zw, ww+y*y-0.5, yz+xw, %)
             rotMatT1 = rotMatT1 + rotMatT1; // matrix1 <- (2(xy-zw), 2(ww+y*y)-1, 2(yz+xw), %)
 
-            rotMatT2.xyz() = tmp1.yxw() * quatConst.xyx() + tmp.yzw(); // matrix2 <- (xz+yw, yz-xw, ww-0.5, %)
+            rotMatT2 = tmp1.yxw() * quatConst.xyx() + tmp.yzw(); // matrix2 <- (xz+yw, yz-xw, ww-0.5, %)
             rotMatT2.z = quatC.z * quatC.z + rotMatT2.z;               // matrix2 <- (xz+yw, yz-xw, ww+zz-0.5, %)
             rotMatT2 = rotMatT2 + rotMatT2;                            // matrix2 <- (2(xz+yw), 2(yz-xw), 2(ww+zz)-1, %)
             // End: Holy code!
