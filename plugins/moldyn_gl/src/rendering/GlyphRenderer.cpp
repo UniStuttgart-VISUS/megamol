@@ -143,17 +143,18 @@ bool GlyphRenderer::create(void) {
         box_prgm_ = core::utility::make_glowl_shader(
             "box", shader_options, "moldyn_gl/glyph_renderer/box.vert.glsl", "moldyn_gl/glyph_renderer/box.frag.glsl");
 
-        ellipsoid_prgm_ = core::utility::make_glowl_shader(
-            "ellipsoid", shader_options, "moldyn_gl/glyph_renderer/ellipsoid.vert.glsl", "moldyn_gl/glyph_renderer/ellipsoid.frag.glsl");
+        ellipsoid_prgm_ = core::utility::make_glowl_shader("ellipsoid", shader_options,
+            "moldyn_gl/glyph_renderer/ellipsoid.vert.glsl", "moldyn_gl/glyph_renderer/ellipsoid.frag.glsl");
 
-        arrow_prgm_ = core::utility::make_glowl_shader(
-            "arrow", shader_options, "moldyn_gl/glyph_renderer/arrow.vert.glsl", "moldyn_gl/glyph_renderer/arrow.frag.glsl");
+        arrow_prgm_ = core::utility::make_glowl_shader("arrow", shader_options,
+            "moldyn_gl/glyph_renderer/arrow.vert.glsl", "moldyn_gl/glyph_renderer/arrow.frag.glsl");
 
         superquadric_prgm_ = core::utility::make_glowl_shader("superquadric", shader_options,
             "moldyn_gl/glyph_renderer/superquadric.vert.glsl", "moldyn_gl/glyph_renderer/superquadric.frag.glsl");
 
         gizmo_arrowglyph_prgm_ = core::utility::make_glowl_shader("gizmo_arrowglyph", shader_options,
-            "moldyn_gl/glyph_renderer/gizmo_arrowglyph.vert.glsl", "moldyn_gl/glyph_renderer/gizmo_arrowglyph.frag.glsl");
+            "moldyn_gl/glyph_renderer/gizmo_arrowglyph.vert.glsl",
+            "moldyn_gl/glyph_renderer/gizmo_arrowglyph.frag.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to compile glyph shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(), __FILE__,
