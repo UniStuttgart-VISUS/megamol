@@ -7,15 +7,15 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "mmcore/CallerSlot.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-
-namespace megamol {
-namespace volume_gl {
+namespace megamol::volume_gl {
 
 /**
  * Renders one slice of a volume (slow)
@@ -27,7 +27,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "VolumeSliceRenderer_2";
     }
 
@@ -36,7 +36,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renders one slice of a volume";
     }
 
@@ -45,12 +45,12 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    VolumeSliceRenderer(void);
-    virtual ~VolumeSliceRenderer(void);
+    VolumeSliceRenderer();
+    virtual ~VolumeSliceRenderer();
 
 protected:
     /**
@@ -58,12 +58,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void) override;
+    virtual bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void) override;
+    virtual void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -96,9 +96,8 @@ private:
     core::CallerSlot getClipPlaneSlot;
 
     /** Shader */
-    vislib_gl::graphics::gl::GLSLComputeShader compute_shader;
-    vislib_gl::graphics::gl::GLSLShader render_shader;
+    std::unique_ptr<glowl::GLSLProgram> compute_shader;
+    std::unique_ptr<glowl::GLSLProgram> render_shader;
 };
 
-} // namespace volume_gl
-} /* end namespace megamol */
+} // namespace megamol::volume_gl

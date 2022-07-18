@@ -1,3 +1,8 @@
+#version 430
+
+#include "mmstd_gl/common/tflookup.inc.glsl"
+#include "mmstd_gl/common/tfconvenience.inc.glsl"
+
 #extension GL_ARB_compute_shader: enable
 #define FLT_MAX 3.402823466e+38
 #define FLT_MIN 1.175494351e-38
