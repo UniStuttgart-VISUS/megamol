@@ -85,7 +85,7 @@ bool MDAOVolumeGenerator::Init(frontend_resources::OpenGL_Context const& ogl_ctx
         // Try to initialize the compute shader
         try {
             mipmap_prgm_ = core::utility::make_glowl_shader(
-                "mipmap", *shader_options_, "mdao_volume_generator/mdao_mipmap_compute_main.comp.glsl");
+                "mipmap", *shader_options_, "moldyn_gl/mdao_volume_generator/mdao_mipmap_compute_main.comp.glsl");
         } catch (std::exception& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to compile mdao volume generator shader: %s. [%s, %s, line %d]\n",
@@ -98,9 +98,10 @@ bool MDAOVolumeGenerator::Init(frontend_resources::OpenGL_Context const& ogl_ctx
     // Initialize our shader
     try {
         // Try to make the volume shader
-        volume_prgm_ =
-            core::utility::make_glowl_shader("volume", *shader_options_, "mdao_volume_generator/mdao_volume.vert.glsl",
-                "mdao_volume_generator/mdao_volume.geom.glsl", "mdao_volume_generator/mdao_volume.frag.glsl");
+        volume_prgm_ = core::utility::make_glowl_shader("volume", *shader_options_,
+            "moldyn_gl/mdao_volume_generator/mdao_volume.vert.glsl",
+            "moldyn_gl/mdao_volume_generator/mdao_volume.geom.glsl",
+            "moldyn_gl/mdao_volume_generator/mdao_volume.frag.glsl");
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
