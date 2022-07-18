@@ -1,4 +1,16 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "SurfaceLICRenderer.h"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <memory>
+#include <random>
 
 #include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/Call.h"
@@ -8,29 +20,13 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/renderer/AbstractCallRender.h"
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "mmstd_gl/renderer/TransferFunctionGL.h"
 
-#include "mmcore/utility/log/Log.h"
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-
-#include "glowl/FramebufferObject.hpp"
-#include "glowl/Texture.hpp"
-#include "glowl/Texture2D.hpp"
-#include "glowl/Texture3D.hpp"
-
-#include <algorithm>
-#include <array>
-#include <cmath>
-#include <memory>
-#include <random>
-
-namespace megamol {
-namespace volume_gl {
+namespace megamol::volume_gl {
 
 SurfaceLICRenderer::SurfaceLICRenderer()
         : input_renderer("input_renderer", "Renderer producing the surface and depth used for drawing the LIC upon")
@@ -110,50 +106,21 @@ SurfaceLICRenderer::~SurfaceLICRenderer() {
 }
 
 bool SurfaceLICRenderer::create() {
+    auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+
     try {
-        // create shader program
-        vislib_gl::graphics::gl::ShaderSource precompute_shader_src;
-        vislib_gl::graphics::gl::ShaderSource compute_shader_src;
-        vislib_gl::graphics::gl::ShaderSource vertex_shader_src;
-        vislib_gl::graphics::gl::ShaderSource fragment_shader_src;
-
-        auto ssf =
-            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-        if (!ssf->MakeShaderSource("SurfaceLICRenderer::precompute", precompute_shader_src))
-            return false;
-        if (!this->pre_compute_shdr.Compile(precompute_shader_src.Code(), precompute_shader_src.Count()))
-            return false;
-        if (!this->pre_compute_shdr.Link())
-            return false;
-
-        if (!ssf->MakeShaderSource("SurfaceLICRenderer::compute", compute_shader_src))
-            return false;
-        if (!this->lic_compute_shdr.Compile(compute_shader_src.Code(), compute_shader_src.Count()))
-            return false;
-        if (!this->lic_compute_shdr.Link())
-            return false;
-
-        if (!ssf->MakeShaderSource("SurfaceLICRenderer::vert", vertex_shader_src))
-            return false;
-        if (!ssf->MakeShaderSource("SurfaceLICRenderer::frag", fragment_shader_src))
-            return false;
-        if (!this->render_to_framebuffer_shdr.Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
-                fragment_shader_src.Code(), fragment_shader_src.Count()))
-            return false;
-        if (!this->render_to_framebuffer_shdr.Link())
-            return false;
-    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader (@%s): %s\n",
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: Unknown exception\n");
+        this->pre_compute_shdr =
+            core::utility::make_glowl_shader("pre_compute_shdr", shaderOptions, "volume_gl/SurfaceLIC-Pre.comp.glsl");
+        this->lic_compute_shdr =
+            core::utility::make_glowl_shader("lic_compute_shdr", shaderOptions, "volume_gl/SurfaceLIC-Lic.comp.glsl");
+        this->render_to_framebuffer_shdr = core::utility::make_glowl_shader("render_to_framebuffer_shdr", shaderOptions,
+            "volume_gl/RaycastVolumeRenderer.vert.glsl", "volume_gl/RaycastVolumeRenderer.frag.glsl");
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("SurfaceLICRenderer: " + std::string(e.what())).c_str());
         return false;
     }
+
+    return true;
 }
 
 void SurfaceLICRenderer::release() {}
@@ -332,31 +299,31 @@ bool SurfaceLICRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     glGetLightfv(GL_LIGHT0, GL_POSITION, light.data());
 
     // Transform velocities to 2D in a pre-computation step
-    this->pre_compute_shdr.Enable();
+    this->pre_compute_shdr->use();
 
-    glUniformMatrix4fv(this->pre_compute_shdr.ParameterLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(this->pre_compute_shdr.ParameterLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(proj));
+    glUniformMatrix4fv(this->pre_compute_shdr->getUniformLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(this->pre_compute_shdr->getUniformLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(proj));
 
-    glUniform2fv(this->pre_compute_shdr.ParameterLocation("rt_resolution"), 1, rt_resolution.data());
+    glUniform2fv(this->pre_compute_shdr->getUniformLocation("rt_resolution"), 1, rt_resolution.data());
 
-    glUniform3fv(this->pre_compute_shdr.ParameterLocation("origin"), 1, origin.data());
-    glUniform3fv(this->pre_compute_shdr.ParameterLocation("resolution"), 1, resolution.data());
+    glUniform3fv(this->pre_compute_shdr->getUniformLocation("origin"), 1, origin.data());
+    glUniform3fv(this->pre_compute_shdr->getUniformLocation("resolution"), 1, resolution.data());
 
     glActiveTexture(GL_TEXTURE0);
     this->fbo->bindDepthbuffer();
-    glUniform1i(this->pre_compute_shdr.ParameterLocation("depth_tx2D"), 0);
+    glUniform1i(this->pre_compute_shdr->getUniformLocation("depth_tx2D"), 0);
 
     glActiveTexture(GL_TEXTURE1);
     this->fbo->bindColorbuffer(1);
-    glUniform1i(this->pre_compute_shdr.ParameterLocation("normal_tx2D"), 1);
+    glUniform1i(this->pre_compute_shdr->getUniformLocation("normal_tx2D"), 1);
 
     glActiveTexture(GL_TEXTURE2);
     this->velocity_texture->bindTexture();
-    glUniform1i(this->pre_compute_shdr.ParameterLocation("velocity_tx3D"), 2);
+    glUniform1i(this->pre_compute_shdr->getUniformLocation("velocity_tx3D"), 2);
 
     this->velocity_target->bindImage(0, GL_WRITE_ONLY);
 
-    this->pre_compute_shdr.Dispatch(
+    glDispatchCompute(
         static_cast<int>(std::ceil(rt_resolution[0] / 8.0f)), static_cast<int>(std::ceil(rt_resolution[1] / 8.0f)), 1);
 
     glBindImageTexture(0, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R8);
@@ -370,77 +337,77 @@ bool SurfaceLICRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    this->pre_compute_shdr.Disable();
+    glUseProgram(0);
 
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
     // Compute surface LIC
-    this->lic_compute_shdr.Enable();
+    this->lic_compute_shdr->use();
 
-    glUniformMatrix4fv(this->lic_compute_shdr.ParameterLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(this->lic_compute_shdr.ParameterLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(proj));
+    glUniformMatrix4fv(this->lic_compute_shdr->getUniformLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(this->lic_compute_shdr->getUniformLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(proj));
 
-    glUniform1f(this->lic_compute_shdr.ParameterLocation("cam_near"), cam_near);
-    glUniform1f(this->lic_compute_shdr.ParameterLocation("cam_far"), cam_far);
+    glUniform1f(this->lic_compute_shdr->getUniformLocation("cam_near"), cam_near);
+    glUniform1f(this->lic_compute_shdr->getUniformLocation("cam_far"), cam_far);
 
-    glUniform2fv(this->lic_compute_shdr.ParameterLocation("rt_resolution"), 1, rt_resolution.data());
+    glUniform2fv(this->lic_compute_shdr->getUniformLocation("rt_resolution"), 1, rt_resolution.data());
 
-    glUniform3fv(this->lic_compute_shdr.ParameterLocation("origin"), 1, origin.data());
-    glUniform3fv(this->lic_compute_shdr.ParameterLocation("resolution"), 1, resolution.data());
+    glUniform3fv(this->lic_compute_shdr->getUniformLocation("origin"), 1, origin.data());
+    glUniform3fv(this->lic_compute_shdr->getUniformLocation("resolution"), 1, resolution.data());
 
-    glUniform1i(this->lic_compute_shdr.ParameterLocation("noise_bands"),
+    glUniform1i(this->lic_compute_shdr->getUniformLocation("noise_bands"),
         this->noise_bands.Param<core::param::IntParam>()->Value());
-    glUniform1f(this->lic_compute_shdr.ParameterLocation("noise_scale"),
+    glUniform1f(this->lic_compute_shdr->getUniformLocation("noise_scale"),
         this->noise_scale.Param<core::param::FloatParam>()->Value());
-    glUniform1f(this->lic_compute_shdr.ParameterLocation("arc_length"),
+    glUniform1f(this->lic_compute_shdr->getUniformLocation("arc_length"),
         this->arc_length.Param<core::param::FloatParam>()->Value());
-    glUniform1i(this->lic_compute_shdr.ParameterLocation("num_advections"),
+    glUniform1i(this->lic_compute_shdr->getUniformLocation("num_advections"),
         this->num_advections.Param<core::param::IntParam>()->Value());
     glUniform1f(
-        this->lic_compute_shdr.ParameterLocation("epsilon"), this->epsilon.Param<core::param::FloatParam>()->Value());
+        this->lic_compute_shdr->getUniformLocation("epsilon"), this->epsilon.Param<core::param::FloatParam>()->Value());
 
-    glUniform1i(
-        this->lic_compute_shdr.ParameterLocation("coloring"), this->coloring.Param<core::param::EnumParam>()->Value());
+    glUniform1i(this->lic_compute_shdr->getUniformLocation("coloring"),
+        this->coloring.Param<core::param::EnumParam>()->Value());
 
-    glUniform1f(
-        this->lic_compute_shdr.ParameterLocation("max_magnitude"), static_cast<float>(cd->GetMetadata()->MaxValues[0]));
+    glUniform1f(this->lic_compute_shdr->getUniformLocation("max_magnitude"),
+        static_cast<float>(cd->GetMetadata()->MaxValues[0]));
 
-    glUniform1f(this->lic_compute_shdr.ParameterLocation("ka"), this->ka.Param<core::param::FloatParam>()->Value());
-    glUniform1f(this->lic_compute_shdr.ParameterLocation("kd"), this->kd.Param<core::param::FloatParam>()->Value());
-    glUniform1f(this->lic_compute_shdr.ParameterLocation("ks"), this->ks.Param<core::param::FloatParam>()->Value());
-    glUniform1f(this->lic_compute_shdr.ParameterLocation("shininess"),
+    glUniform1f(this->lic_compute_shdr->getUniformLocation("ka"), this->ka.Param<core::param::FloatParam>()->Value());
+    glUniform1f(this->lic_compute_shdr->getUniformLocation("kd"), this->kd.Param<core::param::FloatParam>()->Value());
+    glUniform1f(this->lic_compute_shdr->getUniformLocation("ks"), this->ks.Param<core::param::FloatParam>()->Value());
+    glUniform1f(this->lic_compute_shdr->getUniformLocation("shininess"),
         this->shininess.Param<core::param::FloatParam>()->Value());
-    glUniform3fv(this->lic_compute_shdr.ParameterLocation("light"), 1, light.data());
-    glUniform3fv(this->lic_compute_shdr.ParameterLocation("ambient_col"), 1,
+    glUniform3fv(this->lic_compute_shdr->getUniformLocation("light"), 1, light.data());
+    glUniform3fv(this->lic_compute_shdr->getUniformLocation("ambient_col"), 1,
         this->ambient_color.Param<core::param::ColorParam>()->Value().data());
-    glUniform3fv(this->lic_compute_shdr.ParameterLocation("specular_col"), 1,
+    glUniform3fv(this->lic_compute_shdr->getUniformLocation("specular_col"), 1,
         this->specular_color.Param<core::param::ColorParam>()->Value().data());
-    glUniform3fv(this->lic_compute_shdr.ParameterLocation("light_col"), 1,
+    glUniform3fv(this->lic_compute_shdr->getUniformLocation("light_col"), 1,
         this->light_color.Param<core::param::ColorParam>()->Value().data());
 
     glActiveTexture(GL_TEXTURE0);
     this->fbo->bindDepthbuffer();
-    glUniform1i(this->lic_compute_shdr.ParameterLocation("depth_tx2D"), 0);
+    glUniform1i(this->lic_compute_shdr->getUniformLocation("depth_tx2D"), 0);
 
     glActiveTexture(GL_TEXTURE1);
     this->velocity_target->bindTexture();
-    glUniform1i(this->lic_compute_shdr.ParameterLocation("velocity_tx2D"), 1);
+    glUniform1i(this->lic_compute_shdr->getUniformLocation("velocity_tx2D"), 1);
 
     glActiveTexture(GL_TEXTURE2);
     this->fbo->bindColorbuffer(1);
-    glUniform1i(this->lic_compute_shdr.ParameterLocation("normal_tx2D"), 2);
+    glUniform1i(this->lic_compute_shdr->getUniformLocation("normal_tx2D"), 2);
 
     glActiveTexture(GL_TEXTURE3);
     this->noise_texture->bindTexture();
-    glUniform1i(this->lic_compute_shdr.ParameterLocation("noise_tx3D"), 3);
+    glUniform1i(this->lic_compute_shdr->getUniformLocation("noise_tx3D"), 3);
 
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_1D, tf_texture);
-    glUniform1i(this->lic_compute_shdr.ParameterLocation("tf_tx1D"), 4);
+    glUniform1i(this->lic_compute_shdr->getUniformLocation("tf_tx1D"), 4);
 
     this->render_target->bindImage(0, GL_WRITE_ONLY);
 
-    this->lic_compute_shdr.Dispatch(
+    glDispatchCompute(
         static_cast<int>(std::ceil(rt_resolution[0] / 8.0f)), static_cast<int>(std::ceil(rt_resolution[1] / 8.0f)), 1);
 
     glBindImageTexture(0, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R8);
@@ -460,7 +427,7 @@ bool SurfaceLICRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    this->lic_compute_shdr.Disable();
+    glUseProgram(0);
 
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
@@ -475,15 +442,15 @@ bool SurfaceLICRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     if (state_blend)
         glDisable(GL_BLEND);
 
-    this->render_to_framebuffer_shdr.Enable();
+    this->render_to_framebuffer_shdr->use();
 
     glActiveTexture(GL_TEXTURE0);
     this->render_target->bindTexture();
-    glUniform1i(this->render_to_framebuffer_shdr.ParameterLocation("src_tx2D"), 0);
+    glUniform1i(this->render_to_framebuffer_shdr->getUniformLocation("src_tx2D"), 0);
 
     glActiveTexture(GL_TEXTURE1);
     this->fbo->bindDepthbuffer();
-    glUniform1i(this->render_to_framebuffer_shdr.ParameterLocation("depth_tx2D"), 1);
+    glUniform1i(this->render_to_framebuffer_shdr->getUniformLocation("depth_tx2D"), 1);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -493,7 +460,7 @@ bool SurfaceLICRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    this->render_to_framebuffer_shdr.Disable();
+    glUseProgram(0);
 
     if (state_blend)
         glEnable(GL_BLEND);
@@ -509,5 +476,4 @@ vislib::math::Cuboid<float> SurfaceLICRenderer::combineBoundingBoxes(std::vector
     return out;
 }
 
-} // namespace volume_gl
-} // namespace megamol
+} // namespace megamol::volume_gl

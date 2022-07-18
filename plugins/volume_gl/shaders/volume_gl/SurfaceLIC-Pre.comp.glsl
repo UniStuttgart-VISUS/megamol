@@ -1,3 +1,7 @@
+#version 430
+
+#include "common/SurfaceLIC-Functions.inc.glsl"
+
 #extension GL_ARB_compute_shader : enable
 
 /* render target resolution */

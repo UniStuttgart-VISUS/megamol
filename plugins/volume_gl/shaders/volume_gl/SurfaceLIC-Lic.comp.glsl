@@ -1,3 +1,8 @@
+#version 430
+
+#include "core/phong.inc.glsl"
+#include "common/SurfaceLIC-Functions.inc.glsl"
+
 #extension GL_ARB_compute_shader : enable
 
 /* near and far clipping planes */

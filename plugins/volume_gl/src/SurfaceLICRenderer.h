@@ -1,29 +1,22 @@
-/*
- * SurfaceLICRenderer.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
  * All rights reserved.
  */
 
 #pragma once
+
+#include <memory>
+#include <vector>
+
+#include <glowl/glowl.h>
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-
-#include "glowl/FramebufferObject.hpp"
-#include "glowl/Texture2D.hpp"
-#include "glowl/Texture3D.hpp"
-
-#include <memory>
-#include <vector>
-
-namespace megamol {
-namespace volume_gl {
+namespace megamol::volume_gl {
 
 class SurfaceLICRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
@@ -32,7 +25,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SurfaceLICRenderer";
     }
 
@@ -41,7 +34,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for surface LIC";
     }
 
@@ -50,7 +43,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -119,9 +112,9 @@ private:
     SIZE_T hash;
 
     /** Shader */
-    vislib_gl::graphics::gl::GLSLComputeShader pre_compute_shdr;
-    vislib_gl::graphics::gl::GLSLComputeShader lic_compute_shdr;
-    vislib_gl::graphics::gl::GLSLShader render_to_framebuffer_shdr;
+    std::unique_ptr<glowl::GLSLProgram> pre_compute_shdr;
+    std::unique_ptr<glowl::GLSLProgram> lic_compute_shdr;
+    std::unique_ptr<glowl::GLSLProgram> render_to_framebuffer_shdr;
 
     /** Textures */
     std::unique_ptr<glowl::Texture2D> velocity_target;
@@ -136,5 +129,4 @@ private:
     std::vector<float> noise;
 };
 
-} // namespace volume_gl
-} // namespace megamol
+} // namespace megamol::volume_gl
