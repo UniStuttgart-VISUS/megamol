@@ -223,12 +223,6 @@ private:
     // param slot for toggling protein rendering
     megamol::core::param::ParamSlot renderProteinParam;
 
-    // shader for the spheres (raycasting view)
-    vislib_gl::graphics::gl::GLSLShader sphereShader;
-    // shader for the cylinders (raycasting view)
-    vislib_gl::graphics::gl::GLSLShader cylinderShader;
-    // shader for the clipped spheres (raycasting view)
-    vislib_gl::graphics::gl::GLSLShader clippedSphereShader;
     // shader for volume texture generation
     vislib_gl::graphics::gl::GLSLShader updateVolumeShader;
     // shader for volume rendering
