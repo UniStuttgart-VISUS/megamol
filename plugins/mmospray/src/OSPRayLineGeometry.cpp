@@ -8,7 +8,6 @@
 #include "geometry_calls/LinesDataCall.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/Call.h"
-#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmospray/CallOSPRayStructure.h"
@@ -21,8 +20,7 @@ OSPRayLineGeometry::OSPRayLineGeometry(void)
         : AbstractOSPRayStructure()
         , getDataSlot("getdata", "Connects to the data source")
         , getLineDataSlot("getLineData", "")
-        , globalRadiusSlot("globalRadius", "Sets the radius of the lines")
-        , smoothSlot("smooth", "Set whether to smooth the lines") {
+        , globalRadiusSlot("globalRadius", "Sets the radius of the lines") {
 
     this->getDataSlot.SetCompatibleCall<geocalls::LinesDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -33,8 +31,6 @@ OSPRayLineGeometry::OSPRayLineGeometry(void)
     this->globalRadiusSlot << new core::param::FloatParam(0.01);
     this->MakeSlotAvailable(&this->globalRadiusSlot);
 
-    this->smoothSlot << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->smoothSlot);
 }
 
 
@@ -189,9 +185,8 @@ ospray::OSPRayLineGeometry::InterfaceIsDirty()
 bool OSPRayLineGeometry::InterfaceIsDirty() {
     CallOSPRayMaterial* cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
     cm->getMaterialParameter();
-    if (cm->InterfaceIsDirty() || this->globalRadiusSlot.IsDirty() || this->smoothSlot.IsDirty()) {
+    if (cm->InterfaceIsDirty() || this->globalRadiusSlot.IsDirty()) {
         this->globalRadiusSlot.ResetDirty();
-        this->smoothSlot.ResetDirty();
         return true;
     } else {
         return false;

@@ -65,8 +65,6 @@ private:
     core::CallerSlot getLineDataSlot;
 
     core::param::ParamSlot globalRadiusSlot;
-
-    core::param::ParamSlot smoothSlot;
 };
 
 } // namespace ospray

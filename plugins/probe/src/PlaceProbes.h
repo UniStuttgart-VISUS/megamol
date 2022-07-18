@@ -70,6 +70,8 @@ protected:
 
     core::CalleeSlot _probe_positions_slot;
 
+    core::CallerSlot _clipplane_slot;
+
     core::param::ParamSlot _method_slot;
     core::param::ParamSlot _probes_per_unit_slot;
     core::param::ParamSlot _scale_probe_begin_slot;
@@ -77,6 +79,7 @@ protected:
 
 
 private:
+
     bool getData(core::Call& call);
 
     bool getMetaData(core::Call& call);
@@ -98,6 +101,7 @@ private:
     bool getADIOSMetaData(core::Call& call);
     bool loadFromFile();
     bool parameterChanged(core::param::ParamSlot& p);
+    void processClipplane();
 
     uint32_t _longest_edge_index;
 

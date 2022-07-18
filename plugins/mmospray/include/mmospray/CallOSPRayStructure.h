@@ -51,10 +51,9 @@ struct volumeStructure {
     std::array<float, 2> valueRange;
 
     const void* voxels;
-    std::shared_ptr<std::vector<float>> voxels_shared;
     std::array<float, 3> gridOrigin;
     std::array<float, 3> gridSpacing;
-    std::array<int, 3> dimensions;
+    std::array<uint32_t, 3> dimensions;
     std::array<float, 3> clippingBoxLower;
     std::array<float, 3> clippingBoxUpper;
     float isoValue;

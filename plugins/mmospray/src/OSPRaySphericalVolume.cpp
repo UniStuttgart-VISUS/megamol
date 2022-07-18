@@ -112,10 +112,10 @@ bool OSPRaySphericalVolume::readData(core::Call& call) {
     for (auto var : availVars) {
         volumeDataStringSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
     }
-    const std::string volDataStr =
-        std::string(this->volumeDataStringSlot.Param<core::param::FlexEnumParam>()->ValueString());
 
     // do inqures
+    const std::string volDataStr =
+        std::string(this->volumeDataStringSlot.Param<core::param::FlexEnumParam>()->ValueString());
     if (volDataStr != "undef") {
         if (!cd->inquireVar(volDataStr)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -135,6 +135,11 @@ bool OSPRaySphericalVolume::readData(core::Call& call) {
     }
     const std::string gridSpacingStr = "vol_grid_spacing";
     if (!cd->inquireVar(gridSpacingStr)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[OSPRaySphericalVolume] variable \"%s\" does not exist.", gridSpacingStr.c_str());
+    }
+    const std::string gridResStr = "vol_grid_resolution";
+    if (!cd->inquireVar(gridResStr)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[OSPRaySphericalVolume] variable \"%s\" does not exist.", gridSpacingStr.c_str());
     }
@@ -164,7 +169,7 @@ bool OSPRaySphericalVolume::readData(core::Call& call) {
                     ->GetAsFloat();
     auto gridOrigin = cd->getData(gridOrigStr)->GetAsFloat();
     auto gridSpacing = cd->getData(gridSpacingStr)->GetAsFloat();
-
+    auto gridRes = cd->getData(gridResStr)->GetAsUInt32();
 
     this->extendContainer.boundingBox = std::make_shared<core::BoundingBoxes_2>();
     this->extendContainer.boundingBox->SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
@@ -181,21 +186,28 @@ bool OSPRaySphericalVolume::readData(core::Call& call) {
     this->extendContainer.isValid = true;
 
 
-    auto res = cd->getData(volDataStr)->getShape();
-    assert(res.size() == 3);
 
-    unsigned int const voxelCount = res[0] * res[1] * res[2];
+    unsigned int const voxelCount = gridRes[0] * gridRes[1] * gridRes[2];
     assert(data.size() == voxelCount);
 
-    std::array<int, 3> dimensions = {
-        static_cast<int>(res[0]), static_cast<int>(res[1]), static_cast<int>(res[2])};
+    std::array<uint32_t, 3> const dimensions = {gridRes[0], gridRes[1], gridRes[2]};
 
-    voxelDataType voxelType = voxelDataType::FLOAT;
+    voxelDataType const voxelType = voxelDataType::FLOAT;
+
+    // resort data
+    _resorted_data.reserve(dimensions[0] * dimensions[1]*dimensions[2]);
+    for (int phi = 0; phi < dimensions[2]; ++phi) {
+        for (int theta = 0; theta < dimensions[1]; ++theta) {
+            for (int r = 0; r < dimensions[0]; ++r) {
+                _resorted_data.emplace_back(data[r + dimensions[0] * (theta + dimensions[1] * phi)]);
+            }
+        }
+    }
 
     // get color transfer function
     std::vector<float> rgb;
     std::vector<float> a;
-    std::array<float, 2> minmax = {*std::min_element(data.begin(), data.end()), *std::max_element(data.begin(),data.end())};
+    std::array<float, 2> const minmax = {*std::min_element(data.begin(), data.end()), *std::max_element(data.begin(),data.end())};
     cgtf->SetRange(minmax);
     if ((*cgtf)(0)) {
         if (cgtf->TFTextureFormat() == core::view::CallGetTransferFunction::TextureFormat::TEXTURE_FORMAT_RGBA) {
@@ -240,7 +252,7 @@ bool OSPRaySphericalVolume::readData(core::Call& call) {
     volumeStructure svs;
 
     svs.volRepType = (volumeRepresentationType)this->repType.Param<core::param::EnumParam>()->Value();
-    svs.voxels_shared = std::make_shared<std::vector<float>>(data);
+    svs.voxels = _resorted_data.data();
     svs.gridOrigin = { gridOrigin[0], gridOrigin[1], gridOrigin[2]};
     svs.gridSpacing = { gridSpacing[0], gridSpacing[1], gridSpacing[2]};
     svs.dimensions = dimensions;

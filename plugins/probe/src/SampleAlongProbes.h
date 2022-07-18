@@ -163,6 +163,8 @@ void SampleAlongPobes::doScalarSampling(const std::shared_ptr<my_kd_tree_t>& tre
                 probe.m_begin = arg.m_begin;
                 probe.m_end = arg.m_end;
                 probe.m_cluster_id = arg.m_cluster_id;
+                probe.m_geo_ids = arg.m_geo_ids;
+                probe.m_vert_ids = arg.m_vert_ids;
 
                 auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
                 auto radius = 0.5 * sample_step * sample_radius_factor;

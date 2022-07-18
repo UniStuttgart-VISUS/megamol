@@ -271,6 +271,11 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             // adiosInst->AtIO("Input").SetParameters({{"verbose", "4"}});
             io->SetParameter("verbose", "5");
             auto fname = this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string();
+            if (fname.empty()) {
+                core::utility::log::Log::DefaultLog.WriteError(
+                    "[adiosDataSource] No File given!");
+                return false;
+            }
 #ifdef _WIN32
             std::replace(fname.begin(), fname.end(), '/', '\\');
 #endif

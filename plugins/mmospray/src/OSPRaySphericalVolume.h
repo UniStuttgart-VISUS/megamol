@@ -74,6 +74,8 @@ protected:
 
     megamol::core::param::ParamSlot repType;
     megamol::core::param::ParamSlot IsoValue;
+
+    std::vector<float> _resorted_data;
 };
 
 } // namespace ospray

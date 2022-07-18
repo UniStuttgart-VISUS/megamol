@@ -80,23 +80,30 @@ bool ElementColoring::getData(core::Call& call) {
 
             auto const probe_count = cp->getData()->getProbeCount();
             std::vector<int> cluster_ids(probe_count);
+            std::vector<std::vector<uint64_t>> vertex_ids(probe_count);
             for (auto i = 0; i < probe_count; i++) {
                 auto generic_probe = cp->getData()->getGenericProbe(i);
 
                 int cluster_id;
+                std::vector<uint64_t> vertex_id;
 
-                auto visitor = [&cluster_id](auto&& arg) {
+                auto visitor = [&cluster_id, &vertex_id](auto&& arg) {
                     using T = std::decay_t<decltype(arg)>;
                     if constexpr (std::is_same_v<T, probe::FloatProbe>) {
                         cluster_id = arg.m_cluster_id;
+                        vertex_id = arg.m_vert_ids;
                     } else if constexpr (std::is_same_v<T, probe::IntProbe>) {
                         cluster_id = arg.m_cluster_id;
+                        vertex_id = arg.m_vert_ids;
                     } else if constexpr (std::is_same_v<T, probe::Vec4Probe>) {
                         cluster_id = arg.m_cluster_id;
+                        vertex_id = arg.m_vert_ids;
                     } else if constexpr (std::is_same_v<T, probe::FloatDistributionProbe>) {
                         cluster_id = arg.m_cluster_id;
+                        vertex_id = arg.m_vert_ids;
                     } else if constexpr (std::is_same_v<T, probe::BaseProbe>) {
                         cluster_id = arg.m_cluster_id;
+                        vertex_id = arg.m_vert_ids;
                     } else {
                         // unknown probe type, throw error? do nothing?
                     }
@@ -105,6 +112,8 @@ bool ElementColoring::getData(core::Call& call) {
                 std::visit(visitor, generic_probe);
 
                 cluster_ids[i] = cluster_id;
+                vertex_ids[i] = vertex_id;
+
             }
 
             auto cluster_ids_sorted = cluster_ids;
@@ -174,17 +183,25 @@ bool ElementColoring::getData(core::Call& call) {
                     }
                 }
             } else {
-                std::string mesh_id;
-                for (auto& m : _mesh_collection_copy.accessMeshes()) {
-                    mesh_id = m.first;
+                // no elements case
+                std::pair<std::string, mesh::MeshDataAccessCollection::Mesh> mesh =
+                    *_mesh_collection_copy.accessMeshes().begin();
+                std::string mesh_id = mesh.first;
+
+                int num_vertices = 0;
+                for (auto& attr : mesh.second.attributes) {
+                    if (attr.semantic == mesh::MeshDataAccessCollection::AttributeSemanticType::POSITION) {
+                        num_vertices = attr.byte_size / attr.stride;
+                    }
                 }
+
                 _mesh_copy.resize(1);
-                _vertColors.resize(probe_count);
+                _vertColors.resize(num_vertices,{1.0f,1.0f,1.0f,1.0f});
                 for (int j = 0; j < probe_count; ++j) {
                     auto current_id = cluster_ids[j];
                     auto current_color = hsvSpiralColor(current_id - lowest_cluster_id, num_clusters); // id can be -1
-
-                    _vertColors[j] = {current_color.x, current_color.y, current_color.z, 1.0f};
+                    auto& id = vertex_ids[j];
+                    _vertColors[id[0]] = {current_color.x, current_color.y, current_color.z, 1.0f};
                 }
                 auto col_attr = mesh::MeshDataAccessCollection::VertexAttribute();
                 col_attr.component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
@@ -223,7 +240,7 @@ bool ElementColoring::getData(core::Call& call) {
 
             auto current_color = _fallbackColor.Param<core::param::ColorParam>()->GetArray();
             _vertColors.resize(num_verts);
-            for (uint64_t j = 0; j < num_verts; ++j) {
+            for (int j = 0; j < num_verts; ++j) {
                 _vertColors[j] = current_color;
             }
             auto col_attr = mesh::MeshDataAccessCollection::VertexAttribute();

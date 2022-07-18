@@ -1155,11 +1155,12 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
             break;
 
         case structureTypeEnum::VOLUME: {
+
             auto& container = std::get<volumeStructure>(element->structure);
             switch (element->volumeType) {
             case volumeTypeEnum::STRUCTUREDVOLUME: {
 
-                if (container.voxels == NULL) {
+                if (container.voxels == nullptr) {
                     core::utility::log::Log::DefaultLog.WriteError(
                         "[OSPRay:generateRepresentations] Representation STRUCTUREDVOLUME active but no data provided.");
                     break;
@@ -1171,7 +1172,8 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
                 auto type = static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(container.voxelDType)]);
 
                 // add data
-                rkcommon::math::vec3i dims = {container.dimensions[0], container.dimensions[1], container.dimensions[2]};
+                rkcommon::math::vec3ul dims = {
+                    container.dimensions[0], container.dimensions[1], container.dimensions[2]};
                 auto voxelData = ::ospray::cpp::SharedData(container.voxels, type, dims);
                 voxelData.commit();
 
@@ -1182,7 +1184,7 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
             break;
 
             case volumeTypeEnum::SPHERICALVOLUME: {
-                if (!container.voxels_shared) {
+                if (container.voxels == nullptr) {
                     core::utility::log::Log::DefaultLog.WriteError(
                         "[OSPRay:generateRepresentations] Representation SPHERICALVOLUME active but no data provided.");
                     break;
@@ -1192,9 +1194,9 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
                     ::ospray::cpp::Volume("structuredSpherical"), structureTypeEnum::VOLUME);
 
                 // add data
-                rkcommon::math::vec3i dims = {
+                rkcommon::math::vec3ul dims = {
                     container.dimensions[0], container.dimensions[1], container.dimensions[2]};
-                auto voxelData = ::ospray::cpp::SharedData(container.voxels_shared->data(), OSP_FLOAT, dims);
+                auto voxelData = ::ospray::cpp::SharedData(container.voxels, OSP_FLOAT, dims);
                 voxelData.commit();
 
 
@@ -1290,6 +1292,33 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
                 _groups[entry.first].commit();
                 break;
             }
+
+            _groups[entry.first] = ::ospray::cpp::Group();
+            if (element->volumeType == volumeRepresentationType::ISOSURFACE) {
+                _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
+            } else {
+                _groups[entry.first].setParam("volume", ::ospray::cpp::CopiedData(_volumetricModels[entry.first]));
+            }
+            if (entry.second->clippingPlane.isValid) {
+                _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("plane"), GEOMETRY);
+
+                ::rkcommon::math::vec4f plane;
+                plane[0] = entry.second->clippingPlane.coeff[0];
+                plane[1] = entry.second->clippingPlane.coeff[1];
+                plane[2] = entry.second->clippingPlane.coeff[2];
+                plane[3] = entry.second->clippingPlane.coeff[3];
+                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                    .setParam("plane.coefficients", ::ospray::cpp::CopiedData(plane));
+                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
+
+                _clippingModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+                _clippingModels[entry.first].back().commit();
+
+                _groups[entry.first].setParam(
+                    "clippingGeometry", ::ospray::cpp::CopiedData(_clippingModels[entry.first]));
+            }
+            _groups[entry.first].commit();
         } break;
         }
 
