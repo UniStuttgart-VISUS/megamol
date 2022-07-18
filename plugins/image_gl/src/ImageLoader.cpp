@@ -261,7 +261,7 @@ bool ImageLoader::loadImage(const std::filesystem::path& path) {
             image, loadedFile.data(), fileSize)) {
         image.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
         this->imageMutex.lock();
-        this->newImageData.insert(std::pair(path.string(), image));
+        this->newImageData.insert(std::make_pair(path.string(), image));
         this->imageMutex.unlock();
 #ifdef LOADED_MESSAGE
         this->loaded++;

@@ -313,8 +313,9 @@ function(require_external NAME)
       CMAKE_ARGS
         -DBUILD_CURL_EXE=OFF
         -DBUILD_SHARED_LIBS=OFF
-        -DCURL_STATIC_CRT=ON
-        -DCURL_STATICLIB=ON 
+        -DBUILD_TESTING=OFF
+        -DCURL_STATICLIB=ON
+        -DCURL_USE_OPENSSL=OFF
     )
 
     add_external_library(curl

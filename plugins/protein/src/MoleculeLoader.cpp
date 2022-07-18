@@ -81,7 +81,7 @@ bool MoleculeLoader::getMDCExtent(core::Call& call) {
     bool const recalc = updateFiles();
     postProcessFilesMDC(*mdc, recalc);
     if (structure_ != nullptr) {
-        mdc->SetFrameCount(std::max(time_step_count_, 1ll));
+        mdc->SetFrameCount(std::max(time_step_count_, static_cast<int64_t>(1)));
     } else {
         mdc->SetFrameCount(1);
     }

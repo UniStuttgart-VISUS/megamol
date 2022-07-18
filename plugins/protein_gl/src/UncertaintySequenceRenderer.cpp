@@ -21,7 +21,7 @@
 #include "UncertaintySequenceRenderer.h"
 
 #include <ctime>
-#include <math.h>
+#include <cmath>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -385,8 +385,8 @@ bool UncertaintySequenceRenderer::create() {
         if (i == 0) {
             tmpVec = initVec;
         } else {
-            tmpVec.SetX(initVec.X() * std::cosf(angle) - initVec.Y() * std::sinf(angle));
-            tmpVec.SetY(initVec.X() * std::sinf(angle) + initVec.Y() * std::cosf(angle));
+            tmpVec.SetX(initVec.X() * ::cosf(angle) - initVec.Y() * ::sinf(angle));
+            tmpVec.SetY(initVec.X() * ::sinf(angle) + initVec.Y() * ::cosf(angle));
         }
         this->glyphAxis.Add(tmpVec);
     }

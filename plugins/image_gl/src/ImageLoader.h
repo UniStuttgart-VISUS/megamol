@@ -6,18 +6,20 @@
 #ifndef MEGAMOLCORE_IMAGELOADER_H_INCLUDED
 #define MEGAMOLCORE_IMAGELOADER_H_INCLUDED
 
-#include "image_calls/Image2DCall.h"
-#include "mmcore/Call.h"
-#include "mmcore/CalleeSlot.h"
-#include "mmcore/Module.h"
-#include "mmcore/param/ParamSlot.h"
-
 #include <atomic>
+#include <condition_variable>
+#include <filesystem>
 #include <fstream>
 #include <mutex>
 #include <queue>
 #include <set>
 #include <thread>
+
+#include "image_calls/Image2DCall.h"
+#include "mmcore/Call.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
 
 //#define LOADED_MESSAGE
 
