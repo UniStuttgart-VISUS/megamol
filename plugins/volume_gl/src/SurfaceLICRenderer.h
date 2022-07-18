@@ -5,8 +5,6 @@
  * All rights reserved.
  */
 
-#ifndef ASTRO_SURFACELICRENDERER_H_INCLUDED
-#define ASTRO_SURFACELICRENDERER_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -25,7 +23,7 @@
 #include <vector>
 
 namespace megamol {
-namespace astro_gl {
+namespace volume_gl {
 
 class SurfaceLICRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
@@ -138,7 +136,5 @@ private:
     std::vector<float> noise;
 };
 
-} // namespace astro_gl
+} // namespace volume_gl
 } // namespace megamol
-
-#endif /* ASTRO_SURFACELICRENDERER_H_INCLUDED */

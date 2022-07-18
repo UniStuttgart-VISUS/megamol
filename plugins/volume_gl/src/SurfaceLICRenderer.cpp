@@ -30,7 +30,7 @@
 #include <random>
 
 namespace megamol {
-namespace astro_gl {
+namespace volume_gl {
 
 SurfaceLICRenderer::SurfaceLICRenderer()
         : input_renderer("input_renderer", "Renderer producing the surface and depth used for drawing the LIC upon")
@@ -509,5 +509,5 @@ vislib::math::Cuboid<float> SurfaceLICRenderer::combineBoundingBoxes(std::vector
     return out;
 }
 
-} // namespace astro_gl
+} // namespace volume_gl
 } // namespace megamol

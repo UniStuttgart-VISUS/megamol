@@ -9,7 +9,7 @@
 
 #include "OpenGL_Context.h"
 
-#include "geometry_calls//VolumetricDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"

@@ -8,6 +8,7 @@
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "RaycastVolumeRenderer.h"
+#include "SurfaceLICRenderer.h"
 #include "VolumeSliceRenderer.h"
 
 namespace megamol::volume_gl {
@@ -27,6 +28,7 @@ public:
         // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::volume_gl::RaycastVolumeRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::volume_gl::VolumeSliceRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::volume_gl::SurfaceLICRenderer>();
 
         // register calls
     }
