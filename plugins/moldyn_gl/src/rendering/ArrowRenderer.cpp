@@ -83,8 +83,8 @@ bool ArrowRenderer::create(void) {
 
     try {
         // TODO: use std::filesystem::path?
-        arrow_pgrm_ = core::utility::make_glowl_shader(
-            "arrow", shader_options, "arrow_renderer/arrow.vert.glsl", "arrow_renderer/arrow.frag.glsl");
+        arrow_pgrm_ = core::utility::make_glowl_shader("arrow", shader_options,
+            "moldyn_gl/arrow_renderer/arrow.vert.glsl", "moldyn_gl/arrow_renderer/arrow.frag.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to compile arrow shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(), __FILE__,
