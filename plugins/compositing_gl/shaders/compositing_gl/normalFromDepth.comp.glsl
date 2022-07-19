@@ -1,3 +1,5 @@
+#version 430
+
 uniform sampler2D src_tx2D;
 
 layout(RGBA16) writeonly uniform image2D tgt_tx2D;

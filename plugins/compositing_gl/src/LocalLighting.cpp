@@ -9,12 +9,11 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/light/CallLight.h"
 #include "mmstd/light/DistantLight.h"
 #include "mmstd/light/PointLight.h"
 #include "mmstd/light/TriDirectionalLighting.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 megamol::compositing::LocalLighting::LocalLighting()
         : core::Module()
@@ -95,41 +94,17 @@ megamol::compositing::LocalLighting::~LocalLighting() {
 
 bool megamol::compositing::LocalLighting::create() {
 
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+
     try {
-        // create shader program
-        m_lambert_prgm = std::make_unique<GLSLComputeShader>();
-        m_phong_prgm = std::make_unique<GLSLComputeShader>();
+        m_lambert_prgm =
+            core::utility::make_glowl_shader("compositing_lambert", shader_options, "compositing_gl/lambert.comp.glsl");
 
-        vislib_gl::graphics::gl::ShaderSource compute_lambert_src;
-        vislib_gl::graphics::gl::ShaderSource compute_phong_src;
+        m_lambert_prgm =
+            core::utility::make_glowl_shader("compositing_phong", shader_options, "compositing_gl/phong.comp.glsl");
 
-        auto ssf =
-            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-        if (!ssf->MakeShaderSource("Compositing::lambert", compute_lambert_src))
-            return false;
-        if (!m_lambert_prgm->Compile(compute_lambert_src.Code(), compute_lambert_src.Count()))
-            return false;
-        if (!m_lambert_prgm->Link())
-            return false;
-
-        if (!ssf->MakeShaderSource("Compositing::phong", compute_phong_src))
-            return false;
-        if (!m_phong_prgm->Compile(compute_phong_src.Code(), compute_phong_src.Count()))
-            return false;
-        if (!m_phong_prgm->Link())
-            return false;
-
-
-    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader (@%s): %s\n",
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: Unknown exception\n");
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("LocalLighting: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -276,39 +251,39 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
 
                 if (m_lambert_prgm != nullptr && m_point_lights_buffer != nullptr &&
                     m_distant_lights_buffer != nullptr) {
-                    m_lambert_prgm->Enable();
+                    m_lambert_prgm->use();
 
                     m_point_lights_buffer->bind(1);
-                    glUniform1i(m_lambert_prgm->ParameterLocation("point_light_cnt"),
+                    glUniform1i(m_lambert_prgm->getUniformLocation("point_light_cnt"),
                         static_cast<GLint>(m_point_lights.size()));
                     m_distant_lights_buffer->bind(2);
-                    glUniform1i(m_lambert_prgm->ParameterLocation("distant_light_cnt"),
+                    glUniform1i(m_lambert_prgm->getUniformLocation("distant_light_cnt"),
                         static_cast<GLint>(m_distant_lights.size()));
                     glActiveTexture(GL_TEXTURE0);
                     albedo_tx2D->bindTexture();
-                    glUniform1i(m_lambert_prgm->ParameterLocation("albedo_tx2D"), 0);
+                    glUniform1i(m_lambert_prgm->getUniformLocation("albedo_tx2D"), 0);
 
                     glActiveTexture(GL_TEXTURE1);
                     normal_tx2D->bindTexture();
-                    glUniform1i(m_lambert_prgm->ParameterLocation("normal_tx2D"), 1);
+                    glUniform1i(m_lambert_prgm->getUniformLocation("normal_tx2D"), 1);
 
                     glActiveTexture(GL_TEXTURE2);
                     depth_tx2D->bindTexture();
-                    glUniform1i(m_lambert_prgm->ParameterLocation("depth_tx2D"), 2);
+                    glUniform1i(m_lambert_prgm->getUniformLocation("depth_tx2D"), 2);
 
                     auto inv_view_mx = glm::inverse(view_mx);
                     auto inv_proj_mx = glm::inverse(proj_mx);
                     glUniformMatrix4fv(
-                        m_lambert_prgm->ParameterLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(inv_view_mx));
+                        m_lambert_prgm->getUniformLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(inv_view_mx));
                     glUniformMatrix4fv(
-                        m_lambert_prgm->ParameterLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(inv_proj_mx));
+                        m_lambert_prgm->getUniformLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(inv_proj_mx));
 
                     m_output_texture->bindImage(0, GL_WRITE_ONLY);
 
-                    m_lambert_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
+                    glDispatchCompute(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
                         static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
 
-                    m_lambert_prgm->Disable();
+                    glUseProgram(0);
                 }
             } else if (this->m_illuminationmode.Param<core::param::EnumParam>()->Value() == 1) {
                 // Blinn-Phong: std::cout << "Blinn Phong" << std::endl;
@@ -323,59 +298,59 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
                 m_phong_k_exp.Param<core::param::FloatParam>()->SetGUIVisible(true);
 
                 if (m_phong_prgm != nullptr && m_point_lights_buffer != nullptr && m_distant_lights_buffer != nullptr) {
-                    m_phong_prgm->Enable();
+                    m_phong_prgm->use();
 
                     // Phong Parameter to Shader
-                    glUniform4fv(m_phong_prgm->ParameterLocation("ambientColor"), 1,
+                    glUniform4fv(m_phong_prgm->getUniformLocation("ambientColor"), 1,
                         m_phong_ambientColor.Param<core::param::ColorParam>()->Value().data());
-                    glUniform4fv(m_phong_prgm->ParameterLocation("diffuseColor"), 1,
+                    glUniform4fv(m_phong_prgm->getUniformLocation("diffuseColor"), 1,
                         m_phong_diffuseColor.Param<core::param::ColorParam>()->Value().data());
-                    glUniform4fv(m_phong_prgm->ParameterLocation("specularColor"), 1,
+                    glUniform4fv(m_phong_prgm->getUniformLocation("specularColor"), 1,
                         m_phong_specularColor.Param<core::param::ColorParam>()->Value().data());
 
-                    glUniform1f(m_phong_prgm->ParameterLocation("k_amb"),
+                    glUniform1f(m_phong_prgm->getUniformLocation("k_amb"),
                         m_phong_k_ambient.Param<core::param::FloatParam>()->Value());
-                    glUniform1f(m_phong_prgm->ParameterLocation("k_diff"),
+                    glUniform1f(m_phong_prgm->getUniformLocation("k_diff"),
                         m_phong_k_diffuse.Param<core::param::FloatParam>()->Value());
-                    glUniform1f(m_phong_prgm->ParameterLocation("k_spec"),
+                    glUniform1f(m_phong_prgm->getUniformLocation("k_spec"),
                         m_phong_k_specular.Param<core::param::FloatParam>()->Value());
-                    glUniform1f(m_phong_prgm->ParameterLocation("k_exp"),
+                    glUniform1f(m_phong_prgm->getUniformLocation("k_exp"),
                         m_phong_k_exp.Param<core::param::FloatParam>()->Value());
 
                     // Cameraposition
-                    glUniform3fv(m_phong_prgm->ParameterLocation("camPos"), 1, glm::value_ptr(cam_pose.position));
+                    glUniform3fv(m_phong_prgm->getUniformLocation("camPos"), 1, glm::value_ptr(cam_pose.position));
 
                     m_point_lights_buffer->bind(1);
                     glUniform1i(
-                        m_phong_prgm->ParameterLocation("point_light_cnt"), static_cast<GLint>(m_point_lights.size()));
+                        m_phong_prgm->getUniformLocation("point_light_cnt"), static_cast<GLint>(m_point_lights.size()));
                     m_distant_lights_buffer->bind(2);
-                    glUniform1i(m_phong_prgm->ParameterLocation("distant_light_cnt"),
+                    glUniform1i(m_phong_prgm->getUniformLocation("distant_light_cnt"),
                         static_cast<GLint>(m_distant_lights.size()));
                     glActiveTexture(GL_TEXTURE0);
                     albedo_tx2D->bindTexture();
-                    glUniform1i(m_phong_prgm->ParameterLocation("albedo_tx2D"), 0);
+                    glUniform1i(m_phong_prgm->getUniformLocation("albedo_tx2D"), 0);
 
                     glActiveTexture(GL_TEXTURE1);
                     normal_tx2D->bindTexture();
-                    glUniform1i(m_phong_prgm->ParameterLocation("normal_tx2D"), 1);
+                    glUniform1i(m_phong_prgm->getUniformLocation("normal_tx2D"), 1);
 
                     glActiveTexture(GL_TEXTURE2);
                     depth_tx2D->bindTexture();
-                    glUniform1i(m_phong_prgm->ParameterLocation("depth_tx2D"), 2);
+                    glUniform1i(m_phong_prgm->getUniformLocation("depth_tx2D"), 2);
 
                     auto inv_view_mx = glm::inverse(view_mx);
                     auto inv_proj_mx = glm::inverse(proj_mx);
                     glUniformMatrix4fv(
-                        m_phong_prgm->ParameterLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(inv_view_mx));
+                        m_phong_prgm->getUniformLocation("inv_view_mx"), 1, GL_FALSE, glm::value_ptr(inv_view_mx));
                     glUniformMatrix4fv(
-                        m_phong_prgm->ParameterLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(inv_proj_mx));
+                        m_phong_prgm->getUniformLocation("inv_proj_mx"), 1, GL_FALSE, glm::value_ptr(inv_proj_mx));
 
                     m_output_texture->bindImage(0, GL_WRITE_ONLY);
 
-                    m_phong_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
+                    glDispatchCompute(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
                         static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
 
-                    m_phong_prgm->Disable();
+                    glUseProgram(0);
                 }
             }
         }

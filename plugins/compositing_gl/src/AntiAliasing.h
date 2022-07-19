@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <glowl/glowl.h>
 #include <glm/ext.hpp>
 #include <glm/glm.hpp>
+#include <glowl/glowl.h>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"

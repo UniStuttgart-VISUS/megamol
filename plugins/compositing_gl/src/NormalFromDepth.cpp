@@ -2,8 +2,7 @@
 
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 megamol::compositing::NormalFromDepth::NormalFromDepth()
         : m_version(0)
@@ -28,26 +27,15 @@ megamol::compositing::NormalFromDepth::~NormalFromDepth() {
 }
 
 bool megamol::compositing::NormalFromDepth::create() {
-    vislib_gl::graphics::gl::ShaderSource compute_shader_src;
-
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-
-    ssf->MakeShaderSource("Compositing::normalFromDepth", compute_shader_src);
-
-    std::string vertex_src(compute_shader_src.WholeCode(), (compute_shader_src.WholeCode()).Length());
-
-    std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
-
-    if (!vertex_src.empty()) {
-        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Compute, vertex_src});
-    }
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
 
     try {
-        m_normal_from_depth_prgm = std::make_unique<glowl::GLSLProgram>(shader_srcs);
-    } catch (glowl::GLSLProgramException const& exc) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n", "Compositing::normalFromDepth",
-            exc.what(), __FILE__, __FUNCTION__, __LINE__);
+        m_normal_from_depth_prgm = core::utility::make_glowl_shader(
+            "Compositing_normalFromDepth", shader_options, "compositing_gl/normalFromDepth.comp.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("NormalFromDepth: " + std::string(e.what())).c_str());
+        return false;
     }
 
     glowl::TextureLayout tx_layout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);

@@ -1,3 +1,5 @@
+#version 430
+
 struct LightParams
 {
     float x,y,z,intensity;

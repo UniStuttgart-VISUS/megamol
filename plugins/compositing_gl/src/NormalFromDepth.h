@@ -17,8 +17,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace compositing {
+namespace megamol::compositing {
 
 class NormalFromDepth : public core::Module {
 public:
@@ -94,5 +93,4 @@ private:
     megamol::core::CallerSlot m_camera_slot;
 };
 
-} // namespace compositing
-} // namespace megamol
+} // namespace megamol::compositing

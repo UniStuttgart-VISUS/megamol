@@ -1,3 +1,5 @@
+#version 430
+
 uniform sampler2D src0_tx2D; // primary source texture, target texture resolution will match this one
 uniform sampler2D src1_tx2D; // secondary source texture, is read from using normalized texture coords derived from primary
 

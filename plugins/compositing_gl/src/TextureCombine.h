@@ -9,16 +9,14 @@
 
 #include <memory>
 
-#include <glowl/Texture2D.hpp>
+#include <glowl/glowl.h>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
-namespace megamol {
-namespace compositing {
+namespace megamol::compositing {
 
 class TextureCombine : public core::Module {
 public:
@@ -81,15 +79,13 @@ protected:
     bool modeCallback(core::param::ParamSlot& slot);
 
 private:
-    typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
-
     uint32_t m_version;
 
     /** Shader program for texture add */
-    std::unique_ptr<GLSLComputeShader> m_add_prgm;
+    std::unique_ptr<glowl::GLSLProgram> m_add_prgm;
 
     /** Shader program for texture multiply */
-    std::unique_ptr<GLSLComputeShader> m_mult_prgm;
+    std::unique_ptr<glowl::GLSLProgram> m_mult_prgm;
 
     /** Texture that the combination result will be written to */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
@@ -110,5 +106,4 @@ private:
     megamol::core::CallerSlot m_input_tex_1_slot;
 };
 
-} // namespace compositing
-} // namespace megamol
+} // namespace megamol::compositing

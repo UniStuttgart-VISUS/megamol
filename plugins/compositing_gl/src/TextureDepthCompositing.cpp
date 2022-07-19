@@ -5,8 +5,7 @@
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 megamol::compositing::TextureDepthCompositing::TextureDepthCompositing()
         : core::Module()
@@ -53,35 +52,14 @@ megamol::compositing::TextureDepthCompositing::~TextureDepthCompositing() {
 
 bool megamol::compositing::TextureDepthCompositing::create() {
 
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+
     try {
-        // create shader program
-        vislib_gl::graphics::gl::ShaderSource compute_src;
+        m_depthComp_prgm = core::utility::make_glowl_shader(
+            "Compositing_textureDepthCompositing", shader_options, "compositing_gl/textureDepthCompositing.comp.glsl");
 
-        auto ssf =
-            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-        if (!ssf->MakeShaderSource("Compositing::textureDepthCompositing", compute_src)) {
-            return false;
-        }
-
-        std::string compute_shader_src(compute_src.WholeCode(), (compute_src.WholeCode()).Length());
-
-        std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
-        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Compute, compute_shader_src});
-
-        m_depthComp_prgm = std::make_unique<glowl::GLSLProgram>(shader_srcs);
-        m_depthComp_prgm->setDebugLabel(
-            "Compositing::textureDepthCompositing"); //TODO debug label not set in time for catch...
-
-    } catch (glowl::GLSLProgramException const& exc) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n",
-            m_depthComp_prgm->getDebugLabel().c_str(), exc.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: Unknown exception\n");
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("TextureDepthCompositing: " + std::string(e.what())).c_str());
         return false;
     }
 
