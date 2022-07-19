@@ -1,12 +1,10 @@
-/*
- * ScaleModel.h
- *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef SCALEMODEL_H_INCLUDED
-#define SCALEMODEL_H_INCLUDED
+#pragma once
 
 #include <tuple>
 #include <vector>
@@ -15,8 +13,7 @@
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Vector.h"
 
-namespace megamol {
-namespace archvis {
+namespace megamol::archvis_gl {
 
 class ScaleModel {
 public:
@@ -194,7 +191,4 @@ private:
     std::vector<float> m_element_forces;
 };
 
-} // namespace archvis
-} // namespace megamol
-
-#endif
+} // namespace megamol::archvis_gl

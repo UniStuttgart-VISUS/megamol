@@ -1,22 +1,27 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "MSMRenderTaskDataSource.h"
 
 #include <array>
 
+#include "ArchVisCalls.h"
 #include "mesh_gl/GPUMeshCollection.h"
 #include "mesh_gl/MeshCalls_gl.h"
 
-#include "ArchVisCalls.h"
-
-megamol::archvis::MSMRenderTaskDataSource::MSMRenderTaskDataSource()
+megamol::archvis_gl::MSMRenderTaskDataSource::MSMRenderTaskDataSource()
         : m_MSM_callerSlot("getMSM", "Connects the ")
         , m_version(0) {
     this->m_MSM_callerSlot.SetCompatibleCall<ScaleModelCallDescription>();
     this->MakeSlotAvailable(&this->m_MSM_callerSlot);
 }
 
-megamol::archvis::MSMRenderTaskDataSource::~MSMRenderTaskDataSource() {}
+megamol::archvis_gl::MSMRenderTaskDataSource::~MSMRenderTaskDataSource() {}
 
-bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& caller) {
+bool megamol::archvis_gl::MSMRenderTaskDataSource::getDataCallback(core::Call& caller) {
     mesh_gl::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == nullptr) {
         return false;
@@ -146,7 +151,7 @@ bool megamol::archvis::MSMRenderTaskDataSource::getDataCallback(core::Call& call
     return true;
 }
 
-bool megamol::archvis::MSMRenderTaskDataSource::getMetaDataCallback(core::Call& caller) {
+bool megamol::archvis_gl::MSMRenderTaskDataSource::getMetaDataCallback(core::Call& caller) {
     megamol::mesh_gl::CallGPURenderTaskData* lhs_rtc = dynamic_cast<megamol::mesh_gl::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL)
         return false;

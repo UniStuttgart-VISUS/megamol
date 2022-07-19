@@ -1,11 +1,16 @@
-#include "CreateMSM.h"
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
 
-#include "datatools/table/TableDataCall.h"
+#include "CreateMSM.h"
 
 #include "ArchVisCalls.h"
 #include "ScaleModel.h"
+#include "datatools/table/TableDataCall.h"
 
-megamol::archvis::CreateMSM::CreateMSM()
+megamol::archvis_gl::CreateMSM::CreateMSM()
         : Module()
         , m_MSM(nullptr)
         , m_getData_slot("msmmodel", "Provides the MSM Model.")
@@ -36,13 +41,13 @@ megamol::archvis::CreateMSM::CreateMSM()
     this->MakeSlotAvailable(&this->m_displacement_floatTable_slot);
 }
 
-megamol::archvis::CreateMSM::~CreateMSM() {}
+megamol::archvis_gl::CreateMSM::~CreateMSM() {}
 
-bool megamol::archvis::CreateMSM::create(void) {
+bool megamol::archvis_gl::CreateMSM::create(void) {
     return true;
 }
 
-bool megamol::archvis::CreateMSM::getDataCallback(core::Call& caller) {
+bool megamol::archvis_gl::CreateMSM::getDataCallback(core::Call& caller) {
 
     CallScaleModel* msm_call = dynamic_cast<CallScaleModel*>(&caller);
     if (msm_call == NULL) {
@@ -147,4 +152,4 @@ bool megamol::archvis::CreateMSM::getDataCallback(core::Call& caller) {
     return true;
 }
 
-void megamol::archvis::CreateMSM::release() {}
+void megamol::archvis_gl::CreateMSM::release() {}

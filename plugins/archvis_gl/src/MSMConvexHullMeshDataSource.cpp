@@ -1,21 +1,26 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "MSMConvexHullMeshDataSource.h"
 
 #include <QuickHull.hpp>
 
+#include "ArchVisCalls.h"
 #include "mesh_gl/MeshCalls_gl.h"
 
-#include "ArchVisCalls.h"
-
-megamol::archvis::MSMConvexHullDataSource::MSMConvexHullDataSource()
+megamol::archvis_gl::MSMConvexHullDataSource::MSMConvexHullDataSource()
         : m_MSM_callerSlot("getMSM", "Connects the ")
         , m_version(0) {
     this->m_MSM_callerSlot.SetCompatibleCall<ScaleModelCallDescription>();
     this->MakeSlotAvailable(&this->m_MSM_callerSlot);
 }
 
-megamol::archvis::MSMConvexHullDataSource::~MSMConvexHullDataSource() {}
+megamol::archvis_gl::MSMConvexHullDataSource::~MSMConvexHullDataSource() {}
 
-bool megamol::archvis::MSMConvexHullDataSource::getDataCallback(core::Call& caller) {
+bool megamol::archvis_gl::MSMConvexHullDataSource::getDataCallback(core::Call& caller) {
     mesh_gl::CallGPUMeshData* lhs_mesh_call = dynamic_cast<mesh_gl::CallGPUMeshData*>(&caller);
     mesh_gl::CallGPUMeshData* rhs_mesh_call = this->m_mesh_rhs_slot.CallAs<mesh_gl::CallGPUMeshData>();
 
@@ -72,6 +77,6 @@ bool megamol::archvis::MSMConvexHullDataSource::getDataCallback(core::Call& call
     return true;
 }
 
-bool megamol::archvis::MSMConvexHullDataSource::getMetaDataCallback(core::Call& caller) {
+bool megamol::archvis_gl::MSMConvexHullDataSource::getMetaDataCallback(core::Call& caller) {
     return false;
 }

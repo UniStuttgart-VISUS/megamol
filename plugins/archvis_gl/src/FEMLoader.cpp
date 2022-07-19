@@ -1,9 +1,13 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
 
 #include <fstream>
 #include <sstream>
 
 #include "FEMLoader.h"
-
 #include "mmcore/param/FilePathParam.h"
 
 namespace {
@@ -23,7 +27,7 @@ std::vector<std::string> split(std::string const& s, char delimiter) {
 } // namespace
 
 namespace megamol {
-namespace archvis {
+namespace archvis_gl {
 
 FEMLoader::FEMLoader()
         : core::Module()
@@ -177,5 +181,5 @@ std::vector<FEMModel::Vec4> FEMLoader::loadNodeDeformationsFromFile(std::string 
     return retval;
 }
 
-} // namespace archvis
+} // namespace archvis_gl
 } // namespace megamol

@@ -1,33 +1,22 @@
-/*
- * ArchVisMSMDataSource.h
- *
- * Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2017, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef ARCH_VIS_MSM_DATASOURCE_H_INCLUDED
-#define ARCH_VIS_MSM_DATASOURCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-
-#include "vislib/math/Matrix.h"
-#include "vislib/math/Quaternion.h"
-#include "vislib/math/Vector.h"
-
-#include "vislib/net/Socket.h"
-
-#include "mmcore_gl/utility/SDFFont.h"
-
-#include "mmcore/param/ParamSlot.h"
-
-#include "ScaleModel.h"
 
 #include <chrono>
 
+#include "ScaleModel.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore_gl/utility/SDFFont.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Quaternion.h"
+#include "vislib/math/Vector.h"
+#include "vislib/net/Socket.h"
 
-namespace megamol {
-namespace archvis {
+namespace megamol::archvis_gl {
 
 class ArchVisMSMDataSource : public megamol::core::Module {
 public:
@@ -208,7 +197,4 @@ private:
     core::utility::SDFFont font;
 };
 
-} // namespace archvis
-} // namespace megamol
-
-#endif
+} // namespace megamol::archvis_gl

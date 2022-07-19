@@ -1,20 +1,14 @@
-/*
- * MSMRenderTaskDataSource.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef MSM_RENDER_TASK_DATA_SOURCE
-#define MSM_RENDER_TASK_DATA_SOURCE
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 
-namespace megamol {
-namespace archvis {
+namespace megamol::archvis_gl {
 
 class MSMRenderTaskDataSource : public mesh_gl::AbstractGPURenderTaskDataSource {
 public:
@@ -62,7 +56,4 @@ private:
     uint32_t m_version;
 };
 
-} // namespace archvis
-} // namespace megamol
-
-#endif // !MSM_RENDER_TASK_DATA_SOURCE
+} // namespace megamol::archvis_gl

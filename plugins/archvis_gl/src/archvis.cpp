@@ -1,6 +1,6 @@
 /**
  * MegaMol
- * Copyright (c) 2009-2021, MegaMol Dev Team
+ * Copyright (c) 2019, MegaMol Dev Team
  * All rights reserved.
  */
 
@@ -17,7 +17,7 @@
 #include "MSMConvexHullMeshDataSource.h"
 #include "MSMRenderTaskDataSource.h"
 
-namespace megamol::archvis {
+namespace megamol::archvis_gl {
 class ArchvisPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(ArchvisPluginInstance)
 
@@ -31,18 +31,18 @@ public:
     void registerClasses() override {
 
         // register modules
-        this->module_descriptions.RegisterAutoDescription<megamol::archvis::ArchVisMSMDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::archvis::CreateFEMModel>();
-        this->module_descriptions.RegisterAutoDescription<megamol::archvis::CreateMSM>();
-        this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMMeshDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMRenderTaskDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::archvis::FEMLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::archvis::MSMConvexHullDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::archvis::MSMRenderTaskDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::ArchVisMSMDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::CreateFEMModel>();
+        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::CreateMSM>();
+        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::FEMMeshDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::FEMRenderTaskDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::FEMLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::MSMConvexHullDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::MSMRenderTaskDataSource>();
 
         // register calls
-        this->call_descriptions.RegisterAutoDescription<megamol::archvis::CallFEMModel>();
-        this->call_descriptions.RegisterAutoDescription<megamol::archvis::CallScaleModel>();
+        this->call_descriptions.RegisterAutoDescription<megamol::archvis_gl::CallFEMModel>();
+        this->call_descriptions.RegisterAutoDescription<megamol::archvis_gl::CallScaleModel>();
     }
 };
-} // namespace megamol::archvis
+} // namespace megamol::archvis_gl

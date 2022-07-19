@@ -1,23 +1,15 @@
-/*
- * FEMGPUMeshDataSource.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef FEM_GPU_MESH_DATA_SOURCE_H_INCLUDED
-#define FEM_GPU_MESH_DATA_SOURCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-
-#include "mmcore/CallerSlot.h"
 
 #include "mesh_gl/AbstractGPUMeshDataSource.h"
+#include "mmcore/CallerSlot.h"
 
-
-namespace megamol {
-namespace archvis {
+namespace megamol::archvis_gl {
 
 class FEMMeshDataSource : public mesh_gl::AbstractGPUMeshDataSource {
 public:
@@ -63,7 +55,4 @@ private:
     megamol::core::CallerSlot m_fem_callerSlot;
 };
 
-} // namespace archvis
-} // namespace megamol
-
-#endif // !FEM_GPU_MESH_DATA_SOURCE_H_INCLUDED
+} // namespace megamol::archvis_gl

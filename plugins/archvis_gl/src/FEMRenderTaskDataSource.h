@@ -1,20 +1,14 @@
-/*
- * FEMGPURenderTaskDataSource.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef FEM_GPU_TASK_DATA_SOURCE_H_INCLUDED
-#define FEM_GPU_TASK_DATA_SOURCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 
-namespace megamol {
-namespace archvis {
+namespace megamol::archvis_gl {
 
 class FEMRenderTaskDataSource : public mesh_gl::AbstractGPURenderTaskDataSource {
 public:
@@ -68,7 +62,4 @@ private:
     std::shared_ptr<mesh_gl::GPUMaterialCollection> m_material_collection;
 };
 
-} // namespace archvis
-} // namespace megamol
-
-#endif // !FEM_GPU_RENDER_TASK_DATA_SOURCE_H_INCLUDED
+} // namespace megamol::archvis_gl

@@ -1,14 +1,12 @@
-/*
- * ScaleModel.cpp
- *
- * Copyright (C) 2018 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
  * All rights reserved.
  */
 
 #include "ScaleModel.h"
 
-using namespace megamol::archvis;
-
+using namespace megamol::archvis_gl;
 
 ScaleModel::ScaleModel(std::vector<Vec3> node_positions, std::vector<std::tuple<int, int, int, int, int>> elements,
     std::vector<int> input_elements)
@@ -86,11 +84,11 @@ ScaleModel::Vec3 ScaleModel::getElementCenter(int element_idx) {
     return Vec3(m_model_transform * center);
 }
 
-std::vector<ScaleModel::Vec3> const& megamol::archvis::ScaleModel::accessNodePositions() {
+std::vector<ScaleModel::Vec3> const& megamol::archvis_gl::ScaleModel::accessNodePositions() {
     return m_node_positions;
 }
 
-std::vector<ScaleModel::Vec3> const& megamol::archvis::ScaleModel::accessNodeDisplacements() {
+std::vector<ScaleModel::Vec3> const& megamol::archvis_gl::ScaleModel::accessNodeDisplacements() {
     return m_node_displacements;
 }
 

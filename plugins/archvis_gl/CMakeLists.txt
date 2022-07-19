@@ -3,10 +3,12 @@
 # All rights reserved.
 #
 
-megamol_plugin(archvis
+megamol_plugin(archvis_gl
   BUILD_DEFAULT OFF
+  DEPENDS_GL
   DEPENDS_PLUGINS
     mmstd
+    mmstd_gl
     mesh
     mesh_gl
     datatools)

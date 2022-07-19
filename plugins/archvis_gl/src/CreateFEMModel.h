@@ -1,25 +1,18 @@
-/*
- * CreateFEMModel.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef CREATE_FEM_MODEL_H_INCLUDED
-#define CREATE_FEM_MODEL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "ArchVisCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "ArchVisCalls.h"
-
-namespace megamol {
-namespace archvis {
+namespace megamol::archvis_gl {
 
 class CreateFEMModel : public megamol::core::Module {
 public:
@@ -105,7 +98,4 @@ private:
     uint64_t m_deform_input_hash;
 };
 
-} // namespace archvis
-} // namespace megamol
-
-#endif // !CREATE_FEM_MODEL_H_INCLUDED
+} // namespace megamol::archvis_gl

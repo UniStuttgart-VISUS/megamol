@@ -1,15 +1,10 @@
-/*
- * FEMModel.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef FEM_MODEL_H_INCLUDED
-#define FEM_MODEL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <array>
 #include <tuple>
@@ -19,8 +14,7 @@
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Vector.h"
 
-namespace megamol {
-namespace archvis {
+namespace megamol::archvis_gl {
 
 class FEMModel {
 public:
@@ -217,7 +211,4 @@ inline std::vector<FEMModel::DynamicData> const& FEMModel::getDynamicData() {
     return m_dynamic_data;
 }
 
-} // namespace archvis
-} // namespace megamol
-
-#endif // !FEM_MODEL_H_INCLUDED
+} // namespace megamol::archvis_gl

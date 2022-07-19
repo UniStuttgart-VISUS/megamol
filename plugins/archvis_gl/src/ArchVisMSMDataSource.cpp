@@ -1,26 +1,22 @@
-/*
- * AbstractmeshDataSource.h
- *
- * Copyright (C) 2017 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2017, MegaMol Dev Team
  * All rights reserved.
  */
 
+#include <iomanip>
 #include <iostream>
 #include <random>
+#include <sstream>
 #include <string>
 
-#include <iomanip>
-#include <sstream>
-
-#include "vislib/net/SocketException.h"
-
+#include "ArchVisMSMDataSource.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
+#include "vislib/net/SocketException.h"
 
-#include "ArchVisMSMDataSource.h"
-
-using namespace megamol::archvis;
+using namespace megamol::archvis_gl;
 
 ArchVisMSMDataSource::ArchVisMSMDataSource()
         : m_partsList_slot("Parts list", "The path to the parts list file to load")
@@ -82,7 +78,7 @@ ArchVisMSMDataSource::~ArchVisMSMDataSource() {
     vislib::net::Socket::Cleanup();
 }
 
-bool megamol::archvis::ArchVisMSMDataSource::create(void) {
+bool megamol::archvis_gl::ArchVisMSMDataSource::create(void) {
     return false;
 }
 
@@ -211,7 +207,7 @@ bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller) {
     return true;
 }
 
-void megamol::archvis::ArchVisMSMDataSource::release() {}
+void megamol::archvis_gl::ArchVisMSMDataSource::release() {}
 
 std::vector<std::string> ArchVisMSMDataSource::parsePartsList(std::string const& filename) {
     std::vector<std::string> parts;

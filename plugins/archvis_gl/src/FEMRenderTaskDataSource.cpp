@@ -1,22 +1,27 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "FEMRenderTaskDataSource.h"
 
 #include <variant>
 
+#include "ArchVisCalls.h"
 #include "mesh_gl/GPUMeshCollection.h"
 #include "mesh_gl/MeshCalls_gl.h"
 
-#include "ArchVisCalls.h"
-
-megamol::archvis::FEMRenderTaskDataSource::FEMRenderTaskDataSource()
+megamol::archvis_gl::FEMRenderTaskDataSource::FEMRenderTaskDataSource()
         : m_fem_callerSlot("getFEMFile", "Connects the data source with loaded FEM data")
         , m_version(0) {
     this->m_fem_callerSlot.SetCompatibleCall<FEMModelCallDescription>();
     this->MakeSlotAvailable(&this->m_fem_callerSlot);
 }
 
-megamol::archvis::FEMRenderTaskDataSource::~FEMRenderTaskDataSource() {}
+megamol::archvis_gl::FEMRenderTaskDataSource::~FEMRenderTaskDataSource() {}
 
-bool megamol::archvis::FEMRenderTaskDataSource::create(void) {
+bool megamol::archvis_gl::FEMRenderTaskDataSource::create(void) {
     mesh_gl::AbstractGPURenderTaskDataSource::create();
 
     m_material_collection = std::make_shared<mesh_gl::GPUMaterialCollection>();
@@ -27,7 +32,7 @@ bool megamol::archvis::FEMRenderTaskDataSource::create(void) {
     return true;
 }
 
-bool megamol::archvis::FEMRenderTaskDataSource::getDataCallback(core::Call& caller) {
+bool megamol::archvis_gl::FEMRenderTaskDataSource::getDataCallback(core::Call& caller) {
     mesh_gl::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == nullptr) {
         return false;

@@ -1,20 +1,16 @@
-/*
- * ArchVisCalls.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef ARCHVIS_CALLS_H_INCLUDED
-#define ARCHVIS_CALLS_H_INCLUDED
-
-#include "mmstd/generic/CallGeneric.h"
+#pragma once
 
 #include "FEMModel.h"
 #include "ScaleModel.h"
+#include "mmstd/generic/CallGeneric.h"
 
-namespace megamol {
-namespace archvis {
+namespace megamol::archvis_gl {
 
 class CallFEMModel : public core::GenericVersionedCall<std::shared_ptr<FEMModel>, core::Spatial3DMetaData> {
 public:
@@ -46,8 +42,4 @@ public:
 typedef megamol::core::factories::CallAutoDescription<CallScaleModel> ScaleModelCallDescription;
 typedef megamol::core::factories::CallAutoDescription<CallFEMModel> FEMModelCallDescription;
 
-} // namespace archvis
-} // namespace megamol
-
-
-#endif // !ARCHVIS_CALLS_H_INCLUDED
+} // namespace megamol::archvis_gl

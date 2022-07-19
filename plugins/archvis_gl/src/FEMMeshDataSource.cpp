@@ -1,21 +1,26 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "FEMMeshDataSource.h"
 
-#include "glowl/VertexLayout.hpp"
-
-#include "mesh_gl/MeshCalls_gl.h"
+#include <glowl/VertexLayout.hpp>
 
 #include "ArchVisCalls.h"
+#include "mesh_gl/MeshCalls_gl.h"
 
-megamol::archvis::FEMMeshDataSource::FEMMeshDataSource()
+megamol::archvis_gl::FEMMeshDataSource::FEMMeshDataSource()
         : m_fem_callerSlot("getFEMFile", "Connects the data source with loaded FEM data")
         , m_version(0) {
     this->m_fem_callerSlot.SetCompatibleCall<FEMModelCallDescription>();
     this->MakeSlotAvailable(&this->m_fem_callerSlot);
 }
 
-megamol::archvis::FEMMeshDataSource::~FEMMeshDataSource() {}
+megamol::archvis_gl::FEMMeshDataSource::~FEMMeshDataSource() {}
 
-bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call& caller) {
+bool megamol::archvis_gl::FEMMeshDataSource::getDataCallback(core::Call& caller) {
     mesh_gl::CallGPUMeshData* lhs_mesh_call = dynamic_cast<mesh_gl::CallGPUMeshData*>(&caller);
     mesh_gl::CallGPUMeshData* rhs_mesh_call = this->m_mesh_rhs_slot.CallAs<mesh_gl::CallGPUMeshData>();
 
@@ -140,6 +145,6 @@ bool megamol::archvis::FEMMeshDataSource::getDataCallback(core::Call& caller) {
     return true;
 }
 
-bool megamol::archvis::FEMMeshDataSource::getMetaDataCallback(core::Call& caller) {
+bool megamol::archvis_gl::FEMMeshDataSource::getMetaDataCallback(core::Call& caller) {
     return false;
 }

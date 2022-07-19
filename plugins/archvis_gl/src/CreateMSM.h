@@ -1,24 +1,17 @@
-/*
- * CreateMSM.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef CREATE_MSM_H_INCLUDED
-#define CREATE_MSM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "ArchVisCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-#include "ArchVisCalls.h"
-
-namespace megamol {
-namespace archvis {
+namespace megamol::archvis_gl {
 
 class CreateMSM : public megamol::core::Module {
 public:
@@ -102,7 +95,4 @@ private:
     uint32_t m_version;
 };
 
-} // namespace archvis
-} // namespace megamol
-
-#endif // !CREATE_MSM_H_INCLUDED
+} // namespace megamol::archvis_gl

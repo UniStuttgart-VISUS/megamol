@@ -1,11 +1,16 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #include "CreateFEMModel.h"
 
+#include "FEMModel.h"
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/param/IntParam.h"
 
-#include "FEMModel.h"
-
-megamol::archvis::CreateFEMModel::CreateFEMModel()
+megamol::archvis_gl::CreateFEMModel::CreateFEMModel()
         : Module()
         , m_version(0)
         , m_FEM_model(nullptr)
@@ -39,13 +44,13 @@ megamol::archvis::CreateFEMModel::CreateFEMModel()
     this->MakeSlotAvailable(&this->m_deformation_floatTable_slot);
 }
 
-megamol::archvis::CreateFEMModel::~CreateFEMModel() {}
+megamol::archvis_gl::CreateFEMModel::~CreateFEMModel() {}
 
-bool megamol::archvis::CreateFEMModel::create(void) {
+bool megamol::archvis_gl::CreateFEMModel::create(void) {
     return true;
 }
 
-bool megamol::archvis::CreateFEMModel::getDataCallback(core::Call& caller) {
+bool megamol::archvis_gl::CreateFEMModel::getDataCallback(core::Call& caller) {
 
     CallFEMModel* cd = dynamic_cast<CallFEMModel*>(&caller);
     if (cd == NULL) {
@@ -171,4 +176,4 @@ bool megamol::archvis::CreateFEMModel::getDataCallback(core::Call& caller) {
     return true;
 }
 
-void megamol::archvis::CreateFEMModel::release() {}
+void megamol::archvis_gl::CreateFEMModel::release() {}

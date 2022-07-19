@@ -1,24 +1,17 @@
-/*
- * FEMTxtLoader.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef FEM_TXT_LOADER_H_INCLUDED
-#define FEM_TXT_LOADER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "ArchVisCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "ArchVisCalls.h"
-
-namespace megamol {
-namespace archvis {
+namespace megamol::archvis_gl {
 
 class FEMLoader : public megamol::core::Module {
 public:
@@ -98,7 +91,4 @@ private:
     megamol::core::CalleeSlot m_getData_slot;
 };
 
-} // namespace archvis
-} // namespace megamol
-
-#endif // !FEM_TXT_LOADER_H_INCLUDED
+} // namespace megamol::archvis_gl
