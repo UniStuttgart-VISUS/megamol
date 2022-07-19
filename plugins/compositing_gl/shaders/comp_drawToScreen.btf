@@ -5,14 +5,14 @@
     <shader name="vertex">
         <snippet type="version">430</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
-        <snippet name="Main"             type="file">comp/drawToScreen_v.glsl</snippet>
+        <snippet name="Main"             type="file">compositing_gl/drawToScreen_v.glsl</snippet>
     </shader>
 
     <shader name="fragment">
         <snippet type="version">430</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="BitFlags"    type="file">mmstd_gl/flags/bitflags.inc.glsl</snippet>
-        <snippet name="Main"             type="file">comp/drawToScreen_f.glsl</snippet>
+        <snippet name="Main"             type="file">compositing_gl/drawToScreen_f.glsl</snippet>
     </shader>
 
 </btf>

@@ -322,60 +322,61 @@ bool megamol::compositing::SSAO::create() {
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
     try {
-        prepare_depths_prgm_ =
-            core::utility::make_glowl_shader("prepare_depths", shader_options, "comp/assao/prepare_depths.comp.glsl");
+        prepare_depths_prgm_ = core::utility::make_glowl_shader(
+            "prepare_depths", shader_options, "compositing_gl/assao/prepare_depths.comp.glsl");
 
         prepare_depths_half_prgm_ = core::utility::make_glowl_shader(
-            "prepare_depths_half", shader_options, "comp/assao/prepare_depths_half.comp.glsl");
+            "prepare_depths_half", shader_options, "compositing_gl/assao/prepare_depths_half.comp.glsl");
 
         prepare_depths_and_normals_prgm_ = core::utility::make_glowl_shader(
-            "prepare_depths_and_normals", shader_options, "comp/assao/prepare_depths_and_normals.comp.glsl");
+            "prepare_depths_and_normals", shader_options, "compositing_gl/assao/prepare_depths_and_normals.comp.glsl");
 
-        prepare_depths_and_normals_half_prgm_ = core::utility::make_glowl_shader(
-            "prepare_depths_and_normals_half", shader_options, "comp/assao/prepare_depths_and_normals_half.comp.glsl");
+        prepare_depths_and_normals_half_prgm_ = core::utility::make_glowl_shader("prepare_depths_and_normals_half",
+            shader_options, "compositing_gl/assao/prepare_depths_and_normals_half.comp.glsl");
 
         prepare_depth_mip_prgms_[0] = core::utility::make_glowl_shader(
-            "prepare_depth_mip1", shader_options, "comp/assao/prepare_depth_mip1.comp.glsl");
+            "prepare_depth_mip1", shader_options, "compositing_gl/assao/prepare_depth_mip1.comp.glsl");
 
         prepare_depth_mip_prgms_[1] = core::utility::make_glowl_shader(
-            "prepare_depth_mip2", shader_options, "comp/assao/prepare_depth_mip2.comp.glsl");
+            "prepare_depth_mip2", shader_options, "compositing_gl/assao/prepare_depth_mip2.comp.glsl");
 
         prepare_depth_mip_prgms_[2] = core::utility::make_glowl_shader(
-            "prepare_depth_mip3", shader_options, "comp/assao/prepare_depth_mip3.comp.glsl");
+            "prepare_depth_mip3", shader_options, "compositing_gl/assao/prepare_depth_mip3.comp.glsl");
 
-        generate_prgms_[0] =
-            core::utility::make_glowl_shader("generate_q0", shader_options, "comp/assao/generate_q0.comp.glsl");
+        generate_prgms_[0] = core::utility::make_glowl_shader(
+            "generate_q0", shader_options, "compositing_gl/assao/generate_q0.comp.glsl");
 
-        generate_prgms_[1] =
-            core::utility::make_glowl_shader("generate_q1", shader_options, "comp/assao/generate_q1.comp.glsl");
+        generate_prgms_[1] = core::utility::make_glowl_shader(
+            "generate_q1", shader_options, "compositing_gl/assao/generate_q1.comp.glsl");
 
-        generate_prgms_[2] =
-            core::utility::make_glowl_shader("generate_q2", shader_options, "comp/assao/generate_q2.comp.glsl");
+        generate_prgms_[2] = core::utility::make_glowl_shader(
+            "generate_q2", shader_options, "compositing_gl/assao/generate_q2.comp.glsl");
 
-        generate_prgms_[3] =
-            core::utility::make_glowl_shader("generate_q3", shader_options, "comp/assao/generate_q3.comp.glsl");
+        generate_prgms_[3] = core::utility::make_glowl_shader(
+            "generate_q3", shader_options, "compositing_gl/assao/generate_q3.comp.glsl");
 
         smart_blur_prgm_ =
-            core::utility::make_glowl_shader("smart_blur", shader_options, "comp/assao/smart_blur.comp.glsl");
+            core::utility::make_glowl_shader("smart_blur", shader_options, "compositing_gl/assao/smart_blur.comp.glsl");
 
-        smart_blur_wide_prgm_ =
-            core::utility::make_glowl_shader("smart_blur_wide", shader_options, "comp/assao/smart_blur_wide.comp.glsl");
+        smart_blur_wide_prgm_ = core::utility::make_glowl_shader(
+            "smart_blur_wide", shader_options, "compositing_gl/assao/smart_blur_wide.comp.glsl");
 
-        apply_prgm_ = core::utility::make_glowl_shader("apply", shader_options, "comp/assao/apply.comp.glsl");
+        apply_prgm_ = core::utility::make_glowl_shader("apply", shader_options, "compositing_gl/assao/apply.comp.glsl");
 
-        non_smart_blur_prgm_ =
-            core::utility::make_glowl_shader("non_smart_blur", shader_options, "comp/assao/non_smart_blur.comp.glsl");
+        non_smart_blur_prgm_ = core::utility::make_glowl_shader(
+            "non_smart_blur", shader_options, "compositing_gl/assao/non_smart_blur.comp.glsl");
 
-        non_smart_apply_prgm_ =
-            core::utility::make_glowl_shader("non_smart_apply", shader_options, "comp/assao/non_smart_apply.comp.glsl");
+        non_smart_apply_prgm_ = core::utility::make_glowl_shader(
+            "non_smart_apply", shader_options, "compositing_gl/assao/non_smart_apply.comp.glsl");
 
         non_smart_half_apply_prgm_ = core::utility::make_glowl_shader(
-            "non_smart_half_apply", shader_options, "comp/assao/non_smart_half_apply.comp.glsl");
+            "non_smart_half_apply", shader_options, "compositing_gl/assao/non_smart_half_apply.comp.glsl");
 
-        naive_ssao_prgm_ = core::utility::make_glowl_shader("naive_ssao", shader_options, "comp/naive_ssao.comp.glsl");
+        naive_ssao_prgm_ =
+            core::utility::make_glowl_shader("naive_ssao", shader_options, "compositing_gl/naive_ssao.comp.glsl");
 
         simple_blur_prgm_ =
-            core::utility::make_glowl_shader("simple_blur", shader_options, "comp/simple_blur.comp.glsl");
+            core::utility::make_glowl_shader("simple_blur", shader_options, "compositing_gl/simple_blur.comp.glsl");
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(("SSAO: " + std::string(e.what())).c_str());

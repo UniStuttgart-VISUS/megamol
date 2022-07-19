@@ -34,7 +34,7 @@
 
 #version 450
 
-#include "comp/AntiAliasing/preset_uniforms.inc.glsl"
+#include "compositing_gl/AntiAliasing/preset_uniforms.inc.glsl"
 
 layout(local_size_x = 8, local_size_y = 8) in;
 
