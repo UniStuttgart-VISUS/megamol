@@ -3,9 +3,9 @@
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/EventCall.h"
-#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/event/EventCall.h"
+#include "mmstd_gl/flags/FlagCallsGL.h"
 #include "probe/CallKDTree.h"
 #include "probe/ProbeCalls.h"
 
@@ -32,10 +32,10 @@ FilterByProbe::FilterByProbe()
     this->m_event_slot.SetCompatibleCall<megamol::core::CallEventDescription>();
     this->MakeSlotAvailable(&this->m_event_slot);
 
-    this->m_readFlagsSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    this->m_readFlagsSlot.SetCompatibleCall<mmstd_gl::FlagCallRead_GLDescription>();
     this->MakeSlotAvailable(&this->m_readFlagsSlot);
 
-    this->m_writeFlagsSlot.SetCompatibleCall<core_gl::FlagCallWrite_GLDescription>();
+    this->m_writeFlagsSlot.SetCompatibleCall<mmstd_gl::FlagCallWrite_GLDescription>();
     this->MakeSlotAvailable(&this->m_writeFlagsSlot);
 }
 
@@ -79,18 +79,15 @@ bool FilterByProbe::create() {
             return false;
 
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader (@%s): %s\n",
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: Unknown exception\n");
         return false;
     }
 
@@ -103,11 +100,11 @@ void FilterByProbe::release() {
     m_filterAll_prgm.reset();
 }
 
-bool FilterByProbe::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool FilterByProbe::GetExtents(mmstd_gl::CallRender3DGL& call) {
     return true;
 }
 
-bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
+bool FilterByProbe::Render(mmstd_gl::CallRender3DGL& call) {
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
     if (pc == NULL)
         return false;
@@ -182,11 +179,11 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
             auto pending_clearselection_events = event_collection->get<DataClearFilter>();
 
             for (auto& evt : pending_clearselection_events) {
-                auto readFlags = m_readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
-                auto writeFlags = m_writeFlagsSlot.CallAs<core_gl::FlagCallWrite_GL>();
+                auto readFlags = m_readFlagsSlot.CallAs<mmstd_gl::FlagCallRead_GL>();
+                auto writeFlags = m_writeFlagsSlot.CallAs<mmstd_gl::FlagCallWrite_GL>();
 
                 if (readFlags != nullptr && writeFlags != nullptr) {
-                    (*readFlags)(core_gl::FlagCallWrite_GL::CallGetData);
+                    (*readFlags)(mmstd_gl::FlagCallWrite_GL::CallGetData);
 
                     if (readFlags->hasUpdate()) {
                         this->m_version = readFlags->version();
@@ -213,7 +210,7 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
                     }
 
                     writeFlags->setData(readFlags->getData(), m_version);
-                    (*writeFlags)(core_gl::FlagCallWrite_GL::CallGetData);
+                    (*writeFlags)(mmstd_gl::FlagCallWrite_GL::CallGetData);
                 }
             }
         }
@@ -272,11 +269,11 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
                 }
 
                 // TODO set flags
-                auto readFlags = m_readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
-                auto writeFlags = m_writeFlagsSlot.CallAs<core_gl::FlagCallWrite_GL>();
+                auto readFlags = m_readFlagsSlot.CallAs<mmstd_gl::FlagCallRead_GL>();
+                auto writeFlags = m_writeFlagsSlot.CallAs<mmstd_gl::FlagCallWrite_GL>();
 
                 if (readFlags != nullptr && writeFlags != nullptr) {
-                    (*readFlags)(core_gl::FlagCallWrite_GL::CallGetData);
+                    (*readFlags)(mmstd_gl::FlagCallWrite_GL::CallGetData);
 
                     if (readFlags->hasUpdate()) {
                         this->m_version = readFlags->version();
@@ -318,7 +315,7 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
                     }
 
                     writeFlags->setData(readFlags->getData(), m_version);
-                    (*writeFlags)(core_gl::FlagCallWrite_GL::CallGetData);
+                    (*writeFlags)(mmstd_gl::FlagCallWrite_GL::CallGetData);
                 }
             }
         }
@@ -375,11 +372,11 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
                 }
 
                 // TODO set flags
-                auto readFlags = m_readFlagsSlot.CallAs<core_gl::FlagCallRead_GL>();
-                auto writeFlags = m_writeFlagsSlot.CallAs<core_gl::FlagCallWrite_GL>();
+                auto readFlags = m_readFlagsSlot.CallAs<mmstd_gl::FlagCallRead_GL>();
+                auto writeFlags = m_writeFlagsSlot.CallAs<mmstd_gl::FlagCallWrite_GL>();
 
                 if (readFlags != nullptr && writeFlags != nullptr) {
-                    (*readFlags)(core_gl::FlagCallWrite_GL::CallGetData);
+                    (*readFlags)(mmstd_gl::FlagCallWrite_GL::CallGetData);
 
                     if (readFlags->hasUpdate()) {
                         this->m_version = readFlags->version();
@@ -421,7 +418,7 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
                     }
 
                     writeFlags->setData(readFlags->getData(), m_version);
-                    (*writeFlags)(core_gl::FlagCallWrite_GL::CallGetData);
+                    (*writeFlags)(mmstd_gl::FlagCallWrite_GL::CallGetData);
                 }
             }
         }
@@ -430,7 +427,7 @@ bool FilterByProbe::Render(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-void FilterByProbe::PreRender(core_gl::view::CallRender3DGL& call) {}
+void FilterByProbe::PreRender(mmstd_gl::CallRender3DGL& call) {}
 
 } // namespace probe_gl
 } // namespace megamol

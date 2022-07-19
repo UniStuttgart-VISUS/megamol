@@ -5,7 +5,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Trace.h"
@@ -344,11 +344,11 @@ bool TableObserverPlane::getObservedData(core::Call& call) {
 
         return true;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(e.GetMsg());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
-                                                                   _T("in callback getObservedData."));
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Unexpected exception ")
+                                                                _T("in callback getObservedData."));
         return false;
     }
 }
@@ -375,11 +375,11 @@ bool TableObserverPlane::getHash(core::Call& call) {
         out.SetUnlocker(NULL);
         return true;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(e.GetMsg());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
-                                                                   _T("in callback getMultiparticleExtent."));
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Unexpected exception ")
+                                                                _T("in callback getMultiparticleExtent."));
         return false;
     }
 }

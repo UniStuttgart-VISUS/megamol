@@ -7,6 +7,7 @@ pr:
 
 variables:
   defaultConfig: >-
+    -DMEGAMOL_WARNING_LEVEL="Off"
     -DBUILD_PLUGIN_ASTRO=ON
     -DBUILD_PLUGIN_ASTRO_GL=ON
     -DBUILD_PLUGIN_IMAGE_GL=ON
@@ -18,6 +19,7 @@ variables:
     -DBUILD_PLUGIN_PROTEIN_GL=ON
     -DBUILD_PLUGIN_REMOTE=OFF
   nonGlConfig: >-
+    -DMEGAMOL_WARNING_LEVEL="Off"
     -DENABLE_GL=OFF
 
 jobs:

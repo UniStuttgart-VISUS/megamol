@@ -20,8 +20,8 @@
 
 #include "UncertaintySequenceRenderer.h"
 
-#include <ctime>
 #include <cmath>
+#include <ctime>
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -491,7 +491,7 @@ bool UncertaintySequenceRenderer::LoadShader(void) {
             throw vislib::Exception("Could not link shader", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+        Log::DefaultLog.WriteError("Unable to compile shader: %s\n", e.GetMsgA());
         return false;
     }
 
@@ -502,7 +502,7 @@ bool UncertaintySequenceRenderer::LoadShader(void) {
 /*
  * UncertaintySequenceRenderer::GetExtents
  */
-bool UncertaintySequenceRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool UncertaintySequenceRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
 
     // get pointer to UncertaintyDataCall
     UncertaintyDataCall* udc = this->uncertaintyDataSlot.CallAs<UncertaintyDataCall>();
@@ -684,7 +684,7 @@ bool UncertaintySequenceRenderer::GetExtents(core_gl::view::CallRender2DGL& call
 /*
  * UncertaintySequenceRenderer::Render
  */
-bool UncertaintySequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
+bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();

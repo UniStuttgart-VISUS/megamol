@@ -9,8 +9,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/SDFFont.h"
-#include "mmcore_gl/view/CallRender2DGL.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender2DGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/RamachandranDataCall.h"
 
@@ -20,7 +20,7 @@
 #include <glowl/glowl.h>
 
 namespace megamol::protein_gl {
-class RamachandranPlot : public core_gl::view::Renderer2DModuleGL {
+class RamachandranPlot : public mmstd_gl::Renderer2DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -77,7 +77,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core_gl::view::CallRender2DGL& call) override;
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * The OpenGL Render callback.
@@ -86,7 +86,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core_gl::view::CallRender2DGL& call) override;
+    bool Render(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * The mouse button callback

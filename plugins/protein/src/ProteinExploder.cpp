@@ -9,12 +9,12 @@
 #include "ProteinExploder.h"
 #include "AtomWeights.h"
 #include "geometry_calls/LinesDataCall.h"
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 
 #include "vislib/MD5HashProvider.h"
 #include "vislib/SHA1HashProvider.h"

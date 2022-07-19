@@ -4,6 +4,8 @@
  * All rights reserved.
  */
 
+#include <iterator>
+
 #include "ImageRenderer.h"
 #include "JpegBitmapCodec.h"
 #include "vislib/graphics/BitmapCodecCollection.h"
@@ -11,9 +13,9 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 //#define _USE_MATH_DEFINES
+#include "cluster/mpi/MpiCall.h"
 #include "image_calls/Image2DCall.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -21,8 +23,9 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include <iterator>
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "vislib/sys/SystemInformation.h"
 //#include <cmath>
 
 #include "vislib/sys/SystemInformation.h"
@@ -34,8 +37,11 @@ using namespace megamol;
 
 const unsigned int TILE_SIZE = 2 * 1024;
 
-ImageRenderer::ImageRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+/*
+ * misc::ImageRenderer::ImageRenderer
+ */
+image_gl::ImageRenderer::ImageRenderer(void)
+        : mmstd_gl::Renderer3DModuleGL()
         , leftFilenameSlot("leftImg", "The image file name")
         , rightFilenameSlot("rightImg", "The image file name")
         , pasteFilenamesSlot("pasteFiles", "Slot to paste both file names at once (semicolon-separated)")
@@ -129,20 +135,14 @@ bool ImageRenderer::create(void) {
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::PngBitmapCodec());
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::JpegBitmapCodec());
 
+    auto const shader_options = ::msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(instance()->GetShaderPaths());
-        theShader_ = core::utility::make_shared_glowl_shader("images", shdr_options,
-            std::filesystem::path("image_gl/imageviewer.vert.glsl"),
-            std::filesystem::path("image_gl/imageviewer.frag.glsl"));
-    } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[ImageRenderer] %s", ex.what());
-    } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[ImageRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[ImageRenderer] Unable to compile shader: Unknown exception.");
+        theShader_ = core::utility::make_glowl_shader(
+            "imageviewer", shader_options, "image_gl/imageviewer.vert.glsl", "image_gl/imageviewer.frag.glsl");
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("ImageRenderer: " + std::string(e.what())).c_str());
+        return false;
     }
 
     glGenBuffers(1, &theVertBuffer);
@@ -157,7 +157,10 @@ vislib::TString ImageRenderer::stdToTString(const std::string& str) {
 }
 
 
-bool ImageRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+/*
+ * image_gl::ImageRenderer::GetExtents
+ */
+bool ImageRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     auto& cam = call.GetCamera();
 
@@ -471,8 +474,10 @@ bool ImageRenderer::initMPI() {
     return retval;
 }
 
-bool ImageRenderer::Render(core_gl::view::CallRender3DGL& call) {
-
+/*
+ * image_gl::ImageRenderer::Render
+ */
+bool ImageRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     auto& cam = call.GetCamera();
 
     float near_plane = 0.0f;

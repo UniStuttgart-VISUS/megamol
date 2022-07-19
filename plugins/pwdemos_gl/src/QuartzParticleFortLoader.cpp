@@ -295,7 +295,7 @@ void ParticleFortLoader::assertData(void) {
                     attributes.Add(q4); // qw (real term)
                 }
 
-                Log::DefaultLog.WriteInfo(100, "Particle radii: %f ... %f\n", minRad, maxRad);
+                Log::DefaultLog.WriteInfo("Particle radii: %f ... %f\n", minRad, maxRad);
 
                 file.Close();
             } else {
@@ -316,7 +316,7 @@ void ParticleFortLoader::assertData(void) {
             }
             typeList.Sort(&vislib::DiffComparator<int>);
 
-            Log::DefaultLog.WriteMsg(350, "Loaded files %u particles and %u types\n", types.Count(), typeList.Count());
+            Log::DefaultLog.WriteInfo("Loaded files %u particles and %u types\n", types.Count(), typeList.Count());
 
             this->partTypes = new unsigned int[typeList.Count()];
             this->partCnts = new unsigned int[typeList.Count()];

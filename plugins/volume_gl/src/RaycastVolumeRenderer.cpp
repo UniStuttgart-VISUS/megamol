@@ -15,7 +15,7 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
@@ -32,12 +32,12 @@
 
 #include <glm/ext.hpp>
 
-#include "mmcore/view/light/DistantLight.h"
+#include "mmstd/light/DistantLight.h"
 
 using namespace megamol::volume_gl;
 
 RaycastVolumeRenderer::RaycastVolumeRenderer()
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , m_mode("mode", "Mode changing the behavior for the raycaster")
         , m_ray_step_ratio_param("ray step ratio", "Adjust sampling rate")
         , m_use_lighting_slot("lighting::use lighting", "Enable simple volumetric illumination")
@@ -57,7 +57,7 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
         , m_transferFunction_callerSlot(
               "getTransferFunction", "Connects the volume renderer with a transfer function") {
 
-    this->m_renderer_callerSlot.SetCompatibleCall<megamol::core_gl::view::CallRender3DGLDescription>();
+    this->m_renderer_callerSlot.SetCompatibleCall<mmstd_gl::CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->m_renderer_callerSlot);
 
     this->m_volumetricData_callerSlot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
@@ -66,8 +66,7 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     this->m_lights_callerSlot.SetCompatibleCall<megamol::core::view::light::CallLightDescription>();
     this->MakeSlotAvailable(&this->m_lights_callerSlot);
 
-    this->m_transferFunction_callerSlot
-        .SetCompatibleCall<megamol::core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->m_transferFunction_callerSlot.SetCompatibleCall<megamol::mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->m_transferFunction_callerSlot);
 
     this->m_mode << new megamol::core::param::EnumParam(0);
@@ -140,8 +139,7 @@ bool RaycastVolumeRenderer::create() {
             std::filesystem::path("RaycastVolumeRenderer-Vertex.vert.glsl"),
             std::filesystem::path("RaycastVolumeRenderer-Fragment-Aggr.frag.glsl"));
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: Unknown exception\n");
         return false;
     }
 
@@ -150,9 +148,9 @@ bool RaycastVolumeRenderer::create() {
 
 void RaycastVolumeRenderer::release() {}
 
-bool RaycastVolumeRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& cr) {
+bool RaycastVolumeRenderer::GetExtents(mmstd_gl::CallRender3DGL& cr) {
     auto cd = m_volumetricData_callerSlot.CallAs<geocalls::VolumetricDataCall>();
-    auto ci = m_renderer_callerSlot.CallAs<megamol::core_gl::view::CallRender3DGL>();
+    auto ci = m_renderer_callerSlot.CallAs<mmstd_gl::CallRender3DGL>();
 
     if (cd == nullptr)
         return false;
@@ -176,7 +174,7 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& c
     if (ci != nullptr) {
         *ci = cr;
 
-        if (!(*ci)(core_gl::view::CallRender3DGL::FnGetExtents))
+        if (!(*ci)(mmstd_gl::CallRender3DGL::FnGetExtents))
             return false;
 
         bbox.Union(ci->AccessBoundingBoxes().BoundingBox());
@@ -189,9 +187,9 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& c
     return true;
 }
 
-bool RaycastVolumeRenderer::Render(megamol::core_gl::view::CallRender3DGL& cr) {
+bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
     // Chain renderer
-    auto ci = m_renderer_callerSlot.CallAs<megamol::core_gl::view::CallRender3DGL>();
+    auto ci = m_renderer_callerSlot.CallAs<mmstd_gl::CallRender3DGL>();
 
     // Camera
     core::view::Camera cam = cr.GetCamera();
@@ -216,7 +214,7 @@ bool RaycastVolumeRenderer::Render(megamol::core_gl::view::CallRender3DGL& cr) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ci->SetTime(cr.Time());
-        if (!(*ci)(core_gl::view::CallRender3DGL::FnRender))
+        if (!(*ci)(mmstd_gl::CallRender3DGL::FnRender))
             return false;
 
         if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
@@ -706,8 +704,8 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
 }
 
 bool RaycastVolumeRenderer::updateTransferFunction() {
-    core_gl::view::CallGetTransferFunctionGL* ct =
-        this->m_transferFunction_callerSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+    mmstd_gl::CallGetTransferFunctionGL* ct =
+        this->m_transferFunction_callerSlot.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     if (valRangeNeedsUpdate) {
         ct->SetRange(valRange);
         valRangeNeedsUpdate = false;

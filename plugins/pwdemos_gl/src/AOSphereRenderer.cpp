@@ -18,8 +18,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmstd/renderer/CallClipPlane.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/assert.h"
 #include "vislib/math/ShallowVector.h"
@@ -45,7 +45,7 @@ namespace demos_gl {
  * AOSphereRenderer::AOSphereRenderer
  */
 AOSphereRenderer::AOSphereRenderer(void)
-        : megamol::core_gl::view::Renderer3DModuleGL()
+        : megamol::mmstd_gl::Renderer3DModuleGL()
         , sphereShaderAOMainAxes()
         , sphereShaderAONormals()
         , getDataSlot("getdata", "Connects to the data source")
@@ -73,7 +73,7 @@ AOSphereRenderer::AOSphereRenderer(void)
     this->getDataSlot.SetCompatibleCall<protein_calls::MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getTFSlot.SetCompatibleCall<megamol::core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->getTFSlot.SetCompatibleCall<megamol::mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
     this->getClipPlaneSlot.SetCompatibleCall<megamol::core::view::CallClipPlaneDescription>();
@@ -187,29 +187,29 @@ bool AOSphereRenderer::create(void) {
         }
 
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile sphere shader (%s) (@%s): %s\n", shaderName.PeekBuffer(),
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile sphere shader (%s) (@%s): %s\n",
+            shaderName.PeekBuffer(),
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to compile sphere shader (%s): %s\n", shaderName.PeekBuffer(), e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to compile sphere shader (%s): Unknown exception\n", shaderName.PeekBuffer());
         return false;
     }
 
     // Load volume texture generation shader
     if (!ssf->MakeShaderSource("AOSphere::volume::updateVolumeVertex", vert)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%: Unable to load vertex shader source for volume texture update shader", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("AOSphere::volume::updateVolumeFragment", frag)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to load fragment shader source for volume texture update shader", this->ClassName());
         return false;
     }
@@ -218,7 +218,7 @@ bool AOSphereRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to create volume texture update shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
@@ -248,7 +248,7 @@ bool AOSphereRenderer::create(void) {
 /*
  * AOSphereRenderer::GetExtents
  */
-bool AOSphereRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
+bool AOSphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     geocalls::MultiParticleDataCall* c2 = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     protein_calls::MolecularDataCall* mol = this->getDataSlot.CallAs<protein_calls::MolecularDataCall>();
     if ((c2 != NULL) && ((*c2)(1))) {
@@ -290,7 +290,7 @@ void AOSphereRenderer::release(void) {
 /*
  * AOSphereRenderer::Render
  */
-bool AOSphereRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
+bool AOSphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     geocalls::MultiParticleDataCall* c2 = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     protein_calls::MolecularDataCall* mol = this->getDataSlot.CallAs<protein_calls::MolecularDataCall>();
@@ -458,7 +458,7 @@ void AOSphereRenderer::resizeVolume() {
 }
 
 void AOSphereRenderer::uploadCameraUniforms(
-    megamol::core_gl::view::CallRender3DGL& call, vislib_gl::graphics::gl::GLSLShader* sphereShader) {
+    mmstd_gl::CallRender3DGL& call, vislib_gl::graphics::gl::GLSLShader* sphereShader) {
 
     float viewportStuff[4];
     ::glGetFloatv(GL_VIEWPORT, viewportStuff);
@@ -503,8 +503,7 @@ void AOSphereRenderer::uploadCameraUniforms(
 /*
  * AOSphereRenderer::renderParticles
  */
-void AOSphereRenderer::renderParticles(
-    megamol::core_gl::view::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2) {
+void AOSphereRenderer::renderParticles(mmstd_gl::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2) {
 
     vislib_gl::graphics::gl::GLSLShader* sphereShader = NULL;
 
@@ -596,8 +595,8 @@ void AOSphereRenderer::renderParticles(
 
                 glEnable(GL_TEXTURE_1D);
 
-                megamol::core_gl::view::CallGetTransferFunctionGL* cgtf =
-                    this->getTFSlot.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
+                megamol::mmstd_gl::CallGetTransferFunctionGL* cgtf =
+                    this->getTFSlot.CallAs<megamol::mmstd_gl::CallGetTransferFunctionGL>();
                 if ((cgtf != NULL) && ((*cgtf)())) {
                     glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                     colTabSize = cgtf->TextureSize();
@@ -656,8 +655,7 @@ void AOSphereRenderer::renderParticles(
 /*
  * AOSphereRenderer::renderParticles
  */
-void AOSphereRenderer::renderParticles(
-    megamol::core_gl::view::CallRender3DGL& call, protein_calls::MolecularDataCall* mol) {
+void AOSphereRenderer::renderParticles(mmstd_gl::CallRender3DGL& call, protein_calls::MolecularDataCall* mol) {
 
     vislib_gl::graphics::gl::GLSLShader* sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
@@ -764,8 +762,7 @@ void AOSphereRenderer::renderParticles(
 /*
  * AOSphereRenderer::renderParticlesVBO
  */
-void AOSphereRenderer::renderParticlesVBO(
-    megamol::core_gl::view::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2) {
+void AOSphereRenderer::renderParticlesVBO(mmstd_gl::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2) {
 
     vislib_gl::graphics::gl::GLSLShader* sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
@@ -852,8 +849,7 @@ void AOSphereRenderer::renderParticlesVBO(
 /*
  * AOSphereRenderer::renderParticlesVBO
  */
-void AOSphereRenderer::renderParticlesVBO(
-    megamol::core_gl::view::CallRender3DGL& call, protein_calls::MolecularDataCall* mol) {
+void AOSphereRenderer::renderParticlesVBO(mmstd_gl::CallRender3DGL& call, protein_calls::MolecularDataCall* mol) {
 
     vislib_gl::graphics::gl::GLSLShader* sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();

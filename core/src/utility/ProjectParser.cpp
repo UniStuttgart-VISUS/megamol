@@ -48,7 +48,7 @@ utility::ProjectParser::~ProjectParser(void) {
  */
 bool utility::ProjectParser::CheckBaseTag(const utility::xml::XmlReader& reader) {
     if (!reader.BaseTag().Equals(MMXML_STRING("MegaMol"))) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, "Project file does not specify <MegaMol> as base tag");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Project file does not specify <MegaMol> as base tag");
         return false;
     }
 
@@ -85,12 +85,12 @@ bool utility::ProjectParser::CheckBaseTag(const utility::xml::XmlReader& reader)
     }
 
     if (!typeValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(1, "base tag attribute \"type\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("base tag attribute \"type\" not present or invalid.");
         return false;
     }
     if (!versionValid) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            1, "base tag attribute \"version\" not present or invalid.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "base tag attribute \"version\" not present or invalid.");
         return false;
     }
 

@@ -15,8 +15,8 @@
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 #include "compositing_gl/CompositingCalls.h"
 
@@ -38,7 +38,7 @@ namespace mesh_gl {
  * Per render batch, a single call of glMultiDrawElementsIndirect is made. The data
  * for the indirect draw call is stored and accessed via SSBOs.
  */
-class RenderMDIMesh : public megamol::core_gl::view::Renderer3DModuleGL {
+class RenderMDIMesh : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -103,7 +103,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core_gl::view::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -112,7 +112,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core_gl::view::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call);
 
 private:
     /** GPU buffer object that stores per frame data, i.e. camera parameters */

@@ -11,7 +11,7 @@
     <shader name="fragment">
         <snippet type="version">430</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
-        <snippet name="BitFlags"    type="file">core/bitflags.inc.glsl</snippet>
+        <snippet name="BitFlags"    type="file">mmstd_gl/flags/bitflags.inc.glsl</snippet>
         <snippet name="Main"             type="file">comp/drawToScreen_f.glsl</snippet>
     </shader>
 

@@ -18,7 +18,7 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore/utility/DataHash.h"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 
 #include "mmcore_gl/utility/ShaderFactory.h"
 
@@ -202,7 +202,8 @@ bool TriangleMeshRenderer3D::get_input_data() {
         this->mesh_data_hash = mdc_ptr->DataHash();
     }
 
-    if (mdc_ptr != nullptr && !this->data_set.Param<core::param::FlexEnumParam>()->Value().empty()) {
+    if (mdc_ptr != nullptr &&
+        (!this->data_set.Param<core::param::FlexEnumParam>()->Value().empty() && this->data_set.IsDirty())) {
         this->render_data.values = mdc_ptr->get_data(this->data_set.Param<core::param::FlexEnumParam>()->Value());
 
         this->data_set.ResetDirty();
@@ -219,6 +220,7 @@ bool TriangleMeshRenderer3D::get_input_data() {
 
         const auto& color = this->default_color.Param<core::param::ColorParam>()->Value();
         this->default_color.ResetDirty();
+        this->data_set.ResetDirty();
 
         std::stringstream ss;
         ss << "{\"Interpolation\":\"LINEAR\",\"Nodes\":["
@@ -283,7 +285,7 @@ bool TriangleMeshRenderer3D::getDataCallback(core::Call& call) {
     // Get render task from rhs
     auto rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<GPURenderTaskCollection>> rt_collections;
+    auto rt_collections = std::make_shared<std::vector<std::shared_ptr<GPURenderTaskCollection>>>();
 
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
@@ -313,7 +315,7 @@ bool TriangleMeshRenderer3D::getDataCallback(core::Call& call) {
             return false;
         }
 
-        rt_collections.push_back(this->m_rendertask_collection.first);
+        rt_collections->push_back(this->m_rendertask_collection.first);
 
         const std::string identifier("triangle_mesh");
 

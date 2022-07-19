@@ -4,7 +4,7 @@
 #include "compositing_gl/CompositingCalls.h"
 
 megamol::compositing::SimpleRenderTarget::SimpleRenderTarget()
-        : core::view::RendererModule<core_gl::view::CallRender3DGL, ModuleGL>()
+        : core::view::RendererModule<mmstd_gl::CallRender3DGL, ModuleGL>()
         , m_version(0)
         , m_GBuffer(nullptr)
         , m_last_used_camera(glm::mat4(1.0f), glm::mat4(1.0f))
@@ -62,8 +62,8 @@ bool megamol::compositing::SimpleRenderTarget::create() {
 
 void megamol::compositing::SimpleRenderTarget::release() {}
 
-bool megamol::compositing::SimpleRenderTarget::GetExtents(core_gl::view::CallRender3DGL& call) {
-    core_gl::view::CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
+bool megamol::compositing::SimpleRenderTarget::GetExtents(mmstd_gl::CallRender3DGL& call) {
+    mmstd_gl::CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>();
     if (chainedCall != nullptr) {
         *chainedCall = call;
         bool retVal = (*chainedCall)(core::view::AbstractCallRender::FnGetExtents);
@@ -72,7 +72,7 @@ bool megamol::compositing::SimpleRenderTarget::GetExtents(core_gl::view::CallRen
     return true;
 }
 
-bool megamol::compositing::SimpleRenderTarget::Render(core_gl::view::CallRender3DGL& call) {
+bool megamol::compositing::SimpleRenderTarget::Render(mmstd_gl::CallRender3DGL& call) {
     ++m_version;
 
     m_last_used_camera = call.GetCamera();
@@ -91,7 +91,7 @@ bool megamol::compositing::SimpleRenderTarget::Render(core_gl::view::CallRender3
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    core_gl::view::CallRender3DGL* chained_call = this->chainRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
+    mmstd_gl::CallRender3DGL* chained_call = this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>();
     if (chained_call != nullptr) {
         *chained_call = call;
 

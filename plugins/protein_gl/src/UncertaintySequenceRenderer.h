@@ -21,7 +21,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
@@ -42,7 +42,7 @@
 namespace megamol {
 namespace protein_gl {
 
-class UncertaintySequenceRenderer : public megamol::core_gl::view::Renderer2DModuleGL {
+class UncertaintySequenceRenderer : public megamol::mmstd_gl::Renderer2DModuleGL {
 
 public:
     /**
@@ -127,7 +127,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call);
+    virtual bool GetExtents(megamol::mmstd_gl::CallRender2DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -135,7 +135,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender2DGL& call);
+    virtual bool Render(megamol::mmstd_gl::CallRender2DGL& call);
 
     /**********************************************************************
      * other functions

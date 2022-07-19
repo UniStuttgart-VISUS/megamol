@@ -8,6 +8,7 @@
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/Call.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Stack.h"

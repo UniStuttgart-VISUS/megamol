@@ -20,13 +20,13 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/light/DistantLight.h"
-#include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmstd/light/DistantLight.h"
+#include "mmstd/light/PointLight.h"
+#include "mmstd/renderer/CallClipPlane.h"
+#include "mmstd/renderer/CallRender3D.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 
 #include "protein_calls/ProteinColor.h"
 #include "protein_calls/RMSF.h"
@@ -260,13 +260,12 @@ bool UncertaintyCartoonRenderer::loadTubeShader(void) {
             std::filesystem::path("protein_gl/uncertaintycartoon/uncertain.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[UncertaintyCartoonRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[UncertaintyCartoonRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[UncertaintyCartoonRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[UncertaintyCartoonRenderer] Unable to compile shader: Unknown exception.");
     }
 
@@ -324,7 +323,7 @@ void UncertaintyCartoonRenderer::release(void) {
 /*
  * UncertaintyCartoonRenderer::GetExtents
  */
-bool UncertaintyCartoonRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool UncertaintyCartoonRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     // get pointer to UncertaintyDataCall
     UncertaintyDataCall* udc = this->uncertaintyDataSlot.CallAs<UncertaintyDataCall>();
@@ -546,7 +545,7 @@ bool UncertaintyCartoonRenderer::GetUncertaintyData(UncertaintyDataCall* udc, Mo
 /*
  * UncertaintyCartoonRenderer::Render
  */
-bool UncertaintyCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool UncertaintyCartoonRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     // get new data from the MolecularDataCall
     MolecularDataCall* mol = this->GetData(static_cast<unsigned int>(call.Time()));

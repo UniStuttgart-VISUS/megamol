@@ -10,8 +10,8 @@
 
 #include <memory>
 
-#include "mmcore/CallGeneric.h"
 #include "mmcore/view/Camera.h"
+#include "mmstd/generic/CallGeneric.h"
 
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/Texture2D.hpp"

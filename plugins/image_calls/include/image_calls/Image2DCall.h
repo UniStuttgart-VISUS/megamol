@@ -4,8 +4,8 @@
 #include <memory>
 #include <string>
 
-#include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallDescription.h"
+#include "mmstd/data/AbstractGetDataCall.h"
 #include "vislib/graphics/BitmapCodecCollection.h"
 
 namespace megamol {

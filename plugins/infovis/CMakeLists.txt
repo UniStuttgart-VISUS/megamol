@@ -6,6 +6,7 @@
 megamol_plugin(infovis
   BUILD_DEFAULT ON
   DEPENDS_PLUGINS
+    mmstd
     datatools
   DEPENDS_EXTERNALS
     Eigen

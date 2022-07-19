@@ -33,7 +33,7 @@ using megamol::core::utility::log::Log;
  * SequenceRenderer::SequenceRenderer (CTOR)
  */
 SequenceRenderer::SequenceRenderer(void)
-        : core_gl::view::Renderer2DModuleGL()
+        : mmstd_gl::Renderer2DModuleGL()
         , dataCallerSlot("getData", "Connects the sequence diagram rendering with data storage.")
         , bindingSiteCallerSlot("getBindingSites", "Connects the sequence diagram rendering with binding site storage.")
         , resSelectionCallerSlot(
@@ -130,11 +130,10 @@ bool SequenceRenderer::create() {
             std::filesystem::path("protein_gl/render2d/bwtexture.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[SequenceRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SequenceRenderer] %s", ex.what());
         return false;
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[SequenceRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
         return false;
     }
@@ -176,7 +175,7 @@ bool SequenceRenderer::create() {
  */
 void SequenceRenderer::release() {}
 
-bool SequenceRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool SequenceRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
     // check molecular data
     MolecularDataCall* mol = this->dataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == nullptr)
@@ -232,18 +231,18 @@ bool SequenceRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
     return true;
 }
 
-bool SequenceRenderer::GetExtentsSequence(megamol::core_gl::view::CallRender2DGL& call) {
+bool SequenceRenderer::GetExtentsSequence(megamol::mmstd_gl::CallRender2DGL& call) {
     return true;
 }
 
-bool SequenceRenderer::GetExtentsUncertainty(megamol::core_gl::view::CallRender2DGL& call) {
+bool SequenceRenderer::GetExtentsUncertainty(megamol::mmstd_gl::CallRender2DGL& call) {
     return true;
 }
 
 /*
  * SequenceRenderer::Render
  */
-bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
+bool SequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
     // get pointer to MolecularDataCall
     MolecularDataCall* mol = this->dataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == nullptr)
@@ -575,11 +574,11 @@ bool SequenceRenderer::Render(core_gl::view::CallRender2DGL& call) {
     return true;
 }
 
-bool SequenceRenderer::RenderSequence(megamol::core_gl::view::CallRender2DGL& call) {
+bool SequenceRenderer::RenderSequence(megamol::mmstd_gl::CallRender2DGL& call) {
     return true;
 }
 
-bool SequenceRenderer::RenderUncertainty(megamol::core_gl::view::CallRender2DGL& call) {
+bool SequenceRenderer::RenderUncertainty(megamol::mmstd_gl::CallRender2DGL& call) {
     return true;
 }
 

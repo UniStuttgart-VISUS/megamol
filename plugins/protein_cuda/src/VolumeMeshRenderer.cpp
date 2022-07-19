@@ -21,8 +21,8 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/CallRender3D.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/renderer/CallRender3D.h"
 #include "protein_calls/IntSelectionCall.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/StringConverter.h"
@@ -323,15 +323,15 @@ bool VolumeMeshRenderer::create(void) {
 
     // Load normal shader
     if (!ssf->MakeShaderSource("volumemesh::normalVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for normal shader");
+        Log::DefaultLog.WriteError("Unable to load vertex shader source for normal shader");
         return false;
     }
     if (!ssf->MakeShaderSource("volumemesh::normalGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for normal shader");
+        Log::DefaultLog.WriteError("Unable to load geometry shader source for normal shader");
         return false;
     }
     if (!ssf->MakeShaderSource("volumemesh::normalFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for normal shader");
+        Log::DefaultLog.WriteError("Unable to load fragment shader source for normal shader");
         return false;
     }
     try {
@@ -346,17 +346,17 @@ bool VolumeMeshRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create normal shader: %s\n", e.GetMsgA());
+        Log::DefaultLog.WriteError("Unable to create normal shader: %s\n", e.GetMsgA());
         return false;
     }
 
     if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
             "%s: Unable to load vertex shader source for per pixel lighting shader", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
             "%s: Unable to load fragment shader source for per pixel lighting shader", this->ClassName());
         return false;
     }
@@ -365,18 +365,18 @@ bool VolumeMeshRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create per pixel lighting shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to create per pixel lighting shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     if (!ssf->MakeShaderSource("protein_cuda::halo::GenerateVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for halo generation shader", this->ClassName());
+        Log::DefaultLog.WriteError(
+            "%s: Unable to load vertex shader source for halo generation shader", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("protein_cuda::halo::GenerateFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+        Log::DefaultLog.WriteError(
             "%s: Unable to load fragment shader source for halo generation shader", this->ClassName());
         return false;
     }
@@ -385,19 +385,18 @@ bool VolumeMeshRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create halo generation shader: %s\n", this->ClassName(), e.GetMsgA());
+        Log::DefaultLog.WriteError("%s: Unable to create halo generation shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Try to load shader for gaussian filter (horizontal)
     if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to load vertex shader source: gaussian filter (horizontal)", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("protein_cuda::halo::fragmentHoriz", fragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to load fragment shader source: gaussian filter (horizontal)", this->ClassName());
         return false;
     }
@@ -405,19 +404,19 @@ bool VolumeMeshRenderer::create(void) {
         if (!this->haloGaussianHoriz.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Try to load shader for gaussian filter (vertical)
     if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to load vertex shader source: gaussian filter (vertical)", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("protein_cuda::halo::fragmentVert", fragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to load fragment shader source: gaussian filter (vertical)", this->ClassName());
         return false;
     }
@@ -425,19 +424,19 @@ bool VolumeMeshRenderer::create(void) {
         if (!this->haloGaussianVert.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Try to load shader for substract filter
     if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to load vertex shader source: halo substract", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("protein_cuda::halo::SubstractFragment", fragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to load fragment shader source: halo substract", this->ClassName());
         return false;
     }
@@ -445,19 +444,19 @@ bool VolumeMeshRenderer::create(void) {
         if (!this->haloDifferenceShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Try to load shader for grow filter
     if (!ssf->MakeShaderSource("proteinDeferred::gaussian::vertex", vertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to load vertex shader source: halo grow filter", this->ClassName());
         return false;
     }
     if (!ssf->MakeShaderSource("protein_cuda::halo::growFragment", fragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to load fragment shader source: halo grow filter", this->ClassName());
         return false;
     }
@@ -465,7 +464,7 @@ bool VolumeMeshRenderer::create(void) {
         if (!this->haloGrowShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
@@ -473,13 +472,13 @@ bool VolumeMeshRenderer::create(void) {
     // Create OpenGL interoperable CUDA device.
     //cudaError_t cuerr = cudaGLSetGLDevice( cudaUtilGetMaxGflopsDeviceId());
     //if( cuerr != cudaError::cudaSuccess ) {
-    //    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: cudaGLSetGLDevice: %s\n", this->ClassName(), cudaGetErrorString( cuerr));
+    //    Log::DefaultLog.WriteError( "%s: cudaGLSetGLDevice: %s\n", this->ClassName(), cudaGetErrorString( cuerr));
     //    return false;
     //}
 
     // log thrust version
-    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Thrust Version: %d.%d.%d\n", THRUST_MAJOR_VERSION, THRUST_MINOR_VERSION,
-        THRUST_SUBMINOR_VERSION);
+    Log::DefaultLog.WriteInfo(
+        "Thrust Version: %d.%d.%d\n", THRUST_MAJOR_VERSION, THRUST_MINOR_VERSION, THRUST_SUBMINOR_VERSION);
 
     // Allocate CUDA memory for labeling.
     CUDA_VERIFY(cudaMalloc(&modified, sizeof(bool)));
@@ -523,15 +522,13 @@ void VolumeMeshRenderer::release(void) {
             CUDA_VERIFY(cudaFree(modified));
         if (segmentsRemoved)
             CUDA_VERIFY(cudaFree(segmentsRemoved));
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to release CUDA resources: %s\n", e.GetMsgA());
-    }
+    } catch (vislib::Exception e) { Log::DefaultLog.WriteError("Unable to release CUDA resources: %s\n", e.GetMsgA()); }
 }
 
 /*
  * ProteinRenderer::GetExtents
  */
-bool VolumeMeshRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool VolumeMeshRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (!mol) {
         return false;
@@ -550,7 +547,7 @@ bool VolumeMeshRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * VolumeMeshRenderer::Render
  */
-bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool VolumeMeshRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     using megamol::core::utility::log::Log;
 
     if (setCUDAGLDevice) {
@@ -804,7 +801,7 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
             scale *= vislib::math::Vector<float, 3>(
                 1.0f / this->volumeSize.x, 1.0f / this->volumeSize.y, 1.0f / this->volumeSize.z);
 
-            //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Scale: %f %f %f\n", scale.X(), scale.Y(), scale.Z());
+            //Log::DefaultLog.WriteInfo( "Scale: %f %f %f\n", scale.X(), scale.Y(), scale.Z());
             // Compute AO volume and update mesh.
             this->aoShader.setVolumeSize(
                 static_cast<unsigned int>(mol->AccessBoundingBoxes().ObjectSpaceBBox().Width() / 10.0f),
@@ -819,7 +816,7 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
         }
         lastTime = time;
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "UpdateMesh failed: %s, %i \n", e.GetMsgA(), e.GetLine());
+        Log::DefaultLog.WriteError("UpdateMesh failed: %s, %i \n", e.GetMsgA(), e.GetLine());
         return false;
     }
     // -------- END create mesh -----
@@ -867,7 +864,7 @@ bool VolumeMeshRenderer::Render(core_gl::view::CallRender3DGL& call) {
         vislib::math::Vector<float, 3>(1.0f / this->volumeSize.x, 1.0f / this->volumeSize.y, 1.0f / this->volumeSize.z);
     glScalef(tmpDim.X(), tmpDim.Y(), tmpDim.Z());
 
-    //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Scale: %f\n", scale);
+    //Log::DefaultLog.WriteInfo( "Scale: %f\n", scale);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -2491,7 +2488,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
             //printf( "Time to compute center line for feature %3i (%5i tria):      %.5f\n\n", fCnt, fLength, ( double( clock() - t) / double( CLOCKS_PER_SEC) ));
         }
         INT64 t1 = perf.Difference();
-        Log::DefaultLog.WriteInfo(1, "Time to compute centerline for feature %3i (%5i tria): %.5f", fCnt, fLength,
+        Log::DefaultLog.WriteInfo("Time to compute centerline for feature %3i (%5i tria): %.5f", fCnt, fLength,
             (vislib::sys::PerformanceCounter::ToMillis(t1) + time) / 1000.0);
     }
 #endif

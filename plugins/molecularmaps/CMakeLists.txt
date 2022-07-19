@@ -7,6 +7,7 @@ megamol_plugin(molecularmaps
   BUILD_DEFAULT OFF
   DEPENDS_CUDA
   DEPENDS_PLUGINS
+    mmstd
     protein_calls
     geometry_calls
     geometry_calls_gl

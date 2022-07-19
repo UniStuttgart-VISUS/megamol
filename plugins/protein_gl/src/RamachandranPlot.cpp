@@ -16,7 +16,7 @@ using namespace megamol;
 using namespace megamol::protein_gl;
 
 RamachandranPlot::RamachandranPlot()
-        : core_gl::view::Renderer2DModuleGL()
+        : mmstd_gl::Renderer2DModuleGL()
         , moleculeInSlot_("moleculeIn", "Input of the molecular data containing the necessary amino acid information")
         , showBoundingBoxParam_("showBoundingBox", "Steers the display of the bounding box of the graph")
         , pointSizeParam_("pointSize", "Steers the size of the displayed points")
@@ -218,7 +218,7 @@ void RamachandranPlot::release() {
     // intentionally empty
 }
 
-bool RamachandranPlot::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool RamachandranPlot::GetExtents(mmstd_gl::CallRender2DGL& call) {
     call.AccessBoundingBoxes() = bounds_;
 
     const auto mol = moleculeInSlot_.CallAs<protein_calls::MolecularDataCall>();
@@ -231,7 +231,7 @@ bool RamachandranPlot::GetExtents(core_gl::view::CallRender2DGL& call) {
     return true;
 }
 
-bool RamachandranPlot::Render(core_gl::view::CallRender2DGL& call) {
+bool RamachandranPlot::Render(mmstd_gl::CallRender2DGL& call) {
 
     protein_calls::MolecularDataCall* mol = moleculeInSlot_.CallAs<protein_calls::MolecularDataCall>();
     if (mol == nullptr) {

@@ -132,15 +132,14 @@ bool MoleculeCBCudaRenderer::create(void) {
             std::filesystem::path("protein_cuda/molecule_cb/mcbc_sphericaltriangle.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[MoleculeCBCudaRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[MoleculeCBCudaRenderer] %s", ex.what());
         return false;
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[MoleculeCBCudaRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[MoleculeCBCudaRenderer] Unable to compile shader: Unknown exception.");
         return false;
     }
@@ -151,7 +150,7 @@ bool MoleculeCBCudaRenderer::create(void) {
 /*
  * MoleculeCBCudaRenderer::GetExtents
  */
-bool MoleculeCBCudaRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
+bool MoleculeCBCudaRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
         return false;
@@ -168,7 +167,7 @@ bool MoleculeCBCudaRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& 
 /*
  * MoleculeCBCudaRenderer::Render
  */
-bool MoleculeCBCudaRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
+bool MoleculeCBCudaRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // get camera information
     this->cameraInfo = call.GetCamera();
     this->width = call.GetViewResolution().x;
@@ -196,7 +195,7 @@ bool MoleculeCBCudaRenderer::Render(megamol::core_gl::view::CallRender3DGL& call
     // try to initialize CUDA
     if (!this->cudaInitalized) {
         cudaInitalized = this->initCuda(mol, 16, &call);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "%s: CUDA initialization: %i", this->ClassName(), cudaInitalized);
     }
 
@@ -534,7 +533,7 @@ void MoleculeCBCudaRenderer::deinitialise(void) {}
 /*
  * Initialize CUDA
  */
-bool MoleculeCBCudaRenderer::initCuda(MolecularDataCall* mol, uint gridDim, core_gl::view::CallRender3DGL* cr3d) {
+bool MoleculeCBCudaRenderer::initCuda(MolecularDataCall* mol, uint gridDim, mmstd_gl::CallRender3DGL* cr3d) {
     // set number of atoms
     this->numAtoms = mol->AtomCount();
 
