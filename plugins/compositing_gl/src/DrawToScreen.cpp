@@ -3,9 +3,8 @@
 
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd_gl/flags/FlagCallsGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 megamol::compositing::DrawToScreen::DrawToScreen()
         : mmstd_gl::Renderer3DModuleGL()
@@ -32,35 +31,15 @@ megamol::compositing::DrawToScreen::~DrawToScreen() {
 bool megamol::compositing::DrawToScreen::create() {
 
     // create shader program
-    vislib_gl::graphics::gl::ShaderSource vert_shader_src;
-    vislib_gl::graphics::gl::ShaderSource frag_shader_src;
-
-    vislib::StringA shader_base_name("comp_drawToScreen");
-    vislib::StringA vertShaderName = shader_base_name + "::vertex";
-    vislib::StringA fragShaderName = shader_base_name + "::fragment";
-
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    ssf->MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
-    ssf->MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
 
     try {
-        m_drawToScreen_prgm = std::make_unique<GLSLShader>();
-        m_drawToScreen_prgm->Create(
-            vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
-    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile %s (@%s):\n%s\n",
-            shader_base_name.PeekBuffer(),
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        // return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile %s:\n%s\n", shader_base_name.PeekBuffer(), e.GetMsgA());
-        // return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile %s: Unknown exception\n", shader_base_name.PeekBuffer());
-        // return false;
+        m_drawToScreen_prgm = core::utility::make_glowl_shader("comp_drawToScreen", shader_options,
+            "compositing_gl/drawToScreen.vert.glsl", "compositing_gl/drawToScreen.frag.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("DrawToScreen: " + std::string(e.what())).c_str());
+        return false;
     }
 
     auto err = glGetError();
@@ -132,23 +111,23 @@ bool megamol::compositing::DrawToScreen::Render(mmstd_gl::CallRender3DGL& call) 
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     if (m_drawToScreen_prgm != nullptr) {
-        m_drawToScreen_prgm->Enable();
+        m_drawToScreen_prgm->use();
 
         glActiveTexture(GL_TEXTURE0);
         color_texture->bindTexture();
-        glUniform1i(m_drawToScreen_prgm->ParameterLocation("input_tx2D"), 0);
+        glUniform1i(m_drawToScreen_prgm->getUniformLocation("input_tx2D"), 0);
 
         glActiveTexture(GL_TEXTURE1);
         depth_texture->bindTexture();
-        glUniform1i(m_drawToScreen_prgm->ParameterLocation("depth_tx2D"), 1);
+        glUniform1i(m_drawToScreen_prgm->getUniformLocation("depth_tx2D"), 1);
 
-        glUniform1ui(m_drawToScreen_prgm->ParameterLocation("flags_available"), readFlagsCall != nullptr ? 1 : 0);
-        glUniform1ui(m_drawToScreen_prgm->ParameterLocation("frame_id"), this->GetCoreInstance()->GetFrameID());
-        glUniform2i(m_drawToScreen_prgm->ParameterLocation("viewport_resolution"), width, height);
+        glUniform1ui(m_drawToScreen_prgm->getUniformLocation("flags_available"), readFlagsCall != nullptr ? 1 : 0);
+        glUniform1ui(m_drawToScreen_prgm->getUniformLocation("frame_id"), this->GetCoreInstance()->GetFrameID());
+        glUniform2i(m_drawToScreen_prgm->getUniformLocation("viewport_resolution"), width, height);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        m_drawToScreen_prgm->Disable();
+        glUseProgram(0);
     }
 
     glDisable(GL_BLEND);

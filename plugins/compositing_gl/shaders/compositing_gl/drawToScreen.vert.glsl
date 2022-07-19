@@ -1,3 +1,7 @@
+#version 430
+
+#include "commondefines.glsl"
+
 out vec2 uv_coord;
 
 void main()

@@ -1,3 +1,8 @@
+#version 430
+
+#include "commondefines.glsl"
+#include "mmstd_gl/flags/bitflags.inc.glsl"
+
 uniform sampler2D input_tx2D;
 uniform sampler2D depth_tx2D;
 
