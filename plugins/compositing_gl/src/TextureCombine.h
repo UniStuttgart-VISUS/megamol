@@ -5,18 +5,17 @@
  * All rights reserved.
  */
 
-#ifndef TEXTURE_COMBINE_H_INCLUDED
-#define TEXTURE_COMBINE_H_INCLUDED
+#pragma once
 
 #include <memory>
+
+#include <glowl/Texture2D.hpp>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
-
-#include "glowl/Texture2D.hpp"
 
 namespace megamol {
 namespace compositing {
@@ -113,5 +112,3 @@ private:
 
 } // namespace compositing
 } // namespace megamol
-
-#endif // !TEXTURE_COMBINE_H_INCLUDED

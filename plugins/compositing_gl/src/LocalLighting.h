@@ -5,19 +5,17 @@
  * All rights reserved.
  */
 
-#ifndef LOCAL_LIGHTING_H_INCLUDED
-#define LOCAL_LIGHTING_H_INCLUDED
+#pragma once
+
+#include <glowl/BufferObject.hpp>
+#include <glowl/Texture2D.hpp>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-
 #include "vislib_gl/graphics/gl/GLSLComputeShader.h"
-
-#include "glowl/BufferObject.hpp"
-#include "glowl/Texture2D.hpp"
 
 namespace megamol {
 namespace compositing {
@@ -144,6 +142,3 @@ private:
 
 } // namespace compositing
 } // namespace megamol
-
-
-#endif // !LOCAL_LIGHTING_H_INCLUDED

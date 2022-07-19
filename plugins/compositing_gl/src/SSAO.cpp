@@ -25,6 +25,7 @@
 #include <array>
 #include <random>
 
+#include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -33,8 +34,6 @@
 #ifdef PROFILING
 #include "PerformanceManager.h"
 #endif
-
-#include "compositing_gl/CompositingCalls.h"
 
 /////////////////////////////////////////////////////////////////////////
 // CONSTANTS

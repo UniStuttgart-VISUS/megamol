@@ -10,6 +10,9 @@
 #include <chrono>
 #include <random>
 
+#include "SMAA/SMAAAreaTex.h"
+#include "SMAA/SMAASearchTex.h"
+
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -19,9 +22,6 @@
 #ifdef PROFILING
 #include "PerformanceManager.h"
 #endif
-
-#include "SMAA/SMAAAreaTex.h"
-#include "SMAA/SMAASearchTex.h"
 
 
 /*

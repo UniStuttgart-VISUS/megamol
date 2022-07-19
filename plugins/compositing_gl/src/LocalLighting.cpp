@@ -1,23 +1,20 @@
-#include <iostream>
-
 #include "LocalLighting.h"
 
+#include <iostream>
+
+#include <glm/ext.hpp>
+
+#include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmstd/light/CallLight.h"
 #include "mmstd/light/DistantLight.h"
 #include "mmstd/light/PointLight.h"
 #include "mmstd/light/TriDirectionalLighting.h"
-
 #include "vislib_gl/graphics/gl/ShaderSource.h"
-
-#include "compositing_gl/CompositingCalls.h"
-
-#include <glm/ext.hpp>
-
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 megamol::compositing::LocalLighting::LocalLighting()
         : core::Module()

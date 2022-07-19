@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef TEXTURE_DEPTH_COMPOSITING_H_INCLUDED
-#define TEXTURE_DEPTH_COMPOSITING_H_INCLUDED
+#pragma once
 
 #include <memory>
 
@@ -15,8 +14,8 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "glowl/GLSLProgram.hpp"
-#include "glowl/Texture2D.hpp"
+#include <glowl/GLSLProgram.hpp>
+#include <glowl/Texture2D.hpp>
 
 namespace megamol {
 namespace compositing {
@@ -116,5 +115,3 @@ private:
 
 } // namespace compositing
 } // namespace megamol
-
-#endif // !TEXTURE_DEPTH_COMPOSITING_H_INCLUDED

@@ -5,18 +5,16 @@
  * All rights reserved.
  */
 
-#ifndef DRAW_TO_SCREEN_H_INCLUDED
-#define DRAW_TO_SCREEN_H_INCLUDED
+#pragma once
 
-#include "vislib/math/Matrix.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include <glowl/BufferObject.hpp>
+#include <glowl/Texture2D.hpp>
 
 #include "mmcore/CallerSlot.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-
-#include "glowl/BufferObject.hpp"
-#include "glowl/Texture2D.hpp"
+#include "vislib/math/Matrix.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace compositing {
@@ -124,5 +122,3 @@ private:
 
 } // namespace compositing
 } // namespace megamol
-
-#endif

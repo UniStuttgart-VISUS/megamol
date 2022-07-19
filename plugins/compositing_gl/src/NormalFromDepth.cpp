@@ -1,10 +1,9 @@
 #include "NormalFromDepth.h"
 
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 megamol::compositing::NormalFromDepth::NormalFromDepth()
         : m_version(0)

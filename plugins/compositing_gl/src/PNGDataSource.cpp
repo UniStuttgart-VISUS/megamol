@@ -6,13 +6,12 @@
 
 #include "PNGDataSource.h"
 
+#include <png.h>
+
+#include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
-
-#include "compositing_gl/CompositingCalls.h"
-
-#include "png.h"
 
 using namespace megamol;
 using namespace megamol::compositing_gl;
