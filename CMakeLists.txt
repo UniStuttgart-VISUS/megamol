@@ -41,6 +41,7 @@ if (MEGAMOL_USE_OPENGL)
   list(APPEND VCPKG_MANIFEST_FEATURES "use-opengl")
 endif ()
 
+option(X_VCPKG_APPLOCAL_DEPS_INSTALL "" ON)
 set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_ports")
 set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics") # Disable Telemetry
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-download-src/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
