@@ -298,6 +298,11 @@ bool megamol::gui::GraphCollection::load_module_stock(const megamol::core::CoreI
 }
 
 
+void megamol::gui::GraphCollection::SetLuaFunc(lua_func_type* func) {
+    this->input_lua_func = func;
+}
+
+
 bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
     megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
 
@@ -331,7 +336,9 @@ bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
 
             switch (action) {
             case (Graph::QueueAction::ADD_MODULE): {
-                graph_sync_success &= megamol_graph.CreateModule(data.class_name, data.name_id);
+                //graph_sync_success &= megamol_graph.CreateModule(data.class_name, data.name_id);
+                graph_sync_success &= std::get<0>(
+                    (*input_lua_func)("mmCreateModule(\"" + data.class_name + "\",\"" + data.name_id + "\")"));
 #ifdef PROFILING
                 auto core_module_ptr = megamol_graph.FindModule(data.name_id);
                 // ! Search Queue for following module renaming action to get current name of gui graph module
@@ -350,18 +357,24 @@ bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
 #endif
             } break;
             case (Graph::QueueAction::RENAME_MODULE): {
-                bool rename_success = megamol_graph.RenameModule(data.name_id, data.rename_id);
-                graph_sync_success &= rename_success;
+                //bool rename_success = megamol_graph.RenameModule(data.name_id, data.rename_id);
+                //graph_sync_success &= rename_success;
+                graph_sync_success &= std::get<0>(
+                    (*input_lua_func)("mmRenameModule(\"" + data.name_id + "\",\"" + data.rename_id + "\")"));
             } break;
             case (Graph::QueueAction::DELETE_MODULE): {
 #ifdef PROFILING
                 auto core_module_ptr = megamol_graph.FindModule(data.name_id);
                 module_to_module.erase(core_module_ptr.get());
 #endif
-                graph_sync_success &= megamol_graph.DeleteModule(data.name_id);
+                //graph_sync_success &= megamol_graph.DeleteModule(data.name_id);
+                graph_sync_success &= std::get<0>(
+                    (*input_lua_func)("mmDeleteModule(\"" + data.name_id + "\")"));
             } break;
             case (Graph::QueueAction::ADD_CALL): {
-                graph_sync_success &= megamol_graph.CreateCall(data.class_name, data.caller, data.callee);
+                //graph_sync_success &= megamol_graph.CreateCall(data.class_name, data.caller, data.callee);
+                graph_sync_success &= std::get<0>((*input_lua_func)(
+                    "mmCreateCall(\"" + data.class_name + "\",\"" + data.caller + "\",\"" + data.callee + "\")"));
 #ifdef PROFILING
                 auto core_call_ptr = megamol_graph.FindCall(data.caller, data.callee);
                 auto gui_call_ptr = graph_ptr->GetCall(data.caller, data.callee);
@@ -382,12 +395,16 @@ bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
                 auto core_call_ptr = megamol_graph.FindCall(data.caller, data.callee);
                 call_to_call.erase(core_call_ptr.get());
 #endif
-                graph_sync_success &= megamol_graph.DeleteCall(data.caller, data.callee);
+                //graph_sync_success &= megamol_graph.DeleteCall(data.caller, data.callee);
+                graph_sync_success &= std::get<0>((*input_lua_func)(
+                    "mmDeleteCall(\"" + data.caller + "\",\"" + data.callee + "\")"));
             } break;
             case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
+                // TODO what gets logged in the historian here?
                 megamol_graph.SetGraphEntryPoint(data.name_id);
             } break;
             case (Graph::QueueAction::REMOVE_GRAPH_ENTRY): {
+                // TODO what gets logged in the historian here?
                 megamol_graph.RemoveGraphEntryPoint(data.name_id);
             } break;
             default:
