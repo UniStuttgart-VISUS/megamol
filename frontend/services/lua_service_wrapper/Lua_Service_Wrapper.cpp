@@ -504,6 +504,14 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
             return VoidResult{};
         }});
 
+    callbacks.add<VoidResult, std::string, std::string>("mmRenameModule", "(string oldName, string newName)\n\tRenames the module called <oldname> to <newname>.",
+        {[&](std::string oldName, std::string newName) -> VoidResult {
+            if (!graph.RenameModule(oldName, newName)) {
+                return Error{"graph could not rename module: " + oldName + " to " + newName};
+            }
+            return VoidResult{};
+        }});
+
     callbacks.add<VoidResult, std::string, std::string, std::string>("mmCreateCall",
         "(string className, string from, string to)\n\tCreate a call of type <className>, connecting CallerSlot <from> "
         "and CalleeSlot <to>.",
