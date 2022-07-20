@@ -660,34 +660,6 @@ function(require_external NAME)
     add_external_library(lua
       LIBRARY ${LUA_LIB})
 
-  # megamol-shader-factory
-  elseif (NAME STREQUAL "megamol-shader-factory")
-    if (TARGET megamol-shader-factory)
-      return()
-    endif ()
-
-    require_external(glad)
-
-    if (WIN32)
-      set(MEGAMOL_SHADER_FACTORY_LIB "lib/msf_combined.lib")
-    else ()
-      set(MEGAMOL_SHADER_FACTORY_LIB "lib/libmsf_combined.a")
-    endif ()
-
-    add_external_project(megamol-shader-factory STATIC
-      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-      GIT_TAG "v0.8"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
-      DEPENDS glad)
-
-    add_external_library(megamol-shader-factory
-      LIBRARY ${MEGAMOL_SHADER_FACTORY_LIB}
-      INTERFACE_LIBRARIES glad)
-    if (UNIX)
-      target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
-    endif ()
-    target_compile_definitions(megamol-shader-factory INTERFACE MSF_OPENGL_INCLUDE_GLAD2)
-
   # obj-io
   elseif (NAME STREQUAL "obj-io")
     if (TARGET obj-io)
