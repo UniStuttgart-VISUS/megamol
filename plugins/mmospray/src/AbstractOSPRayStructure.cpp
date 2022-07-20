@@ -7,7 +7,7 @@
 #include "mmospray/AbstractOSPRayStructure.h"
 
 #include "glm/glm.hpp"
-#include "mmcore/view/CallClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
 
 
 namespace megamol {

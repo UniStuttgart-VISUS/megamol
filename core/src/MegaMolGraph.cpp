@@ -323,7 +323,7 @@ std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::ListP
 
 bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string module) {
     auto moduleName = clean(module);
-    // currently, we expect the entry point to be derived from AbstractView
+    // currently, we expect the entry point to be derived from AbstractViewInterface
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
@@ -335,8 +335,10 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string module) {
     auto& module_ref = *module_shared_ptr;
     auto* module_raw_ptr = &module_ref;
 
-    if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_raw_ptr); view_ptr == nullptr) {
-        log_error("error adding graph entry point. module is not an entry point type (AbstractView): " + moduleName);
+    if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractViewInterface*>(module_raw_ptr);
+        view_ptr == nullptr) {
+        log_error(
+            "error adding graph entry point. module is not an entry point type (AbstractViewInterface): " + moduleName);
         return false;
     }
 
@@ -420,10 +422,10 @@ megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenienc
 }
 
 void megamol::core::MegaMolGraph::Clear() {
-    // currently entry points are expected to be graph modules, i.e. views
-    // therefore it is ok for us to clear all entry points if the graph shuts down
     call_list_.clear();
-    m_image_presentation->clear_entry_points();
+    for (auto& m : module_list_)
+        if (m.isGraphEntryPoint)
+            m_image_presentation->remove_entry_point(m.request.id);
     graph_entry_points.clear();
     module_list_.clear();
 }

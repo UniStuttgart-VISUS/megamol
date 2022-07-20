@@ -9,11 +9,11 @@
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/light/CallLight.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd/light/CallLight.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 namespace megamol::trisoup_gl {
-class ModernTrisoupRenderer : public core_gl::view::Renderer3DModuleGL {
+class ModernTrisoupRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
     static const char* ClassName(void) {
         return "ModernTrisoupRenderer";
@@ -33,8 +33,8 @@ public:
 protected:
     virtual bool create(void);
     virtual void release(void);
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
 private:
     void updateLights(core::view::light::CallLight* lightCall, glm::vec3 camDir);

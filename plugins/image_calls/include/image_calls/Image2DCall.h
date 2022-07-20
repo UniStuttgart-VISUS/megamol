@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetDataCall.h"
 
 namespace megamol {
 namespace image_calls {

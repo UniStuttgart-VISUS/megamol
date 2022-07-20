@@ -9,7 +9,9 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmcore/utility/ConvertingIterator.h"
 #include "mmcore/utility/log/Log.h"
+
 #include <algorithm>
 #include <map>
 #include <string>
@@ -78,8 +80,13 @@ protected:
                                      std::is_same_v<std::string, value_type>),
         R>>
     getAs() {
-        std::vector<R> new_vec(dataVec.begin(), dataVec.end());
-        return new_vec;
+        if (dataVec.size() > 0) {
+            core::utility::ConvertingIterator<R, value_type> _begin(&*dataVec.begin());
+            core::utility::ConvertingIterator<R, value_type> _end((&*dataVec.begin()) + dataVec.size());
+            return std::vector<R>(_begin, _end);
+        } else {
+            return std::vector<R>();
+        }
     }
 
 private:

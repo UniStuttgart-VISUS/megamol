@@ -5,7 +5,6 @@
  * All rights reserved.
  */
 
-
 #include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 #include "mesh_gl/MeshCalls_gl.h"
 

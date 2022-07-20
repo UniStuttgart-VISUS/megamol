@@ -7,6 +7,8 @@ megamol_plugin(optix_hpg
   BUILD_DEFAULT OFF
   DEPENDS_CUDA
   DEPENDS_PLUGINS
+    mmstd
+    mmstd_gl
     mesh
     geometry_calls
   DEPENDS_EXTERNALS

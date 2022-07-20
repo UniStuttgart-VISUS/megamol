@@ -12,8 +12,8 @@
 #include "QuartzParticleGridDataCall.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
@@ -24,7 +24,7 @@ namespace demos_gl {
 /**
  * Module rendering gridded quarts particle data
  */
-class QuartzTexRenderer : public core_gl::view::Renderer3DModuleGL, public AbstractTexQuartzRenderer {
+class QuartzTexRenderer : public mmstd_gl::Renderer3DModuleGL, public AbstractTexQuartzRenderer {
 public:
     /**
      * Answer the name of this module.
@@ -69,7 +69,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -78,7 +78,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Implementation of 'Create'.

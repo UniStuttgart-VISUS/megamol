@@ -41,21 +41,20 @@ bool megamol::mesh::MeshBakery::getMeshDataCallback(core::Call& caller) {
     CallMesh* lhs_mesh_call = dynamic_cast<CallMesh*>(&caller);
     CallMesh* rhs_mesh_call = m_mesh_rhs_slot.CallAs<CallMesh>();
 
-    if (lhs_mesh_call == NULL) {
+    if (lhs_mesh_call == nullptr) {
         return false;
     }
 
-    syncMeshAccessCollection(lhs_mesh_call, rhs_mesh_call);
+    auto mesh_access_collections = std::make_shared<MeshDataAccessCollection>();
 
-    // if there is a mesh connection to the right, pass on the mesh collection
-    if (rhs_mesh_call != NULL) {
+    if (rhs_mesh_call != nullptr) {
         if (!(*rhs_mesh_call)(0)) {
             return false;
         }
         if (rhs_mesh_call->hasUpdate()) {
             ++m_version;
-            rhs_mesh_call->getData();
         }
+        auto mesh_access_collections = rhs_mesh_call->getData();
     }
 
     bool something_has_changed =
@@ -140,7 +139,8 @@ bool megamol::mesh::MeshBakery::getMeshDataCallback(core::Call& caller) {
         lhs_mesh_call->setMetaData(meta_data);
     }
 
-    lhs_mesh_call->setData(m_mesh_access_collection.first, m_version);
+    mesh_access_collections->append(*m_mesh_access_collection.first);
+    lhs_mesh_call->setData(mesh_access_collections, m_version);
 
     return true;
 }

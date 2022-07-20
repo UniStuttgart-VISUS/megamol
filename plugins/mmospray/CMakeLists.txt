@@ -7,6 +7,7 @@ megamol_plugin(mmospray
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
     mmadios
+    mmstd
     geometry_calls
     datatools
     protein_calls

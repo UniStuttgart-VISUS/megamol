@@ -5,7 +5,7 @@
  */
 
 #pragma once
-#include "mmcore/CallGeneric.h"
+#include "mmstd/generic/CallGeneric.h"
 #include <nanoflann.hpp>
 
 namespace megamol {

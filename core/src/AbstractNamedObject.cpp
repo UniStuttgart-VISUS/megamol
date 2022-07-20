@@ -117,7 +117,7 @@ void AbstractNamedObject::ClearCleanupMark(void) {
 void AbstractNamedObject::PerformCleanup(void) {
     if (this->cleanupMark) {
         // message removed because of quickstart module peeking
-        //megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 850,
+        //megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         //    "Module \"%s\" marked for cleanup\n", this->Name().PeekBuffer());
     }
 

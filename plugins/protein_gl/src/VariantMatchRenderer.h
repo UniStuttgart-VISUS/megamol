@@ -16,7 +16,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/OutlineFont.h"
 #include "vislib_gl/graphics/gl/Verdana.inc"
@@ -26,7 +26,7 @@ namespace megamol {
 namespace protein_gl {
 
 
-class VariantMatchRenderer : public megamol::core_gl::view::Renderer2DModuleGL {
+class VariantMatchRenderer : public megamol::mmstd_gl::Renderer2DModuleGL {
 
 public:
     /**
@@ -79,7 +79,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender2DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -92,7 +92,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender2DGL& call);
+    virtual bool Render(mmstd_gl::CallRender2DGL& call);
 
     /**
      * Update all parameter slots

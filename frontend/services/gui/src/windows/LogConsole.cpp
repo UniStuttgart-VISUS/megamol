@@ -6,11 +6,13 @@
  */
 
 #include "LogConsole.h"
-#include "imgui_stdlib.h"
-#include "mmcore/utility/log/OfflineTarget.h"
-#include "widgets/ButtonWidgets.h"
 
 #include <regex>
+
+#include <imgui_stdlib.h>
+#include <spdlog/sinks/ostream_sink.h>
+
+#include "widgets/ButtonWidgets.h"
 
 using namespace megamol::gui;
 
@@ -160,16 +162,14 @@ int megamol::gui::LogBuffer::sync() {
                 bool extracted_new_message = false;
                 auto seperator_index = new_message.find('|');
                 if (seperator_index != std::string::npos) {
-                    unsigned int log_level = megamol::core::utility::log::Log::LEVEL_NONE;
                     auto level_str = new_message.substr(0, seperator_index);
-                    log_level = std::stoi(level_str);
-                    std::istringstream(level_str) >> log_level; // 0 if failed = LEVEL_NONE
-                    if (log_level != megamol::core::utility::log::Log::LEVEL_NONE) {
+                    auto log_level = core::utility::log::Log::ParseLevelAttribute(level_str);
+                    if (log_level != megamol::core::utility::log::Log::log_level::none) {
                         this->messages.push_back({log_level, new_message});
                         size_t msg_index = this->messages.size() - 1;
-                        if (log_level <= megamol::core::utility::log::Log::LEVEL_WARN) {
+                        if (log_level == megamol::core::utility::log::Log::log_level::warn) {
                             this->warn_msg_indices.push_back(msg_index);
-                        } else if (log_level <= megamol::core::utility::log::Log::LEVEL_ERROR) {
+                        } else if (log_level == megamol::core::utility::log::Log::log_level::error) {
                             this->warn_msg_indices.push_back(msg_index);
                             this->error_msg_indices.push_back(msg_index);
                         }
@@ -181,9 +181,9 @@ int megamol::gui::LogBuffer::sync() {
                     auto log_level = this->messages.back().level;
                     this->messages.push_back({log_level, new_message});
                     size_t msg_index = this->messages.size() - 1;
-                    if (log_level <= megamol::core::utility::log::Log::LEVEL_WARN) {
+                    if (log_level == megamol::core::utility::log::Log::log_level::warn) {
                         this->warn_msg_indices.push_back(msg_index);
-                    } else if (log_level <= megamol::core::utility::log::Log::LEVEL_ERROR) {
+                    } else if (log_level == megamol::core::utility::log::Log::log_level::error) {
                         this->warn_msg_indices.push_back(msg_index);
                         this->error_msg_indices.push_back(msg_index);
                     }
@@ -207,12 +207,11 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
         : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_LOGCONSOLE)
         , echo_log_buffer()
         , echo_log_stream(&this->echo_log_buffer)
-        , echo_log_target(nullptr)
         , log_msg_count(0)
         , scroll_down(2)
         , scroll_up(0)
         , last_window_height(0.0f)
-        , win_log_level(static_cast<int>(megamol::core::utility::log::Log::LEVEL_WARN))
+        , win_log_level(megamol::core::utility::log::Log::log_level::warn)
         , win_log_force_open(true)
         , tooltip()
         , input_shared_data(nullptr)
@@ -220,10 +219,10 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
         , input_buffer()
         , input_lua_func(nullptr)
         , is_autocomplete_popup_open(false) {
-
-    this->echo_log_target = std::make_shared<megamol::core::utility::log::StreamTarget>(
-        this->echo_log_stream, megamol::core::utility::log::Log::LEVEL_ALL);
-    this->connect_log();
+    auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(this->echo_log_stream);
+    sink->set_pattern(core::utility::log::Log::std_pattern);
+    sink->set_level(spdlog::level::level_enum::info);
+    sink_idx_ = megamol::core::utility::log::Log::DefaultLog.AddEchoTarget(sink);
 
     // Configure CONSOLE Window
     this->win_config.size = ImVec2(500.0f * megamol::gui::gui_scaling.Get(), 50.0f * megamol::gui::gui_scaling.Get());
@@ -242,17 +241,12 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
 
 
 LogConsole::~LogConsole() {
-
-    // Reset echo target only if log target of this class instance is used
-    if (megamol::core::utility::log::Log::DefaultLog.AccessEchoTarget() == this->echo_log_target) {
-        megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(nullptr);
-    }
-    this->echo_log_target.reset();
+    megamol::core::utility::log::Log::DefaultLog.RemoveEchoTarget(sink_idx_);
 }
 
 
 bool megamol::gui::LogConsole::Update() {
-
+    core::utility::log::Log::DefaultLog.FlushLog();
     auto new_log_msg_count = this->echo_log_buffer.log().size();
     if (new_log_msg_count > this->log_msg_count) {
         // Scroll down if new message came in
@@ -263,10 +257,8 @@ bool megamol::gui::LogConsole::Update() {
 
             // Bring log console to front on new warnings and errors
             if (this->win_log_force_open) {
-                if (entry.level < megamol::core::utility::log::Log::LEVEL_INFO) {
-                    if (this->win_log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
-                        this->win_log_level = megamol::core::utility::log::Log::LEVEL_WARN;
-                    }
+                if (entry.level == megamol::core::utility::log::Log::log_level::warn ||
+                    entry.level == megamol::core::utility::log::Log::log_level::error) {
                     this->win_config.show = true;
                 }
             }
@@ -298,31 +290,36 @@ bool megamol::gui::LogConsole::Draw() {
         ImGui::TextUnformatted("Show Log Level");
         ImGui::SameLine();
         if (ImGui::RadioButton(
-                "Error (<= 1)", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_ERROR))) {
-            if (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_ERROR) {
-                this->win_log_level = megamol::core::utility::log::Log::LEVEL_NONE;
+                "Error", (this->win_log_level == megamol::core::utility::log::Log::log_level::error ||
+                             this->win_log_level == megamol::core::utility::log::Log::log_level::warn ||
+                             this->win_log_level == megamol::core::utility::log::Log::log_level::info))) {
+            if (this->win_log_level == megamol::core::utility::log::Log::log_level::error ||
+                this->win_log_level == megamol::core::utility::log::Log::log_level::warn ||
+                this->win_log_level == megamol::core::utility::log::Log::log_level::info) {
+                this->win_log_level = megamol::core::utility::log::Log::log_level::none;
             } else {
-                this->win_log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
+                this->win_log_level = megamol::core::utility::log::Log::log_level::error;
             }
             this->scroll_down = 3;
         }
         ImGui::SameLine();
         if (ImGui::RadioButton(
-                "Warnings (<= 100)", (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
-            if (this->win_log_level >= megamol::core::utility::log::Log::LEVEL_WARN) {
-                this->win_log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
+                "Warnings", (this->win_log_level == megamol::core::utility::log::Log::log_level::warn ||
+                                this->win_log_level == megamol::core::utility::log::Log::log_level::info))) {
+            if (this->win_log_level == megamol::core::utility::log::Log::log_level::warn ||
+                this->win_log_level == megamol::core::utility::log::Log::log_level::info) {
+                this->win_log_level = megamol::core::utility::log::Log::log_level::error;
             } else {
-                this->win_log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+                this->win_log_level = megamol::core::utility::log::Log::log_level::warn;
             }
             this->scroll_down = 3;
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton(
-                "Infos (<= 200)", (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
-            if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ALL) {
-                this->win_log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+        if (ImGui::RadioButton("Infos", (this->win_log_level == megamol::core::utility::log::Log::log_level::info))) {
+            if (this->win_log_level == megamol::core::utility::log::Log::log_level::info) {
+                this->win_log_level = megamol::core::utility::log::Log::log_level::warn;
             } else {
-                this->win_log_level = megamol::core::utility::log::Log::LEVEL_ALL;
+                this->win_log_level = megamol::core::utility::log::Log::log_level::info;
             }
             this->scroll_down = 3;
         }
@@ -353,11 +350,14 @@ bool megamol::gui::LogConsole::Draw() {
             ImGui::GetWindowHeight() - (3.0f * ImGui::GetFrameHeightWithSpacing()) - (3.0f * style.FramePadding.y)),
         true, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
-    auto message_count = this->echo_log_buffer.log().size();
-    if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_WARN) {
-        message_count = this->echo_log_buffer.warn_log_indices().size();
-    } else if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ERROR) {
-        message_count = this->echo_log_buffer.error_log_indices().size();
+    auto message_count = 0ull;
+    if (this->win_log_level != megamol::core::utility::log::Log::log_level::none) {
+        message_count = this->echo_log_buffer.log().size();
+        if (this->win_log_level == megamol::core::utility::log::Log::log_level::warn) {
+            message_count = this->echo_log_buffer.warn_log_indices().size();
+        } else if (this->win_log_level == megamol::core::utility::log::Log::log_level::error) {
+            message_count = this->echo_log_buffer.error_log_indices().size();
+        }
     }
     const int modified_count = std::min<int>(static_cast<int>(message_count), 14000000);
 
@@ -367,18 +367,18 @@ bool megamol::gui::LogConsole::Draw() {
         for (auto row = clipper.DisplayStart; row < clipper.DisplayEnd; ++row) {
 
             auto index = static_cast<size_t>(row);
-            if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_WARN) {
+            if (this->win_log_level == megamol::core::utility::log::Log::log_level::warn) {
                 index = this->echo_log_buffer.warn_log_indices()[row];
-            } else if (this->win_log_level == megamol::core::utility::log::Log::LEVEL_ERROR) {
+            } else if (this->win_log_level == megamol::core::utility::log::Log::log_level::error) {
                 index = this->echo_log_buffer.error_log_indices()[row];
             }
             auto entry = this->echo_log_buffer.log()[index];
 
-            if (entry.level >= megamol::core::utility::log::Log::LEVEL_INFO) {
+            if (entry.level == megamol::core::utility::log::Log::log_level::info) {
                 ImGui::TextUnformatted(entry.message.c_str());
-            } else if (entry.level >= megamol::core::utility::log::Log::LEVEL_WARN) {
+            } else if (entry.level == megamol::core::utility::log::Log::log_level::warn) {
                 ImGui::TextColored(GUI_COLOR_TEXT_WARN, entry.message.c_str());
-            } else if (entry.level >= megamol::core::utility::log::Log::LEVEL_ERROR) {
+            } else if (entry.level == megamol::core::utility::log::Log::log_level::error) {
                 ImGui::TextColored(GUI_COLOR_TEXT_ERROR, entry.message.c_str());
             }
         }
@@ -472,25 +472,6 @@ bool megamol::gui::LogConsole::Draw() {
 }
 
 
-bool megamol::gui::LogConsole::connect_log() {
-
-    auto current_echo_target = megamol::core::utility::log::Log::DefaultLog.AccessEchoTarget();
-    std::shared_ptr<megamol::core::utility::log::OfflineTarget> offline_echo_target =
-        std::dynamic_pointer_cast<megamol::core::utility::log::OfflineTarget>(current_echo_target);
-
-    // Only connect if echo target is still default OfflineTarget
-    /// Note: A second log console is temporarily created when "GUIView" module is loaded in configurator for complete
-    /// module list. For this "GUIView" module NO log is connected, because the main LogConsole instance is already
-    /// connected and the taget is not the default OfflineTarget.
-    if ((offline_echo_target != nullptr) && (this->echo_log_target != nullptr)) {
-        megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(this->echo_log_target);
-        megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
-    }
-
-    return true;
-}
-
-
 void LogConsole::SetLuaFunc(lua_func_type* func) {
     this->input_lua_func = func;
 
@@ -513,6 +494,7 @@ void LogConsole::SetLuaFunc(lua_func_type* func) {
     }
 }
 
+
 void LogConsole::SpecificStateFromJSON(const nlohmann::json& in_json) {
 
     for (auto& header_item : in_json.items()) {
@@ -521,8 +503,10 @@ void LogConsole::SpecificStateFromJSON(const nlohmann::json& in_json) {
                 if (config_item.key() == this->Name()) {
                     auto config_values = config_item.value();
 
+                    auto win_log_level_val = static_cast<unsigned int>(
+                        std::underlying_type_t<core::utility::log::Log::log_level>(this->win_log_level));
                     megamol::core::utility::get_json_value<unsigned int>(
-                        config_values, {"log_level"}, &this->win_log_level);
+                        config_values, {"log_level"}, &win_log_level_val);
                     megamol::core::utility::get_json_value<bool>(
                         config_values, {"log_force_open"}, &this->win_log_force_open);
                 }

@@ -7,10 +7,11 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
+#include "datatools_gl/io/STLDataSource.h"
+
 #include "MeshTranslateRotateScale.h"
 #include "io/PLYDataSource.h"
 #include "io/PlyWriter.h"
-#include "io/STLDataSource.h"
 #include "io/TriMeshSTLWriter.h"
 #include "misc/AddClusterColours.h"
 #include "misc/ParticleDensityOpacityModule.h"

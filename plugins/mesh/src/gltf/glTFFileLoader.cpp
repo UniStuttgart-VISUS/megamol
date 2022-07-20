@@ -1,4 +1,3 @@
-
 #include "glTFFileLoader.h"
 
 #include "mmcore/param/FilePathParam.h"
@@ -62,21 +61,21 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
     CallMesh* lhs_mesh_call = dynamic_cast<CallMesh*>(&caller);
     CallMesh* rhs_mesh_call = m_mesh_rhs_slot.CallAs<CallMesh>();
 
-    if (lhs_mesh_call == NULL) {
+    if (lhs_mesh_call == nullptr) {
         return false;
     }
 
-    syncMeshAccessCollection(lhs_mesh_call, rhs_mesh_call);
+    auto mesh_access_collections = std::make_shared<MeshDataAccessCollection>();
 
     // if there is a mesh connection to the right, pass on the mesh collection
-    if (rhs_mesh_call != NULL) {
+    if (rhs_mesh_call != nullptr) {
         if (!(*rhs_mesh_call)(0)) {
             return false;
         }
         if (rhs_mesh_call->hasUpdate()) {
             ++m_version;
-            rhs_mesh_call->getData();
         }
+        auto mesh_access_collections = rhs_mesh_call->getData();
     }
 
     auto has_update = checkAndLoadGltfModel();
@@ -89,9 +88,6 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
             m_mesh_access_collection.first->deleteMesh(identifier);
         }
         m_mesh_access_collection.second.clear();
-
-        // set data and version to signal update
-        lhs_mesh_call->setData(m_mesh_access_collection.first, m_version);
 
         // compute mesh call specific update
         std::array<float, 6> bbox;
@@ -241,6 +237,10 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
         meta_data.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
         lhs_mesh_call->setMetaData(meta_data);
     }
+
+    mesh_access_collections->append(*m_mesh_access_collection.first);
+    // set data and version to signal update
+    lhs_mesh_call->setData(mesh_access_collections, m_version);
 
     return true;
 }

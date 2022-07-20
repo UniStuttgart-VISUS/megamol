@@ -72,9 +72,6 @@ private:
 
     /** In-place material collection (initialized with gltf btf) */
     std::shared_ptr<GPUMaterialCollection> m_material_collection;
-
-    /** The btf file name to override the default gltf material */
-    core::param::ParamSlot m_btf_name_slot;
 };
 } // namespace mesh_gl
 } // namespace megamol

@@ -65,7 +65,7 @@ void io::MMGDDDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, un
     file->Seek(frameIdx[idx]);
     if (!f->LoadFrame(file, idx, frameIdx[idx + 1] - frameIdx[idx])) {
         // failed
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read frame %d from MMGDD file\n", idx);
+        Log::DefaultLog.WriteError("Unable to read frame %d from MMGDD file\n", idx);
     }
 }
 
@@ -94,7 +94,7 @@ bool io::MMGDDDataSource::filenameChanged(core::param::ParamSlot& slot) {
     assert(filename.Param<core::param::FilePathParam>() != nullptr);
     if (!file->Open(filename.Param<core::param::FilePathParam>()->Value().native().c_str(), File::READ_ONLY,
             File::SHARE_READ, File::OPEN_ONLY)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open MMGDD-File \"%s\".",
+        Log::DefaultLog.WriteError("Unable to open MMGDD-File \"%s\".",
             filename.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());
         SAFE_DELETE(file);
         this->setFrameCount(1);
@@ -102,11 +102,11 @@ bool io::MMGDDDataSource::filenameChanged(core::param::ParamSlot& slot) {
         return true;
     }
 
-#define _ERROR_OUT(MSG)                              \
-    Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, MSG); \
-    SAFE_DELETE(this->file);                         \
-    this->setFrameCount(1);                          \
-    this->initFrameCache(1);                         \
+#define _ERROR_OUT(MSG)              \
+    Log::DefaultLog.WriteError(MSG); \
+    SAFE_DELETE(this->file);         \
+    this->setFrameCount(1);          \
+    this->initFrameCache(1);         \
     return true;
 #define _ASSERT_READFILE(BUFFER, BUFFERSIZE)                        \
     if (this->file->Read((BUFFER), (BUFFERSIZE)) != (BUFFERSIZE)) { \

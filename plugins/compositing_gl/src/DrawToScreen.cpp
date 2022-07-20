@@ -5,11 +5,11 @@
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore_gl/flags/FlagCallsGL.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd_gl/flags/FlagCallsGL.h"
 
 megamol::compositing::DrawToScreen::DrawToScreen()
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , m_dummy_color_tx(nullptr)
         , m_dummy_depth_tx(nullptr)
         , m_drawToScreen_prgm(nullptr)
@@ -22,7 +22,7 @@ megamol::compositing::DrawToScreen::DrawToScreen()
     this->m_input_depth_texture_call.SetCompatibleCall<CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->m_input_depth_texture_call);
 
-    m_input_flags_call.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    m_input_flags_call.SetCompatibleCall<mmstd_gl::FlagCallRead_GLDescription>();
     MakeSlotAvailable(&m_input_flags_call);
 }
 
@@ -49,17 +49,17 @@ bool megamol::compositing::DrawToScreen::create() {
         m_drawToScreen_prgm->Create(
             vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile %s (@%s):\n%s\n", shader_base_name.PeekBuffer(),
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile %s (@%s):\n%s\n",
+            shader_base_name.PeekBuffer(),
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         // return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to compile %s:\n%s\n", shader_base_name.PeekBuffer(), e.GetMsgA());
         // return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to compile %s: Unknown exception\n", shader_base_name.PeekBuffer());
         // return false;
     }
@@ -83,13 +83,13 @@ void megamol::compositing::DrawToScreen::release() {
     m_drawToScreen_prgm.reset();
 }
 
-bool megamol::compositing::DrawToScreen::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool megamol::compositing::DrawToScreen::GetExtents(mmstd_gl::CallRender3DGL& call) {
     return true;
 }
 
-bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& call) {
+bool megamol::compositing::DrawToScreen::Render(mmstd_gl::CallRender3DGL& call) {
     // get lhs render call
-    megamol::core_gl::view::CallRender3DGL* cr = &call;
+    mmstd_gl::CallRender3DGL* cr = &call;
     if (cr == NULL)
         return false;
 
@@ -116,9 +116,9 @@ bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& c
     auto width = call.GetFramebuffer()->getWidth();
     auto height = call.GetFramebuffer()->getHeight();
 
-    auto readFlagsCall = m_input_flags_call.CallAs<core_gl::FlagCallRead_GL>();
+    auto readFlagsCall = m_input_flags_call.CallAs<mmstd_gl::FlagCallRead_GL>();
     if (readFlagsCall != nullptr) {
-        (*readFlagsCall)(core_gl::FlagCallRead_GL::CallGetData);
+        (*readFlagsCall)(mmstd_gl::FlagCallRead_GL::CallGetData);
 
         if (m_last_tex_size != glm::ivec2(color_texture->getWidth(), color_texture->getHeight()) ||
             readFlagsCall->hasUpdate()) {
@@ -157,4 +157,4 @@ bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& c
     return true;
 }
 
-void megamol::compositing::DrawToScreen::PreRender(core_gl::view::CallRender3DGL& call) {}
+void megamol::compositing::DrawToScreen::PreRender(mmstd_gl::CallRender3DGL& call) {}

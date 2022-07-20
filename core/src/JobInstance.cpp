@@ -103,8 +103,7 @@ void JobInstance::ClearCleanupMark(void) {
 void JobInstance::PerformCleanup(void) {
     if (this->CleanupMark()) {
         // this should never happen!
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_WARN, "Internal Error: JobInstance marked for cleanup.\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Internal Error: JobInstance marked for cleanup.\n");
     }
     ModuleNamespace::PerformCleanup();
 }

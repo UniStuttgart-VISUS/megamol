@@ -1,6 +1,6 @@
 #include "AddParticleColors.h"
 
-#include "mmcore/view/CallGetTransferFunction.h"
+#include "mmstd/renderer/CallGetTransferFunction.h"
 
 
 megamol::datatools::AddParticleColors::AddParticleColors(void)

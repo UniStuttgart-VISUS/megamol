@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf namespace="core_utils" type="MegaMolGLSLShader" version="1.0">
-  <snippet name="tflookup" type="file">core/tflookup.inc.glsl</snippet>
-  <snippet name="tfconvenience" type="file">core/tfconvenience.inc.glsl</snippet>
+  <snippet name="tflookup" type="file">mmstd_gl/common/tflookup.inc.glsl</snippet>
+  <snippet name="tfconvenience" type="file">mmstd_gl/common/tfconvenience.inc.glsl</snippet>
 
   <snippet name="instancingconvenience" type="string">
     uniform ivec3 instancing_index = ivec3(1, 1, 1);

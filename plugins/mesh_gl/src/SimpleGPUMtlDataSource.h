@@ -61,7 +61,19 @@ private:
     uint32_t m_version;
 
     /** The btf file name */
-    core::param::ParamSlot m_btf_filename_slot;
+    core::param::ParamSlot m_vert_shdr_filepath_slot;
+
+    /** The btf file name */
+    core::param::ParamSlot m_geom_shdr_filepath_slot;
+
+    /** The btf file name */
+    core::param::ParamSlot m_tessCtrl_shdr_filepath_slot;
+
+    /** The btf file name */
+    core::param::ParamSlot m_tessEval_shdr_filepath_slot;
+
+    /** The btf file name */
+    core::param::ParamSlot m_frag_shdr_filepath_slot;
 
     /** */
     size_t m_material_idx;

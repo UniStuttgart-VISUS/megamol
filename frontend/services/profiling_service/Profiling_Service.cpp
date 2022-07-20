@@ -1,5 +1,6 @@
 #include "Profiling_Service.hpp"
 
+
 namespace megamol {
 namespace frontend {
 
@@ -31,6 +32,7 @@ bool Profiling_Service::init(void* configPtr) {
         });
     }
 #endif
+
     return true;
 }
 
@@ -49,5 +51,6 @@ void Profiling_Service::updateProvidedResources() {
 void Profiling_Service::resetProvidedResources() {
     _perf_man.endFrame();
 }
+
 } // namespace frontend
 } // namespace megamol

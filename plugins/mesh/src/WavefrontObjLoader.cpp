@@ -1,4 +1,3 @@
-
 #include "WavefrontObjLoader.h"
 
 #include "mmcore/param/FilePathParam.h"
@@ -20,25 +19,24 @@ bool megamol::mesh::WavefrontObjLoader::create(void) {
 }
 
 bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) {
-
     CallMesh* lhs_mesh_call = dynamic_cast<CallMesh*>(&caller);
     CallMesh* rhs_mesh_call = m_mesh_rhs_slot.CallAs<CallMesh>();
 
-    if (lhs_mesh_call == NULL) {
+    if (lhs_mesh_call == nullptr) {
         return false;
     }
 
-    syncMeshAccessCollection(lhs_mesh_call, rhs_mesh_call);
+    auto mesh_access_collections = std::make_shared<MeshDataAccessCollection>();
 
     // if there is a mesh connection to the right, pass on the mesh collection
-    if (rhs_mesh_call != NULL) {
+    if (rhs_mesh_call != nullptr) {
         if (!(*rhs_mesh_call)(0)) {
             return false;
         }
         if (rhs_mesh_call->hasUpdate()) {
             ++m_version;
-            rhs_mesh_call->getData();
         }
+        mesh_access_collections = rhs_mesh_call->getData();
     }
 
     if (this->m_filename_slot.IsDirty()) {
@@ -227,7 +225,7 @@ bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) 
             std::string identifier = m_obj_model->shapes[s].name;
             if (!mesh.indices.empty()) {
                 m_mesh_access_collection.first->addMesh(
-                    identifier, mesh_attributes, mesh_indices, MeshDataAccessCollection::PrimitiveType::LINES);
+                    identifier, mesh_attributes, mesh_indices, MeshDataAccessCollection::PrimitiveType::TRIANGLES);
             } else {
                 m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices);
             }
@@ -241,8 +239,11 @@ bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) 
 
     if (lhs_mesh_call->version() < m_version) {
         lhs_mesh_call->setMetaData(m_meta_data);
-        lhs_mesh_call->setData(m_mesh_access_collection.first, m_version);
+        //TODO fix bounding box / meta data handling
     }
+
+    mesh_access_collections->append(*m_mesh_access_collection.first);
+    lhs_mesh_call->setData(mesh_access_collections, m_version);
 
     return true;
 }

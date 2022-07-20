@@ -102,8 +102,7 @@ bool megamol::probe::InjectClusterID::getData(core::Call& call) {
             }
         }
 
-        auto meshes = cm_rhs->getData();
-        mesh_collection = meshes;
+        mesh_collection = cm_rhs->getData();
     }
 
     cm_lhs->setData(mesh_collection, _version);
