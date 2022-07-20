@@ -531,57 +531,6 @@ function(require_external NAME)
       GIT_TAG "v2.1.0"
       INCLUDE_DIR "include")
 
-  # libzmq / libcppzmq
-  elseif (NAME STREQUAL "libzmq" OR NAME STREQUAL "libcppzmq")
-    if (TARGET libzmq OR TARGET libcppzmq)
-      return()
-    endif ()
-
-    set(ZMQ_VER "4_3_3")
-    string(REPLACE "_" "." ZMQ_TAG "v${ZMQ_VER}")
-
-    if (MSVC_IDE)
-      set(MSVC_TOOLSET "-${CMAKE_VS_PLATFORM_TOOLSET}")
-    else ()
-      set(MSVC_TOOLSET "")
-    endif ()
-
-    if (WIN32)
-      set(ZMQ_LIB "${CMAKE_INSTALL_LIBDIR}/libzmq${MSVC_TOOLSET}-mt-s<SUFFIX>-${ZMQ_VER}.lib")
-    else ()
-      set(ZMQ_LIB "${CMAKE_INSTALL_LIBDIR}/libzmq.a")
-    endif ()
-
-    add_external_project(libzmq STATIC
-      GIT_REPOSITORY https://github.com/zeromq/libzmq.git
-      GIT_TAG 56ace6d03f521b9abb5a50176ec7763c1b77afa9
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZMQ_LIB}"
-      DEBUG_SUFFIX gd
-      CMAKE_ARGS
-        -DBUILD_SHARED=OFF
-        -DBUILD_TESTS=OFF
-        -DZMQ_BUILD_TESTS=OFF
-        -DENABLE_PRECOMPILED=OFF
-        -DWITH_DOCS=OFF)
-
-    add_external_library(libzmq
-      LIBRARY ${ZMQ_LIB}
-      DEBUG_SUFFIX gd)
-
-    set_target_properties(libzmq PROPERTIES
-      INTERFACE_COMPILE_DEFINITIONS "ZMQ_STATIC"
-      INTERFACE_LINK_LIBRARIES "-lpthread;-lrt")
-
-    # TODO libzmq cmake does a lot more checks and options. This will probably work only in some configurations.
-    if (WIN32)
-      target_link_libraries(libzmq INTERFACE ws2_32 iphlpapi)
-    endif ()
-
-    add_external_headeronly_project(libcppzmq
-      DEPENDS libzmq
-      GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
-      GIT_TAG "v4.6.0")
-
   # lua
   elseif (NAME STREQUAL "lua")
     if (TARGET lua)

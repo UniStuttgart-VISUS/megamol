@@ -3,16 +3,20 @@
 # All rights reserved.
 #
 
+find_package(ZeroMQ REQUIRED)
+find_package(cppzmq REQUIRED)
+
 megamol_plugin(remote
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
     mmstd
     cluster
     image_calls
+  DEPENDS_LIBRARIES
+    libzmq
+    cppzmq
   DEPENDS_EXTERNALS
     glm
-    libzmq
-    libcppzmq
     snappy
     zfp)
 

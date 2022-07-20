@@ -8,8 +8,8 @@ option(BUILD_REMOTECONSOLE "Build remote Lua console" ON)
 if(BUILD_REMOTECONSOLE)
   project(remoteconsole)
 
-  require_external(libzmq)
-  require_external(libcppzmq)
+  find_package(ZeroMQ REQUIRED)
+  find_package(cppzmq REQUIRED)
   require_external(libcxxopts)
 
   # Glob source files.
@@ -20,7 +20,11 @@ if(BUILD_REMOTECONSOLE)
   add_executable(${PROJECT_NAME} ${header_files} ${source_files})
   target_include_directories(${PROJECT_NAME} 
     PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
-  target_link_libraries(${PROJECT_NAME} PRIVATE libzmq libcppzmq libcxxopts)
+  target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+      libzmq
+      cppzmq
+      libcxxopts)
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
   source_group("Header Files" FILES ${header_files})

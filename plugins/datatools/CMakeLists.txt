@@ -3,6 +3,9 @@
 # All rights reserved.
 #
 
+find_package(ZeroMQ REQUIRED)
+find_package(cppzmq REQUIRED)
+
 megamol_plugin(datatools
   BUILD_DEFAULT ON
   DEPENDS_PLUGINS
@@ -10,13 +13,14 @@ megamol_plugin(datatools
     cluster
     geometry_calls
     mesh
+  DEPENDS_LIBRARIES
+    libzmq
+    cppzmq
   DEPENDS_EXTERNALS
     Eigen
     nanoflann
     sim_sort
     mmpld_io
-    libzmq
-    libcppzmq
     imgui)
 
 if (datatools_PLUGIN_ENABLED)

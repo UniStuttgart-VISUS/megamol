@@ -12,11 +12,11 @@ if (BUILD_CORE)
   find_package(nlohmann_json CONFIG REQUIRED)
   find_package(PNG REQUIRED)
   find_package(ZLIB REQUIRED)
+  find_package(ZeroMQ REQUIRED)
+  find_package(cppzmq REQUIRED)
 
   require_external(expat)
   require_external(lua)
-  require_external(libzmq)
-  require_external(libcppzmq)
   require_external(glm)
   require_external(tbb)
 
@@ -44,8 +44,8 @@ if (BUILD_CORE)
       lua
       expat
       frontend_resources
-      libcppzmq
       libzmq
+      cppzmq
       tbb
       OpenMP::OpenMP_CXX
     PRIVATE
