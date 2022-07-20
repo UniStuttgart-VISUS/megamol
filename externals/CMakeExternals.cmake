@@ -531,58 +531,6 @@ function(require_external NAME)
       GIT_TAG "v2.1.0"
       INCLUDE_DIR "include")
 
-  # libpng
-  elseif (NAME STREQUAL "libpng")
-    if (TARGET libpng)
-      return()
-    endif ()
-
-    require_external(zlib)
-
-    if (MSVC)
-      set(LIBPNG_LIB "lib/libpng16_static<SUFFIX>.lib")
-    else ()
-      set(LIBPNG_LIB "${CMAKE_INSTALL_LIBDIR}/libpng16<SUFFIX>.a")
-    endif ()
-
-    if (MSVC)
-      set(ZLIB_LIB "lib/zlibstatic$<$<CONFIG:Debug>:d>.lib")
-    else ()
-      set(ZLIB_LIB "lib/libz.a")
-    endif ()
-
-    external_get_property(zlib INSTALL_DIR)
-
-    add_external_project(libpng STATIC
-      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/libpng.git
-      GIT_TAG "v1.6.34"
-      # libpng CMake executes awk, if available on the system, which fails on Windows if "scripts/pnglibconf.dfa" has CR LF line endings,
-      # see https://github.com/glennrp/libpng/issues/363
-      GIT_CONFIG "core.autocrlf=false;core.eol=lf"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${LIBPNG_LIB}"
-      DEBUG_SUFFIX d
-      DEPENDS zlib
-      CMAKE_ARGS
-        -DPNG_BUILD_ZLIB=ON
-        -DPNG_SHARED=OFF
-        -DPNG_TESTS=OFF
-        -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON
-        -DZLIB_LIBRARY:PATH=${INSTALL_DIR}/${ZLIB_LIB}
-        -DZLIB_INCLUDE_DIR:PATH=${INSTALL_DIR}/include
-        -DZLIB_VERSION_STRING:STRING=${ZLIB_VERSION_STRING}
-        -DZLIB_VERSION_MAJOR:STRING=${ZLIB_VERSION_MAJOR}
-        -DZLIB_VERSION_MINOR:STRING=${ZLIB_VERSION_MINOR}
-        -DZLIB_VERSION_PATCH:STRING=${ZLIB_VERSION_PATCH}
-        -DZLIB_VERSION_TWEAK:STRING=${ZLIB_VERSION_TWEAK}
-        -DZLIB_MAJOR_VERSION:STRING=${ZLIB_VERSION_MAJOR}
-        -DZLIB_MINOR_VERSION:STRING=${ZLIB_VERSION_MINOR}
-        -DZLIB_PATCH_VERSION:STRING=${ZLIB_VERSION_PATCH})
-
-    add_external_library(libpng
-      LIBRARY ${LIBPNG_LIB}
-      INTERFACE_LIBRARIES zlib
-      DEBUG_SUFFIX d)
-
   # libzmq / libcppzmq
   elseif (NAME STREQUAL "libzmq" OR NAME STREQUAL "libcppzmq")
     if (TARGET libzmq OR TARGET libcppzmq)
@@ -927,42 +875,6 @@ function(require_external NAME)
 
     add_external_library(zfp
       LIBRARY ${ZFP_LIB})
-
-  # zlib
-  elseif (NAME STREQUAL "zlib")
-    if (TARGET zlib)
-      return()
-    endif ()
-
-    if (MSVC)
-      set(ZLIB_LIB "lib/zlibstatic<SUFFIX>.lib")
-    else ()
-      set(ZLIB_LIB "lib/libz.a")
-    endif ()
-
-    add_external_project(zlib STATIC
-      GIT_REPOSITORY https://github.com/madler/zlib.git
-      GIT_TAG "v1.2.11"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZLIB_LIB}"
-      DEBUG_SUFFIX d
-      CMAKE_ARGS
-        -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON)
-
-    add_external_library(zlib
-      LIBRARY ${ZLIB_LIB}
-      DEBUG_SUFFIX d)
-
-    set(ZLIB_VERSION_STRING "1.2.11" CACHE STRING "" FORCE)
-    set(ZLIB_VERSION_MAJOR 1 CACHE STRING "" FORCE)
-    set(ZLIB_VERSION_MINOR 2 CACHE STRING "" FORCE)
-    set(ZLIB_VERSION_PATCH 11 CACHE STRING "" FORCE)
-    set(ZLIB_VERSION_TWEAK "" CACHE STRING "" FORCE)
-
-    mark_as_advanced(FORCE ZLIB_VERSION_STRING)
-    mark_as_advanced(FORCE ZLIB_VERSION_MAJOR)
-    mark_as_advanced(FORCE ZLIB_VERSION_MINOR)
-    mark_as_advanced(FORCE ZLIB_VERSION_PATCH)
-    mark_as_advanced(FORCE ZLIB_VERSION_TWEAK)
 
   # vr interop mwk-mint
   elseif(NAME STREQUAL "mwk-mint")

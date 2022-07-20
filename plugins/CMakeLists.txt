@@ -12,13 +12,14 @@ include(CMakeDependentOption)
 #   DIR:               full path to the plugin directory, defaults to CMAKE_CURRENT_SOURCE_DIR if not set
 #   BUILD_DEFAULT:     ON/OFF if the plugin should be build with the default configuration
 #   DEPENDS_PLUGINS:   list of plugins which are required by this plugin
+#   DEPENDS_LIBRARIES: list of CMake targets which are required by this plugin (will be passed directly to target_link_libraries()
 #   DEPENDS_EXTERNALS: list of externals which are required by this plugin
 
 function(megamol_plugin PLUGIN_NAME)
   # Parse arguments
   set(optionArgs ALWAYS_BUILD DEPENDS_CUDA DEPENDS_GL)
   set(oneValueArgs DIR BUILD_DEFAULT)
-  set(multiValueArgs DEPENDS_PLUGINS DEPENDS_EXTERNALS)
+  set(multiValueArgs DEPENDS_PLUGINS DEPENDS_LIBRARIES DEPENDS_EXTERNALS)
   cmake_parse_arguments(MMPLUGIN_ARGS "${optionArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Validate plugin name
@@ -115,6 +116,7 @@ function(megamol_plugin PLUGIN_NAME)
     endif ()
     target_link_libraries(${PLUGIN_NAME}
       PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}
+      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_LIBRARIES}
       PRIVATE ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
 
     # Install shaders

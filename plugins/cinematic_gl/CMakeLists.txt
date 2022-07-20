@@ -3,6 +3,8 @@
 # All rights reserved.
 #
 
+find_package(PNG REQUIRED)
+
 megamol_plugin(cinematic_gl
   BUILD_DEFAULT ON
   DEPENDS_GL
@@ -10,6 +12,7 @@ megamol_plugin(cinematic_gl
     mmstd
     mmstd_gl
     cinematic
+  DEPENDS_LIBRARIES
+    PNG::PNG
   DEPENDS_EXTERNALS
-    libpng
     imgui)

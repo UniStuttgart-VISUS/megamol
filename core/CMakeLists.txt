@@ -10,13 +10,13 @@ if (BUILD_CORE)
 
   # Add externals.
   find_package(nlohmann_json CONFIG REQUIRED)
+  find_package(PNG REQUIRED)
+  find_package(ZLIB REQUIRED)
 
   require_external(expat)
   require_external(lua)
   require_external(libzmq)
   require_external(libcppzmq)
-  require_external(zlib)
-  require_external(libpng)
   require_external(glm)
   require_external(tbb)
 
@@ -35,8 +35,24 @@ if (BUILD_CORE)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
   target_link_libraries(${PROJECT_NAME}
-    PUBLIC vislib glm zlib libpng nlohmann_json::nlohmann_json lua expat frontend_resources libcppzmq libzmq tbb PUBLIC OpenMP::OpenMP_CXX
-    PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} abstract_frontend_service megamol_build_info_rc) # abstract render api used by MegaMolGraph
+    PUBLIC
+      vislib
+      glm
+      ZLIB::ZLIB
+      PNG::PNG
+      nlohmann_json::nlohmann_json
+      lua
+      expat
+      frontend_resources
+      libcppzmq
+      libzmq
+      tbb
+      OpenMP::OpenMP_CXX
+    PRIVATE
+      ${CMAKE_DL_LIBS}
+      ${CMAKE_THREAD_LIBS_INIT}
+      abstract_frontend_service # abstract render api used by MegaMolGraph
+      megamol_build_info_rc)
   if (UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
   endif ()
