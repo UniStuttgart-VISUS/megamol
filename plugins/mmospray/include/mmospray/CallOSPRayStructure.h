@@ -65,8 +65,8 @@ struct structuredVolumeStructure {
 };
 
 struct meshStructure {
-    std::shared_ptr<std::vector<std::shared_ptr<mesh::MeshDataAccessCollection>>> mesh;
-    std::shared_ptr<std::vector<std::shared_ptr<mesh::ImageDataAccessCollection>>> mesh_textures;
+    std::shared_ptr<mesh::MeshDataAccessCollection> mesh;
+    std::shared_ptr<mesh::ImageDataAccessCollection> mesh_textures;
 };
 
 struct apiStructure {
@@ -74,7 +74,7 @@ struct apiStructure {
 };
 
 struct curveStructure {
-    std::shared_ptr<std::vector<std::shared_ptr<mesh::MeshDataAccessCollection>>> mesh;
+    std::shared_ptr<mesh::MeshDataAccessCollection> mesh;
 
     std::shared_ptr<std::vector<float>> vertexData;
     std::shared_ptr<std::vector<float>> colorData;
