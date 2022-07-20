@@ -9,8 +9,8 @@
 #include "mmcore/param/FloatParam.h"
 #include "probe/MeshUtilities.h"
 #include "probe/ProbeCalls.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/ClipPlane.h"
+#include "mmstd/renderer/CallClipPlane.h"
+#include "mmstd/renderer/ClipPlane.h"
 #include <random>
 
 
