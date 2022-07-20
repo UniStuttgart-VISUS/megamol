@@ -163,7 +163,7 @@ bool ImageLoader::GetMetaData(core::Call& call) {
                 }
             } else {
                 core::utility::log::Log::DefaultLog.WriteError(
-                    "ImageLoader: The file \"%s\" could not be opened", path.string());
+                    "ImageLoader: The file \"%s\" could not be opened", path.string().c_str());
                 return false;
             }
         }
