@@ -5,6 +5,7 @@
 
 find_package(ZeroMQ REQUIRED)
 find_package(cppzmq REQUIRED)
+find_package(glm REQUIRED)
 
 megamol_plugin(remote
   BUILD_DEFAULT OFF
@@ -15,8 +16,8 @@ megamol_plugin(remote
   DEPENDS_LIBRARIES
     libzmq
     cppzmq
+    glm::glm
   DEPENDS_EXTERNALS
-    glm
     snappy
     zfp)
 

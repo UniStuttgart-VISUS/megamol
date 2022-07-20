@@ -8,8 +8,8 @@ option(BUILD_FRONTEND_SERVICES "build frontend services" ON)
 if(BUILD_FRONTEND_SERVICES)
   project(frontend_services)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-    
-  require_external(glm)
+
+  find_package(glm REQUIRED)
   require_external(imgui)
   require_external(implot)  
   require_external(imguizmoquat)
@@ -173,8 +173,17 @@ if(BUILD_FRONTEND_SERVICES)
     target_link_libraries(${PROJECT_NAME} PUBLIC core_gl glad)
   endif()
 
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS} PUBLIC abstract_frontend_service core glm imgui implot imguizmoquat)
-
+  target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+      ${VERSION_LIBRARY}
+      ${CMAKE_DL_LIBS}
+    PUBLIC
+      abstract_frontend_service
+      core
+      glm::glm
+      imgui
+      implot
+      imguizmoquat)
 
   # Install gui resources
   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gui/resources")

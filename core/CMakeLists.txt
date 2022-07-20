@@ -14,10 +14,10 @@ if (BUILD_CORE)
   find_package(ZLIB REQUIRED)
   find_package(ZeroMQ REQUIRED)
   find_package(cppzmq REQUIRED)
+  find_package(glm REQUIRED)
 
   require_external(expat)
   require_external(lua)
-  require_external(glm)
   require_external(tbb)
 
   if (ENABLE_CUESDK)
@@ -37,7 +37,7 @@ if (BUILD_CORE)
   target_link_libraries(${PROJECT_NAME}
     PUBLIC
       vislib
-      glm
+      glm::glm
       ZLIB::ZLIB
       PNG::PNG
       nlohmann_json::nlohmann_json

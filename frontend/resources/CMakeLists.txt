@@ -8,8 +8,8 @@
 project(frontend_resources)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-find_package(nlohmann_json CONFIG REQUIRED)
-require_external(glm)
+find_package(glm REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 if (ENABLE_CUESDK)
   require_external(CUESDK)
@@ -33,7 +33,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   #$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
   #$<INSTALL_INTERFACE:include/>
 )
-target_link_libraries(${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json glm)
+target_link_libraries(${PROJECT_NAME}
+  PUBLIC
+    glm::glm
+    nlohmann_json::nlohmann_json)
 if (ENABLE_CUESDK)
   target_link_libraries(${PROJECT_NAME} PUBLIC CUESDK)
 endif()
@@ -42,4 +45,3 @@ endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
 source_group("Header Files" FILES ${header_files})
 source_group("Source Files" FILES ${source_files})
-

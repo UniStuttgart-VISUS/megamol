@@ -66,16 +66,6 @@ function(require_external NAME)
       GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
       GIT_TAG "3.3.7")
 
-  # glm
-  elseif (NAME STREQUAL "glm")
-    if (TARGET glm)
-      return()
-    endif ()
-
-    add_external_headeronly_project(glm
-      GIT_REPOSITORY https://github.com/g-truc/glm.git
-      GIT_TAG "0.9.9.8")
-
   # glowl
   elseif (NAME STREQUAL "glowl")
     if (TARGET glowl)

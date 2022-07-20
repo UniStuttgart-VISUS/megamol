@@ -3,6 +3,8 @@
 # All rights reserved.
 #
 
+find_package(glm REQUIRED)
+
 megamol_plugin(optix_hpg
   BUILD_DEFAULT OFF
   DEPENDS_CUDA
@@ -10,8 +12,8 @@ megamol_plugin(optix_hpg
     mmstd
     mesh
     geometry_calls
-  DEPENDS_EXTERNALS
-    glm)
+  DEPENDS_LIBRARIES
+    glm::glm)
 
 if (optix_hpg_PLUGIN_ENABLED)
 
@@ -31,7 +33,7 @@ if (optix_hpg_PLUGIN_ENABLED)
   include(configure_optix)
   find_package(CUDAToolkit)
 
-  get_target_property(GLM_INCLUDES glm INTERFACE_INCLUDE_DIRECTORIES)
+  get_target_property(GLM_INCLUDES glm::glm INTERFACE_INCLUDE_DIRECTORIES)
 
   # Collect source files
   file(GLOB_RECURSE cuda_resource_include_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "cuda_resources/*.h" "cuda_resources/*.cuh")
