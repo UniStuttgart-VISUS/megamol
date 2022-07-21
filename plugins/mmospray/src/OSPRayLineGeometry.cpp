@@ -68,7 +68,75 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
             this->time = os->getTime();
             this->structureContainer.dataChanged = true;
             this->extendContainer.boundingBox = std::make_shared<core::BoundingBoxes_2>(meta_data.m_bboxs);
-            cs.mesh = cm->getData();
+            _converted_data = nullptr;
+            _converted_data = std::make_shared<mesh::MeshDataAccessCollection>();
+
+            _converted_index = {0};
+            _converted_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
+            _converted_indices.byte_size = _converted_index.size() * sizeof(uint32_t);
+            _converted_indices.data = reinterpret_cast<uint8_t*>(_converted_index.data());
+
+
+            _converted_attribs.clear();
+            _converted_vertices.clear();
+
+
+            auto num_meshes = cm->getData()->accessMeshes().size();
+
+            auto first_mesh = cm->getData()->accessMeshes().begin();
+            for (int m = 0; m < num_meshes; ++m) {
+                auto current_mesh = std::next(first_mesh,m);
+                if (current_mesh->second.primitive_type == mesh::MeshDataAccessCollection::LINES) {
+                    _converted_vertices.emplace_back();
+                    _converted_attribs.emplace_back();
+
+                    auto num_indices = first_mesh->second.indices.byte_size /
+                                   mesh::MeshDataAccessCollection::getByteSize(first_mesh->second.indices.type);
+
+                    _converted_vertices.back().resize(num_indices);
+                    _converted_attribs.back().resize(num_indices/2);
+
+
+                    auto indices = reinterpret_cast<unsigned int*>(current_mesh->second.indices.data);
+                    float* vertices;
+
+                    for (auto& attr : current_mesh->second.attributes) {
+                        if (attr.semantic == mesh::MeshDataAccessCollection::POSITION) {
+                            vertices = reinterpret_cast<float*>(attr.data);
+                        }
+                    }
+
+                    for (int i = 0; i < _converted_attribs.back().size(); ++i) {
+
+                        std::array<float, 3> const vert0 = {
+                            vertices[3 * indices[0] + 0], vertices[3 * indices[0] + 1], vertices[3 * indices[0] + 2]};
+                        std::array<float, 3> const vert1 = {
+                            vertices[3 * indices[1] + 0], vertices[3 * indices[1] + 1], vertices[3 * indices[1] + 2]};
+
+                        _converted_vertices.back()[2 * i + 0] = vert0;
+                        _converted_vertices.back()[2 * i + 1] = vert1;
+
+                        _converted_attribs.back()[i].resize(1);
+                        _converted_attribs.back()[i][0].semantic = mesh::MeshDataAccessCollection::AttributeSemanticType::POSITION;
+                        _converted_attribs.back()[i][0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+                        _converted_attribs.back()[i][0].byte_size = 2 * sizeof(std::array<float, 3>);
+                        _converted_attribs.back()[i][0].component_cnt = 3;
+                        _converted_attribs.back()[i][0].stride = 3 * sizeof(float);
+                        _converted_attribs.back()[i][0].data =
+                            reinterpret_cast<uint8_t*>(_converted_vertices.back()[2 * i + 0].data());
+
+                        std::stringstream mesh_id;
+                        mesh_id << current_mesh->first << i;
+
+                        _converted_data->addMesh(mesh_id.str(), _converted_attribs.back()[i], _converted_indices,
+                            mesh::MeshDataAccessCollection::LINE_STRIP);
+                    }
+                } else {
+                    // leave non line meshes untouched
+                    _converted_data->addMesh(current_mesh->first, current_mesh->second.attributes, current_mesh->second.indices, current_mesh->second.primitive_type);
+                }
+            } 
+            cs.mesh = _converted_data;
             structureContainer.structure = cs;
         }
 

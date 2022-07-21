@@ -121,7 +121,7 @@ std::shared_ptr<megamol::mesh::MeshDataAccessCollection> megamol::probe::Extract
 
         // put data in line
         std::string identifier = std::string(FullName()) + "_pl_" + std::to_string(i);
-        line->addMesh(identifier, _line_attribs[i], _line_indices);
+        line->addMesh(identifier, _line_attribs[i], _line_indices, mesh::MeshDataAccessCollection::LINE_STRIP);
     }
 
     _line = line;
