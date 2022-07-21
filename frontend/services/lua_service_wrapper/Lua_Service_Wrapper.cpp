@@ -687,6 +687,31 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
 
         return StringResult{answer.str().c_str()};
     }});
+
+    callbacks.add<VoidResult, std::string>("mmSetGraphEntryPoint",
+        "(string moduleName)\n\tSet active graph entry point to one specific module.",
+        {[&](std::string moduleName) -> VoidResult {
+            graph.SetGraphEntryPoint(moduleName);
+            return VoidResult{};
+        }});
+    callbacks.add<VoidResult, std::string>("mmRemoveGraphEntryPoint",
+        "(string moduleName)\n\tRemove active graph entry point from one specific module.",
+        {[&](std::string moduleName) -> VoidResult {
+            graph.RemoveGraphEntryPoint(moduleName);
+            return VoidResult{};
+        }});
+    callbacks.add<VoidResult>("mmRemoveAllGraphEntryPoints",
+        "\n\tRemove any and all active graph entry points.",
+        {[&]() -> VoidResult {
+            for (auto& m : graph.ListModules()) {
+                if (m.isGraphEntryPoint) {
+                    graph.RemoveGraphEntryPoint(m.modulePtr->FullName().PeekBuffer());
+                }
+            }
+            return VoidResult{};
+        }});
+
+
 #ifdef PROFILING
     callbacks.add<StringResult, std::string>("mmListModuleTimers",
         "(string name)\n\tList the registered timers of a module.", {[&](std::string name) -> StringResult {
