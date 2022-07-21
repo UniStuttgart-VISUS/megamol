@@ -504,7 +504,8 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
             return VoidResult{};
         }});
 
-    callbacks.add<VoidResult, std::string, std::string>("mmRenameModule", "(string oldName, string newName)\n\tRenames the module called <oldname> to <newname>.",
+    callbacks.add<VoidResult, std::string, std::string>("mmRenameModule",
+        "(string oldName, string newName)\n\tRenames the module called <oldname> to <newname>.",
         {[&](std::string oldName, std::string newName) -> VoidResult {
             if (!graph.RenameModule(oldName, newName)) {
                 return Error{"graph could not rename module: " + oldName + " to " + newName};
@@ -691,18 +692,23 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string>("mmSetGraphEntryPoint",
         "(string moduleName)\n\tSet active graph entry point to one specific module.",
         {[&](std::string moduleName) -> VoidResult {
-            graph.SetGraphEntryPoint(moduleName);
+            auto res = graph.SetGraphEntryPoint(moduleName);
+            if (!res) {
+                return Error{"Could not set graph entry point " + moduleName};
+            }
             return VoidResult{};
         }});
     callbacks.add<VoidResult, std::string>("mmRemoveGraphEntryPoint",
         "(string moduleName)\n\tRemove active graph entry point from one specific module.",
         {[&](std::string moduleName) -> VoidResult {
-            graph.RemoveGraphEntryPoint(moduleName);
+            auto res = graph.RemoveGraphEntryPoint(moduleName);
+            if (!res) {
+                return Error{"Could not remove graph entry point " + moduleName};
+            }
             return VoidResult{};
         }});
-    callbacks.add<VoidResult>("mmRemoveAllGraphEntryPoints",
-        "\n\tRemove any and all active graph entry points.",
-        {[&]() -> VoidResult {
+    callbacks.add<VoidResult>(
+        "mmRemoveAllGraphEntryPoints", "\n\tRemove any and all active graph entry points.", {[&]() -> VoidResult {
             for (auto& m : graph.ListModules()) {
                 if (m.isGraphEntryPoint) {
                     graph.RemoveGraphEntryPoint(m.modulePtr->FullName().PeekBuffer());

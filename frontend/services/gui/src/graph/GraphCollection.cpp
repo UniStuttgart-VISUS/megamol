@@ -364,8 +364,7 @@ bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
                 auto core_module_ptr = megamol_graph.FindModule(data.name_id);
                 module_to_module.erase(core_module_ptr.get());
 #endif
-                graph_sync_success &= std::get<0>(
-                    (*input_lua_func)("mmDeleteModule([=[" + data.name_id + "]=])"));
+                graph_sync_success &= std::get<0>((*input_lua_func)("mmDeleteModule([=[" + data.name_id + "]=])"));
             } break;
             case (Graph::QueueAction::ADD_CALL): {
                 graph_sync_success &= std::get<0>((*input_lua_func)(
@@ -390,8 +389,8 @@ bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
                 auto core_call_ptr = megamol_graph.FindCall(data.caller, data.callee);
                 call_to_call.erase(core_call_ptr.get());
 #endif
-                graph_sync_success &= std::get<0>((*input_lua_func)(
-                    "mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
+                graph_sync_success &=
+                    std::get<0>((*input_lua_func)("mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
             } break;
             case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
                 (*input_lua_func)("mmSetGraphEntryPoint([=[" + data.name_id + "]=])");
@@ -503,8 +502,8 @@ bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
                     }
                     // Write changed parameter value to core parameter
                     if (p.IsValueDirty()) {
-                        param_sync_success &= std::get<0>(
-                            (*input_lua_func)("mmSetParamValue([=[" + p.FullNameCore() + "]=],[=[" + p.GetValueString() + "]=])"));
+                        param_sync_success &= std::get<0>((*input_lua_func)(
+                            "mmSetParamValue([=[" + p.FullNameCore() + "]=],[=[" + p.GetValueString() + "]=])"));
                         p.ResetValueDirty();
                     }
                     // Read current parameter value and GUI state fro core parameter
