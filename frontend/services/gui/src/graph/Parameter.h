@@ -128,9 +128,6 @@ public:
     static bool WriteCoreParameterGUIState(
         megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam> out_param_ptr);
 
-    static bool WriteCoreParameterValue(
-        megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam> out_param_ptr);
-
     // ----------------------------
 
     Parameter(ImGuiID uid, ParamType_t type, Storage_t store, Min_t minval, Max_t maxval, Step_t step,
