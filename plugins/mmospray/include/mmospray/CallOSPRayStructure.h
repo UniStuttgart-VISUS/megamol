@@ -27,6 +27,8 @@ enum volumeTypeEnum { STRUCTUREDVOLUME, BLOCKBRICKEDVOLUME, GHOSTBLOCKBRICKEDVOL
 
 enum volumeRepresentationType { VOLUMEREP, ISOSURFACE, SLICE };
 
+enum curveRepresentationType { FLAT, ROUND, RIBBON, DISJOINT };
+
 enum class voxelDataType : uint8_t { UCHAR = 0, SHORT = 1, USHORT = 2, FLOAT = 3, DOUBLE = 4 };
 
 static std::string voxelDataTypeS[] = {"uchar", "short", "ushort", "float", "double"};
@@ -79,6 +81,7 @@ struct curveStructure {
     std::shared_ptr<std::vector<float>> vertexData;
     std::shared_ptr<std::vector<float>> colorData;
     std::shared_ptr<std::vector<unsigned int>> indexData;
+    curveRepresentationType representation = ROUND;
     unsigned int vertexLength;
     unsigned int dataStride;
     unsigned int colorLength;

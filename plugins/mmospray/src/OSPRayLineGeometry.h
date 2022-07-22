@@ -65,12 +65,13 @@ private:
     core::CallerSlot getLineDataSlot;
 
     core::param::ParamSlot globalRadiusSlot;
+    core::param::ParamSlot representationSlot;
 
     std::shared_ptr<mesh::MeshDataAccessCollection> _converted_data;
-    std::vector<std::vector<std::vector<mesh::MeshDataAccessCollection::VertexAttribute>>> _converted_attribs;
-    mesh::MeshDataAccessCollection::IndexData _converted_indices;
+    std::vector<std::vector<mesh::MeshDataAccessCollection::VertexAttribute>> _converted_attribs;
+    std::vector<mesh::MeshDataAccessCollection::IndexData> _converted_indices;
 
-    std::array<uint32_t, 1> _converted_index;
+    std::vector<std::vector<uint32_t>> _converted_index;
     std::vector<std::vector<std::array<float,3>>> _converted_vertices;
     
 };

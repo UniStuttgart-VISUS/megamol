@@ -1086,9 +1086,26 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
 
                         std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
                             .setParam("radius", container.globalRadius);
-                        // TODO: Add user input support for this
+                        auto repType = OSP_ROUND;
+                        switch (container.representation) {
+                        case (curveRepresentationType::FLAT): {
+                            repType = OSP_FLAT;
+                            break;
+                        }
+                        case (curveRepresentationType::RIBBON): {
+                            repType = OSP_RIBBON;
+                            break;
+                        }
+                        case (curveRepresentationType::DISJOINT): {
+                            repType = OSP_DISJOINT;
+                            break;
+                        }
+                        default:
+                            break;
+                        }
                         std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                            .setParam("type", OSP_ROUND);
+                            .setParam("type", repType);
+                        // TODO: Add user input support for this
                         std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
                             .setParam("basis", OSP_LINEAR);
 
