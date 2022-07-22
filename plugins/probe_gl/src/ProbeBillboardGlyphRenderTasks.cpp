@@ -869,6 +869,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
         m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
             m_clusterID_glyph_identifiers.begin(), m_clusterID_glyph_identifiers.end());
     }
+    return  true;
 }
 
 void megamol::probe_gl::ProbeBillboardGlyphRenderTasks::updateAllRenderTasks() {
