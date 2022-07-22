@@ -219,16 +219,26 @@ bool MeshSelector::getData(core::Call& call) {
         cm->setMetaData(mesh_meta_data);
     }
 
-    auto const& mesh = cd->getData()->accessMeshes().begin()->second;
+    auto const& first_mesh = cd->getData()->accessMeshes().begin()->second;
 
     if (something_changed || _recalc) {
+        _meshNumberSlot.Param<core::param::FlexEnumParam>()->ClearValues();
+        int const num_meshes = cd->getData()->accessMeshes().size();
+        for (int i = 0; i < num_meshes; i++) {
+            auto const current_mesh = std::next(cd->getData()->accessMeshes().begin(), i);
+            for (auto& attr : current_mesh->second.attributes) {
+                if (attr.semantic == mesh::MeshDataAccessCollection::POSITION) {
+                    _meshNumberSlot.Param<core::param::FlexEnumParam>()->AddValue(std::to_string(i));
+                }
+            }
+        }
 
         _selected_mesh = std::stoi(_meshNumberSlot.Param<core::param::FlexEnumParam>()->Value());
+        auto const selected_mesh = std::next(cd->getData()->accessMeshes().begin(), _selected_mesh);
 
-        _meshNumberSlot.Param<core::param::FlexEnumParam>()->ClearValues();
         if (_splitMeshSlot.Param<core::param::BoolParam>()->Value()) {
             if (_grouped_indices.empty() || cd->hasUpdate())
-                this->splitMesh(mesh);
+                this->splitMesh(selected_mesh->second);
 
             assert(_grouped_indices.size() > 0);
 
@@ -236,20 +246,12 @@ bool MeshSelector::getData(core::Call& call) {
                 _meshNumberSlot.Param<core::param::FlexEnumParam>()->AddValue(std::to_string(i));
             }
         } else {
-            int num_meshes = 0;
-            for (int i = 0; i < mesh.attributes.size(); i++) {
-                if (mesh.attributes.data()->semantic == mesh::MeshDataAccessCollection::POSITION) {
-                    _meshNumberSlot.Param<core::param::FlexEnumParam>()->AddValue(std::to_string(num_meshes));
-                    num_meshes++;
-                }
-            }
-            _mesh_attribs.resize(1);
-            _mesh_attribs[0] = mesh.attributes[_selected_mesh];
+
+            _mesh_attribs = selected_mesh->second.attributes;
 
             _mesh_indices.resize(1);
-            _mesh_indices[0] = mesh.indices;
+            _mesh_indices[0] = selected_mesh->second.indices;
         }
-
 
         ++_version;
     }
@@ -264,9 +266,9 @@ bool MeshSelector::getData(core::Call& call) {
         _mesh_indices[0].type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
         _mesh_indices[0].byte_size = _grouped_indices[_selected_mesh].size() * sizeof(std::array<uint32_t, 3>);
         _mesh_indices[0].data = reinterpret_cast<uint8_t*>(_grouped_indices[_selected_mesh].data());
-
+        auto const selected_mesh = std::next(cd->getData()->accessMeshes().begin(), _selected_mesh);
         out_mesh_collection.addMesh(
-            identifier, mesh.attributes, _mesh_indices[0], mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES);
+            identifier, selected_mesh->second.attributes, _mesh_indices[0], mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES);
         // debugging stuff
         // for (int i = 0; i < _grouped_indices.size(); ++i) {
         //    _mesh_indices[i].type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
