@@ -10,7 +10,9 @@
 #include "ConstructKDTree.h"
 #include "ExtractCenterline.h"
 #include "ExtractProbeGeometry.h"
+#ifdef HAS_BLEND2D
 #include "GenerateGlyphs.h"
+#endif
 #include "ManipulateMesh.h"
 #include "PlaceProbes.h"
 #include "ProbesToTable.h"
@@ -51,7 +53,9 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::probe::PlaceProbes>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::SampleAlongPobes>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractProbeGeometry>();
+#ifdef HAS_BLEND2D
         this->module_descriptions.RegisterAutoDescription<megamol::probe::GenerateGlyphs>();
+#endif
         this->module_descriptions.RegisterAutoDescription<megamol::probe::SurfaceNets>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractCenterline>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::ConstructKDTree>();

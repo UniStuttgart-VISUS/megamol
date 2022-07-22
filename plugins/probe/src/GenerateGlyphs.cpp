@@ -4,6 +4,8 @@
  * Alle Rechte vorbehalten.
  */
 
+#ifdef HAS_BLEND2D
+
 #include <variant>
 
 #include "DrawTextureUtility.h"
@@ -654,3 +656,6 @@ bool GenerateGlyphs::paramChanged(core::param::ParamSlot& p) {
 }
 } // namespace probe
 } // namespace megamol
+
+
+#endif

@@ -5,7 +5,7 @@
  */
 
 #pragma once
-
+#ifdef HAS_BLEND2D
 #include "DrawTextureUtility.h"
 #include "mesh/ImageDataAccessCollection.h"
 #include "mesh/MeshDataAccessCollection.h"
@@ -105,3 +105,4 @@ private:
 
 } // namespace probe
 } // namespace megamol
+#endif

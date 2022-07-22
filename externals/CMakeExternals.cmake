@@ -229,7 +229,7 @@ function(require_external NAME)
     endif ()
 
     if (WIN32)
-      set(BLEND2D_LIB "bin/blend2d.dll")
+      #set(BLEND2D_LIB "bin/blend2d.dll")
       set(BLEND2D_IMPORT_LIB "lib/blend2d.lib")
     else ()
       set(BLEND2D_LIB "lib/libblend2d.a")
@@ -238,10 +238,11 @@ function(require_external NAME)
     require_external(asmjit)
     external_get_property(asmjit SOURCE_DIR)
 
-    add_external_project(blend2d SHARED
+    add_external_project(blend2d STATIC
       GIT_REPOSITORY https://github.com/blend2d/blend2d.git
       GIT_TAG "8aeac6cb34b00898ae725bd76eb3bb2c7cffcf86"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}" "<INSTALL_DIR>/${BLEND2D_LIB}"
+      #BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}" "<INSTALL_DIR>/${BLEND2D_LIB}"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}"
       CMAKE_ARGS
         -DASMJIT_DIR=${SOURCE_DIR}
         -DBLEND2D_STATIC=ON)
@@ -249,8 +250,9 @@ function(require_external NAME)
     add_external_library(blend2d
       DEPENDS asmjit
       INCLUDE_DIR "include"
-      LIBRARY ${BLEND2D_LIB}
-      IMPORT_LIBRARY ${BLEND2D_IMPORT_LIB})
+      LIBRARY ${BLEND2D_IMPORT_LIB})
+     # LIBRARY ${BLEND2D_LIB}
+     # IMPORT_LIBRARY ${BLEND2D_IMPORT_LIB})
 
   # chemfiles
   elseif(NAME STREQUAL "chemfiles")

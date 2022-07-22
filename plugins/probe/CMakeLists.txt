@@ -3,6 +3,11 @@
 # All rights reserved.
 #
 
+option(ENABLE_BLEND2D "Use Blend2d" OFF)
+if (ENABLE_BLEND2D) 
+  set(BLEND_TARGETS asmjit blend2d)
+endif()
+
 megamol_plugin(probe
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
@@ -13,12 +18,14 @@ megamol_plugin(probe
     geometry_calls
   DEPENDS_EXTERNALS
     libigl
-    asmjit
-    blend2d
+    ${BLEND_TARGETS}
     PUBLIC Eigen
     nanoflann)
 
 if (probe_PLUGIN_ENABLED)
+  if (ENABLE_BLEND2D)
+  target_compile_definitions(probe PRIVATE "HAS_BLEND2D")
+  endif()
   file(GLOB_RECURSE ospray_sources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "probe_ospray/src/*.cpp")
   file(GLOB_RECURSE ospray_headers RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "probe_ospray/src/*.h")
   file(GLOB_RECURSE ospray_public_headers RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "probe_ospray/include/*.h")
