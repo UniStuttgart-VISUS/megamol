@@ -1782,7 +1782,7 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                     tmpStr, vislib::graphics::AbstractFont::ALIGN_CENTER_TOP);
                 glColor3fv(fgColor); // reset color
                 // draw the chain name and amino acid index
-                tmpStr.Format("%c %s", this->chainID[i], this->aminoAcidIndex[i]);
+                tmpStr.Format("%c %s", this->chainID[i], this->aminoAcidIndex[i].PeekBuffer());
                 theFont.DrawString(this->vertices[i * 2], -(this->vertices[i * 2 + 1] + yPos + 0.5f), 1.0f, 0.5f, 0.35f,
                     true, tmpStr, vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
             }
@@ -2293,7 +2293,8 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                     }
                                 }
 
-                                tmpStr2.Format("Structure:  %s - %.2f %% ", this->secStructDescription[(int)assignment],
+                                tmpStr2.Format("Structure:  %s - %.2f %% ",
+                                    this->secStructDescription[(int)assignment].PeekBuffer(),
                                     this->secStructUncertainty[(int)UncertaintyDataCall::assMethod::UNCERTAINTY]
                                                               [mousePosResIdx][assignment] *
                                         100.0f);
@@ -2354,8 +2355,10 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                             tmpStr2.Append("|");
                                         }
                                         tmpStr3.Format(" %s: %.2f %% ",
-                                            this->secStructDescription[(int)this->sortedSecStructAssignment[(
-                                                int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]],
+                                            this
+                                                ->secStructDescription[(int)this->sortedSecStructAssignment[(
+                                                    int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]]
+                                                .PeekBuffer(),
                                             this->secStructUncertainty[(int)
                                                     UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][(
                                                 int)this->sortedSecStructAssignment[(int)
@@ -2375,9 +2378,11 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                             if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                                 tmpStr = "STRIDE:";
                                 tmpStr2.Format("%s: %.3f %%",
-                                    this->secStructDescription[(
-                                        int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::STRIDE]
-                                                                           [mousePosResIdx][0]],
+                                    this
+                                        ->secStructDescription[(
+                                            int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::STRIDE]
+                                                                               [mousePosResIdx][0]]
+                                        .PeekBuffer(),
                                     this->secStructUncertainty[(int)
                                             UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][(
                                         int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE]
@@ -2469,9 +2474,11 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                             if (this->residueFlag[mousePosResIdx] != UncertaintyDataCall::addFlags::MISSING) {
                                 tmpStr = "STRIDE:";
                                 tmpStr2.Format("%s: %.3f %%",
-                                    this->secStructDescription[(
-                                        int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::STRIDE]
-                                                                           [mousePosResIdx][0]],
+                                    this
+                                        ->secStructDescription[(
+                                            int)this->sortedSecStructAssignment[UncertaintyDataCall::assMethod::STRIDE]
+                                                                               [mousePosResIdx][0]]
+                                        .PeekBuffer(),
                                     this->secStructUncertainty[(int)
                                             UncertaintyDataCall::assMethod::STRIDE][mousePosResIdx][(
                                         int)this->sortedSecStructAssignment[(int)UncertaintyDataCall::assMethod::STRIDE]
@@ -2661,8 +2668,10 @@ bool UncertaintySequenceRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                                             tmpStr2.Append("|");
                                         }
                                         tmpStr3.Format(" %s: %.2f %% ",
-                                            this->secStructDescription[(int)this->sortedSecStructAssignment[(
-                                                int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]],
+                                            this
+                                                ->secStructDescription[(int)this->sortedSecStructAssignment[(
+                                                    int)UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][i]]
+                                                .PeekBuffer(),
                                             this->secStructUncertainty[(int)
                                                     UncertaintyDataCall::assMethod::UNCERTAINTY][mousePosResIdx][(
                                                 int)this->sortedSecStructAssignment[(int)
