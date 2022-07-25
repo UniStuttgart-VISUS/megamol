@@ -865,168 +865,157 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
 
                     _numCreateGeo = 0;
 
-                    // outer loop over mesh collection
-                    for (int mc_index = 0; mc_index < container.mesh->size(); ++mc_index) {
 
-                        mesh_collection = (*container.mesh)[mc_index];
+                    mesh_collection = container.mesh;
+                    mesh_texture_collection = container.mesh_textures;
 
-                        if (container.mesh_textures != nullptr && container.mesh_textures->size() > mc_index) {
-                            mesh_texture_collection = (*container.mesh_textures)[mc_index];
-                        } else {
-                            mesh_texture_collection = nullptr;
-                        }
+                    std::vector<mesh::ImageDataAccessCollection::Image> tex_vec;
+                    if (mesh_texture_collection != nullptr) {
+                        assert(
+                            mesh_collection->accessMeshes().size() == mesh_texture_collection->accessImages().size());
+                        tex_vec = mesh_texture_collection->accessImages();
+                    }
 
-                        std::vector<mesh::ImageDataAccessCollection::Image> tex_vec;
-                        if (mesh_texture_collection != nullptr) {
-                            assert(mesh_collection->accessMeshes().size() ==
-                                   mesh_texture_collection->accessImages().size());
-                            tex_vec = mesh_texture_collection->accessImages();
-                        }
+                    _numCreateGeo += mesh_collection->accessMeshes().size();
 
-                        _numCreateGeo += mesh_collection->accessMeshes().size();
+                    // inner loop over meshes per collection
+                    uint32_t mesh_index = 0;
+                    for (auto const& mesh : mesh_collection->accessMeshes()) {
 
-                        // inner loop over meshes per collection
-                        uint32_t mesh_index = 0;
-                        for (auto const& mesh : mesh_collection->accessMeshes()) {
+                        _baseStructures[entry.first].emplace_back(ospNewGeometry("mesh"), structureTypeEnum::GEOMETRY);
 
-                            _baseStructures[entry.first].emplace_back(
-                                ospNewGeometry("mesh"), structureTypeEnum::GEOMETRY);
+                        auto mesh_type = mesh.second.primitive_type;
 
-                            auto mesh_type = mesh.second.primitive_type;
+                        for (auto& attrib : mesh.second.attributes) {
 
-                            for (auto& attrib : mesh.second.attributes) {
+                            if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
+                                auto count = attrib.byte_size /
+                                             (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
+                                                 attrib.component_cnt);
 
-                                if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
-                                    auto count = attrib.byte_size /
-                                                 (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
-                                                     attrib.component_cnt);
-
-                                    auto vertexData =
-                                        ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
-                                    vertexData.commit();
-                                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                                        .setParam("vertex.position", vertexData);
-                                }
-
-                                // check normal pointer
-                                if (attrib.semantic == mesh::MeshDataAccessCollection::NORMAL) {
-                                    auto count = attrib.byte_size / attrib.stride;
-                                    auto normalData =
-                                        ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
-                                    normalData.commit();
-                                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                                        .setParam("vertex.normal", normalData);
-                                }
-
-                                // check colorpointer and convert to rgba
-                                if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
-                                    ::ospray::cpp::SharedData colorData;
-                                    if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT) {
-                                        auto count = attrib.byte_size / (mesh::MeshDataAccessCollection::getByteSize(
-                                                                             attrib.component_type) *
-                                                                            attrib.component_cnt);
-                                        auto osp_type = OSP_VEC3F;
-                                        if (attrib.component_cnt == 4)
-                                            osp_type = OSP_VEC4F;
-                                        colorData =
-                                            ::ospray::cpp::SharedData(attrib.data, osp_type, count, attrib.stride);
-                                    } else {
-                                        core::utility::log::Log::DefaultLog.WriteError(
-                                            "[OSPRayRenderer][MESH] Color type not supported.");
-                                    }
-                                    colorData.commit();
-                                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                                        .setParam("vertex.color", colorData);
-                                }
-
-                                // check texture array
-                                if (attrib.semantic == mesh::MeshDataAccessCollection::TEXCOORD) {
-                                    auto count = attrib.byte_size /
-                                                 (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
-                                                     attrib.component_cnt);
-                                    auto texData =
-                                        ::ospray::cpp::SharedData(attrib.data, OSP_VEC2F, count, attrib.stride);
-                                    texData.commit();
-                                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                                        .setParam("vertex.texcoord", texData);
-                                }
-                            }
-                            // check index pointer
-                            if (mesh.second.indices.data != nullptr) {
-                                auto count = mesh.second.indices.byte_size /
-                                             mesh::MeshDataAccessCollection::getByteSize(mesh.second.indices.type);
-
-                                size_t stride = 3 * sizeof(unsigned int);
-                                auto osp_type = OSP_VEC3UI;
-                                auto divider = 3ull;
-
-                                if (mesh_type == mesh::MeshDataAccessCollection::QUADS) {
-                                    stride = 4 * sizeof(unsigned int);
-                                    osp_type = OSP_VEC4UI;
-                                    divider = 4ull;
-                                }
-                                count /= divider;
-
-                                auto indexData =
-                                    ::ospray::cpp::SharedData(mesh.second.indices.data, osp_type, count, stride);
-                                indexData.commit();
+                                auto vertexData =
+                                    ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
+                                vertexData.commit();
                                 std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                                    .setParam("index", indexData);
-                            } else {
-                                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "OSPRay cannot render meshes without index array");
-                                returnValue = false;
+                                    .setParam("vertex.position", vertexData);
                             }
 
-                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
-                            _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
-                                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+                            // check normal pointer
+                            if (attrib.semantic == mesh::MeshDataAccessCollection::NORMAL) {
+                                auto count = attrib.byte_size / attrib.stride;
+                                auto normalData =
+                                    ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
+                                normalData.commit();
+                                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                    .setParam("vertex.normal", normalData);
+                            }
 
-                            if (container.mesh_textures != nullptr) {
-                                auto osp_tex_format = OSP_TEXTURE_FORMAT_INVALID;
-                                auto osp_data_format = OSP_BYTE;
-                                switch (tex_vec[mesh_index].format) {
-                                case mesh::ImageDataAccessCollection::TextureFormat::RGBA8:
-                                    osp_tex_format = OSP_TEXTURE_RGBA8;
-                                    break;
-                                case mesh::ImageDataAccessCollection::TextureFormat::RGB32F:
-                                    osp_tex_format = OSP_TEXTURE_RGB32F;
-                                    osp_data_format = OSP_FLOAT;
-                                    break;
-                                case mesh::ImageDataAccessCollection::TextureFormat::RGB8:
-                                    osp_tex_format = OSP_TEXTURE_RGB8;
-                                    break;
-                                case mesh::ImageDataAccessCollection::TextureFormat::RGBA32F:
-                                    osp_tex_format = OSP_TEXTURE_RGBA32F;
-                                    osp_data_format = OSP_FLOAT;
-                                    break;
-                                default:
-                                    osp_tex_format = OSP_TEXTURE_RGB8;
-                                    break;
+                            // check colorpointer and convert to rgba
+                            if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
+                                ::ospray::cpp::SharedData colorData;
+                                if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT) {
+                                    auto count = attrib.byte_size /
+                                                 (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
+                                                     attrib.component_cnt);
+                                    auto osp_type = OSP_VEC3F;
+                                    if (attrib.component_cnt == 4)
+                                        osp_type = OSP_VEC4F;
+                                    colorData = ::ospray::cpp::SharedData(attrib.data, osp_type, count, attrib.stride);
+                                } else {
+                                    core::utility::log::Log::DefaultLog.WriteError(
+                                        "[OSPRayRenderer][MESH] Color type not supported.");
                                 }
-
-                                auto ospTexture = ::ospray::cpp::Texture("texture2d");
-                                rkcommon::math::vec2i width_height = {
-                                    tex_vec[mesh_index].width, tex_vec[mesh_index].height};
-
-                                auto textureData =
-                                    ::ospray::cpp::SharedData(tex_vec[mesh_index].data, osp_data_format, width_height);
-                                textureData.commit();
-
-                                ospTexture.setParam("format", osp_tex_format);
-                                ospTexture.setParam("data", textureData);
-                                ospTexture.commit();
-
-                                auto ospMat = ::ospray::cpp::Material(_rd_type_string.c_str(), "obj");
-                                ospMat.setParam("map_Kd", ospTexture);
-                                // ospSetObject(ospMat, "map_Ks", ospTexture);
-                                // ospSetObject(ospMat, "map_d", ospTexture);
-                                ospMat.commit();
-                                _geometricModels[entry.first].back().setParam(
-                                    "material", ::ospray::cpp::CopiedData(ospMat));
+                                colorData.commit();
+                                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                    .setParam("vertex.color", colorData);
                             }
-                            mesh_index++;
+
+                            // check texture array
+                            if (attrib.semantic == mesh::MeshDataAccessCollection::TEXCOORD) {
+                                auto count = attrib.byte_size /
+                                             (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
+                                                 attrib.component_cnt);
+                                auto texData = ::ospray::cpp::SharedData(attrib.data, OSP_VEC2F, count, attrib.stride);
+                                texData.commit();
+                                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                    .setParam("vertex.texcoord", texData);
+                            }
                         }
+                        // check index pointer
+                        if (mesh.second.indices.data != nullptr) {
+                            auto count = mesh.second.indices.byte_size /
+                                         mesh::MeshDataAccessCollection::getByteSize(mesh.second.indices.type);
+
+                            size_t stride = 3 * sizeof(unsigned int);
+                            auto osp_type = OSP_VEC3UI;
+                            auto divider = 3ull;
+
+                            if (mesh_type == mesh::MeshDataAccessCollection::QUADS) {
+                                stride = 4 * sizeof(unsigned int);
+                                osp_type = OSP_VEC4UI;
+                                divider = 4ull;
+                            }
+                            count /= divider;
+
+                            auto indexData =
+                                ::ospray::cpp::SharedData(mesh.second.indices.data, osp_type, count, stride);
+                            indexData.commit();
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                .setParam("index", indexData);
+                        } else {
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                "OSPRay cannot render meshes without index array");
+                            returnValue = false;
+                        }
+
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
+                        _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+
+                        if (container.mesh_textures != nullptr) {
+                            auto osp_tex_format = OSP_TEXTURE_FORMAT_INVALID;
+                            auto osp_data_format = OSP_BYTE;
+                            switch (tex_vec[mesh_index].format) {
+                            case mesh::ImageDataAccessCollection::TextureFormat::RGBA8:
+                                osp_tex_format = OSP_TEXTURE_RGBA8;
+                                break;
+                            case mesh::ImageDataAccessCollection::TextureFormat::RGB32F:
+                                osp_tex_format = OSP_TEXTURE_RGB32F;
+                                osp_data_format = OSP_FLOAT;
+                                break;
+                            case mesh::ImageDataAccessCollection::TextureFormat::RGB8:
+                                osp_tex_format = OSP_TEXTURE_RGB8;
+                                break;
+                            case mesh::ImageDataAccessCollection::TextureFormat::RGBA32F:
+                                osp_tex_format = OSP_TEXTURE_RGBA32F;
+                                osp_data_format = OSP_FLOAT;
+                                break;
+                            default:
+                                osp_tex_format = OSP_TEXTURE_RGB8;
+                                break;
+                            }
+
+                            auto ospTexture = ::ospray::cpp::Texture("texture2d");
+                            rkcommon::math::vec2i width_height = {
+                                tex_vec[mesh_index].width, tex_vec[mesh_index].height};
+
+                            auto textureData =
+                                ::ospray::cpp::SharedData(tex_vec[mesh_index].data, osp_data_format, width_height);
+                            textureData.commit();
+
+                            ospTexture.setParam("format", osp_tex_format);
+                            ospTexture.setParam("data", textureData);
+                            ospTexture.commit();
+
+                            auto ospMat = ::ospray::cpp::Material(_rd_type_string.c_str(), "obj");
+                            ospMat.setParam("map_Kd", ospTexture);
+                            // ospSetObject(ospMat, "map_Ks", ospTexture);
+                            // ospSetObject(ospMat, "map_d", ospTexture);
+                            ospMat.commit();
+                            _geometricModels[entry.first].back().setParam(
+                                "material", ::ospray::cpp::CopiedData(ospMat));
+                        }
+                        mesh_index++;
                     }
                 }
             } break;
@@ -1045,71 +1034,69 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
 
                     _numCreateGeo = 0;
 
-                    // outer loop over mesh collection
-                    for (int mc_index = 0; mc_index < container.mesh->size(); ++mc_index) {
-                        mesh_collection = (*container.mesh)[mc_index];
 
-                        this->_numCreateGeo += mesh_collection->accessMeshes().size();
-                        for (auto& mesh : mesh_collection->accessMeshes()) {
+                    mesh_collection = container.mesh;
 
-                            _baseStructures[entry.first].emplace_back(
-                                ::ospray::cpp::Geometry("curve"), structureTypeEnum::GEOMETRY);
+                    this->_numCreateGeo += mesh_collection->accessMeshes().size();
+                    for (auto& mesh : mesh_collection->accessMeshes()) {
 
-                            for (auto& attrib : mesh.second.attributes) {
+                        _baseStructures[entry.first].emplace_back(
+                            ::ospray::cpp::Geometry("curve"), structureTypeEnum::GEOMETRY);
 
-                                if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
-                                    size_t count = attrib.byte_size / attrib.stride;
-                                    auto vertexData =
-                                        ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
-                                    vertexData.commit();
-                                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                                        .setParam("vertex.position", vertexData);
-                                }
+                        for (auto& attrib : mesh.second.attributes) {
 
-                                // check colorpointer and convert to rgba
-                                if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
-                                    ::ospray::cpp::SharedData colorData;
-                                    if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT) {
-                                        size_t count = attrib.byte_size / attrib.stride;
-                                        colorData =
-                                            ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
-                                    } else {
-                                        core::utility::log::Log::DefaultLog.WriteError(
-                                            "[OSPRayRenderer][CURVE] Color type not supported.");
-                                    }
-                                    colorData.commit();
-                                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                                        .setParam("vertex.color", colorData);
-                                }
-                            }
-                            // check index pointer
-                            if (mesh.second.indices.data != nullptr) {
-                                size_t count = mesh.second.indices.byte_size /
-                                               mesh::MeshDataAccessCollection::getByteSize(mesh.second.indices.type);
-                                auto indexData = ::ospray::cpp::SharedData(mesh.second.indices.data, OSP_UINT, count);
-                                indexData.commit();
+                            if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
+                                size_t count = attrib.byte_size / attrib.stride;
+                                auto vertexData =
+                                    ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
+                                vertexData.commit();
                                 std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                                    .setParam("index", indexData);
-                            } else {
-                                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "OSPRay cannot render curves without index array");
-                                returnValue = false;
+                                    .setParam("vertex.position", vertexData);
                             }
 
+                            // check colorpointer and convert to rgba
+                            if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
+                                ::ospray::cpp::SharedData colorData;
+                                if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT) {
+                                    size_t count = attrib.byte_size / attrib.stride;
+                                    colorData = ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
+                                } else {
+                                    core::utility::log::Log::DefaultLog.WriteError(
+                                        "[OSPRayRenderer][CURVE] Color type not supported.");
+                                }
+                                colorData.commit();
+                                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                    .setParam("vertex.color", colorData);
+                            }
+                        }
+                        // check index pointer
+                        if (mesh.second.indices.data != nullptr) {
+                            size_t count = mesh.second.indices.byte_size /
+                                           mesh::MeshDataAccessCollection::getByteSize(mesh.second.indices.type);
+                            auto indexData = ::ospray::cpp::SharedData(mesh.second.indices.data, OSP_UINT, count);
+                            indexData.commit();
                             std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                                .setParam("radius", container.globalRadius);
-                            // TODO: Add user input support for this
-                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                                .setParam("type", OSP_ROUND);
-                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                                .setParam("basis", OSP_LINEAR);
+                                .setParam("index", indexData);
+                        } else {
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                "OSPRay cannot render curves without index array");
+                            returnValue = false;
+                        }
 
-                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
-                            _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
-                                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                            .setParam("radius", container.globalRadius);
+                        // TODO: Add user input support for this
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                            .setParam("type", OSP_ROUND);
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                            .setParam("basis", OSP_LINEAR);
 
-                        } // end for geometry
-                    }
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
+                        _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+
+                    } // end for geometry
+
                 } else {
                     _baseStructures[entry.first].emplace_back(
                         ::ospray::cpp::Geometry("curve"), structureTypeEnum::GEOMETRY);
