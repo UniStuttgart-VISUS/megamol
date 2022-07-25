@@ -2,9 +2,9 @@
 
 #include "commondefines.glsl"
 #include "moldyn_gl/sphere_renderer/inc/vertex_attributes.inc.glsl"
-#include "core/bitflags.inc.glsl"
-#include "core/tflookup.inc.glsl"
-#include "core/tfconvenience.inc.glsl"
+#include "mmstd_gl/flags/bitflags.inc.glsl"
+#include "mmstd_gl/common/tflookup.inc.glsl"
+#include "mmstd_gl/common/tfconvenience.inc.glsl"
 #include "moldyn_gl/sphere_renderer/inc/sphere_flags_geometry_attributes.inc.glsl"
 #include "moldyn_gl/sphere_renderer/inc/geometry_geometry_mainstart.inc.glsl"
 #include "moldyn_gl/sphere_renderer/inc/sphere_flags_geometry_getflag.inc.glsl"
