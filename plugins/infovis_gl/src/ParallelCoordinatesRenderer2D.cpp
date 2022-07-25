@@ -284,7 +284,7 @@ bool ParallelCoordinatesRenderer2D::Render(mmstd_gl::CallRender2DGL& call) {
         glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-        //needFlagsUpdate_ = true;
+        needFlagsUpdate_ = true;
     }
 
     // Do stroking/picking
