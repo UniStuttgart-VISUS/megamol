@@ -16,6 +16,10 @@
 
 #include <glm/ext.hpp>
 
+#include <glowl/FramebufferObject.hpp>
+#include <glowl/Texture2D.hpp>
+#include <glowl/Texture3D.hpp>
+
 #include "OpenGL_Context.h"
 #include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/CoreInstance.h"
@@ -192,28 +196,32 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
     auto cr_fbo = cr.GetFramebuffer();
 
     if (ci != nullptr) {
-        auto cam = cr.GetCamera();
-        ci->SetCamera(cam);
+        *ci = cr;
 
         if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
             this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-            if (this->fbo.IsValid())
-                this->fbo.Release();
-            this->fbo.Create(cr_fbo->getWidth(), cr_fbo->getHeight(), GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-                vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
-            this->fbo.Enable();
+            if (this->fbo == nullptr ||
+                (this->fbo->getWidth() != cr_fbo->getWidth() || this->fbo->getHeight() != cr_fbo->getHeight())) {
+
+                try {
+                    this->fbo = std::make_shared<glowl::FramebufferObject>(cr_fbo->getWidth(), cr_fbo->getHeight());
+                    this->fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+                } catch (glowl::FramebufferObjectException const& exc) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[RaycastVolumeRenderer] Unable to create framebuffer object: %s\n", exc.what());
+                }
+            }
+
+            ci->SetFramebuffer(this->fbo);
         }
 
+        this->fbo->bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        ci->SetTime(cr.Time());
         if (!(*ci)(mmstd_gl::CallRender3DGL::FnRender))
             return false;
 
-        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
-            this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-            this->fbo.Disable();
-        }
+        cr.GetFramebuffer()->bind();
     }
 
     // create render target texture
@@ -231,7 +239,7 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
                 std::make_unique<glowl::Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
         } catch (const glowl::TextureException& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Cannot create texture for volume rendering color target: %s.", e.what());
+                "[RaycastVolumeRenderer] Cannot create texture for volume rendering color target: %s.", e.what());
             return false;
         }
 
@@ -247,7 +255,7 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
                 std::make_unique<glowl::Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
         } catch (const glowl::TextureException& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Cannot create texture for volume rendering normal target: %s.", e.what());
+                "[RaycastVolumeRenderer] Cannot create texture for volume rendering normal target: %s.", e.what());
             return false;
         }
 
@@ -262,7 +270,7 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
                 std::make_unique<glowl::Texture2D>("raycast_volume_depth_target", depth_tgt_layout, nullptr);
         } catch (const glowl::TextureException& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Cannot create texture for volume rendering depth target: %s.", e.what());
+                "[RaycastVolumeRenderer] Cannot create texture for volume rendering depth target: %s.", e.what());
             return false;
         }
     }
@@ -414,11 +422,11 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
 
         if (ci != nullptr) {
             glActiveTexture(GL_TEXTURE2);
-            this->fbo.BindColourTexture();
+            this->fbo->bindColorbuffer(0);
             compute_shdr->setUniform("color_tx2D", 2);
 
             glActiveTexture(GL_TEXTURE3);
-            this->fbo.BindDepthTexture();
+            this->fbo->bindDepthbuffer();
             compute_shdr->setUniform("depth_tx2D", 3);
 
             compute_shdr->setUniform("use_depth_tx", 1);
@@ -430,11 +438,11 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
         if (ci != nullptr) {
             glActiveTexture(GL_TEXTURE2);
-            this->fbo.BindColourTexture();
+            this->fbo->bindColorbuffer(0);
             compute_shdr->setUniform("color_tx2D", 2);
 
             glActiveTexture(GL_TEXTURE3);
-            this->fbo.BindDepthTexture();
+            this->fbo->bindDepthbuffer();
             compute_shdr->setUniform("depth_tx2D", 3);
 
             compute_shdr->setUniform("use_depth_tx", 1);

@@ -10,6 +10,7 @@
 #include <limits>
 #include <memory>
 
+#include <glowl/FramebufferObject.hpp>
 #include <glowl/Texture2D.hpp>
 #include <glowl/Texture3D.hpp>
 
@@ -148,7 +149,7 @@ private:
     bool valRangeNeedsUpdate = false;
 
     /** FBO for chaining renderers */
-    vislib_gl::graphics::gl::FramebufferObject fbo;
+    std::shared_ptr<glowl::FramebufferObject> fbo;
 };
 
 } // namespace megamol::volume_gl
