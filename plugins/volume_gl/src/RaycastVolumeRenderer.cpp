@@ -1,27 +1,11 @@
-/*
- * RaycastVolumeRenderer.h
- *
- * Copyright (C) 2018-2020 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
  * All rights reserved.
  */
 
 #include "RaycastVolumeRenderer.h"
 
-#include "OpenGL_Context.h"
-
-#include "geometry_calls//VolumetricDataCall.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/ColorParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
-
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-
-#include "glowl/Texture.hpp"
-#include "glowl/Texture2D.hpp"
-#include "glowl/Texture3D.hpp"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -32,7 +16,15 @@
 
 #include <glm/ext.hpp>
 
+#include "OpenGL_Context.h"
+#include "geometry_calls/VolumetricDataCall.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmstd/light/DistantLight.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 
 using namespace megamol::volume_gl;
 
@@ -123,21 +115,22 @@ bool RaycastVolumeRenderer::create() {
 
     try {
         // create shader program
-        auto const shdr_cp_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
-        rvc_dvr_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Compute", shdr_cp_options,
-            std::filesystem::path("RaycastVolumeRenderer-Compute.comp.glsl"));
-        rvc_iso_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Compute-Iso", shdr_cp_options,
-            std::filesystem::path("RaycastVolumeRenderer-Compute-Iso.comp.glsl"));
-        rvc_aggr_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Compute-Aggr", shdr_cp_options,
-            std::filesystem::path("RaycastVolumeRenderer-Compute-Aggr.comp.glsl"));
+        rvc_dvr_shdr = core::utility::make_glowl_shader(
+            "RaycastVolumeRenderer-Compute", shader_options, "volume_gl/RaycastVolumeRenderer-DVR.comp.glsl");
+        rvc_iso_shdr = core::utility::make_glowl_shader(
+            "RaycastVolumeRenderer-Compute-Iso", shader_options, "volume_gl/RaycastVolumeRenderer-Iso.comp.glsl");
+        rvc_aggr_shdr = core::utility::make_glowl_shader(
+            "RaycastVolumeRenderer-Compute-Aggr", shader_options, "volume_gl/RaycastVolumeRenderer-Aggr.comp.glsl");
 
-        rtf_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer", shdr_cp_options,
-            std::filesystem::path("RaycastVolumeRenderer-Vertex.vert.glsl"),
-            std::filesystem::path("RaycastVolumeRenderer-Fragment.frag.glsl"));
-        rtf_aggr_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Aggr", shdr_cp_options,
-            std::filesystem::path("RaycastVolumeRenderer-Vertex.vert.glsl"),
-            std::filesystem::path("RaycastVolumeRenderer-Fragment-Aggr.frag.glsl"));
+        rtf_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer", shader_options,
+            "volume_gl/RaycastVolumeRenderer.vert.glsl", "volume_gl/RaycastVolumeRenderer.frag.glsl");
+
+        auto shader_options_aggr = shader_options;
+        shader_options_aggr.addDefinition("AGGR");
+        rtf_aggr_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Aggr", shader_options_aggr,
+            "volume_gl/RaycastVolumeRenderer.vert.glsl", "volume_gl/RaycastVolumeRenderer.frag.glsl");
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: Unknown exception\n");
         return false;

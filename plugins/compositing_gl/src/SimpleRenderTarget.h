@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef SIMPLE_RENDER_TARGET_H_INCLUDED
-#define SIMPLE_RENDER_TARGET_H_INCLUDED
+#pragma once
 
 #include <glowl/FramebufferObject.hpp>
 
@@ -147,5 +146,3 @@ private:
 
 } // namespace compositing
 } // namespace megamol
-
-#endif
