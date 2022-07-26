@@ -403,10 +403,8 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 #endif
 
             if (use_flags) {
-                glDisableVertexAttribArrayARB(fal);
-                //cflags->SetFlags(flags);
-                //(*cflags)(core::FlagCall::CallUnmapFlags);
-                glVertexAttribIPointer(fal, 4, GL_FLOAT, 0, nullptr);
+                glEnableVertexAttribArrayARB(fal);
+                glVertexAttribIPointer(fal, 4, GL_UNSIGNED_INT, 0, nullptr);
                 glDisableVertexAttribArrayARB(fal);
             }
 
