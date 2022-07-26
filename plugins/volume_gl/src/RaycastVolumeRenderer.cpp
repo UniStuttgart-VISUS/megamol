@@ -233,8 +233,14 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
             {});
-        m_render_target =
-            std::make_unique<glowl::Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
+        try {
+            m_render_target =
+                std::make_unique<glowl::Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
+        } catch (const glowl::TextureException& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Cannot create texture for volume rendering color target: %s.", e.what());
+            return false;
+        }
 
         // create normal target texture
         glowl::TextureLayout normal_tgt_layout(GL_RGBA32F, cr_fbo->getWidth(), cr_fbo->getHeight(), 1, GL_RGBA,
@@ -243,8 +249,14 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
             {});
-        m_normal_target =
-            std::make_unique<glowl::Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
+        try {
+            m_normal_target =
+                std::make_unique<glowl::Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
+        } catch (const glowl::TextureException& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Cannot create texture for volume rendering normal target: %s.", e.what());
+            return false;
+        }
 
         // create depth target texture
         glowl::TextureLayout depth_tgt_layout(GL_R32F, cr_fbo->getWidth(), cr_fbo->getHeight(), 1, GL_R, GL_FLOAT, 1,
@@ -252,7 +264,14 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
             {});
-        m_depth_target = std::make_unique<glowl::Texture2D>("raycast_volume_depth_target", depth_tgt_layout, nullptr);
+        try {
+            m_depth_target =
+                std::make_unique<glowl::Texture2D>("raycast_volume_depth_target", depth_tgt_layout, nullptr);
+        } catch (const glowl::TextureException& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Cannot create texture for volume rendering depth target: %s.", e.what());
+            return false;
+        }
     }
 
     // this is the apex of suck and must die
