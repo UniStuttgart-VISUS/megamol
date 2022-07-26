@@ -140,16 +140,12 @@ private:
     core::param::ParamSlot m_material_color;
 
     /** caller slot */
-    megamol::core::CallerSlot m_renderer_callerSlot;
     megamol::core::CallerSlot m_volumetricData_callerSlot;
     megamol::core::CallerSlot m_lights_callerSlot;
     megamol::core::CallerSlot m_transferFunction_callerSlot;
 
     std::array<float, 2> valRange;
     bool valRangeNeedsUpdate = false;
-
-    /** FBO for chaining renderers */
-    std::shared_ptr<glowl::FramebufferObject> fbo;
 };
 
 } // namespace megamol::volume_gl

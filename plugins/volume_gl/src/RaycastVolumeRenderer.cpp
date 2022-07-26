@@ -47,14 +47,10 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
         , m_opacity_threshold("opacity threshold", "Opacity threshold for integrative rendering")
         , m_iso_value("isovalue", "Isovalue for isosurface rendering")
         , m_opacity("opacity", "Surface opacity for blending")
-        , m_renderer_callerSlot("Renderer", "Renderer for chaining")
         , m_volumetricData_callerSlot("getData", "Connects the volume renderer with a voluemtric data source")
         , m_lights_callerSlot("lights", "Lights are retrieved over this slot.")
         , m_transferFunction_callerSlot(
               "getTransferFunction", "Connects the volume renderer with a transfer function") {
-
-    this->m_renderer_callerSlot.SetCompatibleCall<mmstd_gl::CallRender3DGLDescription>();
-    this->MakeSlotAvailable(&this->m_renderer_callerSlot);
 
     this->m_volumetricData_callerSlot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->m_volumetricData_callerSlot);
@@ -147,7 +143,6 @@ void RaycastVolumeRenderer::release() {}
 
 bool RaycastVolumeRenderer::GetExtents(mmstd_gl::CallRender3DGL& cr) {
     auto cd = m_volumetricData_callerSlot.CallAs<geocalls::VolumetricDataCall>();
-    auto ci = m_renderer_callerSlot.CallAs<mmstd_gl::CallRender3DGL>();
 
     if (cd == nullptr)
         return false;
@@ -165,19 +160,8 @@ bool RaycastVolumeRenderer::GetExtents(mmstd_gl::CallRender3DGL& cr) {
 
     cr.SetTimeFramesCount(cd->FrameCount());
 
-    auto bbox = cd->AccessBoundingBoxes().ObjectSpaceBBox();
-    auto cbox = cd->AccessBoundingBoxes().ObjectSpaceClipBox();
-
-    if (ci != nullptr) {
-        *ci = cr;
-
-        if (!(*ci)(mmstd_gl::CallRender3DGL::FnGetExtents))
-            return false;
-
-        bbox.Union(ci->AccessBoundingBoxes().BoundingBox());
-        cbox.Union(ci->AccessBoundingBoxes().ClipBox());
-    }
-
+    const auto& bbox = cd->AccessBoundingBoxes().ObjectSpaceBBox();
+    const auto& cbox = cd->AccessBoundingBoxes().ObjectSpaceClipBox();
     cr.AccessBoundingBoxes().SetBoundingBox(bbox);
     cr.AccessBoundingBoxes().SetClipBox(cbox);
 
@@ -185,44 +169,12 @@ bool RaycastVolumeRenderer::GetExtents(mmstd_gl::CallRender3DGL& cr) {
 }
 
 bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
-    // Chain renderer
-    auto ci = m_renderer_callerSlot.CallAs<mmstd_gl::CallRender3DGL>();
-
     // Camera
     core::view::Camera cam = cr.GetCamera();
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
     auto cam_pose = cam.get<core::view::Camera::Pose>();
     auto cr_fbo = cr.GetFramebuffer();
-
-    if (ci != nullptr) {
-        *ci = cr;
-
-        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
-            this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-            if (this->fbo == nullptr ||
-                (this->fbo->getWidth() != cr_fbo->getWidth() || this->fbo->getHeight() != cr_fbo->getHeight())) {
-
-                try {
-                    this->fbo = std::make_shared<glowl::FramebufferObject>(cr_fbo->getWidth(), cr_fbo->getHeight());
-                    this->fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
-                } catch (glowl::FramebufferObjectException const& exc) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[RaycastVolumeRenderer] Unable to create framebuffer object: %s\n", exc.what());
-                }
-            }
-
-            ci->SetFramebuffer(this->fbo);
-        }
-
-        this->fbo->bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        if (!(*ci)(mmstd_gl::CallRender3DGL::FnRender))
-            return false;
-
-        cr.GetFramebuffer()->bind();
-    }
 
     // create render target texture
     if (this->m_render_target == nullptr || this->m_render_target->getWidth() != cr_fbo->getWidth() ||
@@ -420,13 +372,13 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
         glBindTexture(GL_TEXTURE_1D, tf_texture);
         compute_shdr->setUniform("tf_tx1D", 1);
 
-        if (ci != nullptr) {
+        if (Renderer3DModuleGL::chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>() != nullptr) {
             glActiveTexture(GL_TEXTURE2);
-            this->fbo->bindColorbuffer(0);
+            cr.GetFramebuffer()->bindColorbuffer(0);
             compute_shdr->setUniform("color_tx2D", 2);
 
             glActiveTexture(GL_TEXTURE3);
-            this->fbo->bindDepthbuffer();
+            cr.GetFramebuffer()->bindDepthbuffer();
             compute_shdr->setUniform("depth_tx2D", 3);
 
             compute_shdr->setUniform("use_depth_tx", 1);
@@ -436,13 +388,13 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
     }
 
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-        if (ci != nullptr) {
+        if (Renderer3DModuleGL::chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>() != nullptr) {
             glActiveTexture(GL_TEXTURE2);
-            this->fbo->bindColorbuffer(0);
+            cr.GetFramebuffer()->bindColorbuffer(0);
             compute_shdr->setUniform("color_tx2D", 2);
 
             glActiveTexture(GL_TEXTURE3);
-            this->fbo->bindDepthbuffer();
+            cr.GetFramebuffer()->bindDepthbuffer();
             compute_shdr->setUniform("depth_tx2D", 3);
 
             compute_shdr->setUniform("use_depth_tx", 1);
