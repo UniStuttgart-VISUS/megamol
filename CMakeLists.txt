@@ -22,7 +22,7 @@ mark_as_advanced(FORCE
 
 FetchContent_Declare(vcpkg-download
   GIT_REPOSITORY https://github.com/microsoft/vcpkg
-  GIT_TAG 2022.06.16.1)
+  GIT_TAG 2022.07.25)
 FetchContent_GetProperties(vcpkg-download)
 if (NOT vcpkg-download_POPULATED)
   message(STATUS "Fetch vcpkg ...")
