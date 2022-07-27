@@ -187,46 +187,7 @@ bool RenderMDIMesh::Render(mmstd_gl::CallRender3DGL& call) {
     auto const& gpu_render_tasks = task_call->getData();
 
     for (auto const& rt_collection : (*gpu_render_tasks)) {
-        auto const& per_frame_buffers = rt_collection->getPerFrameBuffers();
-
-        for (auto const& buffer : per_frame_buffers) {
-            uint32_t binding_point = std::get<1>(buffer);
-            if (binding_point != 0) {
-                std::get<0>(buffer)->bind(binding_point);
-            } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "Binding point 0 reserved for render task data buffer. \"%s\". [%s, %s, line %d]\n",
-                    this->FullName(), __FILE__, __FUNCTION__, __LINE__);
-            }
-        }
-
-        // loop through "registered" render batches
-        for (auto const& render_task : rt_collection->getRenderTasks()) {
-            // Set GL states (otherwise bounding box or view cube rendering state is used)
-            render_task->set_states();
-
-            render_task->shader_program->use();
-
-            // TODO introduce per frame "global" data buffer to store information like camera matrices?
-            render_task->shader_program->setUniform("view_mx", view_mx);
-            render_task->shader_program->setUniform("proj_mx", proj_mx);
-
-            render_task->per_draw_data->bind(0);
-
-            render_task->draw_commands->bind();
-            render_task->mesh->bindVertexArray();
-
-            if (render_task->mesh->getPrimitiveType() == GL_PATCHES) {
-                glPatchParameteri(GL_PATCH_VERTICES, 4);
-                //TODO add generic patch vertex count to render tasks....
-            }
-
-            glMultiDrawElementsIndirect(render_task->mesh->getPrimitiveType(), render_task->mesh->getIndexType(),
-                (GLvoid*)0, render_task->draw_cnt, 0);
-
-            // Reset previously set GLStates
-            render_task->reset_states();
-        }
+        rendering::processGPURenderTasks(rt_collection, view_mx, proj_mx);
     }
 
     // Clear the way for his ancient majesty, the mighty immediate mode...

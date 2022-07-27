@@ -78,6 +78,8 @@ public:
 
     void addMesh(std::string const& identifier, mesh::MeshDataAccessCollection::Mesh const& mesh);
 
+    void addMeshes(mesh::MeshDataAccessCollection const& mesh_data_access_collection);
+
     template<typename VertexBufferIterator, typename IndexBufferIterator>
     void updateSubMesh(std::string const& identifier, std::vector<glowl::VertexLayout> const& vertex_descriptor,
         std::vector<IteratorPair<VertexBufferIterator>> const& vertex_buffers,
@@ -338,6 +340,12 @@ inline void GPUMeshCollection::addMesh(
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Failed to add GPU mesh \"%s\": %s. [%s, %s, line %d]\n", identifier.c_str(), exc.what(), __FILE__,
             __FUNCTION__, __LINE__);
+    }
+}
+
+inline void GPUMeshCollection::addMeshes(mesh::MeshDataAccessCollection const& mesh_data_access_collection) {
+    for (auto const& mesh_itr : mesh_data_access_collection.accessMeshes()) {
+        addMesh(mesh_itr.first, mesh_itr.second);
     }
 }
 
