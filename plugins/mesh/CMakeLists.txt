@@ -9,9 +9,12 @@ megamol_plugin(mesh
     mmstd
   DEPENDS_EXTERNALS PUBLIC
     quickhull
-    tinyobjloader
     tinygltf
     obj-io)
+
+find_package(tinyobjloader)
+
+target_link_libraries(mesh PUBLIC tinyobjloader::tinyobjloader)
 
 if (mesh_PLUGIN_ENABLED)
   if (MSVC)
