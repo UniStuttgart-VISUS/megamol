@@ -11,13 +11,13 @@
 #include "mmcore/CallerSlot.h"
 
 #include "mesh/MeshCalls.h"
-#include "mesh_gl/BaseRenderTaskRenderer.h"
+#include "mesh_gl/BaseMeshRenderer.h"
 
 namespace megamol {
 namespace mesh_gl {
 
 template<const char* NAME, const char* DESC>
-class BaseGltfRenderer : public BaseRenderTaskRenderer<NAME,DESC> {
+class BaseGltfRenderer : public BaseMeshRenderer<NAME,DESC> {
 public:
     using BaseRenderTaskRenderer<NAME, DESC>::material_collection_;
     using BaseRenderTaskRenderer<NAME, DESC>::mesh_collection_;
@@ -27,99 +27,20 @@ public:
     ~BaseGltfRenderer() = default;
 
 protected:
-    /**
-     * The get extents callback. The module should set the members of
-     * 'call' to tell the caller the extents of its data (bounding boxes
-     * and times).
-     *
-     * @param call The calling call.
-     *
-     * @return The return value of the function.
-     */
-    bool GetExtents(mmstd_gl::CallRender3DGL& call);
-
-    bool updateMeshCollection() override;
-
     void updateRenderTaskCollection(bool force_update) override;
 
 private:
     /** Slot to retrieve the gltf model */
     megamol::core::CallerSlot glTF_callerSlot_;
-
-    /** Slot to retrieve the mesh data of the gltf model */
-    megamol::core::CallerSlot mesh_slot_;
 };
 
 template<const char* NAME, const char* DESC>
 inline BaseGltfRenderer<NAME, DESC>::BaseGltfRenderer()
-        : BaseRenderTaskRenderer<NAME,DESC>()
+        : BaseMeshRenderer<NAME,DESC>()
         , glTF_callerSlot_("gltfModels", "Connects a collection of loaded glTF files")
-        , mesh_slot_("meshes", "Connects a mesh data access collection")
 {
     glTF_callerSlot_.SetCompatibleCall<mesh::CallGlTFDataDescription>();
     megamol::core::Module::MakeSlotAvailable(&this->glTF_callerSlot_);
-    mesh_slot_.SetCompatibleCall<mesh::CallMeshDescription>();
-    megamol::core::Module::MakeSlotAvailable(&this->mesh_slot_);
-}
-
-template<const char* NAME, const char* DESC>
-bool BaseGltfRenderer<NAME, DESC>::GetExtents(mmstd_gl::CallRender3DGL& call) {
-
-    mmstd_gl::CallRender3DGL* cr = &call; // dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
-    if (cr == nullptr) {
-        return false;
-    }
-
-    auto gltf_call = glTF_callerSlot_.CallAs<mesh::CallGlTFData>();
-    if (gltf_call != nullptr) {
-        if (!(*gltf_call)(1)) {
-            return false;
-        }
-    }
-
-    mesh::CallMesh* src_mesh_call = mesh_slot_.CallAs<mesh::CallMesh>();
-    if (src_mesh_call != nullptr) {
-
-        auto src_meta_data = src_mesh_call->getMetaData();
-        src_meta_data.m_frame_ID = static_cast<int>(cr->Time());
-        src_mesh_call->setMetaData(src_meta_data);
-        if (!(*src_mesh_call)(1)) {
-            return false;
-        }
-        src_meta_data = src_mesh_call->getMetaData();
-
-        cr->SetTimeFramesCount(src_meta_data.m_frame_cnt);
-        cr->AccessBoundingBoxes() = src_meta_data.m_bboxs;
-    }
-
-    return true;
-}
-
-template<const char* NAME, const char* DESC>
-inline bool BaseGltfRenderer<NAME, DESC>::updateMeshCollection() {
-    bool something_has_changed = false;
-
-    mesh::CallMesh* mc = this->mesh_slot_.CallAs<mesh::CallMesh>();
-    if (mc != nullptr) {
-
-        if (!(*mc)(0)) {
-            return false;
-        }
-
-        something_has_changed = mc->hasUpdate(); // something has changed in the neath...
-
-        if (something_has_changed) {
-            mesh_collection_->clear();
-            mesh_collection_->addMeshes(*(mc->getData()));
-        }
-    } else {
-        if (mesh_collection_->getMeshes().size() > 0) {
-            mesh_collection_->clear();
-            something_has_changed = true;
-        }
-    }
-
-    return something_has_changed;
 }
 
 template<const char* NAME, const char* DESC>

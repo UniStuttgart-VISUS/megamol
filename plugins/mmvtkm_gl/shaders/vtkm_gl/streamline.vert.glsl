@@ -1,3 +1,5 @@
+#version 450
+
 uniform mat4 view_mx;
 uniform mat4 proj_mx;
 

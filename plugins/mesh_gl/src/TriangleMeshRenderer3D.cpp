@@ -47,7 +47,6 @@ TriangleMeshRenderer3D::TriangleMeshRenderer3D()
         , triangle_mesh_changed(false)
         , mesh_data_hash(TriangleMeshRenderer3D::GUID())
         , mesh_data_changed(false)
-        , rhs_gpu_tasks_version(0)
         , shader_changed(false) {
 
     // Connect input slots
@@ -78,24 +77,34 @@ TriangleMeshRenderer3D::TriangleMeshRenderer3D()
     this->culling.Param<core::param::EnumParam>()->SetTypePair(1, "Backface culling");
     this->culling.Param<core::param::EnumParam>()->SetTypePair(2, "Frontface culling");
     this->MakeSlotAvailable(&this->culling);
-
-    // Disconnect inherited slots
-    this->SetSlotUnavailable(&this->m_mesh_slot);
 }
 
 TriangleMeshRenderer3D::~TriangleMeshRenderer3D() {
     this->Release();
 }
 
-bool TriangleMeshRenderer3D::create() {
-    AbstractGPURenderTaskDataSource::create();
+bool TriangleMeshRenderer3D::GetExtents(mmstd_gl::CallRender3DGL& call) {
+    if (!get_input_extent()) {
+        return false;
+    }
+
+    core::BoundingBoxes_2 bbox;
+    bbox.SetBoundingBox(this->bounding_box);
+    bbox.SetClipBox(this->bounding_box);
+
+    call.SetTimeFramesCount(1);
+    call.AccessBoundingBoxes() = bbox;
+
+    return true;
+}
+
+void TriangleMeshRenderer3D::createMaterialCollection() {
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (!ogl_ctx.isVersionGEQ(4, 3) || !ogl_ctx.isExtAvailable("GL_ARB_shader_draw_parameters") ||
         !ogl_ctx.isExtAvailable("GL_ARB_bindless_texture")) {
 
         Log::DefaultLog.WriteError("GL version too low or required extensions not available.");
-        return false;
     }
 
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
@@ -121,13 +130,162 @@ bool TriangleMeshRenderer3D::create() {
 
     } catch (const std::exception& e) {
         Log::DefaultLog.WriteError(("TriangleMeshRenderer3D: " + std::string(e.what())).c_str());
-        return false;
     }
 
-    return true;
+    // Shaders are used directly in render task creation, so no need for the collection
+    //material_collection_ = std::make_shared<GPUMaterialCollection>();
 }
 
-void TriangleMeshRenderer3D::release() {}
+void TriangleMeshRenderer3D::updateRenderTaskCollection(bool force_update) {
+    if (!get_input_data()) {
+        return;
+        // TODO throw error?
+    }
+
+    if (this->render_data.vertices != nullptr && this->render_data.indices != nullptr) {
+        const auto num_vertices = this->render_data.vertices->size() / 3;
+
+        if (num_vertices != this->render_data.values->data->size()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Number of vertices and data values do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
+
+            return;
+        } else if (this->render_data.normals != nullptr && num_vertices != this->render_data.normals->size() / 3) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Number of vertices and normals do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+
+            return;
+        }
+
+        const std::string identifier("triangle_mesh");
+
+        if (this->triangle_mesh_changed || this->mesh_data_changed || this->shader_changed) {
+            render_task_collection_->clear();
+
+            // Create mesh
+            this->render_data.mesh = std::make_shared<GPUMeshCollection>();
+
+            using vbi_t = typename std::vector<GLfloat>::iterator;
+            using ibi_t = typename std::vector<GLuint>::iterator;
+
+            std::vector<glowl::VertexLayout> vertex_descriptors{
+                glowl::VertexLayout(3 * sizeof(float), {glowl::VertexLayout::Attribute(3, GL_FLOAT, GL_FALSE, 0)}),
+                glowl::VertexLayout(1 * sizeof(float), {glowl::VertexLayout::Attribute(1, GL_FLOAT, GL_FALSE, 0)})};
+
+            if (this->render_data.normals != nullptr) {
+                vertex_descriptors.push_back(
+                    glowl::VertexLayout(3 * sizeof(float), {glowl::VertexLayout::Attribute(3, GL_FLOAT, GL_TRUE, 0)}));
+            }
+
+            std::vector<std::pair<vbi_t, vbi_t>> vertex_buffer{
+                {this->render_data.vertices->begin(), this->render_data.vertices->end()},
+                {this->render_data.values->data->begin(), this->render_data.values->data->end()}};
+
+            if (this->render_data.normals != nullptr) {
+                vertex_buffer.push_back({this->render_data.normals->begin(), this->render_data.normals->end()});
+            }
+
+            std::pair<ibi_t, ibi_t> index_buffer{this->render_data.indices->begin(), this->render_data.indices->end()};
+
+            this->render_data.mesh->template addMesh<vbi_t, ibi_t>(identifier, vertex_descriptors, vertex_buffer,
+                index_buffer, GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
+
+            // Create render task
+            const auto& mesh_data = this->render_data.mesh->getSubMeshData().at(identifier);
+
+            std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_min_value],
+                &this->render_data.values->min_value, per_draw_data_t::size_min_value);
+            std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_max_value],
+                &this->render_data.values->max_value, per_draw_data_t::size_max_value);
+
+            render_task_collection_->addRenderTask(identifier, this->active_shader_program,
+                mesh_data.mesh->mesh, mesh_data.sub_mesh_draw_command, this->render_data.per_draw_data);
+        }
+
+        if (this->render_data.values->transfer_function_dirty || this->triangle_mesh_changed ||
+            this->mesh_data_changed || this->shader_changed) {
+            // Create texture for transfer function
+            std::vector<GLfloat> texture_data;
+            int transfer_function_size, _unused__height;
+
+            const auto valid_tf = core::param::TransferFunctionParam::GetTextureData(
+                this->render_data.values->transfer_function, texture_data, transfer_function_size, _unused__height);
+
+            if (!valid_tf) {
+                return;
+                // TODO throw error?
+            }
+
+            if (this->render_data.transfer_function != 0) {
+                glDeleteTextures(1, &this->render_data.transfer_function);
+            }
+
+            glGenTextures(1, &this->render_data.transfer_function);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_1D, this->render_data.transfer_function);
+
+            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, static_cast<GLsizei>(transfer_function_size), 0, GL_RGBA, GL_FLOAT,
+                static_cast<GLvoid*>(texture_data.data()));
+
+            glBindTexture(GL_TEXTURE_1D, 0);
+
+            const auto transfer_function_handle = glGetTextureHandleARB(this->render_data.transfer_function);
+            glMakeTextureHandleResidentARB(transfer_function_handle);
+
+            // Update per draw data
+            std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_tf], &transfer_function_handle,
+                per_draw_data_t::size_tf);
+
+            render_task_collection_->updatePerDrawData(identifier, this->render_data.per_draw_data);
+        }
+
+        {
+            auto cp = this->clip_plane_slot.CallAs<core::view::CallClipPlane>();
+
+            if (cp != nullptr && (*cp)(0)) {
+                // Set clip plane flag to enabled
+                const int use_plane = 1;
+
+                std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_plane_bool], &use_plane,
+                    per_draw_data_t::size_plane_bool);
+
+                // Get clip plane
+                const auto& plane = cp->GetPlane();
+                const std::array<float, 4> abcd_plane{plane.A(), plane.B(), plane.C(), plane.D()};
+
+                std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_plane], abcd_plane.data(),
+                    per_draw_data_t::size_plane);
+            } else {
+                // Set clip plane flag to disabled
+                const int use_plane = 0;
+
+                std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_plane_bool], &use_plane,
+                    per_draw_data_t::size_plane_bool);
+            }
+
+            render_task_collection_->updatePerDrawData(identifier, this->render_data.per_draw_data);
+        }
+
+        {
+            // Set culling mode: 0 - none, 1 - backface culling, 2 - frontface culling
+            const int culling_mode = static_cast<int>(this->culling.Param<core::param::EnumParam>()->Value());
+
+            std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_culling], &culling_mode,
+                per_draw_data_t::size_culling);
+        }
+    }
+
+    this->triangle_mesh_changed = false;
+    this->mesh_data_changed = false;
+    this->render_data.values->transfer_function_dirty = false;
+    this->shader_changed = false;
+}
 
 std::vector<std::string> TriangleMeshRenderer3D::requested_lifetime_resources() {
     std::vector<std::string> resources = Module::requested_lifetime_resources();
@@ -271,198 +429,6 @@ bool TriangleMeshRenderer3D::get_input_extent() {
     }
 
     this->bounding_box = tmc.get_bounding_box();
-
-    return true;
-}
-
-bool TriangleMeshRenderer3D::getDataCallback(core::Call& call) {
-    auto& grtc = static_cast<CallGPURenderTaskData&>(call);
-
-    if (!get_input_data()) {
-        return false;
-    }
-
-    // Get render task from rhs
-    auto rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
-
-    auto rt_collections = std::make_shared<std::vector<std::shared_ptr<GPURenderTaskCollection>>>();
-
-    if (rhs_rtc != nullptr) {
-        if (!(*rhs_rtc)(0)) {
-            return false;
-        }
-
-        if (rhs_rtc->hasUpdate()) {
-            ++this->rhs_gpu_tasks_version;
-        }
-
-        rt_collections = rhs_rtc->getData();
-    }
-
-    if (this->render_data.vertices != nullptr && this->render_data.indices != nullptr) {
-        const auto num_vertices = this->render_data.vertices->size() / 3;
-
-        if (num_vertices != this->render_data.values->data->size()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Number of vertices and data values do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
-
-            return false;
-        } else if (this->render_data.normals != nullptr && num_vertices != this->render_data.normals->size() / 3) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Number of vertices and normals do not match. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-
-            return false;
-        }
-
-        rt_collections->push_back(this->m_rendertask_collection.first);
-
-        const std::string identifier("triangle_mesh");
-
-        if (this->triangle_mesh_changed || this->mesh_data_changed || this->shader_changed) {
-            clearRenderTaskCollection();
-
-            // Create mesh
-            this->render_data.mesh = std::make_shared<GPUMeshCollection>();
-
-            using vbi_t = typename std::vector<GLfloat>::iterator;
-            using ibi_t = typename std::vector<GLuint>::iterator;
-
-            std::vector<glowl::VertexLayout> vertex_descriptors{
-                glowl::VertexLayout(3 * sizeof(float), {glowl::VertexLayout::Attribute(3, GL_FLOAT, GL_FALSE, 0)}),
-                glowl::VertexLayout(1 * sizeof(float), {glowl::VertexLayout::Attribute(1, GL_FLOAT, GL_FALSE, 0)})};
-
-            if (this->render_data.normals != nullptr) {
-                vertex_descriptors.push_back(
-                    glowl::VertexLayout(3 * sizeof(float), {glowl::VertexLayout::Attribute(3, GL_FLOAT, GL_TRUE, 0)}));
-            }
-
-            std::vector<std::pair<vbi_t, vbi_t>> vertex_buffer{
-                {this->render_data.vertices->begin(), this->render_data.vertices->end()},
-                {this->render_data.values->data->begin(), this->render_data.values->data->end()}};
-
-            if (this->render_data.normals != nullptr) {
-                vertex_buffer.push_back({this->render_data.normals->begin(), this->render_data.normals->end()});
-            }
-
-            std::pair<ibi_t, ibi_t> index_buffer{this->render_data.indices->begin(), this->render_data.indices->end()};
-
-            this->render_data.mesh->template addMesh<vbi_t, ibi_t>(identifier, vertex_descriptors, vertex_buffer,
-                index_buffer, GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
-
-            // Create render task
-            const auto& mesh_data = this->render_data.mesh->getSubMeshData().at(identifier);
-
-            std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_min_value],
-                &this->render_data.values->min_value, per_draw_data_t::size_min_value);
-            std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_max_value],
-                &this->render_data.values->max_value, per_draw_data_t::size_max_value);
-
-            this->m_rendertask_collection.first->clear();
-            this->m_rendertask_collection.first->addRenderTask(identifier, this->active_shader_program,
-                mesh_data.mesh->mesh, mesh_data.sub_mesh_draw_command, this->render_data.per_draw_data);
-        }
-
-        if (this->render_data.values->transfer_function_dirty || this->triangle_mesh_changed ||
-            this->mesh_data_changed || this->shader_changed) {
-            // Create texture for transfer function
-            std::vector<GLfloat> texture_data;
-            int transfer_function_size, _unused__height;
-
-            const auto valid_tf = core::param::TransferFunctionParam::GetTextureData(
-                this->render_data.values->transfer_function, texture_data, transfer_function_size, _unused__height);
-
-            if (!valid_tf) {
-                return false;
-            }
-
-            if (this->render_data.transfer_function != 0) {
-                glDeleteTextures(1, &this->render_data.transfer_function);
-            }
-
-            glGenTextures(1, &this->render_data.transfer_function);
-
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_1D, this->render_data.transfer_function);
-
-            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-            glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, static_cast<GLsizei>(transfer_function_size), 0, GL_RGBA, GL_FLOAT,
-                static_cast<GLvoid*>(texture_data.data()));
-
-            glBindTexture(GL_TEXTURE_1D, 0);
-
-            const auto transfer_function_handle = glGetTextureHandleARB(this->render_data.transfer_function);
-            glMakeTextureHandleResidentARB(transfer_function_handle);
-
-            // Update per draw data
-            std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_tf], &transfer_function_handle,
-                per_draw_data_t::size_tf);
-
-            this->m_rendertask_collection.first->updatePerDrawData(identifier, this->render_data.per_draw_data);
-        }
-
-        {
-            auto cp = this->clip_plane_slot.CallAs<core::view::CallClipPlane>();
-
-            if (cp != nullptr && (*cp)(0)) {
-                // Set clip plane flag to enabled
-                const int use_plane = 1;
-
-                std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_plane_bool], &use_plane,
-                    per_draw_data_t::size_plane_bool);
-
-                // Get clip plane
-                const auto& plane = cp->GetPlane();
-                const std::array<float, 4> abcd_plane{plane.A(), plane.B(), plane.C(), plane.D()};
-
-                std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_plane], abcd_plane.data(),
-                    per_draw_data_t::size_plane);
-            } else {
-                // Set clip plane flag to disabled
-                const int use_plane = 0;
-
-                std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_plane_bool], &use_plane,
-                    per_draw_data_t::size_plane_bool);
-            }
-
-            this->m_rendertask_collection.first->updatePerDrawData(identifier, this->render_data.per_draw_data);
-        }
-
-        {
-            // Set culling mode: 0 - none, 1 - backface culling, 2 - frontface culling
-            const int culling_mode = static_cast<int>(this->culling.Param<core::param::EnumParam>()->Value());
-
-            std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_culling], &culling_mode,
-                per_draw_data_t::size_culling);
-        }
-    }
-
-    this->triangle_mesh_changed = false;
-    this->mesh_data_changed = false;
-    this->render_data.values->transfer_function_dirty = false;
-    this->shader_changed = false;
-
-    grtc.setData(rt_collections, core::utility::DataHash(TriangleMeshRenderer3D::GUID(), this->triangle_mesh_hash,
-                                     this->mesh_data_hash, this->rhs_gpu_tasks_version));
-
-    return true;
-}
-
-bool TriangleMeshRenderer3D::getMetaDataCallback(core::Call& call) {
-    auto& grtc = static_cast<CallGPURenderTaskData&>(call);
-
-    if (!get_input_extent()) {
-        return false;
-    }
-
-    core::BoundingBoxes_2 bbox;
-    bbox.SetBoundingBox(this->bounding_box);
-    bbox.SetClipBox(this->bounding_box);
-
-    grtc.setMetaData(core::Spatial3DMetaData{1, 0, bbox});
 
     return true;
 }

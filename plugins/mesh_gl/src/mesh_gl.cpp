@@ -7,7 +7,7 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-#include "3DUIRenderTaskDataSource.h"
+#include "3DUIRenderer.h"
 #include "gltf/DeferredGltfRenderer.h"
 #include "MeshSTLDataSource.h"
 #include "Render3DUI.h"
@@ -35,7 +35,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::DeferredGltfRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::Render3DUI>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::MeshSTLDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::ThreeDimensionalUIRenderTaskDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::ThreeDimensionalUIRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::TriangleMeshRenderer2D>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::TriangleMeshRenderer3D>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::WavefrontObjRenderer>();

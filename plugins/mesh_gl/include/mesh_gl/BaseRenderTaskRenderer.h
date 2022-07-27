@@ -1,12 +1,12 @@
 /*
- * BaseMeshRenderer.h
+ * BaseRenderTaskRenderer.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
-#ifndef BASE_MESH_RENDERER_H_INCLUDED
-#define BASE_MESH_RENDERER_H_INCLUDED
+#ifndef BASE_RENDER_TASK_RENDERER_H_INCLUDED
+#define BASE_RENDER_TASK_RENDERER_H_INCLUDED
 
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
@@ -212,4 +212,4 @@ inline void BaseRenderTaskRenderer<NAME, DESC>::updateRenderTaskCollection(bool 
 } // namespace mesh_gl
 } // namespace megamol
 
-#endif // !BASE_MESH_RENDERER_H_INCLUDED
+#endif // !BASE_RENDER_TASK_RENDERER_H_INCLUDED

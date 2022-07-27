@@ -8,8 +8,7 @@
 
 #include "mesh/MeshDataCall.h"
 
-#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
-#include "mesh_gl/GPUMeshCollection.h"
+#include "mesh_gl/BaseRenderTaskRenderer.h"
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
@@ -28,43 +27,22 @@
 
 namespace megamol {
 namespace mesh_gl {
+
+inline constexpr char trianglemeshrenderer3D_name[] = "TriangleMeshRenderer3D";
+
+inline constexpr char trianglemeshrenderer3D_desc[] =
+    "Upload 3D data to the GPU for use with the mesh plugin";
+
 /**
  * Module for uploading a 3D triangle mesh to the GPU.
  *
  * @author Alexander Straub
  */
-class TriangleMeshRenderer3D : public AbstractGPURenderTaskDataSource {
+class TriangleMeshRenderer3D : public BaseRenderTaskRenderer<trianglemeshrenderer3D_name, trianglemeshrenderer3D_desc> {
     static_assert(std::is_same<GLfloat, float>::value, "'GLfloat' and 'float' must be the same type!");
     static_assert(std::is_same<GLuint, unsigned int>::value, "'GLuint' and 'unsigned int' must be the same type!");
 
 public:
-    /**
-     * Answer the name of this module.
-     *
-     * @return The name of this module.
-     */
-    static inline const char* ClassName() {
-        return "TriangleMeshRenderer3D";
-    }
-
-    /**
-     * Answer a human readable description of this module.
-     *
-     * @return A human readable description of this module.
-     */
-    static inline const char* Description() {
-        return "Upload 3D data to the GPU for use with the mesh plugin";
-    }
-
-    /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
-    static inline bool IsAvailable() {
-        return true;
-    }
-
     /**
      * Global unique ID that can e.g. be used for hash calculation.
      *
@@ -86,16 +64,21 @@ public:
 
 protected:
     /**
-     * Implementation of 'Create'.
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
      *
-     * @return 'true' on success, 'false' otherwise.
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
      */
-    virtual bool create() override;
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
-    /**
-     * Implementation of 'Release'.
-     */
-    virtual void release() override;
+    void createMaterialCollection() override;
+
+    bool updateMeshCollection() override;
+
+    void updateRenderTaskCollection(bool force_update) override;
 
     /**
      * Request resources to ask for OpenGL state
@@ -106,10 +89,6 @@ private:
     /** Get input data and extent from called modules */
     bool get_input_data();
     bool get_input_extent();
-
-    /** Callbacks for uploading the mesh to the GPU */
-    virtual bool getDataCallback(core::Call& call) override;
-    virtual bool getMetaDataCallback(core::Call& call) override;
 
     /** Input slot for the triangle mesh */
     SIZE_T triangle_mesh_hash;
@@ -125,9 +104,6 @@ private:
 
     /** Input slot for a clip plane */
     core::CallerSlot clip_plane_slot;
-
-    /** Version of RHS gpu tasks */
-    SIZE_T rhs_gpu_tasks_version;
 
     /** Parameter slot for choosing data sets to visualize */
     core::param::ParamSlot data_set;

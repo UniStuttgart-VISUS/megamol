@@ -4,51 +4,19 @@
 #include "mmstd/light/CallLight.h"
 
 megamol::mesh_gl::WavefrontObjRenderer::WavefrontObjRenderer()
-        : BaseRenderTaskRenderer<wavefrontobjrenderer_name, wavefrontobjrenderer_desc>()
+        : BaseMeshRenderer<wavefrontobjrenderer_name, wavefrontobjrenderer_desc>()
         , lights_slot_("lights", "Connects a chain of lights")
-        , mesh_slot_("meshes", "Connects a mesh data access collection") {
+{
     lights_slot_.SetCompatibleCall<megamol::core::view::light::CallLightDescription>();
     megamol::core::Module::MakeSlotAvailable(&this->lights_slot_);
-    mesh_slot_.SetCompatibleCall<mesh::CallMeshDescription>();
-    megamol::core::Module::MakeSlotAvailable(&this->mesh_slot_);
 }
 
 megamol::mesh_gl::WavefrontObjRenderer::~WavefrontObjRenderer() {}
-
-bool megamol::mesh_gl::WavefrontObjRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
-    return true;
-}
 
 void megamol::mesh_gl::WavefrontObjRenderer::createMaterialCollection() {
     material_collection_ = std::make_shared<GPUMaterialCollection>();
     material_collection_->addMaterial(this->instance(), "wavefrontObjMaterial",
         {"mesh_gl/wavefrontObj_example.vert.glsl", "mesh_gl/wavefrontObj_example.frag.glsl"});
-}
-
-bool megamol::mesh_gl::WavefrontObjRenderer::updateMeshCollection() {
-    bool something_has_changed = false;
-
-    mesh::CallMesh* mc = this->mesh_slot_.CallAs<mesh::CallMesh>();
-    if (mc != nullptr) {
-
-        if (!(*mc)(0)) {
-            return false;
-        }
-
-        something_has_changed = mc->hasUpdate(); // something has changed in the neath...
-
-        if (something_has_changed) {
-            mesh_collection_->clear();
-            mesh_collection_->addMeshes(*(mc->getData()));
-        }
-    } else {
-        if (mesh_collection_->getMeshes().size() > 0) {
-            mesh_collection_->clear();
-            something_has_changed = true;
-        }
-    }
-
-    return something_has_changed;
 }
 
 void megamol::mesh_gl::WavefrontObjRenderer::updateRenderTaskCollection(bool force_update) {
