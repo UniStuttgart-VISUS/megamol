@@ -80,10 +80,13 @@ protected:
                                      std::is_same_v<std::string, value_type>),
         R>>
     getAs() {
-        core::utility::ConvertingIterator<R, value_type> _begin(&*dataVec.begin());
-        core::utility::ConvertingIterator<R, value_type> _end(&*dataVec.end());
-        std::vector<R> new_vec(_begin, _end);
-        return new_vec;
+        if (dataVec.size() > 0) {
+            core::utility::ConvertingIterator<R, value_type> _begin(&*dataVec.begin());
+            core::utility::ConvertingIterator<R, value_type> _end((&*dataVec.begin()) + dataVec.size());
+            return std::vector<R>(_begin, _end);
+        } else {
+            return std::vector<R>();
+        }
     }
 
 private:

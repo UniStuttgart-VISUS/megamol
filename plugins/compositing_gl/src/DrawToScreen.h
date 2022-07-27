@@ -5,21 +5,15 @@
  * All rights reserved.
  */
 
-#ifndef DRAW_TO_SCREEN_H_INCLUDED
-#define DRAW_TO_SCREEN_H_INCLUDED
+#pragma once
 
-#include "vislib/math/Matrix.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include <glowl/glowl.h>
 
 #include "mmcore/CallerSlot.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/Texture2D.hpp"
-
-namespace megamol {
-namespace compositing {
+namespace megamol::compositing {
 
 /**
  * TODO
@@ -31,7 +25,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DrawToScreen";
     }
 
@@ -40,7 +34,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "...TODO...";
     }
 
@@ -49,7 +43,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         /*TODO*/
         return true;
     }
@@ -101,8 +95,6 @@ protected:
     void PreRender(mmstd_gl::CallRender3DGL& call);
 
 private:
-    typedef vislib_gl::graphics::gl::GLSLShader GLSLShader;
-
     /** Dummy color texture to use when no texture is connected */
     std::shared_ptr<glowl::Texture2D> m_dummy_color_tx;
 
@@ -110,7 +102,7 @@ private:
     std::shared_ptr<glowl::Texture2D> m_dummy_depth_tx;
 
     /** Shader program for deferred shading pass */
-    std::unique_ptr<GLSLShader> m_drawToScreen_prgm;
+    std::unique_ptr<glowl::GLSLProgram> m_drawToScreen_prgm;
 
     /** */
     core::CallerSlot m_input_texture_call;
@@ -122,7 +114,4 @@ private:
     glm::ivec2 m_last_tex_size = glm::ivec2(0, 0);
 };
 
-} // namespace compositing
-} // namespace megamol
-
-#endif
+} // namespace megamol::compositing

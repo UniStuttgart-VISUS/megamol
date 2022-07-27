@@ -83,8 +83,8 @@ bool ArrowRenderer::create(void) {
 
     try {
         // TODO: use std::filesystem::path?
-        arrow_pgrm_ = core::utility::make_glowl_shader(
-            "arrow", shader_options, "arrow_renderer/arrow.vert.glsl", "arrow_renderer/arrow.frag.glsl");
+        arrow_pgrm_ = core::utility::make_glowl_shader("arrow", shader_options,
+            "moldyn_gl/arrow_renderer/arrow.vert.glsl", "moldyn_gl/arrow_renderer/arrow.frag.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to compile arrow shader: %s. [%s, %s, line %d]\n", std::string(e.what()).c_str(), __FILE__,
@@ -403,10 +403,8 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 #endif
 
             if (use_flags) {
-                glDisableVertexAttribArrayARB(fal);
-                //cflags->SetFlags(flags);
-                //(*cflags)(core::FlagCall::CallUnmapFlags);
-                glVertexAttribIPointer(fal, 4, GL_FLOAT, 0, nullptr);
+                glEnableVertexAttribArrayARB(fal);
+                glVertexAttribIPointer(fal, 4, GL_UNSIGNED_INT, 0, nullptr);
                 glDisableVertexAttribArrayARB(fal);
             }
 

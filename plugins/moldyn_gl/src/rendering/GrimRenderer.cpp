@@ -135,45 +135,45 @@ bool GrimRenderer::create(void) {
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
     try {
-        sphere_shader_ = core::utility::make_glowl_shader(
-            "sphere_shader", shader_options, "grim_renderer/sphere.vert.glsl", "grim_renderer/sphere.frag.glsl");
+        sphere_shader_ = core::utility::make_glowl_shader("sphere_shader", shader_options,
+            "moldyn_gl/grim_renderer/sphere.vert.glsl", "moldyn_gl/grim_renderer/sphere.frag.glsl");
 
         vanilla_sphere_shader_ = core::utility::make_glowl_shader("vanilla_sphere_shader", shader_options,
-            "grim_renderer/vanilla_sphere.vert.glsl", "grim_renderer/vanilla_sphere.frag.glsl");
+            "moldyn_gl/grim_renderer/vanilla_sphere.vert.glsl", "moldyn_gl/grim_renderer/vanilla_sphere.frag.glsl");
 
         init_depth_shader_ = core::utility::make_glowl_shader("init_depth_shader", shader_options,
-            "grim_renderer/init_depth.vert.glsl", "grim_renderer/init_depth.frag.glsl");
+            "moldyn_gl/grim_renderer/init_depth.vert.glsl", "moldyn_gl/grim_renderer/init_depth.frag.glsl");
 
         init_depth_map_shader_ = core::utility::make_glowl_shader("init_depth_map_shader", shader_options,
-            "grim_renderer/init_depth_map.vert.glsl", "grim_renderer/init_depth_map.frag.glsl");
+            "moldyn_gl/grim_renderer/init_depth_map.vert.glsl", "moldyn_gl/grim_renderer/init_depth_map.frag.glsl");
 
         depth_mip_shader_ = core::utility::make_glowl_shader("depth_mip_shader", shader_options,
-            "grim_renderer/depth_mip.vert.glsl", "grim_renderer/depth_mip.frag.glsl");
+            "moldyn_gl/grim_renderer/depth_mip.vert.glsl", "moldyn_gl/grim_renderer/depth_mip.frag.glsl");
 
-        point_shader_ = core::utility::make_glowl_shader(
-            "point_shader", shader_options, "grim_renderer/point.vert.glsl", "grim_renderer/point.frag.glsl");
+        point_shader_ = core::utility::make_glowl_shader("point_shader", shader_options,
+            "moldyn_gl/grim_renderer/point.vert.glsl", "moldyn_gl/grim_renderer/point.frag.glsl");
 
         init_depth_point_shader_ = core::utility::make_glowl_shader("init_depth_point_shader", shader_options,
-            "grim_renderer/init_depth_point.vert.glsl", "grim_renderer/init_depth_point.frag.glsl");
+            "moldyn_gl/grim_renderer/init_depth_point.vert.glsl", "moldyn_gl/grim_renderer/init_depth_point.frag.glsl");
 
-        vert_cnt_shader_ = core::utility::make_glowl_shader(
-            "vert_cnt_shader", shader_options, "grim_renderer/vert_cnt.vert.glsl", "grim_renderer/vert_cnt.frag.glsl");
+        vert_cnt_shader_ = core::utility::make_glowl_shader("vert_cnt_shader", shader_options,
+            "moldyn_gl/grim_renderer/vert_cnt.vert.glsl", "moldyn_gl/grim_renderer/vert_cnt.frag.glsl");
 
         vert_cnt_shader_2_ = core::utility::make_glowl_shader("vert_cnt_shader_2", shader_options,
-            "grim_renderer/vert_cnt_2.vert.glsl", "grim_renderer/vert_cnt_2.frag.glsl");
+            "moldyn_gl/grim_renderer/vert_cnt_2.vert.glsl", "moldyn_gl/grim_renderer/vert_cnt_2.frag.glsl");
 
         deferred_sphere_shader_ = core::utility::make_glowl_shader("deferred_sphere_shader", shader_options,
-            "grim_renderer/deferred_sphere.vert.glsl", "grim_renderer/deferred_sphere.frag.glsl");
+            "moldyn_gl/grim_renderer/deferred_sphere.vert.glsl", "moldyn_gl/grim_renderer/deferred_sphere.frag.glsl");
 
-        deferred_vanilla_sphere_shader_ =
-            core::utility::make_glowl_shader("deferred_vanilla_sphere_shader", shader_options,
-                "grim_renderer/deferred_vanilla_sphere.vert.glsl", "grim_renderer/deferred_vanilla_sphere.frag.glsl");
+        deferred_vanilla_sphere_shader_ = core::utility::make_glowl_shader("deferred_vanilla_sphere_shader",
+            shader_options, "moldyn_gl/grim_renderer/deferred_vanilla_sphere.vert.glsl",
+            "moldyn_gl/grim_renderer/deferred_vanilla_sphere.frag.glsl");
 
         deferred_point_shader_ = core::utility::make_glowl_shader("deferred_point_shader", shader_options,
-            "grim_renderer/deferred_point.vert.glsl", "grim_renderer/deferred_point.frag.glsl");
+            "moldyn_gl/grim_renderer/deferred_point.vert.glsl", "moldyn_gl/grim_renderer/deferred_point.frag.glsl");
 
-        deferred_shader_ = core::utility::make_glowl_shader(
-            "deferred_shader", shader_options, "grim_renderer/deferred.vert.glsl", "grim_renderer/deferred.frag.glsl");
+        deferred_shader_ = core::utility::make_glowl_shader("deferred_shader", shader_options,
+            "moldyn_gl/grim_renderer/deferred.vert.glsl", "moldyn_gl/grim_renderer/deferred.frag.glsl");
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

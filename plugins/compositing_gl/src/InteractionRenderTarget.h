@@ -5,9 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef INTERACTION_RENDER_TARGET_H_INCLUDED
-#define INTERACTION_RENDER_TARGET_H_INCLUDED
-
+#pragma once
 
 #include "SimpleRenderTarget.h"
 
@@ -70,6 +68,3 @@ private:
 
 } // namespace compositing
 } // namespace megamol
-
-
-#endif // !INTERACTION_RENDER_TARGET_H_INCLUDED

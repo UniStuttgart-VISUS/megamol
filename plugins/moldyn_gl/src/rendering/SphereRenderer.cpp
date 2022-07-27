@@ -509,7 +509,8 @@ bool SphereRenderer::createResources() {
         case (RenderMode::SIMPLE_CLUSTERED): {
             sphere_prgm_.reset();
             sphere_prgm_ = core::utility::make_glowl_shader("sphere_simple", *shader_options_flags_,
-                "sphere_renderer/sphere_simple.vert.glsl", "sphere_renderer/sphere_simple.frag.glsl");
+                "moldyn_gl/sphere_renderer/sphere_simple.vert.glsl",
+                "moldyn_gl/sphere_renderer/sphere_simple.frag.glsl");
 
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 0, "inPosition");
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 1, "inColor");
@@ -519,8 +520,9 @@ bool SphereRenderer::createResources() {
         case (RenderMode::GEOMETRY_SHADER): {
             sphere_geometry_prgm_.reset();
             sphere_geometry_prgm_ = core::utility::make_glowl_shader("sphere_geometry", *shader_options_flags_,
-                "sphere_renderer/sphere_geometry.vert.glsl", "sphere_renderer/sphere_geometry.geom.glsl",
-                "sphere_renderer/sphere_geometry.frag.glsl");
+                "moldyn_gl/sphere_renderer/sphere_geometry.vert.glsl",
+                "moldyn_gl/sphere_renderer/sphere_geometry.geom.glsl",
+                "moldyn_gl/sphere_renderer/sphere_geometry.frag.glsl");
 
             glBindAttribLocation(this->sphere_geometry_prgm_->getHandle(), 0, "inPosition");
             glBindAttribLocation(this->sphere_geometry_prgm_->getHandle(), 1, "inColor");
@@ -554,7 +556,8 @@ bool SphereRenderer::createResources() {
         case (RenderMode::BUFFER_ARRAY): {
             sphere_prgm_.reset();
             sphere_prgm_ = core::utility::make_glowl_shader("sphere_bufferarray", *shader_options_flags_,
-                "sphere_renderer/sphere_bufferarray.vert.glsl", "sphere_renderer/sphere_bufferarray.frag.glsl");
+                "moldyn_gl/sphere_renderer/sphere_bufferarray.vert.glsl",
+                "moldyn_gl/sphere_renderer/sphere_bufferarray.frag.glsl");
 
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 0, "inPosition");
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 1, "inColor");
@@ -594,7 +597,7 @@ bool SphereRenderer::createResources() {
             // Create the sphere shader
             sphere_prgm_.reset();
             sphere_prgm_ = core::utility::make_glowl_shader("sphere_mdao", *shader_options_flags_,
-                "sphere_renderer/sphere_mdao.vert.glsl", "sphere_renderer/sphere_mdao.frag.glsl");
+                "moldyn_gl/sphere_renderer/sphere_mdao.vert.glsl", "moldyn_gl/sphere_renderer/sphere_mdao.frag.glsl");
 
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 0, "inPosition");
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 1, "inColor");
@@ -603,8 +606,9 @@ bool SphereRenderer::createResources() {
             // Create the geometry shader
             sphere_geometry_prgm_.reset();
             sphere_geometry_prgm_ = core::utility::make_glowl_shader("sphere_mdao_geometry", *shader_options_flags_,
-                "sphere_renderer/sphere_mdao_geometry.vert.glsl", "sphere_renderer/sphere_mdao_geometry.geom.glsl",
-                "sphere_renderer/sphere_mdao_geometry.frag.glsl");
+                "moldyn_gl/sphere_renderer/sphere_mdao_geometry.vert.glsl",
+                "moldyn_gl/sphere_renderer/sphere_mdao_geometry.geom.glsl",
+                "moldyn_gl/sphere_renderer/sphere_mdao_geometry.frag.glsl");
 
             glBindAttribLocation(this->sphere_geometry_prgm_->getHandle(), 0, "position");
 
@@ -625,7 +629,8 @@ bool SphereRenderer::createResources() {
 
             lighting_prgm_.reset();
             lighting_prgm_ = core::utility::make_glowl_shader("sphere_mdao_deferred", lighting_so,
-                "sphere_renderer/sphere_mdao_deferred.vert.glsl", "sphere_renderer/sphere_mdao_deferred.frag.glsl");
+                "moldyn_gl/sphere_renderer/sphere_mdao_deferred.vert.glsl",
+                "moldyn_gl/sphere_renderer/sphere_mdao_deferred.frag.glsl");
 
             // TODO glowl implementation of GLSLprogram misses this functionality
             auto ubo_idx = glGetUniformBlockIndex(lighting_prgm_->getHandle(), "cone_buffer");
@@ -648,7 +653,8 @@ bool SphereRenderer::createResources() {
 
             // Create the sphere shader
             sphere_prgm_ = core::utility::make_glowl_shader("sphere_outline", *shader_options_flags_,
-                "sphere_renderer/sphere_outline.vert.glsl", "sphere_renderer/sphere_outline.frag.glsl");
+                "moldyn_gl/sphere_renderer/sphere_outline.vert.glsl",
+                "moldyn_gl/sphere_renderer/sphere_outline.frag.glsl");
 
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 0, "inPosition");
             glBindAttribLocation(this->sphere_prgm_->getHandle(), 1, "inColor");
@@ -2184,8 +2190,8 @@ std::shared_ptr<glowl::GLSLProgram> SphereRenderer::makeShader(
     std::shared_ptr<glowl::GLSLProgram> sh;
 
     try {
-        std::string vert_path = "sphere_renderer/" + prgm_name + ".vert.glsl";
-        std::string frag_path = "sphere_renderer/" + prgm_name + ".frag.glsl";
+        std::string vert_path = "moldyn_gl/sphere_renderer/" + prgm_name + ".vert.glsl";
+        std::string frag_path = "moldyn_gl/sphere_renderer/" + prgm_name + ".frag.glsl";
 
         sh = core::utility::make_glowl_shader(prgm_name, shader_options, vert_path, frag_path);
     } catch (std::exception& e) {

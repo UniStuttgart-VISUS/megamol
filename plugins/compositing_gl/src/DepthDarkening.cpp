@@ -3,16 +3,15 @@
  * Copyright (c) 2022, MegaMol Dev Team
  * All rights reserved.
  */
+
 #include "DepthDarkening.h"
 
 #include <glm/glm.hpp>
 
+#include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-
-#include "compositing_gl/CompositingCalls.h"
-
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 megamol::compositing::DepthDarkening::DepthDarkening()
