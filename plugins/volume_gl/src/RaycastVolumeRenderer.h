@@ -1,32 +1,26 @@
-/*
- * RaycastVolumeRenderer.h
- *
- * Copyright (C) 2018-2020 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef RAYCAST_VOLUME_RENDERER_H_INCLUDED
-#define RAYCAST_VOLUME_RENDERER_H_INCLUDED
 #pragma once
-
-#include "mmcore/Call.h"
-#include "mmcore/CallerSlot.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-
-#include "mmcore_gl/utility/ShaderFactory.h"
-
-#include "vislib_gl/graphics/gl/FramebufferObject.h"
-
-#include "glowl/Texture2D.hpp"
-#include "glowl/Texture3D.hpp"
 
 #include <array>
 #include <limits>
 #include <memory>
 
-namespace megamol {
-namespace volume_gl {
+#include <glowl/Texture2D.hpp>
+#include <glowl/Texture3D.hpp>
+
+#include "mmcore/Call.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+
+namespace megamol::volume_gl {
 
 class RaycastVolumeRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
@@ -35,7 +29,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "RaycastVolumeRenderer";
     }
 
@@ -44,7 +38,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Modern compute-based raycast renderer for volumetric datasets.";
     }
 
@@ -53,7 +47,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
 #ifdef _WIN32
 #if defined(DEBUG) || defined(_DEBUG)
         HDC dc = ::wglGetCurrentDC();
@@ -157,7 +151,4 @@ private:
     vislib_gl::graphics::gl::FramebufferObject fbo;
 };
 
-} // namespace volume_gl
-} // namespace megamol
-
-#endif
+} // namespace megamol::volume_gl

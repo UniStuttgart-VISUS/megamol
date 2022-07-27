@@ -9,6 +9,7 @@
 #define MEGAMOLCORE_ARROWRENDERER_H_INCLUDED
 
 
+#include "OpenGL_Context.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
@@ -68,6 +69,7 @@ public:
 #ifdef PROFILING
     std::vector<std::string> requested_lifetime_resources() override {
         std::vector<std::string> resources = Module::requested_lifetime_resources();
+        resources.emplace_back(frontend_resources::OpenGL_Context_Req_Name);
         resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
         return resources;
     }
