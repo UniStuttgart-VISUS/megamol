@@ -15,11 +15,11 @@ if (BUILD_CORE)
   find_package(ZeroMQ REQUIRED)
   find_package(cppzmq REQUIRED)
   find_package(glm REQUIRED)
+  find_package(TBB CONFIG REQUIRED)
 
   require_external(expat)
   require_external(lua)
-  require_external(tbb)
-
+  
   if (ENABLE_CUESDK)
     require_external(CUESDK)
   endif ()
@@ -46,13 +46,14 @@ if (BUILD_CORE)
       frontend_resources
       libzmq
       cppzmq
-      tbb
       OpenMP::OpenMP_CXX
+      TBB::tbb
     PRIVATE
       ${CMAKE_DL_LIBS}
       ${CMAKE_THREAD_LIBS_INIT}
       abstract_frontend_service # abstract render api used by MegaMolGraph
-      megamol_build_info_rc)
+      megamol_build_info_rc
+    )
   if (UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
   endif ()

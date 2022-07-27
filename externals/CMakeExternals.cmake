@@ -631,37 +631,6 @@ function(require_external NAME)
     add_external_library(snappy
       LIBRARY ${SNAPPY_LIB})
 
-  # tbb
-  elseif (NAME STREQUAL "tbb")
-    if (TARGET tbb)
-      return()
-    endif ()
-
-    if (MSVC)
-      set(EXTERNAL_EXE_LINKER_FLAGS "${EXTERNAL_EXE_LINKER_FLAGS} /NODEFAULTLIB:tbb12_debug.lib" CACHE STRING "" FORCE)
-    endif ()
-
-    if (WIN32)
-      set(TBB_LIB "bin/tbb12.dll")
-      set(TBB_LIB_IMPORT "${CMAKE_INSTALL_LIBDIR}/tbb12.lib")
-    else ()
-      set(TBB_LIB "${CMAKE_INSTALL_LIBDIR}/libtbb.so.12")
-    endif ()
-
-    add_external_project(tbb SHARED
-      GIT_REPOSITORY https://github.com/oneapi-src/oneTBB.git
-      GIT_TAG v2021.3.0
-      CMAKE_ARGS
-        -DTBB_TEST=OFF
-      BUILD_BYPRODUCTS
-        "<INSTALL_DIR>/${TBB_LIB}"
-        "<INSTALL_DIR>/${TBB_LIB_IMPORT}")
-
-    add_external_library(tbb
-      PROJECT tbb
-      IMPORT_LIBRARY "${TBB_LIB_IMPORT}"
-      LIBRARY "${TBB_LIB}")
-
   # tinyobjloader
   elseif (NAME STREQUAL "tinyobjloader")
     if (TARGET tinyobjloader)

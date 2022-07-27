@@ -7,6 +7,10 @@
     "libpng",
     "nlohmann-json",
     "spdlog",
+    {
+        "name": "tbb",
+        "version>=": "2021.5.0"
+    },
     "zeromq",
     "zlib"
   ],
@@ -18,10 +22,23 @@
       ]
     },
     "use-opengl": {
-      "description": "Use OpenGL",
-      "dependencies": [
-        "megamol-shader-factory"
-      ]
-    }
+        "description": "Use OpenGL",
+        "dependencies": [
+            "megamol-shader-factory"
+        ]
+    },
+    "use-ospray": {
+        "description": "Use OSPRay",
+        "dependencies": [
+            {
+                "name": "ospray",
+                "version>=": "2.10.0",
+                "features": [
+                    "avx",
+                    "avx2"
+                ]
+            }
+        ]
+    } 
   }
 }
