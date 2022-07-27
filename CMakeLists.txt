@@ -45,7 +45,7 @@ if (MEGAMOL_USE_OSPRAY)
   list(APPEND VCPKG_MANIFEST_FEATURES "use-ospray")
 endif ()
 
-option(X_VCPKG_APPLOCAL_DEPS_INSTALL "" ON)
+# option(X_VCPKG_APPLOCAL_DEPS_INSTALL "" ON) # Does currently not not work as expected, see comment on manual install below!
 set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_ports")
 set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics") # Disable Telemetry
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-download-src/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
@@ -179,8 +179,14 @@ if (TESTS)
 endif ()
 
 # Install vcpkg libraries
-# X_VCPKG_APPLOCAL_DEPS_INSTALL only works for windows, for linux we do just copy all .so files manually for now.
-if (NOT WIN32)
+# X_VCPKG_APPLOCAL_DEPS_INSTALL currently does only work for windows, in addition only actually used dll's are
+# installed. This is a problem for libraries that load dll's dynamically on runtime (.i.e. ospray).
+# Therefore, we just copy all vcpkg libraries to our install dir, until vcpkg may has a better option in future.
+if (WIN32)
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/x64-windows/$<$<CONFIG:Debug>:debug/>bin/
+    DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    FILES_MATCHING PATTERN "*.dll")
+else ()
   install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/x64-linux/$<$<CONFIG:Debug>:debug/>lib/
     DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     FILES_MATCHING PATTERN "*.so*")
