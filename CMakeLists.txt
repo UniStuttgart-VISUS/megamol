@@ -185,7 +185,7 @@ endif ()
 if (WIN32)
   install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/x64-windows/$<$<CONFIG:Debug>:debug/>bin/
     DESTINATION "${CMAKE_INSTALL_BINDIR}"
-    FILES_MATCHING PATTERN "*.dll")
+    FILES_MATCHING PATTERN "*.dll" PATTERN "*.pdb")
 else ()
   install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/x64-linux/$<$<CONFIG:Debug>:debug/>lib/
     DESTINATION "${CMAKE_INSTALL_LIBDIR}"
