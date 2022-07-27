@@ -177,3 +177,11 @@ if (TESTS)
   endif ()
   install(DIRECTORY "${TESTS_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/tests" PATTERN ".git" EXCLUDE)
 endif ()
+
+# Install vcpkg libraries
+# X_VCPKG_APPLOCAL_DEPS_INSTALL only works for windows, for linux we do just copy all .so files manually for now.
+if (NOT WIN32)
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/x64-linux/$<$<CONFIG:Debug>:debug/>lib/
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    FILES_MATCHING PATTERN "*.so*")
+endif ()
