@@ -76,8 +76,6 @@ protected:
 
     void createMaterialCollection() override;
 
-    bool updateMeshCollection() override;
-
     void updateRenderTaskCollection(bool force_update) override;
 
     /**
