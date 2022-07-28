@@ -78,19 +78,6 @@ function(require_external NAME)
       INCLUDE_DIR "include")
     target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD2)
 
-  # libcxxopts
-  elseif (NAME STREQUAL "libcxxopts")
-    if (TARGET libcxxopts)
-      return()
-    endif ()
-
-    add_external_headeronly_project(libcxxopts
-      GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
-      # we are waiting for v3 which brings allowing unrecognized options
-      #GIT_TAG "v2.1.1"
-      GIT_TAG "dd45a0801c99d62109aaa29f8c410ba8def2fbf2"
-      INCLUDE_DIR "include")
-
   # mmpld_io
   elseif (NAME STREQUAL "mmpld_io")
     if (TARGET mmpld_io)

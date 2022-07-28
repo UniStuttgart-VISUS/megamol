@@ -9,7 +9,7 @@ if(BUILD_FRONTEND)
   project(frontend)
   set(BINARY_NAME megamol)
 
-  require_external(libcxxopts)
+  find_package(cxxopts)
 
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -24,7 +24,7 @@ if(BUILD_FRONTEND)
   # Add target
   add_executable(${BINARY_NAME} ${header_files} ${source_files} "${resource_files}")
   target_include_directories(${BINARY_NAME} PRIVATE "src" "include")
-  target_link_libraries(${BINARY_NAME} PRIVATE core frontend_services libcxxopts)
+  target_link_libraries(${BINARY_NAME} PRIVATE core frontend_services cxxopts::cxxopts)
   target_link_libraries(${BINARY_NAME} PRIVATE ${CMAKE_DL_LIBS})
 
   if(MSVC)

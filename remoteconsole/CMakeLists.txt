@@ -10,7 +10,7 @@ if(BUILD_REMOTECONSOLE)
 
   find_package(ZeroMQ REQUIRED)
   find_package(cppzmq REQUIRED)
-  require_external(libcxxopts)
+  find_package(cxxopts)
 
   # Glob source files.
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -24,7 +24,7 @@ if(BUILD_REMOTECONSOLE)
     PRIVATE
       libzmq
       cppzmq
-      libcxxopts)
+      cxxopts::cxxopts)
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
   source_group("Header Files" FILES ${header_files})
