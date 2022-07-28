@@ -136,7 +136,7 @@ void TriangleMeshRenderer3D::createMaterialCollection() {
     //material_collection_ = std::make_shared<GPUMaterialCollection>();
 }
 
-void TriangleMeshRenderer3D::updateRenderTaskCollection(bool force_update) {
+void TriangleMeshRenderer3D::updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) {
     if (!get_input_data()) {
         return;
         // TODO throw error?

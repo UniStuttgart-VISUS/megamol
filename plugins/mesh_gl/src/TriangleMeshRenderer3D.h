@@ -76,7 +76,7 @@ protected:
 
     void createMaterialCollection() override;
 
-    void updateRenderTaskCollection(bool force_update) override;
+    void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
 
     /**
      * Request resources to ask for OpenGL state

@@ -38,9 +38,7 @@ public:
 protected:
     void createMaterialCollection() override;
 
-    void updateRenderTaskCollection(bool force_update) override;
-
-    bool getDataCallback(core::Call& caller);
+    void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
 
     bool getInteractionCallback(core::Call& caller);
 

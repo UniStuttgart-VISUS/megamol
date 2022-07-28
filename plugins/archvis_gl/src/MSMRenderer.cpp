@@ -37,7 +37,7 @@ void megamol::archvis_gl::MSMRenderer::createMaterialCollection() {
         {"archvis_gl/scale_model.vert.glsl", "archvis_gl/scale_model.frag.glsl"});
 }
 
-void megamol::archvis_gl::MSMRenderer::updateRenderTaskCollection(bool force_update) {
+void megamol::archvis_gl::MSMRenderer::updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) {
 
     bool something_has_changed = force_update;
 

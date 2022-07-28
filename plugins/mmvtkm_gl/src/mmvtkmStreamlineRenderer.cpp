@@ -19,7 +19,8 @@ void megamol::mmvtkm_gl::mmvtkmStreamlineRenderer::createMaterialCollection() {
         {"vtkm_gl/streamline.vert.glsl", "vtkm_gl/streamline.frag.glsl"});
 }
 
-void megamol::mmvtkm_gl::mmvtkmStreamlineRenderer::updateRenderTaskCollection(bool force_update) {
+void megamol::mmvtkm_gl::mmvtkmStreamlineRenderer::updateRenderTaskCollection(
+    mmstd_gl::CallRender3DGL& call, bool force_update) {
     bool something_has_changed = force_update;
 
     if (something_has_changed) {

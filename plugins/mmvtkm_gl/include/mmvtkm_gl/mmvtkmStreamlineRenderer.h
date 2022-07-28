@@ -27,7 +27,7 @@ public:
 
 protected:
     void createMaterialCollection() override;
-    void updateRenderTaskCollection(bool force_update) override;
+    void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
 };
 
 } // namespace mmvtkm_gl

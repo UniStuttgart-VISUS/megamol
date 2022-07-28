@@ -28,7 +28,7 @@ namespace mesh_gl {
 
     protected:
         void createMaterialCollection() override;
-        void updateRenderTaskCollection(bool force_update) override;
+        void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
 
     private:
         /** Slot to retrieve the gltf model */

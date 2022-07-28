@@ -137,7 +137,7 @@ bool megamol::archvis_gl::FEMRenderer::updateMeshCollection() {
     }
 }
 
-void megamol::archvis_gl::FEMRenderer::updateRenderTaskCollection(bool force_update) {
+void megamol::archvis_gl::FEMRenderer::updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) {
     bool something_has_changed = force_update;
 
     CallFEMModel* fem_call = this->m_fem_callerSlot.CallAs<CallFEMModel>();

@@ -33,7 +33,8 @@ void megamol::mesh_gl::ThreeDimensionalUIRenderer::createMaterialCollection() {
         {"mesh_gl/3DUI.vert.glsl", "mesh_gl/3DUI.geom.glsl", "mesh_gl/3DUI.frag.glsl"});
 }
 
-void megamol::mesh_gl::ThreeDimensionalUIRenderer::updateRenderTaskCollection(bool force_update) {
+void megamol::mesh_gl::ThreeDimensionalUIRenderer::updateRenderTaskCollection(
+    mmstd_gl::CallRender3DGL& call, bool force_update) {
     bool something_has_changed = force_update;
 
     mesh::CallGlTFData* gltf_call = this->m_glTF_callerSlot.CallAs<mesh::CallGlTFData>();

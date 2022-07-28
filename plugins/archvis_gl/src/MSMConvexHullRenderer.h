@@ -34,7 +34,7 @@ protected:
     void createMaterialCollection() override;
 
     bool updateMeshCollection() override;
-    void updateRenderTaskCollection(bool force_update) override;
+    void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
 
 private:
     megamol::core::CallerSlot m_MSM_callerSlot;

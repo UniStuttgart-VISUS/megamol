@@ -74,6 +74,7 @@ bool megamol::archvis_gl::MSMConvexHullRenderer::updateMeshCollection() {
     return retval;
 }
 
-void megamol::archvis_gl::MSMConvexHullRenderer::updateRenderTaskCollection(bool force_update) {
+void megamol::archvis_gl::MSMConvexHullRenderer::updateRenderTaskCollection(
+    mmstd_gl::CallRender3DGL& call, bool force_update) {
     //TODO
 }

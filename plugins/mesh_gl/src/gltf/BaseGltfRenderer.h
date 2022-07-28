@@ -27,7 +27,7 @@ public:
     ~BaseGltfRenderer() = default;
 
 protected:
-    void updateRenderTaskCollection(bool force_update) override;
+    void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
 
 private:
     /** Slot to retrieve the gltf model */
@@ -44,7 +44,8 @@ inline BaseGltfRenderer<NAME, DESC>::BaseGltfRenderer()
 }
 
 template<const char* NAME, const char* DESC>
-inline void BaseGltfRenderer<NAME, DESC>::updateRenderTaskCollection(bool force_update) {
+inline void BaseGltfRenderer<NAME, DESC>::updateRenderTaskCollection(
+    mmstd_gl::CallRender3DGL& call, bool force_update) {
 
     bool something_has_changed = force_update;
 

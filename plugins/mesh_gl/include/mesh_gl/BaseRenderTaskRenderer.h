@@ -48,7 +48,7 @@ public:
     }
 
     BaseRenderTaskRenderer() = default;
-    ~BaseRenderTaskRenderer() = default;
+    virtual ~BaseRenderTaskRenderer();
 
 protected:
     /**
@@ -111,7 +111,7 @@ protected:
     /**
      * Update render task collection. Called by module's Render function.
      */
-    virtual void updateRenderTaskCollection(bool force_update);
+    virtual void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update);
 
     std::shared_ptr<GPUMaterialCollection> material_collection_;
 
@@ -120,6 +120,11 @@ protected:
     std::shared_ptr<GPURenderTaskCollection> render_task_collection_;
 
 };
+
+template<const char* NAME, const char* DESC>
+inline BaseRenderTaskRenderer<NAME, DESC>::~BaseRenderTaskRenderer() {
+    this->Release();
+}
 
 template<const char* NAME, const char* DESC>
 inline bool BaseRenderTaskRenderer<NAME, DESC>::create() {
@@ -161,7 +166,7 @@ inline bool BaseRenderTaskRenderer<NAME, DESC>::Render(mmstd_gl::CallRender3DGL&
     // Update mesh collection and check whether something awaits you
     something_has_changed |= updateMeshCollection();
     // Update render task collection. Force update if material or mesh has changed
-    updateRenderTaskCollection(something_has_changed);
+    updateRenderTaskCollection(call, something_has_changed);
 
     // Perform actual rendering after updating mesh data and gltf data
     rendering::processGPURenderTasks(render_task_collection_, view_mx, proj_mx);
@@ -205,7 +210,8 @@ inline bool BaseRenderTaskRenderer<NAME, DESC>::updateMeshCollection() {
 }
 
 template<const char* NAME, const char* DESC>
-inline void BaseRenderTaskRenderer<NAME, DESC>::updateRenderTaskCollection(bool force_update) {
+inline void BaseRenderTaskRenderer<NAME, DESC>::updateRenderTaskCollection(
+    mmstd_gl::CallRender3DGL& call, bool force_update) {
     // empty function that is conveniently used when no update is required after creation
 }
 
