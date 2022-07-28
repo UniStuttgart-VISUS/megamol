@@ -12,8 +12,8 @@
 
 #include "ImageWrapper.h"
 #include "imgui.h"
-#include "imgui_impl_generic.h"
-#include "imgui_sw.h"
+#include "imgui_backends/imgui_impl_generic.h"
+#include "imgui_backends/imgui_sw.h"
 #include "mmcore/view/CPUFramebuffer.h"
 #include <glm/glm.hpp>
 #include <memory>

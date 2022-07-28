@@ -1,16 +1,15 @@
 vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
-set(IMGUIZMOQUAT_VERSION 3.0)
 
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
-    REPO BrutPitt/imGuIZMO.quat
-    REF v${IMGUIZMOQUAT_VERSION}
-    SHA512 0315fd29bff88854135745d166bc15218df95e0ebf93bf71e991bf6e90243b6e512c7919ffc0d05dd4a8b48f79d347f535f0006d7ab312bb5c1dfb1cdc172e54
+    REPO braunms/imGuIZMO.quat
+    REF 9841b964a42863e31e3448f12b913601c1347d07
+    SHA512 249f80f515ce8beafad88b58cc7fddf9a90b90a56a74574cff539724218c4adf278ed80ab9563ae8b54fc03a9efec7041202ce7d6af8959a879275c9659796a3
     HEAD_REF master
-    PATCHES
-      generate-cmakelists.patch
-      generate-cmakeconfig.patch
 )
+
+file(COPY "${CMAKE_CURRENT_LIST_DIR}/imguizmoquatConfig.cmake.in" DESTINATION "${SOURCE_PATH}")
+file(COPY "${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt" DESTINATION "${SOURCE_PATH}")
 
 vcpkg_cmake_configure(
     SOURCE_PATH ${SOURCE_PATH}

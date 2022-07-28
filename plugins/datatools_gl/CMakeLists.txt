@@ -3,6 +3,8 @@
 # All rights reserved.
 #
 
+find_package(imgui CONFIG REQUIRED)
+
 megamol_plugin(datatools_gl
   BUILD_DEFAULT ON
   DEPENDS_GL
@@ -11,5 +13,7 @@ megamol_plugin(datatools_gl
     mmstd_gl
     geometry_calls_gl
     datatools
+  DEPENDS_LIBRARIES
+    imgui::imgui
   DEPENDS_EXTERNALS
     tinyply)

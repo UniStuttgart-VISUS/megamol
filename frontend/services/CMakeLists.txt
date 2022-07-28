@@ -9,7 +9,10 @@ if(BUILD_FRONTEND_SERVICES)
   project(frontend_services)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-  find_package(glm REQUIRED)
+  find_package(glm CONFIG REQUIRED)
+  find_package(imgui CONFIG REQUIRED)
+  find_package(imguizmoquat CONFIG REQUIRED)
+  find_package(implot CONFIG REQUIRED)
 
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "include/*.h"
@@ -127,14 +130,8 @@ if(BUILD_FRONTEND_SERVICES)
   
   # GLFW
   if (MEGAMOL_USE_OPENGL)
-    find_package(glfw3)
-    find_package(imgui)
-    find_package(imguizmoquat)
-    find_package(implot)
+    find_package(glfw3 CONFIG REQUIRED)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
-    target_link_libraries(${PROJECT_NAME} PRIVATE imgui::imgui)
-    target_link_libraries(${PROJECT_NAME} PRIVATE imguizmoquat::imguizmoquat)
-    target_link_libraries(${PROJECT_NAME} PRIVATE implot::implot)
   endif()
 
   if(ENABLE_VR_SERVICE_UNITY_KOLABBW)
@@ -184,9 +181,9 @@ if(BUILD_FRONTEND_SERVICES)
       abstract_frontend_service
       core
       glm::glm
-      imgui
-      implot
-      imguizmoquat)
+      imgui::imgui
+      imguizmoquat::imguizmoquat
+      implot::implot)
 
   # Install gui resources
   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gui/resources")

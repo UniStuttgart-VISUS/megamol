@@ -3,6 +3,8 @@
 # All rights reserved.
 #
 
+find_package(imgui CONFIG REQUIRED)
+
 megamol_plugin(probe_gl
   BUILD_DEFAULT OFF
   DEPENDS_GL
@@ -14,5 +16,5 @@ megamol_plugin(probe_gl
     mesh
     mesh_gl
     compositing_gl
-  DEPENDS_EXTERNALS PUBLIC
-    imgui)
+  DEPENDS_LIBRARIES PUBLIC
+    imgui::imgui)

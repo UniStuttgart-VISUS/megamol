@@ -3,6 +3,7 @@
 # All rights reserved.
 #
 
+find_package(imgui CONFIG REQUIRED)
 find_package(PNG REQUIRED)
 
 megamol_plugin(cinematic_gl
@@ -13,4 +14,5 @@ megamol_plugin(cinematic_gl
     mmstd_gl
     cinematic
   DEPENDS_LIBRARIES
+    imgui::imgui
     PNG::PNG)

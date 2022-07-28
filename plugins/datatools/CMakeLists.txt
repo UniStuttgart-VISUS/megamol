@@ -3,8 +3,9 @@
 # All rights reserved.
 #
 
-find_package(ZeroMQ REQUIRED)
-find_package(cppzmq REQUIRED)
+find_package(ZeroMQ CONFIG REQUIRED)
+find_package(cppzmq CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 megamol_plugin(datatools
   BUILD_DEFAULT ON
@@ -16,6 +17,7 @@ megamol_plugin(datatools
   DEPENDS_LIBRARIES
     libzmq
     cppzmq
+    imgui::imgui
   DEPENDS_EXTERNALS
     Eigen
     nanoflann
