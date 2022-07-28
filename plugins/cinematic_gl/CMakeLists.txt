@@ -13,6 +13,4 @@ megamol_plugin(cinematic_gl
     mmstd_gl
     cinematic
   DEPENDS_LIBRARIES
-    PNG::PNG
-  DEPENDS_EXTERNALS
-    imgui)
+    PNG::PNG)

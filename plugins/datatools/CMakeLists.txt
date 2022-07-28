@@ -20,8 +20,7 @@ megamol_plugin(datatools
     Eigen
     nanoflann
     sim_sort
-    mmpld_io
-    imgui)
+    mmpld_io)
 
 if (datatools_PLUGIN_ENABLED)
   # Additional sources

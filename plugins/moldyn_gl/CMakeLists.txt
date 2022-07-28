@@ -11,5 +11,4 @@ megamol_plugin(moldyn_gl
     mmstd_gl
     moldyn
     datatools
-    geometry_calls
-    imgui)
+    geometry_calls)

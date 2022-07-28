@@ -10,9 +10,6 @@ if(BUILD_FRONTEND_SERVICES)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
   find_package(glm REQUIRED)
-  require_external(imgui)
-  require_external(implot)  
-  require_external(imguizmoquat)
 
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "include/*.h"
@@ -130,8 +127,14 @@ if(BUILD_FRONTEND_SERVICES)
   
   # GLFW
   if (MEGAMOL_USE_OPENGL)
-    require_external(glfw)
+    find_package(glfw3)
+    find_package(imgui)
+    find_package(imguizmoquat)
+    find_package(implot)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+    target_link_libraries(${PROJECT_NAME} PRIVATE imgui::imgui)
+    target_link_libraries(${PROJECT_NAME} PRIVATE imguizmoquat::imguizmoquat)
+    target_link_libraries(${PROJECT_NAME} PRIVATE implot::implot)
   endif()
 
   if(ENABLE_VR_SERVICE_UNITY_KOLABBW)

@@ -10,6 +10,4 @@ megamol_plugin(cinematic
   DEPENDS_PLUGINS
     mmstd
   DEPENDS_LIBRARIES
-    PNG::PNG
-  DEPENDS_EXTERNALS
-    imgui)
+    PNG::PNG)

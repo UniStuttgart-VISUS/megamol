@@ -11,6 +11,5 @@ megamol_plugin(datatools_gl
     mmstd_gl
     geometry_calls_gl
     datatools
-    imgui
   DEPENDS_EXTERNALS
     tinyply)

@@ -1,0 +1,12 @@
+diff --git a/cmake/imguizmoquatConfig.cmake.in b/cmake/imguizmoquatConfig.cmake.in
+new file mode 100644
+index 0000000..a243329
+--- /dev/null
++++ b/cmake/imguizmoquatConfig.cmake.in
+@@ -0,0 +1,6 @@
++@PACKAGE_INIT@
++
++include(CMakeFindDependencyMacro)
++find_dependency(imgui REQUIRED)
++
++include("${CMAKE_CURRENT_LIST_DIR}/imguizmoquatConfigTargets.cmake")
