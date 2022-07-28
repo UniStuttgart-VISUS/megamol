@@ -25,8 +25,8 @@ bool megamol::archvis_gl::MSMConvexHullRenderer::GetExtents(mmstd_gl::CallRender
 
 void megamol::archvis_gl::MSMConvexHullRenderer::createMaterialCollection() {
     material_collection_ = std::make_shared<mesh_gl::GPUMaterialCollection>();
-    material_collection_->addMaterial(
-        this->instance(), "convexhull", {"archvis_gl/convex_hull.vert.glsl", "archvis_gl/convex_hull.frag.glsl"});
+    //  material_collection_->addMaterial(
+    //      this->instance(), "convexhull", {"archvis_gl/convex_hull.vert.glsl", "archvis_gl/convex_hull.frag.glsl"});
 }
 
 bool megamol::archvis_gl::MSMConvexHullRenderer::updateMeshCollection() {

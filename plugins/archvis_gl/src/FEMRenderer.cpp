@@ -28,7 +28,7 @@ bool megamol::archvis_gl::FEMRenderer::GetExtents(mmstd_gl::CallRender3DGL& call
 void megamol::archvis_gl::FEMRenderer::createMaterialCollection() {
     material_collection_ = std::make_shared<mesh_gl::GPUMaterialCollection>();
     material_collection_->addMaterial(this->instance(), "ArchVisFEM",
-        {"archvis/FEM/fem_vert.glsl", "archvis/FEM/fem_geom.glsl", "archvis/FEM/fem_frag.glsl"});
+        {"archvis_gl/FEM/fem.vert.glsl", "archvis_gl/FEM/fem.geom.glsl", "archvis_gl/FEM/fem_frag.glsl"});
 }
 
 bool megamol::archvis_gl::FEMRenderer::updateMeshCollection() {
