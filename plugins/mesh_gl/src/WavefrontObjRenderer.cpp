@@ -29,6 +29,7 @@ void megamol::mesh_gl::WavefrontObjRenderer::updateRenderTaskCollection(
     // Obtain camera information
     core::view::Camera cam = call.GetCamera();
     auto cam_pose = cam.getPose();
+    glm::mat4 view_mx = cam.getViewMatrix();
 
     bool something_has_changed = force_update;
 
