@@ -3,7 +3,12 @@
   "version-string": "1.3.0-dev",
   "dependencies": [
     "cppzmq",
-    "imgui",
+    {
+      "name": "imgui",
+      "features": [
+        "docking-experimental"
+      ]
+    },
     "imguizmoquat",
     "implot",
     "glfw3",
@@ -33,7 +38,6 @@
             {
                 "name": "imgui",
                 "features": [
-                    "docking-experimental",
                     "opengl3-binding"
                 ]
             }
