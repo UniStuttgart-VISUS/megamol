@@ -17,8 +17,8 @@
     "nlohmann-json",
     "spdlog",
     {
-        "name": "tbb",
-        "version>=": "2021.5.0"
+      "name": "tbb",
+      "version>=": "2021.5.0"
     },
     "tinyobjloader",
     "zeromq",
@@ -32,29 +32,29 @@
       ]
     },
     "use-opengl": {
-        "description": "Use OpenGL",
-        "dependencies": [
-            "megamol-shader-factory",
-            {
-                "name": "imgui",
-                "features": [
-                    "opengl3-binding"
-                ]
-            }
-        ]
+      "description": "Use OpenGL",
+      "dependencies": [
+        "megamol-shader-factory",
+        {
+          "name": "imgui",
+          "features": [
+            "opengl3-binding"
+          ]
+        }
+      ]
     },
     "use-ospray": {
-        "description": "Use OSPRay",
-        "dependencies": [
-            {
-                "name": "ospray",
-                "version>=": "2.10.0",
-                "features": [
-                    "avx",
-                    "avx2"
-                ]
-            }
-        ]
+      "description": "Use OSPRay",
+      "dependencies": [
+        {
+          "name": "ospray",
+          "version>=": "2.10.0",
+          "features": [
+            "avx",
+            "avx2"
+          ]
+        }
+      ]
     }
   }
 }
