@@ -12,7 +12,6 @@ megamol_plugin(datatools
     mesh
   DEPENDS_EXTERNALS
     nanoflann
-    sim_sort
     mmpld_io)
 
 if (datatools_PLUGIN_ENABLED)
@@ -20,12 +19,14 @@ if (datatools_PLUGIN_ENABLED)
   find_package(cppzmq CONFIG REQUIRED)
   find_package(imgui CONFIG REQUIRED)
   find_package(Eigen3 CONFIG REQUIRED)
+  find_package(simultaneous_sort CONFIG REQUIRED)
   target_link_libraries(datatools
     PRIVATE
       libzmq
       cppzmq
       imgui::imgui
-      Eigen3::Eigen)
+      Eigen3::Eigen
+      simultaneous_sort)
 
   # Additional sources
   file(GLOB_RECURSE extra_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/min_sphere_of_spheres/*.cpp")

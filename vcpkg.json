@@ -20,6 +20,7 @@
         "libpng",
         "lua",
         "nlohmann-json",
+        "simultaneous-sort",
         "spdlog",
         {
             "name": "tbb",

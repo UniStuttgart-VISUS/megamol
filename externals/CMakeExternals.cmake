@@ -79,17 +79,6 @@ function(require_external NAME)
       GIT_TAG "v1.3.0"
       INCLUDE_DIR "include")
 
-  # sim_sort
-  elseif (NAME STREQUAL "sim_sort")
-    if (TARGET sim_sort)
-      return()
-    endif ()
-
-    add_external_headeronly_project(sim_sort
-      GIT_REPOSITORY https://github.com/alexstraub1990/simultaneous-sort.git
-      GIT_TAG 220fdf37fec2d9d3e3f7674194544ee70eb93ee7 # master on 2021-07-26, because nothing was specified here.
-      INCLUDE_DIR "include")
-
   # ###########################################################################
   # ### Built libraries #######################################################
   # ###########################################################################

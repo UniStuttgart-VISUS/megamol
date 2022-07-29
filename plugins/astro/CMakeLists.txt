@@ -11,5 +11,9 @@ megamol_plugin(astro
     geometry_calls
   DEPENDS_EXTERNALS
     nanoflann
-    sim_sort
     glowl)
+
+if (astro_PLUGIN_ENABLED)
+  find_package(simultaneous_sort CONFIG REQUIRED)
+  target_link_libraries(astro PRIVATE simultaneous_sort)
+endif()
