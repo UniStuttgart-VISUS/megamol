@@ -5,6 +5,7 @@
         "cppzmq",
         "cxxopts",
         "eigen3",
+        "expat",
         {
             "name": "imgui",
             "features": [

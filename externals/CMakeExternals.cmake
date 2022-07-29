@@ -247,37 +247,6 @@ function(require_external NAME)
       install(DIRECTORY "${cuesdk_archive_SOURCE_DIR}/redist/x64/" DESTINATION "bin" FILES_MATCHING PATTERN "*2017.dll")
     endif ()
 
-  # expat
-  elseif (NAME STREQUAL "expat")
-    if (TARGET expat)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(EXPAT_LIB "lib/expat<SUFFIX>.lib")
-    else ()
-      set(EXPAT_LIB "lib/libexpat.a")
-    endif ()
-
-    # Files in core were originally at 64f3cf982a156a62c1fdb44d864144ee5871159e
-    # This seems to be master at 07.06.2017, somewhere between 2.2.0 and 2.2.1
-    add_external_project(expat STATIC
-      GIT_REPOSITORY https://github.com/libexpat/libexpat
-      GIT_TAG "R_2_2_1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${EXPAT_LIB}"
-      SOURCE_SUBDIR "expat"
-      DEBUG_SUFFIX "d"
-      CMAKE_ARGS
-        -DBUILD_doc=OFF
-        -DBUILD_examples=OFF
-        -DBUILD_shared=OFF
-        -DBUILD_tests=OFF
-        -DBUILD_tools=OFF)
-
-    add_external_library(expat
-      LIBRARY ${EXPAT_LIB}
-      DEBUG_SUFFIX "d")
-
   # glad
   elseif (NAME STREQUAL "glad")
     if (TARGET glad)
