@@ -15,12 +15,15 @@ megamol_plugin(protein_gl
     geometry_calls_gl
     compositing_gl
   DEPENDS_EXTERNALS
-    glad
-    nanoflann)
+    glad)
 
 if (protein_gl_PLUGIN_ENABLED)
   if (WIN32)
     # special case for the MSMS-related files
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/msms/msms.exe DESTINATION "bin")
   endif ()
+  find_package(nanoflann CONFIG REQUIRED)
+  target_link_libraries(protein_gl
+    PRIVATE
+      nanoflann::nanoflann)
 endif ()

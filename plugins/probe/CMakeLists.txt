@@ -16,10 +16,14 @@ megamol_plugin(probe
     asmjit
     blend2d
     qhull
-    PUBLIC Eigen
-    nanoflann)
+    PUBLIC Eigen)
 
 if (probe_PLUGIN_ENABLED)
+  find_package(nanoflann CONFIG REQUIRED)
+  target_link_libraries(probe
+    PUBLIC
+      nanoflann::nanoflann)
+
   file(GLOB_RECURSE third RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*")
   file(GLOB_RECURSE ospray_sources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "probe_ospray/src/*.cpp")
   file(GLOB_RECURSE ospray_headers RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "probe_ospray/src/*.h")

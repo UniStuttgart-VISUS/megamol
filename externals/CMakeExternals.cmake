@@ -57,17 +57,6 @@ function(require_external NAME)
       INCLUDE_DIR "include")
     target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD2)
 
-  # nanoflann
-  elseif (NAME STREQUAL "nanoflann")
-    if (TARGET nanoflann)
-      return()
-    endif ()
-
-    add_external_headeronly_project(nanoflann
-      GIT_REPOSITORY https://github.com/jlblancoc/nanoflann.git
-      GIT_TAG "v1.3.0"
-      INCLUDE_DIR "include")
-
   # ###########################################################################
   # ### Built libraries #######################################################
   # ###########################################################################

@@ -20,6 +20,7 @@
         "libpng",
         "lua",
         "mmpld-io",
+        "nanoflann",
         "nlohmann-json",
         "simultaneous-sort",
         "spdlog",
