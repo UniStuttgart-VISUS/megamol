@@ -25,6 +25,7 @@
             "name": "tbb",
             "version>=": "2021.5.0"
         },
+        "tinygltf",
         "tinyobjloader",
         "zeromq",
         "zlib"

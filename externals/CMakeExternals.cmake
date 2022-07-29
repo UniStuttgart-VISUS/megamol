@@ -79,17 +79,6 @@ function(require_external NAME)
       GIT_TAG "v1.3.0"
       INCLUDE_DIR "include")
 
-  # tinygltf
-  elseif (NAME STREQUAL "tinygltf")
-    if (TARGET tinygltf)
-      return()
-    endif ()
-
-    add_external_headeronly_project(tinygltf
-      GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
-      GIT_TAG "v2.5.0")
-    target_compile_definitions(tinygltf INTERFACE TINYGLTF_NO_INCLUDE_JSON)
-
   # sim_sort
   elseif (NAME STREQUAL "sim_sort")
     if (TARGET sim_sort)
