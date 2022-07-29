@@ -17,8 +17,7 @@ if (BUILD_CORE)
   find_package(glm REQUIRED)
   find_package(TBB CONFIG REQUIRED)
   find_package(EXPAT CONFIG REQUIRED)
-
-  require_external(lua)
+  find_package(Lua REQUIRED)
   
   if (ENABLE_CUESDK)
     require_external(CUESDK)
@@ -33,7 +32,8 @@ if (BUILD_CORE)
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files})
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
+    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    ${LUA_INCLUDE_DIR})
   target_link_libraries(${PROJECT_NAME}
     PUBLIC
       vislib
@@ -41,7 +41,7 @@ if (BUILD_CORE)
       ZLIB::ZLIB
       PNG::PNG
       nlohmann_json::nlohmann_json
-      lua
+      ${LUA_LIBRARIES}
       expat::expat
       frontend_resources
       libzmq

@@ -321,32 +321,6 @@ function(require_external NAME)
       GIT_TAG "v2.1.0"
       INCLUDE_DIR "include")
 
-  # lua
-  elseif (NAME STREQUAL "lua")
-    if (TARGET lua)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(LUA_LIB "lib/lua.lib")
-    else ()
-      set(LUA_LIB "lib/liblua.a")
-    endif ()
-
-    add_external_project(lua STATIC
-      GIT_REPOSITORY https://github.com/lua/lua.git
-      GIT_TAG v5.3.5
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${LUA_LIB}"
-      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/externals/lua/CMakeLists.txt"
-        "<SOURCE_DIR>/CMakeLists.txt"
-        COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/externals/lua/lua.hpp"
-        "<SOURCE_DIR>/lua.hpp")
-
-    add_external_library(lua
-      LIBRARY ${LUA_LIB})
-
   # obj-io
   elseif (NAME STREQUAL "obj-io")
     if (TARGET obj-io)

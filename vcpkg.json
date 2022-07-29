@@ -17,6 +17,7 @@
         "glfw3",
         "glm",
         "libpng",
+        "lua",
         "nlohmann-json",
         "spdlog",
         {
