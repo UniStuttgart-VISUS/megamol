@@ -13,16 +13,17 @@ megamol_plugin(probe
     geometry_calls
   DEPENDS_EXTERNALS
     libigl
-    asmjit
-    blend2d
-    qhull
-    PUBLIC Eigen)
+    qhull)
 
 if (probe_PLUGIN_ENABLED)
+  find_package(Eigen3 CONFIG REQUIRED)
   find_package(nanoflann CONFIG REQUIRED)
+  find_package(blend2d CONFIG REQUIRED)
   target_link_libraries(probe
     PUBLIC
-      nanoflann::nanoflann)
+      Eigen3::Eigen
+      nanoflann::nanoflann
+      blend2d::blend2d)
 
   file(GLOB_RECURSE third RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*")
   file(GLOB_RECURSE ospray_sources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "probe_ospray/src/*.cpp")

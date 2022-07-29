@@ -35,18 +35,8 @@ function(require_external NAME)
   # ### Header-only libraries #################################################
   # ###########################################################################
 
-  # asmjit
-  if (NAME STREQUAL "asmjit")
-    if (TARGET asmjit)
-      return()
-    endif ()
-
-    add_external_headeronly_project(asmjit INTERFACE
-      GIT_REPOSITORY https://github.com/asmjit/asmjit.git
-      GIT_TAG "8474400e82c3ea65bd828761539e5d9b25f6bd83")
-
   # glowl
-  elseif (NAME STREQUAL "glowl")
+  if (NAME STREQUAL "glowl")
     if (TARGET glowl)
       return()
     endif ()
@@ -120,34 +110,6 @@ function(require_external NAME)
 
     add_external_library(bhtsne
       LIBRARY ${BHTSNE_LIB})
-
-  # blend2d
-  elseif (NAME STREQUAL "blend2d")
-    if (TARGET blend2d)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(BLEND2D_LIB "lib/blend2d.lib")
-    else ()
-      set(BLEND2D_LIB "lib/libblend2d.a")
-    endif ()
-
-    require_external(asmjit)
-    external_get_property(asmjit SOURCE_DIR)
-
-    add_external_project(blend2d STATIC
-      GIT_REPOSITORY https://github.com/blend2d/blend2d.git
-      GIT_TAG "8aeac6cb34b00898ae725bd76eb3bb2c7cffcf86"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}" "<INSTALL_DIR>/${BLEND2D_LIB}"
-      CMAKE_ARGS
-        -DASMJIT_DIR=${SOURCE_DIR}
-        -DBLEND2D_STATIC=ON)
-
-    add_external_library(blend2d
-      DEPENDS asmjit
-      INCLUDE_DIR "include"
-      LIBRARY ${BLEND2D_LIB})
 
   # chemfiles
   elseif(NAME STREQUAL "chemfiles")

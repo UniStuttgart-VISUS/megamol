@@ -385,7 +385,7 @@ template <typename shvecPointT> struct PointCloudAdaptor {
       // typedef PointCloudAdaptor<std::shared_ptr<std::vector<PointT, Eigen::aligned_allocator<PointT>>>> PC2KD;
       typedef PointCloudAdaptor<PointCloudConstPtr> PC2KD;
       typedef ::nanoflann::KDTreeSingleIndexAdaptor<::nanoflann::L2_Simple_Adaptor<typename PointT::value_t, PC2KD, double>, PC2KD,
-          3 /* dim */> FLANNIndex;
+          3 /* dim */, std::size_t> FLANNIndex;
           
 
       // Boost shared pointers
