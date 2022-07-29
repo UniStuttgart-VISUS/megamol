@@ -25,7 +25,7 @@ if (datatools_PLUGIN_ENABLED)
       libzmq
       cppzmq
       imgui::imgui
-      eigen::target)
+      Eigen3::Eigen)
 
   # Additional sources
   file(GLOB_RECURSE extra_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/min_sphere_of_spheres/*.cpp")

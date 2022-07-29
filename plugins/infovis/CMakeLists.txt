@@ -18,7 +18,7 @@ if (infovis_PLUGIN_ENABLED)
 
   target_link_libraries(infovis
     PRIVATE
-      eigen::target)
+      Eigen3::Eigen)
   target_include_directories(infovis
     PRIVATE
       ${DELAUNATOR_CPP_INCLUDE_DIRS})
