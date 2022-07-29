@@ -19,6 +19,7 @@
         "glm",
         "libpng",
         "lua",
+        "mmpld-io",
         "nlohmann-json",
         "simultaneous-sort",
         "spdlog",

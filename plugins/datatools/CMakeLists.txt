@@ -11,8 +11,7 @@ megamol_plugin(datatools
     geometry_calls
     mesh
   DEPENDS_EXTERNALS
-    nanoflann
-    mmpld_io)
+    nanoflann)
 
 if (datatools_PLUGIN_ENABLED)
   find_package(ZeroMQ CONFIG REQUIRED)
@@ -20,6 +19,9 @@ if (datatools_PLUGIN_ENABLED)
   find_package(imgui CONFIG REQUIRED)
   find_package(Eigen3 CONFIG REQUIRED)
   find_package(simultaneous_sort CONFIG REQUIRED)
+
+  find_path(MMPLD_IO_INCLUDE_DIRS "file_header.h")
+
   target_link_libraries(datatools
     PRIVATE
       libzmq
@@ -31,7 +33,7 @@ if (datatools_PLUGIN_ENABLED)
   # Additional sources
   file(GLOB_RECURSE extra_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/min_sphere_of_spheres/*.cpp")
   target_sources(datatools PRIVATE ${extra_source_files})
-  target_include_directories(datatools PUBLIC "3rd/min_sphere_of_spheres")
+  target_include_directories(datatools PUBLIC "3rd/min_sphere_of_spheres" PRIVATE ${MMPLD_IO_INCLUDE_DIRS})
   if (MPI_C_FOUND)
     target_link_libraries(datatools PRIVATE MPI::MPI_C)
   endif ()

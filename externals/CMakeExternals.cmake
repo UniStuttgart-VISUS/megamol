@@ -57,17 +57,6 @@ function(require_external NAME)
       INCLUDE_DIR "include")
     target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD2)
 
-  # mmpld_io
-  elseif (NAME STREQUAL "mmpld_io")
-    if (TARGET mmpld_io)
-      return()
-    endif ()
-
-    add_external_headeronly_project(mmpld_io
-      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mmpld_io.git
-      GIT_TAG 0002c64e0be4dddc137e4fe37db4b96361bc79bd
-      INCLUDE_DIR "include")
-
   # nanoflann
   elseif (NAME STREQUAL "nanoflann")
     if (TARGET nanoflann)
