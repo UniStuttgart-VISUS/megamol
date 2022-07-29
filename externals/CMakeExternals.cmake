@@ -383,30 +383,6 @@ function(require_external NAME)
     add_external_library(snappy
       LIBRARY ${SNAPPY_LIB})
 
-  # tinyply
-  elseif (NAME STREQUAL "tinyply")
-    if (TARGET tinyply)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(TNY_LIB "${CMAKE_INSTALL_LIBDIR}/tinyply<SUFFIX>.lib")
-    else ()
-      set(TNY_LIB "${CMAKE_INSTALL_LIBDIR}/libtinyply<SUFFIX>.a")
-    endif ()
-
-    add_external_project(tinyply STATIC
-      GIT_REPOSITORY https://github.com/ddiakopoulos/tinyply.git
-      GIT_TAG "2.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${TNY_LIB}"
-      DEBUG_SUFFIX d
-      CMAKE_ARGS
-        -DSHARED_LIB=OFF)
-
-    add_external_library(tinyply
-      LIBRARY ${TNY_LIB}
-      DEBUG_SUFFIX d)
-
   # tracking
   elseif (NAME STREQUAL "tracking")
     if (TARGET tracking)
