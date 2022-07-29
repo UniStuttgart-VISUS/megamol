@@ -45,17 +45,6 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/asmjit/asmjit.git
       GIT_TAG "8474400e82c3ea65bd828761539e5d9b25f6bd83")
 
-  # Delaunator
-  elseif (NAME STREQUAL "Delaunator")
-    if (TARGET Delaunator)
-      return()
-    endif ()
-
-    add_external_headeronly_project(Delaunator
-      GIT_REPOSITORY https://github.com/delfrrr/delaunator-cpp.git
-      GIT_TAG "v0.4.0"
-      INCLUDE_DIR "include")
-
   # glowl
   elseif (NAME STREQUAL "glowl")
     if (TARGET glowl)

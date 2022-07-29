@@ -4,6 +4,7 @@
     "dependencies": [
         "cppzmq",
         "cxxopts",
+        "delaunator-cpp",
         "eigen3",
         "expat",
         {
