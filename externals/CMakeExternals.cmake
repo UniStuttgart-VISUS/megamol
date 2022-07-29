@@ -393,56 +393,6 @@ function(require_external NAME)
     external_get_property(tracking SOURCE_DIR)
     set(tracking_files "${SOURCE_DIR}/tracking/conf/tracking.conf" PARENT_SCOPE)
 
-  # vtkm
-  elseif (NAME STREQUAL "vtkm")
-    if (TARGET vtkm)
-      return()
-    endif ()
-
-    set(VTKM_VER 1.4)
-    set(LIB_VER 1)
-
-    if (WIN32)
-      set(VTKM_CONT_LIB "lib/vtkm_cont-${VTKM_VER}.lib")
-      set(VTKM_RENDERER_LIB "lib/vtkm_rendering-${VTKM_VER}.lib")
-      set(VTKM_WORKLET_LIB "lib/vtkm_worklet-${VTKM_VER}.lib")
-    else ()
-      set(VTKM_CONT_LIB "${CMAKE_INSTALL_LIBDIR}/libvtkm_cont-${VTKM_VER}.a")
-      set(VTKM_RENDERER_LIB "${CMAKE_INSTALL_LIBDIR}/libvtkm_rendering-${VTKM_VER}.a")
-      set(VTKM_WORKLET_LIB "${CMAKE_INSTALL_LIBDIR}/libvtkm_worklet-${VTKM_VER}.a")
-    endif ()
-
-    add_external_project(vtkm STATIC
-      GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
-      GIT_TAG "v${VTKM_VER}.0"
-      BUILD_BYPRODUCTS
-        "<INSTALL_DIR>/${VTKM_CONT_LIB}"
-        "<INSTALL_DIR>/${VTKM_RENDERER_LIB}"
-        "<INSTALL_DIR>/${VTKM_WORKLET_LIB}"
-      CMAKE_ARGS
-        -DBUILD_SHARED_LIBS:BOOL=OFF
-        -DBUILD_TESTING:BOOL=OFF
-        -DVTKm_ENABLE_CUDA:BOOL=${vtkm_ENABLE_CUDA}
-        -DVTKm_ENABLE_TESTING:BOOL=OFF
-        -DVTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
-        -DVTKm_ENABLE_EXAMPLES:BOOL=OFF
-        -DVTKm_INSTALL_ONLY_LIBRARIES:BOOL=ON
-        -DVTKm_USE_64BIT_IDS:BOOL=OFF
-        #-DCMAKE_BUILD_TYPE=Release
-      )
-
-    add_external_library(vtkm
-      PROJECT vtkm
-      LIBRARY ${VTKM_CONT_LIB})
-
-    add_external_library(vtkm_renderer
-      PROJECT vtkm
-      LIBRARY ${VTKM_RENDERER_LIB})
-
-    add_external_library(vtkm_worklet
-      PROJECT vtkm
-      LIBRARY ${VTKM_WORKLET_LIB})
-
   # zfp
   elseif (NAME STREQUAL "zfp")
     if (TARGET zfp)

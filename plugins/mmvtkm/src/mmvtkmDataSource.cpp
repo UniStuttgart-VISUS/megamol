@@ -14,6 +14,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 
+#include "vtkm/Matrix.h"
 #include "vtkm/cont/DataSetBuilderExplicit.h"
 #include "vtkm/cont/DataSetFieldAdd.h"
 #include "vtkm/io/writer/VTKDataSetWriter.h"

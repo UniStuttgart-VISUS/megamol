@@ -11,21 +11,14 @@ megamol_plugin(mmvtkm_gl
     mmstd_gl
     mesh_gl
     mmadios
-    mmvtkm
-  DEPENDS_EXTERNALS
-    vtkm)
+    mmvtkm)
 
 if (mmvtkm_gl_PLUGIN_ENABLED)
-  external_get_property(vtkm SOURCE_DIR)
-  string(REPLACE "-src" "-build" BUILD_DIR "${SOURCE_DIR}")
-
-  target_include_directories(mmvtkm_gl PUBLIC
-    "${SOURCE_DIR}"
-    "${BUILD_DIR}/include"
-    "${SOURCE_DIR}/vtkm/thirdparty/taotuple"
-    "${SOURCE_DIR}/vtkm/thirdparty/diy"
-    "${SOURCE_DIR}/vtkm/thirdparty/lcl/vtkmlcl"
-    )
-
-  target_link_libraries(mmvtkm_gl PRIVATE vtkm_renderer vtkm_worklet)
+  find_package(VTKm CONFIG REQUIRED)
+  target_link_libraries(mmvtkm_gl
+    PRIVATE
+      vtkm_cont
+      vtkm_filter
+      vtkm_rendering
+      vtkm_worklet)
 endif ()

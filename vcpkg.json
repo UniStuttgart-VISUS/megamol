@@ -30,6 +30,7 @@
         "tinygltf",
         "tinyobjloader",
         "tinyply",
+        "vtk-m",
         "zeromq",
         "zlib"
     ],
