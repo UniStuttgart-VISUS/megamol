@@ -4,6 +4,7 @@
     "dependencies": [
         "cppzmq",
         "cxxopts",
+        "eigen3",
         {
             "name": "imgui",
             "features": [

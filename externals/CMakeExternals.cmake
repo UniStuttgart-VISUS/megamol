@@ -56,16 +56,6 @@ function(require_external NAME)
       GIT_TAG "v0.4.0"
       INCLUDE_DIR "include")
 
-  # Eigen
-  elseif (NAME STREQUAL "Eigen")
-    if (TARGET Eigen)
-      return()
-    endif ()
-
-    add_external_headeronly_project(Eigen
-      GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
-      GIT_TAG "3.3.7")
-
   # glowl
   elseif (NAME STREQUAL "glowl")
     if (TARGET glowl)

@@ -19,12 +19,12 @@ megamol_plugin(datatools
     cppzmq
     imgui::imgui
   DEPENDS_EXTERNALS
-    Eigen
     nanoflann
     sim_sort
     mmpld_io)
 
 if (datatools_PLUGIN_ENABLED)
+  find_package(Eigen3)
   # Additional sources
   file(GLOB_RECURSE extra_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/min_sphere_of_spheres/*.cpp")
   target_sources(datatools PRIVATE ${extra_source_files})

@@ -9,11 +9,12 @@ megamol_plugin(infovis
     mmstd
     datatools
   DEPENDS_EXTERNALS
-    Eigen
     nanoflann
     bhtsne)
 
 if (infovis_PLUGIN_ENABLED)
+  find_package(Eigen3)
+
   # Additional sources
   file(GLOB_RECURSE extra_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*.h")
   file(GLOB_RECURSE extra_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*.cpp")
