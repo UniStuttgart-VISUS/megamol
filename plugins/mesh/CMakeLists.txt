@@ -11,13 +11,16 @@ megamol_plugin(mesh
     quickhull
     obj-io)
 
-
 if (mesh_PLUGIN_ENABLED)
-  find_package(tinyobjloader)
-
-  target_link_libraries(mesh PRIVATE tinyobjloader::tinyobjloader)
+  find_package(tinyobjloader CONFIG REQUIRED)
   find_path(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h")
-  target_include_directories(mesh PRIVATE ${TINYGLTF_INCLUDE_DIRS})
+
+  target_link_libraries(mesh
+    PRIVATE
+      tinyobjloader::tinyobjloader)
+  target_include_directories(mesh
+    PRIVATE
+      ${TINYGLTF_INCLUDE_DIRS})
 
   if (MSVC)
     target_compile_definitions(mesh PRIVATE NOMINMAX)

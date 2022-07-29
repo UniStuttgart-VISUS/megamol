@@ -3,16 +3,20 @@
 # All rights reserved.
 #
 
-find_package(imgui CONFIG REQUIRED)
-find_package(PNG REQUIRED)
-
 megamol_plugin(cinematic_gl
   BUILD_DEFAULT ON
   DEPENDS_GL
   DEPENDS_PLUGINS
     mmstd
     mmstd_gl
-    cinematic
-  DEPENDS_LIBRARIES
-    imgui::imgui
-    PNG::PNG)
+    cinematic)
+
+if (cinematic_gl_PLUGIN_ENABLED)
+  find_package(imgui CONFIG REQUIRED)
+  find_package(PNG REQUIRED)
+
+  target_link_libraries(cinematic_gl
+    PRIVATE
+      imgui::imgui
+      PNG::PNG)
+endif ()

@@ -3,8 +3,6 @@
 # All rights reserved.
 #
 
-find_package(glm REQUIRED)
-
 megamol_plugin(optix_hpg
   BUILD_DEFAULT OFF
   DEPENDS_CUDA
@@ -12,11 +10,13 @@ megamol_plugin(optix_hpg
     mmstd
     mmstd_gl
     mesh
-    geometry_calls
-  DEPENDS_LIBRARIES
-    glm::glm)
+    geometry_calls)
 
 if (optix_hpg_PLUGIN_ENABLED)
+  find_package(glm CONFIG REQUIRED)
+  target_link_libraries(optix_hpg
+    PRIVATE
+      glm::glm)
 
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 

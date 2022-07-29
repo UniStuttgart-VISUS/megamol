@@ -9,5 +9,8 @@ megamol_plugin(protein_calls
     mmstd)
 
 if (protein_calls_PLUGIN_ENABLED)
-  find_package(Eigen3)
-endif()
+  find_package(Eigen3 CONFIG REQUIRED)
+  target_link_libraries(protein_calls
+    PRIVATE
+      eigen::target)
+endif ()
