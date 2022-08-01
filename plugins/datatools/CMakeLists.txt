@@ -9,15 +9,14 @@ megamol_plugin(datatools
     mmstd
     cluster
     geometry_calls
-    mesh
-  DEPENDS_EXTERNALS
-    nanoflann)
+    mesh)
 
 if (datatools_PLUGIN_ENABLED)
   find_package(ZeroMQ CONFIG REQUIRED)
   find_package(cppzmq CONFIG REQUIRED)
   find_package(imgui CONFIG REQUIRED)
   find_package(Eigen3 CONFIG REQUIRED)
+  find_package(nanoflann CONFIG REQUIRED)
   find_package(simultaneous_sort CONFIG REQUIRED)
 
   find_path(MMPLD_IO_INCLUDE_DIRS "file_header.h")
@@ -28,6 +27,7 @@ if (datatools_PLUGIN_ENABLED)
       cppzmq
       imgui::imgui
       Eigen3::Eigen
+      nanoflann::nanoflann
       simultaneous_sort)
 
   # Additional sources

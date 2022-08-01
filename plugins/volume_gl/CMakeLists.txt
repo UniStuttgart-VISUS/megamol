@@ -13,10 +13,11 @@ megamol_plugin(volume_gl
     volume
     geometry_calls
   DEPENDS_EXTERNALS
-    nanoflann
     glowl)
 
 if (volume_gl_PLUGIN_ENABLED)
   find_package(simultaneous_sort CONFIG REQUIRED)
-  target_link_libraries(volume_gl PRIVATE simultaneous_sort)
+  target_link_libraries(volume_gl
+    PRIVATE
+      simultaneous_sort)
 endif()

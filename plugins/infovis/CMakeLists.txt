@@ -9,7 +9,6 @@ megamol_plugin(infovis
     mmstd
     datatools
   DEPENDS_EXTERNALS
-    nanoflann
     bhtsne)
 
 if (infovis_PLUGIN_ENABLED)

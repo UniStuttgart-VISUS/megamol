@@ -1,12 +1,15 @@
 {
-  "name": "megamol",
-  "version-string": "1.3.0-dev",
+    "name": "megamol",
+    "version-string": "1.3.0-dev",
     "dependencies": [
+        "blend2d",
         "cppzmq",
         "cxxopts",
         "delaunator-cpp",
         "eigen3",
         "expat",
+        "glfw3",
+        "glm",
         {
             "name": "imgui",
             "features": [
@@ -15,11 +18,10 @@
         },
         "imguizmoquat",
         "implot",
-        "glfw3",
-        "glm",
         "libpng",
         "lua",
         "mmpld-io",
+        "nanoflann",
         "nlohmann-json",
         "simultaneous-sort",
         "spdlog",
@@ -30,6 +32,7 @@
         "tinygltf",
         "tinyobjloader",
         "tinyply",
+        "vtk-m",
         "zeromq",
         "zlib"
     ],
@@ -49,13 +52,13 @@
         "use-opengl": {
             "description": "Use OpenGL",
             "dependencies": [
-                "megamol-shader-factory",
                 {
                     "name": "imgui",
                     "features": [
                         "opengl3-binding"
                     ]
-                }
+                },
+                "megamol-shader-factory"
             ]
         },
         "use-ospray": {

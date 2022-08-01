@@ -10,10 +10,13 @@ megamol_plugin(astro
     datatools
     geometry_calls
   DEPENDS_EXTERNALS
-    nanoflann
     glowl)
 
 if (astro_PLUGIN_ENABLED)
+  find_package(nanoflann CONFIG REQUIRED)
   find_package(simultaneous_sort CONFIG REQUIRED)
-  target_link_libraries(astro PRIVATE simultaneous_sort)
+  target_link_libraries(astro
+    PRIVATE
+      nanoflann::nanoflann
+      simultaneous_sort)
 endif()

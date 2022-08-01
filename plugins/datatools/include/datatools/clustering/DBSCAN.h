@@ -18,7 +18,7 @@ using cluster_result_t = std::vector<index_t>;
 
 template<typename T, int DIM>
 using kd_tree_t = nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<T, genericPointcloud<T, DIM>>,
-    genericPointcloud<T, DIM>, DIM>;
+    genericPointcloud<T, DIM>, DIM, index_t>;
 
 using cluster_type_ut = index_t;
 

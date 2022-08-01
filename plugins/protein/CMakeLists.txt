@@ -11,9 +11,10 @@ megamol_plugin(protein
     protein_calls
     geometry_calls
   DEPENDS_EXTERNALS
-    chemfiles
-    nanoflann)
+    chemfiles)
 
 if (protein_PLUGIN_ENABLED)
-  target_link_libraries(protein PRIVATE vislib)
+  target_link_libraries(protein
+    PRIVATE
+      vislib)
 endif ()

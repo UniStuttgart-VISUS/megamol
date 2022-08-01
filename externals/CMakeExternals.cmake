@@ -35,18 +35,8 @@ function(require_external NAME)
   # ### Header-only libraries #################################################
   # ###########################################################################
 
-  # asmjit
-  if (NAME STREQUAL "asmjit")
-    if (TARGET asmjit)
-      return()
-    endif ()
-
-    add_external_headeronly_project(asmjit INTERFACE
-      GIT_REPOSITORY https://github.com/asmjit/asmjit.git
-      GIT_TAG "8474400e82c3ea65bd828761539e5d9b25f6bd83")
-
   # glowl
-  elseif (NAME STREQUAL "glowl")
+  if (NAME STREQUAL "glowl")
     if (TARGET glowl)
       return()
     endif ()
@@ -56,17 +46,6 @@ function(require_external NAME)
       GIT_TAG "dafee75f11c5d759df30ff651d6763e4e674dd0e"
       INCLUDE_DIR "include")
     target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD2)
-
-  # nanoflann
-  elseif (NAME STREQUAL "nanoflann")
-    if (TARGET nanoflann)
-      return()
-    endif ()
-
-    add_external_headeronly_project(nanoflann
-      GIT_REPOSITORY https://github.com/jlblancoc/nanoflann.git
-      GIT_TAG "v1.3.0"
-      INCLUDE_DIR "include")
 
   # ###########################################################################
   # ### Built libraries #######################################################
@@ -94,34 +73,6 @@ function(require_external NAME)
 
     add_external_library(bhtsne
       LIBRARY ${BHTSNE_LIB})
-
-  # blend2d
-  elseif (NAME STREQUAL "blend2d")
-    if (TARGET blend2d)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(BLEND2D_LIB "lib/blend2d.lib")
-    else ()
-      set(BLEND2D_LIB "lib/libblend2d.a")
-    endif ()
-
-    require_external(asmjit)
-    external_get_property(asmjit SOURCE_DIR)
-
-    add_external_project(blend2d STATIC
-      GIT_REPOSITORY https://github.com/blend2d/blend2d.git
-      GIT_TAG "8aeac6cb34b00898ae725bd76eb3bb2c7cffcf86"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}" "<INSTALL_DIR>/${BLEND2D_LIB}"
-      CMAKE_ARGS
-        -DASMJIT_DIR=${SOURCE_DIR}
-        -DBLEND2D_STATIC=ON)
-
-    add_external_library(blend2d
-      DEPENDS asmjit
-      INCLUDE_DIR "include"
-      LIBRARY ${BLEND2D_LIB})
 
   # chemfiles
   elseif(NAME STREQUAL "chemfiles")
@@ -355,56 +306,6 @@ function(require_external NAME)
 
     external_get_property(tracking SOURCE_DIR)
     set(tracking_files "${SOURCE_DIR}/tracking/conf/tracking.conf" PARENT_SCOPE)
-
-  # vtkm
-  elseif (NAME STREQUAL "vtkm")
-    if (TARGET vtkm)
-      return()
-    endif ()
-
-    set(VTKM_VER 1.4)
-    set(LIB_VER 1)
-
-    if (WIN32)
-      set(VTKM_CONT_LIB "lib/vtkm_cont-${VTKM_VER}.lib")
-      set(VTKM_RENDERER_LIB "lib/vtkm_rendering-${VTKM_VER}.lib")
-      set(VTKM_WORKLET_LIB "lib/vtkm_worklet-${VTKM_VER}.lib")
-    else ()
-      set(VTKM_CONT_LIB "${CMAKE_INSTALL_LIBDIR}/libvtkm_cont-${VTKM_VER}.a")
-      set(VTKM_RENDERER_LIB "${CMAKE_INSTALL_LIBDIR}/libvtkm_rendering-${VTKM_VER}.a")
-      set(VTKM_WORKLET_LIB "${CMAKE_INSTALL_LIBDIR}/libvtkm_worklet-${VTKM_VER}.a")
-    endif ()
-
-    add_external_project(vtkm STATIC
-      GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
-      GIT_TAG "v${VTKM_VER}.0"
-      BUILD_BYPRODUCTS
-        "<INSTALL_DIR>/${VTKM_CONT_LIB}"
-        "<INSTALL_DIR>/${VTKM_RENDERER_LIB}"
-        "<INSTALL_DIR>/${VTKM_WORKLET_LIB}"
-      CMAKE_ARGS
-        -DBUILD_SHARED_LIBS:BOOL=OFF
-        -DBUILD_TESTING:BOOL=OFF
-        -DVTKm_ENABLE_CUDA:BOOL=${vtkm_ENABLE_CUDA}
-        -DVTKm_ENABLE_TESTING:BOOL=OFF
-        -DVTKm_ENABLE_DEVELOPER_FLAGS:BOOL=OFF
-        -DVTKm_ENABLE_EXAMPLES:BOOL=OFF
-        -DVTKm_INSTALL_ONLY_LIBRARIES:BOOL=ON
-        -DVTKm_USE_64BIT_IDS:BOOL=OFF
-        #-DCMAKE_BUILD_TYPE=Release
-      )
-
-    add_external_library(vtkm
-      PROJECT vtkm
-      LIBRARY ${VTKM_CONT_LIB})
-
-    add_external_library(vtkm_renderer
-      PROJECT vtkm
-      LIBRARY ${VTKM_RENDERER_LIB})
-
-    add_external_library(vtkm_worklet
-      PROJECT vtkm
-      LIBRARY ${VTKM_WORKLET_LIB})
 
   # zfp
   elseif (NAME STREQUAL "zfp")
