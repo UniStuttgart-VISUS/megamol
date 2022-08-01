@@ -7,7 +7,7 @@
     {
       "kind": "git",
       "repository": "https://github.com/UniStuttgart-VISUS/vcpkg-registry.git",
-      "baseline": "d8b400f42df0436f39177c9c9c8f8663129c9226",
+      "baseline": "320df6bff23647ac59a518150a67aef4a9d18098",
       "packages": [
         "adios2",
         "embree",

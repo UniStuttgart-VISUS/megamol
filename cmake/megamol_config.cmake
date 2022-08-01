@@ -73,6 +73,7 @@ if (ENABLE_CUDA)
 endif ()
 
 # MPI
+# TODO: Will be replaced by MEGAMOL_USE_MPI, use vcpkg mpi!!!
 option(ENABLE_MPI "Enable MPI support" OFF)
 set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "Override MPI library name, e.g., MSMPI, MPICH2")
 if (ENABLE_MPI)
