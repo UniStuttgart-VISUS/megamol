@@ -544,11 +544,7 @@ bool GUIManager::OnMouseMove(double x, double y) {
     ImGuiIO& io = ImGui::GetIO();
     io.MousePos = ImVec2(static_cast<float>(x), static_cast<float>(y));
 
-    auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
-                      ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
-
-    // Always consumed if any imgui windows is hovered.
-    bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    bool consumed = io.WantCaptureMouse;
     if (!consumed) {
         consumed = this->picking_buffer.ProcessMouseMove(x, y);
     }
@@ -569,13 +565,9 @@ bool GUIManager::OnMouseButton(
     auto buttonIndex = static_cast<size_t>(button);
     ImGuiIO& io = ImGui::GetIO();
 
-    auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
-                      ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
-
     io.MouseDown[buttonIndex] = down;
 
-    // Always consumed if any imgui windows is hovered.
-    bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    bool consumed = io.WantCaptureMouse;
     if (!consumed) {
         consumed = this->picking_buffer.ProcessMouseClick(button, action, mods);
     }
@@ -595,11 +587,7 @@ bool GUIManager::OnMouseScroll(double dx, double dy) {
     io.MouseWheelH += (float)dx;
     io.MouseWheel += (float)dy;
 
-    auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
-                      ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
-
-    // Always consumed if any imgui windows is hovered.
-    bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    bool consumed = io.WantCaptureMouse;
     return consumed;
 }
 
