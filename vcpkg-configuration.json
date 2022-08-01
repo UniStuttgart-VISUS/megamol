@@ -1,14 +1,22 @@
 {
-    "default-registry": {
-      "kind": "builtin",
-      "baseline": "f93ba152d55e1d243160e690bc302ffe8638358e"
-    },
-    "registries": [
-        {
-            "kind": "git",
-            "repository": "https://github.com/UniStuttgart-VISUS/vcpkg-registry.git",
-            "baseline": "d8b400f42df0436f39177c9c9c8f8663129c9226",
-            "packages": [ "adios2", "embree", "ispc", "openvkl", "ospray", "rkcommon", "tbb" ]
-        }
-    ]
-  }
+  "default-registry": {
+    "kind": "builtin",
+    "baseline": "f93ba152d55e1d243160e690bc302ffe8638358e"
+  },
+  "registries": [
+    {
+      "kind": "git",
+      "repository": "https://github.com/UniStuttgart-VISUS/vcpkg-registry.git",
+      "baseline": "d8b400f42df0436f39177c9c9c8f8663129c9226",
+      "packages": [
+        "adios2",
+        "embree",
+        "ispc",
+        "openvkl",
+        "ospray",
+        "rkcommon",
+        "tbb"
+      ]
+    }
+  ]
+}
