@@ -7,8 +7,8 @@
         {
             "kind": "git",
             "repository": "https://github.com/UniStuttgart-VISUS/vcpkg-registry.git",
-            "baseline": "e62065468486dda1825d51c1b6dd0db61757dd6d",
-            "packages": [ "embree", "ispc", "openvkl", "ospray", "rkcommon", "tbb" ]
+            "baseline": "d8b400f42df0436f39177c9c9c8f8663129c9226",
+            "packages": [ "adios2", "embree", "ispc", "openvkl", "ospray", "rkcommon", "tbb" ]
         }
     ]
   }

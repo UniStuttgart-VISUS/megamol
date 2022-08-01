@@ -33,37 +33,43 @@
         "zeromq",
         "zlib"
     ],
-  "features": {
-    "use-cgal": {
-      "description": "Use CGAL",
-      "dependencies": [
-        "cgal"
-      ]
-    },
-    "use-opengl": {
-      "description": "Use OpenGL",
-      "dependencies": [
-        "megamol-shader-factory",
-        {
-          "name": "imgui",
-          "features": [
-            "opengl3-binding"
-          ]
+    "features": {
+        "use-adios2": {
+            "description": "Use ADIOS2",
+            "dependencies": [
+                "adios2"
+            ]
+        },
+        "use-cgal": {
+            "description": "Use CGAL",
+            "dependencies": [
+                "cgal"
+            ]
+        },
+        "use-opengl": {
+            "description": "Use OpenGL",
+            "dependencies": [
+                "megamol-shader-factory",
+                {
+                    "name": "imgui",
+                    "features": [
+                        "opengl3-binding"
+                    ]
+                }
+            ]
+        },
+        "use-ospray": {
+            "description": "Use OSPRay",
+            "dependencies": [
+                {
+                    "name": "ospray",
+                    "version>=": "2.10.0",
+                    "features": [
+                        "avx",
+                        "avx2"
+                    ]
+                }
+            ]
         }
-      ]
-    },
-    "use-ospray": {
-      "description": "Use OSPRay",
-      "dependencies": [
-        {
-          "name": "ospray",
-          "version>=": "2.10.0",
-          "features": [
-            "avx",
-            "avx2"
-          ]
-        }
-      ]
     }
-  }
 }

@@ -72,43 +72,6 @@ function(require_external NAME)
   # ### Built libraries #######################################################
   # ###########################################################################
 
-  # adios2
-  elseif (NAME STREQUAL "adios2")
-    if (TARGET adios2)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(ADIOS2_LIB "lib/adios2.lib")
-    else ()
-      set(ADIOS2_LIB "${CMAKE_INSTALL_LIBDIR}/libadios2.a")
-    endif ()
-
-    add_external_project(adios2 STATIC
-      GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
-      GIT_TAG "v2.5.0"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}"
-      CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=OFF
-        -DADIOS2_BUILD_EXAMPLES=OFF
-        -DADIOS2_BUILD_TESTING=OFF
-        -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-        -DADIOS2_USE_BZip2=OFF
-        -DADIOS2_USE_Fortran=OFF
-        -DADIOS2_USE_HDF5=OFF
-        -DADIOS2_USE_PNG=OFF
-        -DADIOS2_USE_Profiling=OFF
-        -DADIOS2_USE_Python=OFF
-        -DADIOS2_USE_SST=OFF
-        -DADIOS2_USE_SZ=OFF
-        -DADIOS2_USE_SysVShMem=OFF
-        -DADIOS2_USE_ZFP=OFF
-        -DADIOS2_USE_ZeroMQ=OFF
-        -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
-
-    add_external_library(adios2
-      LIBRARY ${ADIOS2_LIB})
-
   # bhtsne
   elseif (NAME STREQUAL "bhtsne")
     if (TARGET bhtsne)
