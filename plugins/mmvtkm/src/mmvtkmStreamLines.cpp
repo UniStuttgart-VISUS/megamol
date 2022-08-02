@@ -1204,12 +1204,11 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
                     continue;
                 }
 
-                // can't just simply push back p because seedArray needs vtkm::Vec structure
-                seeds_.push_back({p[0], p[1], p[2]});
+                seeds_.push_back(vtkm::Particle({p[0], p[1], p[2]}, i));
             }
         }
 
-        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> seedArray = vtkm::cont::make_ArrayHandle(seeds_);
+        vtkm::cont::ArrayHandle<vtkm::Particle> seedArray = vtkm::cont::make_ArrayHandle(seeds_);
 
         // streamline calculation part here
         try {
@@ -1239,7 +1238,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
 
         // get polylines
-        const vtkm::cont::DynamicCellSet& polylineSet = streamlineOutput_.GetCellSet(0);
+        const vtkm::cont::DynamicCellSet& polylineSet = streamlineOutput_.GetCellSet();
         const vtkm::cont::CellSet* polylineSetBase = polylineSet.GetCellSetBase();
         int numPolylines = polylineSetBase->GetNumberOfCells();
 
@@ -1266,10 +1265,8 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         // there most probably will only be one coordinate system which name isn't specifically set
         // so this should be sufficient
         const vtkm::cont::CoordinateSystem& coordData = streamlineOutput_.GetCoordinateSystem(0);
-        const vtkm::cont::ArrayHandleVirtualCoordinates& coordDataVirtual =
-            vtkm::cont::make_ArrayHandleVirtual(coordData.GetData());
-        const vtkm::ArrayPortalRef<vtkm::Vec<vtkm::FloatDefault, 3>>& coords = coordDataVirtual.GetPortalConstControl();
 
+        const auto& coords = coordData.GetData().AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Vec3f>>().ReadPortal();
 
         // clear and resize streamline data
         streamlineData_.clear();
@@ -1292,6 +1289,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             for (int j = 0; j < numPoints; ++j) {
                 const vtkm::Vec<vtkm::FloatDefault, 3>& crnt =
                     coords.Get(polylinePointIds[i][j]); // not valid on host for cuda
+
                 streamlineData_[i][j] = glm::vec3(crnt[0], crnt[1], crnt[2]);
 
                 streamlineColor_[i][j] = glm::vec4(glm::vec3((float)j / (float)numPoints * 0.9f + 0.1f), 1.f);
@@ -1321,22 +1319,21 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         createAndAddMeshDataToCall(seedPlaneIdentifier_, liveSeedPlane_, seedPlaneColorVec_, seedPlaneIndices_,
             liveSeedPlane_.size(), seedPlaneIndices_.size(),
             mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
-
+        
         if (!resampleSeeds_) {
             mmvtkmStreamLines::assignSTPQ(psSeedPlaneS_);
         }
-
+        
         // adds the dummy mdac for the u and v border lines
         createAndAddMeshDataToCall(borderlineIdentifier_, borderLine_, borderColors_, borderIdcs_, borderLine_.size(),
             borderIdcs_.size(), mesh::MeshDataAccessCollection::PrimitiveType::LINES);
-
+        
         // adds the dummy mdac for the ghost plane
         createAndAddMeshDataToCall(ghostPlaneIdentifier_, ghostPlane_, ghostColors_, ghostIdcs_, ghostPlane_.size(),
             ghostIdcs_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
-
         lhsMeshDc->setData(meshDataAccess_.first, ++this->newVersion_);
-
+        
         streamlineUpdate_ = false;
         resampleSeeds_ = false;
 
