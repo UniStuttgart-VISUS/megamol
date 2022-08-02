@@ -38,6 +38,7 @@
     "tinyply",
     "vtk-m",
     "zeromq",
+    "zfp",
     "zlib"
   ],
   "features": {

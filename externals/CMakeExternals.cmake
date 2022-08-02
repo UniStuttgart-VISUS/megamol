@@ -217,33 +217,6 @@ function(require_external NAME)
     external_get_property(tracking SOURCE_DIR)
     set(tracking_files "${SOURCE_DIR}/tracking/conf/tracking.conf" PARENT_SCOPE)
 
-  # zfp
-  elseif (NAME STREQUAL "zfp")
-    if (TARGET zfp)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(ZFP_LIB "lib/zfp.lib")
-    else ()
-      set(ZFP_LIB "${CMAKE_INSTALL_LIBDIR}/libzfp.a")
-    endif ()
-
-    add_external_project(zfp STATIC
-      GIT_REPOSITORY https://github.com/LLNL/zfp.git
-      GIT_TAG "0.5.2"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ZFP_LIB}"
-      CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=OFF
-        -DBUILD_UTILITIES=OFF
-        -DBUILD_TESTING=OFF
-        -DZFP_WITH_ALIGNED_ALLOC=ON
-        -DZFP_WITH_CACHE_FAST_HASH=ON
-        -DCMAKE_BUILD_TYPE=Release)
-
-    add_external_library(zfp
-      LIBRARY ${ZFP_LIB})
-
   # vr interop mwk-mint
   elseif(NAME STREQUAL "mwk-mint")
     if(TARGET mwk-mint)

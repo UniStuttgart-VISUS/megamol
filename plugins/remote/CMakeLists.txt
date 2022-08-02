@@ -9,21 +9,22 @@ megamol_plugin(remote
     mmstd
     mmstd_gl
     cluster
-    image_calls
-  DEPENDS_EXTERNALS
-    zfp)
+    image_calls)
 
 if (remote_PLUGIN_ENABLED)
   find_package(ZeroMQ CONFIG REQUIRED)
   find_package(cppzmq CONFIG REQUIRED)
   find_package(glm CONFIG REQUIRED)
   find_package(snappy CONFIG REQUIRED)
+  find_package(zfp CONFIG REQUIRED)
 
   target_link_libraries(remote
     PRIVATE
       libzmq
       cppzmq
-      glm::glm)
+      glm::glm
+      Snappy::snappy
+      zfp::zfp)
 
   if (MPI_C_FOUND)
     require_external(IceT)
