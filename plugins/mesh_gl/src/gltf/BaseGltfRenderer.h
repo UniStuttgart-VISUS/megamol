@@ -17,7 +17,7 @@ namespace megamol {
 namespace mesh_gl {
 
 template<const char* NAME, const char* DESC>
-class BaseGltfRenderer : public BaseMeshRenderer<NAME,DESC> {
+class BaseGltfRenderer : public BaseMeshRenderer<NAME, DESC> {
 public:
     using BaseRenderTaskRenderer<NAME, DESC>::material_collection_;
     using BaseRenderTaskRenderer<NAME, DESC>::mesh_collection_;
@@ -36,9 +36,8 @@ private:
 
 template<const char* NAME, const char* DESC>
 inline BaseGltfRenderer<NAME, DESC>::BaseGltfRenderer()
-        : BaseMeshRenderer<NAME,DESC>()
-        , glTF_callerSlot_("gltfModels", "Connects a collection of loaded glTF files")
-{
+        : BaseMeshRenderer<NAME, DESC>()
+        , glTF_callerSlot_("gltfModels", "Connects a collection of loaded glTF files") {
     glTF_callerSlot_.SetCompatibleCall<mesh::CallGlTFDataDescription>();
     megamol::core::Module::MakeSlotAvailable(&this->glTF_callerSlot_);
 }

@@ -14,8 +14,10 @@ megamol::mesh_gl::ThreeDimensionalUIRenderer::ThreeDimensionalUIRenderer()
               "getInteraction", "The slot publishing available interactions and receiving pending manipulations")
         , m_3DInteraction_callerSlot("", "")
         , m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file") {
-    this->m_3DInteraction_calleeSlot.SetCallback(mesh::Call3DInteraction::ClassName(), "GetData", &ThreeDimensionalUIRenderer::getInteractionCallback);
-    this->m_3DInteraction_calleeSlot.SetCallback(mesh::Call3DInteraction::ClassName(), "GetMetaData", &ThreeDimensionalUIRenderer::getInteractionCallback);
+    this->m_3DInteraction_calleeSlot.SetCallback(
+        mesh::Call3DInteraction::ClassName(), "GetData", &ThreeDimensionalUIRenderer::getInteractionCallback);
+    this->m_3DInteraction_calleeSlot.SetCallback(
+        mesh::Call3DInteraction::ClassName(), "GetMetaData", &ThreeDimensionalUIRenderer::getInteractionCallback);
     this->MakeSlotAvailable(&this->m_3DInteraction_calleeSlot);
 
     this->m_glTF_callerSlot.SetCompatibleCall<mesh::CallGlTFDataDescription>();

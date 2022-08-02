@@ -199,8 +199,8 @@ void TriangleMeshRenderer3D::updateRenderTaskCollection(mmstd_gl::CallRender3DGL
             std::memcpy(&this->render_data.per_draw_data[per_draw_data_t::offset_max_value],
                 &this->render_data.values->max_value, per_draw_data_t::size_max_value);
 
-            render_task_collection_->addRenderTask(identifier, this->active_shader_program,
-                mesh_data.mesh->mesh, mesh_data.sub_mesh_draw_command, this->render_data.per_draw_data);
+            render_task_collection_->addRenderTask(identifier, this->active_shader_program, mesh_data.mesh->mesh,
+                mesh_data.sub_mesh_draw_command, this->render_data.per_draw_data);
         }
 
         if (this->render_data.values->transfer_function_dirty || this->triangle_mesh_changed ||

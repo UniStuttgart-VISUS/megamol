@@ -12,9 +12,11 @@
 namespace megamol::archvis_gl {
 
 inline constexpr char msmconvexhullrenderer_name[] = "MSMConvexHullRenderer";
-inline constexpr char msmconvexhullrenderer_desc[] = "Renderer for generating and displaying convex hulls from MSM displacement values.";
+inline constexpr char msmconvexhullrenderer_desc[] =
+    "Renderer for generating and displaying convex hulls from MSM displacement values.";
 
-class MSMConvexHullRenderer : public mesh_gl::BaseRenderTaskRenderer<msmconvexhullrenderer_name,msmconvexhullrenderer_desc> {
+class MSMConvexHullRenderer
+        : public mesh_gl::BaseRenderTaskRenderer<msmconvexhullrenderer_name, msmconvexhullrenderer_desc> {
 public:
     MSMConvexHullRenderer();
     ~MSMConvexHullRenderer();

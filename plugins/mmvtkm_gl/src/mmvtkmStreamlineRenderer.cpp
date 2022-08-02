@@ -15,8 +15,8 @@ using namespace megamol::mmvtkm_gl;
 
 void megamol::mmvtkm_gl::mmvtkmStreamlineRenderer::createMaterialCollection() {
     material_collection_ = std::make_shared<mesh_gl::GPUMaterialCollection>();
-    material_collection_->addMaterial(this->instance(), "gltfMaterial",
-        {"vtkm_gl/streamline.vert.glsl", "vtkm_gl/streamline.frag.glsl"});
+    material_collection_->addMaterial(
+        this->instance(), "gltfMaterial", {"vtkm_gl/streamline.vert.glsl", "vtkm_gl/streamline.frag.glsl"});
 }
 
 void megamol::mmvtkm_gl::mmvtkmStreamlineRenderer::updateRenderTaskCollection(

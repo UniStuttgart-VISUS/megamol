@@ -30,8 +30,7 @@ namespace mesh_gl {
 
 inline constexpr char trianglemeshrenderer3D_name[] = "TriangleMeshRenderer3D";
 
-inline constexpr char trianglemeshrenderer3D_desc[] =
-    "Upload 3D data to the GPU for use with the mesh plugin";
+inline constexpr char trianglemeshrenderer3D_desc[] = "Upload 3D data to the GPU for use with the mesh plugin";
 
 /**
  * Module for uploading a 3D triangle mesh to the GPU.

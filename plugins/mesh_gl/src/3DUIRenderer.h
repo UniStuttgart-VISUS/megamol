@@ -26,8 +26,7 @@ namespace mesh_gl {
 
 inline constexpr char threedimensionaluirenderer_name[] = "3DUIRenderer";
 
-inline constexpr char threedimensionaluirenderer_desc[] =
-    "....TODO...";
+inline constexpr char threedimensionaluirenderer_desc[] = "....TODO...";
 
 class ThreeDimensionalUIRenderer
         : public BaseMeshRenderer<threedimensionaluirenderer_name, threedimensionaluirenderer_desc> {

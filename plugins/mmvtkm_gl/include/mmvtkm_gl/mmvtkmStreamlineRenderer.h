@@ -31,6 +31,6 @@ protected:
 };
 
 } // namespace mmvtkm_gl
-} // namespace megamolm
+} // namespace megamol
 
 #endif // !MMVTKM_STREAMLINE_RENDERER_H_INCLUDED

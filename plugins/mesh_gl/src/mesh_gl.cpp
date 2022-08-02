@@ -8,13 +8,13 @@
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "3DUIRenderer.h"
-#include "gltf/DeferredGltfRenderer.h"
 #include "MeshSTLDataSource.h"
 #include "Render3DUI.h"
 #include "RenderMDIMesh.h"
 #include "TriangleMeshRenderer2D.h"
 #include "TriangleMeshRenderer3D.h"
 #include "WavefrontObjRenderer.h"
+#include "gltf/DeferredGltfRenderer.h"
 #include "mesh_gl/MeshCalls_gl.h"
 
 namespace megamol::mesh_gl {

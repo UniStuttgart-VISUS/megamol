@@ -11,8 +11,7 @@
 #include "ArchVisCalls.h"
 #include "mesh_gl/MeshCalls_gl.h"
 
-megamol::archvis_gl::MSMConvexHullRenderer::MSMConvexHullRenderer()
-        : m_MSM_callerSlot("getMSM", "Connects the ..."){
+megamol::archvis_gl::MSMConvexHullRenderer::MSMConvexHullRenderer() : m_MSM_callerSlot("getMSM", "Connects the ...") {
     this->m_MSM_callerSlot.SetCompatibleCall<ScaleModelCallDescription>();
     this->MakeSlotAvailable(&this->m_MSM_callerSlot);
 }

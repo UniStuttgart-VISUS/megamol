@@ -118,7 +118,6 @@ protected:
     std::shared_ptr<GPUMeshCollection> mesh_collection_;
 
     std::shared_ptr<GPURenderTaskCollection> render_task_collection_;
-
 };
 
 template<const char* NAME, const char* DESC>
@@ -133,8 +132,7 @@ inline bool BaseRenderTaskRenderer<NAME, DESC>::create() {
         createMaterialCollection();
         createMeshCollection();
         createRenderTaskCollection();
-    }
-    catch (std::runtime_error const& ex) {
+    } catch (std::runtime_error const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
         retval = false;
