@@ -90,7 +90,7 @@ public:
 
     void BindConvenience(std::unique_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform);
 
-    void BindConvenience(std::shared_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform);
+    void BindConvenience(glowl::GLSLProgram& shader, GLenum activeTexture, int textureUniform);
 
     /**
      * Unbinds convenience.
