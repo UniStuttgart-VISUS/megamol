@@ -32,27 +32,11 @@ function(require_external NAME)
   set(FETCHCONTENT_QUIET ON CACHE BOOL "")
 
   # ###########################################################################
-  # ### Header-only libraries #################################################
-  # ###########################################################################
-
-  # glowl
-  if (NAME STREQUAL "glowl")
-    if (TARGET glowl)
-      return()
-    endif ()
-
-    add_external_headeronly_project(glowl
-      GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "dafee75f11c5d759df30ff651d6763e4e674dd0e"
-      INCLUDE_DIR "include")
-    target_compile_definitions(glowl INTERFACE GLOWL_OPENGL_INCLUDE_GLAD2)
-
-  # ###########################################################################
   # ### Built libraries #######################################################
   # ###########################################################################
 
   # glad
-  elseif (NAME STREQUAL "glad")
+  if (NAME STREQUAL "glad")
     if (TARGET glad)
       return()
     endif ()

@@ -11,13 +11,13 @@ megamol_plugin(volume_gl
     mmstd_gl
     datatools
     volume
-    geometry_calls
-  DEPENDS_EXTERNALS
-    glowl)
+    geometry_calls)
 
 if (volume_gl_PLUGIN_ENABLED)
+  find_package(glowl CONFIG REQUIRED)
   find_package(simultaneous_sort CONFIG REQUIRED)
   target_link_libraries(volume_gl
     PRIVATE
+      glowl::glowl
       simultaneous_sort)
 endif()

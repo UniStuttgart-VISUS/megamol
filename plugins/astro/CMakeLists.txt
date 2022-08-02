@@ -8,9 +8,7 @@ megamol_plugin(astro
   DEPENDS_PLUGINS
     mmstd
     datatools
-    geometry_calls
-  DEPENDS_EXTERNALS
-    glowl)
+    geometry_calls)
 
 if (astro_PLUGIN_ENABLED)
   find_package(nanoflann CONFIG REQUIRED)
