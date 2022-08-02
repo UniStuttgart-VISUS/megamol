@@ -121,8 +121,10 @@ inline void GPUMeshCollection::addMesh(std::string const& identifier,
     std::vector<GLvoid*> vb_data;
     std::vector<size_t> vb_byte_sizes;
     for (auto& vb : vertex_buffers) {
-        vb_data.push_back(reinterpret_cast<GLvoid*>(&(*std::get<0>(vb))));
-        vb_byte_sizes.push_back(sizeof(VertexBufferType) * std::distance(std::get<0>(vb), std::get<1>(vb)));
+        size_t vb_byte_size = sizeof(VertexBufferType) * std::distance(std::get<0>(vb), std::get<1>(vb));
+        GLvoid* vb_data_ptr = vb_byte_size > 0 ? reinterpret_cast<GLvoid*>(&(*std::get<0>(vb))) : nullptr;
+        vb_data.push_back(vb_data_ptr);
+        vb_byte_sizes.push_back(vb_byte_size);
     }
     // compute overall byte size of index buffer
     size_t ib_byte_size =
@@ -196,8 +198,11 @@ inline void GPUMeshCollection::addMesh(std::string const& identifier,
             i, vb_data[i], vb_byte_sizes[i], vb_attrib_byte_sizes[i] * (batched_mesh->vertices_used));
     }
 
-    batched_mesh->mesh->bufferIndexSubData(reinterpret_cast<GLvoid*>(&*std::get<0>(index_buffer)), ib_byte_size,
-        glowl::computeByteSize(index_type) * batched_mesh->indices_used);
+    // only upload ib data is size is greater 0
+    if (ib_byte_size > 0) {
+        batched_mesh->mesh->bufferIndexSubData(reinterpret_cast<GLvoid*>(&*std::get<0>(index_buffer)), ib_byte_size,
+            glowl::computeByteSize(index_type) * batched_mesh->indices_used);
+    }
 
     // updated vertices and indices used
     batched_mesh->vertices_used += req_vertex_cnt;
