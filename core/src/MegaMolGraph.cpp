@@ -9,6 +9,7 @@
 #include <iostream>
 #include <numeric> // std::accumulate
 #include <string>
+#include <type_traits>
 
 
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
@@ -207,7 +208,31 @@ megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
 }
 
 megamol::core::param::AbstractParam* megamol::core::MegaMolGraph::FindParameter(std::string const& paramName) const {
-    return getParameterFromParamSlot(this->FindParameterSlot(clean(paramName)));
+    return getParameterFromParamSlot(this->FindParameterSlot(paramName));
+}
+
+bool megamol::core::MegaMolGraph::SetParameter(std::string const& paramName, std::string const& value) {
+    auto param_slot_ptr = FindParameterSlot(paramName);
+    auto param_ptr = getParameterFromParamSlot(param_slot_ptr);
+
+    if (!param_ptr)
+        return false;
+
+    auto old_value = param_ptr->ValueString();
+
+    bool success = param_ptr->ParseValue(value);
+
+    if (!success)
+        return false;
+
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.ParameterChanged(param_slot_ptr, old_value, value)) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process parameter change: " + paramName +
+                      " from " + old_value + " to " + value);
+        }
+    }
+
+    return true;
 }
 
 megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& param) const {
@@ -511,10 +536,28 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
 
     bool isCreateOk = create_module(this->module_list_.front().lifetime_resources);
 
+    // tell subscribers about module
     for (auto& subscriber : graph_subscribers.subscribers) {
         if (!subscriber.AddModule(this->module_list_.front())) {
             log_error("graph subscriber " + subscriber.Name() + " failed to process module add: " + request.className +
                       "(" + request.id + ")");
+            isCreateOk = false;
+        }
+    }
+    // tell subscribers about parameters of module
+    using ParamSlotPtr = frontend_resources::ModuleGraphSubscription::ParamSlotPtr;
+    std::vector<ParamSlotPtr> param_ptrs = module_ptr->GetSlots<std::remove_pointer<ParamSlotPtr>::type>();
+    for (auto& param_ptr : param_ptrs) {
+        assert(param_ptr != nullptr);
+    }
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.AddParameters(param_ptrs)) {
+            log_error("graph subscriber " + subscriber.Name() +
+                      " failed to process added parameters of module: " + request.className + "(" + request.id + ")" +
+                      std::accumulate(param_ptrs.begin(), param_ptrs.end(), std::string("Parameters: "),
+                          [](std::string const& left, ParamSlotPtr const& right) {
+                              return left + "\n   " + std::string(right->FullName());
+                          }));
             isCreateOk = false;
         }
     }
@@ -677,10 +720,25 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
         return false;
     }
 
+    // tell subscribers about parameters of module
+    using ParamSlotPtr = frontend_resources::ModuleGraphSubscription::ParamSlotPtr;
+    std::vector<ParamSlotPtr> param_ptrs = module_ptr->GetSlots<std::remove_pointer<ParamSlotPtr>::type>();
+    for (auto& param_ptr : param_ptrs) {
+        assert(param_ptr != nullptr);
+    }
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.RemoveParameters(param_ptrs)) {
+            log_error("graph subscriber " + subscriber.Name() +
+                      " failed to process removal of parameters of module: " + +module_it->modulePtr->FullName() +
+                      std::accumulate(param_ptrs.begin(), param_ptrs.end(), std::string("Parameters: "),
+                          [](std::string const& left, ParamSlotPtr const& right) {
+                              return left + "\n   " + std::string(right->FullName());
+                          }));
+        }
+    }
     for (auto& subscriber : graph_subscribers.subscribers) {
         if (!subscriber.DeleteModule(*module_it)) {
             log_error("graph subscriber " + subscriber.Name() + " failed to process module deletion: " + request);
-            return false;
         }
     }
 

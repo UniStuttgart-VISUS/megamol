@@ -61,6 +61,8 @@ public:
 
     megamol::core::param::AbstractParam* FindParameter(std::string const& paramName) const;
 
+    bool SetParameter(std::string const& paramName, std::string const& value);
+
     megamol::core::param::ParamSlot* FindParameterSlot(std::string const& paramName) const;
 
     std::vector<megamol::core::param::AbstractParam*> EnumerateModuleParameters(std::string const& moduleName) const;
