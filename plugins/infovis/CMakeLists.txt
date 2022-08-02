@@ -13,16 +13,14 @@ if (infovis_PLUGIN_ENABLED)
   find_package(Eigen3 CONFIG REQUIRED)
   find_package(bhtsne CONFIG REQUIRED)
   find_path(DELAUNATOR_CPP_INCLUDE_DIRS "delaunator.hpp")
-  
 
   target_link_libraries(infovis
     PRIVATE
       Eigen3::Eigen
-      ${BHTSNE_LIB})
+      bhtsne::bhtsne)
   target_include_directories(infovis
     PRIVATE
-      ${DELAUNATOR_CPP_INCLUDE_DIRS}
-      ${BHTSNE_CPP_INCLUDE_DIR})
+      ${DELAUNATOR_CPP_INCLUDE_DIRS})
 
   # Additional sources
   file(GLOB_RECURSE extra_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*.h")

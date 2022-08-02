@@ -1,21 +1,36 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.12)
 
 project(bhtsne CXX)
 
-set(BHTSNE_PUBLIC_HDRS
+set(public_header_files
   tsne.h)
-set(BHTSNE_PRIVATE_HDRS
+set(header_files
   sptree.h
   vptree.h)
-set(BHTSNE_SRCS
+set(source_files
   tsne.cpp
   sptree.cpp)
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-add_library(bhtsne STATIC ${BHTSNE_SRCS} ${BHTSNE_PUBLIC_HDRS} ${BHTSNE_PRIVATE_HDRS})
-#target_include_directories(bhtsne PUBLIC include)
+option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
+
+add_library(bhtsne ${public_header_files} ${header_files} ${source_files})
+set_target_properties(bhtsne PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_include_directories(bhtsne
+  PUBLIC
+    $<INSTALL_INTERFACE:include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
 include(GNUInstallDirs)
 
-install(TARGETS bhtsne DESTINATION "lib")
-install(FILES ${BHTSNE_PUBLIC_HDRS} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(FILES ${public_header_files} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+
+install(TARGETS bhtsne
+  EXPORT bhtsneTargets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+install(EXPORT bhtsneTargets
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/bhtsne
+  NAMESPACE bhtsne::
+  FILE bhtsneConfig.cmake)
