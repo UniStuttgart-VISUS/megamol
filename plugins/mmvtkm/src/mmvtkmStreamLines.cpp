@@ -1319,21 +1319,21 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         createAndAddMeshDataToCall(seedPlaneIdentifier_, liveSeedPlane_, seedPlaneColorVec_, seedPlaneIndices_,
             liveSeedPlane_.size(), seedPlaneIndices_.size(),
             mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
-        
+
         if (!resampleSeeds_) {
             mmvtkmStreamLines::assignSTPQ(psSeedPlaneS_);
         }
-        
+
         // adds the dummy mdac for the u and v border lines
         createAndAddMeshDataToCall(borderlineIdentifier_, borderLine_, borderColors_, borderIdcs_, borderLine_.size(),
             borderIdcs_.size(), mesh::MeshDataAccessCollection::PrimitiveType::LINES);
-        
+
         // adds the dummy mdac for the ghost plane
         createAndAddMeshDataToCall(ghostPlaneIdentifier_, ghostPlane_, ghostColors_, ghostIdcs_, ghostPlane_.size(),
             ghostIdcs_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
         lhsMeshDc->setData(meshDataAccess_.first, ++this->newVersion_);
-        
+
         streamlineUpdate_ = false;
         resampleSeeds_ = false;
 
