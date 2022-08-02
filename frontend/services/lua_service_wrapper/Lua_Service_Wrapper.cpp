@@ -595,12 +595,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string, std::string>("mmSetParamValue",
         "(string name, string value)\n\tSet the value of a parameter slot.",
         {[&](std::string paramName, std::string paramValue) -> VoidResult {
-            auto* param = graph.FindParameter(paramName);
-            if (param == nullptr) {
-                return Error{"graph could not find parameter: " + paramName};
-            }
-
-            if (!param->ParseValue(paramValue.c_str())) {
+            if (!graph.SetParameter(paramName, paramValue.c_str())) {
                 return Error{"parameter could not be set to value: " + paramName + " : " + paramValue};
             }
 
