@@ -11,6 +11,7 @@
 #include <string>
 
 #include <mmcore/MegaMolGraphTypes.h>
+#include <mmcore/param/ParamSlot.h>
 
 namespace megamol {
 namespace frontend_resources {
@@ -46,6 +47,35 @@ public:
      * Module still exists but will be deleted soon after this callback finished.
      */
     std::function<bool(core::ModuleInstance_t const&)> DeleteModule = [](auto const&) { return true; };
+
+    using ParamSlotPtr = core::param::ParamSlot*;
+
+    /**
+     * Informs subscriber about newly created parameters of module(s)
+     * The parameters and the respective module have been created successfully when this callback is called.
+     * This callback gets called after the AddModule callback.
+     * All ParamSlotPtr values are non-null.
+     */
+    std::function<bool(std::vector<ParamSlotPtr> const& /*params*/)> AddParameters = [](auto const&) { return true; };
+
+    /**
+     * Tells subscriber about deleted parameters (due to module deletion)
+     * The parameters still exist when the callback is executed, but get deleted soon after the callback finished.
+     * This callback gets called before the DeleteModule callback.
+     * All ParamSlotPtr values are non-null.
+     */
+    std::function<bool(std::vector<ParamSlotPtr> const& /*params*/)> RemoveParameters = [](auto const&) {
+        return true;
+    };
+
+    /**
+     * Notifies subscriber about change of a paramter value, providing the parameter, its new value, and the old value.
+     * Gets called after parameter value changed to new value.
+     * All ParamSlotPtr values are non-null.
+     */
+    std::function<bool(
+        ParamSlotPtr const& /*param*/, std::string const& /*old_value*/, std::string const& /*new_value*/)>
+        ParameterChanged = [](auto const&, auto const&, auto const&) { return true; };
 
     /**
      * Informs about renaming of a module.
