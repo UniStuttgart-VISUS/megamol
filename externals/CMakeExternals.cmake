@@ -96,27 +96,6 @@ function(require_external NAME)
       INCLUDE_DIR "include"
       LIBRARY ${CHEMFILES_LIB})
 
-  # Corsair CUE SDK
-  elseif (NAME STREQUAL "CUESDK")
-    if (TARGET CUESDK)
-      return()
-    endif ()
-
-    FetchContent_Declare(
-      cuesdk_archive
-      URL https://github.com/CorsairOfficial/cue-sdk/releases/download/v3.0.378/CUESDK_3.0.378.zip)
-    FetchContent_GetProperties(cuesdk_archive)
-    if (NOT cuesdk_archive_POPULATED)
-      FetchContent_Populate(cuesdk_archive)
-      add_library(CUESDK SHARED IMPORTED GLOBAL)
-      set_target_properties(CUESDK PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "${cuesdk_archive_SOURCE_DIR}/include"
-        IMPORTED_CONFIGURATIONS "Release"
-        IMPORTED_LOCATION "${cuesdk_archive_SOURCE_DIR}/redist/x64/CUESDK.x64_2017.dll"
-        IMPORTED_IMPLIB "${cuesdk_archive_SOURCE_DIR}/lib/x64/CUESDK.x64_2017.lib")
-      install(DIRECTORY "${cuesdk_archive_SOURCE_DIR}/redist/x64/" DESTINATION "bin" FILES_MATCHING PATTERN "*2017.dll")
-    endif ()
-
   # glad
   elseif (NAME STREQUAL "glad")
     if (TARGET glad)

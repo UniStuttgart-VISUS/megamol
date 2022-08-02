@@ -11,8 +11,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(glm REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
-if (ENABLE_CUESDK)
-  require_external(CUESDK)
+if (MEGAMOL_USE_CUESDK)
+  find_package(CUESDK CONFIG REQUIRED)
 endif()
 
 file(GLOB_RECURSE header_files "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp" )
@@ -37,8 +37,9 @@ target_link_libraries(${PROJECT_NAME}
   PUBLIC
     glm::glm
     nlohmann_json::nlohmann_json)
-if (ENABLE_CUESDK)
-  target_link_libraries(${PROJECT_NAME} PUBLIC CUESDK)
+if (MEGAMOL_USE_CUESDK)
+  target_include_directories(${PROJECT_NAME} PRIVATE ${CUESDK_INCLUDE_DIR})
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${CUESDK_LIB})
 endif()
 
 # Grouping in Visual Studio

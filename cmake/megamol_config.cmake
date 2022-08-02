@@ -115,6 +115,6 @@ endif ()
 
 # CUE
 cmake_dependent_option(ENABLE_CUESDK "Enable CUE for highlighting hotkeys on Corsair Keyboards" OFF "WIN32" OFF)
-if (ENABLE_CUESDK)
+if (MEGAMOL_USE_CUESDK)
   add_compile_definitions(CUESDK_ENABLED)
 endif ()

@@ -44,6 +44,12 @@
         "cgal"
       ]
     },
+    "use-cuesdk": {
+      "description": "Use Corsair CUE",
+      "dependencies": [
+        "cuesdk"
+      ]
+    },
     "use-mpi": {
       "description": "Use MPI",
       "dependencies": [

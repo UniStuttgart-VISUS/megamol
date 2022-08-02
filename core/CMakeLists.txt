@@ -19,8 +19,8 @@ if (BUILD_CORE)
   find_package(EXPAT CONFIG REQUIRED)
   find_package(Lua REQUIRED)
   
-  if (ENABLE_CUESDK)
-    require_external(CUESDK)
+  if (MEGAMOL_USE_CUESDK)
+    find_package(CUESDK CONFIG REQUIRED)
   endif ()
 
   # Collect source files
@@ -60,8 +60,8 @@ if (BUILD_CORE)
   if (WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE Version)
   endif ()
-  if (ENABLE_CUESDK)
-    target_link_libraries(${PROJECT_NAME} PUBLIC CUESDK)
+  if (MEGAMOL_USE_CUESDK)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${CUESDK_LIB})
   endif ()
 
   if (MPI_C_FOUND)

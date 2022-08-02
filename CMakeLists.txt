@@ -48,6 +48,10 @@ option(MEGAMOL_USE_OSPRAY "Enable OSPRay support" OFF)
 if (MEGAMOL_USE_OSPRAY)
   list(APPEND VCPKG_MANIFEST_FEATURES "use-ospray")
 endif ()
+option(MEGAMOL_USE_CUESDK "Enable Corsair CUESDK support" OFF)
+if (MEGAMOL_USE_CUESDK)
+  list(APPEND VCPKG_MANIFEST_FEATURES "use-cuesdk")
+endif ()
 
 # option(X_VCPKG_APPLOCAL_DEPS_INSTALL "" ON) # Does currently not not work as expected, see comment on manual install below!
 set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_ports")
