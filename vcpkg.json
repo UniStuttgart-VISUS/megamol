@@ -4,6 +4,7 @@
   "dependencies": [
     "adios2",
     "blend2d",
+    "chemfiles",
     "cppzmq",
     "cxxopts",
     "delaunator-cpp",
