@@ -51,29 +51,6 @@ function(require_external NAME)
   # ### Built libraries #######################################################
   # ###########################################################################
 
-  # bhtsne
-  elseif (NAME STREQUAL "bhtsne")
-    if (TARGET bhtsne)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(BHTSNE_LIB "lib/bhtsne.lib")
-    else ()
-      set(BHTSNE_LIB "lib/libbhtsne.a")
-    endif ()
-
-    add_external_project(bhtsne STATIC
-      GIT_REPOSITORY https://github.com/lvdmaaten/bhtsne.git
-      GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${BHTSNE_LIB}"
-      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/externals/bhtsne/CMakeLists.txt"
-        "<SOURCE_DIR>/CMakeLists.txt")
-
-    add_external_library(bhtsne
-      LIBRARY ${BHTSNE_LIB})
-
   # glad
   elseif (NAME STREQUAL "glad")
     if (TARGET glad)
