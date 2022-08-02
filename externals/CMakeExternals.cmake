@@ -185,30 +185,6 @@ function(require_external NAME)
     add_external_library(quickhull
       LIBRARY ${QUICKHULL_LIB})
 
-  # snappy
-  elseif (NAME STREQUAL "snappy")
-    if (TARGET snappy)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(SNAPPY_LIB "lib/snappy.lib")
-    else ()
-      set(SNAPPY_LIB "${CMAKE_INSTALL_LIBDIR}/libsnappy.a")
-    endif ()
-
-    add_external_project(snappy STATIC
-      GIT_REPOSITORY https://github.com/google/snappy.git
-      GIT_TAG "1.1.7"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SNAPPY_LIB}"
-      CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=OFF
-        -DSNAPPY_BUILD_TESTS=OFF
-        -DCMAKE_BUILD_TYPE=Release)
-
-    add_external_library(snappy
-      LIBRARY ${SNAPPY_LIB})
-
   # tracking
   elseif (NAME STREQUAL "tracking")
     if (TARGET tracking)

@@ -7,16 +7,17 @@ megamol_plugin(remote
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
     mmstd
+    mmstd_gl
     cluster
     image_calls
   DEPENDS_EXTERNALS
-    snappy
     zfp)
 
 if (remote_PLUGIN_ENABLED)
   find_package(ZeroMQ CONFIG REQUIRED)
   find_package(cppzmq CONFIG REQUIRED)
   find_package(glm CONFIG REQUIRED)
+  find_package(snappy CONFIG REQUIRED)
 
   target_link_libraries(remote
     PRIVATE
@@ -26,6 +27,6 @@ if (remote_PLUGIN_ENABLED)
 
   if (MPI_C_FOUND)
     require_external(IceT)
-    target_link_libraries(remote PRIVATE IceTCore IceTGL IceTMPI MPI::MPI_C)
+    target_link_libraries(remote PRIVATE IceTCore IceTGL IceTMPI MPI::MPI_C vislib_gl)
   endif ()
 endif ()

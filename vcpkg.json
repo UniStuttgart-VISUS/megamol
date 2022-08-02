@@ -27,6 +27,7 @@
     "nanoflann",
     "nlohmann-json",
     "simultaneous-sort",
+    "snappy",
     "spdlog",
     {
       "name": "tbb",
