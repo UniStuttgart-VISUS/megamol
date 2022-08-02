@@ -41,6 +41,15 @@ void CallGetTransferFunctionGL::BindConvenience(
     glUniform2fv(shader->getUniformLocation("tfRange"), 1, this->range.data());
 }
 
+void CallGetTransferFunctionGL::BindConvenience(
+    std::shared_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform) {
+    glEnable(GL_TEXTURE_1D);
+    glActiveTexture(activeTexture);
+    glBindTexture(GL_TEXTURE_1D, this->texID);
+    shader->setUniform("tfTexture", textureUniform);
+    glUniform2fv(shader->getUniformLocation("tfRange"), 1, this->range.data());
+}
+
 void CallGetTransferFunctionGL::UnbindConvenience() {
     glDisable(GL_TEXTURE_1D);
     glBindTexture(GL_TEXTURE_1D, 0);
