@@ -15,8 +15,7 @@
 namespace megamol {
 namespace mmvtkm_gl {
 
-class mmvtkmStreamlineRenderer
-        : public mesh_gl::BaseMeshRenderer {
+class mmvtkmStreamlineRenderer : public mesh_gl::BaseMeshRenderer {
 public:
     mmvtkmStreamlineRenderer() = default;
     ~mmvtkmStreamlineRenderer() = default;

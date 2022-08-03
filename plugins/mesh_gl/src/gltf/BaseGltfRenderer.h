@@ -36,8 +36,7 @@ inline BaseGltfRenderer::BaseGltfRenderer()
     megamol::core::Module::MakeSlotAvailable(&this->glTF_callerSlot_);
 }
 
-inline void BaseGltfRenderer::updateRenderTaskCollection(
-    mmstd_gl::CallRender3DGL& call, bool force_update) {
+inline void BaseGltfRenderer::updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) {
 
     bool something_has_changed = force_update;
 

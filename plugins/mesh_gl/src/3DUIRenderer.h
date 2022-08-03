@@ -24,8 +24,7 @@
 namespace megamol {
 namespace mesh_gl {
 
-class ThreeDimensionalUIRenderer
-        : public BaseMeshRenderer {
+class ThreeDimensionalUIRenderer : public BaseMeshRenderer {
 public:
     ThreeDimensionalUIRenderer();
     ~ThreeDimensionalUIRenderer();

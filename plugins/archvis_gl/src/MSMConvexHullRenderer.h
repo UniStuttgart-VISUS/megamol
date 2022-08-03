@@ -11,8 +11,7 @@
 
 namespace megamol::archvis_gl {
 
-class MSMConvexHullRenderer
-        : public mesh_gl::BaseRenderTaskRenderer {
+class MSMConvexHullRenderer : public mesh_gl::BaseRenderTaskRenderer {
 public:
     MSMConvexHullRenderer();
     ~MSMConvexHullRenderer();
