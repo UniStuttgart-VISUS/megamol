@@ -11,11 +11,10 @@
 #include "CreateFEMModel.h"
 #include "CreateMSM.h"
 #include "FEMLoader.h"
-#include "FEMMeshDataSource.h"
 #include "FEMModel.h"
-#include "FEMRenderTaskDataSource.h"
-#include "MSMConvexHullMeshDataSource.h"
-#include "MSMRenderTaskDataSource.h"
+#include "FEMRenderer.h"
+#include "MSMConvexHullRenderer.h"
+#include "MSMRenderer.h"
 
 namespace megamol::archvis_gl {
 class ArchvisPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -34,11 +33,10 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::ArchVisMSMDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::CreateFEMModel>();
         this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::CreateMSM>();
-        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::FEMMeshDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::FEMRenderTaskDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::FEMRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::FEMLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::MSMConvexHullDataSource>();
-        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::MSMRenderTaskDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::MSMConvexHullRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::archvis_gl::MSMRenderer>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::archvis_gl::CallFEMModel>();

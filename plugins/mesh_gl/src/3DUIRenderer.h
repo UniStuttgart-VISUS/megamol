@@ -1,12 +1,12 @@
 /*
- * 3DUIRenderTaskDataSource.h
+ * 3DUIRenderer.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
-#ifndef THREE_DIMENSIONAL_UI_RENDER_TASK_DATA_SOURCE
-#define THREE_DIMENSIONAL_UI_RENDER_TASK_DATA_SOURCE
+#ifndef THREE_DIMENSIONAL_UI_RENDERER_H_INCLUDED
+#define THREE_DIMENSIONAL_UI_RENDERER_H_INCLUDED
 
 #include <array>
 #include <list>
@@ -16,8 +16,7 @@
 #include "mmcore/CallerSlot.h"
 
 #include "mesh/MeshCalls.h"
-#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
-#include "mesh_gl/GPUMeshCollection.h"
+#include "mesh_gl/BaseMeshRenderer.h"
 #include "vislib/math/Matrix.h"
 
 #include "mesh/3DInteractionCollection.h"
@@ -25,17 +24,19 @@
 namespace megamol {
 namespace mesh_gl {
 
-class ThreeDimensionalUIRenderTaskDataSource : public AbstractGPURenderTaskDataSource {
+class ThreeDimensionalUIRenderer : public BaseMeshRenderer {
 public:
+    ThreeDimensionalUIRenderer();
+    ~ThreeDimensionalUIRenderer();
+
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
     static const char* ClassName(void) {
-        return "UIRenderTaskDataSource";
+        return "3DUIRenderer";
     }
-
     /**
      * Answer a human readable description of this module.
      *
@@ -45,27 +46,10 @@ public:
         return "....TODO...";
     }
 
-    /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
-    static bool IsAvailable(void) {
-        return true;
-    }
-
-    ThreeDimensionalUIRenderTaskDataSource();
-    ~ThreeDimensionalUIRenderTaskDataSource();
-
 protected:
-    /**
-     * Implementation of 'Create'.
-     *
-     * @return 'true' on success, 'false' otherwise.
-     */
-    virtual bool create(void);
+    void createMaterialCollection() override;
 
-    bool getDataCallback(core::Call& caller);
+    void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
 
     bool getInteractionCallback(core::Call& caller);
 
@@ -92,8 +76,6 @@ private:
 
     std::shared_ptr<mesh::ThreeDimensionalInteractionCollection> m_interaction_collection;
 
-    std::shared_ptr<GPUMaterialCollection> m_material_collection;
-
     megamol::core::CalleeSlot m_3DInteraction_calleeSlot;
     megamol::core::CallerSlot m_3DInteraction_callerSlot;
     megamol::core::CallerSlot m_glTF_callerSlot;
@@ -102,4 +84,4 @@ private:
 } // namespace mesh_gl
 } // namespace megamol
 
-#endif // !THREE_DIMENSIONAL_UI_RENDER_TASK_DATA_SOURCE
+#endif // !THREE_DIMENSIONAL_UI_RENDERER_H_INCLUDED
