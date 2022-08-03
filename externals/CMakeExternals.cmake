@@ -109,32 +109,6 @@ function(require_external NAME)
       GIT_TAG "v2.1.0"
       INCLUDE_DIR "include")
 
-  # qhull
-  elseif (NAME STREQUAL "qhull")
-    if (TARGET qhull)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(QHULL_LIB "lib/qhull<SUFFIX>.lib")
-    else ()
-      set(QUHULL_LIB "lib/libqhull<SUFFIX>.a")
-    endif ()
-
-    add_external_project(qhull STATIC
-      GIT_REPOSITORY https://github.com/qhull/qhull.git
-      GIT_TAG "v7.3.2"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${QHULL_LIB}"
-      DEBUG_SUFFIX _d
-      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/externals/qhull/CMakeLists.txt"
-        "<SOURCE_DIR>/CMakeLists.txt")
-
-    add_external_library(qhull
-      INCLUDE_DIR "include"
-      LIBRARY ${QHULL_LIB}
-      DEBUG_SUFFIX _d)
-
   # quickhull
   elseif (NAME STREQUAL "quickhull")
     if (TARGET quickhull)

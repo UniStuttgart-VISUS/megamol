@@ -27,6 +27,7 @@
     "nanoflann",
     "nlohmann-json",
     "obj-io",
+    "qhull",
     "simultaneous-sort",
     "snappy",
     "spdlog",
