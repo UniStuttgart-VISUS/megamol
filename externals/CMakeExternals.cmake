@@ -109,17 +109,6 @@ function(require_external NAME)
       GIT_TAG "v2.1.0"
       INCLUDE_DIR "include")
 
-  # obj-io
-  elseif (NAME STREQUAL "obj-io")
-    if (TARGET obj-io)
-      return()
-    endif ()
-
-    add_external_headeronly_project(obj-io INTERFACE
-      GIT_REPOSITORY https://github.com/thinks/obj-io.git
-      GIT_TAG bfe835200fdff49b45a6de4561741203f85ad028 # master on 2021-07-26, because nothing was specified here.
-      INCLUDE_DIR "include/thinks")
-
   # qhull
   elseif (NAME STREQUAL "qhull")
     if (TARGET qhull)

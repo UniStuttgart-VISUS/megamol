@@ -8,11 +8,11 @@ megamol_plugin(mesh
   DEPENDS_PLUGINS
     mmstd
   DEPENDS_EXTERNALS PUBLIC
-    quickhull
-    obj-io)
+    quickhull)
 
 if (mesh_PLUGIN_ENABLED)
   find_package(tinyobjloader CONFIG REQUIRED)
+  find_path(OBJ_IO_INCLUDE_DIRS "obj_io.h")
   find_path(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h")
 
   target_link_libraries(mesh
@@ -20,6 +20,7 @@ if (mesh_PLUGIN_ENABLED)
       tinyobjloader::tinyobjloader)
   target_include_directories(mesh
     PRIVATE
+      ${OBJ_IO_INCLUDE_DIRS}
       ${TINYGLTF_INCLUDE_DIRS})
 
   if (MSVC)

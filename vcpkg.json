@@ -26,6 +26,7 @@
     "mmpld-io",
     "nanoflann",
     "nlohmann-json",
+    "obj-io",
     "simultaneous-sort",
     "snappy",
     "spdlog",
