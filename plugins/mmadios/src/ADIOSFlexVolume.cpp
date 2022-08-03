@@ -10,6 +10,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/utility/log/Log.h"
+#include <math.h>
 #include <numeric>
 
 using namespace megamol::geocalls;
