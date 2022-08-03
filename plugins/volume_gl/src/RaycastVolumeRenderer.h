@@ -10,6 +10,7 @@
 #include <limits>
 #include <memory>
 
+#include <glowl/FramebufferObject.hpp>
 #include <glowl/Texture2D.hpp>
 #include <glowl/Texture3D.hpp>
 
@@ -139,16 +140,12 @@ private:
     core::param::ParamSlot m_material_color;
 
     /** caller slot */
-    megamol::core::CallerSlot m_renderer_callerSlot;
     megamol::core::CallerSlot m_volumetricData_callerSlot;
     megamol::core::CallerSlot m_lights_callerSlot;
     megamol::core::CallerSlot m_transferFunction_callerSlot;
 
     std::array<float, 2> valRange;
     bool valRangeNeedsUpdate = false;
-
-    /** FBO for chaining renderers */
-    vislib_gl::graphics::gl::FramebufferObject fbo;
 };
 
 } // namespace megamol::volume_gl
