@@ -2045,7 +2045,6 @@ bool SphereRenderer::enableTransferFunctionTexture(std::shared_ptr<glowl::GLSLPr
 
     mmstd_gl::CallGetTransferFunctionGL* cgtf = this->get_tf_slot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     if ((cgtf != nullptr) && (*cgtf)(0)) {
-        // TODO: how to do with unique?
         cgtf->BindConvenience(*prgm, GL_TEXTURE0, 0);
     } else {
         glEnable(GL_TEXTURE_1D);
