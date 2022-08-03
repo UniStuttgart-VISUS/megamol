@@ -81,19 +81,12 @@ protected:
      */
     virtual void release() override;
 
-    /** Callbacks for piping through data, and saving data on demand */
-    bool getMeshDataCallback(core::Call& call);
-    bool getMeshMetaDataCallback(core::Call& call);
-
     /** Callback to register button pressed */
     bool setButtonPressed(core::param::ParamSlot&);
 
     /** Function for writing to file */
     bool write(const std::string& filename, const std::vector<float>& vertices, const std::vector<float>& normals,
         const std::vector<unsigned int>& indices) const;
-
-    /** The slots for requesting data from this module, i.e., lhs connection */
-    core::CalleeSlot mesh_lhs_slot;
 
     /** The slots for querying data, i.e., a rhs connection */
     core::CallerSlot mesh_rhs_slot;
@@ -102,8 +95,6 @@ protected:
     core::param::ParamSlot filename;
     core::param::ParamSlot filetype;
     core::param::ParamSlot save;
-
-    bool triggered;
 };
 } // namespace mesh
 } // namespace megamol
