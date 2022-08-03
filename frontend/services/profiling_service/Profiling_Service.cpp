@@ -78,7 +78,10 @@ void Profiling_Service::fill_lua_callbacks() {
             auto view = std::dynamic_pointer_cast<core::view::AbstractViewInterface>(entry);
             if (!view)
                 return frontend_resources::LuaCallbacksCollection::Error{"requested entrypoint is not a view"};
-            auto camera_samples = megamol::core::utility::SampleCameraScenes(view, camera_path_pattern, num_samples);
+            auto cam_func = megamol::core::utility::GetCamScenesFunctional(camera_path_pattern);
+            if (!cam_func)
+                return frontend_resources::LuaCallbacksCollection::Error{"could not request camera path pattern"};
+            auto camera_samples = megamol::core::utility::SampleCameraScenes(view, cam_func, num_samples);
             if (camera_samples.empty())
                 return frontend_resources::LuaCallbacksCollection::Error{"could not sample camera"};
             return frontend_resources::LuaCallbacksCollection::StringResult{camera_samples};

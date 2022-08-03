@@ -1,31 +1,28 @@
 #include "mmcore/utility/SampleCameraScenes.h"
 
-#include <functional>
-#include <tuple>
-#include <vector>
-
-#include <glm/glm.hpp>
-
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/utility/LongestEdgeCameraSamples.h"
 #include "mmcore/utility/OrbitalCameraSamples.h"
 #include "mmcore/view/CameraSerializer.h"
 
 
-std::string megamol::core::utility::SampleCameraScenes(std::shared_ptr<megamol::core::view::AbstractViewInterface> view,
-    std::string camera_path_pattern, unsigned int num_samples) {
+megamol::core::utility::cam_samples_func megamol::core::utility::GetCamScenesFunctional(
+    std::string camera_path_pattern) {
     std::function<std::tuple<std::vector<glm::vec3>, std::vector<glm::vec3>>(
         megamol::core::BoundingBoxes_2, unsigned int)>
         sampler;
     if (camera_path_pattern == "orbit") {
-        sampler = &megamol::core::utility::orbital_camera_samples;
+        return &megamol::core::utility::orbital_camera_samples;
     } else if (camera_path_pattern == "longest_edge") {
-        sampler = &megamol::core::utility::longest_edge_camera_samples;
-    } else {
-        return std::string();
+        return &megamol::core::utility::longest_edge_camera_samples;
     }
+    return cam_samples_func();
+}
 
-    auto [cam_positions, cam_directions] = sampler(view->GetBoundingBoxes(), num_samples);
+
+std::string megamol::core::utility::SampleCameraScenes(std::shared_ptr<megamol::core::view::AbstractViewInterface> view,
+    cam_samples_func cam_func, unsigned int num_samples) {
+    auto [cam_positions, cam_directions] = cam_func(view->GetBoundingBoxes(), num_samples);
 
     auto cam = view->GetCamera();
 
