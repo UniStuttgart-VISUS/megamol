@@ -92,29 +92,6 @@ function(require_external NAME)
       PROJECT IceT
       LIBRARY ${ICET_MPI_LIB})
 
-  # quickhull
-  elseif (NAME STREQUAL "quickhull")
-    if (TARGET quickhull)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(QUICKHULL_LIB "lib/quickhull.lib")
-    else ()
-      set(QUICKHULL_LIB "lib/libquickhull.a")
-    endif ()
-
-    add_external_project(quickhull STATIC
-      GIT_REPOSITORY https://github.com/akuukka/quickhull.git
-      GIT_TAG 4f65e0801b8f60c9a97da2dadbe63c2b46397694 # master on 2021-07-26, because nothing was specified here.
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}"
-      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/externals/quickhull/CMakeLists.txt"
-        "<SOURCE_DIR>/CMakeLists.txt")
-
-    add_external_library(quickhull
-      LIBRARY ${QUICKHULL_LIB})
-
   # tracking
   elseif (NAME STREQUAL "tracking")
     if (TARGET tracking)

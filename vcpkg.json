@@ -29,6 +29,7 @@
     "nlohmann-json",
     "obj-io",
     "qhull",
+    "quickhull",
     "simultaneous-sort",
     "snappy",
     "spdlog",
