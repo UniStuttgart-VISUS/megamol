@@ -34,11 +34,10 @@ void CallGetTransferFunctionGL::BindConvenience(
 
 void CallGetTransferFunctionGL::BindConvenience(
     std::unique_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform) {
-        BindConvenience(*shader, activeTexture, textureUniform);
+    BindConvenience(*shader, activeTexture, textureUniform);
 }
 
-void CallGetTransferFunctionGL::BindConvenience(
-    glowl::GLSLProgram& shader, GLenum activeTexture, int textureUniform) {
+void CallGetTransferFunctionGL::BindConvenience(glowl::GLSLProgram& shader, GLenum activeTexture, int textureUniform) {
     glEnable(GL_TEXTURE_1D);
     glActiveTexture(activeTexture);
     glBindTexture(GL_TEXTURE_1D, this->texID);
