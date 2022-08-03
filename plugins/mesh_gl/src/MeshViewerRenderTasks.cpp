@@ -98,8 +98,8 @@ bool megamol::mesh_gl::MeshViewerRenderTasks::getDataCallback(core::Call& caller
                 }
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "Nullpointer given for mesh or material data to \"%s\" [%s, %s, line %d]\n", this->FullName(),
-                    __FILE__, __FUNCTION__, __LINE__);
+                    "Nullpointer given for mesh or material data to \"%s\" [%s, %s, line %d]\n",
+                    this->FullName().PeekBuffer(), __FILE__, __FUNCTION__, __LINE__);
             }
         }
     } else {

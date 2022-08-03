@@ -7,6 +7,7 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
+#include "ImageLoader.h"
 #include "ImageRenderer.h"
 
 namespace megamol::image_gl {
@@ -24,6 +25,7 @@ public:
 
         // register modules
         this->module_descriptions.RegisterAutoDescription<megamol::image_gl::ImageRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::image_gl::ImageLoader>();
 
         // register calls
     }

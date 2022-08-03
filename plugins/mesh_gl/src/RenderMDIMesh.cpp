@@ -196,7 +196,7 @@ bool RenderMDIMesh::Render(mmstd_gl::CallRender3DGL& call) {
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Binding point 0 reserved for render task data buffer. \"%s\". [%s, %s, line %d]\n",
-                    this->FullName(), __FILE__, __FUNCTION__, __LINE__);
+                    this->FullName().PeekBuffer(), __FILE__, __FUNCTION__, __LINE__);
             }
         }
 
