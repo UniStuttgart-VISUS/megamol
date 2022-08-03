@@ -11,7 +11,6 @@
 #include "ArchVisCalls.h"
 #include "MSMRenderer.h"
 #include "mesh_gl/GPUMeshCollection.h"
-#include "mesh_gl/MeshCalls_gl.h"
 
 megamol::archvis_gl::MSMRenderer::MSMRenderer() : m_MSM_callerSlot("getMSM", "Connects...") {
     this->m_MSM_callerSlot.SetCompatibleCall<ScaleModelCallDescription>();

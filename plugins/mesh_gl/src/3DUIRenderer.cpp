@@ -4,9 +4,6 @@
 #include "vislib/math/Matrix.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
-#include "mesh_gl/MeshCalls_gl.h"
-
-
 megamol::mesh_gl::ThreeDimensionalUIRenderer::ThreeDimensionalUIRenderer()
         : m_version(0)
         , m_interaction_collection(new mesh::ThreeDimensionalInteractionCollection)
