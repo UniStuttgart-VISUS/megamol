@@ -16,7 +16,8 @@
 
 namespace megamol {
 namespace mesh {
-STLWriter::STLWriter() : mesh_rhs_slot("mesh_rhs_slot", "Input surface mesh.")
+STLWriter::STLWriter()
+        : mesh_rhs_slot("mesh_rhs_slot", "Input surface mesh.")
         , filename("filename", "Name for the output STL file.")
         , filetype("filetype", "Type of the output STL file (binary vs. ASCII).")
         , save("save", "Save to STL file.") {
