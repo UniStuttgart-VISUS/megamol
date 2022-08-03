@@ -43,7 +43,7 @@ void CallGetTransferFunctionGL::BindConvenience(
     glActiveTexture(activeTexture);
     glBindTexture(GL_TEXTURE_1D, this->texID);
     shader.setUniform("tfTexture", textureUniform);
-    shader.setUniform("tfRange", this->range[0], this->range[1]);
+    glUniform2fv(shader.getUniformLocation("tfRange"), 1, this->range.data());
 }
 
 void CallGetTransferFunctionGL::UnbindConvenience() {
