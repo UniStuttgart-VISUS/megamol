@@ -9,14 +9,14 @@ megamol_plugin(protein
     mmstd
     trisoup
     protein_calls
-    geometry_calls
-  DEPENDS_EXTERNALS
-    curl)
+    geometry_calls)
 
 if (protein_PLUGIN_ENABLED)
   find_package(chemfiles CONFIG REQUIRED)
+  find_package(CURL CONFIG REQUIRED)
   target_link_libraries(protein
     PRIVATE
       vislib
-      chemfiles)
+      chemfiles
+      CURL::libcurl)
 endif ()
