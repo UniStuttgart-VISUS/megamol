@@ -10,7 +10,7 @@
 namespace megamol {
 namespace mesh_gl {
 
-    // Existing mesh_gl calls were deprecated and deleted
+// Existing mesh_gl calls were deprecated and deleted
 
 } // namespace mesh_gl
 } // namespace megamol
