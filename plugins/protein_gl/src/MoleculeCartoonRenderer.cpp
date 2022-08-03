@@ -2683,14 +2683,14 @@ void MoleculeCartoonRenderer::RenderStick(
                 firstRes = mol->Molecules()[mCnt].FirstResidueIndex();
                 for (unsigned int rCnt = 0; rCnt < mol->Molecules()[mCnt].ResidueCount(); rCnt++) {
                     // try to match binding sites
-                    vislib::Pair<char, unsigned int> bsRes;
+                    std::pair<char, unsigned int> bsRes;
                     // loop over all binding sites
                     for (unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++) {
-                        for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count(); bsResCnt++) {
+                        for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->size(); bsResCnt++) {
                             bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
-                            if (mol->Chains()[cCnt].Name() == bsRes.First() &&
-                                mol->Residues()[firstRes + rCnt]->OriginalResIndex() == bsRes.Second() &&
-                                mol->ResidueTypeNames()[mol->Residues()[firstRes + rCnt]->Type()] ==
+                            if (mol->Chains()[cCnt].Name() == bsRes.first &&
+                                mol->Residues()[firstRes + rCnt]->OriginalResIndex() == bsRes.second &&
+                                mol->ResidueTypeNames()[mol->Residues()[firstRes + rCnt]->Type()].PeekBuffer() ==
                                     bs->GetBindingSiteResNames(bsCnt)->operator[](bsResCnt)) {
                                 // TODO loop over all atoms and add the color
                                 firstAtom = mol->Residues()[firstRes + rCnt]->FirstAtomIndex();

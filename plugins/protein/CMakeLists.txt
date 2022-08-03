@@ -9,7 +9,9 @@ megamol_plugin(protein
     mmstd
     trisoup
     protein_calls
-    geometry_calls)
+    geometry_calls
+  DEPENDS_EXTERNALS
+    curl)
 
 if (protein_PLUGIN_ENABLED)
   find_package(chemfiles CONFIG REQUIRED)

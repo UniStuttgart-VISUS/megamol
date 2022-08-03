@@ -5,13 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLPROTEIN_GLSLVOLRENDERER_H_INCLUDED
-#define MEGAMOLPROTEIN_GLSLVOLRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "glm/glm.hpp"
+#include <list>
+#include <memory>
+
+#include <glm/glm.hpp>
+#include <glowl/glowl.h>
+
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/RenderUtils.h"
@@ -21,10 +22,8 @@
 #include "protein_calls/ProteinColor.h"
 #include "slicing.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
-#include <list>
 
 #define CHECK_FOR_OGL_ERROR()                                                                 \
     do {                                                                                      \
@@ -222,20 +221,14 @@ private:
     // param slot for toggling protein rendering
     megamol::core::param::ParamSlot renderProteinParam;
 
-    // shader for the spheres (raycasting view)
-    vislib_gl::graphics::gl::GLSLShader sphereShader;
-    // shader for the cylinders (raycasting view)
-    vislib_gl::graphics::gl::GLSLShader cylinderShader;
-    // shader for the clipped spheres (raycasting view)
-    vislib_gl::graphics::gl::GLSLShader clippedSphereShader;
     // shader for volume texture generation
-    vislib_gl::graphics::gl::GLSLShader updateVolumeShader;
+    std::unique_ptr<glowl::GLSLProgram> updateVolumeShader;
     // shader for volume rendering
-    vislib_gl::graphics::gl::GLSLShader volumeShader;
-    vislib_gl::graphics::gl::GLSLShader volRayStartShader;
-    vislib_gl::graphics::gl::GLSLShader volRayStartEyeShader;
-    vislib_gl::graphics::gl::GLSLShader volRayLengthShader;
-    vislib_gl::graphics::gl::GLSLShader colorWriterShader;
+    std::unique_ptr<glowl::GLSLProgram> volumeShader;
+    std::unique_ptr<glowl::GLSLProgram> volRayStartShader;
+    std::unique_ptr<glowl::GLSLProgram> volRayStartEyeShader;
+    std::unique_ptr<glowl::GLSLProgram> volRayLengthShader;
+    std::unique_ptr<glowl::GLSLProgram> colorWriterShader;
 
     // current coloring mode
     protein_calls::ProteinColor::ColoringMode currentColoringMode;
@@ -318,5 +311,3 @@ private:
 
 } // namespace protein_gl
 } /* end namespace megamol */
-
-#endif // MEGAMOLPROTEIN_GLSLVOLRENDERER_H_INCLUDED

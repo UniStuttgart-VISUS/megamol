@@ -8,6 +8,7 @@
 
 #include "AbstractInputScope.h"
 #include "ImageWrapper.h"
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/Module.h"
 #include "mmcore/view/Camera.h"
 
@@ -32,6 +33,15 @@ public:
 
     virtual Camera GetCamera() const = 0;
 
+    /**
+     * Returns the current Bounding Box extents
+     *
+     * The frontend VR Service needs to access the Bounding Box of the data set to align positioning in the VR scene.
+     */
+    BoundingBoxes_2 const& GetBoundingBoxes() const {
+        return _bboxs;
+    };
+
     ViewDimension const& GetViewDimension() const {
         return viewDimension_;
     }
@@ -50,6 +60,9 @@ public:
 
 protected:
     ViewDimension viewDimension_;
+
+    /** The complete scene bounding box */
+    BoundingBoxes_2 _bboxs;
 };
 
 } // namespace megamol::core::view
