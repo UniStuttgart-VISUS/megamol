@@ -69,7 +69,7 @@ void Profiling_Service::fill_lua_callbacks() {
 
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, int>(
-        "mmGenerateCameraPositions", "(string entrypoint, string camera_path_pattern, uint num_samples)",
+        "mmGenerateCameraScenes", "(string entrypoint, string camera_path_pattern, uint num_samples)",
         {[&graph](std::string entrypoint, std::string camera_path_pattern,
              int num_samples) -> frontend_resources::LuaCallbacksCollection::StringResult {
             auto entry = graph.FindModule(entrypoint);
