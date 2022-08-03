@@ -7,8 +7,8 @@
 
 #include "ADIOSFlexVolume.h"
 #include "mmadios/CallADIOSData.h"
-#include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/utility/log/Log.h"
 #include <numeric>
 
@@ -86,7 +86,8 @@ bool ADIOSFlexVolume::onGetData(core::Call& call) {
         cad->setFrameIDtoLoad(vdc->FrameID());
 
 
-        const std::string vel_str = std::string(this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->ValueString());
+        const std::string vel_str =
+            std::string(this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->ValueString());
         if (vel_str != "undef") {
             if (!cad->inquireVar(vel_str)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -118,7 +119,7 @@ bool ADIOSFlexVolume::onGetData(core::Call& call) {
         int xfactor = 1;
         int yfactor = 1;
         int zfactor = 1;
-        switch(memoryLayoutSlot.Param<megamol::core::param::EnumParam>()->Value()) {
+        switch (memoryLayoutSlot.Param<megamol::core::param::EnumParam>()->Value()) {
         case 0: // xyz
             xfactor = 1;
             yfactor = the_velocities->shape[0];
