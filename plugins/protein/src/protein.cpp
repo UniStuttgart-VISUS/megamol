@@ -17,6 +17,7 @@
 #include "CaverTunnelResidueLoader.h"
 #include "CrystalStructureDataSource.h"
 #include "GROLoader.h"
+#include "MoleculeLoader.h"
 #include "PDBLoader.h"
 #include "SolPathDataSource.h"
 #include "SolventHydroBondGenerator.h"
@@ -65,6 +66,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventHydroBondGenerator>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::GROLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::IntSelection>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CrystalStructureDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::VTILoader>();

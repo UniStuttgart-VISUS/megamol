@@ -20,7 +20,6 @@ uniform int use_depth_tx;
 void compute(float t, const float tfar, const Ray ray, const float rayStep, const ivec2 pixel_coords) {
     // Get pixel texture coordinates and depth value at original position
     vec2 pixel_tex_coords = vec2(pixel_coords.x / rt_resolution.x, pixel_coords.y / rt_resolution.y);
-    //const float input_depth = texture(depth_tx2D, pixel_tex_coords).x;
 
     // Initialize results
     vec4 result = vec4(0.0f);
@@ -33,18 +32,19 @@ void compute(float t, const float tfar, const Ray ray, const float rayStep, cons
         texCoords *= 1.0 - 2.0 * halfVoxelSize;
         texCoords += halfVoxelSize;
 
-        // if (use_depth_tx != 0) {
-        //     // Compare depth values and decide to abort
-        //     const float depth = calculate_depth(pos);
+        if (use_depth_tx != 0) {
+            // Compare depth values and decide to abort
+            const float input_depth = texture(depth_tx2D, pixel_tex_coords).x;
+            const float depth = calculate_depth(pos);
 
-        //     if (depth > input_depth) {
-        //         const vec4 color = texture(color_tx2D, pixel_tex_coords);
+            if (depth > input_depth) {
+                const vec4 color = texture(color_tx2D, pixel_tex_coords);
 
-        //         result += (1.0f - result.w) * color;
+                result += (1.0f - result.w) * color;
 
-        //         break;
-        //     }
-        // }
+                break;
+            }
+        }
 
         // Get sample
         vec4 vol_sample = texture(tf_tx1D, (texture(volume_tx3D, texCoords).x - valRange.x) / (valRange.y-valRange.x));
