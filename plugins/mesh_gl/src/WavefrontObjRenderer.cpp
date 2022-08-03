@@ -8,7 +8,7 @@
 #include "mesh/MeshCalls.h"
 
 megamol::mesh_gl::WavefrontObjRenderer::WavefrontObjRenderer()
-        : BaseMeshRenderer<wavefrontobjrenderer_name, wavefrontobjrenderer_desc>()
+        : BaseMeshRenderer()
         , lights_slot_("lights", "Connects a chain of lights") {
     lights_slot_.SetCompatibleCall<megamol::core::view::light::CallLightDescription>();
     megamol::core::Module::MakeSlotAvailable(&this->lights_slot_);

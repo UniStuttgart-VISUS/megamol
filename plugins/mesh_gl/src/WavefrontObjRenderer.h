@@ -12,19 +12,27 @@
 namespace megamol {
 namespace mesh_gl {
 
-inline constexpr char wavefrontobjrenderer_name[] = "WavefrontObjRenderer";
-
-inline constexpr char wavefrontobjrenderer_desc[] =
-    "Renderer for wavefront obj files using shaders for forward rendering.";
-
-class WavefrontObjRenderer : public BaseMeshRenderer<wavefrontobjrenderer_name, wavefrontobjrenderer_desc> {
+class WavefrontObjRenderer : public BaseMeshRenderer {
 public:
-    using BaseRenderTaskRenderer<wavefrontobjrenderer_name, wavefrontobjrenderer_desc>::material_collection_;
-    using BaseRenderTaskRenderer<wavefrontobjrenderer_name, wavefrontobjrenderer_desc>::mesh_collection_;
-    using BaseRenderTaskRenderer<wavefrontobjrenderer_name, wavefrontobjrenderer_desc>::render_task_collection_;
-
     WavefrontObjRenderer();
     ~WavefrontObjRenderer();
+
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) {
+        return "WavefrontObjRenderer";
+    }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Renderer for wavefront obj files using shaders for forward rendering.";
+    }
 
 protected:
     void createMaterialCollection() override;

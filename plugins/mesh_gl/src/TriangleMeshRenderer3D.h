@@ -28,16 +28,12 @@
 namespace megamol {
 namespace mesh_gl {
 
-inline constexpr char trianglemeshrenderer3D_name[] = "TriangleMeshRenderer3D";
-
-inline constexpr char trianglemeshrenderer3D_desc[] = "Upload 3D data to the GPU for use with the mesh plugin";
-
 /**
  * Module for uploading a 3D triangle mesh to the GPU.
  *
  * @author Alexander Straub
  */
-class TriangleMeshRenderer3D : public BaseRenderTaskRenderer<trianglemeshrenderer3D_name, trianglemeshrenderer3D_desc> {
+class TriangleMeshRenderer3D : public BaseRenderTaskRenderer {
     static_assert(std::is_same<GLfloat, float>::value, "'GLfloat' and 'float' must be the same type!");
     static_assert(std::is_same<GLuint, unsigned int>::value, "'GLuint' and 'unsigned int' must be the same type!");
 
@@ -60,6 +56,23 @@ public:
      * Finalises an instance.
      */
     virtual ~TriangleMeshRenderer3D();
+
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) {
+        return "TriangleMeshRenderer3D";
+    }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Upload 3D data to the GPU for use with the mesh plugin";
+    }
 
 protected:
     /**

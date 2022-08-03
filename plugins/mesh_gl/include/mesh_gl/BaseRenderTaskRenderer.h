@@ -17,27 +17,8 @@
 namespace megamol {
 namespace mesh_gl {
 
-template<const char* NAME, const char* DESC>
 class BaseRenderTaskRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
-    /**
-     * Answer the name of this module.
-     *
-     * @return The name of this module.
-     */
-    static const char* ClassName(void) {
-        return NAME;
-    }
-
-    /**
-     * Answer a human readable description of this module.
-     *
-     * @return A human readable description of this module.
-     */
-    static const char* Description(void) {
-        return DESC;
-    }
-
     /**
      * Answers whether this module is available on the current system.
      *
@@ -120,13 +101,11 @@ protected:
     std::shared_ptr<GPURenderTaskCollection> render_task_collection_;
 };
 
-template<const char* NAME, const char* DESC>
-inline BaseRenderTaskRenderer<NAME, DESC>::~BaseRenderTaskRenderer() {
+inline BaseRenderTaskRenderer::~BaseRenderTaskRenderer() {
     this->Release();
 }
 
-template<const char* NAME, const char* DESC>
-inline bool BaseRenderTaskRenderer<NAME, DESC>::create() {
+inline bool BaseRenderTaskRenderer::create() {
     bool retval = true;
     try {
         createMaterialCollection();
@@ -140,15 +119,13 @@ inline bool BaseRenderTaskRenderer<NAME, DESC>::create() {
     return retval;
 }
 
-template<const char* NAME, const char* DESC>
-inline void BaseRenderTaskRenderer<NAME, DESC>::release() {
+inline void BaseRenderTaskRenderer::release() {
     material_collection_.reset();
     mesh_collection_.reset();
     render_task_collection_.reset();
 }
 
-template<const char* NAME, const char* DESC>
-inline bool BaseRenderTaskRenderer<NAME, DESC>::Render(mmstd_gl::CallRender3DGL& call) {
+inline bool BaseRenderTaskRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     mmstd_gl::CallRender3DGL* cr = &call;
     if (cr == nullptr) {
         return false;
@@ -180,36 +157,29 @@ inline bool BaseRenderTaskRenderer<NAME, DESC>::Render(mmstd_gl::CallRender3DGL&
     return true;
 }
 
-template<const char* NAME, const char* DESC>
-inline void BaseRenderTaskRenderer<NAME, DESC>::createMaterialCollection() {
+inline void BaseRenderTaskRenderer::createMaterialCollection() {
     material_collection_ = std::make_shared<GPUMaterialCollection>();
 }
 
-template<const char* NAME, const char* DESC>
-inline void BaseRenderTaskRenderer<NAME, DESC>::createMeshCollection() {
+inline void BaseRenderTaskRenderer::createMeshCollection() {
     mesh_collection_ = std::make_shared<GPUMeshCollection>();
 }
 
-template<const char* NAME, const char* DESC>
-inline void BaseRenderTaskRenderer<NAME, DESC>::createRenderTaskCollection() {
+inline void BaseRenderTaskRenderer::createRenderTaskCollection() {
     render_task_collection_ = std::make_shared<GPURenderTaskCollection>();
 }
 
-template<const char* NAME, const char* DESC>
-inline bool BaseRenderTaskRenderer<NAME, DESC>::updateMaterialCollection() {
+inline bool BaseRenderTaskRenderer::updateMaterialCollection() {
     // empty function that is conveniently used when no update is required after creation
     return false;
 }
 
-template<const char* NAME, const char* DESC>
-inline bool BaseRenderTaskRenderer<NAME, DESC>::updateMeshCollection() {
+inline bool BaseRenderTaskRenderer::updateMeshCollection() {
     // empty function that is conveniently used when no update is required after creation
     return false;
 }
 
-template<const char* NAME, const char* DESC>
-inline void BaseRenderTaskRenderer<NAME, DESC>::updateRenderTaskCollection(
-    mmstd_gl::CallRender3DGL& call, bool force_update) {
+inline void BaseRenderTaskRenderer::updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) {
     // empty function that is conveniently used when no update is required after creation
 }
 

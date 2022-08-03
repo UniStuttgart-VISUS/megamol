@@ -10,13 +10,27 @@
 
 namespace megamol::archvis_gl {
 
-inline constexpr char msmrenderer_name[] = "MSMRenderer";
-inline constexpr char msmrenderer_desc[] = "Renderer for MSM input data";
-
-class MSMRenderer : public mesh_gl::BaseMeshRenderer<msmrenderer_name, msmrenderer_desc> {
+class MSMRenderer : public mesh_gl::BaseMeshRenderer {
 public:
     MSMRenderer();
     ~MSMRenderer();
+
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) {
+        return "MSMRenderer";
+    }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Renderer for MSM input data";
+    }
 
 protected:
     // Override extents query

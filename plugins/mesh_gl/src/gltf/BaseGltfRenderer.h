@@ -16,13 +16,8 @@
 namespace megamol {
 namespace mesh_gl {
 
-template<const char* NAME, const char* DESC>
-class BaseGltfRenderer : public BaseMeshRenderer<NAME, DESC> {
+class BaseGltfRenderer : public BaseMeshRenderer {
 public:
-    using BaseRenderTaskRenderer<NAME, DESC>::material_collection_;
-    using BaseRenderTaskRenderer<NAME, DESC>::mesh_collection_;
-    using BaseRenderTaskRenderer<NAME, DESC>::render_task_collection_;
-
     BaseGltfRenderer();
     ~BaseGltfRenderer() = default;
 
@@ -34,16 +29,14 @@ private:
     megamol::core::CallerSlot glTF_callerSlot_;
 };
 
-template<const char* NAME, const char* DESC>
-inline BaseGltfRenderer<NAME, DESC>::BaseGltfRenderer()
-        : BaseMeshRenderer<NAME, DESC>()
+inline BaseGltfRenderer::BaseGltfRenderer()
+        : BaseMeshRenderer()
         , glTF_callerSlot_("gltfModels", "Connects a collection of loaded glTF files") {
     glTF_callerSlot_.SetCompatibleCall<mesh::CallGlTFDataDescription>();
     megamol::core::Module::MakeSlotAvailable(&this->glTF_callerSlot_);
 }
 
-template<const char* NAME, const char* DESC>
-inline void BaseGltfRenderer<NAME, DESC>::updateRenderTaskCollection(
+inline void BaseGltfRenderer::updateRenderTaskCollection(
     mmstd_gl::CallRender3DGL& call, bool force_update) {
 
     bool something_has_changed = force_update;

@@ -10,13 +10,27 @@
 
 namespace megamol::archvis_gl {
 
-inline constexpr char femrenderer_name[] = "FEMRenderer";
-inline constexpr char femrenderer_desc[] = "Renderer for FEM (node, edge, box) data.";
-
-class FEMRenderer : public mesh_gl::BaseRenderTaskRenderer<femrenderer_name, femrenderer_desc> {
+class FEMRenderer : public mesh_gl::BaseRenderTaskRenderer {
 public:
     FEMRenderer();
     ~FEMRenderer();
+
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) {
+        return "FEMRenderer";
+    }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Renderer for FEM (node, edge, box) data.";
+    }
 
 protected:
     /**

@@ -24,15 +24,28 @@
 namespace megamol {
 namespace mesh_gl {
 
-inline constexpr char threedimensionaluirenderer_name[] = "3DUIRenderer";
-
-inline constexpr char threedimensionaluirenderer_desc[] = "....TODO...";
-
 class ThreeDimensionalUIRenderer
-        : public BaseMeshRenderer<threedimensionaluirenderer_name, threedimensionaluirenderer_desc> {
+        : public BaseMeshRenderer {
 public:
     ThreeDimensionalUIRenderer();
     ~ThreeDimensionalUIRenderer();
+
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) {
+        return "3DUIRenderer";
+    }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "....TODO...";
+    }
 
 protected:
     void createMaterialCollection() override;

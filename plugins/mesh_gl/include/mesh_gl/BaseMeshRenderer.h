@@ -16,13 +16,8 @@
 namespace megamol {
 namespace mesh_gl {
 
-template<const char* NAME, const char* DESC>
-class BaseMeshRenderer : public BaseRenderTaskRenderer<NAME, DESC> {
+class BaseMeshRenderer : public BaseRenderTaskRenderer {
 public:
-    using BaseRenderTaskRenderer<NAME, DESC>::material_collection_;
-    using BaseRenderTaskRenderer<NAME, DESC>::mesh_collection_;
-    using BaseRenderTaskRenderer<NAME, DESC>::render_task_collection_;
-
     BaseMeshRenderer();
     ~BaseMeshRenderer() = default;
 
@@ -36,7 +31,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     bool updateMeshCollection() override;
 
@@ -44,16 +39,14 @@ protected:
     megamol::core::CallerSlot mesh_slot_;
 };
 
-template<const char* NAME, const char* DESC>
-inline BaseMeshRenderer<NAME, DESC>::BaseMeshRenderer()
-        : BaseRenderTaskRenderer<NAME, DESC>()
+inline BaseMeshRenderer::BaseMeshRenderer()
+        : BaseRenderTaskRenderer()
         , mesh_slot_("meshes", "Connects a mesh data access collection") {
     mesh_slot_.SetCompatibleCall<mesh::CallMeshDescription>();
     megamol::core::Module::MakeSlotAvailable(&this->mesh_slot_);
 }
 
-template<const char* NAME, const char* DESC>
-bool BaseMeshRenderer<NAME, DESC>::GetExtents(mmstd_gl::CallRender3DGL& call) {
+inline bool BaseMeshRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     mmstd_gl::CallRender3DGL* cr = &call; // dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (cr == nullptr) {
@@ -78,11 +71,10 @@ bool BaseMeshRenderer<NAME, DESC>::GetExtents(mmstd_gl::CallRender3DGL& call) {
     return true;
 }
 
-template<const char* NAME, const char* DESC>
-inline bool BaseMeshRenderer<NAME, DESC>::updateMeshCollection() {
+inline bool BaseMeshRenderer::updateMeshCollection() {
     bool something_has_changed = false;
 
-    mesh::CallMesh* mc = this->mesh_slot_.CallAs<mesh::CallMesh>();
+    mesh::CallMesh* mc = mesh_slot_.CallAs<mesh::CallMesh>();
     if (mc != nullptr) {
 
         if (!(*mc)(0)) {

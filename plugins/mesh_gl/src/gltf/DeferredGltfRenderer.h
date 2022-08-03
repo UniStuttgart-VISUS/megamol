@@ -12,14 +12,27 @@
 namespace megamol {
 namespace mesh_gl {
 
-inline constexpr char deferredgltfrenderer_name[] = "DeferredGltfRenderer";
-
-inline constexpr char deferredgltfrenderer_desc[] = "Renderer for gltf files using shaders for deferred rendering.";
-
-class DeferredGltfRenderer : public BaseGltfRenderer<deferredgltfrenderer_name, deferredgltfrenderer_desc> {
+class DeferredGltfRenderer : public BaseGltfRenderer {
 public:
     DeferredGltfRenderer() : BaseGltfRenderer() {}
     ~DeferredGltfRenderer() override = default;
+
+    /**
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
+     */
+    static const char* ClassName(void) {
+        return "DeferredGltfRenderer";
+    }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char* Description(void) {
+        return "Renderer for gltf files using shaders for deferred rendering.";
+    }
 
 protected:
     void createMaterialCollection() override {
