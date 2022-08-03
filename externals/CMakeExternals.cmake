@@ -92,23 +92,6 @@ function(require_external NAME)
       PROJECT IceT
       LIBRARY ${ICET_MPI_LIB})
 
-  # libigl
-  elseif (NAME STREQUAL "libigl")
-    if (TARGET libigl)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(LIBIGL_LIB "")
-    else ()
-      set(LIBIGL_LIB "")
-    endif ()
-
-    add_external_headeronly_project(libigl
-      GIT_REPOSITORY https://github.com/libigl/libigl.git
-      GIT_TAG "v2.1.0"
-      INCLUDE_DIR "include")
-
   # quickhull
   elseif (NAME STREQUAL "quickhull")
     if (TARGET quickhull)

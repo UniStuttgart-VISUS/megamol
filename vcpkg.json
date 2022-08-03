@@ -21,6 +21,7 @@
     },
     "imguizmoquat",
     "implot",
+    "libigl",
     "libpng",
     "lua",
     "mmpld-io",
