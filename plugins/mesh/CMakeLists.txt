@@ -12,7 +12,6 @@ if (mesh_PLUGIN_ENABLED)
   find_package(tinyobjloader CONFIG REQUIRED)
   find_path(OBJ_IO_INCLUDE_DIRS "obj_io.h")
   find_path(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h")
-  find_package(quickhull CONFIG REQUIRED)
 
   target_link_libraries(mesh
     PRIVATE
@@ -28,6 +27,6 @@ if (mesh_PLUGIN_ENABLED)
 
   # Use CGAL
   if (MEGAMOL_USE_CGAL)
-    target_link_libraries(mesh PRIVATE CGAL::CGAL quickhull::quickhull)
+    target_link_libraries(mesh PRIVATE CGAL::CGAL)
   endif ()
 endif ()
