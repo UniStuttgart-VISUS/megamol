@@ -9,8 +9,6 @@
 
 #include "3DUIRenderer.h"
 #include "MeshSTLDataSource.h"
-#include "Render3DUI.h"
-#include "RenderMDIMesh.h"
 #include "TriangleMeshRenderer2D.h"
 #include "TriangleMeshRenderer3D.h"
 #include "WavefrontObjRenderer.h"
@@ -31,9 +29,7 @@ public:
     void registerClasses() override {
 
         // register modules
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::RenderMDIMesh>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::DeferredGltfRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::Render3DUI>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::MeshSTLDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::ThreeDimensionalUIRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::TriangleMeshRenderer2D>();
@@ -41,8 +37,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh_gl::WavefrontObjRenderer>();
 
         // register calls
-        this->call_descriptions.RegisterAutoDescription<megamol::mesh_gl::CallGPUMeshData>();
-        this->call_descriptions.RegisterAutoDescription<megamol::mesh_gl::CallGPURenderTaskData>();
+        //this->call_descriptions.RegisterAutoDescription<megamol::mesh_gl::XXX>();
     }
 };
 } // namespace megamol::mesh_gl
