@@ -9,7 +9,6 @@
 #include <QuickHull.hpp>
 
 #include "ArchVisCalls.h"
-#include "mesh_gl/MeshCalls_gl.h"
 
 megamol::archvis_gl::MSMConvexHullRenderer::MSMConvexHullRenderer() : m_MSM_callerSlot("getMSM", "Connects the ...") {
     this->m_MSM_callerSlot.SetCompatibleCall<ScaleModelCallDescription>();

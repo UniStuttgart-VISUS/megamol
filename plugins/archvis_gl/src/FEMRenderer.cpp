@@ -11,7 +11,6 @@
 #include "ArchVisCalls.h"
 #include "FEMRenderer.h"
 #include "mesh_gl/GPUMeshCollection.h"
-#include "mesh_gl/MeshCalls_gl.h"
 
 megamol::archvis_gl::FEMRenderer::FEMRenderer()
         : m_fem_callerSlot("getFEMFile", "Connects the data source with loaded FEM data") {
