@@ -8,8 +8,6 @@
 
 #include "mmvtkm_gl/mmvtkmStreamlineRenderer.h"
 
-#include "mesh_gl/MeshCalls_gl.h"
-
 using namespace megamol;
 using namespace megamol::mmvtkm_gl;
 
