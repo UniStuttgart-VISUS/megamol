@@ -174,6 +174,26 @@ void Module::PerformCleanup() {
 }
 
 
+bool Module::AnyParameterDirty() const {
+    auto ret = false;
+    for (auto it = ChildList_Begin(); it != ChildList_End(); ++it) {
+        if (const auto paramSlot = dynamic_cast<param::ParamSlot*>((*it).get())) {
+            ret = ret || paramSlot->IsDirty();
+        }
+    }
+    return ret;
+}
+
+
+void Module::ResetAllDirtyFlags() {
+    for (auto it = ChildList_Begin(); it != ChildList_End(); ++it) {
+        if (const auto paramSlot = dynamic_cast<param::ParamSlot*>((*it).get())) {
+            paramSlot->ResetDirty();
+        }
+    }
+}
+
+
 /*
  * Module::getRelevantConfigValue
  */

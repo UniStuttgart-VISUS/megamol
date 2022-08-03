@@ -8,6 +8,7 @@
 #include "mmcore/utility/plugins/PluginRegister.h"
 
 #include "ADIOSFlexConvert.h"
+#include "ADIOSFlexVolume.h"
 #include "ADIOStoMultiParticle.h"
 #include "ADIOStoTable.h"
 #include "MultiParticletoADIOS.h"
@@ -38,6 +39,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOSFlexConvert>();
         this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOStoTable>();
         this->module_descriptions.RegisterAutoDescription<megamol::adios::ls1ParticleFormat>();
+        this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOSFlexVolume>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::adios::CallADIOSData>();
