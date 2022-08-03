@@ -13,7 +13,6 @@
 #include "TriangleMeshRenderer3D.h"
 #include "WavefrontObjRenderer.h"
 #include "gltf/DeferredGltfRenderer.h"
-#include "mesh_gl/MeshCalls_gl.h"
 
 namespace megamol::mesh_gl {
 class MeshGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
