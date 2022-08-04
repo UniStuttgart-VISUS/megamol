@@ -13,9 +13,7 @@ megamol_plugin(protein_gl
     trisoup
     protein_calls
     geometry_calls_gl
-    compositing_gl
-  DEPENDS_EXTERNALS
-    glad)
+    compositing_gl)
 
 if (protein_gl_PLUGIN_ENABLED)
   if (WIN32)

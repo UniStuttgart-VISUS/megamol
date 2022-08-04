@@ -135,11 +135,11 @@ if(BUILD_FRONTEND_SERVICES)
   endif()
 
   if(ENABLE_VR_SERVICE_UNITY_KOLABBW)
-  if(NOT MEGAMOL_USE_OPENGL)
-    message( FATAL_ERROR "VR Service Unity Kolab Interop needs OpenGL enabled. Abort." )
-  endif()
-    require_external(mwk-mint)
-    target_link_libraries(${PROJECT_NAME} PUBLIC interop Spout2)
+    if(NOT MEGAMOL_USE_OPENGL)
+      message( FATAL_ERROR "VR Service Unity Kolab Interop needs OpenGL enabled. Abort." )
+    endif()
+    find_package(mwk-mint-interop::mwk-mint-interop)
+    target_link_libraries(${PROJECT_NAME} PUBLIC mwk-mint-interop)
   endif()
 
   # Linux Stacktrace
@@ -169,7 +169,6 @@ if(BUILD_FRONTEND_SERVICES)
   endif ()
 
   if (MEGAMOL_USE_OPENGL)
-    require_external(glad)
     target_link_libraries(${PROJECT_NAME} PUBLIC core_gl glad)
   endif()
 

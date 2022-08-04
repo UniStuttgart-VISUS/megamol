@@ -95,6 +95,12 @@
           ]
         }
       ]
+    },
+    "use-vr-interop": {
+      "description": "Use VR Interop",
+      "dependencies": [
+        "mwk-mint-interop"
+      ]
     }
   }
 }
