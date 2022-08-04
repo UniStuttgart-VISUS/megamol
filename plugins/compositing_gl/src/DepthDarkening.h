@@ -5,14 +5,14 @@
  */
 #pragma once
 
+#include <glowl/BufferObject.hpp>
+#include <glowl/GLSLProgram.hpp>
+#include <glowl/Texture2D.hpp>
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-
-#include "glowl/BufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
-#include "glowl/Texture2D.hpp"
 
 namespace megamol::compositing {
 /**

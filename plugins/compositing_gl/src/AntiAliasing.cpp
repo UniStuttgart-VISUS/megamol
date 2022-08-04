@@ -10,6 +10,9 @@
 #include <chrono>
 #include <random>
 
+#include "SMAA/SMAAAreaTex.h"
+#include "SMAA/SMAASearchTex.h"
+
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -19,9 +22,6 @@
 #ifdef PROFILING
 #include "PerformanceManager.h"
 #endif
-
-#include "SMAA/SMAAAreaTex.h"
-#include "SMAA/SMAASearchTex.h"
 
 
 /*
@@ -172,18 +172,19 @@ bool megamol::compositing_gl::AntiAliasing::create() {
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
     try {
-        copy_prgm_ = core::utility::make_glowl_shader("copy_texture", shader_options, "comp/copy.comp.glsl");
+        copy_prgm_ = core::utility::make_glowl_shader("copy_texture", shader_options, "compositing_gl/copy.comp.glsl");
 
-        fxaa_prgm_ = core::utility::make_glowl_shader("fxaa", shader_options, "comp/AntiAliasing/fxaa.comp.glsl");
+        fxaa_prgm_ =
+            core::utility::make_glowl_shader("fxaa", shader_options, "compositing_gl/AntiAliasing/fxaa.comp.glsl");
 
         smaa_edge_detection_prgm_ = core::utility::make_glowl_shader(
-            "smaa_edge_detection", shader_options, "comp/AntiAliasing/smaa_edge_detection.comp.glsl");
+            "smaa_edge_detection", shader_options, "compositing_gl/AntiAliasing/smaa_edge_detection.comp.glsl");
 
         smaa_blending_weight_calculation_prgm_ = core::utility::make_glowl_shader("smaa_blending_weight_calculation",
-            shader_options, "comp/AntiAliasing/smaa_blending_weights_calculation.comp.glsl");
+            shader_options, "compositing_gl/AntiAliasing/smaa_blending_weights_calculation.comp.glsl");
 
-        smaa_neighborhood_blending_prgm_ = core::utility::make_glowl_shader(
-            "smaa_neighborhood_blending", shader_options, "comp/AntiAliasing/smaa_neighborhood_blending.comp.glsl");
+        smaa_neighborhood_blending_prgm_ = core::utility::make_glowl_shader("smaa_neighborhood_blending",
+            shader_options, "compositing_gl/AntiAliasing/smaa_neighborhood_blending.comp.glsl");
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(("AntiAliasing: " + std::string(e.what())).c_str());
     }

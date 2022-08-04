@@ -7,16 +7,15 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
+#include "mmcore/utility/ResourceWrapper.h"
+#include "vislib/math/FastMap.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib_gl/graphics/gl/SimpleFont.h"
-#include <math.h>
-//#include "mmcore/misc/ImageViewer.h"
-#include "mmcore/utility/ResourceWrapper.h"
-#include "vislib/math/FastMap.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include "vislib_gl/graphics/gl/SimpleFont.h"
 #include <float.h>
+#include <math.h>
 
 using namespace megamol;
 using namespace megamol::core;

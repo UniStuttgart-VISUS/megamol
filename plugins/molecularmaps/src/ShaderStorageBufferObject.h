@@ -9,8 +9,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <glad/gl.h>
 #include <iostream>
-#include <vislib/graphics/gl/IncludeAllGL.h>
 
 namespace megamol {
 namespace molecularmaps {

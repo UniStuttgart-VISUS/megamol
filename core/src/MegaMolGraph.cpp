@@ -9,6 +9,7 @@
 #include <iostream>
 #include <numeric> // std::accumulate
 #include <string>
+#include <type_traits>
 
 
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
@@ -130,23 +131,6 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& old, std::stri
     module_it->request.id = newId;
     module_it->modulePtr->setName(newId.c_str());
 
-    for (auto child = module_it->modulePtr->ChildList_Begin(); child != module_it->modulePtr->ChildList_End();
-         ++child) {
-        auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
-        if (ps != nullptr) {
-            auto p = ps->Param<param::ButtonParam>();
-            if (p != nullptr) {
-                auto command_name = oldId + std::string("_") + ps->Name().PeekBuffer();
-                auto updated_command_name = newId + std::string("_") + ps->Name().PeekBuffer();
-                auto c = m_command_registry->get_command(command_name);
-                m_command_registry->remove_command_by_name(command_name);
-                c.name = updated_command_name;
-                c.parent = ps->FullName();
-                m_command_registry->add_command(c);
-            }
-        }
-    }
-
     const auto matches_old_prefix = [&](std::string const& call_slot) {
         auto res = call_slot.find(oldId);
         return (res != std::string::npos) && res == 0;
@@ -173,6 +157,14 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& old, std::stri
         if (!view_rename_ok) {
             log_error("error renaming graph entry point. image presentation service could not rename module: " + oldId +
                       " -> " + newId);
+            return false;
+        }
+    }
+
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.RenameModule(oldId, newId, *module_it)) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process module rename: " + oldId + " -> " +
+                      newId);
             return false;
         }
     }
@@ -216,7 +208,31 @@ megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
 }
 
 megamol::core::param::AbstractParam* megamol::core::MegaMolGraph::FindParameter(std::string const& paramName) const {
-    return getParameterFromParamSlot(this->FindParameterSlot(clean(paramName)));
+    return getParameterFromParamSlot(this->FindParameterSlot(paramName));
+}
+
+bool megamol::core::MegaMolGraph::SetParameter(std::string const& paramName, std::string const& value) {
+    auto param_slot_ptr = FindParameterSlot(paramName);
+    auto param_ptr = getParameterFromParamSlot(param_slot_ptr);
+
+    if (!param_ptr)
+        return false;
+
+    auto old_value = param_ptr->ValueString();
+
+    bool success = param_ptr->ParseValue(value);
+
+    if (!success)
+        return false;
+
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.ParameterChanged(param_slot_ptr, old_value, value)) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process parameter change: " + paramName +
+                      " from " + old_value + " to " + value);
+        }
+    }
+
+    return true;
 }
 
 megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& param) const {
@@ -393,12 +409,9 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(
     std::vector<megamol::frontend::FrontendResource> const& resources) {
     this->provided_resources_lookup = {resources};
 
-    auto [success, graph_resources] = provided_resources_lookup.get_requested_resources(
-        {"ImagePresentationEntryPoints", megamol::frontend_resources::CommandRegistry_Req_Name,
-#ifdef PROFILING
-            megamol::frontend_resources::PerformanceManager_Req_Name
-#endif
-        });
+    auto [success, graph_resources] = provided_resources_lookup.get_requested_resources({
+        "ImagePresentationEntryPoints",
+    });
 
     if (!success)
         return false;
@@ -406,19 +419,15 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(
     m_image_presentation = &const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
         graph_resources[0].getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
 
-    m_command_registry = &const_cast<megamol::frontend_resources::CommandRegistry&>(
-        graph_resources[1].getResource<megamol::frontend_resources::CommandRegistry>());
-
-#ifdef PROFILING
-    m_perf_manager = &const_cast<frontend_resources::PerformanceManager&>(
-        graph_resources[2].getResource<megamol::frontend_resources::PerformanceManager>());
-#endif
-
     return true;
 }
 
 megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenience() {
     return this->convenience_functions;
+}
+
+megamol::frontend_resources::MegaMolGraph_SubscriptionRegistry& megamol::core::MegaMolGraph::GraphSubscribers() {
+    return this->graph_subscribers;
 }
 
 void megamol::core::MegaMolGraph::Clear() {
@@ -527,25 +536,36 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
 
     bool isCreateOk = create_module(this->module_list_.front().lifetime_resources);
 
-    if (!isCreateOk) {
-        this->module_list_.pop_front();
-    } else {
-        // iterate parameters, add hotkeys to CommandRegistry
-        for (auto child = module_ptr->ChildList_Begin(); child != module_ptr->ChildList_End(); ++child) {
-            auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
-            if (ps != nullptr) {
-                auto p = ps->Param<param::ButtonParam>();
-                if (p != nullptr) {
-                    frontend_resources::Command c;
-                    c.key = p->GetKeyCode();
-                    c.parent = ps->FullName();
-                    c.name = module_ptr->Name().PeekBuffer() + std::string("_") + ps->Name().PeekBuffer();
-                    c.effect = this->Parameter_Lambda;
-                    m_command_registry->add_command(c);
-                }
-            }
+    // tell subscribers about module
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.AddModule(this->module_list_.front())) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process module add: " + request.className +
+                      "(" + request.id + ")");
+            isCreateOk = false;
         }
     }
+    // tell subscribers about parameters of module
+    using ParamSlotPtr = frontend_resources::ModuleGraphSubscription::ParamSlotPtr;
+    std::vector<ParamSlotPtr> param_ptrs = module_ptr->GetSlots<std::remove_pointer<ParamSlotPtr>::type>();
+    for (auto& param_ptr : param_ptrs) {
+        assert(param_ptr != nullptr);
+    }
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.AddParameters(param_ptrs)) {
+            log_error("graph subscriber " + subscriber.Name() +
+                      " failed to process added parameters of module: " + request.className + "(" + request.id + ")" +
+                      std::accumulate(param_ptrs.begin(), param_ptrs.end(), std::string("Parameters: "),
+                          [](std::string const& left, ParamSlotPtr const& right) {
+                              return left + "\n   " + std::string(right->FullName());
+                          }));
+            isCreateOk = false;
+        }
+    }
+
+    if (!isCreateOk) {
+        this->module_list_.pop_front();
+    }
+
     return isCreateOk;
 }
 
@@ -660,17 +680,14 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 
     log("create call: " + request.from + " -> " + request.to + " (" + std::string(call_description->ClassName()) + ")");
     this->call_list_.emplace_front(CallInstance_t{call, request});
-#ifdef PROFILING
-    auto the_call = call.get();
-    //printf("adding timers for @ %p = %s \n", reinterpret_cast<void*>(the_call), the_call->GetDescriptiveText().c_str());
-    the_call->cpu_queries =
-        m_perf_manager->add_timers(the_call, frontend_resources::PerformanceManager::query_api::CPU);
-    if (the_call->GetCapabilities().OpenGLRequired()) {
-        the_call->gl_queries =
-            m_perf_manager->add_timers(the_call, frontend_resources::PerformanceManager::query_api::OPENGL);
+
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.AddCall(this->call_list_.front())) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process call add : " + request.from +
+                      " -> " + request.to);
+            return false;
+        }
     }
-    the_call->perf_man = m_perf_manager;
-#endif
 
     return true;
 }
@@ -703,14 +720,25 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
         return false;
     }
 
-    // iterate parameters, remove hotkeys from CommandRegistry
-    for (auto child = module_ptr->ChildList_Begin(); child != module_ptr->ChildList_End(); ++child) {
-        auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
-        if (ps != nullptr) {
-            auto p = ps->Param<param::ButtonParam>();
-            if (p != nullptr) {
-                m_command_registry->remove_command_by_parent(ps->FullName().PeekBuffer());
-            }
+    // tell subscribers about parameters of module
+    using ParamSlotPtr = frontend_resources::ModuleGraphSubscription::ParamSlotPtr;
+    std::vector<ParamSlotPtr> param_ptrs = module_ptr->GetSlots<std::remove_pointer<ParamSlotPtr>::type>();
+    for (auto& param_ptr : param_ptrs) {
+        assert(param_ptr != nullptr);
+    }
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.RemoveParameters(param_ptrs)) {
+            log_error("graph subscriber " + subscriber.Name() +
+                      " failed to process removal of parameters of module: " + +module_it->modulePtr->FullName() +
+                      std::accumulate(param_ptrs.begin(), param_ptrs.end(), std::string("Parameters: "),
+                          [](std::string const& left, ParamSlotPtr const& right) {
+                              return left + "\n   " + std::string(right->FullName());
+                          }));
+        }
+    }
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.DeleteModule(*module_it)) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process module deletion: " + request);
         }
     }
 
@@ -761,13 +789,13 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
         return false;
     }
 
-#ifdef PROFILING
-    auto the_call = call_it->callPtr;
-    m_perf_manager->remove_timers(the_call->cpu_queries);
-    if (the_call->GetCapabilities().OpenGLRequired()) {
-        m_perf_manager->remove_timers(the_call->gl_queries);
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.DeleteCall(*call_it)) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process call deletion: " + request.from +
+                      " -> " + request.to);
+            return false;
+        }
     }
-#endif
 
     source->SetCleanupMark(true);
     source->DisconnectCalls();
@@ -798,4 +826,16 @@ megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_mo
     std::string const& request) const {
     return std::find_if(module_list_.begin(), module_list_.end(),
         [&](auto const& module) { return check_module_is_prefix(request, module); });
+}
+
+void megamol::frontend_resources::MegaMolGraph_SubscriptionRegistry::subscribe(ModuleGraphSubscription subscriber) {
+    subscribers.push_back(subscriber);
+}
+
+void megamol::frontend_resources::MegaMolGraph_SubscriptionRegistry::unsubscribe(std::string const& subscriber_name) {
+    auto find_it = std::find_if(
+        subscribers.begin(), subscribers.end(), [&](auto const& elem) { return elem.Name() == subscriber_name; });
+
+    if (find_it != subscribers.end())
+        subscribers.erase(find_it);
 }

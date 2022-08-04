@@ -2,14 +2,11 @@
 
 #include <array>
 
+#include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-
-#include "compositing_gl/CompositingCalls.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 megamol::compositing::TextureCombine::TextureCombine()
         : core::Module()
@@ -52,40 +49,17 @@ megamol::compositing::TextureCombine::~TextureCombine() {
 
 bool megamol::compositing::TextureCombine::create() {
 
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+
     try {
-        // create shader program
-        m_add_prgm = std::make_unique<GLSLComputeShader>();
-        m_mult_prgm = std::make_unique<GLSLComputeShader>();
+        m_add_prgm = core::utility::make_glowl_shader(
+            "Compositing_textureAdd", shader_options, "compositing_gl/textureAdd.comp.glsl");
 
-        vislib_gl::graphics::gl::ShaderSource compute_add_src;
-        vislib_gl::graphics::gl::ShaderSource compute_mult_src;
+        m_mult_prgm = core::utility::make_glowl_shader(
+            "Compositing_textureMultiply", shader_options, "compositing_gl/textureMultiply.comp.glsl");
 
-        auto ssf =
-            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-        if (!ssf->MakeShaderSource("Compositing::textureAdd", compute_add_src))
-            return false;
-        if (!m_add_prgm->Compile(compute_add_src.Code(), compute_add_src.Count()))
-            return false;
-        if (!m_add_prgm->Link())
-            return false;
-
-        if (!ssf->MakeShaderSource("Compositing::textureMultiply", compute_mult_src))
-            return false;
-        if (!m_mult_prgm->Compile(compute_mult_src.Code(), compute_mult_src.Count()))
-            return false;
-        if (!m_mult_prgm->Link())
-            return false;
-
-    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader (@%s): %s\n",
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: Unknown exception\n");
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("TextureCombine: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -134,42 +108,42 @@ bool megamol::compositing::TextureCombine::getDataCallback(core::Call& caller) {
         }
 
         if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
-            m_add_prgm->Enable();
+            m_add_prgm->use();
 
             glActiveTexture(GL_TEXTURE0);
             src0_tx2D->bindTexture();
-            glUniform1i(m_add_prgm->ParameterLocation("src0_tx2D"), 0);
+            glUniform1i(m_add_prgm->getUniformLocation("src0_tx2D"), 0);
             glActiveTexture(GL_TEXTURE1);
             src1_tx2D->bindTexture();
-            glUniform1i(m_add_prgm->ParameterLocation("src1_tx2D"), 1);
+            glUniform1i(m_add_prgm->getUniformLocation("src1_tx2D"), 1);
 
             glUniform1f(
-                m_add_prgm->ParameterLocation("weight0"), this->m_weight_0.Param<core::param::FloatParam>()->Value());
+                m_add_prgm->getUniformLocation("weight0"), this->m_weight_0.Param<core::param::FloatParam>()->Value());
             glUniform1f(
-                m_add_prgm->ParameterLocation("weight1"), this->m_weight_1.Param<core::param::FloatParam>()->Value());
+                m_add_prgm->getUniformLocation("weight1"), this->m_weight_1.Param<core::param::FloatParam>()->Value());
 
             m_output_texture->bindImage(0, GL_WRITE_ONLY);
 
-            m_add_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
+            glDispatchCompute(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
                 static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
 
-            m_add_prgm->Disable();
+            glUseProgram(0);
         } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
-            m_mult_prgm->Enable();
+            m_mult_prgm->use();
 
             glActiveTexture(GL_TEXTURE0);
             src0_tx2D->bindTexture();
-            glUniform1i(m_mult_prgm->ParameterLocation("src0_tx2D"), 0);
+            glUniform1i(m_mult_prgm->getUniformLocation("src0_tx2D"), 0);
             glActiveTexture(GL_TEXTURE1);
             src1_tx2D->bindTexture();
-            glUniform1i(m_mult_prgm->ParameterLocation("src1_tx2D"), 1);
+            glUniform1i(m_mult_prgm->getUniformLocation("src1_tx2D"), 1);
 
             m_output_texture->bindImage(0, GL_WRITE_ONLY);
 
-            m_mult_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
+            glDispatchCompute(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
                 static_cast<int>(std::ceil(std::get<1>(texture_res) / 8.0f)), 1);
 
-            m_mult_prgm->Disable();
+            glUseProgram(0);
         }
     }
 

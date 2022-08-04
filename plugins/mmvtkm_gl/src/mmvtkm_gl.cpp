@@ -7,7 +7,7 @@
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-#include "mmvtkm_gl/mmvtkmMeshRenderTasks.h"
+#include "mmvtkm_gl/mmvtkmStreamlineRenderer.h"
 //#include "mmvtkm_gl/mmvtkmRenderer.h"
 
 
@@ -26,9 +26,8 @@ public:
     void registerClasses() override {
 
         // register modules
-        this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm_gl::mmvtkmMeshRenderTasks>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm_gl::mmvtkmStreamlineRenderer>();
         // this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm_gl::mmvtkmDataRenderer>();
-
 
         // register calls
     }

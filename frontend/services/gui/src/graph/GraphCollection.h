@@ -10,6 +10,7 @@
 #pragma once
 
 
+#include "CommonTypes.h"
 #include "Graph.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
@@ -35,6 +36,8 @@ typedef std::vector<GraphPtr_t> GraphPtrVector_t;
  */
 class GraphCollection {
 public:
+    using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
+
     GraphCollection();
     ~GraphCollection() = default;
 
@@ -60,6 +63,8 @@ public:
     bool IsModuleStockLoaded() const {
         return (!this->modules_stock.empty());
     }
+
+    void SetLuaFunc(lua_func_type* func);
 
     /**
      * Load or update project from graph of core instance or directly from megamol graph.
@@ -99,6 +104,8 @@ private:
 
     FileBrowserWidget gui_file_browser;
     ImGuiID gui_graph_delete_uid;
+
+    lua_func_type* input_lua_func = nullptr;
 
     // FUNCTIONS --------------------------------------------------------------
 

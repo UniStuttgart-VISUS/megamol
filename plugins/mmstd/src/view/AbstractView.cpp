@@ -14,6 +14,8 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/StringParam.h"
+#include "mmcore/utility/LongestEdgeCameraSamples.h"
+#include "mmcore/utility/OrbitalCameraSamples.h"
 #include "mmstd/renderer/AbstractCallRender.h"
 #include "mmstd/renderer/CallRenderView.h"
 #include "vislib/UnsupportedOperationException.h"

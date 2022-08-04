@@ -8,6 +8,7 @@
 #include "CSVFileSequence.h"
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -451,20 +452,8 @@ bool datatools::CSVFileSequence::onFileNameSlotNameChanged(core::param::ParamSlo
 core::param::ParamSlot* datatools::CSVFileSequence::findFileNameSlot(void) {
     core::param::StringParam* P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
     if (P != NULL) {
-        AbstractNamedObjectContainer::ptr_type anoc =
-            AbstractNamedObjectContainer::dynamic_pointer_cast(this->shared_from_this());
-        while (anoc) {
-            core::param::ParamSlot* slot =
-                dynamic_cast<core::param::ParamSlot*>(anoc->FindNamedObject(P->Value().c_str()).get());
-            if (slot != NULL) {
-                if ((slot->Param<core::param::FilePathParam>() != NULL) ||
-                    (slot->Param<core::param::StringParam>() != NULL)) {
-                    // everything is fine
-                    return slot;
-                }
-            }
-            anoc = AbstractNamedObjectContainer::dynamic_pointer_cast(anoc->Parent());
-        }
+        auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+        return megamolgraph.FindParameterSlot(P->Value());
     }
     return NULL;
 }

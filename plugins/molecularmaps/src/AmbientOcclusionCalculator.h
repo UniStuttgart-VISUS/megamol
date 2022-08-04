@@ -11,7 +11,7 @@
 
 #include "mmcore/CoreInstance.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 #include <cfloat>
 
 namespace megamol {
@@ -216,7 +216,7 @@ private:
     void uploadVertexData();
 
     /** The compute shader for the ambient occlusion computation */
-    vislib::graphics::gl::GLSLComputeShader aoComputeShader;
+    vislib_gl::graphics::gl::GLSLComputeShader aoComputeShader;
 
     /** The maximum number of samples */
     int aoSampleMax;

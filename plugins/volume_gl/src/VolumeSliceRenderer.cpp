@@ -7,35 +7,27 @@
 
 #include "VolumeSliceRenderer.h"
 
-#include "geometry_calls/VolumetricDataCall.h"
-#include "mmcore/Call.h"
-#include "mmcore/CoreInstance.h"
-#include "mmstd/renderer/CallClipPlane.h"
-#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
-#include "mmstd_gl/renderer/CallRender3DGL.h"
-#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-
-#include "mmcore/utility/log/Log.h"
-#include "vislib/math/Plane.h"
-#include "vislib/math/Point.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-
-#include "glowl/Texture.hpp"
-#include "glowl/Texture2D.hpp"
-#include "glowl/Texture3D.hpp"
-
 #include <array>
 #include <cmath>
 
 #include <glm/ext.hpp>
 
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "geometry_calls/VolumetricDataCall.h"
+#include "mmcore/Call.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd/renderer/CallClipPlane.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
+#include "vislib/math/Plane.h"
+#include "vislib/math/Point.h"
 
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-megamol::volume_gl::VolumeSliceRenderer::VolumeSliceRenderer(void)
+megamol::volume_gl::VolumeSliceRenderer::VolumeSliceRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , getVolSlot("getVol", "The call for data")
         , getTFSlot("gettransferfunction", "The call for Transfer function")
@@ -55,7 +47,7 @@ megamol::volume_gl::VolumeSliceRenderer::VolumeSliceRenderer(void)
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-megamol::volume_gl::VolumeSliceRenderer::~VolumeSliceRenderer(void) {
+megamol::volume_gl::VolumeSliceRenderer::~VolumeSliceRenderer() {
     this->Release();
 }
 
@@ -63,41 +55,17 @@ megamol::volume_gl::VolumeSliceRenderer::~VolumeSliceRenderer(void) {
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool megamol::volume_gl::VolumeSliceRenderer::create(void) {
+bool megamol::volume_gl::VolumeSliceRenderer::create() {
+    auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+
     try {
-        // create shader program
-        vislib_gl::graphics::gl::ShaderSource compute_shader_src;
-        vislib_gl::graphics::gl::ShaderSource vertex_shader_src;
-        vislib_gl::graphics::gl::ShaderSource fragment_shader_src;
+        this->compute_shader = core::utility::make_glowl_shader(
+            "compute_shader", shaderOptions, "volume_gl/VolumeSliceRenderer.comp.glsl");
+        this->render_shader = core::utility::make_glowl_shader("render_shader", shaderOptions,
+            "volume_gl/VolumeSliceRenderer.vert.glsl", "volume_gl/VolumeSliceRenderer.frag.glsl");
 
-        auto ssf =
-            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-        if (!ssf->MakeShaderSource("VolumeSliceRenderer::compute", compute_shader_src))
-            return false;
-        if (!this->compute_shader.Compile(compute_shader_src.Code(), compute_shader_src.Count()))
-            return false;
-        if (!this->compute_shader.Link())
-            return false;
-
-        if (!ssf->MakeShaderSource("VolumeSliceRenderer::vert", vertex_shader_src))
-            return false;
-        if (!ssf->MakeShaderSource("VolumeSliceRenderer::frag", fragment_shader_src))
-            return false;
-        if (!this->render_shader.Compile(vertex_shader_src.Code(), vertex_shader_src.Count(),
-                fragment_shader_src.Code(), fragment_shader_src.Count()))
-            return false;
-        if (!this->render_shader.Link())
-            return false;
-    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader (@%s): %s\n",
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: Unknown exception\n");
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("VolumeSliceRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -128,7 +96,7 @@ bool megamol::volume_gl::VolumeSliceRenderer::GetExtents(mmstd_gl::CallRender3DG
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-void megamol::volume_gl::VolumeSliceRenderer::release(void) {}
+void megamol::volume_gl::VolumeSliceRenderer::release() {}
 
 
 /*
@@ -229,17 +197,17 @@ bool megamol::volume_gl::VolumeSliceRenderer::Render(mmstd_gl::CallRender3DGL& c
     glowl::Texture2D render_target("render_target", render_tgt_layout, nullptr);
 
     // compute slice
-    this->compute_shader.Enable();
+    this->compute_shader->use();
 
     glUniformMatrix4fv(
-        this->compute_shader.ParameterLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(static_cast<glm::mat4>(view)));
+        this->compute_shader->getUniformLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(static_cast<glm::mat4>(view)));
     glUniformMatrix4fv(
-        this->compute_shader.ParameterLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(static_cast<glm::mat4>(proj)));
+        this->compute_shader->getUniformLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(static_cast<glm::mat4>(proj)));
 
     std::array<float, 2> rt_resolution;
     rt_resolution[0] = static_cast<float>(render_target.getWidth());
     rt_resolution[1] = static_cast<float>(render_target.getHeight());
-    glUniform2fv(this->compute_shader.ParameterLocation("rt_resolution"), 1, rt_resolution.data());
+    glUniform2fv(this->compute_shader->getUniformLocation("rt_resolution"), 1, rt_resolution.data());
 
     glm::vec3 box_min;
     box_min[0] = vdc->GetBoundingBoxes().ObjectSpaceBBox().Left();
@@ -249,30 +217,30 @@ bool megamol::volume_gl::VolumeSliceRenderer::Render(mmstd_gl::CallRender3DGL& c
     box_max[0] = vdc->GetBoundingBoxes().ObjectSpaceBBox().Right();
     box_max[1] = vdc->GetBoundingBoxes().ObjectSpaceBBox().Top();
     box_max[2] = vdc->GetBoundingBoxes().ObjectSpaceBBox().Front();
-    glUniform3fv(this->compute_shader.ParameterLocation("boxMin"), 1, glm::value_ptr(box_min));
-    glUniform3fv(this->compute_shader.ParameterLocation("boxMax"), 1, glm::value_ptr(box_max));
+    glUniform3fv(this->compute_shader->getUniformLocation("boxMin"), 1, glm::value_ptr(box_min));
+    glUniform3fv(this->compute_shader->getUniformLocation("boxMax"), 1, glm::value_ptr(box_max));
 
     std::array<float, 2> valueRange;
     valueRange[0] = static_cast<float>(vdc->GetMetadata()->MinValues[0]);
     valueRange[1] = static_cast<float>(vdc->GetMetadata()->MaxValues[0]);
-    glUniform2fv(this->compute_shader.ParameterLocation("valRange"), 1, valueRange.data());
+    glUniform2fv(this->compute_shader->getUniformLocation("valRange"), 1, valueRange.data());
 
     std::array<float, 4> plane;
     plane[0] = slice.GetA();
     plane[1] = slice.GetB();
     plane[2] = slice.GetC();
     plane[3] = std::abs(slice.GetD());
-    glUniform4fv(this->compute_shader.ParameterLocation("slice"), 1, plane.data());
+    glUniform4fv(this->compute_shader->getUniformLocation("slice"), 1, plane.data());
 
     glActiveTexture(GL_TEXTURE0);
     vol_tex.bindTexture();
-    glUniform1i(this->compute_shader.ParameterLocation("volume_tx3D"), 0);
+    glUniform1i(this->compute_shader->getUniformLocation("volume_tx3D"), 0);
 
     cgtf->BindConvenience(this->compute_shader, GL_TEXTURE1, 1);
 
     render_target.bindImage(0, GL_WRITE_ONLY);
 
-    this->compute_shader.Dispatch(
+    glDispatchCompute(
         static_cast<int>(std::ceil(rt_resolution[0] / 8.0f)), static_cast<int>(std::ceil(rt_resolution[1] / 8.0f)), 1);
 
     glBindImageTexture(0, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R);
@@ -282,7 +250,7 @@ bool megamol::volume_gl::VolumeSliceRenderer::Render(mmstd_gl::CallRender3DGL& c
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, 0);
 
-    this->compute_shader.Disable();
+    glUseProgram(0);
 
     glMemoryBarrier(GL_TEXTURE_FETCH_BARRIER_BIT);
 
@@ -302,18 +270,18 @@ bool megamol::volume_gl::VolumeSliceRenderer::Render(mmstd_gl::CallRender3DGL& c
         glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    this->render_shader.Enable();
+    this->render_shader->use();
 
     glActiveTexture(GL_TEXTURE0);
     render_target.bindTexture();
-    glUniform1i(this->render_shader.ParameterLocation("src_tx2D"), 0);
+    glUniform1i(this->render_shader->getUniformLocation("src_tx2D"), 0);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    this->render_shader.Disable();
+    glUseProgram(0);
 
     glBlendFuncSeparate(state_blend_src_rgb, state_blend_dst_rgb, state_blend_src_alpha, state_blend_dst_alpha);
     if (!state_blend)

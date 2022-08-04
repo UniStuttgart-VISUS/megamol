@@ -622,7 +622,7 @@ void SimpleMoleculeRenderer::RenderStick(
         secondAtomPos.SetZ(atomPos[3 * idx1 + 2]);
 
         // Set filter information for this connection
-        if ((mol->Filter()[idx0] == 1) && (mol->Filter()[idx1] == 1))
+        if ((mol->Filter() != nullptr) && (mol->Filter()[idx0] == 1) && (mol->Filter()[idx1] == 1))
             conFilter_[cnt] = 1;
         else
             conFilter_[cnt] = 0;
