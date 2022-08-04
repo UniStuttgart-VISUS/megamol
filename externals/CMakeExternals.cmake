@@ -35,28 +35,8 @@ function(require_external NAME)
   # ### Built libraries #######################################################
   # ###########################################################################
 
-  # glad
-  if (NAME STREQUAL "glad")
-    if (TARGET glad)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(GLAD_LIB "lib/glad.lib")
-    else ()
-      set(GLAD_LIB "${CMAKE_INSTALL_LIBDIR}/libglad.a")
-    endif ()
-
-    add_external_project(glad STATIC
-      SOURCE_DIR glad
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}")
-
-    add_external_library(glad
-      PROJECT glad
-      LIBRARY ${GLAD_LIB})
-
   # IceT
-  elseif (NAME STREQUAL "IceT")
+  if (NAME STREQUAL "IceT")
     if (TARGET IceTCore)
       return()
     endif ()
