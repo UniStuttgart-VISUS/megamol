@@ -35,28 +35,8 @@ function(require_external NAME)
   # ### Built libraries #######################################################
   # ###########################################################################
 
-  # glad
-  if (NAME STREQUAL "glad")
-    if (TARGET glad)
-      return()
-    endif ()
-
-    if (WIN32)
-      set(GLAD_LIB "lib/glad.lib")
-    else ()
-      set(GLAD_LIB "${CMAKE_INSTALL_LIBDIR}/libglad.a")
-    endif ()
-
-    add_external_project(glad STATIC
-      SOURCE_DIR glad
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}")
-
-    add_external_library(glad
-      PROJECT glad
-      LIBRARY ${GLAD_LIB})
-
   # IceT
-  elseif (NAME STREQUAL "IceT")
+  if (NAME STREQUAL "IceT")
     if (TARGET IceTCore)
       return()
     endif ()
@@ -91,38 +71,6 @@ function(require_external NAME)
     add_external_library(IceTMPI
       PROJECT IceT
       LIBRARY ${ICET_MPI_LIB})
-
-  # tracking
-  elseif (NAME STREQUAL "tracking")
-    if (TARGET tracking)
-      return()
-    endif ()
-
-    if (NOT WIN32)
-      message(WARNING "External 'tracking' requested, but not available on non-Windows systems")
-    endif ()
-
-    set(TRACKING_LIB "lib/tracking.lib")
-    set(TRACKING_NATNET_LIB "lib/NatNetLib.lib")
-
-    add_external_project(tracking STATIC
-      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking.git
-      GIT_TAG "v2.0"
-      BUILD_BYPRODUCTS
-        "<INSTALL_DIR>/${TRACKING_LIB}"
-        "<INSTALL_DIR>/${TRACKING_NATNET_LIB}"
-      CMAKE_ARGS
-        -DCREATE_TRACKING_TEST_PROGRAM=OFF)
-
-    add_external_library(tracking
-      LIBRARY ${TRACKING_LIB})
-
-    add_external_library(natnet
-      PROJECT tracking
-      LIBRARY ${TRACKING_NATNET_LIB})
-
-    external_get_property(tracking SOURCE_DIR)
-    set(tracking_files "${SOURCE_DIR}/tracking/conf/tracking.conf" PARENT_SCOPE)
 
   # vr interop mwk-mint
   elseif(NAME STREQUAL "mwk-mint")

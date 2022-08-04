@@ -83,6 +83,9 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "default install p
 # Modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
+# Dependencies
+add_subdirectory(externals/glad)
+
 # MegaMol config
 include(megamol_config)
 
