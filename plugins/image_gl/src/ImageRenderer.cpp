@@ -12,9 +12,9 @@
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
 //#define _USE_MATH_DEFINES
+#include "cluster/mpi/MpiCall.h"
 #include "image_calls/Image2DCall.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -23,7 +23,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "vislib/sys/SystemInformation.h"
 //#include <cmath>
 
@@ -36,7 +36,7 @@ const unsigned int TILE_SIZE = 2 * 1024;
  * misc::ImageRenderer::ImageRenderer
  */
 image_gl::ImageRenderer::ImageRenderer(void)
-        : Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , leftFilenameSlot("leftImg", "The image file name")
         , rightFilenameSlot("rightImg", "The image file name")
         , pasteFilenamesSlot("pasteFiles", "Slot to paste both file names at once (semicolon-separated)")
@@ -136,7 +136,7 @@ bool image_gl::ImageRenderer::create(void) {
         theShader = core::utility::make_glowl_shader(
             "imageviewer", shader_options, "image_gl/imageviewer.vert.glsl", "image_gl/imageviewer.frag.glsl");
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("ImageRenderer: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(("ImageRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -151,7 +151,7 @@ bool image_gl::ImageRenderer::create(void) {
 /*
  * image_gl::ImageRenderer::GetExtents
  */
-bool image_gl::ImageRenderer::GetExtents(view_gl::CallRender3DGL& call) {
+bool image_gl::ImageRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     call.SetTimeFramesCount(1);
     call.AccessBoundingBoxes().Clear();
@@ -456,7 +456,7 @@ bool image_gl::ImageRenderer::initMPI() {
 /*
  * image_gl::ImageRenderer::Render
  */
-bool image_gl::ImageRenderer::Render(view_gl::CallRender3DGL& call) {
+bool image_gl::ImageRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     auto const lhsFBO = call.GetFramebuffer();
     lhsFBO->bindToDraw();

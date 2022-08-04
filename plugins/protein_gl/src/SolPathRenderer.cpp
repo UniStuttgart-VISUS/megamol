@@ -8,8 +8,8 @@
 #include "SolPathRenderer.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/CallRender3D.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/renderer/CallRender3D.h"
 #include "protein/SolPathDataCall.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
@@ -23,7 +23,7 @@ using namespace megamol::protein_gl;
  * SolPathRenderer::SolPathRenderer
  */
 SolPathRenderer::SolPathRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , getdataslot("getdata", "Fetches data")
         , pathlineShader() {
 
@@ -53,24 +53,24 @@ bool SolPathRenderer::create(void) {
         vislib_gl::graphics::gl::ShaderSource fragSrc;
 
         if (!ssf->MakeShaderSource("solpath::pathline::vert", vertSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load pathline vertex shader source");
+            Log::DefaultLog.WriteError("Unable to load pathline vertex shader source");
             return false;
         }
         if (!ssf->MakeShaderSource("solpath::pathline::frag", fragSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load pathline fragment shader source");
+            Log::DefaultLog.WriteError("Unable to load pathline fragment shader source");
             return false;
         }
 
         if (!this->pathlineShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create pathline shader");
+            Log::DefaultLog.WriteError("Unable to create pathline shader");
             return false;
         }
 
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create pathline shader: %s", e.GetMsgA());
+        Log::DefaultLog.WriteError("Unable to create pathline shader: %s", e.GetMsgA());
         return false;
     } catch (...) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create pathline shader");
+        Log::DefaultLog.WriteError("Unable to create pathline shader");
         return false;
     }
 
@@ -79,24 +79,24 @@ bool SolPathRenderer::create(void) {
         vislib_gl::graphics::gl::ShaderSource fragSrc;
 
         if (!ssf->MakeShaderSource("solpath::dots::vert", vertSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load dots vertex shader source");
+            Log::DefaultLog.WriteError("Unable to load dots vertex shader source");
             return false;
         }
         if (!ssf->MakeShaderSource("solpath::dots::frag", fragSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load dots fragment shader source");
+            Log::DefaultLog.WriteError("Unable to load dots fragment shader source");
             return false;
         }
 
         if (!this->dotsShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create dots shader");
+            Log::DefaultLog.WriteError("Unable to create dots shader");
             return false;
         }
 
     } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create dots shader: %s", e.GetMsgA());
+        Log::DefaultLog.WriteError("Unable to create dots shader: %s", e.GetMsgA());
         return false;
     } catch (...) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create dots shader");
+        Log::DefaultLog.WriteError("Unable to create dots shader");
         return false;
     }
 
@@ -106,7 +106,7 @@ bool SolPathRenderer::create(void) {
 /*
  * SolPathRenderer::GetExtents
  */
-bool SolPathRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool SolPathRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL)
         return false;
@@ -135,7 +135,7 @@ void SolPathRenderer::release(void) {
 /*
  * SolPathRenderer::Render
  */
-bool SolPathRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool SolPathRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL)
         return false;

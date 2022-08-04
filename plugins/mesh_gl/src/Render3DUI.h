@@ -71,7 +71,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core_gl::view::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -80,7 +80,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core_gl::view::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call);
 
 private:
     double m_cursor_x, m_cursor_y;

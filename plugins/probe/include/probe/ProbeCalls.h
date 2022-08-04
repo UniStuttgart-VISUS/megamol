@@ -7,7 +7,7 @@
 #ifndef PROBE_CALLS_H_INCLUDED
 #define PROBE_CALLS_H_INCLUDED
 
-#include "mmcore/CallGeneric.h"
+#include "mmstd/generic/CallGeneric.h"
 
 #include "ProbeCollection.h"
 

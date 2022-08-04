@@ -1,4 +1,5 @@
 #include "ObjWriter.h"
+
 #include <fstream>
 
 #include "mmcore/param/FilePathParam.h"
@@ -96,7 +97,6 @@ bool megamol::mesh::ObjWriter::run() {
         objIter = std::next(objIter);
         ++affix;
     }
-
 
     return true;
 }

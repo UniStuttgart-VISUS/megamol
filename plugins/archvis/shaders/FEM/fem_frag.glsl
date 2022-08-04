@@ -1,3 +1,5 @@
+#version 450
+
 in vec3 colour;
 
 out layout(location = 0) vec4 frag_colour;

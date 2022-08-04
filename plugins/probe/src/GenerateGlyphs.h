@@ -10,11 +10,11 @@
 #include "mesh/ImageDataAccessCollection.h"
 #include "mesh/MeshDataAccessCollection.h"
 #include "mmcore/Call.h"
-#include "mmcore/CallGeneric.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd/generic/CallGeneric.h"
 #include "probe/ProbeCollection.h"
 
 namespace megamol {

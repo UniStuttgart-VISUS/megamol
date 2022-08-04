@@ -6,6 +6,7 @@
 megamol_plugin(megamolplugin
   BUILD_DEFAULT OFF
   DEPENDS_PLUGINS
+    mmstd
     # plugin1
     # plugin2
   DEPENDS_EXTERNALS

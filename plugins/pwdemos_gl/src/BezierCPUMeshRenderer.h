@@ -60,7 +60,7 @@ protected:
      *
      * @return The return value of the function
      */
-    virtual bool render(core_gl::view::CallRender3DGL& call);
+    virtual bool render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Informs the class if the shader is required

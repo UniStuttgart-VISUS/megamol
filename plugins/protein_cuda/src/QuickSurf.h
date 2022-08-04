@@ -3,8 +3,8 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/ProteinColor.h"
 #include "protein_gl/DeferredRenderingProvider.h"
@@ -12,7 +12,7 @@
 #include "quicksurf/CUDAQuickSurf.h"
 
 namespace megamol::protein_cuda {
-class QuickSurf : public megamol::core_gl::view::Renderer3DModuleGL {
+class QuickSurf : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -70,7 +70,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -78,7 +78,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Calculates whether some of the parameters are dirty and we have to recalculate the surface/volume

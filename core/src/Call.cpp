@@ -34,8 +34,7 @@ Call::~Call(void) {
         this->callee->ConnectCall(nullptr);
         this->callee = nullptr; // DO NOT DELETE
     }
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-        megamol::core::utility::log::Log::LEVEL_INFO + 350, "destructed call \"%s\"\n", typeid(*this).name());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("destructed call \"%s\"\n", typeid(*this).name());
     ARY_SAFE_DELETE(this->funcMap);
 }
 

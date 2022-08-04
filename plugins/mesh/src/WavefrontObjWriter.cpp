@@ -1,4 +1,3 @@
-
 #include <fstream>
 
 #include "WavefrontObjWriter.h"
@@ -97,7 +96,6 @@ bool megamol::mesh::WavefrontObjWriter::run() {
         objIter = std::next(objIter);
         ++affix;
     }
-
 
     return true;
 }

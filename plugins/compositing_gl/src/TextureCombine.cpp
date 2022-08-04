@@ -4,6 +4,7 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 
 #include "vislib_gl/graphics/gl/ShaderSource.h"
 
@@ -15,6 +16,8 @@ megamol::compositing::TextureCombine::TextureCombine()
         , m_version(0)
         , m_output_texture(nullptr)
         , m_mode("Mode", "Sets texture combination mode, e.g. add, multiply...")
+        , m_weight_0("Weight0", "Weight for input texture 0 in additive mode")
+        , m_weight_1("Weight1", "Weight for input texture 1 in additive mode")
         , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
         , m_input_tex_0_slot(
               "InputTexture0", "Connects the primary input texture that is also used the set the output texture size")
@@ -22,7 +25,14 @@ megamol::compositing::TextureCombine::TextureCombine()
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Add");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Multiply");
+    this->m_mode.SetUpdateCallback(&TextureCombine::modeCallback);
     this->MakeSlotAvailable(&this->m_mode);
+
+    this->m_weight_0 << new megamol::core::param::FloatParam(0.5);
+    this->MakeSlotAvailable(&this->m_weight_0);
+
+    this->m_weight_1 << new megamol::core::param::FloatParam(0.5);
+    this->MakeSlotAvailable(&this->m_weight_1);
 
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &TextureCombine::getDataCallback);
     this->m_output_tex_slot.SetCallback(
@@ -67,18 +77,15 @@ bool megamol::compositing::TextureCombine::create() {
             return false;
 
     } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile shader (@%s): %s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader (@%s): %s\n",
             vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: Unknown exception\n");
         return false;
     }
 
@@ -136,6 +143,11 @@ bool megamol::compositing::TextureCombine::getDataCallback(core::Call& caller) {
             src1_tx2D->bindTexture();
             glUniform1i(m_add_prgm->ParameterLocation("src1_tx2D"), 1);
 
+            glUniform1f(
+                m_add_prgm->ParameterLocation("weight0"), this->m_weight_0.Param<core::param::FloatParam>()->Value());
+            glUniform1f(
+                m_add_prgm->ParameterLocation("weight1"), this->m_weight_1.Param<core::param::FloatParam>()->Value());
+
             m_output_texture->bindImage(0, GL_WRITE_ONLY);
 
             m_add_prgm->Dispatch(static_cast<int>(std::ceil(std::get<0>(texture_res) / 8.0f)),
@@ -147,10 +159,10 @@ bool megamol::compositing::TextureCombine::getDataCallback(core::Call& caller) {
 
             glActiveTexture(GL_TEXTURE0);
             src0_tx2D->bindTexture();
-            glUniform1i(m_add_prgm->ParameterLocation("src0_tx2D"), 0);
+            glUniform1i(m_mult_prgm->ParameterLocation("src0_tx2D"), 0);
             glActiveTexture(GL_TEXTURE1);
             src1_tx2D->bindTexture();
-            glUniform1i(m_add_prgm->ParameterLocation("src1_tx2D"), 1);
+            glUniform1i(m_mult_prgm->ParameterLocation("src1_tx2D"), 1);
 
             m_output_texture->bindImage(0, GL_WRITE_ONLY);
 
@@ -169,6 +181,24 @@ bool megamol::compositing::TextureCombine::getDataCallback(core::Call& caller) {
 bool megamol::compositing::TextureCombine::getMetaDataCallback(core::Call& caller) {
 
     // TODO output hash?
+
+    return true;
+}
+
+bool megamol::compositing::TextureCombine::modeCallback(core::param::ParamSlot& slot) {
+
+    int mode = m_mode.Param<core::param::EnumParam>()->Value();
+
+    // assao
+    if (mode == 0) {
+        m_weight_0.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        m_weight_1.Param<core::param::FloatParam>()->SetGUIVisible(true);
+    }
+    // naive
+    else {
+        m_weight_0.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        m_weight_1.Param<core::param::FloatParam>()->SetGUIVisible(false);
+    }
 
     return true;
 }

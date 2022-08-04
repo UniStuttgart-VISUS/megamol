@@ -10,7 +10,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "vislib/Array.h"
 #include "vislib/Map.h"
 #include "vislib/RawStorage.h"

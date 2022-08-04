@@ -11,13 +11,12 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/view/CallRender2DGL.h"
-
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender2DGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 
 namespace megamol::mmstd_gl {
 
-class BaseAmortization2D : public core_gl::view::Renderer2DModuleGL {
+class BaseAmortization2D : public mmstd_gl::Renderer2DModuleGL {
 public:
     BaseAmortization2D();
 
@@ -28,9 +27,9 @@ protected:
 
     void release() override;
 
-    bool GetExtents(core_gl::view::CallRender2DGL& call) final;
+    bool GetExtents(CallRender2DGL& call) final;
 
-    bool Render(core_gl::view::CallRender2DGL& call) final;
+    bool Render(CallRender2DGL& call) final;
 
     bool OnMouseButton(
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) final;
@@ -48,7 +47,7 @@ protected:
 
     virtual void releaseImpl() = 0;
 
-    virtual bool renderImpl(core_gl::view::CallRender2DGL& call, core_gl::view::CallRender2DGL& nextRendererCall) = 0;
+    virtual bool renderImpl(CallRender2DGL& call, CallRender2DGL& nextRendererCall) = 0;
 
 private:
     megamol::core::CallerSlot nextRendererSlot;

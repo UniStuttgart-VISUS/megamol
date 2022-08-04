@@ -7,6 +7,7 @@ megamol_plugin(infovis_gl
   BUILD_DEFAULT ON
   DEPENDS_GL
   DEPENDS_PLUGINS
+    mmstd
     mmstd_gl
     infovis
     datatools

@@ -181,7 +181,7 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
             XYZ = cad->getData(pos_str)->GetAsFloat();
             p_count = XYZ.size() / 3;
             stride += 3 * sizeof(float);
-        } else if (x_str != "undef" || y_str != "undef" || z_str != "undef") {
+        } else if (x_str != "undef" && y_str != "undef" && z_str != "undef") {
             X = cad->getData(x_str)->GetAsFloat();
             Y = cad->getData(y_str)->GetAsFloat();
             Z = cad->getData(z_str)->GetAsFloat();

@@ -6,7 +6,7 @@
 
 #pragma once
 #include "kdtree.h"
-#include "mmcore/CallGeneric.h"
+#include "mmstd/generic/CallGeneric.h"
 
 namespace megamol {
 namespace probe {

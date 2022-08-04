@@ -7,8 +7,8 @@
 #ifndef MEGAMOL_MEGAMOL101_CALLSPHERES_H
 #define MEGAMOL_MEGAMOL101_CALLSPHERES_H
 
-#include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 
 namespace megamol::megamol101_gl {
 

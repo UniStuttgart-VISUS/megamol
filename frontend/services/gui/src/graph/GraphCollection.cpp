@@ -10,7 +10,7 @@
 #include "mmcore/utility/FileUtils.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmcore/view/AbstractViewInterface.h"
 
 
 using namespace megamol;
@@ -592,7 +592,7 @@ bool megamol::gui::GraphCollection::update_running_graph_from_core(
                 //    }
                 //}
                 /// XXX VIEW TEST
-                auto viewptr = dynamic_cast<core::view::AbstractView*>(core_module_ptr);
+                auto viewptr = dynamic_cast<core::view::AbstractViewInterface*>(core_module_ptr);
                 bool is_view = (viewptr != nullptr);
 
                 gui_module_ptr = graph_ptr->AddModule(class_name, module_description, module_plugin, is_view);
@@ -1419,8 +1419,8 @@ bool megamol::gui::GraphCollection::get_module_stock_data(Module::StockModule& o
         //    "[GUI] [DEBUG] Created temporary module '%s'.", mod_desc->ClassName());
 
         /// XXX VIEW TEST
-        std::shared_ptr<const core::view::AbstractView> viewptr =
-            std::dynamic_pointer_cast<const core::view::AbstractView>(new_mod);
+        std::shared_ptr<const core::view::AbstractViewInterface> viewptr =
+            std::dynamic_pointer_cast<const core::view::AbstractViewInterface>(new_mod);
 
         out_mod.is_view = (viewptr != nullptr);
 

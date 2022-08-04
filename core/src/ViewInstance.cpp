@@ -36,7 +36,7 @@ ViewInstance::~ViewInstance(void) {
 /*
  * ViewInstance::Initialize
  */
-bool ViewInstance::Initialize(ModuleNamespace::ptr_type ns, view::AbstractView* view) {
+bool ViewInstance::Initialize(ModuleNamespace::ptr_type ns, view::AbstractViewInterface* view) {
     if ((this->view != NULL) || (ns == NULL) || (view == NULL)) {
         return false;
     }
@@ -92,8 +92,7 @@ void ViewInstance::ClearCleanupMark(void) {
 void ViewInstance::PerformCleanup(void) {
     if (this->CleanupMark()) {
         // this should never happen!
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_WARN, "Internal Error: ViewInstance marked for cleanup.\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Internal Error: ViewInstance marked for cleanup.\n");
     }
     ModuleNamespace::PerformCleanup();
 }

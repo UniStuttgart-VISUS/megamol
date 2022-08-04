@@ -6,6 +6,7 @@
 megamol_plugin(volume
   BUILD_DEFAULT ON
   DEPENDS_PLUGINS
+    mmstd
     geometry_calls)
 
 if (volume_PLUGIN_ENABLED)

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "mmadios/CallADIOSData.h"
-#include "mmcore/AbstractDataWriter.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd/data/AbstractDataWriter.h"
 #include "vislib/String.h"
 #include <adios2.h>
 #ifdef WITH_MPI

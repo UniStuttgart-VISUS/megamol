@@ -17,10 +17,12 @@ namespace megamol {
 namespace mesh_gl {
 
 class CallGPUMaterialData
-        : public core::GenericVersionedCall<std::vector<std::shared_ptr<GPUMaterialCollection>>, core::EmptyMetaData> {
+        : public core::GenericVersionedCall<std::shared_ptr<std::vector<std::shared_ptr<GPUMaterialCollection>>>,
+              core::EmptyMetaData> {
 public:
     CallGPUMaterialData()
-            : GenericVersionedCall<std::vector<std::shared_ptr<GPUMaterialCollection>>, core::EmptyMetaData>() {}
+            : GenericVersionedCall<std::shared_ptr<std::vector<std::shared_ptr<GPUMaterialCollection>>>,
+                  core::EmptyMetaData>() {}
     ~CallGPUMaterialData() = default;
 
     static const char* ClassName(void) {
@@ -32,10 +34,12 @@ public:
 };
 
 class CallGPUMeshData
-        : public core::GenericVersionedCall<std::vector<std::shared_ptr<GPUMeshCollection>>, core::Spatial3DMetaData> {
+        : public core::GenericVersionedCall<std::shared_ptr<std::vector<std::shared_ptr<GPUMeshCollection>>>,
+              core::Spatial3DMetaData> {
 public:
     CallGPUMeshData()
-            : GenericVersionedCall<std::vector<std::shared_ptr<GPUMeshCollection>>, core::Spatial3DMetaData>() {}
+            : GenericVersionedCall<std::shared_ptr<std::vector<std::shared_ptr<GPUMeshCollection>>>,
+                  core::Spatial3DMetaData>() {}
     ~CallGPUMeshData() = default;
 
     static const char* ClassName(void) {
@@ -46,11 +50,13 @@ public:
     }
 };
 
-class CallGPURenderTaskData : public core::GenericVersionedCall<std::vector<std::shared_ptr<GPURenderTaskCollection>>,
-                                  core::Spatial3DMetaData> {
+class CallGPURenderTaskData
+        : public core::GenericVersionedCall<std::shared_ptr<std::vector<std::shared_ptr<GPURenderTaskCollection>>>,
+              core::Spatial3DMetaData> {
 public:
     CallGPURenderTaskData()
-            : GenericVersionedCall<std::vector<std::shared_ptr<GPURenderTaskCollection>>, core::Spatial3DMetaData>() {}
+            : GenericVersionedCall<std::shared_ptr<std::vector<std::shared_ptr<GPURenderTaskCollection>>>,
+                  core::Spatial3DMetaData>() {}
     ~CallGPURenderTaskData(){};
 
     static const char* ClassName(void) {
