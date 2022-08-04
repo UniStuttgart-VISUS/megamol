@@ -16,10 +16,6 @@ bool Profiling_Service::init(void* configPtr) {
         {"PerformanceManager", _perf_man},
     };
 
-    _requestedResourcesNames = {
-        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name,
-    };
-
 #ifdef PROFILING
     const auto conf = static_cast<Config*>(configPtr);
     if (conf != nullptr && !conf->log_file.empty()) {
@@ -46,7 +42,8 @@ bool Profiling_Service::init(void* configPtr) {
     }
 #endif
 
-    _requestedResourcesNames = {"RegisterLuaCallbacks", "MegaMolGraph", "RenderNextFrame"};
+    _requestedResourcesNames = {"RegisterLuaCallbacks", "MegaMolGraph", "RenderNextFrame",
+        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name};
 
     return true;
 }
@@ -55,7 +52,7 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
     _requestedResourcesReferences = resources;
 
     auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(
-        resources[0].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
+        resources[3].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
 
 #ifdef PROFILING
     frontend_resources::ModuleGraphSubscription profiling_manager_subscription("Profiling Manager");
