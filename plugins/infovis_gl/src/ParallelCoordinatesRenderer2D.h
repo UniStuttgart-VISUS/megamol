@@ -191,6 +191,7 @@ protected:
     core::param::ParamSlot scaleToFitParam_;
     core::param::ParamSlot resetFiltersParam_;
     core::param::ParamSlot filterStateParam_;
+    core::param::ParamSlot debugFloatParam_;
 
     // Data Info
     std::size_t currentTableDataHash_;

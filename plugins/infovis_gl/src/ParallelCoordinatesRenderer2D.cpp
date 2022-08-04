@@ -60,6 +60,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         , scaleToFitParam_("ui::scaleToFit", "fit the diagram in the viewport")
         , resetFiltersParam_("filter::resetFilters", "Reset dimension filters to initial state")
         , filterStateParam_("filter::filterState", "stores filter state for serialization")
+        , debugFloatParam_("debugFloat", "debugging float")
         , currentTableDataHash_(std::numeric_limits<std::size_t>::max())
         , currentTableFrameId_(std::numeric_limits<unsigned int>::max())
         , dimensionCount_(0)
@@ -184,7 +185,10 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
 
     filterStateParam_ << new ::core::param::StringParam("");
     MakeSlotAvailable(&filterStateParam_);
-}
+
+    debugFloatParam_ << new ::core::param::FloatParam(0.0);
+    MakeSlotAvailable(&debugFloatParam_);
+    }
 
 ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D() {
     Release();
@@ -236,7 +240,8 @@ bool ParallelCoordinatesRenderer2D::create() {
         //dualProgram_
         //= core::utility::make_glowl_shader("pc_dual", shader_options, "infovis_gl/pc/dualM.comp.glsl");
         dualProgram_
-        = core::utility::make_glowl_shader("pc_dual", shader_options, "infovis_gl/pc/dual.comp.glsl");
+        //= core::utility::make_glowl_shader("pc_dual", shader_options, "infovis_gl/pc/dual.comp.glsl");
+        = core::utility::make_glowl_shader("pc_dual", shader_options, "infovis_gl/pc/dualHough.comp.glsl");
 
         dualDisplayProgram_
         = core::utility::make_glowl_shader(
@@ -244,7 +249,7 @@ bool ParallelCoordinatesRenderer2D::create() {
 
         dualAltDisplayProgram_ = core::utility::make_glowl_shader(
             //"pc_dualAltDisplay", shader_options, "infovis_gl/pc/dualM.vert.glsl", "infovis_gl/pc/dualM.frag.glsl");
-            "pc_dualAltDisplay", shader_options, "infovis_gl/pc/dualAlt.vert.glsl", "infovis_gl/pc/dualAlt.frag.glsl");
+            "pc_dualAltDisplay", shader_options, "infovis_gl/pc/dualAlt.vert.glsl", "infovis_gl/pc/dualHugh.frag.glsl"); // typo needs fixing -hough- not -hugh-
     } catch (std::exception& e) {
         Log::DefaultLog.WriteError(("ParallelCoordinatesRenderer2D: " + std::string(e.what())).c_str());
         return false;
@@ -868,29 +873,37 @@ void ParallelCoordinatesRenderer2D::drawDual() {
     useProgramAndBindCommon(dualProgram_);
     int axes_pixel_height = (cameraCopy_.value().getViewMatrix() * cameraCopy_.value().getProjectionMatrix() * glm::vec4(0, 1.0, 0, 0)).y *
                   axisHeight_ * viewRes_.y / 2;
+    int axes_pixel_width =
+        (cameraCopy_.value().getViewMatrix() * cameraCopy_.value().getProjectionMatrix() * glm::vec4(1.0, 0, 0, 0)).x *
+        (dimensionCount_-1) * axisDistance_ * viewRes_.x / 2;
+    if (dualTexture_ == nullptr || dualTexture_->getHeigth() != axes_pixel_height) {
+        std::vector<uint32_t> zeroData(axes_pixel_height * axes_pixel_height, 0);
 
-    if (dualTexture_ == nullptr || dualTexture_->getHeigth() != axes_pixel_height +1) {
         dualTexture_ = std::make_unique<glowl::Texture2DArray>("o_dualtex",
-            glowl::TextureLayout(GL_R32UI, axes_pixel_height + 1, 2 * axes_pixel_height + 1, dimensionCount_, GL_RED, GL_UNSIGNED_INT, 1,
+            glowl::TextureLayout(GL_R32UI, axes_pixel_height , axes_pixel_height , dimensionCount_-1, GL_RED, GL_UNSIGNED_INT, 1,
                 {
                     {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER},
                     {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                     {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER},
-                    {GL_TEXTURE_MIN_FILTER, GL_NEAREST},
-                    {GL_TEXTURE_MAG_FILTER, GL_NEAREST},
+                    {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+                    {GL_TEXTURE_MAG_FILTER, GL_LINEAR},
                 },
                 {}),
             nullptr);
-        dualTexture_->bindImage(7, GL_WRITE_ONLY);
 
-        
+        //zeroData = std::vector<uint32_t>(axes_pixel_height * axes_pixel_height, 0);
         
     }
+    dualTexture_->bindImage(7, GL_WRITE_ONLY);
     //const std::vector<uint32_t> zeroData((axes_pixel_height + 1) * (axes_pixel_height + 1), 0);
-    
+    //uint32_t z = 0; 
+    //glTextureSubImage3D(dualTexture_->getName(), 0, 0, 0, 0, axes_pixel_height + 1, axes_pixel_height + 1, 1, GL_RED,
+    //    GL_UNSIGNED_INT, zeroData.data());
+    //Log::DefaultLog.WriteInfo("%i", glGetError());
+
     std::array<GLuint, 3> groupCounts{};
-    dualProgram_->setUniform("axesHeight", axes_pixel_height);
-    computeDispatchSizes(itemCount_ * dimensionCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
+    dualProgram_->setUniform("axPxHeight", axes_pixel_height);
+    computeDispatchSizes((itemCount_ + 1) * dimensionCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
     glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
 
     /*
@@ -902,8 +915,14 @@ void ParallelCoordinatesRenderer2D::drawDual() {
     glDrawArraysInstanced(GL_LINES, 0, 2, dimensionCount_ * axes_pixel_height * axes_pixel_height);
     */
     useProgramAndBindCommon(dualAltDisplayProgram_);
-    dualTexture_->bindImage(7, GL_READ_ONLY);
-    dualDisplayProgram_->setUniform("axesHeight", axes_pixel_height);
+    glActiveTexture(GL_TEXTURE7);
+    dualTexture_->bindTexture(); 
+    
+    dualAltDisplayProgram_->setUniform("axPxHeight", axes_pixel_height);
+    dualAltDisplayProgram_->setUniform("axPxWidth", axes_pixel_width);
+    dualAltDisplayProgram_->setUniform("debugFloat", debugFloatParam_.Param<core::param::FloatParam>()->Value());
+
+    //Log::DefaultLog.WriteInfo("%i", axes_pixel_height);
     auto tfCall = tfSlot_.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
     tfCall->BindConvenience(dualAltDisplayProgram_, GL_TEXTURE5, 5);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);

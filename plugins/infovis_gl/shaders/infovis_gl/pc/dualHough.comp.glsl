@@ -13,8 +13,14 @@ void main(){
     uint dimID = invID / (itemCount); // correct division of inv to item/dim
     float left = pc_dataValueNormalized(itemID, dimID);
     float right = pc_dataValueNormalized(itemID, dimID + 1);
+    vec2 from = vec2(0.0, left);
+    vec2 to = vec2(1.0, right);
+    vec2 lineDir = normalize(to - from);
+    vec2 orthLine = normalize(vec2(-lineDir.y, lineDir.x));
+    float theta = acos(dot(orthLine, vec2(1.0, 0.0)));
+    float rho = abs((from.x * lineDir.y - from.y * lineDir.x)/(orthLine.x * lineDir.y - orthLine.y * lineDir.x));
 
     //imageAtomicAdd(o_dualtex, ivec3(left * axisHeight, right* axisHeight, dimID), 1);
-    imageAtomicAdd(o_dualtex, ivec3(left * float(axPxHeight), right* float(axPxHeight), dimID), 1);
+    imageAtomicAdd(o_dualtex, ivec3(int((theta - 3.141/4.0) * axPxHeight / (3.141/2.0)), int(rho * axPxHeight), dimID), 1);
     // write to texture at (left, right) atomically
 }

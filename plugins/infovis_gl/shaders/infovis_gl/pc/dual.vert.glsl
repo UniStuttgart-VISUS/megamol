@@ -4,14 +4,14 @@
 #include "core/tfconvenience.inc.glsl"
 out vec2 uvCoords;
 layout (binding=7, r32ui) uniform uimage2DArray imgRead;
-uniform int axesHeight;
+uniform int axPxHeight;
 out vec4 color;
 
 void main() {
-    int right = (gl_InstanceID % axesHeight);
-    int cDim = gl_InstanceID / (axesHeight*axesHeight);
-    int left = (gl_InstanceID-cDim * (axesHeight*axesHeight)) / axesHeight;
-    float fHeight = float(axesHeight);
+    int right = (gl_InstanceID % axPxHeight);
+    int cDim = gl_InstanceID / (axPxHeight*axPxHeight);
+    int left = (gl_InstanceID-cDim * (axPxHeight*axPxHeight)) / axPxHeight;
+    float fHeight = float(axPxHeight);
     vec2 coord = vec2(float(gl_VertexID % 2), float((gl_VertexID % 4) / 2));
     mat4 compMx = projMx * viewMx;
     vec2 realOffset = vec2(margin.x + cDim * axisDistance, margin.y);
