@@ -186,7 +186,7 @@ bool JpegBitmapCodec::loadFromMemory(const void* mem, SIZE_T size) {
         IStream* stream = SHCreateMemStream(reinterpret_cast<const BYTE*>(mem), size);
 
         hr = piFactory->CreateDecoderFromStream(stream, NULL,
-            WICDecodeMetadataCacheOnDemand, //For JPEG lossless decoding/encoding.
+            WICDecodeMetadataCacheOnDemand, // For JPEG lossless decoding/encoding.
             &piDecoder);
 
         UINT count;
@@ -568,14 +568,12 @@ bool JpegBitmapCodec::loadFromMemoryImplemented(void) const {
     return true;
 }
 
-
 /*
  * JpegBitmapCodec::saveToMemoryImplemented
  */
 bool JpegBitmapCodec::saveToMemoryImplemented(void) const {
     return true;
 }
-
 
 bool JpegBitmapCodec::saveToStream(vislib::sys::File& stream) const {
     vislib::RawStorage mem;

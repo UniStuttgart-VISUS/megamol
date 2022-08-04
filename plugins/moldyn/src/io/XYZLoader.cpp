@@ -200,8 +200,8 @@ void io::XYZLoader::assertData(void) {
         vislib::Array<vislib::StringA> parts(vislib::StringTokeniserA::Split(l, ' ', true));
         if (parts.Count() != (hasEl ? 4 : 3)) {
             if (warning) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "Problem parsing \"%s\":", filenameSlot.Param<core::param::FilePathParam>()->Value());
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("Problem parsing \"%s\":",
+                    filenameSlot.Param<core::param::FilePathParam>()->Value().string().c_str());
                 warning = false;
             }
         }

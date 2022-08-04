@@ -50,6 +50,7 @@ private:
     megamol::gui::WindowCollection* window_collection_ptr;
     megamol::gui::HotkeyMap_t* gui_hotkey_ptr;
     megamol::core::MegaMolGraph* megamolgraph_ptr;
+    frontend_resources::Command::EffectFunction graph_parameter_lambda;
     frontend_resources::Command::EffectFunction parent_gui_hotkey_lambda;
     frontend_resources::Command::EffectFunction parent_gui_window_lambda;
     frontend_resources::Command::EffectFunction parent_gui_window_hotkey_lambda;

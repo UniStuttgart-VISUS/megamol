@@ -1143,7 +1143,7 @@ CUDAKernels::CUDAKernels(void) {}
  */
 std::vector<FaceGroup> CUDAKernels::GroupFaces(const std::vector<bool>& p_face_shadowed,
     const std::vector<std::vector<Edge>>& p_face_edge_offset, const std::vector<uint>& p_face_edge_offset_depth,
-    const vislib::Array<vec3f>& p_group_colour_table, const std::vector<uint>& p_faces,
+    const std::vector<glm::vec3>& p_group_colour_table, const std::vector<uint>& p_faces,
     std::vector<float>& p_vertexColors_group) {
     size_t face_cnt = p_face_shadowed.size();
 
@@ -1227,7 +1227,7 @@ std::vector<FaceGroup> CUDAKernels::GroupFaces(const std::vector<bool>& p_face_s
 
     // Add the faces to the groups.
     vec3ui vertex_ids;
-    int colour_table_size = static_cast<int>(p_group_colour_table.Count());
+    int colour_table_size = static_cast<int>(p_group_colour_table.size());
     for (size_t i = 0; i < face_cnt; i++) {
         auto idx = new_group_ids_offset[face_group_ids[i]];
         groups[idx].AddFace(static_cast<uint>(i));
@@ -1235,15 +1235,15 @@ std::vector<FaceGroup> CUDAKernels::GroupFaces(const std::vector<bool>& p_face_s
 
         // Set the colour of the vertices.
         vertex_ids.Set(p_faces[i * 3], p_faces[i * 3 + 1], p_faces[i * 3 + 2]);
-        p_vertexColors_group[vertex_ids.GetX() * 3] = p_group_colour_table[idx % colour_table_size].GetX();
-        p_vertexColors_group[vertex_ids.GetX() * 3 + 1] = p_group_colour_table[idx % colour_table_size].GetY();
-        p_vertexColors_group[vertex_ids.GetX() * 3 + 2] = p_group_colour_table[idx % colour_table_size].GetZ();
-        p_vertexColors_group[vertex_ids.GetY() * 3] = p_group_colour_table[idx % colour_table_size].GetX();
-        p_vertexColors_group[vertex_ids.GetY() * 3 + 1] = p_group_colour_table[idx % colour_table_size].GetY();
-        p_vertexColors_group[vertex_ids.GetY() * 3 + 2] = p_group_colour_table[idx % colour_table_size].GetZ();
-        p_vertexColors_group[vertex_ids.GetZ() * 3] = p_group_colour_table[idx % colour_table_size].GetX();
-        p_vertexColors_group[vertex_ids.GetZ() * 3 + 1] = p_group_colour_table[idx % colour_table_size].GetY();
-        p_vertexColors_group[vertex_ids.GetZ() * 3 + 2] = p_group_colour_table[idx % colour_table_size].GetZ();
+        p_vertexColors_group[vertex_ids.GetX() * 3] = p_group_colour_table[idx % colour_table_size].x;
+        p_vertexColors_group[vertex_ids.GetX() * 3 + 1] = p_group_colour_table[idx % colour_table_size].y;
+        p_vertexColors_group[vertex_ids.GetX() * 3 + 2] = p_group_colour_table[idx % colour_table_size].z;
+        p_vertexColors_group[vertex_ids.GetY() * 3] = p_group_colour_table[idx % colour_table_size].x;
+        p_vertexColors_group[vertex_ids.GetY() * 3 + 1] = p_group_colour_table[idx % colour_table_size].y;
+        p_vertexColors_group[vertex_ids.GetY() * 3 + 2] = p_group_colour_table[idx % colour_table_size].z;
+        p_vertexColors_group[vertex_ids.GetZ() * 3] = p_group_colour_table[idx % colour_table_size].x;
+        p_vertexColors_group[vertex_ids.GetZ() * 3 + 1] = p_group_colour_table[idx % colour_table_size].y;
+        p_vertexColors_group[vertex_ids.GetZ() * 3 + 2] = p_group_colour_table[idx % colour_table_size].z;
     }
 
     return groups;

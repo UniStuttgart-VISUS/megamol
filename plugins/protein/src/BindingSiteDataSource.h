@@ -6,21 +6,12 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOLPROTEIN_BSITEDATA_H_INCLUDED
-#define MEGAMOLPROTEIN_BSITEDATA_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "glm/glm.hpp"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/Array.h"
-#include "vislib/Pair.h"
-#include "vislib/String.h"
-#include "vislib/math/Vector.h"
-
 
 namespace megamol {
 namespace protein {
@@ -93,38 +84,53 @@ private:
     /**
      * TODO
      */
-    vislib::StringA ExtractBindingSiteDescripton(vislib::StringA bsName, vislib::Array<vislib::StringA> remarkArray);
+    std::string ExtractBindingSiteDescripton(std::string bsName, std::vector<std::string> remarkArray);
+
+    static inline bool strStartsWith(const std::string& str, const std::string& prefix) {
+        return str.rfind(prefix, 0) == 0;
+    }
+
+    static inline bool strEndsWith(const std::string& str, const std::string& suffix) {
+        return str.rfind(suffix) == std::llabs(str.size() - suffix.size());
+    }
+
+    static inline void strTrimSpaces(std::string& str) {
+        // ltrim
+        str.erase(
+            str.begin(), std::find_if(str.begin(), str.end(), [](unsigned char ch) { return !std::isspace(ch); }));
+        // rtrim
+        str.erase(std::find_if(str.rbegin(), str.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(),
+            str.end());
+    }
 
     /** The data callee slot */
-    core::CalleeSlot dataOutSlot;
+    core::CalleeSlot dataOutSlot_;
 
     /** the parameter slot for the binding site file (PDB) */
-    core::param::ParamSlot pdbFilenameSlot;
+    core::param::ParamSlot pdbFilenameSlot_;
     // the file name for the color table
-    megamol::core::param::ParamSlot colorTableFileParam;
+    megamol::core::param::ParamSlot colorTableFileParam_;
 
     /** Parameter to activate the special enzyme mode */
-    megamol::core::param::ParamSlot enzymeModeParam;
+    megamol::core::param::ParamSlot enzymeModeParam_;
 
     /** Parameter to select the type of the protein */
-    megamol::core::param::ParamSlot gxTypeFlag;
+    megamol::core::param::ParamSlot gxTypeFlag_;
 
     /** The binding site information */
-    vislib::Array<vislib::Array<vislib::Pair<char, unsigned int>>> bindingSites;
+    std::vector<std::vector<std::pair<char, unsigned int>>> bindingSites_;
     /** Pointer to binding site residue name array */
-    vislib::Array<vislib::Array<vislib::StringA>> bindingSiteResNames;
+    std::vector<std::vector<std::string>> bindingSiteResNames_;
     /** The binding site name */
-    vislib::Array<vislib::StringA> bindingSiteNames;
+    std::vector<std::string> bindingSiteNames_;
     /** The binding site description */
-    vislib::Array<vislib::StringA> bindingSiteDescription;
+    std::vector<std::string> bindingSiteDescription_;
 
     // color table
-    std::vector<glm::vec3> colorLookupTable;
+    std::vector<glm::vec3> colorLookupTable_;
     // color table
-    std::vector<glm::vec3> bindingSiteColors;
+    std::vector<glm::vec3> bindingSiteColors_;
 };
 
 } /* end namespace protein */
 } /* end namespace megamol */
-
-#endif // MEGAMOLPROTEIN_BSITEDATA_H_INCLUDED

@@ -19,6 +19,7 @@
 #include "vislib/String.h"
 #include "vislib/macro_utils.h"
 #include "vislib/math/Vector.h"
+#include <filesystem>
 #include <vector>
 
 namespace megamol {
@@ -1106,7 +1107,7 @@ public:
      *
      * @return The atom b-factor array.
      */
-    float* AtomBFactors(void) const {
+    const float* AtomBFactors(void) const {
         return atomBFactors;
     }
 
@@ -1420,7 +1421,8 @@ public:
      * @param occupancies   The atom occupancies.
      */
     void SetAtoms(unsigned int atomCnt, unsigned int atomTypeCnt, const unsigned int* typeIdx, const float* pos,
-        const AtomType* types, const int* residueIdx, float* bfactor, const float* charge, const float* occupancy);
+        const AtomType* types, const int* residueIdx, const float* bfactor, const float* charge,
+        const float* occupancy);
 
     void SetAtomPositions(const float* atomPositions) {
         atomPos = atomPositions;
@@ -1688,12 +1690,7 @@ public:
         this->atomSolventResCount = s.atomSolventResCount;
         this->atomType = s.atomType;
         this->ownsBFactorMemory = s.ownsBFactorMemory;
-        if (!this->ownsBFactorMemory) {
-            this->atomBFactors = s.atomBFactors;
-        } else {
-            this->atomBFactors = new float[this->atomCount];
-            memcpy(this->atomBFactors, s.atomBFactors, sizeof(float) * this->atomCount);
-        }
+        this->atomBFactors = s.atomBFactors;
         this->atomCharges = s.atomCharges;
         this->atomOccupancies = s.atomOccupancies;
         this->minBFactor = s.minBFactor;
@@ -1737,14 +1734,14 @@ public:
      *
      * @param pdbFilename The filename of the pdb file
      */
-    inline void SetPDBFilename(vislib::TString pdbFilename) {
+    inline void SetPDBFilename(std::filesystem::path pdbFilename) {
         this->pdbFilename = pdbFilename;
     }
 
     /*
      * Returns the filename of the containing pdb file.
      */
-    inline vislib::TString GetPDBFilename(void) const {
+    inline std::filesystem::path GetPDBFilename(void) const {
         return this->pdbFilename;
     }
 
@@ -1806,7 +1803,7 @@ private:
     const unsigned int* connections;
 
     /** The array of b-factors */
-    float* atomBFactors;
+    const float* atomBFactors;
     /** Flag whether the call owns the B-factor memory */
     bool ownsBFactorMemory;
     /** The minimum bfactor */
@@ -1848,8 +1845,7 @@ private:
     unsigned int numHydrogenBonds;
 
     /** The name of the pdb file the data is from */
-    VISLIB_MSVC_SUPPRESS_WARNING(4251)
-    vislib::TString pdbFilename;
+    std::filesystem::path pdbFilename;
 };
 
 /** Description class typedef */

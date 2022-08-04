@@ -5,6 +5,10 @@
  */
 #include "AtomGrid.h"
 
+#include <array>
+#include <concrt.h>
+#include <thread>
+
 using namespace megamol;
 using namespace megamol::molecularmaps;
 

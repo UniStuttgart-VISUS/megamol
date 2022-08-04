@@ -5,12 +5,10 @@
 #include <string>
 #include <vector>
 
-#include "CommandRegistry.h"
 #include "FrontendResource.h"
 #include "FrontendResourcesLookup.h"
 #include "ImagePresentationEntryPoints.h"
-#include "PerformanceManager.h"
-
+#include "ModuleGraphSubscription.h"
 #include "mmcore/MegaMolGraphTypes.h"
 #include "mmcore/MegaMolGraph_Convenience.h"
 #include "mmcore/RootModuleNamespace.h"
@@ -63,6 +61,8 @@ public:
 
     megamol::core::param::AbstractParam* FindParameter(std::string const& paramName) const;
 
+    bool SetParameter(std::string const& paramName, std::string const& value);
+
     megamol::core::param::ParamSlot* FindParameterSlot(std::string const& paramName) const;
 
     std::vector<megamol::core::param::AbstractParam*> EnumerateModuleParameters(std::string const& moduleName) const;
@@ -88,12 +88,7 @@ public:
 
     MegaMolGraph_Convenience& Convenience();
 
-    frontend_resources::Command::EffectFunction Parameter_Lambda = [&](const frontend_resources::Command* self) {
-        auto my_p = this->FindParameter(self->parent);
-        if (my_p != nullptr) {
-            my_p->setDirty();
-        }
-    };
+    frontend_resources::MegaMolGraph_SubscriptionRegistry& GraphSubscribers();
 
 private:
     [[nodiscard]] ModuleList_t::iterator find_module(std::string const& name);
@@ -135,13 +130,9 @@ private:
     std::list<Module::ptr_type> graph_entry_points;
     megamol::frontend_resources::ImagePresentationEntryPoints* m_image_presentation = nullptr;
 
-    megamol::frontend_resources::CommandRegistry* m_command_registry = nullptr;
-
     MegaMolGraph_Convenience convenience_functions;
 
-#ifdef PROFILING
-    megamol::frontend_resources::PerformanceManager* m_perf_manager = nullptr;
-#endif
+    frontend_resources::MegaMolGraph_SubscriptionRegistry graph_subscribers;
 };
 
 

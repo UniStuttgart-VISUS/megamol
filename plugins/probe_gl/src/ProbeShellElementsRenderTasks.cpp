@@ -15,8 +15,6 @@
 #include "ProbeShellElementsRenderTasks.h"
 #include "probe/ProbeCalls.h"
 
-#include "mesh_gl/MeshCalls_gl.h"
-
 bool megamol::probe_gl::ProbeShellElementsRenderTasks::create() {
 
     m_rendertask_collection.first = std::make_shared<mesh_gl::GPURenderTaskCollection>();

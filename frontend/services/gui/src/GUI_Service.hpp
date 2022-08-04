@@ -14,6 +14,7 @@
 #include "CommonTypes.h"
 #include "GUIRegisterWindow.h"
 #include "GUIState.h"
+#include "PerformanceManager.h"
 #include "gui_render_backend.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"

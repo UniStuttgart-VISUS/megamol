@@ -13,6 +13,8 @@
 #include <numeric>
 #include <sstream>
 
+#include "mmcore/utility/Timestamp.h"
+
 #include "LuaCallbacksCollection.h"
 
 
@@ -117,15 +119,8 @@ void FrameStatistics_Service::fill_lua_callbacks() {
         "(void)\n\tReturns a timestamp in ISO format.",
         {[&]() -> frontend_resources::LuaCallbacksCollection::StringResult {
             auto const tp = std::chrono::system_clock::now();
-
-            auto const t = std::chrono::system_clock::to_time_t(tp);
-            auto const lt = std::localtime(&t);
-            auto const fs = std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch()).count() % 1000;
-            std::stringstream str;
-            str << std::to_string(1900 + lt->tm_year) << "-" << std::to_string(1 + lt->tm_mon) << "-"
-                << std::to_string(lt->tm_mday) << "T" << std::to_string(lt->tm_hour) << ":"
-                << std::to_string(lt->tm_min) << ":" << std::to_string(lt->tm_sec) << "." << std::to_string(fs);
-            return frontend_resources::LuaCallbacksCollection::StringResult(str.str());
+            auto const timestamp = core::utility::serialize_timestamp(tp);
+            return frontend_resources::LuaCallbacksCollection::StringResult(timestamp);
         }});
 
     auto& register_callbacks =
