@@ -31,13 +31,23 @@ add_compile_definitions("$<$<CONFIG:DEBUG>:DEBUG>")
 add_compile_definitions("$<$<CONFIG:DEBUG>:_DEBUG>")
 
 # Compiler flags
+# Note: special C++ and C-Compiler flags should be set for each language seperately as done below.
+# Otherwise, a possible compilation with CUDA will propagate those flags to the CUDA-Compiler and lead to a crash.
+# For certain systems, those flags should be set for both C++ and C compilers to work properly
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   # nothing to do
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  add_compile_options("-fsized-deallocation") # TODO git history suggests this was required for cuda in 2019, still required?
-  add_compile_options("-Wno-narrowing" "-Wno-non-pod-varargs") # Prevent build fail.
+  # TODO git history suggests this was required for cuda in 2019, still required?
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-fsized-deallocation>) 
+
+   # Prevent build fail.
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Wno-narrowing>)
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-Wno-non-pod-vararg>)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  add_compile_options("/MP" "/permissive-" "/Zc:twoPhase-" "/utf-8")
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/MP>)
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/permissive->)
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/Zc:twoPhase->)
+  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/utf-8>)
   add_compile_definitions("NOMINMAX")
 else ()
   message(FATAL_ERROR "Unsupported compiler specified: '${CMAKE_CXX_COMPILER_ID}'")

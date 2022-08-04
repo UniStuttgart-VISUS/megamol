@@ -67,33 +67,32 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
             this->structureContainer.structure = mesh_str;
 
             _mesh_prefix_count.clear();
-            for (auto const& mesh_collection : (*(mesh_str.mesh))) {
-                auto const& meshes = mesh_collection->accessMeshes();
-                std::vector<size_t> tmp_prefix_count(meshes.size());
-                auto counter = 0u;
-                for (auto const& entry : meshes) {
-                    auto c_count = 0;
-                    switch (entry.second.primitive_type) {
-                    case mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES: {
-                        c_count = 3;
-                    } break;
-                    case mesh::MeshDataAccessCollection::PrimitiveType::QUADS: {
-                        c_count = 4;
-                    } break;
-                    }
-                    if (c_count == 0) {
-                        tmp_prefix_count[counter] = counter == 0 ? 0 : tmp_prefix_count[counter - 1];
-                        ++counter;
-                        break;
-                    }
-                    auto const c_bs = mesh::MeshDataAccessCollection::getByteSize(entry.second.indices.type);
-                    auto const num_el = entry.second.indices.byte_size / (c_bs * c_count);
-                    tmp_prefix_count[counter] = counter == 0 ? num_el : tmp_prefix_count[counter - 1] + num_el;
-                    ++counter;
-                }
 
-                _mesh_prefix_count.insert(_mesh_prefix_count.end(), tmp_prefix_count.begin(), tmp_prefix_count.end());
+            auto const& meshes = mesh_str.mesh->accessMeshes();
+            std::vector<size_t> tmp_prefix_count(meshes.size());
+            auto counter = 0u;
+            for (auto const& entry : meshes) {
+                auto c_count = 0;
+                switch (entry.second.primitive_type) {
+                case mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES: {
+                    c_count = 3;
+                } break;
+                case mesh::MeshDataAccessCollection::PrimitiveType::QUADS: {
+                    c_count = 4;
+                } break;
+                }
+                if (c_count == 0) {
+                    tmp_prefix_count[counter] = counter == 0 ? 0 : tmp_prefix_count[counter - 1];
+                    ++counter;
+                    break;
+                }
+                auto const c_bs = mesh::MeshDataAccessCollection::getByteSize(entry.second.indices.type);
+                auto const num_el = entry.second.indices.byte_size / (c_bs * c_count);
+                tmp_prefix_count[counter] = counter == 0 ? num_el : tmp_prefix_count[counter - 1] + num_el;
+                ++counter;
             }
+
+            _mesh_prefix_count.insert(_mesh_prefix_count.end(), tmp_prefix_count.begin(), tmp_prefix_count.end());
 
             if (fcw != nullptr && fcr != nullptr && !_mesh_prefix_count.empty()) {
                 if ((*fcr)(core::FlagCallWrite_CPU::CallGetData)) {

@@ -1,11 +1,24 @@
 #include "Profiling_Service.hpp"
 
+#include "mmcore/MegaMolGraph.h"
+#include "mmcore/utility/SampleCameraScenes.h"
+#include "mmcore/view/AbstractViewInterface.h"
+#include "mmcore/view/CameraSerializer.h"
+
+#include "LuaCallbacksCollection.h"
+#include "ModuleGraphSubscription.h"
 
 namespace megamol {
 namespace frontend {
 
 bool Profiling_Service::init(void* configPtr) {
-    _providedResourceReferences = {{"PerformanceManager", _perf_man}};
+    _providedResourceReferences = {
+        {"PerformanceManager", _perf_man},
+    };
+
+    _requestedResourcesNames = {
+        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name,
+    };
 
 #ifdef PROFILING
     const auto conf = static_cast<Config*>(configPtr);
@@ -33,7 +46,45 @@ bool Profiling_Service::init(void* configPtr) {
     }
 #endif
 
+    _requestedResourcesNames = {"RegisterLuaCallbacks", "MegaMolGraph", "RenderNextFrame"};
+
     return true;
+}
+
+void Profiling_Service::setRequestedResources(std::vector<FrontendResource> resources) {
+    _requestedResourcesReferences = resources;
+
+    auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(
+        resources[0].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
+
+#ifdef PROFILING
+    frontend_resources::ModuleGraphSubscription profiling_manager_subscription("Profiling Manager");
+
+    profiling_manager_subscription.AddCall = [&](core::CallInstance_t const& call_inst) {
+        auto the_call = call_inst.callPtr.get();
+        //printf("adding timers for @ %p = %s \n", reinterpret_cast<void*>(the_call), the_call->GetDescriptiveText().c_str());
+        the_call->cpu_queries = _perf_man.add_timers(the_call, frontend_resources::PerformanceManager::query_api::CPU);
+        if (the_call->GetCapabilities().OpenGLRequired()) {
+            the_call->gl_queries =
+                _perf_man.add_timers(the_call, frontend_resources::PerformanceManager::query_api::OPENGL);
+        }
+        the_call->perf_man = &_perf_man;
+        return true;
+    };
+
+    profiling_manager_subscription.DeleteCall = [&](core::CallInstance_t const& call_inst) {
+        auto the_call = call_inst.callPtr.get();
+        _perf_man.remove_timers(the_call->cpu_queries);
+        if (the_call->GetCapabilities().OpenGLRequired()) {
+            _perf_man.remove_timers(the_call->gl_queries);
+        }
+        return true;
+    };
+
+    megamolgraph_subscription.subscribe(profiling_manager_subscription);
+#endif
+
+    fill_lua_callbacks();
 }
 
 void Profiling_Service::close() {
@@ -50,6 +101,91 @@ void Profiling_Service::updateProvidedResources() {
 
 void Profiling_Service::resetProvidedResources() {
     _perf_man.endFrame();
+}
+
+void Profiling_Service::fill_lua_callbacks() {
+    frontend_resources::LuaCallbacksCollection callbacks;
+
+    auto& graph = const_cast<core::MegaMolGraph&>(_requestedResourcesReferences[1].getResource<core::MegaMolGraph>());
+    auto& render_next_frame = _requestedResourcesReferences[2].getResource<std::function<bool()>>();
+
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, int>(
+        "mmGenerateCameraScenes", "(string entrypoint, string camera_path_pattern, uint num_samples)",
+        {[&graph](std::string entrypoint, std::string camera_path_pattern,
+             int num_samples) -> frontend_resources::LuaCallbacksCollection::StringResult {
+            auto entry = graph.FindModule(entrypoint);
+            if (!entry)
+                return frontend_resources::LuaCallbacksCollection::Error{"could not find entrypoint"};
+            auto view = std::dynamic_pointer_cast<core::view::AbstractViewInterface>(entry);
+            if (!view)
+                return frontend_resources::LuaCallbacksCollection::Error{"requested entrypoint is not a view"};
+            auto cam_func = megamol::core::utility::GetCamScenesFunctional(camera_path_pattern);
+            if (!cam_func)
+                return frontend_resources::LuaCallbacksCollection::Error{"could not request camera path pattern"};
+            auto camera_samples = megamol::core::utility::SampleCameraScenes(view, cam_func, num_samples);
+            if (camera_samples.empty())
+                return frontend_resources::LuaCallbacksCollection::Error{"could not sample camera"};
+            return frontend_resources::LuaCallbacksCollection::StringResult{camera_samples};
+        }});
+
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, int, bool>(
+        "mmProfile", "(string entrypoint, string cameras, unsigned int num_frames, bool pretty)",
+        {[&graph, &render_next_frame](std::string entrypoint, std::string cameras, int num_frames,
+             bool pretty) -> frontend_resources::LuaCallbacksCollection::StringResult {
+            auto entry = graph.FindModule(entrypoint);
+            if (!entry)
+                return frontend_resources::LuaCallbacksCollection::Error{"could not find entrypoint"};
+            auto view = std::dynamic_pointer_cast<core::view::AbstractViewInterface>(entry);
+            if (!view)
+                return frontend_resources::LuaCallbacksCollection::Error{"requested entrypoint is not a view"};
+
+            auto serializer = core::view::CameraSerializer();
+            std::vector<core::view::Camera> cams;
+            serializer.deserialize(cams, cameras);
+
+            auto const old_cam = view->GetCamera();
+
+            uint64_t tot_num_frames = num_frames * cams.size();
+
+            auto const tp_start = std::chrono::system_clock::now();
+            for (auto const& cam : cams) {
+                view->SetCamera(cam);
+                for (unsigned int f_idx = 0; f_idx < num_frames; ++f_idx) {
+                    render_next_frame();
+                }
+            }
+            auto const tp_end = std::chrono::system_clock::now();
+
+            view->SetCamera(old_cam);
+
+            auto const duration = tp_end - tp_start;
+
+            auto const time_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
+            auto const time_per_frame = static_cast<float>(time_in_ms) / static_cast<float>(tot_num_frames);
+
+            std::stringstream sstr;
+            if (pretty) {
+                sstr << "Total Number of Frames: " << tot_num_frames << "; Elapsed Time (ms): "
+                     << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()
+                     << "; Time per Frame (ms): " << time_per_frame;
+            } else {
+                sstr << tot_num_frames << ", "
+                     << std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() << ", "
+                     << time_per_frame;
+            }
+
+            return frontend_resources::LuaCallbacksCollection::StringResult{sstr.str()};
+        }});
+
+
+    auto& register_callbacks =
+        _requestedResourcesReferences[0]
+            .getResource<std::function<void(frontend_resources::LuaCallbacksCollection const&)>>();
+
+    register_callbacks(callbacks);
 }
 
 } // namespace frontend

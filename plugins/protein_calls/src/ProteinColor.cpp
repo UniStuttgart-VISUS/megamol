@@ -140,17 +140,19 @@ void ProteinColor::MakeWeightedColorTable(const megamol::protein_calls::Molecula
     }
 }
 
-void ProteinColor::MakeColorTable(const megamol::protein_calls::MolecularDataCall& mdc,
+std::pair<float, float> ProteinColor::MakeColorTable(const megamol::protein_calls::MolecularDataCall& mdc,
     const ProteinColor::ColoringMode colMode, std::vector<glm::vec3>& OUT_colorTable,
     const std::vector<glm::vec3>& colorLookupTable, const std::vector<glm::vec3>& fileColorTable,
     const std::vector<glm::vec3>& rainbowColorTable, const protein_calls::BindingSiteCall* bsc,
     const protein_calls::PerAtomFloatCall* psc, bool forceRecompute, bool useNeighbors, bool enzymeMode, bool gxtype) {
 
+    std::pair<float, float> result(0.0f, 0.0f);
+
     if (forceRecompute) {
         OUT_colorTable.clear();
     }
     if (!OUT_colorTable.empty()) {
-        return;
+        return result;
     }
 
     OUT_colorTable.reserve(mdc.AtomCount());
@@ -195,6 +197,7 @@ void ProteinColor::MakeColorTable(const megamol::protein_calls::MolecularDataCal
                 mdc.AtomBFactors()[i], colorLookupTable, mdc.MinimumBFactor(), mdc.MaximumBFactor());
             OUT_colorTable.push_back(col);
         }
+        result = std::make_pair(mdc.MinimumBFactor(), mdc.MaximumBFactor());
         if (mdc.MaximumBFactor() - mdc.MinimumBFactor() < std::numeric_limits<float>::epsilon()) {
             OUT_colorTable.clear();
             OUT_colorTable.resize(mdc.AtomCount(), glm::vec3(1.0));
@@ -205,6 +208,7 @@ void ProteinColor::MakeColorTable(const megamol::protein_calls::MolecularDataCal
                 mdc.AtomCharges()[i], colorLookupTable, mdc.MinimumCharge(), mdc.MaximumCharge());
             OUT_colorTable.push_back(col);
         }
+        result = std::make_pair(mdc.MinimumCharge(), mdc.MaximumCharge());
         if (mdc.MaximumCharge() - mdc.MinimumCharge() < std::numeric_limits<float>::epsilon()) {
             OUT_colorTable.clear();
             OUT_colorTable.resize(mdc.AtomCount(), glm::vec3(1.0));
@@ -215,6 +219,7 @@ void ProteinColor::MakeColorTable(const megamol::protein_calls::MolecularDataCal
                 mdc.AtomOccupancies()[i], colorLookupTable, mdc.MinimumOccupancy(), mdc.MaximumOccupancy());
             OUT_colorTable.push_back(col);
         }
+        result = std::make_pair(mdc.MinimumOccupancy(), mdc.MaximumOccupancy());
         if (mdc.MaximumOccupancy() - mdc.MinimumOccupancy() < std::numeric_limits<float>::epsilon()) {
             OUT_colorTable.clear();
             OUT_colorTable.resize(mdc.AtomCount(), glm::vec3(1.0));
@@ -291,6 +296,7 @@ void ProteinColor::MakeColorTable(const megamol::protein_calls::MolecularDataCal
         }
     } else if (colMode == ColoringMode::AMINOACID) {
         // loop over all residues
+        result = std::make_pair(0.0f, 3.0f);
         for (uint32_t res = 0; res < mdc.ResidueCount(); ++res) {
             // loop over all atoms of the current residue
             uint32_t idx = mdc.Residues()[res]->FirstAtomIndex();
@@ -349,6 +355,7 @@ void ProteinColor::MakeColorTable(const megamol::protein_calls::MolecularDataCal
         // TODO
     } else if (colMode == ColoringMode::HYDROPHOBICITY) {
         auto bounds = protein_calls::GetHydrophobicityBounds();
+        result = std::make_pair(bounds.x, bounds.y);
         for (uint32_t res = 0; res < mdc.ResidueCount(); ++res) {
             uint32_t idx = mdc.Residues()[res]->FirstAtomIndex();
             uint32_t cnt = mdc.Residues()[res]->AtomCount();
@@ -370,18 +377,17 @@ void ProteinColor::MakeColorTable(const megamol::protein_calls::MolecularDataCal
                     for (unsigned int res = 0; res < mdc.Molecules()[res].ResidueCount(); ++res) {
                         // loop over all binding sites
                         for (uint32_t bs = 0; bs < bsc->GetBindingSiteCount(); ++bs) {
-                            for (unsigned int bsResCnt = 0; bsResCnt < bsc->GetBindingSite(bs)->Count(); ++bsResCnt) {
-                                vislib::Pair<char, unsigned int> bsRes = bsc->GetBindingSite(bs)->operator[](bsResCnt);
-                                if (mdc.Chains()[chain].Name() == bsRes.First() &&
-                                    mdc.Residues()[firstRes + res]->OriginalResIndex() == bsRes.Second() &&
-                                    mdc.ResidueTypeNames()[mdc.Residues()[firstRes + res]->Type()] ==
+                            for (unsigned int bsResCnt = 0; bsResCnt < bsc->GetBindingSite(bs)->size(); ++bsResCnt) {
+                                std::pair<char, unsigned int> bsRes = bsc->GetBindingSite(bs)->operator[](bsResCnt);
+                                if (mdc.Chains()[chain].Name() == bsRes.first &&
+                                    mdc.Residues()[firstRes + res]->OriginalResIndex() == bsRes.second &&
+                                    mdc.ResidueTypeNames()[mdc.Residues()[firstRes + res]->Type()].PeekBuffer() ==
                                         bsc->GetBindingSiteResNames(bs)->operator[](bsResCnt)) {
                                     uint32_t firstAtom = mdc.Residues()[firstRes + res]->FirstAtomIndex();
                                     for (unsigned int aCnt = 0; aCnt < mdc.Residues()[firstRes + res]->AtomCount();
                                          aCnt++) {
                                         uint32_t atomIdx = firstAtom + aCnt;
-                                        OUT_colorTable[atomIdx] =
-                                            glm::make_vec3(bsc->GetBindingSiteColor(bs).PeekComponents());
+                                        OUT_colorTable[atomIdx] = bsc->GetBindingSiteColor(bs);
                                     }
                                 }
                             }
@@ -404,6 +410,7 @@ void ProteinColor::MakeColorTable(const megamol::protein_calls::MolecularDataCal
                     InterpolateMultipleColors(psc->GetFloat()[i], colorLookupTable, psc->MinValue(), psc->MaxValue());
                 OUT_colorTable.push_back(col);
             }
+            result = std::make_pair(psc->MinValue(), psc->MaxValue());
             if (psc->MaxValue() - psc->MinValue() < std::numeric_limits<float>::epsilon()) {
                 OUT_colorTable.clear();
                 OUT_colorTable.resize(mdc.AtomCount(), glm::vec3(1.0));
@@ -460,6 +467,7 @@ void ProteinColor::MakeColorTable(const megamol::protein_calls::MolecularDataCal
             }
         }
     }
+    return result;
 }
 
 glm::vec3 ProteinColor::InterpolateMultipleColors(
@@ -471,10 +479,10 @@ glm::vec3 ProteinColor::InterpolateMultipleColors(
     if (alpha > maxVal) {
         alpha = maxVal;
     }
-    float stepSize = (maxVal - minVal) / static_cast<float>(colors.size());
-    uint32_t bin = static_cast<uint32_t>(std::truncf((alpha - minVal) / stepSize));
-    float lower_bound = minVal + static_cast<float>(bin) * stepSize;
-    float upper_bound = minVal + static_cast<float>(bin + 1) * stepSize;
+    const float stepSize = (maxVal - minVal) / static_cast<float>(colors.size());
+    const uint32_t bin = static_cast<uint32_t>(std::truncf((alpha - minVal) / stepSize));
+    const float lower_bound = minVal + static_cast<float>(bin) * stepSize;
+    const float upper_bound = minVal + static_cast<float>(bin + 1) * stepSize;
     alpha = (alpha - lower_bound) / (upper_bound - lower_bound);
     // special case for certain floating point errors
     if (bin >= colors.size() - 1) {
