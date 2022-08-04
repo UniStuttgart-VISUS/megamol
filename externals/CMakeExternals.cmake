@@ -72,38 +72,6 @@ function(require_external NAME)
       PROJECT IceT
       LIBRARY ${ICET_MPI_LIB})
 
-  # tracking
-  elseif (NAME STREQUAL "tracking")
-    if (TARGET tracking)
-      return()
-    endif ()
-
-    if (NOT WIN32)
-      message(WARNING "External 'tracking' requested, but not available on non-Windows systems")
-    endif ()
-
-    set(TRACKING_LIB "lib/tracking.lib")
-    set(TRACKING_NATNET_LIB "lib/NatNetLib.lib")
-
-    add_external_project(tracking STATIC
-      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking.git
-      GIT_TAG "v2.0"
-      BUILD_BYPRODUCTS
-        "<INSTALL_DIR>/${TRACKING_LIB}"
-        "<INSTALL_DIR>/${TRACKING_NATNET_LIB}"
-      CMAKE_ARGS
-        -DCREATE_TRACKING_TEST_PROGRAM=OFF)
-
-    add_external_library(tracking
-      LIBRARY ${TRACKING_LIB})
-
-    add_external_library(natnet
-      PROJECT tracking
-      LIBRARY ${TRACKING_NATNET_LIB})
-
-    external_get_property(tracking SOURCE_DIR)
-    set(tracking_files "${SOURCE_DIR}/tracking/conf/tracking.conf" PARENT_SCOPE)
-
   # vr interop mwk-mint
   elseif(NAME STREQUAL "mwk-mint")
     if(TARGET mwk-mint)
