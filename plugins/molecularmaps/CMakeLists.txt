@@ -10,6 +10,7 @@ megamol_plugin(molecularmaps
     mmstd
     protein_calls
     geometry_calls
+    geometry_calls_gl
   DEPENDS_EXTERNALS
     Eigen)
 
@@ -21,8 +22,6 @@ if (molecularmaps_PLUGIN_ENABLED)
 
   set(CMAKE_CUDA_ARCHITECTURES 52)
   set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS} -O3")
-
-  get_filename_component(cuda_compiler_directory "${CMAKE_CUDA_COMPILER}" DIRECTORY)
 
   file(GLOB_RECURSE cuda_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cu")
   file(GLOB_RECURSE cuda_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cuh")

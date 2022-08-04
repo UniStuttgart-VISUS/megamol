@@ -158,11 +158,11 @@ int main(const int argc, const char** argv) {
     megamol::frontend::Command_Service command_service;
     // Should be applied after gui service to process only keyboard events not used by gui.
     command_service.setPriority(24);
-#ifdef PROFILING
+
     megamol::frontend::Profiling_Service profiling_service;
     megamol::frontend::Profiling_Service::Config profiling_config;
     profiling_config.log_file = config.profiling_output_file;
-#endif
+
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;
     cuda_service.setPriority(24);
@@ -198,9 +198,8 @@ int main(const int argc, const char** argv) {
         services.add(vr_service, &vrConfig);
     }
 
-#ifdef PROFILING
     services.add(profiling_service, &profiling_config);
-#endif
+
 #ifdef MM_CUDA_ENABLED
     services.add(cuda_service, nullptr);
 #endif

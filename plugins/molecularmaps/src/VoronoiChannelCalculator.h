@@ -19,6 +19,7 @@
 #include "vislib/math/Vector.h"
 
 #include <Eigen/Dense>
+#include <mutex>
 
 namespace megamol {
 namespace molecularmaps {
@@ -39,7 +40,7 @@ public:
     /**
      * Invokes the rendering calls.
      */
-    virtual bool Render(core::view::CallRender3DGL& call, bool lighting = true);
+    virtual bool Render(core_gl::view::CallRender3DGL& call, bool lighting = true);
 
     /**
      * Update function for the local data to render.
