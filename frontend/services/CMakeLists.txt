@@ -138,8 +138,8 @@ if(BUILD_FRONTEND_SERVICES)
     if(NOT MEGAMOL_USE_OPENGL)
       message( FATAL_ERROR "VR Service Unity Kolab Interop needs OpenGL enabled. Abort." )
     endif()
-    find_package(mwk-mint-interop::mwk-mint-interop)
-    target_link_libraries(${PROJECT_NAME} PUBLIC mwk-mint-interop)
+    find_package(mwk-mint-interop)
+    target_link_libraries(${PROJECT_NAME} PUBLIC mwk-mint-interop::mwk-mint-interop)
   endif()
 
   # Linux Stacktrace
