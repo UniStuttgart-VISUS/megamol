@@ -158,6 +158,17 @@ function(require_external NAME)
       GIT_TAG 220fdf37fec2d9d3e3f7674194544ee70eb93ee7 # master on 2021-07-26, because nothing was specified here.
       INCLUDE_DIR "include")
 
+  # imguitexinspect
+  elseif (NAME STREQUAL "imguitexinspect")
+    if (TARGET imguitexinspect)
+      return()
+    endif ()
+
+    add_external_headeronly_project(imguitexinspect
+      GIT_REPOSITORY https://github.com/andyborrell/imgui_tex_inspect.git
+      GIT_TAG e568d55186167fdf48fb562ea5a6399af49c7c99 # master on 2022-07-27, because nothing was specified here.
+      )
+
   # ###########################################################################
   # ### Built libraries #######################################################
   # ###########################################################################

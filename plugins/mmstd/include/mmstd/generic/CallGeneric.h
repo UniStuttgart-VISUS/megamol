@@ -11,6 +11,8 @@
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmstd/data/AbstractGetDataCall.h"
 
+#include "glm/glm.hpp"
+
 namespace megamol::core {
 
 /**
@@ -59,12 +61,51 @@ public:
         return (m_set_version > m_get_version);
     }
 
+    /**
+     * Returns all textures that are to be inspected by the texture inspector.
+     *
+     * @return Vector of pairs with all textures and their corresponding size
+     */
+    inline const std::vector<std::pair<unsigned int, glm::ivec2>> GetInspectorTextures() const {
+        return this->_texInspectorTextures;
+    }
+
+    /**
+     * Adds a texture to the texture vector for the texture inspector.
+     */
+    inline void AddInspectorTexture(std::pair<unsigned int, glm::ivec2> texture) {
+        for (int i = 0; i < _texInspectorTextures.size(); ++i) {
+            if (_texInspectorTextures[i].first == texture.first) {
+                return;
+            }
+        }
+
+        this->_texInspectorTextures.push_back(texture);
+    }
+
+    /**
+     * Adds a texture to the texture vector for the texture inspector.
+     */
+    inline void RemoveInspectorTexture(unsigned int handle) {
+        for (int i = 0; i < _texInspectorTextures.size(); ++i) {
+            if (_texInspectorTextures[i].first == handle) {
+                //_texInspectorTextures.
+            }
+        }
+    }
+
 private:
     DataType m_data;
     MetaDataType m_meta_data;
 
     uint32_t m_get_version = 0;
     uint32_t m_set_version = 0;
+
+    /**
+     * Array for textures used in the texture inspector
+     * (Textures need to be members)
+     */
+    std::vector<std::pair<unsigned int, glm::ivec2>> _texInspectorTextures;
 };
 
 template<typename DataType, typename MetaDataType>
