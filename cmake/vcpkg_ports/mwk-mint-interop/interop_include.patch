@@ -1,0 +1,13 @@
+diff --git a/interop/src/interop.cpp b/interop/src/interop.cpp
+index 19415de..5d27cad 100644
+--- a/interop/src/interop.cpp
++++ b/interop/src/interop.cpp
+@@ -1,7 +1,7 @@
+ ﻿#include "interop.hpp"
+ 
+ #include <zmq.hpp>
+-#include "SpoutSender.h"
++#include "SpoutGL/SpoutSender.h"
+ #include <nlohmann/json.hpp>
+ 
+ #include <iostream>

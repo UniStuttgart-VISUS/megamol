@@ -7,7 +7,7 @@ project(mwk-mint-interop
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(ZeroMQ CONFIG REQUIRED)
 find_package(cppzmq CONFIG REQUIRED)
-find_package(Spout2 CONFIG REQUIRED)
+find_package(spout2 CONFIG REQUIRED)
 
 add_library(mwk-mint-interop STATIC
   src/interop.cpp
@@ -25,7 +25,7 @@ target_link_libraries(mwk-mint-interop
     nlohmann_json::nlohmann_json
     libzmq
     cppzmq
-    Spout2)
+    Spout2::Spout)
 
 # Install
 include(GNUInstallDirs)
