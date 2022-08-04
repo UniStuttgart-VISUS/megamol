@@ -9,18 +9,21 @@
 
 #ifdef WITH_VR_SERVICE_UNITY_KOLABBW
 #include <glm/gtc/matrix_transform.hpp>
-#include <include/interop.hpp>
+#include <interop.hpp>
 
 #include "ImageWrapper_to_GLTexture.hpp"
 #include "ViewRenderInputs.h"
 
 #include "mmcore/Module.h"
 #include "mmcore/view/AbstractViewInterface.h"
+#include "mmstd/view/AbstractView.h"
 #endif // WITH_VR_SERVICE_UNITY_KOLABBW
 
 #include "mmcore/MegaMolGraph.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
 
 
@@ -485,7 +488,7 @@ bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& 
 
     // if the entry point is not a 3d view there is no point in doing stereo for it
     const auto* view = dynamic_cast<megamol::core::view::AbstractViewInterface*>(ptr);
-    if (view == nullptr || view->GetViewDimension() != ViewDimension::VIEW_3D) {
+    if (view == nullptr || view->GetViewDimension() != core::view::AbstractViewInterface::ViewDimension::VIEW_3D) {
         log_error("entry point " + entry_point_name +
                   " does not seem to be a supported 3D View Type. Not using it for stereo rendering.");
         return false;

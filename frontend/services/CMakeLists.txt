@@ -169,7 +169,7 @@ if(BUILD_FRONTEND_SERVICES)
   endif ()
 
   if (MEGAMOL_USE_OPENGL)
-    target_link_libraries(${PROJECT_NAME} PUBLIC core_gl glad)
+    target_link_libraries(${PROJECT_NAME} PUBLIC core_gl glad mmstd)
   endif()
 
   target_link_libraries(${PROJECT_NAME}
