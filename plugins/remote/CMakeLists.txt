@@ -27,7 +27,7 @@ if (remote_PLUGIN_ENABLED)
       zfp::zfp)
 
   if (MPI_C_FOUND)
-    require_external(IceT)
+    find_package(IceT CONFIG REQUIRED)
     target_link_libraries(remote PRIVATE IceTCore IceTGL IceTMPI MPI::MPI_C vislib_gl)
   endif ()
 endif ()

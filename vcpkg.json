@@ -67,6 +67,13 @@
           "features": [
             "mpi"
           ]
+        },
+        {
+          "name": "icet",
+          "features": [
+            "mpi",
+            "opengl"
+          ]
         }
       ]
     },
