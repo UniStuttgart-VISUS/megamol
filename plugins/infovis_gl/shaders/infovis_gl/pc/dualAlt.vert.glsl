@@ -1,7 +1,9 @@
 #version 450
+
 #include "common/common.inc.glsl"
 //#include "mmstd_gl/common/tflookup.inc.glsl"
 //#include "mmstd_gl/common/tfconvenience.inc.glsl"
+
 out vec2 uvCoords;
 layout (binding=7) uniform usampler2DArray imgRead;
 uniform int axPxHeight;
