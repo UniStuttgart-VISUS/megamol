@@ -1324,13 +1324,14 @@ void megamol::gui::GUIManager::draw_popups() {
         std::string year;
         if (commit_date.empty()) {
             // Backup when commit date is no available via build script info
-            std::time_t t = std::time(0); 
+            std::time_t t = std::time(0);
             std::tm* now = std::localtime(&t);
-            year = std::to_string(now->tm_year + 1900); 
+            year = std::to_string(now->tm_year + 1900);
         } else {
             year = commit_date.substr(0, 4);
         }
-        const std::string about = "Copyright (C) 2009-" + year + " by University of Stuttgart (VISUS).\nAll rights reserved.";
+        const std::string about =
+            "Copyright (C) 2009-" + year + " by University of Stuttgart (VISUS).\nAll rights reserved.";
 
         ImGui::TextUnformatted(mmstr.c_str());
 
