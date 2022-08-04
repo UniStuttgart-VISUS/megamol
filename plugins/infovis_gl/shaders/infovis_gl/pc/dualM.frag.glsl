@@ -1,7 +1,7 @@
 #version 450
 #include "common/common.inc.glsl"
-#include "core/tflookup.inc.glsl"
-#include "core/tfconvenience.inc.glsl"
+#include "mmstd_gl/common/tflookup.inc.glsl"
+#include "mmstd_gl/common/tfconvenience.inc.glsl"
 in vec2 uvCoords;
 out vec4 fragOut;
 uniform int axesHeight;

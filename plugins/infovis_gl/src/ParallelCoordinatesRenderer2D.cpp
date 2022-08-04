@@ -923,7 +923,7 @@ void ParallelCoordinatesRenderer2D::drawDual() {
     dualAltDisplayProgram_->setUniform("debugFloat", debugFloatParam_.Param<core::param::FloatParam>()->Value());
 
     //Log::DefaultLog.WriteInfo("%i", axes_pixel_height);
-    auto tfCall = tfSlot_.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
+    auto tfCall = tfSlot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     tfCall->BindConvenience(dualAltDisplayProgram_, GL_TEXTURE5, 5);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
