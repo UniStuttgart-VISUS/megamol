@@ -1,7 +1,10 @@
 #include "Command_Service.hpp"
 
 #include "KeyboardMouse_Events.h"
+#include "ModuleGraphSubscription.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/param/AbstractParam.h"
+#include "mmcore/param/ButtonParam.h"
 #include "mmcore/utility/log/Log.h"
 
 
@@ -19,7 +22,11 @@ static void log_error(std::string const& text) {
 
 bool megamol::frontend::Command_Service::init(void* configPtr) {
 
-    requestedResourceNames = {"optional<KeyboardEvents>"};
+    requestedResourceNames = {
+        "optional<KeyboardEvents>",
+        frontend_resources::MegaMolGraph_Req_Name,
+        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name,
+    };
     providedResourceReferences = {{frontend_resources::CommandRegistry_Req_Name, commands}};
 
     log("initialized successfully");
@@ -60,4 +67,78 @@ void megamol::frontend::Command_Service::digestChangedRequestedResources() {
 
 void megamol::frontend::Command_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     requestedResourceReferences = resources;
+
+    auto& megamolgraph = const_cast<megamol::core::MegaMolGraph&>(
+        requestedResourceReferences[1].getResource<megamol::core::MegaMolGraph>());
+
+    auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(
+        requestedResourceReferences[2].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
+
+    frontend_resources::ModuleGraphSubscription command_registry_subscription("Command Registry");
+
+    // this lambda is replicated in HotkeyEditor.h for the GUI to use
+    frontend_resources::Command::EffectFunction Parameter_Lambda = [&](const frontend_resources::Command* self) {
+        auto my_p = megamolgraph.FindParameter(self->parent);
+        if (my_p != nullptr) {
+            my_p->setDirty();
+        }
+    };
+
+    command_registry_subscription.AddModule = [&, Parameter_Lambda](core::ModuleInstance_t const& module_inst) {
+        // iterate parameters, add hotkeys to CommandRegistry
+        auto module_ptr = module_inst.modulePtr;
+        for (auto child = module_ptr->ChildList_Begin(); child != module_ptr->ChildList_End(); ++child) {
+            auto ps = dynamic_cast<core::param::ParamSlot*>((*child).get());
+            if (ps != nullptr) {
+                auto p = ps->Param<core::param::ButtonParam>();
+                if (p != nullptr) {
+                    frontend_resources::Command c;
+                    c.key = p->GetKeyCode();
+                    c.parent = ps->FullName();
+                    c.name = module_ptr->Name().PeekBuffer() + std::string("_") + ps->Name().PeekBuffer();
+                    c.effect = Parameter_Lambda;
+                    this->commands.add_command(c);
+                }
+            }
+        }
+        return true;
+    };
+
+    command_registry_subscription.RenameModule = [&](std::string const& oldName, std::string const& newName,
+                                                     core::ModuleInstance_t const& module_inst) {
+        for (auto child = module_inst.modulePtr->ChildList_Begin(); child != module_inst.modulePtr->ChildList_End();
+             ++child) {
+            auto ps = dynamic_cast<core::param::ParamSlot*>((*child).get());
+            if (ps != nullptr) {
+                auto p = ps->Param<core::param::ButtonParam>();
+                if (p != nullptr) {
+                    auto command_name = oldName + std::string("_") + ps->Name().PeekBuffer();
+                    auto updated_command_name = newName + std::string("_") + ps->Name().PeekBuffer();
+                    auto c = this->commands.get_command(command_name);
+                    this->commands.remove_command_by_name(command_name);
+                    c.name = updated_command_name;
+                    c.parent = ps->FullName();
+                    this->commands.add_command(c);
+                }
+            }
+        }
+        return true;
+    };
+
+    command_registry_subscription.DeleteModule = [&](core::ModuleInstance_t const& module_inst) {
+        // iterate parameters, remove hotkeys from CommandRegistry
+        auto module_ptr = module_inst.modulePtr;
+        for (auto child = module_ptr->ChildList_Begin(); child != module_ptr->ChildList_End(); ++child) {
+            auto ps = dynamic_cast<core::param::ParamSlot*>((*child).get());
+            if (ps != nullptr) {
+                auto p = ps->Param<core::param::ButtonParam>();
+                if (p != nullptr) {
+                    this->commands.remove_command_by_parent(ps->FullName().PeekBuffer());
+                }
+            }
+        }
+        return true;
+    };
+
+    megamolgraph_subscription.subscribe(command_registry_subscription);
 }

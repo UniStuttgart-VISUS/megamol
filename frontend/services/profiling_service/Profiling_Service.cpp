@@ -1,18 +1,24 @@
 #include "Profiling_Service.hpp"
 
 #include "mmcore/MegaMolGraph.h"
+#include "mmcore/utility/SampleCameraScenes.h"
 #include "mmcore/view/AbstractViewInterface.h"
 #include "mmcore/view/CameraSerializer.h"
 
-#include "mmcore/utility/SampleCameraScenes.h"
-
 #include "LuaCallbacksCollection.h"
+#include "ModuleGraphSubscription.h"
 
 namespace megamol {
 namespace frontend {
 
 bool Profiling_Service::init(void* configPtr) {
-    _providedResourceReferences = {{"PerformanceManager", _perf_man}};
+    _providedResourceReferences = {
+        {"PerformanceManager", _perf_man},
+    };
+
+    _requestedResourcesNames = {
+        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name,
+    };
 
 #ifdef PROFILING
     const auto conf = static_cast<Config*>(configPtr);
@@ -43,6 +49,42 @@ bool Profiling_Service::init(void* configPtr) {
     _requestedResourcesNames = {"RegisterLuaCallbacks", "MegaMolGraph", "RenderNextFrame"};
 
     return true;
+}
+
+void Profiling_Service::setRequestedResources(std::vector<FrontendResource> resources) {
+    _requestedResourcesReferences = resources;
+
+    auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(
+        resources[0].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
+
+#ifdef PROFILING
+    frontend_resources::ModuleGraphSubscription profiling_manager_subscription("Profiling Manager");
+
+    profiling_manager_subscription.AddCall = [&](core::CallInstance_t const& call_inst) {
+        auto the_call = call_inst.callPtr.get();
+        //printf("adding timers for @ %p = %s \n", reinterpret_cast<void*>(the_call), the_call->GetDescriptiveText().c_str());
+        the_call->cpu_queries = _perf_man.add_timers(the_call, frontend_resources::PerformanceManager::query_api::CPU);
+        if (the_call->GetCapabilities().OpenGLRequired()) {
+            the_call->gl_queries =
+                _perf_man.add_timers(the_call, frontend_resources::PerformanceManager::query_api::OPENGL);
+        }
+        the_call->perf_man = &_perf_man;
+        return true;
+    };
+
+    profiling_manager_subscription.DeleteCall = [&](core::CallInstance_t const& call_inst) {
+        auto the_call = call_inst.callPtr.get();
+        _perf_man.remove_timers(the_call->cpu_queries);
+        if (the_call->GetCapabilities().OpenGLRequired()) {
+            _perf_man.remove_timers(the_call->gl_queries);
+        }
+        return true;
+    };
+
+    megamolgraph_subscription.subscribe(profiling_manager_subscription);
+#endif
+
+    fill_lua_callbacks();
 }
 
 void Profiling_Service::close() {
