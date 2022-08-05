@@ -96,9 +96,6 @@ include(megamol_config)
 # MegaMol build info library (version + config)
 include(megamol_build_info)
 
-# Externals
-include("externals/CMakeExternals.cmake")
-
 # MegaMol targets
 
 # Frontend Resources, Input Events interfaces
