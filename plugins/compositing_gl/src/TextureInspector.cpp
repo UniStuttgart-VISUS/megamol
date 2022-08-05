@@ -7,6 +7,7 @@
 #include "TextureInspector.h"
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/IntParam.h"
 
 #include "imgui_tex_inspect.h"
 #include "tex_inspect_opengl.h"
@@ -19,10 +20,15 @@ TextureInspector::TextureInspector()
     , get_data_slot_("getData", "Slot to fetch data")
     , output_tex_slot_("OutputTexture", "Gives access to the resulting output texture")
     , show_inspector_("On//Off", "Toggles the Imgui window on or off")
+    , which_texture_("Select", "Select which texture to show in the inspector")
 {
     core::param::BoolParam* bp = new core::param::BoolParam(true);
     this->show_inspector_ << bp;
     this->MakeSlotAvailable(&this->show_inspector_);
+
+    core::param::IntParam* ip = new core::param::IntParam(0, 0, 2);
+    this->which_texture_ << ip;
+    this->MakeSlotAvailable(&this->which_texture_);
 
     this->output_tex_slot_.SetCallback(
         compositing::CallTexture2D::ClassName(), "GetData", &TextureInspector::getDataCallback);
@@ -66,11 +72,13 @@ bool TextureInspector::getDataCallback(core::Call& caller) {
             auto tex_handles = rhs_ct2d->GetInspectorTextures();
 
             if (tex_handles.size() != 0) {
-                ImTextureID tex_handle = &tex_handles[0].first;
-                ImVec2 tex_size = ImVec2(tex_handles[0].second.x, tex_handles[0].second.y);
+                int tex_id = which_texture_.Param<core::param::IntParam>()->Value();
+
+                ImTextureID tex_handle = (void*)(intptr_t)tex_handles[tex_id].first;
+                ImVec2 tex_size = ImVec2(tex_handles[tex_id].second.x, tex_handles[tex_id].second.y);
 
                 ImGui::Begin("Simple Texture Inspector");
-                ImGuiTexInspect::BeginInspectorPanel("Inspector", tex_handle, tex_size);
+                ImGuiTexInspect::BeginInspectorPanel("Inspector", tex_handle, tex_size, ImGuiTexInspect::InspectorFlags_FlipY);
                 ImGuiTexInspect::EndInspectorPanel();
                 ImGui::End();
             }

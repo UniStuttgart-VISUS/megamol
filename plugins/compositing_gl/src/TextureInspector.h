@@ -90,6 +90,9 @@ private:
     /** The name of the view instance to be shot */
     core::param::ParamSlot show_inspector_;
 
+    /** Slot to select a specific texture */
+    core::param::ParamSlot which_texture_;
+
     /** Slot for optionally querying input textures, i.e. rhs connection */
     megamol::core::CallerSlot get_data_slot_;
 
