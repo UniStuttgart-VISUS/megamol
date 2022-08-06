@@ -39,10 +39,7 @@ public:
     const std::vector<std::string> getRequestedResourceNames() const override {
         return _requestedResourcesNames;
     }
-    void setRequestedResources(std::vector<FrontendResource> resources) override {
-        _requestedResourcesReferences = resources;
-        fill_lua_callbacks();
-    }
+    void setRequestedResources(std::vector<FrontendResource> resources) override;
 
 private:
     void fill_lua_callbacks();

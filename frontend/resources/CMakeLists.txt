@@ -36,7 +36,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
   PUBLIC
     glm::glm
-    nlohmann_json::nlohmann_json)
+    nlohmann_json::nlohmann_json
+    core)
 if (MEGAMOL_USE_CUESDK)
   target_include_directories(${PROJECT_NAME} PRIVATE ${CUESDK_INCLUDE_DIR})
   target_link_libraries(${PROJECT_NAME} PRIVATE ${CUESDK_LIB})

@@ -1308,7 +1308,18 @@ void megamol::gui::GUIManager::draw_popups() {
         const std::string gitstr = std::string("Git-Hub: ") + github_link;
         const std::string imguistr = ("Dear ImGui - Version ") + std::string(IMGUI_VERSION) + ("\n");
         const std::string imguigitstr = std::string("Git-Hub: ") + imgui_link;
-        const std::string about = "Copyright (C) 2009-2020 by University of Stuttgart (VISUS).\nAll rights reserved.";
+        std::string commit_date = megamol::core::utility::buildinfo::MEGAMOL_GIT_LAST_COMMIT_DATE();
+        std::string year;
+        if (commit_date.empty()) {
+            // Backup when commit date is no available via build script info
+            std::time_t t = std::time(0);
+            std::tm* now = std::localtime(&t);
+            year = std::to_string(now->tm_year + 1900);
+        } else {
+            year = commit_date.substr(0, 4);
+        }
+        const std::string about =
+            "Copyright (C) 2009-" + year + " by University of Stuttgart (VISUS).\nAll rights reserved.";
 
         ImGui::TextUnformatted(mmstr.c_str());
 
