@@ -20,6 +20,9 @@ mark_as_advanced(FORCE
   FETCHCONTENT_QUIET
   FETCHCONTENT_UPDATES_DISCONNECTED)
 
+# Require git for download
+find_package(Git REQUIRED)
+
 FetchContent_Declare(vcpkg-download
   GIT_REPOSITORY https://github.com/microsoft/vcpkg
   GIT_TAG 2022.07.25)
@@ -32,30 +35,14 @@ if (NOT vcpkg-download_POPULATED)
     FETCHCONTENT_UPDATES_DISCONNECTED_VCPKG-DOWNLOAD)
 endif ()
 
-option(MEGAMOL_USE_CGAL "Enable CGAL support" OFF)
-if (MEGAMOL_USE_CGAL)
-  list(APPEND VCPKG_MANIFEST_FEATURES "use-cgal")
-endif ()
-option(MEGAMOL_USE_MPI "Enable MPI support" OFF)
-if (MEGAMOL_USE_MPI)
-  list(APPEND VCPKG_MANIFEST_FEATURES "use-mpi")
-endif ()
-option(MEGAMOL_USE_OPENGL "Enable OpenGL support" ON)
-if (MEGAMOL_USE_OPENGL)
-  list(APPEND VCPKG_MANIFEST_FEATURES "use-opengl")
-endif ()
-option(MEGAMOL_USE_OSPRAY "Enable OSPRay support" OFF)
-if (MEGAMOL_USE_OSPRAY)
-  list(APPEND VCPKG_MANIFEST_FEATURES "use-ospray")
-endif ()
-option(MEGAMOL_USE_CUESDK "Enable Corsair CUESDK support" OFF)
-if (MEGAMOL_USE_CUESDK)
-  list(APPEND VCPKG_MANIFEST_FEATURES "use-cuesdk")
-endif ()
-option(MEGAMOL_USE_VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF)
-if (MEGAMOL_USE_VR_INTEROP)
-  list(APPEND VCPKG_MANIFEST_FEATURES "use-vr-interop")
-endif ()
+include(cmake/megamol_feature_option.cmake)
+
+megamol_feature_option(CGAL "Enable CGAL support" OFF)
+megamol_feature_option(MPI "Enable MPI support" OFF)
+megamol_feature_option(OPENGL "Enable OpenGL support" ON)
+megamol_feature_option(OSPRAY "Enable OSPRay support" OFF)
+megamol_feature_option(CUESDK "Enable Corsair CUESDK support" OFF)
+megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF)
 
 # option(X_VCPKG_APPLOCAL_DEPS_INSTALL "" ON) # Does currently not not work as expected, see comment on manual install below!
 set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_ports")
