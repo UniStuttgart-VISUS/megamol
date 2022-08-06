@@ -8,14 +8,14 @@
 #ifndef PROBE_DETAIL_VIEW_RENDER_TASK_H_INCLUDED
 #define PROBE_DETAIL_VIEW_RENDER_TASK_H_INCLUDED
 
-#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/BaseRenderTaskRenderer.h"
 
 #include "probe/ProbeCollection.h"
 
 namespace megamol {
 namespace probe_gl {
 
-class ProbeDetailViewRenderTasks : public mesh_gl::AbstractGPURenderTaskDataSource {
+class ProbeDetailViewRenderer : public mesh_gl::BaseRenderTaskRenderer {
 public:
     /**
      * Answer the name of this module.
@@ -23,7 +23,7 @@ public:
      * @return The name of this module.
      */
     static const char* ClassName(void) {
-        return "ProbeDetailViewRenderTasks";
+        return "ProbeDetailViewRenderer";
     }
 
     /**
@@ -35,26 +35,23 @@ public:
         return "...";
     }
 
-    /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
-    static bool IsAvailable(void) {
-        return true;
-    }
-
-    bool create();
-
-    void release();
-
-    ProbeDetailViewRenderTasks();
-    ~ProbeDetailViewRenderTasks();
+    ProbeDetailViewRenderer();
+    ~ProbeDetailViewRenderer();
 
 protected:
-    bool getDataCallback(core::Call& caller);
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
-    bool getMetaDataCallback(core::Call& caller);
+    void createMaterialCollection() override;
+    void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
 
 private:
     uint32_t m_version;
@@ -64,9 +61,6 @@ private:
     core::CallerSlot m_probes_slot;
 
     core::CallerSlot m_event_slot;
-
-    /** In-place material collection (initialized with probe detail view btf) */
-    std::shared_ptr<mesh_gl::GPUMaterialCollection> m_material_collection;
 
     std::shared_ptr<glowl::Mesh> m_ui_mesh; // for depth scale (parallel to probe, offset by cam right vector)
 

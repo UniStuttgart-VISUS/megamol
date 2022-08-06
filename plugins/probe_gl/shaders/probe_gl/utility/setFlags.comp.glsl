@@ -1,3 +1,6 @@
+#version 450
+
+#include "mmstd_gl/flags/bitflags.inc.glsl"
 
 layout(std430, binding = 0) readonly buffer InputIDs { 
     uint ids[]; 

@@ -8,12 +8,12 @@
 #ifndef PROBE_HULL_RENDER_TASK_H_INCLUDED
 #define PROBE_HULL_RENDER_TASK_H_INCLUDED
 
-#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/BaseMeshRenderer.h"
 
 namespace megamol {
 namespace probe_gl {
 
-class ProbeHullRenderTasks : public megamol::mesh_gl::AbstractGPURenderTaskDataSource {
+class ProbeHullRenderer : public mesh_gl::BaseMeshRenderer {
 public:
     /**
      * Answer the name of this module.
@@ -21,7 +21,7 @@ public:
      * @return The name of this module.
      */
     static const char* ClassName(void) {
-        return "ProbeHullRenderTasks";
+        return "ProbeHullRenderer";
     }
 
     /**
@@ -33,28 +33,15 @@ public:
         return "Simple mesh viewer for the enclosing hull for probe placement.";
     }
 
-    /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
-    static bool IsAvailable(void) {
-        return true;
-    }
-
-    bool create();
-
-    ProbeHullRenderTasks();
-    ~ProbeHullRenderTasks();
+    ProbeHullRenderer();
+    ~ProbeHullRenderer();
 
 protected:
-    virtual bool getDataCallback(core::Call& caller);
-
-    virtual bool getMetaDataCallback(core::Call& caller);
+    void createMaterialCollection() override;
+    void createRenderTaskCollection() override;
+    void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
 
 private:
-    uint32_t m_version;
-
     bool m_show_hull;
 
     std::vector<std::vector<std::string>> m_identifiers;
@@ -72,9 +59,6 @@ private:
     //core::CallerSlot m_probes_slot;
 
     core::CallerSlot m_event_slot;
-
-    /** In-place material collection (initialized with probe hull btf) */
-    std::shared_ptr<mesh_gl::GPUMaterialCollection> m_material_collection;
 
     /** Slot for setting different rendering mode in hull shader */
     core::param::ParamSlot m_shading_mode_slot;

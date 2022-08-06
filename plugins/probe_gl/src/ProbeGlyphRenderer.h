@@ -10,7 +10,7 @@
 
 #include <typeindex>
 
-#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/BaseRenderTaskRenderer.h"
 
 #include "probe/ProbeCollection.h"
 
@@ -19,7 +19,7 @@
 namespace megamol {
 namespace probe_gl {
 
-class ProbeBillboardGlyphRenderTasks : public mesh_gl::AbstractGPURenderTaskDataSource {
+class ProbeGlyphRenderer : public mesh_gl::BaseRenderTaskRenderer {
 public:
     /**
      * Answer the name of this module.
@@ -27,7 +27,7 @@ public:
      * @return The name of this module.
      */
     static const char* ClassName(void) {
-        return "ProbeBillboardGlyphRenderTasks";
+        return "ProbeGlyphRenderer";
     }
 
     /**
@@ -39,30 +39,25 @@ public:
         return "...";
     }
 
-    /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
-    static bool IsAvailable(void) {
-        return true;
-    }
-
-    bool create();
-
-    void release();
-
-    ProbeBillboardGlyphRenderTasks();
-    ~ProbeBillboardGlyphRenderTasks();
+    ProbeGlyphRenderer();
+    ~ProbeGlyphRenderer();
 
 protected:
-    bool getDataCallback(core::Call& caller);
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
-    bool getMetaDataCallback(core::Call& caller);
+    void createMaterialCollection() override;
+    void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
 
 private:
-    uint32_t m_version;
-
     core::CallerSlot m_transfer_function_Slot;
 
     core::CallerSlot m_probes_slot;
@@ -78,8 +73,6 @@ private:
     core::param::ParamSlot m_show_canvas_slot;
 
     core::param::ParamSlot m_canvas_color_slot;
-
-    std::shared_ptr<mesh_gl::GPUMaterialCollection> m_material_collection;
 
     std::shared_ptr<glowl::Mesh> m_billboard_dummy_mesh;
 
@@ -193,8 +186,6 @@ private:
 
     void updateAllRenderTasks();
 
-    void clearAllRenderTasks();
-
     template<typename ProbeType>
     TexturedGlyphData createTexturedGlyphData(
         ProbeType const& probe, int probe_id, GLuint64 texture_handle, float slice_idx, float scale);
@@ -210,7 +201,7 @@ private:
 };
 
 template<typename ProbeType>
-inline ProbeBillboardGlyphRenderTasks::TexturedGlyphData ProbeBillboardGlyphRenderTasks::createTexturedGlyphData(
+inline ProbeGlyphRenderer::TexturedGlyphData ProbeGlyphRenderer::createTexturedGlyphData(
     ProbeType const& probe, int probe_id, GLuint64 texture_handle, float slice_idx, float scale) {
     TexturedGlyphData glyph_data;
     glyph_data.position = glm::vec4(probe.m_position[0] + probe.m_direction[0] * (probe.m_begin * 1.1f),

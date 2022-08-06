@@ -12,7 +12,7 @@
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
+#include "glowl/GLSLProgram.hpp"
 
 namespace megamol {
 namespace probe_gl {
@@ -97,20 +97,18 @@ protected:
     void PreRender(mmstd_gl::CallRender3DGL& call);
 
 private:
-    typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
-
     uint32_t m_version;
 
     std::vector<bool> m_probe_selection;
 
     /** Shader program for setting flags based on incoming user manipulations */
-    std::unique_ptr<GLSLComputeShader> m_setFlags_prgm;
+    std::unique_ptr<glowl::GLSLProgram> m_setFlags_prgm;
 
     /** Shader program for filtering all data within a flag storage */
-    std::unique_ptr<GLSLComputeShader> m_filterAll_prgm;
+    std::unique_ptr<glowl::GLSLProgram> m_filterAll_prgm;
 
     /** Shader program for clearing filters on all data within a flag storage */
-    std::unique_ptr<GLSLComputeShader> m_filterNone_prgm;
+    std::unique_ptr<glowl::GLSLProgram> m_filterNone_prgm;
 
     core::CallerSlot m_probes_slot;
 

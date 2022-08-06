@@ -8,12 +8,12 @@
 #ifndef PROBE_SHELL_ELEMENTS_RENDER_TASK_H_INCLUDED
 #define PROBE_SHELL_ELEMENTS_RENDER_TASK_H_INCLUDED
 
-#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/BaseMeshRenderer.h"
 
 namespace megamol {
 namespace probe_gl {
 
-class ProbeShellElementsRenderTasks : public megamol::mesh_gl::AbstractGPURenderTaskDataSource {
+class ProbeShellElementsRenderTasks : public mesh_gl::BaseMeshRenderer {
 public:
     /**
      * Answer the name of this module.
@@ -21,7 +21,7 @@ public:
      * @return The name of this module.
      */
     static const char* ClassName(void) {
-        return "ProbeShellElementsRenderTasks";
+        return "ProbeShellElementsRenderer";
     }
 
     /**
@@ -33,28 +33,15 @@ public:
         return "Mesh viewer for the elements of shells used for probing.";
     }
 
-    /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
-    static bool IsAvailable(void) {
-        return true;
-    }
-
-    bool create();
-
     ProbeShellElementsRenderTasks();
     ~ProbeShellElementsRenderTasks();
 
 protected:
-    virtual bool getDataCallback(core::Call& caller);
-
-    virtual bool getMetaDataCallback(core::Call& caller);
+    void createMaterialCollection() override;
+    void createRenderTaskCollection() override;
+    void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
 
 private:
-    uint32_t m_version;
-
     bool m_show_elements;
 
     std::vector<std::vector<std::string>> m_rt_identifiers;
@@ -76,9 +63,6 @@ private:
     core::CallerSlot m_probes_slot;
 
     core::CallerSlot m_event_slot;
-
-    /** In-place material collection (initialized with probe hull btf) */
-    std::shared_ptr<mesh_gl::GPUMaterialCollection> m_material_collection;
 
     /** Slot for setting different rendering mode in hull shader */
     core::param::ParamSlot m_shading_mode_slot;

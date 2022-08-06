@@ -1,4 +1,4 @@
-#include "ProbeDetailViewRenderTasks.h"
+#include "ProbeDetailViewRenderer.h"
 
 #include "mmstd/event/EventCall.h"
 
@@ -8,13 +8,10 @@
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "probe/ProbeCalls.h"
 
-megamol::probe_gl::ProbeDetailViewRenderTasks::ProbeDetailViewRenderTasks()
-        : AbstractGPURenderTaskDataSource()
-        , m_version(0)
-        , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
+megamol::probe_gl::ProbeDetailViewRenderer::ProbeDetailViewRenderer()
+        : m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
         , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
         , m_event_slot("GetProbeManipulation", "")
-        , m_material_collection(nullptr)
         , m_ui_mesh(nullptr)
         , m_probes_mesh(nullptr)
         , m_tf_min(0.0f)
@@ -29,12 +26,9 @@ megamol::probe_gl::ProbeDetailViewRenderTasks::ProbeDetailViewRenderTasks()
     this->MakeSlotAvailable(&this->m_event_slot);
 }
 
-megamol::probe_gl::ProbeDetailViewRenderTasks::~ProbeDetailViewRenderTasks() {}
+megamol::probe_gl::ProbeDetailViewRenderer::~ProbeDetailViewRenderer() {}
 
-bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
-
-    auto retval = AbstractGPURenderTaskDataSource::create();
-
+void megamol::probe_gl::ProbeDetailViewRenderer::createMaterialCollection() {
     // Create local copy of transfer function texture (for compatibility with material pipeline)
     glowl::TextureLayout tex_layout;
     tex_layout.width = 1;
@@ -56,19 +50,17 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error on transfer texture view pre-creation: %s. [%s, %s, line %d]\n", exc.what(), __FILE__, __FUNCTION__,
             __LINE__);
-        retval = false;
     }
 
-    m_material_collection = std::make_shared<mesh_gl::GPUMaterialCollection>();
+    material_collection_ = std::make_shared<mesh_gl::GPUMaterialCollection>();
     try {
         std::vector<std::filesystem::path> shaderfiles = {"probes/dfr_probeDetailView.vert.glsl",
             "probes/dfr_probeDetailView.frag.glsl", "probes/dfr_probeDetailView.tesc.glsl",
             "probes/dfr_probeDetailView.tese.glsl"};
-        m_material_collection->addMaterial(this->instance(), "ProbeDetailView", shaderfiles);
+        material_collection_->addMaterial(this->instance(), "ProbeDetailView", shaderfiles);
     } catch (const std::exception& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
-        retval = false;
     }
 
     // TODO ui mesh
@@ -103,7 +95,6 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
             __LINE__);
         }
     }
-    
 
     // create an empty dummy mesh, probe mesh
     std::vector<void const*> data_ptrs = {};
@@ -114,62 +105,34 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
     //TODO try catch
     m_probes_mesh = std::make_shared<glowl::Mesh>(
         data_ptrs, byte_sizes, vertex_layout, indices.data(), 6 * 4, GL_UNSIGNED_INT, GL_TRIANGLES, GL_STATIC_DRAW);
-
-    return retval; 
 }
 
-void megamol::probe_gl::ProbeDetailViewRenderTasks::release() {}
-
-bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& caller) {
-
-    mesh_gl::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == nullptr){
-        return false;
-    }
-
-    // if there is a render task connection to the right, pass on the render task collection
-    mesh_gl::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh_gl::CallGPURenderTaskData>();
-
-    auto gpu_render_tasks = std::make_shared<std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>>>();
-    if (rhs_rtc != nullptr) {
-        if (!(*rhs_rtc)(0)) {
-            return false;
-        }
-        if (rhs_rtc->hasUpdate()) {
-            ++m_version;
-        }
-        gpu_render_tasks = rhs_rtc->getData();
-    }
-    gpu_render_tasks->push_back(m_rendertask_collection.first);
-
-    // check/get mesh data 
-    mesh_gl::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh_gl::CallGPUMeshData>();
-    if (mc != NULL){
-        if (!(*mc)(0)) return false;
-    }
+void megamol::probe_gl::ProbeDetailViewRenderer::updateRenderTaskCollection(
+    mmstd_gl::CallRender3DGL& call, bool force_update) {
 
     // check/get probe data
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
-    if (pc == NULL) return false;
-    if (!(*pc)(0)) return false;
-
+    if (pc != nullptr){
+    
+    if (!(*pc)(0)){
+        // TODO throw error
+        return;
+    }
     // check/get transfer function
     auto* tfc = this->m_transfer_function_Slot.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
-    if (tfc != NULL) {
-        if (!(*tfc)(0)) return false;
+    if (tfc != nullptr) {
+        if (!(*tfc)(0)){
+        // TODO throw error
+        return;
+    }
     }
 
     bool something_has_changed = pc->hasUpdate() || ((tfc != NULL) ? tfc->IsDirty() : false);
 
     if (something_has_changed) {
-        ++m_version;
+        render_task_collection_->clear();
 
-        for (auto& identifier : m_rendertask_collection.second) {
-            m_rendertask_collection.first->deleteRenderTask(identifier);
-        }
-        m_rendertask_collection.second.clear();
-
-        auto const& ui_shader = m_material_collection->getMaterial("ProbeDetailViewUI").shader_program;
+        auto const& ui_shader = material_collection_->getMaterial("ProbeDetailViewUI").shader_program;
         std::vector<glowl::DrawElementsCommand> draw_commands = {glowl::DrawElementsCommand()};
         draw_commands[0].cnt = 12;
         draw_commands[0].instance_cnt = 1;
@@ -179,8 +142,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         struct UIPerDrawData {};
         std::vector<UIPerDrawData> per_draw_data = {UIPerDrawData()};
         std::vector<std::string> identifiers = {std::string(FullName()) + "UI"};
-        m_rendertask_collection.first->addRenderTasks(identifiers, ui_shader, m_ui_mesh, draw_commands, per_draw_data );
-        m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),identifiers.begin(),identifiers.end());
+        render_task_collection_->addRenderTasks(identifiers, ui_shader, m_ui_mesh, draw_commands, per_draw_data );
 
         auto probes = pc->getData();
         auto probe_cnt = probes->getProbeCount();
@@ -374,10 +336,8 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         }
         
         if (!m_vector_probe_draw_commands.empty()) {
-            auto const& probe_shader = m_material_collection->getMaterial("ProbeDetailView").shader_program;
-            m_rendertask_collection.first->addRenderTasks(m_vector_probe_identifiers,probe_shader, m_probes_mesh, m_vector_probe_draw_commands, m_vector_probe_data);
-            m_rendertask_collection.second.insert(
-                            m_rendertask_collection.second.end(), m_vector_probe_identifiers.begin(), m_vector_probe_identifiers.end());
+            auto const& probe_shader = material_collection_->getMaterial("ProbeDetailView").shader_program;
+            render_task_collection_->addRenderTasks(m_vector_probe_identifiers,probe_shader, m_probes_mesh, m_vector_probe_draw_commands, m_vector_probe_data);
         }
     }
 
@@ -392,17 +352,17 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
     bbox[4] = -0.5f;
     bbox[5] = 3.0f;
 
-    auto meta_data = lhs_rtc->getMetaData();
-    meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
-    meta_data.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
-    lhs_rtc->setMetaData(meta_data);
-
+    call.AccessBoundingBoxes().SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
+    call.AccessBoundingBoxes().SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);    
 
     // check for pending probe manipulations
     // check for pending events
     auto call_event_storage = this->m_event_slot.CallAs<core::CallEvent>();
     if (call_event_storage != NULL) {
-        if ((!(*call_event_storage)(0))) return false;
+        if ((!(*call_event_storage)(0))){
+            // TODO throw
+            return;
+        }
 
         auto event_collection = call_event_storage->getData();
 
@@ -452,26 +412,22 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
             if (!pending_events.empty()) {
                 auto probe_idx = pending_events.back().obj_id;
                 
-                for (auto& identifier : m_rendertask_collection.second) {
-                    m_rendertask_collection.first->deleteRenderTask(identifier);
-                }
-                m_rendertask_collection.second.clear();
+                render_task_collection_->clear();
 
                 for (int i=0; i< m_vector_probe_selected.size(); ++i) {
                     m_vector_probe_selected[i] = false;
                 }
                 
                 if (!m_vector_probe_draw_commands.empty()) {
-                    auto const& probe_shader = m_material_collection->getMaterial("ProbeDetailView").shader_program;
+                    auto const& probe_shader = material_collection_->getMaterial("ProbeDetailView").shader_program;
                     std::string identifier = std::string(FullName()) + std::to_string(probe_idx);
-                    m_rendertask_collection.first->addRenderTask(identifier,
+                    render_task_collection_->addRenderTask(identifier,
                     probe_shader, m_probes_mesh, m_vector_probe_draw_commands[probe_idx], m_vector_probe_data[probe_idx]);
-                    m_rendertask_collection.second.push_back(identifier);
 
                     m_vector_probe_selected[probe_idx] = true;
                 }
 
-                auto const& ui_shader = m_material_collection->getMaterial("ProbeDetailViewUI").shader_program;
+                auto const& ui_shader = material_collection_->getMaterial("ProbeDetailViewUI").shader_program;
                 std::vector<glowl::DrawElementsCommand> draw_commands = {glowl::DrawElementsCommand()};
                 draw_commands[0].cnt = 12;
                 draw_commands[0].instance_cnt = 1;
@@ -481,8 +437,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                 struct UIPerDrawData {};
                 std::vector<UIPerDrawData> per_draw_data = {UIPerDrawData()};
                 std::vector<std::string> identifiers = {std::string(FullName()) + "UI"};
-                m_rendertask_collection.first->addRenderTasks(identifiers, ui_shader, m_ui_mesh, draw_commands, per_draw_data );
-                m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),identifiers.begin(),identifiers.end());
+                render_task_collection_->addRenderTasks(identifiers, ui_shader, m_ui_mesh, draw_commands, per_draw_data );
             }
         }
 
@@ -495,16 +450,15 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                 if (!m_vector_probe_draw_commands.empty()) {
                     std::string identifier = std::string(FullName()) + std::to_string(probe_idx);
                     if (!m_vector_probe_selected[probe_idx]) {
-                        auto const& probe_shader = m_material_collection->getMaterial("ProbeDetailView").shader_program;
+                        auto const& probe_shader = material_collection_->getMaterial("ProbeDetailView").shader_program;
 
-                        m_rendertask_collection.first->addRenderTask(identifier,
+                        render_task_collection_->addRenderTask(identifier,
                         probe_shader, m_probes_mesh, m_vector_probe_draw_commands[probe_idx], m_vector_probe_data[probe_idx]);
-                        m_rendertask_collection.second.push_back(identifier);
 
                         m_vector_probe_selected[probe_idx] = true;
                     }
                     else {
-                        m_rendertask_collection.first->deleteRenderTask(identifier);
+                        render_task_collection_->deleteRenderTask(identifier);
                         m_vector_probe_selected[probe_idx] = false;
                     }
                 }
@@ -512,40 +466,33 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         }
 
     }
-
-    lhs_rtc->setData(gpu_render_tasks, m_version);
-
-    return true;
+    }
 }
 
-bool megamol::probe_gl::ProbeDetailViewRenderTasks::getMetaDataCallback(core::Call& caller) {
-    if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller)) return false;
-
-    mesh_gl::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh_gl::CallGPURenderTaskData*>(&caller);
+bool megamol::probe_gl::ProbeDetailViewRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
+    bool retval = false;
     auto probe_call = m_probes_slot.CallAs<probe::CallProbes>();
-    if (probe_call == NULL) return false;
+    if (probe_call != nullptr) {
+        auto probe_meta_data = probe_call->getMetaData();
+        probe_meta_data.m_frame_ID = static_cast<int>(call.Time());
+        probe_call->setMetaData(probe_meta_data);
+        if ((*probe_call)(1)) {
+            probe_meta_data = probe_call->getMetaData();
 
-    auto lhs_meta_data = lhs_rt_call->getMetaData();
+            call.SetTimeFramesCount(std::min(call.TimeFramesCount(), probe_meta_data.m_frame_cnt));
 
-    auto probe_meta_data = probe_call->getMetaData();
-    probe_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
-    probe_call->setMetaData(probe_meta_data);
-    if (!(*probe_call)(1)) return false;
-    probe_meta_data = probe_call->getMetaData();
+            auto bbox = call.AccessBoundingBoxes().BoundingBox();
+            bbox.Union(probe_meta_data.m_bboxs.BoundingBox());
+            call.AccessBoundingBoxes().SetBoundingBox(bbox);
 
-    lhs_meta_data.m_frame_cnt = std::min(lhs_meta_data.m_frame_cnt, probe_meta_data.m_frame_cnt);
+            auto cbbox = call.AccessBoundingBoxes().ClipBox();
+            cbbox.Union(probe_meta_data.m_bboxs.ClipBox());
+            call.AccessBoundingBoxes().SetClipBox(cbbox);
 
-    //auto bbox = lhs_meta_data.m_bboxs.BoundingBox();
-    //bbox.Union(probe_meta_data.m_bboxs.BoundingBox());
-    //lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
-    //
-    //auto cbbox = lhs_meta_data.m_bboxs.ClipBox();
-    //cbbox.Union(probe_meta_data.m_bboxs.ClipBox());
-    //lhs_meta_data.m_bboxs.SetClipBox(cbbox);
-
-    lhs_rt_call->setMetaData(lhs_meta_data);
-
-    return true;
+            retval = true;
+        }
+    }
+    return retval;
 }
 
 

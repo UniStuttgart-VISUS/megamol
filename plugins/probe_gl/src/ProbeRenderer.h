@@ -8,20 +8,23 @@
 #ifndef PROBE_RENDER_TASK_H_INCLUDED
 #define PROBE_RENDER_TASK_H_INCLUDED
 
-#include "mesh_gl/AbstractGPURenderTaskDataSource.h"
+#include "mesh_gl/BaseMeshRenderer.h"
 
 namespace megamol {
 namespace probe_gl {
 
-class ProbeRenderTasks : public mesh_gl::AbstractGPURenderTaskDataSource {
+class ProbeRenderTasks : public mesh_gl::BaseMeshRenderer {
 public:
+    ProbeRenderTasks();
+    ~ProbeRenderTasks();
+
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
     static const char* ClassName(void) {
-        return "ProbeRenderTasks";
+        return "ProbeRenderer";
     }
 
     /**
@@ -33,29 +36,20 @@ public:
         return "...";
     }
 
-    /**
-     * Answers whether this module is available on the current system.
-     *
-     * @return 'true' if the module is available, 'false' otherwise.
-     */
-    static bool IsAvailable(void) {
-        return true;
-    }
-
-    ProbeRenderTasks();
-    ~ProbeRenderTasks();
-
 protected:
     /**
-     * Implementation of 'Create'.
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
      *
-     * @return 'true' on success, 'false' otherwise.
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
      */
-    virtual bool create();
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
-    virtual bool getDataCallback(core::Call& caller);
-
-    virtual bool getMetaDataCallback(core::Call& caller);
+    void createMaterialCollection() override;
+    void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
 
 private:
     struct PerProbeDrawData {
@@ -65,11 +59,6 @@ private:
         float pad1;
         float pad2;
     };
-
-    uint32_t m_version;
-
-    /** In-place material collection (initialized with probe btf) */
-    std::shared_ptr<mesh_gl::GPUMaterialCollection> m_material_collection;
 
     std::vector<std::string> m_identifiers;
 
