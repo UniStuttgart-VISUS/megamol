@@ -83,13 +83,7 @@ if (ENABLE_CUDA)
 endif ()
 
 # MPI
-# TODO: Will be replaced by MEGAMOL_USE_MPI, use vcpkg mpi!!!
-option(ENABLE_MPI "Enable MPI support" OFF)
-set(MPI_GUESS_LIBRARY_NAME "undef" CACHE STRING "Override MPI library name, e.g., MSMPI, MPICH2")
-if (ENABLE_MPI)
-  if (MPI_GUESS_LIBRARY_NAME STREQUAL "undef")
-    message(FATAL_ERROR "you must set MPI_GUESS_LIBRARY_NAME to ovveride automatic finding of unwanted MPI libraries (or empty for default)")
-  endif ()
+if (MEGAMOL_USE_MPI)
   find_package(MPI REQUIRED)
   if (MPI_C_FOUND)
     target_compile_definitions(MPI::MPI_C INTERFACE "-DWITH_MPI")
