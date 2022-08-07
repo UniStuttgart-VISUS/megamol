@@ -155,7 +155,7 @@ public:
     void SetScreenPosition(ImVec2 pos) {
         this->gui_set_screen_position = pos;
     }
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     void SetProfilingData(void* ptr, frontend_resources::PerformanceManager* perf_manager) {
         this->profiling_parent_pointer = ptr;
 
@@ -228,7 +228,7 @@ private:
     HoverToolTip gui_tooltip;
     PopUps gui_rename_popup;
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 
     std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
         cpu_perf_history;
@@ -242,7 +242,7 @@ private:
     bool pause_profiling_history_update;
     ImVec2 profiling_button_position;
 
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 
     // FUNCTIONS --------------------------------------------------------------
 

@@ -45,7 +45,7 @@ adiosDataSource::~adiosDataSource() {
  */
 bool adiosDataSource::create() {
     try {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         MpiInitialized = this->initMPI();
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Initializing with MPI");
         if (MpiInitialized) {
@@ -62,7 +62,7 @@ bool adiosDataSource::create() {
         this->io = std::make_shared<adios2::IO>(adiosInst->DeclareIO("Input"));
 
     } catch (std::invalid_argument& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[adiosDataSource] Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -71,7 +71,7 @@ bool adiosDataSource::create() {
 #endif
         megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
     } catch (std::ios_base::failure& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[adiosDataSource] IO System base failure exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -80,7 +80,7 @@ bool adiosDataSource::create() {
 #endif
         megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
     } catch (std::exception& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[adiosDataSource] Exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -206,7 +206,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
             loadedFrameID = cad->getFrameIDtoLoad();
             // here data is loaded
         } catch (std::invalid_argument& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosDataSource] Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -215,7 +215,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 #endif
             megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
         } catch (std::ios_base::failure& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosDataSource] IO System base failure exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -224,7 +224,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 #endif
             megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
         } catch (std::exception& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosDataSource] Exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -343,7 +343,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             this->data_hash++;
 
         } catch (std::invalid_argument& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosDataSource] Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -352,7 +352,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 #endif
             megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
         } catch (std::ios_base::failure& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosDataSource] IO System base failure exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -361,7 +361,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 #endif
             megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
         } catch (std::exception& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosDataSource] Exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -389,7 +389,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 }
 
 bool adiosDataSource::initMPI() {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     if (this->mpi_comm_ == MPI_COMM_NULL) {
         auto c = this->callRequestMpi.CallAs<core::cluster::mpi::MpiCall>();
         if (c != nullptr) {
@@ -433,7 +433,7 @@ bool adiosDataSource::initMPI() {
     return retval;
 #else
     return false;
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 }
 
 vislib::StringA adiosDataSource::getCommandLine(void) {

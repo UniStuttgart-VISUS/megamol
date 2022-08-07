@@ -37,7 +37,7 @@ megamol::frontend::Remote_Service::MpiNode::~MpiNode() {
     close();
 }
 
-#ifndef WITH_MPI
+#ifndef MEGAMOL_USE_MPI
 bool megamol::frontend::Remote_Service::MpiNode::init(int broadcast_rank) {
     return false;
 }
@@ -137,4 +137,4 @@ void megamol::frontend::Remote_Service::MpiNode::sync_barrier() {
     MPI_Barrier(mpi_comm.mpi_comm);
 }
 
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI

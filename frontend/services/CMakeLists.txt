@@ -134,7 +134,7 @@ if(BUILD_FRONTEND_SERVICES)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
   endif()
 
-  if(ENABLE_VR_SERVICE_UNITY_KOLABBW)
+  if (MEGAMOL_USE_VR_INTEROP)
     if(NOT MEGAMOL_USE_OPENGL)
       message( FATAL_ERROR "VR Service Unity Kolab Interop needs OpenGL enabled. Abort." )
     endif()

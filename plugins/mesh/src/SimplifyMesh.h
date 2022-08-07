@@ -52,7 +52,7 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static inline bool IsAvailable() {
-#ifdef WITH_CGAL
+#ifdef MEGAMOL_USE_CGAL
         return true;
 #else
         return false;
@@ -68,7 +68,7 @@ public:
         return 472520021uLL;
     }
 
-#ifdef WITH_CGAL
+#ifdef MEGAMOL_USE_CGAL
     /**
      * Initialises a new instance.
      */
@@ -94,7 +94,7 @@ protected:
     virtual void release() override;
 
 private:
-#ifdef WITH_CGAL
+#ifdef MEGAMOL_USE_CGAL
     /** Callbacks for performing the computation and exposing data */
     bool getMeshDataCallback(core::Call& call);
     bool getMeshMetaDataCallback(core::Call& call);

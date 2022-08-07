@@ -260,7 +260,7 @@ public:
         }
     }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
         this->win_configurator_ptr->GetGraphCollection().SetPerformanceManager(perf_manager);
     }

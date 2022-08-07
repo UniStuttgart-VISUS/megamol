@@ -305,12 +305,12 @@ void megamol::gui::Configurator::draw_window_menu() {
                     (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
                 this->graph_state.show_parameter_sidebar = !this->graph_state.show_parameter_sidebar;
             }
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
             if (ImGui::MenuItem(
                     "Profiling Bar", nullptr, this->graph_state.show_profiling_bar, is_running_graph_active)) {
                 this->graph_state.show_profiling_bar = !this->graph_state.show_profiling_bar;
             }
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
             ImGui::EndMenu();
         }
         ImGui::Separator();

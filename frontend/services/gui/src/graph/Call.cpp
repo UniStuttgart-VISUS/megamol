@@ -11,12 +11,12 @@
 #include "Module.h"
 #include "widgets/ColorPalettes.h"
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 #include "ProfilingUtils.h"
 #include "implot.h"
 #define CALL_PROFILING_PLOT_HEIGHT (150.0f * megamol::gui::gui_scaling.Get())
 #define CALL_PROFILING_WINDOW_WIDTH (300.0f * megamol::gui::gui_scaling.Get())
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 
 using namespace megamol;
 using namespace megamol::gui;
@@ -36,7 +36,7 @@ megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::
         , gui_tooltip()
         , gui_profiling_button()
         , gui_profiling_btn_hovered(false)
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         , cpu_perf_history()
         , gl_perf_history()
         , profiling_parent_pointer(nullptr)
@@ -45,7 +45,7 @@ megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::
         , gui_profiling_run_button()
         , pause_profiling_history_update(false)
         , profiling_button_position()
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 {
 
     this->connected_callslots.emplace(CallSlotType::CALLER, nullptr);
@@ -260,13 +260,13 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                     if (state.interact.call_show_label && state.interact.call_show_slots_label) {
                         rect_size.y += (ImGui::GetFontSize() + (style.ItemSpacing.y * state.canvas.zooming));
                     }
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                     rect_size.x += 2.0f * ImGui::GetTextLineHeightWithSpacing();
                     rect_size.y = std::max(rect_size.y, ImGui::GetTextLineHeightWithSpacing());
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
                     ImVec2 call_rect_min =
                         ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                     /*
                     /// Draw profiling data inplace
                     if (this->show_profiling_data) {
@@ -276,7 +276,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                                 (style.ItemSpacing.y * 2.0f * state.canvas.zooming) + rect_size.y));
                     }
                     */
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
 
                     const float min_curve_zoom = 0.2f;
@@ -397,7 +397,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         draw_list->AddRect(
                             call_rect_min, call_rect_max, COLOR_CALL_GROUP_BORDER, GUI_RECT_CORNER_RADIUS);
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                         // Lazy loading of performance button texture
                         const auto profiling_button_size = ImGui::GetTextLineHeight();
                         if (!this->gui_profiling_button.IsLoaded()) {
@@ -448,7 +448,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                             ImGui::EndChild();
                             */
                         }
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
                         // Draw Text
                         ImVec2 text_pos_left_upper =
                             (call_center + ImVec2(-(class_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
@@ -495,7 +495,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 }
 
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 
 void megamol::gui::Call::AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
     const frontend_resources::PerformanceManager::timer_entry& entry) {
@@ -586,4 +586,4 @@ void megamol::gui::Call::DrawProfiling(GraphItemsState_t& state) {
 }
 
 
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING

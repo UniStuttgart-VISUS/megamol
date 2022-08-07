@@ -7,7 +7,7 @@
 
 #include "VR_Service.hpp"
 
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
 #include <glm/gtc/matrix_transform.hpp>
 #include <interop.hpp>
 
@@ -17,7 +17,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/view/AbstractViewInterface.h"
 #include "mmstd/view/AbstractView.h"
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#endif // MEGAMOL_USE_VR_INTEROP
 
 #include "mmcore/MegaMolGraph.h"
 
@@ -63,20 +63,20 @@ bool VR_Service::init(const Config& config) {
     m_requestedResourcesNames = {
         "ImagePresentationEntryPoints",
         "MegaMolGraph",
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
         "OpenGL_Context",
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#endif // MEGAMOL_USE_VR_INTEROP
     };
 
     switch (config.mode) {
     case Config::Mode::Off:
         break;
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
     case Config::Mode::UnityKolabBW:
         log("running Unity KolabBW VR mode. Duplicating and sending View3D Entry Points via Spout.");
         m_vr_device_ptr = std::make_unique<VR_Service::KolabBW>();
         break;
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#endif // MEGAMOL_USE_VR_INTEROP
     default:
         log_error("Unknown VR Service Mode: " + std::to_string(static_cast<int>(config.mode)));
         return false;
@@ -177,11 +177,11 @@ void VR_Service::setRequestedResources(std::vector<FrontendResource> resources) 
     };
 
     auto& megamol_graph = m_requestedResourceReferences[1].getResource<core::MegaMolGraph>();
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
     // Unity Kolab wants to manipulate graph modules like clipping plane or views
     static_cast<VR_Service::KolabBW*>(m_vr_device_ptr.get())
         ->add_graph(const_cast<core::MegaMolGraph*>(&megamol_graph));
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#endif // MEGAMOL_USE_VR_INTEROP
 }
 
 void VR_Service::updateProvidedResources() {}
@@ -202,7 +202,7 @@ void VR_Service::postGraphRender() {
 } // namespace frontend
 } // namespace megamol
 
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
 namespace {
 glm::vec4 toGlm(const interop::vec4& v) {
     return glm::vec4{v.x, v.y, v.z, v.w};
@@ -619,4 +619,4 @@ void megamol::frontend::VR_Service::KolabBW::preGraphRender() {
 void megamol::frontend::VR_Service::KolabBW::postGraphRender() {
     this->send_image_data();
 }
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#endif // MEGAMOL_USE_VR_INTEROP

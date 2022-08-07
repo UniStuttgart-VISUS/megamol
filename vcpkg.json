@@ -53,6 +53,9 @@
         "cgal"
       ]
     },
+    "use-cuda": {
+      "description": "Use CUDA"
+    },
     "use-cuesdk": {
       "description": "Use Corsair CUE",
       "dependencies": [
@@ -103,6 +106,9 @@
           ]
         }
       ]
+    },
+    "use-profiling": {
+      "description": "Use Profiling"
     },
     "use-vr-interop": {
       "description": "Use VR Interop",

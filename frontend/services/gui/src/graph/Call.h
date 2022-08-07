@@ -10,7 +10,7 @@
 #pragma once
 
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 #include "PerformanceManager.h"
 #include "mmcore/MultiPerformanceHistory.h"
 #endif
@@ -79,7 +79,7 @@ public:
         capabilities = caps;
     }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 
     ImVec2 GetProfilingButtonPosition() {
         return this->profiling_button_position;
@@ -109,7 +109,7 @@ public:
 
     void DrawProfiling(GraphItemsState_t& state);
 
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -133,7 +133,7 @@ private:
     ImageWidget gui_profiling_button;
     bool gui_profiling_btn_hovered;
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 
     std::vector<core::MultiPerformanceHistory> cpu_perf_history;
     std::vector<core::MultiPerformanceHistory> gl_perf_history;
@@ -144,7 +144,7 @@ private:
     bool pause_profiling_history_update;
     ImVec2 profiling_button_position;
 
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 };
 
 

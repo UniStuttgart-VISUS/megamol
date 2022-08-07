@@ -10,9 +10,9 @@
 #include "imgui_stdlib.h"
 #include "vislib/math/Ternary.h"
 #include "widgets/ButtonWidgets.h"
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 #define GRAPH_PROFILING_WINDOW_WIDTH (300.0f * megamol::gui::gui_scaling.Get())
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 
 using namespace megamol;
 using namespace megamol::gui;
@@ -52,11 +52,11 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
         , gui_profiling_splitter()
         , gui_rename_popup()
         , gui_tooltip()
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         , gui_profiling_run_button()
         , profiling_list()
         , scroll_delta_time(std::chrono::system_clock::now())
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 {
 
     this->filenames.first.first = false;
@@ -1167,7 +1167,7 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                         }
                         megamol::core::utility::get_json_value<float>(
                             graph_state, {"parameter_sidebar_width"}, &this->gui_parameter_sidebar_width);
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                         bool tmp_show_profiling_bar = false;
                         this->gui_change_show_profiling_bar = false;
                         if (megamol::core::utility::get_json_value<bool>(
@@ -1177,7 +1177,7 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                         }
                         megamol::core::utility::get_json_value<float>(
                             graph_state, {"profiling_bar_height"}, &this->gui_profiling_bar_height);
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
                         megamol::core::utility::get_json_value<bool>(graph_state, {"show_grid"}, &this->gui_show_grid);
                         megamol::core::utility::get_json_value<bool>(
                             graph_state, {"show_call_label"}, &this->gui_graph_state.interact.call_show_label);
@@ -1547,13 +1547,13 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                     this->gui_parameter_sidebar_width);
             }
             float graph_height_auto = available_space.y;
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
             this->gui_profiling_bar_height *= megamol::gui::gui_scaling.Get();
             if (this->gui_show_profiling_bar) {
                 this->gui_profiling_splitter.Widget("profiling_splitter", false, graph_width_auto,
                     SplitterWidget::FixedSplitterSide::RIGHT_BOTTOM, graph_height_auto, this->gui_profiling_bar_height);
             }
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 
             // Draw content of splitter regions
             this->draw_canvas(cursor_position + ImVec2(0.0f, 0.0f), ImVec2(graph_width_auto, graph_height_auto), state);
@@ -1561,12 +1561,12 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                 this->draw_parameters(cursor_position + ImVec2(graph_width_auto + splitter_width, 0.0f),
                     ImVec2(this->gui_parameter_sidebar_width, available_space.y));
             }
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
             if (this->gui_show_profiling_bar) {
                 this->draw_profiling(cursor_position + ImVec2(0.0f, graph_height_auto + splitter_width),
                     ImVec2(graph_width_auto, this->gui_profiling_bar_height));
             }
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 
             this->gui_parameter_sidebar_width /= megamol::gui::gui_scaling.Get();
             this->gui_profiling_bar_height /= megamol::gui::gui_scaling.Get();
@@ -3187,7 +3187,7 @@ std::string megamol::gui::Graph::GenerateUniqueGraphEntryName() {
 }
 
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 
 void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
 
@@ -3389,4 +3389,4 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
 }
 
 
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING

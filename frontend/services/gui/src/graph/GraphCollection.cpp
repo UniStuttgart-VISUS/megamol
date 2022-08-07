@@ -338,7 +338,7 @@ bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
             case (Graph::QueueAction::ADD_MODULE): {
                 graph_sync_success &= std::get<0>(
                     (*input_lua_func)("mmCreateModule([=[" + data.class_name + "]=],[=[" + data.name_id + "]=])"));
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                 auto core_module_ptr = megamol_graph.FindModule(data.name_id);
                 // ! Search Queue for following module renaming action to get current name of gui graph module
                 auto module_rename_data =
@@ -360,7 +360,7 @@ bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
                     (*input_lua_func)("mmRenameModule([=[" + data.name_id + "]=],[=[" + data.rename_id + "]=])"));
             } break;
             case (Graph::QueueAction::DELETE_MODULE): {
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                 auto core_module_ptr = megamol_graph.FindModule(data.name_id);
                 module_to_module.erase(core_module_ptr.get());
 #endif
@@ -369,7 +369,7 @@ bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
             case (Graph::QueueAction::ADD_CALL): {
                 graph_sync_success &= std::get<0>((*input_lua_func)(
                     "mmCreateCall([=[" + data.class_name + "]=],[=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                 auto core_call_ptr = megamol_graph.FindCall(data.caller, data.callee);
                 auto gui_call_ptr = graph_ptr->GetCall(data.caller, data.callee);
                 if (gui_call_ptr != nullptr) {
@@ -385,7 +385,7 @@ bool megamol::gui::GraphCollection::SyncRunningGUIGraphWithCoreGraph(
 #endif
             } break;
             case (Graph::QueueAction::DELETE_CALL): {
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                 auto core_call_ptr = megamol_graph.FindCall(data.caller, data.callee);
                 call_to_call.erase(core_call_ptr.get());
 #endif
@@ -631,7 +631,7 @@ bool megamol::gui::GraphCollection::update_running_graph_from_core(
                 }
                 // Add module to group
                 graph_ptr->AddGroupModule(module_namespace, gui_module_ptr);
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                 // TODO set some stuff here so I can find which regions are which!?
                 gui_module_ptr->SetProfilingData(core_module_ptr, perf_manager);
                 module_to_module[core_module_ptr] = gui_module_ptr;
@@ -701,7 +701,7 @@ bool megamol::gui::GraphCollection::update_running_graph_from_core(
             if (!megamol_graph.FindModule(module_ptr->FullName())) {
                 deletion_queue.push_back(module_ptr->UID());
                 gui_graph_changed = true;
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                 module_to_module.erase(module_ptr->GetProfilingParent());
 #endif
             }
@@ -807,7 +807,7 @@ bool megamol::gui::GraphCollection::update_running_graph_from_core(
         for (auto& call_info : gui_graph_call_info) {
             if (!megamol_graph.FindCall(call_info.from, call_info.to)) {
                 call_info.ptr.reset();
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                 call_to_call.erase(call_info.ptr.lock()->GetProfilingParent());
 #endif
                 graph_ptr->DeleteCall(call_info.uid);
@@ -840,7 +840,7 @@ bool megamol::gui::GraphCollection::update_running_graph_from_core(
             if (auto gui_call_ptr = graph_ptr->AddCall(this->GetCallsStock(), callslot_1, callslot_2)) {
                 gui_graph_changed = true;
                 gui_call_ptr->SetCapabilities(cd.core_call->GetCapabilities());
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                 gui_call_ptr->SetProfilingData(cd.core_call.get(), cd.core_call->GetCallbackCount());
                 // printf("setting map for @ %p = %s \n", reinterpret_cast<void*>(cd.core_call.get()),
                 //    cd.core_call.get()->GetDescriptiveText().c_str());
@@ -1871,7 +1871,7 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
     }
 }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 void megamol::gui::GraphCollection::AppendPerformanceData(
     const frontend_resources::PerformanceManager::frame_info& fi) {
     auto frame = fi.frame;

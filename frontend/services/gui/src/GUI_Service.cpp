@@ -63,7 +63,7 @@ bool GUI_Service::init(const Config& config) {
         frontend_resources::CommandRegistry_Req_Name, // 12 - Command registry
         "ImagePresentationEntryPoints",               // 13 - Entry point
         "ExecuteLuaScript",                           // 14 - Execute Lua Scripts (from Console)
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         frontend_resources::PerformanceManager_Req_Name // 15 - Performance Manager
 #endif
     };
@@ -367,7 +367,7 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
         &m_requestedResourceReferences[14].getResource<frontend_resources::common_types::lua_func_type>());
     m_gui->SetLuaFunc(m_exec_lua);
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     // PerformanceManager
     perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
         &this->m_requestedResourceReferences[15].getResource<megamol::frontend_resources::PerformanceManager>());

@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include <mpi.h>
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
 #include <atomic>
 #include <memory>
@@ -151,14 +151,14 @@ private:
      */
     std::atomic<int> activeNodeColour;
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     /**
      * The communicator that was retrieved during node colouring. If this
      * is MPI_COMM_NULL, it indicates that node colouring has not yet been
      * performed.
      */
     std::atomic<MPI_Comm> comm;
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
     /**
      * Remembers whether the MpiProvider has initialised MPI. In this case,

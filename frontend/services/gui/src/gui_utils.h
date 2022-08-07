@@ -77,7 +77,7 @@
 #define GUI_FILENAME_TEXTURE_PROFILING_BUTTON ("profiling_button.png")
 
 
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
 
 #define GUI_GL_CHECK_ERROR                                                                        \
     {                                                                                             \
@@ -87,7 +87,7 @@
                 "OpenGL Error: %i. [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__); \
     }
 
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
 
 
 namespace megamol {

@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "CallCapabilities.h"
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 #include "PerformanceManager.h"
 #endif
 
@@ -135,14 +135,14 @@ private:
 
     inline static std::string err_out_of_bounds = "index out of bounds";
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     // i cant make access to the queries work without making the Profiling_Service a friend class
     // and thereby linking the frontend service headers into the core
     // so make the perf queries public when profiling is active...
 public:
     frontend_resources::PerformanceManager* perf_man = nullptr;
     frontend_resources::PerformanceManager::handle_vector cpu_queries, gl_queries;
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 protected:
     CallCapabilities caps;
 };
