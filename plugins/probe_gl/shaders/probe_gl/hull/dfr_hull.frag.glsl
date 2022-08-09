@@ -1,6 +1,6 @@
 #version 450
 
-#include "utility/random_colors_lut.inc.glsl"
+#include "probe_gl/utility/random_colors_lut.inc.glsl"
 
 struct PerFrameData
 {

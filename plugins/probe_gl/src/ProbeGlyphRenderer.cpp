@@ -92,23 +92,23 @@ void megamol::probe_gl::ProbeGlyphRenderer::createMaterialCollection() {
     // textured glyph shader program
 
     material_collection_->addMaterial(this->instance(), "TexturedProbeGlyph",
-        {"glyphs/textured_probe_glyph.vert.glsl", "glyphs/textured_probe_glyph.frag.glsl"});
+        {"probe_gl/glyphs/textured_probe_glyph.vert.glsl", "probe_gl/glyphs/textured_probe_glyph.frag.glsl"});
 
     // scalar glyph shader program
     material_collection_->addMaterial(this->instance(), "ScalarProbeGlyph",
-        {"glyphs/scalar_probe_glyph_v2.vert.glsl", "glyphs/scalar_probe_glyph_v2.frag.glsl"});
+        {"probe_gl/glyphs/scalar_probe_glyph_v2.vert.glsl", "probe_gl/glyphs/scalar_probe_glyph_v2.frag.glsl"});
 
     // scalar distribution glyph shader program
     material_collection_->addMaterial(this->instance(), "ScalarDistributionProbeGlyph",
-        {"glyphs/scalar_distribution_probe_glyph_v2.vert.glsl", "glyphs/scalar_distribution_probe_glyph.frag.glsl"});
+        {"probe_gl/glyphs/scalar_distribution_probe_glyph_v2.vert.glsl", "probe_gl/glyphs/scalar_distribution_probe_glyph.frag.glsl"});
 
     // vector glyph shader program
     material_collection_->addMaterial(this->instance(), "VectorProbeGlyph",
-        {"glyphs/vector_probe_glyph.vert.glsl", "glyphs/vector_probe_glyph.frag.glsl"});
+        {"probe_gl/glyphs/vector_probe_glyph.vert.glsl", "probe_gl/glyphs/vector_probe_glyph.frag.glsl"});
 
     // cluster ID glyph shader program
     material_collection_->addMaterial(this->instance(), "ClusterIDProbeGlyph",
-        {"glyphs/clusterID_probe_glyph.vert.glsl", "glyphs/clusterID_probe_glyph.frag.glsl"});
+        {"probe_gl/glyphs/clusterID_probe_glyph.vert.glsl", "probe_gl/glyphs/clusterID_probe_glyph.frag.glsl"});
 }
 
 void megamol::probe_gl::ProbeGlyphRenderer::updateRenderTaskCollection(

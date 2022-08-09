@@ -54,9 +54,9 @@ void megamol::probe_gl::ProbeDetailViewRenderer::createMaterialCollection() {
 
     material_collection_ = std::make_shared<mesh_gl::GPUMaterialCollection>();
     try {
-        std::vector<std::filesystem::path> shaderfiles = {"probes/dfr_probeDetailView.vert.glsl",
-            "probes/dfr_probeDetailView.frag.glsl", "probes/dfr_probeDetailView.tesc.glsl",
-            "probes/dfr_probeDetailView.tese.glsl"};
+        std::vector<std::filesystem::path> shaderfiles = {"probe_gl/probes/dfr_probeDetailView.vert.glsl",
+            "probe_gl/probes/dfr_probeDetailView.frag.glsl", "probe_gl/probes/dfr_probeDetailView.tesc.glsl",
+            "probe_gl/probes/dfr_probeDetailView.tese.glsl"};
         material_collection_->addMaterial(this->instance(), "ProbeDetailView", shaderfiles);
     } catch (const std::exception& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

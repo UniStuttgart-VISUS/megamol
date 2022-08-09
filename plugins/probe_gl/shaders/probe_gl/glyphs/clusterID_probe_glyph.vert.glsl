@@ -1,7 +1,7 @@
 #version 450
 
-#include "glyphs/extensions.inc.glsl"
-#include "glyphs/clusterID_probe_struct.inc.glsl"
+#include "probe_gl/glyphs/extensions.inc.glsl"
+#include "probe_gl/glyphs/clusterID_probe_struct.inc.glsl"
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
 

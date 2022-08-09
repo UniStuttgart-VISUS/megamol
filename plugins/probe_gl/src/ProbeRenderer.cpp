@@ -54,7 +54,7 @@ void megamol::probe_gl::ProbeRenderTasks::createMaterialCollection() {
     material_collection_ = std::make_shared<mesh_gl::GPUMaterialCollection>();
     try {
         material_collection_->addMaterial(this->instance(), "ProbeInteraction",
-            {"probes/dfr_interaction_probe.vert.glsl", "probes/dfr_interaction_probe.frag.glsl"});
+            {"probe_gl/probes/dfr_interaction_probe.vert.glsl", "probe_gl/probes/dfr_interaction_probe.frag.glsl"});
     } catch (std::runtime_error const& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);

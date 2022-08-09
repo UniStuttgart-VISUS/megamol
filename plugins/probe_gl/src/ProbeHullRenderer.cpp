@@ -45,10 +45,10 @@ megamol::probe_gl::ProbeHullRenderer::~ProbeHullRenderer() {}
 void megamol::probe_gl::ProbeHullRenderer::createMaterialCollection() {
     material_collection_ = std::make_shared<mesh_gl::GPUMaterialCollection>();
     material_collection_->addMaterial(this->instance(), "ProbeHull",
-        {"hull/dfr_hull_patch.vert.glsl", "hull/dfr_hull.frag.glsl", "hull/dfr_hull.tesc.glsl",
-            "hull/dfr_hull.tese.glsl"});
+        {"probe_gl/hull/dfr_hull_patch.vert.glsl", "probe_gl/hull/dfr_hull.frag.glsl", "probe_gl/hull/dfr_hull.tesc.glsl",
+            "probe_gl/hull/dfr_hull.tese.glsl"});
     material_collection_->addMaterial(
-        this->instance(), "ProbeTriangleHull", {"hull/dfr_hull_tri.vert.glsl", "hull/dfr_hull.frag.glsl"});
+        this->instance(), "ProbeTriangleHull", {"probe_gl/hull/dfr_hull_tri.vert.glsl", "probe_gl/hull/dfr_hull.frag.glsl"});
 }
 
 void megamol::probe_gl::ProbeHullRenderer::createRenderTaskCollection() {
@@ -58,7 +58,7 @@ void megamol::probe_gl::ProbeHullRenderer::createRenderTaskCollection() {
     };
     std::array<PerFrameData, 1> per_frame_data;
     per_frame_data[0].shading_mode = m_shading_mode_slot.Param<core::param::EnumParam>()->Value();
-    render_task_collection_->addPerFrameDataBuffer("", per_frame_data, 1);
+    render_task_collection_->addPerFrameDataBuffer("ProbeHullPerFrameData", per_frame_data, 1);
 }
 
 void megamol::probe_gl::ProbeHullRenderer::updateRenderTaskCollection(
@@ -75,7 +75,7 @@ void megamol::probe_gl::ProbeHullRenderer::updateRenderTaskCollection(
         std::array<PerFrameData, 1> per_frame_data;
         per_frame_data[0].shading_mode = m_shading_mode_slot.Param<core::param::EnumParam>()->Value();
 
-        render_task_collection_->updatePerFrameDataBuffer("", per_frame_data, 1);
+        render_task_collection_->updatePerFrameDataBuffer("ProbeHullPerFrameData", per_frame_data, 1);
     }
 
     if (m_hull_color_slot.IsDirty()) {
@@ -106,6 +106,15 @@ void megamol::probe_gl::ProbeHullRenderer::updateRenderTaskCollection(
         m_draw_commands.clear();
         m_per_object_data.clear();
         m_batch_meshes.clear();
+
+        {
+            struct PerFrameData {
+                int shading_mode;
+            };
+            std::array<PerFrameData, 1> per_frame_data;
+            per_frame_data[0].shading_mode = m_shading_mode_slot.Param<core::param::EnumParam>()->Value();
+            render_task_collection_->addPerFrameDataBuffer("ProbeHullPerFrameData", per_frame_data, 1);
+        }
 
         std::shared_ptr<glowl::Mesh> prev_mesh(nullptr);
 
