@@ -24,7 +24,7 @@ megamol::gui::GraphCollection::GraphCollection()
         , graph_name_uid(0)
         , gui_file_browser()
         , gui_graph_delete_uid(GUI_INVALID_ID)
-        , created_running_graph (false) {}
+        , created_running_graph(false) {}
 
 
 bool megamol::gui::GraphCollection::AddEmptyProject() {
@@ -1562,7 +1562,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
                     gui_module_ptr->Parameters().emplace_back((*param_ptr));
                 }
 
-                // Add call slots 
+                // Add call slots
                 std::shared_ptr<core::CallerSlot> caller_slot =
                     std::dynamic_pointer_cast<megamol::core::CallerSlot>((*si));
                 if (caller_slot) {
@@ -1590,9 +1590,8 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
             return true;
         }
 
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to add module:: '%s' [%s, %s, line %d]\n", module_inst.modulePtr->Name().PeekBuffer(),
-            __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Unable to add module:: '%s' [%s, %s, line %d]\n",
+            module_inst.modulePtr->Name().PeekBuffer(), __FILE__, __FUNCTION__, __LINE__);
     }
     return false;
 }
@@ -1681,8 +1680,9 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_ParameterChanged(
             }
         }
 
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Unable to apply parameter changest to '%s'. [%s, %s, line %d]\n", param_slot->FullName().PeekBuffer(),
-            __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unable to apply parameter changest to '%s'. [%s, %s, line %d]\n",
+            param_slot->FullName().PeekBuffer(), __FILE__, __FUNCTION__, __LINE__);
     }
     return false;
 }
@@ -1746,7 +1746,8 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddCall(core::CallInstanc
             return true;
         }
 
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Unable to create call: '%s' [%s, %s, line %d]\n", call_inst.request.className.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Unable to create call: '%s' [%s, %s, line %d]\n",
+            call_inst.request.className.c_str(), __FILE__, __FUNCTION__, __LINE__);
     }
     return false;
 }
@@ -1784,7 +1785,8 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_DeleteCall(core::CallInst
             }
         }
 
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Unable to delete call: '%s' [%s, %s, line %d]\n", call_inst.request.className.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Unable to delete call: '%s' [%s, %s, line %d]\n",
+            call_inst.request.className.c_str(), __FILE__, __FUNCTION__, __LINE__);
     }
     return false;
 }

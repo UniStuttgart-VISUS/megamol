@@ -14,13 +14,13 @@
 #include "GUIManager.h"
 #include "ImagePresentationEntryPoints.h"
 #include "KeyboardMouse_Events.h"
+#include "ModuleGraphSubscription.h"
 #include "OpenGL_Context.h"
 #include "ProjectLoader.h"
 #include "RuntimeConfig.h"
 #include "ScriptPaths.h"
 #include "WindowManipulation.h"
 #include "Window_Events.h"
-#include "ModuleGraphSubscription.h"
 
 #include "mmcore/utility/log/Log.h"
 
@@ -398,11 +398,11 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     gui_subscription.AddParameters =
         [&](std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots) {
             return m_gui->NotifyRunningGraph_AddParameters(param_slots);
-    };
+        };
     gui_subscription.RemoveParameters =
         [&](std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots) {
             return m_gui->NotifyRunningGraph_RemoveParameters(param_slots);
-    };
+        };
     gui_subscription.ParameterChanged =
         [&](megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
             std::string const& old_value, std::string const& new_value) {
@@ -411,7 +411,8 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     gui_subscription.AddCall = [&](core::CallInstance_t const& call_inst) {
         return m_gui->NotifyRunningGraph_AddCall(call_inst);
     };
-    gui_subscription.DeleteCall = [&](core::CallInstance_t const& call_inst) { return m_gui->NotifyRunningGraph_DeleteCall(call_inst);
+    gui_subscription.DeleteCall = [&](core::CallInstance_t const& call_inst) {
+        return m_gui->NotifyRunningGraph_DeleteCall(call_inst);
     };
 
     megamolgraph_subscription.subscribe(gui_subscription);

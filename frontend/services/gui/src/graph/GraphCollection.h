@@ -66,8 +66,7 @@ public:
 
     void SetLuaFunc(lua_func_type* func);
 
-    bool SynchronizeGraphs(
-        megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
+    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
 
     bool LoadOrAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
 

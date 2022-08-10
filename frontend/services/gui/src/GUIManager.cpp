@@ -674,8 +674,7 @@ bool megamol::gui::GUIManager::SynchronizeGraphs(
     if (!this->gui_state.gui_visible)
         return true;
 
-    if (this->win_configurator_ptr->GetGraphCollection().SynchronizeGraphs(
-            megamol_graph, core_instance)) {
+    if (this->win_configurator_ptr->GetGraphCollection().SynchronizeGraphs(megamol_graph, core_instance)) {
 
         // Check for new GUI state
         if (!this->gui_state.new_gui_state.empty()) {
