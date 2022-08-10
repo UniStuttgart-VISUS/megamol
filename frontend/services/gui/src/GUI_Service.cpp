@@ -20,6 +20,7 @@
 #include "ScriptPaths.h"
 #include "WindowManipulation.h"
 #include "Window_Events.h"
+#include "ModuleGraphSubscription.h"
 
 #include "mmcore/utility/log/Log.h"
 
@@ -48,7 +49,7 @@ bool GUI_Service::init(const Config& config) {
     this->m_requestedResourceReferences.clear();
     this->m_providedResourceReferences.clear();
     this->m_requestedResourcesNames = {
-        "MegaMolGraph",                               // 0 - sync graph
+        "MegaMolGraph",                               // 0 - sync graphs
         "optional<WindowEvents>",                     // 1 - time, size, clipboard
         "optional<KeyboardEvents>",                   // 2 - key press
         "optional<MouseEvents>",                      // 3 - mouse click
@@ -64,8 +65,9 @@ bool GUI_Service::init(const Config& config) {
         "ImagePresentationEntryPoints",               // 13 - Entry point
         "ExecuteLuaScript",                           // 14 - Execute Lua Scripts (from Console)
 #ifdef PROFILING
-        frontend_resources::PerformanceManager_Req_Name // 15 - Performance Manager
+        frontend_resources::PerformanceManager_Req_Name, // 15 - Performance Manager
 #endif
+        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name // 16 MegaMol Graph subscription
     };
 
     this->m_gui = std::make_shared<megamol::gui::GUIManager>();
@@ -271,10 +273,10 @@ void GUI_Service::resetProvidedResources() {}
 void GUI_Service::preGraphRender() {
 
     if (this->m_gui != nullptr) {
-        // Synchronise changes between core graph and gui graph
+        // Propagate changes from the GUI graph to the MegaMol graph
         if ((this->m_megamol_graph != nullptr) && (this->m_config.core_instance != nullptr)) {
             // Requires enabled OpenGL context, e.g. for textures used in parameters
-            this->m_gui->GraphSynchronization((*this->m_megamol_graph), (*this->m_config.core_instance));
+            this->m_gui->SynchronizeGraphs((*this->m_megamol_graph), (*this->m_config.core_instance));
         }
         this->m_gui->PreDraw(this->m_framebuffer_size, this->m_window_size, this->m_time);
     }
@@ -376,6 +378,43 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     perf_manager->subscribe_to_updates(
         [&](const frontend_resources::PerformanceManager::frame_info& fi) { m_gui->AppendPerformanceData(fi); });
 #endif
+
+    // MegaMol Graph Subscription
+    auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(
+        this->m_requestedResourceReferences[16].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
+
+    frontend_resources::ModuleGraphSubscription gui_subscription("GUI");
+
+    gui_subscription.AddModule = [&](core::ModuleInstance_t const& module_inst) {
+        return m_gui->NotifyRunningGraph_AddModule(module_inst);
+    };
+    gui_subscription.DeleteModule = [&](core::ModuleInstance_t const& module_inst) {
+        return m_gui->NotifyRunningGraph_DeleteModule(module_inst);
+    };
+    gui_subscription.RenameModule = [&](std::string const& old_name, std::string const& new_name,
+                                        core::ModuleInstance_t const& module_inst) {
+        return m_gui->NotifyRunningGraph_RenameModule(old_name, new_name, module_inst);
+    };
+    gui_subscription.AddParameters =
+        [&](std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots) {
+            return m_gui->NotifyRunningGraph_AddParameters(param_slots);
+    };
+    gui_subscription.RemoveParameters =
+        [&](std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots) {
+            return m_gui->NotifyRunningGraph_RemoveParameters(param_slots);
+    };
+    gui_subscription.ParameterChanged =
+        [&](megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
+            std::string const& old_value, std::string const& new_value) {
+            return m_gui->NotifyRunningGraph_ParameterChanged(param_slot, old_value, new_value);
+        };
+    gui_subscription.AddCall = [&](core::CallInstance_t const& call_inst) {
+        return m_gui->NotifyRunningGraph_AddCall(call_inst);
+    };
+    gui_subscription.DeleteCall = [&](core::CallInstance_t const& call_inst) { return m_gui->NotifyRunningGraph_DeleteCall(call_inst);
+    };
+
+    megamolgraph_subscription.subscribe(gui_subscription);
 }
 
 

@@ -99,7 +99,6 @@ public:
         this->dirty_flag = true;
     }
 
-
     std::string GetFilename() const;
     void SetFilename(const std::string& filename, bool saved_filename);
 

@@ -66,15 +66,7 @@ public:
 
     void SetLuaFunc(lua_func_type* func);
 
-    /**
-     * Load or update project from graph of core instance or directly from megamol graph.
-     *
-     * @param inout_graph_uid  The graph uid to use. If graph uid is GUI_INVALID_ID a new graph is created.
-     * @param megamol_graph    The megamol graph.
-     *
-     * @return                 True on success, false otherwise.
-     */
-    bool SyncRunningGUIGraphWithCoreGraph(
+    bool SynchronizeGraphs(
         megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
 
     bool LoadOrAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
@@ -94,6 +86,20 @@ public:
     void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi);
 #endif
 
+    bool NotifyRunningGraph_AddModule(core::ModuleInstance_t const& module_inst);
+    bool NotifyRunningGraph_DeleteModule(core::ModuleInstance_t const& module_inst);
+    bool NotifyRunningGraph_RenameModule(
+        std::string const& old_name, std::string const& new_name, core::ModuleInstance_t const& module_inst);
+    bool NotifyRunningGraph_AddParameters(
+        std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots);
+    bool NotifyRunningGraph_RemoveParameters(
+        std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots);
+    bool NotifyRunningGraph_ParameterChanged(
+        megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
+        std::string const& old_value, std::string const& new_value);
+    bool NotifyRunningGraph_AddCall(core::CallInstance_t const& call_inst);
+    bool NotifyRunningGraph_DeleteCall(core::CallInstance_t const& call_inst);
+
 private:
     // VARIABLES --------------------------------------------------------------
 
@@ -107,9 +113,11 @@ private:
 
     lua_func_type* input_lua_func = nullptr;
 
+    bool created_running_graph;
+
     // FUNCTIONS --------------------------------------------------------------
 
-    bool update_running_graph_from_core(megamol::core::MegaMolGraph& megamol_graph, bool use_stock);
+    GraphPtr_t request_running_graph();
 
     bool load_module_stock(const megamol::core::CoreInstance& core_instance);
     bool load_call_stock(const megamol::core::CoreInstance& core_instance);
