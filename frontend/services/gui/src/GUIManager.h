@@ -237,6 +237,10 @@ public:
 
     void RegisterNotification(const std::string& name, std::weak_ptr<bool> open, const std::string& message);
 
+    bool InitializeGraphSynchronisation(const megamol::core::CoreInstance& core_instance) {
+        return this->win_configurator_ptr->GetGraphCollection().InitializeGraphSynchronisation(core_instance);
+    }
+
     bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
 
     /**

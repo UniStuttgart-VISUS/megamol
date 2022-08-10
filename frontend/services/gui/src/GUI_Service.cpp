@@ -49,25 +49,25 @@ bool GUI_Service::init(const Config& config) {
     this->m_requestedResourceReferences.clear();
     this->m_providedResourceReferences.clear();
     this->m_requestedResourcesNames = {
-        "MegaMolGraph",                               // 0 - sync graphs
-        "optional<WindowEvents>",                     // 1 - time, size, clipboard
-        "optional<KeyboardEvents>",                   // 2 - key press
-        "optional<MouseEvents>",                      // 3 - mouse click
-        "optional<OpenGL_Context>",                   // 4 - graphics api for imgui context
-        "FramebufferEvents",                          // 5 - viewport size
-        "GLFrontbufferToPNG_ScreenshotTrigger",       // 6 - trigger screenshot
-        "LuaScriptPaths",                             // 7 - current project path
-        "ProjectLoader",                              // 8 - trigger loading of new running project
-        "FrameStatistics",                            // 9 - current fps and ms value
-        "RuntimeConfig",                              // 10 - resource paths
-        "optional<WindowManipulation>",               // 11 - GLFW window pointer
-        frontend_resources::CommandRegistry_Req_Name, // 12 - Command registry
-        "ImagePresentationEntryPoints",               // 13 - Entry point
-        "ExecuteLuaScript",                           // 14 - Execute Lua Scripts (from Console)
+        "MegaMolGraph",                                                 // 0 - sync graphs
+        "optional<WindowEvents>",                                       // 1 - time, size, clipboard
+        "optional<KeyboardEvents>",                                     // 2 - key press
+        "optional<MouseEvents>",                                        // 3 - mouse click
+        "optional<OpenGL_Context>",                                     // 4 - graphics api for imgui context
+        "FramebufferEvents",                                            // 5 - viewport size
+        "GLFrontbufferToPNG_ScreenshotTrigger",                         // 6 - trigger screenshot
+        "LuaScriptPaths",                                               // 7 - current project path
+        "ProjectLoader",                                                // 8 - trigger loading of new running project
+        "FrameStatistics",                                              // 9 - current fps and ms value
+        "RuntimeConfig",                                                // 10 - resource paths
+        "optional<WindowManipulation>",                                 // 11 - GLFW window pointer
+        frontend_resources::CommandRegistry_Req_Name,                   // 12 - Command registry
+        "ImagePresentationEntryPoints",                                 // 13 - Entry point
+        "ExecuteLuaScript",                                             // 14 - Execute Lua Scripts (from Console)
+        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name, // 15 MegaMol Graph subscription
 #ifdef PROFILING
-        frontend_resources::PerformanceManager_Req_Name, // 15 - Performance Manager
+        frontend_resources::PerformanceManager_Req_Name // 16 - Performance Manager
 #endif
-        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name // 16 MegaMol Graph subscription
     };
 
     this->m_gui = std::make_shared<megamol::gui::GUIManager>();
@@ -316,6 +316,8 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
         return;
     }
 
+    this->m_gui->InitializeGraphSynchronisation((*this->m_config.core_instance));
+
     // Check render backend prerequisites
     auto maybe_opengl_context =
         m_requestedResourceReferences[4].getOptionalResource<frontend_resources::OpenGL_Context>();
@@ -369,19 +371,9 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
         &m_requestedResourceReferences[14].getResource<frontend_resources::common_types::lua_func_type>());
     m_gui->SetLuaFunc(m_exec_lua);
 
-#ifdef PROFILING
-    // PerformanceManager
-    perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
-        &this->m_requestedResourceReferences[15].getResource<megamol::frontend_resources::PerformanceManager>());
-    // this needs to happen before the first (gui) module is spawned to help it look up the timers
-    m_gui->SetPerformanceManager(perf_manager);
-    perf_manager->subscribe_to_updates(
-        [&](const frontend_resources::PerformanceManager::frame_info& fi) { m_gui->AppendPerformanceData(fi); });
-#endif
-
     // MegaMol Graph Subscription
     auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(
-        this->m_requestedResourceReferences[16].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
+        this->m_requestedResourceReferences[15].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
 
     frontend_resources::ModuleGraphSubscription gui_subscription("GUI");
 
@@ -416,6 +408,16 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     };
 
     megamolgraph_subscription.subscribe(gui_subscription);
+
+#ifdef PROFILING
+    // PerformanceManager
+    perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
+        &this->m_requestedResourceReferences[16].getResource<megamol::frontend_resources::PerformanceManager>());
+    // this needs to happen before the first (gui) module is spawned to help it look up the timers
+    m_gui->SetPerformanceManager(perf_manager);
+    perf_manager->subscribe_to_updates(
+        [&](const frontend_resources::PerformanceManager::frame_info& fi) { m_gui->AppendPerformanceData(fi); });
+#endif
 }
 
 
@@ -424,6 +426,7 @@ std::vector<std::string> GUI_Service::get_gui_runtime_resources_requests() {
     /// Already provided via getRequestedResourceNames()
     return {};
 }
+
 
 bool GUI_Service::gui_rendering_execution(void* void_ptr,
     std::vector<megamol::frontend::FrontendResource> const& resources,

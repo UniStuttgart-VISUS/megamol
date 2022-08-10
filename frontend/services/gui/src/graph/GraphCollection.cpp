@@ -300,14 +300,14 @@ bool megamol::gui::GraphCollection::load_module_stock(const megamol::core::CoreI
 
 
 void megamol::gui::GraphCollection::SetLuaFunc(lua_func_type* func) {
+
     this->input_lua_func = func;
 }
 
 
-bool megamol::gui::GraphCollection::SynchronizeGraphs(
-    megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
+bool megamol::gui::GraphCollection::InitializeGraphSynchronisation(const megamol::core::CoreInstance& core_instance) {
 
-    // 1) Load all known calls from core instance ONCE
+    // Load all known calls from core instance ONCE
     if (!this->load_call_stock(core_instance)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -320,12 +320,41 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(
         return false;
     }
 
+    // Create inital running graph
+    auto graph_ptr = this->GetRunningGraph();
+    ImGuiID valid_graph_id = (graph_ptr != nullptr) ? (graph_ptr->UID()) : (GUI_INVALID_ID);
+    if (valid_graph_id == GUI_INVALID_ID) {
+
+        valid_graph_id = this->AddGraph();
+        if (valid_graph_id == GUI_INVALID_ID) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Failed to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        graph_ptr = this->GetGraph(valid_graph_id);
+        if (graph_ptr == nullptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to find graph for given uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        } else {
+            graph_ptr->SetRunning(true);
+            this->created_running_graph = true;
+        }
+    }
+
+    return true;
+}
+
+
+bool megamol::gui::GraphCollection::SynchronizeGraphs(
+    megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
+
     bool synced = false;
     bool sync_success = true;
     auto graph_ptr = this->GetRunningGraph();
 
     /// XXX Necessary? -> Check ...
-    // 1.5) Convenience: Layout new graph initally after changes have been propagated from core to GUI
+    // Convenience: Layout new graph initally after changes have been propagated from core to GUI
     if (graph_ptr != nullptr) {
         if (this->created_running_graph) {
             this->created_running_graph = false;
@@ -334,7 +363,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(
         }
     }
 
-    // 2) Propagate all changes from the GUI graph to the MegaMol graph
+    // Propagate all changes from the GUI graph to the MegaMol graph
     if (graph_ptr != nullptr) {
         bool graph_sync_success = true;
 
@@ -421,7 +450,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(
         sync_success &= graph_sync_success;
     }
 
-    // 3) Propagate all changed parameter values from the GUI graph to the MegaMol graph
+    // Propagate all changed parameter values from the GUI graph to the MegaMol graph
     if (graph_ptr != nullptr) {
 
         bool param_sync_success = true;
@@ -1507,7 +1536,7 @@ void megamol::gui::GraphCollection::AppendPerformanceData(
 
 bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleInstance_t const& module_inst) {
 
-    if (auto graph_ptr = this->request_running_graph()) {
+    if (auto graph_ptr = this->GetRunningGraph()) {
 
         std::string full_name;
         full_name = (module_inst.modulePtr->Name().PeekBuffer()); /// Check only 'Name()'!
@@ -1599,7 +1628,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
 
 bool megamol::gui::GraphCollection::NotifyRunningGraph_DeleteModule(core::ModuleInstance_t const& module_inst) {
 
-    if (auto graph_ptr = this->request_running_graph()) {
+    if (auto graph_ptr = this->GetRunningGraph()) {
 
         for (auto& module_ptr : graph_ptr->Modules()) {
             if (module_ptr->FullName() == std::string(module_inst.modulePtr->Name().PeekBuffer())) {
@@ -1623,7 +1652,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_DeleteModule(core::Module
 bool megamol::gui::GraphCollection::NotifyRunningGraph_RenameModule(
     std::string const& old_name, std::string const& new_name, core::ModuleInstance_t const& module_inst) {
 
-    if (auto graph_ptr = this->request_running_graph()) {
+    if (auto graph_ptr = this->GetRunningGraph()) {
 
         for (auto& module_ptr : graph_ptr->Modules()) {
             if (module_ptr->FullName() == std::string(module_inst.modulePtr->Name().PeekBuffer())) {
@@ -1643,7 +1672,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_RenameModule(
 bool megamol::gui::GraphCollection::NotifyRunningGraph_AddParameters(
     std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots) {
 
-    if (auto graph_ptr = this->request_running_graph()) {
+    if (auto graph_ptr = this->GetRunningGraph()) {
         /// XXX Not required ... done when module is added
         //graph_ptr->ClearSyncQueue(); // prevent sync loop
         return true;
@@ -1655,7 +1684,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddParameters(
 bool megamol::gui::GraphCollection::NotifyRunningGraph_RemoveParameters(
     std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots) {
 
-    if (auto graph_ptr = this->request_running_graph()) {
+    if (auto graph_ptr = this->GetRunningGraph()) {
         /// XXX Not required ... done when module is deleted
         //graph_ptr->ClearSyncQueue(); // required to prevent sync loop
         return true;
@@ -1668,7 +1697,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_ParameterChanged(
     megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot, std::string const& old_value,
     std::string const& new_value) {
 
-    if (auto graph_ptr = this->request_running_graph()) {
+    if (auto graph_ptr = this->GetRunningGraph()) {
 
         for (auto& module_ptr : graph_ptr->Modules()) {
             for (auto& p : module_ptr->Parameters()) {
@@ -1690,7 +1719,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_ParameterChanged(
 
 bool megamol::gui::GraphCollection::NotifyRunningGraph_AddCall(core::CallInstance_t const& call_inst) {
 
-    if (auto graph_ptr = this->request_running_graph()) {
+    if (auto graph_ptr = this->GetRunningGraph()) {
 
         auto call_class_name = call_inst.request.className;
         std::string call_caller_name;
@@ -1755,7 +1784,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddCall(core::CallInstanc
 
 bool megamol::gui::GraphCollection::NotifyRunningGraph_DeleteCall(core::CallInstance_t const& call_inst) {
 
-    if (auto graph_ptr = this->request_running_graph()) {
+    if (auto graph_ptr = this->GetRunningGraph()) {
 
         for (auto& call_ptr : graph_ptr->Calls()) {
             std::string class_name = call_ptr->ClassName();
@@ -1789,32 +1818,6 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_DeleteCall(core::CallInst
             call_inst.request.className.c_str(), __FILE__, __FUNCTION__, __LINE__);
     }
     return false;
-}
-
-
-GraphPtr_t megamol::gui::GraphCollection::request_running_graph() {
-
-    auto graph_ptr = this->GetRunningGraph();
-    ImGuiID valid_graph_id = (graph_ptr != nullptr) ? (graph_ptr->UID()) : (GUI_INVALID_ID);
-    if (valid_graph_id == GUI_INVALID_ID) {
-        // Create new graph
-        valid_graph_id = this->AddGraph();
-        if (valid_graph_id == GUI_INVALID_ID) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Failed to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return nullptr;
-        }
-        graph_ptr = this->GetGraph(valid_graph_id);
-        if (graph_ptr == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unable to find graph for given uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return nullptr;
-        } else {
-            graph_ptr->SetRunning(true);
-            this->created_running_graph = true;
-        }
-    }
-    return graph_ptr;
 }
 
 

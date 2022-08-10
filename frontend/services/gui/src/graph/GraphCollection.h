@@ -66,6 +66,9 @@ public:
 
     void SetLuaFunc(lua_func_type* func);
 
+    // ! Has to be called once before calling SynchronizeGraphs() or NotifyRunningGraph_*()
+    bool InitializeGraphSynchronisation(const megamol::core::CoreInstance& core_instance);
+
     bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
 
     bool LoadOrAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
@@ -115,8 +118,6 @@ private:
     bool created_running_graph;
 
     // FUNCTIONS --------------------------------------------------------------
-
-    GraphPtr_t request_running_graph();
 
     bool load_module_stock(const megamol::core::CoreInstance& core_instance);
     bool load_call_stock(const megamol::core::CoreInstance& core_instance);
