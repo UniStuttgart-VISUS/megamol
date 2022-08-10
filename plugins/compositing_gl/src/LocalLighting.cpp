@@ -100,7 +100,7 @@ bool megamol::compositing::LocalLighting::create() {
         m_lambert_prgm =
             core::utility::make_glowl_shader("compositing_lambert", shader_options, "compositing_gl/lambert.comp.glsl");
 
-        m_lambert_prgm =
+        m_phong_prgm =
             core::utility::make_glowl_shader("compositing_phong", shader_options, "compositing_gl/phong.comp.glsl");
 
     } catch (std::exception& e) {

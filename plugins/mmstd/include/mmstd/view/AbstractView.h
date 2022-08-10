@@ -120,15 +120,6 @@ public:
     virtual void CalcCameraClippingPlanes(float border);
 
     /**
-     * Returns the current Bounding Box extents
-     *
-     * The frontend VR Service needs to access the Bounding Box of the data set to align positioning in the VR scene.
-     */
-    BoundingBoxes_2 const& GetBoundingBoxes() const {
-        return _bboxs;
-    };
-
-    /**
      * Resets the view. This normally sets the camera parameters to
      * default values.
      */
@@ -309,9 +300,6 @@ protected:
 
     /** Slot for incoming rendering requests */
     CalleeSlot _lhsRenderSlot;
-
-    /** The complete scene bounding box */
-    BoundingBoxes_2 _bboxs;
 
     /** The camera */
     Camera _camera;

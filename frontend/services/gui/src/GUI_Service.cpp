@@ -15,7 +15,6 @@
 #include "ImagePresentationEntryPoints.h"
 #include "KeyboardMouse_Events.h"
 #include "OpenGL_Context.h"
-#include "PerformanceManager.h"
 #include "ProjectLoader.h"
 #include "RuntimeConfig.h"
 #include "ScriptPaths.h"
