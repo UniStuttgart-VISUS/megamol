@@ -10,6 +10,7 @@
 #include "mmcore/param/IntParam.h"
 
 #include "imgui_tex_inspect.h"
+#include "imgui_tex_inspect_demo.h"
 #include "tex_inspect_opengl.h"
 
 using namespace megamol::compositing_gl;
@@ -77,10 +78,8 @@ bool TextureInspector::getDataCallback(core::Call& caller) {
                 ImTextureID tex_handle = (void*)(intptr_t)tex_handles[tex_id].first;
                 ImVec2 tex_size = ImVec2(tex_handles[tex_id].second.x, tex_handles[tex_id].second.y);
 
-                ImGui::Begin("Simple Texture Inspector");
-                ImGuiTexInspect::BeginInspectorPanel("Inspector", tex_handle, tex_size, ImGuiTexInspect::InspectorFlags_FlipY);
-                ImGuiTexInspect::EndInspectorPanel();
-                ImGui::End();
+                ImGuiTexInspect::Demo_SetTexture(tex_handle, tex_size);
+                ImGuiTexInspect::ShowDemoWindow();
             }
         }
     }
