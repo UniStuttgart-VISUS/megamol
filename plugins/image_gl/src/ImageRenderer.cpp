@@ -350,7 +350,6 @@ bool ImageRenderer::assertImage(bool rightEye) {
                     if (remoteness) {
                         MPI_Bcast(&this->width, 1, MPI_UNSIGNED, roleImgcRank, roleComm);
                         MPI_Bcast(&this->height, 1, MPI_UNSIGNED, roleImgcRank, roleComm);
-                        MPI_Bcast(&imgc_enc, 1, MPI_UNSIGNED_CHAR, roleImgcRank, roleComm);
                     }
                 }
 #endif /* MEGAMOL_USE_MPI */
