@@ -521,9 +521,13 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
     out_param.SetGUIReadOnly(in_param_ptr->IsGUIReadOnly());
     out_param.SetGUIPresentation(in_param_ptr->GetGUIPresentation());
 
-    // Do not read param value from core param if gui param has already updated value
-    if (out_param.IsValueDirty())
+    /// XXX Prioritizing currently changed value from GUI
+    /// Do not read param value from core param if gui param has already updated value
+    if (out_param.IsValueDirty()) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[GUI] Ignoring core parameter value. More up to date value of GUI parameter available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
+    }
 
     bool type_error = false;
 

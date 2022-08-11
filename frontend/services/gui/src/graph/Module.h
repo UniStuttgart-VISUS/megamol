@@ -58,6 +58,9 @@ public:
 
     void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
     void Update(const GraphItemsState_t& state);
+    void Update() {
+        this->gui_update = true;
+    }
 
     inline bool DrawParameters(const std::string& in_search, bool in_extended, bool in_indent,
         megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr,

@@ -116,6 +116,7 @@ private:
     lua_func_type* input_lua_func = nullptr;
 
     bool created_running_graph;
+    bool initialized_syncing;
 
     // FUNCTIONS --------------------------------------------------------------
 
