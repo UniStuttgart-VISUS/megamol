@@ -164,23 +164,6 @@ bool ImageRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     auto& cam = call.GetCamera();
 
-    float near_plane = 0.0f;
-    float far_plane = 0.0f;
-
-    try {
-        auto cam_intrinsics = cam.get<megamol::core::view::Camera::PerspectiveParameters>();
-        near_plane = cam_intrinsics.near_plane;
-        far_plane = cam_intrinsics.far_plane;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "SimpleMoleculeRenderer - Error when getting perspective camera intrinsics");
-    }
-
-    auto CamPos = cam.getPose().position;
-    auto CamView = cam.getPose().direction;
-    auto CamRight = cam.getPose().right;
-    auto CamUp = cam.getPose().up;
-    auto CamNearClip = near_plane;
     //auto Eye = cam.eye();
     //bool rightEye = (Eye == core::thecam::Eye::right);
     bool rightEye = false;
