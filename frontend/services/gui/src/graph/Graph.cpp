@@ -781,7 +781,6 @@ bool megamol::gui::Graph::CallExists(
                     (tmp_callee_fullname == callee_fullname));
         }
     }) != this->calls.end());
-
 }
 
 

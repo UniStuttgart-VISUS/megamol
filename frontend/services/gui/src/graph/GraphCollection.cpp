@@ -25,7 +25,7 @@ megamol::gui::GraphCollection::GraphCollection()
         , gui_file_browser()
         , gui_graph_delete_uid(GUI_INVALID_ID)
         , created_running_graph(false)
-        , initialized_syncing (false) {}
+        , initialized_syncing(false) {}
 
 
 bool megamol::gui::GraphCollection::AddEmptyProject() {
@@ -1668,8 +1668,8 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_DeleteModule(core::Module
         // Return true if module is already absent
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Could not find module for deletion: '%s' [%s, %s, line %d]\n", module_inst.modulePtr->Name().PeekBuffer(),
-            __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Could not find module for deletion: '%s' [%s, %s, line %d]\n",
+            module_inst.modulePtr->Name().PeekBuffer(), __FILE__, __FUNCTION__, __LINE__);
 #endif // GUI_VERBOSE
         return true;
     }
@@ -1707,8 +1707,8 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_RenameModule(
         }
 
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Could not find module for renaming: '%s' [%s, %s, line %d]\n", module_inst.modulePtr->Name().PeekBuffer(),
-            __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Could not find module for renaming: '%s' [%s, %s, line %d]\n",
+            module_inst.modulePtr->Name().PeekBuffer(), __FILE__, __FUNCTION__, __LINE__);
     }
     return false;
 }
@@ -1767,15 +1767,16 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_ParameterChanged(
         for (auto& module_ptr : graph_ptr->Modules()) {
             for (auto& p : module_ptr->Parameters()) {
                 if (param_slot->Parameter() == p.CoreParamPtr()) {
-                    bool success = megamol::gui::Parameter::ReadCoreParameterToParameter(param_slot->Parameter(), p, false, false);
+                    bool success =
+                        megamol::gui::Parameter::ReadCoreParameterToParameter(param_slot->Parameter(), p, false, false);
                     return success;
                 }
             }
         }
 
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Could not find parameter: '%s' [%s, %s, line %d]\n",
-            param_slot->FullName().PeekBuffer(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Could not find parameter: '%s' [%s, %s, line %d]\n", param_slot->FullName().PeekBuffer(), __FILE__,
+            __FUNCTION__, __LINE__);
     }
     return false;
 }
@@ -1791,12 +1792,11 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddCall(core::CallInstanc
 
     if (auto graph_ptr = this->GetRunningGraph()) {
 
-        if (graph_ptr->CallExists(
-                call_inst.request.className, call_inst.request.from, call_inst.request.to)) {
+        if (graph_ptr->CallExists(call_inst.request.className, call_inst.request.from, call_inst.request.to)) {
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Call already exists: '%s' [%s, %s, line %d]\n", call_inst.callPtr->ClassName(),
-                __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Call already exists: '%s' [%s, %s, line %d]\n", call_inst.callPtr->ClassName(), __FILE__,
+                __FUNCTION__, __LINE__);
 #endif // GUI_VERBOSE
             return true;
         }
