@@ -870,7 +870,7 @@ bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
 }
 
 
-ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr) {
+ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr, bool use_queue) {
 
     try {
         // Only create new group if given name is not empty
@@ -893,7 +893,9 @@ ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const
                     queue_data.name_id = module_ptr->FullName();
                     if (group_ptr->AddModule(module_ptr)) {
                         queue_data.rename_id = module_ptr->FullName();
-                        this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+                        if (use_queue) {
+                            this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+                        }
                         this->ForceSetDirty();
                         return existing_group_uid;
                     }

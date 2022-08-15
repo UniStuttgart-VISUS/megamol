@@ -1589,7 +1589,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
                 ///XXX Remove all other graph entries?
             }
             // Add module to group
-            graph_ptr->AddGroupModule(module_namespace, gui_module_ptr);
+            graph_ptr->AddGroupModule(module_namespace, gui_module_ptr, false);
 
 #ifdef PROFILING
             // TODO set some stuff here so I can find which regions are which!?
@@ -1688,8 +1688,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_RenameModule(
 
     if (auto graph_ptr = this->GetRunningGraph()) {
 
-        std::string full_name(module_inst.modulePtr->Name().PeekBuffer());
-        if (graph_ptr->ModuleExists(full_name)) {
+        if (graph_ptr->ModuleExists(old_name)) {
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Module already exists: '%s' [%s, %s, line %d]\n", module_inst.modulePtr->Name().PeekBuffer(),
@@ -1699,7 +1698,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_RenameModule(
         }
 
         for (auto& module_ptr : graph_ptr->Modules()) {
-            if (module_ptr->FullName() == full_name) {
+            if (module_ptr->FullName() == old_name) {
                 module_ptr->SetName(new_name);
                 module_ptr->Update();
                 return true;

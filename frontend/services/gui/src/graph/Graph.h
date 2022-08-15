@@ -89,7 +89,7 @@ public:
         return this->groups;
     }
     GroupPtr_t GetGroup(ImGuiID group_uid);
-    ImGuiID AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr);
+    ImGuiID AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr, bool use_queue = true);
 
     void Clear();
 
