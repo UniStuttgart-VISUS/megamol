@@ -131,7 +131,7 @@ ModulePtr_t megamol::gui::Graph::AddModule(const std::string& class_name, const 
         /// Parameters and CallSlots have to be added separately
         /// Add module to queue manually
         if (auto mod_ptr = std::make_shared<Module>(
-            megamol::gui::GenerateUniqueID(), class_name, description, plugin_name, is_view)) {
+                megamol::gui::GenerateUniqueID(), class_name, description, plugin_name, is_view)) {
 
             this->modules.emplace_back(mod_ptr);
 

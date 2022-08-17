@@ -1549,8 +1549,8 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
         std::string module_namespace;
         if (!this->project_separate_name_and_namespace(full_name, module_namespace, module_name)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Invalid module name: '%s' [%s, %s, line %d]\n", full_name.c_str(), __FILE__,
-                __FUNCTION__, __LINE__);
+                "[GUI] Invalid module name: '%s' [%s, %s, line %d]\n", full_name.c_str(), __FILE__, __FUNCTION__,
+                __LINE__);
             return false;
         }
 
@@ -1619,8 +1619,9 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
             return true;
         }
 
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Unable to create module: '%s' [%s, %s, line %d]\n",
-            module_inst.modulePtr->Name().PeekBuffer(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unable to create module: '%s' [%s, %s, line %d]\n", module_inst.modulePtr->Name().PeekBuffer(),
+            __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return false;
