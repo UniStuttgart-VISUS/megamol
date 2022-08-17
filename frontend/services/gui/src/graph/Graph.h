@@ -58,9 +58,10 @@ public:
     explicit Graph(const std::string& graph_name);
     ~Graph();
 
-    ModulePtr_t AddModule(const ModuleStockVector_t& stock_ms, const std::string& class_name);
-    ModulePtr_t AddModule(
-        const std::string& class_name, const std::string& description, const std::string& plugin_name, bool is_view);
+    ModulePtr_t AddModule(const ModuleStockVector_t& stock_ms, const std::string& class_name,
+        const std::string& module_name, const std::string& group_name);
+    ModulePtr_t AddModule(const std::string& class_name, const std::string& module_name, const std::string& group_name,
+        const std::string& description, const std::string& plugin_name, bool is_view);
     bool DeleteModule(ImGuiID module_uid, bool use_queue = true);
     inline const ModulePtrVector_t& Modules() {
         return this->modules;

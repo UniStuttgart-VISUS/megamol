@@ -124,21 +124,26 @@ megamol::gui::Graph::~Graph() {
 }
 
 
-ModulePtr_t megamol::gui::Graph::AddModule(
-    const std::string& class_name, const std::string& description, const std::string& plugin_name, bool is_view) {
+ModulePtr_t megamol::gui::Graph::AddModule(const std::string& class_name, const std::string& module_name,
+    const std::string& group_name, const std::string& description, const std::string& plugin_name, bool is_view) {
 
     try {
+        /// Parameters and CallSlots have to be added separately
+        /// Add module to queue manually
+        if (auto mod_ptr = std::make_shared<Module>(
+            megamol::gui::GenerateUniqueID(), class_name, description, plugin_name, is_view)) {
 
-        auto mod_ptr =
-            std::make_shared<Module>(megamol::gui::GenerateUniqueID(), class_name, description, plugin_name, is_view);
-        this->modules.emplace_back(mod_ptr);
-        this->ForceSetDirty();
+            this->modules.emplace_back(mod_ptr);
+
+            mod_ptr->SetName(module_name);
+            this->AddGroupModule(group_name, mod_ptr, false);
+            this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Added empty module to project.\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Added empty module to project.\n");
 #endif // GUI_VERBOSE
-
-        return mod_ptr;
+            return mod_ptr;
+        }
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -151,12 +156,13 @@ ModulePtr_t megamol::gui::Graph::AddModule(
     }
 
     megamol::core::utility::log::Log::DefaultLog.WriteError(
-        "[GUI] Unable to add empty module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Unable to add module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return nullptr;
 }
 
 
-ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name) {
+ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name,
+    const std::string& module_name, const std::string& group_name) {
 
     try {
         for (auto& mod : stock_modules) {
@@ -164,8 +170,13 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
                 ImGuiID mod_uid = megamol::gui::GenerateUniqueID();
                 auto mod_ptr =
                     std::make_shared<Module>(mod_uid, mod.class_name, mod.description, mod.plugin_name, mod.is_view);
-                mod_ptr->SetName(this->generate_unique_module_name(mod.class_name));
+                if (module_name.empty()) {
+                    mod_ptr->SetName(this->generate_unique_module_name(mod.class_name));
+                } else {
+                    mod_ptr->SetName(module_name);
+                }
                 mod_ptr->SetGraphEntryName("");
+                this->AddGroupModule(group_name, mod_ptr, false);
 
                 for (auto& p : mod.parameters) {
                     Parameter parameter(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval,
