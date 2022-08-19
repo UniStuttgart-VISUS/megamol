@@ -42,6 +42,7 @@ TableToParticles::TableToParticles(void)
         , slotColumnX("xcolumnname", "The name of the column holding the x-coordinate.")
         , slotColumnY("ycolumnname", "The name of the column holding the y-coordinate.")
         , slotColumnZ("zcolumnname", "The name of the column holding the z-coordinate.")
+        , slotColumnID("idcolumnname", "The name of the column holding the particle id.")
         , slotColumnVX("direction::vxcolumnname", "The name of the column holding the vx-coordinate.")
         , slotColumnVY("direction::vycolumnname", "The name of the column holding the vy-coordinate.")
         , slotColumnVZ("direction::vzcolumnname", "The name of the column holding the vz-coordinate.")
@@ -116,6 +117,10 @@ TableToParticles::TableToParticles(void)
     this->slotColumnZ << zColumnEp;
     this->MakeSlotAvailable(&this->slotColumnZ);
 
+    core::param::FlexEnumParam* idColumnEp = new core::param::FlexEnumParam("undef");
+    this->slotColumnID << idColumnEp;
+    this->MakeSlotAvailable(&this->slotColumnID);
+
     core::param::FlexEnumParam* vxColumnEp = new core::param::FlexEnumParam("undef");
     this->slotColumnVX << vxColumnEp;
     this->MakeSlotAvailable(&this->slotColumnVX);
@@ -183,7 +188,8 @@ bool TableToParticles::anythingDirty() {
            this->slotColumnI.IsDirty() || this->slotGlobalColor.IsDirty() || this->slotColorMode.IsDirty() ||
            this->slotColumnRadius.IsDirty() || this->slotGlobalRadius.IsDirty() || this->slotRadiusMode.IsDirty() ||
            this->slotColumnX.IsDirty() || this->slotColumnY.IsDirty() || this->slotColumnZ.IsDirty() ||
-           this->slotColumnVX.IsDirty() || this->slotColumnVY.IsDirty() || this->slotColumnVZ.IsDirty();
+           this->slotColumnID.IsDirty() || this->slotColumnVX.IsDirty() || this->slotColumnVY.IsDirty() ||
+           this->slotColumnVZ.IsDirty();
 }
 
 void TableToParticles::resetAllDirty() {
@@ -199,6 +205,7 @@ void TableToParticles::resetAllDirty() {
     this->slotColumnX.ResetDirty();
     this->slotColumnY.ResetDirty();
     this->slotColumnZ.ResetDirty();
+    this->slotColumnID.ResetDirty();
     this->slotColumnVX.ResetDirty();
     this->slotColumnVY.ResetDirty();
     this->slotColumnVZ.ResetDirty();
@@ -245,6 +252,7 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
         this->slotColumnX.Param<core::param::FlexEnumParam>()->ClearValues();
         this->slotColumnY.Param<core::param::FlexEnumParam>()->ClearValues();
         this->slotColumnZ.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->slotColumnID.Param<core::param::FlexEnumParam>()->ClearValues();
         this->slotColumnVX.Param<core::param::FlexEnumParam>()->ClearValues();
         this->slotColumnVY.Param<core::param::FlexEnumParam>()->ClearValues();
         this->slotColumnVZ.Param<core::param::FlexEnumParam>()->ClearValues();
@@ -267,6 +275,7 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
             this->slotColumnX.Param<core::param::FlexEnumParam>()->AddValue(n);
             this->slotColumnY.Param<core::param::FlexEnumParam>()->AddValue(n);
             this->slotColumnZ.Param<core::param::FlexEnumParam>()->AddValue(n);
+            this->slotColumnID.Param<core::param::FlexEnumParam>()->AddValue(n);
             this->slotColumnVX.Param<core::param::FlexEnumParam>()->AddValue(n);
             this->slotColumnVY.Param<core::param::FlexEnumParam>()->AddValue(n);
             this->slotColumnVZ.Param<core::param::FlexEnumParam>()->AddValue(n);
@@ -349,9 +358,17 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
         break;
     }
 
+    std::string c = cleanUpColumnHeader(this->slotColumnID.Param<core::param::FlexEnumParam>()->ValueString());
+    haveIDs = this->columnIndex.find(c) != columnIndex.end();
+    if (haveIDs) {
+        retValue = retValue && pushColumnIndex(indicesToCollect,
+                                   this->slotColumnID.Param<core::param::FlexEnumParam>()->ValueString().c_str());
+        stride += 1;
+    }
+
     bool vx, vy, vz;
     vx = vy = vz = false;
-    std::string c = cleanUpColumnHeader(this->slotColumnVX.Param<core::param::FlexEnumParam>()->ValueString());
+    c = cleanUpColumnHeader(this->slotColumnVX.Param<core::param::FlexEnumParam>()->ValueString());
     if (this->columnIndex.find(c) != columnIndex.end())
         vx = true;
     c = cleanUpColumnHeader(this->slotColumnVY.Param<core::param::FlexEnumParam>()->ValueString());
@@ -604,6 +621,10 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                         geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
                     break;
                 }
+                if (haveIDs) {
+                    c->AccessParticles(0).SetIDData(geocalls::MultiParticleDataCall::Particles::IDDATA_UINT32,
+                        this->everything.data() + colOffset + 1, static_cast<unsigned int>(stride * sizeof(float)));
+                }
                 if (haveVelocities) {
                     c->AccessParticles(0).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
                         this->everything.data() + (stride - 3), static_cast<unsigned int>(stride * sizeof(float)));
@@ -669,6 +690,10 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                 //    e->AccessParticles(0).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
                 //        this->everything.data() + (stride - 3), static_cast<unsigned int>(stride * sizeof(float)));
                 //}
+                if (haveIDs) {
+                    c->AccessParticles(0).SetIDData(geocalls::MultiParticleDataCall::Particles::IDDATA_UINT32,
+                        this->everything.data() + colOffset + 1, static_cast<unsigned int>(stride * sizeof(float)));
+                }
 
                 if (haveTensor) {
                     e->AccessParticles(0).SetRadData(
