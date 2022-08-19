@@ -325,6 +325,16 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
     retValue = retValue && pushColumnIndex(indicesToCollect,
                                this->slotColumnZ.Param<core::param::FlexEnumParam>()->ValueString().c_str());
 
+    std::string c = cleanUpColumnHeader(this->slotColumnID.Param<core::param::FlexEnumParam>()->ValueString());
+    haveIDs = this->columnIndex.find(c) != columnIndex.end();
+    size_t idOffset;
+    if (haveIDs) {
+        retValue = retValue && pushColumnIndex(indicesToCollect,
+                                   this->slotColumnID.Param<core::param::FlexEnumParam>()->ValueString().c_str());
+        idOffset = indicesToCollect.size() - 1;
+        stride += 1;
+    }
+
     if (this->slotRadiusMode.Param<core::param::EnumParam>()->Value() == 0) { // particle
         if (!pushColumnIndex(
                 indicesToCollect, this->slotColumnRadius.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
@@ -356,16 +366,6 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
         break;
     case 2: // global RGB
         break;
-    }
-
-    std::string c = cleanUpColumnHeader(this->slotColumnID.Param<core::param::FlexEnumParam>()->ValueString());
-    haveIDs = this->columnIndex.find(c) != columnIndex.end();
-    size_t idOffset;
-    if (haveIDs) {
-        retValue = retValue && pushColumnIndex(indicesToCollect,
-                                   this->slotColumnID.Param<core::param::FlexEnumParam>()->ValueString().c_str());
-        idOffset = indicesToCollect.size() - 1;
-        stride += 1;
     }
 
     bool vx, vy, vz;
@@ -611,6 +611,12 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                     break;
                 }
 
+                if (haveIDs) {
+                    c->AccessParticles(0).SetIDData(geocalls::MultiParticleDataCall::Particles::IDDATA_UINT32,
+                        this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
+                    colOffset += 1;
+                }
+
                 switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // RGB
                     c->AccessParticles(0).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
@@ -625,10 +631,6 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                     c->AccessParticles(0).SetColourData(
                         geocalls::MultiParticleDataCall::Particles::COLDATA_NONE, nullptr);
                     break;
-                }
-                if (haveIDs) {
-                    c->AccessParticles(0).SetIDData(geocalls::MultiParticleDataCall::Particles::IDDATA_UINT32,
-                        this->everything.data() + colOffset + 1, static_cast<unsigned int>(stride * sizeof(float)));
                 }
                 if (haveVelocities) {
                     c->AccessParticles(0).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
@@ -676,6 +678,12 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                     break;
                 }
 
+                if (haveIDs) {
+                    c->AccessParticles(0).SetIDData(geocalls::MultiParticleDataCall::Particles::IDDATA_UINT32,
+                        this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
+                    colOffset += 1;
+                }
+
                 switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // RGB
                     e->AccessParticles(0).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
@@ -695,10 +703,6 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                 //    e->AccessParticles(0).SetDirData(geocalls::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
                 //        this->everything.data() + (stride - 3), static_cast<unsigned int>(stride * sizeof(float)));
                 //}
-                if (haveIDs) {
-                    c->AccessParticles(0).SetIDData(geocalls::MultiParticleDataCall::Particles::IDDATA_UINT32,
-                        this->everything.data() + colOffset + 1, static_cast<unsigned int>(stride * sizeof(float)));
-                }
 
                 if (haveTensor) {
                     e->AccessParticles(0).SetRadData(
