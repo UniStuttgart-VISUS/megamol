@@ -1,5 +1,7 @@
 #include "ProbeGlyphRenderer.h"
 
+#include "Screenshots.h"
+
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "mmstd/event/EventCall.h"
@@ -10,6 +12,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/transform.hpp"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -30,6 +33,7 @@ megamol::probe_gl::ProbeGlyphRenderer::ProbeGlyphRenderer()
         , m_use_interpolation_slot("UseInterpolation", "Interpolate between samples")
         , m_show_canvas_slot("ShowGlyphCanvas", "Render glyphs with opaque background")
         , m_canvas_color_slot("GlyphCanvasColor", "Color used for the background of individual glyphs")
+        , m_save_glyphs_to_textures_slot("SaveToImageSlot", "Render glyph to texture and save to image")
         , m_tf_range({0.0f, 0.0f})
         , m_show_glyphs(true) {
 
@@ -59,6 +63,10 @@ megamol::probe_gl::ProbeGlyphRenderer::ProbeGlyphRenderer()
 
     this->m_canvas_color_slot << new core::param::ColorParam(1.0, 1.0, 1.0, 1.0);
     this->MakeSlotAvailable(&this->m_canvas_color_slot);
+
+    this->m_save_glyphs_to_textures_slot << new core::param::ButtonParam();
+    this->m_save_glyphs_to_textures_slot.SetUpdateCallback(&ProbeGlyphRenderer::saveGlyphsToImages);
+    this->MakeSlotAvailable(&this->m_save_glyphs_to_textures_slot);
 }
 
 megamol::probe_gl::ProbeGlyphRenderer::~ProbeGlyphRenderer() {}
@@ -109,6 +117,10 @@ void megamol::probe_gl::ProbeGlyphRenderer::createMaterialCollection() {
     // cluster ID glyph shader program
     material_collection_->addMaterial(this->instance(), "ClusterIDProbeGlyph",
         {"probe_gl/glyphs/clusterID_probe_glyph.vert.glsl", "probe_gl/glyphs/clusterID_probe_glyph.frag.glsl"});
+
+    // render to texture program
+    material_collection_->addMaterial(this->instance(), "RenderToTexture",
+        {"probe_gl/glyphs/renderToTexture.vert.glsl", "probe_gl/glyphs/scalar_probe_glyph_v2.frag.glsl"});
 }
 
 void megamol::probe_gl::ProbeGlyphRenderer::updateRenderTaskCollection(
@@ -663,6 +675,126 @@ void megamol::probe_gl::ProbeGlyphRenderer::updateRenderTaskCollection(
             }
         }
     }
+}
+
+bool megamol::probe_gl::ProbeGlyphRenderer::saveGlyphsToImages(core::param::ParamSlot& slot) {
+
+    // process render tasks and render to texture
+    std::shared_ptr<glowl::FramebufferObject> fbo = std::make_shared<glowl::FramebufferObject>(256, 256);
+    fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+    std::shared_ptr<glowl::BufferObject> draw_data_buffer =
+        std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    std::shared_ptr<glowl::BufferObject> draw_command_buffer =
+        std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+
+    GLint previous_read_fbo;
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &previous_read_fbo);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+    {
+        // Perform actual rendering after updating mesh data and gltf data
+        for (auto const& buffer : render_task_collection_->getPerFrameBuffers()) {
+            uint32_t binding_point = std::get<1>(buffer);
+            if (binding_point != 0) {
+                std::get<0>(buffer)->bind(binding_point);
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "Binding point 0 reserved for render task data buffer. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                    __LINE__);
+            }
+        }
+
+        auto render_func = [](
+            std::shared_ptr<glowl::GLSLProgram> shdr_prgm,
+            std::shared_ptr<glowl::FramebufferObject> fbo,
+            std::shared_ptr<glowl::BufferObject> draw_data_buffer,
+            std::shared_ptr<glowl::BufferObject> draw_command_buffer)
+        {
+            glDisable(GL_DEPTH_TEST);
+
+            fbo->bind();
+            glClearColor(0, 0, 0, 0);
+            glClear(GL_COLOR_BUFFER_BIT);
+            glViewport(0, 0, fbo->getWidth(), fbo->getHeight());
+            //TODO clear FBO
+
+            shdr_prgm->use();
+
+            draw_data_buffer->bind(0);
+
+            draw_command_buffer->bind();
+            //m_billboard_dummy_mesh->bindVertexArray();
+
+            //if (m_billboard_dummy_mesh->getPrimitiveType() == GL_PATCHES) {
+            //    glPatchParameteri(GL_PATCH_VERTICES, 4);
+            //    //TODO add generic patch vertex count to render tasks....
+            //}
+
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+            //glMultiDrawElementsIndirect(m_billboard_dummy_mesh->getPrimitiveType(),
+            //    m_billboard_dummy_mesh->getIndexType(),
+            //    (GLvoid*)0, 1, 0);
+
+            glUseProgram(0);
+            glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
+        };
+
+        auto save_to_disk_func = [](
+            std::string const& filename,
+            std::shared_ptr<glowl::FramebufferObject> fbo)
+        {
+            megamol::frontend_resources::ScreenshotImageData result;
+            result.resize(static_cast<size_t>(fbo->getWidth()), static_cast<size_t>(fbo->getHeight()));
+
+            fbo->bindToRead(0);
+            //glReadBuffer(m_read_buffer);
+            glReadPixels(0, 0, fbo->getWidth(), fbo->getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, result.image.data());
+
+            megamol::frontend_resources::ScreenshotImageDataToPNGWriter writer;
+            writer.write_image(result, filename);
+        };
+
+        // loop through "registered" render batches
+        int draw_idx = 0;
+        for (auto const& draw_command : m_scalar_probe_gylph_draw_commands) {
+
+            try {
+                auto const& draw_data = m_scalar_probe_glyph_data[draw_idx];
+                draw_command_buffer->rebuffer(&draw_command, sizeof(glowl::DrawElementsCommand));
+                draw_data_buffer->rebuffer(&draw_data, sizeof(GlyphScalarProbeData));
+
+                fbo = std::make_shared<glowl::FramebufferObject>(256, 256);
+                fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+                auto shdr_prgm = material_collection_->getMaterials().find("RenderToTexture")->second.shader_program;
+
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+                render_func(shdr_prgm, fbo, draw_data_buffer, draw_command_buffer);
+
+                // save texture to disk
+                auto filename = "probe_scalar_glyph" + std::to_string(draw_idx) + ".png";
+                save_to_disk_func(filename, fbo);
+            } catch (const std::exception&) {
+            
+            }
+
+            draw_idx++;
+        }
+
+        //TODO add loop for other glpyh types
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, previous_read_fbo);
+
+        // Clear the way for his ancient majesty, the mighty immediate mode...
+        glUseProgram(0);
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+    }
+
+    return true;
 }
 
 bool megamol::probe_gl::ProbeGlyphRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {

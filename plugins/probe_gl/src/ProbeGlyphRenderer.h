@@ -57,6 +57,8 @@ protected:
     void createMaterialCollection() override;
     void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
 
+    bool saveGlyphsToImages(core::param::ParamSlot& slot);
+
 private:
     core::CallerSlot m_transfer_function_Slot;
 
@@ -73,6 +75,8 @@ private:
     core::param::ParamSlot m_show_canvas_slot;
 
     core::param::ParamSlot m_canvas_color_slot;
+
+    core::param::ParamSlot m_save_glyphs_to_textures_slot;
 
     std::shared_ptr<glowl::Mesh> m_billboard_dummy_mesh;
 
