@@ -42,7 +42,7 @@ TableToParticles::TableToParticles(void)
         , slotColumnX("xcolumnname", "The name of the column holding the x-coordinate.")
         , slotColumnY("ycolumnname", "The name of the column holding the y-coordinate.")
         , slotColumnZ("zcolumnname", "The name of the column holding the z-coordinate.")
-        , slotColumnID("idcolumnname", "The name of the column holding the particle id.")
+        , slotColumnID("idcolumnname", "The name of the column holding the particle id. Stored as uint32_t.")
         , slotColumnVX("direction::vxcolumnname", "The name of the column holding the vx-coordinate.")
         , slotColumnVY("direction::vycolumnname", "The name of the column holding the vy-coordinate.")
         , slotColumnVZ("direction::vzcolumnname", "The name of the column holding the vz-coordinate.")
@@ -360,9 +360,11 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
 
     std::string c = cleanUpColumnHeader(this->slotColumnID.Param<core::param::FlexEnumParam>()->ValueString());
     haveIDs = this->columnIndex.find(c) != columnIndex.end();
+    size_t idOffset;
     if (haveIDs) {
         retValue = retValue && pushColumnIndex(indicesToCollect,
                                    this->slotColumnID.Param<core::param::FlexEnumParam>()->ValueString().c_str());
+        idOffset = indicesToCollect.size() - 1;
         stride += 1;
     }
 
@@ -448,6 +450,9 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
         float* currOut = &everything[i * stride];
         for (uint32_t j = 0; j < numIndices; j++) {
             currOut[j] = ftData[cols * i + indicesToCollect[j]];
+        }
+        if (this->haveIDs) {
+            currOut[idOffset] = static_cast<uint32_t>(currOut[idOffset]);
         }
         if (this->haveTensor) {
             glm::mat3 rotate_world_into_tensor;
