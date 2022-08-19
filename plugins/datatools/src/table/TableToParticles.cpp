@@ -452,7 +452,9 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
             currOut[j] = ftData[cols * i + indicesToCollect[j]];
         }
         if (this->haveIDs) {
-            currOut[idOffset] = static_cast<uint32_t>(currOut[idOffset]);
+            // First cast the float to a int, then save bits w/o casting in currOut
+            uint32_t id = static_cast<uint32_t>(currOut[idOffset]);
+            currOut[idOffset] = *reinterpret_cast<float*>(&id);
         }
         if (this->haveTensor) {
             glm::mat3 rotate_world_into_tensor;
