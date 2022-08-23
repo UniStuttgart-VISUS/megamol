@@ -87,6 +87,10 @@ private:
     core::param::ParamSlot flexYSlot;
     core::param::ParamSlot flexZSlot;
     core::param::ParamSlot flexAlignedPosSlot;
+    core::param::ParamSlot flexIDSlot;
+    core::param::ParamSlot flexVXSlot;
+    core::param::ParamSlot flexVYSlot;
+    core::param::ParamSlot flexVZSlot;
 
 
     std::vector<float> mix;
@@ -96,6 +100,7 @@ private:
     geocalls::SimpleSphericalParticles::ColourDataType colType = geocalls::SimpleSphericalParticles::COLDATA_NONE;
     geocalls::SimpleSphericalParticles::VertexDataType vertType = geocalls::SimpleSphericalParticles::VERTDATA_NONE;
     geocalls::SimpleSphericalParticles::IDDataType idType = geocalls::SimpleSphericalParticles::IDDATA_NONE;
+    geocalls::SimpleSphericalParticles::DirDataType dirType = geocalls::SimpleSphericalParticles::DIRDATA_NONE;
 
     size_t stride = 0;
 
