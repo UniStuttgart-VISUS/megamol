@@ -28,6 +28,7 @@ OSPRayRenderer::OSPRayRenderer(void)
 {
     this->_getStructureSlot.SetCompatibleCall<CallOSPRayStructureDescription>();
     this->MakeSlotAvailable(&this->_getStructureSlot);
+    _getStructureSlot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
 
     _imgSize = {0, 0};
     _time = 0;

@@ -18,6 +18,7 @@ OSPRaySphereGeometry::OSPRaySphereGeometry(void)
 
     this->getDataSlot.SetCompatibleCall<geocalls::MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
+    getDataSlot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
 }
 
 

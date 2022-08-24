@@ -58,6 +58,7 @@ public:
 
         this->_getContextSlot.template SetCompatibleCall<core::factories::CallAutoDescription<CALL>>();
         this->MakeSlotAvailable(&this->_getContextSlot);
+        _getContextSlot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
     }
 
     /** Dtor. */
