@@ -13,18 +13,19 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/utility/ShaderSourceFactory.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/view/Renderer3DModuleGL.h"
 
-#include "geometry_calls/CallTriMeshData.h"
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
+#include "protein_calls/BindingSiteCall.h"
 
+#include "vislib/graphics/BitmapImage.h"
 #include "vislib/graphics/PngBitmapCodec.h"
-#include "vislib/graphics/gl/OutlineFont.h"
-#include "vislib/graphics/gl/Verdana.inc"
+#include "vislib_gl/graphics/gl/OutlineFont.h"
+#include "vislib_gl/graphics/gl/Verdana.inc"
 
 #include "AmbientOcclusionCalculator.h"
 #include "CUDAKernels.cuh"
-#include "Color.h"
 #include "Octree.h"
 #include "TriangleMeshRenderer.h"
 #include "VoronoiChannelCalculator.h"
@@ -36,7 +37,7 @@
 namespace megamol {
 namespace molecularmaps {
 
-class MapGenerator : public core::view::Renderer3DModuleGL {
+class MapGenerator : public core_gl::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -105,8 +106,8 @@ private:
      *
      * @return false if an error occured, true otherwise.
      */
-    bool capColouring(megamol::geocalls::CallTriMeshData* p_cap_data_call, megamol::core::view::CallRender3DGL& p_cr3d,
-        protein_calls::BindingSiteCall* p_bs);
+    bool capColouring(megamol::geocalls_gl::CallTriMeshDataGL* p_cap_data_call,
+        megamol::core_gl::view::CallRender3DGL& p_cr3d, protein_calls::BindingSiteCall* p_bs);
 
     /**
      * Colours the mesh in a certain radius around a binding site.
@@ -255,7 +256,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::view::CallRender3DGL& call);
+    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
 
     /**
      * The get data callback for the resulting mesh. The module should set the members of
@@ -282,7 +283,7 @@ private:
      * @param emsh The triangle mesh
      * @return True on success. False otherwise.
      */
-    bool fillLocalMesh(const geocalls::CallTriMeshData::Mesh& mesh);
+    bool fillLocalMesh(const geocalls_gl::CallTriMeshDataGL::Mesh& mesh);
 
     /**
      * Queries the index of the value attribute from a given mesh
@@ -290,7 +291,7 @@ private:
      * @param mesh The mesh to query the index from.
      * @return The queried index or -1 if it does not exist.
      */
-    int findValueAttributeIndex(const geocalls::CallTriMeshData::Mesh& mesh);
+    int findValueAttributeIndex(const geocalls_gl::CallTriMeshDataGL::Mesh& mesh);
 
     /**
      * Determine the boundary meridian of the protein. And set the types
@@ -550,7 +551,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::view::CallRender3DGL& call);
+    virtual bool Render(core_gl::view::CallRender3DGL& call);
 
     /**
      * Render the geodesic lines in 3D.
@@ -615,7 +616,7 @@ private:
      * @param ctmd The call containing the relevant data to write.
      * @param input_image The image that has to be rewritten.
      */
-    void writeValueImage(const vislib::TString& path_to_image, const geocalls::CallTriMeshData& ctmd,
+    void writeValueImage(const std::filesystem::path& path_to_image, const geocalls_gl::CallTriMeshDataGL& ctmd,
         vislib::Array<unsigned char>& input_image);
 
     /** Turn the Ambient Occlusion on or off */
@@ -706,7 +707,7 @@ private:
     core::param::ParamSlot cut_colour_param;
 
     /** The colour table for the cuts. */
-    vislib::Array<vec3f> cut_colour_table;
+    std::vector<glm::vec3> cut_colour_table;
 
     /** Determines what to render */
     core::param::ParamSlot display_param;
@@ -739,7 +740,7 @@ private:
     core::param::ParamSlot geodesic_lines_param;
 
     /** The geodesic lines shader programme. */
-    vislib::graphics::gl::GLSLGeometryShader geodesic_shader;
+    vislib_gl::graphics::gl::GLSLGeometryShader geodesic_shader;
 
     /** Store the OpenGL vertex buffer for the geodesic lines. */
     std::vector<GLuint> geodesic_lines_vbos;
@@ -748,7 +749,7 @@ private:
     core::param::ParamSlot group_colour_param;
 
     /** The colour table for the groups. */
-    vislib::Array<vec3f> group_colour_table;
+    std::vector<glm::vec3> group_colour_table;
 
     /** The data hash of the recently loaded data */
     SIZE_T lastDataHash;
@@ -790,10 +791,10 @@ private:
     GLuint map_vertex_vbo;
 
     /** The framebufferobject for the map shader */
-    vislib::graphics::gl::FramebufferObject map_fbo;
+    vislib_gl::graphics::gl::FramebufferObject map_fbo;
 
     /** The map shader programme */
-    vislib::graphics::gl::GLSLGeometryShader map_shader;
+    vislib_gl::graphics::gl::GLSLGeometryShader map_shader;
 
     /** The state of the shaders */
     bool map_shader_init;
@@ -829,7 +830,7 @@ private:
     Octree octree;
 
     /** Mesh that gets outputted via a call for possible further processing */
-    geocalls::CallTriMeshData::Mesh out_mesh;
+    geocalls_gl::CallTriMeshDataGL::Mesh out_mesh;
 
     /** Parameter slot for the selection of the output mesh */
     core::param::ParamSlot out_mesh_selection_slot;
@@ -862,7 +863,7 @@ private:
     vislib::Array<unsigned char> store_png_data;
 
     /** Renders the radius onto bottom left corner of the map. */
-    vislib::graphics::gl::OutlineFont store_png_font;
+    vislib_gl::graphics::gl::OutlineFont store_png_font;
 
     /** The image itself that is stored. */
     sg::graphics::PngBitmapCodec store_png_image;
@@ -874,10 +875,10 @@ private:
     core::param::ParamSlot store_png_path;
 
     /** The fbo that is used to render the map image */
-    vislib::graphics::gl::FramebufferObject store_png_fbo;
+    vislib_gl::graphics::gl::FramebufferObject store_png_fbo;
 
     /** The fbo that is used to render the value image */
-    vislib::graphics::gl::FramebufferObject store_values_fbo;
+    vislib_gl::graphics::gl::FramebufferObject store_values_fbo;
 
     /** The path to which the values image is stored */
     core::param::ParamSlot store_png_values_path;

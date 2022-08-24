@@ -6,7 +6,9 @@
 
 #pragma once
 
-#include "glowl/glowl.h"
+#include <glm/ext.hpp>
+#include <glm/glm.hpp>
+#include <glowl/glowl.h>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -14,10 +16,6 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-
-
-#include <glm/ext.hpp>
-#include <glm/glm.hpp>
 
 namespace megamol::compositing_gl {
 

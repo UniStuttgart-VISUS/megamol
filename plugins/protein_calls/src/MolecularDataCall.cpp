@@ -541,7 +541,7 @@ MolecularDataCall::~MolecularDataCall(void) {}
  * Set the atom types and positions.
  */
 void MolecularDataCall::SetAtoms(unsigned int atomCnt, unsigned int atomTypeCnt, const unsigned int* typeIdx,
-    const float* pos, const AtomType* types, const int* residueIdx, float* bfactor, const float* charge,
+    const float* pos, const AtomType* types, const int* residueIdx, const float* bfactor, const float* charge,
     const float* occupancy) {
     // set all values
     this->atomCount = atomCnt;

@@ -14,9 +14,9 @@ namespace protein_calls {
 
 class RamachandranDataCall : public megamol::core::Call {
 public:
-    enum PointState { NONE = 0, UNSURE_ALPHA = 1, SURE_ALPHA = 2, UNSURE_BETA = 3, SURE_BETA = 4 };
+    enum class PointState { NONE = 0, UNSURE_ALPHA = 1, SURE_ALPHA = 2, UNSURE_BETA = 3, SURE_BETA = 4 };
 
-    enum ProcheckState {
+    enum class ProcheckState {
         PS_NONE = 0,
         PS_UNSURE_ALPHA = 1,
         PS_MIDDLE_ALPHA = 2,

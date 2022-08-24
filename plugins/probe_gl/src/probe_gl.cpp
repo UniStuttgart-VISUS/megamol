@@ -10,14 +10,13 @@
 #include "ComputeDistance.h"
 #include "FilterByProbe.h"
 #include "PrecomputeGlyphTextures.h"
-#include "ProbeBillboardGlyphMaterial.h"
-#include "ProbeBillboardGlyphRenderTasks.h"
-#include "ProbeDetailViewRenderTasks.h"
+#include "ProbeGlyphRenderer.h"
+#include "ProbeDetailViewRenderer.h"
 #include "ProbeGlCalls.h"
-#include "ProbeHullRenderTasks.h"
+#include "ProbeHullRenderer.h"
 #include "ProbeInteraction.h"
-#include "ProbeRenderTasks.h"
-#include "ProbeShellElementsRenderTasks.h"
+#include "ProbeRenderer.h"
+#include "ProbeShellElementsRenderer.h"
 
 namespace megamol::probe_gl {
 class ProbeGlPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -32,13 +31,12 @@ public:
     void registerClasses() override {
 
         // register modules
-        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeBillboardGlyphMaterial>();
-        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeBillboardGlyphRenderTasks>();
-        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeDetailViewRenderTasks>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeGlyphRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeDetailViewRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeInteraction>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::FilterByProbe>();
-        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeHullRenderTasks>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeHullRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::PrecomputeGlyphTextures>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeShellElementsRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ComputeDistance>();

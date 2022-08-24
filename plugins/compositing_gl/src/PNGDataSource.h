@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <glowl/Texture2D.hpp>
+
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-
-#include "glowl/Texture2D.hpp"
 
 namespace megamol::compositing_gl {
 

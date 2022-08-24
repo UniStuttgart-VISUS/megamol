@@ -136,7 +136,10 @@ private:
     inline static std::string err_out_of_bounds = "index out of bounds";
 
 #ifdef PROFILING
-    friend class MegaMolGraph;
+    // i cant make access to the queries work without making the Profiling_Service a friend class
+    // and thereby linking the frontend service headers into the core
+    // so make the perf queries public when profiling is active...
+public:
     frontend_resources::PerformanceManager* perf_man = nullptr;
     frontend_resources::PerformanceManager::handle_vector cpu_queries, gl_queries;
 #endif // PROFILING

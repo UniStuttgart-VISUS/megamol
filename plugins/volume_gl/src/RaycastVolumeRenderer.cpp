@@ -1,27 +1,11 @@
-/*
- * RaycastVolumeRenderer.h
- *
- * Copyright (C) 2018-2020 by Universitaet Stuttgart (VISUS).
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
  * All rights reserved.
  */
 
 #include "RaycastVolumeRenderer.h"
 
-#include "OpenGL_Context.h"
-
-#include "geometry_calls//VolumetricDataCall.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/ColorParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
-
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-
-#include "glowl/Texture.hpp"
-#include "glowl/Texture2D.hpp"
-#include "glowl/Texture3D.hpp"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -32,7 +16,19 @@
 
 #include <glm/ext.hpp>
 
+#include <glowl/FramebufferObject.hpp>
+#include <glowl/Texture2D.hpp>
+#include <glowl/Texture3D.hpp>
+
+#include "OpenGL_Context.h"
+#include "geometry_calls/VolumetricDataCall.h"
+#include "mmcore/CoreInstance.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ColorParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmstd/light/DistantLight.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 
 using namespace megamol::volume_gl;
 
@@ -51,14 +47,10 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
         , m_opacity_threshold("opacity threshold", "Opacity threshold for integrative rendering")
         , m_iso_value("isovalue", "Isovalue for isosurface rendering")
         , m_opacity("opacity", "Surface opacity for blending")
-        , m_renderer_callerSlot("Renderer", "Renderer for chaining")
         , m_volumetricData_callerSlot("getData", "Connects the volume renderer with a voluemtric data source")
         , m_lights_callerSlot("lights", "Lights are retrieved over this slot.")
         , m_transferFunction_callerSlot(
               "getTransferFunction", "Connects the volume renderer with a transfer function") {
-
-    this->m_renderer_callerSlot.SetCompatibleCall<mmstd_gl::CallRender3DGLDescription>();
-    this->MakeSlotAvailable(&this->m_renderer_callerSlot);
 
     this->m_volumetricData_callerSlot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->m_volumetricData_callerSlot);
@@ -123,21 +115,22 @@ bool RaycastVolumeRenderer::create() {
 
     try {
         // create shader program
-        auto const shdr_cp_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
 
-        rvc_dvr_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Compute", shdr_cp_options,
-            std::filesystem::path("RaycastVolumeRenderer-Compute.comp.glsl"));
-        rvc_iso_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Compute-Iso", shdr_cp_options,
-            std::filesystem::path("RaycastVolumeRenderer-Compute-Iso.comp.glsl"));
-        rvc_aggr_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Compute-Aggr", shdr_cp_options,
-            std::filesystem::path("RaycastVolumeRenderer-Compute-Aggr.comp.glsl"));
+        rvc_dvr_shdr = core::utility::make_glowl_shader(
+            "RaycastVolumeRenderer-Compute", shader_options, "volume_gl/RaycastVolumeRenderer-DVR.comp.glsl");
+        rvc_iso_shdr = core::utility::make_glowl_shader(
+            "RaycastVolumeRenderer-Compute-Iso", shader_options, "volume_gl/RaycastVolumeRenderer-Iso.comp.glsl");
+        rvc_aggr_shdr = core::utility::make_glowl_shader(
+            "RaycastVolumeRenderer-Compute-Aggr", shader_options, "volume_gl/RaycastVolumeRenderer-Aggr.comp.glsl");
 
-        rtf_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer", shdr_cp_options,
-            std::filesystem::path("RaycastVolumeRenderer-Vertex.vert.glsl"),
-            std::filesystem::path("RaycastVolumeRenderer-Fragment.frag.glsl"));
-        rtf_aggr_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Aggr", shdr_cp_options,
-            std::filesystem::path("RaycastVolumeRenderer-Vertex.vert.glsl"),
-            std::filesystem::path("RaycastVolumeRenderer-Fragment-Aggr.frag.glsl"));
+        rtf_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer", shader_options,
+            "volume_gl/RaycastVolumeRenderer.vert.glsl", "volume_gl/RaycastVolumeRenderer.frag.glsl");
+
+        auto shader_options_aggr = shader_options;
+        shader_options_aggr.addDefinition("AGGR");
+        rtf_aggr_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Aggr", shader_options_aggr,
+            "volume_gl/RaycastVolumeRenderer.vert.glsl", "volume_gl/RaycastVolumeRenderer.frag.glsl");
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: Unknown exception\n");
         return false;
@@ -150,7 +143,6 @@ void RaycastVolumeRenderer::release() {}
 
 bool RaycastVolumeRenderer::GetExtents(mmstd_gl::CallRender3DGL& cr) {
     auto cd = m_volumetricData_callerSlot.CallAs<geocalls::VolumetricDataCall>();
-    auto ci = m_renderer_callerSlot.CallAs<mmstd_gl::CallRender3DGL>();
 
     if (cd == nullptr)
         return false;
@@ -168,19 +160,8 @@ bool RaycastVolumeRenderer::GetExtents(mmstd_gl::CallRender3DGL& cr) {
 
     cr.SetTimeFramesCount(cd->FrameCount());
 
-    auto bbox = cd->AccessBoundingBoxes().ObjectSpaceBBox();
-    auto cbox = cd->AccessBoundingBoxes().ObjectSpaceClipBox();
-
-    if (ci != nullptr) {
-        *ci = cr;
-
-        if (!(*ci)(mmstd_gl::CallRender3DGL::FnGetExtents))
-            return false;
-
-        bbox.Union(ci->AccessBoundingBoxes().BoundingBox());
-        cbox.Union(ci->AccessBoundingBoxes().ClipBox());
-    }
-
+    const auto& bbox = cd->AccessBoundingBoxes().ObjectSpaceBBox();
+    const auto& cbox = cd->AccessBoundingBoxes().ObjectSpaceClipBox();
     cr.AccessBoundingBoxes().SetBoundingBox(bbox);
     cr.AccessBoundingBoxes().SetClipBox(cbox);
 
@@ -188,40 +169,12 @@ bool RaycastVolumeRenderer::GetExtents(mmstd_gl::CallRender3DGL& cr) {
 }
 
 bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
-    // Chain renderer
-    auto ci = m_renderer_callerSlot.CallAs<mmstd_gl::CallRender3DGL>();
-
     // Camera
     core::view::Camera cam = cr.GetCamera();
     auto view = cam.getViewMatrix();
     auto proj = cam.getProjectionMatrix();
     auto cam_pose = cam.get<core::view::Camera::Pose>();
     auto cr_fbo = cr.GetFramebuffer();
-
-    if (ci != nullptr) {
-        auto cam = cr.GetCamera();
-        ci->SetCamera(cam);
-
-        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
-            this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-            if (this->fbo.IsValid())
-                this->fbo.Release();
-            this->fbo.Create(cr_fbo->getWidth(), cr_fbo->getHeight(), GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-                vislib_gl::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
-            this->fbo.Enable();
-        }
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        ci->SetTime(cr.Time());
-        if (!(*ci)(mmstd_gl::CallRender3DGL::FnRender))
-            return false;
-
-        if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
-            this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-            this->fbo.Disable();
-        }
-    }
 
     // create render target texture
     if (this->m_render_target == nullptr || this->m_render_target->getWidth() != cr_fbo->getWidth() ||
@@ -233,8 +186,14 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
             {});
-        m_render_target =
-            std::make_unique<glowl::Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
+        try {
+            m_render_target =
+                std::make_unique<glowl::Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
+        } catch (const glowl::TextureException& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[RaycastVolumeRenderer] Cannot create texture for volume rendering color target: %s.", e.what());
+            return false;
+        }
 
         // create normal target texture
         glowl::TextureLayout normal_tgt_layout(GL_RGBA32F, cr_fbo->getWidth(), cr_fbo->getHeight(), 1, GL_RGBA,
@@ -243,8 +202,14 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
             {});
-        m_normal_target =
-            std::make_unique<glowl::Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
+        try {
+            m_normal_target =
+                std::make_unique<glowl::Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
+        } catch (const glowl::TextureException& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[RaycastVolumeRenderer] Cannot create texture for volume rendering normal target: %s.", e.what());
+            return false;
+        }
 
         // create depth target texture
         glowl::TextureLayout depth_tgt_layout(GL_R32F, cr_fbo->getWidth(), cr_fbo->getHeight(), 1, GL_R, GL_FLOAT, 1,
@@ -252,7 +217,14 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
                 {GL_TEXTURE_MAG_FILTER, GL_LINEAR}},
             {});
-        m_depth_target = std::make_unique<glowl::Texture2D>("raycast_volume_depth_target", depth_tgt_layout, nullptr);
+        try {
+            m_depth_target =
+                std::make_unique<glowl::Texture2D>("raycast_volume_depth_target", depth_tgt_layout, nullptr);
+        } catch (const glowl::TextureException& e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[RaycastVolumeRenderer] Cannot create texture for volume rendering depth target: %s.", e.what());
+            return false;
+        }
     }
 
     // this is the apex of suck and must die
@@ -400,13 +372,13 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
         glBindTexture(GL_TEXTURE_1D, tf_texture);
         compute_shdr->setUniform("tf_tx1D", 1);
 
-        if (ci != nullptr) {
+        if (Renderer3DModuleGL::chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>() != nullptr) {
             glActiveTexture(GL_TEXTURE2);
-            this->fbo.BindColourTexture();
+            cr.GetFramebuffer()->bindColorbuffer(0);
             compute_shdr->setUniform("color_tx2D", 2);
 
             glActiveTexture(GL_TEXTURE3);
-            this->fbo.BindDepthTexture();
+            cr.GetFramebuffer()->bindDepthbuffer();
             compute_shdr->setUniform("depth_tx2D", 3);
 
             compute_shdr->setUniform("use_depth_tx", 1);
@@ -416,13 +388,13 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
     }
 
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-        if (ci != nullptr) {
+        if (Renderer3DModuleGL::chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>() != nullptr) {
             glActiveTexture(GL_TEXTURE2);
-            this->fbo.BindColourTexture();
+            cr.GetFramebuffer()->bindColorbuffer(0);
             compute_shdr->setUniform("color_tx2D", 2);
 
             glActiveTexture(GL_TEXTURE3);
-            this->fbo.BindDepthTexture();
+            cr.GetFramebuffer()->bindDepthbuffer();
             compute_shdr->setUniform("depth_tx2D", 3);
 
             compute_shdr->setUniform("use_depth_tx", 1);

@@ -255,6 +255,9 @@ public:
         if (cons) {
             cons->SetLuaFunc(lua_func);
         }
+        if (this->win_configurator_ptr != nullptr) {
+            this->win_configurator_ptr->GetGraphCollection().SetLuaFunc(lua_func);
+        }
     }
 
 #ifdef PROFILING
