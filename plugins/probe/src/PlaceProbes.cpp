@@ -47,6 +47,7 @@ megamol::probe::PlaceProbes::PlaceProbes()
 
     this->_mesh_slot.SetCompatibleCall<mesh::CallMeshDescription>();
     this->MakeSlotAvailable(&this->_mesh_slot);
+    _mesh_slot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
 
     this->_centerline_slot.SetCompatibleCall<mesh::CallMeshDescription>();
     this->MakeSlotAvailable(&this->_centerline_slot);
@@ -166,8 +167,10 @@ bool megamol::probe::PlaceProbes::getMetaData(core::Call& call) {
     mesh::CallMesh* cm = this->_mesh_slot.CallAs<mesh::CallMesh>();
     mesh::CallMesh* ccl = this->_centerline_slot.CallAs<mesh::CallMesh>();
 
-    if (cm == nullptr)
+    if (cm == nullptr) {
+        core::utility::log::Log::DefaultLog.WriteError("[PlaceProbes] No surface mesh connected.");
         return false;
+    }
 
     // set frame id before callback
     auto mesh_meta_data = cm->getMetaData();
@@ -497,15 +500,22 @@ void megamol::probe::PlaceProbes::forceDirectedSampling(const mesh::MeshDataAcce
     }
 }
 
+void megamol::probe::PlaceProbes::vertexSampling(const mesh::MeshDataAccessCollection::Mesh& mesh) {
 
-void megamol::probe::PlaceProbes::vertexSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices) {
-
+    mesh::MeshDataAccessCollection::VertexAttribute vertices;
+    for (auto& attr : mesh.attributes) {
+        if (attr.semantic == mesh::MeshDataAccessCollection::POSITION) {
+            vertices = attr;
+        }
+    }
     uint32_t probe_count = vertices.byte_size / vertices.stride;
     _probePositions.resize(probe_count);
     _probeVertices.resize(probe_count);
 
     auto vertex_accessor = reinterpret_cast<float*>(vertices.data);
     auto vertex_step = vertices.stride / sizeof(float);
+
+    auto index_accessor = reinterpret_cast<unsigned int*>(mesh.indices.data);
 
 #pragma omp parallel for
     for (int i = 0; i < probe_count; i++) {
@@ -542,7 +552,9 @@ void megamol::probe::PlaceProbes::vertexNormalSampling(mesh::MeshDataAccessColle
             -normal_accessor[normal_step * i + 2]};
         probe.m_begin = -2.0 * _scale_probe_begin_slot.Param<core::param::FloatParam>()->Value();
         probe.m_end = 50.0;
+        probe.m_orig_end = probe.m_end;
         probe.m_cluster_id = -1;
+        probe.m_placement_method = BaseProbe::VERTEX_NORMAL;
 
         auto probe_idx = this->_probes->getProbeCount();
         this->_probes->addProbe(std::move(probe));
@@ -603,7 +615,9 @@ void PlaceProbes::faceNormalSampling(mesh::MeshDataAccessCollection::VertexAttri
         probe.m_direction = {-n_c.x, -n_c.y, -n_c.z};
         probe.m_begin = -2.0 * _scale_probe_begin_slot.Param<core::param::FloatParam>()->Value();
         probe.m_end = 50.0;
+        probe.m_orig_end = probe.m_end;
         probe.m_cluster_id = -1;
+        probe.m_placement_method = BaseProbe::FACE_NORMAL;
 
         auto probe_idx = this->_probes->getProbeCount();
         this->_probes->addProbe(std::move(probe));
@@ -635,7 +649,7 @@ bool megamol::probe::PlaceProbes::placeProbes() {
     const float distanceIndicator = _whd[smallest_edge_index] / 20;
 
     if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 0) {
-        this->vertexSampling(vertices);
+        this->vertexSampling(_mesh->accessMeshes().begin()->second);
         processClipplane();
         mesh::CallMesh* ccl = this->_centerline_slot.CallAs<mesh::CallMesh>();
         if (ccl == nullptr) {
@@ -861,7 +875,9 @@ bool megamol::probe::PlaceProbes::placeByCenterline(
         auto begin = -0.1 * final_dist * _scale_probe_begin_slot.Param<core::param::FloatParam>()->Value();
         probe.m_begin = std::isfinite(begin) ? begin : 0.0f;
         probe.m_end = std::isfinite(final_dist) ? final_dist : 0.0f;
+        probe.m_orig_end = probe.m_end;
         probe.m_cluster_id = -1;
+        probe.m_placement_method = BaseProbe::CENTERLINE;
         if (!mesh_id.empty()) {
             probe.m_geo_ids.emplace_back(mesh_id);
             probe.m_vert_ids.emplace_back(_probeVertices[i]);
@@ -888,12 +904,7 @@ bool megamol::probe::PlaceProbes::placeByCenterpoint() {
     auto probe_accessor = reinterpret_cast<float*>(_probePositions.data()->data());
     auto probe_step = 4;
 
-    std::string mesh_id;
-    if (_mesh->accessMeshes().size() == 1) {
-        for (auto& m : _mesh->accessMeshes()) {
-            mesh_id = m.first;
-        }
-    }
+    std::string mesh_id = _mesh->accessMeshes().begin()->first;
 
     for (uint32_t i = 0; i < probe_count; i++) {
         BaseProbe probe;
@@ -913,6 +924,7 @@ bool megamol::probe::PlaceProbes::placeByCenterpoint() {
         auto override_length = _override_probe_length_slot.Param<core::param::FloatParam>()
             ->Value();
 
+        probe.m_orig_end = normal_length;
         if (override_length > 0.0f){
             normal_length = override_length;
         }
@@ -923,6 +935,7 @@ bool megamol::probe::PlaceProbes::placeByCenterpoint() {
         probe.m_begin = -0.02 * normal_length * _scale_probe_begin_slot.Param<core::param::FloatParam>()->Value();
         probe.m_end = normal_length;
         probe.m_cluster_id = -1;
+        probe.m_placement_method = BaseProbe::CENTERPOINT;
         if (!mesh_id.empty()) {
             probe.m_geo_ids.emplace_back(mesh_id);
             probe.m_vert_ids.emplace_back(_probeVertices[i]);

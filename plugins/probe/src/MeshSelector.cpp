@@ -234,6 +234,10 @@ bool MeshSelector::getData(core::Call& call) {
         }
 
         _selected_mesh = std::stoi(_meshNumberSlot.Param<core::param::FlexEnumParam>()->Value());
+        if (_selected_mesh >= cd->getData()->accessMeshes().size()) {
+            core::utility::log::Log::DefaultLog.WriteError("[MeshSelector] Selected mesh out of bounds.");
+            return false;
+        }
         auto const selected_mesh = std::next(cd->getData()->accessMeshes().begin(), _selected_mesh);
 
         if (_splitMeshSlot.Param<core::param::BoolParam>()->Value()) {

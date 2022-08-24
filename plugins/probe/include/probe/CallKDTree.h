@@ -34,12 +34,7 @@ struct kd_adaptor {
     // Since this is inlined and the "dim" argument is typically an immediate value, the
     //  "if/else's" are actually solved at compile time.
     inline coord_t kdtree_get_pt(const size_t idx, const size_t dim) const {
-        if (dim == 0)
-            return derived()[idx][0];
-        else if (dim == 1)
-            return derived()[idx][1];
-        else
-            return derived()[idx][2];
+        return derived()[idx][dim];
     }
 
     // Optional bounding-box computation: return false to default to a standard bbox computation loop.

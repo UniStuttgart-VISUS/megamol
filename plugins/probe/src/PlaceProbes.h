@@ -87,7 +87,7 @@ private:
     void dartSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
         mesh::MeshDataAccessCollection::IndexData indexData, float distanceIndicator);
     void forceDirectedSampling(const mesh::MeshDataAccessCollection::Mesh& mesh);
-    void vertexSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices);
+    void vertexSampling(const mesh::MeshDataAccessCollection::Mesh& mesh);
     void vertexNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
         mesh::MeshDataAccessCollection::VertexAttribute& normals,
         mesh::MeshDataAccessCollection::VertexAttribute& probe_ids);

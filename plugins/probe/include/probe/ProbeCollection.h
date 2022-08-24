@@ -18,6 +18,7 @@ namespace megamol {
 namespace probe {
 
 struct BaseProbe {
+    enum PlacementMethod {CENTERLINE, CENTERPOINT, VERTEX_NORMAL, FACE_NORMAL, UNKNOWN};
     /** time at which this probes samples the data */
     size_t m_timestamp;
     /** semantic name of the values/field that this probe samples */
@@ -30,6 +31,8 @@ struct BaseProbe {
     float m_begin;
     /** "sample to" offset from position */
     float m_end;
+    /** original end of probe in case the probe was shortened */
+    float m_orig_end;
     // std::vector<size_t>m_sample_idxs; ///< indices of samples relevant to this
     /** sample radius used by this probe */
     float m_sample_radius;
@@ -39,8 +42,12 @@ struct BaseProbe {
     bool m_representant = false;
     /** string id of the meshes that the probe goes through */
     std::vector<std::string> m_geo_ids;
-    /** string id of the meshes that the probe goes through */
+    /** vertex id on the rendered mesh the probe is placed */
     std::vector<uint64_t> m_vert_ids;
+    /** vertex id on the original mesh the probe is placed */
+    std::vector<uint64_t> m_face_vert_ids;
+    /** saves the placement method used to create probe */
+    PlacementMethod m_placement_method;
 
     // virtual void probe() = 0;
 };
@@ -74,6 +81,8 @@ public:
         float mean;
         float lower_bound;
         float upper_bound;
+        std::vector<float> values;
+        std::vector<float> value_depth;
     };
 
     struct SamplingResult {
@@ -123,7 +132,7 @@ private:
 };
 
 using GenericProbe = std::variant<FloatProbe, IntProbe, Vec4Probe, BaseProbe, FloatDistributionProbe>;
-using GenericMinMax = std::variant<std::array<float, 2>, std::array<int, 2>>;
+using GenericMinMax = std::variant<std::array<double, 2>, std::array<float, 2>, std::array<int, 2>>;
 
 class ProbeCollection {
 public:

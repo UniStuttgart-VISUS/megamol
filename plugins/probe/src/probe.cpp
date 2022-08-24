@@ -34,6 +34,7 @@
 #include "TableToProbes.h"
 #include "TessellateBoundingBox.h"
 #include "FilterProbes.h"
+#include "DualMeshProbeSampling.h"
 
 namespace megamol::probe {
 class ProbePluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -75,6 +76,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::probe::ElementColoring>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::ConstructHull>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::FilterProbes>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe::DualMeshProbeSampling>();
 
 
         // register calls
