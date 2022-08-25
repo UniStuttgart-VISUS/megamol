@@ -8,8 +8,8 @@
 #include "geometry_calls/LinesDataCall.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/Call.h"
-#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmospray/CallOSPRayStructure.h"
 
@@ -22,19 +22,25 @@ OSPRayLineGeometry::OSPRayLineGeometry(void)
         , getDataSlot("getdata", "Connects to the data source")
         , getLineDataSlot("getLineData", "")
         , globalRadiusSlot("globalRadius", "Sets the radius of the lines")
-        , smoothSlot("smooth", "Set whether to smooth the lines") {
+        , representationSlot("lineRepresentation", "Sets the representation type of the line structure") {
 
-    this->getDataSlot.SetCompatibleCall<geocalls::LinesDataCallDescription>();
-    this->MakeSlotAvailable(&this->getDataSlot);
+    getDataSlot.SetCompatibleCall<geocalls::LinesDataCallDescription>();
+    MakeSlotAvailable(&getDataSlot);
 
-    this->getLineDataSlot.SetCompatibleCall<mesh::CallMeshDescription>();
-    this->MakeSlotAvailable(&this->getLineDataSlot);
+    getLineDataSlot.SetCompatibleCall<mesh::CallMeshDescription>();
+    MakeSlotAvailable(&getLineDataSlot);
 
-    this->globalRadiusSlot << new core::param::FloatParam(0.01);
-    this->MakeSlotAvailable(&this->globalRadiusSlot);
+    globalRadiusSlot << new core::param::FloatParam(0.01);
+    MakeSlotAvailable(&globalRadiusSlot);
 
-    this->smoothSlot << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->smoothSlot);
+    auto repType = new megamol::core::param::EnumParam(curveRepresentationType::ROUND);
+    repType->SetTypePair(curveRepresentationType::ROUND, "round");
+    repType->SetTypePair(curveRepresentationType::FLAT, "flat");
+    repType->SetTypePair(curveRepresentationType::RIBBON, "ribbon");
+    repType->SetTypePair(curveRepresentationType::DISJOINT, "disjoint");
+    this->representationSlot << repType;
+    MakeSlotAvailable(&representationSlot);
+
 }
 
 
@@ -56,7 +62,6 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
     curveStructure cs;
     if (cm != nullptr) {
         auto meta_data = cm->getMetaData();
-        this->structureContainer.dataChanged = false;
         if (os->getTime() > meta_data.m_frame_cnt) {
             meta_data.m_frame_ID = meta_data.m_frame_cnt - 1;
         } else {
@@ -73,14 +78,82 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
             this->time = os->getTime();
             this->structureContainer.dataChanged = true;
             this->extendContainer.boundingBox = std::make_shared<core::BoundingBoxes_2>(meta_data.m_bboxs);
-            cs.mesh = cm->getData();
+            _converted_data = nullptr;
+            _converted_data = std::make_shared<mesh::MeshDataAccessCollection>();
+
+            _converted_attribs.clear();
+            _converted_vertices.clear();
+
+
+            auto num_meshes = cm->getData()->accessMeshes().size();
+
+            auto first_mesh = cm->getData()->accessMeshes().begin();
+            for (int m = 0; m < num_meshes; ++m) {
+                auto current_mesh = std::next(first_mesh,m);
+                if (current_mesh->second.primitive_type == mesh::MeshDataAccessCollection::LINES) {
+                    _converted_vertices.emplace_back();
+                    _converted_attribs.emplace_back();
+                    _converted_index.emplace_back();
+                    _converted_indices.emplace_back();
+
+                    auto num_indices = first_mesh->second.indices.byte_size / mesh::MeshDataAccessCollection::getByteSize(first_mesh->second.indices.type);
+
+                    _converted_vertices.back().resize(num_indices);
+                    _converted_attribs.back().resize(1);
+                    _converted_index.back().reserve(num_indices / 2);
+
+
+                    auto indices = reinterpret_cast<unsigned int*>(current_mesh->second.indices.data);
+                    float* vertices;
+
+                    for (auto& attr : current_mesh->second.attributes) {
+                        if (attr.semantic == mesh::MeshDataAccessCollection::POSITION) {
+                            vertices = reinterpret_cast<float*>(attr.data);
+                        }
+                    }
+
+                    for (int i = 0; i < num_indices/2; ++i) {
+
+                        std::array<float, 3> const vert0 = {
+                            vertices[3 * indices[2*i + 0] + 0], vertices[3 * indices[2*i + 0] + 1], vertices[3 * indices[2*i + 0] + 2]};
+                        std::array<float, 3> const vert1 = {
+                            vertices[3 * indices[2*i + 1] + 0], vertices[3 * indices[2*i + 1] + 1], vertices[3 * indices[2*i + 1] + 2]};
+                        _converted_vertices.back()[2 * i + 0] = vert0;
+                        _converted_vertices.back()[2 * i + 1] = vert1;
+                        _converted_index.back().emplace_back(2 * i);
+
+                    }
+
+
+                    _converted_attribs.back().resize(1);
+                    _converted_attribs.back()[0].semantic =
+                        mesh::MeshDataAccessCollection::AttributeSemanticType::POSITION;
+                    _converted_attribs.back()[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+                    _converted_attribs.back()[0].byte_size = _converted_vertices.back().size() * sizeof(std::array<float, 3>);
+                    _converted_attribs.back()[0].component_cnt = 3;
+                    _converted_attribs.back()[0].stride = 3 * sizeof(float);
+                    _converted_attribs.back()[0].data =
+                        reinterpret_cast<uint8_t*>(_converted_vertices.back().data());
+
+
+                    _converted_indices.back().type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
+                    _converted_indices.back().byte_size = _converted_index.back().size() * sizeof(uint32_t);
+                    _converted_indices.back().data = reinterpret_cast<uint8_t*>(_converted_index.back().data());
+
+                    _converted_data->addMesh(current_mesh->first, _converted_attribs.back(), _converted_indices.back(),
+                        mesh::MeshDataAccessCollection::LINE_STRIP);
+                } else {
+                    // leave non line meshes untouched
+                    _converted_data->addMesh(current_mesh->first, current_mesh->second.attributes, current_mesh->second.indices, current_mesh->second.primitive_type);
+                }
+            } 
+            cs.mesh = _converted_data;
             structureContainer.structure = cs;
         }
 
     } else {
 
         geocalls::LinesDataCall* cd = this->getDataSlot.CallAs<geocalls::LinesDataCall>();
-        this->structureContainer.dataChanged = false;
         if (cd == NULL)
             return false;
         cd->SetTime(os->getTime());
@@ -167,9 +240,12 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
         cs.indexData = std::make_shared<std::vector<unsigned int>>(std::move(index));
     }
 
-    this->structureContainer.type = structureTypeEnum::GEOMETRY;
-    this->structureContainer.geometryType = geometryTypeEnum::LINES;
+
+
+    structureContainer.type = structureTypeEnum::GEOMETRY;
+    structureContainer.geometryType = geometryTypeEnum::LINES;
     cs.globalRadius = globalRadiusSlot.Param<core::param::FloatParam>()->Value();
+    cs.representation = curveRepresentationType(representationSlot.Param<core::param::EnumParam>()->Value());
     structureContainer.structure = cs;
 
     return true;
@@ -189,11 +265,11 @@ void OSPRayLineGeometry::release() {}
 ospray::OSPRayLineGeometry::InterfaceIsDirty()
 */
 bool OSPRayLineGeometry::InterfaceIsDirty() {
-    CallOSPRayMaterial* cm = this->getMaterialSlot.CallAs<CallOSPRayMaterial>();
+    CallOSPRayMaterial* cm = getMaterialSlot.CallAs<CallOSPRayMaterial>();
     cm->getMaterialParameter();
-    if (cm->InterfaceIsDirty() || this->globalRadiusSlot.IsDirty() || this->smoothSlot.IsDirty()) {
-        this->globalRadiusSlot.ResetDirty();
-        this->smoothSlot.ResetDirty();
+    if (cm->InterfaceIsDirty() || globalRadiusSlot.IsDirty() || representationSlot.IsDirty()) {
+        globalRadiusSlot.ResetDirty();
+        representationSlot.ResetDirty();
         return true;
     } else {
         return false;

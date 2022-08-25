@@ -570,7 +570,7 @@ void AbstractOSPRayRenderer::fillMaterialContainer(
 
 void AbstractOSPRayRenderer::changeMaterial() {
 
-    for (auto entry : this->_structureMap) {
+    for (auto& entry : _structureMap) {
         auto const& element = entry.second;
 
         // custom material settings
@@ -578,13 +578,13 @@ void AbstractOSPRayRenderer::changeMaterial() {
             //ospRelease(this->_materials[entry.first]);
             this->_materials.erase(entry.first);
         }
-        if (element.materialContainer != NULL) {
-            fillMaterialContainer(entry.first, element);
+        if (element->materialContainer != NULL) {
+            fillMaterialContainer(entry.first, *element);
             _materials[entry.first].commit();
         }
 
         if (this->_materials[entry.first] != NULL) {
-            if (element.type == structureTypeEnum::GEOMETRY) {
+            if (element->type == structureTypeEnum::GEOMETRY) {
                 _geometricModels[entry.first].back().setParam(
                     "material", ::ospray::cpp::CopiedData(_materials[entry.first]));
                 _geometricModels[entry.first].back().commit();
@@ -597,10 +597,10 @@ void AbstractOSPRayRenderer::changeMaterial() {
 
 void AbstractOSPRayRenderer::changeTransformation() {
 
-    for (auto& entry : this->_baseStructures) {
-        if (this->_structureMap[entry.first].transformationContainer == nullptr)
+    for (auto& entry : _baseStructures) {
+        if (_structureMap[entry.first]->transformationContainer == nullptr)
             continue;
-        auto trafo = this->_structureMap[entry.first].transformationContainer;
+        auto trafo = _structureMap[entry.first]->transformationContainer;
         ::rkcommon::math::affine3f xfm;
         xfm.p.x = trafo->pos[0];
         xfm.p.y = trafo->pos[1];
@@ -629,13 +629,14 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
     std::vector<::rkcommon::math::box3f> ghostRegions;
     std::vector<::rkcommon::math::box3f> regions;
 
-    for (auto& entry : this->_structureMap) {
+    for (auto& entry : _structureMap) {
 
         _numCreateGeo = 1;
-        auto const& element = entry.second;
+        auto& element = entry.second;
 
         // check if structure should be released first
-        if (element.dataChanged) {
+        if (element->dataChanged) {
+            element->dataChanged = false;
             //for (int i = 0; i < _baseStructures[entry.first].size(); ++i) {
             //    if (_baseStructures[entry.first].types[i] == structureTypeEnum::GEOMETRY) {
             //        ospRelease(std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures[i]).handle());
@@ -679,18 +680,18 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
         if (_materials[entry.first]) {
             _materials.erase(entry.first);
         }
-        if (element.materialContainer &&
+        if (element->materialContainer &&
             this->_rd_type.Param<megamol::core::param::EnumParam>()->Value() != MPI_RAYCAST) {
-            fillMaterialContainer(entry.first, element);
+            fillMaterialContainer(entry.first, *element);
             _materials[entry.first].commit();
         }
 
-        switch (element.type) {
+        switch (element->type) {
         case structureTypeEnum::UNINITIALIZED:
             break;
 
         case structureTypeEnum::OSPRAY_API_STRUCTURES: {
-            auto& container = std::get<apiStructure>(element.structure);
+            auto& container = std::get<apiStructure>(element->structure);
             if (container.ospStructures.first.empty()) {
                 // returnValue = false;
                 break;
@@ -736,7 +737,7 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
             _groups[entry.first].commit();
         } break;
         case structureTypeEnum::GEOMETRY:
-            switch (element.geometryType) {
+            switch (element->geometryType) {
             case geometryTypeEnum::TEST:
 
                 using namespace rkcommon::math;
@@ -771,7 +772,7 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
                 break;
 
             case geometryTypeEnum::SPHERES: {
-                auto& container = std::get<sphereStructure>(element.structure);
+                auto& container = std::get<sphereStructure>(element->structure);
                 if (container.spheres == NULL) {
                     core::utility::log::Log::DefaultLog.WriteError(
                         "[OSPRay:generateRepresentations] Representation SPHERES active but no data provided.");
@@ -852,7 +853,7 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
                 } // end for num geometies
             } break;
             case geometryTypeEnum::MESH: {
-                auto& container = std::get<meshStructure>(element.structure);
+                auto& container = std::get<meshStructure>(element->structure);
                 if (container.mesh == nullptr) {
                     core::utility::log::Log::DefaultLog.WriteError(
                         "[OSPRay:generateRepresentations] Representation MESH active but no data provided.");
@@ -1021,7 +1022,7 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
             } break;
             case geometryTypeEnum::LINES:
             case geometryTypeEnum::CURVES: {
-                auto& container = std::get<curveStructure>(element.structure);
+                auto& container = std::get<curveStructure>(element->structure);
                 if (container.vertexData == nullptr && container.mesh == nullptr) {
                     // returnValue = false;
                     core::utility::log::Log::DefaultLog.WriteError(
@@ -1085,9 +1086,26 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
 
                         std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
                             .setParam("radius", container.globalRadius);
-                        // TODO: Add user input support for this
+                        auto repType = OSP_ROUND;
+                        switch (container.representation) {
+                        case (curveRepresentationType::FLAT): {
+                            repType = OSP_FLAT;
+                            break;
+                        }
+                        case (curveRepresentationType::RIBBON): {
+                            repType = OSP_RIBBON;
+                            break;
+                        }
+                        case (curveRepresentationType::DISJOINT): {
+                            repType = OSP_DISJOINT;
+                            break;
+                        }
+                        default:
+                            break;
+                        }
                         std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
-                            .setParam("type", OSP_ROUND);
+                            .setParam("type", repType);
+                        // TODO: Add user input support for this
                         std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
                             .setParam("basis", OSP_LINEAR);
 
@@ -1151,14 +1169,14 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
 
             _groups[entry.first] = ::ospray::cpp::Group();
             _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
-            if (entry.second.clippingPlane.isValid) {
+            if (entry.second->clippingPlane.isValid) {
                 _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("plane"), GEOMETRY);
 
                 ::rkcommon::math::vec4f plane;
-                plane[0] = entry.second.clippingPlane.coeff[0];
-                plane[1] = entry.second.clippingPlane.coeff[1];
-                plane[2] = entry.second.clippingPlane.coeff[2];
-                plane[3] = entry.second.clippingPlane.coeff[3];
+                plane[0] = entry.second->clippingPlane.coeff[0];
+                plane[1] = entry.second->clippingPlane.coeff[1];
+                plane[2] = entry.second->clippingPlane.coeff[2];
+                plane[3] = entry.second->clippingPlane.coeff[3];
                 std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
                     .setParam("plane.coefficients", ::ospray::cpp::CopiedData(plane));
                 std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
@@ -1174,46 +1192,64 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
             break;
 
         case structureTypeEnum::VOLUME: {
-            auto& container = std::get<structuredVolumeStructure>(element.structure);
-            if (container.voxels == NULL) {
-                core::utility::log::Log::DefaultLog.WriteError(
-                    "[OSPRay:generateRepresentations] Representation VOLUME active but no data provided.");
-                break;
+
+            auto& container = std::get<volumeStructure>(element->structure);
+            switch (element->volumeType) {
+            case volumeTypeEnum::STRUCTUREDVOLUME: {
+
+                if (container.voxels == nullptr) {
+                    core::utility::log::Log::DefaultLog.WriteError(
+                        "[OSPRay:generateRepresentations] Representation STRUCTUREDVOLUME active but no data provided.");
+                    break;
+                }
+
+                _baseStructures[entry.first].emplace_back(
+                    ::ospray::cpp::Volume("structuredRegular"), structureTypeEnum::VOLUME);
+
+                auto type = static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(container.voxelDType)]);
+
+                // add data
+                rkcommon::math::vec3ul dims = {
+                    container.dimensions[0], container.dimensions[1], container.dimensions[2]};
+                auto voxelData = ::ospray::cpp::SharedData(container.voxels, type, dims);
+                voxelData.commit();
+
+
+                std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures.back()).setParam("data", voxelData);
+
+            }
+            break;
+
+            case volumeTypeEnum::SPHERICALVOLUME: {
+                if (container.voxels == nullptr) {
+                    core::utility::log::Log::DefaultLog.WriteError(
+                        "[OSPRay:generateRepresentations] Representation SPHERICALVOLUME active but no data provided.");
+                    break;
+                }
+
+                _baseStructures[entry.first].emplace_back(
+                    ::ospray::cpp::Volume("structuredSpherical"), structureTypeEnum::VOLUME);
+
+                // add data
+                rkcommon::math::vec3ul dims = {
+                    container.dimensions[0], container.dimensions[1], container.dimensions[2]};
+                auto voxelData = ::ospray::cpp::SharedData(container.voxels, OSP_FLOAT, dims);
+                voxelData.commit();
+
+
+                std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures.back())
+                    .setParam("data", voxelData);
+
+            }
+            break;
             }
 
-            _baseStructures[entry.first].emplace_back(
-                ::ospray::cpp::Volume("structuredRegular"), structureTypeEnum::VOLUME);
 
-            auto type = static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(container.voxelDType)]);
-
-            // add data
-            rkcommon::math::vec3i dims = {container.dimensions[0], container.dimensions[1], container.dimensions[2]};
-            auto voxelData = ::ospray::cpp::SharedData(container.voxels, type, dims);
-            voxelData.commit();
-
-
-            std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures.back()).setParam("data", voxelData);
-
-            //ospSet3iv(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "dimensions",element.dimensions->data());
             std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures.back())
                 .setParam("gridOrigin", convertToVec3f(container.gridOrigin));
             std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures.back())
                 .setParam("gridSpacing", convertToVec3f(container.gridSpacing));
 
-
-            //std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()).setParam("voxelRange", element.valueRange);
-            //ospSet1b(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "singleShade", element.useMIP);
-            //ospSet1b(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "gradientShadingEnables",
-            //    element.useGradient);
-            //ospSet1b(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "preIntegration",
-            //    element.usePreIntegration);
-            //ospSet1b(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "adaptiveSampling",
-            //    element.useAdaptiveSampling);
-            //ospSet1f(
-            //    std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "adaptiveScalar", element.adaptiveFactor);
-            //ospSet1f(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "adaptiveMaxSamplingRate",
-            //    element.adaptiveMaxRate);
-            //ospSet1f(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "samplingRate", element.samplingRate);
 
             auto tf = ::ospray::cpp::TransferFunction("piecewiseLinear");
 
@@ -1293,6 +1329,33 @@ bool AbstractOSPRayRenderer::generateRepresentations() {
                 _groups[entry.first].commit();
                 break;
             }
+
+            _groups[entry.first] = ::ospray::cpp::Group();
+            if (element->volumeType == volumeRepresentationType::ISOSURFACE) {
+                _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
+            } else {
+                _groups[entry.first].setParam("volume", ::ospray::cpp::CopiedData(_volumetricModels[entry.first]));
+            }
+            if (entry.second->clippingPlane.isValid) {
+                _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("plane"), GEOMETRY);
+
+                ::rkcommon::math::vec4f plane;
+                plane[0] = entry.second->clippingPlane.coeff[0];
+                plane[1] = entry.second->clippingPlane.coeff[1];
+                plane[2] = entry.second->clippingPlane.coeff[2];
+                plane[3] = entry.second->clippingPlane.coeff[3];
+                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                    .setParam("plane.coefficients", ::ospray::cpp::CopiedData(plane));
+                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
+
+                _clippingModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+                _clippingModels[entry.first].back().commit();
+
+                _groups[entry.first].setParam(
+                    "clippingGeometry", ::ospray::cpp::CopiedData(_clippingModels[entry.first]));
+            }
+            _groups[entry.first].commit();
         } break;
         }
 
@@ -1327,9 +1390,9 @@ void AbstractOSPRayRenderer::createInstances() {
 
         _instances[entry.first] = ::ospray::cpp::Instance(_groups[entry.first]);
 
-        if (element.transformationContainer) {
+        if (element->transformationContainer) {
 
-            auto trafo = element.transformationContainer;
+            auto trafo = element->transformationContainer;
             ::rkcommon::math::affine3f xfm;
             xfm.p.x = trafo->pos[0];
             xfm.p.y = trafo->pos[1];

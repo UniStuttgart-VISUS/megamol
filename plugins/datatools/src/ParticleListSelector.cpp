@@ -17,6 +17,7 @@ datatools::ParticleListSelector::ParticleListSelector(void)
         : AbstractParticleManipulator("outData", "indata")
         , listIndexSlot("listIndex", "The thinning factor. Only each n-th particle will be kept.") {
     this->listIndexSlot.SetParameter(new core::param::IntParam(0, 0));
+    listIndexSlot.SetUpdateCallback(&datatools::ParticleListSelector::paramChanged);
     this->MakeSlotAvailable(&this->listIndexSlot);
 }
 
@@ -48,6 +49,16 @@ bool datatools::ParticleListSelector::manipulateData(
         outData.SetParticleListCount(1);
         outData.AccessParticles(0) = inData.AccessParticles(idx);
     }
+    if (_param_changed) {
+        auto current_hash = outData.DataHash();
+        outData.SetDataHash(++current_hash);
+        _param_changed = false;
+    }
 
+    return true;
+}
+
+bool datatools::ParticleListSelector::paramChanged(core::param::ParamSlot& p) {
+    _param_changed = true;
     return true;
 }

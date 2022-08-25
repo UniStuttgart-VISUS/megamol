@@ -22,7 +22,7 @@ class MeshDataAccessCollection {
 public:
     enum ValueType { BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT, INT, UNSIGNED_INT, HALF_FLOAT, FLOAT, DOUBLE };
     enum AttributeSemanticType { POSITION, NORMAL, COLOR, TEXCOORD, TANGENT, UNKNOWN, ID };
-    enum PrimitiveType { TRIANGLES, QUADS, LINES, LINE_STRIP, TRIANGLE_FAN };
+    enum PrimitiveType { TRIANGLES, QUADS, LINES, LINE_STRIP, TRIANGLE_FAN, TRIANGLE_STRIP };
 
     static constexpr unsigned int convertToGLType(ValueType value_type) {
         unsigned int retval = 0;

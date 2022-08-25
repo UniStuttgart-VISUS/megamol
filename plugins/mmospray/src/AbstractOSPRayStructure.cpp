@@ -67,7 +67,7 @@ bool AbstractOSPRayStructure::getStructureCallback(megamol::core::Call& call) {
     if (os_in != NULL) {
         if (!this->readData(call))
             return false;
-        os_in->addStructure(this->structureContainer);
+        os_in->addStructure(&structureContainer);
     }
 
     if (os_out != NULL) {
@@ -87,7 +87,7 @@ bool AbstractOSPRayStructure::getExtendsCallback(megamol::core::Call& call) {
         if (!this->getExtends(call)) {
             return false;
         }
-        os_in->addExtend(this->extendContainer);
+        os_in->addExtend(&extendContainer);
     }
 
     if (os_out != NULL) {

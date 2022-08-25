@@ -5,7 +5,7 @@
  */
 
 #pragma once
-
+#ifdef HAS_BLEND2D
 #include "blend2d.h"
 #include "mmcore/utility/log/Log.h"
 #include <cmath>
@@ -409,3 +409,4 @@ inline void DrawTextureUtility::drawRadarGlyph(std::vector<T>& data, std::array<
 
 } // namespace probe
 } // namespace megamol
+#endif

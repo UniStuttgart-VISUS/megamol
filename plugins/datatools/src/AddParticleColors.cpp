@@ -43,19 +43,33 @@ bool megamol::datatools::AddParticleColors::manipulateData(
     core::view::CallGetTransferFunction* cgtf = _tf_slot.CallAs<core::view::CallGetTransferFunction>();
     if (cgtf == nullptr)
         return false;
-    if (!(*cgtf)())
+    if (!(*cgtf)(0))
         return false;
 
     outData = inData;
-
-    if (_frame_id != inData.FrameID() || _in_data_hash != inData.DataHash() || cgtf->IsDirty()) {
-        auto const tf = cgtf->GetTextureData();
-        auto const tf_size = cgtf->TextureSize();
+    const auto cgtf_dirty = cgtf->IsDirty();
+    if (_frame_id != inData.FrameID() || _in_data_hash != inData.DataHash() || cgtf_dirty) {
 
         auto const pl_count = outData.GetParticleListCount();
+        assert(pl_count > 0);
         _colors.clear();
         _colors.resize(pl_count);
 
+        auto global_min_i = outData.AccessParticles(0).GetMinColourIndexValue();
+        auto global_max_i = outData.AccessParticles(0).GetMaxColourIndexValue();
+        for (unsigned int plidx = 0; plidx < pl_count; ++plidx) {
+            auto& parts = outData.AccessParticles(plidx);
+            auto const min_i = parts.GetMinColourIndexValue();
+            auto const max_i = parts.GetMaxColourIndexValue();
+            global_min_i = std::min(global_min_i,min_i);
+            global_max_i = std::max(global_max_i, max_i);
+        }
+
+        cgtf->SetRange({global_min_i,global_max_i});
+        if (!(*cgtf)(0))
+            return false;
+        auto const tf = cgtf->GetTextureData();
+        auto const tf_size = cgtf->TextureSize();
         for (unsigned int plidx = 0; plidx < pl_count; ++plidx) {
             auto& parts = outData.AccessParticles(plidx);
             if (parts.GetColourDataType() != geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I &&

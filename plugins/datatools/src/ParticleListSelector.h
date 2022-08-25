@@ -58,10 +58,12 @@ protected:
      * @return True on success
      */
     virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool paramChanged(core::param::ParamSlot& p);
 
 private:
     /** The list selection index */
     core::param::ParamSlot listIndexSlot;
+    bool _param_changed = false;
 };
 
 } /* end namespace datatools */

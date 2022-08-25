@@ -3,7 +3,7 @@
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/event/EventCall.h"
 #include "mmstd_gl/flags/FlagCallsGL.h"
 #include "probe/CallKDTree.h"
@@ -44,50 +44,20 @@ FilterByProbe::~FilterByProbe() {
 }
 
 bool FilterByProbe::create() {
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+
     try {
-        // create shader program
-        m_setFlags_prgm = std::make_unique<GLSLComputeShader>();
-        m_filterAll_prgm = std::make_unique<GLSLComputeShader>();
-        m_filterNone_prgm = std::make_unique<GLSLComputeShader>();
+        m_setFlags_prgm =
+            core::utility::make_glowl_shader("setFlags", shader_options, "probe_gl/utility/setFlags.comp.glsl");
 
-        vislib_gl::graphics::gl::ShaderSource setFlags_src;
-        vislib_gl::graphics::gl::ShaderSource filterAll_src;
-        vislib_gl::graphics::gl::ShaderSource filterNone_src;
+        m_filterAll_prgm =
+            core::utility::make_glowl_shader("filterAll", shader_options, "probe_gl/utility/filterAll.comp.glsl");
 
-        auto ssf =
-            std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-
-        if (!ssf->MakeShaderSource("FilterByProbe::setFlags", setFlags_src))
-            return false;
-        if (!m_setFlags_prgm->Compile(setFlags_src.Code(), setFlags_src.Count()))
-            return false;
-        if (!m_setFlags_prgm->Link())
-            return false;
-
-        if (!ssf->MakeShaderSource("FilterByProbe::filterAll", filterAll_src))
-            return false;
-        if (!m_filterAll_prgm->Compile(filterAll_src.Code(), filterAll_src.Count()))
-            return false;
-        if (!m_filterAll_prgm->Link())
-            return false;
-
-        if (!ssf->MakeShaderSource("FilterByProbe::filterNone", filterNone_src))
-            return false;
-        if (!m_filterNone_prgm->Compile(filterNone_src.Code(), filterNone_src.Count()))
-            return false;
-        if (!m_filterNone_prgm->Link())
-            return false;
-
-    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader (@%s): %s\n",
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: Unknown exception\n");
+        m_filterNone_prgm =
+            core::utility::make_glowl_shader("filterAll", shader_options, "probe_gl/utility/filterNone.comp.glsl");
+    } catch (std::runtime_error const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -194,19 +164,19 @@ bool FilterByProbe::Render(mmstd_gl::CallRender3DGL& call) {
                     auto flag_data = readFlags->getData();
 
                     {
-                        m_filterNone_prgm->Enable();
+                        m_filterNone_prgm->use();
 
                         auto flag_cnt = static_cast<GLuint>(flag_data->flags->getByteSize() / sizeof(GLuint));
 
-                        glUniform1ui(m_filterNone_prgm->ParameterLocation("flag_cnt"), flag_cnt);
+                        m_filterNone_prgm->setUniform("flag_cnt", flag_cnt);
 
-                        flag_data->flags->bind(1);
+                        flag_data->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 1);
 
-                        m_filterNone_prgm->Dispatch(static_cast<int>(std::ceil(flag_cnt / 64.0f)), 1, 1);
+                        glDispatchCompute(static_cast<int>(std::ceil(flag_cnt / 64.0f)), 1, 1);
 
                         ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-                        m_filterNone_prgm->Disable();
+                        glUseProgram(0);
                     }
 
                     writeFlags->setData(readFlags->getData(), m_version);
@@ -245,21 +215,30 @@ bool FilterByProbe::Render(mmstd_gl::CallRender3DGL& call) {
 
                                 for (int j = 0; j < samples_per_probe; j++) {
 
-                                    pcl::PointXYZ sample_point;
-                                    sample_point.x = position[0] + j * sample_step * direction[0];
-                                    sample_point.y = position[1] + j * sample_step * direction[1];
-                                    sample_point.z = position[2] + j * sample_step * direction[2];
+                                    std::array<float, 3> sample_point;
+                                    sample_point[0] = position[0] + j * sample_step * direction[0];
+                                    sample_point[1] = position[1] + j * sample_step * direction[1];
+                                    sample_point[2] = position[2] + j * sample_step * direction[2];
 
-                                    std::vector<float> k_distances;
-                                    std::vector<uint32_t> k_indices;
+                                    std::vector<std::pair<size_t, float>> res;
 
-                                    auto num_neighbors =
-                                        tree->radiusSearch(sample_point, arg.m_sample_radius, k_indices, k_distances);
+                                    auto num_neighbors = tree->radiusSearch(
+                                        &sample_point[0], radius, res, nanoflann::SearchParams(10, 0.01f, true));
                                     if (num_neighbors == 0) {
-                                        num_neighbors = tree->nearestKSearch(sample_point, 1, k_indices, k_distances);
-                                    }
+                                        std::vector<size_t> ret_index(1);
+                                        std::vector<float> out_dist_sqr(1);
+                                        nanoflann::KNNResultSet<float> resultSet(1);
+                                        resultSet.init(ret_index.data(), out_dist_sqr.data());
+                                        num_neighbors = tree->findNeighbors(
+                                            resultSet, &sample_point[0], nanoflann::SearchParams(10));
 
-                                    indices.insert(indices.end(), k_indices.begin(), k_indices.end());
+                                        res.resize(1);
+                                        res[0].first = ret_index[0];
+                                        res[0].second = out_dist_sqr[0];
+                                    }
+                                    for (auto r : res) {
+                                        indices.emplace_back(r.first);
+                                    }
                                 } // end num samples per probe
                             }
                         };
@@ -273,7 +252,7 @@ bool FilterByProbe::Render(mmstd_gl::CallRender3DGL& call) {
                 auto writeFlags = m_writeFlagsSlot.CallAs<mmstd_gl::FlagCallWrite_GL>();
 
                 if (readFlags != nullptr && writeFlags != nullptr) {
-                    (*readFlags)(mmstd_gl::FlagCallWrite_GL::CallGetData);
+                    (*readFlags)(mmstd_gl::FlagCallRead_GL::CallGetData);
 
                     if (readFlags->hasUpdate()) {
                         this->m_version = readFlags->version();
@@ -286,32 +265,30 @@ bool FilterByProbe::Render(mmstd_gl::CallRender3DGL& call) {
                         std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, indices, GL_DYNAMIC_DRAW);
 
                     if (!indices.empty()) {
-                        m_filterAll_prgm->Enable();
+                        m_filterAll_prgm->use();
 
                         auto flag_cnt = static_cast<GLuint>(flag_data->flags->getByteSize() / sizeof(GLuint));
 
-                        glUniform1ui(m_filterAll_prgm->ParameterLocation("flag_cnt"), flag_cnt);
+                        m_filterAll_prgm->setUniform("flag_cnt", flag_cnt);
 
-                        flag_data->flags->bind(1);
+                        flag_data->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 1);
 
-                        m_filterAll_prgm->Dispatch(static_cast<int>(std::ceil(flag_cnt / 64.0f)), 1, 1);
+                        glDispatchCompute(static_cast<int>(std::ceil(flag_cnt / 64.0f)), 1, 1);
 
                         ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-                        m_filterAll_prgm->Disable();
+                        m_setFlags_prgm->use();
 
-                        m_setFlags_prgm->Enable();
-
-                        glUniform1ui(m_setFlags_prgm->ParameterLocation("id_cnt"), static_cast<GLuint>(indices.size()));
+                        m_setFlags_prgm->setUniform("id_cnt", static_cast<GLuint>(indices.size()));
 
                         kdtree_ids->bind(0);
-                        flag_data->flags->bind(1);
+                        flag_data->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 1);
 
-                        m_setFlags_prgm->Dispatch(static_cast<int>(std::ceil(indices.size() / 64.0f)), 1, 1);
+                        glDispatchCompute(static_cast<int>(std::ceil(indices.size() / 64.0f)), 1, 1);
 
                         ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-                        m_setFlags_prgm->Disable();
+                        glUseProgram(0);
                     }
 
                     writeFlags->setData(readFlags->getData(), m_version);
@@ -350,21 +327,30 @@ bool FilterByProbe::Render(mmstd_gl::CallRender3DGL& call) {
                             float depth = std::min(end, pending_filter_event.back().depth);
                             //float depth = pending_filter_event.back().depth;
 
-                            pcl::PointXYZ sample_point;
-                            sample_point.x = position[0] + depth * direction[0];
-                            sample_point.y = position[1] + depth * direction[1];
-                            sample_point.z = position[2] + depth * direction[2];
+                            std::array<float, 3> sample_point;
+                            sample_point[0] = position[0] + depth * direction[0];
+                            sample_point[1] = position[1] + depth * direction[1];
+                            sample_point[2] = position[2] + depth * direction[2];
 
-                            std::vector<float> k_distances;
-                            std::vector<uint32_t> k_indices;
+                            std::vector<std::pair<size_t, float>> res;
 
-                            auto num_neighbors =
-                                tree->radiusSearch(sample_point, arg.m_sample_radius, k_indices, k_distances);
+                            auto num_neighbors = tree->radiusSearch(
+                                &sample_point[0], radius, res, nanoflann::SearchParams(10, 0.01f, true));
                             if (num_neighbors == 0) {
-                                num_neighbors = tree->nearestKSearch(sample_point, 1, k_indices, k_distances);
-                            }
+                                std::vector<size_t> ret_index(1);
+                                std::vector<float> out_dist_sqr(1);
+                                nanoflann::KNNResultSet<float> resultSet(1);
+                                resultSet.init(ret_index.data(), out_dist_sqr.data());
+                                num_neighbors =
+                                    tree->findNeighbors(resultSet, &sample_point[0], nanoflann::SearchParams(10));
 
-                            indices.insert(indices.end(), k_indices.begin(), k_indices.end());
+                                res.resize(1);
+                                res[0].first = ret_index[0];
+                                res[0].second = out_dist_sqr[0];
+                            }
+                            for (auto r : res) {
+                                indices.emplace_back(r.first);
+                            }
                         }
                     };
 
@@ -389,32 +375,30 @@ bool FilterByProbe::Render(mmstd_gl::CallRender3DGL& call) {
                         std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, indices, GL_DYNAMIC_DRAW);
 
                     if (!indices.empty()) {
-                        m_filterAll_prgm->Enable();
+                        m_filterAll_prgm->use();
 
                         auto flag_cnt = static_cast<GLuint>(flag_data->flags->getByteSize() / sizeof(GLuint));
 
-                        glUniform1ui(m_filterAll_prgm->ParameterLocation("flag_cnt"), flag_cnt);
+                        m_filterAll_prgm->setUniform("flag_cnt", flag_cnt);
 
-                        flag_data->flags->bind(1);
+                        flag_data->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 1);
 
-                        m_filterAll_prgm->Dispatch(static_cast<int>(std::ceil(flag_cnt / 64.0f)), 1, 1);
+                        glDispatchCompute(static_cast<int>(std::ceil(flag_cnt / 64.0f)), 1, 1);
 
                         ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-                        m_filterAll_prgm->Disable();
+                        m_setFlags_prgm->use();
 
-                        m_setFlags_prgm->Enable();
-
-                        glUniform1ui(m_setFlags_prgm->ParameterLocation("id_cnt"), static_cast<GLuint>(indices.size()));
+                        m_setFlags_prgm->setUniform("id_cnt", static_cast<GLuint>(indices.size()));
 
                         kdtree_ids->bind(0);
-                        flag_data->flags->bind(1);
+                        flag_data->flags->bindBase(GL_SHADER_STORAGE_BUFFER, 1);
 
-                        m_setFlags_prgm->Dispatch(static_cast<int>(std::ceil(indices.size() / 64.0f)), 1, 1);
+                        glDispatchCompute(static_cast<int>(std::ceil(indices.size() / 64.0f)), 1, 1);
 
                         ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-                        m_setFlags_prgm->Disable();
+                        glUseProgram(0);
                     }
 
                     writeFlags->setData(readFlags->getData(), m_version);

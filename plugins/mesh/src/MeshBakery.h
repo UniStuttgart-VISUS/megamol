@@ -73,6 +73,8 @@ private:
 
     void createConeGeometry();
 
+    void createIcosphereGeometry(float radius, unsigned int subdivisions);
+
     uint32_t m_version;
 
     std::vector<float> m_vertex_positions;
@@ -85,6 +87,12 @@ private:
 
     /** Parameter for selecting the geometry to be generated */
     megamol::core::param::ParamSlot m_geometry_type;
+
+    /** Parameter for setting icosphere radius */
+    megamol::core::param::ParamSlot m_icosphere_radius;
+
+    /** Parameter for setting icosphere subdivisions */
+    megamol::core::param::ParamSlot m_icosphere_subdivs;
 };
 
 } // namespace mesh

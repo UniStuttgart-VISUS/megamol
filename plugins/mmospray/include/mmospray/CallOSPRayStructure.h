@@ -23,9 +23,11 @@ enum structureTypeEnum { UNINITIALIZED, GEOMETRY, VOLUME, OSPRAY_API_STRUCTURES 
 
 enum geometryTypeEnum { SPHERES, MESH, LINES, CURVES, CYLINDERS, TEST };
 
-enum volumeTypeEnum { STRUCTUREDVOLUME, BLOCKBRICKEDVOLUME, GHOSTBLOCKBRICKEDVOLUME };
+enum volumeTypeEnum { STRUCTUREDVOLUME, BLOCKBRICKEDVOLUME, GHOSTBLOCKBRICKEDVOLUME, SPHERICALVOLUME };
 
 enum volumeRepresentationType { VOLUMEREP, ISOSURFACE, SLICE };
+
+enum curveRepresentationType { FLAT, ROUND, RIBBON, DISJOINT };
 
 enum class voxelDataType : uint8_t { UCHAR = 0, SHORT = 1, USHORT = 2, FLOAT = 3, DOUBLE = 4 };
 
@@ -45,7 +47,7 @@ struct sphereStructure {
     std::shared_ptr<ParticleDataAccessCollection> spheres;
 };
 
-struct structuredVolumeStructure {
+struct volumeStructure {
     std::shared_ptr<std::vector<float>> tfRGB;
     std::shared_ptr<std::vector<float>> tfA;
     std::array<float, 2> valueRange;
@@ -53,7 +55,7 @@ struct structuredVolumeStructure {
     const void* voxels;
     std::array<float, 3> gridOrigin;
     std::array<float, 3> gridSpacing;
-    std::array<int, 3> dimensions;
+    std::array<uint32_t, 3> dimensions;
     std::array<float, 3> clippingBoxLower;
     std::array<float, 3> clippingBoxUpper;
     float isoValue;
@@ -79,6 +81,7 @@ struct curveStructure {
     std::shared_ptr<std::vector<float>> vertexData;
     std::shared_ptr<std::vector<float>> colorData;
     std::shared_ptr<std::vector<unsigned int>> indexData;
+    curveRepresentationType representation = ROUND;
     unsigned int vertexLength;
     unsigned int dataStride;
     unsigned int colorLength;
@@ -107,7 +110,7 @@ struct OSPRayStructureContainer {
     ClippingPlane clippingPlane;
     bool clippingPlaneChanged = false;
 
-    std::variant<sphereStructure, structuredVolumeStructure, meshStructure, apiStructure, curveStructure> structure;
+    std::variant<sphereStructure, volumeStructure, meshStructure, apiStructure, curveStructure> structure;
 };
 
 
@@ -123,8 +126,8 @@ public:
 
 
 class CallOSPRayStructure;
-typedef std::map<CallOSPRayStructure*, OSPRayStructureContainer> OSPRayStrcutrureMap;
-typedef std::map<CallOSPRayStructure*, OSPRayExtendContainer> OSPRayExtendMap;
+typedef std::map<CallOSPRayStructure*, OSPRayStructureContainer*> OSPRayStrcutrureMap;
+typedef std::map<CallOSPRayStructure*, OSPRayExtendContainer*> OSPRayExtendMap;
 
 
 class CallOSPRayStructure : public megamol::core::Call {
@@ -190,11 +193,11 @@ public:
     CallOSPRayStructure& operator=(const CallOSPRayStructure& rhs);
 
     void setStructureMap(OSPRayStrcutrureMap* sm);
-    void addStructure(OSPRayStructureContainer& sc);
+    void addStructure(OSPRayStructureContainer* sc);
     bool fillStructureMap();
 
     void setExtendMap(OSPRayExtendMap* em);
-    void addExtend(OSPRayExtendContainer& ec);
+    void addExtend(OSPRayExtendContainer* ec);
     bool fillExtendMap();
 
     void setTime(float time);

@@ -32,14 +32,15 @@
 #include "mmospray/CallOSPRayMaterial.h"
 #include "mmospray/CallOSPRayStructure.h"
 #include "mmospray/CallOSPRayTransformation.h"
+#include "OSPRaySphericalVolume.h"
 
 namespace megamol::ospray {
-class MMOSPRayPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class MMOSPRayPluginInstance : public core::utility::plugins::AbstractPluginInstance {
     REGISTERPLUGIN(MMOSPRayPluginInstance)
 
 public:
     MMOSPRayPluginInstance(void)
-            : megamol::core::utility::plugins::AbstractPluginInstance("mmospray", "CPU Raytracing"){};
+            : AbstractPluginInstance("mmospray", "CPU Raytracing"){};
 
     ~MMOSPRayPluginInstance() override = default;
 
@@ -48,36 +49,37 @@ public:
 
         // register modules
 
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayRenderer>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayRenderer>();
 
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySphereGeometry>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayMeshGeometry>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayStructuredVolume>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAPIStructure>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayLineGeometry>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayGeometryTest>();
+        this->module_descriptions.RegisterAutoDescription<OSPRaySphereGeometry>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayMeshGeometry>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayStructuredVolume>();
+        this->module_descriptions.RegisterAutoDescription<OSPRaySphericalVolume>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayAPIStructure>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayLineGeometry>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayGeometryTest>();
 
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayOBJMaterial>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayLuminousMaterial>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayVelvetMaterial>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayMatteMaterial>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayMetalMaterial>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayMetallicPaintMaterial>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayGlassMaterial>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayThinGlassMaterial>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPlasticMaterial>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayOBJMaterial>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayLuminousMaterial>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayVelvetMaterial>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayMatteMaterial>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayMetalMaterial>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayMetallicPaintMaterial>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayGlassMaterial>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayThinGlassMaterial>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayPlasticMaterial>();
 
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::PkdBuilder>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayPKDGeometry>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAOVSphereGeometry>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayTransform>();
+        this->module_descriptions.RegisterAutoDescription<PkdBuilder>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayPKDGeometry>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayAOVSphereGeometry>();
+        this->module_descriptions.RegisterAutoDescription<OSPRayTransform>();
 
         // register calls
 
-        this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayStructure>();
-        this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayAPIObject>();
-        this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayMaterial>();
-        this->call_descriptions.RegisterAutoDescription<megamol::ospray::CallOSPRayTransformation>();
+        this->call_descriptions.RegisterAutoDescription<CallOSPRayStructure>();
+        this->call_descriptions.RegisterAutoDescription<CallOSPRayAPIObject>();
+        this->call_descriptions.RegisterAutoDescription<CallOSPRayMaterial>();
+        this->call_descriptions.RegisterAutoDescription<CallOSPRayTransformation>();
     }
 };
 } // namespace megamol::ospray

@@ -18,6 +18,7 @@ namespace megamol {
 namespace probe {
 
 struct BaseProbe {
+    enum PlacementMethod {CENTERLINE, CENTERPOINT, VERTEX_NORMAL, FACE_NORMAL, UNKNOWN};
     /** time at which this probes samples the data */
     size_t m_timestamp;
     /** semantic name of the values/field that this probe samples */
@@ -30,17 +31,23 @@ struct BaseProbe {
     float m_begin;
     /** "sample to" offset from position */
     float m_end;
+    /** original end of probe in case the probe was shortened */
+    float m_orig_end;
     // std::vector<size_t>m_sample_idxs; ///< indices of samples relevant to this
     /** sample radius used by this probe */
     float m_sample_radius;
     /** for clustered samples */
     int m_cluster_id;
     /** true, if clustering considers this probe to be a representant */
-    bool m_representant;
+    bool m_representant = false;
     /** string id of the meshes that the probe goes through */
     std::vector<std::string> m_geo_ids;
-    /** string id of the meshes that the probe goes through */
+    /** vertex id on the rendered mesh the probe is placed */
     std::vector<uint64_t> m_vert_ids;
+    /** vertex id on the original mesh the probe is placed */
+    std::vector<uint64_t> m_face_vert_ids;
+    /** saves the placement method used to create probe */
+    PlacementMethod m_placement_method;
 
     // virtual void probe() = 0;
 };
@@ -74,6 +81,8 @@ public:
         float mean;
         float lower_bound;
         float upper_bound;
+        std::vector<float> values;
+        std::vector<float> value_depth;
     };
 
     struct SamplingResult {
@@ -123,7 +132,7 @@ private:
 };
 
 using GenericProbe = std::variant<FloatProbe, IntProbe, Vec4Probe, BaseProbe, FloatDistributionProbe>;
-using GenericMinMax = std::variant<std::array<float, 2>, std::array<int, 2>>;
+using GenericMinMax = std::variant<std::array<double, 2>, std::array<float, 2>, std::array<int, 2>>;
 
 class ProbeCollection {
 public:
@@ -149,26 +158,9 @@ public:
         return m_probes[idx];
     }
 
-    BaseProbe getBaseProbe(size_t idx) const {
-        using T = std::decay_t<decltype(m_probes[idx])>;
-        if constexpr (std::is_same_v<T, probe::FloatProbe>) {
-            FloatProbe fp = std::get<FloatProbe>(m_probes[idx]);
-            FloatProbe* fpp = &fp;
-            BaseProbe* bpp = dynamic_cast<BaseProbe*>(fpp);
-            return *bpp;
-        } else if constexpr (std::is_same_v<T, probe::IntProbe>) {
-            IntProbe ip = std::get<IntProbe>(m_probes[idx]);
-            IntProbe* ipp = &ip;
-            BaseProbe* bpp = dynamic_cast<BaseProbe*>(ipp);
-            return *bpp;
-        } else if constexpr (std::is_same_v<T, probe::Vec4Probe>) {
-            Vec4Probe vecp = std::get<Vec4Probe>(m_probes[idx]);
-            Vec4Probe* vecpp = &vecp;
-            BaseProbe* bpp = dynamic_cast<BaseProbe*>(vecpp);
-            return *bpp;
-        } else {
-            return std::get<BaseProbe>(m_probes[idx]);
-        }
+    const BaseProbe& getBaseProbe(size_t idx) const {
+        const BaseProbe& x = std::visit([](const auto& x) -> const BaseProbe& { return x; }, m_probes[idx]);
+        return x;
     }
 
     uint32_t getProbeCount() const {

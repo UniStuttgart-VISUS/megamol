@@ -11,7 +11,6 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "normal_3d_omp.h"
 #include "probe/CallKDTree.h"
 #include <atomic>
 #include <limits>

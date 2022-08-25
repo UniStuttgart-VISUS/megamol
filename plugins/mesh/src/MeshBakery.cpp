@@ -1,19 +1,33 @@
 #include "MeshBakery.h"
 
+#include <glm/glm.hpp>
+
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 
 megamol::mesh::MeshBakery::MeshBakery()
         : AbstractMeshDataSource()
         , m_version(0)
-        , m_geometry_type("GeometryType", "...") {
-    this->m_geometry_type << new megamol::core::param::EnumParam(0);
-    this->m_geometry_type.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Quad");
-    this->m_geometry_type.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Cone");
-    this->MakeSlotAvailable(&this->m_geometry_type);
+        , m_geometry_type("GeometryType", "...")
+        , m_icosphere_radius("IcosphereRadius","...")
+        , m_icosphere_subdivs("IcosphereSubdivs", "")
+{
+    m_geometry_type << new megamol::core::param::EnumParam(2);
+    m_geometry_type.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Quad");
+    m_geometry_type.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Cone");
+    m_geometry_type.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "Icosphere");
+    MakeSlotAvailable(&m_geometry_type);
+
+    m_icosphere_radius << new megamol::core::param::FloatParam(1.0f,0.0f);
+    MakeSlotAvailable(&m_icosphere_radius);
+
+    m_icosphere_subdivs << new megamol::core::param::IntParam(0,0);
+    MakeSlotAvailable(&m_icosphere_subdivs);
 }
 
 megamol::mesh::MeshBakery::~MeshBakery() {
-    this->Release();
+    Release();
 }
 
 bool megamol::mesh::MeshBakery::create(void) {
@@ -43,39 +57,54 @@ bool megamol::mesh::MeshBakery::getMeshDataCallback(core::Call& caller) {
         auto mesh_access_collections = rhs_mesh_call->getData();
     }
 
-    if (m_geometry_type.IsDirty()) {
+    bool something_has_changed =
+        m_geometry_type.IsDirty() || m_icosphere_radius.IsDirty() || m_icosphere_subdivs.IsDirty();
+
+    if (m_vertex_positions.empty() || something_has_changed) {
+        //TODO bad move, but necessary right now. chaining is broken with this
+        clearMeshAccessCollection();
+
         m_geometry_type.ResetDirty();
+        m_icosphere_radius.ResetDirty();
+        m_icosphere_subdivs.ResetDirty();
 
         ++m_version;
 
-        auto geometry_type = m_geometry_type.Param<core::param::EnumParam>()->Value();
-
-        //TODO call geometry generating functions
-        switch (geometry_type) {
-        case 0:
-            break;
-        case 1:
-            createConeGeometry();
-            break;
-        default:
-            break;
-        }
-
         std::array<float, 6> bbox;
 
-        bbox[0] = std::numeric_limits<float>::max();
-        bbox[1] = std::numeric_limits<float>::max();
-        bbox[2] = std::numeric_limits<float>::max();
-        bbox[3] = std::numeric_limits<float>::min();
-        bbox[4] = std::numeric_limits<float>::min();
-        bbox[5] = std::numeric_limits<float>::min();
-
+        // init default bounding box
         bbox[0] = -1.0f;
         bbox[1] = -1.0f;
         bbox[2] = -1.0f;
         bbox[3] = 1.0f;
         bbox[4] = 1.0f;
         bbox[5] = 1.0f;
+
+        auto geometry_type = m_geometry_type.Param<core::param::EnumParam>()->Value();
+
+        //TODO call geometry generating functions
+        switch (geometry_type) {
+        case 0:
+            m_icosphere_radius.Param<megamol::core::param::FloatParam>()->SetGUIVisible(false);
+            m_icosphere_subdivs.Param<megamol::core::param::IntParam>()->SetGUIVisible(false);
+            break;
+        case 1:
+            m_icosphere_radius.Param<megamol::core::param::FloatParam>()->SetGUIVisible(false);
+            m_icosphere_subdivs.Param<megamol::core::param::IntParam>()->SetGUIVisible(false);
+            createConeGeometry();
+            break;
+        case 2:
+            m_icosphere_radius.Param<megamol::core::param::FloatParam>()->SetGUIVisible(true);
+            m_icosphere_subdivs.Param<megamol::core::param::IntParam>()->SetGUIVisible(true);
+            createIcosphereGeometry(m_icosphere_radius.Param<megamol::core::param::FloatParam>()->Value(),
+                static_cast<unsigned int>(m_icosphere_subdivs.Param<megamol::core::param::IntParam>()->Value()));
+            for (auto& val : bbox) {
+                val *= m_icosphere_radius.Param<megamol::core::param::FloatParam>()->Value();
+            }
+            break;
+        default:
+            break;
+        }
 
         std::vector<MeshDataAccessCollection::VertexAttribute> mesh_attributes;
         MeshDataAccessCollection::IndexData mesh_indices;
@@ -199,4 +228,94 @@ void megamol::mesh::MeshBakery::createConeGeometry() {
         m_indices.push_back((i + 1) % segments);
         m_indices.push_back(i + segments);
     }
+}
+
+void megamol::mesh::MeshBakery::createIcosphereGeometry(float radius, unsigned int subdivisions) {
+
+    m_vertex_positions.clear();
+    m_vertex_normals.clear();
+    m_vertex_tangents.clear();
+    m_vertex_uvs.clear();
+    m_vertex_colors.clear();
+    m_indices.clear();
+
+    // Create intial icosahedron
+    float x = 0.525731112119133606f * radius;
+    float z = 0.850650808352039932f * radius;
+    float nx = 0.525731112119133606f;
+    float nz = 0.850650808352039932f;
+
+    m_vertex_positions = {-x, 0.0f, z, x, 0.0f, z, -x, 0.0f, -z, x, 0.0f, -z, 0.0f, z, x, 0.0f, z, -x, 0.0f, -z, x,
+        0.0f, -z, -x, z, x, 0.0f, -z, x, 0.0f, z, -x, 0.0f, -z, -x, 0.0f};
+    m_vertex_normals = {-nx, 0.0f, nz, nx, 0.0f, nz, -nx, 0.0f, -nz, nx, 0.0f, -nz, 0.0f, nz, nx, 0.0f, nz, -nx, 0.0f,
+        -nz, nx, 0.0f, -nz, -nx, nz, nx, 0.0f, -nz, nx, 0.0f, nz, -nx, 0.0f, -nz, -nx, 0.0f};
+    m_indices = {0, 4, 1, 0, 9, 4, 9, 5, 4, 4, 5, 8, 4, 8, 1, 8, 10, 1, 8, 3, 10, 5, 3, 8, 5, 2, 3, 2, 7, 3, 7, 10, 3,
+        7, 6, 10, 7, 11, 6, 11, 0, 6, 0, 1, 6, 6, 1, 10, 9, 0, 11, 9, 11, 2, 9, 2, 5, 7, 2, 11};
+
+    // Subdivide icosahedron
+    for (unsigned int subdivs = 0; subdivs < subdivisions; subdivs++) {
+        std::vector<uint32_t> refined_indices;
+        refined_indices.reserve(m_indices.size() * 3);
+
+        for (int i = 0; i < m_indices.size(); i = i + 3) {
+            unsigned int idx1 = m_indices[i];
+            unsigned int idx2 = m_indices[i + 1];
+            unsigned int idx3 = m_indices[i + 2];
+
+            glm::vec3 newVtx1((m_vertex_positions[idx1 * 3 + 0] + m_vertex_positions[idx2 * 3 + 0]),
+                (m_vertex_positions[idx1 * 3 + 1] + m_vertex_positions[idx2 * 3 + 1]),
+                (m_vertex_positions[idx1 * 3 + 2] + m_vertex_positions[idx2 * 3 + 2]));
+            newVtx1 = glm::normalize(newVtx1);
+            newVtx1 *= radius;
+
+            glm::vec3 newVtx2((m_vertex_positions[idx2 * 3 + 0] + m_vertex_positions[idx3 * 3 + 0]),
+                (m_vertex_positions[idx2 * 3 + 1] + m_vertex_positions[idx3 * 3 + 1]),
+                (m_vertex_positions[idx2 * 3 + 2] + m_vertex_positions[idx3 * 3 + 2]));
+            newVtx2 = glm::normalize(newVtx2);
+            newVtx2 *= radius;
+
+            glm::vec3 newVtx3((m_vertex_positions[idx3 * 3 + 0] + m_vertex_positions[idx1 * 3 + 0]),
+                (m_vertex_positions[idx3 * 3 + 1] + m_vertex_positions[idx1 * 3 + 1]),
+                (m_vertex_positions[idx3 * 3 + 2] + m_vertex_positions[idx1 * 3 + 2]));
+            newVtx3 = glm::normalize(newVtx3);
+            newVtx3 *= radius;
+
+            glm::vec3 newVtxNrml1((m_vertex_normals[idx1 * 3 + 0] + m_vertex_normals[idx2 * 3 + 0]),
+                (m_vertex_normals[idx1 * 3 + 1] + m_vertex_normals[idx2 * 3 + 1]),
+                (m_vertex_normals[idx1 * 3 + 2] + m_vertex_normals[idx2 * 3 + 2]));
+            newVtxNrml1 = glm::normalize(newVtx1);
+
+            glm::vec3 newVtxNrml2((m_vertex_normals[idx2 * 3 + 0] + m_vertex_normals[idx3 * 3 + 0]),
+                (m_vertex_normals[idx2 * 3 + 1] + m_vertex_normals[idx3 * 3 + 1]),
+                (m_vertex_normals[idx2 * 3 + 2] + m_vertex_normals[idx3 * 3 + 2]));
+            newVtxNrml2 = glm::normalize(newVtx2);
+
+            glm::vec3 newVtxNrml3((m_vertex_normals[idx3 * 3 + 0] + m_vertex_normals[idx1 * 3 + 0]),
+                (m_vertex_normals[idx3 * 3 + 1] + m_vertex_normals[idx1 * 3 + 1]),
+                (m_vertex_normals[idx3 * 3 + 2] + m_vertex_normals[idx1 * 3 + 2]));
+            newVtxNrml3 = glm::normalize(newVtx3);
+
+            unsigned int newIdx1 = static_cast<unsigned int>(m_vertex_positions.size() / 3);
+            m_vertex_positions.insert(m_vertex_positions.end(), {newVtx1.x, newVtx1.y, newVtx1.z});
+            m_vertex_normals.insert(m_vertex_normals.end(), {newVtxNrml1.x, newVtxNrml1.y, newVtxNrml1.z});
+
+            unsigned int newIdx2 = newIdx1 + 1;
+            m_vertex_positions.insert(m_vertex_positions.end(), {newVtx2.x, newVtx2.y, newVtx2.z});
+            m_vertex_normals.insert(m_vertex_normals.end(), {newVtxNrml2.x, newVtxNrml2.y, newVtxNrml2.z});
+
+            unsigned int newIdx3 = newIdx2 + 1;
+            m_vertex_positions.insert(m_vertex_positions.end(), {newVtx3.x, newVtx3.y, newVtx3.z});
+            m_vertex_normals.insert(m_vertex_normals.end(), {newVtxNrml3.x, newVtxNrml3.y, newVtxNrml3.z});
+
+            refined_indices.insert(refined_indices.end(),
+                {idx1, newIdx1, newIdx3, newIdx1, idx2, newIdx2, newIdx3, newIdx1, newIdx2, newIdx3, newIdx2, idx3});
+        }
+
+        m_indices.clear();
+        m_indices = refined_indices;
+    }
+
+    // fill unused attributes with zeros for now
+    m_vertex_tangents.resize(m_vertex_normals.size());
+    m_vertex_uvs.resize((m_vertex_normals.size() / 3) * 2);
 }

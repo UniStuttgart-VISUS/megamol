@@ -9,6 +9,8 @@
 #include "mmcore/param/FloatParam.h"
 #include "probe/MeshUtilities.h"
 #include "probe/ProbeCalls.h"
+#include "mmstd/renderer/CallClipPlane.h"
+#include "mmstd/renderer/ClipPlane.h"
 #include <random>
 
 
@@ -26,6 +28,8 @@ megamol::probe::PlaceProbes::PlaceProbes()
         , _probe_positions_slot("deployProbePositions", "Safe probe positions to a file")
         , _load_probe_positions_slot("loadProbePositions", "Load saved probe positions")
         , _scale_probe_begin_slot("distanceFromSurfaceFactor", "")
+        , _override_probe_length_slot("overrideProbeLength", "")
+        , _clipplane_slot("getClipplane", "")
         , _longest_edge_index(0) {
 
     this->_probe_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(0), &PlaceProbes::getData);
@@ -43,9 +47,13 @@ megamol::probe::PlaceProbes::PlaceProbes()
 
     this->_mesh_slot.SetCompatibleCall<mesh::CallMeshDescription>();
     this->MakeSlotAvailable(&this->_mesh_slot);
+    _mesh_slot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
 
     this->_centerline_slot.SetCompatibleCall<mesh::CallMeshDescription>();
     this->MakeSlotAvailable(&this->_centerline_slot);
+
+    this->_clipplane_slot.SetCompatibleCall<core::view::CallClipPlaneDescription>();
+    this->MakeSlotAvailable(&this->_clipplane_slot);
 
     core::param::EnumParam* ep = new core::param::EnumParam(0);
     ep->SetTypePair(0, "vertices");
@@ -60,6 +68,12 @@ megamol::probe::PlaceProbes::PlaceProbes()
 
 
     this->_probes_per_unit_slot << new core::param::FloatParam(1, 0);
+    this->_probes_per_unit_slot.SetUpdateCallback(&PlaceProbes::parameterChanged);
+    this->MakeSlotAvailable(&this->_probes_per_unit_slot);
+
+    this->_override_probe_length_slot << new core::param::FloatParam(0);
+    this->_override_probe_length_slot.SetUpdateCallback(&PlaceProbes::parameterChanged);
+    this->MakeSlotAvailable(&this->_override_probe_length_slot);
 
     this->_scale_probe_begin_slot << new core::param::FloatParam(1.0f);
     this->_scale_probe_begin_slot.SetUpdateCallback(&PlaceProbes::parameterChanged);
@@ -153,8 +167,10 @@ bool megamol::probe::PlaceProbes::getMetaData(core::Call& call) {
     mesh::CallMesh* cm = this->_mesh_slot.CallAs<mesh::CallMesh>();
     mesh::CallMesh* ccl = this->_centerline_slot.CallAs<mesh::CallMesh>();
 
-    if (cm == nullptr)
+    if (cm == nullptr) {
+        core::utility::log::Log::DefaultLog.WriteError("[PlaceProbes] No surface mesh connected.");
         return false;
+    }
 
     // set frame id before callback
     auto mesh_meta_data = cm->getMetaData();
@@ -484,15 +500,22 @@ void megamol::probe::PlaceProbes::forceDirectedSampling(const mesh::MeshDataAcce
     }
 }
 
+void megamol::probe::PlaceProbes::vertexSampling(const mesh::MeshDataAccessCollection::Mesh& mesh) {
 
-void megamol::probe::PlaceProbes::vertexSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices) {
-
+    mesh::MeshDataAccessCollection::VertexAttribute vertices;
+    for (auto& attr : mesh.attributes) {
+        if (attr.semantic == mesh::MeshDataAccessCollection::POSITION) {
+            vertices = attr;
+        }
+    }
     uint32_t probe_count = vertices.byte_size / vertices.stride;
     _probePositions.resize(probe_count);
     _probeVertices.resize(probe_count);
 
     auto vertex_accessor = reinterpret_cast<float*>(vertices.data);
     auto vertex_step = vertices.stride / sizeof(float);
+
+    auto index_accessor = reinterpret_cast<unsigned int*>(mesh.indices.data);
 
 #pragma omp parallel for
     for (int i = 0; i < probe_count; i++) {
@@ -529,7 +552,9 @@ void megamol::probe::PlaceProbes::vertexNormalSampling(mesh::MeshDataAccessColle
             -normal_accessor[normal_step * i + 2]};
         probe.m_begin = -2.0 * _scale_probe_begin_slot.Param<core::param::FloatParam>()->Value();
         probe.m_end = 50.0;
+        probe.m_orig_end = probe.m_end;
         probe.m_cluster_id = -1;
+        probe.m_placement_method = BaseProbe::VERTEX_NORMAL;
 
         auto probe_idx = this->_probes->getProbeCount();
         this->_probes->addProbe(std::move(probe));
@@ -590,7 +615,9 @@ void PlaceProbes::faceNormalSampling(mesh::MeshDataAccessCollection::VertexAttri
         probe.m_direction = {-n_c.x, -n_c.y, -n_c.z};
         probe.m_begin = -2.0 * _scale_probe_begin_slot.Param<core::param::FloatParam>()->Value();
         probe.m_end = 50.0;
+        probe.m_orig_end = probe.m_end;
         probe.m_cluster_id = -1;
+        probe.m_placement_method = BaseProbe::FACE_NORMAL;
 
         auto probe_idx = this->_probes->getProbeCount();
         this->_probes->addProbe(std::move(probe));
@@ -622,7 +649,8 @@ bool megamol::probe::PlaceProbes::placeProbes() {
     const float distanceIndicator = _whd[smallest_edge_index] / 20;
 
     if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 0) {
-        this->vertexSampling(vertices);
+        this->vertexSampling(_mesh->accessMeshes().begin()->second);
+        processClipplane();
         mesh::CallMesh* ccl = this->_centerline_slot.CallAs<mesh::CallMesh>();
         if (ccl == nullptr) {
             this->placeByCenterpoint();
@@ -637,10 +665,13 @@ bool megamol::probe::PlaceProbes::placeProbes() {
         }
     } else if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 1) {
         this->dartSampling(vertices, _mesh->accessMeshes().begin()->second.indices, distanceIndicator);
+        processClipplane();
     } else if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 2) {
         this->forceDirectedSampling(_mesh->accessMeshes().begin()->second);
+        processClipplane();
     } else if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 3) {
         this->loadFromFile();
+        processClipplane();
     } else if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 4) {
 
         for (auto& mesh : _mesh->accessMeshes()) {
@@ -666,6 +697,7 @@ bool megamol::probe::PlaceProbes::placeProbes() {
             }
 
             this->vertexNormalSampling(vertices, normals, probe_ids);
+            processClipplane();
         }
     } else if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 5) {
 
@@ -692,6 +724,7 @@ bool megamol::probe::PlaceProbes::placeProbes() {
             }
 
             this->faceNormalSampling(vertices, normals, probe_ids, mesh.second.indices);
+            processClipplane();
         }
     }
 
@@ -842,7 +875,9 @@ bool megamol::probe::PlaceProbes::placeByCenterline(
         auto begin = -0.1 * final_dist * _scale_probe_begin_slot.Param<core::param::FloatParam>()->Value();
         probe.m_begin = std::isfinite(begin) ? begin : 0.0f;
         probe.m_end = std::isfinite(final_dist) ? final_dist : 0.0f;
+        probe.m_orig_end = probe.m_end;
         probe.m_cluster_id = -1;
+        probe.m_placement_method = BaseProbe::CENTERLINE;
         if (!mesh_id.empty()) {
             probe.m_geo_ids.emplace_back(mesh_id);
             probe.m_vert_ids.emplace_back(_probeVertices[i]);
@@ -869,12 +904,7 @@ bool megamol::probe::PlaceProbes::placeByCenterpoint() {
     auto probe_accessor = reinterpret_cast<float*>(_probePositions.data()->data());
     auto probe_step = 4;
 
-    std::string mesh_id;
-    if (_mesh->accessMeshes().size() == 1) {
-        for (auto& m : _mesh->accessMeshes()) {
-            mesh_id = m.first;
-        }
-    }
+    std::string mesh_id = _mesh->accessMeshes().begin()->first;
 
     for (uint32_t i = 0; i < probe_count; i++) {
         BaseProbe probe;
@@ -891,12 +921,21 @@ bool megamol::probe::PlaceProbes::placeByCenterpoint() {
         normal[1] /= normal_length;
         normal[2] /= normal_length;
 
+        auto override_length = _override_probe_length_slot.Param<core::param::FloatParam>()
+            ->Value();
+
+        probe.m_orig_end = normal_length;
+        if (override_length > 0.0f){
+            normal_length = override_length;
+        }
+
         probe.m_position = {
             probe_accessor[probe_step * i + 0], probe_accessor[probe_step * i + 1], probe_accessor[probe_step * i + 2]};
         probe.m_direction = normal;
         probe.m_begin = -0.02 * normal_length * _scale_probe_begin_slot.Param<core::param::FloatParam>()->Value();
         probe.m_end = normal_length;
         probe.m_cluster_id = -1;
+        probe.m_placement_method = BaseProbe::CENTERPOINT;
         if (!mesh_id.empty()) {
             probe.m_geo_ids.emplace_back(mesh_id);
             probe.m_vert_ids.emplace_back(_probeVertices[i]);
@@ -1032,6 +1071,35 @@ bool PlaceProbes::parameterChanged(core::param::ParamSlot& p) {
     _recalc = true;
 
     return true;
+}
+
+void PlaceProbes::processClipplane() {
+    // process clipplane
+    auto ccp = this->_clipplane_slot.CallAs<core::view::CallClipPlane>();
+
+    if ((ccp != nullptr) && (*ccp)()) {
+        glm::vec3 normal = {
+            ccp->GetPlane().Normal().GetX(), ccp->GetPlane().Normal().GetY(), ccp->GetPlane().Normal().GetZ()};
+        float d = ccp->GetPlane().D();
+
+        auto probePositions = _probePositions;
+        auto probeVertices = _probeVertices;
+        _probePositions.clear();
+        _probeVertices.clear();
+        _probePositions.reserve(probePositions.size());
+        _probeVertices.reserve(probePositions.size());
+        for (int i = 0; i < probePositions.size(); ++i) {
+            auto point = glm::vec3(
+                probePositions[i][0], probePositions[i][1], probePositions[i][2]);
+            if (glm::dot(normal, point ) + d > 0) {
+                _probePositions.emplace_back(probePositions[i]);
+                _probeVertices.emplace_back(probeVertices[i]);
+            }
+        }
+        _probePositions.shrink_to_fit();
+        _probeVertices.shrink_to_fit();
+
+    }
 }
 
 } // namespace probe

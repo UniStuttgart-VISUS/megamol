@@ -76,7 +76,6 @@ bool OSPRayStructuredVolume::readData(core::Call& call) {
     auto cd = this->getDataSlot.CallAs<geocalls::VolumetricDataCall>();
     auto const cgtf = this->getTFSlot.CallAs<core::view::CallGetTransferFunction>();
 
-    this->structureContainer.dataChanged = false;
     if (cd == nullptr)
         return false;
     if (cgtf == nullptr) {
@@ -120,12 +119,12 @@ bool OSPRayStructuredVolume::readData(core::Call& call) {
     }
 
     unsigned int const voxelCount = metadata->Resolution[0] * metadata->Resolution[1] * metadata->Resolution[2];
-    std::array<float, 3> gridOrigin = {metadata->Origin[0], metadata->Origin[1], metadata->Origin[2]};
-    std::array<float, 3> gridSpacing = {
+    const std::array<float, 3> gridOrigin = {metadata->Origin[0], metadata->Origin[1], metadata->Origin[2]};
+    const std::array<float, 3> gridSpacing = {
         metadata->SliceDists[0][0], metadata->SliceDists[1][0], metadata->SliceDists[2][0]};
-    std::array<int, 3> dimensions = {static_cast<int>(metadata->Resolution[0]),
-        static_cast<int>(metadata->Resolution[1]),
-        static_cast<int>(metadata->Resolution[2])}; //< TODO HAZARD explicit narrowing
+    const std::array<uint32_t, 3> dimensions = {static_cast<uint32_t>(metadata->Resolution[0]),
+                                                static_cast<uint32_t>(metadata->Resolution[1]),
+                                                static_cast<uint32_t>(metadata->Resolution[2])};
 
     unsigned int const maxDim =
         std::max<size_t>(metadata->Resolution[0], std::max<size_t>(metadata->Resolution[1], metadata->Resolution[2]));
@@ -168,7 +167,7 @@ bool OSPRayStructuredVolume::readData(core::Call& call) {
     // get color transfer function
     std::vector<float> rgb;
     std::vector<float> a;
-    std::array<float, 2> minmax = {
+    const std::array<float, 2> minmax = {
         static_cast<float>(metadata->MinValues[0]), static_cast<float>(metadata->MaxValues[0])};
     cgtf->SetRange(minmax);
     if ((*cgtf)(0)) {
@@ -211,7 +210,7 @@ bool OSPRayStructuredVolume::readData(core::Call& call) {
 
     this->structureContainer.type = structureTypeEnum::VOLUME;
     this->structureContainer.volumeType = volumeTypeEnum::STRUCTUREDVOLUME;
-    structuredVolumeStructure svs;
+    volumeStructure svs;
 
     svs.volRepType = (volumeRepresentationType)this->repType.Param<core::param::EnumParam>()->Value();
     svs.voxels = cd->GetData();

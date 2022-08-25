@@ -35,11 +35,11 @@ bool TransferFunction::requestTF(core::Call& call) {
     bool something_has_changed = false;
 
     // update transfer function if tf param is dirty
-    if (this->tfParam.IsDirty()) {
+    if (tfParam.IsDirty()) {
         // Check if range of initially loaded project value should be ignored
         auto tf_param_value = this->tfParam.Param<TransferFunctionParam>()->Value();
-        this->ignore_project_range = TransferFunctionParam::IgnoreProjectRange(tf_param_value);
-        this->tfParam.ResetDirty();
+        ignore_project_range = TransferFunctionParam::IgnoreProjectRange(tf_param_value);
+        tfParam.ResetDirty();
         something_has_changed = true;
     }
 
@@ -47,10 +47,10 @@ bool TransferFunction::requestTF(core::Call& call) {
     if (cgtf->UpdateRange() && this->ignore_project_range) {
         // Update changed range propagated from the module via the call
         if (cgtf->ConsumeRangeUpdate()) {
-            auto tf_param_value = this->tfParam.Param<TransferFunctionParam>()->Value();
-            auto tmp_range = this->range;
-            auto tmp_interpol = this->interpolMode;
-            auto tmp_tex_size = this->texSize;
+            auto tf_param_value = tfParam.Param<TransferFunctionParam>()->Value();
+            auto tmp_range = range;
+            auto tmp_interpol = interpolMode;
+            auto tmp_tex_size = texSize;
             TransferFunctionParam::NodeVector_t tmp_nodes;
 
             if (TransferFunctionParam::GetParsedTransferFunctionData(
@@ -59,7 +59,8 @@ bool TransferFunction::requestTF(core::Call& call) {
                 std::string tf_str;
                 if (TransferFunctionParam::GetDumpedTransferFunction(
                         tf_str, tmp_nodes, tmp_interpol, tmp_tex_size, cgtf->Range())) {
-                    this->tfParam.Param<TransferFunctionParam>()->SetValue(tf_str);
+                    tfParam.Param<TransferFunctionParam>()->SetValue(tf_str);
+                    tfParam.ResetDirty();
                 }
             }
             something_has_changed = true;
@@ -69,22 +70,22 @@ bool TransferFunction::requestTF(core::Call& call) {
     if (something_has_changed) {
         // Get current values from parameter string (Values are checked, too).
         TransferFunctionParam::NodeVector_t tmp_nodes;
-        if (!TransferFunctionParam::GetParsedTransferFunctionData(this->tfParam.Param<TransferFunctionParam>()->Value(),
-                tmp_nodes, this->interpolMode, this->texSize, this->range)) {
+        if (!TransferFunctionParam::GetParsedTransferFunctionData(tfParam.Param<TransferFunctionParam>()->Value(),
+                tmp_nodes, interpolMode, texSize, range)) {
             return false;
         }
 
         // Apply interpolation and generate texture data.
-        if (this->interpolMode == TransferFunctionParam::InterpolationMode::LINEAR) {
-            this->tex = TransferFunctionParam::LinearInterpolation(this->texSize, tmp_nodes);
-        } else if (this->interpolMode == TransferFunctionParam::InterpolationMode::GAUSS) {
-            this->tex = TransferFunctionParam::GaussInterpolation(this->texSize, tmp_nodes);
+        if (interpolMode == TransferFunctionParam::InterpolationMode::LINEAR) {
+            tex = TransferFunctionParam::LinearInterpolation(texSize, tmp_nodes);
+        } else if (interpolMode == TransferFunctionParam::InterpolationMode::GAUSS) {
+            tex = TransferFunctionParam::GaussInterpolation(texSize, tmp_nodes);
         }
 
-        ++this->version;
+        ++version;
     }
 
-    cgtf->SetTexture(this->texSize, this->tex.data(), this->texFormat, this->range, this->version);
+    cgtf->SetTexture(texSize, tex.data(), texFormat, range, version);
 
     return true;
 }

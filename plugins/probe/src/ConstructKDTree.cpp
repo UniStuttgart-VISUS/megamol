@@ -10,7 +10,6 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "normal_3d_omp.h"
 #include "probe/CallKDTree.h"
 #include <atomic>
 #include <limits>
@@ -87,7 +86,7 @@ bool ConstructKDTree::createPointCloud(std::vector<std::string>& vars) {
 
     const auto count = cd->getData(vars[0])->size();
 
-    _cloud.points.resize(count);
+    _cloud.resize(count);
 
     for (auto var : vars) {
         if (this->_formatSlot.Param<core::param::EnumParam>()->Value() == 0) {
@@ -105,9 +104,9 @@ bool ConstructKDTree::createPointCloud(std::vector<std::string>& vars) {
                 *xminmax.first, *yminmax.first, *zminmax.second, *xminmax.second, *yminmax.second, *zminmax.first);
 
             for (unsigned long long i = 0; i < count; i++) {
-                _cloud.points[i].x = x[i];
-                _cloud.points[i].y = y[i];
-                _cloud.points[i].z = z[i];
+                _cloud[i][0] = x[i];
+                _cloud[i][1] = y[i];
+                _cloud[i][2] = z[i];
             }
 
         } else {
@@ -123,18 +122,18 @@ bool ConstructKDTree::createPointCloud(std::vector<std::string>& vars) {
             float zmin = std::numeric_limits<float>::max();
             float zmax = std::numeric_limits<float>::min();
 
-            _cloud.points.resize(count / coarse_factor);
+            _cloud.resize(count / coarse_factor);
             for (unsigned long long i = 0; i < count / (3 * coarse_factor); i++) {
-                _cloud.points[i].x = xyz[3 * (i * coarse_factor) + 0];
-                _cloud.points[i].y = xyz[3 * (i * coarse_factor) + 1];
-                _cloud.points[i].z = xyz[3 * (i * coarse_factor) + 2];
+                _cloud[i][0] = xyz[3 * (i * coarse_factor) + 0];
+                _cloud[i][1] = xyz[3 * (i * coarse_factor) + 1];
+                _cloud[i][2] = xyz[3 * (i * coarse_factor) + 2];
 
-                xmin = std::min(xmin, _cloud.points[i].x);
-                xmax = std::max(xmax, _cloud.points[i].x);
-                ymin = std::min(ymin, _cloud.points[i].y);
-                ymax = std::max(ymax, _cloud.points[i].y);
-                zmin = std::min(zmin, _cloud.points[i].z);
-                zmax = std::max(zmax, _cloud.points[i].z);
+                xmin = std::min(xmin, _cloud[i][0]);
+                xmax = std::max(xmax, _cloud[i][0]);
+                ymin = std::min(ymin, _cloud[i][1]);
+                ymax = std::max(ymax, _cloud[i][1]);
+                zmin = std::min(zmin, _cloud[i][2]);
+                zmax = std::max(zmax, _cloud[i][2]);
             }
             _bbox.SetBoundingBox(xmin, ymin, zmax, xmax, ymax, zmin);
         }
@@ -217,10 +216,11 @@ bool ConstructKDTree::getData(core::Call& call) {
         ct->setMetaData(meta_data);
 
         // Extract the kd tree for easy sampling of the data
-        _inputCloud = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>(_cloud);
-        this->_full_data_tree = std::make_shared<pcl::KdTreeFLANN<pcl::PointXYZ>>();
-        this->_full_data_tree->setInputCloud(_inputCloud, nullptr);
-        this->_version++;
+        _data2kd = std::make_shared<const data2KD>(_cloud);
+        _full_data_tree = std::make_shared<my_kd_tree_t>(
+            3 /*dim*/, *_data2kd, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
+        _full_data_tree->buildIndex();
+        _version++;
         _old_datahash = cd->getDataHash();
     }
 

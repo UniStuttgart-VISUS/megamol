@@ -9,9 +9,10 @@
 
 #include "ConstructKDTree.h"
 #include "ExtractCenterline.h"
-#include "ExtractMesh.h"
 #include "ExtractProbeGeometry.h"
+#ifdef HAS_BLEND2D
 #include "GenerateGlyphs.h"
+#endif
 #include "ManipulateMesh.h"
 #include "PlaceProbes.h"
 #include "ProbesToTable.h"
@@ -32,6 +33,8 @@
 #include "ReconstructSurface.h"
 #include "TableToProbes.h"
 #include "TessellateBoundingBox.h"
+#include "FilterProbes.h"
+#include "DualMeshProbeSampling.h"
 
 namespace megamol::probe {
 class ProbePluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -48,11 +51,12 @@ public:
     void registerClasses() override {
 
         // register modules
-        this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractMesh>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::PlaceProbes>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::SampleAlongPobes>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractProbeGeometry>();
+#ifdef HAS_BLEND2D
         this->module_descriptions.RegisterAutoDescription<megamol::probe::GenerateGlyphs>();
+#endif
         this->module_descriptions.RegisterAutoDescription<megamol::probe::SurfaceNets>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractCenterline>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::ConstructKDTree>();
@@ -71,6 +75,8 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::probe::ExtractSkeleton>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::ElementColoring>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe::ConstructHull>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe::FilterProbes>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe::DualMeshProbeSampling>();
 
 
         // register calls

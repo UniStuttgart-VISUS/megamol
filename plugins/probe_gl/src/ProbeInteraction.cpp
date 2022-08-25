@@ -335,10 +335,12 @@ bool megamol::probe_gl::ProbeInteraction::Render(mmstd_gl::CallRender3DGL& call)
     {
         bool my_tool_active = true;
 
-        auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
-        if (ctx != nullptr) {
-            ImGui::SetCurrentContext(ctx);
-
+        bool valid_imgui_scope =
+            ((ImGui::GetCurrentContext() != nullptr) ? (ImGui::GetCurrentContext()->WithinFrameScope) : (false));
+        //auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
+        //if (ctx != nullptr) {
+            //ImGui::SetCurrentContext(ctx);
+        if (valid_imgui_scope) {
             ImGuiIO& io = ImGui::GetIO();
             ImVec2 viewport = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
 

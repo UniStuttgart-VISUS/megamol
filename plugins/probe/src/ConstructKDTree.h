@@ -5,13 +5,13 @@
  */
 #pragma once
 
-#include "concave_hull.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "poisson.h"
+#include "ConstructHull.h"
+#include <nanoflann.hpp>
 
 namespace megamol {
 namespace probe {
@@ -72,10 +72,9 @@ private:
     bool toggleFormat(core::param::ParamSlot& p);
 
     // PCL stuff
-    pcl::PointCloud<pcl::PointXYZ>::ConstPtr _inputCloud;
-    pcl::PointCloud<pcl::PointXYZ> _cloud;
-    std::shared_ptr<pcl::PointCloud<pcl::PointNormal>> _resultNormalCloud;
-    std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>> _full_data_tree;
+    std::shared_ptr<const data2KD> _data2kd;
+    std::vector<std::array<float,3>> _cloud;
+    std::shared_ptr<my_kd_tree_t> _full_data_tree;
 
     size_t _old_datahash = 0;
     uint32_t _version = 0;
