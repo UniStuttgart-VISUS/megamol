@@ -109,8 +109,8 @@ private:
         const std::vector<T>& data_y, const std::vector<T>& data_z, const std::vector<T>& data_w);
 
     template<typename T>
-    bool isInsideSamplingArea(float& min_radius, const std::array<T, 3>& _point, const std::vector<std::array<T, 3>>& _top,
-        const std::vector<std::array<T, 3>>& bottom, const std::array<T, 3>& _probe, const bool check_bottom = true,
+    bool isInsideSamplingArea(float& min_radius, const std::array<T, 3>& _point, const std::vector<std::array<T, 3>>& _top, const std::vector<std::array<T, 3>>& bottom,
+        const std::array<T, 3>& _probe, const std::array<T, 3>& _probe_dir, const bool check_bottom = true,
         const bool includes_probe = false);
 
     bool getData(core::Call& call);
@@ -247,7 +247,7 @@ inline void DualMeshProbeSampling::doScalarDistributionSampling(
 
             // clac min radius
             if (!isInsideSamplingArea(min_radius, sample_center, dual_mesh_top_vertices, dual_mesh_bottom_vertices,
-                        probe.m_position, check_bottom, includes_probe)) {
+                        probe.m_position, probe.m_direction, check_bottom, includes_probe)) {
                 log.WriteError("[DualMeshSampling] ERROR: Sample point found to be not in geometry. Check equations!");
                 return;
             }
@@ -263,7 +263,7 @@ inline void DualMeshProbeSampling::doScalarDistributionSampling(
                     kept_dists.emplace_back(std::sqrtf(id.second));
                 }else {
                     if (isInsideSamplingArea(blub, point, dual_mesh_top_vertices, dual_mesh_bottom_vertices,
-                        probe.m_position, check_bottom, includes_probe)) {
+                        probe.m_position, probe.m_direction, check_bottom, includes_probe)) {
                     points_to_keep.emplace_back(id);
                     kept_dists.emplace_back(std::sqrtf(id.second));
                     }
@@ -422,7 +422,7 @@ inline void DualMeshProbeSampling::doVectorSamling(const std::shared_ptr<my_kd_t
 template<typename T>
 inline bool DualMeshProbeSampling::isInsideSamplingArea(float& min_radius, const std::array<T, 3>& _point,
     const std::vector<std::array<T, 3>>& _top,
-    const std::vector<std::array<T, 3>>& bottom, const std::array<T, 3>& _probe, const bool check_bottom, const bool includes_probe) {
+    const std::vector<std::array<T, 3>>& bottom, const std::array<T, 3>& _probe, const std::array<T, 3>& _probe_dir, const bool check_bottom, const bool includes_probe) {
 
     assert(bottom.size() > 3);
     assert(_top.size() > 3);
@@ -434,8 +434,7 @@ inline bool DualMeshProbeSampling::isInsideSamplingArea(float& min_radius, const
     // check bottom
     if (check_bottom) {
         // calculate normal
-        glm::vec3 const bottom_normal = glm::normalize(
-            glm::cross(to_vec3(bottom[2]) - to_vec3(bottom[0]), to_vec3(bottom[1]) - to_vec3(bottom[0])));
+        glm::vec3 const bottom_normal = to_vec3(_probe_dir);
         // check direction of diff vec
         auto dot = glm::dot(bottom_normal, to_vec3(bottom[0]) - point);
         min_radius = std::min(min_radius, std::abs(dot));
@@ -445,6 +444,16 @@ inline bool DualMeshProbeSampling::isInsideSamplingArea(float& min_radius, const
     }
 
     // check sides
+    // DEBUG CODE
+    //glm::vec3 com(0.0f,0.0f,0.0f);
+    //for (int i = 0; i < _top.size(); i++) {
+    //    com += to_vec3(top[i]);
+    //}
+    //com /= _top.size();
+    //std::vector<glm::vec3> top_star(_top.size());
+    //for (int i = 0; i < _top.size(); i++) {
+    //    top_star[i] = to_vec3(top[i]) - com;
+    //}
     for (int i = 0; i < _top.size(); i++) {
         glm::vec3 const side_normal = glm::normalize(glm::cross(to_vec3(bottom[i]) - to_vec3(top[i]), to_vec3(top[i + 1]) - to_vec3(top[i])));
         // check direction of diff vec
@@ -469,8 +478,7 @@ inline bool DualMeshProbeSampling::isInsideSamplingArea(float& min_radius, const
         }
     } else {
         // calculate normal
-        glm::vec3 const top_normal = glm::normalize(
-            glm::cross(to_vec3(top[1]) - to_vec3(top[0]), to_vec3(top[2]) - to_vec3(top[0])));
+        glm::vec3 const top_normal = -1.0f * to_vec3(_probe_dir);
         // check direction of diff vec
         auto dot = glm::dot(to_vec3(top[0]) - point, top_normal);
         min_radius = std::min(min_radius, std::abs(dot));

@@ -580,7 +580,8 @@ bool DualMeshProbeSampling::calcDualMesh(std::shared_ptr<mesh::MeshDataAccessCol
             }
         }
         // calc centers of triangles
-        _dual_mesh_vertices[i].reserve(5);
+        std::vector<std::array<float,3>> unsorted_dual_mesh_vertices;
+        std::vector<float> dual_mesh_angles;
         for (auto const& triangle : triangles) {
             auto const t0 = 3 * mesh_indices[triangle];
             auto const t1 = 3 * mesh_indices[triangle+1];
@@ -595,8 +596,40 @@ bool DualMeshProbeSampling::calcDualMesh(std::shared_ptr<mesh::MeshDataAccessCol
                 vertex_accessor[t2 + 1],
                 vertex_accessor[t2 + 2]};
             glm::vec3 const center = (v0 + v1 + v2)/3.0f;
-            _dual_mesh_vertices[i].emplace_back(std::array<float,3>{center.x, center.y, center.z});
+            unsorted_dual_mesh_vertices
+                .emplace_back(std::array<float, 3>{center.x, center.y, center.z});
+            if (unsorted_dual_mesh_vertices.size() > 1) {
+                auto to_dm0 = to_vec3(unsorted_dual_mesh_vertices[0]) - to_vec3(current_probe.m_position);
+                auto to_dm1 = to_vec3(unsorted_dual_mesh_vertices[1]) - to_vec3(current_probe.m_position);
+                auto to_dmx = to_vec3(unsorted_dual_mesh_vertices.back()) - to_vec3(current_probe.m_position);
+                auto face_n = -1.0f*to_vec3(current_probe.m_direction);
+                auto n = glm::normalize(glm::cross(to_dm0, to_dmx));
+                auto tangent = glm::normalize(glm::cross(face_n, to_dm0));
+
+                auto angle = std::atan2(glm::dot(n, glm::cross(to_dm0, to_dmx)),
+                    glm::dot(to_dm0, to_dmx));
+                if ( glm::dot(to_dmx, tangent) < 0.0f) {
+                    angle = 2.0f*3.1415926535f - angle;
+                }
+                dual_mesh_angles.emplace_back(angle);
+            }
         }
+
+        std::vector<int> index_permutation(dual_mesh_angles.size(),0);
+        for (int j = 0; j < index_permutation.size(); j++) {
+            index_permutation[j] = j;
+        }
+        std::sort(index_permutation.begin(), index_permutation.end(),
+            [&](const int& a, const int& b) { return (dual_mesh_angles[a] < dual_mesh_angles[b]); });
+
+        _dual_mesh_vertices[i].resize(unsorted_dual_mesh_vertices.size());
+        _dual_mesh_vertices[i][0] = unsorted_dual_mesh_vertices[0];
+        for (int k = 0; k < index_permutation.size(); k++) {
+            _dual_mesh_vertices[i][k + 1] = unsorted_dual_mesh_vertices[index_permutation[k] + 1];
+        }
+
+        //_dual_mesh_vertices[i] = unsorted_dual_mesh_vertices;
+
     }
     
     return true;
