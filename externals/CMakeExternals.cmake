@@ -244,18 +244,6 @@ function(require_external NAME)
       set(IMGUITEXINSPECT_LIB "lib/libimguitexinspect.a")
     endif ()
 
-    if (WIN32)
-      set(IMGUI_LIB "lib/imgui.lib")
-    else ()
-      set(IMGUI_LIB "lib/libimgui.a")
-    endif ()
-
-    if (WIN32)
-      set(GLAD_LIB "lib/glad.lib")
-    else ()
-      set(GLAD_LIB "lib/libglad.a")
-    endif ()
-
     add_external_project(imguitexinspect STATIC
       GIT_REPOSITORY https://github.com/andyborrell/imgui_tex_inspect.git
       GIT_TAG "e568d55186167fdf48fb562ea5a6399af49c7c99"
@@ -264,9 +252,7 @@ function(require_external NAME)
         imgui
         glad
       CMAKE_ARGS
-        -DIMGUI_LIBRARY:PATH=${IMGUI_INSTALL_DIR}/${IMGUI_LIB}
         -DIMGUI_INCLUDE_DIR:PATH=${IMGUI_INSTALL_DIR}/include
-        -DGLAD_LIBRARY:PATH=${GLAD_INSTALL_DIR}/${GLAD_LIB}
         -DGLAD_INCLUDE_DIR:PATH=${GLAD_INSTALL_DIR}/include
         -DSOURCE_INCLUDE_DIR:PATH=${SOURCE_DIR}
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
@@ -274,8 +260,7 @@ function(require_external NAME)
         "<SOURCE_DIR>/CMakeLists.txt")
 
     add_external_library(imguitexinspect
-      LIBRARY ${IMGUITEXINSPECT_LIB}
-      INTERFACE_LIBRARIES glad)
+      LIBRARY ${IMGUITEXINSPECT_LIB})
 
     external_get_property(imguitexinspect SOURCE_DIR)
     target_include_directories(imguitexinspect INTERFACE "${SOURCE_DIR}")
