@@ -273,9 +273,6 @@ private:
      */
     megamol::core::param::ParamSlot smaa_mode_;
 
-    /** Parameter for selecting which texture to show, e.g. final output, edges, or weights */
-    megamol::core::param::ParamSlot smaa_view_;
-
     /** Parameter for selecting the smaa quality level
      * as stated in the original work http://www.iryoku.com/smaa/
      * LOW    (60% of the quality)
