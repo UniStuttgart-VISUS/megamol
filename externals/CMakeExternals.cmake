@@ -158,17 +158,6 @@ function(require_external NAME)
       GIT_TAG 220fdf37fec2d9d3e3f7674194544ee70eb93ee7 # master on 2021-07-26, because nothing was specified here.
       INCLUDE_DIR "include")
 
-  # imguitexinspect
-  elseif (NAME STREQUAL "imguitexinspect")
-    if (TARGET imguitexinspect)
-      return()
-    endif ()
-
-    add_external_headeronly_project(imguitexinspect
-      GIT_REPOSITORY https://github.com/andyborrell/imgui_tex_inspect.git
-      GIT_TAG e568d55186167fdf48fb562ea5a6399af49c7c99 # master on 2022-07-27, because nothing was specified here.
-      )
-
   # ###########################################################################
   # ### Built libraries #######################################################
   # ###########################################################################
@@ -232,6 +221,64 @@ function(require_external NAME)
 
     add_external_library(bhtsne
       LIBRARY ${BHTSNE_LIB})
+
+  # imguitexinspect
+  elseif (NAME STREQUAL "imguitexinspect")
+    if (TARGET imguitexinspect)
+      return()
+    endif ()
+
+    require_external(glad)
+    external_get_property(glad INSTALL_DIR)
+    set(GLAD_INSTALL_DIR ${INSTALL_DIR})
+
+    require_external(imgui)
+    external_get_property(imgui INSTALL_DIR)
+    set(IMGUI_INSTALL_DIR ${INSTALL_DIR})
+
+    external_get_property(imguitexinspect SOURCE_DIR)
+
+    if (WIN32)
+      set(IMGUITEXINSPECT_LIB "lib/imguitexinspect.lib")
+    else ()
+      set(IMGUITEXINSPECT_LIB "lib/libimguitexinspect.a")
+    endif ()
+
+    if (WIN32)
+      set(IMGUI_LIB "lib/imgui.lib")
+    else ()
+      set(IMGUI_LIB "lib/libimgui.a")
+    endif ()
+
+    if (WIN32)
+      set(GLAD_LIB "lib/glad.lib")
+    else ()
+      set(GLAD_LIB "lib/libglad.a")
+    endif ()
+
+    add_external_project(imguitexinspect STATIC
+      GIT_REPOSITORY https://github.com/andyborrell/imgui_tex_inspect.git
+      GIT_TAG "e568d55186167fdf48fb562ea5a6399af49c7c99"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUITEXINSPECT_LIB}"
+      DEPENDS
+        imgui
+        glad
+      CMAKE_ARGS
+        -DIMGUI_LIBRARY:PATH=${IMGUI_INSTALL_DIR}/${IMGUI_LIB}
+        -DIMGUI_INCLUDE_DIR:PATH=${IMGUI_INSTALL_DIR}/include
+        -DGLAD_LIBRARY:PATH=${GLAD_INSTALL_DIR}/${GLAD_LIB}
+        -DGLAD_INCLUDE_DIR:PATH=${GLAD_INSTALL_DIR}/include
+        -DSOURCE_INCLUDE_DIR:PATH=${SOURCE_DIR}
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/externals/imguitexinspect/CMakeLists.txt"
+        "<SOURCE_DIR>/CMakeLists.txt")
+
+    add_external_library(imguitexinspect
+      LIBRARY ${IMGUITEXINSPECT_LIB}
+      INTERFACE_LIBRARIES glad)
+
+    external_get_property(imguitexinspect SOURCE_DIR)
+    target_include_directories(imguitexinspect INTERFACE "${SOURCE_DIR}")
 
   # blend2d
   elseif (NAME STREQUAL "blend2d")

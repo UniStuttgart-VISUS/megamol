@@ -31,7 +31,6 @@
 #include "mmstd_gl/special/TextureInspector.h"
 
 #include "imgui_tex_inspect_internal.h"
-#include "imgui_tex_inspect.h"
 #include "backends/tex_inspect_opengl.h"
 
 using namespace megamol::mmstd_gl::special;

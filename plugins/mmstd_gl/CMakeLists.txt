@@ -10,6 +10,7 @@ megamol_plugin(mmstd_gl
     mmstd
   DEPENDS_EXTERNALS
     glowl
+    glad
     imgui
     imguitexinspect)
 
