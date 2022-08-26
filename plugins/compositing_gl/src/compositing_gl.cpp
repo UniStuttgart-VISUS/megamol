@@ -18,7 +18,6 @@
 #include "SimpleRenderTarget.h"
 #include "TextureCombine.h"
 #include "TextureDepthCompositing.h"
-#include "TextureInspector.h"
 #include "compositing_gl/CompositingCalls.h"
 
 namespace megamol::compositing {
@@ -42,7 +41,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::SimpleRenderTarget>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureCombine>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureDepthCompositing>();
-        this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::TextureInspector>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::NormalFromDepth>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::SSAO>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::AntiAliasing>();

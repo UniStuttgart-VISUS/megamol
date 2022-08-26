@@ -17,6 +17,8 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
+#include "mmstd_gl/special/TextureInspector.h"
+
 namespace megamol::compositing_gl {
 
 /**
@@ -220,6 +222,8 @@ private:
     std::vector<unsigned char> search_;
 
     uint32_t version_;
+
+    mmstd_gl::special::TextureInspector tex_insp_;
 
     /** Shader program to copy a texture to another */
     std::unique_ptr<glowl::GLSLProgram> copy_prgm_;

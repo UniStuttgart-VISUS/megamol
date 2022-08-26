@@ -632,11 +632,9 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
         this->smaa_detection_technique_.ResetDirty();
     }
 
-    glm::ivec2 tex_dim = glm::ivec2(smaa_layout_.width, smaa_layout_.height);
-    lhs_tc->AddInspectorTexture(std::pair<unsigned int, glm::ivec2>(output_tx2D_->getName(), tex_dim));
-    lhs_tc->AddInspectorTexture(std::pair<unsigned int, glm::ivec2>(edges_tx2D_->getName(), tex_dim));
-    lhs_tc->AddInspectorTexture(
-        std::pair<unsigned int, glm::ivec2>(blending_weights_tx2D_->getName(), tex_dim));
+    glm::vec2 tex_dim = glm::vec2(smaa_layout_.width, smaa_layout_.height);
+    tex_insp_.SetTexture((void*)(intptr_t)output_tx2D_->getName(), tex_dim.x, tex_dim.y);
+    tex_insp_.ShowWindow();
 
 
     if (lhs_tc->version() < version_ || this->smaa_view_.IsDirty()) {

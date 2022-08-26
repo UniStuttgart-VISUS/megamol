@@ -9,7 +9,9 @@ megamol_plugin(mmstd_gl
   DEPENDS_PLUGINS
     mmstd
   DEPENDS_EXTERNALS
-    glowl)
+    glowl
+    imgui
+    imguitexinspect)
 
 if (mmstd_gl_PLUGIN_ENABLED)
   # Additional sources

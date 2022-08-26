@@ -9,9 +9,6 @@ megamol_plugin(compositing_gl
   DEPENDS_PLUGINS
     mmstd
     mmstd_gl
-  DEPENDS_EXTERNALS
-    imgui
-    #imguitexinspect
     )
 
 if (compositing_gl_PLUGIN_ENABLED)
