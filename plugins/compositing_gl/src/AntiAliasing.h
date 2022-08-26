@@ -223,7 +223,7 @@ private:
 
     uint32_t version_;
 
-    mmstd_gl::special::TextureInspector tex_insp_;
+    mmstd_gl::special::TextureInspector tex_inspector_;
 
     /** Shader program to copy a texture to another */
     std::unique_ptr<glowl::GLSLProgram> copy_prgm_;

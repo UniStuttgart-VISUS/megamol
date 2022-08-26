@@ -30,6 +30,7 @@
 megamol::compositing_gl::AntiAliasing::AntiAliasing()
         : core::Module()
         , version_(0)
+        , tex_inspector_({"Edges", "BlendingWeights", "Output"})
         , output_tx2D_(nullptr)
         , mode_("Mode", "Sets antialiasing technqiue: SMAA, FXAA, no AA")
         , smaa_mode_("SMAA Mode", "Sets the SMAA mode: SMAA 1x or SMAA T2x")
@@ -131,6 +132,11 @@ megamol::compositing_gl::AntiAliasing::AntiAliasing()
     view->SetTypePair(2, "Weights");
     this->smaa_view_.SetParameter(view);
     this->MakeSlotAvailable(&this->smaa_view_);
+
+    auto tex_inspector_slots = this->tex_inspector_.GetParameterSlots();
+    for (auto& tex_slot : tex_inspector_slots) {
+        this->MakeSlotAvailable(tex_slot);
+    }
 
     this->output_tex_slot_.SetCallback(
         compositing::CallTexture2D::ClassName(), "GetData", &AntiAliasing::getDataCallback);
@@ -632,9 +638,28 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
         this->smaa_detection_technique_.ResetDirty();
     }
 
-    glm::vec2 tex_dim = glm::vec2(smaa_layout_.width, smaa_layout_.height);
-    tex_insp_.SetTexture((void*)(intptr_t)output_tx2D_->getName(), tex_dim.x, tex_dim.y);
-    tex_insp_.ShowWindow();
+    if (tex_inspector_.GetShowInspectorSlotValue()) {
+        glm::vec2 tex_dim = glm::vec2(smaa_layout_.width, smaa_layout_.height);
+
+        GLuint tex_to_show = 0;
+        switch (tex_inspector_.GetSelectTextureSlotValue()) {
+        case 0:
+            tex_to_show = edges_tx2D_->getName();
+            break;
+        case 1:
+            tex_to_show = blending_weights_tx2D_->getName();
+            break;
+        case 2:
+            tex_to_show = output_tx2D_->getName();
+            break;
+        default:
+            tex_to_show = output_tx2D_->getName();
+            break;
+        }
+
+        tex_inspector_.SetTexture((void*)(intptr_t)tex_to_show, tex_dim.x, tex_dim.y);
+        tex_inspector_.ShowWindow();
+    }
 
 
     if (lhs_tc->version() < version_ || this->smaa_view_.IsDirty()) {

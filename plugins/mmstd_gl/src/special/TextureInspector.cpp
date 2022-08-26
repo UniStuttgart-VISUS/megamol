@@ -36,13 +36,24 @@
 
 using namespace megamol::mmstd_gl::special;
 
-TextureInspector::TextureInspector()
-        : draw(nullptr)
+TextureInspector::TextureInspector(const std::vector<std::string>& textures)
+        : show_inspector_("Show", "Turn the texture inspector on or off.")
+        , select_texture_("Texture", "Select which texture to be shown.")
+        , draw(nullptr)
         , tex_({nullptr, 0.f, 0.f})
         , flags_(0)
-        , flip_x_(0)
-        , flip_y_(0)
-        , initiated_(false) {}
+        , flip_x_(false)
+        , flip_y_(true)
+        , initiated_(false) {
+    auto bp = new core::param::BoolParam(true);
+    show_inspector_.SetParameter(bp);
+
+    auto ep = new core::param::EnumParam(0);
+    for (int i = 0; i < textures.size(); i++) {
+        ep->SetTypePair(i, textures[i].c_str());
+    }
+    select_texture_.SetParameter(ep);
+}
 
 TextureInspector::~TextureInspector() {}
 

@@ -6,6 +6,13 @@
 
 #pragma once
 
+#include <vector>
+#include <string>
+
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/ParamSlot.h"
+
 namespace megamol::mmstd_gl::special {
 
 struct Texture {
@@ -20,22 +27,34 @@ struct Texture {
 class TextureInspector {
 public:
 
-    void SetTexture(Texture tex) {
+    inline void SetTexture(Texture tex) {
         this->tex_ = tex;
     }
 
-    void SetTexture(void* id, float x, float y) {
+    inline void SetTexture(void* id, float x, float y) {
         this->tex_.texture = id;
         this->tex_.x = x;
         this->tex_.y = y;
     }
 
-    void SetFlipX(bool flip) {
+    inline void SetFlipX(bool flip) {
         this->flip_x_ = flip;
     }
 
-    void SetFlipY(bool flip) {
+    inline void SetFlipY(bool flip) {
         this->flip_y_ = flip;
+    }
+
+    inline std::vector<core::AbstractSlot*> GetParameterSlots() {
+        return {&this->show_inspector_, &this->select_texture_};
+    }
+
+    inline bool GetShowInspectorSlotValue() {
+        return show_inspector_.Param<core::param::BoolParam>()->Value();
+    }
+
+    inline int GetSelectTextureSlotValue() {
+        return select_texture_.Param<core::param::EnumParam>()->Value();
     }
 
     /*
@@ -47,7 +66,7 @@ public:
     /**
      * Ctor
      */
-    TextureInspector();
+    TextureInspector(const std::vector<std::string>& textures);
 
     /**
      * Dtor
@@ -55,12 +74,6 @@ public:
     ~TextureInspector();
 
 private:
-    /** The name of the view instance to be shot */
-    //core::param::ParamSlot show_inspector_;
-
-    /** Slot to select a specific texture */
-    //core::param::ParamSlot which_texture_;
-
     /*
      * SceneColorFilters
      * An example showing controls to filter red, green and blue channels
@@ -105,6 +118,12 @@ private:
     * Initializes opengl and creates a context.
     */
     void Init();
+
+    /** Slot to toggle the texture inspector window */
+    core::param::ParamSlot show_inspector_;
+
+    /** Slot to select a specific texture */
+    core::param::ParamSlot select_texture_;
 
     void (TextureInspector::*draw)();
 
