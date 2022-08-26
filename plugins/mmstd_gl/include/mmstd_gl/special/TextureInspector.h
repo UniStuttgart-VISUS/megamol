@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -26,7 +26,6 @@ struct Texture {
  */
 class TextureInspector {
 public:
-
     inline void SetTexture(Texture tex) {
         this->tex_ = tex;
     }
@@ -58,9 +57,9 @@ public:
     }
 
     /*
-    * ShowWindow
-    * The main function responsible for creating the imgui window and the different scenes.
-    */
+     * ShowWindow
+     * The main function responsible for creating the imgui window and the different scenes.
+     */
     void ShowWindow();
 
     /**
@@ -114,9 +113,9 @@ private:
     void SceneWrapAndFilter();
 
     /*
-    * Init
-    * Initializes opengl and creates a context.
-    */
+     * Init
+     * Initializes opengl and creates a context.
+     */
     void Init();
 
     /** Slot to toggle the texture inspector window */
@@ -135,4 +134,4 @@ private:
     bool initiated_;
 };
 
-} // namespace megamol::mmstd_gl
+} // namespace megamol::mmstd_gl::special
