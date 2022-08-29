@@ -56,6 +56,7 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
         , gui_profiling_run_button()
         , profiling_list()
         , scroll_delta_time(std::chrono::system_clock::now())
+        , gui_profiling_graph_link(true)
 #endif // PROFILING
 {
 
@@ -124,21 +125,26 @@ megamol::gui::Graph::~Graph() {
 }
 
 
-ModulePtr_t megamol::gui::Graph::AddModule(
-    const std::string& class_name, const std::string& description, const std::string& plugin_name, bool is_view) {
+ModulePtr_t megamol::gui::Graph::AddModule(const std::string& class_name, const std::string& module_name,
+    const std::string& group_name, const std::string& description, const std::string& plugin_name, bool is_view) {
 
     try {
+        /// Parameters and CallSlots have to be added separately
+        /// Add module to queue manually
+        if (auto mod_ptr = std::make_shared<Module>(
+                megamol::gui::GenerateUniqueID(), class_name, description, plugin_name, is_view)) {
 
-        auto mod_ptr =
-            std::make_shared<Module>(megamol::gui::GenerateUniqueID(), class_name, description, plugin_name, is_view);
-        this->modules.emplace_back(mod_ptr);
-        this->ForceSetDirty();
+            this->modules.emplace_back(mod_ptr);
+
+            mod_ptr->SetName(module_name);
+            this->AddGroupModule(group_name, mod_ptr, false);
+            this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Added empty module to project.\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Added empty module to project.\n");
 #endif // GUI_VERBOSE
-
-        return mod_ptr;
+            return mod_ptr;
+        }
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -151,12 +157,13 @@ ModulePtr_t megamol::gui::Graph::AddModule(
     }
 
     megamol::core::utility::log::Log::DefaultLog.WriteError(
-        "[GUI] Unable to add empty module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Unable to add module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return nullptr;
 }
 
 
-ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name) {
+ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name,
+    const std::string& module_name, const std::string& group_name) {
 
     try {
         for (auto& mod : stock_modules) {
@@ -164,8 +171,13 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
                 ImGuiID mod_uid = megamol::gui::GenerateUniqueID();
                 auto mod_ptr =
                     std::make_shared<Module>(mod_uid, mod.class_name, mod.description, mod.plugin_name, mod.is_view);
-                mod_ptr->SetName(this->generate_unique_module_name(mod.class_name));
+                if (module_name.empty()) {
+                    mod_ptr->SetName(this->generate_unique_module_name(mod.class_name));
+                } else {
+                    mod_ptr->SetName(module_name);
+                }
                 mod_ptr->SetGraphEntryName("");
+                this->AddGroupModule(group_name, mod_ptr, false);
 
                 for (auto& p : mod.parameters) {
                     Parameter parameter(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval,
@@ -237,7 +249,7 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
 }
 
 
-bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
+bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool use_queue) {
 
     try {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
@@ -256,7 +268,9 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
 
                         queue_data.name_id = current_full_name;
                         queue_data.rename_id = (*iter)->FullName();
-                        this->PushSyncQueue(QueueAction::RENAME_MODULE, queue_data);
+                        if (use_queue) {
+                            this->PushSyncQueue(QueueAction::RENAME_MODULE, queue_data);
+                        }
                     }
                 }
 
@@ -290,7 +304,9 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
 #endif // GUI_VERBOSE
 
                 queue_data.name_id = (*iter)->FullName();
-                this->PushSyncQueue(QueueAction::DELETE_MODULE, queue_data);
+                if (use_queue) {
+                    this->PushSyncQueue(QueueAction::DELETE_MODULE, queue_data);
+                }
 
                 // 5) Delete module
                 if ((*iter).use_count() > 1) {
@@ -460,7 +476,7 @@ bool megamol::gui::Graph::AddCall(const CallStockVector_t& stock_calls, ImGuiID 
 
 
 CallPtr_t megamol::gui::Graph::AddCall(
-    const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2) {
+    const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2, bool use_queue) {
 
     try {
         if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
@@ -482,7 +498,7 @@ CallPtr_t megamol::gui::Graph::AddCall(
         auto call_ptr = std::make_shared<Call>(megamol::gui::GenerateUniqueID(), call_stock_data.class_name,
             call_stock_data.description, call_stock_data.plugin_name, call_stock_data.functions);
 
-        return this->ConnectCall(call_ptr, callslot_1, callslot_2) ? call_ptr : nullptr;
+        return this->ConnectCall(call_ptr, callslot_1, callslot_2, use_queue) ? call_ptr : nullptr;
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -496,7 +512,8 @@ CallPtr_t megamol::gui::Graph::AddCall(
 }
 
 
-bool megamol::gui::Graph::ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2) {
+bool megamol::gui::Graph::ConnectCall(
+    CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2, bool use_queue) {
 
     if (call_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -558,7 +575,9 @@ bool megamol::gui::Graph::ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslo
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
-        this->PushSyncQueue(QueueAction::ADD_CALL, queue_data);
+        if (use_queue) {
+            this->PushSyncQueue(QueueAction::ADD_CALL, queue_data);
+        }
 
         this->calls.emplace_back(call_ptr);
         this->ForceSetDirty();
@@ -600,21 +619,23 @@ bool megamol::gui::Graph::ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslo
 }
 
 
-CallPtr_t megamol::gui::Graph::GetCall(std::string const& caller_fullname, std::string const& callee_fullname) {
+CallPtr_t megamol::gui::Graph::GetCall(
+    std::string const& call_classname, std::string const& caller_fullname, std::string const& callee_fullname) {
 
     for (auto& call_ptr : this->calls) {
-        std::string tmp_caller_fullname;
-        std::string tmp_callee_fullname;
         auto caller_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLER);
         auto callee_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLEE);
         if ((caller_ptr != nullptr) && (callee_ptr != nullptr)) {
+            std::string tmp_caller_fullname;
+            std::string tmp_callee_fullname;
             if (caller_ptr->GetParentModule() != nullptr) {
                 tmp_caller_fullname = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->Name();
             }
             if (callee_ptr->GetParentModule() != nullptr) {
                 tmp_callee_fullname = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->Name();
             }
-            if ((tmp_caller_fullname == caller_fullname) && (tmp_callee_fullname == callee_fullname)) {
+            if ((call_ptr->ClassName() == call_classname) && (tmp_caller_fullname == caller_fullname) &&
+                (tmp_callee_fullname == callee_fullname)) {
                 return call_ptr;
             }
         }
@@ -623,7 +644,7 @@ CallPtr_t megamol::gui::Graph::GetCall(std::string const& caller_fullname, std::
 }
 
 
-bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
+bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid, bool use_queue) {
 
     try {
         std::vector<ImGuiID> delete_calls_uids;
@@ -714,8 +735,9 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                         return false;
                     }
 
-                    this->PushSyncQueue(QueueAction::DELETE_CALL, queue_data);
-
+                    if (use_queue) {
+                        this->PushSyncQueue(QueueAction::DELETE_CALL, queue_data);
+                    }
                     this->ResetStatePointers();
 
                     (*iter)->DisconnectCallSlots();
@@ -749,6 +771,28 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
         return false;
     }
     return true;
+}
+
+
+bool megamol::gui::Graph::CallExists(
+    std::string const& call_classname, std::string const& caller_fullname, std::string const& callee_fullname) {
+
+    return (std::find_if(this->calls.begin(), this->calls.end(), [&](megamol::gui::CallPtr_t& call_ptr) {
+        auto caller_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLER);
+        auto callee_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLEE);
+        if ((caller_ptr != nullptr) && (callee_ptr != nullptr)) {
+            std::string tmp_caller_fullname;
+            std::string tmp_callee_fullname;
+            if (caller_ptr->GetParentModule() != nullptr) {
+                tmp_caller_fullname = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->Name();
+            }
+            if (callee_ptr->GetParentModule() != nullptr) {
+                tmp_callee_fullname = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->Name();
+            }
+            return ((call_ptr->ClassName() == call_classname) && (tmp_caller_fullname == caller_fullname) &&
+                    (tmp_callee_fullname == callee_fullname));
+        }
+    }) != this->calls.end());
 }
 
 
@@ -838,7 +882,8 @@ bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
 }
 
 
-ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr) {
+ImGuiID megamol::gui::Graph::AddGroupModule(
+    const std::string& group_name, const ModulePtr_t& module_ptr, bool use_queue) {
 
     try {
         // Only create new group if given name is not empty
@@ -861,7 +906,9 @@ ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const
                     queue_data.name_id = module_ptr->FullName();
                     if (group_ptr->AddModule(module_ptr)) {
                         queue_data.rename_id = module_ptr->FullName();
-                        this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+                        if (use_queue) {
+                            this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+                        }
                         this->ForceSetDirty();
                         return existing_group_uid;
                     }
@@ -2274,13 +2321,13 @@ void megamol::gui::Graph::draw_canvas(ImVec2 position, ImVec2 size, GraphState_t
     }
     this->gui_graph_state.canvas.offset = new_offset;
 
-    // Update position and size of modules (and  call slots) and groups.
+    // Update position and size of modules (and call slots) and groups.
     if (this->gui_update) {
         for (auto& mod : this->Modules()) {
-            mod->Update(this->gui_graph_state);
+            mod->InstantUpdate(this->gui_graph_state);
         }
         for (auto& group : this->GetGroups()) {
-            group->UpdatePositionSize(this->gui_graph_state.canvas);
+            group->Update(this->gui_graph_state.canvas);
         }
         this->gui_update = false;
     }
@@ -2725,7 +2772,7 @@ void megamol::gui::Graph::layout_graph() {
     /// 1] Layout all grouped modules
     for (auto& group_ptr : this->GetGroups()) {
         this->layout(group_ptr->Modules(), GroupPtrVector_t(), init_position);
-        group_ptr->UpdatePositionSize(this->gui_graph_state.canvas);
+        group_ptr->Update(this->gui_graph_state.canvas);
     }
 
     /// 2] Layout ungrouped modules and groups
@@ -3194,29 +3241,51 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiIO& io = ImGui::GetIO();
 
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-
-    // Clipping: Graph Canvas plus profiling bar size
-    ImGui::PushClipRect(this->gui_graph_state.canvas.position, position + size, true);
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    assert(draw_list != nullptr);
-
     ImGui::SetNextWindowPos(position);
-    ImGui::BeginChild("profiling_child", size, false, ImGuiWindowFlags_AlwaysHorizontalScrollbar);
-    auto window_position = ImGui::GetCursorScreenPos();
 
+    float child_height = ImGui::GetFrameHeightWithSpacing();
+    auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_MenuBar;
+    ImGui::BeginChild("profiling_menu", ImVec2(0.0f, child_height), false, child_flags);
+
+    ImGui::BeginMenuBar();
     ImGui::TextUnformatted("Profiling");
-    ImGui::SameLine();
+
+    ImGui::Separator();
     // Lazy loading of run button textures
     if (!this->gui_profiling_run_button.IsLoaded()) {
         this->gui_profiling_run_button.LoadTextureFromFile(
             GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE, GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY);
     }
+
     this->gui_profiling_run_button.ToggleButton(this->gui_graph_state.interact.profiling_pause_update,
         "Pause update of profiling values globally", "Continue updating of profiling values",
-        ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()));
+        ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
+    ImGui::TextUnformatted(((this->gui_graph_state.interact.profiling_pause_update) ? ("Run") : ("Pause")));
+
     ImGui::Separator();
+    if (ImGui::Button(((this->gui_profiling_graph_link) ? ("Hide") : ("Show")))) {
+        this->gui_profiling_graph_link = !this->gui_profiling_graph_link;
+    }
+    ImGui::TextUnformatted("Graph Links");
+
+    ImGui::Separator();
+
+    ImGui::EndMenuBar();
+    ImGui::EndChild();
+
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    // Clipping: Graph Canvas plus profiling bar size
+    ImGui::PushClipRect(this->gui_graph_state.canvas.position, position + size, true);
+    ImDrawList* draw_list = ImGui::GetForegroundDrawList();
+    assert(draw_list != nullptr);
+
+    float delta_height = ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.y;
+    auto child_position = position + ImVec2(0.0f, delta_height);
+    auto child_size = size + ImVec2(0.0f, -delta_height);
+    ImGui::SetNextWindowPos(child_position);
+    ImGui::BeginChild("profiling_child", child_size, false, ImGuiWindowFlags_AlwaysHorizontalScrollbar);
+    auto window_position = ImGui::GetCursorScreenPos();
 
     // Sync profiling list
     auto iterp = this->profiling_list.begin();
@@ -3284,29 +3353,84 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
             ImGuiWindowFlags_NoMove);
 
         // Draw line to graph item
-        ImVec2 start =
-            ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetFrameHeight() / 2.0f, ImGui::GetFrameHeight() / 2.0f);
-        if (window_position.y > start.y) {
-            start.y = window_position.y;
+        if (this->gui_profiling_graph_link) {
+            ImVec2 start =
+                ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetFrameHeight() / 2.0f, ImGui::GetFrameHeight() / 2.0f);
+            if (window_position.y > start.y) {
+                start.y = window_position.y;
+            }
+            ImVec2 end;
+            if (m_ptr != nullptr) {
+                end = m_ptr->GetProfilingButtonPosition();
+                if (m_ptr->IsHidden()) {
+                    auto group_uid = m_ptr->GroupUID();
+                    for (auto group_ptr : this->groups) {
+                        if (group_ptr->UID() == group_uid) {
+                            end = group_ptr->GetPositionBottomCenter();
+                        }
+                    }
+                }
+            } else if (c_ptr != nullptr) {
+                end = c_ptr->GetProfilingButtonPosition();
+                if (c_ptr->IsHidden()) {
+                    auto callerslot_ptr = c_ptr->CallSlotPtr(CallSlotType::CALLER);
+                    if (callerslot_ptr != nullptr) {
+                        if (callerslot_ptr->IsParentModuleConnected()) {
+                            auto group_uid = callerslot_ptr->GetParentModule()->GroupUID();
+                            for (auto group_ptr : this->groups) {
+                                if (group_ptr->UID() == group_uid) {
+                                    end = group_ptr->GetPositionBottomCenter();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (window_position.y < end.y) {
+                end.y = window_position.y;
+            }
+            auto tmpcol = style.Colors[ImGuiCol_PlotLines];
+            tmpcol = ImVec4(tmpcol.x, tmpcol.y, tmpcol.z, 0.5f);
+            const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
+            draw_list->AddBezierCubic(start, start + ImVec2(0.0f, (-100.0f * megamol::gui::gui_scaling.Get())),
+                end + ImVec2(0.0f, (100.0f * megamol::gui::gui_scaling.Get())), end, COLOR_CALL_CURVE,
+                GUI_LINE_THICKNESS);
         }
-        ImVec2 end;
+        // Synchronize highlighting of hovered/active call/module with profiling header
+        bool push_style_color = false;
+        if (c_ptr != nullptr) {
+            if (c_ptr->IsSelected() || c_ptr->IsHovered()) {
+                push_style_color = true;
+            }
+        }
         if (m_ptr != nullptr) {
-            end = m_ptr->GetProfilingButtonPosition();
-        } else if (c_ptr != nullptr) {
-            end = c_ptr->GetProfilingButtonPosition();
+            if (m_ptr->IsSelected() || m_ptr->IsHovered()) {
+                push_style_color = true;
+            }
         }
-        if (window_position.y < end.y) {
-            end.y = window_position.y;
+        if (push_style_color) {
+            ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
         }
-        auto tmpcol = style.Colors[ImGuiCol_PlotLines];
-        tmpcol = ImVec4(tmpcol.x, tmpcol.y, tmpcol.z, 0.5f);
-        const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
-        draw_list->AddBezierCubic(start, start + ImVec2(0.0f, (-100.0f * megamol::gui::gui_scaling.Get())),
-            end + ImVec2(0.0f, (100.0f * megamol::gui::gui_scaling.Get())), end, COLOR_CALL_CURVE, GUI_LINE_THICKNESS);
-
-        // Profiling data
-        ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet);
+        // Header
+        ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_Bullet);
+        if (push_style_color) {
+            ImGui::PopStyleColor(1);
+        }
         this->gui_tooltip.ToolTip("[Drag and drop] Horizontally sort profiling data.", ImGui::GetItemID(), 0.5f, 5.0f);
+        // Synchronize highlighting of hovered/active profiling header with call/module
+        if (ImGui::IsItemActivated()) {
+            if (c_ptr != nullptr)
+                c_ptr->SetActive();
+            if (m_ptr != nullptr)
+                m_ptr->SetActive();
+        }
+        if (ImGui::IsItemHovered()) {
+            if (c_ptr != nullptr)
+                c_ptr->SetHovered();
+            if (m_ptr != nullptr)
+                m_ptr->SetHovered();
+        }
+
         // Drag source
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
             std::string payload;

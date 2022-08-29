@@ -57,7 +57,12 @@ public:
     bool DeleteCallSlots();
 
     void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
-    void Update(const GraphItemsState_t& state);
+    void Update() {
+        this->gui_update = true;
+    }
+    void InstantUpdate(const GraphItemsState_t& state) {
+        this->update(state);
+    }
 
     inline bool DrawParameters(const std::string& in_search, bool in_extended, bool in_indent,
         megamol::gui::Parameter::WidgetScope in_scope, std::shared_ptr<TransferFunctionEditor> tfeditor_ptr,
@@ -155,6 +160,23 @@ public:
     void SetScreenPosition(ImVec2 pos) {
         this->gui_set_screen_position = pos;
     }
+
+    void SetActive() {
+        this->gui_set_active = true;
+    }
+
+    void SetHovered() {
+        this->gui_set_hovered = true;
+    }
+
+    bool IsSelected() {
+        return this->gui_selected;
+    }
+
+    bool IsHovered() {
+        return this->gui_hovered;
+    }
+
 #ifdef PROFILING
     void SetProfilingData(void* ptr, frontend_resources::PerformanceManager* perf_manager) {
         this->profiling_parent_pointer = ptr;
@@ -215,7 +237,6 @@ private:
 
     ParameterGroups gui_param_groups;
 
-    bool gui_selected;
     ImVec2 gui_position; /// Relative position without considering canvas offset and zooming
     ImVec2 gui_size;     /// Relative size without considering zooming
     bool gui_update;
@@ -224,9 +245,12 @@ private:
     bool gui_set_selected_slot_position;
     bool gui_hidden;
     bool gui_other_item_hovered;
-
     HoverToolTip gui_tooltip;
     PopUps gui_rename_popup;
+    bool gui_selected;
+    bool gui_set_active;
+    bool gui_set_hovered;
+    bool gui_hovered;
 
 #ifdef PROFILING
 
@@ -245,6 +269,8 @@ private:
 #endif // PROFILING
 
     // FUNCTIONS --------------------------------------------------------------
+
+    void update(const GraphItemsState_t& state);
 
     inline bool found_uid(UIDVector_t& modules_uid_vector, ImGuiID module_uid) const {
         return (
