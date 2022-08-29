@@ -1571,7 +1571,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
                 gui_module_ptr->SetGraphEntryName(graph_ptr->GenerateUniqueGraphEntryName());
             }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
             // TODO set some stuff here so I can find which regions are which!?
             gui_module_ptr->SetProfilingData(module_inst.modulePtr.get(), perf_manager);
             module_to_module[module_inst.modulePtr.get()] = gui_module_ptr;
@@ -1639,7 +1639,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_DeleteModule(core::Module
 
         for (auto& module_ptr : graph_ptr->Modules()) {
             if (module_ptr->FullName() == std::string(module_inst.modulePtr->Name().PeekBuffer())) {
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                 this->module_to_module.erase(module_ptr->GetProfilingParent());
 #endif
                 bool success = graph_ptr->DeleteModule(module_ptr->UID(), false);
@@ -1807,7 +1807,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddCall(core::CallInstanc
         if (auto gui_call_ptr = graph_ptr->AddCall(this->GetCallsStock(), callslot_1, callslot_2, false)) {
 
             gui_call_ptr->SetCapabilities(call_inst.callPtr->GetCapabilities());
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
             gui_call_ptr->SetProfilingData(call_inst.callPtr.get(), call_inst.callPtr->GetCallbackCount());
             // printf("setting map for @ %p = %s \n", reinterpret_cast<void*>(cd.core_call.get()),
             //    cd.core_call.get()->GetDescriptiveText().c_str());
@@ -1852,7 +1852,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_DeleteCall(core::CallInst
             if ((class_name == call_inst.request.className) &&
                 gui_utils::CaseInsensitiveStringEqual(from, call_inst.request.from) &&
                 gui_utils::CaseInsensitiveStringEqual(to, call_inst.request.to)) {
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                 this->call_to_call.erase(call_ptr->GetProfilingParent());
 #endif
                 bool success = graph_ptr->DeleteCall(call_ptr->UID(), false);
