@@ -5,7 +5,8 @@
 
 megamol_plugin(optix_hpg
   BUILD_DEFAULT OFF
-  DEPENDS_CUDA
+  DEPENDS_FEATURES
+    cuda
   DEPENDS_PLUGINS
     mmstd
     mmstd_gl

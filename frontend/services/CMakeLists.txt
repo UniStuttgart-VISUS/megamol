@@ -118,7 +118,7 @@ if(BUILD_FRONTEND_SERVICES)
   )
   target_link_libraries(abstract_frontend_service INTERFACE frontend_resources)
 
-  if(ENABLE_CUDA)
+  if(MEGAMOL_USE_CUDA)
     find_package(CUDAToolkit)
     target_compile_definitions(${PROJECT_NAME} PUBLIC MM_CUDA_ENABLED)
     target_link_libraries(${PROJECT_NAME} PRIVATE CUDA::cuda_driver)

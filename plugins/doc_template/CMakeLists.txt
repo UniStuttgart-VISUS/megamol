@@ -5,6 +5,8 @@
 
 megamol_plugin(megamolplugin
   BUILD_DEFAULT OFF
+  DEPENDS_FEATURES
+    # feature1
   DEPENDS_PLUGINS
     mmstd
     # plugin1

@@ -4,8 +4,9 @@
 #
 
 megamol_plugin(moldyn_gl
-  BUILD_DEFAULT ON 
-  DEPENDS_GL
+  BUILD_DEFAULT ON
+  DEPENDS_FEATURES
+    opengl
   DEPENDS_PLUGINS
     mmstd
     mmstd_gl

@@ -9,16 +9,18 @@ include(CMakeDependentOption)
 #
 # Parameters:
 #   PLUGIN_NAME:       name of the plugin, should match the plugin directory name.
+#   ALWAYS_BUILD:      always build the plugin without showing a CMake option (should only be used by mmstd plugins)
 #   DIR:               full path to the plugin directory, defaults to CMAKE_CURRENT_SOURCE_DIR if not set
 #   BUILD_DEFAULT:     ON/OFF if the plugin should be build with the default configuration
+#   DEPENDS_FEATURES:  list of features which are required by this plugin
 #   DEPENDS_PLUGINS:   list of plugins which are required by this plugin
 #   DEPENDS_EXTERNALS: list of externals which are required by this plugin
 
 function(megamol_plugin PLUGIN_NAME)
   # Parse arguments
-  set(optionArgs ALWAYS_BUILD DEPENDS_CUDA DEPENDS_GL)
+  set(optionArgs ALWAYS_BUILD)
   set(oneValueArgs DIR BUILD_DEFAULT)
-  set(multiValueArgs DEPENDS_PLUGINS DEPENDS_EXTERNALS)
+  set(multiValueArgs DEPENDS_FEATURES DEPENDS_PLUGINS DEPENDS_EXTERNALS)
   cmake_parse_arguments(MMPLUGIN_ARGS "${optionArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Validate plugin name
@@ -32,21 +34,18 @@ function(megamol_plugin PLUGIN_NAME)
   # Check feature requirements
   set(REQUIREMENTS_AVAILABLE TRUE)
 
-  # Check Cuda
-  if (MMPLUGIN_ARGS_DEPENDS_CUDA)
-    if (NOT ENABLE_CUDA)
-      set(REQUIREMENTS_AVAILABLE FALSE)
-    else ()
-      enable_language(CUDA)
-    endif ()
-  endif ()
+  foreach (required_feature ${MMPLUGIN_ARGS_DEPENDS_FEATURES})
+    string(TOUPPER ${required_feature} required_feature_upper)
+    string(REPLACE "-" "_" required_feature_upper "${required_feature_upper}")
 
-  # Check GL
-  if (MMPLUGIN_ARGS_DEPENDS_GL)
-    if (NOT MEGAMOL_USE_OPENGL)
+    if (NOT DEFINED MEGAMOL_USE_${required_feature_upper})
+      message(FATAL_ERROR "Plugin `${PLUGIN_NAME}` requested unknown feature: ${required_feature}")
+    endif ()
+
+    if (NOT MEGAMOL_USE_${required_feature_upper})
       set(REQUIREMENTS_AVAILABLE FALSE)
     endif ()
-  endif ()
+  endforeach ()
 
   # Enable plugin build option, show only if requirements are available and not always build
   cmake_dependent_option(MEGAMOL_PLUGIN_${PLUGIN_NAME_UPPER} "Option to build ${PLUGIN_NAME}" "${MMPLUGIN_ARGS_BUILD_DEFAULT}" "REQUIREMENTS_AVAILABLE;NOT MMPLUGIN_ARGS_ALWAYS_BUILD" OFF)

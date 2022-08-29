@@ -5,7 +5,8 @@
 
 megamol_plugin(molsurfmapcluster_gl
   BUILD_DEFAULT OFF
-  DEPENDS_GL
+  DEPENDS_FEATURES
+    opengl
   DEPENDS_PLUGINS
     geometry_calls
     geometry_calls_gl

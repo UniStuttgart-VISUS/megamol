@@ -5,7 +5,8 @@
 
 megamol_plugin(mmstd_gl
   ALWAYS_BUILD
-  DEPENDS_GL
+  DEPENDS_FEATURES
+    opengl
   DEPENDS_PLUGINS
     mmstd)
 

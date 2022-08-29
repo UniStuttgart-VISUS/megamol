@@ -75,8 +75,7 @@ if (MEGAMOL_USE_OPENGL)
 endif ()
 
 # CUDA
-option(ENABLE_CUDA "Enable CUDA support" OFF)
-if (ENABLE_CUDA)
+if (MEGAMOL_USE_CUDA)
   enable_language(CUDA)
   set(CMAKE_CUDA_ARCHITECTURES FALSE)
 endif ()
