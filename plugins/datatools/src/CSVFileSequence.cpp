@@ -499,7 +499,7 @@ void datatools::CSVFileSequence::assertData(void) {
     // we want to inject our variations of the file name into the referenced file path param
     auto* fileParam = fnSlot->Param<core::param::FilePathParam>();
     if (fileParam == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "file name slot is not a FilePathParam");
+        Log::DefaultLog.WriteMsg(Log::log_level::error, "file name slot is not a FilePathParam");
         return;
     }
     auto curent_file_param_value = fileParam->ValueString();
