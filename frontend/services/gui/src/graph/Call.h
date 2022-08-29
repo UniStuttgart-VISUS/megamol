@@ -79,6 +79,26 @@ public:
         capabilities = caps;
     }
 
+    void SetActive() {
+        this->gui_set_active = true;
+    }
+
+    void SetHovered() {
+        this->gui_set_hovered = true;
+    }
+
+    bool IsSelected() {
+        return this->gui_selected;
+    }
+
+    bool IsHovered() {
+        return this->gui_hovered;
+    }
+
+    inline bool IsHidden() const {
+        return this->gui_hidden;
+    }
+
 #ifdef MEGAMOL_USE_PROFILING
 
     ImVec2 GetProfilingButtonPosition() {
@@ -124,7 +144,6 @@ private:
 
     std::map<CallSlotType, CallSlotPtr_t> connected_callslots;
 
-    bool gui_selected;
     const std::string slot_name_separator = " > ";
     std::string caller_slot_name;
     std::string callee_slot_name;
@@ -132,6 +151,11 @@ private:
     HoverToolTip gui_tooltip;
     ImageWidget gui_profiling_button;
     bool gui_profiling_btn_hovered;
+    bool gui_hidden;
+    bool gui_selected;
+    bool gui_set_active;
+    bool gui_set_hovered;
+    bool gui_hovered;
 
 #ifdef MEGAMOL_USE_PROFILING
 

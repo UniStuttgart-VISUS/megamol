@@ -36,7 +36,6 @@ megamol::gui::Module::Module(ImGuiID uid, const std::string& class_name, const s
         , group_uid(GUI_INVALID_ID)
         , group_name("")
         , gui_param_groups()
-        , gui_selected(false)
         , gui_position(ImVec2(FLT_MAX, FLT_MAX))
         , gui_size(ImVec2(0.0f, 0.0f))
         , gui_update(true)
@@ -47,6 +46,10 @@ megamol::gui::Module::Module(ImGuiID uid, const std::string& class_name, const s
         , gui_other_item_hovered(false)
         , gui_tooltip()
         , gui_rename_popup()
+        , gui_selected(false)
+        , gui_set_active(false)
+        , gui_set_hovered(false)
+        , gui_hovered(false)
 #ifdef MEGAMOL_USE_PROFILING
         , cpu_perf_history()
         , gl_perf_history()
@@ -156,7 +159,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
     try {
         // Update size
         if (this->gui_update || (this->gui_size.x <= 0.0f) || (this->gui_size.y <= 0.0f)) {
-            this->Update(state);
+            this->update(state);
             this->gui_update = false;
         }
 
@@ -240,11 +243,13 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 ImGui::SetItemAllowOverlap();
                 ImGui::InvisibleButton(button_label.c_str(), module_size);
                 ImGui::SetItemAllowOverlap();
-                if (ImGui::IsItemActivated()) {
+                if (this->gui_set_active || ImGui::IsItemActivated()) {
                     state.interact.button_active_uid = this->uid;
+                    this->gui_set_active = false;
                 }
-                if (ImGui::IsItemHovered()) {
+                if (this->gui_set_hovered || ImGui::IsItemHovered()) {
                     state.interact.button_hovered_uid = this->uid;
+                    this->gui_set_hovered = false;
                 }
 
                 ImGui::PushFont(state.canvas.gui_font_ptr);
@@ -337,7 +342,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 std::string last_module_name = this->FullName();
                 if (this->gui_rename_popup.Rename("Rename Module", popup_rename, new_name)) {
                     this->SetName(new_name);
-                    this->Update(state);
+                    this->Update();
                     if (state.interact.graph_is_running) {
                         state.interact.module_rename.push_back(StrPair_t(last_module_name, this->FullName()));
                     }
@@ -348,7 +353,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
             } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 
                 bool active = (state.interact.button_active_uid == this->uid);
-                bool hovered = (state.interact.button_hovered_uid == this->uid);
+                this->gui_hovered = (state.interact.button_hovered_uid == this->uid);
 
                 // Selection
                 if (!this->gui_selected &&
@@ -382,14 +387,14 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 // Dragging
                 if (this->gui_selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
                     this->gui_position += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
-                    this->Update(state);
+                    this->update(state);
                 }
 
                 // Hovering
-                if (hovered) {
+                if (this->gui_hovered) {
                     state.interact.module_hovered_uid = this->uid;
                 }
-                if (!hovered && (state.interact.module_hovered_uid == this->uid)) {
+                if (!this->gui_hovered && (state.interact.module_hovered_uid == this->uid)) {
                     state.interact.module_hovered_uid = GUI_INVALID_ID;
                 }
 
@@ -410,7 +415,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
 
                 // Draw Background
-                ImU32 module_bg_color = (this->gui_selected) ? (COLOR_MODULE_HIGHTLIGHT) : (COLOR_MODULE_BACKGROUND);
+                ImU32 module_bg_color =
+                    (this->gui_selected || this->gui_hovered) ? (COLOR_MODULE_HIGHTLIGHT) : (COLOR_MODULE_BACKGROUND);
                 draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, GUI_RECT_CORNER_RADIUS,
                     ImDrawFlags_RoundCornersAll);
 
@@ -431,7 +437,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 this->gui_other_item_hovered = false;
                 if (state.interact.module_show_label) {
 
-                    auto header_color = (this->gui_selected) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
+                    auto header_color =
+                        (this->gui_selected || this->gui_hovered) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
                     ImVec2 header_rect_max =
                         module_rect_min + ImVec2(module_size.x, ImGui::GetTextLineHeightWithSpacing());
                     draw_list->AddRectFilled(module_rect_min, header_rect_max, header_color, GUI_RECT_CORNER_RADIUS,
@@ -445,15 +452,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     text_width = ImGui::CalcTextSize(this->name.c_str()).x;
                     text_pos_left_upper = module_center - ImVec2((text_width / 2.0f),
                                                               ((button_count > 0) ? (line_height * 0.6f) : (0.0f)));
-#ifdef MEGAMOL_USE_PROFILING
-                    /*
-                    /// Draw profiling data inplace
-                    if (this->show_profiling_data) {
-                        text_pos_left_upper = ImVec2(module_center.x - (text_width / 2.0f),
-                            module_rect_min.y + (1.0f * ImGui::GetFrameHeightWithSpacing()));
-                    }
-                    */
-#endif // MEGAMOL_USE_PROFILING
+
                     draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->name.c_str());
                 }
 
@@ -470,15 +469,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                                         (style.ItemSpacing.x * state.canvas.zooming);
                     }
                     ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
-#ifdef MEGAMOL_USE_PROFILING
-                    /*
-                    /// Draw profiling data inplace
-                    if (this->show_profiling_data) {
-                        ImGui::SetCursorScreenPos(ImVec2(module_center.x - item_x_offset,
-                            module_rect_min.y + (2.0f * ImGui::GetFrameHeightWithSpacing())));
-                    }
-                    */
-#endif // MEGAMOL_USE_PROFILING
+
                     if (graph_entry_button) {
                         bool is_graph_entry = this->IsGraphEntry();
                         if (ImGui::RadioButton("###graph_entry_switch", is_graph_entry)) {
@@ -489,7 +480,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             }
                         }
                         ImGui::SetItemAllowOverlap();
-                        if (hovered) {
+                        if (this->gui_hovered) {
                             std::string tooltip_label;
                             if (is_graph_entry) {
                                 tooltip_label = tooltip_label + "Graph Entry '" + this->graph_entry_name + "'";
@@ -514,7 +505,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         }
                         if (ImGui::ArrowButton("###parameter_toggle",
                                 ((this->gui_param_child_show) ? (ImGuiDir_Down) : (ImGuiDir_Up))) &&
-                            hovered) {
+                            this->gui_hovered) {
                             this->gui_param_child_show = !this->gui_param_child_show;
                             if (this->gui_param_child_show) {
                                 state.interact.module_param_child_position = param_popup_pos;
@@ -524,7 +515,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             }
                         }
                         ImGui::SetItemAllowOverlap();
-                        if (hovered) {
+                        if (this->gui_hovered) {
                             ImGui::PushFont(state.canvas.gui_font_ptr);
                             this->gui_other_item_hovered |= this->gui_tooltip.ToolTip("Parameters");
                             ImGui::PopFont();
@@ -541,46 +532,22 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         auto button_size = ImGui::GetFrameHeight();
                         this->profiling_button_position =
                             ImVec2(ImGui::GetCursorScreenPos().x + button_size / 2.0f, module_rect_max.y);
-                        if (this->gui_profiling_button.Button("", ImVec2(button_size, button_size))) {
+                        if (this->gui_profiling_button.Button("", ImVec2(button_size, button_size)) &&
+                            this->gui_hovered) {
                             this->show_profiling_data = !this->show_profiling_data;
                             this->gui_update = true;
                             if (this->show_profiling_data) {
                                 state.interact.profiling_show = true;
                             }
                         }
-                        if (hovered) {
+                        ImGui::SetItemAllowOverlap();
+                        if (this->gui_hovered) {
                             ImGui::PushFont(state.canvas.gui_font_ptr);
                             this->gui_other_item_hovered |= this->gui_tooltip.ToolTip("Profiling");
                             ImGui::PopFont();
                         }
                         if (this->show_profiling_data) {
                             this->pause_profiling_history_update = state.interact.profiling_pause_update;
-                            /*
-                            /// Draw profiling data inplace
-                            ImVec2 profiling_child_pos = ImGui::GetCursorScreenPos();
-                            profiling_child_pos.x = module_rect_min.x + (1.5f * GUI_SLOT_RADIUS * state.canvas.zooming);
-                            ImGui::SetCursorScreenPos(profiling_child_pos);
-                            ImGui::BeginChild("module_profiling_info",
-                                ImVec2((MODULE_PROFILING_WINDOW_WIDTH * state.canvas.zooming),
-                                    (this->profiling_window_height * state.canvas.zooming)),
-                                true,
-                                ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoMove |
-                                    ImGuiWindowFlags_NoScrollbar);
-                            ImGui::TextUnformatted("Profiling");
-                            ImGui::SameLine();
-                            // Lazy loading of run button textures
-                            if (!this->gui_profiling_run_button.IsLoaded()) {
-                                this->gui_profiling_run_button.LoadTextureFromFile(
-                                    GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE,
-                                    GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY);
-                            }
-                            this->gui_profiling_run_button.ToggleButton(state.interact.profiling_pause_update,
-                                "Pause update of profiling values globally", "Continue updating of profiling values",
-                                ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()));
-                            ImGui::TextDisabled("Region Name:");
-                            this->DrawProfiling(state);
-                            ImGui::EndChild();
-                            */
                         }
                     }
 #endif // MEGAMOL_USE_PROFILING
@@ -622,7 +589,7 @@ ImVec2 megamol::gui::Module::GetDefaultModulePosition(const GraphCanvas_t& canva
 }
 
 
-void megamol::gui::Module::Update(const GraphItemsState_t& state) {
+void megamol::gui::Module::update(const GraphItemsState_t& state) {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -671,17 +638,6 @@ void megamol::gui::Module::Update(const GraphItemsState_t& state) {
         line_height + (static_cast<float>(max_slot_count) * (GUI_SLOT_RADIUS * 2.0f) * 1.5f) + GUI_SLOT_RADIUS;
     float text_button_height = (line_height * ((state.interact.module_show_label) ? (4.0f) : (1.0f)));
     float module_height = std::max(module_slot_height, text_button_height);
-
-#ifdef MEGAMOL_USE_PROFILING
-    /*
-    /// Draw profiling data inplace
-    if (this->show_profiling_data) {
-        module_width = std::max(module_width, (MODULE_PROFILING_WINDOW_WIDTH) + (3.0f * GUI_SLOT_RADIUS));
-        module_height = std::max(module_height, (3.0f * ImGui::GetFrameHeightWithSpacing() / state.canvas.zooming) +
-                                                    (this->profiling_window_height) + (1.5f * GUI_SLOT_RADIUS));
-    }
-    */
-#endif // MEGAMOL_USE_PROFILING
 
     // Clamp to minimum size
     this->gui_size = ImVec2(std::max(module_width, (2.0f * megamol::gui::gui_scaling.Get())),

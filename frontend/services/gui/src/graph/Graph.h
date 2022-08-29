@@ -58,10 +58,11 @@ public:
     explicit Graph(const std::string& graph_name);
     ~Graph();
 
-    ModulePtr_t AddModule(const ModuleStockVector_t& stock_ms, const std::string& class_name);
-    ModulePtr_t AddModule(
-        const std::string& class_name, const std::string& description, const std::string& plugin_name, bool is_view);
-    bool DeleteModule(ImGuiID module_uid);
+    ModulePtr_t AddModule(const ModuleStockVector_t& stock_ms, const std::string& class_name,
+        const std::string& module_name, const std::string& group_name);
+    ModulePtr_t AddModule(const std::string& class_name, const std::string& module_name, const std::string& group_name,
+        const std::string& description, const std::string& plugin_name, bool is_view);
+    bool DeleteModule(ImGuiID module_uid, bool use_queue = true);
     inline const ModulePtrVector_t& Modules() {
         return this->modules;
     }
@@ -71,13 +72,17 @@ public:
     bool UniqueModuleRename(const std::string& module_full_name);
 
     bool AddCall(const CallStockVector_t& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid);
-    CallPtr_t AddCall(const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
-    bool ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
-    CallPtr_t GetCall(std::string const& caller_fullname, std::string const& callee_fullname);
-    bool DeleteCall(ImGuiID call_uid);
+    CallPtr_t AddCall(const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2,
+        bool use_queue = true);
+    bool ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2, bool use_queue = true);
+    CallPtr_t GetCall(
+        std::string const& call_classname, std::string const& caller_fullname, std::string const& callee_fullname);
+    bool DeleteCall(ImGuiID call_uid, bool use_queue = true);
     inline const CallPtrVector_t& Calls() {
         return this->calls;
     }
+    bool CallExists(
+        std::string const& call_classname, std::string const& caller_fullname, std::string const& callee_fullname);
 
     ImGuiID AddGroup(const std::string& group_name = "");
     bool DeleteGroup(ImGuiID group_uid);
@@ -85,7 +90,7 @@ public:
         return this->groups;
     }
     GroupPtr_t GetGroup(ImGuiID group_uid);
-    ImGuiID AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr);
+    ImGuiID AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr, bool use_queue = true);
 
     void Clear();
 
@@ -99,7 +104,6 @@ public:
         this->dirty_flag = true;
     }
 
-
     std::string GetFilename() const;
     void SetFilename(const std::string& filename, bool saved_filename);
 
@@ -108,9 +112,6 @@ public:
     bool PushSyncQueue(QueueAction in_action, const QueueData& in_data);
     bool PopSyncQueue(QueueAction& out_action, QueueData& out_data);
     QueueData FindQueueEntryByActionName(QueueAction action, const std::string& name);
-    inline void ClearSyncQueue() {
-        this->sync_queue.clear();
-    }
 
     inline bool IsRunning() const {
         return this->running;
@@ -222,6 +223,7 @@ private:
     ImageWidget gui_profiling_run_button;
     std::vector<std::pair<std::weak_ptr<gui::Module>, std::weak_ptr<gui::Call>>> profiling_list;
     std::chrono::system_clock::time_point scroll_delta_time;
+    bool gui_profiling_graph_link;
 #endif // MEGAMOL_USE_PROFILING
 
     // FUNCTIONS --------------------------------------------------------------
