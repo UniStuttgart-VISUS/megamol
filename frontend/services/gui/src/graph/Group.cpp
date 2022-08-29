@@ -24,6 +24,7 @@ megamol::gui::Group::Group(ImGuiID uid)
         , gui_collapsed_view(false)
         , gui_allow_selection(false)
         , gui_update(true)
+        , gui_position_bottom_center(ImVec2())
         , gui_rename_popup() {
 
     this->interfaceslots.emplace(megamol::gui::CallSlotType::CALLER, InterfaceSlotPtrVector_t());
@@ -385,9 +386,9 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
 
     try {
         // Update size and position if current values are invalid or in expanded view
-        /// XXX First condition calls UpdatePositionSize every frame is not collapsed
+        /// XXX First condition calls Update() every frame if not collapsed
         if (!this->gui_collapsed_view || this->gui_update || (this->gui_size.x <= 0.0f) || (this->gui_size.y <= 0.0f)) {
-            this->UpdatePositionSize(state.canvas);
+            this->Update(state.canvas);
             for (auto& mod : this->modules) {
                 mod->SetHidden(this->gui_collapsed_view);
             }
@@ -400,6 +401,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
         ImVec2 group_rect_min = state.canvas.offset + this->gui_position * state.canvas.zooming;
         ImVec2 group_rect_max = group_rect_min + group_size;
         ImVec2 group_center = group_rect_min + ImVec2(group_size.x / 2.0f, group_size.y / 2.0f);
+        this->gui_position_bottom_center = group_rect_min + ImVec2(group_size.x / 2.0f, group_size.y);
         ImVec2 header_size = ImVec2(group_size.x, ImGui::GetTextLineHeightWithSpacing());
         ImVec2 header_rect_max = group_rect_min + header_size;
 
@@ -467,12 +469,12 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                 for (auto& module_ptr : this->modules) {
                     std::string last_module_name = module_ptr->FullName();
                     module_ptr->SetGroupName(this->name);
-                    module_ptr->Update(state);
+                    module_ptr->Update();
                     if (state.interact.graph_is_running) {
                         state.interact.module_rename.push_back(StrPair_t(last_module_name, module_ptr->FullName()));
                     }
                 }
-                this->UpdatePositionSize(state.canvas);
+                this->Update(state.canvas);
             }
 
             ImGui::PopFont();
@@ -571,7 +573,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                     interfaceslot_ptr->SetGroupViewCollapsed(this->gui_collapsed_view);
                 }
             }
-            this->UpdatePositionSize(state.canvas);
+            this->Update(state.canvas);
         }
 
         // INTERFACE SLOTS -----------------------------------------------------
@@ -603,13 +605,13 @@ void megamol::gui::Group::SetPosition(const GraphItemsState_t& state, ImVec2 pos
         tmp_pos = module_ptr->Position();
         tmp_pos += pos_delta;
         module_ptr->SetPosition(tmp_pos);
-        module_ptr->Update(state);
+        module_ptr->Update();
     }
-    this->UpdatePositionSize(state.canvas);
+    this->Update(state.canvas);
 }
 
 
-void megamol::gui::Group::UpdatePositionSize(const GraphCanvas_t& in_canvas) {
+void megamol::gui::Group::Update(const GraphCanvas_t& in_canvas) {
 
     const float line_height = ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming;
     const float slot_height = GUI_SLOT_RADIUS * 3.0f;

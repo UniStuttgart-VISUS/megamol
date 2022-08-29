@@ -58,7 +58,7 @@ public:
     void RestoreInterfaceslots();
 
     void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
-    void UpdatePositionSize(const GraphCanvas_t& in_canvas);
+    void Update(const GraphCanvas_t& in_canvas);
 
     inline ImGuiID UID() const {
         return this->uid;
@@ -81,6 +81,10 @@ public:
     }
     void SetPosition(const GraphItemsState_t& state, ImVec2 pos);
 
+    ImVec2 GetPositionBottomCenter() {
+        return this->gui_position_bottom_center;
+    }
+
 private:
     // VARIABLES --------------------------------------------------------------
 
@@ -97,7 +101,7 @@ private:
     bool gui_collapsed_view;
     bool gui_allow_selection;
     bool gui_update;
-
+    ImVec2 gui_position_bottom_center;
     PopUps gui_rename_popup;
 
     // FUNCTIONS --------------------------------------------------------------
