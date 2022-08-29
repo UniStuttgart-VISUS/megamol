@@ -124,21 +124,26 @@ megamol::gui::Graph::~Graph() {
 }
 
 
-ModulePtr_t megamol::gui::Graph::AddModule(
-    const std::string& class_name, const std::string& description, const std::string& plugin_name, bool is_view) {
+ModulePtr_t megamol::gui::Graph::AddModule(const std::string& class_name, const std::string& module_name,
+    const std::string& group_name, const std::string& description, const std::string& plugin_name, bool is_view) {
 
     try {
+        /// Parameters and CallSlots have to be added separately
+        /// Add module to queue manually
+        if (auto mod_ptr = std::make_shared<Module>(
+                megamol::gui::GenerateUniqueID(), class_name, description, plugin_name, is_view)) {
 
-        auto mod_ptr =
-            std::make_shared<Module>(megamol::gui::GenerateUniqueID(), class_name, description, plugin_name, is_view);
-        this->modules.emplace_back(mod_ptr);
-        this->ForceSetDirty();
+            this->modules.emplace_back(mod_ptr);
+
+            mod_ptr->SetName(module_name);
+            this->AddGroupModule(group_name, mod_ptr, false);
+            this->ForceSetDirty();
 
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Added empty module to project.\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Added empty module to project.\n");
 #endif // GUI_VERBOSE
-
-        return mod_ptr;
+            return mod_ptr;
+        }
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -151,12 +156,13 @@ ModulePtr_t megamol::gui::Graph::AddModule(
     }
 
     megamol::core::utility::log::Log::DefaultLog.WriteError(
-        "[GUI] Unable to add empty module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Unable to add module. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return nullptr;
 }
 
 
-ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name) {
+ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name,
+    const std::string& module_name, const std::string& group_name) {
 
     try {
         for (auto& mod : stock_modules) {
@@ -164,8 +170,13 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
                 ImGuiID mod_uid = megamol::gui::GenerateUniqueID();
                 auto mod_ptr =
                     std::make_shared<Module>(mod_uid, mod.class_name, mod.description, mod.plugin_name, mod.is_view);
-                mod_ptr->SetName(this->generate_unique_module_name(mod.class_name));
+                if (module_name.empty()) {
+                    mod_ptr->SetName(this->generate_unique_module_name(mod.class_name));
+                } else {
+                    mod_ptr->SetName(module_name);
+                }
                 mod_ptr->SetGraphEntryName("");
+                this->AddGroupModule(group_name, mod_ptr, false);
 
                 for (auto& p : mod.parameters) {
                     Parameter parameter(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval,
@@ -237,7 +248,7 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
 }
 
 
-bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
+bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool use_queue) {
 
     try {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
@@ -256,7 +267,9 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
 
                         queue_data.name_id = current_full_name;
                         queue_data.rename_id = (*iter)->FullName();
-                        this->PushSyncQueue(QueueAction::RENAME_MODULE, queue_data);
+                        if (use_queue) {
+                            this->PushSyncQueue(QueueAction::RENAME_MODULE, queue_data);
+                        }
                     }
                 }
 
@@ -290,7 +303,9 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
 #endif // GUI_VERBOSE
 
                 queue_data.name_id = (*iter)->FullName();
-                this->PushSyncQueue(QueueAction::DELETE_MODULE, queue_data);
+                if (use_queue) {
+                    this->PushSyncQueue(QueueAction::DELETE_MODULE, queue_data);
+                }
 
                 // 5) Delete module
                 if ((*iter).use_count() > 1) {
@@ -460,7 +475,7 @@ bool megamol::gui::Graph::AddCall(const CallStockVector_t& stock_calls, ImGuiID 
 
 
 CallPtr_t megamol::gui::Graph::AddCall(
-    const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2) {
+    const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2, bool use_queue) {
 
     try {
         if ((callslot_1 == nullptr) || (callslot_2 == nullptr)) {
@@ -482,7 +497,7 @@ CallPtr_t megamol::gui::Graph::AddCall(
         auto call_ptr = std::make_shared<Call>(megamol::gui::GenerateUniqueID(), call_stock_data.class_name,
             call_stock_data.description, call_stock_data.plugin_name, call_stock_data.functions);
 
-        return this->ConnectCall(call_ptr, callslot_1, callslot_2) ? call_ptr : nullptr;
+        return this->ConnectCall(call_ptr, callslot_1, callslot_2, use_queue) ? call_ptr : nullptr;
 
     } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -496,7 +511,8 @@ CallPtr_t megamol::gui::Graph::AddCall(
 }
 
 
-bool megamol::gui::Graph::ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2) {
+bool megamol::gui::Graph::ConnectCall(
+    CallPtr_t& call_ptr, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2, bool use_queue) {
 
     if (call_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -558,7 +574,9 @@ bool megamol::gui::Graph::ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslo
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
-        this->PushSyncQueue(QueueAction::ADD_CALL, queue_data);
+        if (use_queue) {
+            this->PushSyncQueue(QueueAction::ADD_CALL, queue_data);
+        }
 
         this->calls.emplace_back(call_ptr);
         this->ForceSetDirty();
@@ -600,21 +618,23 @@ bool megamol::gui::Graph::ConnectCall(CallPtr_t& call_ptr, CallSlotPtr_t callslo
 }
 
 
-CallPtr_t megamol::gui::Graph::GetCall(std::string const& caller_fullname, std::string const& callee_fullname) {
+CallPtr_t megamol::gui::Graph::GetCall(
+    std::string const& call_classname, std::string const& caller_fullname, std::string const& callee_fullname) {
 
     for (auto& call_ptr : this->calls) {
-        std::string tmp_caller_fullname;
-        std::string tmp_callee_fullname;
         auto caller_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLER);
         auto callee_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLEE);
         if ((caller_ptr != nullptr) && (callee_ptr != nullptr)) {
+            std::string tmp_caller_fullname;
+            std::string tmp_callee_fullname;
             if (caller_ptr->GetParentModule() != nullptr) {
                 tmp_caller_fullname = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->Name();
             }
             if (callee_ptr->GetParentModule() != nullptr) {
                 tmp_callee_fullname = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->Name();
             }
-            if ((tmp_caller_fullname == caller_fullname) && (tmp_callee_fullname == callee_fullname)) {
+            if ((call_ptr->ClassName() == call_classname) && (tmp_caller_fullname == caller_fullname) &&
+                (tmp_callee_fullname == callee_fullname)) {
                 return call_ptr;
             }
         }
@@ -623,7 +643,7 @@ CallPtr_t megamol::gui::Graph::GetCall(std::string const& caller_fullname, std::
 }
 
 
-bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
+bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid, bool use_queue) {
 
     try {
         std::vector<ImGuiID> delete_calls_uids;
@@ -714,8 +734,9 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                         return false;
                     }
 
-                    this->PushSyncQueue(QueueAction::DELETE_CALL, queue_data);
-
+                    if (use_queue) {
+                        this->PushSyncQueue(QueueAction::DELETE_CALL, queue_data);
+                    }
                     this->ResetStatePointers();
 
                     (*iter)->DisconnectCallSlots();
@@ -749,6 +770,28 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
         return false;
     }
     return true;
+}
+
+
+bool megamol::gui::Graph::CallExists(
+    std::string const& call_classname, std::string const& caller_fullname, std::string const& callee_fullname) {
+
+    return (std::find_if(this->calls.begin(), this->calls.end(), [&](megamol::gui::CallPtr_t& call_ptr) {
+        auto caller_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLER);
+        auto callee_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLEE);
+        if ((caller_ptr != nullptr) && (callee_ptr != nullptr)) {
+            std::string tmp_caller_fullname;
+            std::string tmp_callee_fullname;
+            if (caller_ptr->GetParentModule() != nullptr) {
+                tmp_caller_fullname = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->Name();
+            }
+            if (callee_ptr->GetParentModule() != nullptr) {
+                tmp_callee_fullname = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->Name();
+            }
+            return ((call_ptr->ClassName() == call_classname) && (tmp_caller_fullname == caller_fullname) &&
+                    (tmp_callee_fullname == callee_fullname));
+        }
+    }) != this->calls.end());
 }
 
 
@@ -838,7 +881,8 @@ bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
 }
 
 
-ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr) {
+ImGuiID megamol::gui::Graph::AddGroupModule(
+    const std::string& group_name, const ModulePtr_t& module_ptr, bool use_queue) {
 
     try {
         // Only create new group if given name is not empty
@@ -861,7 +905,9 @@ ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const
                     queue_data.name_id = module_ptr->FullName();
                     if (group_ptr->AddModule(module_ptr)) {
                         queue_data.rename_id = module_ptr->FullName();
-                        this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+                        if (use_queue) {
+                            this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+                        }
                         this->ForceSetDirty();
                         return existing_group_uid;
                     }

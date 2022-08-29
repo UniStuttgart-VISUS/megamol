@@ -667,15 +667,14 @@ void megamol::gui::GUIManager::SetClipboardFunc(const char* (*get_clipboard_func
 }
 
 
-bool megamol::gui::GUIManager::GraphSynchronization(
+bool megamol::gui::GUIManager::SynchronizeGraphs(
     megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
 
     // Synchronization is not required when no gui element is visible (?)
     if (!this->gui_state.gui_visible)
         return true;
 
-    if (this->win_configurator_ptr->GetGraphCollection().SyncRunningGUIGraphWithCoreGraph(
-            megamol_graph, core_instance)) {
+    if (this->win_configurator_ptr->GetGraphCollection().SynchronizeGraphs(megamol_graph, core_instance)) {
 
         // Check for new GUI state
         if (!this->gui_state.new_gui_state.empty()) {
