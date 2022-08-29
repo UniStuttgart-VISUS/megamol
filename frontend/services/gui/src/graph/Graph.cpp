@@ -56,6 +56,7 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
         , gui_profiling_run_button()
         , profiling_list()
         , scroll_delta_time(std::chrono::system_clock::now())
+        , gui_profiling_graph_link(true)
 #endif // PROFILING
 {
 
@@ -2320,13 +2321,13 @@ void megamol::gui::Graph::draw_canvas(ImVec2 position, ImVec2 size, GraphState_t
     }
     this->gui_graph_state.canvas.offset = new_offset;
 
-    // Update position and size of modules (and  call slots) and groups.
+    // Update position and size of modules (and call slots) and groups.
     if (this->gui_update) {
         for (auto& mod : this->Modules()) {
-            mod->Update(this->gui_graph_state);
+            mod->InstantUpdate(this->gui_graph_state);
         }
         for (auto& group : this->GetGroups()) {
-            group->UpdatePositionSize(this->gui_graph_state.canvas);
+            group->Update(this->gui_graph_state.canvas);
         }
         this->gui_update = false;
     }
@@ -2771,7 +2772,7 @@ void megamol::gui::Graph::layout_graph() {
     /// 1] Layout all grouped modules
     for (auto& group_ptr : this->GetGroups()) {
         this->layout(group_ptr->Modules(), GroupPtrVector_t(), init_position);
-        group_ptr->UpdatePositionSize(this->gui_graph_state.canvas);
+        group_ptr->Update(this->gui_graph_state.canvas);
     }
 
     /// 2] Layout ungrouped modules and groups
@@ -3240,29 +3241,51 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiIO& io = ImGui::GetIO();
 
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-
-    // Clipping: Graph Canvas plus profiling bar size
-    ImGui::PushClipRect(this->gui_graph_state.canvas.position, position + size, true);
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    assert(draw_list != nullptr);
-
     ImGui::SetNextWindowPos(position);
-    ImGui::BeginChild("profiling_child", size, false, ImGuiWindowFlags_AlwaysHorizontalScrollbar);
-    auto window_position = ImGui::GetCursorScreenPos();
 
+    float child_height = ImGui::GetFrameHeightWithSpacing();
+    auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_MenuBar;
+    ImGui::BeginChild("profiling_menu", ImVec2(0.0f, child_height), false, child_flags);
+
+    ImGui::BeginMenuBar();
     ImGui::TextUnformatted("Profiling");
-    ImGui::SameLine();
+
+    ImGui::Separator();
     // Lazy loading of run button textures
     if (!this->gui_profiling_run_button.IsLoaded()) {
         this->gui_profiling_run_button.LoadTextureFromFile(
             GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PAUSE, GUI_FILENAME_TEXTURE_TRANSPORT_ICON_PLAY);
     }
+
     this->gui_profiling_run_button.ToggleButton(this->gui_graph_state.interact.profiling_pause_update,
         "Pause update of profiling values globally", "Continue updating of profiling values",
-        ImVec2(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()));
+        ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
+    ImGui::TextUnformatted(((this->gui_graph_state.interact.profiling_pause_update) ? ("Run") : ("Pause")));
+
     ImGui::Separator();
+    if (ImGui::Button(((this->gui_profiling_graph_link) ? ("Hide") : ("Show")))) {
+        this->gui_profiling_graph_link = !this->gui_profiling_graph_link;
+    }
+    ImGui::TextUnformatted("Graph Links");
+
+    ImGui::Separator();
+
+    ImGui::EndMenuBar();
+    ImGui::EndChild();
+
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    // Clipping: Graph Canvas plus profiling bar size
+    ImGui::PushClipRect(this->gui_graph_state.canvas.position, position + size, true);
+    ImDrawList* draw_list = ImGui::GetForegroundDrawList();
+    assert(draw_list != nullptr);
+
+    float delta_height = ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.y;
+    auto child_position = position + ImVec2(0.0f, delta_height);
+    auto child_size = size + ImVec2(0.0f, -delta_height);
+    ImGui::SetNextWindowPos(child_position);
+    ImGui::BeginChild("profiling_child", child_size, false, ImGuiWindowFlags_AlwaysHorizontalScrollbar);
+    auto window_position = ImGui::GetCursorScreenPos();
 
     // Sync profiling list
     auto iterp = this->profiling_list.begin();
@@ -3330,29 +3353,84 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
             ImGuiWindowFlags_NoMove);
 
         // Draw line to graph item
-        ImVec2 start =
-            ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetFrameHeight() / 2.0f, ImGui::GetFrameHeight() / 2.0f);
-        if (window_position.y > start.y) {
-            start.y = window_position.y;
+        if (this->gui_profiling_graph_link) {
+            ImVec2 start =
+                ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetFrameHeight() / 2.0f, ImGui::GetFrameHeight() / 2.0f);
+            if (window_position.y > start.y) {
+                start.y = window_position.y;
+            }
+            ImVec2 end;
+            if (m_ptr != nullptr) {
+                end = m_ptr->GetProfilingButtonPosition();
+                if (m_ptr->IsHidden()) {
+                    auto group_uid = m_ptr->GroupUID();
+                    for (auto group_ptr : this->groups) {
+                        if (group_ptr->UID() == group_uid) {
+                            end = group_ptr->GetPositionBottomCenter();
+                        }
+                    }
+                }
+            } else if (c_ptr != nullptr) {
+                end = c_ptr->GetProfilingButtonPosition();
+                if (c_ptr->IsHidden()) {
+                    auto callerslot_ptr = c_ptr->CallSlotPtr(CallSlotType::CALLER);
+                    if (callerslot_ptr != nullptr) {
+                        if (callerslot_ptr->IsParentModuleConnected()) {
+                            auto group_uid = callerslot_ptr->GetParentModule()->GroupUID();
+                            for (auto group_ptr : this->groups) {
+                                if (group_ptr->UID() == group_uid) {
+                                    end = group_ptr->GetPositionBottomCenter();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (window_position.y < end.y) {
+                end.y = window_position.y;
+            }
+            auto tmpcol = style.Colors[ImGuiCol_PlotLines];
+            tmpcol = ImVec4(tmpcol.x, tmpcol.y, tmpcol.z, 0.5f);
+            const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
+            draw_list->AddBezierCubic(start, start + ImVec2(0.0f, (-100.0f * megamol::gui::gui_scaling.Get())),
+                end + ImVec2(0.0f, (100.0f * megamol::gui::gui_scaling.Get())), end, COLOR_CALL_CURVE,
+                GUI_LINE_THICKNESS);
         }
-        ImVec2 end;
+        // Synchronize highlighting of hovered/active call/module with profiling header
+        bool push_style_color = false;
+        if (c_ptr != nullptr) {
+            if (c_ptr->IsSelected() || c_ptr->IsHovered()) {
+                push_style_color = true;
+            }
+        }
         if (m_ptr != nullptr) {
-            end = m_ptr->GetProfilingButtonPosition();
-        } else if (c_ptr != nullptr) {
-            end = c_ptr->GetProfilingButtonPosition();
+            if (m_ptr->IsSelected() || m_ptr->IsHovered()) {
+                push_style_color = true;
+            }
         }
-        if (window_position.y < end.y) {
-            end.y = window_position.y;
+        if (push_style_color) {
+            ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
         }
-        auto tmpcol = style.Colors[ImGuiCol_PlotLines];
-        tmpcol = ImVec4(tmpcol.x, tmpcol.y, tmpcol.z, 0.5f);
-        const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
-        draw_list->AddBezierCubic(start, start + ImVec2(0.0f, (-100.0f * megamol::gui::gui_scaling.Get())),
-            end + ImVec2(0.0f, (100.0f * megamol::gui::gui_scaling.Get())), end, COLOR_CALL_CURVE, GUI_LINE_THICKNESS);
-
-        // Profiling data
-        ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet);
+        // Header
+        ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_Bullet);
+        if (push_style_color) {
+            ImGui::PopStyleColor(1);
+        }
         this->gui_tooltip.ToolTip("[Drag and drop] Horizontally sort profiling data.", ImGui::GetItemID(), 0.5f, 5.0f);
+        // Synchronize highlighting of hovered/active profiling header with call/module
+        if (ImGui::IsItemActivated()) {
+            if (c_ptr != nullptr)
+                c_ptr->SetActive();
+            if (m_ptr != nullptr)
+                m_ptr->SetActive();
+        }
+        if (ImGui::IsItemHovered()) {
+            if (c_ptr != nullptr)
+                c_ptr->SetHovered();
+            if (m_ptr != nullptr)
+                m_ptr->SetHovered();
+        }
+
         // Drag source
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
             std::string payload;

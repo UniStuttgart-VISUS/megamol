@@ -329,32 +329,32 @@ void megamol::gui::Configurator::draw_window_menu() {
                 ImGui::TextUnformatted(
                     "Spawn module selection pop-up (Only compatible modules when call slo tis clicked)");
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Double left-click");
+                ImGui::TextUnformatted("Mouse Double Left-Click");
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("Show context menu of module/call/group");
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Right-click");
+                ImGui::TextUnformatted("Mouse Right-Click");
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted(
                     "Drag call slot of module to other compatible call slot to create call between modules");
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Drag & drop");
+                ImGui::TextUnformatted("Mouse Left Drag & Drop");
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("Zoom graph");
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Mouse wheel");
+                ImGui::TextUnformatted("Mouse Wheel");
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted("Scroll graph");
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted("Middle-click");
+                ImGui::TextUnformatted("Mouse Middle Drag");
 
                 ImGui::EndTable();
             }
