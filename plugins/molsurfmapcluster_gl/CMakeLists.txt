@@ -12,6 +12,9 @@ megamol_plugin(molsurfmapcluster_gl
     geometry_calls_gl
     protein_calls
     image_calls
-    compositing_gl
-  DEPENDS_EXTERNALS
-    Eigen)
+    compositing_gl)
+
+if (molsurfmapcluster_gl_PLUGIN_ENABLED)
+  find_package(Eigen3 CONFIG REQUIRED)
+  target_link_libraries(molsurfmapcluster_gl PRIVATE Eigen3::Eigen)
+endif ()

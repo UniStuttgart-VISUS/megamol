@@ -11,9 +11,6 @@ megamol_plugin(megamolplugin
     mmstd
     # plugin1
     # plugin2
-  DEPENDS_EXTERNALS
-    # external1
-    # external2
   )
 
 if (megamolplugin_PLUGIN_ENABLED)

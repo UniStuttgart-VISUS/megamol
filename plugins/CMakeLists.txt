@@ -14,13 +14,12 @@ include(CMakeDependentOption)
 #   BUILD_DEFAULT:     ON/OFF if the plugin should be build with the default configuration
 #   DEPENDS_FEATURES:  list of features which are required by this plugin
 #   DEPENDS_PLUGINS:   list of plugins which are required by this plugin
-#   DEPENDS_EXTERNALS: list of externals which are required by this plugin
-
+#
 function(megamol_plugin PLUGIN_NAME)
   # Parse arguments
   set(optionArgs ALWAYS_BUILD)
   set(oneValueArgs DIR BUILD_DEFAULT)
-  set(multiValueArgs DEPENDS_FEATURES DEPENDS_PLUGINS DEPENDS_EXTERNALS)
+  set(multiValueArgs DEPENDS_FEATURES DEPENDS_PLUGINS)
   cmake_parse_arguments(MMPLUGIN_ARGS "${optionArgs}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Validate plugin name
@@ -98,13 +97,6 @@ function(megamol_plugin PLUGIN_NAME)
       endif ()
     endforeach ()
 
-    # Externals
-    foreach (external ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
-      if (NOT "${external}" IN_LIST reserved_link_keywords)
-        require_external(${external})
-      endif ()
-    endforeach ()
-
     # Link
     target_link_libraries(${PLUGIN_NAME}
       PUBLIC OpenMP::OpenMP_CXX
@@ -113,8 +105,7 @@ function(megamol_plugin PLUGIN_NAME)
       target_link_libraries(${PLUGIN_NAME} PRIVATE core_gl)
     endif ()
     target_link_libraries(${PLUGIN_NAME}
-      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS}
-      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_EXTERNALS})
+      PRIVATE ${MMPLUGIN_ARGS_DEPENDS_PLUGINS})
 
     # Install shaders
     if (EXISTS "${MMPLUGIN_ARGS_DIR}/shaders")
