@@ -462,17 +462,28 @@ core::param::ParamSlot* datatools::CSVFileSequence::findFileNameSlot() {
     if (this->inDataSlot.GetStatus() != megamol::core::AbstractSlot::STATUS_CONNECTED)
         return nullptr;
 
-    core::param::ParamSlot* slot =
-        dynamic_cast<core::param::ParamSlot*>(AbstractNamedObjectContainer::dynamic_pointer_cast(
-            this->inDataSlot
-                .CallAs<megamol::core::Call>() // connected Call
-                ->PeekCalleeSlotNoConst()      // slot of target Module
-                ->Parent()                     // target Module
-                ->shared_from_this())          // cast to AbstractNamedObjectContainer
-                                                  // TODO: find slot by full name, not just by slot name
-                                                  ->FindChild(P->Value().c_str()) // Find target Slot by name in Module
-                                                  .get()                          // get value of smart ptr
-        );
+    auto target_module = this->inDataSlot
+                             .CallAs<megamol::core::Call>() // connected Call
+                             ->PeekCalleeSlotNoConst()      // slot of target Module
+                             ->Parent();                    // target Module
+
+    auto target_module_name = std::string{target_module->FullName().PeekBuffer()};
+
+    auto target_slot_name = P->Value();
+
+    // shorten long slot name which may contain module name: ::module::path::slot_name -> slot_name
+    if (target_slot_name.find(target_module_name) == 0) {
+        auto name_start_pos = target_module_name.length() + 2; // module_path + "::"
+        assert(target_slot_name.length() >= name_start_pos);
+        target_slot_name = target_slot_name.substr(name_start_pos); // truncate long name to only slot name
+    }
+
+    core::param::ParamSlot* slot = dynamic_cast<core::param::ParamSlot*>(
+        AbstractNamedObjectContainer::dynamic_pointer_cast(
+            target_module->shared_from_this())    // cast to AbstractNamedObjectContainer
+            ->FindChild(target_slot_name.c_str()) // Find target Slot by name in Module
+            .get()                                // get value of smart ptr
+    );
 
     return slot;
 }
