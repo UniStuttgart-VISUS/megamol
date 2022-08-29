@@ -2,11 +2,6 @@ cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 project(quickhull CXX)
 
-option(BUILD_TESTS "Option to build tests" OFF)
-if(BUILD_TESTS)
-  add_subdirectory(Tests)
-endif()
-
 file(GLOB struct_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Structs/*.hpp")
 file(GLOB header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.hpp")
 file(GLOB source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.cpp")
@@ -35,4 +30,3 @@ install(EXPORT "${PROJECT_NAME}Targets"
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
   NAMESPACE ${PROJECT_NAME}::
   FILE ${PROJECT_NAME}Config.cmake)
-
