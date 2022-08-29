@@ -85,7 +85,8 @@ vislib::StringA AbstractNamedObject::FullName(void) const {
                 break;
             }
             name.Prepend(ano->Name());
-            name.Prepend("::");
+            if (!name.StartsWith("::", false))
+                name.Prepend("::");
             ano = ano->Parent();
         }
         return name;
