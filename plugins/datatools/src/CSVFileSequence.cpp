@@ -8,7 +8,6 @@
 #include "CSVFileSequence.h"
 #include "PluginsResource.h"
 #include "datatools/table/TableDataCall.h"
-#include "mmcore/MegaMolGraph.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
