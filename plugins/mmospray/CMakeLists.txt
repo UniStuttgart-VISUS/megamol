@@ -4,7 +4,9 @@
 #
 
 megamol_plugin(mmospray
-  BUILD_DEFAULT OFF
+  BUILD_DEFAULT ON
+  DEPENDS_FEATURES
+    ospray
   DEPENDS_PLUGINS
     mmstd
     geometry_calls
