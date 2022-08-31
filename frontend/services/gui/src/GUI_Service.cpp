@@ -65,7 +65,7 @@ bool GUI_Service::init(const Config& config) {
         "ImagePresentationEntryPoints",                                 // 13 - Entry point
         "ExecuteLuaScript",                                             // 14 - Execute Lua Scripts (from Console)
         frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name, // 15 MegaMol Graph subscription
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         frontend_resources::PerformanceManager_Req_Name // 16 - Performance Manager
 #endif
     };
@@ -409,7 +409,7 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 
     megamolgraph_subscription.subscribe(gui_subscription);
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     // PerformanceManager
     perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
         &this->m_requestedResourceReferences[16].getResource<megamol::frontend_resources::PerformanceManager>());

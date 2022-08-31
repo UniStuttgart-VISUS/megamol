@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#ifdef CUESDK_ENABLED
+#ifdef MEGAMOL_USE_CUESDK
 std::unordered_map<megamol::frontend_resources::Key, CorsairLedId>
     megamol::frontend_resources::CommandRegistry::corsair_led_from_glfw_key{
         {megamol::frontend_resources::Key::KEY_ESCAPE, CLK_Escape}, {megamol::frontend_resources::Key::KEY_F1, CLK_F1},
@@ -153,7 +153,7 @@ const char* corsair_error_to_string(CorsairError error) {
 
 
 megamol::frontend_resources::CommandRegistry::CommandRegistry() {
-#ifdef CUESDK_ENABLED
+#ifdef MEGAMOL_USE_CUESDK
     CorsairPerformProtocolHandshake();
     if (const auto error = CorsairGetLastError()) {
         std::cout << "Corsair CUE Handshake failed: " << corsair_error_to_string(error) << " - is iCUE running?"
@@ -178,7 +178,7 @@ megamol::frontend_resources::CommandRegistry::CommandRegistry() {
 }
 
 megamol::frontend_resources::CommandRegistry::~CommandRegistry() {
-#ifdef CUESDK_ENABLED
+#ifdef MEGAMOL_USE_CUESDK
     CorsairReleaseControl(CAM_ExclusiveLightingControl);
 #endif
 }
@@ -286,7 +286,7 @@ bool megamol::frontend_resources::CommandRegistry::remove_hotkey(KeyCode key) {
 
 void megamol::frontend_resources::CommandRegistry::modifiers_changed(Modifiers mod) {
     // TODO
-#ifdef CUESDK_ENABLED
+#ifdef MEGAMOL_USE_CUESDK
     // unset all keys
     if (!CorsairSetLedsColors(static_cast<int>(black_keyboard.size()), black_keyboard.data())) {
         const auto error = CorsairGetLastError();
@@ -347,7 +347,7 @@ std::string megamol::frontend_resources::CommandRegistry::increment_name(const s
 }
 
 void megamol::frontend_resources::CommandRegistry::add_color_to_layer(const megamol::frontend_resources::Command& c) {
-#ifdef CUESDK_ENABLED
+#ifdef MEGAMOL_USE_CUESDK
     auto cols = key_colors.find(c.key.mods);
     if (cols == key_colors.end()) {
         key_colors[c.key.mods] = std::vector<CorsairLedColor>();
@@ -370,7 +370,7 @@ void megamol::frontend_resources::CommandRegistry::add_color_to_layer(const mega
 
 void megamol::frontend_resources::CommandRegistry::remove_color_from_layer(
     const megamol::frontend_resources::Command& c) {
-#ifdef CUESDK_ENABLED
+#ifdef MEGAMOL_USE_CUESDK
     if (c.key.key != Key::KEY_UNKNOWN) {
         auto& layer = key_colors[c.key.mods];
         const auto& k = corsair_led_from_glfw_key[c.key.key];
@@ -386,7 +386,7 @@ void megamol::frontend_resources::CommandRegistry::push_command(const Command& c
     if (c.key.key != Key::KEY_UNKNOWN) {
         key_to_command[c.key] = static_cast<int>(commands.size() - 1);
         add_color_to_layer(c);
-#ifdef CUESDK_ENABLED
+#ifdef MEGAMOL_USE_CUESDK
         if (current_modifiers.equals(c.key.mods)) {
             auto ledColor = CorsairLedColor{corsair_led_from_glfw_key[c.key.key], 255, 0, 0};
             CorsairSetLedsColors(1, &ledColor);

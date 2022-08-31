@@ -15,7 +15,7 @@
 
 #include "omp.h"
 
-#include "simultaneous_sort.h"
+#include "simultaneous_sort/simultaneous_sort.h"
 
 megamol::astro::SpectralIntensityVolume::SpectralIntensityVolume()
         : volume_in_slot_("volumeIn", "Input of volume containing optical depth")

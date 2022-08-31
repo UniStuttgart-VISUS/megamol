@@ -164,23 +164,6 @@ bool ImageRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     auto& cam = call.GetCamera();
 
-    float near_plane = 0.0f;
-    float far_plane = 0.0f;
-
-    try {
-        auto cam_intrinsics = cam.get<megamol::core::view::Camera::PerspectiveParameters>();
-        near_plane = cam_intrinsics.near_plane;
-        far_plane = cam_intrinsics.far_plane;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "SimpleMoleculeRenderer - Error when getting perspective camera intrinsics");
-    }
-
-    auto CamPos = cam.getPose().position;
-    auto CamView = cam.getPose().direction;
-    auto CamRight = cam.getPose().right;
-    auto CamUp = cam.getPose().up;
-    auto CamNearClip = near_plane;
     //auto Eye = cam.eye();
     //bool rightEye = (Eye == core::thecam::Eye::right);
     bool rightEye = false;
@@ -216,7 +199,7 @@ bool ImageRenderer::assertImage(bool rightEye) {
 
     bool beBlank = this->blankMachines.Contains(this->machineName);
     bool useMpi = initMPI();
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     // generate communicators for each role
     if (useMpi && !registered) {
         myRole = beBlank ? IMG_BLANK : (rightEye ? IMG_RIGHT : IMG_LEFT);
@@ -228,7 +211,7 @@ bool ImageRenderer::assertImage(bool rightEye) {
             myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
         registered = true;
     }
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
 
     bool imgcConnected = false;
@@ -261,7 +244,7 @@ bool ImageRenderer::assertImage(bool rightEye) {
         ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         try {
             static bool handIsShaken = false;
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             if (useMpi && !handIsShaken) {
                 handIsShaken = true;
                 core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: IMGC Handshake\n");
@@ -293,19 +276,19 @@ bool ImageRenderer::assertImage(bool rightEye) {
                 core::utility::log::Log::DefaultLog.WriteInfo(
                     "ImageRenderer: IMGC Handshake result remoteness = %d imgcRank = %d\n", remoteness, roleImgcRank);
             }
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
             if (!beBlank && ((loadedFile != filename) || remoteness)) {
                 int fileSize = 0;
                 BYTE* allFile = nullptr;
                 BYTE* imgc_data_ptr = nullptr;
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
                 // single node or role boss loads the image
                 if (!useMpi || roleRank == roleImgcRank) {
                     core::utility::log::Log::DefaultLog.WriteInfo(
                         "ImageRenderer: role %s (rank %i of %i) loads an image",
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
                     if (!remoteness && !imgcConnected) {
                         core::utility::log::Log::DefaultLog.WriteInfo(
@@ -329,7 +312,7 @@ bool ImageRenderer::assertImage(bool rightEye) {
                         this->height = (*it).second.Height();
                         allFile = reinterpret_cast<uint8_t*>((*it).second.PeekDataAs<uint8_t>());
                     }
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
                 }
                 // cluster nodes broadcast file size
                 if (useMpi) {
@@ -350,10 +333,9 @@ bool ImageRenderer::assertImage(bool rightEye) {
                     if (remoteness) {
                         MPI_Bcast(&this->width, 1, MPI_UNSIGNED, roleImgcRank, roleComm);
                         MPI_Bcast(&this->height, 1, MPI_UNSIGNED, roleImgcRank, roleComm);
-                        MPI_Bcast(&imgc_enc, 1, MPI_UNSIGNED_CHAR, roleImgcRank, roleComm);
                     }
                 }
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
                 uint8_t* image_ptr = nullptr;
 
                 if (!imgcConnected) {
@@ -414,7 +396,7 @@ bool ImageRenderer::assertImage(bool rightEye) {
                     loadedFile = filename;
                 }
                 new_tiles_ = true;
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
                 // we finish this together
                 if (useMpi) {
                     core::utility::log::Log::DefaultLog.WriteInfo(
@@ -442,7 +424,7 @@ bool ImageRenderer::assertImage(bool rightEye) {
 
 bool ImageRenderer::initMPI() {
     bool retval = false;
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     if (this->comm == MPI_COMM_NULL) {
         auto c = this->callRequestMpi.CallAs<cluster::mpi::MpiCall>();
         if (c != nullptr) {
@@ -470,7 +452,7 @@ bool ImageRenderer::initMPI() {
 
     /* Determine success of the whole operation. */
     retval = (this->comm != MPI_COMM_NULL);
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
     return retval;
 }
 

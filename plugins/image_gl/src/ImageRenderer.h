@@ -18,9 +18,9 @@
 #include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include "mpi.h"
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
 /*
  * Copyright (C) 2010 by Sebastian Grottel.
@@ -200,11 +200,11 @@ private:
     /** slot for image data */
     core::CallerSlot callRequestImage;
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     /** The communicator that the view uses. */
     MPI_Comm comm = MPI_COMM_NULL;
     MPI_Comm roleComm;
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
     int mpiRank = 0;
 

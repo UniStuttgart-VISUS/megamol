@@ -54,13 +54,13 @@ std::string handle_remote_session_config(
         role_name = " (Render Node)";
     }
     if (config.remote_mpirendernode) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         remote_config.role = megamol::frontend::Remote_Service::Role::MPIRenderNode;
         role_name = " (MPI Render Node)";
 #else
         log_error(" MegaMol was compiled without MPI. Can not start in MPI mode. Shut down.");
         std::exit(1);
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
     }
 
     remote_config.mpi_broadcast_rank = config.remote_mpi_broadcast_rank;
@@ -678,7 +678,7 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 //
 //
 // void megamol::remote::Remote_Service::MpiNode::Render(const mmcRenderViewContext& context, core::Call* call) {
-// ifdef WITH_MPI
+// ifdef MEGAMOL_USE_MPI
 //     static bool first_frame = true;
 //
 //     this->initMPI();

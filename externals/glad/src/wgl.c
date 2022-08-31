@@ -562,6 +562,7 @@ int gladLoadWGLUserPtr(HDC hdc, GLADuserptrloadfunc load, void *userptr) {
     glad_wgl_load_WGL_NV_video_output(load, userptr);
     glad_wgl_load_WGL_OML_sync_control(load, userptr);
 
+
     return version;
 }
 

@@ -11,12 +11,12 @@
 #include "CallSlot.h"
 #include "InterfaceSlot.h"
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 #include "ProfilingUtils.h"
 #include "implot.h"
 #define MODULE_PROFILING_PLOT_HEIGHT (150.0f * megamol::gui::gui_scaling.Get())
 #define MODULE_PROFILING_WINDOW_WIDTH (300.0f * megamol::gui::gui_scaling.Get())
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 
 using namespace megamol;
 using namespace megamol::gui;
@@ -50,7 +50,7 @@ megamol::gui::Module::Module(ImGuiID uid, const std::string& class_name, const s
         , gui_set_active(false)
         , gui_set_hovered(false)
         , gui_hovered(false)
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         , cpu_perf_history()
         , gl_perf_history()
         , profiling_parent_pointer(nullptr)
@@ -60,7 +60,7 @@ megamol::gui::Module::Module(ImGuiID uid, const std::string& class_name, const s
         , gui_profiling_run_button()
         , pause_profiling_history_update(false)
         , profiling_button_position()
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 {
 
     this->callslots.emplace(megamol::gui::CallSlotType::CALLER, CallSlotPtrVector_t());
@@ -427,9 +427,9 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 bool graph_entry_button = this->is_view;
                 bool parameter_button = (!this->parameters.empty());
                 bool profiling_button = false;
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                 profiling_button = true;
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
                 unsigned int button_count = (graph_entry_button) ? (1) : (0);
                 button_count += (parameter_button) ? (1) : (0);
                 button_count += (profiling_button) ? (1) : (0);
@@ -522,7 +522,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         }
                         ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
                     }
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                     // Profiling Button
                     if (profiling_button) {
                         // Lazy loading of performance button texture
@@ -550,7 +550,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             this->pause_profiling_history_update = state.interact.profiling_pause_update;
                         }
                     }
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
                 }
 
                 // Draw Outline
@@ -597,9 +597,9 @@ void megamol::gui::Module::update(const GraphItemsState_t& state) {
     bool graph_entry_button = this->is_view;
     bool parameter_button = (!this->parameters.empty());
     bool profiling_button = false;
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     profiling_button = true;
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
     float button_count = (graph_entry_button) ? (1.0f) : (0.0f);
     button_count += (parameter_button) ? (1.0f) : (0.0f);
     button_count += (profiling_button) ? (1.0f) : (0.0f);
@@ -701,7 +701,7 @@ bool megamol::gui::Module::StateFromJSON(const nlohmann::json& in_json) {
 }
 
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 
 void megamol::gui::Module::AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
     const frontend_resources::PerformanceManager::timer_entry& entry) {
@@ -772,4 +772,4 @@ void megamol::gui::Module::DrawProfiling(GraphItemsState_t& state) {
     }
 }
 
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING

@@ -219,12 +219,12 @@ private:
     SplitterWidget gui_profiling_splitter;
     PopUps gui_rename_popup;
     HoverToolTip gui_tooltip;
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     ImageWidget gui_profiling_run_button;
     std::vector<std::pair<std::weak_ptr<gui::Module>, std::weak_ptr<gui::Call>>> profiling_list;
     std::chrono::system_clock::time_point scroll_delta_time;
     bool gui_profiling_graph_link;
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -251,9 +251,9 @@ private:
     std::string generate_unique_group_name() const;
     std::string generate_unique_module_name(const std::string& name) const;
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     void draw_profiling(ImVec2 position, ImVec2 size);
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 };
 
 

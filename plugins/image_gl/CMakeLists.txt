@@ -5,7 +5,8 @@
 
 megamol_plugin(image_gl
   BUILD_DEFAULT OFF
-  DEPENDS_GL
+  DEPENDS_FEATURES
+    opengl
   DEPENDS_PLUGINS
     mmstd
     mmstd_gl

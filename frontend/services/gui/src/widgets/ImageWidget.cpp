@@ -19,7 +19,7 @@ using namespace megamol::gui;
 megamol::gui::ImageWidget::ImageWidget() : tooltip() {}
 
 
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
 
 bool megamol::gui::ImageWidget::LoadTextureFromFile(
     const std::string& filename, const std::string& toggle_filename, GLint tex_min_filter, GLint tex_max_filter) {

@@ -8,11 +8,11 @@
 #ifndef MEGAMOL_UTILITY_JSONHELPER_INCLUDED
 #define MEGAMOL_UTILITY_JSONHELPER_INCLUDED
 
-
-#include "mmcore/utility/log/Log.h"
-#include <json.hpp>
 #include <string>
 
+#include <nlohmann/json.hpp>
+
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol {
 namespace core {

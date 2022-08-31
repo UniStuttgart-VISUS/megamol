@@ -10,14 +10,14 @@
 #include "mmcore/utility/log/Log.h"
 #include <algorithm>
 
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
 #ifdef _WIN32 // Windows
 #include "glad/wgl.h"
 #else // LINUX
 #include "glad/glx.h"
 #endif // _WIN32
 #include "imgui_impl_opengl3.h"
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
 
 using namespace megamol::gui;
 
@@ -31,16 +31,16 @@ megamol::gui::gui_render_backend::gui_render_backend()
 megamol::gui::gui_render_backend::~gui_render_backend() {
 
     this->cpu_fbo.reset();
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     this->ogl_fbo.reset();
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
 }
 
 
 bool megamol::gui::gui_render_backend::CheckPrerequisites(GUIRenderBackend backend) {
 
     switch (backend) {
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::OPEN_GL): {
         bool prerequisities_given = true;
 #ifdef _WIN32 // Windows
@@ -80,7 +80,7 @@ bool megamol::gui::gui_render_backend::CheckPrerequisites(GUIRenderBackend backe
             return false;
         }
     } break;
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::CPU): {
         /// nothing to check for CPU rendering ...
     } break;
@@ -104,7 +104,7 @@ bool megamol::gui::gui_render_backend::Init(GUIRenderBackend backend) {
     }
 
     switch (backend) {
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::OPEN_GL): {
         if (ImGui_ImplOpenGL3_Init(nullptr) && this->createOGLFramebuffer(1, 1)) { // "#version 130"
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
@@ -116,7 +116,7 @@ bool megamol::gui::gui_render_backend::Init(GUIRenderBackend backend) {
             return false;
         }
     } break;
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::CPU): {
         if (ImGui_ImplGeneric_Init(&this->cpu_window) && this->createCPUFramebuffer(1, 1)) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Initialized ImGui render Backend for CPU.");
@@ -142,12 +142,12 @@ bool megamol::gui::gui_render_backend::Init(GUIRenderBackend backend) {
 void megamol::gui::gui_render_backend::NewFrame(glm::vec2 framebuffer_size, glm::vec2 window_size) {
 
     switch (this->initialized_backend) {
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::OPEN_GL): {
         ImGui_ImplOpenGL3_NewFrame();
         this->createOGLFramebuffer(framebuffer_size.x, framebuffer_size.y);
     } break;
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::CPU): {
         this->cpu_window.width = static_cast<int>(window_size.x);
         this->cpu_window.height = static_cast<int>(window_size.y);
@@ -170,7 +170,7 @@ bool megamol::gui::gui_render_backend::EnableRendering(
     unsigned int framebuffer_width, unsigned int framebuffer_height) {
 
     switch (this->initialized_backend) {
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::OPEN_GL): {
         GUI_GL_CHECK_ERROR
 
@@ -183,7 +183,7 @@ bool megamol::gui::gui_render_backend::EnableRendering(
 
         GUI_GL_CHECK_ERROR
     } break;
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::CPU): {
         return true;
     } break;
@@ -207,12 +207,12 @@ bool megamol::gui::gui_render_backend::Render(ImDrawData* draw_data) {
     }
 
     switch (this->initialized_backend) {
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::OPEN_GL): {
         ImGui_ImplOpenGL3_RenderDrawData(draw_data);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     } break;
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::CPU): {
         std::fill_n(this->cpu_fbo->colorBuffer.data(), this->cpu_fbo->colorBuffer.size(), 0x19191919u);
         imgui_sw::paint_imgui(this->cpu_fbo->colorBuffer.data(), static_cast<int>(this->cpu_fbo->getWidth()),
@@ -239,12 +239,12 @@ bool megamol::gui::gui_render_backend::Render(ImDrawData* draw_data) {
 bool megamol::gui::gui_render_backend::ShutdownBackend() {
 
     switch (this->initialized_backend) {
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::OPEN_GL): {
         ImGui_ImplOpenGL3_Shutdown();
 
     } break;
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::CPU): {
         imgui_sw::unbind_imgui_painting();
         ImGui_ImplGeneric_Shutdown();
@@ -270,11 +270,11 @@ bool megamol::gui::gui_render_backend::CreateFontsTexture() {
             __LINE__);
         return false;
     }
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::OPEN_GL): {
         return ImGui_ImplOpenGL3_CreateFontsTexture();
     } break;
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::CPU): {
         imgui_sw::bind_imgui_painting();
         return true;
@@ -291,11 +291,11 @@ bool megamol::gui::gui_render_backend::CreateFontsTexture() {
 bool megamol::gui::gui_render_backend::SupportsCustomFonts() const {
 
     switch (this->initialized_backend) {
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::OPEN_GL): {
         return true;
     } break;
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::CPU): {
         return false;
     }
@@ -311,7 +311,7 @@ bool megamol::gui::gui_render_backend::SupportsCustomFonts() const {
 void megamol::gui::gui_render_backend::ClearFrame() {
 
     switch (this->initialized_backend) {
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::OPEN_GL): {
         if (this->ogl_fbo != nullptr) {
             this->ogl_fbo->bind();
@@ -321,7 +321,7 @@ void megamol::gui::gui_render_backend::ClearFrame() {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
     } break;
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::CPU): {
         if (this->cpu_fbo != nullptr) {
             std::fill_n(this->cpu_fbo->colorBuffer.data(), this->cpu_fbo->colorBuffer.size(), 0x19191919u);
@@ -342,13 +342,13 @@ megamol::frontend_resources::ImageWrapper gui_render_backend::GetImage() {
         megamol::frontend_resources::ImageWrapper::DataChannels::RGBA8;
 
     switch (this->initialized_backend) {
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::OPEN_GL): {
         return megamol::frontend_resources::wrap_image(
             {static_cast<size_t>(this->ogl_fbo->getWidth()), static_cast<size_t>(this->ogl_fbo->getHeight())},
             this->ogl_fbo->getColorAttachment(0)->getName(), channels);
     }
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
     case (GUIRenderBackend::CPU): {
         return megamol::frontend_resources::wrap_image(
             {this->cpu_fbo->getWidth(), this->cpu_fbo->getHeight()}, this->cpu_fbo->colorBuffer, channels);
@@ -390,7 +390,7 @@ bool gui_render_backend::createCPUFramebuffer(unsigned int width, unsigned int h
 
 bool gui_render_backend::createOGLFramebuffer(unsigned int width, unsigned int height) {
 
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     // Create FBO for Open GL
     auto width_i = static_cast<int>(width);
     auto height_i = static_cast<int>(height);
@@ -423,5 +423,5 @@ bool gui_render_backend::createOGLFramebuffer(unsigned int width, unsigned int h
     return true;
 #else
     return false;
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
 }
