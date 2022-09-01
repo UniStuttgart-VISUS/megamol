@@ -49,22 +49,23 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 
 1. Copy the template folder `plugins/doc_template`.
 2. Rename the copied folder to the intended plugin name (style guide: only lower case letters, numbers, and underscore).
-3. Rename the `src/MegaMolPlugin.cpp` to your plugin name (file name can be arbitrary). Within the file change the following:
+3. Rename the `src/megamolplugin.cpp` to your plugin name (style guide: same as folder name). Within the file change the following:
     1. Use a unique namespace `megamol::pluginname`. (style guide: same as folder name)
     2. Change the plugin name and description in the parameters of the constructor.
     3. The class name can be changed to any name, but it must be set accordingly in the `REGISTERPLUGIN()` macro.
 4. Open the `CMakeLists.txt` file and to the following changes:
     1. Set the name of the target at the beginning of `megamol_plugin()`. (style guide: same as folder name)
-    2. List the targets of other plugin dependencies after `DEPENDS_PLUGINS`[*].
-    3. List the targets of external dependencies after `DEPENDS_EXTERNALS`[*]. Do not define new externals within the plugin CMake! Use the global externals file `externals/CMakeExternals.cmake`.
-    4. If additional custom CMake settings are required they can be put within `if (megamolplugin_PLUGIN_ENABLED)`. The variable defined at the beginning of `megamol_plugin()` is a regular CMake target that can be used.
-5. Add libraries/dependencies to `CMakeLists.txt` (optional, see [external dependencies](#external-dependencies)).
-6. Implement the content of your plugin.
+    2. List the required features of the plugin after `DEPENDS_FEATURES`.
+    3. List the targets of other plugin dependencies after `DEPENDS_PLUGINS`[*].
+    4. Add any dependencies or additional CMake configuration within `if (megamolplugin_PLUGIN_ENABLED)`.
+       Dependencies are defined in the regular vcpkg way (`find_package()`, `target_link_libraries()`, etc., see [external dependencies](#external-dependencies)).
+       The variable defined at the beginning of `megamol_plugin()` is a regular CMake target that can be used.
+5. Implement the content of your plugin.
     1. The private implementation should be in the `<pluginname>/src` directory. Source files are added automatically within CMake.
     2. If the plugin has a public interface, add the headers in the `<pluginname>/include` directory (set visibility of dependencies accordingly, see [*]).
     3. If the plugin uses shaders, add them into the `<pluginname>/shaders/<pluginname>` directory (see shader guide for more details).
     4. If the plugin uses resources, add them to `<pluginname>/resources`.
-7. Write a `README.md` for your plugin (mandatory).
+6. Write a `README.md` for your plugin (mandatory).
 
 [*] You can prefix the dependency targets with the keywords `PUBLIC`, `PRIVATE`, or `INTERFACE` the same way `target_link_libraries()` works. Defaults to `PRIVATE` if nothing is set.
 
@@ -294,158 +295,16 @@ For building MegaMol, CMake is used. For developers, two aspects are of importan
 
 ### External dependencies
 
-**All externals must be build STATIC now!**
-The installation of shared libraries was removed, therefore the megamol binary will not find the so/dll files of externals if they are used as SHARED library.
+We are using [vcpkg](https://github.com/microsoft/vcpkg) (in manifest mode) for managing external dependencies.
+In short, vcpkg will automatically download, build and cache any dependency during configuring MegaMol.
+After that common CMake methods are used to use the library (i.e. `find_package()` and `target_link_libraries()`, but of course depends on the external library).
 
-The system for including external dependencies in MegaMol is a process split into two phases, corresponding to CMake configuration and the build process.
+For dependencies already available within the vcpkg ecosystem, just add them to `vcpkg.json`.
+For dependencies not already available, an overlay port must be created within `cmake/vcpkg_ports/<port-name>`.
+Further information on writing new ports is available in the [vcpkg documentation](https://vcpkg.io/en/docs/README.html).
 
-In the CMake configuration run, in which the external is first requested, it is downloaded from a git repository by providing a URL and tag (or commit hash), and configured in a separate process and folder. 
-This is done to prevent global CMake options from clashing. 
-In later CMake configuration runs, this configuration of the external dependencies is not re-run, except when manually requested by setting the appropriate CMake cache variable ```EXTERNAL_<NAME>_NEW_VERSION``` to ```TRUE```, or when the URL, tag or build type change.
-
-When building MegaMol, all external dependencies are only built if they have not been built before. 
-Afterwards, only by setting ```EXTERNAL_<NAME>_NEW_VERSION``` to ```TRUE``` can the build process be triggered again. 
-This ensures that they are not rebuilt unnecessarily, but built when their version change.
-
-#### Using external dependencies
-
-External dependencies are split into two categories: header-only libraries and libraries that have to be built into a static (```.a```/```.lib```) library. 
-Both kinds are defined in the ```CMakeExternals.cmake``` file in the MegaMol main directory and can be requested in the plugins using the command ```require_external(<NAME>)```. 
-Generally, this command makes available the target ```<NAME>```, which provides all necessary information on where to find the library and include files.
-
-#### Adding new external dependencies
-
-The setup for header-only and built libraries need different parameters and commands.
-
-##### Header-only libraries
-
-For setting up a header-only library, the following command is used:
-
-```
-add_external_headeronly_project(<NAME>
-   GIT_REPOSITORY <GIT_REPOSITORY>
-  [GIT_TAG <GIT_TAG>]
-  [INCLUDE_DIR <INCLUDE_DIR>]
-  [DEPENDS <DEPENDS>...])
-```
-
-| Parameter              | Description                                                                                                               |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| ```<NAME>```           | Target name, usually the official name of the library or its abbreviation.                                                |
-| ```<GIT_REPOSITORY>``` | URL of the git repository.                                                                                                |
-| ```<GIT_TAG>```        | Tag or commit hash for getting a specific version, ensuring compatibility. Default behavior is to get the latest version. |
-| ```<INCLUDE_DIR>```    | Relative directory where the include files can be found, usually ```include```. Defaults to the main source directory.    |
-| ```<DEPENDS>```        | Targets this library depends on, if any.                                                                                  |
-
-In the following example, the library Delaunator is downloaded from ```https://github.com/delfrrr/delaunator-cpp.git``` in its version ```v0.4.0```. 
-The header files can be found in the folder ```include```.
-
-```
-add_external_headeronly_project(Delaunator
-  GIT_REPOSITORY https://github.com/delfrrr/delaunator-cpp.git
-  GIT_TAG "v0.4.0"
-  INCLUDE_DIR "include")
-```
-
-For more examples on how to include header-only libraries, see the ```CMakeExternals.cmake``` file in the MegaMol main directory.
-
-Additionally, information about the header-only libraries can be queried with the command ```external_get_property(<NAME> <VARIABLE>)```, where variable has to be one of the provided variables in the following table, and at the same time is used as local variable name for storing the queried results.
-
-| Variable       | Description                                           |
-| -------------- | ----------------------------------------------------- |
-| GIT_REPOSITORY | The URL of the git repository.                        |
-| GIT_TAG        | The git tag or commit hash of the downloaded library. |
-| SOURCE_DIR     | Source directory, where the downloaded files reside.  |
-
-##### Built libraries
-
-Libraries that are built into static libraries, follow a process executing two different commands. 
-The first command is responsible for setting up the project, while the second command creates the interface targets.
-
-Similarly to the header-only libraries, the setup uses a command specifying the source and type of the library, additionally providing information for the configuration and build processes:
-
-```
-add_external_project(<NAME> STATIC
-   GIT_REPOSITORY <GIT_REPOSITORY>
-  [GIT_TAG <GIT_TAG>]
-  [PATCH_COMMAND <PATCH_COMMAND>...]
-  [CMAKE_ARGS <CMAKE_ARGUMENTS>...]
-  BUILD_BYPRODUCTS <OUTPUT_LIBRARIES>...
-  [COMMANDS <INSTALL_COMMANDS>...]
-  [DEBUG_SUFFIX <DEBUG_SUFFIX>]
-  [DEPENDS <DEPENDS>...])
-```
-
-| Parameter                     | Description |
-| ----------------------------- | ----------- |
-| ```<NAME>```                  | Project name, usually the official name of the library or its abbreviation. |
-| ```STATIC```                  | Indicate to build a static (```.a```/```.lib```) library. Static libraries are always built according to user selection. |
-| ```<GIT_REPOSITORY>```        | URL of the git repository. |
-| ```<GIT_TAG>```               | Tag or commit hash for getting a specific version, ensuring compatibility. Default behavior is to get the latest version. |
-| ```<PATCH_COMMAND>```         | Command that is run before the configuration step and is mostly used to apply patches or providing a modified ```CMakeLists.txt``` file. |
-| ```<CMAKE_ARGS>```            | Arguments that are passed to CMake for the configuration of the external library. |
-| ```<BUILD_BYPRODUCTS>```      | Specifies the output libraries, which are automatically installed if it is a dynamic library. This must include the import library on Windows systems. |
-| ```<COMMANDS>```              | Commands that are executed after the build process finished, allowing for custom install commands. |
-| ```<DEBUG_SUFFIX>```          | Specify a suffix for the debug version of the library. The position of this suffix has to be specified by providing ```<SUFFIX>``` in the library name. |
-| ```<DEPENDS>```               | Targets this library depends on, if any. |
-
-The second command creates the actual interface targets. Note that for some libraries, multiple targets have to be created.
-
-```
-add_external_library(<NAME> [PROJECT <PROJECT>]
-   LIBRARY <LIBRARY>
-  [IMPORT_LIBRARY <IMPORT_LIBRARY>]
-  [INTERFACE_LIBRARIES <INTERFACE_LIBRARIES>...]
-  [DEBUG_SUFFIX <DEBUG_SUFFIX>])
-```
-
-| Parameter                     | Description |
-| ----------------------------- | ----------- |
-| ```<NAME>```                  | Target name, for the main target this is usually the official name of the library or its abbreviation. |
-| ```<PROJECT>```               | If the target name does not match the name provided in the ```add_external_project``` command, the project has to be set accordingly. |
-| ```<LIBRARY>```               | The created library file, in case of a shared library a ```.so``` or ```.dll``` file, or ```.a``` or ```.lib``` for a static library. |
-| ```<INTERFACE_LIBRARIES>```   | Additional libraries the external library depends on. |
-| ```<DEBUG_SUFFIX>```          | Specify a suffix for the debug version of the library. The position of this suffix has to be specified by providing ```<SUFFIX>``` in the library name and has to match the debug suffix provided to the ```add_external_project``` command. |
-
-An example for a static library is as follows, where the ```tracking``` library ```v2.0``` is defined as a static library and downloaded from the VISUS github repository at ```https://github.com/UniStuttgart-VISUS/mm-tracking```. 
-It builds two libraries, ```tracking``` and ```NatNetLib```, and uses the CMake flag ```-DCREATE_TRACKING_TEST_PROGRAM=OFF``` to prevent the building of a test program. 
-Both libraries are created providing the paths to the respective import libraries. 
-Note that only the ```NatNetLib``` has to specify the project as its name does not match the external library.
-
-```
-    set(TRACKING_LIB "lib/tracking.lib")
-    set(TRACKING_NATNET_LIB "lib/NatNetLib.lib")
-
-    add_external_project(tracking STATIC
-      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking.git
-      GIT_TAG "v2.0"
-      BUILD_BYPRODUCTS
-        "<INSTALL_DIR>/${TRACKING_LIB}"
-        "<INSTALL_DIR>/${TRACKING_NATNET_LIB}"
-      CMAKE_ARGS
-        -DCREATE_TRACKING_TEST_PROGRAM=OFF)
-
-    add_external_library(tracking
-      LIBRARY ${TRACKING_LIB})
-
-    add_external_library(natnet
-      PROJECT tracking
-      LIBRARY ${TRACKING_NATNET_LIB})
-```
-
-Further examples on how to include static libraries can be found in the ```CMakeExternals.cmake``` file in the MegaMol main directory.
-
-Additionally, information about the libraries can be queried with the command ```external_get_property(<NAME> <VARIABLE>)```, where variable has to be one of the provided variables in the following table, and at the same time is used as local variable name for storing the queried results.
-
-| Variable       | Description                                                                                                                                                                 |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GIT_REPOSITORY | The URL of the git repository.                                                                                                                                              |
-| GIT_TAG        | The git tag or commit hash of the downloaded library.                                                                                                                       |
-| SOURCE_DIR     | Source directory, where the downloaded files reside.                                                                                                                        |
-| BINARY_DIR     | Directory of the CMake configuration files.                                                                                                                                 |
-| INSTALL_DIR    | Target directory for the local installation. Note that for multi-configuration systems, the built static libraries are in a subdirectory corresponding to their build type. |
-| SHARED         | Indicates that the library was built as a dynamic library if ```TRUE```, or a static library otherwise.                                                                     |
-| BUILD_TYPE     | Build type of the output library on single-configuration systems.                                                                                                           |
+Larger (especially in the meaning of build times) and/or very specialized libraries could be wrapped within vcpkg features in `vcpkg.json`.
+If doing so add an option to the beginning of `CMakeLists.txt` using `megamol_feature_option()` to allow using that feature.
 
 
 <!-- ###################################################################### -->

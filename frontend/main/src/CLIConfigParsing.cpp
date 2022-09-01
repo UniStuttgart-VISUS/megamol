@@ -368,7 +368,7 @@ static void vsync_handler(
 static void no_opengl_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     // User cannot overwrite default value when there is no openGL present
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     config.no_opengl = parsed_options[option_name].as<bool>();
 #endif
 };
@@ -472,9 +472,9 @@ static void vr_service_handler(
 
     std::vector<std::pair<std::string, RuntimeConfig::VRMode>> options = {
         {"off", RuntimeConfig::VRMode::Off},
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
         {"unitykolab", RuntimeConfig::VRMode::UnityKolab},
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#endif // MEGAMOL_USE_VR_INTEROP
     };
 
     auto match = [&](std::string const& string) -> RuntimeConfig::VRMode {
@@ -544,7 +544,7 @@ std::vector<OptionsListEntry> cli_options_list =
             cxxopts::value<bool>(), privacynote_handler},
         {versionnote_option, "Show version warning when loading a project, use '=false' to disable",
             cxxopts::value<bool>(), versionnote_handler}
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         ,
         {profile_log_option, "Enable performance counters and set output to file", cxxopts::value<std::string>(),
             profile_log_handler}

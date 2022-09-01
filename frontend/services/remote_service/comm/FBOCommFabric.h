@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <vector>
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include <mpi.h>
 #endif
 #include "zmq.hpp"

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include <mpi.h>
 #else
 using MPI_Comm = int;

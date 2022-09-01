@@ -100,7 +100,7 @@ private:
     core::param::ParamSlot maxParticlePercentageCuttoff;
 
     typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<float, PointCloud<float>>,
-        PointCloud<float>, 3>
+        PointCloud<float>, 3, std::size_t>
         my_kd_tree_t;
 
     std::shared_ptr<my_kd_tree_t> searchIndexPtr = nullptr;

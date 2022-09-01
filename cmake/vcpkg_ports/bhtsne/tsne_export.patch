@@ -1,0 +1,24 @@
+diff --git a/tsne.h b/tsne.h
+index 243fa18..80714a4 100644
+--- a/tsne.h
++++ b/tsne.h
+@@ -34,14 +34,16 @@
+ #ifndef TSNE_H
+ #define TSNE_H
+ 
++#include "bhtsne_export.h"
++
+ #ifdef __cplusplus
+ extern "C" {
+ namespace TSNE {
+ #endif
+-    void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, int rand_seed,
++    void BHTSNE_EXPORT run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, int rand_seed,
+              bool skip_random_init, int max_iter, int stop_lying_iter, int mom_switch_iter);
+-    bool load_data(double** data, int* n, int* d, int* no_dims, double* theta, double* perplexity, int* rand_seed, int* max_iter);
+-    void save_data(double* data, int* landmarks, double* costs, int n, int d);
++    bool BHTSNE_EXPORT load_data(double** data, int* n, int* d, int* no_dims, double* theta, double* perplexity, int* rand_seed, int* max_iter);
++    void BHTSNE_EXPORT save_data(double* data, int* landmarks, double* costs, int n, int d);
+ #ifdef __cplusplus
+ };
+ }

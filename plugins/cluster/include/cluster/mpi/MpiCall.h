@@ -11,9 +11,9 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include <mpi.h>
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -85,7 +85,7 @@ public:
      */
     virtual ~MpiCall(void);
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     /**
      * Answer the communicator created during node colouring.
      *
@@ -94,7 +94,7 @@ public:
     inline MPI_Comm GetComm(void) const {
         return this->comm;
     }
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
     /**
      * Get the size of the communicator that has been created during node
@@ -112,7 +112,7 @@ public:
      */
     int GetRank(void) const;
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     /**
      * Set the communicator created during node colouring.
      *
@@ -121,7 +121,7 @@ public:
     inline void SetComm(const MPI_Comm comm) {
         this->comm = comm;
     }
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
 private:
     /** Super class. */
@@ -130,10 +130,10 @@ private:
     /** The intents that are provided by the call. */
     static const char* INTENTS[1];
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     /** The communicator that the caller should use. */
     MPI_Comm comm;
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 };
 
 typedef factories::CallAutoDescription<MpiCall> MpiCallDescription;

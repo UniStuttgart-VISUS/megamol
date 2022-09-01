@@ -4,8 +4,10 @@
 #
 
 megamol_plugin(mmospray_gl
-  BUILD_DEFAULT OFF
-  DEPENDS_GL
+  BUILD_DEFAULT ON
+  DEPENDS_FEATURES
+    opengl
+    ospray
   DEPENDS_PLUGINS
     mmstd
     mmstd_gl

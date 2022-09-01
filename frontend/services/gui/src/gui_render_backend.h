@@ -12,15 +12,15 @@
 
 #include "ImageWrapper.h"
 #include "imgui.h"
-#include "imgui_impl_generic.h"
-#include "imgui_sw.h"
+#include "imgui_backends/imgui_impl_generic.h"
+#include "imgui_backends/imgui_sw.h"
 #include "mmcore/view/CPUFramebuffer.h"
 #include <glm/glm.hpp>
 #include <memory>
 
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
 #include <glowl/FramebufferObject.hpp>
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
 
 
 namespace megamol {
@@ -77,9 +77,9 @@ private:
     GenericWindow cpu_window;
     GenericMonitor cpu_monitor;
 
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     std::shared_ptr<glowl::FramebufferObject> ogl_fbo = nullptr;
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
     std::shared_ptr<megamol::core::view::CPUFramebuffer> cpu_fbo = nullptr;
 
     // FUNCTIONS --------------------------------------------------------------

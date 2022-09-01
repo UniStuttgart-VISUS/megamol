@@ -652,6 +652,7 @@ int gladLoadGLXUserPtr(Display *display, int screen, GLADuserptrloadfunc load, v
     glad_glx_load_GLX_SGI_video_sync(load, userptr);
     glad_glx_load_GLX_SUN_get_transparent_index(load, userptr);
 
+
     return version;
 }
 

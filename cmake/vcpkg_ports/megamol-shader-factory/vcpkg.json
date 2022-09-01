@@ -1,0 +1,19 @@
+{
+  "name": "megamol-shader-factory",
+  "version": "0.8.0",
+  "port-version": 1,
+  "description": "MegaMol Shader Factory.",
+  "homepage": "https://github.com/UniStuttgart-VISUS/megamol-shader-factory",
+  "license": "BSD-3-Clause",
+  "dependencies": [
+    "glslang",
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}

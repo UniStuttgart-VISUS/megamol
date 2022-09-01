@@ -31,7 +31,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 #include "PerformanceManager.h"
 #endif
 
@@ -304,7 +304,7 @@ megamol::compositing::SSAO::~SSAO() {
  */
 bool megamol::compositing::SSAO::create() {
     // profiling
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
         &frontend_resources.get<frontend_resources::PerformanceManager>());
 
@@ -485,7 +485,7 @@ bool megamol::compositing::SSAO::create() {
  * @megamol::compositing::SSAO::release
  */
 void megamol::compositing::SSAO::release() {
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     perf_manager_->remove_timers(timers_);
 #endif
 }
@@ -543,7 +543,7 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
                                    update_caused_by_normal_slot_change_ || settings_have_changed_;
 
         if (somethingHasChanged) {
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
             perf_manager_->start_timer(timers_[0], this->GetCoreInstance()->GetFrameID());
 #endif
             ++version_;
@@ -689,7 +689,7 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
                 glUseProgram(0);
             }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
             perf_manager_->stop_timer(timers_[0]);
 #endif
         }

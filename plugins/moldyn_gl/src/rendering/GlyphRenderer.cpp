@@ -26,7 +26,7 @@
 #include <iostream>
 
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 #include "PerformanceManager.h"
 #endif
 
@@ -121,7 +121,7 @@ GlyphRenderer::~GlyphRenderer(void) {
 
 bool GlyphRenderer::create(void) {
     // profiling
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
         &frontend_resources.get<frontend_resources::PerformanceManager>());
 
@@ -194,7 +194,7 @@ bool GlyphRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 void GlyphRenderer::release(void) {
     glDeleteTextures(1, &this->grey_tf_);
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     perf_manager_->remove_timers(timers_);
 #endif
 }
@@ -593,7 +593,7 @@ bool GlyphRenderer::Render(mmstd_gl::CallRender3DGL& call) {
                 glUniform1ui(shader->getUniformLocation("flag_offset"), curr_glyph_offset);
             }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
             perf_manager_->start_timer(timers_[0], this->GetCoreInstance()->GetFrameID());
 #endif
 
@@ -621,7 +621,7 @@ bool GlyphRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             default:;
             }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
             perf_manager_->stop_timer(timers_[0]);
 #endif
 

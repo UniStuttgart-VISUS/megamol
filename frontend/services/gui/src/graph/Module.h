@@ -177,7 +177,7 @@ public:
         return this->gui_hovered;
     }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     void SetProfilingData(void* ptr, frontend_resources::PerformanceManager* perf_manager) {
         this->profiling_parent_pointer = ptr;
 
@@ -252,7 +252,7 @@ private:
     bool gui_set_hovered;
     bool gui_hovered;
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 
     std::unordered_map<frontend_resources::PerformanceManager::handle_type, core::MultiPerformanceHistory>
         cpu_perf_history;
@@ -266,7 +266,7 @@ private:
     bool pause_profiling_history_update;
     ImVec2 profiling_button_position;
 
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 
     // FUNCTIONS --------------------------------------------------------------
 

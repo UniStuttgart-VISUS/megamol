@@ -1,8 +1,6 @@
 if(BUILD_VISLIB)
   project(vislib_gl)
 
-  require_external(glad)
-
   # Build vislib
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")

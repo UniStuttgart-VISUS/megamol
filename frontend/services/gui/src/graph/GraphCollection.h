@@ -81,7 +81,7 @@ public:
         this->change_running_graph(graph_uid);
     }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
         this->perf_manager = perf_manager;
     }
@@ -149,7 +149,7 @@ private:
 
     bool change_running_graph(ImGuiID graph_uid);
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     std::unordered_map<void*, std::weak_ptr<megamol::gui::Call>> call_to_call;
     std::unordered_map<void*, std::weak_ptr<megamol::gui::Module>> module_to_module;
     frontend_resources::PerformanceManager* perf_manager = nullptr;
