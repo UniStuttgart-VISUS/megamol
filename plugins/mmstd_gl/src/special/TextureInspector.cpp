@@ -30,8 +30,8 @@
 
 #include "mmstd_gl/special/TextureInspector.h"
 
-#include "imgui_tex_inspect_internal.h"
 #include "backends/tex_inspect_opengl.h"
+#include "imgui_tex_inspect_internal.h"
 
 using namespace megamol::mmstd_gl::special;
 
@@ -80,7 +80,8 @@ void TextureInspector::SceneColorFilters() {
      * ImGui::End pair)
      * */
 
-    if (ImGuiTexInspect::BeginInspectorPanel("##ColorFilters", this->tex_.texture, ImVec2(this->tex_.x, this->tex_.y), flags_)) {
+    if (ImGuiTexInspect::BeginInspectorPanel(
+            "##ColorFilters", this->tex_.texture, ImVec2(this->tex_.x, this->tex_.y), flags_)) {
         // Draw some text showing color value of each texel (you must be zoomed in to see this)
         ImGuiTexInspect::DrawAnnotations(ImGuiTexInspect::ValueText(ImGuiTexInspect::ValueText::BytesDec));
     }
@@ -271,8 +272,8 @@ public:
 };
 
 /**
-* void TextureInspector::SceneTextureAnnotations
-*/
+ * void TextureInspector::SceneTextureAnnotations
+ */
 void TextureInspector::SceneTextureAnnotations() {
     static bool annotation_enabled_arrow = true;
     static bool annotation_enabled_value_text = false;
@@ -336,7 +337,7 @@ void TextureInspector::ShowWindow() {
     ImGui::SetNextWindowSize(ImVec2(1000, 1000), ImGuiCond_FirstUseEver);
 
     struct SceneConfig {
-        const char* button_name; // Button text to display to user for a scene
+        const char* button_name;             // Button text to display to user for a scene
         void (TextureInspector::*draw_fn)(); // Function which implements the scene
     };
 
