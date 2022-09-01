@@ -108,7 +108,9 @@ protected:
     enum DrawMode {
         DRAW_DISCRETE = 0,
         DRAW_DENSITY,
-        DRAW_DUAL,
+        DRAW_DUAL_HOUGH,
+        DRAW_DUAL_SPAWN_LINES,
+        DRAW_DUAL_AXES_NORMALIZED,
     };
 
     enum SelectionMode {
@@ -148,7 +150,7 @@ protected:
 
     void drawDensity(std::shared_ptr<glowl::FramebufferObject> const& fbo);
 
-    void drawDual();
+    void drawDual(int drawmode);
 
     void drawAxes(glm::mat4 ortho);
 
@@ -249,9 +251,13 @@ protected:
     std::unique_ptr<glowl::GLSLProgram> drawAxesProgram_;
     std::unique_ptr<glowl::GLSLProgram> drawIndicatorPickProgram_;
     std::unique_ptr<glowl::GLSLProgram> drawIndicatorStrokeProgram_;
-    std::unique_ptr<glowl::GLSLProgram> dualProgram_;
-    std::unique_ptr<glowl::GLSLProgram> dualDisplayProgram_;
-    std::unique_ptr<glowl::GLSLProgram> dualAltDisplayProgram_;
+    std::unique_ptr<glowl::GLSLProgram> dualHoughProgramC_;
+    std::unique_ptr<glowl::GLSLProgram> dualRelAxesC_;
+    std::unique_ptr<glowl::GLSLProgram> dualNormalizedAxesProgramC_;
+    std::unique_ptr<glowl::GLSLProgram> dualSpawnLinesProgramD_;
+    std::unique_ptr<glowl::GLSLProgram> dualHoughProgramD_;
+    std::unique_ptr<glowl::GLSLProgram> dualRayProgramD_;
+    std::unique_ptr<glowl::GLSLProgram> dualRelRayProgramD_;
 
     std::array<GLint, 3> filterWorkgroupSize_;
     std::array<GLint, 3> dualWorkgroupSize_;

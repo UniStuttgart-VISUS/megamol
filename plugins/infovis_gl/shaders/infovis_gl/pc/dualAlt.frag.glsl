@@ -47,7 +47,7 @@ void main() {
     if (result > 0) {
         fragOut = tflookup(result);
     } else {
-        fragOut = vec4(0.0);
+        //fragOut = vec4(0.7);
     }
     //fragOut = vec4(fract(uvCoords.x), uvCoords.y / float(axPxHeight) , 0 ,1);
     if (uvCoords.y == 1.0) {
@@ -56,6 +56,5 @@ void main() {
         //vec4(0.0, 0.0, 0.0, 1.0);
     }
 
-    //fragOut = vec4(relX, relY,0,1);
-
+    //fragOut = vec4(1, 1,0,1);
 }
