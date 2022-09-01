@@ -19,7 +19,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 #include "PerformanceManager.h"
 #endif
 
@@ -155,7 +155,7 @@ megamol::compositing_gl::AntiAliasing::~AntiAliasing() {
  */
 bool megamol::compositing_gl::AntiAliasing::create() {
 // profiling
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
         &frontend_resources.get<frontend_resources::PerformanceManager>());
 
@@ -242,7 +242,7 @@ bool megamol::compositing_gl::AntiAliasing::create() {
  * @megamol::compositing_gl::AntiAliasing::release
  */
 void megamol::compositing_gl::AntiAliasing::release() {
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     perf_manager_->remove_timers(timers_);
 #endif
 }
@@ -554,7 +554,7 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
                                  (technique == 2 ? rhs_call_depth->hasUpdate() : false);
 
     if (something_has_changed) {
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         perf_manager_->start_timer(timers_[0], this->GetCoreInstance()->GetFrameID());
 #endif
 
@@ -618,7 +618,7 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
             copyTextureViaShader(input_tx2D, output_tx2D_);
         }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         perf_manager_->stop_timer(timers_[0]);
 #endif
 

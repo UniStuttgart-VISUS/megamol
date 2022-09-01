@@ -12,6 +12,47 @@ if (POLICY CMP0104)
   cmake_policy(SET CMP0104 NEW) # CUDA architectures
 endif ()
 
+# vcpkg
+include(FetchContent)
+mark_as_advanced(FORCE
+  FETCHCONTENT_BASE_DIR
+  FETCHCONTENT_FULLY_DISCONNECTED
+  FETCHCONTENT_QUIET
+  FETCHCONTENT_UPDATES_DISCONNECTED)
+
+# Require git for download
+find_package(Git REQUIRED)
+
+FetchContent_Declare(vcpkg-download
+  GIT_REPOSITORY https://github.com/microsoft/vcpkg.git
+  GIT_TAG 2022.08.15)
+FetchContent_GetProperties(vcpkg-download)
+if (NOT vcpkg-download_POPULATED)
+  message(STATUS "Fetch vcpkg ...")
+  FetchContent_Populate(vcpkg-download)
+  mark_as_advanced(FORCE
+    FETCHCONTENT_SOURCE_DIR_VCPKG-DOWNLOAD
+    FETCHCONTENT_UPDATES_DISCONNECTED_VCPKG-DOWNLOAD)
+endif ()
+
+include(cmake/megamol_feature_option.cmake)
+
+megamol_feature_option(CGAL "Enable CGAL support" OFF)
+megamol_feature_option(CUDA "Enable CUDA support" OFF)
+megamol_feature_option(MPI "Enable MPI support" OFF)
+megamol_feature_option(OPENGL "Enable OpenGL support" ON)
+megamol_feature_option(OSPRAY "Enable OSPRay support" OFF)
+megamol_feature_option(PROFILING "Enable profiling support" OFF)
+# dependent options
+megamol_feature_option(CUESDK "Enable Corsair CUESDK support" OFF "WIN32")
+megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "MEGAMOL_USE_OPENGL")
+
+# option(X_VCPKG_APPLOCAL_DEPS_INSTALL "" ON) # Does currently not not work as expected, see comment on manual install below!
+set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_ports")
+set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics") # Disable Telemetry
+set(VCPKG_INSTALL_OPTIONS "--clean-after-build") # Build dirs get quite large and are usually only needed for debugging new ports.
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-download-src/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+
 # Disable in source build
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
@@ -37,14 +78,14 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "default install p
 # Modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
+# Dependencies
+add_subdirectory(externals/glad)
+
 # MegaMol config
 include(megamol_config)
 
 # MegaMol build info library (version + config)
 include(megamol_build_info)
-
-# Externals
-include("externals/CMakeExternals.cmake")
 
 # MegaMol targets
 
@@ -56,13 +97,13 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/frontend/services)
 
 # Vislib
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vislib)
-if (ENABLE_GL)
+if (MEGAMOL_USE_OPENGL)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vislib_gl)
 endif ()
 
 # Core
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/core)
-if (ENABLE_GL)
+if (MEGAMOL_USE_OPENGL)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/core_gl)
 endif ()
 
@@ -75,7 +116,7 @@ add_subdirectory(remoteconsole)
 # Plugins
 add_subdirectory(plugins)
 if (BUILD_FRONTEND)
-  if (ENABLE_GL)
+  if (MEGAMOL_USE_OPENGL)
     target_link_libraries(plugins INTERFACE core_gl)
     target_sources(plugins INTERFACE $<TARGET_OBJECTS:core_gl>)
   endif ()
@@ -138,4 +179,18 @@ if (TESTS)
       OUTPUT_STRIP_TRAILING_WHITESPACE)
   endif ()
   install(DIRECTORY "${TESTS_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/tests" PATTERN ".git" EXCLUDE)
+endif ()
+
+# Install vcpkg libraries
+# X_VCPKG_APPLOCAL_DEPS_INSTALL currently does only work for windows, in addition only actually used dll's are
+# installed. This is a problem for libraries that load dll's dynamically on runtime (.i.e. ospray).
+# Therefore, we just copy all vcpkg libraries to our install dir, until vcpkg may has a better option in future.
+if (WIN32)
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/x64-windows/$<$<CONFIG:Debug>:debug/>bin/
+    DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    FILES_MATCHING PATTERN "*.dll" PATTERN "*.pdb")
+else ()
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/vcpkg_installed/x64-linux/$<$<CONFIG:Debug>:debug/>lib/
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    FILES_MATCHING PATTERN "*.so*")
 endif ()

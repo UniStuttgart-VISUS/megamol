@@ -83,7 +83,7 @@ megamol::gui::ParameterGroups::ParameterGroups()
         : tooltip()
         , animation_group()
         , group_widgets()
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
         , cube_widget_group() {
     // Create/register available group widgets
     this->group_widgets.emplace_back(static_cast<AbstractParameterGroupWidget*>(&this->cube_widget_group));

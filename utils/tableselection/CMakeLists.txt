@@ -13,6 +13,7 @@ endif ()
 # Dependencies
 find_package(Threads REQUIRED)
 find_package(ZeroMQ REQUIRED)
+find_package(cppzmq REQUIRED)
 
 # Files
 set(files
@@ -20,7 +21,7 @@ set(files
 
 # Project
 add_executable(${PROJECT_NAME} ${files})
-target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads libzmq-static)
+target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads libzmq cppzmq)
 
 # Install
 include(GNUInstallDirs)

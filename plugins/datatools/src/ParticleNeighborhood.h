@@ -88,8 +88,7 @@ private:
     float maxDist;
 
     typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<float, simplePointcloud>, simplePointcloud,
-        3 /* dim */
-        >
+        3 /* dim */, std::size_t>
         my_kd_tree_t;
 
     std::shared_ptr<my_kd_tree_t> particleTree;

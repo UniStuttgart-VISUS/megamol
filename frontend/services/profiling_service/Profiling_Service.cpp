@@ -16,7 +16,7 @@ bool Profiling_Service::init(void* configPtr) {
         {"PerformanceManager", _perf_man},
     };
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     const auto conf = static_cast<Config*>(configPtr);
     if (conf != nullptr && !conf->log_file.empty()) {
         log_file = std::ofstream(conf->log_file, std::ofstream::trunc);
@@ -54,7 +54,7 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
     auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(
         resources[3].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     frontend_resources::ModuleGraphSubscription profiling_manager_subscription("Profiling Manager");
 
     profiling_manager_subscription.AddCall = [&](core::CallInstance_t const& call_inst) {
@@ -85,7 +85,7 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
 }
 
 void Profiling_Service::close() {
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     if (log_file.is_open()) {
         log_file.close();
     }

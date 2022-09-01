@@ -262,8 +262,8 @@ void datatools::ParticleColorSignedDistance::compute_colors(geocalls::MultiParti
     assert(negpartcnt + nulpartcnt == negparts.size());
     pointcloud negnulPts(dat, negparts);
 
-    typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<float, pointcloud>, pointcloud, 3 /* dim */
-        >
+    typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<float, pointcloud>, pointcloud,
+        3 /* dim */, std::size_t>
         my_kd_tree_t;
 
     my_kd_tree_t posTree(3 /* dim */, posnulPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));

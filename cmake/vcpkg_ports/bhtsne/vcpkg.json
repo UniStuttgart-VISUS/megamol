@@ -1,0 +1,17 @@
+{
+  "name": "bhtsne",
+  "version": "2018-10-15",
+  "port-version": 0,
+  "homepage": "https://github.com/lvdmaaten/bhtsne",
+  "description": "This software package contains a Barnes-Hut implementation of the t-SNE algorithm.",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}

@@ -100,7 +100,7 @@ public:
         return true;
     }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     std::vector<std::string> requested_lifetime_resources() override {
         std::vector<std::string> resources = Module::requested_lifetime_resources();
         resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
@@ -213,7 +213,7 @@ private:
         const std::shared_ptr<glowl::Texture2D>& tgt, const std::shared_ptr<glowl::Texture2D>& src);
 
     // profiling
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     frontend_resources::PerformanceManager::handle_vector timers_;
     frontend_resources::PerformanceManager* perf_manager_ = nullptr;
 #endif

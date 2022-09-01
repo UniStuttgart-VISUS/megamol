@@ -14,7 +14,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "obj_io/obj_io.h"
+#include "obj_io.h"
 
 namespace megamol {
 namespace mesh {

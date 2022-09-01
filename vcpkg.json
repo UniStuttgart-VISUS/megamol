@@ -1,0 +1,126 @@
+{
+  "name": "megamol",
+  "version-string": "1.3.0-dev",
+  "dependencies": [
+    {
+      "name": "adios2",
+      "features": [
+        "zfp"
+      ],
+      "version>=": "2.8.3#1"
+    },
+    "bhtsne",
+    "blend2d",
+    "chemfiles",
+    "cppzmq",
+    "curl",
+    "cxxopts",
+    "delaunator-cpp",
+    "eigen3",
+    "expat",
+    "glfw3",
+    "glm",
+    {
+      "name": "imgui",
+      "features": [
+        "docking-experimental"
+      ]
+    },
+    "imguizmoquat",
+    "implot",
+    "libigl",
+    "libpng",
+    "lua",
+    "mmpld-io",
+    "nanoflann",
+    "nlohmann-json",
+    "obj-io",
+    "qhull",
+    "quickhull",
+    "simultaneous-sort",
+    "snappy",
+    "spdlog",
+    {
+      "name": "tbb",
+      "version>=": "2021.5.0"
+    },
+    "tinygltf",
+    "tinyobjloader",
+    "tinyply",
+    "vtk-m",
+    "zeromq",
+    "zfp",
+    "zlib"
+  ],
+  "features": {
+    "use-cgal": {
+      "description": "Use CGAL",
+      "dependencies": [
+        "cgal"
+      ]
+    },
+    "use-cuda": {
+      "description": "Use CUDA"
+    },
+    "use-cuesdk": {
+      "description": "Use Corsair CUE",
+      "dependencies": [
+        "cuesdk"
+      ]
+    },
+    "use-mpi": {
+      "description": "Use MPI",
+      "dependencies": [
+        {
+          "name": "adios2",
+          "features": [
+            "mpi"
+          ]
+        },
+        {
+          "name": "icet",
+          "features": [
+            "mpi",
+            "opengl"
+          ]
+        },
+        "mpi"
+      ]
+    },
+    "use-opengl": {
+      "description": "Use OpenGL",
+      "dependencies": [
+        {
+          "name": "imgui",
+          "features": [
+            "opengl3-binding"
+          ]
+        },
+        "megamol-shader-factory",
+        "glowl"
+      ]
+    },
+    "use-ospray": {
+      "description": "Use OSPRay",
+      "dependencies": [
+        {
+          "name": "ospray",
+          "version>=": "2.10.0",
+          "features": [
+            "avx",
+            "avx2"
+          ]
+        }
+      ]
+    },
+    "use-profiling": {
+      "description": "Use Profiling"
+    },
+    "use-vr-interop": {
+      "description": "Use VR Interop",
+      "dependencies": [
+        "mwk-mint-interop"
+      ]
+    }
+  }
+}
