@@ -578,7 +578,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
             texture_data =
                 TransferFunctionParam::GaussInterpolation(static_cast<unsigned int>(this->texture_size), this->nodes);
         }
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
         if (!this->flip_legend) {
             this->image_widget_linear.LoadTextureFromData(this->texture_size, 1, texture_data.data());
             this->image_widget_nearest.LoadTextureFromData(

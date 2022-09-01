@@ -10,16 +10,20 @@ megamol_plugin(probe
     mmadios
     mesh
     datatools
-    geometry_calls
-  DEPENDS_EXTERNALS
-    libigl
-    asmjit
-    blend2d
-    qhull
-    PUBLIC Eigen
-    nanoflann)
+    geometry_calls)
 
 if (probe_PLUGIN_ENABLED)
+  find_package(Eigen3 CONFIG REQUIRED)
+  find_package(nanoflann CONFIG REQUIRED)
+  find_package(blend2d CONFIG REQUIRED)
+  find_package(qhull CONFIG REQUIRED)
+  find_package(libigl CONFIG REQUIRED)
+  target_link_libraries(probe
+    PUBLIC
+      Eigen3::Eigen
+      nanoflann::nanoflann
+      blend2d::blend2d)
+
   file(GLOB_RECURSE third RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*")
   file(GLOB_RECURSE ospray_sources RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "probe_ospray/src/*.cpp")
   file(GLOB_RECURSE ospray_headers RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "probe_ospray/src/*.h")
@@ -37,7 +41,7 @@ if (probe_PLUGIN_ENABLED)
     target_sources(probe PRIVATE ${ospray_sources} ${ospray_headers} ${ospray_public_headers})
     target_compile_definitions(probe PRIVATE ${EXPORT_NAME}_HAS_OSPRAY)
     target_include_directories(probe PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/probe_ospray/include> "probe_ospray/src")
-    target_link_libraries(probe PUBLIC mmospray)
+    target_link_libraries(probe PRIVATE mmospray Qhull::qhull igl::core igl::common)
   endif ()
 
 endif ()

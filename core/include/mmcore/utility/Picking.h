@@ -116,7 +116,7 @@ private:
     ManipVector_t pending_manipulations;
     bool enabled;
 
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     int prev_fbo = 0;
     std::shared_ptr<glowl::FramebufferObject> fbo = nullptr;
     std::shared_ptr<glowl::GLSLProgram> shader = nullptr;

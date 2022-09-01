@@ -12,7 +12,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractTileView.h"
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include "mpi.h"
 #endif
 
@@ -49,7 +49,7 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         return true;
 #else
         return false;
@@ -173,7 +173,7 @@ private:
 
     bool run_threads;
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     MPI_Comm comm_;
 #else
     int comm_;

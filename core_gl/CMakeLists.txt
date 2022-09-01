@@ -8,8 +8,9 @@ if(BUILD_CORE)
   project(core_gl)
 
   # Add externals.
-  require_external(glowl)
-  require_external(megamol-shader-factory)
+  find_package(glowl CONFIG REQUIRED)
+  find_package(msf CONFIG REQUIRED)
+  target_compile_definitions(msf::msf_static INTERFACE MSF_OPENGL_INCLUDE_GLAD2)
 
   # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.inl")
@@ -22,8 +23,8 @@ if(BUILD_CORE)
   target_include_directories(${PROJECT_NAME}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
-  target_link_libraries(${PROJECT_NAME} 
-    PUBLIC core vislib_gl glowl megamol-shader-factory frontend_resources OpenMP::OpenMP_CXX
+  target_link_libraries(${PROJECT_NAME}
+    PUBLIC core vislib_gl glowl::glowl msf::msf_static frontend_resources OpenMP::OpenMP_CXX
     PRIVATE abstract_frontend_service) # abstract render api used by MegaMolGraph
 
   # Install shaders

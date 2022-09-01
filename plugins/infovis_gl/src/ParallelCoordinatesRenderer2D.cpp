@@ -10,7 +10,7 @@
 #include <array>
 
 #include <glm/gtc/type_ptr.hpp>
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CoreInstance.h"

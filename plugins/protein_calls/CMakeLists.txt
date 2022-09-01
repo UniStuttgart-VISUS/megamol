@@ -6,6 +6,11 @@
 megamol_plugin(protein_calls
   BUILD_DEFAULT ON
   DEPENDS_PLUGINS
-    mmstd
-  DEPENDS_EXTERNALS
-    Eigen)
+    mmstd)
+
+if (protein_calls_PLUGIN_ENABLED)
+  find_package(Eigen3 CONFIG REQUIRED)
+  target_link_libraries(protein_calls
+    PRIVATE
+      Eigen3::Eigen)
+endif ()

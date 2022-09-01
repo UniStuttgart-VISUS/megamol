@@ -23,6 +23,7 @@ std::string const& MEGAMOL_GIT_REMOTE_NAME();
 std::string const& MEGAMOL_GIT_REMOTE_URL();
 std::string const& MEGAMOL_GIT_DIFF();
 int MEGAMOL_GIT_IS_DIRTY();
+std::string const& MEGAMOL_GIT_LAST_COMMIT_DATE();
 std::string const& MEGAMOL_LICENSE();
 std::string const& MEGAMOL_CMAKE_CACHE();
 } // namespace megamol::core::utility::buildinfo

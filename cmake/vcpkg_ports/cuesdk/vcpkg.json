@@ -1,0 +1,17 @@
+{
+  "name": "cuesdk",
+  "version": "3.0.464",
+  "port-version": 0,
+  "description": "The official CUE SDK for C/C++",
+  "homepage": "https://github.com/CorsairOfficial/cue-sdk",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}

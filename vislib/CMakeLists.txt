@@ -5,8 +5,8 @@ if(BUILD_VISLIB)
 
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-  require_external(spdlog)
-  require_external(libpng)
+  find_package(PNG REQUIRED)
+  find_package(spdlog REQUIRED)
 
   # Build vislib
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -17,8 +17,8 @@ if(BUILD_VISLIB)
   add_library(vislib STATIC ${public_header_files} ${header_files} ${source_files})
 
   target_link_libraries(vislib 
-    PRIVATE ${CMAKE_THREAD_LIBS_INIT} libpng
-    PUBLIC spdlog)
+    PRIVATE ${CMAKE_THREAD_LIBS_INIT} PNG::PNG
+    PUBLIC spdlog::spdlog)
 
   # Word size
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)

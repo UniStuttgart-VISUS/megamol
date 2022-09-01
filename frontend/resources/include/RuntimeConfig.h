@@ -53,8 +53,8 @@ struct RuntimeConfig {
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool lua_host_port_retry = true;
     // Different default values for a present openGL
-    // In the WITH_GL not defined case, the user cannot overwrite the default
-#ifdef WITH_GL
+    // In the MEGAMOL_USE_OPENGL not defined case, the user cannot overwrite the default
+#ifdef MEGAMOL_USE_OPENGL
     bool no_opengl = false;
 #else
     bool no_opengl = true;
@@ -104,9 +104,9 @@ struct RuntimeConfig {
 
     enum class VRMode {
         Off,
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
         UnityKolab,
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#endif // MEGAMOL_USE_VR_INTEROP
     };
     VRMode vr_mode = VRMode::Off;
 

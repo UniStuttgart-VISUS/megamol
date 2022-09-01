@@ -38,11 +38,11 @@ megamol::remote::FBOTransmitter2::FBOTransmitter2()
         , handshake_port_slot_{"handshakePort", "Port for zmq handshake"}
         , reconnect_slot_{"reconnect", "Reconnect comm threads"}
         , tiled_slot_("tiledDisplay", "True if rendering on a tiled display")
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
         , toggle_aggregate_slot_{"aggregate", "Toggle whether to aggregate and composite FBOs prior to transmission"}
         , render_comp_img_slot_("renderCompImage", "Renders the complete composited image on the broadcast master")
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
         , aggregate_{false}
         , frame_id_{0}
         , thread_stop_{false}
@@ -75,7 +75,7 @@ megamol::remote::FBOTransmitter2::FBOTransmitter2()
     this->MakeSlotAvailable(&this->target_machine_slot_);
     this->force_localhost_slot_ << new megamol::core::param::BoolParam{false};
     this->MakeSlotAvailable(&this->force_localhost_slot_);
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     this->callRequestMpi.SetCompatibleCall<core::cluster::mpi::MpiCallDescription>();
     this->MakeSlotAvailable(&this->callRequestMpi);
     toggle_aggregate_slot_ << new megamol::core::param::BoolParam{false};
@@ -83,7 +83,7 @@ megamol::remote::FBOTransmitter2::FBOTransmitter2()
     render_comp_img_slot_ << new megamol::core::param::BoolParam{false};
     this->render_comp_img_slot_.SetUpdateCallback(&FBOTransmitter2::renderCompChanged);
     this->MakeSlotAvailable(&render_comp_img_slot_);
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
     reconnect_slot_ << new megamol::core::param::ButtonParam{};
     reconnect_slot_.SetUpdateCallback(&FBOTransmitter2::reconnectCallback);
     this->MakeSlotAvailable(&reconnect_slot_);
@@ -113,7 +113,7 @@ void megamol::remote::FBOTransmitter2::release() {
 
 void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     if (!this->render_comp_img_slot_.Param<core::param::BoolParam>()->Value()) {
         initThreads();
 #if _DEBUG
@@ -181,7 +181,7 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
 #endif
 
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     IceTUByte* icet_col_buf = reinterpret_cast<IceTUByte*>(col_buf.data());
     IceTFloat* icet_depth_buf = reinterpret_cast<IceTFloat*>(depth_buf.data());
 
@@ -218,7 +218,7 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
     }
 
     if ((aggregate_ && mpiRank == 0) || !aggregate_) {
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
 
 
 #if _DEBUG
@@ -261,7 +261,7 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
             this->color_buf_read_->resize(col_buf.size());
             this->depth_buf_read_->resize(depth_buf.size());
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             // std::copy(col_buf.begin(),   col_buf.end(),   this->color_buf_read_->begin());
             memcpy(this->color_buf_read_->data(), icet_col_buf, width * height * col_buf_el_size_);
             // std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
@@ -269,7 +269,7 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
 #else
         std::copy(col_buf.begin(), col_buf.end(), this->color_buf_read_->begin());
         std::copy(depth_buf.begin(), depth_buf.end(), this->depth_buf_read_->begin());
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
 
             this->fbo_msg_read_->frame_id = this->frame_id_.fetch_add(1);
         }
@@ -279,9 +279,9 @@ void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::Abstract
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Swapping Buffer ... Done\n");
 #endif
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     }
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
 }
 
 
@@ -320,7 +320,7 @@ void megamol::remote::FBOTransmitter2::transmitterJob() {
             {
                 std::lock_guard<std::mutex> send_lock(this->buffer_send_guard_);
 
-                //#ifdef WITH_MPI
+                //#ifdef MEGAMOL_USE_MPI
                 //            IceTUByte* icet_col_buf = nullptr;
                 //            IceTFloat* icet_depth_buf = nullptr;
                 //            if (aggregate_) {
@@ -404,7 +404,7 @@ bool megamol::remote::FBOTransmitter2::triggerButtonClicked(megamol::core::param
     // happy trigger finger hit button action happened
     using megamol::core::utility::log::Log;
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     initIceT();
 #endif
 
@@ -564,7 +564,7 @@ bool megamol::remote::FBOTransmitter2::extractBackgroundColor(std::array<float, 
 
 bool megamol::remote::FBOTransmitter2::initMPI() {
     bool retval = false;
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     if (this->mpi_comm_ == MPI_COMM_NULL) {
         VLTRACE(vislib::Trace::LEVEL_INFO, "FBOTransmitter2: Need to initialize MPI\n");
         auto c = this->callRequestMpi.CallAs<core::cluster::mpi::MpiCall>();
@@ -596,7 +596,7 @@ bool megamol::remote::FBOTransmitter2::initMPI() {
 
     /* Determine success of the whole operation. */
     retval = (this->mpi_comm_ != MPI_COMM_NULL);
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
     return retval;
 }
 
@@ -614,13 +614,13 @@ bool megamol::remote::FBOTransmitter2::initThreads() {
 #ifdef _DEBUG
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting ...\n");
 #endif
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 
         if ((aggregate_ && mpiRank == 0) || !aggregate_) {
 #ifdef _DEBUG
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connecting rank %d\n", mpiRank);
 #endif
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
             auto const address =
                 std::string(T2A(this->address_slot_.Param<megamol::core::param::StringParam>()->Value()));
             auto const target =
@@ -715,9 +715,9 @@ bool megamol::remote::FBOTransmitter2::initThreads() {
 
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("FBOTransmitter2: Connection established.\n");
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         }
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
         connected_ = true;
     }
 
@@ -732,12 +732,12 @@ bool megamol::remote::FBOTransmitter2::shutdownThreads() {
     if (this->transmitter_thread_.joinable())
         this->transmitter_thread_.join();
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     if (useMpi) {
         icetDestroyMPICommunicator(icet_comm_);
         icetDestroyContext(icet_ctx_);
     }
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
 
     connected_ = false;
     return true;
@@ -764,7 +764,7 @@ bool megamol::remote::FBOTransmitter2::renderCompChanged(core::param::ParamSlot&
 }
 
 void megamol::remote::FBOTransmitter2::initIceT() {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 
     useMpi = initMPI();
     aggregate_ = this->toggle_aggregate_slot_.Param<megamol::core::param::BoolParam>()->Value();
@@ -829,5 +829,5 @@ void megamol::remote::FBOTransmitter2::initIceT() {
             "FBOTransmitter2: Initialized IceT at rank %d\n", mpiRank);
 #endif
     }
-#endif // WITH_MPI
+#endif // MEGAMOL_USE_MPI
 }

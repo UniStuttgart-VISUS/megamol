@@ -7,7 +7,7 @@
 #include "mmstd/data/AbstractDataWriter.h"
 #include "vislib/String.h"
 #include <adios2.h>
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include <mpi.h>
 #endif
 
@@ -76,7 +76,7 @@ private:
     bool initMPI();
     vislib::StringA getCommandLine(void);
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     MPI_Comm mpi_comm_ = MPI_COMM_NULL;
     bool useMpi = false;
     int mpiRank = -1, mpiSize = -1;

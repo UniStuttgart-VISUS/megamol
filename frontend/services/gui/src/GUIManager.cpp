@@ -544,11 +544,7 @@ bool GUIManager::OnMouseMove(double x, double y) {
     ImGuiIO& io = ImGui::GetIO();
     io.MousePos = ImVec2(static_cast<float>(x), static_cast<float>(y));
 
-    auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
-                      ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
-
-    // Always consumed if any imgui windows is hovered.
-    bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    bool consumed = io.WantCaptureMouse;
     if (!consumed) {
         consumed = this->picking_buffer.ProcessMouseMove(x, y);
     }
@@ -569,13 +565,9 @@ bool GUIManager::OnMouseButton(
     auto buttonIndex = static_cast<size_t>(button);
     ImGuiIO& io = ImGui::GetIO();
 
-    auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
-                      ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
-
     io.MouseDown[buttonIndex] = down;
 
-    // Always consumed if any imgui windows is hovered.
-    bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    bool consumed = io.WantCaptureMouse;
     if (!consumed) {
         consumed = this->picking_buffer.ProcessMouseClick(button, action, mods);
     }
@@ -595,11 +587,7 @@ bool GUIManager::OnMouseScroll(double dx, double dy) {
     io.MouseWheelH += (float)dx;
     io.MouseWheel += (float)dy;
 
-    auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
-                      ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
-
-    // Always consumed if any imgui windows is hovered.
-    bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    bool consumed = io.WantCaptureMouse;
     return consumed;
 }
 
@@ -667,15 +655,14 @@ void megamol::gui::GUIManager::SetClipboardFunc(const char* (*get_clipboard_func
 }
 
 
-bool megamol::gui::GUIManager::GraphSynchronization(
+bool megamol::gui::GUIManager::SynchronizeGraphs(
     megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
 
     // Synchronization is not required when no gui element is visible (?)
     if (!this->gui_state.gui_visible)
         return true;
 
-    if (this->win_configurator_ptr->GetGraphCollection().SyncRunningGUIGraphWithCoreGraph(
-            megamol_graph, core_instance)) {
+    if (this->win_configurator_ptr->GetGraphCollection().SynchronizeGraphs(megamol_graph, core_instance)) {
 
         // Check for new GUI state
         if (!this->gui_state.new_gui_state.empty()) {
@@ -1320,7 +1307,18 @@ void megamol::gui::GUIManager::draw_popups() {
         const std::string gitstr = std::string("Git-Hub: ") + github_link;
         const std::string imguistr = ("Dear ImGui - Version ") + std::string(IMGUI_VERSION) + ("\n");
         const std::string imguigitstr = std::string("Git-Hub: ") + imgui_link;
-        const std::string about = "Copyright (C) 2009-2020 by University of Stuttgart (VISUS).\nAll rights reserved.";
+        std::string commit_date = megamol::core::utility::buildinfo::MEGAMOL_GIT_LAST_COMMIT_DATE();
+        std::string year;
+        if (commit_date.empty()) {
+            // Backup when commit date is no available via build script info
+            std::time_t t = std::time(0);
+            std::tm* now = std::localtime(&t);
+            year = std::to_string(now->tm_year + 1900);
+        } else {
+            year = commit_date.substr(0, 4);
+        }
+        const std::string about =
+            "Copyright (C) 2009-" + year + " by University of Stuttgart (VISUS).\nAll rights reserved.";
 
         ImGui::TextUnformatted(mmstr.c_str());
 
