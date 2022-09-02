@@ -1977,6 +1977,7 @@ bool megamol::gui::GraphCollection::change_running_graph(ImGuiID graph_uid) {
                         running_graph->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                     }
                     if (!running_graph->ModuleExists(module_ptr->FullName())) {
+                        // Do not delete module if module with same full name exists in new running graph (prevent double deletion and re-creation of module)
                         running_graph->PushSyncQueue(Graph::QueueAction::DELETE_MODULE, queue_data);
                     }
                     // Reset pointers to core parameters
@@ -1992,9 +1993,7 @@ bool megamol::gui::GraphCollection::change_running_graph(ImGuiID graph_uid) {
                     Graph::QueueData queue_data;
                     queue_data.name_id = module_ptr->FullName();
                     queue_data.class_name = module_ptr->ClassName();
-                    if (!last_running_graph->ModuleExists(module_ptr->FullName())) {
-                        running_graph->PushSyncQueue(Graph::QueueAction::ADD_MODULE, queue_data);
-                    }
+                    running_graph->PushSyncQueue(Graph::QueueAction::ADD_MODULE, queue_data);
                     if (module_ptr->IsGraphEntry()) {
                         running_graph->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
                     }
