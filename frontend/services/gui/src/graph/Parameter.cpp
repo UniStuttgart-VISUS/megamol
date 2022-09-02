@@ -524,9 +524,11 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
     /// XXX Prioritizing currently changed value from GUI
     /// Do not read param value from core param if gui param has already updated value
     if (out_param.IsValueDirty()) {
+#ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Ignoring core parameter value. More up to date "
                                                                "value of GUI parameter available. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
+#endif //GUI_VERBOSE
         /// Error tolerance to ignore redundant changes that have been triggered by the GUI
         return true;
     }
