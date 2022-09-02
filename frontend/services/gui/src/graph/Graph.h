@@ -107,7 +107,9 @@ public:
     std::string GetFilename() const;
     void SetFilename(const std::string& filename, bool saved_filename);
 
-    bool ToggleGraphEntry();
+    bool ToggleGraphEntry(bool use_queue = true);
+    bool AddGraphEntry(const ModulePtr_t& module_ptr, const std::string& name, bool use_queue = true);
+    bool RemoveGraphEntry(const ModulePtr_t& module_ptr, bool use_queue = true);
 
     bool PushSyncQueue(QueueAction in_action, const QueueData& in_data);
     bool PopSyncQueue(QueueAction& out_action, QueueData& out_data);
@@ -171,7 +173,6 @@ public:
 
     /// TODO get set module/call labels
     /// TODO get/set call coloring
-
 
     void SetLayoutGraph(bool layout = true) {
         this->gui_graph_layout = ((layout) ? (1) : (0));

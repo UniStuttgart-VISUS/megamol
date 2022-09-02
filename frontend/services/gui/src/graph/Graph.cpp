@@ -988,7 +988,7 @@ bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_full_name
 }
 
 
-bool Graph::ToggleGraphEntry() {
+bool Graph::ToggleGraphEntry(bool use_queue) {
 
     auto module_graph_entry_iter = this->modules.begin();
     // Search for first graph entry and set next view to graph entry (= graph entry point)
@@ -996,7 +996,7 @@ bool Graph::ToggleGraphEntry() {
         if ((*module_iter)->IsView() && (*module_iter)->IsGraphEntry()) {
             // Remove all graph entries
             (*module_iter)->SetGraphEntryName("");
-            if (this->IsRunning()) {
+            if (this->IsRunning() && use_queue) {
                 QueueData queue_data;
                 queue_data.name_id = (*module_iter)->FullName();
                 this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
@@ -1007,12 +1007,12 @@ bool Graph::ToggleGraphEntry() {
             }
         }
     }
-    if ((module_graph_entry_iter == this->modules.begin()) || (module_graph_entry_iter != this->modules.end())) {
+    if (module_graph_entry_iter != this->modules.end()) {
         // Search for next graph entry
         for (auto module_iter = module_graph_entry_iter; module_iter != this->modules.end(); module_iter++) {
             if ((*module_iter)->IsView()) {
                 (*module_iter)->SetGraphEntryName(this->GenerateUniqueGraphEntryName());
-                if (this->IsRunning()) {
+                if (this->IsRunning() && use_queue) {
                     QueueData queue_data;
                     queue_data.name_id = (*module_iter)->FullName();
                     this->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
@@ -1020,6 +1020,50 @@ bool Graph::ToggleGraphEntry() {
                 break;
             }
         }
+    }
+    return true;
+}
+
+
+bool megamol::gui::Graph::AddGraphEntry(const ModulePtr_t& module_ptr, const std::string& name, bool use_queue) {
+
+    if (module_ptr == nullptr)
+        return false;
+
+    // Remove all existing graph entries
+    for (auto mod_ptr : this->modules) {
+        mod_ptr->SetGraphEntryName("");
+        if (this->IsRunning() && use_queue) {
+            QueueData queue_data;
+            queue_data.name_id = mod_ptr->FullName();
+            this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
+        }
+    }
+
+    if (module_ptr->IsView()) {
+        module_ptr->SetGraphEntryName(name);
+        if (this->IsRunning() && use_queue) {
+            QueueData queue_data;
+            queue_data.name_id = module_ptr->FullName();
+            this->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+        }
+    }
+
+    return true;
+}
+
+
+bool megamol::gui::Graph::RemoveGraphEntry(const ModulePtr_t& module_ptr, bool use_queue) {
+
+    if (module_ptr == nullptr)
+        return false;
+    // Remove graph entry
+
+    module_ptr->SetGraphEntryName("");
+    if (this->IsRunning() && use_queue) {
+        QueueData queue_data;
+        queue_data.name_id = module_ptr->FullName();
+        this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
     }
     return true;
 }
