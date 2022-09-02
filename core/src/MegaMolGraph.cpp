@@ -403,6 +403,14 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string module) {
     module_it->isGraphEntryPoint = true;
     log("set graph entry point: " + moduleName);
 
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.EnableEntryPoint(*module_it)) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process enabling entry point " +
+                      module_it->request.id);
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -430,6 +438,14 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string module) {
 
     module_it->isGraphEntryPoint = false;
     log("remove graph entry point: " + moduleName);
+
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.DisableEntryPoint(*module_it)) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process disabling entry point " +
+                      module_it->request.id);
+            return false;
+        }
+    }
 
     return true;
 }

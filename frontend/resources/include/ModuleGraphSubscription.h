@@ -94,6 +94,16 @@ public:
      * The call still exists and will be deleted soon after execution of this callback.
      */
     std::function<bool(core::CallInstance_t const&)> DeleteCall = [](auto const&) { return true; };
+
+    /**
+     * Informs about a graph module (view) becoming a graph entry point, a graph module that is poked for rendering
+     */
+    std::function<bool(core::ModuleInstance_t const&)> EnableEntryPoint = [](auto const&) { return true; };
+
+    /**
+     * Informs about a graph module (view) becoming disabled as an entry point
+     */
+    std::function<bool(core::ModuleInstance_t const&)> DisableEntryPoint = [](auto const&) { return true; };
 };
 
 struct MegaMolGraph_SubscriptionRegistry {
