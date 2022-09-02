@@ -314,9 +314,6 @@ private:
         LightColors,
     };
 
-    /** ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512) */
-    enum GuiTextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
-
     /** The global state (for settings to be applied before ImGui::Begin). */
     struct StateBuffer {
         bool gui_visible;      // Flag indicating whether GUI is completely disabled

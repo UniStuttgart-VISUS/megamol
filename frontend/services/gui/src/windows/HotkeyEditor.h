@@ -44,7 +44,8 @@ private:
     StringSearchWidget search_widget;
     HoverToolTip tooltip_widget;
 
-    bool is_any_key_pressed();
+    bool is_any_key_down();
+    bool is_key_modifier(ImGuiKey k);
 
     megamol::frontend_resources::CommandRegistry* command_registry_ptr;
     megamol::gui::WindowCollection* window_collection_ptr;

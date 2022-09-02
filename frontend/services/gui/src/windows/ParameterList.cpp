@@ -35,7 +35,7 @@ ParameterList::ParameterList(const std::string& window_name, AbstractWindow::Win
     this->win_config.show = true;
     this->win_config.size = ImVec2(400.0f * megamol::gui::gui_scaling.Get(), 500.0f * megamol::gui::gui_scaling.Get());
     this->win_config.reset_size = this->win_config.size;
-    this->win_config.flags = ImGuiWindowFlags_NoScrollbar;
+    this->win_config.flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs;
 
     if (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
         if (initial_module_uid != GUI_INVALID_ID) {

@@ -28,7 +28,7 @@ megamol::gui::HotkeyEditor::HotkeyEditor(const std::string& window_name)
     // Configure HOTKEY EDITOR Window
     this->win_config.size = ImVec2(0.0f * megamol::gui::gui_scaling.Get(), 0.0f * megamol::gui::gui_scaling.Get());
     this->win_config.reset_size = this->win_config.size;
-    this->win_config.flags = ImGuiWindowFlags_None;
+    this->win_config.flags = ImGuiWindowFlags_NoNavInputs;
     this->win_config.hotkey =
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F6, core::view::Modifier::NONE);
 }
@@ -179,26 +179,28 @@ bool megamol::gui::HotkeyEditor::Draw() {
                         ImGui::TextUnformatted("Press new hotkey to overwrite existing one\n[Press ESC to abort]");
                         if (this->pending_hotkey_assignment == 0) {
                             // First: Wait for first user key press
-                            if (is_any_key_pressed()) {
+                            if (this->is_any_key_down()) {
                                 this->pending_hotkey_assignment = 1;
                             }
                         } else if (this->pending_hotkey_assignment == 1) {
                             // Second: Collect all pressed keys
                             ImGuiIO& io = ImGui::GetIO();
-                            for (int i = 0; i < 337; i++) { // Exclude modifiers (Total range of array is 512. See
-                                                            // KeysDown[512] in imgui.h) and see KeyboardMouseInput.h)
-                                if (io.KeysDown[i]) {
-                                    this->pending_hotkey.key = static_cast<megamol::frontend_resources::Key>(i);
+                            for (int i = static_cast<int>(ImGuiKey_NamedKey_BEGIN);
+                                 i < static_cast<int>(ImGuiKey_NamedKey_END); i++) {
+                                auto imgui_key = static_cast<ImGuiKey>(i);
+                                if (ImGui::IsKeyDown(imgui_key) && !this->is_key_modifier(imgui_key)) {
+                                    this->pending_hotkey.key = gui_utils::ImGuiKeyToGlfwKey(i);
                                     this->pending_hotkey.mods = core::view::Modifier::NONE;
-                                    if (io.KeyAlt)
+                                    if (ImGui::IsKeyDown(ImGuiKey_ModAlt))
                                         this->pending_hotkey.mods |= core::view::Modifier::ALT;
-                                    if (io.KeyCtrl)
+                                    if (ImGui::IsKeyDown(ImGuiKey_ModCtrl))
                                         this->pending_hotkey.mods |= core::view::Modifier::CTRL;
-                                    if (io.KeyShift)
+                                    if (ImGui::IsKeyDown(ImGuiKey_ModShift))
                                         this->pending_hotkey.mods |= core::view::Modifier::SHIFT;
+                                    break;
                                 }
                             }
-                            if (!is_any_key_pressed()) {
+                            if (!this->is_any_key_down()) {
                                 this->pending_hotkey_assignment = 2;
                             }
                         } else if (this->pending_hotkey_assignment == 2) {
@@ -225,7 +227,7 @@ bool megamol::gui::HotkeyEditor::Draw() {
                             }
                         }
 
-                        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+                        if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                             close_popup();
                         }
                         ImGui::EndPopup();
@@ -307,14 +309,25 @@ void megamol::gui::HotkeyEditor::SpecificStateToJSON(nlohmann::json& inout_json)
 }
 
 
-bool megamol::gui::HotkeyEditor::is_any_key_pressed() {
+bool megamol::gui::HotkeyEditor::is_any_key_down() {
 
     ImGuiIO& io = ImGui::GetIO();
-    bool regular_key_pressed = false;
-    for (auto& k : io.KeysDown) {
-        if (k) {
-            regular_key_pressed = true;
+    for (int i = static_cast<int>(ImGuiKey_NamedKey_BEGIN); i < static_cast<int>(ImGuiKey_NamedKey_END); i++) {
+        if (ImGui::IsKeyDown(static_cast<ImGuiKey>(i))) {
+            return true;
         }
     }
-    return (regular_key_pressed || io.KeyAlt || io.KeyCtrl || io.KeyShift);
+    return false;
+}
+
+
+bool megamol::gui::HotkeyEditor::is_key_modifier(ImGuiKey k) {
+
+    if ((k == ImGuiKey_LeftCtrl) || (k == ImGuiKey_LeftShift) || (k == ImGuiKey_LeftAlt) || (k == ImGuiKey_LeftSuper) ||
+        (k == ImGuiKey_RightCtrl) || (k == ImGuiKey_RightShift) || (k == ImGuiKey_RightAlt) ||
+        (k == ImGuiKey_RightSuper) || (k == ImGuiKey_ModCtrl) || (k == ImGuiKey_ModShift) || (k == ImGuiKey_ModAlt) ||
+        (k == ImGuiKey_ModSuper)) {
+        return true;
+    }
+    return false;
 }
