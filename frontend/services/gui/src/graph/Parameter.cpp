@@ -527,7 +527,8 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Ignoring core parameter value. More up to date "
                                                                "value of GUI parameter available. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        /// Error tolerance to ignore redundant changes that have been triggered by the GUI
+        return true;
     }
 
     bool type_error = false;
