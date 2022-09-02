@@ -69,13 +69,12 @@ public:
     };
 
     /**
-     * Notifies subscriber about change of a paramter value, providing the parameter, its new value, and the old value.
+     * Notifies subscriber about change of a paramter value, providing the parameter and its new value.
      * Gets called after parameter value changed to new value.
      * All ParamSlotPtr values are non-null.
      */
-    std::function<bool(
-        ParamSlotPtr const& /*param*/, std::string const& /*old_value*/, std::string const& /*new_value*/)>
-        ParameterChanged = [](auto const&, auto const&, auto const&) { return true; };
+    std::function<bool(ParamSlotPtr const& /*param*/, std::string const& /*new_value*/)> ParameterChanged =
+        [](auto const&, auto const&) { return true; };
 
     /**
      * Informs about renaming of a module.

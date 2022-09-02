@@ -286,9 +286,9 @@ public:
     }
     bool NotifyRunningGraph_ParameterChanged(
         megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
-        std::string const& old_value, std::string const& new_value) {
+        std::string const& new_value) {
         return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_ParameterChanged(
-            param_slot, old_value, new_value);
+            param_slot, new_value);
     }
     bool NotifyRunningGraph_AddCall(core::CallInstance_t const& call_inst) {
         return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_AddCall(call_inst);

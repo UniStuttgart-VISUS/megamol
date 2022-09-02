@@ -1715,7 +1715,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_RemoveParameters(
 
 
 bool megamol::gui::GraphCollection::NotifyRunningGraph_ParameterChanged(
-    megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot, std::string const& old_value,
+    megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
     std::string const& new_value) {
 
     if (!this->initialized_syncing) {

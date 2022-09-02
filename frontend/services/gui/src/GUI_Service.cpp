@@ -397,9 +397,8 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
         };
     gui_subscription.ParameterChanged =
         [&](megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
-            std::string const& old_value, std::string const& new_value) {
-            return m_gui->NotifyRunningGraph_ParameterChanged(param_slot, old_value, new_value);
-        };
+            std::string const& new_value) { return m_gui->NotifyRunningGraph_ParameterChanged(param_slot, new_value); };
+
     gui_subscription.AddCall = [&](core::CallInstance_t const& call_inst) {
         return m_gui->NotifyRunningGraph_AddCall(call_inst);
     };
