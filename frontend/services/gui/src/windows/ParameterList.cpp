@@ -107,7 +107,7 @@ bool ParameterList::Draw() {
     if (auto graph_ptr = this->win_configurator_ptr->GetGraphCollection().GetRunningGraph()) {
 
         // Get module groups
-        std::map<std::string, std::vector<ModulePtr_t>> group_map;
+        std::map<ImGuiID, std::vector<ModulePtr_t>> group_map;
         for (auto& module_ptr : graph_ptr->Modules()) {
             bool skip = false;
             std::string module_label = module_ptr->FullName();
@@ -124,27 +124,33 @@ bool ParameterList::Draw() {
             }
             if (!skip) {
                 auto group_name = module_ptr->GroupName();
+                auto group_id = module_ptr->GroupUID();
                 if (!group_name.empty()) {
-                    group_map["::" + group_name].emplace_back(module_ptr);
+                    group_map[group_id].emplace_back(module_ptr);
                 } else {
-                    group_map[""].emplace_back(module_ptr);
+                    group_map[GUI_INVALID_ID].emplace_back(module_ptr);
                 }
             }
         }
         for (auto& group : group_map) {
             std::string group_search_string = this->search_widget.GetSearchString();
             bool indent = false;
-            bool group_header_open = group.first.empty();
+            bool group_header_open = (group.first == GUI_INVALID_ID);
             if (!group_header_open) {
-                group_header_open = gui_utils::GroupHeader(
-                    megamol::gui::HeaderType::MODULE_GROUP, group.first, group_search_string, override_header_state);
-                indent = true;
-                ImGui::Indent();
+                if (auto group_ptr = graph_ptr->GetGroup(group.first)) {
+                    ImGui::PushID(group.first);
+                    group_header_open = gui_utils::GroupHeader(
+                        megamol::gui::HeaderType::MODULE_GROUP, group_ptr->Name(), group_search_string, override_header_state);
+                    indent = true;
+                    ImGui::Indent();
+                    ImGui::PopID();
+                }
             }
             if (group_header_open) {
                 for (auto& module_ptr : group.second) {
                     std::string module_search_string = group_search_string;
                     std::string module_label = module_ptr->FullName();
+                    ImGui::PushID(module_ptr->UID());
 
                     // Draw module header
                     bool module_header_open = gui_utils::GroupHeader(
@@ -190,6 +196,7 @@ bool ParameterList::Draw() {
                         module_ptr->DrawParameters(module_search_string, this->win_extended_mode, true,
                             Parameter::WidgetScope::LOCAL, this->win_tfeditor_ptr, override_header_state, nullptr);
                     }
+                    ImGui::PopID();
                 }
             }
             if (indent) {
