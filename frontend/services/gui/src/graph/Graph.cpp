@@ -1025,8 +1025,7 @@ bool Graph::ToggleGraphEntry(bool use_queue) {
 }
 
 
-bool megamol::gui::Graph::AddGraphEntry(
-    const ModulePtr_t& module_ptr, const std::string& name, bool use_queue) {
+bool megamol::gui::Graph::AddGraphEntry(const ModulePtr_t& module_ptr, const std::string& name, bool use_queue) {
 
     if (module_ptr == nullptr)
         return false;
@@ -2503,8 +2502,7 @@ void megamol::gui::Graph::draw_canvas(ImVec2 position, ImVec2 size, GraphState_t
         // Zooming (Mouse Wheel) + Reset
         float mouse_wheel_value = io.MouseWheel;
         if (((isfinite(mouse_wheel_value)) && (mouse_wheel_value != 0)) || this->gui_reset_zooming ||
-            this->gui_increment_zooming ||
-            this->gui_decrement_zooming) {
+            this->gui_increment_zooming || this->gui_decrement_zooming) {
 
             float last_zooming = this->gui_graph_state.canvas.zooming;
             // Center mouse position as init value

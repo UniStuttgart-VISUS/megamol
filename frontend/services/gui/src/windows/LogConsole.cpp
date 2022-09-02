@@ -416,7 +416,8 @@ bool megamol::gui::LogConsole::Draw() {
         hint = "Parameter(s): " + this->input_shared_data->param_hint;
     }
 
-    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(hint.c_str()).x - (2.0f * style.ItemSpacing.x));
+    ImGui::PushItemWidth(
+        ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(hint.c_str()).x - (2.0f * style.ItemSpacing.x));
 
     ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue |
                                            ImGuiInputTextFlags_CallbackCompletion |
@@ -470,8 +471,7 @@ bool megamol::gui::LogConsole::Draw() {
                 ImGui::Selectable(this->input_shared_data->autocomplete_candidates[i].first.c_str(),
                     (i == this->selected_candidate_index),
                     ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_SelectOnNav);
-            if (selected_candidate ||
-                ((i == this->selected_candidate_index) && ImGui::IsKeyPressed(ImGuiKey_Enter))) {
+            if (selected_candidate || ((i == this->selected_candidate_index) && ImGui::IsKeyPressed(ImGuiKey_Enter))) {
                 this->input_buffer = this->input_shared_data->autocomplete_candidates[i].first;
                 this->input_buffer.append("()");
                 this->input_shared_data->autocomplete_candidates.clear();

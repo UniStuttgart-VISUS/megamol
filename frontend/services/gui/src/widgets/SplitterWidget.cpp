@@ -18,7 +18,8 @@ megamol::gui::SplitterWidget::SplitterWidget() : splitter_last_width(0.0f) {}
 
 
 bool megamol::gui::SplitterWidget::Widget(const std::string& idstr, bool vertical, float length,
-    FixedSplitterSide fixed_side, float& inout_range_left_top, float& inout_range_right_bottom, ImVec2 window_cursor_pos) {
+    FixedSplitterSide fixed_side, float& inout_range_left_top, float& inout_range_right_bottom,
+    ImVec2 window_cursor_pos) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
 
@@ -49,7 +50,7 @@ bool megamol::gui::SplitterWidget::Widget(const std::string& idstr, bool vertica
                  (vertical ? ImVec2(inout_range_left_top + 1.0f, 0.0f) : ImVec2(0.0f, inout_range_left_top + 1.0f));
     } else if (fixed_side == SplitterWidget::FixedSplitterSide::RIGHT_BOTTOM) {
         bb.Min = window_cursor_pos + (vertical ? ImVec2((split_range - inout_range_right_bottom) + 1.0f, 0.0f)
-                                                  : ImVec2(0.0f, (split_range - inout_range_right_bottom) + 1.0f));
+                                               : ImVec2(0.0f, (split_range - inout_range_right_bottom) + 1.0f));
     }
     bb.Max = bb.Min + ImGui::CalcItemSize(vertical ? ImVec2(splitter_width / 2.0f, splitter_length)
                                                    : ImVec2(splitter_length, splitter_width / 2.0f),

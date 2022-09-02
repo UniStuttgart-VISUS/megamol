@@ -683,10 +683,10 @@ bool GUIManager::create_context() {
 
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
-    io.IniSavingRate = 5.0f;            // in seconds - unused
-    io.IniFilename = nullptr;           // "imgui.ini" - disabled, using own window settings profile
-    io.LogFilename = nullptr;           // "imgui_log.txt" - disabled
-    io.FontAllowUserScaling = false;    // disable font scaling using ctrl + mouse wheel
+    io.IniSavingRate = 5.0f;         // in seconds - unused
+    io.IniFilename = nullptr;        // "imgui.ini" - disabled, using own window settings profile
+    io.LogFilename = nullptr;        // "imgui_log.txt" - disabled
+    io.FontAllowUserScaling = false; // disable font scaling using ctrl + mouse wheel
     /// XXX IO io.ConfigFlags |=  ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation, required for log console -> possible conflict with param hotkeys. io.WantCaptureKeyboard in GUIManager::OnKey blocks all hokeys when GUI window is selected..
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors; // GetMouseCursor() is processed in frontend service
 

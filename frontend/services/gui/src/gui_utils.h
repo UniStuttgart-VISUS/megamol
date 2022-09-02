@@ -694,7 +694,7 @@ public:
         }
     }
 
-    
+
     static megamol::frontend_resources::Key ImGuiKeyToGlfwKey(ImGuiKey key) {
         switch (key) {
         case ImGuiKey_Tab:
@@ -703,210 +703,210 @@ public:
             return megamol::frontend_resources::Key::KEY_LEFT;
         case ImGuiKey_RightArrow:
             return megamol::frontend_resources::Key::KEY_RIGHT;
-        case ImGuiKey_UpArrow: return
-             megamol::frontend_resources::Key::KEY_UP;
+        case ImGuiKey_UpArrow:
+            return megamol::frontend_resources::Key::KEY_UP;
         case ImGuiKey_DownArrow:
-             return megamol::frontend_resources::Key::KEY_DOWN;
+            return megamol::frontend_resources::Key::KEY_DOWN;
         case ImGuiKey_PageUp:
-             return megamol::frontend_resources::Key::KEY_PAGE_UP;
+            return megamol::frontend_resources::Key::KEY_PAGE_UP;
         case ImGuiKey_PageDown:
-             return megamol::frontend_resources::Key::KEY_PAGE_DOWN;
+            return megamol::frontend_resources::Key::KEY_PAGE_DOWN;
         case ImGuiKey_Home:
-             return megamol::frontend_resources::Key::KEY_HOME;
+            return megamol::frontend_resources::Key::KEY_HOME;
         case ImGuiKey_End:
-             return megamol::frontend_resources::Key::KEY_END;
+            return megamol::frontend_resources::Key::KEY_END;
         case ImGuiKey_Insert:
-             return megamol::frontend_resources::Key::KEY_INSERT;
+            return megamol::frontend_resources::Key::KEY_INSERT;
         case ImGuiKey_Delete:
-             return megamol::frontend_resources::Key::KEY_DELETE;
+            return megamol::frontend_resources::Key::KEY_DELETE;
         case ImGuiKey_Backspace:
-             return megamol::frontend_resources::Key::KEY_BACKSPACE;
+            return megamol::frontend_resources::Key::KEY_BACKSPACE;
         case ImGuiKey_Space:
-             return megamol::frontend_resources::Key::KEY_SPACE;
+            return megamol::frontend_resources::Key::KEY_SPACE;
         case ImGuiKey_Enter:
-             return megamol::frontend_resources::Key::KEY_ENTER;
+            return megamol::frontend_resources::Key::KEY_ENTER;
         case ImGuiKey_Escape:
-             return megamol::frontend_resources::Key::KEY_ESCAPE;
+            return megamol::frontend_resources::Key::KEY_ESCAPE;
         case ImGuiKey_Apostrophe:
-             return megamol::frontend_resources::Key::KEY_APOSTROPHE;
+            return megamol::frontend_resources::Key::KEY_APOSTROPHE;
         case ImGuiKey_Comma:
-             return megamol::frontend_resources::Key::KEY_COMMA;
+            return megamol::frontend_resources::Key::KEY_COMMA;
         case ImGuiKey_Minus:
-             return megamol::frontend_resources::Key::KEY_MINUS;
+            return megamol::frontend_resources::Key::KEY_MINUS;
         case ImGuiKey_Period:
-             return megamol::frontend_resources::Key::KEY_PERIOD;
+            return megamol::frontend_resources::Key::KEY_PERIOD;
         case ImGuiKey_Slash:
-             return megamol::frontend_resources::Key::KEY_SLASH;
+            return megamol::frontend_resources::Key::KEY_SLASH;
         case ImGuiKey_Semicolon:
-             return megamol::frontend_resources::Key::KEY_SEMICOLON;
+            return megamol::frontend_resources::Key::KEY_SEMICOLON;
         case ImGuiKey_Equal:
-             return megamol::frontend_resources::Key::KEY_EQUAL;
+            return megamol::frontend_resources::Key::KEY_EQUAL;
         case ImGuiKey_LeftBracket:
-             return megamol::frontend_resources::Key::KEY_LEFT_BRACKET;
+            return megamol::frontend_resources::Key::KEY_LEFT_BRACKET;
         case ImGuiKey_Backslash:
-             return megamol::frontend_resources::Key::KEY_BACKSLASH;
+            return megamol::frontend_resources::Key::KEY_BACKSLASH;
         case ImGuiKey_RightBracket:
-             return megamol::frontend_resources::Key::KEY_RIGHT_BRACKET;
+            return megamol::frontend_resources::Key::KEY_RIGHT_BRACKET;
         case ImGuiKey_GraveAccent:
-             return megamol::frontend_resources::Key::KEY_GRAVE_ACCENT;
+            return megamol::frontend_resources::Key::KEY_GRAVE_ACCENT;
         case ImGuiKey_CapsLock:
-             return megamol::frontend_resources::Key::KEY_CAPS_LOCK;
+            return megamol::frontend_resources::Key::KEY_CAPS_LOCK;
         case ImGuiKey_ScrollLock:
-             return megamol::frontend_resources::Key::KEY_SCROLL_LOCK;
+            return megamol::frontend_resources::Key::KEY_SCROLL_LOCK;
         case ImGuiKey_NumLock:
-             return megamol::frontend_resources::Key::KEY_NUM_LOCK;
+            return megamol::frontend_resources::Key::KEY_NUM_LOCK;
         case ImGuiKey_PrintScreen:
-             return megamol::frontend_resources::Key::KEY_PRINT_SCREEN;
+            return megamol::frontend_resources::Key::KEY_PRINT_SCREEN;
         case ImGuiKey_Pause:
-             return megamol::frontend_resources::Key::KEY_PAUSE;
+            return megamol::frontend_resources::Key::KEY_PAUSE;
         case ImGuiKey_Keypad0:
-             return megamol::frontend_resources::Key::KEY_KP_0;
+            return megamol::frontend_resources::Key::KEY_KP_0;
         case ImGuiKey_Keypad1:
-             return megamol::frontend_resources::Key::KEY_KP_1;
+            return megamol::frontend_resources::Key::KEY_KP_1;
         case ImGuiKey_Keypad2:
-             return megamol::frontend_resources::Key::KEY_KP_2;
+            return megamol::frontend_resources::Key::KEY_KP_2;
         case ImGuiKey_Keypad3:
-             return megamol::frontend_resources::Key::KEY_KP_3;
+            return megamol::frontend_resources::Key::KEY_KP_3;
         case ImGuiKey_Keypad4:
-             return megamol::frontend_resources::Key::KEY_KP_4;
+            return megamol::frontend_resources::Key::KEY_KP_4;
         case ImGuiKey_Keypad5:
-             return megamol::frontend_resources::Key::KEY_KP_5;
+            return megamol::frontend_resources::Key::KEY_KP_5;
         case ImGuiKey_Keypad6:
-             return megamol::frontend_resources::Key::KEY_KP_6;
+            return megamol::frontend_resources::Key::KEY_KP_6;
         case ImGuiKey_Keypad7:
-             return megamol::frontend_resources::Key::KEY_KP_7;
+            return megamol::frontend_resources::Key::KEY_KP_7;
         case ImGuiKey_Keypad8:
-             return megamol::frontend_resources::Key::KEY_KP_8;
+            return megamol::frontend_resources::Key::KEY_KP_8;
         case ImGuiKey_Keypad9:
-             return megamol::frontend_resources::Key::KEY_KP_9;
+            return megamol::frontend_resources::Key::KEY_KP_9;
         case ImGuiKey_KeypadDecimal:
-             return megamol::frontend_resources::Key::KEY_KP_DECIMAL;
+            return megamol::frontend_resources::Key::KEY_KP_DECIMAL;
         case ImGuiKey_KeypadDivide:
-             return megamol::frontend_resources::Key::KEY_KP_DIVIDE;
+            return megamol::frontend_resources::Key::KEY_KP_DIVIDE;
         case ImGuiKey_KeypadMultiply:
-             return megamol::frontend_resources::Key::KEY_KP_MULTIPLY;
+            return megamol::frontend_resources::Key::KEY_KP_MULTIPLY;
         case ImGuiKey_KeypadSubtract:
-             return megamol::frontend_resources::Key::KEY_KP_SUBTRACT;
+            return megamol::frontend_resources::Key::KEY_KP_SUBTRACT;
         case ImGuiKey_KeypadAdd:
-             return megamol::frontend_resources::Key::KEY_KP_ADD;
+            return megamol::frontend_resources::Key::KEY_KP_ADD;
         case ImGuiKey_KeypadEnter:
-             return megamol::frontend_resources::Key::KEY_KP_ENTER;
+            return megamol::frontend_resources::Key::KEY_KP_ENTER;
         case ImGuiKey_KeypadEqual:
-             return megamol::frontend_resources::Key::KEY_KP_EQUAL;
+            return megamol::frontend_resources::Key::KEY_KP_EQUAL;
         case ImGuiKey_LeftShift:
-             return megamol::frontend_resources::Key::KEY_LEFT_SHIFT;
+            return megamol::frontend_resources::Key::KEY_LEFT_SHIFT;
         case ImGuiKey_LeftCtrl:
-             return megamol::frontend_resources::Key::KEY_LEFT_CONTROL;
+            return megamol::frontend_resources::Key::KEY_LEFT_CONTROL;
         case ImGuiKey_LeftAlt:
-             return megamol::frontend_resources::Key::KEY_LEFT_ALT;
+            return megamol::frontend_resources::Key::KEY_LEFT_ALT;
         case ImGuiKey_LeftSuper:
-             return megamol::frontend_resources::Key::KEY_LEFT_SUPER;
+            return megamol::frontend_resources::Key::KEY_LEFT_SUPER;
         case ImGuiKey_RightShift:
-             return megamol::frontend_resources::Key::KEY_RIGHT_SHIFT;
+            return megamol::frontend_resources::Key::KEY_RIGHT_SHIFT;
         case ImGuiKey_RightCtrl:
-             return megamol::frontend_resources::Key::KEY_RIGHT_CONTROL;
+            return megamol::frontend_resources::Key::KEY_RIGHT_CONTROL;
         case ImGuiKey_RightAlt:
-             return megamol::frontend_resources::Key::KEY_RIGHT_ALT;
+            return megamol::frontend_resources::Key::KEY_RIGHT_ALT;
         case ImGuiKey_RightSuper:
-             return megamol::frontend_resources::Key::KEY_RIGHT_SUPER;
+            return megamol::frontend_resources::Key::KEY_RIGHT_SUPER;
         case ImGuiKey_Menu:
-             return megamol::frontend_resources::Key::KEY_MENU;
+            return megamol::frontend_resources::Key::KEY_MENU;
         case ImGuiKey_0:
-             return megamol::frontend_resources::Key::KEY_0;
+            return megamol::frontend_resources::Key::KEY_0;
         case ImGuiKey_1:
-             return megamol::frontend_resources::Key::KEY_1;
+            return megamol::frontend_resources::Key::KEY_1;
         case ImGuiKey_2:
-             return megamol::frontend_resources::Key::KEY_2;
+            return megamol::frontend_resources::Key::KEY_2;
         case ImGuiKey_3:
-             return megamol::frontend_resources::Key::KEY_3;
+            return megamol::frontend_resources::Key::KEY_3;
         case ImGuiKey_4:
-             return megamol::frontend_resources::Key::KEY_4;
+            return megamol::frontend_resources::Key::KEY_4;
         case ImGuiKey_5:
-             return megamol::frontend_resources::Key::KEY_5;
+            return megamol::frontend_resources::Key::KEY_5;
         case ImGuiKey_6:
-             return megamol::frontend_resources::Key::KEY_6;
+            return megamol::frontend_resources::Key::KEY_6;
         case ImGuiKey_7:
-             return megamol::frontend_resources::Key::KEY_7;
+            return megamol::frontend_resources::Key::KEY_7;
         case ImGuiKey_8:
-             return megamol::frontend_resources::Key::KEY_8;
+            return megamol::frontend_resources::Key::KEY_8;
         case ImGuiKey_9:
-             return megamol::frontend_resources::Key::KEY_9;
+            return megamol::frontend_resources::Key::KEY_9;
         case ImGuiKey_A:
-             return megamol::frontend_resources::Key::KEY_A;
+            return megamol::frontend_resources::Key::KEY_A;
         case ImGuiKey_B:
-             return megamol::frontend_resources::Key::KEY_B;
+            return megamol::frontend_resources::Key::KEY_B;
         case ImGuiKey_C:
-             return megamol::frontend_resources::Key::KEY_C;
+            return megamol::frontend_resources::Key::KEY_C;
         case ImGuiKey_D:
-             return megamol::frontend_resources::Key::KEY_D;
+            return megamol::frontend_resources::Key::KEY_D;
         case ImGuiKey_E:
-             return megamol::frontend_resources::Key::KEY_E;
+            return megamol::frontend_resources::Key::KEY_E;
         case ImGuiKey_F:
-             return megamol::frontend_resources::Key::KEY_F;
+            return megamol::frontend_resources::Key::KEY_F;
         case ImGuiKey_G:
-             return megamol::frontend_resources::Key::KEY_G;
+            return megamol::frontend_resources::Key::KEY_G;
         case ImGuiKey_H:
-             return megamol::frontend_resources::Key::KEY_H;
+            return megamol::frontend_resources::Key::KEY_H;
         case ImGuiKey_I:
-             return megamol::frontend_resources::Key::KEY_I;
+            return megamol::frontend_resources::Key::KEY_I;
         case ImGuiKey_J:
-             return megamol::frontend_resources::Key::KEY_J;
+            return megamol::frontend_resources::Key::KEY_J;
         case ImGuiKey_K:
-             return megamol::frontend_resources::Key::KEY_K;
+            return megamol::frontend_resources::Key::KEY_K;
         case ImGuiKey_L:
-             return megamol::frontend_resources::Key::KEY_L;
+            return megamol::frontend_resources::Key::KEY_L;
         case ImGuiKey_M:
-             return megamol::frontend_resources::Key::KEY_M;
+            return megamol::frontend_resources::Key::KEY_M;
         case ImGuiKey_N:
-             return megamol::frontend_resources::Key::KEY_N;
+            return megamol::frontend_resources::Key::KEY_N;
         case ImGuiKey_O:
-             return megamol::frontend_resources::Key::KEY_O;
+            return megamol::frontend_resources::Key::KEY_O;
         case ImGuiKey_P:
-             return megamol::frontend_resources::Key::KEY_P;
+            return megamol::frontend_resources::Key::KEY_P;
         case ImGuiKey_Q:
-             return megamol::frontend_resources::Key::KEY_Q;
+            return megamol::frontend_resources::Key::KEY_Q;
         case ImGuiKey_R:
-             return megamol::frontend_resources::Key::KEY_R;
+            return megamol::frontend_resources::Key::KEY_R;
         case ImGuiKey_S:
-             return megamol::frontend_resources::Key::KEY_S;
+            return megamol::frontend_resources::Key::KEY_S;
         case ImGuiKey_T:
-             return megamol::frontend_resources::Key::KEY_T;
+            return megamol::frontend_resources::Key::KEY_T;
         case ImGuiKey_U:
-             return megamol::frontend_resources::Key::KEY_U;
+            return megamol::frontend_resources::Key::KEY_U;
         case ImGuiKey_V:
-             return megamol::frontend_resources::Key::KEY_V;
+            return megamol::frontend_resources::Key::KEY_V;
         case ImGuiKey_W:
-             return megamol::frontend_resources::Key::KEY_W;
+            return megamol::frontend_resources::Key::KEY_W;
         case ImGuiKey_X:
-             return megamol::frontend_resources::Key::KEY_X;
+            return megamol::frontend_resources::Key::KEY_X;
         case ImGuiKey_Y:
-             return megamol::frontend_resources::Key::KEY_Y;
+            return megamol::frontend_resources::Key::KEY_Y;
         case ImGuiKey_Z:
-             return megamol::frontend_resources::Key::KEY_Z;
+            return megamol::frontend_resources::Key::KEY_Z;
         case ImGuiKey_F1:
-             return megamol::frontend_resources::Key::KEY_F1;
+            return megamol::frontend_resources::Key::KEY_F1;
         case ImGuiKey_F2:
-             return megamol::frontend_resources::Key::KEY_F2;
+            return megamol::frontend_resources::Key::KEY_F2;
         case ImGuiKey_F3:
-             return megamol::frontend_resources::Key::KEY_F3;
+            return megamol::frontend_resources::Key::KEY_F3;
         case ImGuiKey_F4:
-             return megamol::frontend_resources::Key::KEY_F4;
+            return megamol::frontend_resources::Key::KEY_F4;
         case ImGuiKey_F5:
-             return megamol::frontend_resources::Key::KEY_F5;
+            return megamol::frontend_resources::Key::KEY_F5;
         case ImGuiKey_F6:
-             return megamol::frontend_resources::Key::KEY_F6;
+            return megamol::frontend_resources::Key::KEY_F6;
         case ImGuiKey_F7:
-             return megamol::frontend_resources::Key::KEY_F7;
+            return megamol::frontend_resources::Key::KEY_F7;
         case ImGuiKey_F8:
-             return megamol::frontend_resources::Key::KEY_F8;
+            return megamol::frontend_resources::Key::KEY_F8;
         case ImGuiKey_F9:
-             return megamol::frontend_resources::Key::KEY_F9;
+            return megamol::frontend_resources::Key::KEY_F9;
         case ImGuiKey_F10:
-             return megamol::frontend_resources::Key::KEY_F10;
+            return megamol::frontend_resources::Key::KEY_F10;
         case ImGuiKey_F11:
-             return megamol::frontend_resources::Key::KEY_F11;
+            return megamol::frontend_resources::Key::KEY_F11;
         case ImGuiKey_F12:
-             return megamol::frontend_resources::Key::KEY_F12;
+            return megamol::frontend_resources::Key::KEY_F12;
         default:
             return megamol::frontend_resources::Key::KEY_UNKNOWN;
         }
