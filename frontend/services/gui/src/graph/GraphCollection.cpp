@@ -1047,7 +1047,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(Module::StockModule& o
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         //    "[GUI] [DEBUG] Created temporary module '%s'.", mod_desc->ClassName());
 
-        /// XXX VIEW TEST
+        /// XXX Better check if module is a 'view':
         std::shared_ptr<const core::view::AbstractViewInterface> viewptr =
             std::dynamic_pointer_cast<const core::view::AbstractViewInterface>(new_mod);
 
@@ -1552,10 +1552,10 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
 
         ImGuiID moduel_uid = GUI_INVALID_ID;
         ModulePtr_t gui_module_ptr;
-        /// XXX ModuleDescriptionManager is only available via core instance graph yet.
+        /// XXX ModuleDescriptionManager is only available via core instance graph yet:
         std::string module_description = "[n/a]";
         std::string module_plugin = "[n/a]";
-        /// XXX Better check if module is a 'view'?
+        /// XXX Better check if module is a 'view':
         auto viewptr = dynamic_cast<core::view::AbstractViewInterface*>(module_inst.modulePtr.get());
         bool is_view = (viewptr != nullptr);
 
@@ -1564,8 +1564,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
 
             // Set remaining module data
             if (module_inst.isGraphEntryPoint) {
-                ///XXX Remove all other graph entries first?
-                gui_module_ptr->SetGraphEntryName(graph_ptr->GenerateUniqueGraphEntryName());
+                graph_ptr->AddGraphEntry(gui_module_ptr, graph_ptr->GenerateUniqueGraphEntryName(), false);
             }
 
 #ifdef MEGAMOL_USE_PROFILING
@@ -1700,7 +1699,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_RenameModule(
 bool megamol::gui::GraphCollection::NotifyRunningGraph_AddParameters(
     std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots) {
 
-    /// XXX unused
+    /// XXX Unused
     return true;
 }
 
@@ -1708,7 +1707,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddParameters(
 bool megamol::gui::GraphCollection::NotifyRunningGraph_RemoveParameters(
     std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots) {
 
-    /// XXX unused
+    /// XXX Unused
     return true;
 }
 
