@@ -332,7 +332,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                 auto dir = std::filesystem::u8path(this->current_directory_str);
                 auto file = std::filesystem::u8path(this->current_file_str);
                 std::filesystem::path tmp_path;
-                if (flags & FilePathParam::Flag_Any) {
+                if ((flags & FilePathParam::Flag_Any) == FilePathParam::Flag_Any) {
                     tmp_path = dir / file;
                     if (dir.stem() == file.stem()) {
                         tmp_path = dir;
@@ -391,7 +391,7 @@ bool megamol::gui::FileBrowserWidget::validate_split_path(
             out_path = std::filesystem::current_path();
         }
 
-        if (flags & FilePathParam::Flag_Any) {
+        if ((flags & FilePathParam::Flag_Any) == FilePathParam::Flag_Any) {
             if ((status_known(status(out_path)) && is_directory(out_path))) {
                 out_dir = out_path.generic_u8string();
                 out_file = out_path.filename().generic_u8string();
