@@ -337,17 +337,23 @@ bool megamol::gui::ButtonWidgets::ToggleButton(const std::string& id, bool& inou
 
     ImGui::BeginGroup();
 
+    ImGuiContext& g = *GImGui;
+
     std::string button_id = "toggle_button_" + id;
     ImGui::InvisibleButton(button_id.c_str(), ImVec2(width, height));
     if (ImGui::IsItemClicked()) {
         inout_bool = !inout_bool;
         retval = true;
     }
+    if (ImGui::IsItemActivated()) {
+        g.LastActiveId = ImGui::GetID(button_id.c_str());
+        g.LastActiveIdTimer = 0.0f;
+    }
 
+    // Animate button changes
     float t = inout_bool ? 1.0f : 0.0f;
-    ImGuiContext& g = *GImGui;
-    float ANIM_SPEED = 0.1f;
-    if ((g.LastActiveId == g.CurrentWindow->GetID(button_id.c_str())) && (g.LastActiveIdTimer < ANIM_SPEED)) {
+    float ANIM_SPEED = 0.25f;
+    if ((g.LastActiveId == ImGui::GetID(button_id.c_str())) && (g.LastActiveIdTimer < ANIM_SPEED)) {
         float t_anim = ImSaturate(g.LastActiveIdTimer / ANIM_SPEED);
         t = inout_bool ? (t_anim) : (1.0f - t_anim);
     }
