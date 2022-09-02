@@ -405,6 +405,12 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     gui_subscription.DeleteCall = [&](core::CallInstance_t const& call_inst) {
         return m_gui->NotifyRunningGraph_DeleteCall(call_inst);
     };
+    gui_subscription.EnableEntryPoint = [&](core::ModuleInstance_t const& module_inst) {
+        return m_gui->NotifyRunningGraph_EnableEntryPoint(module_inst);
+    };
+    gui_subscription.DisableEntryPoint = [&](core::ModuleInstance_t const& module_inst) {
+        return m_gui->NotifyRunningGraph_DisableEntryPoint(module_inst);
+    };
 
     megamolgraph_subscription.subscribe(gui_subscription);
 

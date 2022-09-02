@@ -436,7 +436,10 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(
                     std::get<0>((*input_lua_func)("mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
             } break;
             case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
-                (*input_lua_func)("mmSetGraphEntryPoint([=[" + data.name_id + "]=])");
+                // megamol currently does not handle well having multiple entrypoints active
+                (*input_lua_func)("mmRemoveAllGraphEntryPoints()\n"
+                                  "mmSetGraphEntryPoint([=[" +
+                                  data.name_id + "]=])");
             } break;
             case (Graph::QueueAction::REMOVE_GRAPH_ENTRY): {
                 (*input_lua_func)("mmRemoveGraphEntryPoint([=[" + data.name_id + "]=])");
@@ -1870,6 +1873,15 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_DeleteCall(core::CallInst
     return false;
 }
 
+bool megamol::gui::GraphCollection::NotifyRunningGraph_EnableEntryPoint(core::ModuleInstance_t const& module_inst) {
+    TODO EntryPoint subscription
+    //return false;
+}
+
+bool megamol::gui::GraphCollection::NotifyRunningGraph_DisableEntryPoint(core::ModuleInstance_t const& module_inst) {
+    TODO EntryPoint subscription
+    //return false;
+}
 
 bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool& open_dialog) {
 

@@ -296,6 +296,12 @@ public:
     bool NotifyRunningGraph_DeleteCall(core::CallInstance_t const& call_inst) {
         return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_DeleteCall(call_inst);
     }
+    bool NotifyRunningGraph_EnableEntryPoint(core::ModuleInstance_t const& module_inst) {
+        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_EnableEntryPoint(module_inst);
+    }
+    bool NotifyRunningGraph_DisableEntryPoint(core::ModuleInstance_t const& module_inst) {
+        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_DisableEntryPoint(module_inst);
+    }
 
     ///////////////////////////////////////////////////////////////////////
 

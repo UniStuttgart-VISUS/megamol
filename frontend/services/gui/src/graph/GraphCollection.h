@@ -101,6 +101,8 @@ public:
         std::string const& new_value);
     bool NotifyRunningGraph_AddCall(core::CallInstance_t const& call_inst);
     bool NotifyRunningGraph_DeleteCall(core::CallInstance_t const& call_inst);
+    bool NotifyRunningGraph_EnableEntryPoint(core::ModuleInstance_t const& module_inst);
+    bool NotifyRunningGraph_DisableEntryPoint(core::ModuleInstance_t const& module_inst);
 
 private:
     // VARIABLES --------------------------------------------------------------
