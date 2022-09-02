@@ -495,15 +495,15 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(
                 if (!p.CoreParamPtr().IsNull()) {
                     // Write changed gui state to core parameter
                     if (p.IsGUIStateDirty()) {
+                        p.ResetGUIStateDirty(); // ! Reset before calling lua cmd because of instantly triggered subscription callback
                         // TODO what gets logged in the historian here?
                         param_sync_success &= megamol::gui::Parameter::WriteCoreParameterGUIState(p, p.CoreParamPtr());
-                        p.ResetGUIStateDirty();
                     }
                     // Write changed parameter value to core parameter
                     if (p.IsValueDirty()) {
+                        p.ResetValueDirty(); // ! Reset before calling lua cmd because of instantly triggered subscription callback
                         param_sync_success &= std::get<0>((*input_lua_func)(
                             "mmSetParamValue([=[" + p.FullNameCore() + "]=],[=[" + p.GetValueString() + "]=])"));
-                        p.ResetValueDirty();
                     }
                 }
             }
@@ -1976,7 +1976,9 @@ bool megamol::gui::GraphCollection::change_running_graph(ImGuiID graph_uid) {
                     if (module_ptr->IsGraphEntry()) {
                         running_graph->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                     }
-                    running_graph->PushSyncQueue(Graph::QueueAction::DELETE_MODULE, queue_data);
+                    if (!running_graph->ModuleExists(module_ptr->FullName())) {
+                        running_graph->PushSyncQueue(Graph::QueueAction::DELETE_MODULE, queue_data);
+                    }
                     // Reset pointers to core parameters
                     for (auto& param : module_ptr->Parameters()) {
                         param.ResetCoreParamPtr();
@@ -1986,10 +1988,13 @@ bool megamol::gui::GraphCollection::change_running_graph(ImGuiID graph_uid) {
                 // 3] Create new modules and calls in core graph, but keep newly running GUI graph in project
                 // untouched
                 for (auto& module_ptr : running_graph->Modules()) {
+
                     Graph::QueueData queue_data;
                     queue_data.name_id = module_ptr->FullName();
                     queue_data.class_name = module_ptr->ClassName();
-                    running_graph->PushSyncQueue(Graph::QueueAction::ADD_MODULE, queue_data);
+                    if (!last_running_graph->ModuleExists(module_ptr->FullName())) {
+                        running_graph->PushSyncQueue(Graph::QueueAction::ADD_MODULE, queue_data);
+                    }
                     if (module_ptr->IsGraphEntry()) {
                         running_graph->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
                     }
@@ -2019,7 +2024,6 @@ bool megamol::gui::GraphCollection::change_running_graph(ImGuiID graph_uid) {
                     }
                     running_graph->PushSyncQueue(Graph::QueueAction::ADD_CALL, queue_data);
                 }
-
                 return true;
             }
         }
