@@ -27,7 +27,6 @@
       ]
     },
     "imguizmoquat",
-    "imguitexinspect",
     "implot",
     "libigl",
     "libpng",
@@ -93,6 +92,12 @@
       "dependencies": [
         {
           "name": "imgui",
+          "features": [
+            "opengl3-binding"
+          ]
+        },
+        {
+          "name": "imgui-tex-inspect",
           "features": [
             "opengl3-binding"
           ]

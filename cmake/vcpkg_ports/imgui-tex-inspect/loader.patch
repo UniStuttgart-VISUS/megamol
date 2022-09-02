@@ -1,0 +1,14 @@
+diff --git a/backends/tex_inspect_opengl.cpp b/backends/tex_inspect_opengl.cpp
+index b860f13..67c3986 100644
+--- a/backends/tex_inspect_opengl.cpp
++++ b/backends/tex_inspect_opengl.cpp
+@@ -77,7 +77,8 @@ using namespace gl;
+ #elif defined(IMGUI_IMPL_OPENGL_LOADER_EPOXY)
+ #include <epoxy/gl.h>
+ #else
+-#include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
++//#include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
++#include "tex_inspect_opengl_loader.h"
+ #endif
+ #endif
+ 
