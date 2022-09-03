@@ -257,9 +257,12 @@ bool megamol::core::MegaMolGraph::Broadcast_graph_subscribers_parameter_changes(
             if (!subscriber.ParameterChanged(param_slot_ptr, param_value)) {
                 log_error("graph subscriber " + subscriber.Name() +
                           " failed to process parameter change: " + param_name + " to " + param_value);
+                return false;
             }
         }
     }
+
+    module_param_changes_queue.clear();
 
     return true;
 }
