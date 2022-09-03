@@ -1881,7 +1881,8 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_DisableEntryPoint(core::M
     //return false;
 }
 
-bool megamol::gui::GraphCollection::NotifyRunningGraph_EnableGraphEntryPoint(core::ModuleInstance_t const& module_inst) {
+bool megamol::gui::GraphCollection::NotifyRunningGraph_EnableGraphEntryPoint(
+    core::ModuleInstance_t const& module_inst) {
 
     if (!this->initialized_syncing) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
