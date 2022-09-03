@@ -406,15 +406,6 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     gui_subscription.DeleteCall = [&](core::CallInstance_t const& call_inst) {
         return m_gui->NotifyRunningGraph_DeleteCall(call_inst);
     };
-    /* XXX TODO
-    gui_subscription.AddGraphEntryPoint = [&](core::ModuleInstance_t const& module_inst) {
-        return m_gui->NotifyRunningGraph_AddGraphEntryPoint(module_inst);
-    };
-    gui_subscription.RemoveGraphEntryPoint = [&](core::ModuleInstance_t const& module_inst) {
-        return m_gui->NotifyRunningGraph_RemoveGraphEntryPoint(module_inst);
-    };
-    XXX TODO */
-
     megamolgraph_subscription.subscribe(gui_subscription);
 
 #ifdef MEGAMOL_USE_PROFILING
