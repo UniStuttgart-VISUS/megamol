@@ -139,8 +139,8 @@ bool ParameterList::Draw() {
             if (!group_header_open) {
                 if (auto group_ptr = graph_ptr->GetGroup(group.first)) {
                     ImGui::PushID(group.first);
-                    group_header_open = gui_utils::GroupHeader(
-                        megamol::gui::HeaderType::MODULE_GROUP, group_ptr->Name(), group_search_string, override_header_state);
+                    group_header_open = gui_utils::GroupHeader(megamol::gui::HeaderType::MODULE_GROUP,
+                        group_ptr->Name(), group_search_string, override_header_state);
                     indent = true;
                     ImGui::Indent();
                     ImGui::PopID();
