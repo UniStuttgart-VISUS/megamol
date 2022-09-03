@@ -17,6 +17,8 @@
 #include "vislib/String.h"
 #include "vislib/tchar.h"
 
+#include <functional>
+
 
 namespace megamol {
 namespace core {
@@ -33,6 +35,8 @@ class AbstractParamSlot;
 class AbstractParam : public AbstractParamPresentation {
 public:
     friend class AbstractParamSlot;
+
+    using ParamChangeCallback = std::function<void(AbstractParamSlot*)>;
 
     /**
      * Dtor.
@@ -101,6 +105,10 @@ public:
         return val;
     }
 
+    void setChangeCallback(ParamChangeCallback const& callback) {
+        this->change_callback = callback;
+    }
+
 protected:
     /**
      * Ctor.
@@ -120,6 +128,7 @@ protected:
      */
     void indicateChange() {
         has_changed = true;
+        change_callback(slot);
     }
 
 private:
@@ -136,6 +145,14 @@ private:
      * Indicating that the value has changed.
      */
     bool has_changed;
+
+    /**
+     * The change callback is set by the MegaMol Graph/Frontend as a notification mechanism
+     * to be made aware of module-driven or other parameters changes not made via the lua parameter setter function
+     */
+    ParamChangeCallback change_callback = [](auto*) {
+        // needs default init for randomly created modules/params not to crash for default SetValue() calls
+    };
 };
 
 

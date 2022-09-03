@@ -90,6 +90,8 @@ public:
 
     frontend_resources::MegaMolGraph_SubscriptionRegistry& GraphSubscribers();
 
+    bool Broadcast_graph_subscribers_parameter_changes();
+
 private:
     [[nodiscard]] ModuleList_t::iterator find_module(std::string const& name);
     [[nodiscard]] ModuleList_t::iterator find_module_by_prefix(std::string const& name);
@@ -133,6 +135,16 @@ private:
     MegaMolGraph_Convenience convenience_functions;
 
     frontend_resources::MegaMolGraph_SubscriptionRegistry graph_subscribers;
+
+    // module params may change their internal value on their own
+    // the graph uses the AbstractParam::indicateChange() mechanism to inject
+    // a callback that notifies the graph of param changes.
+    // these parameter changes get collected in the following queue and are issued to graph subscribers when possible.
+    std::vector<core::param::AbstractParamSlot*> module_param_changes_queue;
+    core::param::AbstractParam::ParamChangeCallback param_change_callback = [&](core::param::AbstractParamSlot* slot) {
+        module_param_changes_queue.push_back(slot);
+        return true;
+    };
 };
 
 

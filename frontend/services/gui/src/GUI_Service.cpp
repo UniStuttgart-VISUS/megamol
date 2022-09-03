@@ -397,15 +397,21 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
         };
     gui_subscription.ParameterChanged =
         [&](megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
-            std::string const& old_value, std::string const& new_value) {
-            return m_gui->NotifyRunningGraph_ParameterChanged(param_slot, old_value, new_value);
-        };
+            std::string const& new_value) { return m_gui->NotifyRunningGraph_ParameterChanged(param_slot, new_value); };
+
     gui_subscription.AddCall = [&](core::CallInstance_t const& call_inst) {
         return m_gui->NotifyRunningGraph_AddCall(call_inst);
     };
     gui_subscription.DeleteCall = [&](core::CallInstance_t const& call_inst) {
         return m_gui->NotifyRunningGraph_DeleteCall(call_inst);
     };
+    gui_subscription.EnableEntryPoint = [&](core::ModuleInstance_t const& module_inst) {
+        return m_gui->NotifyRunningGraph_EnableEntryPoint(module_inst);
+    };
+    gui_subscription.DisableEntryPoint = [&](core::ModuleInstance_t const& module_inst) {
+        return m_gui->NotifyRunningGraph_DisableEntryPoint(module_inst);
+    };
+
     megamolgraph_subscription.subscribe(gui_subscription);
 
 #ifdef MEGAMOL_USE_PROFILING
