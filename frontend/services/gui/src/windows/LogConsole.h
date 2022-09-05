@@ -92,6 +92,7 @@ private:
     unsigned int scroll_down;
     unsigned int scroll_up;
     float last_window_height;
+    int selected_candidate_index;
 
     core::utility::log::Log::log_level win_log_level; // [SAVED] Log level used in log window
     bool win_log_force_open; // [SAVED] flag indicating if log window should be forced open on warnings and errors

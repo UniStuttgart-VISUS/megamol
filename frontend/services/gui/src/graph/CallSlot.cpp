@@ -302,7 +302,8 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
             }
         }
 
-        bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+        bool mouse_clicked_anywhere =
+            ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiPopupFlags_MouseButtonLeft);
 
         std::string slot_label = this->name;
         std::string button_label = "callslot_" + std::to_string(this->uid);

@@ -286,15 +286,21 @@ public:
     }
     bool NotifyRunningGraph_ParameterChanged(
         megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
-        std::string const& old_value, std::string const& new_value) {
+        std::string const& new_value) {
         return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_ParameterChanged(
-            param_slot, old_value, new_value);
+            param_slot, new_value);
     }
     bool NotifyRunningGraph_AddCall(core::CallInstance_t const& call_inst) {
         return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_AddCall(call_inst);
     }
     bool NotifyRunningGraph_DeleteCall(core::CallInstance_t const& call_inst) {
         return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_DeleteCall(call_inst);
+    }
+    bool NotifyRunningGraph_EnableEntryPoint(core::ModuleInstance_t const& module_inst) {
+        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_EnableEntryPoint(module_inst);
+    }
+    bool NotifyRunningGraph_DisableEntryPoint(core::ModuleInstance_t const& module_inst) {
+        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_DisableEntryPoint(module_inst);
     }
 
     ///////////////////////////////////////////////////////////////////////
@@ -307,9 +313,6 @@ private:
         DarkColors,
         LightColors,
     };
-
-    /** ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512) */
-    enum GuiTextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
 
     /** The global state (for settings to be applied before ImGui::Begin). */
     struct StateBuffer {

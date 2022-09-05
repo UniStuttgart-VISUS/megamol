@@ -218,7 +218,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
         }
 
         if (!this->gui_hidden) {
-            bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+            bool mouse_clicked_anywhere =
+                ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiPopupFlags_MouseButtonLeft);
 
             ImGui::PushID(static_cast<int>(this->uid));
 
@@ -359,7 +360,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 if (!this->gui_selected &&
                     (active || this->found_uid(state.interact.modules_selected_uids, this->uid))) {
                     if (!this->found_uid(state.interact.modules_selected_uids, this->uid)) {
-                        if (GUI_MULTISELECT_MODIFIER) {
+                        if (ImGui::IsKeyPressed(ImGuiKey_ModShift)) {
                             // Multiple Selection
                             this->add_uid(state.interact.modules_selected_uids, this->uid);
                         } else {
@@ -377,8 +378,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                 // Deselection
                 else if (this->gui_selected &&
                          ((mouse_clicked_anywhere && (state.interact.module_hovered_uid == GUI_INVALID_ID) &&
-                              !GUI_MULTISELECT_MODIFIER) ||
-                             (active && GUI_MULTISELECT_MODIFIER) ||
+                              !ImGui::IsKeyPressed(ImGuiKey_ModShift)) ||
+                             (active && ImGui::IsKeyPressed(ImGuiKey_ModShift)) ||
                              (!this->found_uid(state.interact.modules_selected_uids, this->uid)))) {
                     this->gui_selected = false;
                     this->erase_uid(state.interact.modules_selected_uids, this->uid);
