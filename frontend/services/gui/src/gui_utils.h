@@ -131,6 +131,12 @@ extern unsigned int gui_context_count;
 extern std::vector<std::string> gui_resource_paths;
 
 
+/********** Global ImGui Mouse Wheel Value  *************************/
+
+/// XXX IO This value is not available in child windows via io.MouseWheel
+extern float gui_mouse_wheel;
+
+
 /********** Global GUI Scaling Factor ************************************/
 
 // Forward declaration

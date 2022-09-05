@@ -289,6 +289,8 @@ bool GUIManager::PostDraw() {
         auto height = static_cast<int>(io.DisplaySize.y);
         this->render_backend.EnableRendering(width, height);
 
+        megamol::gui::gui_mouse_wheel = io.MouseWheel;
+
         try {
 
             // Draw global menu -----------------------------------------------
@@ -542,7 +544,7 @@ bool GUIManager::OnMouseScroll(double dx, double dy) {
     ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.AddMouseWheelEvent((float)dx, (float)dy);
+    io.AddMouseWheelEvent(static_cast<float>(dx), static_cast<float>(dy));
 
     bool consumed = io.WantCaptureMouse;
     return consumed;

@@ -2484,22 +2484,18 @@ void megamol::gui::Graph::draw_canvas(ImVec2 position, ImVec2 size, GraphState_t
     // Zooming and Scaling ----------------------
     // Must be checked inside this canvas child window!
     // Check at the end of drawing for being applied in next frame when font scaling matches zooming.
-    /// XXX adding flag ImGuiHoveredFlags_ChildWindows to ImGui::IsWindowHovered prevents mouse wheel zooming in
-    /// profiling diagrams
-    ImGui::SetItemUsingMouseWheel();
     if ((ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) || this->gui_reset_zooming ||
         this->gui_increment_zooming || this->gui_decrement_zooming) {
 
         // Scrolling (2 = Middle Mouse Button)
-        if (ImGui::IsMouseDragging(
-                ImGuiMouseButton_Middle)) { // io.KeyCtrl && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle)) { 
             this->gui_graph_state.canvas.scrolling = this->gui_graph_state.canvas.scrolling +
                                                      ImGui::GetIO().MouseDelta / this->gui_graph_state.canvas.zooming;
             this->gui_update = true;
         }
 
         // Zooming (Mouse Wheel) + Reset
-        float mouse_wheel_value = io.MouseWheel;
+        float mouse_wheel_value = megamol::gui::gui_mouse_wheel;
         if (((isfinite(mouse_wheel_value)) && (mouse_wheel_value != 0)) || this->gui_reset_zooming ||
             this->gui_increment_zooming || this->gui_decrement_zooming) {
 
