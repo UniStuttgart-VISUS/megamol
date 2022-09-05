@@ -240,7 +240,6 @@ bool megamol::core::MegaMolGraph::Broadcast_graph_subscribers_parameter_changes(
             if (!changed_param_ptr) {
                 log_error("AbstractParamSlot* of a changed module parameter turned out nullptr. can not propagate "
                           "changed param value to graph subscribers.");
-                module_param_changes_queue.clear();
                 return false;
             }
 
@@ -250,7 +249,6 @@ bool megamol::core::MegaMolGraph::Broadcast_graph_subscribers_parameter_changes(
             if (!param_slot_ptr) {
                 log_error(" casting AbstractParamSlot* to ParamSlot* failed. Can not propagate changed param value " +
                           param_value + " to graph subscribers");
-                module_param_changes_queue.clear();
                 return false;
             }
 
@@ -265,6 +263,7 @@ bool megamol::core::MegaMolGraph::Broadcast_graph_subscribers_parameter_changes(
     }
 
     module_param_changes_queue.clear();
+
     return true;
 }
 
