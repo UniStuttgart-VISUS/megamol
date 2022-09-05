@@ -1057,7 +1057,6 @@ bool megamol::gui::Graph::RemoveGraphEntry(const ModulePtr_t& module_ptr, bool u
 
     if (module_ptr == nullptr)
         return false;
-    // Remove graph entry
 
     module_ptr->SetGraphEntryName("");
     if (this->IsRunning() && use_queue) {

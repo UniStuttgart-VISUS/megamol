@@ -33,7 +33,6 @@
 #define GUI_MAX_MULITLINE (8)
 #define GUI_DND_CALLSLOT_UID_TYPE ("DND_CALL")
 #define GUI_GRAPH_BORDER (GUI_SLOT_RADIUS * 4.0f)
-#define GUI_MULTISELECT_MODIFIER (ImGui::GetIO().KeyShift)
 
 #define GUI_JSON_TAG_GUI ("GUIState")
 #define GUI_JSON_TAG_WINDOW_CONFIGS ("WindowConfigurations")

@@ -195,7 +195,6 @@ void megamol::gui::Configurator::PopUps() {
         if (valid_double_click || valid_double_click_callslot) {
             this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH].is_pressed = true;
             this->last_selected_callslot_uid = selected_callslot_uid;
-            /// XXX IO ImGui::GetIO().MouseDoubleClicked[0] = false; // Force consume double click! -> not necessary?
         }
         if (this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH].is_pressed) {
             this->module_list_popup_hovered_group_uid = selected_graph_ptr->GetHoveredGroup();

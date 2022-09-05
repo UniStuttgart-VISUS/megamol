@@ -1871,17 +1871,8 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_DeleteCall(core::CallInst
     return false;
 }
 
+
 bool megamol::gui::GraphCollection::NotifyRunningGraph_EnableEntryPoint(core::ModuleInstance_t const& module_inst) {
-    TODO EntryPoint subscription
-    //return false;
-}
-
-bool megamol::gui::GraphCollection::NotifyRunningGraph_DisableEntryPoint(core::ModuleInstance_t const& module_inst) {
-    TODO EntryPoint subscription
-    //return false;
-}
-
-bool megamol::gui::GraphCollection::NotifyRunningGraph_EnableGraphEntryPoint(core::ModuleInstance_t const& module_inst) {
 
     if (!this->initialized_syncing) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1899,7 +1890,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_EnableGraphEntryPoint(cor
 }
 
 
-bool megamol::gui::GraphCollection::NotifyRunningGraph_DisableGraphEntryPoint(
+bool megamol::gui::GraphCollection::NotifyRunningGraph_DisableEntryPoint(
     core::ModuleInstance_t const& module_inst) {
 
     if (!this->initialized_syncing) {
@@ -1911,6 +1902,14 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_DisableGraphEntryPoint(
     if (auto graph_ptr = this->GetRunningGraph()) {
         if (auto mod_ptr = graph_ptr->GetModule(module_inst.request.id)) {
             return graph_ptr->RemoveGraphEntry(mod_ptr, false);
+        } else {
+#ifdef GUI_VERBOSE
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to find module: '%s' [%s, %s, line %d]\n", module_inst.request.id.c_str(), __FILE__,
+                __FUNCTION__, __LINE__);
+#endif // GUI_VERBOSE
+            /// Error tolerance to ignore redundant changes that have been triggered by the GUI
+            return true;
         }
     }
 
