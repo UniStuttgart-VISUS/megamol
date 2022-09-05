@@ -344,7 +344,8 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
 
             bool active = (state.interact.button_active_uid == this->uid);
             bool hovered = (state.interact.button_hovered_uid == this->uid);
-            bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+            bool mouse_clicked_anywhere =
+                ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiPopupFlags_MouseButtonLeft);
 
             // Compatibility
             if (state.interact.callslot_compat_ptr != nullptr) {

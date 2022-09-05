@@ -181,6 +181,12 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
         return;
 
 void Lua_Service_Wrapper::updateProvidedResources() {
+    // during the previous frame module parameters of the graph may have changed.
+    // submit the queued parameter changes to graph subscribers before other services do their thing
+    auto& graph = const_cast<megamol::core::MegaMolGraph&>(
+        m_requestedResourceReferences[5].getResource<megamol::core::MegaMolGraph>());
+    graph.Broadcast_graph_subscribers_parameter_changes();
+
     recursion_guard;
     // we want lua to be the first thing executed in main loop
     // so we do all the lua work here

@@ -218,19 +218,51 @@ bool megamol::core::MegaMolGraph::SetParameter(std::string const& paramName, std
     if (!param_ptr)
         return false;
 
+    // unused since generic param changes mechanism does not allow passing 'old value' to graph subscribers
     auto old_value = param_ptr->ValueString();
 
     bool success = param_ptr->ParseValue(value);
 
+    // param changes are queued in the graphs parameter changes queue
+    // and get passed to graph subscribers at beginning of each frame by the Lua Service
+    // using MegaMolGraph::Broadcast_graph_subscribers_parameter_changes()
+
     if (!success)
         return false;
 
+    return true;
+}
+
+bool megamol::core::MegaMolGraph::Broadcast_graph_subscribers_parameter_changes() {
     for (auto& subscriber : graph_subscribers.subscribers) {
-        if (!subscriber.ParameterChanged(param_slot_ptr, old_value, value)) {
-            log_error("graph subscriber " + subscriber.Name() + " failed to process parameter change: " + paramName +
-                      " from " + old_value + " to " + value);
+
+        for (megamol::core::param::AbstractParamSlot* changed_param_ptr : module_param_changes_queue) {
+            if (!changed_param_ptr) {
+                log_error("AbstractParamSlot* of a changed module parameter turned out nullptr. can not propagate "
+                          "changed param value to graph subscribers.");
+                return false;
+            }
+
+            auto param_value = changed_param_ptr->Parameter()->ValueString();
+            param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(changed_param_ptr);
+
+            if (!param_slot_ptr) {
+                log_error(" casting AbstractParamSlot* to ParamSlot* failed. Can not propagate changed param value " +
+                          param_value + " to graph subscribers");
+                return false;
+            }
+
+            auto param_name = std::string{param_slot_ptr->FullName().PeekBuffer()};
+
+            if (!subscriber.ParameterChanged(param_slot_ptr, param_value)) {
+                log_error("graph subscriber " + subscriber.Name() +
+                          " failed to process parameter change: " + param_name + " to " + param_value);
+                return false;
+            }
         }
     }
+
+    module_param_changes_queue.clear();
 
     return true;
 }
@@ -374,6 +406,14 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string module) {
     module_it->isGraphEntryPoint = true;
     log("set graph entry point: " + moduleName);
 
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.EnableEntryPoint(*module_it)) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process enabling entry point " +
+                      module_it->request.id);
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -401,6 +441,14 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string module) {
 
     module_it->isGraphEntryPoint = false;
     log("remove graph entry point: " + moduleName);
+
+    for (auto& subscriber : graph_subscribers.subscribers) {
+        if (!subscriber.DisableEntryPoint(*module_it)) {
+            log_error("graph subscriber " + subscriber.Name() + " failed to process disabling entry point " +
+                      module_it->request.id);
+            return false;
+        }
+    }
 
     return true;
 }
@@ -549,6 +597,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
     std::vector<ParamSlotPtr> param_ptrs = module_ptr->GetSlots<std::remove_pointer<ParamSlotPtr>::type>();
     for (auto& param_ptr : param_ptrs) {
         assert(param_ptr != nullptr);
+        param_ptr->Parameter()->setChangeCallback(this->param_change_callback);
     }
     for (auto& subscriber : graph_subscribers.subscribers) {
         if (!subscriber.AddParameters(param_ptrs)) {
