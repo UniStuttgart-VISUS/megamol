@@ -2488,7 +2488,7 @@ void megamol::gui::Graph::draw_canvas(ImVec2 position, ImVec2 size, GraphState_t
         this->gui_increment_zooming || this->gui_decrement_zooming) {
 
         // Scrolling (2 = Middle Mouse Button)
-        if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle)) { 
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle)) {
             this->gui_graph_state.canvas.scrolling = this->gui_graph_state.canvas.scrolling +
                                                      ImGui::GetIO().MouseDelta / this->gui_graph_state.canvas.zooming;
             this->gui_update = true;
