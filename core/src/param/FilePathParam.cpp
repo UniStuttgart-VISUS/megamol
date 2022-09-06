@@ -48,10 +48,15 @@ bool FilePathParam::ParseValue(std::string const& v) {
 
 void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
 
-    try {
-        auto tmp_val_str = v.generic_u8string();
+    const auto normalize_path = [](std::filesystem::path const& path) -> std::filesystem::path {
+        auto tmp_val_str = path.generic_u8string();
         std::replace(tmp_val_str.begin(), tmp_val_str.end(), '\\', '/');
-        auto new_value = std::filesystem::path(tmp_val_str);
+        return std::filesystem::path{tmp_val_str};
+    };
+
+    try {
+        auto new_value = normalize_path(v);
+
         if (this->value != new_value) {
             auto absolute_new_value = GetAbsolutePathValue(new_value);
             auto error_flags = FilePathParam::ValidatePath(absolute_new_value, this->extensions, this->flags);
@@ -80,6 +85,31 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
                     new_value.generic_u8string().c_str(), log_exts.c_str());
             }
             if (error_flags == 0) {
+                if (new_value.is_absolute() && !this->project_directory.empty()) {
+                    // is new path in project directory?
+                    // then represent as relative path
+                    auto new_val_str = new_value.u8string();
+                    auto proj_dir_str = project_directory.u8string();
+
+                    auto val_it = new_value.begin();
+                    auto proj_it = project_directory.begin();
+                    while (*val_it == *proj_it) {
+                        val_it++;
+                        proj_it++;
+                    }
+                    if (*proj_it == *project_directory.end()) {
+                        // new value is in project directory path
+                        // collect the tail
+                        std::filesystem::path project_relative_path;
+                        while (val_it != new_value.end()) {
+                            project_relative_path = project_relative_path / *val_it;
+                            val_it++;
+                        }
+
+                        new_value = normalize_path(project_relative_path);
+                    }
+                }
+
                 this->value = new_value;
                 this->indicateChange();
                 if (setDirty)
