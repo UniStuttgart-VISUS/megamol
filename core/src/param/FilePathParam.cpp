@@ -114,6 +114,9 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
                 this->indicateChange();
                 if (setDirty)
                     this->setDirty();
+            } else {
+                // send around initial value, because the GUI might get stuck on an invalid file name
+                this->indicateChange();
             }
         }
     } catch (std::filesystem::filesystem_error& e) {

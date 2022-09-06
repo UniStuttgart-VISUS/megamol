@@ -170,9 +170,14 @@ std::string megamol::gui::Parameter::GetValueString() const {
         } else if constexpr (std::is_same_v<T, std::string>) {
             value_string = arg;
         } else if constexpr (std::is_same_v<T, std::filesystem::path>) {
-            auto file_storage = this->GetStorage<FilePathStorage_t>();
-            auto parameter = megamol::core::param::FilePathParam(arg, file_storage.first, file_storage.second);
-            value_string = parameter.ValueString();
+            //if (this->core_param_ptr != nullptr) {
+            //    value_string = this->core_param_ptr->ValueString();
+            //} else {
+            //    auto file_storage = this->GetStorage<FilePathStorage_t>();
+            //    auto parameter = megamol::core::param::FilePathParam(arg, file_storage.first, file_storage.second);
+            //    value_string = parameter.ValueString();
+            //}
+            value_string = arg.u8string();
         } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
             auto parameter = megamol::core::param::TernaryParam(arg);
             value_string = parameter.ValueString();
@@ -571,7 +576,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
         }
     } else if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::FilePathParam>()) {
         if (out_param.type == ParamType_t::FILEPATH) {
-            out_param.SetValue(p_ptr->Value(), set_default_val, set_dirty);
+            out_param.SetValue(std::filesystem::path{p_ptr->ValueString()}, set_default_val, set_dirty);
             auto file_storage = FilePathStorage_t({p_ptr->GetFlags(), p_ptr->GetExtensions()});
             out_param.SetStorage(file_storage);
         } else {
@@ -1483,41 +1488,41 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
             auto tmp_val_str = std::get<std::string>(this->gui_widget_value);
             std::replace(tmp_val_str.begin(), tmp_val_str.end(), '\\', '/');
             val = std::filesystem::path(tmp_val_str);
-            try {
-                if (last_val != val) {
-                    auto error_flags = FilePathParam::ValidatePath(val, file_extensions, file_flags);
-                    if (error_flags & FilePathParam::FilePathParam::Flag_File) {
-                        this->gui_popup_msg =
-                            "Omitting value '" + val.generic_u8string() + "'. Expected file but directory is given.";
-                    }
-                    if (error_flags & FilePathParam::Flag_Directory) {
-                        this->gui_popup_msg =
-                            "Omitting value '" + val.generic_u8string() + "'. Expected directory but file is given.";
-                    }
-                    if (error_flags & FilePathParam::Internal_NoExistenceCheck) {
-                        this->gui_popup_msg = "Omitting value '" + val.generic_u8string() + "'. File does not exist.";
-                    }
-                    if (error_flags & FilePathParam::Internal_RestrictExtension) {
-                        std::string log_exts;
-                        for (auto& ext : file_extensions) {
-                            log_exts += "'." + ext + "' ";
-                        }
-                        this->gui_popup_msg = "Omitting value '" + val.generic_u8string() +
-                                              "'. File does not have required extension: " + log_exts;
-                    }
-                    if (error_flags != 0) {
-                        val = last_val;
-                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                            (std::string("[FilePathParam] ") + this->gui_popup_msg).c_str());
-                        if (!this->gui_popup_disabled) {
-                            ImGui::OpenPopup(popup_name.c_str());
-                        }
-                    }
-                }
-            } catch (std::filesystem::filesystem_error& e) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-            }
+            //try {
+            //    if (last_val != val) {
+            //        auto error_flags = FilePathParam::ValidatePath(val, file_extensions, file_flags);
+            //        if (error_flags & FilePathParam::FilePathParam::Flag_File) {
+            //            this->gui_popup_msg =
+            //                "Omitting value '" + val.generic_u8string() + "'. Expected file but directory is given.";
+            //        }
+            //        if (error_flags & FilePathParam::Flag_Directory) {
+            //            this->gui_popup_msg =
+            //                "Omitting value '" + val.generic_u8string() + "'. Expected directory but file is given.";
+            //        }
+            //        if (error_flags & FilePathParam::Internal_NoExistenceCheck) {
+            //            this->gui_popup_msg = "Omitting value '" + val.generic_u8string() + "'. File does not exist.";
+            //        }
+            //        if (error_flags & FilePathParam::Internal_RestrictExtension) {
+            //            std::string log_exts;
+            //            for (auto& ext : file_extensions) {
+            //                log_exts += "'." + ext + "' ";
+            //            }
+            //            this->gui_popup_msg = "Omitting value '" + val.generic_u8string() +
+            //                                  "'. File does not have required extension: " + log_exts;
+            //        }
+            //        if (error_flags != 0) {
+            //            val = last_val;
+            //            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            //                (std::string("[FilePathParam] ") + this->gui_popup_msg).c_str());
+            //            if (!this->gui_popup_disabled) {
+            //                ImGui::OpenPopup(popup_name.c_str());
+            //            }
+            //        }
+            //    }
+            //} catch (std::filesystem::filesystem_error& e) {
+            //    megamol::core::utility::log::Log::DefaultLog.WriteError(
+            //        "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            //}
             this->filepath_scroll_xmax = true;
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
