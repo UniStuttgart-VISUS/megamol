@@ -29,7 +29,7 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
     } else {
         /// LOCAL
 
-        auto param_fullname = inout_param.FullNameProject();
+        auto param_fullname = inout_param.FullName();
         bool param_searched = true;
         if (in_scope == Parameter::WidgetScope::LOCAL) {
             param_searched = gui_utils::FindCaseInsensitiveSubstring(param_fullname, in_search);
