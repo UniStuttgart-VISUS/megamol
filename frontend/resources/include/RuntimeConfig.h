@@ -31,7 +31,8 @@ struct RuntimeConfig {
     std::vector<std::string> configuration_file_contents = {};
     std::vector<StringPair> cli_options_from_configs = {}; // mmSetCliOption - set config/option values accepted in CLI
     std::vector<std::string> configuration_file_contents_as_cli = {};
-    Path megamol_executable_directory = "";      // mmGetMegaMolExecutableDirectory
+    Path megamol_executable_directory = ""; // mmGetMegaMolExecutableDirectory
+    Path megamol_current_working_directory = "";
     Path application_directory = "";             // mmSetAppDir
     std::vector<Path> resource_directories = {}; // mmAddResourceDir
     std::vector<Path> shader_directories = {};   // mmAddShaderDir

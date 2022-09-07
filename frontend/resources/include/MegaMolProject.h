@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <filesystem>
 #include <optional>
 #include <string>
@@ -27,6 +28,7 @@ struct MegaMolProject {
     std::optional<ProjectAttributes> attributes = std::nullopt;
 
     void setProjectFile(path const& file) {
+        assert(file.is_absolute());
         ProjectAttributes a;
         a.project_file = file;
         a.project_directory = path{file}.remove_filename(); // leaves trailing '/'

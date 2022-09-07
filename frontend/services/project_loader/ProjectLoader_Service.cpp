@@ -10,6 +10,7 @@
 #include <fstream>
 #include <sstream>
 
+#include "RuntimeConfig.h"
 #include "Window_Events.h"
 #include "mmcore/utility/String.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
@@ -54,7 +55,12 @@ bool ProjectLoader_Service::init(const Config& config) {
         {"MegaMolProject", m_current_project},
     };
 
-    this->m_requestedResourcesNames = {"ExecuteLuaScript", "SetScriptPath", "optional<WindowEvents>"};
+    this->m_requestedResourcesNames = {
+        "ExecuteLuaScript",
+        "SetScriptPath",
+        "optional<WindowEvents>",
+        "RuntimeConfig",
+    };
 
     log("initialized successfully");
     return true;
@@ -115,6 +121,9 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
     using SetScriptPath = std::function<void(std::string const&)>;
     const SetScriptPath& set_script_path = m_requestedResourceReferences[1].getResource<SetScriptPath>();
 
+    const frontend_resources::RuntimeConfig& rt_config =
+        m_requestedResourceReferences[3].getResource<frontend_resources::RuntimeConfig>();
+
     set_script_path(filename.generic_u8string());
     // TODO: we have a timing issue with the script path / project path here
     // the lua script path resource gets updated by the lua service at the beginning of each frame
@@ -122,7 +131,8 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
     // such that the project path is known to the megamol graph when constructing modules with file path parameters
     // thus we sed the current project path resource, which the megamol graph can look into
     // somewhat of a very thight coupling here to pass information into the lua interpreter but currently no other solution...
-    const_cast<ProjectLoader_Service*>(this)->m_current_project.setProjectFile(filename);
+    const_cast<ProjectLoader_Service*>(this)->m_current_project.setProjectFile(
+        filename.is_absolute() ? filename : (rt_config.megamol_current_working_directory / filename));
 
     auto result = execute_lua(script);
     bool script_ok = std::get<0>(result);

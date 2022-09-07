@@ -48,6 +48,7 @@ std::pair<RuntimeConfig, GlobalValueStore> megamol::frontend::handle_cli_and_con
     RuntimeConfig config;
 
     config.megamol_executable_directory = getExecutableDirectory().u8string();
+    config.megamol_current_working_directory = std::filesystem::current_path().u8string();
 
     // config files are already checked to exist in file system
     config.configuration_files = extract_config_file_paths(argc, argv);
