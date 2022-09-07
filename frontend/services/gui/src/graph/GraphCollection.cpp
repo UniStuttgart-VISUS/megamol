@@ -440,7 +440,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(
                                 std::string param_full_name(param_slot->FullName().PeekBuffer());
                                 for (auto& parameter : module_ptr->Parameters()) {
                                     if (gui_utils::CaseInsensitiveStringEqual(
-                                            parameter.FullNameCore(), param_full_name)) {
+                                            parameter.FullName(), param_full_name)) {
                                         megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                             (*param_slot), parameter, true, false, true);
                                     }
@@ -468,7 +468,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(
                     if (p.IsValueDirty()) {
                         p.ResetValueDirty(); // ! Reset before calling lua cmd because of instantly triggered subscription callback
                         param_sync_success &= std::get<0>((*input_lua_func)(
-                            "mmSetParamValue([=[" + p.FullNameCore() + "]=],[=[" + p.GetValueString() + "]=])"));
+                            "mmSetParamValue([=[" + p.FullName() + "]=],[=[" + p.GetValueString() + "]=])"));
                     }
                 }
             }
@@ -844,7 +844,7 @@ bool megamol::gui::GraphCollection::LoadOrAddProjectFromFile(
                     for (auto& module_ptr : graph_ptr->Modules()) {
                         for (auto& parameter : module_ptr->Parameters()) {
                             if (gui_utils::CaseInsensitiveStringEqual(
-                                    parameter.FullNameProject(), param_slot_full_name)) {
+                                    parameter.FullName(), param_slot_full_name)) {
                                 parameter.SetValueString(value_str);
                             }
                         }
@@ -918,7 +918,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                         // - Ignore button parameters
                         if ((graph_ptr->IsRunning() || parameter.DefaultValueMismatch()) &&
                             (parameter.Type() != ParamType_t::BUTTON)) {
-                            confParams << "mmSetParamValue(\"" << parameter.FullNameProject() << "\",[=["
+                            confParams << "mmSetParamValue(\"" << parameter.FullName() << "\",[=["
                                        << parameter.GetValueString() << "]=])\n";
                         }
                     }

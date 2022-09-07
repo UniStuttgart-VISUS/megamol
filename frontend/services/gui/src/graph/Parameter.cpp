@@ -765,7 +765,7 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope) {
                     ImGui::SameLine();
 
                     // Lua
-                    ButtonWidgets::LuaButton("param_lua_button", (*this), this->FullNameProject());
+                    ButtonWidgets::LuaButton("param_lua_button", (*this), this->FullName());
                     this->gui_tooltip.ToolTip("Copy lua command to clipboard.");
 
                     ImGui::SameLine();
@@ -1543,7 +1543,7 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
 
     auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar;
     if (ImGui::BeginPopupModal(popup_name.c_str(), nullptr, popup_flags)) {
-        ImGui::Text("Parameter: %s", this->FullNameProject().c_str());
+        ImGui::Text("Parameter: %s", this->FullName().c_str());
         ImGui::TextColored(GUI_COLOR_TEXT_WARN, "Message: %s", this->gui_popup_msg.c_str());
         bool close = false;
         if (ImGui::Button("Ok")) {
@@ -2076,7 +2076,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
             ImGui::SameLine();
             gui_utils::PushReadOnly(param_externally_connected);
             if (ImGui::Button("Connect")) {
-                this->tf_editor_external_ptr->SetConnectedParameter(this, this->FullNameProject());
+                this->tf_editor_external_ptr->SetConnectedParameter(this, this->FullName());
                 this->tf_editor_external_ptr->Config().show = true;
                 retval = true;
             }
