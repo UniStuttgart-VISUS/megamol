@@ -138,25 +138,31 @@ void megamol::core::param::FilePathParam::SetValue(const char* v, bool setDirty)
 }
 
 
-FilePathParam::Flags_t FilePathParam::ValidatePath(const std::filesystem::path& p, const Extensions_t& e, Flags_t f) {
+FilePathParam::Flags_t FilePathParam::ValidatePath(
+    const std::filesystem::path& p, const Extensions_t& e, Flags_t f, const std::filesystem::path& project_dir) {
+
+    std::filesystem::path path = p;
+    if (!project_dir.empty() && project_dir.is_absolute() && p.is_relative()) {
+        path = project_dir / p;
+    }
 
     try {
         FilePathParam::Flags_t retval = 0;
         if ((f & FilePathParam::Flag_Any) != FilePathParam::Flag_Any) {
-            if ((f & FilePathParam::Flag_File) && std::filesystem::is_directory(p)) {
+            if ((f & FilePathParam::Flag_File) && std::filesystem::is_directory(path)) {
                 retval |= FilePathParam::Flag_File;
             }
-            if ((f & FilePathParam::Flag_Directory) && std::filesystem::is_regular_file(p)) {
+            if ((f & FilePathParam::Flag_Directory) && std::filesystem::is_regular_file(path)) {
                 retval |= FilePathParam::Flag_Directory;
             }
         }
-        if (!(f & Internal_NoExistenceCheck) && !std::filesystem::exists(p)) {
+        if (!(f & Internal_NoExistenceCheck) && !std::filesystem::exists(path)) {
             retval |= FilePathParam::Internal_NoExistenceCheck;
         }
         if (f & FilePathParam::Internal_RestrictExtension) {
             bool valid_ext = false;
             for (auto& ext : e) {
-                if (p.extension().generic_u8string() == std::string("." + ext)) {
+                if (path.extension().generic_u8string() == std::string("." + ext)) {
                     valid_ext = true;
                 }
             }

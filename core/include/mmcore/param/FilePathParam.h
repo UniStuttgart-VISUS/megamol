@@ -134,7 +134,8 @@ public:
      *
      * @return Return 0 for success, flags with failed check otherwise.
      */
-    static Flags_t ValidatePath(const std::filesystem::path& p, const Extensions_t&, Flags_t f);
+    static Flags_t ValidatePath(
+        const std::filesystem::path& p, const Extensions_t&, Flags_t f, const std::filesystem::path& project_dir = "");
 
 
     /**
