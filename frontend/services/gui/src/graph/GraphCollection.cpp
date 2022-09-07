@@ -439,8 +439,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(
                             if (param_slot != nullptr) {
                                 std::string param_full_name(param_slot->FullName().PeekBuffer());
                                 for (auto& parameter : module_ptr->Parameters()) {
-                                    if (gui_utils::CaseInsensitiveStringEqual(
-                                            parameter.FullName(), param_full_name)) {
+                                    if (gui_utils::CaseInsensitiveStringEqual(parameter.FullName(), param_full_name)) {
                                         megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                             (*param_slot), parameter, true, false, true);
                                     }
@@ -843,8 +842,7 @@ bool megamol::gui::GraphCollection::LoadOrAddProjectFromFile(
                 if (graph_ptr != nullptr) {
                     for (auto& module_ptr : graph_ptr->Modules()) {
                         for (auto& parameter : module_ptr->Parameters()) {
-                            if (gui_utils::CaseInsensitiveStringEqual(
-                                    parameter.FullName(), param_slot_full_name)) {
+                            if (gui_utils::CaseInsensitiveStringEqual(parameter.FullName(), param_slot_full_name)) {
                                 parameter.SetValueString(value_str);
                             }
                         }
