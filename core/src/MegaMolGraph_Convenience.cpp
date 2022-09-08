@@ -71,7 +71,6 @@ std::string megamol::core::MegaMolGraph_Convenience::SerializeCalls() const {
 }
 
 #include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/FilePathParam.h"
 std::string megamol::core::MegaMolGraph_Convenience::SerializeModuleParameters(std::string const& module_name) const {
     std::string serParams;
 

@@ -93,24 +93,22 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
                 if (new_value.is_absolute() && !this->project_directory.empty()) {
                     // is new path in project directory?
                     // then represent as relative path
-                    auto new_val_str = new_value.u8string();
-                    auto proj_dir_str = project_directory.u8string();
 
+                    // walk along directory path where project dir and new file path are the same
                     auto val_it = new_value.begin();
                     auto proj_it = project_directory.begin();
                     while (*val_it == *proj_it) {
                         val_it++;
                         proj_it++;
                     }
+                    // if we walked the project directory till the end, new file is inside that directory
                     if (*proj_it == *project_directory.end()) {
-                        // new value is in project directory path
-                        // collect the tail
+                        // collect the tail of new file path and use it as new value
                         std::filesystem::path project_relative_path;
                         while (val_it != new_value.end()) {
                             project_relative_path = project_relative_path / *val_it;
                             val_it++;
                         }
-
                         new_value = normalize_path(project_relative_path);
                     }
                 }
@@ -119,9 +117,6 @@ void FilePathParam::SetValue(const std::filesystem::path& v, bool setDirty) {
                 this->indicateChange();
                 if (setDirty)
                     this->setDirty();
-            } else {
-                // send around initial value, because the GUI might get stuck on an invalid file name
-                this->indicateChange();
             }
         }
     } catch (std::filesystem::filesystem_error& e) {
