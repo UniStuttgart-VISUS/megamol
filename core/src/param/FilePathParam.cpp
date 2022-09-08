@@ -11,6 +11,11 @@
 
 using namespace megamol::core::param;
 
+FilePathParam::FilePathParam(const std::filesystem::path& initVal, Flags_t flags, const Extensions_t& exts,
+    const std::filesystem::path& project_directory)
+        : FilePathParam(initVal, flags, exts) {
+    this->SetProjectDirectory(project_directory);
+}
 
 FilePathParam::FilePathParam(const std::filesystem::path& initVal, Flags_t flags, const Extensions_t& exts)
         : AbstractParam()

@@ -53,6 +53,8 @@ public:
      * @param flags The flags for the parameter
      * @param exts The required file extensions for the parameter
      */
+    FilePathParam(const std::filesystem::path& initVal, Flags_t flags, const Extensions_t& exts,
+        const std::filesystem::path& project_directory);
     FilePathParam(const std::filesystem::path& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
     FilePathParam(const std::string& initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
     FilePathParam(const char* initVal, Flags_t flags = Flag_File, const Extensions_t& exts = {});
@@ -127,6 +129,10 @@ public:
      */
     inline const Extensions_t& GetExtensions() const {
         return this->extensions;
+    }
+
+    inline std::filesystem::path GetProjectDirectory() const {
+        return this->project_directory;
     }
 
     /**
