@@ -36,8 +36,12 @@ typedef std::shared_ptr<Module> ModulePtr_t;
 // Types
 typedef std::vector<Parameter> ParamVector_t;
 typedef std::map<int, std::string> EnumStorage_t;
-typedef std::pair<megamol::core::param::FilePathParam::Flags_t, megamol::core::param::FilePathParam::Extensions_t>
-    FilePathStorage_t;
+
+struct FilePathStorage_t {
+    megamol::core::param::FilePathParam::Flags_t flags = 0;
+    megamol::core::param::FilePathParam::Extensions_t extensions = {};
+    std::filesystem::path project_directory = "";
+};
 
 
 /** ************************************************************************

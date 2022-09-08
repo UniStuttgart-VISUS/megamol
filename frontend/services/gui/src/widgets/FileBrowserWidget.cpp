@@ -12,6 +12,8 @@
 #include "mmcore/utility/FileUtils.h"
 #include "widgets/ButtonWidgets.h"
 
+#include "../gui/src/graph/Parameter.h"
+
 
 using namespace megamol;
 using namespace megamol::gui;
@@ -37,8 +39,7 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget()
 }
 
 
-bool megamol::gui::FileBrowserWidget::Button_Select(
-    std::string& inout_filename, const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags) {
+bool megamol::gui::FileBrowserWidget::Button_Select(std::string& inout_filename, const FilePathStorage_t& store) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -77,15 +78,18 @@ bool megamol::gui::FileBrowserWidget::Button_Select(
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
-    return this->PopUp_Select("Select File", inout_filename, open_popup_select_file, extensions, flags);
+    return this->PopUp_Select("Select File", inout_filename, open_popup_select_file, store);
 }
 
 
 bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, const std::string& label,
-    std::string& inout_filename, bool& inout_open_popup, const FilePathParam::Extensions_t& extensions,
-    FilePathParam::Flags_t flags, vislib::math::Ternary& inout_save_gui_state) {
+    std::string& inout_filename, bool& inout_open_popup, const FilePathStorage_t& store,
+    vislib::math::Ternary& inout_save_gui_state) {
 
     bool retval = false;
+
+    auto const& extensions = store.extensions;
+    auto const& flags = store.flags;
 
     try {
         // Generate UID independent of label name
@@ -106,9 +110,9 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
         popup_label += "###fbw" + this->label_uid_map[label];
 
         if (inout_open_popup) {
-            this->validate_split_path(inout_filename, flags, this->current_directory_str, this->current_file_str);
-            this->validate_directory(flags, this->current_directory_str);
-            this->validate_file(mode, extensions, flags, this->current_directory_str, this->current_file_str);
+            this->validate_split_path(inout_filename, store, this->current_directory_str, this->current_file_str);
+            this->validate_directory(store, this->current_directory_str);
+            this->validate_file(mode, store, this->current_directory_str, this->current_file_str);
             this->path_changed = true;
 
             ImGui::OpenPopup(popup_label.c_str());
@@ -141,7 +145,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
             ImGui::InputText("Directory", &this->current_directory_str, ImGuiInputTextFlags_AutoSelectAll);
             this->tooltip.ToolTip(this->current_directory_str);
             if (last_file_path_str != this->current_directory_str) {
-                this->validate_directory(flags, this->current_directory_str);
+                this->validate_directory(store, this->current_directory_str);
                 this->path_changed = true;
             }
             // Error message when path is no valid directory
@@ -239,9 +243,8 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                             last_file_path_str = this->current_directory_str;
                             auto new_path = path_pair.first.generic_u8string();
                             this->validate_split_path(
-                                new_path, flags, this->current_directory_str, this->current_file_str);
-                            this->validate_file(
-                                mode, extensions, flags, this->current_directory_str, this->current_file_str);
+                                new_path, store, this->current_directory_str, this->current_file_str);
+                            this->validate_file(mode, store, this->current_directory_str, this->current_file_str);
                             if (last_file_path_str != this->current_directory_str) {
                                 this->path_changed = true;
                             }
@@ -293,7 +296,7 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
                 ImGui::PopItemFlag();
             }
             if (last_file_name_str != this->current_file_str) {
-                this->validate_file(mode, extensions, flags, this->current_directory_str, this->current_file_str);
+                this->validate_file(mode, store, this->current_directory_str, this->current_file_str);
             }
 
             // Optional save GUI state option ------------
@@ -379,7 +382,9 @@ bool megamol::gui::FileBrowserWidget::popup(FileBrowserWidget::DialogMode mode, 
 
 
 bool megamol::gui::FileBrowserWidget::validate_split_path(
-    const std::string& in_path, FilePathParam::Flags_t flags, std::string& out_dir, std::string& out_file) const {
+    const std::string& in_path, const FilePathStorage_t& store, std::string& out_dir, std::string& out_file) const {
+
+    const auto& flags = store.flags;
 
     try {
         out_dir.clear();
@@ -433,7 +438,7 @@ bool megamol::gui::FileBrowserWidget::validate_split_path(
 }
 
 
-void megamol::gui::FileBrowserWidget::validate_directory(FilePathParam::Flags_t flags, const std::string& path_str) {
+void megamol::gui::FileBrowserWidget::validate_directory(const FilePathStorage_t& store, const std::string& path_str) {
 
     try {
         auto tmp_path = std::filesystem::u8path(path_str);
@@ -447,9 +452,11 @@ void megamol::gui::FileBrowserWidget::validate_directory(FilePathParam::Flags_t 
 }
 
 
-void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMode mode,
-    const FilePathParam::Extensions_t& extensions, FilePathParam::Flags_t flags, const std::string& directory_str,
-    const std::string& file_str) {
+void megamol::gui::FileBrowserWidget::validate_file(FileBrowserWidget::DialogMode mode, const FilePathStorage_t& store,
+    const std::string& directory_str, const std::string& file_str) {
+
+    auto const& flags = store.flags;
+    auto const& extensions = store.extensions;
 
     try {
         this->file_errors.clear();

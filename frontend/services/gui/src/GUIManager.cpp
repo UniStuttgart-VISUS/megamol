@@ -1119,8 +1119,8 @@ void megamol::gui::GUIManager::draw_popups() {
         float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
         ImGui::PushItemWidth(widget_width);
 
-        this->file_browser.Button_Select(this->gui_state.font_input_string_buffer, {"ttf"},
-            megamol::core::param::FilePathParam::Flag_File_RestrictExtension);
+        this->file_browser.Button_Select(this->gui_state.font_input_string_buffer,
+            FilePathStorage_t{megamol::core::param::FilePathParam::Flag_File_RestrictExtension, {"ttf"}});
         ImGui::SameLine();
         ImGui::InputText("Font Filename (.ttf)", &this->gui_state.font_input_string_buffer, ImGuiInputTextFlags_None);
         ImGui::PopItemWidth();
@@ -1238,8 +1238,9 @@ void megamol::gui::GUIManager::draw_popups() {
         auto filename = graph_ptr->GetFilename();
         auto save_gui_state = vislib::math::Ternary(vislib::math::Ternary::TRI_FALSE);
         bool popup_failed = false;
-        if (this->file_browser.PopUp_Save("Save Running Project", filename, this->gui_state.open_popup_save, {"lua"},
-                megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, save_gui_state)) {
+        if (this->file_browser.PopUp_Save("Save Running Project", filename, this->gui_state.open_popup_save,
+                FilePathStorage_t{megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"lua"}},
+                save_gui_state)) {
             std::string state_str;
             if (save_gui_state.IsTrue()) {
                 state_str = this->project_to_lua_string(true);
@@ -1255,8 +1256,8 @@ void megamol::gui::GUIManager::draw_popups() {
     // Load project pop-up
     std::string filename;
     this->gui_state.open_popup_load |= this->gui_hotkeys[HOTKEY_GUI_LOAD_PROJECT].is_pressed;
-    if (this->file_browser.PopUp_Load("Load Project", filename, this->gui_state.open_popup_load, {"lua", "png"},
-            megamol::core::param::FilePathParam::Flag_File_RestrictExtension)) {
+    if (this->file_browser.PopUp_Load("Load Project", filename, this->gui_state.open_popup_load,
+            FilePathStorage_t{megamol::core::param::FilePathParam::Flag_File_RestrictExtension, {"lua", "png"}})) {
         // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
         /// GUI graph and GUI state are updated at next synchronization
         this->gui_state.request_load_projet_file = filename;
@@ -1266,8 +1267,9 @@ void megamol::gui::GUIManager::draw_popups() {
     // File name for screenshot pop-up
     auto tmp_flag = vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN);
     if (this->file_browser.PopUp_Save("File Name for Screenshot", this->gui_state.screenshot_filepath,
-            this->gui_state.open_popup_screenshot, {"png"},
-            megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, tmp_flag)) {
+            this->gui_state.open_popup_screenshot,
+            FilePathStorage_t{megamol::core::param::FilePathParam::Flag_File_ToBeCreatedWithRestrExts, {"png"}},
+            tmp_flag)) {
         this->gui_state.screenshot_filepath_id = 0;
     }
 }
@@ -1277,7 +1279,6 @@ void megamol::gui::GUIManager::load_preset_window_docking(ImGuiID global_docking
 
 /// DOCKING
 #ifdef IMGUI_HAS_DOCK
-
     // Create preset using DockBuilder
     /// https://github.com/ocornut/imgui/issues/2109#issuecomment-426204357
     //   -------------------------------
@@ -1356,7 +1357,6 @@ std::string megamol::gui::GUIManager::save_imgui_settings_to_string() const {
 
 
 std::string megamol::gui::GUIManager::project_to_lua_string(bool as_lua) {
-
     std::string state_str;
     if (this->state_to_string(state_str)) {
         std::string return_state_str;
@@ -1383,7 +1383,6 @@ std::string megamol::gui::GUIManager::project_to_lua_string(bool as_lua) {
 
 
 bool megamol::gui::GUIManager::state_from_string(const std::string& state) {
-
     try {
         nlohmann::json state_json = nlohmann::json::parse(state);
         if (!state_json.is_object()) {
@@ -1433,7 +1432,6 @@ bool megamol::gui::GUIManager::state_from_string(const std::string& state) {
 
 
 bool megamol::gui::GUIManager::state_to_string(std::string& out_state) {
-
     ImGuiIO& io = ImGui::GetIO();
 
     try {
@@ -1469,7 +1467,6 @@ bool megamol::gui::GUIManager::state_to_string(std::string& out_state) {
 
 
 bool megamol::gui::GUIManager::create_unique_screenshot_filename(std::string& inout_filepath) {
-
     // Check for existing file
     bool created_filepath = false;
     if (!inout_filepath.empty()) {
@@ -1508,26 +1505,22 @@ bool megamol::gui::GUIManager::create_unique_screenshot_filename(std::string& in
 
 void GUIManager::RegisterWindow(
     const std::string& window_name, std::function<void(AbstractWindow::BasicConfig&)> const& callback) {
-
     this->win_collection.AddWindow(window_name, callback);
 }
 
 
 void GUIManager::RegisterPopUp(
     const std::string& name, std::weak_ptr<bool> open, const std::function<void()>& callback) {
-
     this->popup_collection[name] = PopUpData{open, const_cast<std::function<void()>&>(callback)};
 }
 
 
 void GUIManager::RegisterNotification(const std::string& name, std::weak_ptr<bool> open, const std::string& message) {
-
     this->notification_collection[name] = NotificationData{open, false, message};
 }
 
 
 std::string GUIManager::extract_fontname(const std::string& imgui_fontname) const {
-
     auto return_fontname = std::string(imgui_fontname);
     auto sep_index = return_fontname.find(',');
     return_fontname = return_fontname.substr(0, sep_index);
@@ -1537,7 +1530,6 @@ std::string GUIManager::extract_fontname(const std::string& imgui_fontname) cons
 
 void GUIManager::RegisterHotkeys(
     megamol::core::view::CommandRegistry& cmdregistry, megamol::core::MegaMolGraph& megamolgraph) {
-
     if (auto win_hkeditor_ptr = this->win_collection.GetWindow<HotkeyEditor>()) {
         win_hkeditor_ptr->RegisterHotkeys(&cmdregistry, &megamolgraph, &this->win_collection, &this->gui_hotkeys);
     }
