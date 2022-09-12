@@ -25,7 +25,11 @@ ADIOSFlexConvert::ADIOSFlexConvert()
         , flexXSlot("x", "")
         , flexYSlot("y", "")
         , flexZSlot("z", "")
-        , flexAlignedPosSlot("xyzw", "") {
+        , flexAlignedPosSlot("xyzw", "")
+        , flexIDSlot("id", "The name of the data holding the particle id.")
+        , flexVXSlot("direction::vx", "The name of the data holding the vx-coordinate.")
+        , flexVYSlot("direction::vy", "The name of the data holding the vy-coordinate.")
+        , flexVZSlot("direction::vz", "The name of the data holding the vz-coordinate.") {
 
     this->mpSlot.SetCallback(geocalls::MultiParticleDataCall::ClassName(),
         geocalls::MultiParticleDataCall::FunctionName(0), &ADIOSFlexConvert::getDataCallback);
@@ -63,6 +67,22 @@ ADIOSFlexConvert::ADIOSFlexConvert()
     this->flexZSlot << new core::param::FlexEnumParam("undef");
     this->flexZSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexZSlot);
+
+    this->flexIDSlot << new core::param::FlexEnumParam("undef");
+    this->flexIDSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
+    this->MakeSlotAvailable(&this->flexIDSlot);
+
+    this->flexVXSlot << new core::param::FlexEnumParam("undef");
+    this->flexVXSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
+    this->MakeSlotAvailable(&this->flexVXSlot);
+
+    this->flexVYSlot << new core::param::FlexEnumParam("undef");
+    this->flexVYSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
+    this->MakeSlotAvailable(&this->flexVYSlot);
+
+    this->flexVZSlot << new core::param::FlexEnumParam("undef");
+    this->flexVZSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
+    this->MakeSlotAvailable(&this->flexVZSlot);
 }
 
 ADIOSFlexConvert::~ADIOSFlexConvert() {
@@ -103,6 +123,10 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
             this->flexXSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
             this->flexYSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
             this->flexZSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+            this->flexIDSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+            this->flexVXSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+            this->flexVYSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+            this->flexVZSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
         }
 
         cad->setFrameIDtoLoad(mpdc->FrameID());
@@ -115,6 +139,10 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         const std::string x_str = std::string(this->flexXSlot.Param<core::param::FlexEnumParam>()->ValueString());
         const std::string y_str = std::string(this->flexYSlot.Param<core::param::FlexEnumParam>()->ValueString());
         const std::string z_str = std::string(this->flexZSlot.Param<core::param::FlexEnumParam>()->ValueString());
+        const std::string id_str = std::string(this->flexIDSlot.Param<core::param::FlexEnumParam>()->ValueString());
+        const std::string vx_str = std::string(this->flexVXSlot.Param<core::param::FlexEnumParam>()->ValueString());
+        const std::string vy_str = std::string(this->flexVYSlot.Param<core::param::FlexEnumParam>()->ValueString());
+        const std::string vz_str = std::string(this->flexVZSlot.Param<core::param::FlexEnumParam>()->ValueString());
 
         if (pos_str != "undef") {
             if (!cad->inquireVar(pos_str)) {
@@ -165,6 +193,38 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
             return false;
         }
 
+        bool hasID = false;
+        if (id_str != "undef") {
+            if (!cad->inquireVar(id_str)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", id_str.c_str());
+            } else {
+                hasID = true;
+            }
+        }
+
+        bool hasVel = false;
+        if (vx_str != "undef" || vy_str != "undef" || vz_str != "undef") {
+            hasVel = true;
+            if (!cad->inquireVar(vx_str)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", vx_str.c_str());
+                hasVel = false;
+            }
+
+            if (!cad->inquireVar(vy_str)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", vy_str.c_str());
+                hasVel = false;
+            }
+
+            if (!cad->inquireVar(vz_str)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", vz_str.c_str());
+                hasVel = false;
+            }
+        }
+
         if (!(*cad)(0)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetData");
             return false;
@@ -175,6 +235,10 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         std::vector<float> X;
         std::vector<float> Y;
         std::vector<float> Z;
+        std::vector<float> VX;
+        std::vector<float> VY;
+        std::vector<float> VZ;
+        std::vector<uint32_t> ID;
         uint64_t p_count;
         stride = 0;
         if (pos_str != "undef") {
@@ -195,6 +259,18 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
             return false;
         }
 
+        if (hasVel) {
+            VX = cad->getData(vx_str)->GetAsFloat();
+            VY = cad->getData(vy_str)->GetAsFloat();
+            VZ = cad->getData(vz_str)->GetAsFloat();
+            stride += 3 * sizeof(float);
+        }
+
+        if (hasID) {
+            ID = cad->getData(id_str)->GetAsUInt32();
+            stride += sizeof(uint32_t);
+        }
+
         std::vector<float> col;
         if (col_str != "undef") {
             col = cad->getData(col_str)->GetAsFloat();
@@ -212,17 +288,26 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
 
         mpdc->SetParticleListCount(1);
         mix.clear();
+        mix.resize(p_count * stride);
         if (col_str != "undef") {
-            mix.resize(p_count * 4);
             colType = geocalls::SimpleSphericalParticles::COLDATA_FLOAT_I;
         } else {
-            mix.resize(p_count * 3);
             colType = geocalls::SimpleSphericalParticles::COLDATA_NONE;
         }
 
         // Set types
         vertType = geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
-        idType = geocalls::SimpleSphericalParticles::IDDATA_NONE;
+        if (hasID) {
+            idType = geocalls::SimpleSphericalParticles::IDDATA_UINT32;
+        } else {
+            idType = geocalls::SimpleSphericalParticles::IDDATA_NONE;
+        }
+        if (hasVel) {
+            dirType = geocalls::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ;
+        } else {
+            dirType = geocalls::SimpleSphericalParticles::DIRDATA_NONE;
+        }
+
 
         mpdc->AccessParticles(0).SetGlobalRadius(0.1);
 
@@ -235,6 +320,9 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
 
         float imin = std::numeric_limits<float>::max();
         float imax = std::numeric_limits<float>::lowest();
+
+        size_t vel_offset = 0;
+        size_t id_offset = 0;
 
         for (size_t i = 0; i < p_count; i++) {
             if (pos_str != "undef") {
@@ -264,6 +352,21 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
                 zmin = std::min(zmin, mix[float_step * i + 2]);
                 zmax = std::max(zmax, mix[float_step * i + 2]);
             }
+
+            size_t offset = 4;
+            if (hasVel) {
+                vel_offset = offset;
+                mix[float_step * i + offset + 0] = VX[i];
+                mix[float_step * i + offset + 1] = VY[i];
+                mix[float_step * i + offset + 2] = VZ[i];
+                offset += 3;
+            }
+
+            if (hasID) {
+                id_offset = offset;
+                std::memcpy(&mix[float_step * i + offset], &ID[i], sizeof(uint32_t));
+                offset += 1;
+            }
         }
         if (box_str == "undef") {
             cubo = vislib::math::Cuboid<float>(xmin, ymin, zmin, xmax, ymax, zmax);
@@ -284,10 +387,10 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
 
         mpdc->AccessParticles(0).SetColourMapIndexValues(imin, imax);
 
-        mpdc->AccessParticles(0).SetIDData(idType,
-            mix.data() + geocalls::SimpleSphericalParticles::VertexDataSize[vertType] +
-                geocalls::SimpleSphericalParticles::ColorDataSize[colType],
-            stride);
+        mpdc->AccessParticles(0).SetIDData(idType, &mix[id_offset], stride);
+
+        mpdc->AccessParticles(0).SetDirData(dirType, &mix[vel_offset], stride);
+
         mpdc->AccessParticles(0).SetBBox(cubo);
     }
 

@@ -25,11 +25,11 @@
  * megamol::core::cluster::mpi::MpiProvider::IsAvailable
  */
 bool megamol::core::cluster::mpi::MpiProvider::IsAvailable(void) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     return true;
-#else  /* WITH_MPI */
+#else  /* MEGAMOL_USE_MPI */
     return false;
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 }
 
 
@@ -39,13 +39,13 @@ bool megamol::core::cluster::mpi::MpiProvider::IsAvailable(void) {
 megamol::core::cluster::mpi::MpiProvider::MpiProvider(void)
         : Base()
         , activeNodeColour(
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
               MPI_UNDEFINED
 #else
               -1
 #endif
               )
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         , comm(MPI_COMM_NULL)
 #endif
 
@@ -82,7 +82,7 @@ bool megamol::core::cluster::mpi::MpiProvider::create(void) {
  * megamol::core::cluster::mpi::MpiProvider::OnCallProvideMpi
  */
 bool megamol::core::cluster::mpi::MpiProvider::OnCallProvideMpi(Call& call) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     auto colour = this->paramNodeColour.Param<param::IntParam>()->Value();
 
     try {
@@ -100,9 +100,9 @@ bool megamol::core::cluster::mpi::MpiProvider::OnCallProvideMpi(Call& call) {
 
     } catch (...) { return false; }
 
-#else  /* WITH_MPI */
+#else  /* MEGAMOL_USE_MPI */
     return false;
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 }
 
 
@@ -114,7 +114,7 @@ void megamol::core::cluster::mpi::MpiProvider::release(void) {
 
     ASSERT(MpiProvider::activeInstances.load() > 0);
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     auto comm = MpiProvider::comm.exchange(MPI_COMM_NULL);
     if (comm != MPI_COMM_NULL) {
         Log::DefaultLog.WriteInfo("Releasing MPI communicator ...");
@@ -127,7 +127,7 @@ void megamol::core::cluster::mpi::MpiProvider::release(void) {
         activeNodeColour.store(MPI_UNDEFINED);
     }
     ASSERT(MpiProvider::activeInstances.load() >= 0);
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 }
 
 
@@ -167,7 +167,7 @@ vislib::StringA megamol::core::cluster::mpi::MpiProvider::getCommandLine(void) {
 bool megamol::core::cluster::mpi::MpiProvider::initialiseMpi(const int colour) {
     using megamol::core::utility::log::Log;
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     int expectedColour = MPI_UNDEFINED;
 
     if (this->activeNodeColour.compare_exchange_strong(expectedColour, colour)) {
@@ -237,9 +237,9 @@ bool megamol::core::cluster::mpi::MpiProvider::initialiseMpi(const int colour) {
 
     return true;
 
-#else  /* WITH_MPI */
+#else  /* MEGAMOL_USE_MPI */
     return false;
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 }
 
 

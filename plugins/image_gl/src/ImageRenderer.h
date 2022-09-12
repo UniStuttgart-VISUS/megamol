@@ -8,18 +8,19 @@
 
 #include <memory>
 
-#include <glowl/glowl.h>
+#include <glowl/GLSLProgram.hpp>
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib/Pair.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/math/Rectangle.h"
+#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include "mpi.h"
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
 /*
  * Copyright (C) 2010 by Sebastian Grottel.
@@ -32,7 +33,7 @@ namespace megamol {
 namespace image_gl {
 
 /**
- * Mesh-based renderer for bézier curve tubes
+ * Mesh-based renderer for bezier curve tubes
  */
 class ImageRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
@@ -104,12 +105,6 @@ protected:
 
 private:
     /**
-     * Utility function to convert a 'std::string' instance into 'TString',
-     * while preserving '\0' bytes.
-     */
-    static vislib::TString stdToTString(const std::string& str);
-
-    /**
      * Splits a line at the semicolon into a left and right part. If there
      * is no semicolon, defaultEye governs which one of the strings is set,
      * the other one is emptied.
@@ -161,6 +156,8 @@ private:
 
     bool initMPI();
 
+    vislib::TString stdToTString(const std::string& str);
+
     /** The image file path slot */
     core::param::ParamSlot leftFilenameSlot;
 
@@ -194,17 +191,20 @@ private:
     /** if only one image per pair is defined: where it should go */
     core::param::ParamSlot defaultEye;
 
+    /** Index of the shown image if the one from the call is taken */
+    core::param::ParamSlot shownImage;
+
     /** slot for MPIprovider */
     core::CallerSlot callRequestMpi;
 
     /** slot for image data */
     core::CallerSlot callRequestImage;
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     /** The communicator that the view uses. */
     MPI_Comm comm = MPI_COMM_NULL;
     MPI_Comm roleComm;
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
     int mpiRank = 0;
 
@@ -226,7 +226,9 @@ private:
     /** The height of the image */
     unsigned int height;
 
-    std::unique_ptr<glowl::GLSLProgram> theShader;
+    bool newImageNeeded;
+
+    std::shared_ptr<glowl::GLSLProgram> theShader_;
     GLuint theVertBuffer;
     GLuint theTexCoordBuffer;
     GLuint theVAO;
@@ -250,6 +252,9 @@ private:
 
     /** hash to check whether image has changed */
     size_t datahash;
+
+    /** Flag determining whether the tiles have been recalculated */
+    bool new_tiles_;
 };
 
 } // namespace image_gl

@@ -4,7 +4,7 @@
 #include "mmcore/Module.h"
 #include <array>
 
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
 #include "glad/gl.h"
 #endif
 
@@ -46,7 +46,7 @@ void PerformanceManager::cpu_timer::end() {
 }
 
 PerformanceManager::gl_timer::~gl_timer() {
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     for (auto& q_pair : query_ids) {
         glDeleteQueries(1, &q_pair.first);
         glDeleteQueries(1, &q_pair.second);
@@ -60,7 +60,7 @@ bool PerformanceManager::gl_timer::start(frame_type frame) {
         query_index = 0;
     }
     last_query = assert_query(query_index).first;
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     glQueryCounter(last_query, GL_TIMESTAMP);
 #endif
     return new_frame;
@@ -69,14 +69,14 @@ bool PerformanceManager::gl_timer::start(frame_type frame) {
 void PerformanceManager::gl_timer::end() {
     Itimer::end();
     last_query = assert_query(query_index).second;
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     glQueryCounter(last_query, GL_TIMESTAMP);
 #endif
     query_index++;
 }
 
 void PerformanceManager::gl_timer::collect() {
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     GLuint64 start_time, end_time;
     for (uint32_t index = 0; index < query_index; ++index) {
         const auto& [start, end] = query_ids[index];
@@ -95,7 +95,7 @@ std::pair<uint32_t, uint32_t> PerformanceManager::gl_timer::assert_query(uint32_
     }
     if (index == query_ids.size()) {
         std::array<uint32_t, 2> ids = {0, 0};
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
         glGenQueries(2, ids.data());
 #endif
         query_ids.emplace_back(std::make_pair(ids[0], ids[1]));
@@ -235,7 +235,7 @@ PerformanceManager::handle_type PerformanceManager::add_timer(std::unique_ptr<It
 }
 
 void PerformanceManager::endFrame() {
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     int done = (gl_timer::last_query == 0);
     while (!done) {
         glGetQueryObjectiv(gl_timer::last_query, GL_QUERY_RESULT_AVAILABLE, &done);

@@ -8,20 +8,26 @@ pr:
 variables:
   defaultConfig: >-
     -DMEGAMOL_WARNING_LEVEL="Off"
-    -DBUILD_PLUGIN_ASTRO=ON
-    -DBUILD_PLUGIN_ASTRO_GL=ON
-    -DBUILD_PLUGIN_IMAGE_GL=ON
-    -DBUILD_PLUGIN_MEGAMOL101_GL=ON
-    -DBUILD_PLUGIN_MMADIOS=ON
-    -DBUILD_PLUGIN_MMVTKM=ON
-    -DBUILD_PLUGIN_MMVTKM_GL=ON
-    -DBUILD_PLUGIN_REMOTE=OFF
+    -DMEGAMOL_PLUGIN_ASTRO=ON
+    -DMEGAMOL_PLUGIN_ASTRO_GL=ON
+    -DMEGAMOL_PLUGIN_IMAGE_GL=ON
+    -DMEGAMOL_PLUGIN_MEGAMOL101_GL=ON
+    -DMEGAMOL_PLUGIN_MMADIOS=ON
+    -DMEGAMOL_PLUGIN_MMVTKM=ON
+    -DMEGAMOL_PLUGIN_MMVTKM_GL=ON
+    -DMEGAMOL_PLUGIN_PROTEIN=ON
+    -DMEGAMOL_PLUGIN_PROTEIN_GL=ON
+    -DMEGAMOL_PLUGIN_REMOTE=OFF
   nonGlConfig: >-
     -DMEGAMOL_WARNING_LEVEL="Off"
-    -DENABLE_GL=OFF
+    -DMEGAMOL_USE_OPENGL=OFF
 
 jobs:
 - job: Windows
+  variables:
+    VCPKG_DEFAULT_BINARY_CACHE: '$(Agent.BuildDirectory)\vcpkg_cache\archives'
+    X_VCPKG_REGISTRIES_CACHE: '$(Agent.BuildDirectory)\vcpkg_cache\registries'
+
   strategy:
     matrix:
       'VS2019 Release':
@@ -46,6 +52,10 @@ jobs:
 
   steps:
   - template: .ci/check-pr-labels-step.yml
+  - powershell: |
+      New-Item -ItemType "directory" -Path "$Env:VCPKG_DEFAULT_BINARY_CACHE" -Force
+      New-Item -ItemType "directory" -Path "$Env:X_VCPKG_REGISTRIES_CACHE" -Force
+    displayName: 'Setup vcpkg cache directories'
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
@@ -56,6 +66,10 @@ jobs:
       cmakeArgs: '--build . --config $(configuration)'
 
 - job: Linux
+  variables:
+    VCPKG_DEFAULT_BINARY_CACHE: '$(Agent.BuildDirectory)/vcpkg_cache/archives'
+    X_VCPKG_REGISTRIES_CACHE: '$(Agent.BuildDirectory)/vcpkg_cache/registries'
+
   strategy:
     matrix:
       ## Temporarily disabled until more CI machines are available!
@@ -101,6 +115,10 @@ jobs:
 
   steps:
   - template: .ci/check-pr-labels-step.yml
+  - bash: |
+      mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
+      mkdir -p $X_VCPKG_REGISTRIES_CACHE
+    displayName: 'Setup vcpkg cache directories'
   - bash: echo "##vso[task.setvariable variable=numberOfCpuCores]$(nproc)"
     displayName: 'Bash get number of CPU cores'
   - task: CMake@1

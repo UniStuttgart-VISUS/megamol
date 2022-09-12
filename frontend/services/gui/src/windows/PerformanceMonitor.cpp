@@ -31,8 +31,8 @@ PerformanceMonitor::PerformanceMonitor(const std::string& window_name)
         , averaged_ms(0.0f) {
 
     // Configure FPS/MS Window
-    this->win_config.flags =
-        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking;
+    this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar |
+                             ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoNavInputs;
     this->win_config.hotkey =
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F7, core::view::Modifier::NONE);
 }

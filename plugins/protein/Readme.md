@@ -59,10 +59,11 @@ The PDBLoader loads the atom coordinates from the desired protein, the BindingSi
 
 ### Internal
 
-* trisoup
+* trisoup_gl
 * protein_calls
 * geometry_calls
 
 ### External
 
 * nanoflann
+* chemfiles

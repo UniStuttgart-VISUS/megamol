@@ -9,9 +9,9 @@
 #include "datatools/AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include "mpi.h"
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
 namespace megamol {
 namespace datatools {
@@ -36,7 +36,7 @@ public:
 
     /** Module is always available */
     static bool IsAvailable(void) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         return true;
 #else
         return false;
@@ -64,10 +64,10 @@ protected:
     bool initMPI();
 
 private:
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     /** The communicator that the view uses. */
     MPI_Comm comm = MPI_COMM_NULL;
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
     /** slot for MPIprovider */
     core::CallerSlot callRequestMpi;

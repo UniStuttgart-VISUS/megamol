@@ -13,7 +13,7 @@
 
 #include "OpenGL_Context.h"
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 #include "PerformanceManager.h"
 #endif
 
@@ -64,7 +64,7 @@ ArrowRenderer::~ArrowRenderer(void) {
 
 
 bool ArrowRenderer::create(void) {
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
         &frontend_resources.get<frontend_resources::PerformanceManager>());
 
@@ -128,7 +128,7 @@ bool ArrowRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 void ArrowRenderer::release(void) {
     glDeleteTextures(1, &this->grey_tf_);
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     perf_manager_->remove_timers(timers_);
 #endif
 }
@@ -392,13 +392,13 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             }
             glUniform1ui(this->arrow_pgrm_->getUniformLocation("flagsAvailable"), use_flags ? 1 : 0);
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
             perf_manager_->start_timer(timers_[0], this->GetCoreInstance()->GetFrameID());
 #endif
 
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
             perf_manager_->stop_timer(timers_[0]);
 #endif
 

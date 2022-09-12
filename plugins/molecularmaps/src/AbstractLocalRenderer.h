@@ -9,7 +9,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore_gl/view/CallRender3DGL.h"
 
 namespace megamol {
 namespace molecularmaps {
@@ -35,7 +35,7 @@ public:
      * @param call The incoming rendering call containing the necessary camera information
      * @return True on success, false otherwise.
      */
-    virtual bool Render(core::view::CallRender3DGL& call, bool lighting = true) = 0;
+    virtual bool Render(core_gl::view::CallRender3DGL& call, bool lighting = true) = 0;
 
     /**
      * Frees all needed resources used by this renderer

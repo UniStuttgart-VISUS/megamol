@@ -42,7 +42,7 @@ bool datatools::MPIParticleCollector::manipulateData(
 
     inData.SetUnlocker(nullptr, false); // keep original data locked
                                         // original data will be unlocked through outData
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     bool useMpi = initMPI();
 
     unsigned int plc = outData.GetParticleListCount();
@@ -125,14 +125,14 @@ bool datatools::MPIParticleCollector::manipulateData(
             p.SetVertexData(vdt, vertexData.data(), vsize);
         }
     }
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
     return true;
 }
 
 bool datatools::MPIParticleCollector::initMPI() {
     bool retval = false;
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     if (this->comm == MPI_COMM_NULL) {
         auto c = this->callRequestMpi.CallAs<core::cluster::mpi::MpiCall>();
         if (c != nullptr) {
@@ -161,6 +161,6 @@ bool datatools::MPIParticleCollector::initMPI() {
 
     /* Determine success of the whole operation. */
     retval = (this->comm != MPI_COMM_NULL);
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
     return retval;
 }

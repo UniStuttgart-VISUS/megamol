@@ -35,11 +35,11 @@ const char* megamol::core::cluster::mpi::MpiCall::FunctionName(unsigned int idx)
  * megamol::core::cluster::mpi::MpiCall::IsAvailable
  */
 bool megamol::core::cluster::mpi::MpiCall::IsAvailable(void) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     return true;
-#else  /* WITH_MPI */
+#else  /* MEGAMOL_USE_MPI */
     return false;
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 }
 
 
@@ -53,9 +53,9 @@ const unsigned int megamol::core::cluster::mpi::MpiCall::IDX_PROVIDE_MPI = 0;
  * megamol::core::cluster::mpi::MpiCall::MpiCall
  */
 megamol::core::cluster::mpi::MpiCall::MpiCall(void) : Base() {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     this->comm = MPI_COMM_NULL;
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 }
 
 
@@ -70,9 +70,9 @@ megamol::core::cluster::mpi::MpiCall::~MpiCall(void) {}
  */
 int megamol::core::cluster::mpi::MpiCall::GetCommSize(void) const {
     int retval = -1;
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     ::MPI_Comm_size(this->comm, &retval);
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
     return retval;
 }
 
@@ -82,9 +82,9 @@ int megamol::core::cluster::mpi::MpiCall::GetCommSize(void) const {
  */
 int megamol::core::cluster::mpi::MpiCall::GetRank(void) const {
     int retval = -1;
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     ::MPI_Comm_rank(this->comm, &retval);
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
     return retval;
 }
 

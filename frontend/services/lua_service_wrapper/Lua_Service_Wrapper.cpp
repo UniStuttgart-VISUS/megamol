@@ -116,7 +116,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "RenderNextFrame",                      // LuaAPI can render one frame
         "GlobalValueStore",                     // LuaAPI can read and set global values
         frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>", "RuntimeConfig",
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         frontend_resources::PerformanceManager_Req_Name
 #endif
     }; //= {"ZMQ_Context"};
@@ -181,6 +181,12 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
         return;
 
 void Lua_Service_Wrapper::updateProvidedResources() {
+    // during the previous frame module parameters of the graph may have changed.
+    // submit the queued parameter changes to graph subscribers before other services do their thing
+    auto& graph = const_cast<megamol::core::MegaMolGraph&>(
+        m_requestedResourceReferences[5].getResource<megamol::core::MegaMolGraph>());
+    graph.Broadcast_graph_subscribers_parameter_changes();
+
     recursion_guard;
     // we want lua to be the first thing executed in main loop
     // so we do all the lua work here
@@ -595,12 +601,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string, std::string>("mmSetParamValue",
         "(string name, string value)\n\tSet the value of a parameter slot.",
         {[&](std::string paramName, std::string paramValue) -> VoidResult {
-            auto* param = graph.FindParameter(paramName);
-            if (param == nullptr) {
-                return Error{"graph could not find parameter: " + paramName};
-            }
-
-            if (!param->ParseValue(paramValue.c_str())) {
+            if (!graph.SetParameter(paramName, paramValue.c_str())) {
                 return Error{"parameter could not be set to value: " + paramName + " : " + paramValue};
             }
 
@@ -718,7 +719,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
         }});
 
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     callbacks.add<StringResult, std::string>("mmListModuleTimers",
         "(string name)\n\tList the registered timers of a module.", {[&](std::string name) -> StringResult {
             auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(

@@ -6,6 +6,11 @@
 
 #include "VoronoiChannelCalculator.h"
 
+#include "mmcore/utility/log/Log.h"
+
+#include <array>
+#include <concrt.h>
+
 using namespace megamol::core;
 using namespace megamol::molecularmaps;
 using namespace megamol::protein_calls;
@@ -597,7 +602,7 @@ bool VoronoiChannelCalculator::create(void) {
 /*
  * VoronoiChannelCalculator::Render
  */
-bool VoronoiChannelCalculator::Render(view::CallRender3DGL& call, bool lighting) {
+bool VoronoiChannelCalculator::Render(core_gl::view::CallRender3DGL& call, bool lighting) {
     glLineWidth(1.0);
     glDisable(GL_LIGHTING);
     glBegin(GL_LINES);

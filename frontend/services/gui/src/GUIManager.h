@@ -237,13 +237,11 @@ public:
 
     void RegisterNotification(const std::string& name, std::weak_ptr<bool> open, const std::string& message);
 
-    /**
-     * Synchronise changes between core graph <-> gui graph.
-     *
-     * @param megamol_graph          The megamol graph.
-     * @param core_instance          The core_instance.
-     */
-    bool GraphSynchronization(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
+    bool InitializeGraphSynchronisation(const megamol::core::CoreInstance& core_instance) {
+        return this->win_configurator_ptr->GetGraphCollection().InitializeGraphSynchronisation(core_instance);
+    }
+
+    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
 
     /**
      * Register GUI hotkeys.
@@ -255,12 +253,10 @@ public:
         if (cons) {
             cons->SetLuaFunc(lua_func);
         }
-        if (this->win_configurator_ptr != nullptr) {
-            this->win_configurator_ptr->GetGraphCollection().SetLuaFunc(lua_func);
-        }
+        this->win_configurator_ptr->GetGraphCollection().SetLuaFunc(lua_func);
     }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
         this->win_configurator_ptr->GetGraphCollection().SetPerformanceManager(perf_manager);
     }
@@ -268,6 +264,44 @@ public:
         this->win_configurator_ptr->GetGraphCollection().AppendPerformanceData(fi);
     }
 #endif
+
+    bool NotifyRunningGraph_AddModule(core::ModuleInstance_t const& module_inst) {
+        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_AddModule(module_inst);
+    }
+    bool NotifyRunningGraph_DeleteModule(core::ModuleInstance_t const& module_inst) {
+        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_DeleteModule(module_inst);
+    }
+    bool NotifyRunningGraph_RenameModule(
+        std::string const& old_name, std::string const& new_name, core::ModuleInstance_t const& module_inst) {
+        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_RenameModule(
+            old_name, new_name, module_inst);
+    }
+    bool NotifyRunningGraph_AddParameters(
+        std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots) {
+        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_AddParameters(param_slots);
+    }
+    bool NotifyRunningGraph_RemoveParameters(
+        std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots) {
+        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_RemoveParameters(param_slots);
+    }
+    bool NotifyRunningGraph_ParameterChanged(
+        megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
+        std::string const& new_value) {
+        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_ParameterChanged(
+            param_slot, new_value);
+    }
+    bool NotifyRunningGraph_AddCall(core::CallInstance_t const& call_inst) {
+        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_AddCall(call_inst);
+    }
+    bool NotifyRunningGraph_DeleteCall(core::CallInstance_t const& call_inst) {
+        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_DeleteCall(call_inst);
+    }
+    bool NotifyRunningGraph_EnableEntryPoint(core::ModuleInstance_t const& module_inst) {
+        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_EnableEntryPoint(module_inst);
+    }
+    bool NotifyRunningGraph_DisableEntryPoint(core::ModuleInstance_t const& module_inst) {
+        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_DisableEntryPoint(module_inst);
+    }
 
     ///////////////////////////////////////////////////////////////////////
 
@@ -279,9 +313,6 @@ private:
         DarkColors,
         LightColors,
     };
-
-    /** ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512) */
-    enum GuiTextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
 
     /** The global state (for settings to be applied before ImGui::Begin). */
     struct StateBuffer {

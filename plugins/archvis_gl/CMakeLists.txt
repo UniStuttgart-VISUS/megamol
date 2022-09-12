@@ -5,7 +5,8 @@
 
 megamol_plugin(archvis_gl
   BUILD_DEFAULT OFF
-  DEPENDS_GL
+  DEPENDS_FEATURES
+    opengl
   DEPENDS_PLUGINS
     mmstd
     mmstd_gl
@@ -13,6 +14,9 @@ megamol_plugin(archvis_gl
     mesh_gl
     datatools)
 
-#if (archvis_PLUGIN_ENABLED)
-#  target_include_directories(archvis PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external>)
-#endif ()
+if (archvis_gl_PLUGIN_ENABLED)
+  find_package(quickhull CONFIG REQUIRED)
+  target_link_libraries(archvis_gl
+    PRIVATE
+      quickhull::quickhull)
+endif ()

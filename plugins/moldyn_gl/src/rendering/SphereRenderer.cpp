@@ -338,7 +338,7 @@ bool SphereRenderer::create(void) {
     // timer_.SetSummaryFileName("summary.csv");
     // timer_.SetMaximumFrames(20, 100);
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
         &frontend_resources.get<frontend_resources::PerformanceManager>());
     frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer;
@@ -357,7 +357,7 @@ bool SphereRenderer::create(void) {
 
 
 void SphereRenderer::release(void) {
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     perf_manager_->remove_timers(timers_);
 #endif
     this->resetResources();
@@ -1164,11 +1164,11 @@ bool SphereRenderer::renderSimple(mmstd_gl::CallRender3DGL& call, MultiParticleD
             this->enableBufferData(this->sphere_prgm_, parts, 0, parts.GetVertexData(), 0, parts.GetColourData());
         }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         perf_manager_->start_timer(timers_[1], this->GetCoreInstance()->GetFrameID());
 #endif
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         perf_manager_->stop_timer(timers_[1]);
 #endif
 
@@ -2045,8 +2045,7 @@ bool SphereRenderer::enableTransferFunctionTexture(std::shared_ptr<glowl::GLSLPr
 
     mmstd_gl::CallGetTransferFunctionGL* cgtf = this->get_tf_slot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     if ((cgtf != nullptr) && (*cgtf)(0)) {
-        // TODO: how to do with unique?
-        //cgtf->BindConvenience(prgm, GL_TEXTURE0, 0);
+        cgtf->BindConvenience(*prgm, GL_TEXTURE0, 0);
     } else {
         glEnable(GL_TEXTURE_1D);
         glActiveTexture(GL_TEXTURE0);

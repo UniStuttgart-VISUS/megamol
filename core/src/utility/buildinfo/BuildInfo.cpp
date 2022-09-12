@@ -91,6 +91,11 @@ int megamol::core::utility::buildinfo::MEGAMOL_GIT_IS_DIRTY() {
     return res;
 }
 
+std::string const& megamol::core::utility::buildinfo::MEGAMOL_GIT_LAST_COMMIT_DATE() {
+    static const auto res = loadStringResource("MEGAMOL_GIT_LAST_COMMIT_DATE");
+    return res;
+}
+
 std::string const& megamol::core::utility::buildinfo::MEGAMOL_LICENSE() {
     static const auto res = loadStringResource("MEGAMOL_LICENSE");
     return res;

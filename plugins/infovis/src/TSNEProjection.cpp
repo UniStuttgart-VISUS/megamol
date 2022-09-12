@@ -25,8 +25,6 @@ TSNEProjection::TSNEProjection(void)
         , dataInHash(0)
         , columnInfos() {
 
-    TSNE* tsne = new TSNE(); // lib load test
-
     this->dataInSlot.SetCompatibleCall<megamol::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
 
@@ -163,14 +161,11 @@ bool megamol::infovis::TSNEProjection::project(megamol::datatools::table::TableD
         }
     }
 
-
-    TSNE* tsne = new TSNE();
-
     double* result = (double*)malloc(rowsCount * outputColumnCount * sizeof(double));
     // void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, int rand_seed,
     // bool skip_random_init, int max_iter = 1000, int stop_lying_iter = 250, int mom_switch_iter = 250);
-    tsne->run(
-        inputData, rowsCount, columnCount, result, outputColumnCount, perplexity, theta, randomSeed, false, maxIter);
+    TSNE::run(inputData, rowsCount, columnCount, result, outputColumnCount, perplexity, theta, randomSeed, false,
+        maxIter, 250, 250);
 
     double* maximas = new double[outputColumnCount];
     double* minimas = new double[outputColumnCount];
@@ -230,7 +225,6 @@ bool megamol::infovis::TSNEProjection::project(megamol::datatools::table::TableD
     result = NULL;
     free(inputData);
     inputData = NULL;
-    delete (tsne);
     delete[] maximas;
     delete[] minimas;
 

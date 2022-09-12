@@ -9,7 +9,7 @@
 #include "vislib/String.h"
 #include "vislib/math/Cuboid.h"
 #include <adios2.h>
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include <mpi.h>
 #endif
 
@@ -85,7 +85,7 @@ private:
     core::CallerSlot callRequestMpi;
     bool initMPI();
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     MPI_Comm mpi_comm_ = MPI_COMM_NULL;
     int mpiRank = -1, mpiSize = -1;
     bool MpiInitialized = false;

@@ -206,7 +206,7 @@ TransferFunctionEditor::TransferFunctionEditor(const std::string& window_name, b
     RampAdapter(this->nodes, this->texture_size);
 
     // Configure TRANSFER FUNCTION Window
-    this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize;
+    this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNavInputs;
     this->win_config.hotkey =
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F8, core::view::Modifier::NONE);
 }
@@ -314,9 +314,10 @@ bool TransferFunctionEditor::Update() {
     // Change window flags depending on current view of transfer function editor
     if (this->IsMinimized()) {
         this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
-                                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
+                                 ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar |
+                                 ImGuiWindowFlags_NoNavInputs;
     } else {
-        this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize;
+        this->win_config.flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoNavInputs;
     }
     this->win_view_minimized = this->IsMinimized();
     this->win_view_vertical = this->IsVertical();
@@ -578,7 +579,7 @@ bool TransferFunctionEditor::TransferFunctionEditor::Draw() {
             texture_data =
                 TransferFunctionParam::GaussInterpolation(static_cast<unsigned int>(this->texture_size), this->nodes);
         }
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
         if (!this->flip_legend) {
             this->image_widget_linear.LoadTextureFromData(this->texture_size, 1, texture_data.data());
             this->image_widget_nearest.LoadTextureFromData(
@@ -871,6 +872,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     ImGuiStyle& style = ImGui::GetStyle();
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
+    assert(drawList != nullptr);
 
     ImVec2 canvas_pos = ImGui::GetCursorScreenPos(); // ImDrawList API uses screen coordinates!
     ImVec2 canvas_size = size;
@@ -878,7 +880,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
         canvas_size.x = 100.0f;
     if (canvas_size.y < 100.0f)
         canvas_size.y = 100.0f;
-    ImVec2 mouse_pos = io.MousePos; // current mouse position
+    ImVec2 mouse_pos = ImGui::GetMousePos(); // current mouse position
 
     ImVec4 tmp_frameBkgrd = style.Colors[ImGuiCol_FrameBg];
     tmp_frameBkgrd.w = 1.0f;
@@ -1025,7 +1027,6 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     } else {
         this->plot_dragging = false;
     }
-
     ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
     ImGui::AlignTextToFramePadding();
     ImGui::TextUnformatted("Function Plot");

@@ -135,7 +135,7 @@ void datatools::ParticleIColGradientField::compute_colors(geocalls::MultiParticl
 
     // construct a kd-tree index:
     typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<float, DataAdapter>, DataAdapter,
-        3 /* dim */>
+        3 /* dim */, std::size_t>
         my_kd_tree_t;
 
     my_kd_tree_t index(3 /*dim*/, data, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));

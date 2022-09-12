@@ -1,0 +1,18 @@
+{
+  "name": "obj-io",
+  "version": "2009-05-19",
+  "port-version": 0,
+  "description": "single-file, header-only, no-dependencies C++ implementation of the OBJ file format",
+  "homepage": "https://github.com/thinks/obj-io",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}

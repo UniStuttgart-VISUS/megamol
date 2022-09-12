@@ -44,12 +44,14 @@ private:
     StringSearchWidget search_widget;
     HoverToolTip tooltip_widget;
 
-    bool is_any_key_pressed();
+    bool is_any_key_down();
+    bool is_key_modifier(ImGuiKey k);
 
     megamol::frontend_resources::CommandRegistry* command_registry_ptr;
     megamol::gui::WindowCollection* window_collection_ptr;
     megamol::gui::HotkeyMap_t* gui_hotkey_ptr;
     megamol::core::MegaMolGraph* megamolgraph_ptr;
+    frontend_resources::Command::EffectFunction graph_parameter_lambda;
     frontend_resources::Command::EffectFunction parent_gui_hotkey_lambda;
     frontend_resources::Command::EffectFunction parent_gui_window_lambda;
     frontend_resources::Command::EffectFunction parent_gui_window_hotkey_lambda;

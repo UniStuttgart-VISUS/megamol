@@ -176,7 +176,7 @@ public:
         return retval;
     }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     std::vector<std::string> requested_lifetime_resources() override {
         std::vector<std::string> resources = ModuleGL::requested_lifetime_resources();
         resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
@@ -310,7 +310,7 @@ private:
     misc::MDAOVolumeGenerator* vol_gen_;
     bool trigger_rebuild_g_buffer_;
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     frontend_resources::PerformanceManager::handle_vector timers_;
     frontend_resources::PerformanceManager* perf_manager_ = nullptr;
 #endif

@@ -14,7 +14,7 @@
 #include "vislib/math/Ternary.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ParameterGroupAnimationWidget.h"
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
 #include "widgets/gl/ParameterGroupViewCubeWidget.h"
 #endif
 
@@ -59,7 +59,7 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     HoverToolTip tooltip;
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     ParameterGroupViewCubeWidget cube_widget_group;
 #endif
     ParameterGroupAnimationWidget animation_group;

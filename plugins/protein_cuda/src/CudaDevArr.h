@@ -41,7 +41,6 @@ public:
      * variable.
      */
     T GetAt(size_t idx) {
-        ASSERT(idx < this->count);
         T el;
         CudaSafeCall(cudaMemcpy(&el, this->pt_D + idx, sizeof(T), cudaMemcpyDeviceToHost));
         return el;

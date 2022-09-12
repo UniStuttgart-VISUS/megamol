@@ -10,7 +10,7 @@
 #pragma once
 
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 #include "PerformanceManager.h"
 #include "mmcore/MultiPerformanceHistory.h"
 #endif
@@ -79,7 +79,27 @@ public:
         capabilities = caps;
     }
 
-#ifdef PROFILING
+    void SetActive() {
+        this->gui_set_active = true;
+    }
+
+    void SetHovered() {
+        this->gui_set_hovered = true;
+    }
+
+    bool IsSelected() {
+        return this->gui_selected;
+    }
+
+    bool IsHovered() {
+        return this->gui_hovered;
+    }
+
+    inline bool IsHidden() const {
+        return this->gui_hidden;
+    }
+
+#ifdef MEGAMOL_USE_PROFILING
 
     ImVec2 GetProfilingButtonPosition() {
         return this->profiling_button_position;
@@ -109,7 +129,7 @@ public:
 
     void DrawProfiling(GraphItemsState_t& state);
 
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -124,7 +144,6 @@ private:
 
     std::map<CallSlotType, CallSlotPtr_t> connected_callslots;
 
-    bool gui_selected;
     const std::string slot_name_separator = " > ";
     std::string caller_slot_name;
     std::string callee_slot_name;
@@ -132,8 +151,13 @@ private:
     HoverToolTip gui_tooltip;
     ImageWidget gui_profiling_button;
     bool gui_profiling_btn_hovered;
+    bool gui_hidden;
+    bool gui_selected;
+    bool gui_set_active;
+    bool gui_set_hovered;
+    bool gui_hovered;
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 
     std::vector<core::MultiPerformanceHistory> cpu_perf_history;
     std::vector<core::MultiPerformanceHistory> gl_perf_history;
@@ -144,7 +168,7 @@ private:
     bool pause_profiling_history_update;
     ImVec2 profiling_button_position;
 
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 };
 
 

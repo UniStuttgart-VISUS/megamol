@@ -1,6 +1,6 @@
 #include "SimplifyMesh.h"
 
-#ifdef WITH_CGAL
+#ifdef MEGAMOL_USE_CGAL
 #include "mesh/TriangleMeshCall.h"
 
 #include "mmcore/param/FloatParam.h"
