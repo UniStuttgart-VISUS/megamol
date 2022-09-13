@@ -16,7 +16,7 @@
 #include "mmstd_gl/renderer/CallRenderViewGL.h"
 #include "mmstd_gl/renderer/ContextToGL.h"
 #include "mmstd_gl/renderer/DeferredShading.h"
-#include "mmstd_gl/renderer/TimeDivisor.h"
+#include "mmstd_gl/renderer/TimeMultiplier.h"
 #include "mmstd_gl/renderer/TransferFunctionGL.h"
 #include "mmstd_gl/special/CallbackScreenShooter.h"
 #include "mmstd_gl/special/ChronoGraph.h"
@@ -56,7 +56,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::ImageSpaceAmortization2D>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::ResolutionScaler2D>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::ResolutionScaler3D>();
-        this->module_descriptions.RegisterAutoDescription<mmstd_gl::TimeDivisor>();
+        this->module_descriptions.RegisterAutoDescription<mmstd_gl::TimeMultiplier>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::ScreenShooter>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::CallbackScreenShooter>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::ChronoGraph>();

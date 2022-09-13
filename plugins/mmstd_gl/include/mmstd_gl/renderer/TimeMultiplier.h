@@ -17,7 +17,7 @@ namespace megamol::mmstd_gl {
  * Pseudo-Renderer that manipulates time to quickly synchronize data that has only a subset of timesteps
  * with respect to another.
  */
-class TimeDivisor : public core::view::RendererModule<CallRender3DGL, ModuleGL> {
+class TimeMultiplier : public core::view::RendererModule<CallRender3DGL, ModuleGL> {
 public:
     /**
      * Answer the name of this module.
@@ -25,7 +25,7 @@ public:
      * @return The name of this module.
      */
     static const char* ClassName() {
-        return "TimeDivisor";
+        return "TimeMultiplier";
     }
 
     /**
@@ -47,10 +47,10 @@ public:
     }
 
     /** Ctor. */
-    TimeDivisor();
+    TimeMultiplier();
 
     /** Dtor. */
-    ~TimeDivisor() override;
+    ~TimeMultiplier() override;
 
 protected:
     /**
@@ -82,7 +82,7 @@ private:
      */
     bool Render(CallRender3DGL& call) final;
 
-    /** Parameter for the time divisor */
-    core::param::ParamSlot divisorSlot;
+    /** Parameter for the time multiplier */
+    core::param::ParamSlot multiplierSlot;
 };
 } // namespace megamol::mmstd_gl
