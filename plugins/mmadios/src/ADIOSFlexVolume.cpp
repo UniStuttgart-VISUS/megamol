@@ -10,7 +10,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/utility/log/Log.h"
-#include <math.h>
+#include <cmath>
 #include <numeric>
 
 using namespace megamol::geocalls;
@@ -141,7 +141,7 @@ bool ADIOSFlexVolume::onGetData(core::Call& call) {
                     auto vx = VXVYVZ[offset_in * 3 + 0];
                     auto vy = VXVYVZ[offset_in * 3 + 1];
                     auto vz = VXVYVZ[offset_in * 3 + 2];
-                    auto vmag = std::sqrtf(vx * vx + vy * vy + vz * vz);
+                    auto vmag = std::sqrt(vx * vx + vy * vy + vz * vz);
                     VMAG[offset_out] = vmag;
                     min = std::min(min, vmag);
                     max = std::max(max, vmag);
