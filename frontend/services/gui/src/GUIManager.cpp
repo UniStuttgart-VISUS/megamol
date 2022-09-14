@@ -667,9 +667,6 @@ bool GUIManager::create_context() {
     */
 #endif
 
-    // Init global state -------------------------------------------------------
-    this->init_state();
-
     // Adding additional utf-8 glyph ranges
     // (there is no error if glyph has no representation in font atlas)
     this->gui_state.font_utf8_ranges.clear();
@@ -726,6 +723,9 @@ bool GUIManager::destroy_context() {
         }
         this->imgui_context = nullptr;
     }
+
+    // Reset global state 
+    this->init_state();
 
     return true;
 }
