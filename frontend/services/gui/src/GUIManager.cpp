@@ -724,7 +724,7 @@ bool GUIManager::destroy_context() {
         this->imgui_context = nullptr;
     }
 
-    // Reset global state 
+    // Reset global state
     this->init_state();
 
     return true;
