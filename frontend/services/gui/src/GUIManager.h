@@ -188,7 +188,9 @@ public:
     /**
      * Set GUI visibility.
      */
-    void SetVisibility(bool visible);
+    void SetVisibility(bool visible) {
+        this->gui_state.gui_visible = visible;
+    }
 
     /**
      * Set GUI scale.
