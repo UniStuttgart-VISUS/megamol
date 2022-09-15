@@ -25,11 +25,11 @@ void main() {
         vec2 dir = vec2(-orth.y, orth.x);
         float rho = (dir.x * uvCoords.y - dir.y * relx) / (dir.x * orth.y - dir.y * orth.x);
         if (texelFetch(imgRead, ivec3(i, rho * axPxHeight, cdim), 0).x > 0) {
-            result += 3 * texelFetch(imgRead, ivec3(i, rho * axPxHeight, cdim), 0).x;
+            result += texelFetch(imgRead, ivec3(i, rho * axPxHeight, cdim), 0).x;
         }
     }
     if (result > 0) {
-        fragOut = tflookup(result);
+        fragOut = tflookup(result-1);
     } else {
         discard;
     }

@@ -8,5 +8,5 @@ in vec4 color;
 layout (binding=7, r32ui) uniform uimage2DArray imgRead;
 
 void main() {
-    fragOut = vec4(1.0);
+    fragOut = color;
 }

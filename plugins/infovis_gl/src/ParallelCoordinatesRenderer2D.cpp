@@ -249,6 +249,8 @@ bool ParallelCoordinatesRenderer2D::create() {
         // Displays result from normalizedAxesC, by placing vertices at coordinates and drawling line primitives
         dualSpawnLinesProgramD_ = core::utility::make_glowl_shader(
             "pc_dualSpawnLinesD", shader_options, "infovis_gl/pc/dual.vert.glsl", "infovis_gl/pc/dual.frag.glsl");
+        dualSpawnLinesProgramTF_ = core::utility::make_glowl_shader(
+            "pc_dualSpawnLinesTF", shader_options, "infovis_gl/pc/dualSpawnLinesTF.vert.glsl", "infovis_gl/pc/dualSpawnLinesTF.frag.glsl");
         //Displays result from normalizedAxesC by calculating which lines hit which fragments
         dualRayProgramD_ = core::utility::make_glowl_shader(
             "pc_dualRayD", shader_options, "infovis_gl/pc/dualAlt.vert.glsl",
@@ -381,7 +383,7 @@ bool ParallelCoordinatesRenderer2D::Render(mmstd_gl::CallRender2DGL& call) {
     case DRAW_DUAL_SPAWN_LINES:
     case DRAW_DUAL_HOUGH:
     case DRAW_DUAL_AXES_NORMALIZED:
-        drawDual(drawmode);
+        drawDual(drawmode, call.GetFramebuffer());
         break;
     }
 
@@ -880,7 +882,7 @@ void ParallelCoordinatesRenderer2D::drawDensity(std::shared_ptr<glowl::Framebuff
     glUseProgram(0);
 }
 
-void ParallelCoordinatesRenderer2D::drawDual(int drawmode) {
+void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl::FramebufferObject> const& fbo) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
     int axes_pixel_height =
         (cameraCopy_.value().getViewMatrix() * cameraCopy_.value().getProjectionMatrix() * glm::vec4(0, 1.0, 0, 0)).y *
@@ -923,14 +925,13 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode) {
             break;
     }
     dualTexture_->bindImage(7, GL_WRITE_ONLY);
-    //const std::vector<uint32_t> zeroData((axes_pixel_height + 1) * (axes_pixel_height + 1), 0);
-    //uint32_t z = 0;
-    //glTextureSubImage3D(dualTexture_->getName(), 0, 0, 0, 0, axes_pixel_height + 1, axes_pixel_height + 1, 1, GL_RED,
+    //glTextureSubImage3D(dualTexture_->getName(), 0, 0, 0, 0, axes_pixel_height, axes_pixel_height, 1, GL_RED_INTEGER,
     //    GL_UNSIGNED_INT, zeroData.data());
+    glClearTexImage(dualTexture_->getName(), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
     //Log::DefaultLog.WriteInfo("%i", glGetError());
 
     std::array<GLuint, 3> groupCounts{};
-    computeDispatchSizes((itemCount_ + 1) * dimensionCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
+    computeDispatchSizes((itemCount_) * dimensionCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
     glDispatchCompute(groupCounts[0], groupCounts[1], groupCounts[2]);
 
     /*
@@ -942,15 +943,38 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode) {
     glDrawArraysInstanced(GL_LINES, 0, 2, dimensionCount_ * axes_pixel_height * axes_pixel_height);
     */
     auto tfCall = tfSlot_.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
-    
+    const int fboWidth = fbo->getWidth();
+    const int fboHeight = fbo->getHeight();
     switch (drawmode) {
     case DRAW_DUAL_SPAWN_LINES:
+        if (densityFbo_ == nullptr || densityFbo_->getWidth() != fboWidth || densityFbo_->getHeight() != fboHeight) {
+            densityFbo_ = std::make_unique<glowl::FramebufferObject>(
+                "densityFbo", fboWidth, fboHeight, glowl::FramebufferObject::NONE);
+            densityFbo_->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);
+            //densityFbo_->createColorAttachment(GL_R8, GL_RED, GL_UNSIGNED_BYTE);
+        }
+        densityFbo_->bind();
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE);
+        glBlendEquation(GL_FUNC_ADD);
+        
         useProgramAndBindCommon(dualSpawnLinesProgramD_);
         tfCall->BindConvenience(dualSpawnLinesProgramD_, GL_TEXTURE5, 5);
         dualTexture_->bindImage(7, GL_READ_ONLY);
         //glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA);
         dualSpawnLinesProgramD_->setUniform("axPxHeight", axes_pixel_height);
         glDrawArraysInstanced(GL_LINES, 0, 2, dimensionCount_ * axes_pixel_height * axes_pixel_height);
+        //TODO reset blending mode, not sure if the following is default
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+        useProgramAndBindCommon(dualSpawnLinesProgramTF_);
+        tfCall->BindConvenience(dualSpawnLinesProgramTF_, GL_TEXTURE5, 5);
+        fbo->bind();
+        glActiveTexture(GL_TEXTURE1);
+        densityFbo_->bindColorbuffer(0);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         break;
     case DRAW_DUAL_AXES_NORMALIZED:
         useProgramAndBindCommon(dualRayProgramD_);

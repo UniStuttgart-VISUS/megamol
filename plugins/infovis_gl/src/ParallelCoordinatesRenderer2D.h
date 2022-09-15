@@ -150,7 +150,7 @@ protected:
 
     void drawDensity(std::shared_ptr<glowl::FramebufferObject> const& fbo);
 
-    void drawDual(int drawmode);
+    void drawDual(int drawmode, std::shared_ptr<glowl::FramebufferObject> const& fbo);
 
     void drawAxes(glm::mat4 ortho);
 
@@ -255,6 +255,7 @@ protected:
     std::unique_ptr<glowl::GLSLProgram> dualRelAxesC_;
     std::unique_ptr<glowl::GLSLProgram> dualNormalizedAxesProgramC_;
     std::unique_ptr<glowl::GLSLProgram> dualSpawnLinesProgramD_;
+    std::unique_ptr<glowl::GLSLProgram> dualSpawnLinesProgramTF_;
     std::unique_ptr<glowl::GLSLProgram> dualHoughProgramD_;
     std::unique_ptr<glowl::GLSLProgram> dualRayProgramD_;
     std::unique_ptr<glowl::GLSLProgram> dualRelRayProgramD_;
