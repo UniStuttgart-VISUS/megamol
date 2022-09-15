@@ -479,12 +479,18 @@ megamol::frontend_resources::MegaMolGraph_SubscriptionRegistry& megamol::core::M
 }
 
 void megamol::core::MegaMolGraph::Clear() {
+    while (!call_list_.empty()) {
+        auto& call = call_list_.front().request;
+        delete_call(CallDeletionRequest_t{call.from, call.to});
+    }
     call_list_.clear();
-    for (auto& m : module_list_)
-        if (m.isGraphEntryPoint)
-            m_image_presentation->remove_entry_point(m.request.id);
-    graph_entry_points.clear();
+
+    while (!module_list_.empty()) {
+        auto& module = module_list_.front().request;
+        delete_module(ModuleDeletionRequest_t{module.id});
+    }
     module_list_.clear();
+    graph_entry_points.clear();
 }
 
 /*
