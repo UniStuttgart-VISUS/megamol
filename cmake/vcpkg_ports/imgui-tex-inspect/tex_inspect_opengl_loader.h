@@ -18,7 +18,7 @@
 //-----------------------------------------------------------------------------
 
 /*
- * This file was generated with gl3w_gen.py, part of imgl3w
+ * This file was generated with gl3w_gen.py, part of imtexingl3w
  * (hosted at https://github.com/dearimgui/gl3w_stripped)
  *
  * This is free and unencumbered software released into the public domain.
@@ -371,10 +371,10 @@ typedef void (*GL3WglProc)(void);
 typedef GL3WglProc (*GL3WGetProcAddressProc)(const char *proc);
 
 /* gl3w api */
-GL3W_API int imgl3wInit(void);
-GL3W_API int imgl3wInit2(GL3WGetProcAddressProc proc);
-GL3W_API int imgl3wIsSupported(int major, int minor);
-GL3W_API GL3WglProc imgl3wGetProcAddress(const char *proc);
+GL3W_API int imtexingl3wInit(void);
+GL3W_API int imtexingl3wInit2(GL3WGetProcAddressProc proc);
+GL3W_API int imtexingl3wIsSupported(int major, int minor);
+GL3W_API GL3WglProc imtexingl3wGetProcAddress(const char *proc);
 
 /* gl3w internal state */
 union GL3WProcs {
@@ -424,50 +424,50 @@ union GL3WProcs {
     } gl;
 };
 
-GL3W_API extern union GL3WProcs imgl3wProcs;
+GL3W_API extern union GL3WProcs imtexingl3wProcs;
 
 /* OpenGL functions */
-#define glAttachShader                   imgl3wProcs.gl.AttachShader
-#define glBindFramebuffer                imgl3wProcs.gl.BindFramebuffer
-#define glBindSampler                    imgl3wProcs.gl.BindSampler
-#define glBlendEquation                  imgl3wProcs.gl.BlendEquation
-#define glBlendFuncSeparate              imgl3wProcs.gl.BlendFuncSeparate
-#define glClear                          imgl3wProcs.gl.Clear
-#define glClearColor                     imgl3wProcs.gl.ClearColor
-#define glCompileShader                  imgl3wProcs.gl.CompileShader
-#define glCreateProgram                  imgl3wProcs.gl.CreateProgram
-#define glCreateShader                   imgl3wProcs.gl.CreateShader
-#define glDeleteFramebuffers             imgl3wProcs.gl.DeleteFramebuffers
-#define glDeleteProgram                  imgl3wProcs.gl.DeleteProgram
-#define glDeleteShader                   imgl3wProcs.gl.DeleteShader
-#define glDisable                        imgl3wProcs.gl.Disable
-#define glEnable                         imgl3wProcs.gl.Enable
-#define glEnableVertexAttribArray        imgl3wProcs.gl.EnableVertexAttribArray
-#define glFlush                          imgl3wProcs.gl.Flush
-#define glFramebufferTexture2D           imgl3wProcs.gl.FramebufferTexture2D
-#define glGenFramebuffers                imgl3wProcs.gl.GenFramebuffers
-#define glGetAttribLocation              imgl3wProcs.gl.GetAttribLocation
-#define glGetError                       imgl3wProcs.gl.GetError
-#define glGetIntegerv                    imgl3wProcs.gl.GetIntegerv
-#define glGetProgramInfoLog              imgl3wProcs.gl.GetProgramInfoLog
-#define glGetProgramiv                   imgl3wProcs.gl.GetProgramiv
-#define glGetShaderInfoLog               imgl3wProcs.gl.GetShaderInfoLog
-#define glGetShaderiv                    imgl3wProcs.gl.GetShaderiv
-#define glGetString                      imgl3wProcs.gl.GetString
-#define glGetUniformLocation             imgl3wProcs.gl.GetUniformLocation
-#define glLinkProgram                    imgl3wProcs.gl.LinkProgram
-#define glPolygonMode                    imgl3wProcs.gl.PolygonMode
-#define glReadPixels                     imgl3wProcs.gl.ReadPixels
-#define glShaderSource                   imgl3wProcs.gl.ShaderSource
-#define glUniform1f                      imgl3wProcs.gl.Uniform1f
-#define glUniform1i                      imgl3wProcs.gl.Uniform1i
-#define glUniform2fv                     imgl3wProcs.gl.Uniform2fv
-#define glUniform3fv                     imgl3wProcs.gl.Uniform3fv
-#define glUniform4fv                     imgl3wProcs.gl.Uniform4fv
-#define glUniformMatrix4fv               imgl3wProcs.gl.UniformMatrix4fv
-#define glUseProgram                     imgl3wProcs.gl.UseProgram
-#define glVertexAttribPointer            imgl3wProcs.gl.VertexAttribPointer
-#define glViewport                       imgl3wProcs.gl.Viewport
+#define glAttachShader                   imtexingl3wProcs.gl.AttachShader
+#define glBindFramebuffer                imtexingl3wProcs.gl.BindFramebuffer
+#define glBindSampler                    imtexingl3wProcs.gl.BindSampler
+#define glBlendEquation                  imtexingl3wProcs.gl.BlendEquation
+#define glBlendFuncSeparate              imtexingl3wProcs.gl.BlendFuncSeparate
+#define glClear                          imtexingl3wProcs.gl.Clear
+#define glClearColor                     imtexingl3wProcs.gl.ClearColor
+#define glCompileShader                  imtexingl3wProcs.gl.CompileShader
+#define glCreateProgram                  imtexingl3wProcs.gl.CreateProgram
+#define glCreateShader                   imtexingl3wProcs.gl.CreateShader
+#define glDeleteFramebuffers             imtexingl3wProcs.gl.DeleteFramebuffers
+#define glDeleteProgram                  imtexingl3wProcs.gl.DeleteProgram
+#define glDeleteShader                   imtexingl3wProcs.gl.DeleteShader
+#define glDisable                        imtexingl3wProcs.gl.Disable
+#define glEnable                         imtexingl3wProcs.gl.Enable
+#define glEnableVertexAttribArray        imtexingl3wProcs.gl.EnableVertexAttribArray
+#define glFlush                          imtexingl3wProcs.gl.Flush
+#define glFramebufferTexture2D           imtexingl3wProcs.gl.FramebufferTexture2D
+#define glGenFramebuffers                imtexingl3wProcs.gl.GenFramebuffers
+#define glGetAttribLocation              imtexingl3wProcs.gl.GetAttribLocation
+#define glGetError                       imtexingl3wProcs.gl.GetError
+#define glGetIntegerv                    imtexingl3wProcs.gl.GetIntegerv
+#define glGetProgramInfoLog              imtexingl3wProcs.gl.GetProgramInfoLog
+#define glGetProgramiv                   imtexingl3wProcs.gl.GetProgramiv
+#define glGetShaderInfoLog               imtexingl3wProcs.gl.GetShaderInfoLog
+#define glGetShaderiv                    imtexingl3wProcs.gl.GetShaderiv
+#define glGetString                      imtexingl3wProcs.gl.GetString
+#define glGetUniformLocation             imtexingl3wProcs.gl.GetUniformLocation
+#define glLinkProgram                    imtexingl3wProcs.gl.LinkProgram
+#define glPolygonMode                    imtexingl3wProcs.gl.PolygonMode
+#define glReadPixels                     imtexingl3wProcs.gl.ReadPixels
+#define glShaderSource                   imtexingl3wProcs.gl.ShaderSource
+#define glUniform1f                      imtexingl3wProcs.gl.Uniform1f
+#define glUniform1i                      imtexingl3wProcs.gl.Uniform1i
+#define glUniform2fv                     imtexingl3wProcs.gl.Uniform2fv
+#define glUniform3fv                     imtexingl3wProcs.gl.Uniform3fv
+#define glUniform4fv                     imtexingl3wProcs.gl.Uniform4fv
+#define glUniformMatrix4fv               imtexingl3wProcs.gl.UniformMatrix4fv
+#define glUseProgram                     imtexingl3wProcs.gl.UseProgram
+#define glVertexAttribPointer            imtexingl3wProcs.gl.VertexAttribPointer
+#define glViewport                       imtexingl3wProcs.gl.Viewport
 
 #ifdef __cplusplus
 }
@@ -475,7 +475,7 @@ GL3W_API extern union GL3WProcs imgl3wProcs;
 
 #endif
 
-#ifdef IMGL3W_IMPL
+#ifdef IMTEXINGL3W_IMPL
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -574,22 +574,22 @@ static int parse_version(void)
 
 static void load_procs(GL3WGetProcAddressProc proc);
 
-int imgl3wInit(void)
+int imtexingl3wInit(void)
 {
     int res = open_libgl();
     if (res)
         return res;
     atexit(close_libgl);
-    return imgl3wInit2(get_proc);
+    return imtexingl3wInit2(get_proc);
 }
 
-int imgl3wInit2(GL3WGetProcAddressProc proc)
+int imtexingl3wInit2(GL3WGetProcAddressProc proc)
 {
     load_procs(proc);
     return parse_version();
 }
 
-int imgl3wIsSupported(int major, int minor)
+int imtexingl3wIsSupported(int major, int minor)
 {
     if (major < 3)
         return 0;
@@ -598,7 +598,7 @@ int imgl3wIsSupported(int major, int minor)
     return version.major >= major;
 }
 
-GL3WglProc imgl3wGetProcAddress(const char *proc) { return get_proc(proc); }
+GL3WglProc imtexingl3wGetProcAddress(const char *proc) { return get_proc(proc); }
 
 static const char *proc_names[] = {
     "glAttachShader",
@@ -644,13 +644,13 @@ static const char *proc_names[] = {
     "glViewport",
 };
 
-GL3W_API union GL3WProcs imgl3wProcs;
+GL3W_API union GL3WProcs imtexingl3wProcs;
 
 static void load_procs(GL3WGetProcAddressProc proc)
 {
     size_t i;
     for (i = 0; i < ARRAY_SIZE(proc_names); i++)
-        imgl3wProcs.ptr[i] = proc(proc_names[i]);
+        imtexingl3wProcs.ptr[i] = proc(proc_names[i]);
 }
 
 #ifdef __cplusplus
