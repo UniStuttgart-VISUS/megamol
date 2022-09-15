@@ -47,7 +47,6 @@
     "tinygltf",
     "tinyobjloader",
     "tinyply",
-    "vtk-m",
     "zeromq",
     "zfp",
     "zlib"
@@ -120,6 +119,12 @@
       "description": "Use VR Interop",
       "dependencies": [
         "mwk-mint-interop"
+      ]
+    },
+    "use-vtkm": {
+      "description": "Use VTK-m",
+      "dependencies": [
+        "vtk-m"
       ]
     }
   }
