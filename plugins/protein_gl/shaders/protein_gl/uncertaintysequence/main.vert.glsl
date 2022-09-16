@@ -1,3 +1,5 @@
+#version 430
+
 #extension GL_ARB_explicit_attrib_location : enable
 
 layout (location = 0) in vec4 vertexPosition;              // the input vertex position

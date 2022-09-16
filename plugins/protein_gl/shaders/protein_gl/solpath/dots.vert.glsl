@@ -1,3 +1,5 @@
+#version 120
+
 uniform vec4 paramSpan; // timeMin, 1/timeRange, speedMin, 1/speedRange
 #define TIMEMIN       paramSpan.x
 #define TIMERANGEINV  paramSpan.y

@@ -1,3 +1,5 @@
+#version 430
+
 #extension GL_ARB_explicit_attrib_location : enable
 
 #define STRUCT_COUNT 9                                     // must be equal to 'UncertaintyDataCall::secStructure::NOE'
