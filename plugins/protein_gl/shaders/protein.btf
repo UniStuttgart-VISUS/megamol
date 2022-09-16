@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="protein">
   <include file="common"/>
-  <include file="colormaps"/>
 
   <snippet name="commondefines" type="file">protein_gl/protein/snippets/commondefines.glsl</snippet>
 

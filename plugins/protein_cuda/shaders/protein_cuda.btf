@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="protein_cuda">
   <include file="common"/>
-  <include file="colormaps"/>
   <include file="electrostatics"/>
 
   <snippet name="commondefines" type="file">protein_cuda/protein_cuda/commondefines.glsl</snippet>

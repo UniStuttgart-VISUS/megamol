@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="streamlines">
 
-  <include file="colormaps"/>
-
   <snippet name="ppLightingStreamlines" type="file">protein_cuda/streamlines/ppLightingStreamlines.glsl</snippet>
 
   <!-- Shaders for illuminated streamlines -->
@@ -24,8 +22,8 @@
       <snippet type="file">protein_cuda/streamlines/tube.vert.glsl</snippet>
     </shader>
     <shader name="geometry">
-      <snippet name="colormaps::MSH2RGB"/>
-      <snippet name="colormaps::COOLWARM"/>
+      <snippet type="file">protein_gl/colormaps/MSH2RGB.glsl</snippet>
+      <snippet type="file">protein_gl/colormaps/COOLWARM.glsl</snippet>
       <snippet type="file">protein_cuda/streamlines/tube.geom.glsl</snippet>
     </shader>
     <shader name="fragment">

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="electrostatics">
 
-  <include file="colormaps"/>
-
   <snippet name="ppLighting" type="file">protein_cuda/electrostatics/ppLighting.glsl</snippet>
 
   <snippet name="colorMix" type="file">protein_cuda/electrostatics/colorMix.glsl</snippet>
@@ -18,10 +16,10 @@
       <snippet type="version">120</snippet>
       <snippet name="colorMix"/>
       <snippet name="ppLighting"/>
-      <snippet name="colormaps::RGB2MSH"/>
-      <snippet name="colormaps::MSH2RGB"/>
-      <snippet name="colormaps::COOLWARM"/>
-      <snippet name="colormaps::HSV2RGB"/>
+      <snippet type="file">protein_gl/colormaps/RGB2MSH.glsl</snippet>
+      <snippet type="file">protein_gl/colormaps/MSH2RGB.glsl</snippet>
+      <snippet type="file">protein_gl/colormaps/COOLWARM.glsl</snippet>
+      <snippet type="file">protein_gl/colormaps/HSV2RGB.glsl</snippet>
       <snippet type="file">protein_cuda/electrostatics/pplsurface_Mapped.frag.glsl</snippet>
     </shader>
 
@@ -34,10 +32,10 @@
       <snippet type="version">120</snippet>
       <snippet name="colorMix"/>
       <snippet name="ppLighting"/>
-      <snippet name="colormaps::RGB2MSH"/>
-      <snippet name="colormaps::MSH2RGB"/>
-      <snippet name="colormaps::COOLWARM"/>
-      <snippet name="colormaps::HSV2RGB"/>
+      <snippet type="file">protein_gl/colormaps/RGB2MSH.glsl</snippet>
+      <snippet type="file">protein_gl/colormaps/MSH2RGB.glsl</snippet>
+      <snippet type="file">protein_gl/colormaps/COOLWARM.glsl</snippet>
+      <snippet type="file">protein_gl/colormaps/HSV2RGB.glsl</snippet>
       <snippet type="file">protein_cuda/electrostatics/pplsurface.frag.glsl</snippet>
     </shader>
 
@@ -50,10 +48,10 @@
       <snippet type="version">120</snippet>
       <snippet name="colorMix"/>
       <snippet name="ppLighting"/>
-      <snippet name="colormaps::RGB2MSH"/>
-      <snippet name="colormaps::MSH2RGB"/>
-      <snippet name="colormaps::COOLWARM"/>
-      <snippet name="colormaps::HSV2RGB"/>
+      <snippet type="file">protein_gl/colormaps/RGB2MSH.glsl</snippet>
+      <snippet type="file">protein_gl/colormaps/MSH2RGB.glsl</snippet>
+      <snippet type="file">protein_gl/colormaps/COOLWARM.glsl</snippet>
+      <snippet type="file">protein_gl/colormaps/HSV2RGB.glsl</snippet>
       <snippet type="file">protein_cuda/electrostatics/pplsurface_WithFlag.frag.glsl</snippet>
     </shader>
 
@@ -66,10 +64,10 @@
       <snippet type="version">120</snippet>
       <snippet name="colorMix"/>
       <snippet name="ppLighting"/>
-      <snippet name="colormaps::RGB2MSH"/>
-      <snippet name="colormaps::MSH2RGB"/>
-      <snippet name="colormaps::COOLWARM"/>
-      <snippet name="colormaps::HSV2RGB"/>
+      <snippet type="file">protein_gl/colormaps/RGB2MSH.glsl</snippet>
+      <snippet type="file">protein_gl/colormaps/MSH2RGB.glsl</snippet>
+      <snippet type="file">protein_gl/colormaps/COOLWARM.glsl</snippet>
+      <snippet type="file">protein_gl/colormaps/HSV2RGB.glsl</snippet>
       <snippet type="file">protein_cuda/electrostatics/pplsurface_Uncertainty.frag.glsl</snippet>
     </shader>
   </namespace>
