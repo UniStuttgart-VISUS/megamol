@@ -155,7 +155,7 @@
 
     <shader name="updateVolumeFragment">
       <snippet type="version">120</snippet>
-      <snippet type="string">pwdemos_gl/AOSphere/snippets/volume_updateVolumeFragment.glsl</snippet>
+      <snippet type="file">pwdemos_gl/AOSphere/snippets/volume_updateVolumeFragment.glsl</snippet>
     </shader>
   </namespace>
 
