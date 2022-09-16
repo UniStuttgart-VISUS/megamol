@@ -5,6 +5,8 @@
 
 megamol_plugin(mmvtkm
   BUILD_DEFAULT OFF
+  DEPENDS_FEATURES
+    vtkm
   DEPENDS_PLUGINS
     mmstd
     PUBLIC mesh
