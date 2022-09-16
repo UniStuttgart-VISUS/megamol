@@ -1,3 +1,5 @@
+#version 120
+
 attribute float val;
 uniform float minVal;
 uniform float maxVal;

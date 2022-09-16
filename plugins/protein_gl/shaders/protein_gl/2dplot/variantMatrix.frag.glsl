@@ -1,3 +1,8 @@
+#version 120
+
+#include "Heatmap.glsl"
+#include "protein_gl/colormaps/MSH2RGB.glsl"
+
 uniform sampler2D matrixTex;
 uniform float minVal;
 uniform float maxVal;
