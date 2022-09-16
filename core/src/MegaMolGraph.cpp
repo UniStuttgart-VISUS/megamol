@@ -161,12 +161,10 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& old, std::stri
         }
     }
 
-    for (auto& subscriber : graph_subscribers.subscribers) {
-        if (!subscriber.RenameModule(oldId, newId, *module_it)) {
-            log_error("graph subscriber " + subscriber.Name() + " failed to process module rename: " + oldId + " -> " +
-                      newId);
-            return false;
-        }
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.RenameModule(oldId, newId, *module_it); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second + " failed to process module rename: " + oldId + " -> " + newId);
+        return false;
     }
 
     return true;
@@ -406,12 +404,11 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string module) {
     module_it->isGraphEntryPoint = true;
     log("set graph entry point: " + moduleName);
 
-    for (auto& subscriber : graph_subscribers.subscribers) {
-        if (!subscriber.EnableEntryPoint(*module_it)) {
-            log_error("graph subscriber " + subscriber.Name() + " failed to process enabling entry point " +
-                      module_it->request.id);
-            return false;
-        }
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.EnableEntryPoint(*module_it); });
+        result.first == false) {
+        log_error(
+            "graph subscriber " + result.second + " failed to process enabling entry point " + module_it->request.id);
+        return false;
     }
 
     return true;
@@ -442,12 +439,11 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string module) {
     module_it->isGraphEntryPoint = false;
     log("remove graph entry point: " + moduleName);
 
-    for (auto& subscriber : graph_subscribers.subscribers) {
-        if (!subscriber.DisableEntryPoint(*module_it)) {
-            log_error("graph subscriber " + subscriber.Name() + " failed to process disabling entry point " +
-                      module_it->request.id);
-            return false;
-        }
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.DisableEntryPoint(*module_it); });
+        result.first == false) {
+        log_error(
+            "graph subscriber " + result.second + " failed to process disabling entry point " + module_it->request.id);
+        return false;
     }
 
     return true;
@@ -591,13 +587,13 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
     bool isCreateOk = create_module(this->module_list_.front().lifetime_resources);
 
     // tell subscribers about module
-    for (auto& subscriber : graph_subscribers.subscribers) {
-        if (!subscriber.AddModule(this->module_list_.front())) {
-            log_error("graph subscriber " + subscriber.Name() + " failed to process module add: " + request.className +
-                      "(" + request.id + ")");
-            isCreateOk = false;
-        }
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.AddModule(this->module_list_.front()); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second + " failed to process module add: " + request.className + "(" +
+                  request.id + ")");
+        isCreateOk = false;
     }
+
     // tell subscribers about parameters of module
     using ParamSlotPtr = frontend_resources::ModuleGraphSubscription::ParamSlotPtr;
     std::vector<ParamSlotPtr> param_ptrs = module_ptr->GetSlots<std::remove_pointer<ParamSlotPtr>::type>();
@@ -605,16 +601,16 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         assert(param_ptr != nullptr);
         param_ptr->Parameter()->setChangeCallback(this->param_change_callback);
     }
-    for (auto& subscriber : graph_subscribers.subscribers) {
-        if (!subscriber.AddParameters(param_ptrs)) {
-            log_error("graph subscriber " + subscriber.Name() +
-                      " failed to process added parameters of module: " + request.className + "(" + request.id + ")" +
-                      std::accumulate(param_ptrs.begin(), param_ptrs.end(), std::string("Parameters: "),
-                          [](std::string const& left, ParamSlotPtr const& right) {
-                              return left + "\n   " + std::string(right->FullName());
-                          }));
-            isCreateOk = false;
-        }
+
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.AddParameters(param_ptrs); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second +
+                  " failed to process added parameters of module: " + request.className + "(" + request.id + ")" +
+                  std::accumulate(param_ptrs.begin(), param_ptrs.end(), std::string("Parameters: "),
+                      [](std::string const& left, ParamSlotPtr const& right) {
+                          return left + "\n   " + std::string(right->FullName());
+                      }));
+        isCreateOk = false;
     }
 
     if (!isCreateOk) {
@@ -736,12 +732,11 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
     log("create call: " + request.from + " -> " + request.to + " (" + std::string(call_description->ClassName()) + ")");
     this->call_list_.emplace_front(CallInstance_t{call, request});
 
-    for (auto& subscriber : graph_subscribers.subscribers) {
-        if (!subscriber.AddCall(this->call_list_.front())) {
-            log_error("graph subscriber " + subscriber.Name() + " failed to process call add : " + request.from +
-                      " -> " + request.to);
-            return false;
-        }
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.AddCall(this->call_list_.front()); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second + " failed to process call add : " + request.from + " -> " +
+                  request.to);
+        return false;
     }
 
     return true;
@@ -781,20 +776,20 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
     for (auto& param_ptr : param_ptrs) {
         assert(param_ptr != nullptr);
     }
-    for (auto& subscriber : graph_subscribers.subscribers) {
-        if (!subscriber.RemoveParameters(param_ptrs)) {
-            log_error("graph subscriber " + subscriber.Name() +
-                      " failed to process removal of parameters of module: " + +module_it->modulePtr->FullName() +
-                      std::accumulate(param_ptrs.begin(), param_ptrs.end(), std::string("Parameters: "),
-                          [](std::string const& left, ParamSlotPtr const& right) {
-                              return left + "\n   " + std::string(right->FullName());
-                          }));
-        }
+
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.RemoveParameters(param_ptrs); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second +
+                  " failed to process removal of parameters of module: " + +module_it->modulePtr->FullName() +
+                  std::accumulate(param_ptrs.begin(), param_ptrs.end(), std::string("Parameters: "),
+                      [](std::string const& left, ParamSlotPtr const& right) {
+                          return left + "\n   " + std::string(right->FullName());
+                      }));
     }
-    for (auto& subscriber : graph_subscribers.subscribers) {
-        if (!subscriber.DeleteModule(*module_it)) {
-            log_error("graph subscriber " + subscriber.Name() + " failed to process module deletion: " + request);
-        }
+
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.DeleteModule(*module_it); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second + " failed to process module deletion: " + request);
     }
 
     // delete all outgoing/incoming calls
@@ -844,12 +839,11 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
         return false;
     }
 
-    for (auto& subscriber : graph_subscribers.subscribers) {
-        if (!subscriber.DeleteCall(*call_it)) {
-            log_error("graph subscriber " + subscriber.Name() + " failed to process call deletion: " + request.from +
-                      " -> " + request.to);
-            return false;
-        }
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.DeleteCall(*call_it); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second + " failed to process call deletion: " + request.from + " -> " +
+                  request.to);
+        return false;
     }
 
     source->SetCleanupMark(true);
