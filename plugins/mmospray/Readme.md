@@ -12,7 +12,7 @@ The figure below shows a common OSPRay module call graph in MegaMol.
 
 ## Building
 
-[OSPRay](http://ospray.org) is pulled via vcpkg, you can just switch on `MEGAMOL_USE_OSPRAY` and then enable this plugin.
+[OSPRay](http://ospray.org) is pulled via vcpkg, you can just switch on `MEGAMOL_USE_OSPRAY` and then enable this plugin. Note that this comes with several complex dependencies, so the first build will be extremely expensive!
 
 ## Modules
 
