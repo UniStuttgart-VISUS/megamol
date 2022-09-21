@@ -69,11 +69,13 @@ private:
     core::CallerSlot adiosSlot;
 
     core::param::ParamSlot flexVelocitySlot;
+    core::param::ParamSlot flexBoxSlot;
     core::param::ParamSlot memoryLayoutSlot;
 
     geocalls::VolumetricDataCall::Metadata metadata;
     std::vector<double> mins, maxes;
     std::vector<float> VMAG;
+    vislib::math::Cuboid<float> bbox;
 
     size_t currentFrame = -1;
 };

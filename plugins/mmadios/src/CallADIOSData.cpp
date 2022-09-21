@@ -50,7 +50,7 @@ bool CallADIOSData::inquireVar(const std::string& varname) {
             this->inqVars.push_back(varname);
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[CallADIOSData] Variable %s is not in available varialbes", varname.c_str());
+                "[CallADIOSData] Variable %s is not in available variables", varname.c_str());
             return false;
         }
     } else {

@@ -74,7 +74,6 @@ protected:
      * @return 'true' on success, 'false' on failure.
      */
     bool getExtentCallback(core::Call& caller);
-    bool paramChanged(core::param::ParamSlot& p);
 
 private:
     core::CalleeSlot mpSlot;

@@ -22,7 +22,8 @@ ADIOSFlexVolume::ADIOSFlexVolume()
         : core::Module()
         , volumeSlot("volumeSlot", "Slot to send volume data.")
         , adiosSlot("adiosSlot", "Slot to request ADIOS IO")
-        , flexVelocitySlot("vxvyvz", "")
+        , flexVelocitySlot("vxvyvz", "Adios variable containing the velocity vector")
+        , flexBoxSlot("box", "Adios variable containing the global bounding box")
         , memoryLayoutSlot("memLayout", "dimension increments (fastest to slowest)") {
 
     this->volumeSlot.SetCallback(geocalls::VolumetricDataCall::ClassName(),
@@ -44,6 +45,9 @@ ADIOSFlexVolume::ADIOSFlexVolume()
 
     this->flexVelocitySlot << new core::param::FlexEnumParam("undef");
     this->MakeSlotAvailable(&this->flexVelocitySlot);
+
+    this->flexBoxSlot << new core::param::FlexEnumParam("undef");
+    this->MakeSlotAvailable(&this->flexBoxSlot);
 
     auto memLayout = new core::param::EnumParam(0);
     memLayout->SetTypePair(0, "xyz");
@@ -83,6 +87,7 @@ bool ADIOSFlexVolume::onGetData(core::Call& call) {
         auto availVars = cad->getAvailableVars();
         for (auto var : availVars) {
             this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+            this->flexBoxSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
         }
         cad->setFrameIDtoLoad(vdc->FrameID());
 
@@ -97,17 +102,33 @@ bool ADIOSFlexVolume::onGetData(core::Call& call) {
         } else {
             return false;
         }
+        const std::string box_str =
+            std::string(this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString());
+        if (box_str != "undef") {
+            if (!cad->inquireVar(box_str)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[ADIOSFlexVolume] variable \"%s\" does not exist.", box_str.c_str());
+            }
+        }
+
         if (!(*cad)(0)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexVolume] Error during GetData");
             return false;
         }
-        auto the_velocities = cad->getData(vel_str);
 
+        if (box_str != "undef") {
+            auto the_box = cad->getData(box_str)->GetAsFloat();
+            bbox.Set(the_box[0], the_box[1], the_box[2], the_box[3], the_box[4], the_box[5]);
+        } else {
+            bbox.Set(0.0f, 0.0f, 0.0f, 10.0f, 10.0f, 10.0f);
+        }
+
+        auto the_velocities = cad->getData(vel_str);
         std::vector<float> VXVYVZ;
         std::size_t cell_count = 0;
 
         if (vel_str != "undef") {
-            VXVYVZ = cad->getData(vel_str)->GetAsFloat();
+            VXVYVZ = the_velocities->GetAsFloat();
             cell_count = VXVYVZ.size() / 3;
         } else {
             return false;
@@ -210,9 +231,6 @@ bool ADIOSFlexVolume::onGetExtents(core::Call& call) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetHeader");
         return false;
     }
-    // TODO have and extract the bounding box :)
-
-    vislib::math::Cuboid<float> bbox(0.0f, 0.0f, 0.0f, 780.0f, 127.0f, 127.0f);
     vdc->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
     vdc->AccessBoundingBoxes().SetObjectSpaceClipBox(bbox);
     vdc->SetFrameCount(std::max<size_t>(cad->getFrameCount(), 1));

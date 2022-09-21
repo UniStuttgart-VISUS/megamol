@@ -41,47 +41,36 @@ ADIOSFlexConvert::ADIOSFlexConvert()
     this->MakeSlotAvailable(&this->adiosSlot);
 
     this->flexAlignedPosSlot << new core::param::FlexEnumParam("undef");
-    this->flexAlignedPosSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexAlignedPosSlot);
 
     this->flexPosSlot << new core::param::FlexEnumParam("undef");
-    this->flexPosSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexPosSlot);
 
     this->flexColSlot << new core::param::FlexEnumParam("undef");
-    this->flexColSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexColSlot);
 
     this->flexBoxSlot << new core::param::FlexEnumParam("undef");
-    this->flexBoxSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexBoxSlot);
 
     this->flexXSlot << new core::param::FlexEnumParam("undef");
-    this->flexXSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexXSlot);
 
     this->flexYSlot << new core::param::FlexEnumParam("undef");
-    this->flexYSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexYSlot);
 
     this->flexZSlot << new core::param::FlexEnumParam("undef");
-    this->flexZSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexZSlot);
 
     this->flexIDSlot << new core::param::FlexEnumParam("undef");
-    this->flexIDSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexIDSlot);
 
     this->flexVXSlot << new core::param::FlexEnumParam("undef");
-    this->flexVXSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexVXSlot);
 
     this->flexVYSlot << new core::param::FlexEnumParam("undef");
-    this->flexVYSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexVYSlot);
 
     this->flexVZSlot << new core::param::FlexEnumParam("undef");
-    this->flexVZSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexVZSlot);
 }
 
@@ -108,10 +97,11 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetHeader");
         return false;
     }
+    auto anythingDirty = this->AnyParameterDirty();
     bool dathashChanged = (mpdc->DataHash() != cad->getDataHash());
-    if ((mpdc->FrameID() != currentFrame) || dathashChanged || _trigger_recalc) {
+    if ((mpdc->FrameID() != currentFrame) || dathashChanged || anythingDirty) {
 
-        _trigger_recalc = false;
+        this->ResetAllDirtyFlags();
 
         // get adios meta data
         auto availVars = cad->getAvailableVars();
@@ -417,12 +407,6 @@ bool ADIOSFlexConvert::getExtentCallback(core::Call& call) {
     if (!this->getDataCallback(call))
         return false;
 
-    return true;
-}
-
-bool ADIOSFlexConvert::paramChanged(core::param::ParamSlot& p) {
-
-    _trigger_recalc = true;
     return true;
 }
 
