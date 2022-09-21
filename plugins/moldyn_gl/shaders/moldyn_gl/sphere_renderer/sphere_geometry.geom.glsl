@@ -1,4 +1,4 @@
-#version 150
+#version 330
 
 #include "commondefines.glsl"
 #include "moldyn_gl/sphere_renderer/inc/vertex_attributes.inc.glsl"
