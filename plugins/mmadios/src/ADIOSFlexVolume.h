@@ -8,6 +8,7 @@
 #pragma once
 
 #include "geometry_calls/VolumetricDataCall.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -56,6 +57,9 @@ public:
 
 protected:
     void release();
+    bool inquireDataVariables(CallADIOSData* cad);
+    bool inquireMetaDataVariables(CallADIOSData* cad);
+    bool assertData(geocalls::VolumetricDataCall* vdc, CallADIOSData* cad);
 
     bool onGetData(core::Call& call);
     bool onGetExtents(core::Call& call);
@@ -76,6 +80,8 @@ private:
     std::vector<double> mins, maxes;
     std::vector<float> VMAG;
     vislib::math::Cuboid<float> bbox;
+
+    std::string box_str, vel_str;
 
     size_t currentFrame = -1;
 };

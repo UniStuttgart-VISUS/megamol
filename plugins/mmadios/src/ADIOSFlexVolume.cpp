@@ -66,19 +66,31 @@ bool ADIOSFlexVolume::create() {
 
 void ADIOSFlexVolume::release() {}
 
-bool ADIOSFlexVolume::onGetData(core::Call& call) {
-    auto* vdc = dynamic_cast<geocalls::VolumetricDataCall*>(&call);
-    if (vdc == nullptr)
-        return false;
-
-    auto* cad = this->adiosSlot.CallAs<CallADIOSData>();
-    if (cad == nullptr)
-        return false;
-
-    if (!(*cad)(1)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetHeader");
+bool ADIOSFlexVolume::inquireDataVariables(CallADIOSData* cad) {
+    vel_str = std::string(this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->ValueString());
+    if (vel_str != "undef") {
+        if (!cad->inquireVar(vel_str)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[ADIOSFlexVolume] variable \"%s\" does not exist.", vel_str.c_str());
+        }
+    } else {
         return false;
     }
+    return true;
+}
+
+bool ADIOSFlexVolume::inquireMetaDataVariables(CallADIOSData* cad) {
+    box_str = std::string(this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString());
+    if (box_str != "undef") {
+        if (!cad->inquireVar(box_str)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[ADIOSFlexVolume] variable \"%s\" does not exist.", box_str.c_str());
+        }
+    }
+    return true;
+}
+
+bool ADIOSFlexVolume::assertData(geocalls::VolumetricDataCall* vdc, CallADIOSData* cad) {
     bool dathashChanged = (vdc->DataHash() != cad->getDataHash());
     if ((vdc->FrameID() != currentFrame) || dathashChanged || this->AnyParameterDirty()) {
         this->ResetAllDirtyFlags();
@@ -91,36 +103,13 @@ bool ADIOSFlexVolume::onGetData(core::Call& call) {
         }
         cad->setFrameIDtoLoad(vdc->FrameID());
 
-
-        const std::string vel_str =
-            std::string(this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->ValueString());
-        if (vel_str != "undef") {
-            if (!cad->inquireVar(vel_str)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[ADIOSFlexVolume] variable \"%s\" does not exist.", vel_str.c_str());
-            }
-        } else {
+        inquireMetaDataVariables(cad);
+        if (!inquireDataVariables(cad))
             return false;
-        }
-        const std::string box_str =
-            std::string(this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString());
-        if (box_str != "undef") {
-            if (!cad->inquireVar(box_str)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[ADIOSFlexVolume] variable \"%s\" does not exist.", box_str.c_str());
-            }
-        }
 
         if (!(*cad)(0)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexVolume] Error during GetData");
             return false;
-        }
-
-        if (box_str != "undef") {
-            auto the_box = cad->getData(box_str)->GetAsFloat();
-            bbox.Set(the_box[0], the_box[1], the_box[2], the_box[3], the_box[4], the_box[5]);
-        } else {
-            bbox.Set(0.0f, 0.0f, 0.0f, 10.0f, 10.0f, 10.0f);
         }
 
         auto the_velocities = cad->getData(vel_str);
@@ -183,8 +172,8 @@ bool ADIOSFlexVolume::onGetData(core::Call& call) {
         this->metadata.GridType = CARTESIAN;
         this->metadata.Components = 1;
         for (auto x = 0; x < 3; ++x) {
-            this->metadata.Extents[x] = static_cast<float>(the_velocities->shape[x]);
-            this->metadata.Origin[x] = 0.0f;
+            // TODO: can we get the velocity shape without actually getting the data?
+            // Then we could move this to getExtents where it belongs
             this->metadata.Resolution[x] = the_velocities->shape[x];
             metadata.SliceDists[0] = new float[1];
             metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0] - 1);
@@ -203,18 +192,32 @@ bool ADIOSFlexVolume::onGetData(core::Call& call) {
         this->metadata.ScalarLength = 4;
         this->metadata.ScalarType = FLOATING_POINT;
 
-        vdc->SetData(VMAG.data(), 1);
-        vdc->SetDataHash(cad->getDataHash());
-        vdc->SetFrameID(cad->getFrameIDtoLoad());
         currentFrame = vdc->FrameID();
     }
+    return true;
+}
+
+bool ADIOSFlexVolume::onGetData(core::Call& call) {
+    auto* vdc = dynamic_cast<geocalls::VolumetricDataCall*>(&call);
+    if (vdc == nullptr)
+        return false;
+
+    auto* cad = this->adiosSlot.CallAs<CallADIOSData>();
+    if (cad == nullptr)
+        return false;
+
+    if (!(*cad)(1)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexVolume] Error during GetHeader");
+        return false;
+    }
+    auto ret = assertData(vdc, cad);
 
     vdc->SetData(VMAG.data(), 1);
     vdc->SetDataHash(cad->getDataHash());
     vdc->SetFrameID(currentFrame);
     vdc->SetMetadata(&this->metadata);
 
-    return true;
+    return ret;
 }
 
 
@@ -228,12 +231,38 @@ bool ADIOSFlexVolume::onGetExtents(core::Call& call) {
         return false;
 
     if (!(*cad)(1)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetHeader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexVolume] Error during GetHeader");
         return false;
     }
+
+    cad->setFrameIDtoLoad(vdc->FrameID());
+
+    if (!inquireMetaDataVariables(cad))
+        return false;
+
+    if (!(*cad)(0)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexVolume] Error during GetData");
+        return false;
+    }
+
+    if (box_str != "undef") {
+        auto the_box = cad->getData(box_str)->GetAsFloat();
+        bbox.Set(the_box[0], the_box[1], the_box[2], the_box[3], the_box[4], the_box[5]);
+    } else {
+        bbox.Set(0.0f, 0.0f, 0.0f, 10.0f, 10.0f, 10.0f);
+    }
+
+    this->metadata.Origin[0] = bbox.Left();
+    this->metadata.Origin[1] = bbox.Bottom();
+    this->metadata.Origin[2] = bbox.Back();
+    this->metadata.Extents[0] = bbox.Width();
+    this->metadata.Extents[1] = bbox.Height();
+    this->metadata.Extents[2] = bbox.Depth();
+
     vdc->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
     vdc->AccessBoundingBoxes().SetObjectSpaceClipBox(bbox);
     vdc->SetFrameCount(std::max<size_t>(cad->getFrameCount(), 1));
+    vdc->SetMetadata(&this->metadata);
 
     return true;
 }
