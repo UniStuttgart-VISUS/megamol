@@ -67,11 +67,10 @@ bool ADIOSFlexVolume::create() {
 void ADIOSFlexVolume::release() {}
 
 bool ADIOSFlexVolume::inquireDataVariables(CallADIOSData* cad) {
-    vel_str = std::string(this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->ValueString());
-    if (vel_str != "undef") {
-        if (!cad->inquireVar(vel_str)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[ADIOSFlexVolume] variable \"%s\" does not exist.", vel_str.c_str());
+    if (this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->ValueString() != "undef") {
+        if (!cad->inquireVar(this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->ValueString())) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexVolume] variable \"%s\" does not exist.",
+                this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->ValueString().c_str());
         }
     } else {
         return false;
@@ -80,11 +79,10 @@ bool ADIOSFlexVolume::inquireDataVariables(CallADIOSData* cad) {
 }
 
 bool ADIOSFlexVolume::inquireMetaDataVariables(CallADIOSData* cad) {
-    box_str = std::string(this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString());
-    if (box_str != "undef") {
-        if (!cad->inquireVar(box_str)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[ADIOSFlexVolume] variable \"%s\" does not exist.", box_str.c_str());
+    if (this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString() != "undef") {
+        if (!cad->inquireVar(this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString())) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[ADIOSFlexVolume] variable \"%s\" does not exist.",
+                this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString().c_str());
         }
     }
     return true;
@@ -112,11 +110,12 @@ bool ADIOSFlexVolume::assertData(geocalls::VolumetricDataCall* vdc, CallADIOSDat
             return false;
         }
 
-        if (vel_str == "undef") {
+        if (this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->ValueString() == "undef") {
             return false;
         }
 
-        const auto the_velocities = cad->getData(vel_str);
+        const auto the_velocities =
+            cad->getData(this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->ValueString());
         const std::vector<float> VXVYVZ = the_velocities->GetAsFloat();
         const std::size_t cell_count = VXVYVZ.size() / 3;
         VMAG.resize(cell_count);
@@ -155,39 +154,11 @@ bool ADIOSFlexVolume::assertData(geocalls::VolumetricDataCall* vdc, CallADIOSDat
                 }
             }
         }
-        //for (auto x = 0; x < cell_count; ++x) {
-        //    auto offset = x +
-        //    auto vx = VXVYVZ[x * 3 + 0];
-        //    auto vy = VXVYVZ[x * 3 + 1];
-        //    auto vz = VXVYVZ[x * 3 + 2];
-        //    auto vmag = std::sqrtf(vx * vx + vy * vy + vz * vz);
-        //    VMAG[x] = vmag;
-        //    min = std::min(min, vmag);
-        //    max = std::max(max, vmag);
-        //}
 
-        this->metadata.GridType = CARTESIAN;
-        this->metadata.Components = 1;
-        for (auto x = 0; x < 3; ++x) {
-            // TODO: can we get the velocity shape without actually getting the data?
-            // Then we could move this to getExtents where it belongs
-            this->metadata.Resolution[x] = the_velocities->shape[x];
-            metadata.SliceDists[0] = new float[1];
-            metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0] - 1);
-            metadata.SliceDists[1] = new float[1];
-            metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1] - 1);
-            metadata.SliceDists[2] = new float[1];
-            metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2] - 1);
-            this->metadata.IsUniform[x] = true;
-        }
         this->mins[0] = min;
         this->maxes[0] = max;
         this->metadata.MinValues = this->mins.data();
         this->metadata.MaxValues = this->maxes.data();
-        this->metadata.MemLoc = RAM;
-        this->metadata.NumberOfFrames = cad->getFrameCount();
-        this->metadata.ScalarLength = 4;
-        this->metadata.ScalarType = FLOATING_POINT;
 
         currentFrame = vdc->FrameID();
     }
@@ -242,12 +213,22 @@ bool ADIOSFlexVolume::onGetExtents(core::Call& call) {
         return false;
     }
 
-    if (box_str != "undef") {
-        auto the_box = cad->getData(box_str)->GetAsFloat();
+    if (this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString() != "undef") {
+        const auto the_box =
+            cad->getData(this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString())->GetAsFloat();
         bbox.Set(the_box[0], the_box[1], the_box[2], the_box[3], the_box[4], the_box[5]);
     } else {
         bbox.Set(0.0f, 0.0f, 0.0f, 10.0f, 10.0f, 10.0f);
     }
+
+    this->metadata.MemLoc = RAM;
+    this->metadata.NumberOfFrames = cad->getFrameCount();
+
+    this->metadata.GridType = CARTESIAN;
+    this->metadata.Components = 1;
+    this->metadata.ScalarLength = 4;
+    this->metadata.ScalarType = FLOATING_POINT;
+
 
     this->metadata.Origin[0] = bbox.Left();
     this->metadata.Origin[1] = bbox.Bottom();
@@ -256,6 +237,32 @@ bool ADIOSFlexVolume::onGetExtents(core::Call& call) {
     this->metadata.Extents[1] = bbox.Height();
     this->metadata.Extents[2] = bbox.Depth();
 
+    if (this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->ValueString() == "undef") {
+        return false;
+    }
+
+    std::stringstream vel_shape_str(cad->getVarProperties(this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->ValueString())["Shape"]);
+    std::vector<size_t> vel_shape;
+    while (vel_shape_str.good()) {
+        std::string substr;
+        std::getline(vel_shape_str, substr, ',');
+        vel_shape.push_back(std::atoi(substr.c_str()));
+    }
+    for (auto x = 0; x < 3; ++x) {
+        this->metadata.Resolution[x] = vel_shape[x];
+        metadata.SliceDists[0] = new float[1];
+        metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0] - 1);
+        metadata.SliceDists[1] = new float[1];
+        metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1] - 1);
+        metadata.SliceDists[2] = new float[1];
+        metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2] - 1);
+        this->metadata.IsUniform[x] = true;
+    }
+    //this->mins[0] = min;
+    //this->maxes[0] = max;
+    //this->metadata.MinValues = this->mins.data();
+    //this->metadata.MaxValues = this->maxes.data();
+
     vdc->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
     vdc->AccessBoundingBoxes().SetObjectSpaceClipBox(bbox);
     vdc->SetFrameCount(std::max<size_t>(cad->getFrameCount(), 1));
@@ -263,11 +270,6 @@ bool ADIOSFlexVolume::onGetExtents(core::Call& call) {
 
     return true;
 }
-
-
-//bool ADIOSFlexVolume::onGetMetadata(core::Call& call) {
-//    return true;
-//}
 
 
 bool ADIOSFlexVolume::onStartAsync(core::Call& call) {

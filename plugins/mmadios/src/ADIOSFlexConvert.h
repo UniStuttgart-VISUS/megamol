@@ -8,6 +8,7 @@
 #pragma once
 
 #include "geometry_calls/SimpleSphericalParticles.h"
+#include "mmadios/CallADIOSData.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -76,6 +77,10 @@ protected:
     bool getExtentCallback(core::Call& caller);
 
 private:
+
+    bool inquireDataVariables(CallADIOSData* cad);
+    bool inquireMetaDataVariables(CallADIOSData* cad);
+
     core::CalleeSlot mpSlot;
     core::CallerSlot adiosSlot;
 
@@ -91,6 +96,8 @@ private:
     core::param::ParamSlot flexVYSlot;
     core::param::ParamSlot flexVZSlot;
 
+    vislib::math::Cuboid<float> bbox;
+    bool hasVel, hasID;
 
     std::vector<float> mix;
 

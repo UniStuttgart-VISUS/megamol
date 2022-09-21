@@ -81,8 +81,6 @@ private:
     std::vector<float> VMAG;
     vislib::math::Cuboid<float> bbox;
 
-    std::string box_str, vel_str;
-
     size_t currentFrame = -1;
 };
 
