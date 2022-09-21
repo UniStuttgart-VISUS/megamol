@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "adios2/common/ADIOSTypes.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/utility/ConvertingIterator.h"
@@ -20,6 +21,11 @@
 namespace megamol {
 namespace adios {
 
+struct adios2Params {
+    std::string name;
+    adios2::Params params;
+    bool isAttribute = false;
+};
 
 class abstractContainer {
 public:
@@ -515,6 +521,8 @@ public:
     bool inquireVar(const std::string& varname);
     std::vector<std::string> getVarsToInquire() const;
     std::vector<std::string> getAvailableVars() const;
+    void setAllVars(std::map<std::string, std::map<std::string, std::string>> vars);
+    std::map<std::string, std::string> getVarProperties(std::string var) const;
     void setAvailableVars(const std::vector<std::string>& avars);
 
     bool inquireAttr(const std::string& attrname);
@@ -556,6 +564,7 @@ private:
     size_t frameIDtoLoad;
     std::vector<std::string> inqVars;
     std::vector<std::string> availableVars;
+    std::map<std::string, std::map<std::string, std::string>> allVars;
     std::vector<std::string> inqAttributes;
     std::vector<std::string> availableAttributes;
 

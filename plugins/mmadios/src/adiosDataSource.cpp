@@ -305,6 +305,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 
             availVars.clear();
             availVars.reserve(tmp_variables.size());
+            allVariables = tmp_variables;
             variables.clear();
             variables.reserve(tmp_variables.size());
             availAttribs.clear();
@@ -372,6 +373,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
     }
 
     cad->setAvailableVars(availVars);
+    cad->setAllVars(allVariables);
     cad->setAvailableAttributes(availAttribs);
     if (timesteps.size() != 1) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(

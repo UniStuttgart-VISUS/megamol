@@ -73,6 +73,14 @@ std::vector<std::string> CallADIOSData::getAvailableVars() const {
     return availableVars;
 }
 
+void CallADIOSData::setAllVars(std::map<std::string, std::map<std::string, std::string>> vars) {
+    allVars = vars;
+}
+
+std::map<std::string, std::string> CallADIOSData::getVarProperties(std::string var) const {
+    return allVars.at(var);
+}
+
 void CallADIOSData::setAvailableVars(const std::vector<std::string>& avars) {
     this->availableVars = avars;
 }
