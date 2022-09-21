@@ -112,16 +112,13 @@ bool ADIOSFlexVolume::assertData(geocalls::VolumetricDataCall* vdc, CallADIOSDat
             return false;
         }
 
-        auto the_velocities = cad->getData(vel_str);
-        std::vector<float> VXVYVZ;
-        std::size_t cell_count = 0;
-
-        if (vel_str != "undef") {
-            VXVYVZ = the_velocities->GetAsFloat();
-            cell_count = VXVYVZ.size() / 3;
-        } else {
+        if (vel_str == "undef") {
             return false;
         }
+
+        const auto the_velocities = cad->getData(vel_str);
+        const std::vector<float> VXVYVZ = the_velocities->GetAsFloat();
+        const std::size_t cell_count = VXVYVZ.size() / 3;
         VMAG.resize(cell_count);
         mins.resize(1);
         maxes.resize(1);
