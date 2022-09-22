@@ -49,8 +49,10 @@ megamol_feature_option(VTKM "Enable VTK-m support" OFF)
 megamol_feature_option(CUESDK "Enable Corsair CUESDK support" OFF "WIN32")
 megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "MEGAMOL_USE_OPENGL")
 
+include(cmake/megamol_vcpkg_empty_port.cmake)
+
 # option(X_VCPKG_APPLOCAL_DEPS_INSTALL "" ON) # Does currently not not work as expected, see comment on manual install below!
-set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_ports")
+set(VCPKG_OVERLAY_PORTS "${mm_empty_ports_dir}${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_ports")
 set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics") # Disable Telemetry
 set(VCPKG_INSTALL_OPTIONS "--clean-after-build") # Build dirs get quite large and are usually only needed for debugging new ports.
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-download-src/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
