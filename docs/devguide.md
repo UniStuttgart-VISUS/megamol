@@ -314,7 +314,7 @@ The port needs to contain a `vcpkg.json` that includes all relevant dependencies
 
 You are responsible for building the custom version in the correct way yourself. A custom drop-in replacement OSPRay that re-uses all the dependencies that are built with MegaMol anyway would, for example, be configured using options along the lines of:
 
-```-Drkcommon_DIR:PATH="drive:/path/to/megamol/megamol/build/vs-ninja-22/vcpkg_installed/x64-windows/share/rkcommon" -DISPC_EXECUTABLE:FILEPATH="drive:/path/to/megamol/megamol/build/vs-ninja-22/vcpkg_installed/x64-windows/tools/ispc/ispc.exe" -DOSPRAY_ENABLE_APPS_EXAMPLES:BOOL="0" -DTBB_DIR:PATH="" -DTBB_ROOT:PATH="drive:/path/to/megamol/megamol/build/vs-ninja-22/vcpkg_installed/x64-windows" -Dembree_DIR:PATH="drive:/path/to/megamol/megamol/build/vs-ninja-22/vcpkg_installed/x64-windows/share/embree" -DOSPRAY_ENABLE_APPS_TESTING:BOOL="0" -Dopenvkl_DIR:PATH="drive:/path/to/megamol/megamol/build/vs-ninja-22/vcpkg_installed/x64-windows/share/openvkl" -DOSPRAY_ENABLE_APPS_BENCHMARK:BOOL="0" -DOSPRAY_ENABLE_APPS_TUTORIALS:BOOL="0"```
+```-DCMAKE_PREFIX_PATH="drive:/path/to/megamol/megamol/build/vs-ninja-22/vcpkg_installed/x64-windows" -DISPC_EXECUTABLE="drive:/path/to/megamol/megamol/build/vs-ninja-22/vcpkg_installed/x64-windows/tools/ispc/ispc.exe" -DOSPRAY_ENABLE_APPS_EXAMPLES="0" -DOSPRAY_ENABLE_APPS_TESTING="0" -DOSPRAY_ENABLE_APPS_BENCHMARK="0" -DOSPRAY_ENABLE_APPS_TUTORIALS="0"```
 
 Do not use the OSPRay superbuild as it includes and references its own set of transitive dependencies, which could mean that you end up with two different versions of TBB, for example. It also pollutes CMake with additional targets that confuse vcpkg.
 
