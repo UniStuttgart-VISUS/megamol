@@ -487,6 +487,7 @@ void megamol::core::MegaMolGraph::Clear() {
     }
     module_list_.clear();
     graph_entry_points.clear();
+    module_param_changes_queue.clear();
 }
 
 /*
