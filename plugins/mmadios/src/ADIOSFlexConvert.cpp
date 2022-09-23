@@ -223,6 +223,8 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
 
         cad->setFrameIDtoLoad(mpdc->FrameID());
 
+        hasVel = hasID = false;
+
         this->inquireMetaDataVariables(cad);
         this->inquireDataVariables(cad);
 
@@ -237,8 +239,6 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         const auto vx_str = this->flexVXSlot.Param<core::param::FlexEnumParam>()->ValueString();
         const auto vy_str = this->flexVYSlot.Param<core::param::FlexEnumParam>()->ValueString();
         const auto vz_str = this->flexVZSlot.Param<core::param::FlexEnumParam>()->ValueString();
-
-        hasVel = hasID = false;
 
         if (!(*cad)(0)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetData");
