@@ -21,6 +21,7 @@
 #include "mmstd_gl/special/ChronoGraph.h"
 #include "mmstd_gl/special/DemoRenderer2D.h"
 #include "mmstd_gl/special/ScreenShooter.h"
+#include "mmstd_gl/special/TexInspectModule.h"
 #include "mmstd_gl/view/HeadView.h"
 #include "mmstd_gl/view/SplitViewGL.h"
 #include "mmstd_gl/view/View2DGL.h"
@@ -29,7 +30,6 @@
 #include "upscaling/ImageSpaceAmortization2D.h"
 #include "upscaling/ResolutionScaler2D.h"
 #include "upscaling/ResolutionScaler3D.h"
-#include "mmstd_gl/special/TexInspectModule.h"
 
 namespace megamol::mmstd_gl {
 class PluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {

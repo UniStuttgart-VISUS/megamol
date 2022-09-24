@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "mmcore/CallerSlot.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
 #include "mmstd_gl/special/TextureInspector.h"

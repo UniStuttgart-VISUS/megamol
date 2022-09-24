@@ -11,11 +11,10 @@ using namespace megamol::mmstd_gl::special;
 
 
 TexInspectModule::TexInspectModule()
-    : megamol::core::Module()
-    , tex_inspector_()
-    , get_data_slot_("getData", "Slot to fetch data")
-    , output_tex_slot_("OutputTexture", "Gives access to the resulting output texture")
-{
+        : megamol::core::Module()
+        , tex_inspector_()
+        , get_data_slot_("getData", "Slot to fetch data")
+        , output_tex_slot_("OutputTexture", "Gives access to the resulting output texture") {
     this->output_tex_slot_.SetCallback(
         compositing::CallTexture2D::ClassName(), "GetData", &TexInspectModule::getDataCallback);
     this->output_tex_slot_.SetCallback(
