@@ -29,6 +29,7 @@
 #include "upscaling/ImageSpaceAmortization2D.h"
 #include "upscaling/ResolutionScaler2D.h"
 #include "upscaling/ResolutionScaler3D.h"
+#include "mmstd_gl/special/TexInspectModule.h"
 
 namespace megamol::mmstd_gl {
 class PluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
@@ -59,6 +60,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::CallbackScreenShooter>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::ChronoGraph>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::DemoRenderer2D>();
+        this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::TexInspectModule>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<mmstd_gl::CallRenderViewGL>();

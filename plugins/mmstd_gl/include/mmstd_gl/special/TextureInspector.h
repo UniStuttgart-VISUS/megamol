@@ -68,6 +68,11 @@ public:
     TextureInspector(const std::vector<std::string>& textures);
 
     /**
+     * Ctor
+     */
+    TextureInspector();
+
+    /**
      * Dtor
      */
     ~TextureInspector();

@@ -54,6 +54,23 @@ TextureInspector::TextureInspector(const std::vector<std::string>& textures)
     select_texture_.SetParameter(ep);
 }
 
+TextureInspector::TextureInspector()
+        : show_inspector_("Show", "Turn the texture inspector on or off.")
+        , select_texture_("Texture", "Select which texture to be shown.")
+        , draw(nullptr)
+        , tex_({nullptr, 0.f, 0.f})
+        , flags_(0)
+        , flip_x_(false)
+        , flip_y_(true)
+        , initiated_(false) {
+    auto bp = new core::param::BoolParam(true);
+    show_inspector_.SetParameter(bp);
+
+    auto ep = new core::param::EnumParam(1);
+    ep->SetTypePair(0, "Default");
+    select_texture_.SetParameter(ep);
+}
+
 TextureInspector::~TextureInspector() {}
 
 

@@ -22,8 +22,12 @@ if (mmstd_gl_PLUGIN_ENABLED)
       imguitexinspect::imguitexinspect)
 
   # Additional sources
+  # get include directories from compositing
+  get_target_property(COMPOSITING_INCLUDE_DIRS compositing_gl INCLUDE_DIRECTORIES)
+  message(${COMPOSITING_INCLUDE_DIRS})
+
   file(GLOB_RECURSE extra_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*.h")
   file(GLOB_RECURSE extra_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*.cpp")
   target_sources(mmstd_gl PRIVATE ${extra_header_files} ${extra_source_files})
-  target_include_directories(mmstd_gl PRIVATE "3rd")
+  target_include_directories(mmstd_gl PRIVATE "3rd" ${COMPOSITING_INCLUDE_DIRS})
 endif ()
