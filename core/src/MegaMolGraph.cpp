@@ -788,11 +788,6 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
                       }));
     }
 
-    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.DeleteModule(*module_it); });
-        result.first == false) {
-        log_error("graph subscriber " + result.second + " failed to process module deletion: " + request);
-    }
-
     // delete all outgoing/incoming calls
     auto discard_calls = find_all_of(call_list_, [&](CallInstance_t const& call_info) {
         return (call_info.request.from.find(request) != std::string::npos ||
@@ -803,18 +798,21 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
         delete_call(CallDeletionRequest_t{call_it->request.from, call_it->request.to});
     });
 
-    if (module_it->isGraphEntryPoint)
+    if (module_it->isGraphEntryPoint) {
+        if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.DisableEntryPoint(*module_it); });
+            result.first == false) {
+            log_error("graph subscriber " + result.second + " failed to process disabling entry point: " + request);
+        }
         this->RemoveGraphEntryPoint(request);
+    }
 
-    const auto release_module = [module_ptr](auto& module_lifetime_dependencies) -> bool {
-        module_ptr->Release(module_lifetime_dependencies);
-        log("release module: " + std::string(module_ptr->Name().PeekBuffer()));
-        return true;
-        // end of lambda scope deletes last shared_ptr to module
-        // thus the module gets deleted after execution and deletion of this command callback
-    };
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.DeleteModule(*module_it); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second + " failed to process module deletion: " + request);
+    }
 
-    release_module(module_it->lifetime_resources);
+    module_ptr->Release(module_it->lifetime_resources);
+    log("release module: " + std::string(module_ptr->Name().PeekBuffer()));
 
     this->module_list_.erase(module_it);
 
