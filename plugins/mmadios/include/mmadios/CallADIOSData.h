@@ -551,6 +551,13 @@ public:
         return this->frameIDtoLoad;
     }
 
+    void setLoadedFrameID(size_t fid) {
+        this->loadedFrameID = fid;
+    }
+    size_t getLoadedFrameID() const {
+        return this->loadedFrameID;
+    }
+
     void setData(std::shared_ptr<adiosDataMap> _dta);
     std::shared_ptr<abstractContainer> getData(std::string _str) const;
 
@@ -562,6 +569,7 @@ private:
     float time;
     size_t frameCount;
     size_t frameIDtoLoad;
+    size_t loadedFrameID;
     std::vector<std::string> inqVars;
     std::vector<std::string> availableVars;
     std::map<std::string, std::map<std::string, std::string>> allVars;
