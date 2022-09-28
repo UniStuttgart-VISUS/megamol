@@ -90,13 +90,19 @@
       "description": "Use OpenGL",
       "dependencies": [
         {
+          "name": "glowl",
+          "features": [
+            "glm",
+            "gl-extensions"
+          ]
+        },
+        {
           "name": "imgui",
           "features": [
             "opengl3-binding"
           ]
         },
-        "megamol-shader-factory",
-        "glowl"
+        "megamol-shader-factory"
       ]
     },
     "use-ospray": {
