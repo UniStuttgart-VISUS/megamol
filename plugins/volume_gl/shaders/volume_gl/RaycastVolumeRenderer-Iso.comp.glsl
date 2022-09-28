@@ -33,6 +33,7 @@ void compute(float t, const float tfar, const Ray ray, const float rayStep, cons
     vec3 normal = vec3(0.0f);
 
     vec2 pixel_tex_coords = vec2(pixel_coords.x / rt_resolution.x, pixel_coords.y / rt_resolution.y);
+    pixel_tex_coords += vec2(0.5/rt_resolution.x, 0.5/rt_resolution.y);
 
     // input values
     const float input_depth = texture(depth_tx2D, pixel_tex_coords).x;
