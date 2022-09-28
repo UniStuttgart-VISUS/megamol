@@ -116,6 +116,18 @@ struct MegaMolGraph_SubscriptionRegistry {
     // do not touch.
     // the subscribers are accessed by the graph itself and should not be touched by outsiders
     std::vector<ModuleGraphSubscription> subscribers;
+
+    std::pair<bool, std::string> tell_all(std::function<bool(ModuleGraphSubscription& subscriber)> callback) {
+        bool result = true;
+        std::string name;
+        for (auto& s : subscribers) {
+            if (!callback(s)) {
+                result = false;
+                name = s.Name();
+            }
+        }
+        return std::pair{result, name};
+    }
 };
 
 } /* end namespace frontend_resources */
