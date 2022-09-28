@@ -25,7 +25,8 @@ find_package(Git REQUIRED)
 
 FetchContent_Declare(vcpkg-download
   GIT_REPOSITORY https://github.com/microsoft/vcpkg.git
-  GIT_TAG 2022.08.15)
+  GIT_TAG 2022.08.15
+  GIT_SHALLOW TRUE)
 FetchContent_GetProperties(vcpkg-download)
 if (NOT vcpkg-download_POPULATED)
   message(STATUS "Fetch vcpkg ...")
@@ -43,6 +44,7 @@ megamol_feature_option(MPI "Enable MPI support" OFF)
 megamol_feature_option(OPENGL "Enable OpenGL support" ON)
 megamol_feature_option(OSPRAY "Enable OSPRay support" OFF)
 megamol_feature_option(PROFILING "Enable profiling support" OFF)
+megamol_feature_option(VTKM "Enable VTK-m support" OFF)
 # dependent options
 megamol_feature_option(CUESDK "Enable Corsair CUESDK support" OFF "WIN32")
 megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "MEGAMOL_USE_OPENGL")

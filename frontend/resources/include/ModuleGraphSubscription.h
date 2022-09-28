@@ -69,13 +69,12 @@ public:
     };
 
     /**
-     * Notifies subscriber about change of a paramter value, providing the parameter, its new value, and the old value.
+     * Notifies subscriber about change of a paramter value, providing the parameter and its new value.
      * Gets called after parameter value changed to new value.
      * All ParamSlotPtr values are non-null.
      */
-    std::function<bool(
-        ParamSlotPtr const& /*param*/, std::string const& /*old_value*/, std::string const& /*new_value*/)>
-        ParameterChanged = [](auto const&, auto const&, auto const&) { return true; };
+    std::function<bool(ParamSlotPtr const& /*param*/, std::string const& /*new_value*/)> ParameterChanged =
+        [](auto const&, auto const&) { return true; };
 
     /**
      * Informs about renaming of a module.
@@ -95,6 +94,16 @@ public:
      * The call still exists and will be deleted soon after execution of this callback.
      */
     std::function<bool(core::CallInstance_t const&)> DeleteCall = [](auto const&) { return true; };
+
+    /**
+     * Informs about a graph module (view) becoming a graph entry point, a graph module that is poked for rendering
+     */
+    std::function<bool(core::ModuleInstance_t const&)> EnableEntryPoint = [](auto const&) { return true; };
+
+    /**
+     * Informs about a graph module (view) becoming disabled as an entry point
+     */
+    std::function<bool(core::ModuleInstance_t const&)> DisableEntryPoint = [](auto const&) { return true; };
 };
 
 struct MegaMolGraph_SubscriptionRegistry {
@@ -107,6 +116,18 @@ struct MegaMolGraph_SubscriptionRegistry {
     // do not touch.
     // the subscribers are accessed by the graph itself and should not be touched by outsiders
     std::vector<ModuleGraphSubscription> subscribers;
+
+    std::pair<bool, std::string> tell_all(std::function<bool(ModuleGraphSubscription& subscriber)> callback) {
+        bool result = true;
+        std::string name;
+        for (auto& s : subscribers) {
+            if (!callback(s)) {
+                result = false;
+                name = s.Name();
+            }
+        }
+        return std::pair{result, name};
+    }
 };
 
 } /* end namespace frontend_resources */

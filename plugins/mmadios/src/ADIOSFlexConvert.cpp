@@ -323,6 +323,7 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
 
         size_t vel_offset = 0;
         size_t id_offset = 0;
+        size_t col_offset = 0;
 
         for (size_t i = 0; i < p_count; i++) {
             if (pos_str != "undef") {
@@ -339,10 +340,13 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
                 mix[float_step * i + 2] = XYZW[4 * i + 2];
             }
 
+            size_t offset = 3;
             if (col_str != "undef") {
+                col_offset = offset;
                 mix[float_step * i + 3] = col[i];
                 imin = std::min(imin, col[i]);
                 imax = std::max(imax, col[i]);
+                offset += 1;
             }
             if (box_str == "undef") {
                 xmin = std::min(xmin, mix[float_step * i + 0]);
@@ -353,7 +357,6 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
                 zmax = std::max(zmax, mix[float_step * i + 2]);
             }
 
-            size_t offset = 4;
             if (hasVel) {
                 vel_offset = offset;
                 mix[float_step * i + offset + 0] = VX[i];
@@ -383,7 +386,7 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         mpdc->AccessParticles(0).SetVertexData(vertType, mix.data(), stride);
         //mpdc->AccessParticles(0).SetColourData(
         //    colType, mix.data() + geocalls::SimpleSphericalParticles::VertexDataSize[vertType], stride);
-        mpdc->AccessParticles(0).SetColourData(colType, &mix[3], stride);
+        mpdc->AccessParticles(0).SetColourData(colType, &mix[col_offset], stride);
 
         mpdc->AccessParticles(0).SetColourMapIndexValues(imin, imax);
 

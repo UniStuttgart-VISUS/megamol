@@ -324,6 +324,8 @@ private:
     bool tf_show_editor;
     size_t tf_editor_hash;
 
+    bool filepath_scroll_xmax;
+
     // FUNCTIONS ----------------------------------------------------------
 
     bool draw_parameter(WidgetScope scope);

@@ -56,7 +56,7 @@ std::string CameraSerializer::serialize(std::vector<Camera> const& camVec) const
  */
 bool CameraSerializer::deserialize(Camera& outCamera, std::string const text) const {
     nlohmann::json obj = nlohmann::json::parse(text, nullptr, false);
-    if (obj != nlohmann::json::value_t::discarded) {
+    if (!obj.is_discarded()) {
         bool result = this->getCamFromJsonObject(outCamera, obj);
         if (!result)
             outCamera = {};

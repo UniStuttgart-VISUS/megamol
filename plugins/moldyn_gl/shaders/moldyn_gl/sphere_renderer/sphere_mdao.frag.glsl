@@ -1,4 +1,4 @@
-#version 150
+#version 330
 
 #include "moldyn_gl/sphere_renderer/inc/fragment_extensions.inc.glsl"
 #include "commondefines.glsl"

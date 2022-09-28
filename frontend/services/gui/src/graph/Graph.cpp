@@ -988,7 +988,7 @@ bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_full_name
 }
 
 
-bool Graph::ToggleGraphEntry() {
+bool Graph::ToggleGraphEntry(bool use_queue) {
 
     auto module_graph_entry_iter = this->modules.begin();
     // Search for first graph entry and set next view to graph entry (= graph entry point)
@@ -996,7 +996,7 @@ bool Graph::ToggleGraphEntry() {
         if ((*module_iter)->IsView() && (*module_iter)->IsGraphEntry()) {
             // Remove all graph entries
             (*module_iter)->SetGraphEntryName("");
-            if (this->IsRunning()) {
+            if (this->IsRunning() && use_queue) {
                 QueueData queue_data;
                 queue_data.name_id = (*module_iter)->FullName();
                 this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
@@ -1007,12 +1007,12 @@ bool Graph::ToggleGraphEntry() {
             }
         }
     }
-    if ((module_graph_entry_iter == this->modules.begin()) || (module_graph_entry_iter != this->modules.end())) {
+    if (module_graph_entry_iter != this->modules.end()) {
         // Search for next graph entry
         for (auto module_iter = module_graph_entry_iter; module_iter != this->modules.end(); module_iter++) {
             if ((*module_iter)->IsView()) {
                 (*module_iter)->SetGraphEntryName(this->GenerateUniqueGraphEntryName());
-                if (this->IsRunning()) {
+                if (this->IsRunning() && use_queue) {
                     QueueData queue_data;
                     queue_data.name_id = (*module_iter)->FullName();
                     this->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
@@ -1020,6 +1020,49 @@ bool Graph::ToggleGraphEntry() {
                 break;
             }
         }
+    }
+    return true;
+}
+
+
+bool megamol::gui::Graph::AddGraphEntry(const ModulePtr_t& module_ptr, const std::string& name, bool use_queue) {
+
+    if (module_ptr == nullptr)
+        return false;
+
+    // Remove all existing graph entries
+    for (auto mod_ptr : this->modules) {
+        mod_ptr->SetGraphEntryName("");
+        if (this->IsRunning() && use_queue) {
+            QueueData queue_data;
+            queue_data.name_id = mod_ptr->FullName();
+            this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
+        }
+    }
+
+    if (module_ptr->IsView()) {
+        module_ptr->SetGraphEntryName(name);
+        if (this->IsRunning() && use_queue) {
+            QueueData queue_data;
+            queue_data.name_id = module_ptr->FullName();
+            this->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+        }
+    }
+
+    return true;
+}
+
+
+bool megamol::gui::Graph::RemoveGraphEntry(const ModulePtr_t& module_ptr, bool use_queue) {
+
+    if (module_ptr == nullptr)
+        return false;
+
+    module_ptr->SetGraphEntryName("");
+    if (this->IsRunning() && use_queue) {
+        QueueData queue_data;
+        queue_data.name_id = module_ptr->FullName();
+        this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
     }
     return true;
 }
@@ -1591,14 +1634,15 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             if (this->gui_show_parameter_sidebar) {
                 this->gui_parameters_splitter.Widget("parameters_splitter", true, 0.0f,
                     SplitterWidget::FixedSplitterSide::RIGHT_BOTTOM, graph_width_auto,
-                    this->gui_parameter_sidebar_width);
+                    this->gui_parameter_sidebar_width, cursor_position);
             }
             float graph_height_auto = available_space.y;
 #ifdef MEGAMOL_USE_PROFILING
             this->gui_profiling_bar_height *= megamol::gui::gui_scaling.Get();
             if (this->gui_show_profiling_bar) {
                 this->gui_profiling_splitter.Widget("profiling_splitter", false, graph_width_auto,
-                    SplitterWidget::FixedSplitterSide::RIGHT_BOTTOM, graph_height_auto, this->gui_profiling_bar_height);
+                    SplitterWidget::FixedSplitterSide::RIGHT_BOTTOM, graph_height_auto, this->gui_profiling_bar_height,
+                    cursor_position);
             }
 #endif // MEGAMOL_USE_PROFILING
 
@@ -2009,7 +2053,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                         }
                         if (!param_popup_open &&
                             ((ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !module_parm_child_popup_hovered) ||
-                                ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))) {
+                                ImGui::IsKeyPressed(ImGuiKey_Escape))) {
 
                             this->gui_graph_state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
                             // Reset module selection to prevent irrgular dragging
@@ -2332,6 +2376,11 @@ void megamol::gui::Graph::draw_canvas(ImVec2 position, ImVec2 size, GraphState_t
         this->gui_update = false;
     }
 
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    assert(drawList != nullptr);
+
+    drawList->PushClipRect(this->gui_graph_state.canvas.position,
+        this->gui_graph_state.canvas.position + this->gui_graph_state.canvas.size, true);
     ImGui::PushClipRect(this->gui_graph_state.canvas.position,
         this->gui_graph_state.canvas.position + this->gui_graph_state.canvas.size, true);
 
@@ -2429,49 +2478,48 @@ void megamol::gui::Graph::draw_canvas(ImVec2 position, ImVec2 size, GraphState_t
     // Dragged CALL ------------------------------
     this->draw_canvas_dragged_call();
 
+    drawList->PopClipRect();
     ImGui::PopClipRect();
 
     // Zooming and Scaling ----------------------
     // Must be checked inside this canvas child window!
     // Check at the end of drawing for being applied in next frame when font scaling matches zooming.
-    /// XXX adding flag ImGuiHoveredFlags_ChildWindows to ImGui::IsWindowHovered prevents mouse wheel zooming in
-    /// profiling diagrams
     if ((ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) || this->gui_reset_zooming ||
         this->gui_increment_zooming || this->gui_decrement_zooming) {
 
         // Scrolling (2 = Middle Mouse Button)
-        if (ImGui::IsMouseDragging(
-                ImGuiMouseButton_Middle)) { // io.KeyCtrl && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Middle)) {
             this->gui_graph_state.canvas.scrolling = this->gui_graph_state.canvas.scrolling +
                                                      ImGui::GetIO().MouseDelta / this->gui_graph_state.canvas.zooming;
             this->gui_update = true;
         }
 
         // Zooming (Mouse Wheel) + Reset
-        if ((io.MouseWheel != 0) || this->gui_reset_zooming || this->gui_increment_zooming ||
-            this->gui_decrement_zooming) {
+        float mouse_wheel_value = megamol::gui::gui_mouse_wheel;
+        if (((isfinite(mouse_wheel_value)) && (mouse_wheel_value != 0)) || this->gui_reset_zooming ||
+            this->gui_increment_zooming || this->gui_decrement_zooming) {
+
             float last_zooming = this->gui_graph_state.canvas.zooming;
             // Center mouse position as init value
             ImVec2 current_mouse_pos =
                 this->gui_graph_state.canvas.offset -
                 (this->gui_graph_state.canvas.position + this->gui_graph_state.canvas.size * 0.5f);
             const float zoom_fac = 1.1f; // = 10%
+
             if (this->gui_reset_zooming) {
                 this->gui_graph_state.canvas.zooming = 1.0f;
                 last_zooming = 1.0f;
                 this->gui_reset_zooming = false;
-            } else {
-                if (io.MouseWheel != 0) {
-                    const float factor = this->gui_graph_state.canvas.zooming / 10.0f;
-                    this->gui_graph_state.canvas.zooming += (io.MouseWheel * factor);
-                    current_mouse_pos = this->gui_graph_state.canvas.offset - ImGui::GetMousePos();
-                } else if (this->gui_increment_zooming) {
-                    this->gui_graph_state.canvas.zooming *= zoom_fac;
-                    this->gui_increment_zooming = false;
-                } else if (this->gui_decrement_zooming) {
-                    this->gui_graph_state.canvas.zooming /= zoom_fac;
-                    this->gui_decrement_zooming = false;
-                }
+            } else if (this->gui_increment_zooming) {
+                this->gui_graph_state.canvas.zooming *= zoom_fac;
+                this->gui_increment_zooming = false;
+            } else if (this->gui_decrement_zooming) {
+                this->gui_graph_state.canvas.zooming /= zoom_fac;
+                this->gui_decrement_zooming = false;
+            } else if ((isfinite(mouse_wheel_value)) && (mouse_wheel_value != 0)) {
+                const float factor = this->gui_graph_state.canvas.zooming / 10.0f;
+                this->gui_graph_state.canvas.zooming += (mouse_wheel_value * factor);
+                current_mouse_pos = this->gui_graph_state.canvas.offset - ImGui::GetMousePos();
             }
             // Limit zooming
             const float zooming_minimum = 0.01f;
@@ -2613,8 +2661,8 @@ void megamol::gui::Graph::draw_canvas_grid() const {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    assert(draw_list != nullptr);
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    assert(drawList != nullptr);
 
     /// COLOR_GRID
     const ImU32 COLOR_GRID = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
@@ -2623,12 +2671,12 @@ void megamol::gui::Graph::draw_canvas_grid() const {
     ImVec2 relative_offset = this->gui_graph_state.canvas.offset - this->gui_graph_state.canvas.position;
 
     for (float x = fmodf(relative_offset.x, GRID_SIZE); x < this->gui_graph_state.canvas.size.x; x += GRID_SIZE) {
-        draw_list->AddLine(ImVec2(x, 0.0f) + this->gui_graph_state.canvas.position,
+        drawList->AddLine(ImVec2(x, 0.0f) + this->gui_graph_state.canvas.position,
             ImVec2(x, this->gui_graph_state.canvas.size.y) + this->gui_graph_state.canvas.position, COLOR_GRID);
     }
 
     for (float y = fmodf(relative_offset.y, GRID_SIZE); y < this->gui_graph_state.canvas.size.y; y += GRID_SIZE) {
-        draw_list->AddLine(ImVec2(0.0f, y) + this->gui_graph_state.canvas.position,
+        drawList->AddLine(ImVec2(0.0f, y) + this->gui_graph_state.canvas.position,
             ImVec2(this->gui_graph_state.canvas.size.x, y) + this->gui_graph_state.canvas.position, COLOR_GRID);
     }
 }
@@ -2647,7 +2695,7 @@ void megamol::gui::Graph::draw_canvas_dragged_call() {
             }
 
             ImGuiStyle& style = ImGui::GetStyle();
-            ImDrawList* draw_list = ImGui::GetWindowDrawList();
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
 
             /// COLOR_CALL_CURVE
             const auto COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]);
@@ -2696,7 +2744,7 @@ void megamol::gui::Graph::draw_canvas_dragged_call() {
                         p2 = tmp;
                     }
                     if (glm::length(glm::vec2(p1.x, p1.y) - glm::vec2(p2.x, p2.y)) > GUI_SLOT_RADIUS) {
-                        draw_list->AddBezierCubic(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE,
+                        drawList->AddBezierCubic(p1, p1 + ImVec2(+50, 0), p2 + ImVec2(-50, 0), p2, COLOR_CALL_CURVE,
                             GUI_LINE_THICKNESS * this->gui_graph_state.canvas.zooming);
                     }
                 }
@@ -2720,8 +2768,8 @@ void megamol::gui::Graph::draw_canvas_multiselection() {
         this->gui_multiselect_done = true;
 
         ImGuiStyle& style = ImGui::GetStyle();
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        assert(draw_list != nullptr);
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        assert(drawList != nullptr);
 
         /// COLOR_MULTISELECT_BACKGROUND
         ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
@@ -2730,11 +2778,11 @@ void megamol::gui::Graph::draw_canvas_multiselection() {
         /// COLOR_MULTISELECT_BORDER
         const ImU32 COLOR_MULTISELECT_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
 
-        draw_list->AddRectFilled(this->gui_multiselect_start_pos, this->gui_multiselect_end_pos,
+        drawList->AddRectFilled(this->gui_multiselect_start_pos, this->gui_multiselect_end_pos,
             COLOR_MULTISELECT_BACKGROUND, GUI_RECT_CORNER_RADIUS, ImDrawFlags_RoundCornersAll);
 
         float border = (1.0f * megamol::gui::gui_scaling.Get());
-        draw_list->AddRect(this->gui_multiselect_start_pos, this->gui_multiselect_end_pos, COLOR_MULTISELECT_BORDER,
+        drawList->AddRect(this->gui_multiselect_start_pos, this->gui_multiselect_end_pos, COLOR_MULTISELECT_BORDER,
             GUI_RECT_CORNER_RADIUS, ImDrawFlags_RoundCornersAll, border);
     } else if (this->gui_multiselect_done && ImGui::IsWindowHovered() &&
                ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
@@ -3245,7 +3293,7 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
 
     float child_height = ImGui::GetFrameHeightWithSpacing();
     auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_MenuBar;
-    ImGui::BeginChild("profiling_menu", ImVec2(0.0f, child_height), false, child_flags);
+    ImGui::BeginChild("profiling_menu", ImVec2(size.x, child_height), false, child_flags);
 
     ImGui::BeginMenuBar();
     ImGui::TextUnformatted("Profiling");
@@ -3275,10 +3323,6 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
 
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-    // Clipping: Graph Canvas plus profiling bar size
-    ImGui::PushClipRect(this->gui_graph_state.canvas.position, position + size, true);
-    ImDrawList* draw_list = ImGui::GetForegroundDrawList();
-    assert(draw_list != nullptr);
 
     float delta_height = ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.y;
     auto child_position = position + ImVec2(0.0f, delta_height);
@@ -3333,6 +3377,11 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     unsigned int drop_target_index = 0;
     ImGuiID drop_uid = 0;
     int drop_index = 0;
+
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    assert(drawList != nullptr);
+
+    drawList->PushClipRect(this->gui_graph_state.canvas.position, position + size, false);
 
     // Draw profiling data
     for (auto& p : this->profiling_list) {
@@ -3392,7 +3441,7 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
             auto tmpcol = style.Colors[ImGuiCol_PlotLines];
             tmpcol = ImVec4(tmpcol.x, tmpcol.y, tmpcol.z, 0.5f);
             const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
-            draw_list->AddBezierCubic(start, start + ImVec2(0.0f, (-100.0f * megamol::gui::gui_scaling.Get())),
+            drawList->AddBezierCubic(start, start + ImVec2(0.0f, (-100.0f * megamol::gui::gui_scaling.Get())),
                 end + ImVec2(0.0f, (100.0f * megamol::gui::gui_scaling.Get())), end, COLOR_CALL_CURVE,
                 GUI_LINE_THICKNESS);
         }
@@ -3475,6 +3524,8 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
         ImGui::SameLine(0.0f);
     }
 
+    drawList->PopClipRect();
+
     // Apply drop
     if (drop_uid != 0) {
         for (auto iterp = this->profiling_list.begin(); iterp != this->profiling_list.end(); iterp++) {
@@ -3491,6 +3542,7 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
     }
 
     // Auto scroll during profiling drag
+    auto mouse_pos = ImGui::GetMousePos();
     const float mouse_delta = 50.0f * megamol::gui::gui_scaling.Get();
     if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
         auto min_win_x = ImGui::GetWindowPos().x;
@@ -3498,9 +3550,9 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
         auto time_delta = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now() - this->scroll_delta_time)
                               .count();
-        if (io.MousePos.x <= (min_win_x + mouse_delta)) {
+        if (mouse_pos.x <= (min_win_x + mouse_delta)) {
             ImGui::SetScrollX(ImGui::GetScrollX() - static_cast<float>(time_delta));
-        } else if (io.MousePos.x >= (max_win_x - mouse_delta)) {
+        } else if (mouse_pos.x >= (max_win_x - mouse_delta)) {
             ImGui::SetScrollX(ImGui::GetScrollX() + static_cast<float>(time_delta));
         }
     }
@@ -3508,7 +3560,6 @@ void megamol::gui::Graph::draw_profiling(ImVec2 position, ImVec2 size) {
 
     ImGui::EndChild();
 
-    ImGui::PopClipRect();
     ImGui::PopStyleVar(2);
 }
 

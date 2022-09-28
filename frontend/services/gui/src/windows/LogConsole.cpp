@@ -211,6 +211,7 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
         , scroll_down(2)
         , scroll_up(0)
         , last_window_height(0.0f)
+        , selected_candidate_index(0)
         , win_log_level(megamol::core::utility::log::Log::log_level::warn)
         , win_log_force_open(true)
         , tooltip()
@@ -227,7 +228,8 @@ megamol::gui::LogConsole::LogConsole(const std::string& window_name)
     // Configure CONSOLE Window
     this->win_config.size = ImVec2(500.0f * megamol::gui::gui_scaling.Get(), 50.0f * megamol::gui::gui_scaling.Get());
     this->win_config.reset_size = this->win_config.size;
-    this->win_config.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
+    this->win_config.flags =
+        ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoNavInputs;
     this->win_config.hotkey =
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F9, core::view::Modifier::NONE);
 
@@ -387,7 +389,7 @@ bool megamol::gui::LogConsole::Draw() {
 
     // Scroll - Requires 3 frames for being applied!
     if (this->scroll_down > 0) {
-        const auto max_offset = 2.0f * ImGui::GetTextLineHeight();
+        const auto max_offset = 5.0f * ImGui::GetTextLineHeight(); /// XXX IO Why is that neccessary?
         ImGui::SetScrollY(ImGui::GetScrollMaxY() + max_offset);
         this->scroll_down--;
     }
@@ -402,13 +404,21 @@ bool megamol::gui::LogConsole::Draw() {
 
     ImGui::AlignTextToFramePadding();
     ImGui::TextUnformatted("Input");
-    this->tooltip.Marker("[TAB] Activate autocomplete.\n[Arrow up/down] Browse command history.");
+    this->tooltip.Marker("[TAB] Activate autocomplete.\n[Arrow up/down] Browse history of valid lua commands.");
     ImGui::SameLine();
     auto popup_pos = ImGui::GetCursorScreenPos();
     if (this->input_reclaim_focus) {
         ImGui::SetKeyboardFocusHere();
         this->input_reclaim_focus = false;
     }
+    std::string hint;
+    if (!this->input_shared_data->param_hint.empty()) {
+        hint = "Parameter(s): " + this->input_shared_data->param_hint;
+    }
+
+    ImGui::PushItemWidth(
+        ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(hint.c_str()).x - (2.0f * style.ItemSpacing.x));
+
     ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue |
                                            ImGuiInputTextFlags_CallbackCompletion |
                                            ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackAlways;
@@ -430,11 +440,12 @@ bool megamol::gui::LogConsole::Draw() {
         }
         this->input_reclaim_focus = true;
     }
-    if (!this->input_shared_data->param_hint.empty()) {
-        const std::string t = "Parameter(s): " + this->input_shared_data->param_hint;
+
+    if (!hint.empty()) {
         ImGui::SameLine();
-        ImGui::TextUnformatted(t.c_str());
+        ImGui::TextUnformatted(hint.c_str());
     }
+    ImGui::PopItemWidth();
 
     std::string popup_id = "autocomplete_selector";
     if (this->input_shared_data->open_autocomplete_popup) {
@@ -445,21 +456,34 @@ bool megamol::gui::LogConsole::Draw() {
         this->input_shared_data->open_autocomplete_popup = false;
     }
     if (ImGui::BeginPopup(popup_id.c_str())) {
-        for (int i = 0; i < this->input_shared_data->autocomplete_candidates.size(); i++) {
+
+        int candidates_count = this->input_shared_data->autocomplete_candidates.size();
+        if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)) {
+            this->selected_candidate_index = (this->selected_candidate_index + 1) % candidates_count;
+        } else if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)) {
+            this->selected_candidate_index = (candidates_count + this->selected_candidate_index - 1) % candidates_count;
+        }
+        ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetColorU32(ImGuiCol_HeaderHovered));
+        for (int i = 0; i < candidates_count; i++) {
+            /// XXX IO ImGui::ScrollToItem(ImGuiScrollFlags_AlwaysCenterY);
+            /// Re-implementing behaviour because of globally disabled ImGuiConfigFlags_NavEnableKeyboard
             bool selected_candidate =
-                ImGui::Selectable(this->input_shared_data->autocomplete_candidates[i].first.c_str(), false,
-                    ImGuiSelectableFlags_AllowDoubleClick);
-            // Keyboard selection can only be confirmed with 'space'. Also allow confirmation using 'enter'
-            if (selected_candidate ||
-                (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter)))) {
+                ImGui::Selectable(this->input_shared_data->autocomplete_candidates[i].first.c_str(),
+                    (i == this->selected_candidate_index),
+                    ImGuiSelectableFlags_AllowDoubleClick | ImGuiSelectableFlags_SelectOnNav);
+            if (selected_candidate || ((i == this->selected_candidate_index) && ImGui::IsKeyPressed(ImGuiKey_Enter))) {
                 this->input_buffer = this->input_shared_data->autocomplete_candidates[i].first;
                 this->input_buffer.append("()");
                 this->input_shared_data->autocomplete_candidates.clear();
                 this->input_shared_data->move_cursor_to_end = true;
                 this->input_reclaim_focus = true;
+                this->selected_candidate_index = 0;
                 ImGui::CloseCurrentPopup();
+                break;
             }
         }
+        ImGui::PopStyleColor();
+
         ImGui::EndPopup();
     }
     // Check if pop-up was closed last frame (needed to detect pop-up closing for reclaiming input focus )
