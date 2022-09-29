@@ -497,14 +497,14 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
     glGetIntegerv(GL_BLEND_DST_RGB, &state_blend_dst_rgb);
     glGetIntegerv(GL_BLEND_DST_ALPHA, &state_blend_dst_alpha);
 
-    //if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
-    //    this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
+        this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
         if (state_depth_test)
             glDisable(GL_DEPTH_TEST);
-    //} else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
-    //    if (!state_depth_test)
-    //        glEnable(GL_DEPTH_TEST);
-    //}
+    } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        if (!state_depth_test)
+            glEnable(GL_DEPTH_TEST);
+    }
 
     if (!state_blend)
         glEnable(GL_BLEND);
