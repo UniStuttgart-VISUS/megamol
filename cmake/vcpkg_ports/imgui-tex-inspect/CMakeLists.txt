@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(imguitexinspect
+project(imgui_tex_inspect
   LANGUAGES CXX)
 
-option(IMGUITEXINSPECT_USE_OPENGL3 "" OFF)
+option(IMGUI_TEX_INSPECT_USE_OPENGL3 "" OFF)
 
 find_package(imgui CONFIG REQUIRED)
 
@@ -13,10 +13,10 @@ target_include_directories(${PROJECT_NAME}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/backends>
     $<INSTALL_INTERFACE:include/imgui_tex_inspect>)
-target_link_libraries(imguitexinspect PRIVATE imgui::imgui)
+target_link_libraries(${PROJECT_NAME} PRIVATE imgui::imgui)
 target_sources(${PROJECT_NAME} PRIVATE imgui_tex_inspect.cpp)
 
-if (IMGUITEXINSPECT_USE_OPENGL3)
+if (IMGUI_TEX_INSPECT_USE_OPENGL3)
   target_sources(${PROJECT_NAME} PRIVATE backends/tex_inspect_opengl.cpp)
 endif ()
 
@@ -27,7 +27,7 @@ install(FILES
   imgui_tex_inspect_internal.h
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/imgui_tex_inspect")
 
-if (IMGUITEXINSPECT_USE_OPENGL3)
+if (IMGUI_TEX_INSPECT_USE_OPENGL3)
   install(FILES
     backends/tex_inspect_opengl.h
     backends/tex_inspect_opengl_loader.h

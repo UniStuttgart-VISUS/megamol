@@ -13,13 +13,13 @@ megamol_plugin(mmstd_gl
 if (mmstd_gl_PLUGIN_ENABLED)
   find_package(glowl CONFIG REQUIRED)
   find_package(imgui CONFIG REQUIRED)
-  find_package(imguitexinspect CONFIG REQUIRED)
+  find_package(imgui_tex_inspect CONFIG REQUIRED)
 
   target_link_libraries(mmstd_gl
     PUBLIC
       glowl::glowl
       imgui::imgui
-      imguitexinspect::imguitexinspect)
+      imgui_tex_inspect::imgui_tex_inspect)
 
   # Additional sources
   # get include directories from compositing

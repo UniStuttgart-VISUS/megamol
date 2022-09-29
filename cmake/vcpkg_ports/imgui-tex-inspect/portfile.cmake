@@ -3,11 +3,9 @@ vcpkg_check_linkage(ONLY_STATIC_LIBRARY)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO andyborrell/imgui_tex_inspect
-    REF 80ffc679e8f3f477d861d7a806e072098e94158c
-    SHA512 595c13d9cc57c0357e87fb56a5e88d140cc0e377290b28c61e15e587bdafcb8c0dd755eb9301c58ebf0ce656b9875bf46687a08b4d474a7bb7442389e6e4e60f
+    REF ccff03b844cc9845cc3e3c6ef69026fe7051d330 # https://github.com/andyborrell/imgui_tex_inspect/pull/3
+    SHA512 16e73a68bb8c4473bb8b3b1ddbab62453b36f4e4d0deb5f62c209c7b05bbe12173420dee8441e3d1ab9cec25f6dd77f8f4039c1a6f91fe972c88e5c21cfa634f
     HEAD_REF main
-    PATCHES
-        loader.patch
 )
 
 if ("opengl3-binding" IN_LIST FEATURES)
@@ -17,20 +15,19 @@ else ()
 endif ()
 
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt" DESTINATION "${SOURCE_PATH}")
-file(COPY "${CMAKE_CURRENT_LIST_DIR}/tex_inspect_opengl_loader.h" DESTINATION "${SOURCE_PATH}/backends")
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
-      -DIMGUITEXINSPECT_USE_OPENGL3=${USE_OPENGL3}
+      -DIMGUI_TEX_INSPECT_USE_OPENGL3=${USE_OPENGL3}
 )
 
 vcpkg_cmake_install()
 
 vcpkg_copy_pdbs()
 vcpkg_cmake_config_fixup(
-  PACKAGE_NAME imguitexinspect
-  CONFIG_PATH lib/cmake/imguitexinspect
+  PACKAGE_NAME imgui_tex_inspect
+  CONFIG_PATH lib/cmake/imgui_tex_inspect
 )
 
 file(INSTALL "${SOURCE_PATH}/LICENSE.txt" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
