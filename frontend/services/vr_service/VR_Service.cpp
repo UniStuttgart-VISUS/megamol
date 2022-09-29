@@ -16,7 +16,6 @@
 
 #include "mmcore/Module.h"
 #include "mmcore/view/AbstractViewInterface.h"
-#include "mmstd/view/AbstractView.h"
 #endif // MEGAMOL_USE_VR_INTEROP
 
 #include "mmcore/MegaMolGraph.h"
@@ -428,7 +427,7 @@ void megamol::frontend::VR_Service::KolabBW::send_image_data() {
         left.as_gl_handle(), right.as_gl_handle(), 0, 0, left.size.width, left.size.height);
 
     if (!pimpl.has_bbox) {
-        auto maybe_bbox = static_cast<core::view::AbstractView*>(pimpl.left_ep->modulePtr)->GetBoundingBoxes();
+        auto maybe_bbox = static_cast<core::view::AbstractViewInterface*>(pimpl.left_ep->modulePtr)->GetBoundingBoxes();
 
         if (!maybe_bbox.IsBoundingBoxValid())
             return;

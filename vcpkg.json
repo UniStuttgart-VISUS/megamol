@@ -47,7 +47,6 @@
     "tinygltf",
     "tinyobjloader",
     "tinyply",
-    "vtk-m",
     "zeromq",
     "zfp",
     "zlib"
@@ -91,13 +90,19 @@
       "description": "Use OpenGL",
       "dependencies": [
         {
+          "name": "glowl",
+          "features": [
+            "glm",
+            "gl-extensions"
+          ]
+        },
+        {
           "name": "imgui",
           "features": [
             "opengl3-binding"
           ]
         },
-        "megamol-shader-factory",
-        "glowl"
+        "megamol-shader-factory"
       ]
     },
     "use-ospray": {
@@ -120,6 +125,12 @@
       "description": "Use VR Interop",
       "dependencies": [
         "mwk-mint-interop"
+      ]
+    },
+    "use-vtkm": {
+      "description": "Use VTK-m",
+      "dependencies": [
+        "vtk-m"
       ]
     }
   }

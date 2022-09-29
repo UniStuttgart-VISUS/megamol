@@ -70,7 +70,8 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, ParamType_t type, Storage_t stor
         , tf_editor_inplace(std::string("inplace_tfeditor_parameter_" + std::to_string(uid)), false)
         , tf_use_external_editor(false)
         , tf_show_editor(false)
-        , tf_editor_hash(0) {
+        , tf_editor_hash(0)
+        , filepath_scroll_xmax(false) {
 
     this->InitPresentation(type);
 
@@ -524,10 +525,13 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
     /// XXX Prioritizing currently changed value from GUI
     /// Do not read param value from core param if gui param has already updated value
     if (out_param.IsValueDirty()) {
+#ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Ignoring core parameter value. More up to date "
                                                                "value of GUI parameter available. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
-        return false;
+#endif //GUI_VERBOSE
+        /// Error tolerance to ignore redundant changes that have been triggered by the GUI
+        return true;
     }
 
     bool type_error = false;
@@ -1451,21 +1455,30 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
         }
         ImGuiStyle& style = ImGui::GetStyle();
 
-        float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
-        float text_width = ImGui::CalcTextSize(std::get<std::string>(this->gui_widget_value).c_str()).x +
-                           (2.0f * style.ItemInnerSpacing.x);
-        widget_width = std::max(widget_width, text_width);
-
-        ImGui::PushItemWidth(widget_width);
-
         auto last_val = val;
         auto file_flags = store.first;
         auto file_extensions = store.second;
         bool button_edit = this->gui_file_browser.Button_Select(
             std::get<std::string>(this->gui_widget_value), file_extensions, file_flags);
         ImGui::SameLine();
-        ImGui::AlignTextToFramePadding();
-        ImGui::InputText(label.c_str(), &std::get<std::string>(this->gui_widget_value), ImGuiInputTextFlags_None);
+
+        auto item_width = ImGui::CalcItemWidth();
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+        ImGui::BeginChild("filepath_param_child",
+            ImVec2(item_width, ImGui::GetFrameHeightWithSpacing() + style.ScrollbarSize), false,
+            ImGuiWindowFlags_AlwaysHorizontalScrollbar);
+        ImGui::PopStyleVar(2);
+        if (this->filepath_scroll_xmax) {
+            ImGui::SetScrollX(ImGui::GetScrollMaxX());
+            this->filepath_scroll_xmax = false;
+        }
+
+        item_width = std::max(item_width,
+            ImGui::CalcTextSize(std::get<std::string>(this->gui_widget_value).c_str()).x + style.ItemSpacing.x);
+        ImGui::PushItemWidth(item_width);
+        auto input_label = "###" + label;
+        ImGui::InputText(input_label.c_str(), &std::get<std::string>(this->gui_widget_value), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
             auto tmp_val_str = std::get<std::string>(this->gui_widget_value);
             std::replace(tmp_val_str.begin(), tmp_val_str.end(), '\\', '/');
@@ -1505,11 +1518,19 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             }
+            this->filepath_scroll_xmax = true;
             retval = true;
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->gui_widget_value = val.generic_u8string();
         }
         ImGui::PopItemWidth();
+
+        ImGui::EndChild();
+
+        ImGui::SameLine();
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(label.c_str());
+
         ImGui::EndGroup();
 
         this->gui_tooltip_text += "\n" + std::get<std::string>(this->gui_widget_value);
@@ -1529,7 +1550,7 @@ bool megamol::gui::Parameter::widget_filepath(megamol::gui::Parameter::WidgetSco
             // Disable further notifications
             this->gui_popup_disabled = true;
         }
-        if (close || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+        if (close || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();

@@ -383,6 +383,12 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
 
             compute_shdr->setUniform("use_depth_tx", 1);
         } else {
+            // AMD does not like unbound inputs, even if they are only used in inactive shader code paths.
+            glActiveTexture(GL_TEXTURE2);
+            compute_shdr->setUniform("color_tx2D", 2);
+            glActiveTexture(GL_TEXTURE3);
+            compute_shdr->setUniform("depth_tx2D", 3);
+
             compute_shdr->setUniform("use_depth_tx", 0);
         }
     }
@@ -399,6 +405,12 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
 
             compute_shdr->setUniform("use_depth_tx", 1);
         } else {
+            // AMD does not like unbound inputs, even if they are only used in inactive shader code paths.
+            glActiveTexture(GL_TEXTURE2);
+            compute_shdr->setUniform("color_tx2D", 2);
+            glActiveTexture(GL_TEXTURE3);
+            compute_shdr->setUniform("depth_tx2D", 3);
+
             compute_shdr->setUniform("use_depth_tx", 0);
         }
     }
