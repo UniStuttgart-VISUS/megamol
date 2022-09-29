@@ -30,6 +30,7 @@
 megamol::compositing_gl::AntiAliasing::AntiAliasing()
         : core::Module()
         , version_(0)
+        , tex_inspector_({"Edges", "BlendingWeights", "Output"})
         , output_tx2D_(nullptr)
         , mode_("Mode", "Sets antialiasing technqiue: SMAA, FXAA, no AA")
         , smaa_mode_("SMAA Mode", "Sets the SMAA mode: SMAA 1x or SMAA T2x")
@@ -45,8 +46,6 @@ megamol::compositing_gl::AntiAliasing::AntiAliasing()
         , smaa_detection_technique_("EdgeDetection",
               "Sets smaa edge detection base: luma, color, or depth. Use depth only when a depth "
               "texture can be provided as it is mandatory to have one")
-        , smaa_view_("Output", "Sets the texture to view: final output, edges or weights. Edges or weights should "
-                               "only be used when directly connected to the screen for debug purposes")
         , output_tex_slot_("OutputTexture", "Gives access to the resulting output texture")
         , input_tex_slot_("InputTexture", "Connects the input texture")
         , depth_tex_slot_("DepthTexture", "Connects the depth texture")
@@ -125,12 +124,10 @@ megamol::compositing_gl::AntiAliasing::AntiAliasing()
     this->smaa_detection_technique_.SetParameter(detection_technique);
     this->MakeSlotAvailable(&this->smaa_detection_technique_);
 
-    auto view = new megamol::core::param::EnumParam(0);
-    view->SetTypePair(0, "Result");
-    view->SetTypePair(1, "Edges");
-    view->SetTypePair(2, "Weights");
-    this->smaa_view_.SetParameter(view);
-    this->MakeSlotAvailable(&this->smaa_view_);
+    auto tex_inspector_slots = this->tex_inspector_.GetParameterSlots();
+    for (auto& tex_slot : tex_inspector_slots) {
+        this->MakeSlotAvailable(tex_slot);
+    }
 
     this->output_tex_slot_.SetCallback(
         compositing::CallTexture2D::ClassName(), "GetData", &AntiAliasing::getDataCallback);
@@ -367,14 +364,12 @@ bool megamol::compositing_gl::AntiAliasing::visibilityCallback(core::param::Para
     if (this->mode_.Param<core::param::EnumParam>()->Value() == 0) {
         smaa_quality_.Param<core::param::EnumParam>()->SetGUIVisible(true);
         smaa_detection_technique_.Param<core::param::EnumParam>()->SetGUIVisible(true);
-        smaa_view_.Param<core::param::EnumParam>()->SetGUIVisible(true);
         smaa_mode_.Param<core::param::EnumParam>()->SetGUIVisible(true);
     }
     // smaa disabled
     else {
         smaa_quality_.Param<core::param::EnumParam>()->SetGUIVisible(false);
         smaa_detection_technique_.Param<core::param::EnumParam>()->SetGUIVisible(false);
-        smaa_view_.Param<core::param::EnumParam>()->SetGUIVisible(false);
         smaa_mode_.Param<core::param::EnumParam>()->SetGUIVisible(false);
     }
 
@@ -632,26 +627,32 @@ bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) 
         this->smaa_detection_technique_.ResetDirty();
     }
 
+    if (tex_inspector_.GetShowInspectorSlotValue()) {
+        glm::vec2 tex_dim = glm::vec2(smaa_layout_.width, smaa_layout_.height);
 
-    if (lhs_tc->version() < version_ || this->smaa_view_.IsDirty()) {
-        int view = this->smaa_view_.Param<core::param::EnumParam>()->Value();
-
-        switch (view) {
+        GLuint tex_to_show = 0;
+        switch (tex_inspector_.GetSelectTextureSlotValue()) {
         case 0:
-            lhs_tc->setData(output_tx2D_, version_);
+            tex_to_show = edges_tx2D_->getName();
             break;
         case 1:
-            lhs_tc->setData(edges_tx2D_, version_);
+            tex_to_show = blending_weights_tx2D_->getName();
             break;
         case 2:
-            lhs_tc->setData(blending_weights_tx2D_, version_);
+            tex_to_show = output_tx2D_->getName();
             break;
         default:
-            lhs_tc->setData(output_tx2D_, version_);
+            tex_to_show = output_tx2D_->getName();
             break;
         }
 
-        this->smaa_view_.ResetDirty();
+        tex_inspector_.SetTexture((void*)(intptr_t)tex_to_show, tex_dim.x, tex_dim.y);
+        tex_inspector_.ShowWindow();
+    }
+
+
+    if (lhs_tc->version() < version_) {
+        lhs_tc->setData(output_tx2D_, version_);
     }
 
     return true;
