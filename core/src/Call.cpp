@@ -45,15 +45,15 @@ Call::~Call(void) {
 bool Call::operator()(unsigned int func) {
     bool res = false;
     if (this->callee != nullptr) {
-#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
+#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
         auto f = this->callee->GetCallbackFuncName(func);
         auto parent = callee->Parent().get();
         if (caps.OpenGLRequired()) {
             std::string output = dynamic_cast<core::Module*>(parent)->ClassName();
             output += "::";
             output += f;
-            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
-            // megamol::core::utility::log::Log::DefaultLog.WriteInfo("called %s::%s", p3->ClassName(), f);
+            // let some service do it!
+            gl_helper->PushDebugGroup(1234, -1, output.c_str());
         }
 #endif
 #ifdef MEGAMOL_USE_PROFILING
@@ -68,9 +68,9 @@ bool Call::operator()(unsigned int func) {
             perf_man->stop_timer(gl_queries[func]);
         perf_man->stop_timer(cpu_queries[func]);
 #endif
-#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
+#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
         if (caps.OpenGLRequired())
-            glPopDebugGroup();
+            gl_helper->PopDebugGroup();
 #endif
     }
     // megamol::core::utility::log::Log::DefaultLog.WriteInfo("calling %s, idx %i, result %s (%s)", this->ClassName(), func,

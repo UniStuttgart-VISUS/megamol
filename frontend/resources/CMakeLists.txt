@@ -42,6 +42,9 @@ if (MEGAMOL_USE_CUESDK)
   target_include_directories(${PROJECT_NAME} PRIVATE ${CUESDK_INCLUDE_DIR})
   target_link_libraries(${PROJECT_NAME} PRIVATE ${CUESDK_LIB})
 endif()
+if (MEGAMOL_USE_OPENGL_DEBUGGROUPS)
+  target_link_libraries(${PROJECT_NAME} PUBLIC glad)
+endif()
 
 # Grouping in Visual Studio
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
