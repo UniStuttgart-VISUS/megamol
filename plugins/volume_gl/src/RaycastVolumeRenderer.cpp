@@ -141,10 +141,14 @@ bool RaycastVolumeRenderer::create() {
         return false;
     }
 
+    glGenVertexArrays(1, &empty_vao);
+
     return true;
 }
 
-void RaycastVolumeRenderer::release() {}
+void RaycastVolumeRenderer::release() {
+    glDeleteVertexArrays(1, &empty_vao);
+}
 
 bool RaycastVolumeRenderer::GetExtents(mmstd_gl::CallRender3DGL& cr) {
     auto cd = m_volumetricData_callerSlot.CallAs<geocalls::VolumetricDataCall>();
@@ -542,7 +546,9 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
         fbo_shdr->setUniform("valRange", rndr_min, rndr_max);
     }
 
+    glBindVertexArray(empty_vao);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
 
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
         glActiveTexture(GL_TEXTURE2);
