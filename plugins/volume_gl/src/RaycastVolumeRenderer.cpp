@@ -699,11 +699,11 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
 bool RaycastVolumeRenderer::updateTransferFunction() {
     mmstd_gl::CallGetTransferFunctionGL* ct =
         this->m_transferFunction_callerSlot.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
-    if (valRangeNeedsUpdate) {
+    if (ct != nullptr && valRangeNeedsUpdate) {
         ct->SetRange(valRange);
         valRangeNeedsUpdate = false;
     }
-    if (ct != NULL && ((*ct)())) {
+    if (ct != nullptr && ((*ct)())) {
         tf_texture = ct->OpenGLTexture();
         valRange = ct->Range();
     }
