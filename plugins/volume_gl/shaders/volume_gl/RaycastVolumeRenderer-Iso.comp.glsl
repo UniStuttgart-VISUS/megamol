@@ -102,9 +102,14 @@ void compute(float t, const float tfar, const Ray ray, const float rayStep, cons
     }
 
     if (!have_hit) {
-        result = input_color;
+        if(use_depth_tx != 0){
+            result = input_color;
+            depth = input_depth;
+        } else {
+            result.a = 0.0f;
+            depth = FLT_MAX;
+        }
         normal = vec3(0.0f);
-        depth = input_depth;
     }    
 
     // Write results
