@@ -4,10 +4,11 @@
  * All rights reserved.
  */
 
-#include "mmstd_gl/special/TexInspectModule.h"
+#include "TexInspectModule.h"
+
 #include "compositing_gl/CompositingCalls.h"
 
-using namespace megamol::mmstd_gl::special;
+using namespace megamol::compositing_gl;
 
 
 TexInspectModule::TexInspectModule()

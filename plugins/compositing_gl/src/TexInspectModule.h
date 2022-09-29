@@ -12,7 +12,7 @@
 
 #include "mmstd_gl/special/TextureInspector.h"
 
-namespace megamol::mmstd_gl::special {
+namespace megamol::compositing_gl {
 
 /**
  * Class implementing the texture inspector
@@ -88,7 +88,7 @@ protected:
     void release();
 
 private:
-    TextureInspector tex_inspector_;
+    mmstd_gl::special::TextureInspector tex_inspector_;
 
     /** Slot for optionally querying input textures, i.e. rhs connection */
     megamol::core::CallerSlot get_data_slot_;
@@ -97,4 +97,4 @@ private:
     megamol::core::CalleeSlot output_tex_slot_;
 };
 
-} // namespace megamol::mmstd_gl::special
+} // namespace megamol::compositing_gl

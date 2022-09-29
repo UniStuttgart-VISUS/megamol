@@ -21,7 +21,6 @@
 #include "mmstd_gl/special/ChronoGraph.h"
 #include "mmstd_gl/special/DemoRenderer2D.h"
 #include "mmstd_gl/special/ScreenShooter.h"
-#include "mmstd_gl/special/TexInspectModule.h"
 #include "mmstd_gl/view/HeadView.h"
 #include "mmstd_gl/view/SplitViewGL.h"
 #include "mmstd_gl/view/View2DGL.h"
@@ -60,7 +59,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::CallbackScreenShooter>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::ChronoGraph>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::DemoRenderer2D>();
-        this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::TexInspectModule>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<mmstd_gl::CallRenderViewGL>();
