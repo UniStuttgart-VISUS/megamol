@@ -108,8 +108,7 @@
             "opengl3-binding"
           ]
         },
-        "megamol-shader-factory",
-        "glowl"
+        "megamol-shader-factory"
       ]
     },
     "use-ospray": {
