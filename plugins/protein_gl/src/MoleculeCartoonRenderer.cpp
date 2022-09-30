@@ -222,6 +222,19 @@ void MoleculeCartoonRenderer::release(void) {}
 bool MoleculeCartoonRenderer::create(void) {
     using megamol::core::utility::log::Log;
 
+    {
+        // TODO Note from shader factory migration:
+        // The old shaders did not set a #version, which is required with the shader factory. The problem is, geometry
+        // shaders require at least version 150, but the code within the geometry shaders uses a lot of deprecated
+        // functions only available before version 150. So some refactoring is needed within this module.
+        // Please do this, whoever wants to use this stuff!
+        Log::DefaultLog.WriteError("MoleculeCartoonRenderer is currently broken and requires some refactoring after "
+                                   "the shader factory migration. If you are a maintainer or user of this module "
+                                   "please do this. For more info see comment above this error message in code.");
+        return false;
+    }
+
+
     glEnable(GL_DEPTH_TEST);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
