@@ -3,6 +3,8 @@
 //                     University of Stuttgart, Germany
 //                     http://www.vis.uni-stuttgart.de/~kroneml/
 
+#version 120
+
 varying float density;
 
 void main(void) {

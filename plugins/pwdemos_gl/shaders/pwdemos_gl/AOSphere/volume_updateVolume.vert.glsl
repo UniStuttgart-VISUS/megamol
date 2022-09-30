@@ -3,6 +3,8 @@
 //                     University of Stuttgart, Germany
 //                     http://www.vis.uni-stuttgart.de/~kroneml/
 
+#version 120
+
 uniform vec3 minOS;
 uniform vec3 rangeOS;
 uniform float genFac;

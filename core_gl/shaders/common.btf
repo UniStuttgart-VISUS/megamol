@@ -1,28 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="common">
 
-    <snippet name="defines" type="string">
-        <!--
-#define CLIP
-#define DEPTH
-#define SMALL_SPRITE_LIGHTING
-//#define CALC_CAM_SYS
-
-//#define RETICLE
-//#define DISCARD_COLOR_MARKER
-#ifdef DEBUG
-#undef CLIP
-#define RETICLE
-#define AXISHINTS
-#endif // DEBUG
-
-//#define BULLSHIT
-
-#ifndef FLACH
-#define FLACH
-#endif
--->
-    </snippet>
+    <snippet name="defines" type="file">common_defines_btf.glsl</snippet>
 
     <shader name="ConstColFragment">
         <snippet type="string"><![CDATA[
