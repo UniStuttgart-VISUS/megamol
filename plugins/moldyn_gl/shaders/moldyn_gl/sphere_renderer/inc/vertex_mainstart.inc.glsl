@@ -1,7 +1,7 @@
 
-in vec4 inPosition;
-in vec4 inColor;
-in float inColIdx;
+layout (location = 0) in vec4 inPosition;
+layout (location = 1) in vec4 inColor;
+layout (location = 2) in float inColIdx;
 
 void main(void) {
     
