@@ -29,7 +29,6 @@ extern "C" void copyArrayFromDevice(void* host, const void* device, unsigned int
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_cuda;
 using namespace megamol::core::utility::log;
