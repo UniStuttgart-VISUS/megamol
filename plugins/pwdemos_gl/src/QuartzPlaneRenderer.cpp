@@ -5,17 +5,15 @@
  * Alle Rechte vorbehalten.
  */
 #include "QuartzPlaneRenderer.h"
+
+#include "OpenGL_Context.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "vislib/assert.h"
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/math/Vector.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-
-#include "OpenGL_Context.h"
 
 
 namespace megamol {
@@ -55,31 +53,15 @@ QuartzPlaneRenderer::~QuartzPlaneRenderer(void) {
  */
 bool QuartzPlaneRenderer::create(void) {
     using megamol::core::utility::log::Log;
-    using vislib_gl::graphics::gl::GLSLShader;
-    using vislib_gl::graphics::gl::ShaderSource;
 
-    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
-        return false;
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
 
-    ShaderSource vert, frag;
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     try {
-        if (!ssf->MakeShaderSource("quartz::ray::plane::vertErr", vert)) {
-            throw vislib::Exception("Generic vertex shader build failure", __FILE__, __LINE__);
-        }
-        if (!ssf->MakeShaderSource("quartz::ray::plane::fragErr", frag)) {
-            throw vislib::Exception("Generic fragment shader build failure", __FILE__, __LINE__);
-        }
-        if (!this->errShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            throw vislib::Exception("Generic shader create failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception ex) {
-        Log::DefaultLog.WriteError("Unable to compile shader: %s", ex.GetMsgA());
-        this->release(); // Because I know that 'release' ONLY releases all the shaders
-        return false;
-    } catch (...) {
-        Log::DefaultLog.WriteError("Unable to compile shader: Unexpected Exception");
+        this->errShader = core::utility::make_shared_glowl_shader("errShader", shader_options,
+            "pwdemos_gl/quartz/ray_plane_err.vert.glsl", "pwdemos_gl/quartz/ray_plane_err.frag.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("QuartzPlaneRenderer: " + std::string(e.what())).c_str());
         this->release(); // Because I know that 'release' ONLY releases all the shaders
         return false;
     }
@@ -212,7 +194,7 @@ bool QuartzPlaneRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
  */
 void QuartzPlaneRenderer::release(void) {
     this->releaseShaders();
-    this->errShader.Release();
+    this->errShader.reset();
 }
 
 
@@ -374,34 +356,34 @@ bool QuartzPlaneRenderer::Render(mmstd_gl::CallRender2DGL& call) {
                     const ParticleGridDataCall::List& list = cell.Lists()[listIdx];
                     //if (list.Type() != 0) continue; // DEBUG!
 
-                    vislib_gl::graphics::gl::GLSLShader* shader = this->shaders[list.Type() % this->cntShaders];
+                    std::shared_ptr<glowl::GLSLProgram> shader = this->shaders[list.Type() % this->shaders.size()];
                     if ((shader == NULL) && (shaderInitCnt > 0)) {
-                        unsigned int t = list.Type() % this->cntShaders;
+                        unsigned int t = list.Type() % this->shaders.size();
                         try {
                             shader = this->shaders[t] = this->makeShader(tdc->GetCrystals()[t]);
                         } catch (...) {}
                         shaderInitCnt--;
                     }
                     if (shader == NULL) {
-                        shader = &this->errShader;
+                        shader = this->errShader;
                     }
                     ASSERT(shader != NULL);
 
-                    shader->Enable();
-                    GL_VERIFY(shader->SetParameterArray3("camX", 1, cx.PeekComponents()));
-                    GL_VERIFY(shader->SetParameterArray3("camY", 1, cy.PeekComponents()));
-                    GL_VERIFY(shader->SetParameterArray3("camZ", 1, cz.PeekComponents()));
-                    GL_VERIFY(shader->SetParameterArray4("viewAttr", 1, viewportStuff));
-                    GL_VERIFY(shader->SetParameter("planeZ", planeZ));
-                    GL_VERIFY(shader->SetParameterArray3("bboxmin", 1, bboxmin.PeekCoordinates()));
-                    GL_VERIFY(shader->SetParameterArray3("bboxmax", 1, bboxmax.PeekCoordinates()));
-                    GL_VERIFY(shader->SetParameter("posoffset", xoff, yoff, zoff));
+                    shader->use();
+                    glUniform3fv(shader->getUniformLocation("camX"), 1, cx.PeekComponents());
+                    glUniform3fv(shader->getUniformLocation("camY"), 1, cy.PeekComponents());
+                    glUniform3fv(shader->getUniformLocation("camZ"), 1, cz.PeekComponents());
+                    glUniform4fv(shader->getUniformLocation("viewAttr"), 1, viewportStuff);
+                    shader->setUniform("planeZ", planeZ);
+                    glUniform3fv(shader->getUniformLocation("bboxmin"), 1, bboxmin.PeekCoordinates());
+                    glUniform3fv(shader->getUniformLocation("bboxmax"), 1, bboxmax.PeekCoordinates());
+                    shader->setUniform("posoffset", xoff, yoff, zoff);
 
                     ::glVertexPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data());
                     ::glTexCoordPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data() + 4);
                     ::glDrawArrays(GL_POINTS, 0, list.Count());
 
-                    shader->Disable();
+                    glUseProgram(0);
                 }
             }
         }
@@ -476,29 +458,22 @@ bool QuartzPlaneRenderer::Render(mmstd_gl::CallRender2DGL& call) {
 /*
  * QuartzPlaneRenderer::makeShader
  */
-vislib_gl::graphics::gl::GLSLShader* QuartzPlaneRenderer::makeShader(const CrystalDataCall::Crystal& c) {
+std::shared_ptr<glowl::GLSLProgram> QuartzPlaneRenderer::makeShader(const CrystalDataCall::Crystal& c) {
     using megamol::core::utility::log::Log;
-    using vislib_gl::graphics::gl::GLSLShader;
-    using vislib_gl::graphics::gl::ShaderSource;
 
-    GLSLShader* s = new GLSLShader();
+    std::shared_ptr<glowl::GLSLProgram> s;
 
     c.AssertMesh();
     const float* v = c.GetMeshVertexData();
 
-    ShaderSource vert, frag;
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+
     try {
-        if (!ssf->MakeShaderSource("quartz::ray::plane::vert", vert)) {
-            throw vislib::Exception("Generic vertex shader build failure", __FILE__, __LINE__);
-        }
-        if (!ssf->MakeShaderSource("quartz::ray::plane::frag", frag)) {
-            throw vislib::Exception("Generic fragment shader build failure", __FILE__, __LINE__);
-        }
         vislib::StringA str, line;
+        auto shader_options2 = shader_options;
 
         str.Format("#define OUTERRAD %f\n", c.GetBoundingRadius());
-        vert.Replace(1 /* HAZARD */, new ShaderSource::StringSnippet(str));
+        shader_options2.addDefinition("REPLACE_VERT_SNIPPET", str.PeekBuffer());
 
         str = "vec3 face;\n"
               "float d = 0.0;\n";
@@ -512,23 +487,14 @@ vislib_gl::graphics::gl::GLSLShader* QuartzPlaneRenderer::makeShader(const Cryst
             str += line;
         }
         str.Append("if (d > 1.0) discard;\n");
-        frag.Replace(2 /* HAZARD */, new ShaderSource::StringSnippet(str));
+        shader_options2.addDefinition("REPLACE_FRAG_SNIPPET", str.PeekBuffer());
 
-        if (!s->Compile(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            throw vislib::Exception("Generic compilation failure", __FILE__, __LINE__);
-        }
-        if (!s->Link()) {
-            throw vislib::Exception("Generic linking failure", __FILE__, __LINE__);
-        }
+        s = core::utility::make_shared_glowl_shader("shader", shader_options2, "pwdemos_gl/quartz/ray_plane.vert.glsl",
+            "pwdemos_gl/quartz/ray_plane.frag.glsl");
 
-    } catch (vislib::Exception ex) {
-        Log::DefaultLog.WriteError("Unable to compile shader: %s", ex.GetMsgA());
-        delete s;
-        return NULL;
-    } catch (...) {
-        Log::DefaultLog.WriteError("Unable to compile shader: Unexpected Exception");
-        delete s;
-        return NULL;
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("QuartzPlaneRenderer: " + std::string(e.what())).c_str());
+        return nullptr;
     }
 
     return s;

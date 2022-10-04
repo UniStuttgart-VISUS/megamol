@@ -48,16 +48,6 @@
       <snippet type="file">pwdemos_gl/quartz/snippets/simple_instvert_2.glsl</snippet>
     </shader>
 
-    <shader name="frag">
-      <snippet type="version">430</snippet>
-      <snippet name="common::simpleFragment"/>
-    </shader>
-
-    <shader name="errVert">
-      <snippet type="version">430</snippet>
-      <snippet type="file">pwdemos_gl/quartz/snippets/simple_errVert.glsl</snippet>
-    </shader>
-
   </namespace>
 
   <namespace name="ray">
@@ -77,100 +67,6 @@
       <snippet type="file" name="mastercaster">pwdemos_gl/quartz/snippets/ray_frag_mastercaster.glsl</snippet>
       <snippet type="file">pwdemos_gl/quartz/snippets/ray_frag_4.glsl</snippet>
     </shader>
-
-    <shader name="vertclipped">
-      <snippet type="version">430</snippet>
-      <snippet type="file" name="replaceMeParams">pwdemos_gl/quartz/snippets/ray_vertclipped_replaceMeParams.glsl</snippet>
-      <snippet type="file">pwdemos_gl/quartz/snippets/ray_vertclipped.glsl</snippet>
-    </shader>
-
-    <shader name="fragclipped">
-      <snippet type="version">430</snippet>
-      <snippet type="file">pwdemos_gl/quartz/snippets/ray_fragclipped_1.glsl</snippet>
-      <snippet name="common::directLight"/>
-      <snippet type="file">pwdemos_gl/quartz/snippets/ray_fragclipped_2.glsl</snippet>
-      <snippet type="file">pwdemos_gl/quartz/snippets/ray_fragclipped_3.glsl</snippet>
-      <snippet type="file" name="mastercaster">pwdemos_gl/quartz/snippets/ray_fragclipped_mastercaster.glsl</snippet>
-      <snippet type="file">pwdemos_gl/quartz/snippets/ray_fragclipped_4.glsl</snippet>
-      <snippet type="file">pwdemos_gl/quartz/snippets/ray_fragclipped_5.glsl</snippet>
-      <snippet type="file">pwdemos_gl/quartz/snippets/ray_fragclipped_6.glsl</snippet>
-    </shader>
-
-    <namespace name="plane">
-
-      <shader name="vertErr">
-        <snippet type="version">430</snippet>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_plane_vertErr.glsl</snippet>
-      </shader>
-
-      <shader name="fragErr">
-        <snippet type="version">430</snippet>
-        <snippet name="common::simpleFragment"/>
-      </shader>
-
-      <shader name="vert">
-        <snippet type="version">430</snippet>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_plane_vert_1.glsl</snippet>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_plane_vert_2.glsl</snippet>
-      </shader>
-
-      <shader name="frag">
-        <snippet type="version">430</snippet>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_plane_frag_1.glsl</snippet>
-        <snippet type="string" name="polyederclipping"/>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_plane_frag_2.glsl</snippet>
-      </shader>
-
-      <namespace name="tex">
-
-        <shader name="vert">
-          <snippet type="version">430</snippet>
-          <snippet type="file">pwdemos_gl/quartz/snippets/ray_plane_tex_vert_1.glsl</snippet>
-          <snippet type="file">pwdemos_gl/quartz/snippets/ray_plane_tex_vert_2.glsl</snippet>
-          <snippet type="file">pwdemos_gl/quartz/snippets/ray_plane_tex_vert_3.glsl</snippet>
-        </shader>
-
-        <shader name="frag">
-          <snippet type="version">430</snippet>
-          <snippet type="file">pwdemos_gl/quartz/snippets/ray_plane_tex_frag_1.glsl</snippet>
-          <snippet type="file">pwdemos_gl/quartz/snippets/ray_plane_tex_frag_2.glsl</snippet>
-          <snippet type="file">pwdemos_gl/quartz/snippets/ray_plane_tex_frag_3.glsl</snippet>
-          <snippet type="file">pwdemos_gl/quartz/snippets/ray_plane_tex_frag_4.glsl</snippet>
-        </shader>
-
-        <shader name="fragfaced">
-          <snippet type="version">430</snippet>
-          <snippet type="file">pwdemos_gl/quartz/snippets/ray_plane_tex_fragfaced_1.glsl</snippet>
-          <snippet type="file">pwdemos_gl/quartz/snippets/ray_plane_tex_fragfaced_2.glsl</snippet>
-        </shader>
-
-      </namespace>
-
-    </namespace>
-
-    <namespace name="tex">
-
-      <shader name="vertclipped">
-        <snippet type="version">430</snippet>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_tex_vertclipped_1.glsl</snippet>
-        <snippet type="file" name="replaceMeParams">pwdemos_gl/quartz/snippets/ray_tex_vertclipped_replaceMeParams.glsl</snippet>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_tex_vertclipped_2.glsl</snippet>
-      </shader>
-
-      <shader name="fragclipped">
-        <snippet type="version">430</snippet>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_tex_fragclipped_1.glsl</snippet>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_tex_fragclipped_2.glsl</snippet>
-        <snippet name="common::directLight"/>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_tex_fragclipped_3.glsl</snippet>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_tex_fragclipped_4.glsl</snippet>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_tex_fragclipped_5.glsl</snippet>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_tex_fragclipped_6.glsl</snippet>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_tex_fragclipped_7.glsl</snippet>
-        <snippet type="file">pwdemos_gl/quartz/snippets/ray_tex_fragclipped_8.glsl</snippet>
-      </shader>
-
-    </namespace>
 
   </namespace>
 
