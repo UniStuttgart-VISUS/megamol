@@ -8,12 +8,9 @@
 
 #include "SphereRenderer.h"
 
+#include "OpenGL_Context.h"
 #include "mmstd/light/DistantLight.h"
 #include "mmstd_gl/flags/FlagCallsGL.h"
-
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h" // only for RequiredExtensions
-
-#include "OpenGL_Context.h"
 
 
 using namespace megamol::core;
@@ -275,11 +272,6 @@ bool SphereRenderer::create(void) {
     if (!ogl_ctx.isExtAvailable("GL_ARB_conservative_depth")) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SphereRenderer] No render mode is available. Extension GL_ARB_conservative_depth is not available.");
-        return false;
-    }
-    if (!ogl_ctx.areExtAvailable(GLSLShader::RequiredExtensions())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[SphereRenderer] No render mode is available. Shader extensions are not available.");
         return false;
     }
 
@@ -761,9 +753,6 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
         if (ogl_ctx.isVersionGEQ(3, 2) == 0) {
             warnstr += warnmode + "OpenGL version 3.2 or greater is required.\n";
         }
-        if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLGeometryShader::RequiredExtensions())) {
-            warnstr += warnmode + "Geometry shader extensions are required. \n";
-        }
         if (!ogl_ctx.isExtAvailable("GL_EXT_geometry_shader4")) {
             warnstr += warnmode + "Extension GL_EXT_geometry_shader4 is required. \n";
         }
@@ -810,9 +799,6 @@ bool SphereRenderer::isRenderModeAvailable(RenderMode rm, bool silent) {
     case (RenderMode::AMBIENT_OCCLUSION):
         if (ogl_ctx.isVersionGEQ(4, 2) == 0) {
             warnstr += warnmode + "OpenGL version 4.2 or greater is required. \n";
-        }
-        if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLGeometryShader::RequiredExtensions())) {
-            warnstr += warnmode + "Geometry shader extensions are required. \n";
         }
         if (!ogl_ctx.isExtAvailable("GL_EXT_geometry_shader4")) {
             warnstr += warnmode + "Extension GL_EXT_geometry_shader4 is required. \n";
