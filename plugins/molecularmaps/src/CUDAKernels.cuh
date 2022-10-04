@@ -10,10 +10,10 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <thrust\device_vector.h>
-#include <thrust\sort.h>
-#include "helper_includes\exception.h"
-#include "helper_includes\helper_cuda.h"
+#include <thrust/device_vector.h>
+#include <thrust/sort.h>
+#include "helper_includes/exception.h"
+#include "helper_includes/helper_cuda.h"
 #include <glm/glm.hpp>
 
 #include "vislib/types.h"

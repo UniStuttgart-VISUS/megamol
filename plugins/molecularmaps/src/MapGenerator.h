@@ -14,7 +14,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "protein_calls/BindingSiteCall.h"
