@@ -22,7 +22,7 @@
 #include "mmstd/renderer/RendererModule.h"
 #include "mmstd_gl/ModuleGL.h"
 
-#include "FSRAMDHelper.h"
+#include "FSR/FSRAMDHelper.h"
 
 namespace megamol::mmstd_gl {
 

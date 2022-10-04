@@ -102,6 +102,12 @@
             "opengl3-binding"
           ]
         },
+        {
+          "name": "imgui-tex-inspect",
+          "features": [
+            "opengl3-binding"
+          ]
+        },
         "megamol-shader-factory"
       ]
     },
