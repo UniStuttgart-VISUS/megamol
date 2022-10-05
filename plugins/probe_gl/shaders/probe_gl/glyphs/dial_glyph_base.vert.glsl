@@ -2,7 +2,7 @@
 
 #include "probe_gl/glyphs/extensions.inc.glsl"
 #include "probe_gl/glyphs/per_frame_data_struct.inc.glsl"
-#include "probe_gl/glyphs/scalar_distribution_probe_struct.inc.glsl"
+#include "probe_gl/glyphs/base_probe_struct.inc.glsl"
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
 
@@ -80,53 +80,4 @@ void main()
     glyph_pos.xyz = glyph_pos.xyz + (glyph_up * bboard_vertex.y * mesh_shader_params[gl_DrawIDARB].scale) + (glyph_right * bboard_vertex.x * mesh_shader_params[gl_DrawIDARB].scale);
 
     gl_Position = (proj_mx * view_mx * glyph_pos);
-
-    {
-        /*
-        vec3 cam_right = normalize(transpose(mat3(view_mx)) * vec3(1.0,0.0,0.0));
-        vec3 cam_front = normalize(transpose(mat3(view_mx)) * vec3(0.0,0.0,-1.0));
-
-        float cr_dot_pd = dot(cam_right,probe_direction);
-        float cf_dot_pd = dot(cam_front,probe_direction);
-
-        vec3 glyph_up_0 = normalize(cross(probe_direction,cam_right)) * -sign(cf_dot_pd);;
-        vec3 glyph_up_1 = normalize(cross(probe_direction,cam_front)) * sign(cr_dot_pd);;
-
-        vec3 glyph_right_0 = normalize(cross(probe_direction,glyph_up_0));
-        vec3 glyph_right_1 = normalize(cross(probe_direction,glyph_up_1));
-
-        vec2 pixel_coords = uv_coords * 2.0 - 1.0;
-
-        if( abs(cf_dot_pd) < 0.9 && abs(cf_dot_pd) > 0.25 )
-        {
-            glyph_up = normalize( mix(glyph_up_0,glyph_up_1, 1.0 - (cf_dot_pd * 0.5 + 0.5) ) );
-            glyph_right = normalize( mix(glyph_right_0,glyph_right_1, 1.0 - (cf_dot_pd * 0.5 + 0.5) ) );
-
-            //pixel_vector = pixel_coords.x * glyph_right;
-            //pixel_vector = vec3(1.0,0.0,1.0);
-        }
-        else if(abs(cr_dot_pd) < abs(cf_dot_pd))
-        {
-            glyph_up = glyph_up_0;
-            glyph_right = glyph_right_0;
-
-            //pixel_vector = pixel_coords.x * glyph_right_0;
-            //pixel_vector = vec3(1.0,0.0,1.0);
-        }
-        else
-        {
-            glyph_up = glyph_up_1;
-            glyph_right = glyph_right_1;
-
-            //pixel_vector = pixel_coords.x * glyph_right_1;
-            //pixel_vector = vec3(1.0,0.0,1.0);
-        }
-
-        pixel_vector = normalize( pixel_coords.x * glyph_right + pixel_coords.y * glyph_up );
-        //pixel_vector = vec3(dot(glyph_right_0,glyph_right_1),0.0,0.0);
-        */
-    }
-    
-    //gl_Position = clip_pos + vec4(bboard_vertex.x * mesh_shader_params[gl_DrawIDARB].scale,
-    //                             bboard_vertex.y * mesh_shader_params[gl_DrawIDARB].scale * aspect, 0.0, 0.0);
 }

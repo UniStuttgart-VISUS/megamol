@@ -164,6 +164,17 @@ private:
         int padding2;
     };
 
+    struct GlyphBaseProbeData {
+        glm::vec4 position;
+        glm::vec4 probe_direction;
+        float scale;
+
+        int probe_id;
+        int state;
+
+        float padding0;
+    };
+
     bool m_show_glyphs;
 
     std::vector<std::pair<std::type_index, size_t>> m_type_index_map;
@@ -173,18 +184,76 @@ private:
     std::vector<std::string> m_scalar_probe_glyph_identifiers;
     std::vector<std::string> m_scalar_distribution_probe_glyph_identifiers;
     std::vector<std::string> m_clusterID_glyph_identifiers;
+    std::vector<std::string> m_dial_glyph_background_identifiers;
 
     std::vector<TexturedGlyphData> m_textured_glyph_data;
     std::vector<GlyphVectorProbeData> m_vector_probe_glyph_data;
     std::vector<GlyphScalarProbeData> m_scalar_probe_glyph_data;
     std::vector<GlyphScalarDistributionProbeData> m_scalar_distribution_probe_glyph_data;
     std::vector<GlyphClusterIDData> m_clusterID_glyph_data;
+    std::vector<GlyphBaseProbeData> m_dial_glyph_background_data;
 
     std::vector<glowl::DrawElementsCommand> m_textured_gylph_draw_commands;
     std::vector<glowl::DrawElementsCommand> m_vector_probe_gylph_draw_commands;
     std::vector<glowl::DrawElementsCommand> m_scalar_probe_gylph_draw_commands;
     std::vector<glowl::DrawElementsCommand> m_scalar_distribution_probe_gylph_draw_commands;
     std::vector<glowl::DrawElementsCommand> m_clusterID_gylph_draw_commands;
+    std::vector<glowl::DrawElementsCommand> m_dial_glyph_background_draw_commands;
+
+    struct HierachicalScalarAIOGlyphs {
+        struct Glyph {
+            std::string boxplot_submesh;
+            std::string histrogram_submesh;
+            std::string value_arcs_submesh;
+            std::string scatterplot_submesh;
+
+            glowl::DrawElementsCommand circular_grid_draw_command;
+            glowl::DrawElementsCommand boxplot_draw_command;
+            glowl::DrawElementsCommand histogram_draw_command;
+            glowl::DrawElementsCommand value_arcs_draw_command;
+            glowl::DrawElementsCommand scatterplot_draw_command;
+
+            struct Data {
+                glm::vec4 position;
+                glm::vec4 probe_direction;
+
+                float scale;
+
+                int probe_id;
+                int state;
+
+                float sample_cnt;
+
+                //  int sample_offset;
+                //  int padding0;
+                //  int padding1;
+                //  int padding2;
+            };
+        };
+
+        // Probably don't need to store sample values or depth on the GPU since everything is baked into vertices
+        //struct PerFrameData {
+        //    float sample_value;
+        //    float sample_depth;
+        //};
+
+        static constexpr char circular_grid_shader_identifier[]  = "HSAIOG_CircGrid";
+        static constexpr char boxplot_shader_identifier[]        = "HSAIOG_Boxplot";
+        static constexpr char histogram_shader_identifier[]      = "HSAIOG_Histogram";
+        static constexpr char value_arcs_shader_identifier[]     = "HSAIOG_ValueArcs";
+        static constexpr char scatterplot_shader_identifier[]    = "HSAIOG_Scatterplot";
+
+        static constexpr char circular_grid_submesh_identifier[] = "HSAIOG_CircGrid";
+
+        std::vector<PerFrameData> per_frame_data;
+        std::vector<Glyph::Data> per_glpyh_data;
+        std::vector<Glyph> glyphs;
+
+        static void createShaders(std::shared_ptr<mesh_gl::GPUMaterialCollection> material_collection);
+
+        void addGlyph(probe::FloatDistributionProbe const& probe,
+            std::shared_ptr<mesh_gl::GPUMeshCollection> mesh_collection);
+    };
 
     bool addAllRenderTasks();
 
@@ -200,6 +269,8 @@ private:
         probe::FloatDistributionProbe const& probe, int probe_id, float scale);
 
     GlyphVectorProbeData createVectorProbeGlyphData(probe::Vec4Probe const& probe, int probe_id, float scale);
+
+    GlyphBaseProbeData createBaseProbeGlyphData(probe::BaseProbe const& probe, int probe_id, float scale);
 
     GlyphClusterIDData createClusterIDGlyphData(probe::BaseProbe const& probe, int probe_id, float scale);
 };

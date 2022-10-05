@@ -82,14 +82,6 @@ void megamol::probe_gl::ProbeRenderTasks::updateRenderTaskCollection(
 
         auto probes = pc->getData();
 
-        struct PerObjData {
-            glm::mat4x4 object_transform;
-            int highlighted;
-            float pad0;
-            float pad1;
-            float pad2;
-        };
-
         if (something_has_changed) {
             render_task_collection_->clear();
 
@@ -215,12 +207,16 @@ void megamol::probe_gl::ProbeRenderTasks::updateRenderTaskCollection(
             {
                 auto pending_highlight_events = event_collection->get<ProbeHighlight>();
                 for (auto& evt : pending_highlight_events) {
-                    std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
-                    per_probe_data[0].highlighted = 1;
+                    if (evt.obj_id < m_probe_draw_data.size()) {
+                        std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
+                        per_probe_data[0].highlighted = 1;
 
-                    if (m_show_probes) {
-                        std::string identifier = std::string(FullName()) + "_probe_" + std::to_string(evt.obj_id);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        if (m_show_probes) {
+                            std::string identifier = std::string(FullName()) + "_probe_" + std::to_string(evt.obj_id);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        }
+                    } else {
+                        //TODO warning
                     }
                 }
             }
@@ -229,11 +225,15 @@ void megamol::probe_gl::ProbeRenderTasks::updateRenderTaskCollection(
             {
                 auto pending_dehighlight_events = event_collection->get<ProbeDehighlight>();
                 for (auto& evt : pending_dehighlight_events) {
-                    std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
+                    if (evt.obj_id < m_probe_draw_data.size()) {
+                        std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
 
-                    if (m_show_probes) {
-                        std::string identifier = std::string(FullName()) + "_probe_" + std::to_string(evt.obj_id);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        if (m_show_probes) {
+                            std::string identifier = std::string(FullName()) + "_probe_" + std::to_string(evt.obj_id);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        }
+                    } else {
+                        //TODO warning
                     }
                 }
             }
@@ -242,12 +242,16 @@ void megamol::probe_gl::ProbeRenderTasks::updateRenderTaskCollection(
             {
                 auto pending_select_events = event_collection->get<ProbeSelect>();
                 for (auto& evt : pending_select_events) {
-                    m_probe_draw_data[evt.obj_id].highlighted = 2;
-                    std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
+                    if (evt.obj_id < m_probe_draw_data.size()) {
+                        m_probe_draw_data[evt.obj_id].highlighted = 2;
+                        std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
 
-                    if (m_show_probes) {
-                        std::string identifier = std::string(FullName()) + "_probe_" + std::to_string(evt.obj_id);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        if (m_show_probes) {
+                            std::string identifier = std::string(FullName()) + "_probe_" + std::to_string(evt.obj_id);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        }
+                    } else {
+                        //TODO warning
                     }
                 }
             }
@@ -256,12 +260,16 @@ void megamol::probe_gl::ProbeRenderTasks::updateRenderTaskCollection(
             {
                 auto pending_deselect_events = event_collection->get<ProbeDeselect>();
                 for (auto& evt : pending_deselect_events) {
-                    m_probe_draw_data[evt.obj_id].highlighted = 0;
-                    std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
+                    if (evt.obj_id < m_probe_draw_data.size()) {
+                        m_probe_draw_data[evt.obj_id].highlighted = 0;
+                        std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
 
-                    if (m_show_probes) {
-                        std::string identifier = std::string(FullName()) + "_probe_" + std::to_string(evt.obj_id);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        if (m_show_probes) {
+                            std::string identifier = std::string(FullName()) + "_probe_" + std::to_string(evt.obj_id);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        }
+                    } else {
+                        //TODO warning
                     }
                 }
             }
