@@ -11,11 +11,10 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Vector.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
 #include <limits>
 #include <map>
@@ -442,64 +441,64 @@ bool SecStructRenderer2D::Render(mmstd_gl::CallRender2DGL& call) {
 
 
     if (this->showBackboneParam.Param<param::BoolParam>()->Value()) {
-        this->lineShader.Enable();
-        glUniformMatrix4fv(this->lineShader.ParameterLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
+        this->lineShader->use();
+        glUniformMatrix4fv(this->lineShader->getUniformLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
         glUniformMatrix4fv(
-            this->lineShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+            this->lineShader->getUniformLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
         glUniformMatrix4fv(
-            this->lineShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+            this->lineShader->getUniformLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
         glUniformMatrix4fv(
-            this->lineShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
+            this->lineShader->getUniformLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
         glUniformMatrix4fv(
-            this->lineShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
+            this->lineShader->getUniformLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
         glUniformMatrix4fv(
-            this->lineShader.ParameterLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
+            this->lineShader->getUniformLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
         glUniformMatrix4fv(
-            this->lineShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
+            this->lineShader->getUniformLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
 
         glPointSize(5.0f);
         glLineWidth(1.0f);
         unsigned int startingIndex = 0;
         for (unsigned int i = 0; i < molSizes.size(); i++) {
-            glUniform1i(this->lineShader.ParameterLocation("instanceOffset"), startingIndex);
+            glUniform1i(this->lineShader->getUniformLocation("instanceOffset"), startingIndex);
             glPatchParameteri(GL_PATCH_VERTICES, 1);
             glDrawArrays(GL_PATCHES, 0, molSizes[i] - 3);
             startingIndex += molSizes[i];
         }
-        this->lineShader.Disable();
+        glUseProgram(0);
     }
 
     if (this->showTubesParam.Param<param::BoolParam>()->Value()) {
-        this->tubeShader.Enable();
-        glUniformMatrix4fv(this->tubeShader.ParameterLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
+        this->tubeShader->use();
+        glUniformMatrix4fv(this->tubeShader->getUniformLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
         glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+            this->tubeShader->getUniformLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
         glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+            this->tubeShader->getUniformLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
         glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
+            this->tubeShader->getUniformLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
         glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
+            this->tubeShader->getUniformLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
         glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
+            this->tubeShader->getUniformLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
         glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
+            this->tubeShader->getUniformLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
 
-        glUniform1f(
-            this->tubeShader.ParameterLocation("tubewidth"), this->coilWidthParam.Param<param::FloatParam>()->Value());
-        glUniform1f(this->tubeShader.ParameterLocation("structurewidth"),
+        glUniform1f(this->tubeShader->getUniformLocation("tubewidth"),
+            this->coilWidthParam.Param<param::FloatParam>()->Value());
+        glUniform1f(this->tubeShader->getUniformLocation("structurewidth"),
             this->structureWidthParam.Param<param::FloatParam>()->Value());
 
         glPointSize(5.0f);
         glLineWidth(1.0f);
         unsigned int startingIndex = 0;
         for (unsigned int i = 0; i < molSizes.size(); i++) {
-            glUniform1i(this->tubeShader.ParameterLocation("instanceOffset"), startingIndex);
+            glUniform1i(this->tubeShader->getUniformLocation("instanceOffset"), startingIndex);
             glPatchParameteri(GL_PATCH_VERTICES, 1);
             glDrawArrays(GL_PATCHES, 0, molSizes[i] - 3);
             startingIndex += molSizes[i];
         }
-        this->tubeShader.Disable();
+        glUseProgram(0);
     }
 
     if (this->showAtomPositionsParam.Param<param::BoolParam>()->Value()) {

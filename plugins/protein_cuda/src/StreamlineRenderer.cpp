@@ -20,17 +20,15 @@
 #include "vislib/math/Cuboid.h"
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/renderer/CallClipPlane.h"
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <cstdlib>
 #include <cuda_gl_interop.h>
 
@@ -167,18 +165,20 @@ bool StreamlineRenderer::create(void) {
         this->tubeShader =
             core::utility::make_glowl_shader("tubeShader", shader_options, "protein_cuda/streamlines/tube.vert.glsl",
                 "protein_cuda/streamlines/tube.geom.glsl", "protein_cuda/streamlines/tube.frag.glsl");
-        this->tubeShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY);
-        this->tubeShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-        this->tubeShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-        this->tubeShader.Link();
+        glProgramParameteriEXT(tubeShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY);
+        glProgramParameteriEXT(tubeShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+        glProgramParameteriEXT(tubeShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(tubeShader->getHandle());
 
         this->illumShader = core::utility::make_glowl_shader("illumShader", shader_options,
             "protein_cuda/streamlines/illuminated.vert.glsl", "protein_cuda/streamlines/illuminated.geom.glsl",
             "protein_cuda/streamlines/illuminated.frag.glsl");
-        this->illumShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY);
-        this->illumShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
-        this->illumShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-        this->illumShader.Link();
+        glProgramParameteriEXT(illumShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY);
+        glProgramParameteriEXT(illumShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
+        glProgramParameteriEXT(illumShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(illumShader->getHandle());
 
     } catch (std::exception& e) {
         Log::DefaultLog.WriteError(("StreamlineRenderer: " + std::string(e.what())).c_str());
@@ -193,8 +193,8 @@ bool StreamlineRenderer::create(void) {
  * StreamlineRenderer::release
  */
 void StreamlineRenderer::release(void) {
-    this->tubeShader.Release();
-    this->illumShader.Release();
+    this->tubeShader.reset();
+    this->illumShader.reset();
 }
 
 
@@ -302,14 +302,14 @@ bool StreamlineRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     glColor3f(0.0f, 1.0f, 1.0f);
 
     if (this->renderMode == TUBES) {
-        this->tubeShader.Enable();
-        glUniform1fARB(this->tubeShader.ParameterLocation("streamTubeThicknessScl"), this->streamtubesThickness);
-        glUniform1fARB(this->tubeShader.ParameterLocation("minColTexValue"), this->minCol); // TODO Parameter?
-        glUniform1fARB(this->tubeShader.ParameterLocation("maxColTexValue"), this->maxCol); // TODO Paremeter?
+        this->tubeShader->use();
+        glUniform1fARB(this->tubeShader->getUniformLocation("streamTubeThicknessScl"), this->streamtubesThickness);
+        glUniform1fARB(this->tubeShader->getUniformLocation("minColTexValue"), this->minCol); // TODO Parameter?
+        glUniform1fARB(this->tubeShader->getUniformLocation("maxColTexValue"), this->maxCol); // TODO Paremeter?
         if (!this->strLines.RenderLineStripWithColor()) {
             return false;
         }
-        this->tubeShader.Disable();
+        glUseProgram(0);
     } else if (this->renderMode == LINES) {
         glColor3f(StreamlineRenderer::uniformColor.GetX(), StreamlineRenderer::uniformColor.GetY(),
             StreamlineRenderer::uniformColor.GetZ());
@@ -317,11 +317,11 @@ bool StreamlineRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             return false;
         }
     } else if (this->renderMode == ILLUMINATED_LINES) {
-        this->illumShader.Enable();
+        this->illumShader->use();
         if (!this->strLines.RenderLineStripWithColor()) {
             return false;
         }
-        this->illumShader.Disable();
+        glUseProgram(0);
     }
 
     glPopMatrix();

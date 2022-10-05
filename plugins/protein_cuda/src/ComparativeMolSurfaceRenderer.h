@@ -8,11 +8,11 @@
 // Author     : scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_COMPARATIVEMOLSURFACERENDERER_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_COMPARATIVEMOLSURFACERENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <memory>
+
+#include <glowl/glowl.h>
 
 // Toggle the use of procedural volume fields for debugging purposes
 //#define USE_PROCEDURAL_DATA
@@ -38,7 +38,6 @@ typedef vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR> Mat4f;
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/VTIDataCall.h"
 #include "quicksurf/CUDAQuickSurf.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -679,16 +678,16 @@ private:
     core::view::Camera cameraInfo;
 
     /// Shader implementing per pixel lighting
-    vislib_gl::graphics::gl::GLSLShader pplSurfaceShader;
+    std::unique_ptr<glowl::GLSLProgram> pplSurfaceShader;
 
     /// Shader implementing per pixel lighting
-    vislib_gl::graphics::gl::GLSLShader pplSurfaceShaderVertexFlag;
+    std::unique_ptr<glowl::GLSLProgram> pplSurfaceShaderVertexFlag;
 
     /// Shader implementing per pixel lighting
-    vislib_gl::graphics::gl::GLSLShader pplSurfaceShaderUncertainty;
+    std::unique_ptr<glowl::GLSLProgram> pplSurfaceShaderUncertainty;
 
     /// Shader implementing per pixel lighting
-    vislib_gl::graphics::gl::GLSLShader pplMappedSurfaceShader;
+    std::unique_ptr<glowl::GLSLProgram> pplMappedSurfaceShader;
 
     /// The textures holding surface attributes (e.g. surface potential)
     GLuint surfAttribTex1, surfAttribTex2;
@@ -750,5 +749,3 @@ private:
 
 } // namespace protein_cuda
 } // namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_COMPARATIVEMOLSURFACERENDERER_H_INCLUDED

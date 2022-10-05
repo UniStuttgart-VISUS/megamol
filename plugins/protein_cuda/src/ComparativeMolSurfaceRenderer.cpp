@@ -24,10 +24,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/renderer/CallRender3D.h"
-
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include <algorithm>
 // For profiling
@@ -1553,10 +1551,10 @@ void ComparativeMolSurfaceRenderer::release(void) {
 #endif // USE_PROCEDURAL_DATA
     this->gridDataPos.Release();
 
-    this->pplSurfaceShader.Release();
-    this->pplSurfaceShaderVertexFlag.Release();
-    this->pplSurfaceShaderUncertainty.Release();
-    this->pplMappedSurfaceShader.Release();
+    this->pplSurfaceShader.reset();
+    this->pplSurfaceShaderVertexFlag.reset();
+    this->pplSurfaceShaderUncertainty.reset();
+    this->pplMappedSurfaceShader.reset();
 
     CudaSafeCall(this->surfAttribTex1_D.Release());
     CudaSafeCall(this->surfAttribTex2_D.Release());
@@ -2889,15 +2887,15 @@ bool ComparativeMolSurfaceRenderer::renderSurface(GLuint vbo, uint vertexCnt, GL
     glBindBufferARB(GL_ARRAY_BUFFER, vbo);
     CheckForGLError(); // OpenGL error check
 
-    this->pplSurfaceShader.Enable();
+    this->pplSurfaceShader->use();
     CheckForGLError(); // OpenGL error check
 
     // Note: glGetAttribLocation returnes -1 if the attribute if not used in
     // the shader code, because in this case the attribute is optimized out by
     // the compiler
-    attribLocPos = glGetAttribLocationARB(this->pplSurfaceShader.ProgramHandle(), "pos");
-    attribLocNormal = glGetAttribLocationARB(this->pplSurfaceShader.ProgramHandle(), "normal");
-    attribLocTexCoord = glGetAttribLocationARB(this->pplSurfaceShader.ProgramHandle(), "texCoord");
+    attribLocPos = glGetAttribLocationARB(this->pplSurfaceShader->getHandle(), "pos");
+    attribLocNormal = glGetAttribLocationARB(this->pplSurfaceShader->getHandle(), "normal");
+    attribLocTexCoord = glGetAttribLocationARB(this->pplSurfaceShader->getHandle(), "texCoord");
     CheckForGLError(); // OpenGL error check
 
     glEnableVertexAttribArrayARB(attribLocPos);
@@ -2919,15 +2917,17 @@ bool ComparativeMolSurfaceRenderer::renderSurface(GLuint vbo, uint vertexCnt, GL
     /* Render */
 
     // Set uniform vars
-    glUniform1iARB(this->pplSurfaceShader.ParameterLocation("potentialTex"), 0);
-    glUniform1iARB(this->pplSurfaceShader.ParameterLocation("colorMode"), static_cast<int>(colorMode));
-    glUniform1iARB(this->pplSurfaceShader.ParameterLocation("renderMode"), static_cast<int>(renderMode));
-    glUniform3fvARB(this->pplSurfaceShader.ParameterLocation("colorMin"), 1, this->colorMinPotential.PeekComponents());
-    glUniform3fvARB(this->pplSurfaceShader.ParameterLocation("colorMax"), 1, this->colorMaxPotential.PeekComponents());
-    glUniform3fvARB(this->pplSurfaceShader.ParameterLocation("colorUniform"), 1, uniformColor.PeekComponents());
-    glUniform1fARB(this->pplSurfaceShader.ParameterLocation("minPotential"), this->minPotential);
-    glUniform1fARB(this->pplSurfaceShader.ParameterLocation("maxPotential"), this->maxPotential);
-    glUniform1fARB(this->pplSurfaceShader.ParameterLocation("alphaScl"), alphaScl);
+    glUniform1iARB(this->pplSurfaceShader->getUniformLocation("potentialTex"), 0);
+    glUniform1iARB(this->pplSurfaceShader->getUniformLocation("colorMode"), static_cast<int>(colorMode));
+    glUniform1iARB(this->pplSurfaceShader->getUniformLocation("renderMode"), static_cast<int>(renderMode));
+    glUniform3fvARB(
+        this->pplSurfaceShader->getUniformLocation("colorMin"), 1, this->colorMinPotential.PeekComponents());
+    glUniform3fvARB(
+        this->pplSurfaceShader->getUniformLocation("colorMax"), 1, this->colorMaxPotential.PeekComponents());
+    glUniform3fvARB(this->pplSurfaceShader->getUniformLocation("colorUniform"), 1, uniformColor.PeekComponents());
+    glUniform1fARB(this->pplSurfaceShader->getUniformLocation("minPotential"), this->minPotential);
+    glUniform1fARB(this->pplSurfaceShader->getUniformLocation("maxPotential"), this->maxPotential);
+    glUniform1fARB(this->pplSurfaceShader->getUniformLocation("alphaScl"), alphaScl);
 
     glActiveTextureARB(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_3D, potentialTex);
@@ -2954,7 +2954,7 @@ bool ComparativeMolSurfaceRenderer::renderSurface(GLuint vbo, uint vertexCnt, GL
     //    glDrawArrays(GL_POINTS, 0, vertexCnt); // DEBUG
     glDisable(GL_CULL_FACE);
 
-    this->pplSurfaceShader.Disable();
+    glUseProgram(0);
 
     //    glColor3f(1.0, 0.0, 0.0);
     //
@@ -2996,13 +2996,13 @@ bool ComparativeMolSurfaceRenderer::renderSurfaceWithSubdivFlag(DeformableGPUSur
     glBindBufferARB(GL_ARRAY_BUFFER, surf.GetVtxDataVBO());
     CheckForGLError(); // OpenGL error check
 
-    this->pplSurfaceShaderVertexFlag.Enable();
+    this->pplSurfaceShaderVertexFlag->use();
     CheckForGLError(); // OpenGL error check
 
     // Note: glGetAttribLocation returnes -1 if the attribute if not used in
     // the shader code, because in this case the attribute is optimized out by
     // the compiler
-    attribLocPos = glGetAttribLocationARB(this->pplSurfaceShaderVertexFlag.ProgramHandle(), "pos");
+    attribLocPos = glGetAttribLocationARB(this->pplSurfaceShaderVertexFlag->getHandle(), "pos");
     //    attribLocNormal = glGetAttribLocationARB(this->pplSurfaceShaderVertexFlag.ProgramHandle(), "normal");
     CheckForGLError(); // OpenGL error check
 
@@ -3021,7 +3021,7 @@ bool ComparativeMolSurfaceRenderer::renderSurfaceWithSubdivFlag(DeformableGPUSur
     // Vertex flag
 
     glBindBufferARB(GL_ARRAY_BUFFER, 0);
-    attribLocFlag = glGetAttribLocationARB(this->pplSurfaceShaderVertexFlag.ProgramHandle(), "flag");
+    attribLocFlag = glGetAttribLocationARB(this->pplSurfaceShaderVertexFlag->getHandle(), "flag");
     glEnableVertexAttribArrayARB(attribLocFlag);
     glVertexAttribPointerARB(attribLocFlag, 1, GL_FLOAT, GL_FALSE, 0, this->mappedSurfVertexFlags.Peek());
     CheckForGLError(); // OpenGL error check
@@ -3047,7 +3047,7 @@ bool ComparativeMolSurfaceRenderer::renderSurfaceWithSubdivFlag(DeformableGPUSur
     glDisable(GL_CULL_FACE);
     glEnable(GL_LIGHTING);
 
-    this->pplSurfaceShaderVertexFlag.Disable();
+    glUseProgram(0);
 
     glDisableVertexAttribArrayARB(attribLocPos);
     //    glDisableVertexAttribArrayARB(attribLocNormal);
@@ -3078,14 +3078,15 @@ bool ComparativeMolSurfaceRenderer::renderSurfaceWithUncertainty(DeformableGPUSu
     glBindBufferARB(GL_ARRAY_BUFFER, surf.GetVtxDataVBO());
     CheckForGLError(); // OpenGL error check
 
-    this->pplSurfaceShaderUncertainty.Enable();
-    glUniform1fARB(this->pplSurfaceShaderUncertainty.ParameterLocation("maxUncertainty"), 1.0f / this->surfMaxPosDiff);
+    this->pplSurfaceShaderUncertainty->use();
+    glUniform1fARB(
+        this->pplSurfaceShaderUncertainty->getUniformLocation("maxUncertainty"), 1.0f / this->surfMaxPosDiff);
     CheckForGLError(); // OpenGL error check
 
     // Note: glGetAttribLocation returnes -1 if the attribute if not used in
     // the shader code, because in this case the attribute is optimized out by
     // the compiler
-    attribLocPos = glGetAttribLocationARB(this->pplSurfaceShaderUncertainty.ProgramHandle(), "pos");
+    attribLocPos = glGetAttribLocationARB(this->pplSurfaceShaderUncertainty->getHandle(), "pos");
     //    attribLocNormal = glGetAttribLocationARB(this->pplSurfaceShaderUncertainty.ProgramHandle(), "normal");
     CheckForGLError(); // OpenGL error check
 
@@ -3104,7 +3105,7 @@ bool ComparativeMolSurfaceRenderer::renderSurfaceWithUncertainty(DeformableGPUSu
     // Vertex flag
 
     glBindBufferARB(GL_ARRAY_BUFFER, surf.GetVtxPathVBO());
-    attribLocUncertainty = glGetAttribLocationARB(this->pplSurfaceShaderUncertainty.ProgramHandle(), "uncertainty");
+    attribLocUncertainty = glGetAttribLocationARB(this->pplSurfaceShaderUncertainty->getHandle(), "uncertainty");
     glEnableVertexAttribArrayARB(attribLocUncertainty);
     glVertexAttribPointerARB(attribLocUncertainty, 1, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<void*>(0));
     CheckForGLError(); // OpenGL error check
@@ -3127,7 +3128,7 @@ bool ComparativeMolSurfaceRenderer::renderSurfaceWithUncertainty(DeformableGPUSu
     glDisable(GL_CULL_FACE);
     glEnable(GL_LIGHTING);
 
-    this->pplSurfaceShaderUncertainty.Disable();
+    glUseProgram(0);
 
     glDisableVertexAttribArrayARB(attribLocPos);
     //    glDisableVertexAttribArrayARB(attribLocNormal);
@@ -3151,21 +3152,21 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(GLuint vboOld, GLuint vb
     GLint attribLocNormal, attribLocCorruptTriangleFlag;
     GLint attribLocTexCoordNew, /*attribLocTexCoordOld,*/ attribLocPathLen, attribLocSurfAttrib;
 
-    this->pplMappedSurfaceShader.Enable();
+    this->pplMappedSurfaceShader->use();
     CheckForGLError(); // OpenGL error check
 
     // Note: glGetAttribLocation returns -1 if an attribute if not used in
     // the shader code, because in this case the attribute is optimized out by
     // the compiler
-    attribLocPosNew = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "posNew");
+    attribLocPosNew = glGetAttribLocationARB(this->pplMappedSurfaceShader->getHandle(), "posNew");
     //    attribLocPosOld = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "posOld");
-    attribLocNormal = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "normal");
+    attribLocNormal = glGetAttribLocationARB(this->pplMappedSurfaceShader->getHandle(), "normal");
     attribLocCorruptTriangleFlag =
-        glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "corruptTriangleFlag");
-    attribLocTexCoordNew = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "texCoordNew");
+        glGetAttribLocationARB(this->pplMappedSurfaceShader->getHandle(), "corruptTriangleFlag");
+    attribLocTexCoordNew = glGetAttribLocationARB(this->pplMappedSurfaceShader->getHandle(), "texCoordNew");
     //    attribLocTexCoordOld = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "texCoordOld");
-    attribLocPathLen = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "pathLen");
-    attribLocSurfAttrib = glGetAttribLocationARB(this->pplMappedSurfaceShader.ProgramHandle(), "surfAttrib");
+    attribLocPathLen = glGetAttribLocationARB(this->pplMappedSurfaceShader->getHandle(), "pathLen");
+    attribLocSurfAttrib = glGetAttribLocationARB(this->pplMappedSurfaceShader->getHandle(), "surfAttrib");
     CheckForGLError(); // OpenGL error check
 
     glEnableVertexAttribArrayARB(attribLocPosNew);
@@ -3217,23 +3218,23 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(GLuint vboOld, GLuint vb
     /* Render */
 
     // Set uniform vars
-    glUniform1iARB(this->pplMappedSurfaceShader.ParameterLocation("potentialTex0"), 0);
-    glUniform1iARB(this->pplMappedSurfaceShader.ParameterLocation("potentialTex1"), 1);
-    glUniform1iARB(this->pplMappedSurfaceShader.ParameterLocation("colorMode"), static_cast<int>(colorMode));
-    glUniform1iARB(this->pplMappedSurfaceShader.ParameterLocation("renderMode"), static_cast<int>(renderMode));
-    glUniform1iARB(this->pplMappedSurfaceShader.ParameterLocation("unmappedTrisColorMode"),
+    glUniform1iARB(this->pplMappedSurfaceShader->getUniformLocation("potentialTex0"), 0);
+    glUniform1iARB(this->pplMappedSurfaceShader->getUniformLocation("potentialTex1"), 1);
+    glUniform1iARB(this->pplMappedSurfaceShader->getUniformLocation("colorMode"), static_cast<int>(colorMode));
+    glUniform1iARB(this->pplMappedSurfaceShader->getUniformLocation("renderMode"), static_cast<int>(renderMode));
+    glUniform1iARB(this->pplMappedSurfaceShader->getUniformLocation("unmappedTrisColorMode"),
         static_cast<int>(this->theUnmappedTrisColor));
     glUniform3fvARB(
-        this->pplMappedSurfaceShader.ParameterLocation("colorMin"), 1, this->colorMinPotential.PeekComponents());
+        this->pplMappedSurfaceShader->getUniformLocation("colorMin"), 1, this->colorMinPotential.PeekComponents());
     glUniform3fvARB(
-        this->pplMappedSurfaceShader.ParameterLocation("colorMax"), 1, this->colorMaxPotential.PeekComponents());
-    glUniform3fvARB(this->pplMappedSurfaceShader.ParameterLocation("colorUniform"), 1,
+        this->pplMappedSurfaceShader->getUniformLocation("colorMax"), 1, this->colorMaxPotential.PeekComponents());
+    glUniform3fvARB(this->pplMappedSurfaceShader->getUniformLocation("colorUniform"), 1,
         this->uniformColorSurfMapped.PeekComponents());
-    glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("minPotential"), this->minPotential);
-    glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("maxPotential"), this->maxPotential);
-    glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("alphaScl"), this->surfMappedAlphaScl);
-    glUniform1fARB(this->pplMappedSurfaceShader.ParameterLocation("maxPosDiff"), this->surfMaxPosDiff);
-    glUniform1iARB(this->pplMappedSurfaceShader.ParameterLocation("uncertaintyMeasurement"),
+    glUniform1fARB(this->pplMappedSurfaceShader->getUniformLocation("minPotential"), this->minPotential);
+    glUniform1fARB(this->pplMappedSurfaceShader->getUniformLocation("maxPotential"), this->maxPotential);
+    glUniform1fARB(this->pplMappedSurfaceShader->getUniformLocation("alphaScl"), this->surfMappedAlphaScl);
+    glUniform1fARB(this->pplMappedSurfaceShader->getUniformLocation("maxPosDiff"), this->surfMaxPosDiff);
+    glUniform1iARB(this->pplMappedSurfaceShader->getUniformLocation("uncertaintyMeasurement"),
         static_cast<int>(this->uncertaintyCriterion));
 
     glActiveTextureARB(GL_TEXTURE1);
@@ -3260,7 +3261,7 @@ bool ComparativeMolSurfaceRenderer::renderMappedSurface(GLuint vboOld, GLuint vb
 
     glDrawElements(GL_TRIANGLES, triangleVertexCnt, GL_UNSIGNED_INT, reinterpret_cast<void*>(0));
 
-    this->pplMappedSurfaceShader.Disable();
+    glUseProgram(0);
 
     glDisableVertexAttribArrayARB(attribLocPosNew);
     glDisableVertexAttribArrayARB(attribLocNormal);
