@@ -1,3 +1,7 @@
+#version 130
+
+#include "common_defines_btf.glsl"
+
 #extension GL_EXT_geometry_shader4 : enable
 #extension GL_EXT_gpu_shader4 : enable
 

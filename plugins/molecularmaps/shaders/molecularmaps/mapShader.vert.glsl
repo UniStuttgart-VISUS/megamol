@@ -1,3 +1,7 @@
+#version 130
+
+#include "common_defines_btf.glsl"
+
 uniform vec4 sphere;
 uniform vec3 frontVertex;
 uniform bool mirrorMap;

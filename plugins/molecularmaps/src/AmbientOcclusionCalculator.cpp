@@ -39,7 +39,7 @@ AmbientOcclusionCalculator::AmbientOcclusionCalculator(void)
  * AmbientOcclusionCalculator::~AmbientOcclusionCalculator
  */
 AmbientOcclusionCalculator::~AmbientOcclusionCalculator(void) {
-    this->aoComputeShader.Release();
+    this->aoComputeShader.reset();
     if (this->volTexture != 0) {
         glDeleteTextures(1, &this->volTexture);
     }
@@ -210,29 +210,29 @@ const std::vector<float>* AmbientOcclusionCalculator::calculateVertexShadows(
 
         int n = static_cast<int>(this->vertices->size() / 3);
 
-        this->aoComputeShader.Enable();
-        this->aoComputeShader.SetParameter("aoSampFact", this->settings.evalFactor);
-        this->aoComputeShader.SetParameter("vertexCount", n);
-        this->aoComputeShader.SetParameter("sampleNum", this->settings.numSampleDirections);
-        this->aoComputeShader.SetParameter("sampleMax", this->aoSampleMax);
-        this->aoComputeShader.SetParameter("posOrigin", minOSx, minOSy, minOSz);
-        this->aoComputeShader.SetParameter("posExtents", rangeOSx, rangeOSy, rangeOSz);
+        this->aoComputeShader->use();
+        this->aoComputeShader->setUniform("aoSampFact", this->settings.evalFactor);
+        this->aoComputeShader->setUniform("vertexCount", n);
+        this->aoComputeShader->setUniform("sampleNum", this->settings.numSampleDirections);
+        this->aoComputeShader->setUniform("sampleMax", this->aoSampleMax);
+        this->aoComputeShader->setUniform("posOrigin", minOSx, minOSy, minOSz);
+        this->aoComputeShader->setUniform("posExtents", rangeOSx, rangeOSy, rangeOSz);
 
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_1D, this->dirTexture);
-        this->aoComputeShader.SetParameter("directionTex", 5);
+        this->aoComputeShader->setUniform("directionTex", 5);
 
         glActiveTexture(GL_TEXTURE6);
         glBindTexture(GL_TEXTURE_1D, this->lvlTexture);
-        this->aoComputeShader.SetParameter("levelTex", 6);
+        this->aoComputeShader->setUniform("levelTex", 6);
 
         glActiveTexture(GL_TEXTURE7);
         glBindTexture(GL_TEXTURE_3D, this->volTexture);
-        this->aoComputeShader.SetParameter("aoVol", 7);
+        this->aoComputeShader->setUniform("aoVol", 7);
 
         glDispatchCompute((n / 512) + 1, 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        this->aoComputeShader.Disable();
+        glUseProgram(0);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_3D, 0);
@@ -404,34 +404,17 @@ bool AmbientOcclusionCalculator::initilialize(core::CoreInstance* instance, cons
  */
 bool AmbientOcclusionCalculator::loadShaders(core::CoreInstance* instance) {
     // load compute shader
-    auto ssf =
-        std::make_shared<megamol::core_gl::utility::ShaderSourceFactory>(instance->Configuration().ShaderDirectories());
-    ssf->LoadBTF("aocompute", true);
-    vislib_gl::graphics::gl::ShaderSource compute;
-    if (!ssf->MakeShaderSource("aocompute::compute", compute)) {
+
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    try {
+        this->aoComputeShader =
+            core::utility::make_glowl_shader("aoComputeShader", shader_options, "molecularmaps/aocompute.comp.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("AmbientOcclusionCalculator: " + std::string(e.what())).c_str());
         return false;
     }
 
-    try {
-        if (!this->aoComputeShader.Compile(compute.Code(), compute.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to compile aocompute shader: Unknown error\n");
-            return false;
-        }
-    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile aocompute shader (@%s): %s\n",
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile aocompute shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to compile aocompute shader: Unknown exception\n");
-        return false;
-    }
     this->shaderChanged = true;
     return true;
 }

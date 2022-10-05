@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<btf type="MegaMolGLSLShader" version="1.0" namespace="aocompute">
-  <shader name="compute">
-    <snippet type="version">430</snippet>
-    <snippet name="text" type="file">molecularmaps/aocompute.comp.glsl</snippet>
-  </shader>
-</btf>
