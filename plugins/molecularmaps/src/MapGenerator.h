@@ -20,7 +20,6 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "vislib/graphics/BitmapImage.h"

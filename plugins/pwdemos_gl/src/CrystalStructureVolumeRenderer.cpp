@@ -40,7 +40,6 @@
 #include "vislib/math/Quaternion.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "cuda_gl_interop.h"
 #include <thrust/version.h>

@@ -22,9 +22,6 @@
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
-#include "vislib_gl/graphics/gl/GLSLTesselationShader.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Vector.h"
 
