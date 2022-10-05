@@ -13,6 +13,7 @@
 #include <random>
 #include <string>
 #include <variant>
+#include <mmcore/utility/log/Log.h>
 
 namespace megamol {
 namespace probe {
@@ -47,7 +48,7 @@ struct BaseProbe {
     /** vertex id on the original mesh the probe is placed */
     std::vector<uint64_t> m_face_vert_ids;
     /** saves the placement method used to create probe */
-    PlacementMethod m_placement_method;
+    PlacementMethod m_placement_method = UNKNOWN;
 
     // virtual void probe() = 0;
 };
@@ -136,35 +137,45 @@ using GenericMinMax = std::variant<std::array<double, 2>, std::array<float, 2>, 
 
 class ProbeCollection {
 public:
+    struct ProbeLevel {
+        // indices of sub_probes correspond to previous level indices
+        std::vector<std::vector<size_t>> sub_probes;
+        // indices of super_probes correspond to next level indices
+        std::vector<size_t> super_probes;
+        std::vector<GenericProbe> probes;
+        int level_index = -1;
+    };
+
     ProbeCollection() = default;
     ~ProbeCollection() = default;
 
     template<typename ProbeType>
     void addProbe(ProbeType const& probe) {
-        m_probes.push_back(probe);
+        lod_collection[max_level].probes.push_back(probe);
     }
 
     template<typename ProbeType>
     void setProbe(size_t idx, ProbeType const& probe) {
-        m_probes[idx] = probe;
+        lod_collection[max_level].probes[idx] = probe;
     }
 
     template<typename ProbeType>
     ProbeType getProbe(size_t idx) const {
-        return std::get<ProbeType>(m_probes[idx]);
+        return std::get<ProbeType>(lod_collection[max_level].probes[idx]);
     }
 
     GenericProbe getGenericProbe(size_t idx) const {
-        return m_probes[idx];
+        return lod_collection[max_level].probes[idx];
     }
 
-    const BaseProbe& getBaseProbe(size_t idx) const {
-        const BaseProbe& x = std::visit([](const auto& x) -> const BaseProbe& { return x; }, m_probes[idx]);
+    BaseProbe const& getBaseProbe(size_t idx) const {
+        const BaseProbe& x = std::visit([](const auto& x) -> const BaseProbe& {
+            return x; }, lod_collection[max_level].probes[idx]);
         return x;
     }
 
     uint32_t getProbeCount() const {
-        return m_probes.size();
+        return lod_collection[max_level].probes.size();
     }
 
     template<typename T>
@@ -177,35 +188,97 @@ public:
         return std::get<std::array<T, 2>>(m_global_min_max);
     }
 
-    GenericMinMax getGenericGlobalMinMax() {
+    GenericMinMax getGenericGlobalMinMax() const {
         return m_global_min_max;
     }
 
-    void erase_probes(std::vector<char> const& indicator) {
-        if (indicator.size() != m_probes.size())
+    void eraseProbes(std::vector<char> const& indicator) {
+        if (indicator.size() != lod_collection[max_level].probes.size())
             return;
         auto const num_el = std::count_if(indicator.begin(), indicator.end(), [](auto const el) { return el == 0; });
         std::vector<GenericProbe> tmp;
         tmp.reserve(num_el);
-        for (std::vector<GenericProbe>::size_type idx = 0; idx < m_probes.size(); ++idx) {
+        for (std::vector<GenericProbe>::size_type idx = 0; idx < lod_collection[max_level].probes.size(); ++idx) {
             if (indicator[idx] == 0) {
-                tmp.push_back(m_probes[idx]);
+                tmp.emplace_back(lod_collection[max_level].probes[idx]);
             }
         }
-        m_probes = tmp;
+        lod_collection[max_level].probes = tmp;
     }
 
-    void shuffle_probes() {
+    void shuffleProbes() {
         std::random_device rd;
         std::mt19937 g(rd());
-        std::shuffle(m_probes.begin(), m_probes.end(), g);
+        std::shuffle(lod_collection[max_level].probes.begin(), lod_collection[max_level].probes.end(), g);
     }
 
-private:
-    std::vector<GenericProbe> m_probes;
-    GenericMinMax m_global_min_max;
-};
+    bool setLevel(int const idx, ProbeLevel const level) {
+        if (idx >= lod_collection.size()) {
+            core::utility::log::Log::DefaultLog.WriteError("[ProbeLoDCollection] Level index too large.");
+            return false;
+        }
+        if (level.super_probes.empty() && level.sub_probes.empty()) {
+            core::utility::log::Log::DefaultLog.WriteError("[ProbeLoDCollection] Level not complete.");
+            return false;
+        }
+        lod_collection[idx] = level;
+        return true;
+    }
 
+    ProbeLevel getLevel(int const idx) {
+        if (idx >= lod_collection.size()) {
+            core::utility::log::Log::DefaultLog.WriteError("[ProbeLoDCollection] Probe level does not exist.");
+            return ProbeLevel{};
+        }
+        return lod_collection[idx];
+    }
+
+    template<typename ProbeType>
+    ProbeType getSuperProbe(int const level, size_t const idx) const {
+        if (level - 1 < 0) {
+            core::utility::log::Log::DefaultLog.WriteError("[ProbeLoDCollection] Level for get super probe too low.");
+            return ProbeType();
+        }
+        auto const super_index = lod_collection[level].super_probes[idx];
+        return std::get<ProbeType>(lod_collection[level - 1].probes[super_index]);
+    }
+
+    template<typename ProbeType>
+    std::vector<ProbeType> getSubProbes(int const level, size_t const idx) const {
+        if (level + 1 >= lod_collection.size()) {
+            core::utility::log::Log::DefaultLog.WriteError("[ProbeLoDCollection] Level for get sub probe too high.");
+            return nullptr;
+        }
+        auto const sub_indices = lod_collection[level].sub_probes[idx];
+        std::vector<ProbeType> sub_probes;
+        sub_probes.reserve(sub_indices.size());
+        for (auto const index : sub_indices) {
+            sub_probes.emplace_back(std::get<ProbeType>(lod_collection[level + 1].probes[index]));
+        }
+        return sub_probes;
+    }
+
+    int getNumLevels() const {
+        return lod_collection.size();
+    }
+
+    int getActiveLevels() {
+        int i = 0;
+        for (auto const& level : lod_collection) {
+            if (!level.probes.empty()) {
+                i++;
+            }
+        }
+        return i;
+    }
+
+
+private:
+    std::array<ProbeLevel, 4> lod_collection;
+    int max_level = 3;
+    GenericMinMax m_global_min_max;
+
+};
 
 } // namespace probe
 } // namespace megamol
