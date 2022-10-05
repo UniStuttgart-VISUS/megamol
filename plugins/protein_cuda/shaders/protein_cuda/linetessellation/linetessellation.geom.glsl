@@ -1,3 +1,5 @@
+#version 400
+
 uniform mat4 MVP;
 
 layout(lines) in;

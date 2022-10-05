@@ -1,3 +1,5 @@
+#version 130
+
 varying vec3 posES;
 void main(void) {
     posES = (gl_ModelViewMatrix*gl_Vertex).xyz;

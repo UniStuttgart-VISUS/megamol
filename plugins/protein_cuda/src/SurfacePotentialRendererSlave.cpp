@@ -65,30 +65,14 @@ bool SurfacePotentialRendererSlave::create(void) {
     }*/
 
     // Load shader sources
-    ShaderSource vertSrc, fragSrc, geomSrc;
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
 
-    core::CoreInstance* ci = this->GetCoreInstance();
-    if (!ci) {
-        return false;
-    }
-
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    // Load shader for per pixel lighting of the surface
-    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertex", vertSrc)) {
-        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
-        return false;
-    }
-    // Load ppl fragment shader
-    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragment", fragSrc)) {
-        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
-        return false;
-    }
     try {
-        if (!this->pplSurfaceShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception& e) {
-        Log::DefaultLog.WriteError("%s: Unable to create the ppl shader: %s\n", this->ClassName(), e.GetMsgA());
+        this->pplSurfaceShader = core::utility::make_glowl_shader("pplSurfaceShader", shader_options,
+            "protein_cuda/electrostatics/pplsurface.vert.glsl", "protein_cuda/electrostatics/pplsurface.frag.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("SurfacePotentialRendererSlave: " + std::string(e.what())).c_str());
         return false;
     }
 

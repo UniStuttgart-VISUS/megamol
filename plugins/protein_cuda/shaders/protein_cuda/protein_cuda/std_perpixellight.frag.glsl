@@ -1,3 +1,5 @@
+#version 120
+
 uniform int twoSidedLight = 0;
 
 varying vec4 diffuse,ambient;

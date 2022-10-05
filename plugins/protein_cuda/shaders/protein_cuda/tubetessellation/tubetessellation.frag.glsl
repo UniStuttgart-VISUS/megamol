@@ -1,3 +1,8 @@
+#version 140
+
+#include "common_defines_btf.glsl"
+#include "lightdirectional.glsl"
+
 #extension GL_ARB_conservative_depth:require
 layout (depth_greater) out float gl_FragDepth; // we think this is right
 // this should be wrong //layout (depth_less) out float gl_FragDepth;

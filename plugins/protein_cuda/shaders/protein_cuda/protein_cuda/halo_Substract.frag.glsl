@@ -1,3 +1,5 @@
+#version 110
+
           uniform sampler2D originalTex;
           uniform sampler2D blurredTex;
           void main(void) {

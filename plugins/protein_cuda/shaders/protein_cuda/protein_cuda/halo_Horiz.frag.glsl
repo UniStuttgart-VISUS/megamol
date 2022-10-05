@@ -1,3 +1,5 @@
+#version 120
+
 #define GAUSS_3x3
 #undef GAUSS_3x3
 

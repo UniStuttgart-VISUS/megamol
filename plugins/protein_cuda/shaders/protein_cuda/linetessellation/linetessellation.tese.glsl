@@ -1,3 +1,5 @@
+#version 400
+
 layout(isolines, equal_spacing) in;
 
 in vec4 myColor[];

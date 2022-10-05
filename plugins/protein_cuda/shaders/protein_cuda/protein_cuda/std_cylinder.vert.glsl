@@ -1,3 +1,7 @@
+#version 110
+
+#include "protein_cuda/protein_cuda/commondefines.glsl"
+
 uniform vec4 viewAttr; // TODO: check fragment position if viewport starts not in (0, 0)
 
 #ifndef CALC_CAM_SYS

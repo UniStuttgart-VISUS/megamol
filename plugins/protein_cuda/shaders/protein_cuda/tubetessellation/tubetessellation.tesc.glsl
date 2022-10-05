@@ -1,3 +1,5 @@
+#version 400
+
 #extension GL_ARB_shader_storage_buffer_object : require
 #extension GL_EXT_gpu_shader4 : require
 

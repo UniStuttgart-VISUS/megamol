@@ -1,3 +1,5 @@
+#version 110
+
 uniform vec2 screenResInv;
 
 void main(void)

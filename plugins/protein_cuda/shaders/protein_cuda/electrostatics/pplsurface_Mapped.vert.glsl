@@ -1,3 +1,5 @@
+#version 120
+
 uniform sampler3D potentialTex0;
 uniform sampler3D potentialTex1;
 

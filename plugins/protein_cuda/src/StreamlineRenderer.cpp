@@ -161,55 +161,27 @@ bool StreamlineRenderer::create(void) {
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
 
-    ShaderSource vertSrc;
-    ShaderSource fragSrc;
-    ShaderSource geomSrc;
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
 
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    // Load the shader source for the tube shader
-    if (!ssf->MakeShaderSource("streamlines::tube::vertex", vertSrc)) {
-        Log::DefaultLog.WriteError("Unable to load vertex shader source for cartoon shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("streamlines::tube::geometry", geomSrc)) {
-        Log::DefaultLog.WriteError("Unable to load geometry shader source for tube shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("streamlines::tube::fragment", fragSrc)) {
-        Log::DefaultLog.WriteError("Unable to load fragment shader source for cartoon shader");
-        return false;
-    }
-    this->tubeShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    this->tubeShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY);
-    this->tubeShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    this->tubeShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-    if (!this->tubeShader.Link()) {
-        Log::DefaultLog.WriteError("Unable to link the streamtube shader");
-        return false;
-    }
+    try {
+        this->tubeShader =
+            core::utility::make_glowl_shader("tubeShader", shader_options, "protein_cuda/streamlines/tube.vert.glsl",
+                "protein_cuda/streamlines/tube.geom.glsl", "protein_cuda/streamlines/tube.frag.glsl");
+        this->tubeShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY);
+        this->tubeShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+        this->tubeShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+        this->tubeShader.Link();
 
-    // Load the shader source for the illuminated streamlines
-    if (!ssf->MakeShaderSource("streamlines::illuminated::vertex", vertSrc)) {
-        Log::DefaultLog.WriteError("Unable to load vertex shader source for illuminated streamlines");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("streamlines::illuminated::geometry", geomSrc)) {
-        Log::DefaultLog.WriteError("Unable to load geometry shader source for illuminated streamlines");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("streamlines::illuminated::fragment", fragSrc)) {
-        Log::DefaultLog.WriteError("Unable to load fragment shader source for illuminated streamlines");
-        return false;
-    }
-    this->illumShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
+        this->illumShader = core::utility::make_glowl_shader("illumShader", shader_options,
+            "protein_cuda/streamlines/illuminated.vert.glsl", "protein_cuda/streamlines/illuminated.geom.glsl",
+            "protein_cuda/streamlines/illuminated.frag.glsl");
+        this->illumShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY);
+        this->illumShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
+        this->illumShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+        this->illumShader.Link();
 
-    this->illumShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY);
-    this->illumShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
-    this->illumShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-    if (!this->illumShader.Link()) {
-        Log::DefaultLog.WriteError("Unable to link the illuminated streamlines shader");
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("StreamlineRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 

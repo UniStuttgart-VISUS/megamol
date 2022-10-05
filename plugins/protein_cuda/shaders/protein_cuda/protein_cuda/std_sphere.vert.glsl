@@ -1,3 +1,6 @@
+#version 110
+
+#include "protein_cuda/protein_cuda/commondefines.glsl"
 
 #undef HALO
 //#define HALO

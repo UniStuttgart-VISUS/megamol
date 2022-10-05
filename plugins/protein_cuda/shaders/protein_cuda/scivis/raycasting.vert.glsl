@@ -1,3 +1,5 @@
+#version 130
+
 varying vec3 posES;
 varying vec4 pos;
 void main(void) {

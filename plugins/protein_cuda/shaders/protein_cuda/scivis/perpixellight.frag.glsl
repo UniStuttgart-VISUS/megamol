@@ -1,3 +1,5 @@
+#version 120
+
 varying vec4 diffuse,ambient;
 varying vec3 normal,lightDir,halfVector;
 varying vec4 posWS;

@@ -1,5 +1,7 @@
 //#version 120
 
+#include "protein_cuda/streamlines/ppLightingStreamlines.glsl"
+
 varying vec4 diffuse,ambient;
 varying vec3 normal,lightDir,halfVector;
 varying vec3 view;

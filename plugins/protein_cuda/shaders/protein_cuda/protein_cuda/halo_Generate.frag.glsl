@@ -1,3 +1,5 @@
+#version 110
+
           uniform vec4 haloColor;
           void main(void) {
             vec3 col = abs(gl_Color.rgb - vec3(0.5, 0.5, 0.5));

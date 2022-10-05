@@ -1,3 +1,8 @@
+#version 110
+
+#include "protein_cuda/protein_cuda/commondefines.glsl"
+#include "lightdirectional.glsl"
+
 #undef HALO
 //#define HALO
 #undef HALO_RAD

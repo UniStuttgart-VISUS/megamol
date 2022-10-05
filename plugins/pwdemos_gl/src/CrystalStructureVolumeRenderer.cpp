@@ -1266,179 +1266,41 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
         !isExtAvailable("GL_ARB_draw_buffers")) {
         return false;
     }
-    if (!vislib_gl::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        return false;
-    }
 
-    // Load shader sources
-    ShaderSource vertSrc, fragSrc, geomSrc;
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
 
-    core::CoreInstance* ci = this->GetCoreInstance();
-    if (!ci)
-        return false;
-
-    if (!ci->ShaderSourceFactory().MakeShaderSource("scivis::slice::vertex", vertSrc)) {
-        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source", this->ClassName());
-        return false;
-    }
-    if (!ci->ShaderSourceFactory().MakeShaderSource("scivis::slice::fragment", fragSrc)) {
-        Log::DefaultLog.WriteError("%s: Unable to load fragment shader source", this->ClassName());
-        return false;
-    }
     try {
-        if (!this->vrShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError("%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        this->vrShader = core::utility::make_glowl_shader(
+            "vrShader", shader_options, "protein_cuda/scivis/slice.vert.glsl", "protein_cuda/scivis/slice.frag.glsl");
 
-    // Load sphere vertex shader
-    if (!ssf->MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
+        this->sphereShader = core::utility::make_glowl_shader("sphereShader", shader_options,
+            "protein_cuda/protein_cuda/std_sphere.vert.glsl", "protein_cuda/protein_cuda/std_sphere.frag.glsl");
 
-        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for sphere shader", this->ClassName());
-        return false;
-    }
-    // Load sphere fragment shader
-    if (!ssf->
-         //MakeShaderSource("protein_cuda::std::sphereFragmentFog", fragSrc)) {
-         MakeShaderSource("protein_cuda::std::sphereFragment", fragSrc)) {
+        this->rcShader = core::utility::make_glowl_shader("rcShader", shader_options,
+            "protein_cuda/scivis/raycasting.vert.glsl", "protein_cuda/scivis/raycasting.frag.glsl");
 
-        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for sphere shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->sphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError("%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        this->rcShaderDebug = core::utility::make_glowl_shader("rcShaderDebug", shader_options,
+            "protein_cuda/scivis/raycastingDebug.vert.glsl", "protein_cuda/scivis/raycastingDebug.frag.glsl");
 
-    // Load raycasting vertex shader
-    if (!ssf->MakeShaderSource("scivis::raycasting::vertex", vertSrc)) {
-        Log::DefaultLog.WriteError(
-            "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
-        return false;
-    }
-    // Load raycasting fragment shader
-    if (!ssf->MakeShaderSource("scivis::raycasting::fragment", fragSrc)) {
-        Log::DefaultLog.WriteError(
-            "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->rcShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError("%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        this->arrowShader = core::utility::make_glowl_shader("arrowShader", shader_options,
+            "protein_cuda/protein_cuda/std_arrow.vert.glsl", "protein_cuda/protein_cuda/std_arrow.geom.glsl",
+            "protein_cuda/protein_cuda/std_arrow.frag.glsl");
 
-    // Load raycasting vertex shader
-    if (!ssf->MakeShaderSource("scivis::raycasting::vertexDebug", vertSrc)) {
-        Log::DefaultLog.WriteError(
-            "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
-        return false;
-    }
-    // Load raycasting fragment shader
-    if (!ssf->MakeShaderSource("scivis::raycasting::fragmentDebug", fragSrc)) {
-        Log::DefaultLog.WriteError(
-            "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->rcShaderDebug.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError("%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        this->cylinderShader = core::utility::make_glowl_shader("cylinderShader", shader_options,
+            "protein_cuda/protein_cuda/std_cylinder.vert.glsl", "protein_cuda/protein_cuda/std_cylinder.frag.glsl");
 
-    // Load alternative arrow shader (uses geometry shader)
-    if (!ssf->MakeShaderSource("protein_cuda::std::arrowVertexGeom", vertSrc)) {
-        Log::DefaultLog.WriteError("Unable to load vertex shader source for arrow shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein_cuda::std::arrowGeom", geomSrc)) {
-        Log::DefaultLog.WriteError("Unable to load geometry shader source for arrow shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein_cuda::std::arrowFragmentGeom", fragSrc)) {
-        Log::DefaultLog.WriteError("Unable to load fragment shader source for arrow shader");
-        return false;
-    }
-    this->arrowShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    this->arrowShader.Link();
+        this->pplShader = core::utility::make_glowl_shader("pplShader", shader_options,
+            "protein_cuda/protein_cuda/std_perpixellight.vert.glsl",
+            "protein_cuda/protein_cuda/std_perpixellight.frag.glsl");
 
-    // Load cylinder vertex shader
-    if (!ssf->MakeShaderSource("protein_cuda::std::cylinderVertex", vertSrc)) {
-        Log::DefaultLog.WriteError("Unable to load vertex shader source for cylinder shader");
+        // TODO
+        this->pplShaderClip = core::utility::make_glowl_shader("pplShaderClip", shader_options,
+            "protein_cuda/scivis/perpixellight.vert.glsl", "protein_cuda/scivis/perpixellight.frag.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("CrystalStructureVolumeRenderer: " + std::string(e.what())).c_str());
         return false;
     }
-    // Load cylinder fragment shader
-    if (!ssf->MakeShaderSource("protein_cuda::std::cylinderFragment", fragSrc)) {
-        Log::DefaultLog.WriteError("Unable to load fragment shader source for cylinder shader");
-        return false;
-    }
-    try {
-        if (!this->cylinderShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError("Unable to create cylinder shader: %s\n", e.GetMsgA());
-        return false;
-    }
-
-    // Load per pixel lighting shader
-    if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightVertex", vertSrc)) {
-
-        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
-        return false;
-    }
-
-    if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightFragment", fragSrc)) {
-
-        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->pplShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError(
-            "%s: Unable to create shader for per pixel lighting: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-
-    // TODO
-    if (!ssf->MakeShaderSource("scivis::ppl::perpixellightVertex", vertSrc)) {
-
-        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
-        return false;
-    }
-
-    if (!ssf->MakeShaderSource("scivis::ppl::perpixellightFragment", fragSrc)) {
-
-        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->pplShaderClip.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteError(
-            "%s: Unable to create shader for per pixel lighting: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
 
     return true;
 }

@@ -1,3 +1,8 @@
+#version 140
+
+#include "protein_cuda/protein_cuda/commondefines.glsl"
+#include "lightdirectional.glsl"
+
 uniform mat4 modelview;
 uniform mat4 proj;
 

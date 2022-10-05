@@ -1,4 +1,8 @@
 //#version 120
+
+#include "protein_gl/colormaps/MSH2RGB.glsl"
+#include "protein_gl/colormaps/COOLWARM.glsl"
+
 #extension GL_EXT_geometry_shader4 : enable
 #extension GL_EXT_gpu_shader4 : enable
 

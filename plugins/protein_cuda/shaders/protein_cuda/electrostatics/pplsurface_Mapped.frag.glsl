@@ -1,3 +1,12 @@
+#version 120
+
+#include "protein_cuda/electrostatics/colorMix.glsl"
+#include "protein_cuda/electrostatics/ppLighting.glsl"
+#include "protein_gl/colormaps/RGB2MSH.glsl"
+#include "protein_gl/colormaps/MSH2RGB.glsl"
+#include "protein_gl/colormaps/COOLWARM.glsl"
+#include "protein_gl/colormaps/HSV2RGB.glsl"
+
 uniform sampler3D potentialTex0;
 uniform sampler3D potentialTex1;
 uniform int colorMode;

@@ -1,3 +1,5 @@
+#version 120
+
 uniform sampler2D sourceTex;
 uniform vec2 screenResInv;
 

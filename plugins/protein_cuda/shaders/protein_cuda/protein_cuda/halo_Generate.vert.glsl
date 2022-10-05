@@ -1,3 +1,5 @@
+#version 110
+
           void main(void) {
             vec4 vertexPos = gl_Vertex;
 

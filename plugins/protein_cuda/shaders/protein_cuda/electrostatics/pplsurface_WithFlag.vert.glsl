@@ -1,3 +1,5 @@
+#version 120
+
 attribute vec3 pos;
 attribute float flag;
 

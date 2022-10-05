@@ -1,3 +1,8 @@
+#version 140
+
+#include "protein_cuda/protein_cuda/commondefines.glsl"
+#include "lightdirectional.glsl"
+
 // #undef CLIP
 #extension GL_ARB_gpu_shader5 : enable
 #extension GL_EXT_geometry_shader4 : enable
