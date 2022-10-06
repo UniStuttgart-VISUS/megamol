@@ -87,14 +87,6 @@ public:
     virtual ~CoreInstance(void);
 
     /**
-     * Answer the (machine-readable) name of the assembly. This usually is
-     * The name of the plugin dll/so without prefix and extension.
-     *
-     * @return The (machine-readable) name of the assembly
-     */
-    virtual const std::string& GetObjectFactoryName() const;
-
-    /**
      * Answer the call description manager of the assembly.
      *
      * @return The call description manager of the assembly.
@@ -119,16 +111,6 @@ public:
     }
 
     vislib::StringA GetMergedLuaProject() const;
-
-    /**
-     * Answer whether this instance is initialised or not.
-     *
-     * @return 'true' if this instance already is initialised, 'false'
-     *         otherwise.
-     */
-    inline bool IsInitialised(void) const {
-        return (this->preInit == NULL);
-    }
 
     /**
      * Initialises the instance. This method must only be called once!
@@ -166,11 +148,6 @@ public:
      *         not found.
      */
     std::shared_ptr<const JobDescription> FindJobDescription(const char* name);
-
-    /**
-     * Requests all available instantiations.
-     */
-    void RequestAllInstantiations();
 
     /**
      * Requests the instantiation of the view defined by the given
@@ -251,67 +228,6 @@ public:
      */
     bool GOES_INTO_GRAPH FlushGraphUpdates();
 
-    //** do everything that is queued w.r.t. modules and calls */
-    void GOES_INTO_GRAPH PerformGraphUpdates();
-
-    /**
-     * Answer whether the core has pending requests of instantiations of
-     * views.
-     *
-     * @return 'true' if there are pending view instantiation requests,
-     *         'false' otherwise.
-     */
-    inline bool HasPendingViewInstantiationRequests(void) {
-        vislib::sys::AutoLock l(this->graphUpdateLock);
-        return !this->pendingViewInstRequests.IsEmpty();
-    }
-
-    /**
-     * Answer whether the core has pending requests of instantiations of
-     * jobs.
-     *
-     * @return 'true' if there are pending job instantiation requests,
-     *         'false' otherwise.
-     */
-    inline bool HasPendingJobInstantiationRequests(void) {
-        vislib::sys::AutoLock l(this->graphUpdateLock);
-        return !this->pendingJobInstRequests.IsEmpty();
-    }
-
-    inline GOES_INTO_GRAPH bool HasPendingRequests(void) {
-        vislib::sys::AutoLock l(this->graphUpdateLock);
-        return !this->pendingViewInstRequests.IsEmpty() || !this->pendingJobInstRequests.IsEmpty() ||
-               !this->pendingCallDelRequests.IsEmpty() || !this->pendingCallInstRequests.IsEmpty() ||
-               !this->pendingChainCallInstRequests.IsEmpty() || !this->pendingModuleDelRequests.IsEmpty() ||
-               !this->pendingModuleInstRequests.IsEmpty() || !this->pendingParamSetRequests.IsEmpty();
-    }
-#endif
-
-    vislib::StringA GetPendingViewName(void);
-
-    /**
-     * Instantiates the next pending view, if there is one.
-     *
-     * @return The newly created view object or 'NULL' in case of an error.
-     */
-    ViewInstance::ptr_type InstantiatePendingView(void);
-
-    /**
-     * Instantiates a view description filled with full names! This method
-     * is for internal use by the framework. Do not call it directly
-     *
-     * @return The instantiated view module
-     */
-    view::AbstractViewInterface* instantiateSubView(ViewDescription* vd);
-
-    /**
-     * Instantiates the next pending job, if there is one.
-     *
-     * @return The newly created job object or 'NULL' in case of an error.
-     */
-    JobInstance::ptr_type InstantiatePendingJob(void);
-
-#ifdef REMOVE_GRAPH
     /**
      * Returns a pointer to the parameter with the given name.
      *
@@ -325,20 +241,6 @@ public:
      */
     vislib::SmartPtr<param::AbstractParam> GOES_INTO_GRAPH FindParameter(
         const vislib::StringA& name, bool quiet = false, bool create = false);
-
-    /**
-     * Returns a pointer to the parameter with the given name.
-     * If the parameter value is the name of a valid parameter, it follows the path..
-     *
-     * @param name The name of the parameter to find.
-     * @param quiet Flag controlling the error output if the parameter is
-     *              not found.
-     *
-     * @return The found parameter or NULL if no parameter with this name
-     *         exists.
-     */
-    vislib::SmartPtr<param::AbstractParam> GOES_INTO_TRASH FindParameterIndirect(
-        const vislib::StringA& name, bool quiet = false);
 
     /**
      * Returns a pointer to the parameter with the given name.
@@ -507,46 +409,7 @@ public:
         return found;
     }
 
-
-    /**
-     * Updates global parameter hash and returns it.
-     * Comparison of parameter info is expensive.
-     *
-     * @return Updated parameter hash.
-     */
-    size_t GOES_INTO_GRAPH GetGlobalParameterHash(void);
-
-    /**
-     * Answer the full name of the paramter 'param' if it is bound to a
-     * parameter slot of an active module.
-     *
-     * @param param The parameter to search for.
-     *
-     * @return The full name of the parameter, or an empty string if the
-     *         parameter is not found
-     */
-    inline vislib::StringA GOES_INTO_GRAPH FindParameterName(
-        const vislib::SmartPtr<param::AbstractParam>& param) const {
-        return this->findParameterName(this->namespaceRoot, param);
-    }
 #endif
-
-    /**
-     * Answer the time of this instance in seconds.
-     *
-     * DO NOT USE THIS FUNCTION in Renderer Modules.
-     * Use '_instTime' parameter in method 'Render' instead.
-     *
-     * @return The time of this instance.
-     */
-    double GetCoreInstanceTime(void) const;
-
-    /**
-     * Adds an offset to the instance time.
-     *
-     * @param offset The offset to be added
-     */
-    void OffsetInstanceTime(double offset);
 
 #ifdef REMOVE_GRAPH
     /**
@@ -556,52 +419,11 @@ public:
 #endif
 
     /**
-     * Closes a view or job handle (the corresponding instance object will
-     * be deleted by the caller.
-     *
-     * @param obj The object to be removed from the module namespace.
-     */
-    inline void CloseViewJob(ModuleNamespace::ptr_type obj) {
-        this->closeViewJob(obj);
-    }
-
-    /**
      * Shuts down the application by terminating all jobs and closing all views
      */
     void Shutdown(void);
 
 #ifdef REMOVE_GRAPH
-    /**
-     * Sets up the module graph based on the serialized graph description
-     * from the head node of the network rendering cluster.
-     *
-     * @param data The serialized graph description (Pointer to an
-     *             vislib::net::AbstractSimpleMessage)
-     */
-    //void GOES_INTO_GRAPH SetupGraphFromNetwork(const void* data);
-
-    /**
-     * Instantiates a call.
-     *
-     * @param fromPath The full namespace path of the caller slot
-     * @param toPath The full namespace path of the callee slot
-     * @param desc The call description
-     *
-     * @return The new call or 'NULL' in case of an error
-     */
-    Call* GOES_INTO_TRASH InstantiateCall(
-        const vislib::StringA fromPath, const vislib::StringA toPath, factories::CallDescription::ptr desc);
-
-    /**
-     * Instantiates a module
-     *
-     * @param path The full namespace path
-     * @param desc The module description
-     *
-     * @return The new module or 'NULL' in case of an error
-     */
-    Module::ptr_type GOES_INTO_TRASH instantiateModule(
-        const vislib::StringA path, factories::ModuleDescription::ptr desc);
 
     /**
      * Fired whenever a parameter updates it's value
@@ -609,11 +431,6 @@ public:
      * @param slot The parameter slot
      */
     void GOES_INTO_GRAPH ParameterValueUpdate(param::ParamSlot& slot);
-
-    /**
-     * Fired to notify all listeners with a batch of updates.
-     */
-    void NotifyParamUpdateListener();
 
     /**
      * Adds a ParamUpdateListener to the list of registered listeners
@@ -753,186 +570,6 @@ public:
     }
 
 private:
-    /**
-     * Nested class with pre initialisation values.
-     */
-    class PreInit {
-    public:
-        /** Default Ctor */
-        PreInit(void);
-
-        /**
-         * Answer the config file to load.
-         *
-         * @return The config file to load.
-         */
-        inline const vislib::StringW& GetConfigFile(void) const {
-            return this->cfgFile;
-        }
-
-        /**
-         * Answer the config file overrides.
-         *
-         * @return a '\b'-separated list of '\a'-separated key-value pairs
-         */
-        inline const vislib::StringW& GetConfigFileOverrides(void) const {
-            return this->cfgOverrides;
-        }
-
-        /**
-         * Answer the log file to use.
-         *
-         * @return The log file to use.
-         */
-        inline const std::string& GetLogFile(void) const {
-            return this->logFile;
-        }
-
-        /**
-         * Answer the log level to use.
-         *
-         * @return The log level to use.
-         */
-        inline const unsigned int GetLogLevel(void) const {
-            return this->logLevel;
-        }
-
-        /**
-         * Answer the log echo level to use.
-         *
-         * @return The log echo level to use.
-         */
-        inline const unsigned int GetLogEchoLevel(void) const {
-            return this->logEchoLevel;
-        }
-
-        /**
-         * Answer whether the config file has been set.
-         *
-         * @return 'true' if the config file has been set.
-         */
-        inline bool IsConfigFileSet(void) const {
-            return this->cfgFileSet;
-        }
-
-        /**
-         * Answer whether the config file overrides have been set.
-         *
-         * @return 'true' if the config file overrides have been set.
-         */
-        inline bool IsConfigOverrideSet(void) const {
-            return this->cfgOverridesSet;
-        }
-
-        /**
-         * Answer whether the log file has been set.
-         *
-         * @return 'true' if the log file has been set.
-         */
-        inline bool IsLogFileSet(void) const {
-            return this->logFileSet;
-        }
-
-        /**
-         * Answer whether the log level has been set.
-         *
-         * @return 'true' if the log level has been set.
-         */
-        inline bool IsLogLevelSet(void) const {
-            return this->logLevelSet;
-        }
-
-        /**
-         * Answer whether the log echo level has been set.
-         *
-         * @return 'true' if the log echo level has been set.
-         */
-        inline bool IsLogEchoLevelSet(void) const {
-            return this->logEchoLevelSet;
-        }
-
-        /**
-         * Sets the config file to load.
-         *
-         * @param cfgFile The config file to load.
-         */
-        inline void SetConfigFile(const vislib::StringW& cfgFile) {
-            this->cfgFile = cfgFile;
-            this->cfgFileSet = true;
-        }
-
-        /**
-         * Sets the config file overrides.
-         *
-         * @param cfgOverrides a '\b'-separated list of '\a'-separated
-         *                     key-value pairs
-         */
-        inline void SetConfigFileOverrides(const vislib::StringW& cfgOverrides) {
-            this->cfgOverrides = cfgOverrides;
-            this->cfgOverridesSet = true;
-        }
-
-        /**
-         * Sets the log file to use.
-         *
-         * @param logFile The log file to use.
-         */
-        inline void SetLogFile(const std::string& logFile) {
-            this->logFile = logFile;
-            this->logFileSet = true;
-        }
-
-        /**
-         * Sets the log level to use.
-         *
-         * @param level The log level to use.
-         */
-        inline void SetLogLevel(unsigned int level) {
-            this->logLevel = level;
-            this->logLevelSet = true;
-        }
-
-        /**
-         * Sets the log echo level to use.
-         *
-         * @param level The log echo level to use.
-         */
-        inline void SetLogEchoLevel(unsigned int level) {
-            this->logEchoLevel = level;
-            this->logEchoLevelSet = true;
-        }
-
-    private:
-        /** Flag whether the config file has been set. */
-        bool cfgFileSet : 1;
-
-        /** Flag whether the config file overrides have been set. */
-        bool cfgOverridesSet : 1;
-
-        /** Flag whether the log file has been set. */
-        bool logFileSet : 1;
-
-        /** Flag whether the log level has been set. */
-        bool logLevelSet : 1;
-
-        /** Flag whether the log echo level has been set. */
-        bool logEchoLevelSet : 1;
-
-        /** The config file name. */
-        vislib::StringW cfgFile;
-
-        /** The log file name. */
-        std::string logFile;
-
-        /** A serialized list of config key-value overrides */
-        vislib::StringW cfgOverrides;
-
-        /** The log level. */
-        unsigned int logLevel;
-
-        /** The log echo level. */
-        unsigned int logEchoLevel;
-    };
 
     /**
      * Utility struct for quickstart configuration
@@ -979,30 +616,6 @@ private:
 
     } quickStepInfo;
 
-#ifdef REMOVE_GRAPH
-    /**
-     * Enumerates all parameters to collect parameter hashes.
-     *
-     * @param path The current module namespace
-     * @param map  Stores association between parameter name
-     *             and parameter hash
-     */
-    void GOES_INTO_GRAPH getGlobalParameterHash(ModuleNamespace::const_ptr_type path, ParamHashMap_t& map) const;
-
-    /**
-     * Answer the full name of the paramter 'param' if it is bound to a
-     * parameter slot of an active module.
-     *
-     * @param path The current module namespace
-     * @param param The parameter to search for.
-     *
-     * @return The full name of the parameter, or an empty string if the
-     *         parameter is not found
-     */
-    vislib::StringA GOES_INTO_TRASH findParameterName(
-        ModuleNamespace::const_ptr_type path, const vislib::SmartPtr<param::AbstractParam>& param) const;
-#endif
-
     /**
      * Closes a view or job handle (the corresponding instance object will
      * be deleted by the caller.
@@ -1012,82 +625,11 @@ private:
     void closeViewJob(ModuleNamespace::ptr_type obj);
 
     /**
-     * Apply parameters from configuration file
-     *
-     * @param root The root namespace
-     * @param id The instance description
-     */
-    void applyConfigParams(
-        const vislib::StringA& root, const InstanceDescription* id, const ParamValueSetRequest* params);
-
-    /**
      * Loads the plugin 'filename'
      *
      * @param filename The plugin to load
      */
     void loadPlugin(const std::shared_ptr<utility::plugins::AbstractPluginDescriptor>& plugin);
-
-#ifdef REMOVE_GRAPH
-    /**
-     * Compares two maps storing the association between
-     * parameter names and hashes.
-     *
-     * @param one   First map for comparison
-     * @param other Second map for comparison
-     *
-     * @return      True, if map "one" and "other" are the same
-     */
-    bool GOES_INTO_GRAPH mapCompare(ParamHashMap_t& one, ParamHashMap_t& other);
-#endif
-
-    /**
-     * Auto-connects a view module graph from 'from' to 'to' upwards
-     *
-     * @param view The view description object to receive the graph
-     * @param from The name of the module to connect from (upwards)
-     * @param to The optional module to connect to (upwards)
-     *
-     * @return True on success
-     */
-    bool quickConnectUp(ViewDescription& view, const char* from, const char* to);
-
-    /**
-     * Collects information on possible upwards connections for the module
-     * 'from'
-     *
-     * @param from The module to connect from (upwards)
-     * @param step List of possible upward connections
-     */
-    void quickConnectUpStepInfo(factories::ModuleDescription::ptr from, vislib::Array<quickStepInfo>& step);
-
-
-#ifdef REMOVE_GRAPH
-    /**
-     * Updates flush index list after flush has been performed
-     *
-     * @param processedCount Number of processed events
-     * @param list Index list to be updated
-     */
-    void GOES_INTO_GRAPH updateFlushIdxList(size_t const processedCount, std::vector<size_t>& list);
-
-    /**
-     * Check if current event is after flush event
-     *
-     * @param eventIdx Index in queue of current event
-     * @param list List of flush events
-     *
-     * @return True, if current event is after flush event
-     */
-    bool GOES_INTO_GRAPH checkForFlushEvent(size_t const eventIdx, std::vector<size_t>& list) const;
-
-    /**
-     * Removes all unreachable flushes
-     *
-     * @param eventCount Number of events in the respective queue
-     * @param list The flush index list to update
-     */
-    void GOES_INTO_GRAPH shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list);
-#endif
 
     /**
      * Translates shader paths to include paths in the compiler options for the ShaderFactory.
@@ -1099,8 +641,6 @@ private:
 #ifdef _WIN32
 #pragma warning(disable : 4251)
 #endif /* _WIN32 */
-    /** the pre initialisation values. */
-    PreInit* preInit;
 
     /** the cores configuration */
     megamol::core::utility::Configuration config;
@@ -1210,9 +750,6 @@ private:
 
     /** The module namespace root */
     RootModuleNamespace::ptr_type namespaceRoot;
-
-    /** the time offset */
-    double timeOffset;
 
     /** the count of rendered frames */
     uint32_t frameID;
