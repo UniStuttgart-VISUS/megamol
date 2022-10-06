@@ -17,7 +17,6 @@
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/serializable.h"
 
 namespace megamol {
 namespace core {
