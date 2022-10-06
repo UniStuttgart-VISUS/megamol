@@ -1,3 +1,5 @@
+const vec4 glyph_border_color = vec4(0.0,0.0,0.0,1.0);
+
 const float base_line_width = 0.02;
 const float inner_radius = 0.333;
 const float arrow_base_radius = 0.2;

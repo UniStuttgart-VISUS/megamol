@@ -4,6 +4,7 @@
 #include "probe_gl/glyphs/per_frame_data_struct.inc.glsl"
 #include "probe_gl/glyphs/base_probe_struct.inc.glsl"
 #include "probe_gl/glyphs/dial_glyph_constants.inc.glsl"
+#include "probe_gl/glyphs/dial_glyph_utility.inc.glsl"
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
 
@@ -27,13 +28,17 @@ void main() {
         discard;
     }
 
-    vec2 pixel_direction = normalize(pixel_coords);
-    float angle = atan(
-        pixel_direction.x,
-        pixel_direction.x > 0.0 ? -pixel_direction.y : pixel_direction.y
-    );
-    angle = pixel_coords.x < 0.0 ? angle * -1.0 + 3.14159 : angle;
-    float angle_normalized = 1.0 - (angle/6.283185 /*2pi*/);
+    // Highlight glyph up and glyph right directions
+    if(highlightCorners(uv_coords))
+    {
+        albedo_out = glyph_border_color;
+        normal_out = vec3(0.0,0.0,1.0);
+        depth_out = gl_FragCoord.z;
+        objID_out = mesh_shader_params[draw_id].probe_id;
+        return;
+    }
+
+    float angle_normalized = computeNormalizedAngle(uv_coords);
 
     float pixel_diag_width = 1.5 * max(dFdx(uv_coords.x),dFdy(uv_coords.y));
     float border_line_width = max(base_line_width, pixel_diag_width);
@@ -80,7 +85,7 @@ void main() {
             }
     }
 
-    vec4 out_colour = vec4(0.0,0.0,0.0,1.0);
+    vec4 out_colour = glyph_border_color;
 
     if(mesh_shader_params[draw_id].state == 1) {
         out_colour = vec4(1.0,1.0,0.0,1.0);

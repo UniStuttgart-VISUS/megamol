@@ -3,6 +3,7 @@
 #include "probe_gl/glyphs/extensions.inc.glsl"
 #include "probe_gl/glyphs/per_frame_data_struct.inc.glsl"
 #include "probe_gl/glyphs/scalar_probe_struct.inc.glsl"
+#include "probe_gl/glyphs/dial_glyph_constants.inc.glsl"
 #include "probe_gl/glyphs/dial_glyph_utility.inc.glsl"
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
@@ -12,7 +13,6 @@ layout(std430, binding = 1) readonly buffer PerFrameDataBuffer { PerFrameData[] 
 layout(location = 0) flat in int draw_id;
 layout(location = 1) in vec2 uv_coords;
 layout(location = 2) in vec3 pixel_vector;
-layout(location = 3) in vec3 cam_vector;
 
 layout(location = 0) out vec4 albedo_out;
 layout(location = 1) out vec3 normal_out;
@@ -20,39 +20,7 @@ layout(location = 2) out float depth_out;
 layout(location = 3) out int objID_out;
 layout(location = 4) out vec4 interactionData_out;
 
-vec3 fakeViridis(float lerp)
-{
-    vec3 c0 = vec3(0.2823645529290169,0.0,0.3310101940118055);
-    vec3 c1 = vec3(0.24090172204161298,0.7633448774061599,0.42216355577803744);
-    vec3 c2 = vec3(0.9529994532916154,0.9125452328290099,0.11085876909361342);
-
-    return lerp < 0.5 ? mix(c0,c1,lerp * 2.0) : mix(c1,c2,(lerp*2.0)-1.0);
-};
-
 void main() {
-
-    if(dot(cam_vector,mesh_shader_params[draw_id].probe_direction.xyz) < 0.0 ){
-        discard;
-    }
-
-    vec4 glyph_border_color = vec4(0.0,0.0,0.0,1.0);
-
-    if(mesh_shader_params[draw_id].state == 1) {
-        glyph_border_color = vec4(1.0,1.0,0.0,1.0);
-    }
-    else if(mesh_shader_params[draw_id].state == 2) {
-        glyph_border_color = vec4(1.0,0.58,0.0,1.0);
-    }
-
-    // Highlight glyph up and glyph right directions
-    if(highlightCorners(uv_coords))
-    {
-        albedo_out = glyph_border_color;
-        normal_out = vec3(0.0,0.0,1.0);
-        depth_out = gl_FragCoord.z;
-        objID_out = mesh_shader_params[draw_id].probe_id;
-        return;
-    }
 
     float pixel_diag_width = 1.5 * max(dFdx(uv_coords.x),dFdy(uv_coords.y));
 
@@ -70,17 +38,7 @@ void main() {
     }
     border_circle_width = 2.0 * max(border_circle_width,pixel_diag_width);
 
-    float angle = atan(
-        pixel_coords.x,
-        pixel_coords.x > 0.0 ? -pixel_coords.y : pixel_coords.y
-    );
-
-    if(pixel_coords.x < 0.0){
-        angle = angle * -1.0 + 3.14159;
-    }
-
-    float angle_normalized = angle / (3.14159*2.0);
-    angle_normalized = 1.0 - angle_normalized; // invert for clockwise reading
+    float angle_normalized = computeNormalizedAngle(uv_coords);
 
     vec3 out_colour = vec3(0.0,0.0,0.0);
 
@@ -88,12 +46,13 @@ void main() {
     float max_value = per_frame_data[0].tf_max;
     float value_range = max_value - min_value;
 
-    float zero_value_radius = -min_value / value_range;
-    float zero_arc_width = max(0.005, 0.5 * pixel_diag_width);
-
-    if(angle_normalized > 0.025 && angle_normalized < 0.975 && (radius > zero_value_radius+zero_arc_width || radius < zero_value_radius-zero_arc_width) )
+    if(angle_normalized > angle_start && angle_normalized < angle_end && radius > (inner_radius+base_line_width) && radius < (1.0 - base_line_width))
     {
-        float angle_shifted = (angle_normalized - 0.025) / 0.95;
+        float angle_shifted = (angle_normalized - angle_start) / (angle_end-angle_start);
+        float radius_shifted = (radius - (inner_radius+base_line_width)) / (1.0 - base_line_width - (inner_radius+base_line_width));
+
+        float zero_value_radius = -min_value / value_range;
+        float zero_arc_width = max(0.005, 0.5 * pixel_diag_width);
 
         int sample_cnt = int(mesh_shader_params[draw_id].sample_cnt);
         int sample_idx_0 = int(floor(angle_shifted * sample_cnt));
@@ -115,47 +74,36 @@ void main() {
         {
             float sample_value = mix(sample_0,sample_1,lerp);
             sample_value_normalized = (sample_value - min_value) / (value_range);
-            //out_colour = fakeViridis(sample_value_normalized);
-            //out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
-            //if( radius > sample_value_normalized && radius < border_circle_width ) discard;
         }
         else
         {
             int sample_idx = int(round(angle_shifted * sample_cnt));
             float sample_value = mesh_shader_params[draw_id].samples[sample_idx];
             sample_value_normalized = (sample_value - min_value) / (value_range);
-            //out_colour = fakeViridis(sample_value_normalized);
-            //out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
-            //if( radius > sample_value_normalized && radius < border_circle_width ) discard;
         }
 
         out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
 
-        if( sample_value_normalized >= zero_value_radius && radius < (1.0 - border_circle_width)){
-            if( radius < (zero_value_radius) || radius > sample_value_normalized ){
-                if(bool(per_frame_data[0].show_canvas)){
-                    out_colour = per_frame_data[0].canvas_color.rgb;
-                }
-                else{
-                    discard;
-                }
+        if( sample_value_normalized >= zero_value_radius){
+            if( radius_shifted < (zero_value_radius) || ( radius_shifted > sample_value_normalized && radius_shifted < (1.0 - 2.0*base_line_width) ) ){
+                discard;
             }
         }
-        else if(sample_value_normalized < zero_value_radius && radius < (1.0 - border_circle_width)){
-            if( radius > (zero_value_radius) || radius < sample_value_normalized ){
-                if(bool(per_frame_data[0].show_canvas)){
-                    out_colour = per_frame_data[0].canvas_color.rgb;
-                }
-                else{
-                    discard;
-                }
+        else if(sample_value_normalized < zero_value_radius){
+            if( (radius_shifted > (zero_value_radius) && radius_shifted < (1.0 - 2.0*base_line_width)) || radius_shifted < sample_value_normalized ){
+                discard;
             }
         }
 
+        if(abs(radius_shifted - zero_value_radius) < zero_arc_width) out_colour = vec3(1.0);
+    }
+    else{
+        discard;
     }
 
-    if(abs(radius - zero_value_radius) < zero_arc_width) out_colour = vec3(1.0);
-    if(radius > (1.0 - border_circle_width) && radius < (1.0 - (0.5*border_circle_width) )) out_colour = glyph_border_color.rgb;
+    
+
+    //if(radius > (1.0 - border_circle_width) && radius < (1.0 - (0.5*border_circle_width) )) out_colour = glyph_border_color.rgb;
 
     albedo_out = vec4(out_colour,1.0);
     normal_out = vec3(0.0,0.0,1.0);
