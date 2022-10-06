@@ -358,20 +358,6 @@ public:
     }
 #endif
 
-    /**
-     * Loads a project into the core.
-     *
-     * @param filename The path to the project file to load.
-     */
-    void LoadProject(const vislib::StringA& filename);
-
-    /**
-     * Loads a project into the core.
-     *
-     * @param filename The path to the project file to load.
-     */
-    void LoadProject(const vislib::StringW& filename);
-
 #ifdef REMOVE_GRAPH
     /**
      * Serializes the current graph into lua commands.
@@ -661,15 +647,6 @@ public:
         return this->namespaceRoot;
     }
 #endif
-
-    /**
-     * Writes the current state of the call graph to an xml file.
-     *
-     * @param outFilename The output file name.
-     * @return 'True' on success, 'false' otherwise.
-     */
-    // TODO: in the future, this is either not needed or JSON please
-    bool WriteStateToXML(const char* outFilename);
 
     /**
      * Access to the plugin manager
@@ -1001,13 +978,6 @@ private:
         }
 
     } quickStepInfo;
-
-    /**
-     * Adds a project to the instance.
-     *
-     * @param reader The xml reader to load the project from.
-     */
-    void addProject(megamol::core::utility::xml::XmlReader& reader);
 
 #ifdef REMOVE_GRAPH
     /**

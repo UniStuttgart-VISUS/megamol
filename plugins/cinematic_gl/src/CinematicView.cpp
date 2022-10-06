@@ -15,6 +15,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
+#include "vislib/sys/Path.h"
 
 
 using namespace megamol;

@@ -23,6 +23,8 @@
 
 #include "glowl/FramebufferObject.hpp"
 
+#include "vislib/sys/FastFile.h"
+
 
 namespace megamol {
 namespace cinematic_gl {

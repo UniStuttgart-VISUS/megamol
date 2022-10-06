@@ -17,7 +17,6 @@
     "cxxopts",
     "delaunator-cpp",
     "eigen3",
-    "expat",
     "glfw3",
     "glm",
     {

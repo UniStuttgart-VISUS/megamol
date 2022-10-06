@@ -28,6 +28,7 @@
 //#include <cmath>
 
 #include "vislib/sys/SystemInformation.h"
+#include "vislib/sys/FastFile.h"
 
 using namespace megamol::image_gl;
 using namespace megamol::core;

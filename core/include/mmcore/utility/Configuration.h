@@ -14,7 +14,6 @@
 #include "mmcore/LuaState.h"
 #include "mmcore/ParamValueSetRequest.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/xml/ConditionalParser.h"
 #include "vislib/Map.h"
 #include "vislib/Pair.h"
 #include "vislib/SingleLinkedList.h"
@@ -61,9 +60,6 @@ class CoreInstance;
 namespace utility {
 namespace xml {
 
-/** forward declaration of the parser used for loading */
-class ConfigurationParser;
-
 } /* end namespace xml */
 
 /**
@@ -73,9 +69,6 @@ class Configuration {
 public:
     /** only Entry may create Configuration objects */
     friend class megamol::core::CoreInstance;
-
-    /** only ConfigurationXMLParser may set values */
-    friend class megamol::core::utility::xml::ConfigurationParser;
 
     /** LuaState is the new configuration, so it may set values */
     friend class megamol::core::LuaState;
@@ -167,22 +160,6 @@ public:
 
     /** dtor */
     virtual ~Configuration(void);
-
-    /**
-     * Loads the configuration from the first found MegaMol xml
-     * configuration file. The following search order is used for file
-     * names: first the specified file name, 'megamolconfig.xml',
-     * 'megamol.cfg', '.megamolconfig.xml', '.megamol.cfg'.
-     *
-     * These names are case sensitive on Linux, as always. The following
-     * seach order is used for directories: first the specified path, the
-     * value of the environment variable 'MEGAMOLCONFIG', if this variable
-     * is set, the current working directory, the users home directory
-     * ('My Documents' folder on windows), a subfolder '.megamol' of the
-     * users home directory.
-     */
-    void LoadConfig(void);
-    void LoadConfig(const vislib::StringW& searchName);
 
     /**
      * Answer whether there was a critical error during the last load of a
@@ -446,22 +423,6 @@ private:
 
     /** forbidden assignment operator */
     Configuration& operator=(const Configuration& rhs);
-
-    /**
-     * Searches for the configuration file in the specified directory.
-     *
-     * @param path The directory to search in.
-     *
-     * @return true if the configuration file was found, false otherwise.
-     */
-    bool searchConfigFile(const vislib::StringW& path);
-
-    /**
-     * Loads the configurations from the specified file.
-     *
-     * @param filename The name of the configuration file.
-     */
-    void loadConfigFromFile(const vislib::StringW& filename);
 
     /** Sets all values to default. */
     void setDefaultValues(void);
