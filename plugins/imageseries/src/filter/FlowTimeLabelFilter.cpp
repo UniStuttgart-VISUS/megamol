@@ -500,9 +500,7 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
 
     // Export to Lua file (DEBUG)
     graph::util::exportToCSV(simplifiedGraph, "temp/" + dbgFileName + ".csv");
-    graph::util::exportToLua(simplifiedGraph,
-        "/home/marukyu/documents/uni/sem12/seminar/presentation/assets/scripts/luavis/vis/graphdata/CurrentGraph.lua",
-        luaExportMeta);
+    graph::util::exportToLua(simplifiedGraph, "CurrentGraph.lua", luaExportMeta);
 
     // convert to velocity map (DEBUG2)
     if (false) {
