@@ -11,7 +11,6 @@ layout(std430, binding = 1) readonly buffer PerFrameDataBuffer { PerFrameData[] 
 layout(location = 0) flat in int draw_id;
 layout(location = 1) in vec2 uv_coords;
 layout(location = 2) in vec3 pixel_vector;
-layout(location = 3) in vec3 cam_vector;
 
 layout(location = 0) out vec4 albedo_out;
 layout(location = 1) out vec3 normal_out;
@@ -29,10 +28,6 @@ vec3 fakeViridis(float lerp)
 };
 
 void main() {
-
-    if(dot(cam_vector,mesh_shader_params[draw_id].probe_direction.xyz) < 0.0 ){
-        discard;
-    }
 
     vec4 glyph_border_color = vec4(0.0,0.0,0.0,1.0);
 

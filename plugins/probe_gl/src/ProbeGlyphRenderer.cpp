@@ -104,7 +104,7 @@ void megamol::probe_gl::ProbeGlyphRenderer::createMaterialCollection() {
 
     // scalar glyph shader program
     material_collection_->addMaterial(this->instance(), "ScalarProbeGlyph",
-        {"probe_gl/glyphs/scalar_probe_glyph.vert.glsl", "probe_gl/glyphs/scalar_probe_glyph.frag.glsl"});
+        {"probe_gl/glyphs/scalar_probe_glyph_v2.vert.glsl", "probe_gl/glyphs/scalar_probe_glyph_v2.frag.glsl"});
 
     // scalar distribution glyph shader program
     material_collection_->addMaterial(this->instance(), "ScalarDistributionProbeGlyph",
@@ -932,25 +932,32 @@ bool megamol::probe_gl::ProbeGlyphRenderer::addAllRenderTasks() {
             __FUNCTION__, __LINE__);
     }
 
+    auto set_gl_state = []() {
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        glFrontFace(GL_CCW);  
+    };
+
     if (!m_textured_gylph_draw_commands.empty()) {
         render_task_collection_->addRenderTasks(m_textured_glyph_identifiers, textured_shader,
             m_billboard_dummy_mesh, m_textured_gylph_draw_commands, m_textured_glyph_data);
     }
 
     if (!m_scalar_probe_glyph_data.empty()) {
-        render_task_collection_->addRenderTasks(m_scalar_probe_glyph_identifiers, scalar_shader,
-            m_billboard_dummy_mesh, m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
+        render_task_collection_->addRenderTasks(m_scalar_probe_glyph_identifiers, scalar_shader, m_billboard_dummy_mesh,
+            m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data, set_gl_state);
     }
 
     if (!m_scalar_distribution_probe_glyph_data.empty()) {
         render_task_collection_->addRenderTasks(m_scalar_distribution_probe_glyph_identifiers,
             scalar_distribution_shader, m_billboard_dummy_mesh, m_scalar_distribution_probe_gylph_draw_commands,
-            m_scalar_distribution_probe_glyph_data);
+            m_scalar_distribution_probe_glyph_data, set_gl_state);
     }
 
     if (!m_vector_probe_glyph_data.empty()) {
-        render_task_collection_->addRenderTasks(m_vector_probe_glyph_identifiers, vector_shader,
-            m_billboard_dummy_mesh, m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
+        render_task_collection_->addRenderTasks(m_vector_probe_glyph_identifiers, vector_shader, m_billboard_dummy_mesh,
+            m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data, set_gl_state);
     }
 
     if (!m_clusterID_gylph_draw_commands.empty()) {
@@ -959,9 +966,9 @@ bool megamol::probe_gl::ProbeGlyphRenderer::addAllRenderTasks() {
     }
 
     if (!m_dial_glyph_background_draw_commands.empty()) {
-        //      render_task_collection_->addRenderTasks(m_dial_glyph_background_identifiers, dial_background_shader,
-        //          m_billboard_dummy_mesh,
-        //          m_dial_glyph_background_draw_commands, m_dial_glyph_background_data);
+        render_task_collection_->addRenderTasks(m_dial_glyph_background_identifiers, dial_background_shader,
+            m_billboard_dummy_mesh,
+            m_dial_glyph_background_draw_commands, m_dial_glyph_background_data, set_gl_state);
     }
     return  true;
 }
@@ -986,7 +993,7 @@ void megamol::probe_gl::ProbeGlyphRenderer::updateAllRenderTasks() {
         } else if (probe_type == std::type_index(typeid(GlyphBaseProbeData))) {
             std::array<GlyphBaseProbeData, 1> per_probe_data = {m_dial_glyph_background_data[probe_idx]};
             std::string identifier = std::string(FullName()) + "_dgbg_" + std::to_string(probe_idx);
-            //      render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
         }
     }
 }

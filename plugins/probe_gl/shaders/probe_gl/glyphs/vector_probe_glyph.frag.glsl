@@ -3,6 +3,7 @@
 #include "probe_gl/glyphs/extensions.inc.glsl"
 #include "probe_gl/glyphs/per_frame_data_struct.inc.glsl"
 #include "probe_gl/glyphs/vector_probe_struct.inc.glsl"
+#include "probe_gl/glyphs/dial_glyph_utility.inc.glsl"
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
 
@@ -53,17 +54,14 @@ void main() {
     }
 
     // Highlight glyph up and glyph right directions
-    //  if( (uv_coords.x > 0.99 && uv_coords.x > uv_coords.y && uv_coords.y > 0.9) ||
-    //      (uv_coords.y > 0.99 && uv_coords.x < uv_coords.y && uv_coords.x > 0.9) ||
-    //      (uv_coords.x < 0.01 && uv_coords.x < uv_coords.y && uv_coords.y < 0.05) ||
-    //      (uv_coords.y < 0.01 && uv_coords.x > uv_coords.y && uv_coords.x < 0.05) )
-    //  {
-    //      albedo_out = glyph_border_color;
-    //      normal_out = vec3(0.0,0.0,1.0);
-    //      depth_out = gl_FragCoord.z;
-    //      objID_out = mesh_shader_params[draw_id].probe_id;
-    //      return;
-    //  }
+    if(highlightCorners(uv_coords))
+    {
+        albedo_out = glyph_border_color;
+        normal_out = vec3(0.0,0.0,1.0);
+        depth_out = gl_FragCoord.z;
+        objID_out = mesh_shader_params[draw_id].probe_id;
+        return;
+    }
     
     float r = length(uv_coords - vec2(0.5)) * 2.0;
 

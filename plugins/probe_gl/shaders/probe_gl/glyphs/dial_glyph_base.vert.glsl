@@ -3,6 +3,8 @@
 #include "probe_gl/glyphs/extensions.inc.glsl"
 #include "probe_gl/glyphs/per_frame_data_struct.inc.glsl"
 #include "probe_gl/glyphs/base_probe_struct.inc.glsl"
+#include "probe_gl/glyphs/dial_glyph_utility.inc.glsl"
+#include "probe_gl/glyphs/dial_glyph_constants.inc.glsl"
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
 
@@ -12,71 +14,28 @@ uniform mat4 proj_mx;
 layout(location = 0) flat out int draw_id;
 layout(location = 1) out vec2 uv_coords;
 layout(location = 2) out vec3 pixel_vector;
-layout(location = 3) out vec3 cam_vector;
-
-//http://www.neilmendoza.com/glsl-rotation-about-an-arbitrary-axis/
-mat4 rotationMatrix(vec3 axis, float angle)
-{
-    axis = normalize(axis);
-    float s = sin(angle);
-    float c = cos(angle);
-    float oc = 1.0 - c;
-    
-    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
-                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
-                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
-                0.0,                                0.0,                                0.0,                                1.0);
-}
 
 void main()
 {
-    const vec4 vertices[6] = vec4[6]( vec4( -1.0,-1.0,0.0,0.0 ),
-                                      vec4( 1.0,1.0,1.0,1.0 ),
-                                      vec4( -1.0,1.0,0.0,1.0 ),
-                                      vec4( 1.0,1.0,1.0,1.0 ),
-                                      vec4( -1.0,-1.0,0.0,0.0 ),
-                                      vec4( 1.0,-1.0,1.0,0.0 ) );
-
     draw_id = gl_DrawIDARB;
     uv_coords = vertices[gl_VertexID].zw;
 
-    vec4 glyph_pos = vec4(mesh_shader_params[gl_DrawIDARB].glpyh_position.xyz, 1.0);
-    vec4 clip_pos = (proj_mx * view_mx * glyph_pos);  
-    float aspect = proj_mx[1][1] / proj_mx[0][0];
-    vec2  bboard_vertex = vertices[gl_VertexID].xy;
+    vec3 probe_direction = normalize( mesh_shader_params[draw_id].probe_direction.xyz );
+    vec3 cam_front = normalize(transpose(mat3(view_mx)) * vec3(0.0,0.0,-1.0));
 
-    ////
-    // compute plausible glyph up vector 
-    
+    // initialize glyph right and up to camera plane
     vec3 glyph_up = normalize(transpose(mat3(view_mx)) * vec3(0.0,1.0,0.0));
-    vec3 glyph_right= normalize(transpose(mat3(view_mx)) * vec3(1.0,0.0,0.0));
+    vec3 glyph_right= normalize(transpose(mat3(view_mx)) * vec3(sign(dot(probe_direction, cam_front)) * 1.0,0.0,0.0));
 
+    // compute world space pixel vector
     vec2 pixel_coords = uv_coords * 2.0 - 1.0;
     pixel_vector = normalize( pixel_coords.x * glyph_right + pixel_coords.y * glyph_up );
 
     // tilt glyph to be orthognal to probe direction
-    vec3 probe_direction = normalize( mesh_shader_params[draw_id].probe_direction.xyz );
-    vec3 cam_front = normalize(transpose(mat3(view_mx)) * vec3(0.0,0.0,-1.0));
-    cam_vector = cam_front;
+    tiltGlyph(glyph_right,glyph_up,probe_direction,cam_front);
 
-    float probe_dot_cam = dot(probe_direction, cam_front);
-    if( probe_dot_cam > 0.0 )
-    {
-        float angle = probe_dot_cam;
-        vec3 axis = normalize(cross(probe_direction, cam_front));
-
-        mat4 rot = rotationMatrix(axis,acos(angle));
-
-        vec3 tilted_glyph_up = (rot * vec4(glyph_up,1.0)).xyz;
-        vec3 tilted_glyph_right = (rot * vec4(glyph_right,1.0)).xyz;
-
-        float tilt_factor = (acos(probe_dot_cam) / 1.57);
-        tilt_factor = pow(tilt_factor,4.0);
-        tilt_factor = 1.0 - tilt_factor;
-        glyph_up = normalize(mix(tilted_glyph_up, glyph_up, tilt_factor));
-        glyph_right = normalize(mix(tilted_glyph_right, glyph_right, tilt_factor));
-    }
-
+    vec4 glyph_pos = vec4(mesh_shader_params[gl_DrawIDARB].glpyh_position.xyz, 1.0);
+    vec2 bboard_vertex = vertices[gl_VertexID].xy;
     glyph_pos.xyz = glyph_pos.xyz + (glyph_up * bboard_vertex.y * mesh_shader_params[gl_DrawIDARB].scale) + (glyph_right * bboard_vertex.x * mesh_shader_params[gl_DrawIDARB].scale);
 
     gl_Position = (proj_mx * view_mx * glyph_pos);
