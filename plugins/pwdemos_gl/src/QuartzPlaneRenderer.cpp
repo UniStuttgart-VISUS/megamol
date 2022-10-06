@@ -44,7 +44,7 @@ QuartzPlaneRenderer::QuartzPlaneRenderer(void)
  */
 QuartzPlaneRenderer::~QuartzPlaneRenderer(void) {
     this->Release();
-    ASSERT(this->shaders == NULL);
+    ASSERT(this->shaders.empty());
 }
 
 

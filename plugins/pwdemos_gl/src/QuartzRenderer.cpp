@@ -56,7 +56,7 @@ QuartzRenderer::QuartzRenderer(void)
  */
 QuartzRenderer::~QuartzRenderer(void) {
     this->Release();
-    ASSERT(this->shaders == NULL);
+    ASSERT(this->shaders.empty());
 }
 
 
