@@ -70,6 +70,7 @@ bool ImageSeriesLoader::getDataCallback(core::Call& caller) {
             output.filename = path.string();
 
             ImageMetadata meta = metadata;
+            meta.imageCount = output.imageCount;
             meta.index = output.imageIndex;
             meta.valid = true;
             output.imageData = imageCache.findOrCreate(output.imageIndex, [&](std::uint32_t) {

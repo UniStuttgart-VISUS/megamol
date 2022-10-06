@@ -51,7 +51,7 @@ vec4 getColor(vec4 color) {
 	case 3: // Labels
 		return labelColor(color);
 	case 4: // Time diff
-		return timeDifference(color);
+		return vec4(vec2(mod(color.r * 255.0, 1.0)), mod(floor(color.r * 255.0), 2.0), 1.0);
 	}
 }
 

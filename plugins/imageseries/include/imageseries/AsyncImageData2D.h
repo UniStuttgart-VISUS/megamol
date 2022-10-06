@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "util/ImageUtils.h"
+#include "util/PerfTimer.h"
 #include "util/WorkerThreadPool.h"
 
 namespace vislib::graphics {
@@ -33,6 +34,7 @@ struct ImageMetadata {
     bool valid = false;
     Mode mode = Mode::Color;
     std::uint32_t index = 0;
+    std::uint32_t imageCount = 1;
     std::uint32_t width = 0;
     std::uint32_t height = 0;
     std::uint32_t channels = 1;

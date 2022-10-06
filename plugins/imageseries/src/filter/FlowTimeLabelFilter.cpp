@@ -2,6 +2,7 @@
 
 #include "imageseries/graph/GraphData2D.h"
 
+#include "mmcore/misc/PngBitmapCodec.h"
 #include "vislib/graphics/BitmapImage.h"
 
 #include "../util/GraphCSVExporter.h"
@@ -10,6 +11,8 @@
 
 #include <array>
 #include <deque>
+#include <iostream>
+#include <regex>
 #include <vector>
 
 namespace megamol::ImageSeries::filter {
@@ -30,6 +33,8 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
     if (image->GetChannelCount() != 1 || image->GetChannelType() != Image::ChannelType::CHANNELTYPE_WORD) {
         return nullptr;
     }
+
+    util::PerfTimer timer("FlowTimeLabelFilter", input.timeMap->getMetadata().filename);
 
     // Create output image
     auto result = std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_BYTE);
@@ -437,6 +442,37 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
         }
     }
 
+    // Find breakthrough timestamp
+    auto findBoundaryTime = [&](bool mirror) -> Timestamp {
+        std::vector<Timestamp> boundarySamples;
+        for (Index x = 0; x < width; ++x) {
+            for (Index y = 0; y < height; ++y) {
+                Index index = mirror ? (width - x - 1 + y * width) : x + y * width;
+                auto sample = dataIn[index];
+                if (sample < voidTimestamp && sample > minimumTimestamp && dataOut[index] >= LabelFirst) {
+                    boundarySamples.push_back(sample);
+                }
+            }
+            if (boundarySamples.size() > height * 3) {
+                break;
+            }
+        }
+        if (!boundarySamples.empty()) {
+            // 5th percentile
+            auto percentile = boundarySamples.begin() + 0.05 * boundarySamples.size();
+            std::nth_element(boundarySamples.begin(), percentile, boundarySamples.end());
+            return *percentile;
+        } else {
+            return minimumTimestamp;
+        }
+    };
+
+    auto boundaryMin = findBoundaryTime(false);
+    auto boundaryMax = findBoundaryTime(true);
+    if (boundaryMin > boundaryMax) {
+        std::swap(boundaryMin, boundaryMax);
+    }
+
     // Postprocess nodes
     for (std::size_t i = 0; i < nodeGraph.getNodes().size(); ++i) {
         auto& node = nodeGraph.getNode(i);
@@ -445,7 +481,72 @@ FlowTimeLabelFilter::ImagePtr FlowTimeLabelFilter::operator()() {
         }
     }
 
-    nodeGraph = graph::util::simplifyGraph(nodeGraph);
+    auto simplifiedGraph = graph::util::simplifyGraph(nodeGraph);
+
+    // even more temp code
+    std::string dbgFileName = "unknown";
+    std::regex dbgRegex(".*/([^/]*)/([^/]*)/[^/]*");
+    std::smatch dbgMatch;
+    if (std::regex_match(input.timeMap->getMetadata().filename, dbgMatch, dbgRegex)) {
+        dbgFileName = dbgMatch[1].str() + "_" + dbgMatch[2].str();
+    }
+
+    graph::util::LuaExportMeta luaExportMeta;
+    luaExportMeta.path = input.timeMap->getMetadata().filename;
+    luaExportMeta.minRange = float(boundaryMin) / input.timeMap->getMetadata().imageCount;
+    luaExportMeta.maxRange = float(boundaryMax) / input.timeMap->getMetadata().imageCount;
+    luaExportMeta.imgW = input.timeMap->getMetadata().width;
+    luaExportMeta.imgH = input.timeMap->getMetadata().height;
+
+    // Export to Lua file (DEBUG)
+    graph::util::exportToCSV(simplifiedGraph, "temp/" + dbgFileName + ".csv");
+    graph::util::exportToLua(simplifiedGraph,
+        "/home/marukyu/documents/uni/sem12/seminar/presentation/assets/scripts/luavis/vis/graphdata/CurrentGraph.lua",
+        luaExportMeta);
+
+    // convert to velocity map (DEBUG2)
+    if (false) {
+        auto velo = std::make_shared<Image>(image->Width(), image->Height(), 3, Image::ChannelType::CHANNELTYPE_BYTE);
+        auto* veloOut = velo->PeekDataAs<std::uint8_t>();
+        for (Index i = 0; i < size; ++i) {
+            auto timestamp = dataIn[i];
+            auto label = dataOut[i];
+            if (label >= LabelFirst) {
+                int value = 255 * getOrCreateNode(timestamp, label).velocityMagnitude;
+                veloOut[i * 3] = value % 256;
+                veloOut[i * 3 + 1] = value / 256;
+                veloOut[i * 3 + 2] = value;
+            } else {
+                veloOut[i * 3] = 127;
+                veloOut[i * 3 + 1] = 127;
+                veloOut[i * 3 + 2] = 127;
+            }
+        }
+
+        // even more temp code
+        sg::graphics::PngBitmapCodec codec;
+        codec.Image() = velo.get();
+        codec.Save(("temp/" + dbgFileName + ".png").c_str());
+    }
+
+    // convert to velocity map (DEBUG3)
+    if (false) {
+        auto velo = std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_WORD);
+        auto* veloOut = velo->PeekDataAs<std::int16_t>();
+        for (Index i = 0; i < size; ++i) {
+            auto timestamp = dataIn[i];
+            auto label = dataOut[i];
+            if (label >= LabelFirst) {
+                std::int64_t value = std::int64_t(32768) * getOrCreateNode(timestamp, label).velocityMagnitude /
+                                     std::max<int>(1, boundaryMax - boundaryMin);
+                veloOut[i] = std::int16_t(std::max<std::int64_t>(std::min<std::int64_t>(value, 32767), -32767));
+            } else {
+                veloOut[i] = -32768;
+            }
+        }
+
+        return std::const_pointer_cast<const Image>(velo);
+    }
 
     return std::const_pointer_cast<const Image>(result);
 }

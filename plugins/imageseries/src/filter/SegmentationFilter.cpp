@@ -28,6 +28,8 @@ SegmentationFilter::ImagePtr SegmentationFilter::operator()() {
         return nullptr;
     }
 
+    util::PerfTimer timer("SegmentationFilter", input.image->getMetadata().filename);
+
     // Create output image
     auto result = std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_BYTE);
 

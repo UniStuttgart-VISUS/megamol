@@ -43,6 +43,8 @@ BlobLabelFilter::ImagePtr BlobLabelFilter::operator()() {
     // Create output image
     auto result = std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_BYTE);
 
+    util::PerfTimer timer("BlobLabelFilter", input.image->getMetadata().filename);
+
     using Index = std::uint32_t;
 
     const auto* dataIn = image->PeekDataAs<std::uint8_t>();

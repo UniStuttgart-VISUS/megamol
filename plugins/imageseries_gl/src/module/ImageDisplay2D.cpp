@@ -30,7 +30,7 @@ bool ImageDisplay2D::updateTexture(const vislib::graphics::BitmapImage& image) {
     switch (image.GetChannelCount()) {
     case 1:
         textureLayout.format = GL_RED;
-        textureLayout.internal_format = GL_R8;
+        textureLayout.internal_format = GL_R16;
         break;
     case 2:
         textureLayout.format = GL_RG;
@@ -69,6 +69,13 @@ bool ImageDisplay2D::updateTexture(const vislib::graphics::BitmapImage& image) {
     textureLayout.height = image.Height();
     textureLayout.levels = 1;
 
+    // Alignment
+    GLint packAlignment = 0;
+    if (textureLayout.width % 4 != 0) {
+        glGetIntegerv(GL_UNPACK_ALIGNMENT, &packAlignment);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    }
+
     if (texture && textureLayoutEquals(texture->getTextureLayout(), textureLayout)) {
         // Reuse texture
         glTextureSubImage2D(texture->getName(), 0, 0, 0, textureLayout.width, textureLayout.height,
@@ -76,6 +83,10 @@ bool ImageDisplay2D::updateTexture(const vislib::graphics::BitmapImage& image) {
     } else {
         // Recreate texture
         texture = std::make_unique<glowl::Texture2D>("ImageSeriesRenderer", textureLayout, image.PeekData());
+    }
+
+    if (packAlignment) {
+        glPixelStorei(GL_UNPACK_ALIGNMENT, packAlignment);
     }
 
     return true;

@@ -7,8 +7,16 @@
 
 namespace megamol::ImageSeries::graph::util {
 
-bool exportToLua(const GraphData2D& graph, const std::string& outfileName, const std::string& metaPath = "");
+struct LuaExportMeta {
+    std::string path;
+    float minRange = 0.0;
+    float maxRange = 1.0;
+    int imgW = 0;
+    int imgH = 0;
+};
 
-}
+bool exportToLua(const GraphData2D& graph, const std::string& outfileName, LuaExportMeta meta);
+
+} // namespace megamol::ImageSeries::graph::util
 
 #endif

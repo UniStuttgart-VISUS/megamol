@@ -5,6 +5,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 
+#include "../filter/GenericFilter.h"
 #include "../filter/TimeOffsetFilter.h"
 #include "imageseries/util/ImageUtils.h"
 
@@ -33,8 +34,10 @@ ImageSeriesTimeDiffFilter::ImageSeriesTimeDiffFilter()
         &ImageSeriesTimeDiffFilter::getMetaDataCallback);
     MakeSlotAvailable(&getDataCallee);
 
+    // Unused
     frameCountParam << new core::param::IntParam(4, 1, 15);
     frameCountParam.Parameter()->SetGUIPresentation(Presentation::Slider);
+    frameCountParam.Parameter()->SetGUIVisible(false);
     frameCountParam.SetUpdateCallback(&ImageSeriesTimeDiffFilter::filterParametersChangedCallback);
     MakeSlotAvailable(&frameCountParam);
 
@@ -60,37 +63,21 @@ bool ImageSeriesTimeDiffFilter::getDataCallback(core::Call& caller) {
     if (auto* call = dynamic_cast<ImageSeries2DCall*>(&caller)) {
         double timestamp = call->GetInput().time;
 
-        auto output = requestFrame(getReferenceCaller, timestamp);
+        auto input1 = requestFrame(getReferenceCaller, timestamp);
 
-        if (output.imageData) {
-            auto reference = output.imageData;
-            auto inputMeta = requestFrame(getInputCaller, timestamp);
+        if (input1.imageData) {
+            auto input2 = requestFrame(getInputCaller, timestamp);
 
             // Retrieve cached image or run filter on input data
-            auto hash = util::combineHash(reference->getHash(), inputMeta.getHash());
-            output.imageData = imageCache.findOrCreate(hash, [=](AsyncImageData2D::Hash) {
-                filter::TimeOffsetFilter::Input filterParams;
-                filterParams.reference = reference;
-                int frameCount = frameCountParam.Param<core::param::IntParam>()->Value();
-                for (int i = -frameCount; i <= frameCount; ++i) {
-                    filter::TimeOffsetFilter::Input::Frame frame;
-                    frame.image = requestFrame(getInputCaller, timestamp + i / inputMeta.framerate).imageData;
-                    frame.weight = i < 0 ? -1 : (i > 0 ? 1 : 0);
-                    frame.certainty = frameCount - std::abs(i) + 1;
-                    frame.primary = (i == 0);
-
-                    if (!filterParams.frames.empty() && filterParams.frames.back().image == frame.image) {
-                        // Optimization: merge identical frames
-                        filterParams.frames.back().weight += frame.weight;
-                        filterParams.frames.back().certainty += frame.certainty;
-                        filterParams.frames.back().primary |= frame.primary;
-                    } else {
-                        filterParams.frames.push_back(frame);
-                    }
-                }
-                return filterRunner->run<filter::TimeOffsetFilter>(filterParams);
+            auto hash = util::combineHash(input1.getHash(), input2.getHash());
+            input1.imageData = imageCache.findOrCreate(hash, [=](AsyncImageData2D::Hash) {
+                filter::GenericFilter::Input filterParams;
+                filterParams.image1 = input1.imageData;
+                filterParams.image2 = input2.imageData;
+                filterParams.operation = filter::GenericFilter::Operation::Difference;
+                return filterRunner->run<filter::GenericFilter>(filterParams);
             });
-            call->SetOutput(output);
+            call->SetOutput(input1);
             return true;
         }
     }

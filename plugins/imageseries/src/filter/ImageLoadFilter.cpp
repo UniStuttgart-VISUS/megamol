@@ -16,6 +16,8 @@ ImageLoadFilter::ImageLoadFilter(
 ImageLoadFilter::ImagePtr ImageLoadFilter::operator()() {
     const char* filename = input.filename.c_str();
     try {
+        util::PerfTimer timer("ImageLoadFilter", input.filename);
+
         auto img = std::make_shared<vislib::graphics::BitmapImage>();
         if (!input.codecs->LoadBitmapImage(*img, filename)) {
             throw vislib::Exception("No suitable codec found", __FILE__, __LINE__);
