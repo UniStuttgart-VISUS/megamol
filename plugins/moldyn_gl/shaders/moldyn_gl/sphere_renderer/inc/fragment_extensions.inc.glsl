@@ -5,4 +5,3 @@
 #else
 #extension GL_ARB_conservative_depth       : require   // glsl version 130
 #endif
-layout (depth_greater) out float gl_FragDepth;
