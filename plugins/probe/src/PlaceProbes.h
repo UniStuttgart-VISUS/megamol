@@ -76,6 +76,7 @@ protected:
     core::param::ParamSlot _probes_per_unit_slot;
     core::param::ParamSlot _scale_probe_begin_slot;
     core::param::ParamSlot _override_probe_length_slot;
+    core::param::ParamSlot _skip_edges_corers_slot;
 
 
 private:
@@ -103,6 +104,8 @@ private:
     bool loadFromFile();
     bool parameterChanged(core::param::ParamSlot& p);
     void processClipplane();
+    float distanceToLine(glm::vec3 const linePointA, glm::vec3 const linePointB, glm::vec3 const samplePoint);
+    bool isOnCornerOrEdge(glm::vec3 const samplePoint);
 
     uint32_t _longest_edge_index;
 
@@ -121,6 +124,8 @@ private:
     std::vector<uint64_t> _probeVertices;
     adios::adiosDataMap dataMap;
     bool _recalc;
+
+    std::vector<float> _allDists;
 };
 
 

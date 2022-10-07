@@ -7,6 +7,7 @@
 #include "PlaceProbes.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/BoolParam.h"
 #include "probe/MeshUtilities.h"
 #include "probe/ProbeCalls.h"
 #include "mmstd/renderer/CallClipPlane.h"
@@ -16,6 +17,9 @@
 
 namespace megamol {
 namespace probe {
+
+
+glm::vec3 to_vec3(vislib::math::Vector<float,3> vec) {return glm::vec3(vec.GetX(), vec.GetY(),vec.GetZ());}
 
 megamol::probe::PlaceProbes::PlaceProbes()
         : Module()
@@ -30,6 +34,7 @@ megamol::probe::PlaceProbes::PlaceProbes()
         , _scale_probe_begin_slot("distanceFromSurfaceFactor", "")
         , _override_probe_length_slot("overrideProbeLength", "")
         , _clipplane_slot("getClipplane", "")
+        , _skip_edges_corers_slot("skipEdgesAndCorners", "")
         , _longest_edge_index(0) {
 
     this->_probe_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(0), &PlaceProbes::getData);
@@ -78,6 +83,10 @@ megamol::probe::PlaceProbes::PlaceProbes()
     this->_scale_probe_begin_slot << new core::param::FloatParam(1.0f);
     this->_scale_probe_begin_slot.SetUpdateCallback(&PlaceProbes::parameterChanged);
     this->MakeSlotAvailable(&this->_scale_probe_begin_slot);
+
+    this->_skip_edges_corers_slot << new core::param::BoolParam(false);
+    this->_skip_edges_corers_slot.SetUpdateCallback(&PlaceProbes::parameterChanged);
+    this->MakeSlotAvailable(&this->_skip_edges_corers_slot);
 
     /* Feasibility test */
     _probes = std::make_shared<ProbeCollection>();
@@ -539,7 +548,7 @@ void megamol::probe::PlaceProbes::vertexNormalSampling(mesh::MeshDataAccessColle
     auto normal_accessor = reinterpret_cast<float*>(normals.data);
     auto normal_step = normals.stride / sizeof(float);
 
-    auto probe_id_accessor = reinterpret_cast<uint32_t*>(probe_ids.data);
+    bool const skip_edges_and_corners = _skip_edges_corers_slot.Param<core::param::BoolParam>()->Value();
 
     //#pragma omp parallel for
     for (int i = 0; i < probe_count; i++) {
@@ -548,6 +557,15 @@ void megamol::probe::PlaceProbes::vertexNormalSampling(mesh::MeshDataAccessColle
 
         probe.m_position = {vertex_accessor[vertex_step * i + 0], vertex_accessor[vertex_step * i + 1],
             vertex_accessor[vertex_step * i + 2]};
+
+        if (skip_edges_and_corners) {
+            auto const sample_point = glm::vec3(probe.m_position[0],probe.m_position[1],probe.m_position[2]);
+            auto const is_on_edge = isOnCornerOrEdge(sample_point);
+            if (is_on_edge) {
+                continue;
+            }
+        }
+
         probe.m_direction = {-normal_accessor[normal_step * i + 0], -normal_accessor[normal_step * i + 1],
             -normal_accessor[normal_step * i + 2]};
         probe.m_begin = -2.0 * _scale_probe_begin_slot.Param<core::param::FloatParam>()->Value();
@@ -555,11 +573,10 @@ void megamol::probe::PlaceProbes::vertexNormalSampling(mesh::MeshDataAccessColle
         probe.m_orig_end = probe.m_end;
         probe.m_cluster_id = -1;
         probe.m_placement_method = BaseProbe::VERTEX_NORMAL;
+        probe.m_geo_ids.emplace_back(_mesh->accessMeshes().begin()->first);
+        probe.m_vert_ids.emplace_back(i);
 
-        auto probe_idx = this->_probes->getProbeCount();
-        this->_probes->addProbe(std::move(probe));
-
-        probe_id_accessor[i] = probe_idx;
+        _probes->addProbe(std::move(probe));
     }
 }
 
@@ -1101,6 +1118,69 @@ void PlaceProbes::processClipplane() {
 
     }
 }
+
+
+bool PlaceProbes::isOnCornerOrEdge(glm::vec3 const samplePoint) {
+
+    constexpr float epsilon = 0.5f;
+
+    float distance = std::numeric_limits<float>::max();
+
+    auto rtf = to_vec3(_bbox.BoundingBox().GetRightTopFront());
+
+    std::vector<vislib::math::Vector<float, 3>> corners(8);
+    _bbox.BoundingBox().GetPoints(corners.begin());
+
+    for (auto const& corner : corners) {
+        auto const c = to_vec3(corner);
+        distance = std::min(distance, glm::length(c - samplePoint));
+    }
+
+    // LBF RBF
+    distance = std::min(distance, distanceToLine(
+        to_vec3(_bbox.BoundingBox().GetLeftBottomFront()), to_vec3(_bbox.BoundingBox().GetRightBottomFront()), samplePoint));
+    // LBF LTF
+    distance = std::min(distance,distanceToLine(to_vec3(_bbox.BoundingBox().GetLeftBottomFront()),
+        to_vec3(_bbox.BoundingBox().GetLeftTopFront()), samplePoint));
+    // LBF LBB
+    distance = std::min(distance, distanceToLine(to_vec3(_bbox.BoundingBox().GetLeftBottomFront()),
+                                      to_vec3(_bbox.BoundingBox().GetLeftBottomBack()), samplePoint));
+    // RTF RBF
+    distance = std::min(distance, distanceToLine(to_vec3(_bbox.BoundingBox().GetRightTopFront()),
+                                      to_vec3(_bbox.BoundingBox().GetRightBottomFront()), samplePoint));
+    // RTF LTF
+    distance = std::min(distance, distanceToLine(to_vec3(_bbox.BoundingBox().GetRightTopFront()),
+                                      to_vec3(_bbox.BoundingBox().GetLeftTopFront()), samplePoint));
+    // RTF RTB
+    distance = std::min(distance, distanceToLine(to_vec3(_bbox.BoundingBox().GetRightTopFront()),
+                                      to_vec3(_bbox.BoundingBox().GetRightTopBack()), samplePoint));
+    // LTB LTF
+    distance = std::min(distance, distanceToLine(to_vec3(_bbox.BoundingBox().GetLeftTopBack()),
+                                      to_vec3(_bbox.BoundingBox().GetLeftTopFront()), samplePoint));
+    // LTB LBB
+    distance = std::min(distance, distanceToLine(to_vec3(_bbox.BoundingBox().GetLeftTopBack()),
+                                      to_vec3(_bbox.BoundingBox().GetLeftBottomBack()), samplePoint));
+    // LTB RTB
+    distance = std::min(distance, distanceToLine(to_vec3(_bbox.BoundingBox().GetLeftTopBack()),
+                                      to_vec3(_bbox.BoundingBox().GetRightTopBack()), samplePoint));
+    // RBB RTB
+    distance = std::min(distance, distanceToLine(to_vec3(_bbox.BoundingBox().GetRightBottomBack()),
+                                      to_vec3(_bbox.BoundingBox().GetRightTopBack()), samplePoint));
+    // RBB RBF
+    distance = std::min(distance, distanceToLine(to_vec3(_bbox.BoundingBox().GetRightBottomBack()),
+                                      to_vec3(_bbox.BoundingBox().GetRightBottomFront()), samplePoint));
+    // RBB LBB
+    distance = std::min(distance, distanceToLine(to_vec3(_bbox.BoundingBox().GetRightBottomBack()),
+                                      to_vec3(_bbox.BoundingBox().GetLeftBottomBack()), samplePoint));
+    _allDists.emplace_back(distance);
+    return (distance < epsilon);
+}
+
+
+float PlaceProbes::distanceToLine(glm::vec3 const linePointA, glm::vec3 const linePointB, glm::vec3 const samplePoint) {
+    return glm::length(glm::cross(linePointA - linePointB, samplePoint - linePointB)) / glm::length(samplePoint - linePointB);
+}
+
 
 } // namespace probe
 } // namespace megamol
