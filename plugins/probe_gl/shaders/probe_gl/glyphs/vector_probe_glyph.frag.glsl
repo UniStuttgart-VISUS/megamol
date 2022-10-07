@@ -1,7 +1,9 @@
 #version 450
 
 #include "probe_gl/glyphs/extensions.inc.glsl"
+#include "probe_gl/glyphs/per_frame_data_struct.inc.glsl"
 #include "probe_gl/glyphs/vector_probe_struct.inc.glsl"
+#include "probe_gl/glyphs/dial_glyph_utility.inc.glsl"
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
 
@@ -21,15 +23,6 @@ layout(location = 3) out int objID_out;
 layout(location = 4) out vec4 interactionData_out;
 
 #define PI 3.1415926
-
-vec3 fakeViridis(float lerp)
-{
-    vec3 c0 = vec3(0.2823645529290169,0.0,0.3310101940118055);
-    vec3 c1 = vec3(0.24090172204161298,0.7633448774061599,0.42216355577803744);
-    vec3 c2 = vec3(0.9529994532916154,0.9125452328290099,0.11085876909361342);
-
-    return lerp < 0.5 ? mix(c0,c1,lerp * 2.0) : mix(c1,c2,(lerp*2.0)-1.0);
-};
 
 vec3 projectOntoPlane(vec3 v, vec3 n)
 {
@@ -52,17 +45,14 @@ void main() {
     }
 
     // Highlight glyph up and glyph right directions
-    //  if( (uv_coords.x > 0.99 && uv_coords.x > uv_coords.y && uv_coords.y > 0.9) ||
-    //      (uv_coords.y > 0.99 && uv_coords.x < uv_coords.y && uv_coords.x > 0.9) ||
-    //      (uv_coords.x < 0.01 && uv_coords.x < uv_coords.y && uv_coords.y < 0.05) ||
-    //      (uv_coords.y < 0.01 && uv_coords.x > uv_coords.y && uv_coords.x < 0.05) )
-    //  {
-    //      albedo_out = glyph_border_color;
-    //      normal_out = vec3(0.0,0.0,1.0);
-    //      depth_out = gl_FragCoord.z;
-    //      objID_out = mesh_shader_params[draw_id].probe_id;
-    //      return;
-    //  }
+    if(highlightCorners(uv_coords))
+    {
+        albedo_out = glyph_border_color;
+        normal_out = vec3(0.0,0.0,1.0);
+        depth_out = gl_FragCoord.z;
+        objID_out = mesh_shader_params[draw_id].probe_id;
+        return;
+    }
     
     float r = length(uv_coords - vec2(0.5)) * 2.0;
 

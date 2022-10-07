@@ -492,32 +492,26 @@ bool megamol::probe_gl::ProbeInteraction::Render(mmstd_gl::CallRender3DGL& call)
             }
 
             if (m_open_dataFilterByDepth_popup) {
+                ImGuiIO& io = ImGui::GetIO();
+                ImVec2 viewport = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
 
-                auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
-                if (ctx != nullptr) {
-                    ImGui::SetCurrentContext(ctx);
+                ImGui::SetNextWindowPos(ImVec2(750, 150));
 
-                    ImGuiIO& io = ImGui::GetIO();
-                    ImVec2 viewport = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
+                ImGui::Begin("Filter By Probing Depth", &m_open_dataFilterByDepth_popup, ImGuiWindowFlags_NoResize);
 
-                    ImGui::SetNextWindowPos(ImVec2(750, 150));
-
-                    ImGui::Begin("Filter By Probing Depth", &m_open_dataFilterByDepth_popup, ImGuiWindowFlags_NoResize);
-
-                    static float probing_depth = 5.0f;
-                    if (ImGui::SliderFloat("DataFilter::robingDepth", &probing_depth, 0.0f, 100.0f)) {
-                        auto evt = std::make_unique<DataFilterByProbingDepth>(
-                            this->GetCoreInstance()->GetFrameID(), probing_depth);
-                        event_collection->add<DataFilterByProbingDepth>(std::move(evt));
-                    }
-
-                    //if (ImGui::Button("Close")) {
-
-                    //    m_open_dataFilterByDepth_popup = false;
-                    //}
-
-                    ImGui::End();
+                static float probing_depth = 5.0f;
+                if (ImGui::SliderFloat("DataFilter::robingDepth", &probing_depth, 0.0f, 100.0f)) {
+                    auto evt = std::make_unique<DataFilterByProbingDepth>(
+                        this->GetCoreInstance()->GetFrameID(), probing_depth);
+                    event_collection->add<DataFilterByProbingDepth>(std::move(evt));
                 }
+
+                //if (ImGui::Button("Close")) {
+
+                //    m_open_dataFilterByDepth_popup = false;
+                //}
+
+                ImGui::End();
             }
         }
     }

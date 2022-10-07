@@ -104,11 +104,12 @@ void megamol::probe_gl::ProbeGlyphRenderer::createMaterialCollection() {
 
     // scalar glyph shader program
     material_collection_->addMaterial(this->instance(), "ScalarProbeGlyph",
-        {"probe_gl/glyphs/scalar_probe_glyph_v2.vert.glsl", "probe_gl/glyphs/scalar_probe_glyph_v2.frag.glsl"});
+        {"probe_gl/glyphs/scalar_probe_glyph_v2.vert.glsl", "probe_gl/glyphs/scalar_probe_glyph_v3.frag.glsl"});
 
     // scalar distribution glyph shader program
     material_collection_->addMaterial(this->instance(), "ScalarDistributionProbeGlyph",
-        {"probe_gl/glyphs/scalar_distribution_probe_glyph_v2.vert.glsl", "probe_gl/glyphs/scalar_distribution_probe_glyph.frag.glsl"});
+        {"probe_gl/glyphs/scalar_distribution_probe_glyph_v2.vert.glsl",
+            "probe_gl/glyphs/scalar_distribution_probe_glyph.frag.glsl"});
 
     // vector glyph shader program
     material_collection_->addMaterial(this->instance(), "VectorProbeGlyph",
@@ -117,6 +118,10 @@ void megamol::probe_gl::ProbeGlyphRenderer::createMaterialCollection() {
     // cluster ID glyph shader program
     material_collection_->addMaterial(this->instance(), "ClusterIDProbeGlyph",
         {"probe_gl/glyphs/clusterID_probe_glyph.vert.glsl", "probe_gl/glyphs/clusterID_probe_glyph.frag.glsl"});
+
+    // dial glyph background shader
+    material_collection_->addMaterial(this->instance(), "DialGlyphBackground",
+        {"probe_gl/glyphs/dial_glyph_base.vert.glsl", "probe_gl/glyphs/dial_glyph_background.frag.glsl"});
 
     // render to texture program
     material_collection_->addMaterial(this->instance(), "RenderToTexture",
@@ -189,18 +194,21 @@ void megamol::probe_gl::ProbeGlyphRenderer::updateRenderTaskCollection(
             m_scalar_probe_glyph_identifiers.clear();
             m_scalar_distribution_probe_glyph_identifiers.clear();
             m_clusterID_glyph_identifiers.clear();
+            m_dial_glyph_background_identifiers.clear();
 
             m_textured_glyph_data.clear();
             m_vector_probe_glyph_data.clear();
             m_scalar_probe_glyph_data.clear();
             m_scalar_distribution_probe_glyph_data.clear();
             m_clusterID_glyph_data.clear();
+            m_dial_glyph_background_data.clear();
 
             m_textured_gylph_draw_commands.clear();
             m_vector_probe_gylph_draw_commands.clear();
             m_scalar_probe_gylph_draw_commands.clear();
             m_scalar_distribution_probe_gylph_draw_commands.clear();
             m_clusterID_gylph_draw_commands.clear();
+            m_dial_glyph_background_draw_commands.clear();
 
             m_textured_gylph_draw_commands.reserve(probe_cnt);
             m_textured_glyph_data.reserve(probe_cnt);
@@ -216,6 +224,9 @@ void megamol::probe_gl::ProbeGlyphRenderer::updateRenderTaskCollection(
 
             m_clusterID_gylph_draw_commands.reserve(probe_cnt);
             m_clusterID_glyph_data.reserve(probe_cnt);
+
+            m_dial_glyph_background_draw_commands.reserve(probe_cnt);
+            m_dial_glyph_background_data.reserve(probe_cnt);
 
             // draw command looks the same for all billboards because geometry is reused
             glowl::DrawElementsCommand draw_command;
@@ -310,6 +321,13 @@ void megamol::probe_gl::ProbeGlyphRenderer::updateRenderTaskCollection(
                         } else {
                             // unknown probe type, throw error? do nothing?
                         }
+
+                        // for all probe types, add glyph background
+                        auto glyph_data = createBaseProbeGlyphData(arg, probe_idx, scale);
+                        m_dial_glyph_background_draw_commands.push_back(draw_command);
+                        m_dial_glyph_background_data.push_back(glyph_data);
+                        m_dial_glyph_background_identifiers.push_back(
+                            std::string(FullName()) + "_dgbg_" + std::to_string(probe_idx));
                     };
 
                     std::visit(visitor, generic_probe);
@@ -457,6 +475,9 @@ void megamol::probe_gl::ProbeGlyphRenderer::updateRenderTaskCollection(
                     for (auto& draw_data : m_clusterID_glyph_data) {
                         draw_data.state = 0;
                     }
+                    for (auto& draw_data : m_dial_glyph_background_data) {
+                        draw_data.state = 0;
+                    }
 
                     updateAllRenderTasks();
                 }
@@ -466,63 +487,76 @@ void megamol::probe_gl::ProbeGlyphRenderer::updateRenderTaskCollection(
             {
                 auto pending_highlight_events = event_collection->get<ProbeHighlight>();
                 for (auto& evt : pending_highlight_events) {
-                    auto probe_type = m_type_index_map[evt.obj_id].first;
-                    auto probe_idx = m_type_index_map[evt.obj_id].second;
 
-                    if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
-                        std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
+                    // update glyph background
+                    if (evt.obj_id < m_dial_glyph_background_data.size()) {
+                        std::array<GlyphBaseProbeData, 1> per_probe_data = {m_dial_glyph_background_data[evt.obj_id]};
                         per_probe_data[0].state = 1;
-                        std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
-                    } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
-                        std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
-                        per_probe_data[0].state = 1;
-                        std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
-                    } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
-                        std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
-                        per_probe_data[0].state = 1;
-                        std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
+                        std::string identifier = std::string(FullName()) + "_dgbg_" + std::to_string(evt.obj_id);
                         render_task_collection_->updatePerDrawData(identifier, per_probe_data);
                     }
 
-                    //  bool my_tool_active = true;
-                    //  float my_color[4] = {0.0, 0.0, 0.0, 0.0};
-                    //
-                    //  // ImGui::NewFrame();
-                    //  // Create a window called "My First Tool", with a menu bar.
-                    //  auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
-                    //  if (ctx != nullptr) {
-                    //      ImGui::SetCurrentContext(ctx);
-                    //      ImGui::Begin("My First Tool", &my_tool_active, ImGuiWindowFlags_MenuBar);
-                    //      if (ImGui::BeginMenuBar()) {
-                    //          if (ImGui::BeginMenu("File")) {
-                    //              if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */
-                    //              }
-                    //              if (ImGui::MenuItem("Save", "Ctrl+S")) { /* Do stuff */
-                    //              }
-                    //              if (ImGui::MenuItem("Close", "Ctrl+W")) {
-                    //                  my_tool_active = false;
-                    //              }
-                    //              ImGui::EndMenu();
-                    //          }
-                    //          ImGui::EndMenuBar();
-                    //      }
-                    //
-                    //      // Edit a color (stored as ~4 floats)
-                    //      ImGui::ColorEdit4("Color", my_color);
-                    //
-                    //      // Plot some values
-                    //      const float my_values[] = {0.2f, 0.1f, 1.0f, 0.5f, 0.9f, 2.2f};
-                    //      ImGui::PlotLines("Frame Times", my_values, IM_ARRAYSIZE(my_values));
-                    //
-                    //      // Display contents in a scrolling region
-                    //      ImGui::TextColored(ImVec4(1, 1, 0, 1), "Important Stuff");
-                    //      ImGui::BeginChild("Scrolling");
-                    //      for (int n = 0; n < 50; n++) ImGui::Text("%04d: Some text", n);
-                    //      ImGui::EndChild();
-                    //      ImGui::End();
-                    //  }
+                    // update glyph foreground
+                    if (evt.obj_id < m_type_index_map.size()) {
+                        auto probe_type = m_type_index_map[evt.obj_id].first;
+                        auto probe_idx = m_type_index_map[evt.obj_id].second;
+
+                        if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
+                            std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
+                            per_probe_data[0].state = 1;
+                            std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
+                            std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
+                            per_probe_data[0].state = 1;
+                            std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
+                            std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
+                            per_probe_data[0].state = 1;
+                            std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        }
+                        //  bool my_tool_active = true;
+                        //  float my_color[4] = {0.0, 0.0, 0.0, 0.0};
+                        //
+                        //  // ImGui::NewFrame();
+                        //  // Create a window called "My First Tool", with a menu bar.
+                        //  auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
+                        //  if (ctx != nullptr) {
+                        //      ImGui::SetCurrentContext(ctx);
+                        //      ImGui::Begin("My First Tool", &my_tool_active, ImGuiWindowFlags_MenuBar);
+                        //      if (ImGui::BeginMenuBar()) {
+                        //          if (ImGui::BeginMenu("File")) {
+                        //              if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */
+                        //              }
+                        //              if (ImGui::MenuItem("Save", "Ctrl+S")) { /* Do stuff */
+                        //              }
+                        //              if (ImGui::MenuItem("Close", "Ctrl+W")) {
+                        //                  my_tool_active = false;
+                        //              }
+                        //              ImGui::EndMenu();
+                        //          }
+                        //          ImGui::EndMenuBar();
+                        //      }
+                        //
+                        //      // Edit a color (stored as ~4 floats)
+                        //      ImGui::ColorEdit4("Color", my_color);
+                        //
+                        //      // Plot some values
+                        //      const float my_values[] = {0.2f, 0.1f, 1.0f, 0.5f, 0.9f, 2.2f};
+                        //      ImGui::PlotLines("Frame Times", my_values, IM_ARRAYSIZE(my_values));
+                        //
+                        //      // Display contents in a scrolling region
+                        //      ImGui::TextColored(ImVec4(1, 1, 0, 1), "Important Stuff");
+                        //      ImGui::BeginChild("Scrolling");
+                        //      for (int n = 0; n < 50; n++) ImGui::Text("%04d: Some text", n);
+                        //      ImGui::EndChild();
+                        //      ImGui::End();
+                        //  }
+                    } else {
+                        //TODO warning
+                    }
                 }
             }
 
@@ -530,21 +564,34 @@ void megamol::probe_gl::ProbeGlyphRenderer::updateRenderTaskCollection(
             {
                 auto pending_dehighlight_events = event_collection->get<ProbeDehighlight>();
                 for (auto& evt : pending_dehighlight_events) {
-                    auto probe_type = m_type_index_map[evt.obj_id].first;
-                    auto probe_idx = m_type_index_map[evt.obj_id].second;
+                    // update glyph background
+                    if (evt.obj_id < m_dial_glyph_background_data.size()) {
+                        std::array<GlyphBaseProbeData, 1> per_probe_data = {m_dial_glyph_background_data[evt.obj_id]};
+                        std::string identifier = std::string(FullName()) + "_dgbg_" + std::to_string(evt.obj_id);
+                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                    }
 
-                    if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
-                        std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
-                        std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
-                    } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
-                        std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
-                        std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
-                    } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
-                        std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
-                        std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                    // update glyph foreground
+                    if (evt.obj_id < m_type_index_map.size()) {
+                        auto probe_type = m_type_index_map[evt.obj_id].first;
+                        auto probe_idx = m_type_index_map[evt.obj_id].second;
+
+                        if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
+                            std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
+                            std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
+                            std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
+                            std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
+                            std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
+                            std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        }
+
+                    } else {
+                        //TODO warning
                     }
                 }
             }
@@ -553,24 +600,37 @@ void megamol::probe_gl::ProbeGlyphRenderer::updateRenderTaskCollection(
             {
                 auto pending_select_events = event_collection->get<ProbeSelect>();
                 for (auto& evt : pending_select_events) {
-                    auto probe_type = m_type_index_map[evt.obj_id].first;
-                    auto probe_idx = m_type_index_map[evt.obj_id].second;
+                    // update glyph background
+                    if (evt.obj_id < m_dial_glyph_background_data.size()) {
+                        m_dial_glyph_background_data[evt.obj_id].state = 2;
+                        std::array<GlyphBaseProbeData, 1> per_probe_data = {m_dial_glyph_background_data[evt.obj_id]};
+                        std::string identifier = std::string(FullName()) + "_dgbg_" + std::to_string(evt.obj_id);
+                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                    }
 
-                    if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
-                        m_scalar_probe_glyph_data[probe_idx].state = 2;
-                        std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
-                        std::string identifier = std::string(FullName()) + "_ProbeBillboard_Scalar";
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
-                    } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
-                        m_vector_probe_glyph_data[probe_idx].state = 2;
-                        std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
-                        std::string identifier = std::string(FullName()) + "_ProbeBillboard_Vector";
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
-                    } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
-                        m_clusterID_glyph_data[probe_idx].state = 2;
-                        std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
-                        std::string identifier = std::string(FullName()) + "_ProbeBillboard_ClusterID";
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                    // update glyph foreground
+                    if (evt.obj_id < m_type_index_map.size()) {
+                        auto probe_type = m_type_index_map[evt.obj_id].first;
+                        auto probe_idx = m_type_index_map[evt.obj_id].second;
+
+                        if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
+                            m_scalar_probe_glyph_data[probe_idx].state = 2;
+                            std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
+                            std::string identifier = std::string(FullName()) + "_ProbeBillboard_Scalar";
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
+                            m_vector_probe_glyph_data[probe_idx].state = 2;
+                            std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
+                            std::string identifier = std::string(FullName()) + "_ProbeBillboard_Vector";
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
+                            m_clusterID_glyph_data[probe_idx].state = 2;
+                            std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
+                            std::string identifier = std::string(FullName()) + "_ProbeBillboard_ClusterID";
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        }
+                    } else {
+                        //TODO warning
                     }
                 }
             }
@@ -579,24 +639,37 @@ void megamol::probe_gl::ProbeGlyphRenderer::updateRenderTaskCollection(
             {
                 auto pending_deselect_events = event_collection->get<ProbeDeselect>();
                 for (auto& evt : pending_deselect_events) {
-                    auto probe_type = m_type_index_map[evt.obj_id].first;
-                    auto probe_idx = m_type_index_map[evt.obj_id].second;
+                    // update glyph background
+                    if (evt.obj_id < m_dial_glyph_background_data.size()) {
+                        m_dial_glyph_background_data[evt.obj_id].state = 0;
+                        std::array<GlyphBaseProbeData, 1> per_probe_data = {m_dial_glyph_background_data[evt.obj_id]};
+                        std::string identifier = std::string(FullName()) + "_dgbg_" + std::to_string(evt.obj_id);
+                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                    }
 
-                    if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
-                        m_scalar_probe_glyph_data[probe_idx].state = 0;
-                        std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
-                        std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
-                    } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
-                        m_vector_probe_glyph_data[probe_idx].state = 0;
-                        std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
-                        std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
-                    } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
-                        m_clusterID_glyph_data[probe_idx].state = 0;
-                        std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
-                        std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                    // update glyph foreground
+                    if (evt.obj_id < m_type_index_map.size()) {
+                        auto probe_type = m_type_index_map[evt.obj_id].first;
+                        auto probe_idx = m_type_index_map[evt.obj_id].second;
+
+                        if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
+                            m_scalar_probe_glyph_data[probe_idx].state = 0;
+                            std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
+                            std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
+                            m_vector_probe_glyph_data[probe_idx].state = 0;
+                            std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
+                            std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
+                            m_clusterID_glyph_data[probe_idx].state = 0;
+                            std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
+                            std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        }
+                    } else {
+                        //TODO warning
                     }
                 }
             }
@@ -605,30 +678,43 @@ void megamol::probe_gl::ProbeGlyphRenderer::updateRenderTaskCollection(
             {
                 auto pending_events = event_collection->get<ProbeSelectExclusive>();
                 if (!pending_events.empty()) {
+                    // update glyph background
+                    if (pending_events.back().obj_id < m_dial_glyph_background_data.size()) {
+                        for (auto& draw_data : m_dial_glyph_background_data) {
+                            draw_data.state = 0;
+                        }
 
-                    for (auto& draw_data : m_scalar_probe_glyph_data) {
-                        draw_data.state = 0;
-                    }
-                    for (auto& draw_data : m_vector_probe_glyph_data) {
-                        draw_data.state = 0;
-                    }
-                    for (auto& draw_data : m_clusterID_glyph_data) {
-                        draw_data.state = 0;
+                        m_dial_glyph_background_data[pending_events.back().obj_id].state = 2;
                     }
 
-                    auto probe_type = m_type_index_map[pending_events.back().obj_id].first;
-                    auto probe_idx = m_type_index_map[pending_events.back().obj_id].second;
+                    // update glyph foreground
+                    if (pending_events.back().obj_id < m_type_index_map.size()) {
+                        for (auto& draw_data : m_scalar_probe_glyph_data) {
+                            draw_data.state = 0;
+                        }
+                        for (auto& draw_data : m_vector_probe_glyph_data) {
+                            draw_data.state = 0;
+                        }
+                        for (auto& draw_data : m_clusterID_glyph_data) {
+                            draw_data.state = 0;
+                        }
 
-                    // multiple exclusive selections make no sense, just apply the last one
-                    if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
-                        m_scalar_probe_glyph_data[probe_idx].state = 2;
-                    } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
-                        m_vector_probe_glyph_data[probe_idx].state = 2;
-                    } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
-                        m_clusterID_glyph_data[probe_idx].state = 2;
+                        auto probe_type = m_type_index_map[pending_events.back().obj_id].first;
+                        auto probe_idx = m_type_index_map[pending_events.back().obj_id].second;
+
+                        // multiple exclusive selections make no sense, just apply the last one
+                        if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
+                            m_scalar_probe_glyph_data[probe_idx].state = 2;
+                        } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
+                            m_vector_probe_glyph_data[probe_idx].state = 2;
+                        } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
+                            m_clusterID_glyph_data[probe_idx].state = 2;
+                        }
+
+                        updateAllRenderTasks();
+                    } else {
+                        //TODO warning
                     }
-
-                    updateAllRenderTasks();
                 }
             }
 
@@ -636,26 +722,41 @@ void megamol::probe_gl::ProbeGlyphRenderer::updateRenderTaskCollection(
             {
                 auto pending_select_events = event_collection->get<ProbeSelectToggle>();
                 for (auto& evt : pending_select_events) {
-                    auto probe_type = m_type_index_map[evt.obj_id].first;
-                    auto probe_idx = m_type_index_map[evt.obj_id].second;
+                    // update glyph background
+                    if (evt.obj_id < m_dial_glyph_background_data.size()) {
+                        m_dial_glyph_background_data[evt.obj_id].state =
+                            m_dial_glyph_background_data[evt.obj_id].state == 2 ? 0 : 2;
+                        std::array<GlyphBaseProbeData, 1> per_probe_data = {m_dial_glyph_background_data[evt.obj_id]};
+                        std::string identifier = std::string(FullName()) + "_dgbg_" + std::to_string(evt.obj_id);
+                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                    }
 
-                    if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
-                        m_scalar_probe_glyph_data[probe_idx].state =
-                            m_scalar_probe_glyph_data[probe_idx].state == 2 ? 0 : 2;
-                        std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
-                        std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
-                    } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
-                        m_vector_probe_glyph_data[probe_idx].state =
-                            m_vector_probe_glyph_data[probe_idx].state == 2 ? 0 : 2;
-                        std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
-                        std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
-                    } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
-                        m_clusterID_glyph_data[probe_idx].state = m_clusterID_glyph_data[probe_idx].state == 2 ? 0 : 2;
-                        std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
-                        std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
-                        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                    // update glyph foreground
+                    if (evt.obj_id < m_type_index_map.size()) {
+                        auto probe_type = m_type_index_map[evt.obj_id].first;
+                        auto probe_idx = m_type_index_map[evt.obj_id].second;
+
+                        if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
+                            m_scalar_probe_glyph_data[probe_idx].state =
+                                m_scalar_probe_glyph_data[probe_idx].state == 2 ? 0 : 2;
+                            std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
+                            std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
+                            m_vector_probe_glyph_data[probe_idx].state =
+                                m_vector_probe_glyph_data[probe_idx].state == 2 ? 0 : 2;
+                            std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
+                            std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
+                            m_clusterID_glyph_data[probe_idx].state =
+                                m_clusterID_glyph_data[probe_idx].state == 2 ? 0 : 2;
+                            std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
+                            std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
+                            render_task_collection_->updatePerDrawData(identifier, per_probe_data);
+                        }
+                    } else {
+                        //TODO warning
                     }
                 }
             }
@@ -704,12 +805,10 @@ bool megamol::probe_gl::ProbeGlyphRenderer::saveGlyphsToImages(core::param::Para
             }
         }
 
-        auto render_func = [](
-            std::shared_ptr<glowl::GLSLProgram> shdr_prgm,
-            std::shared_ptr<glowl::FramebufferObject> fbo,
-            std::shared_ptr<glowl::BufferObject> draw_data_buffer,
-            std::shared_ptr<glowl::BufferObject> draw_command_buffer)
-        {
+        auto render_func = [](std::shared_ptr<glowl::GLSLProgram> shdr_prgm,
+                               std::shared_ptr<glowl::FramebufferObject> fbo,
+                               std::shared_ptr<glowl::BufferObject> draw_data_buffer,
+                               std::shared_ptr<glowl::BufferObject> draw_command_buffer) {
             glDisable(GL_DEPTH_TEST);
 
             fbo->bind();
@@ -739,10 +838,7 @@ bool megamol::probe_gl::ProbeGlyphRenderer::saveGlyphsToImages(core::param::Para
             glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
         };
 
-        auto save_to_disk_func = [](
-            std::string const& filename,
-            std::shared_ptr<glowl::FramebufferObject> fbo)
-        {
+        auto save_to_disk_func = [](std::string const& filename, std::shared_ptr<glowl::FramebufferObject> fbo) {
             megamol::frontend_resources::ScreenshotImageData result;
             result.resize(static_cast<size_t>(fbo->getWidth()), static_cast<size_t>(fbo->getHeight()));
 
@@ -774,9 +870,7 @@ bool megamol::probe_gl::ProbeGlyphRenderer::saveGlyphsToImages(core::param::Para
                 // save texture to disk
                 auto filename = "probe_scalar_glyph" + std::to_string(draw_idx) + ".png";
                 save_to_disk_func(filename, fbo);
-            } catch (const std::exception&) {
-            
-            }
+            } catch (const std::exception&) {}
 
             draw_idx++;
         }
@@ -830,12 +924,14 @@ bool megamol::probe_gl::ProbeGlyphRenderer::addAllRenderTasks() {
     std::shared_ptr<glowl::GLSLProgram> scalar_distribution_shader(nullptr);
     std::shared_ptr<glowl::GLSLProgram> vector_shader(nullptr);
     std::shared_ptr<glowl::GLSLProgram> clusterID_shader(nullptr);
+    std::shared_ptr<glowl::GLSLProgram> dial_background_shader(nullptr);
 
     auto textured_query = material_collection_->getMaterials().find("TexturedProbeGlyph");
     auto scalar_query = material_collection_->getMaterials().find("ScalarProbeGlyph");
     auto scalar_distribution_query = material_collection_->getMaterials().find("ScalarDistributionProbeGlyph");
     auto vector_query = material_collection_->getMaterials().find("VectorProbeGlyph");
     auto clusterID_query = material_collection_->getMaterials().find("ClusterIDProbeGlyph");
+    auto dial_background_query = material_collection_->getMaterials().find("DialGlyphBackground");
 
     if (textured_query != material_collection_->getMaterials().end()) {
         textured_shader = textured_query->second.shader_program;
@@ -852,7 +948,9 @@ bool megamol::probe_gl::ProbeGlyphRenderer::addAllRenderTasks() {
     if (clusterID_query != material_collection_->getMaterials().end()) {
         clusterID_shader = clusterID_query->second.shader_program;
     }
-
+    if (dial_background_query != material_collection_->getMaterials().end()) {
+        dial_background_shader = dial_background_query->second.shader_program;
+    }
 
     if (textured_shader == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -879,33 +977,50 @@ bool megamol::probe_gl::ProbeGlyphRenderer::addAllRenderTasks() {
             "Could not get ClusterIDProbeGlyph material, identifier not found. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
     }
+    if (dial_background_shader == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Could not get DialGlyphBackground material, identifier not found. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
+    }
+
+    auto set_gl_state = []() {
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        glFrontFace(GL_CCW);
+    };
 
     if (!m_textured_gylph_draw_commands.empty()) {
-        render_task_collection_->addRenderTasks(m_textured_glyph_identifiers, textured_shader,
-            m_billboard_dummy_mesh, m_textured_gylph_draw_commands, m_textured_glyph_data);
+        render_task_collection_->addRenderTasks(m_textured_glyph_identifiers, textured_shader, m_billboard_dummy_mesh,
+            m_textured_gylph_draw_commands, m_textured_glyph_data);
     }
 
     if (!m_scalar_probe_glyph_data.empty()) {
-        render_task_collection_->addRenderTasks(m_scalar_probe_glyph_identifiers, scalar_shader,
-            m_billboard_dummy_mesh, m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
+        render_task_collection_->addRenderTasks(m_scalar_probe_glyph_identifiers, scalar_shader, m_billboard_dummy_mesh,
+            m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data, set_gl_state);
     }
 
     if (!m_scalar_distribution_probe_glyph_data.empty()) {
         render_task_collection_->addRenderTasks(m_scalar_distribution_probe_glyph_identifiers,
             scalar_distribution_shader, m_billboard_dummy_mesh, m_scalar_distribution_probe_gylph_draw_commands,
-            m_scalar_distribution_probe_glyph_data);
+            m_scalar_distribution_probe_glyph_data, set_gl_state);
     }
 
     if (!m_vector_probe_glyph_data.empty()) {
-        render_task_collection_->addRenderTasks(m_vector_probe_glyph_identifiers, vector_shader,
-            m_billboard_dummy_mesh, m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
+        render_task_collection_->addRenderTasks(m_vector_probe_glyph_identifiers, vector_shader, m_billboard_dummy_mesh,
+            m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data, set_gl_state);
     }
 
     if (!m_clusterID_gylph_draw_commands.empty()) {
-        render_task_collection_->addRenderTasks(m_clusterID_glyph_identifiers, clusterID_shader,
-            m_billboard_dummy_mesh, m_clusterID_gylph_draw_commands, m_clusterID_glyph_data);
+        render_task_collection_->addRenderTasks(m_clusterID_glyph_identifiers, clusterID_shader, m_billboard_dummy_mesh,
+            m_clusterID_gylph_draw_commands, m_clusterID_glyph_data);
     }
-    return  true;
+
+    if (!m_dial_glyph_background_draw_commands.empty()) {
+        render_task_collection_->addRenderTasks(m_dial_glyph_background_identifiers, dial_background_shader,
+            m_billboard_dummy_mesh, m_dial_glyph_background_draw_commands, m_dial_glyph_background_data, set_gl_state);
+    }
+    return true;
 }
 
 void megamol::probe_gl::ProbeGlyphRenderer::updateAllRenderTasks() {
@@ -926,6 +1041,12 @@ void megamol::probe_gl::ProbeGlyphRenderer::updateAllRenderTasks() {
             std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
             render_task_collection_->updatePerDrawData(identifier, per_probe_data);
         }
+    }
+
+    for (int i = 0; i < m_dial_glyph_background_data.size(); ++i) {
+        std::array<GlyphBaseProbeData, 1> per_probe_data = {m_dial_glyph_background_data[i]};
+        std::string identifier = std::string(FullName()) + "_dgbg_" + std::to_string(i);
+        render_task_collection_->updatePerDrawData(identifier, per_probe_data);
     }
 }
 
@@ -1008,6 +1129,25 @@ megamol::probe_gl::ProbeGlyphRenderer::createVectorProbeGlyphData(
     for (int i = 0; i < glyph_data.sample_cnt; ++i) {
         glyph_data.samples[i] = probe.getSamplingResult()->samples[i];
     }
+
+    glyph_data.probe_id = probe_id;
+
+    return glyph_data;
+}
+
+megamol::probe_gl::ProbeGlyphRenderer::GlyphBaseProbeData
+megamol::probe_gl::ProbeGlyphRenderer::createBaseProbeGlyphData(
+    probe::BaseProbe const& probe, int probe_id, float scale) {
+
+    GlyphBaseProbeData glyph_data;
+
+    glyph_data.position = glm::vec4(probe.m_position[0] + probe.m_direction[0] * (probe.m_begin * 1.24f),
+        probe.m_position[1] + probe.m_direction[1] * (probe.m_begin * 1.24f),
+        probe.m_position[2] + probe.m_direction[2] * (probe.m_begin * 1.24f), 1.0f);
+
+    glyph_data.probe_direction = glm::vec4(probe.m_direction[0], probe.m_direction[1], probe.m_direction[2], 1.0f);
+
+    glyph_data.scale = scale;
 
     glyph_data.probe_id = probe_id;
 

@@ -1,6 +1,7 @@
 #version 450
 
 #include "probe_gl/glyphs/extensions.inc.glsl"
+#include "probe_gl/glyphs/per_frame_data_struct.inc.glsl"
 #include "probe_gl/glyphs/scalar_probe_struct.inc.glsl"
 
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
@@ -57,14 +58,14 @@ void main() {
         float sample_0 = mesh_shader_params[draw_id].samples[sample_idx_0];
         float sample_1 = mesh_shader_params[draw_id].samples[sample_idx_1];
 
-        sampler2D tf_tx = sampler2D(mesh_shader_params[draw_id].tf_texture_handle);
+        sampler2D tf_tx = sampler2D(per_frame_data[0].tf_texture_handle);
 
         bool interpolate = bool(per_frame_data[0].use_interpolation);
 
         if(interpolate)
         {
             float sample_value = mix(sample_0,sample_1,lerp);
-            float sample_value_normalized = (sample_value - mesh_shader_params[draw_id].min_value) / (mesh_shader_params[draw_id].max_value - mesh_shader_params[draw_id].min_value);
+            float sample_value_normalized = (sample_value - per_frame_data[0].tf_min) / (per_frame_data[0].tf_max - per_frame_data[0].tf_min);
             //out_colour = fakeViridis(sample_value_normalized);
             out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
 
@@ -75,7 +76,7 @@ void main() {
             int sample_idx = int(round(angle_shifted * sample_cnt));
             float sample_value = mesh_shader_params[draw_id].samples[sample_idx];
 
-            float sample_value_normalized = (sample_value - mesh_shader_params[draw_id].min_value) / (mesh_shader_params[draw_id].max_value - mesh_shader_params[draw_id].min_value);
+            float sample_value_normalized = (sample_value - per_frame_data[0].tf_min) / (per_frame_data[0].tf_max - per_frame_data[0].tf_min);
             //out_colour = fakeViridis(sample_value_normalized);
             out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
 
@@ -83,7 +84,7 @@ void main() {
         }
     }
 
-    float zero_value_radius = (- mesh_shader_params[draw_id].min_value) / (mesh_shader_params[draw_id].max_value - mesh_shader_params[draw_id].min_value);
+    float zero_value_radius = (- per_frame_data[0].tf_min) / (per_frame_data[0].tf_max - per_frame_data[0].tf_min);
     if(abs(radius - zero_value_radius) < 0.005) out_colour = vec3(1.0);
     if(radius > 0.96 && radius < 0.98) out_colour = vec3(0.0);
 
