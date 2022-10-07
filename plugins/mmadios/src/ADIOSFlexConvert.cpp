@@ -88,10 +88,11 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetHeader");
         return false;
     }
-    bool dathashChanged = (mpdc->DataHash() != cad->getDataHash());
+    bool dathashChanged = (currentDatahash != cad->getDataHash());
     if ((mpdc->FrameID() != currentFrame) || dathashChanged || _trigger_recalc) {
 
         _trigger_recalc = false;
+        currentDatahash = cad->getDataHash();
 
         // get adios meta data
         auto availVars = cad->getAvailableVars();
