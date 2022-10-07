@@ -598,7 +598,7 @@ void SampleAlongPobes::doTetrahedralSampling(
         global_max = std::max(global_max, samples->max_value);
     } // end for probes
     _probes->setGlobalMinMax(global_min, global_max);
-    _probes->shuffle_probes();
+    _probes->shuffleProbes();
 }
 
 template<typename T>
@@ -758,8 +758,8 @@ inline void SampleAlongPobes::doTetrahedralVectorSamling(const std::shared_ptr<m
         global_max = std::max(global_max, max_value);
     } // end for probes
     _probes->setGlobalMinMax(global_min, global_max);
-    _probes->erase_probes(invalid_probes);
-    _probes->shuffle_probes();
+    _probes->eraseProbes(invalid_probes);
+    _probes->shuffleProbes();
 }
 
 
