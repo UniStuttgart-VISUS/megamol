@@ -191,6 +191,7 @@ inline void DualMeshProbeSampling::doScalarDistributionSampling(
         T probe_max = std::numeric_limits<T>::lowest();
         T probe_avg = 0.0;
         samples->samples.resize(samples_per_probe);
+        // _dual_mesh_vertices is sorted after probe ids
         auto dual_mesh_top_vertices = _dual_mesh_vertices[i];
         auto dual_mesh_bottom_vertices = _dual_mesh_vertices[i];
         for (int j = 0; j < samples_per_probe; j++) {
@@ -202,7 +203,7 @@ inline void DualMeshProbeSampling::doScalarDistributionSampling(
 
             // DEBUG USE: auto sampledist_to_probe = glm::length(to_vec3(sample_center) - to_vec3(probe.m_position));
             float min_radius = std::numeric_limits<float>::max();
-            float blub = 0.0f;
+            float _ = 0.0f;
             float radius = sample_step/2.0f;
             for (int d = 0; d < dual_mesh_top_vertices.size(); d++) {
                 // determine max radius of sampling geometry
@@ -236,8 +237,7 @@ inline void DualMeshProbeSampling::doScalarDistributionSampling(
 
             bool check_bottom = true;
             bool includes_probe = false;
-            if (j == 0 && (probe.m_placement_method == BaseProbe::CENTERPOINT ||
-                              probe.m_placement_method == BaseProbe::CENTERLINE)) {
+            if (j == 0 && probe.m_placement_method != BaseProbe::VERTEX_NORMAL) {
                 includes_probe = true;
             }
             if ((j == samples_per_probe - 1) && (probe.m_placement_method == BaseProbe::CENTERPOINT ||
@@ -262,7 +262,7 @@ inline void DualMeshProbeSampling::doScalarDistributionSampling(
                     points_to_keep.emplace_back(id);
                     kept_dists.emplace_back(std::sqrtf(id.second));
                 }else {
-                    if (isInsideSamplingArea(blub, point, dual_mesh_top_vertices, dual_mesh_bottom_vertices,
+                    if (isInsideSamplingArea(_, point, dual_mesh_top_vertices, dual_mesh_bottom_vertices,
                         probe.m_position, probe.m_direction, check_bottom, includes_probe)) {
                     points_to_keep.emplace_back(id);
                     kept_dists.emplace_back(std::sqrtf(id.second));
@@ -400,13 +400,9 @@ inline void DualMeshProbeSampling::doVectorSamling(const std::shared_ptr<my_kd_t
                 value_w += data_w[res[n].first];
             } // end num_neighbors
             samples->samples[j][0] = value_x / num_neighbors;
-            ;
             samples->samples[j][1] = value_y / num_neighbors;
-            ;
             samples->samples[j][2] = value_z / num_neighbors;
-            ;
             samples->samples[j][3] = value_w / num_neighbors;
-            ;
             //min_value = std::min(min_value, value);
             //max_value = std::max(max_value, value);
             //avg_value += value;
@@ -424,8 +420,8 @@ inline bool DualMeshProbeSampling::isInsideSamplingArea(float& min_radius, const
     const std::vector<std::array<T, 3>>& _top,
     const std::vector<std::array<T, 3>>& bottom, const std::array<T, 3>& _probe, const std::array<T, 3>& _probe_dir, const bool check_bottom, const bool includes_probe) {
 
-    assert(bottom.size() > 3);
-    assert(_top.size() > 3);
+    assert(bottom.size() >= 3);
+    assert(_top.size() >= 3);
 
     glm::vec3 const point = to_vec3(_point);
     glm::vec3 const probe = to_vec3(_probe);

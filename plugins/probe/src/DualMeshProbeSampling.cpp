@@ -243,7 +243,6 @@ bool DualMeshProbeSampling::getData(core::Call& call) {
     }
 
     // put data into probes
-
     if (cd != nullptr) {
         _old_datahash = cd->getDataHash();
         meta_data.m_bboxs = tree_meta_data.m_bboxs;
@@ -566,7 +565,7 @@ bool DualMeshProbeSampling::calcDualMesh(std::shared_ptr<mesh::MeshDataAccessCol
             return false;
         }
 
-        int const current_vert_id = current_probe.m_vert_ids[0];
+        auto const current_vert_id = current_probe.m_vert_ids[0];
 
         std::vector<unsigned int> triangles;
         triangles.reserve(5);
@@ -604,12 +603,18 @@ bool DualMeshProbeSampling::calcDualMesh(std::shared_ptr<mesh::MeshDataAccessCol
                 auto to_dmx = to_vec3(unsorted_dual_mesh_vertices.back()) - to_vec3(current_probe.m_position);
                 auto face_n = -1.0f*to_vec3(current_probe.m_direction);
                 auto n = glm::normalize(glm::cross(to_dm0, to_dmx));
+                if (!std::isfinite(n.x) || !std::isfinite(n.y) || !std::isfinite(n.z)) {
+                    n = face_n;
+                }
                 auto tangent = glm::normalize(glm::cross(face_n, to_dm0));
 
                 auto angle = std::atan2(glm::dot(n, glm::cross(to_dm0, to_dmx)),
                     glm::dot(to_dm0, to_dmx));
                 if ( glm::dot(to_dmx, tangent) < 0.0f) {
                     angle = 2.0f*3.1415926535f - angle;
+                }
+                if (angle < 0.0f) {
+                    angle = angle + 2.0f * 3.1415926535f;
                 }
                 dual_mesh_angles.emplace_back(angle);
             }
