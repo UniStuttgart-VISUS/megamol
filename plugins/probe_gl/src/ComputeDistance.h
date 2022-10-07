@@ -56,12 +56,19 @@ private:
     bool get_data_cb(core::Call& c);
 
     bool get_extent_cb(core::Call& c);
+    bool paramChanged(core::param::ParamSlot& p);
 
     core::CalleeSlot _out_table_slot;
 
     core::CallerSlot _in_probes_slot;
 
     core::param::ParamSlot _stretching_factor_slot;
+
+    core::param::ParamSlot _min_sample_slot;
+
+    core::param::ParamSlot _max_sample_slot;
+
+    core::param::ParamSlot _recalc_slot;
 
     std::size_t _row_count = 0;
 
@@ -78,5 +85,7 @@ private:
     vislib_gl::graphics::gl::GLSLComputeShader _fd_shader;
 
     vislib_gl::graphics::gl::ShaderSource _compute_shader_src;
+
+    bool _trigger_recalc;
 };
 } // namespace megamol::probe_gl

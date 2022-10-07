@@ -2,7 +2,8 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/param/ButtonParam.h"
 
 #include "glm/glm.hpp"
 
@@ -19,7 +20,10 @@
 megamol::probe_gl::ComputeDistance::ComputeDistance()
         : _out_table_slot("outTable", "")
         , _in_probes_slot("inProbes", "")
-        , _stretching_factor_slot("stretching factor", "") {
+        , _stretching_factor_slot("stretching factor", "")
+        , _min_sample_slot("minSample", "")
+        , _max_sample_slot("maxSample", "")
+        , _recalc_slot("recalc", "") {
     _out_table_slot.SetCallback(datatools::table::TableDataCall::ClassName(),
         datatools::table::TableDataCall::FunctionName(0), &ComputeDistance::get_data_cb);
     _out_table_slot.SetCallback(datatools::table::TableDataCall::ClassName(),
@@ -31,6 +35,17 @@ megamol::probe_gl::ComputeDistance::ComputeDistance()
 
     _stretching_factor_slot << new core::param::FloatParam(5.0f, 0.0f);
     MakeSlotAvailable(&_stretching_factor_slot);
+
+    _min_sample_slot << new core::param::IntParam(-1);
+    MakeSlotAvailable(&_min_sample_slot);
+
+    _max_sample_slot << new core::param::IntParam(-1);
+    MakeSlotAvailable(&_max_sample_slot);
+
+    _recalc_slot << new core::param::ButtonParam();
+    _recalc_slot.SetUpdateCallback(&ComputeDistance::paramChanged);
+    MakeSlotAvailable(&_recalc_slot);
+
 }
 
 
@@ -62,9 +77,12 @@ bool megamol::probe_gl::ComputeDistance::get_data_cb(core::Call& c) {
 
     auto const& meta_data = in_probes->getMetaData();
 
-    if (in_probes->hasUpdate() || meta_data.m_frame_ID != _frame_id || _stretching_factor_slot.IsDirty()) {
+    if (in_probes->hasUpdate() || meta_data.m_frame_ID != _frame_id || _stretching_factor_slot.IsDirty() || _trigger_recalc) {
+
         auto const& probe_data = in_probes->getData();
         auto const probe_count = probe_data->getProbeCount();
+
+        _trigger_recalc = false;
 
         _row_count = probe_count;
         _col_count = probe_count;
@@ -327,12 +345,24 @@ bool megamol::probe_gl::ComputeDistance::get_data_cb(core::Call& c) {
                 base_skip = 0;
             core::utility::log::Log::DefaultLog.WriteInfo(
                 "[ComputeDistance] Skipping first %d samples due to NaNs", base_skip);
-            auto base_sample_count = sample_count - base_skip;
+
+            // user defined range
+            auto const bottom = _min_sample_slot.Param<core::param::IntParam>()->Value();
+            auto top = _max_sample_slot.Param<core::param::IntParam>()->Value();
+            std::size_t base_sample_count = 0;
+            if (bottom >= 0 && top >= 1) {
+                base_sample_count = top - bottom;
+                base_skip = bottom;
+            } else {
+                base_sample_count = sample_count - base_skip;
+                top = base_sample_count;
+            }
+
             auto X = Eigen::MatrixXd(probe_count, base_sample_count);
             for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
                 auto const a_probe = probe_data->getProbe<probe::FloatProbe>(a_pidx);
                 auto const& a_samples_tmp = a_probe.getSamplingResult()->samples;
-                for (std::size_t sample_idx = base_skip; sample_idx < base_sample_count; ++sample_idx) {
+                for (std::size_t sample_idx = base_skip; sample_idx < top; ++sample_idx) {
                     X(a_pidx, sample_idx - base_skip) = a_samples_tmp[sample_idx];
                 }
             }
@@ -438,5 +468,11 @@ bool megamol::probe_gl::ComputeDistance::get_extent_cb(core::Call& c) {
     meta_data = cpd->getMetaData();
     ctd->SetFrameCount(meta_data.m_frame_cnt);
 
+    return true;
+}
+
+bool megamol::probe_gl::ComputeDistance::paramChanged(core::param::ParamSlot& p) {
+
+    _trigger_recalc = true;
     return true;
 }
