@@ -66,6 +66,11 @@ project(megamol
   VERSION 1.3.0
   LANGUAGES C CXX)
 
+# Allow CI dependency build to stop here.
+if (MEGAMOL_STOP_AFTER_VCPKG)
+  return()
+endif ()
+
 # Default build type
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to 'Release' as none was specified.")
