@@ -1,4 +1,4 @@
-#version 130
+#version 330
 
 #include "commondefines.glsl"
 #include "moldyn_gl/sphere_renderer/inc/flags_snippet.inc.glsl"

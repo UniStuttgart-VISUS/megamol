@@ -22,7 +22,7 @@
 #include "mmstd/renderer/RendererModule.h"
 #include "mmstd_gl/ModuleGL.h"
 
-#include "FSRAMDHelper.h"
+#include "FSR/FSRAMDHelper.h"
 
 namespace megamol::mmstd_gl {
 
@@ -207,7 +207,7 @@ protected:
                 inter_tl_ = input_fbo_tl;
             }
 
-            if (scaled_fbo_->checkStatus(0) != GL_FRAMEBUFFER_COMPLETE) {
+            if (scaled_fbo_->checkStatus() != GL_FRAMEBUFFER_COMPLETE) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "The scaled_fbo_ in ResolutionScalerBase did not return GL_FRAMEBUFFER_COMPLETE");
                 return false;

@@ -1,15 +1,29 @@
 vcpkg_from_github(
   OUT_SOURCE_PATH SOURCE_PATH
   REPO invor/glowl
-  REF dafee75f11c5d759df30ff651d6763e4e674dd0e
-  SHA512 e29524be04a5eb65c4cf41190392eb7b09632ef85cf0ede53a36f8af8a84eda3a21dde2fcce7f20a61b9a269c604b31e33537aa473e20d8385562eb62c032c82
+  REF e80ae434618d7a3b0056f2765dcca9d6d64c1db7
+  SHA512 d2db2e5d5753e157a1b6d394a7154a2bfe4d2b8410e7e0d65cbfc437c99c66b20fbcb57753ac7eddf8836e020c0208a4f2ce9fdeb751898e3bc507e6fb90e731
   HEAD_REF master
 )
+
+if ("glm" IN_LIST FEATURES)
+  set(USE_GLM ON)
+else ()
+  set(USE_GLM OFF)
+endif ()
+if ("gl-extensions" IN_LIST FEATURES)
+  set(USE_GL_EXT ON)
+else ()
+  set(USE_GL_EXT OFF)
+endif ()
 
 vcpkg_cmake_configure(
   SOURCE_PATH ${SOURCE_PATH}
   OPTIONS
     -DGLOWL_OPENGL_INCLUDE=GLAD2
+    -DGLOWL_USE_GLM=${USE_GLM}
+    -DGLOWL_USE_ARB_BINDLESS_TEXTURE=${USE_GL_EXT}
+    -DGLOWL_USE_NV_MESH_SHADER=${USE_GL_EXT}
 )
 
 vcpkg_cmake_install()

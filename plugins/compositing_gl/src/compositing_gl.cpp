@@ -16,6 +16,7 @@
 #include "PNGDataSource.h"
 #include "SSAO.h"
 #include "SimpleRenderTarget.h"
+#include "TexInspectModule.h"
 #include "TextureCombine.h"
 #include "TextureDepthCompositing.h"
 #include "compositing_gl/CompositingCalls.h"
@@ -45,6 +46,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::compositing::SSAO>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::AntiAliasing>();
         this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::PNGDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::compositing_gl::TexInspectModule>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::compositing::CallTexture2D>();
