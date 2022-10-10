@@ -3,7 +3,7 @@
 
 #include "compositing_gl/CompositingCalls.h"
 
-megamol::compositing::SimpleRenderTarget::SimpleRenderTarget()
+megamol::compositing_gl::SimpleRenderTarget::SimpleRenderTarget()
         : core::view::RendererModule<mmstd_gl::CallRender3DGL, ModuleGL>()
         , m_version(0)
         , m_GBuffer(nullptr)
@@ -45,12 +45,12 @@ megamol::compositing::SimpleRenderTarget::SimpleRenderTarget()
     this->MakeSlotAvailable(&this->renderSlot);
 }
 
-megamol::compositing::SimpleRenderTarget::~SimpleRenderTarget() {
+megamol::compositing_gl::SimpleRenderTarget::~SimpleRenderTarget() {
     m_GBuffer.reset();
     this->Release();
 }
 
-bool megamol::compositing::SimpleRenderTarget::create() {
+bool megamol::compositing_gl::SimpleRenderTarget::create() {
 
     m_GBuffer = std::make_shared<glowl::FramebufferObject>(1, 1);
     m_GBuffer->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT); // surface albedo
@@ -60,9 +60,9 @@ bool megamol::compositing::SimpleRenderTarget::create() {
     return true;
 }
 
-void megamol::compositing::SimpleRenderTarget::release() {}
+void megamol::compositing_gl::SimpleRenderTarget::release() {}
 
-bool megamol::compositing::SimpleRenderTarget::GetExtents(mmstd_gl::CallRender3DGL& call) {
+bool megamol::compositing_gl::SimpleRenderTarget::GetExtents(mmstd_gl::CallRender3DGL& call) {
     mmstd_gl::CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>();
     if (chainedCall != nullptr) {
         *chainedCall = call;
@@ -72,7 +72,7 @@ bool megamol::compositing::SimpleRenderTarget::GetExtents(mmstd_gl::CallRender3D
     return true;
 }
 
-bool megamol::compositing::SimpleRenderTarget::Render(mmstd_gl::CallRender3DGL& call) {
+bool megamol::compositing_gl::SimpleRenderTarget::Render(mmstd_gl::CallRender3DGL& call) {
     ++m_version;
 
     m_last_used_camera = call.GetCamera();
@@ -84,7 +84,7 @@ bool megamol::compositing::SimpleRenderTarget::Render(mmstd_gl::CallRender3DGL& 
     }
 
     // this framebuffer will use 0 clear color because it uses alpha transparency during
-    // compositing and final presentating to screen anyway
+    // compositing_gl and final presentating to screen anyway
     m_GBuffer->bind();
     glClearColor(0, 0, 0, 0);
     glClearDepth(1.0f);
@@ -105,7 +105,7 @@ bool megamol::compositing::SimpleRenderTarget::Render(mmstd_gl::CallRender3DGL& 
     return true;
 }
 
-bool megamol::compositing::SimpleRenderTarget::getColorRenderTarget(core::Call& caller) {
+bool megamol::compositing_gl::SimpleRenderTarget::getColorRenderTarget(core::Call& caller) {
     auto ct = dynamic_cast<CallTexture2D*>(&caller);
 
     if (ct == NULL)
@@ -116,7 +116,7 @@ bool megamol::compositing::SimpleRenderTarget::getColorRenderTarget(core::Call& 
     return true;
 }
 
-bool megamol::compositing::SimpleRenderTarget::getNormalsRenderTarget(core::Call& caller) {
+bool megamol::compositing_gl::SimpleRenderTarget::getNormalsRenderTarget(core::Call& caller) {
     auto ct = dynamic_cast<CallTexture2D*>(&caller);
 
     if (ct == NULL)
@@ -127,7 +127,7 @@ bool megamol::compositing::SimpleRenderTarget::getNormalsRenderTarget(core::Call
     return true;
 }
 
-bool megamol::compositing::SimpleRenderTarget::getDepthRenderTarget(core::Call& caller) {
+bool megamol::compositing_gl::SimpleRenderTarget::getDepthRenderTarget(core::Call& caller) {
     auto ct = dynamic_cast<CallTexture2D*>(&caller);
 
     if (ct == NULL)
@@ -138,7 +138,7 @@ bool megamol::compositing::SimpleRenderTarget::getDepthRenderTarget(core::Call& 
     return true;
 }
 
-bool megamol::compositing::SimpleRenderTarget::getCameraSnapshot(core::Call& caller) {
+bool megamol::compositing_gl::SimpleRenderTarget::getCameraSnapshot(core::Call& caller) {
     auto cc = dynamic_cast<CallCamera*>(&caller);
 
     if (cc == NULL)
@@ -149,7 +149,7 @@ bool megamol::compositing::SimpleRenderTarget::getCameraSnapshot(core::Call& cal
     return true;
 }
 
-bool megamol::compositing::SimpleRenderTarget::getFramebufferObject(core::Call& caller) {
+bool megamol::compositing_gl::SimpleRenderTarget::getFramebufferObject(core::Call& caller) {
     auto cf = dynamic_cast<CallFramebufferGL*>(&caller);
 
     if (cf == NULL)
@@ -160,6 +160,6 @@ bool megamol::compositing::SimpleRenderTarget::getFramebufferObject(core::Call& 
     return true;
 }
 
-bool megamol::compositing::SimpleRenderTarget::getMetaDataCallback(core::Call& caller) {
+bool megamol::compositing_gl::SimpleRenderTarget::getMetaDataCallback(core::Call& caller) {
     return true;
 }
