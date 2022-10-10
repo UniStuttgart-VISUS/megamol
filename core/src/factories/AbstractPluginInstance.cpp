@@ -13,7 +13,8 @@ using namespace megamol::core::factories;
  * AbstractPluginInstance::AbstractPluginInstance
  */
 AbstractPluginInstance::AbstractPluginInstance(const char* name, const char* description)
-        : factories::AbstractObjectFactoryInstance()
+        : call_descriptions()
+        , module_descriptions()
         , name(name)
         , description(description)
         , classes_registered(false) {
@@ -36,7 +37,7 @@ AbstractPluginInstance::~AbstractPluginInstance() {
  */
 const factories::CallDescriptionManager& AbstractPluginInstance::GetCallDescriptionManager() const {
     this->ensureRegisterClassesWrapper();
-    return AbstractObjectFactoryInstance::GetCallDescriptionManager();
+    return call_descriptions;
 }
 
 /*
@@ -44,7 +45,7 @@ const factories::CallDescriptionManager& AbstractPluginInstance::GetCallDescript
  */
 const factories::ModuleDescriptionManager& AbstractPluginInstance::GetModuleDescriptionManager() const {
     this->ensureRegisterClassesWrapper();
-    return AbstractObjectFactoryInstance::GetModuleDescriptionManager();
+    return module_descriptions;
 }
 
 /*
