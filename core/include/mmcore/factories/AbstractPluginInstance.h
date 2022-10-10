@@ -9,9 +9,9 @@
 #include <memory>
 #include <string>
 
-#include "mmcore/factories/AbstractObjectFactoryInstance.h"
+#include "AbstractObjectFactoryInstance.h"
 
-namespace megamol::core::utility::plugins {
+namespace megamol::core::factories {
 
 /**
  * Abstract base class for all object descriptions.
@@ -92,4 +92,4 @@ private:
     bool classes_registered;
 };
 
-} // namespace megamol::core::utility::plugins
+} // namespace megamol::core::factories

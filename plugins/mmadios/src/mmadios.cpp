@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "ADIOSFlexConvert.h"
 #include "ADIOStoMultiParticle.h"
@@ -18,11 +18,11 @@
 #include "mmadios/CallADIOSData.h"
 
 namespace megamol::adios {
-class MMADIOSPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class MMADIOSPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(MMADIOSPluginInstance)
 
 public:
-    MMADIOSPluginInstance() : megamol::core::utility::plugins::AbstractPluginInstance("mmadios", "The adios plugin."){};
+    MMADIOSPluginInstance() : megamol::core::factories::AbstractPluginInstance("mmadios", "The adios plugin."){};
 
     ~MMADIOSPluginInstance() override = default;
 

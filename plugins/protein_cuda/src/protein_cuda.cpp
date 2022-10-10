@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 // jobs
 #include "DataWriter.h"
@@ -37,12 +37,12 @@
 #include "vislib/Trace.h"
 
 namespace megamol::protein_cuda {
-class ProteinCudaPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class ProteinCudaPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(ProteinCudaPluginInstance)
 
 public:
     ProteinCudaPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
+            : megamol::core::factories::AbstractPluginInstance(
                   "Protein_CUDA", "Plugin for protein rendering using CUDA for accelleration (SFB716 D4)"){};
 
     ~ProteinCudaPluginInstance() override = default;

@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "AntiAliasing.h"
 #include "DepthDarkening.h"
@@ -22,12 +22,12 @@
 #include "compositing_gl/CompositingCalls.h"
 
 namespace megamol::compositing {
-class CompositingPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class CompositingPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(CompositingPluginInstance)
 
 public:
     CompositingPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("compositing_gl", "The compositing_gl plugin."){};
+            : megamol::core::factories::AbstractPluginInstance("compositing_gl", "The compositing_gl plugin."){};
 
     ~CompositingPluginInstance() override = default;
 

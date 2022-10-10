@@ -22,13 +22,13 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 //#include "mmcore/cluster/ClusterController.h"
+#include "mmcore/factories/PluginRegister.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/profiler/Manager.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
 #include "vislib/MissingImplementationException.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
@@ -204,7 +204,7 @@ void megamol::core::CoreInstance::Initialise() {
     // lua->RunString("mmLogInfo('Lua loaded Ok.')");
 
     // loading plugins
-    for (const auto& plugin : utility::plugins::PluginRegister::getAll()) {
+    for (const auto& plugin : factories::PluginRegister::getAll()) {
         this->loadPlugin(plugin);
     }
 
@@ -1025,7 +1025,7 @@ void megamol::core::CoreInstance::closeViewJob(megamol::core::ModuleNamespace::p
  * megamol::core::CoreInstance::loadPlugin
  */
 void megamol::core::CoreInstance::loadPlugin(
-    const std::shared_ptr<utility::plugins::AbstractPluginDescriptor>& pluginDescriptor) {
+    const std::shared_ptr<factories::AbstractPluginDescriptor>& pluginDescriptor) {
 
     // select log level for plugin loading errors
     utility::log::Log::log_level loadFailedLevel = megamol::core::utility::log::Log::log_level::error;

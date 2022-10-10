@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "CallClustering_2.h"
 #include "ClusterGraphRenderer.h"
@@ -13,12 +13,12 @@
 #include "ProteinViewRenderer.h"
 
 namespace megamol::molsurfmapcluster_gl {
-class ProteinCallsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class ProteinCallsPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(ProteinCallsPluginInstance)
 
 public:
     ProteinCallsPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("MolSurfMapCluster",
+            : megamol::core::factories::AbstractPluginInstance("MolSurfMapCluster",
                   "Plugin containing all necessary modules to produce a clustering of Molecular Surface Maps"){};
 
     ~ProteinCallsPluginInstance() override = default;

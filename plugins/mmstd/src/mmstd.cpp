@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "event/EventStorage.h"
 #include "job/TickSwitch.h"
@@ -40,10 +40,10 @@
 #include "special/StubModule.h"
 
 namespace megamol::mmstd {
-class PluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class PluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(PluginInstance)
 public:
-    PluginInstance() : megamol::core::utility::plugins::AbstractPluginInstance("mmstd", "Core calls and modules."){};
+    PluginInstance() : megamol::core::factories::AbstractPluginInstance("mmstd", "Core calls and modules."){};
 
     ~PluginInstance() override = default;
 

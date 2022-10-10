@@ -11,11 +11,10 @@
 
 #include "PluginDescriptor.h"
 
-#define REGISTERPLUGIN(classname)                        \
-    [[maybe_unused]] static inline bool is_registered_ = \
-        megamol::core::utility::plugins::PluginRegister::add<classname>();
+#define REGISTERPLUGIN(classname) \
+    [[maybe_unused]] static inline bool is_registered_ = megamol::core::factories::PluginRegister::add<classname>();
 
-namespace megamol::core::utility::plugins {
+namespace megamol::core::factories {
 class PluginRegister {
 public:
     // Use PluginRegister only static!
@@ -53,4 +52,4 @@ private:
     static inline std::vector<std::shared_ptr<AbstractPluginDescriptor>> plugins_;
 };
 
-} // namespace megamol::core::utility::plugins
+} // namespace megamol::core::factories

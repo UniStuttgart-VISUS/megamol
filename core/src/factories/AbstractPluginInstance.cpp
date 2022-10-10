@@ -4,10 +4,10 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
 
 using namespace megamol::core;
-using namespace megamol::core::utility::plugins;
+using namespace megamol::core::factories;
 
 /*
  * AbstractPluginInstance::AbstractPluginInstance

@@ -28,10 +28,10 @@
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/factories/ObjectDescription.h"
 #include "mmcore/factories/ObjectDescriptionManager.h"
+#include "mmcore/factories/PluginDescriptor.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamUpdateListener.h"
 #include "mmcore/utility/Configuration.h"
-#include "mmcore/utility/plugins/PluginDescriptor.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Array.h"
@@ -469,7 +469,7 @@ public:
      *
      * @return The plugin manager
      */
-    inline const std::vector<utility::plugins::AbstractPluginInstance::ptr_type>& GetPlugins() const {
+    inline const std::vector<factories::AbstractPluginInstance::ptr_type>& GetPlugins() const {
         return plugins;
     }
 
@@ -569,7 +569,6 @@ public:
     }
 
 private:
-
     /**
      * Utility struct for quickstart configuration
      */
@@ -628,7 +627,7 @@ private:
      *
      * @param filename The plugin to load
      */
-    void loadPlugin(const std::shared_ptr<utility::plugins::AbstractPluginDescriptor>& plugin);
+    void loadPlugin(const std::shared_ptr<factories::AbstractPluginDescriptor>& plugin);
 
     /**
      * Translates shader paths to include paths in the compiler options for the ShaderFactory.
@@ -762,7 +761,7 @@ private:
     param::ParamUpdateListener::param_updates_vec_t paramUpdates;
 
     /** The loaded plugins */
-    std::vector<utility::plugins::AbstractPluginInstance::ptr_type> plugins;
+    std::vector<factories::AbstractPluginInstance::ptr_type> plugins;
 
     /** The manager of registered services */
     utility::ServiceManager* services;

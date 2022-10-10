@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 // jobs
 #include "PDBWriter.h"
@@ -47,13 +47,12 @@
 #include "vislib/Trace.h"
 
 namespace megamol::protein {
-class ProteinPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class ProteinPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(ProteinPluginInstance)
 
 public:
     ProteinPluginInstance(void)
-            : megamol::core::utility::plugins::AbstractPluginInstance(
-                  "protein", "Plugin for protein rendering (SFB716 D4)"){};
+            : megamol::core::factories::AbstractPluginInstance("protein", "Plugin for protein rendering (SFB716 D4)"){};
 
     ~ProteinPluginInstance() override = default;
 

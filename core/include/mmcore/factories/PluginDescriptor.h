@@ -10,7 +10,7 @@
 
 #include "AbstractPluginInstance.h"
 
-namespace megamol::core::utility::plugins {
+namespace megamol::core::factories {
 class AbstractPluginDescriptor {
 public:
     [[nodiscard]] virtual std::shared_ptr<AbstractPluginInstance> create() const = 0;
@@ -23,4 +23,4 @@ public:
         return std::make_shared<C>();
     }
 };
-} // namespace megamol::core::utility::plugins
+} // namespace megamol::core::factories

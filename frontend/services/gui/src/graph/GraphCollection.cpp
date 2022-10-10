@@ -9,7 +9,6 @@
 #include "GraphCollection.h"
 #include "mmcore/utility/FileUtils.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
 #include "mmcore/view/AbstractViewInterface.h"
 
 
