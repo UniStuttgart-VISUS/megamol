@@ -51,7 +51,7 @@ megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" O
 
 # option(X_VCPKG_APPLOCAL_DEPS_INSTALL "" ON) # Does currently not not work as expected, see comment on manual install below!
 set(VCPKG_OVERLAY_PORTS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_ports")
-set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_triplets") # We are using triplets with VCPKG_DISABLE_COMPILER_TRACKING set.
+set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_triplets") # We are using triplets with VCPKG_DISABLE_COMPILER_TRACKING set (on Windows).
 set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics") # Disable Telemetry
 set(VCPKG_FORCE_DOWNLOADED_BINARIES ON) # Vcpkg should always download tools (i.e. CMake) to have consistent versions over all systems.
 set(VCPKG_INSTALL_OPTIONS "--clean-after-build") # Build dirs get quite large and are usually only needed for debugging new ports.
