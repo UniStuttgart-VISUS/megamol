@@ -1,11 +1,10 @@
 /**
  * MegaMol
- * Copyright (c) 2020-2021, MegaMol Dev Team
+ * Copyright (c) 2020, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_UTILITY_PLUGINS_PLUGINREGISTER_H_INCLUDED
-#define MEGAMOLCORE_UTILITY_PLUGINS_PLUGINREGISTER_H_INCLUDED
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -55,5 +54,3 @@ private:
 };
 
 } // namespace megamol::core::utility::plugins
-
-#endif // MEGAMOLCORE_UTILITY_PLUGINS_PLUGINREGISTER_H_INCLUDED

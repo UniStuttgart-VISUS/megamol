@@ -1,11 +1,9 @@
 /**
  * MegaMol
- * Copyright (c) 2015-2021, MegaMol Dev Team
+ * Copyright (c) 2015, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_UTILITY_PLUGINS_ABSTRACTPLUGININSTANCE_H_INCLUDED
-#define MEGAMOLCORE_UTILITY_PLUGINS_ABSTRACTPLUGININSTANCE_H_INCLUDED
 #pragma once
 
 #include <memory>
@@ -95,5 +93,3 @@ private:
 };
 
 } // namespace megamol::core::utility::plugins
-
-#endif // MEGAMOLCORE_UTILITY_PLUGINS_ABSTRACTPLUGININSTANCE_H_INCLUDED

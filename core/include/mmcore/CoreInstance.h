@@ -22,7 +22,6 @@
 #include "mmcore/ViewDescription.h"
 #include "mmcore/ViewInstance.h"
 #include "mmcore/ViewInstanceRequest.h"
-#include "mmcore/factories/AbstractObjectFactoryInstance.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/factories/ModuleDescription.h"
