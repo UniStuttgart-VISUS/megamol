@@ -379,20 +379,19 @@ bool megamol::compositing_gl::LocalLighting::getDataCallback(core::Call& caller)
                 m_toon_exposure_avg_intensity.Param<core::param::FloatParam>()->SetGUIVisible(true);
                 m_toon_roughness.Param<core::param::FloatParam>()->SetGUIVisible(true);
 
-                if (m_toon_prgm != nullptr && m_point_lights_buffer != nullptr &&
-                    m_distant_lights_buffer != nullptr) {
+                if (m_toon_prgm != nullptr && m_point_lights_buffer != nullptr && m_distant_lights_buffer != nullptr) {
                     m_toon_prgm->use();
 
                     glUniform1f(m_toon_prgm->getUniformLocation("exposure_avg_intensity"),
                         m_toon_exposure_avg_intensity.Param<core::param::FloatParam>()->Value());
-                     glUniform1f(m_toon_prgm->getUniformLocation("roughness"),
-                         m_toon_roughness.Param<core::param::FloatParam>()->Value());
+                    glUniform1f(m_toon_prgm->getUniformLocation("roughness"),
+                        m_toon_roughness.Param<core::param::FloatParam>()->Value());
 
                     glUniform3fv(m_toon_prgm->getUniformLocation("camPos"), 1, glm::value_ptr(cam_pose.position));
 
                     m_point_lights_buffer->bind(1);
-                    glUniform1i(m_toon_prgm->getUniformLocation("point_light_cnt"),
-                        static_cast<GLint>(m_point_lights.size()));
+                    glUniform1i(
+                        m_toon_prgm->getUniformLocation("point_light_cnt"), static_cast<GLint>(m_point_lights.size()));
                     m_distant_lights_buffer->bind(2);
                     glUniform1i(m_toon_prgm->getUniformLocation("distant_light_cnt"),
                         static_cast<GLint>(m_distant_lights.size()));
