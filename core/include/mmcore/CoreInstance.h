@@ -15,10 +15,8 @@
 
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/InstanceDescription.h"
 #include "mmcore/JobInstance.h"
 #include "mmcore/LuaState.h"
-#include "mmcore/ParamValueSetRequest.h"
 #include "mmcore/RootModuleNamespace.h"
 #include "mmcore/ViewInstance.h"
 #include "mmcore/factories/CallDescription.h"

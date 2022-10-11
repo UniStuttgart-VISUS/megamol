@@ -12,7 +12,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/LuaState.h"
-#include "mmcore/ParamValueSetRequest.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Map.h"
 #include "vislib/Pair.h"
