@@ -16,10 +16,9 @@ megamol::compositing_gl::EdgeOutline::EdgeOutline()
         , m_weight_0("Weight0", "Weight for input texture 0 in additive mode")
         , m_weight_1("Weight1", "Weight for input texture 1 in additive mode")
         , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
-        , m_depth_tex_slot(
-              "Depth", "Connects the depth texture that")
+        , m_depth_tex_slot("Depth", "Connects the depth texture that")
         , m_normal_tex_slot("Normal", "Connects the normal texture")
-        , camera_slot_("Camera", "Connects a (copy of) camera state"){
+        , camera_slot_("Camera", "Connects a (copy of) camera state") {
     this->m_mode << new megamol::core::param::EnumParam(0);
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Depth");
     this->m_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Normal");
@@ -34,8 +33,7 @@ megamol::compositing_gl::EdgeOutline::EdgeOutline()
     this->MakeSlotAvailable(&this->m_weight_1);
 
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &EdgeOutline::getDataCallback);
-    this->m_output_tex_slot.SetCallback(
-        CallTexture2D::ClassName(), "GetMetaData", &EdgeOutline::getMetaDataCallback);
+    this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &EdgeOutline::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_output_tex_slot);
 
     this->m_depth_tex_slot.SetCompatibleCall<CallTexture2DDescription>();
@@ -151,9 +149,8 @@ bool megamol::compositing_gl::EdgeOutline::getDataCallback(core::Call& caller) {
 
             glUseProgram(0);
         } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
-            
+
         } else if (this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-            
         }
     }
 
