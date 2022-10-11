@@ -307,8 +307,8 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
     // Alternatively, check core instance graph for available parameter:
     if (param_ptr == nullptr) {
         auto core_parameter_ptr = this->GetCoreInstance()->FindParameter(parameter_name, false, false);
-        if (!core_parameter_ptr.IsNull()) {
-            param_ptr = core_parameter_ptr.DynamicCast<megamol::core::param::AbstractParam>();
+        if (core_parameter_ptr != nullptr) {
+            param_ptr = core_parameter_ptr.get();
         }
     }
     if (param_ptr == nullptr) {

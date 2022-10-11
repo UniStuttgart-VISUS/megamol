@@ -41,7 +41,7 @@ public:
      *
      * @return 'true' if 'param' is relevant, 'false' otherwise.
      */
-    virtual bool IsParamRelevant(const vislib::SmartPtr<param::AbstractParam>& param) const;
+    virtual bool IsParamRelevant(const std::shared_ptr<param::AbstractParam>& param) const;
 
     /**
      * Answers whether or not this job is still running.

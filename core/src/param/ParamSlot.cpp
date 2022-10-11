@@ -1,11 +1,11 @@
-/*
- * ParamSlot.cpp
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/param/ParamSlot.h"
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
@@ -50,7 +50,7 @@ void param::ParamSlot::MakeAvailable(void) {
  * param::ParamSlot::IsParamRelevant
  */
 bool param::ParamSlot::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const vislib::SmartPtr<param::AbstractParam>& param) const {
+    const std::shared_ptr<param::AbstractParam>& param) const {
     return (this->Parameter() == param);
 }
 

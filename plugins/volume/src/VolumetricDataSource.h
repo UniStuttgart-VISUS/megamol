@@ -22,6 +22,7 @@
 #include "mmcore/Module.h"
 
 #include "vislib/PtrArray.h"
+#include "vislib/RawStorage.h"
 #include "vislib/sys/Event.h"
 #include "vislib/sys/Thread.h"
 

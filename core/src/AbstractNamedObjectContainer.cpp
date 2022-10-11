@@ -204,7 +204,7 @@ void AbstractNamedObjectContainer::DisconnectCalls(void) {
  * AbstractNamedObjectContainer::IsParamRelevant
  */
 bool AbstractNamedObjectContainer::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const vislib::SmartPtr<param::AbstractParam>& param) const {
+    const std::shared_ptr<param::AbstractParam>& param) const {
     // ensure each container is only asked ones
     // We need this, because this call might propagate through the graph and not only through the tree
     if (searched.Contains(this)) {

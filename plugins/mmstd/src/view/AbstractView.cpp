@@ -143,11 +143,11 @@ view::AbstractView::~AbstractView(void) {
 /*
  * view::AbstractView::IsParamRelevant
  */
-bool view::AbstractView::IsParamRelevant(const vislib::SmartPtr<param::AbstractParam>& param) const {
+bool view::AbstractView::IsParamRelevant(const std::shared_ptr<param::AbstractParam>& param) const {
     const AbstractNamedObject* ano = dynamic_cast<const AbstractNamedObject*>(this);
     if (ano == NULL)
         return false;
-    if (param.IsNull())
+    if (param == nullptr)
         return false;
 
     vislib::SingleLinkedList<const AbstractNamedObject*> searched;

@@ -101,7 +101,7 @@ void CallerSlot::DisconnectCalls(void) {
  * CallerSlot::IsParamRelevant
  */
 bool CallerSlot::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const vislib::SmartPtr<param::AbstractParam>& param) const {
+    const std::shared_ptr<param::AbstractParam>& param) const {
 
     if ((this->call != NULL) && (this->call->PeekCalleeSlot() != NULL)) {
         if (searched.Contains(this->call->PeekCalleeSlot())) {

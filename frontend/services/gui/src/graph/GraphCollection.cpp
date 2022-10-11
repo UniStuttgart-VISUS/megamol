@@ -428,7 +428,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(
             for (auto& p : module_ptr->Parameters()) {
 
                 // Try to connect gui parameter to newly created parameter of core modules
-                if (p.CoreParamPtr().IsNull()) {
+                if (p.CoreParamPtr() == nullptr) {
                     auto module_name = module_ptr->FullName();
                     megamol::core::Module* core_module_ptr = megamol_graph.FindModule(module_name).get();
                     // Connect pointer of new parameters of core module to parameters in gui module
@@ -457,7 +457,7 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(
 #endif // GUI_VERBOSE
                 }
 
-                if (!p.CoreParamPtr().IsNull()) {
+                if (p.CoreParamPtr() != nullptr) {
                     // Write changed gui state to core parameter
                     if (p.IsGUIStateDirty()) {
                         p.ResetGUIStateDirty(); // ! Reset before calling lua cmd because of instantly triggered subscription callback

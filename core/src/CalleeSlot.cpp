@@ -141,7 +141,7 @@ void CalleeSlot::ClearCleanupMark(void) {
  * CalleeSlot::IsParamRelevant
  */
 bool CalleeSlot::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const vislib::SmartPtr<param::AbstractParam>& param) const {
+    const std::shared_ptr<param::AbstractParam>& param) const {
     if (searched.Contains(this)) {
         return false;
     } else {

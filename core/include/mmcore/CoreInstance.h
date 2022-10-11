@@ -134,7 +134,7 @@ public:
      * @return The found parameter or NULL if no parameter with this name
      *         exists.
      */
-    vislib::SmartPtr<param::AbstractParam> GOES_INTO_GRAPH FindParameter(
+    std::shared_ptr<param::AbstractParam> GOES_INTO_GRAPH FindParameter(
         const vislib::StringA& name, bool quiet = false, bool create = false);
 
     /**
@@ -148,7 +148,7 @@ public:
      * @return The found parameter or NULL if no parameter with this name
      *         exists.
      */
-    inline vislib::SmartPtr<param::AbstractParam> GOES_INTO_GRAPH FindParameter(
+    inline std::shared_ptr<param::AbstractParam> GOES_INTO_GRAPH FindParameter(
         const vislib::StringW& name, bool quiet = false, bool create = false) {
         // absolutly sufficient, since module namespaces use ANSI strings
         return this->FindParameter(vislib::StringA(name), quiet, create);

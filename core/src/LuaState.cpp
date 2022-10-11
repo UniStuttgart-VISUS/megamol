@@ -474,69 +474,7 @@ int megamol::core::LuaState::GetProcessID(lua_State* L) {
 
 
 int megamol::core::LuaState::GetModuleParams(lua_State* L) {
-    if (this->checkRunning(MMC_LUA_MMGETMODULEPARAMS)) {
-        auto moduleName = luaL_checkstring(L, 1);
-
-        // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
-        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
-
-
-        auto ret =
-            this->coreInst->EnumerateParameterSlotsNoLock<megamol::core::Module>(moduleName, [L](param::ParamSlot& ps) {
-                std::stringstream answer;
-                Module* mod = dynamic_cast<Module*>(ps.Parent().get());
-                if (mod != nullptr) {
-                    vislib::StringA name(mod->FullName());
-                    answer << name << "\1";
-                    AbstractNamedObjectContainer::child_list_type::iterator si, se;
-                    se = mod->ChildList_End();
-                    for (si = mod->ChildList_Begin(); si != se; ++si) {
-                        param::ParamSlot* slot = dynamic_cast<param::ParamSlot*>((*si).get());
-                        if (slot != NULL) {
-                            // name.Append("::");
-                            // name.Append(slot->Name());
-
-                            answer << slot->Name() << "\1";
-
-                            vislib::StringA descUTF8;
-                            vislib::UTF8Encoder::Encode(descUTF8, slot->Description());
-                            answer << descUTF8 << "\1";
-
-                            auto psp = slot->Parameter();
-                            if (psp.IsNull()) {
-                                std::ostringstream err;
-                                err << MMC_LUA_MMGETMODULEPARAMS ": ParamSlot " << slot->FullName()
-                                    << " does seem to hold no parameter";
-                                lua_pushstring(L, err.str().c_str());
-                                lua_error(L);
-                            }
-
-                            auto const pspdef = psp->Definition();
-                            // not nice, but we make HEX (base64 would be better, but I don't care)
-                            std::string answer2(pspdef.size() * 2, ' ');
-                            for (SIZE_T i = 0; i < pspdef.size(); ++i) {
-                                uint8_t b = pspdef[i];
-                                uint8_t bh[2] = {static_cast<uint8_t>(b / 16), static_cast<uint8_t>(b % 16)};
-                                for (unsigned int j = 0; j < 2; ++j)
-                                    answer2[i * 2 + j] = (bh[j] < 10u) ? ('0' + bh[j]) : ('A' + (bh[j] - 10u));
-                            }
-                            answer << answer2 << "\1";
-
-                            vislib::StringA valUTF8;
-                            vislib::UTF8Encoder::Encode(valUTF8, psp->ValueString().c_str());
-
-                            answer << valUTF8 << "\1";
-                        }
-                    }
-                    lua_pushstring(L, answer.str().c_str());
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "LuaState: ParamSlot %s has a parent which is not a Module!", ps.FullName().PeekBuffer());
-                }
-            });
-        return ret ? 1 : 0;
-    }
-    return 0;
+    throw std::runtime_error("Not implemented anymore! Use new Lua API!");
 }
 
 
@@ -610,40 +548,7 @@ bool megamol::core::LuaState::getJob(const std::string routine, const char* jobN
 
 
 int megamol::core::LuaState::GetParamType(lua_State* L) {
-    if (this->checkRunning(MMC_LUA_MMGETPARAMTYPE)) {
-        auto paramName = luaL_checkstring(L, 1);
-
-        // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
-        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
-
-        core::param::ParamSlot* ps = nullptr;
-        if (getParamSlot(MMC_LUA_MMGETPARAMTYPE, paramName, &ps)) {
-
-            auto psp = ps->Parameter();
-            if (psp.IsNull()) {
-                lua_pushstring(L, MMC_LUA_MMGETPARAMTYPE ": ParamSlot does seem to hold no parameter");
-                lua_error(L);
-                return 0;
-            }
-
-            auto const pspdef = psp->Definition();
-            // not nice, but we make HEX (base64 would be better, but I don't care)
-            std::string answer(pspdef.size() * 2, ' ');
-            for (SIZE_T i = 0; i < pspdef.size(); ++i) {
-                uint8_t b = pspdef[i];
-                uint8_t bh[2] = {static_cast<uint8_t>(b / 16), static_cast<uint8_t>(b % 16)};
-                for (unsigned int j = 0; j < 2; ++j)
-                    answer[i * 2 + j] = (bh[j] < 10u) ? ('0' + bh[j]) : ('A' + (bh[j] - 10u));
-            }
-
-            lua_pushstring(L, answer.c_str());
-            return 1;
-        } else {
-            // the error is already thrown
-            return 0;
-        }
-    }
-    return 0;
+    throw std::runtime_error("Not implemented anymore! Use new Lua API!");
 }
 
 
@@ -681,7 +586,7 @@ int megamol::core::LuaState::GetParamValue(lua_State* L) {
         if (getParamSlot(MMC_LUA_MMGETPARAMVALUE, paramName, &ps)) {
 
             auto psp = ps->Parameter();
-            if (psp.IsNull()) {
+            if (psp == nullptr) {
                 lua_pushstring(L, MMC_LUA_MMGETPARAMVALUE ": ParamSlot does seem to hold no parameter");
                 lua_error(L);
                 return 0;

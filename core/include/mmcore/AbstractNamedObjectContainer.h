@@ -164,8 +164,8 @@ public:
      *
      * @return 'true' if 'param' is relevant, 'false' otherwise.
      */
-    virtual bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const vislib::SmartPtr<param::AbstractParam>& param) const;
+    bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
+        const std::shared_ptr<param::AbstractParam>& param) const override;
 
 protected:
     /**

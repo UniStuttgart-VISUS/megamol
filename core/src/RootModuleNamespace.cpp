@@ -207,7 +207,7 @@ void RootModuleNamespace::SerializeGraph(vislib::RawStorage& outmem) {
         }
 
         if (param != NULL) {
-            if (param->Parameter().IsNull())
+            if (param->Parameter() == nullptr)
                 continue;
             if (param->Param<param::ButtonParam>() != NULL)
                 continue; // ignore button parameters (we do not want to press them)

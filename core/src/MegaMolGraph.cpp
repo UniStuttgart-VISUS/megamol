@@ -66,13 +66,13 @@ static megamol::core::param::AbstractParam* getParameterFromParamSlot(megamol::c
                   ", slot is not available");
         return nullptr;
     }
-    if (param_slot->Parameter().IsNull()) {
+    if (param_slot->Parameter() == nullptr) {
         log_error("error. cannot find parameter: " + std::string(param_slot->Name().PeekBuffer()) +
                   ", slot has no parameter");
         return nullptr;
     }
 
-    return param_slot->Parameter().DynamicCast<megamol::core::param::AbstractParam>();
+    return param_slot->Parameter().get();
 }
 
 megamol::core::MegaMolGraph::MegaMolGraph(megamol::core::CoreInstance& core,

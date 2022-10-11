@@ -217,7 +217,7 @@ void megamol::core::CoreInstance::Initialise() {
 /*
  * megamol::core::CoreInstance::FindParameter
  */
-vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstance::FindParameter(
+std::shared_ptr<megamol::core::param::AbstractParam> megamol::core::CoreInstance::FindParameter(
     const vislib::StringA& name, bool quiet, bool create) {
     using megamol::core::utility::log::Log;
     vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
@@ -314,7 +314,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
             return NULL;
         }
     }
-    if (slot->Parameter().IsNull()) {
+    if (slot->Parameter() == nullptr) {
         /*    if(create)
             {
                 param::ParamSlot *slotNew = new param::ParamSlot(slotName, "newly inserted");

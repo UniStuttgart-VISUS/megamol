@@ -216,7 +216,7 @@ public:
      * @return 'true' if 'param' is relevant, 'false' otherwise.
      */
     virtual bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const vislib::SmartPtr<param::AbstractParam>& param) const;
+        const std::shared_ptr<param::AbstractParam>& param) const;
 
     /**
      * Answer the reader-writer lock to lock the module graph
