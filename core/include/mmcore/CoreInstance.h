@@ -5,11 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_COREINSTANCE_H_INCLUDED
-#define MEGAMOLCORE_COREINSTANCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <filesystem>
+#include <functional>
+#include <memory>
+#include <string>
+#include <unordered_map>
 
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -29,7 +31,6 @@
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamUpdateListener.h"
 #include "mmcore/utility/Configuration.h"
-
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Array.h"
 #include "vislib/IllegalStateException.h"
@@ -44,11 +45,6 @@
 #include "vislib/sys/DynamicLinkLibrary.h"
 #include "vislib/sys/Lockable.h"
 
-#include <filesystem>
-#include <functional>
-#include <memory>
-#include <string>
-#include <unordered_map>
 
 #define GOES_INTO_GRAPH
 #define GOES_INTO_TRASH
@@ -126,62 +122,9 @@ public:
     }
 
     /**
-     * Request deletion of the module with the given id.
-     */
-#ifdef REMOVE_GRAPH
-    bool GOES_INTO_GRAPH RequestModuleDeletion(const vislib::StringA& id);
-#endif
-
-
-    /**
-     * Request deletion of call connecting callerslot from
-     * to calleeslot to.
-     */
-#ifdef REMOVE_GRAPH
-    bool GOES_INTO_GRAPH RequestCallDeletion(const vislib::StringA& from, const vislib::StringA& to);
-#endif
-
-    /**
-     * Request instantiation of a module of class className
-     * with the name id.
-     */
-#ifdef REMOVE_GRAPH
-    bool GOES_INTO_GRAPH RequestModuleInstantiation(const vislib::StringA& className, const vislib::StringA& id);
-#endif
-
-    /**
-     * Request instantiation of a call of class className, connecting
-     * Callerslot from to Calleeslot to.
-     */
-#ifdef REMOVE_GRAPH
-    bool GOES_INTO_GRAPH RequestCallInstantiation(
-        const vislib::StringA& className, const vislib::StringA& from, const vislib::StringA& to);
-#endif
-
-    /**
-     * Request instantiation of a call at the end of a chain of calls of
-     * type className. See Daisy-Chaining Paradigm.
-     */
-#ifdef REMOVE_GRAPH
-    bool GOES_INTO_GRAPH RequestChainCallInstantiation(
-        const vislib::StringA& className, const vislib::StringA& chainStart, const vislib::StringA& to);
-#endif
-
-    /**
      * Request setting the parameter id to the value.
      */
 #ifdef REMOVE_GRAPH
-    bool GOES_INTO_GRAPH RequestParamValue(const vislib::StringA& id, const vislib::StringA& value);
-
-    bool GOES_INTO_GRAPH CreateParamGroup(const vislib::StringA& name, const int size);
-    bool GOES_INTO_GRAPH RequestParamGroupValue(
-        const vislib::StringA& group, const vislib::StringA& id, const vislib::StringA& value);
-
-    /**
-     * Inserts a flush event into the graph update queues
-     */
-    bool GOES_INTO_GRAPH FlushGraphUpdates();
-
     /**
      * Returns a pointer to the parameter with the given name.
      *
@@ -525,51 +468,6 @@ public:
 
 private:
     /**
-     * Utility struct for quickstart configuration
-     */
-    typedef struct _quickstepinfo_t {
-
-        /** The name of the slot of the previous mod */
-        vislib::StringA prevSlot;
-
-        /** The name of the slot of the next mod */
-        vislib::StringA nextSlot;
-
-        /** module one step upward */
-        factories::ModuleDescription::ptr nextMod;
-
-        /** call connecting 'nextMod' to previous mod */
-        factories::CallDescription::ptr call;
-
-        /**
-         * Assignment operator
-         *
-         *
-         * @return A reference to this
-         */
-        struct _quickstepinfo_t& operator=(const struct _quickstepinfo_t& rhs) {
-            this->prevSlot = rhs.prevSlot;
-            this->nextSlot = rhs.nextSlot;
-            this->nextMod = rhs.nextMod;
-            this->call = rhs.call;
-            return *this;
-        }
-
-        /**
-         * Test for equality
-         *
-         * @param rhs The right hand side operand
-         *
-         * @return True if this and rhs are equal
-         */
-        bool operator==(const struct _quickstepinfo_t& rhs) {
-            return (this->prevSlot == rhs.prevSlot) && (this->nextSlot == rhs.nextSlot) &&
-                   (this->nextMod == rhs.nextMod) && (this->call == rhs.call);
-        }
-
-    } quickStepInfo;
-
-    /**
      * Closes a view or job handle (the corresponding instance object will
      * be deleted by the caller.
      *
@@ -591,10 +489,6 @@ private:
      */
     void translateShaderPaths(megamol::core::utility::Configuration const& config);
 
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
-
     /** the cores configuration */
     megamol::core::utility::Configuration config;
 
@@ -614,74 +508,6 @@ private:
      * MegaMol execution.
      */
     vislib::Array<vislib::Pair<vislib::StringA, vislib::StringA>> loadedLuaProjects;
-
-#ifdef REMOVE_GRAPH
-    /** the list of calls to be instantiated: (class,(from,to))* */
-    vislib::SingleLinkedList<core::InstanceDescription::CallInstanceRequest> GOES_INTO_GRAPH pendingCallInstRequests;
-
-    /** the list of calls to be instantiated: (class,(from == chainStart,to))* */
-    vislib::SingleLinkedList<core::InstanceDescription::CallInstanceRequest> GOES_INTO_GRAPH
-        pendingChainCallInstRequests;
-
-    /** the list of modules to be instantiated: (class, id)* */
-    vislib::SingleLinkedList<core::InstanceDescription::ModuleInstanceRequest> GOES_INTO_GRAPH
-        pendingModuleInstRequests;
-
-    /** the list of calls to be deleted: (from,to)* */
-    vislib::SingleLinkedList<vislib::Pair<vislib::StringA, vislib::StringA>> GOES_INTO_GRAPH pendingCallDelRequests;
-
-    /** the list of modules to be deleted: (id)* */
-    vislib::SingleLinkedList<vislib::StringA> GOES_INTO_GRAPH pendingModuleDelRequests;
-
-    /** the list of (parameter = value) pairs that need to be set */
-    vislib::SingleLinkedList<vislib::Pair<vislib::StringA, vislib::StringA>> GOES_INTO_GRAPH pendingParamSetRequests;
-
-    struct GOES_INTO_GRAPH ParamGroup {
-        int GroupSize;
-        vislib::StringA Name;
-        vislib::Map<vislib::StringA, vislib::StringA> Requests;
-
-        bool operator==(const ParamGroup& other) const {
-            return this->Name.Equals(other.Name);
-        }
-    };
-
-    vislib::Map<vislib::StringA, ParamGroup> GOES_INTO_GRAPH pendingGroupParamSetRequests;
-
-    /** list of indices into view instantiation requests pointing to flush events */
-    std::vector<size_t> GOES_INTO_GRAPH viewInstRequestsFlushIndices;
-
-    /** list of indices into job instantiation requests pointing to flush events */
-    std::vector<size_t> GOES_INTO_GRAPH jobInstRequestsFlushIndices;
-
-    /** list of indices into call instantiation requests pointing to flush events */
-    std::vector<size_t> GOES_INTO_GRAPH callInstRequestsFlushIndices;
-
-    /** list of indices into chain call instantiation requests pointing to flush events */
-    std::vector<size_t> GOES_INTO_GRAPH chainCallInstRequestsFlushIndices;
-
-    /** list of indices into module instantiation requests pointing to flush events */
-    std::vector<size_t> GOES_INTO_GRAPH moduleInstRequestsFlushIndices;
-
-    /** list of indices into call deletion requests pointing to flush events */
-    std::vector<size_t> GOES_INTO_GRAPH callDelRequestsFlushIndices;
-
-    /** list of indices into module deletion requests pointing to flush events */
-    std::vector<size_t> GOES_INTO_GRAPH moduleDelRequestsFlushIndices;
-
-    /** list of indices into param set requests pointing to flush events */
-    std::vector<size_t> GOES_INTO_GRAPH paramSetRequestsFlushIndices;
-
-    /** list of indices into group param set requests pointing to flush events */
-    std::vector<size_t> GOES_INTO_GRAPH groupParamSetRequestsFlushIndices;
-
-    /**
-     * You need to lock this if you manipulate any pending* lists. The lists
-     * are designed to be manipulated from the Lua interface which CAN be
-     * invoked from another thread (the LuaRemoteHost, for example).
-     */
-    mutable vislib::sys::CriticalSection GOES_INTO_GRAPH graphUpdateLock;
-#endif
 
     /** The module namespace root */
     RootModuleNamespace::ptr_type namespaceRoot;
@@ -703,18 +529,6 @@ private:
     /** The manager of registered services */
     utility::ServiceManager* services;
 
-#ifdef REMOVE_GRAPH
-    /** Map of all parameter hashes (as requested by GetFullParameterHash)*/
-    ParamHashMap_t GOES_INTO_GRAPH lastParamMap;
-
-    /** Global hash of all parameters (is increased if any parameter defintion changes) */
-    size_t GOES_INTO_GRAPH parameterHash;
-#endif
-
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif /* _WIN32 */
-
     /**
      * Factory referencing all call descriptions from core and all loaded
      * plugins.
@@ -730,5 +544,3 @@ private:
 
 } /* end namespace core */
 } /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_COREINSTANCE_H_INCLUDED */

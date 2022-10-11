@@ -702,178 +702,41 @@ int megamol::core::LuaState::GetParamValue(lua_State* L) {
 
 
 int megamol::core::LuaState::SetParamValue(lua_State* L) {
-
-    if (this->checkRunning(MMC_LUA_MMSETPARAMVALUE)) {
-        auto paramName = luaL_checkstring(L, 1);
-        auto paramValue = luaL_checkstring(L, 2);
-
-        if (!this->coreInst->RequestParamValue(paramName, paramValue)) {
-            std::stringstream out;
-            out << "could not set \"";
-            out << paramName;
-            out << "\" to \"";
-            out << paramValue;
-            out << "\" (check MegaMol log)";
-            lua_pushstring(L, out.str().c_str());
-            lua_error(L);
-            return 0;
-        }
-    }
-    return 0;
+    throw std::runtime_error("Not implemented anymore! Use new Lua API!");
 }
 
 
 int megamol::core::LuaState::CreateParamGroup(lua_State* L) {
-    if (this->checkRunning(MMC_LUA_MMCREATEPARAMGROUP)) {
-        auto groupName = luaL_checkstring(L, 1);
-        auto groupSize = luaL_checkinteger(L, 2);
-
-        if (!this->coreInst->CreateParamGroup(groupName, groupSize)) {
-            std::stringstream out;
-            out << "could not create param group \"";
-            out << groupName;
-            out << "\" with size \"";
-            out << groupSize;
-            out << "\" (check MegaMol log)";
-            lua_pushstring(L, out.str().c_str());
-            lua_error(L);
-            return 0;
-        }
-    }
-    return 0;
+    throw std::runtime_error("Not implemented anymore! Use new Lua API!");
 }
 
 
 int megamol::core::LuaState::SetParamGroupValue(lua_State* L) {
-    if (this->checkRunning(MMC_LUA_MMSETPARAMGROUPVALUE)) {
-        auto paramGroup = luaL_checkstring(L, 1);
-        auto paramName = luaL_checkstring(L, 2);
-        auto paramValue = luaL_checkstring(L, 3);
-
-        if (!this->coreInst->RequestParamGroupValue(paramGroup, paramName, paramValue)) {
-            std::stringstream out;
-            out << "could not set \"";
-            out << paramName;
-            out << "\" in group \"";
-            out << paramGroup;
-            out << "\" to \"";
-            out << paramValue;
-            out << "\" (check MegaMol log)";
-            lua_pushstring(L, out.str().c_str());
-            lua_error(L);
-            return 0;
-        }
-    }
-    return 0;
+    throw std::runtime_error("Not implemented anymore! Use new Lua API!");
 }
 
 
 int megamol::core::LuaState::CreateModule(lua_State* L) {
-    if (this->checkRunning(MMC_LUA_MMCREATEMODULE)) {
-        // auto viewjobName = luaL_checkstring(L, 1);
-        auto className = luaL_checkstring(L, 1);
-        std::string instanceName(luaL_checkstring(L, 2));
-
-        if (instanceName.compare(0, 2, "::") != 0) {
-            std::string out = "instance name \"" + instanceName + "\" must be global (starting with \"::\")";
-            lua_pushstring(L, out.c_str());
-            lua_error(L);
-            return 0;
-        }
-
-        if (!this->coreInst->RequestModuleInstantiation(className, instanceName.c_str())) {
-            std::stringstream out;
-            out << "could not create \"";
-            out << className;
-            out << "\" module (check MegaMol log)";
-            lua_pushstring(L, out.str().c_str());
-            lua_error(L);
-            return 0;
-        }
-    }
-    return 0;
+    throw std::runtime_error("Not implemented anymore! Use new Lua API!");
 }
 
 
 int megamol::core::LuaState::DeleteModule(lua_State* L) {
-    if (this->checkRunning(MMC_LUA_MMDELETEMODULE)) {
-        auto moduleName = luaL_checkstring(L, 1);
-
-        if (!this->coreInst->RequestModuleDeletion(moduleName)) {
-            lua_pushstring(L, ("cannot delete module \"" + std::string(moduleName) + "\" (check MegaMol log)").c_str());
-            lua_error(L);
-            return 0;
-        }
-    }
-    return 0;
+    throw std::runtime_error("Not implemented anymore! Use new Lua API!");
 }
 
 
 int megamol::core::LuaState::CreateCall(lua_State* L) {
-    if (this->checkRunning(MMC_LUA_MMCREATECALL)) {
-        auto className = luaL_checkstring(L, 1);
-        auto from = luaL_checkstring(L, 2);
-        auto to = luaL_checkstring(L, 3);
-
-        if (!this->coreInst->RequestCallInstantiation(className, from, to)) {
-            std::stringstream out;
-            out << "could not create \"";
-            out << className;
-            out << "\" call (check MegaMol log)";
-            lua_pushstring(L, out.str().c_str());
-            lua_error(L);
-            return 0;
-        }
-    }
-    return 0;
+    throw std::runtime_error("Not implemented anymore! Use new Lua API!");
 }
 
 int megamol::core::LuaState::CreateChainCall(lua_State* L) {
-    if (this->checkRunning(MMC_LUA_MMCREATECHAINCALL)) {
-        auto className = luaL_checkstring(L, 1);
-        std::string chainStart = luaL_checkstring(L, 2);
-        std::string to = luaL_checkstring(L, 3);
-
-        // TODO I am not sure whether reading information from the MegaMol Graph is safe without locking
-        vislib::sys::AutoLock l(this->coreInst->ModuleGraphRoot()->ModuleGraphLock());
-
-        auto pos = chainStart.find_last_of("::");
-        if (pos < 4 || chainStart.length() < pos + 2) {
-            lua_pushstring(L, MMC_LUA_MMCREATECHAINCALL ": chainStart module/slot name weird");
-            lua_error(L);
-            return 0;
-        }
-        auto moduleName = chainStart.substr(0, pos - 1);
-        auto slotName = chainStart.substr(pos + 1, -1);
-
-        if (!this->coreInst->RequestChainCallInstantiation(className, chainStart.c_str(), to.c_str())) {
-            std::stringstream out;
-            out << "could not create \"";
-            out << className;
-            out << "\" call (check MegaMol log)";
-            lua_pushstring(L, out.str().c_str());
-            lua_error(L);
-            return 0;
-        }
-    }
-    return 0;
+    throw std::runtime_error("Not implemented anymore! Use new Lua API!");
 }
 
 
 int megamol::core::LuaState::DeleteCall(lua_State* L) {
-    if (this->checkRunning(MMC_LUA_MMDELETECALL)) {
-        auto from = luaL_checkstring(L, 1);
-        auto to = luaL_checkstring(L, 2);
-
-        if (!this->coreInst->RequestCallDeletion(from, to)) {
-            lua_pushstring(L, ("cannot delete call from \"" + std::string(from) + "\" to \"" + std::string(to) +
-                                  "\" (check MegaMol log)")
-                                  .c_str());
-            lua_error(L);
-            return 0;
-        }
-    }
-    return 0;
+    throw std::runtime_error("Not implemented anymore! Use new Lua API!");
 }
 
 
@@ -1180,11 +1043,7 @@ int megamol::core::LuaState::ReadTextFile(lua_State* L) {
 }
 
 int megamol::core::LuaState::Flush(lua_State* L) {
-    if (this->checkRunning(MMC_LUA_MMFLUSH)) {
-        this->coreInst->FlushGraphUpdates();
-    }
-
-    return 0;
+    throw std::runtime_error("Not implemented anymore! Use new Lua API!");
 }
 
 int megamol::core::LuaState::CurrentScriptPath(struct lua_State* L) {

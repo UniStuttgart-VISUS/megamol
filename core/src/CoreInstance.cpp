@@ -68,10 +68,6 @@
 
 /*****************************************************************************/
 
-#ifdef _WIN32
-extern HMODULE mmCoreModuleHandle;
-#endif
-
 /*
  * megamol::core::CoreInstance::CoreInstance
  */
@@ -79,18 +75,11 @@ megamol::core::CoreInstance::CoreInstance(void)
         : config()
         , lua(nullptr)
         , namespaceRoot()
-        , pendingCallInstRequests()
-        , pendingCallDelRequests()
-        , pendingModuleInstRequests()
-        , pendingModuleDelRequests()
-        , pendingParamSetRequests()
-        , graphUpdateLock()
         , loadedLuaProjects()
         , paramUpdateListeners()
         , plugins()
         , all_call_descriptions()
-        , all_module_descriptions()
-        , parameterHash(1) {
+        , all_module_descriptions() {
 
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
@@ -106,9 +95,6 @@ megamol::core::CoreInstance::CoreInstance(void)
     //    this->InstallService<megamol::core::utility::LuaHostService>();
 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("Core Instance created");
-
-    // megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO+42, "GraphUpdateLock address: %x\n",
-    // std::addressof(this->graphUpdateLock));
 }
 
 
@@ -225,143 +211,6 @@ void megamol::core::CoreInstance::Initialise() {
     //////////////////////////////////////////////////////////////////////
 
     translateShaderPaths(config);
-}
-
-
-bool megamol::core::CoreInstance::RequestModuleDeletion(const vislib::StringA& id) {
-    vislib::sys::AutoLock l(this->graphUpdateLock);
-    this->pendingModuleDelRequests.Add(id);
-    return true;
-}
-
-
-bool megamol::core::CoreInstance::RequestCallDeletion(const vislib::StringA& from, const vislib::StringA& to) {
-    vislib::sys::AutoLock l(this->graphUpdateLock);
-    this->pendingCallDelRequests.Add(vislib::Pair<vislib::StringA, vislib::StringA>(from, to));
-    return true;
-}
-
-
-bool megamol::core::CoreInstance::RequestModuleInstantiation(
-    const vislib::StringA& className, const vislib::StringA& id) {
-
-    factories::ModuleDescription::ptr md = this->GetModuleDescriptionManager().Find(vislib::StringA(className));
-    if (md == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to request instantiation of module"
-                                                                " \"%s\": class \"%s\" not found.",
-            id.PeekBuffer(), className.PeekBuffer());
-        return false;
-    }
-
-    core::InstanceDescription::ModuleInstanceRequest mir;
-    mir.SetFirst(id);
-    mir.SetSecond(md);
-    vislib::sys::AutoLock l(this->graphUpdateLock);
-    this->pendingModuleInstRequests.Add(mir);
-    return true;
-}
-
-
-bool megamol::core::CoreInstance::RequestCallInstantiation(
-    const vislib::StringA& className, const vislib::StringA& from, const vislib::StringA& to) {
-
-    factories::CallDescription::ptr cd = this->GetCallDescriptionManager().Find(vislib::StringA(className));
-    if (cd == NULL) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to request instantiation of "
-                                                                " unknown call class \"%s\".",
-            className.PeekBuffer());
-        return false;
-    }
-
-    core::InstanceDescription::CallInstanceRequest cir(from, to, cd, false);
-    vislib::sys::AutoLock l(this->graphUpdateLock);
-    this->pendingCallInstRequests.Add(cir);
-    return true;
-}
-
-bool megamol::core::CoreInstance::RequestChainCallInstantiation(
-    const vislib::StringA& className, const vislib::StringA& chainStart, const vislib::StringA& to) {
-    factories::CallDescription::ptr cd = this->GetCallDescriptionManager().Find(vislib::StringA(className));
-    if (cd == NULL) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to request chain instantiation of "
-                                                                " unknown call class \"%s\".",
-            className.PeekBuffer());
-        return false;
-    }
-
-    core::InstanceDescription::CallInstanceRequest cir(chainStart, to, cd, false);
-    vislib::sys::AutoLock l(this->graphUpdateLock);
-    this->pendingChainCallInstRequests.Add(cir);
-    return true;
-}
-
-
-bool megamol::core::CoreInstance::RequestParamValue(const vislib::StringA& id, const vislib::StringA& value) {
-    vislib::sys::AutoLock l(this->graphUpdateLock);
-    this->pendingParamSetRequests.Add(vislib::Pair<vislib::StringA, vislib::StringA>(id, value));
-    return true;
-}
-
-bool megamol::core::CoreInstance::CreateParamGroup(const vislib::StringA& name, const int size) {
-    vislib::sys::AutoLock l(this->graphUpdateLock);
-    if (this->pendingGroupParamSetRequests.Contains(name)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Cannot create parameter group %s: group already exists!", name.PeekBuffer());
-        return false;
-    } else {
-        ParamGroup pg;
-        pg.GroupSize = size;
-        pg.Name = name;
-        this->pendingGroupParamSetRequests[name] = pg;
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "Created parameter group %s with size %i", name.PeekBuffer(), size);
-        return true;
-    }
-}
-
-bool megamol::core::CoreInstance::RequestParamGroupValue(
-    const vislib::StringA& group, const vislib::StringA& id, const vislib::StringA& value) {
-
-    vislib::sys::AutoLock l(this->graphUpdateLock);
-    if (this->pendingGroupParamSetRequests.Contains(group)) {
-        auto& g = this->pendingGroupParamSetRequests[group];
-        if (g.Requests.Contains(id)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Cannot queue %s parameter change in group %s twice!", id.PeekBuffer(), group.PeekBuffer());
-            return false;
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("Queueing parameter value change: [%s] %s = %s",
-                group.PeekBuffer(), id.PeekBuffer(), value.PeekBuffer());
-            g.Requests[id] = value;
-        }
-        return true;
-    } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Cannot queue parameter change into nonexisting group %s", group.PeekBuffer());
-        return false;
-    }
-}
-
-
-bool megamol::core::CoreInstance::FlushGraphUpdates() {
-    vislib::sys::AutoLock u(this->graphUpdateLock);
-
-    if (this->pendingCallInstRequests.Count() != 0)
-        this->callInstRequestsFlushIndices.push_back(this->pendingCallInstRequests.Count() - 1);
-    if (this->pendingChainCallInstRequests.Count() != 0)
-        this->chainCallInstRequestsFlushIndices.push_back(this->pendingChainCallInstRequests.Count() - 1);
-    if (this->pendingModuleInstRequests.Count() != 0)
-        this->moduleInstRequestsFlushIndices.push_back(this->pendingModuleInstRequests.Count() - 1);
-    if (this->pendingCallDelRequests.Count() != 0)
-        this->callDelRequestsFlushIndices.push_back(this->pendingCallDelRequests.Count() - 1);
-    if (this->pendingModuleDelRequests.Count() != 0)
-        this->moduleDelRequestsFlushIndices.push_back(this->pendingModuleDelRequests.Count() - 1);
-    if (this->pendingParamSetRequests.Count() != 0)
-        this->paramSetRequestsFlushIndices.push_back(this->pendingParamSetRequests.Count() - 1);
-    if (this->pendingGroupParamSetRequests.Count() != 0)
-        this->groupParamSetRequestsFlushIndices.push_back(this->pendingGroupParamSetRequests.Count() - 1);
-
-    return true;
 }
 
 
@@ -816,10 +665,6 @@ void megamol::core::CoreInstance::loadPlugin(
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load Plugin: unknown exception");
     }
 }
-
-#ifdef _WIN32
-extern HMODULE mmCoreModuleHandle;
-#endif /* _WIN32 */
 
 
 void megamol::core::CoreInstance::translateShaderPaths(megamol::core::utility::Configuration const& config) {
