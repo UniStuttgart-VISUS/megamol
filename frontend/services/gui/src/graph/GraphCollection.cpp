@@ -937,7 +937,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                 }
 
                 projectstr = std::string("mmCheckVersion(\"") + megamol::core::utility::buildinfo::MEGAMOL_GIT_HASH() +
-                             "\") \n" + confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" +
+                             "\")\n" + confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" +
                              confParams.str() + "\n" + state_json;
 
                 graph_ptr->ResetDirty();
