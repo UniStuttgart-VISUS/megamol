@@ -5,7 +5,6 @@
  */
 
 #include "mmcore/factories/CallDescription.h"
-
 #include "mmcore/Call.h"
 
 using namespace megamol::core;

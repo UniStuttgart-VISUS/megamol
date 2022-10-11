@@ -15,6 +15,8 @@
 #include "mmstd/light/PointLight.h"
 #include "mmstd/light/TriDirectionalLighting.h"
 
+using megamol::core::utility::log::Log;
+
 megamol::compositing::LocalLighting::LocalLighting()
         : core::Module()
         , m_version(0)

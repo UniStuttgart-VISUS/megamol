@@ -23,6 +23,7 @@
 
 using namespace megamol;
 using namespace megamol::protein_gl;
+using megamol::core::utility::log::Log;
 
 #pragma push_macro("min")
 #undef min

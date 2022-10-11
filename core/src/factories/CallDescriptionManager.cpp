@@ -5,7 +5,6 @@
  */
 
 #include "mmcore/factories/CallDescriptionManager.h"
-
 #include "mmcore/Call.h"
 
 /*

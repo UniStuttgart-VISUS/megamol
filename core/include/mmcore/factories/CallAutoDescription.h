@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "CallDescription.h"
-
 #include <string>
 #include <vector>
+
+#include "CallDescription.h"
 
 namespace megamol::core::factories {
 

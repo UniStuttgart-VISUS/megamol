@@ -33,6 +33,7 @@
 using namespace megamol::image_gl;
 using namespace megamol::core;
 using namespace megamol;
+using megamol::core::utility::log::Log;
 
 const unsigned int TILE_SIZE = 2 * 1024;
 

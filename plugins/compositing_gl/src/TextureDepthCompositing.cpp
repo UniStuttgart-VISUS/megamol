@@ -7,6 +7,8 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
+using megamol::core::utility::log::Log;
+
 megamol::compositing::TextureDepthCompositing::TextureDepthCompositing()
         : core::Module()
         , m_version(0)

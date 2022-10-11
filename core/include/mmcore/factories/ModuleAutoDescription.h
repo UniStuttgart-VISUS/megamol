@@ -11,8 +11,6 @@
 #include "ModuleDescription.h"
 #include "mmcore/utility/log/Log.h"
 
-using megamol::core::utility::log::Log;
-
 namespace megamol::core::factories {
 
 /**
@@ -99,6 +97,7 @@ protected:
      *         error.
      */
     Module::ptr_type createModuleImpl() const override {
+        using megamol::core::utility::log::Log;
         try {
             Module::ptr_type m = std::make_shared<C>();
             m->SetClassName(this->ClassName());

@@ -4,6 +4,8 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
+using megamol::core::utility::log::Log;
+
 megamol::compositing::NormalFromDepth::NormalFromDepth()
         : m_version(0)
         , m_output_texture(nullptr)

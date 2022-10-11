@@ -40,6 +40,8 @@
         }                                                                                     \
     } while (0)
 
+using megamol::core::utility::log::Log;
+
 namespace megamol {
 namespace demos_gl {
 /*

@@ -16,6 +16,7 @@
 
 using namespace megamol;
 using namespace megamol::core;
+using megamol::core::utility::log::Log;
 
 
 FlagStorage::FlagStorage()

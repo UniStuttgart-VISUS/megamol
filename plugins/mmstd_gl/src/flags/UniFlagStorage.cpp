@@ -15,6 +15,7 @@
 
 using namespace megamol;
 using namespace megamol::mmstd_gl;
+using megamol::core::utility::log::Log;
 
 
 UniFlagStorage::UniFlagStorage()

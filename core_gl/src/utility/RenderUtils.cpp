@@ -9,6 +9,8 @@
 
 #include "mmcore_gl/utility/ShaderFactory.h"
 
+using megamol::core::utility::log::Log;
+
 namespace megamol::core_gl::utility {
 
 // STATIC functions -------------------------------------------------------

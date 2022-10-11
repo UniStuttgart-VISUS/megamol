@@ -8,6 +8,8 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
+using megamol::core::utility::log::Log;
+
 megamol::compositing::TextureCombine::TextureCombine()
         : core::Module()
         , m_version(0)

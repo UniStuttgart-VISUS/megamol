@@ -26,6 +26,8 @@
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "mmstd_gl/renderer/TransferFunctionGL.h"
 
+using megamol::core::utility::log::Log;
+
 namespace megamol::volume_gl {
 
 SurfaceLICRenderer::SurfaceLICRenderer()

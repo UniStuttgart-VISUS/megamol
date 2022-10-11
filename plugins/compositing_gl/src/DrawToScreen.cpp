@@ -6,6 +6,8 @@
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd_gl/flags/FlagCallsGL.h"
 
+using megamol::core::utility::log::Log;
+
 megamol::compositing::DrawToScreen::DrawToScreen()
         : mmstd_gl::Renderer3DModuleGL()
         , m_dummy_color_tx(nullptr)

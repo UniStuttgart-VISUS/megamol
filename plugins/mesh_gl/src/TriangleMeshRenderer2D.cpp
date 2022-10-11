@@ -18,6 +18,8 @@
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
+using megamol::core::utility::log::Log;
+
 namespace megamol::mesh_gl {
 
 TriangleMeshRenderer2D::TriangleMeshRenderer2D()

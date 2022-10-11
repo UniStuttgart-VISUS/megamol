@@ -24,6 +24,8 @@
 #include "vislib/math/Plane.h"
 #include "vislib/math/Point.h"
 
+using megamol::core::utility::log::Log;
+
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */

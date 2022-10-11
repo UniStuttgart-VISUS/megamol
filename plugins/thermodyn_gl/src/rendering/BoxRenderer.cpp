@@ -9,6 +9,8 @@
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "thermodyn/BoxDataCall.h"
 
+using megamol::core::utility::log::Log;
+
 megamol::thermodyn_gl::rendering::BoxRenderer::BoxRenderer()
         : dataInSlot_("dataIn", "Input of boxes to render")
         , calculateGlobalBoundingBoxParam("calcBoundingBoxEachFrame",

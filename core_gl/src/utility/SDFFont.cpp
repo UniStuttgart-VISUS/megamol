@@ -16,6 +16,7 @@
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 using namespace megamol::core::utility;
+using megamol::core::utility::log::Log;
 
 
 SDFFont::SDFFont(PresetFontName fn) : SDFFont(fn, 1.0f, RenderMode::RENDERMODE_FILL, false) {}

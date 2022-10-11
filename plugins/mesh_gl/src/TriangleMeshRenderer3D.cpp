@@ -31,6 +31,8 @@
 #include <utility>
 #include <vector>
 
+using megamol::core::utility::log::Log;
+
 namespace megamol {
 namespace mesh_gl {
 
