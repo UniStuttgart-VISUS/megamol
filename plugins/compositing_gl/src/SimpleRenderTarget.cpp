@@ -10,7 +10,7 @@ megamol::compositing_gl::SimpleRenderTarget::SimpleRenderTarget()
         , m_last_used_camera(glm::mat4(1.0f), glm::mat4(1.0f))
         , m_color_render_target("Color", "Access the color render target texture")
         , m_normal_render_target("Normals", "Access the normals render target texture")
-        , m_depth_render_target("Depth", "Access the depth render target texture")
+        , m_depth_buffer("Depth", "Access the depth render target texture")
         , m_camera("Camera", "Access the latest camera snapshot")
         , m_framebuffer_slot("Framebuffer", "Access the framebuffer used by this render target") {
     this->m_color_render_target.SetCallback(
@@ -25,11 +25,11 @@ megamol::compositing_gl::SimpleRenderTarget::SimpleRenderTarget()
         CallTexture2D::ClassName(), "GetMetaData", &SimpleRenderTarget::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_normal_render_target);
 
-    this->m_depth_render_target.SetCallback(
-        CallTexture2D::ClassName(), "GetData", &SimpleRenderTarget::getDepthRenderTarget);
-    this->m_depth_render_target.SetCallback(
+    this->m_depth_buffer.SetCallback(
+        CallTexture2D::ClassName(), "GetData", &SimpleRenderTarget::getDepthBuffer);
+    this->m_depth_buffer.SetCallback(
         CallTexture2D::ClassName(), "GetMetaData", &SimpleRenderTarget::getMetaDataCallback);
-    this->MakeSlotAvailable(&this->m_depth_render_target);
+    this->MakeSlotAvailable(&this->m_depth_buffer);
 
     this->m_camera.SetCallback(CallCamera::ClassName(), "GetData", &SimpleRenderTarget::getCameraSnapshot);
     this->m_camera.SetCallback(CallCamera::ClassName(), "GetMetaData", &SimpleRenderTarget::getMetaDataCallback);
@@ -55,7 +55,6 @@ bool megamol::compositing_gl::SimpleRenderTarget::create() {
     m_GBuffer = std::make_shared<glowl::FramebufferObject>(1, 1);
     m_GBuffer->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT); // surface albedo
     m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT);   // normals
-    m_GBuffer->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);          // clip space depth
 
     return true;
 }
@@ -84,7 +83,7 @@ bool megamol::compositing_gl::SimpleRenderTarget::Render(mmstd_gl::CallRender3DG
     }
 
     // this framebuffer will use 0 clear color because it uses alpha transparency during
-    // compositing_gl and final presentating to screen anyway
+    // compositing and final presentation to screen anyway
     m_GBuffer->bind();
     glClearColor(0, 0, 0, 0);
     glClearDepth(1.0f);
@@ -127,7 +126,7 @@ bool megamol::compositing_gl::SimpleRenderTarget::getNormalsRenderTarget(core::C
     return true;
 }
 
-bool megamol::compositing_gl::SimpleRenderTarget::getDepthRenderTarget(core::Call& caller) {
+bool megamol::compositing_gl::SimpleRenderTarget::getDepthBuffer(core::Call& caller) {
     auto ct = dynamic_cast<CallTexture2D*>(&caller);
 
     if (ct == NULL)
