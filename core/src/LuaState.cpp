@@ -878,24 +878,7 @@ int megamol::core::LuaState::DeleteCall(lua_State* L) {
 
 
 int megamol::core::LuaState::CreateJob(lua_State* L) {
-    if (this->checkRunning(MMC_LUA_MMCREATEJOB)) {
-        auto jobName = luaL_checkstring(L, 1);
-        auto className = luaL_checkstring(L, 2);
-        auto moduleName = luaL_checkstring(L, 3);
-
-        auto jd = std::make_shared<JobDescription>(jobName);
-        jd->AddModule(this->coreInst->GetModuleDescriptionManager().Find(className), moduleName);
-        jd->SetJobModuleID(moduleName);
-        try {
-            this->coreInst->projJobDescs.Register(jd);
-            this->coreInst->RequestJobInstantiation(jd.get(), jobName);
-        } catch (std::invalid_argument&) {
-            lua_pushstring(L, ("job \"" + std::string(jobName) + "\" already exists.").c_str());
-            lua_error(L);
-            return 0;
-        }
-    }
-    return 0;
+    throw std::runtime_error("Not implemented anymore! Use new Lua API!");
 }
 
 
@@ -907,24 +890,7 @@ int megamol::core::LuaState::DeleteJob(lua_State* L) {
 
 
 int megamol::core::LuaState::CreateView(lua_State* L) {
-    if (this->checkRunning(MMC_LUA_MMCREATEVIEW)) {
-        auto viewName = luaL_checkstring(L, 1);
-        auto className = luaL_checkstring(L, 2);
-        auto moduleName = luaL_checkstring(L, 3);
-
-        auto vd = std::make_shared<ViewDescription>(viewName);
-        vd->AddModule(this->coreInst->GetModuleDescriptionManager().Find(className), moduleName);
-        vd->SetViewModuleID(moduleName);
-        try {
-            this->coreInst->projViewDescs.Register(vd);
-            this->coreInst->RequestViewInstantiation(vd.get(), viewName);
-        } catch (std::invalid_argument&) {
-            lua_pushstring(L, ("view \"" + std::string(viewName) + "\" already exists.").c_str());
-            lua_error(L);
-            return 0;
-        }
-    }
-    return 0;
+    throw std::runtime_error("Not implemented anymore! Use new Lua API!");
 }
 
 

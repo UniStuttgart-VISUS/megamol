@@ -27,8 +27,8 @@
 #include "vislib/sys/SystemInformation.h"
 //#include <cmath>
 
-#include "vislib/sys/SystemInformation.h"
 #include "vislib/sys/FastFile.h"
+#include "vislib/sys/SystemInformation.h"
 
 using namespace megamol::image_gl;
 using namespace megamol::core;

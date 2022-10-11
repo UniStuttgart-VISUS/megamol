@@ -58,9 +58,7 @@ namespace core {
 class CoreInstance;
 
 namespace utility {
-namespace xml {
-
-} /* end namespace xml */
+namespace xml {} /* end namespace xml */
 
 /**
  * Class hold the data of the MegaMol xml configuration file
@@ -72,91 +70,6 @@ public:
 
     /** LuaState is the new configuration, so it may set values */
     friend class megamol::core::LuaState;
-
-
-    /**
-     * Class holding an instance request for a view or a job.
-     */
-    class InstanceRequest : public ParamValueSetRequest {
-    public:
-        /**
-         * Ctor.
-         */
-        InstanceRequest(void);
-
-        /**
-         * Copy ctor.
-         *
-         * @param src The object to clone from
-         */
-        InstanceRequest(const InstanceRequest& src);
-
-        /**
-         * Dtor.
-         */
-        virtual ~InstanceRequest(void);
-
-        /**
-         * Answer the description for the instance to be instantiated.
-         *
-         * @return The description
-         */
-        inline const vislib::StringA& Description(void) const {
-            return this->descname;
-        }
-
-        /**
-         * Answer the identifier for the instance to be instantiated.
-         *
-         * @return The identifier
-         */
-        inline const vislib::StringA& Identifier(void) const {
-            return this->id;
-        }
-
-        /**
-         * Sets the description for the instance to be instantiated.
-         *
-         * @param desc The new description
-         */
-        inline void SetDescription(const vislib::StringA& desc) {
-            this->descname = desc;
-        }
-
-        /**
-         * Sets the identifier for the instance to be instantiated.
-         *
-         * @param id The new identifier
-         */
-        inline void SetIdentifier(const vislib::StringA& id) {
-            this->id = id;
-        }
-
-        /**
-         * Assignment operator.
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return Reference to 'this'
-         */
-        InstanceRequest& operator=(const InstanceRequest& rhs);
-
-        /**
-         * Test for equality
-         *
-         * @param rhs The right hand side operand.
-         *
-         * @return 'true' if 'this' is equal to 'rhs'
-         */
-        bool operator==(const InstanceRequest& rhs) const;
-
-    private:
-        /** The instance identifier */
-        vislib::StringA id;
-
-        /** The name of the description */
-        vislib::StringA descname;
-    };
 
     /** dtor */
     virtual ~Configuration(void);
@@ -304,36 +217,6 @@ public:
      *        value with this name.
      */
     const vislib::StringW& ConfigValue(const vislib::StringW& name) const;
-
-    /**
-     * Adds an instantiation request.
-     *
-     * @param name The name of the job/view to be instantiated.
-     * @param id The name of the instance to be created.
-     */
-    inline void AddInstantiationRequest(const InstanceRequest& req) {
-        this->instanceRequests.Add(req);
-    }
-
-    /**
-     * Answers whether there are pending instantiation requests.
-     *
-     * @return 'true' if there are pending requests
-     */
-    inline bool HasInstantiationRequests(void) const {
-        return !this->instanceRequests.IsEmpty();
-    }
-
-    /**
-     * Answers the next instantiation request.
-     *
-     * @return The next instantiation request.
-     */
-    inline InstanceRequest GetNextInstantiationRequest(void) {
-        InstanceRequest rv = this->instanceRequests.First();
-        this->instanceRequests.RemoveFirst();
-        return rv;
-    }
 
     /**
      * Adds information on which plugins to load.
@@ -669,9 +552,6 @@ private:
 
     /** map of generic configuration values */
     vislib::Map<ConfigValueName, vislib::StringW> configValues;
-
-    /** List of instance requests from the configuration file */
-    vislib::SingleLinkedList<InstanceRequest> instanceRequests;
 
     /** The plugin loading informations */
     vislib::SingleLinkedList<PluginLoadInfo> pluginLoadInfos;

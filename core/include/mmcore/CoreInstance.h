@@ -13,15 +13,12 @@
 
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/JobDescription.h"
+#include "mmcore/InstanceDescription.h"
 #include "mmcore/JobInstance.h"
-#include "mmcore/JobInstanceRequest.h"
 #include "mmcore/LuaState.h"
 #include "mmcore/ParamValueSetRequest.h"
 #include "mmcore/RootModuleNamespace.h"
-#include "mmcore/ViewDescription.h"
 #include "mmcore/ViewInstance.h"
-#include "mmcore/ViewInstanceRequest.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/factories/ModuleDescription.h"
@@ -127,48 +124,6 @@ public:
     inline const megamol::core::utility::Configuration& Configuration(void) const {
         return this->config;
     }
-
-    /**
-     * Searches for an view description object with the given name.
-     *
-     * @param name The name to search for.
-     *
-     * @return The found view description object or NULL if the name is
-     *         not found.
-     */
-    std::shared_ptr<const ViewDescription> FindViewDescription(const char* name);
-
-    /**
-     * Searches for an view description object with the given name.
-     *
-     * @param name The name to search for.
-     *
-     * @return The found view description object or NULL if the name is
-     *         not found.
-     */
-    std::shared_ptr<const JobDescription> FindJobDescription(const char* name);
-
-    /**
-     * Requests the instantiation of the view defined by the given
-     * description.
-     *
-     * @param desc The description of the view to be instantiated.
-     * @param id The identifier to be used for the new instance.
-     * @param param The parameters to be set
-     */
-    void RequestViewInstantiation(
-        const ViewDescription* desc, const vislib::StringA& id, const ParamValueSetRequest* param = NULL);
-
-    /**
-     * Requests the instantiation of the job defined by the given
-     * description.
-     *
-     * @param desc The description of the job to be instantiated.
-     * @param id The identifier to be used for the new instance.
-     * @param param The parameters to be set
-     */
-    void RequestJobInstantiation(
-        const JobDescription* desc, const vislib::StringA& id, const ParamValueSetRequest* param = NULL);
 
     /**
      * Request deletion of the module with the given id.
@@ -659,24 +614,6 @@ private:
      * MegaMol execution.
      */
     vislib::Array<vislib::Pair<vislib::StringA, vislib::StringA>> loadedLuaProjects;
-
-    /** The manager of the builtin view descriptions */
-    megamol::core::factories::ObjectDescriptionManager<megamol::core::ViewDescription> builtinViewDescs;
-
-    /** The manager of the view descriptions load from projects */
-    megamol::core::factories::ObjectDescriptionManager<megamol::core::ViewDescription> projViewDescs;
-
-    /** The manager of the builtin job descriptions */
-    megamol::core::factories::ObjectDescriptionManager<megamol::core::JobDescription> builtinJobDescs;
-
-    /** The manager of the builtin job descriptions */
-    megamol::core::factories::ObjectDescriptionManager<megamol::core::JobDescription> projJobDescs;
-
-    /** The list of pending views to be instantiated */
-    vislib::SingleLinkedList<ViewInstanceRequest> pendingViewInstRequests;
-
-    /** The list of pending jobs to be instantiated */
-    vislib::SingleLinkedList<JobInstanceRequest> pendingJobInstRequests;
 
 #ifdef REMOVE_GRAPH
     /** the list of calls to be instantiated: (class,(from,to))* */

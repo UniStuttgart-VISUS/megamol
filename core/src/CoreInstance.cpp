@@ -78,12 +78,6 @@ extern HMODULE mmCoreModuleHandle;
 megamol::core::CoreInstance::CoreInstance(void)
         : config()
         , lua(nullptr)
-        , builtinViewDescs()
-        , projViewDescs()
-        , builtinJobDescs()
-        , projJobDescs()
-        , pendingViewInstRequests()
-        , pendingJobInstRequests()
         , namespaceRoot()
         , pendingCallInstRequests()
         , pendingCallDelRequests()
@@ -144,10 +138,6 @@ megamol::core::CoreInstance::~CoreInstance(void) {
 
     // we need to manually clean up all data structures in the right order!
     // first view- and job-descriptions
-    this->builtinViewDescs.Shutdown();
-    this->builtinJobDescs.Shutdown();
-    this->projViewDescs.Shutdown();
-    this->projJobDescs.Shutdown();
     // then factories
     this->all_module_descriptions.Shutdown();
     this->all_call_descriptions.Shutdown();
@@ -232,246 +222,9 @@ void megamol::core::CoreInstance::Initialise() {
         profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
     }
 
-
     //////////////////////////////////////////////////////////////////////
-    // register builtin descriptions
-    //////////////////////////////////////////////////////////////////////
-    // view descriptions
-    //////////////////////////////////////////////////////////////////////
-    std::shared_ptr<ViewDescription> vd;
-
-    // empty view; name for compatibility reasons
-    vd = std::make_shared<ViewDescription>("emptyview");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("View3D"), "view");
-    // 'View3D' will show the title logo as long as no renderer is connected
-    vd->SetViewModuleID("view");
-    this->builtinViewDescs.Register(vd);
-
-    // empty View3D
-    vd = std::make_shared<ViewDescription>("emptyview3d");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("View3D"), "view");
-    // 'View3D' will show the title logo as long as no renderer is connected
-    vd->SetViewModuleID("view");
-    this->builtinViewDescs.Register(vd);
-
-    // empty View2DGL
-    vd = std::make_shared<ViewDescription>("emptyview2d");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("View2DGL"), "view");
-    // 'View2DGL' will show the title logo as long as no renderer is connected
-    vd->SetViewModuleID("view");
-    this->builtinViewDescs.Register(vd);
-
-    // empty view (show the title); name for compatibility reasons
-    vd = std::make_shared<ViewDescription>("titleview");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("View3D"), "view");
-    // 'View3D' will show the title logo as long as no renderer is connected
-    vd->SetViewModuleID("view");
-    this->builtinViewDescs.Register(vd);
-
-    // view for powerwall
-    vd = std::make_shared<ViewDescription>("powerwallview");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("PowerwallView"), "pwview");
-    // vd->AddModule(this->GetModuleDescriptionManager().Find("ClusterController"), "::cctrl"); // TODO: Dependant
-    // instance!
-    vd->AddCall(
-        this->GetCallDescriptionManager().Find("CallRegisterAtController"), "pwview::register", "::cctrl::register");
-    vd->SetViewModuleID("pwview");
-    this->builtinViewDescs.Register(vd);
-
-    // view for fusionex-hack (client side)
-    vd = std::make_shared<ViewDescription>("simpleclusterview");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("SimpleClusterClient"), "::scc");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("SimpleClusterView"), "scview");
-    vd->AddCall(this->GetCallDescriptionManager().Find("SimpleClusterClientViewRegistration"), "scview::register",
-        "::scc::registerView");
-    vd->SetViewModuleID("scview");
-
-    vd->AddModule(this->GetModuleDescriptionManager().Find("View3D"), "::logo");
-    vd->AddCall(this->GetCallDescriptionManager().Find("CallRenderView"), "scview::renderView", "::logo::render");
-
-    this->builtinViewDescs.Register(vd);
-
-    vd = std::make_shared<ViewDescription>("mpiclusterview");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("SimpleClusterClient"), "::mcc");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("MpiProvider"), "::mpi");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("MpiClusterView"), "mcview");
-    vd->AddCall(this->GetCallDescriptionManager().Find("SimpleClusterClientViewRegistration"), "mcview::register",
-        "::mcc::registerView");
-    vd->AddCall(this->GetCallDescriptionManager().Find("MpiCall"), "mcview::requestMpi", "::mpi::provideMpi");
-    vd->SetViewModuleID("mcview");
-
-    this->builtinViewDescs.Register(vd);
-
-    // test view for sphere rendering
-    vd = std::make_shared<ViewDescription>("testspheres");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("View3D"), "view");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("SphereRenderer"), "rnd");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("TestSpheresDataSource"), "dat");
-    vd->AddCall(this->GetCallDescriptionManager().Find("CallRender3D"), "view::rendering", "rnd::rendering");
-    vd->AddCall(this->GetCallDescriptionManager().Find("MultiParticleDataCall"), "rnd::getData", "dat::getData");
-    vd->SetViewModuleID("view");
-    this->builtinViewDescs.Register(vd);
-
-    // test view for sphere rendering
-    vd = std::make_shared<ViewDescription>("testgeospheres");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("View3D"), "view");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("SimpleGeoSphereRenderer"), "rnd");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("TestSpheresDataSource"), "dat");
-    vd->AddCall(this->GetCallDescriptionManager().Find("CallRender3D"), "view::rendering", "rnd::rendering");
-    vd->AddCall(this->GetCallDescriptionManager().Find("MultiParticleDataCall"), "rnd::getData", "dat::getData");
-    vd->SetViewModuleID("view");
-    this->builtinViewDescs.Register(vd);
-
-    //////////////////////////////////////////////////////////////////////
-    // job descriptions
-    //////////////////////////////////////////////////////////////////////
-    std::shared_ptr<JobDescription> jd;
-
-    // job for the cluster controller modules
-    jd = std::make_shared<JobDescription>("clustercontroller");
-    jd->AddModule(this->GetModuleDescriptionManager().Find("ClusterController"), "::cctrl");
-    jd->SetJobModuleID("::cctrl");
-    this->builtinJobDescs.Register(jd);
-
-    // job for the cluster controller head-node modules
-    jd = std::make_shared<JobDescription>("clusterheadcontroller");
-    jd->AddModule(this->GetModuleDescriptionManager().Find("ClusterController"), "::cctrl");
-    jd->AddModule(this->GetModuleDescriptionManager().Find("ClusterViewMaster"), "::cmaster");
-    jd->AddCall(
-        this->GetCallDescriptionManager().Find("CallRegisterAtController"), "::cmaster::register", "::cctrl::register");
-    jd->SetJobModuleID("::cctrl");
-    this->builtinJobDescs.Register(jd);
-
-    // job for the cluster display client heartbeat server
-    jd = std::make_shared<JobDescription>("heartbeat");
-    jd->AddModule(this->GetModuleDescriptionManager().Find("SimpleClusterClient"), "::scc");
-    jd->AddModule(this->GetModuleDescriptionManager().Find("SimpleClusterHeartbeat"), "scheartbeat");
-    jd->AddCall(this->GetCallDescriptionManager().Find("SimpleClusterClientViewRegistration"), "scheartbeat::register",
-        "::scc::registerView");
-    jd->SetJobModuleID("scheartbeatthread");
-    this->builtinJobDescs.Register(jd);
-
-    // view for fusionex-hack (server side)
-    jd = std::make_shared<JobDescription>("simpleclusterserver");
-    jd->AddModule(this->GetModuleDescriptionManager().Find("SimpleClusterServer"), "::scs");
-    jd->SetJobModuleID("::scs");
-    this->builtinJobDescs.Register(jd);
-
-    // // TODO: Replace (is deprecated)
-    // job to produce images
-    jd = std::make_shared<JobDescription>("imagemaker");
-    jd->AddModule(this->GetModuleDescriptionManager().Find("ScreenShooter"), "imgmaker");
-    jd->SetJobModuleID("imgmaker");
-    this->builtinJobDescs.Register(jd);
-
-    // TODO: Debug
-    jd = std::make_shared<JobDescription>("DEBUGjob");
-    jd->AddModule(this->GetModuleDescriptionManager().Find("JobThread"), "ctrl");
-    jd->SetJobModuleID("ctrl");
-    this->builtinJobDescs.Register(jd);
-
-    //////////////////////////////////////////////////////////////////////
-
-
-    while (this->config.HasInstantiationRequests()) {
-        utility::Configuration::InstanceRequest r = this->config.GetNextInstantiationRequest();
-
-        std::shared_ptr<const megamol::core::ViewDescription> vd =
-            this->FindViewDescription(vislib::StringA(r.Description()));
-        if (vd) {
-            this->RequestViewInstantiation(vd.get(), r.Identifier(), &r);
-            continue;
-        }
-        std::shared_ptr<const megamol::core::JobDescription> jd =
-            this->FindJobDescription(vislib::StringA(r.Description()));
-        if (jd) {
-            this->RequestJobInstantiation(jd.get(), r.Identifier(), &r);
-            continue;
-        }
-
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Unable to instance \"%s\" as \"%s\": Description not found.\n",
-            vislib::StringA(r.Description()).PeekBuffer(), vislib::StringA(r.Identifier()).PeekBuffer());
-    }
 
     translateShaderPaths(config);
-}
-
-
-/*
- * megamol::core::CoreInstance::FindViewDescription
- */
-std::shared_ptr<const megamol::core::ViewDescription> megamol::core::CoreInstance::FindViewDescription(
-    const char* name) {
-    std::shared_ptr<const ViewDescription> d = NULL;
-    if (d == NULL) {
-        d = this->projViewDescs.Find(name);
-    }
-    if (d == NULL) {
-        d = this->builtinViewDescs.Find(name);
-    }
-    return d;
-}
-
-
-/*
- * megamol::core::CoreInstance::FindJobDescription
- */
-std::shared_ptr<const megamol::core::JobDescription> megamol::core::CoreInstance::FindJobDescription(const char* name) {
-    std::shared_ptr<const JobDescription> d;
-    if (!d)
-        d = this->projJobDescs.Find(name);
-    if (!d)
-        d = this->builtinJobDescs.Find(name);
-    return d;
-}
-
-
-/*
- * megamol::core::CoreInstance::RequestViewInstantiation
- */
-void megamol::core::CoreInstance::RequestViewInstantiation(
-    const megamol::core::ViewDescription* desc, const vislib::StringA& id, const ParamValueSetRequest* param) {
-    if (id.Find(':') != vislib::StringA::INVALID_POS) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "View instantiation request aborted: name contains invalid character \":\"");
-        return;
-    }
-    // could check here if the description is instantiable, but I do not want
-    // to.
-    ASSERT(desc);
-    ViewInstanceRequest req;
-    req.SetName(id);
-    req.SetDescription(desc);
-    if (param != NULL) {
-        static_cast<ParamValueSetRequest&>(req) = *param;
-    }
-    vislib::sys::AutoLock l(this->graphUpdateLock);
-    this->pendingViewInstRequests.Add(req);
-}
-
-
-/*
- * megamol::core::CoreInstance::RequestJobInstantiation
- */
-void megamol::core::CoreInstance::RequestJobInstantiation(
-    const megamol::core::JobDescription* desc, const vislib::StringA& id, const ParamValueSetRequest* param) {
-    if (id.Find(':') != vislib::StringA::INVALID_POS) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Job instantiation request aborted: name contains invalid character \":\"");
-        return;
-    }
-    // could check here if the description is instantiable, but I do not want
-    // to.
-    ASSERT(desc);
-    JobInstanceRequest req;
-    req.SetName(id);
-    req.SetDescription(desc);
-    if (param != NULL) {
-        static_cast<ParamValueSetRequest&>(req) = *param;
-    }
-    vislib::sys::AutoLock l(this->graphUpdateLock);
-    this->pendingJobInstRequests.Add(req);
 }
 
 
@@ -1027,29 +780,9 @@ void megamol::core::CoreInstance::closeViewJob(megamol::core::ModuleNamespace::p
 void megamol::core::CoreInstance::loadPlugin(
     const std::shared_ptr<factories::AbstractPluginDescriptor>& pluginDescriptor) {
 
-    // select log level for plugin loading errors
-    utility::log::Log::log_level loadFailedLevel = megamol::core::utility::log::Log::log_level::error;
-    if (this->config.IsConfigValueSet("PluginLoadFailMsg")) {
-        try {
-            const vislib::StringW& v = this->config.ConfigValue("PluginLoadFailMsg");
-            if (v.Equals(L"error", false) || v.Equals(L"err", false) || v.Equals(L"e", false)) {
-                loadFailedLevel = megamol::core::utility::log::Log::log_level::error;
-            } else if (v.Equals(L"warning", false) || v.Equals(L"warn", false) || v.Equals(L"w", false)) {
-                loadFailedLevel = megamol::core::utility::log::Log::log_level::warn;
-            } else if (v.Equals(L"information", false) || v.Equals(L"info", false) || v.Equals(L"i", false) ||
-                       v.Equals(L"message", false) || v.Equals(L"msg", false) || v.Equals(L"m", false)) {
-                loadFailedLevel = megamol::core::utility::log::Log::log_level::info;
-            }
-        } catch (...) {}
-    }
-
     try {
 
         auto new_plugin = pluginDescriptor->create();
-
-        // initialize factories
-        new_plugin->GetModuleDescriptionManager();
-
         this->plugins.push_back(new_plugin);
 
         // report success
@@ -1075,13 +808,12 @@ void megamol::core::CoreInstance::loadPlugin(
         }
 
     } catch (const vislib::Exception& vex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            loadFailedLevel, "Unable to load Plugin: %s (%s, &d)", vex.GetMsgA(), vex.GetFile(), vex.GetLine());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to load Plugin: %s (%s, &d)", vex.GetMsgA(), vex.GetFile(), vex.GetLine());
     } catch (const std::exception& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(loadFailedLevel, "Unable to load Plugin: %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load Plugin: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            loadFailedLevel, "Unable to load Plugin: unknown exception");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load Plugin: unknown exception");
     }
 }
 

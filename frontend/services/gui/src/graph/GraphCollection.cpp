@@ -155,20 +155,6 @@ bool megamol::gui::GraphCollection::load_call_stock(const megamol::core::CoreIns
                     }
                 }
             }
-
-            // Get core calls
-            plugin_name = "Core"; // (core_instance->GetObjectFactoryName() = "")
-            for (auto& c_desc : core_instance.GetCallDescriptionManager()) {
-                std::string class_name(c_desc->ClassName());
-                if (std::find_if(this->calls_stock.begin(), this->calls_stock.end(),
-                        [class_name](const Call::StockCall& call) { return (call.class_name == class_name); }) ==
-                    this->calls_stock.end()) {
-                    Call::StockCall call;
-                    if (this->get_call_stock_data(call, c_desc, plugin_name)) {
-                        this->calls_stock.emplace_back(call);
-                    }
-                }
-            }
         }
 
         auto delta_time =
@@ -228,29 +214,6 @@ bool megamol::gui::GraphCollection::load_module_stock(const megamol::core::CoreI
             for (auto& plugin : plugins) {
                 plugin_name = plugin->GetObjectFactoryName();
                 for (auto& m_desc : plugin->GetModuleDescriptionManager()) {
-                    Module::StockModule mod;
-                    if (this->get_module_stock_data(mod, m_desc, plugin_name)) {
-                        this->modules_stock.emplace_back(mod);
-                    }
-#ifdef GUI_VERBOSE
-                    auto module_load_time_count =
-                        static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - module_load_time)
-                            .count();
-                    module_load_time = std::chrono::system_clock::now();
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                        "[GUI] Reading module '%s' ... DONE (duration: %.3f seconds)\n", class_name.c_str(),
-                        module_load_time_count);
-#endif // GUI_VERBOSE
-                }
-            }
-
-            // Get core modules
-            plugin_name = "Core"; // (core_instance->GetObjectFactoryName() = "")
-            for (auto& m_desc : core_instance.GetModuleDescriptionManager()) {
-                std::string class_name(m_desc->ClassName());
-                if (std::find_if(this->modules_stock.begin(), this->modules_stock.end(),
-                        [class_name](const Module::StockModule& mod) { return (mod.class_name == class_name); }) ==
-                    this->modules_stock.end()) {
                     Module::StockModule mod;
                     if (this->get_module_stock_data(mod, m_desc, plugin_name)) {
                         this->modules_stock.emplace_back(mod);

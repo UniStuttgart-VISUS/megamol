@@ -185,63 +185,6 @@ bool megamol::core::utility::Configuration::ConfigValueName::operator==(const vi
 
 
 /*
- * megamol::core::utility::Configuration::InstanceRequest::InstanceRequest
- */
-megamol::core::utility::Configuration::InstanceRequest::InstanceRequest(void)
-        : ParamValueSetRequest()
-        , id()
-        , descname() {
-    // intentionally empty
-}
-
-
-/*
- * megamol::core::utility::Configuration::InstanceRequest::InstanceRequest
- */
-megamol::core::utility::Configuration::InstanceRequest::InstanceRequest(
-    const megamol::core::utility::Configuration::InstanceRequest& src)
-        : ParamValueSetRequest()
-        , id()
-        , descname() {
-    *this = src;
-}
-
-
-/*
- * megamol::core::utility::Configuration::InstanceRequest::~InstanceRequest
- */
-megamol::core::utility::Configuration::InstanceRequest::~InstanceRequest(void) {
-    // intentionally empty
-}
-
-
-/*
- * megamol::core::utility::Configuration::InstanceRequest::operator=
- */
-megamol::core::utility::Configuration::InstanceRequest&
-megamol::core::utility::Configuration::InstanceRequest::operator=(
-    const megamol::core::utility::Configuration::InstanceRequest& rhs) {
-    if (&rhs == this)
-        return *this;
-    ParamValueSetRequest::operator=(rhs);
-    this->id = rhs.id;
-    this->descname = rhs.descname;
-    return *this;
-}
-
-
-/*
- * megamol::core::utility::Configuration::InstanceRequest::operator==
- */
-bool megamol::core::utility::Configuration::InstanceRequest::operator==(
-    const megamol::core::utility::Configuration::InstanceRequest& rhs) const {
-    return ParamValueSetRequest::operator==(rhs) && (this->id == rhs.id) && (this->descname == rhs.descname);
-}
-
-/*****************************************************************************/
-
-
-/*
  * megamol::core::utility::Configuration::logLevelLocked
  */
 bool megamol::core::utility::Configuration::logLevelLocked = false;
@@ -269,7 +212,6 @@ megamol::core::utility::Configuration::Configuration(void)
         , shaderDirs()
         , resourceDirs()
         , configValues()
-        , instanceRequests()
         , pluginLoadInfos() {
     this->setDefaultValues();
 }
