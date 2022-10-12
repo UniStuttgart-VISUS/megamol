@@ -107,6 +107,32 @@ private:
     std::shared_ptr<SamplingResult> m_result;
 };
 
+struct VectorDistributionProbe : public BaseProbe {
+public:
+    struct SampleValue {
+        std::vector<std::array<float,3>> norm_directions;
+        std::vector<float> magnitudes;
+        std::vector<std::array<float,3>> positions;
+    };
+
+    struct SamplingResult {
+        std::vector<SampleValue> samples;
+    };
+
+    VectorDistributionProbe() : m_result(std::make_shared<SamplingResult>()) {}
+
+    template<typename DatafieldType>
+    void probe(DatafieldType const& datafield) { /* ToDo*/
+    }
+
+    std::shared_ptr<SamplingResult> getSamplingResult() const {
+        return m_result;
+    }
+
+private:
+    std::shared_ptr<SamplingResult> m_result;
+};
+
 struct IntProbe : public BaseProbe {
     void probe() { /*ToDo*/
     }
