@@ -133,6 +133,14 @@ private:
 
     /** The slot accessing the original data */
     megamol::core::CallerSlot inDataSlot;
+
+    megamol::core::CalleeSlot testDataSlot;
+
+    std::shared_ptr<geocalls::MultiParticleDataCall::ret_data_t> test_data_cb(
+        geocalls::MultiParticleDataCall::req_t const& req);
+
+    std::shared_ptr<geocalls::MultiParticleDataCall::ret_extent_t> test_extent_cb(
+        geocalls::MultiParticleDataCall::req_t const& req);
 };
 
 } /* end namespace datatools */

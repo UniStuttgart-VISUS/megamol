@@ -65,6 +65,24 @@ public:
     bool InCall(unsigned int func, Call& call);
 
     /**
+     * Do not call this method directly!
+     *
+     * @param func The id of the function to be called.
+     * @param call The call object calling this function.
+     *
+     * @return The return value of the function.
+     */
+    template<typename RET, typename REQ>
+    std::shared_ptr<RET> InCall(unsigned int func, REQ const& req) {
+        if (func >= this->callbacks.Count())
+            return nullptr;
+        auto callback = dynamic_cast<CallbackImplRetBase<RET, REQ>>(this->callbacks[func]);
+        if (callback == nullptr)
+            return nullptr;
+        return callback->CallMe(const_cast<Module*>(reinterpret_cast<const Module*>(this->Owner())), req);
+    }
+
+    /**
      * Clears the cleanup mark for this and all dependent objects.
      */
     virtual void ClearCleanupMark(void);
@@ -126,6 +144,64 @@ public:
             }
         }
         Callback* cb = new CallbackImpl<C>(callName, funcName, func);
+        this->callbacks.Add(cb);
+    }
+
+    /**
+     * Registers the member 'func' as callback function for call 'CALL'
+     * function at index 'idx'.
+     *
+     * @param idx  The index of the function of the call to register
+     *             this callback for.
+     * @param func The member function pointer of the method to be used as
+     *             callback. Use the class of the method as template
+     *             parameter 'C'.
+     */
+    template<class CALL, class C>
+    void SetCallback(unsigned int idx, bool (C::*func)(Call&)) {
+        if (this->GetStatus() != AbstractSlot::STATUS_UNAVAILABLE) {
+            throw vislib::IllegalStateException("You may not register "
+                                                "callbacks after the slot has been enabled.",
+                __FILE__, __LINE__);
+        }
+
+        vislib::StringA cn(CALL::ClassName());
+        vislib::StringA fn(CALL::FunctionName(idx));
+        for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
+            if (cn.Equals(this->callbacks[i]->CallName(), false) && fn.Equals(this->callbacks[i]->FuncName(), false)) {
+                throw vislib::IllegalParamException("callName funcName", __FILE__, __LINE__);
+            }
+        }
+        Callback* cb = new CallbackImpl<C>(cn, fn, func);
+        this->callbacks.Add(cb);
+    }
+
+    /**
+     * Registers the member 'func' as callback function for call 'CALL'
+     * function at index 'idx'.
+     *
+     * @param idx  The index of the function of the call to register
+     *             this callback for.
+     * @param func The member function pointer of the method to be used as
+     *             callback. Use the class of the method as template
+     *             parameter 'C'.
+     */
+    template<class CALL, class C, class RET, class REQ>
+    void SetCallback(unsigned int idx, std::shared_ptr<RET> (C::*func)(REQ const&)) {
+        if (this->GetStatus() != AbstractSlot::STATUS_UNAVAILABLE) {
+            throw vislib::IllegalStateException("You may not register "
+                                                "callbacks after the slot has been enabled.",
+                __FILE__, __LINE__);
+        }
+
+        vislib::StringA cn(CALL::ClassName());
+        vislib::StringA fn(CALL::FunctionName(idx));
+        for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
+            if (cn.Equals(this->callbacks[i]->CallName(), false) && fn.Equals(this->callbacks[i]->FuncName(), false)) {
+                throw vislib::IllegalParamException("callName funcName", __FILE__, __LINE__);
+            }
+        }
+        Callback* cb = new CallbackImplRet<C, RET, REQ>(cn, fn, func);
         this->callbacks.Add(cb);
     }
 
@@ -329,6 +405,92 @@ private:
     private:
         /** The callback method */
         bool (C::*func)(Call&);
+    };
+
+    /**
+     * Nested class for callback storage
+     */
+    template<class RET, class REQ>
+    class CallbackImplRetBase : public Callback {
+    public:
+        /**
+         * Ctor
+         *
+         * @param func The callback member of 'C'
+         */
+        CallbackImplRetBase(const char* callName, const char* funcName)
+                : Callback(callName, funcName) {
+            // intentionally empty
+        }
+
+        /** Dtor. */
+        virtual ~CallbackImplRetBase(void) {
+            // intentionally empty
+        }
+
+        /**
+         * Call this callback.
+         *
+         * @param owner The owning object.
+         * @param call The calling call.
+         *
+         * @return The return value of the function.
+         */
+        virtual std::shared_ptr<RET> CallMe(Module* owner, REQ const& req) = 0;
+    };
+
+    /**
+     * Nested class for callback storage
+     */
+    template<class C, class RET, class REQ>
+    class CallbackImplRet : public CallbackImplRetBase<RET, REQ> {
+    public:
+        /**
+         * Ctor
+         *
+         * @param func The callback member of 'C'
+         */
+        CallbackImplRet(const char* callName, const char* funcName, std::shared_ptr<RET> (C::*func)(REQ const&))
+                : CallbackImplRetBase<RET, REQ>(callName, funcName)
+                , func(func) {
+            // intentionally empty
+        }
+
+        /** Dtor. */
+        virtual ~CallbackImplRet(void) {
+            // intentionally empty
+        }
+
+        /**
+         * Call this callback.
+         *
+         * @param owner The owning object.
+         * @param call The calling call.
+         *
+         * @return The return value of the function.
+         */
+        virtual bool CallMe(Module* owner, Call& call) {
+            return false;
+        }
+
+        /**
+         * Call this callback.
+         *
+         * @param owner The owning object.
+         * @param call The calling call.
+         *
+         * @return The return value of the function.
+         */
+        virtual std::shared_ptr<RET> CallMe(Module* owner, REQ const& req) {
+            C* c = dynamic_cast<C*>(owner);
+            if (c == nullptr)
+                return nullptr;
+            return (c->*func)(req);
+        }
+
+    private:
+        /** The callback method */
+        std::shared_ptr<RET> (C::*func)(REQ const&);
     };
 
     /**
