@@ -418,8 +418,7 @@ private:
          *
          * @param func The callback member of 'C'
          */
-        CallbackImplRetBase(const char* callName, const char* funcName)
-                : Callback(callName, funcName) {
+        CallbackImplRetBase(const char* callName, const char* funcName) : Callback(callName, funcName) {
             // intentionally empty
         }
 

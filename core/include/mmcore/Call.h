@@ -77,7 +77,7 @@ public:
      *
      * @return The return value of the function.
      */
-    template <typename RET, typename REQ>
+    template<typename RET, typename REQ>
     std::shared_ptr<RET> operator()(unsigned int func, REQ const& req) {
         if (callee != nullptr) {
             return callee->InCall(funcMap[func], req);

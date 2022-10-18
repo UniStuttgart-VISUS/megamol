@@ -9,8 +9,8 @@
 
 #include "geometry_calls/AbstractParticleDataCall.h"
 #include "geometry_calls/SimpleSphericalParticles.h"
-#include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/BoundingBoxes_2.h"
+#include "mmcore/factories/CallAutoDescription.h"
 
 namespace megamol::geocalls {
 
