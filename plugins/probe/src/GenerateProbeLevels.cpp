@@ -126,6 +126,11 @@ bool GenerateProbeLevels::getData(core::Call& call) {
         if (!calcMercatorProjection())
             return false;
 
+        // apply force directed distribution
+        if (!doRelaxation()) {
+            return false;
+        }
+
         // start with grouping from bottom left
         if (!calcLevels(rhs_probes->getData()))
             return false;
@@ -179,8 +184,8 @@ bool GenerateProbeLevels::calcSphericalCoordinates() {
         return false;
     }
 
-    _probe_positions_spherical_coodrinates.clear();
-    _probe_positions_spherical_coodrinates.resize(_probe_positions.size());
+    _probe_positions_spherical_coordinates.clear();
+    _probe_positions_spherical_coordinates.resize(_probe_positions.size());
     for (int i = 0; i < _probe_positions.size(); ++i) {
         glm::vec3 const pos = glm::vec3(_probe_positions[i][0], _probe_positions[i][1], _probe_positions[i][2]) -
                               glm::vec3(_center[0], _center[1], _center[2]);
@@ -189,9 +194,9 @@ bool GenerateProbeLevels::calcSphericalCoordinates() {
         auto const theta = std::acosf(pos.z/ r);
         auto const phi = std::atan2f(pos.y, pos.x);
 
-        _probe_positions_spherical_coodrinates[i][0] = r;
-        _probe_positions_spherical_coodrinates[i][1] = theta;
-        _probe_positions_spherical_coodrinates[i][2] = phi;
+        _probe_positions_spherical_coordinates[i][0] = r;
+        _probe_positions_spherical_coordinates[i][1] = theta;
+        _probe_positions_spherical_coordinates[i][2] = phi;
     }
 
     return true;
@@ -199,25 +204,37 @@ bool GenerateProbeLevels::calcSphericalCoordinates() {
 
 bool GenerateProbeLevels::calcMercatorProjection() {
 
-    if (_probe_positions_spherical_coodrinates.empty()) {
+    if (_probe_positions_spherical_coordinates.empty()) {
         core::utility::log::Log::DefaultLog.WriteError("[GenerateProbeLevels] Calculate spherical coordinates first. Abort.");
         return false;
     }
     _probe_positions_mercator.clear();
-    _probe_positions_mercator.resize(_probe_positions_spherical_coodrinates.size());
+    _probe_positions_mercator.resize(_probe_positions_spherical_coordinates.size());
 
-    std::vector<float> bounds(4);
+    std::array<float, 4> bounds;
     bounds[0] = std::numeric_limits<float>::max();
     bounds[1] = std::numeric_limits<float>::max();
     bounds[2] = std::numeric_limits<float>::lowest();
     bounds[3] = std::numeric_limits<float>::lowest();
-    for (int i = 0; i < _probe_positions_spherical_coodrinates.size(); i++) {
-        // theta -> phi , phi -> lambda
-        auto const phi = _probe_positions_spherical_coodrinates[i][1];
-        auto const lambda = _probe_positions_spherical_coodrinates[i][2];
 
-        _probe_positions_mercator[i][0] = lambda;
-        _probe_positions_mercator[i][1] = 0.5f * std::logf((1.0f + std::sinf(phi)) / (1.0f - std::sinf(phi)));
+    constexpr float pi = 3.14159265359f;
+
+    int inf_count = 0;
+    for (int i = 0; i < _probe_positions_spherical_coordinates.size(); i++) {
+        // theta -> phi , phi -> lambda
+        auto const phi = _probe_positions_spherical_coordinates[i][1];
+        auto const lambda = _probe_positions_spherical_coordinates[i][2];
+
+        //_probe_positions_mercator[i][0] = lambda;
+        //_probe_positions_mercator[i][1] = 0.5f * std::logf((1.0f + std::sinf(phi)) / (1.0f - std::sinf(phi)));
+
+        _probe_positions_mercator[i][0] = phi;
+        _probe_positions_mercator[i][1] = std::sin(lambda);
+
+        if (!std::isfinite(_probe_positions_mercator[i][1])) {
+            _probe_positions_mercator[i][1] = std::copysignf(5.0f, _probe_positions_mercator[i][1]);
+            inf_count++;
+        }
 
         bounds[0] = std::min(bounds[0], _probe_positions_mercator[i][0]);
         bounds[1] = std::min(bounds[1], _probe_positions_mercator[i][1]);
@@ -231,7 +248,9 @@ bool GenerateProbeLevels::calcMercatorProjection() {
     return true;
 }
 
-bool GenerateProbeLevels::calcLevels(std::shared_ptr<ProbeCollection> inputProbes) {
+bool GenerateProbeLevels::calcLevels(std::shared_ptr<ProbeCol> inputProbes) {
+
+    auto const rhs_probe = this->_probe_rhs_slot.CallAs<probe::CallProbes>();
 
     if (_probe_positions_mercator.empty()) {
         return false;
@@ -249,42 +268,86 @@ bool GenerateProbeLevels::calcLevels(std::shared_ptr<ProbeCollection> inputProbe
     // span grid over projection and use one grid cell as first superlevel
     for (int i = 0; i < _probe_positions_mercator.size(); i ++) {
 
-        auto id_x = std::clamp(_probe_positions_mercator[i][0], _mercator_bounds[0], _mercator_bounds[2]) /
-                    static_cast<float>(grid_dim_x);
-        auto id_y = std::clamp(_probe_positions_mercator[i][1], _mercator_bounds[1], _mercator_bounds[3]) /
-                    static_cast<float>(grid_dim_y);
+        int id_x = grid_dim_x *
+            (_probe_positions_mercator[i][0] - _mercator_bounds[0]) / (_mercator_bounds[2] - _mercator_bounds[0]);
+        int id_y = grid_dim_y *
+            (_probe_positions_mercator[i][1] - _mercator_bounds[1]) / (_mercator_bounds[3] - _mercator_bounds[1]);
+
+        id_x = (id_x == grid_dim_x) ? id_x - 1 : id_x;
+        id_y = (id_y == grid_dim_y) ? id_y - 1 : id_y;
 
         auto const n = grid_dim_x * id_y + id_x;
         level_by_id[n].emplace_back(i);
     }
 
     // generate level from level_by_id
-    ProbeCollection::ProbeLevel level;
+    ProbeCol::ProbeLevel level;
+    level.probes.reserve(level_by_id.size());
 
 
     for (int n = 0; n < level_by_id.size(); n++) {
         if (level_by_id.empty()) {
-            core::utility::log::Log::DefaultLog.WriteError("[GenerateProbeLevels] Level found to be empty.");
+            core::utility::log::Log::DefaultLog.WriteWarn("[GenerateProbeLevels] Level found to be empty.");
         }
+        // since we do a relaxation, the mapping from projection to sphere is not bijective anymore
+        /*
         auto const id_x = n % grid_dim_x;
         auto const id_y = n / grid_dim_x;
         std::array<float,2> level_midpoint = {id_x * grid_step_x + 0.5f * grid_step_x, id_y * grid_step_y + 0.5f * grid_step_y};
-        auto const radius = _probe_positions_spherical_coodrinates[level_by_id[n][0]][0];
+        auto const radius = _probe_positions_spherical_coordinates[level_by_id[n][0]][0];
         auto const new_probe_pos_spherical = calcInverseMercatorProjection(level_midpoint, radius);
         auto const new_probe_pos = calcInverseSphericalProjection(new_probe_pos_spherical);
+        */
+
+        glm::vec3 probe_center_of_mass = {0.0f,0.0f,0.0f};
+        for (auto const probe_id : level_by_id[n]) {
+            // calc center of mass
+            probe_center_of_mass[0] += _probe_positions[probe_id][0];
+            probe_center_of_mass[1] += _probe_positions[probe_id][1];
+            probe_center_of_mass[2] += _probe_positions[probe_id][2];
+        }
+        probe_center_of_mass /= static_cast<float>(level_by_id[n].size());
+
+        std::vector<float> dists_to_com;
+        dists_to_com.reserve(level_by_id[n].size());
+        for (auto const probe_id : level_by_id[n]) {
+            // calc dists to center of mass
+            dists_to_com.emplace_back(glm::length(probe_center_of_mass - to_vec3(_probe_positions[probe_id])));
+        }
+
+        auto min_element = std::min_element(dists_to_com.begin(), dists_to_com.end());
+        auto min_element_pos = min_element - dists_to_com.begin();
+
+        auto const min_dist_id = level_by_id[n][min_element_pos];
 
         if (std::holds_alternative<FloatDistributionProbe>(inputProbes->getGenericProbe(0))) {
 
             FloatDistributionProbe probe;
-            probe.m_position = new_probe_pos;
-            /// ... fill with meta data
-
-            for (auto probe_id : level_by_id[n]) {
-                /// accumulate sample results
-                
+            probe = rhs_probe->getData()->getProbe<FloatDistributionProbe>(min_dist_id);
+            auto sampling_result = probe.getSamplingResult();
+            float new_min = 0.0f;
+            float new_max = 0.0f;
+            float new_avg = 0.0f;
+            for (auto const probe_id : level_by_id[n]) {
+                auto const& current_probe = rhs_probe->getData()->getProbe<FloatDistributionProbe>(probe_id);
+                auto const& current_sampling_result = current_probe.getSamplingResult();
+                new_min += current_sampling_result->min_value;
+                new_max += current_sampling_result->max_value;
+                new_avg += current_sampling_result->average_value;
             }
+            new_min /= static_cast<float>(level_by_id[n].size());
+            new_max /= static_cast<float>(level_by_id[n].size());
+            new_avg /= static_cast<float>(level_by_id[n].size());
+
+            sampling_result->min_value = new_min;
+            sampling_result->max_value = new_max;
+            sampling_result->average_value = new_avg;
+
+            level.probes.emplace_back(probe);
+            level.level_index = 0;
+
         } else {
-            
+            // Vector distribution probe
         }
     }
 
@@ -319,6 +382,101 @@ std::array<float, 3> GenerateProbeLevels::calcInverseSphericalProjection(std::ar
     res[2] = coords[0] * std::cosf(coords[1]);
 
     return res;
+}
+
+bool GenerateProbeLevels::doRelaxation() {
+
+    auto const w = _mercator_bounds[2] - _mercator_bounds[0];
+    auto const h = _mercator_bounds[3] - _mercator_bounds[1];
+
+    float delta_t = std::max(w,h) / 1000.0f;
+
+    float const radius = std::min(w,h)/10.0f;
+
+    int const iterations = 150;
+
+    for (int n = 0; n < iterations; n++) {
+
+        auto const old_probe_positions_mercator = _probe_positions_mercator;
+
+        _probe_mercator_dataKD =
+            std::make_shared<const PBC_adaptor>(_probe_positions_mercator, _mercator_bounds, true, true);
+        _probe_mercator_tree = std::make_shared<my_2d_kd_tree_t>(
+            2 /*dim*/, *_probe_mercator_dataKD, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
+        _probe_mercator_tree->buildIndex();
+
+        for (int i = 0; i < _probe_positions_mercator.size(); i++) {
+
+            auto& current_pos = _probe_positions_mercator[i]; 
+
+            std::vector<std::pair<size_t, float>> res;
+            auto num_neighbors = _probe_mercator_tree->radiusSearch(
+                _probe_positions_mercator[i].data(), std::powf(radius, 2), res, nanoflann::SearchParams());
+
+            // calc force and dir
+            glm::vec2 tot_force(0.0f, 0.0f);
+            for (auto const& neighbor : res) {
+
+                auto const dist = std::sqrtf(neighbor.second);
+                // filter self interaction
+                if (dist < (radius / 1000.0f)) {
+                    continue;
+                }
+
+                // check if pbc has to be applied into force calculation
+                auto const hand_calced_dist =
+                    glm::length(to_vec2(current_pos) -
+                                to_vec2(_probe_positions_mercator[neighbor.first]));
+                auto neighbor_pos = to_vec2(_probe_positions_mercator[neighbor.first]);
+                if (hand_calced_dist > radius) {
+                    // apply pbc
+                    auto const dist_x = current_pos[0] - neighbor_pos[0];
+                    auto const dist_y = current_pos[1] - neighbor_pos[1];
+                    if ((std::abs(dist_x) > radius && dist_x > 0)) {
+                        neighbor_pos[0] += w;
+                    } else if ((std::abs(dist_x) > radius && dist_x < 0)) {
+                        neighbor_pos[0] -= w;
+                    }
+
+                    if ((std::abs(dist_y) > radius && dist_y > 0)) {
+                        neighbor_pos[1] += h;
+                    } else if ((std::abs(dist_y) > radius && dist_y < 0)) {
+                        neighbor_pos[1] -= h;
+                    }
+                }
+
+                auto const dir = glm::normalize(to_vec2(current_pos) - neighbor_pos);
+                auto const current_force = coulomb_force(dist);
+                tot_force[0] += dir[0] * current_force;
+                tot_force[1] += dir[1] * current_force;
+
+            }
+            // move the probe according to verlet
+            
+            current_pos[0] = 2 * current_pos[0] -
+                                               old_probe_positions_mercator[i][0] +
+                                               tot_force[0] * std::powf(delta_t, 2.0f);
+            current_pos[1] = 2 * current_pos[1] -
+                                               old_probe_positions_mercator[i][1] +
+                                               tot_force[1] * std::powf(delta_t, 2.0f);
+
+
+
+            // check if repositioning would kick probe out of bounds
+            // since we use pbc in the neighbor search, the probes should not get kicked out too hard
+            if (current_pos[0] < _mercator_bounds[0] ||
+                current_pos[1] < _mercator_bounds[1] ||
+                current_pos[0] > _mercator_bounds[2] ||
+                current_pos[1] > _mercator_bounds[3]) {
+
+                // reset pos
+                current_pos = old_probe_positions_mercator[i];
+
+            }
+        }
+    }
+
+    return true;
 }
 
 } // namespace probe

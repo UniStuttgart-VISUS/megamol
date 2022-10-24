@@ -17,11 +17,18 @@
 #include "mmcore/param/ParamSlot.h"
 #include "probe/CallKDTree.h"
 #include "probe/ProbeCollection.h"
+#include "PlaceProbes.h"
+
+#include "probe/PBCkdTree.h"
+#include "DualMeshProbeSampling.h"
 
 
 namespace megamol {
 namespace probe {
 
+inline glm::vec2 to_vec2(std::array<float, 2> input) {
+    return glm::vec2(input[0], input[1]);
+}
 
 class GenerateProbeLevels : public core::Module {
 public:
@@ -71,19 +78,28 @@ private:
     bool parameterChanged(core::param::ParamSlot& p);
     bool calcSphericalCoordinates();
     bool calcMercatorProjection();
-    bool calcLevels(std::shared_ptr<ProbeCollection> inputProbes);
+    bool calcLevels(std::shared_ptr<ProbeCol> inputProbes);
     std::array<float, 3> calcInverseMercatorProjection(std::array<float, 2> const& coords, float const& r);
     std::array<float, 3> calcInverseSphericalProjection(std::array<float, 3> const& coords);
+    bool doRelaxation();
 
-    std::vector<ProbeCollection::ProbeLevel> _levels;
+    std::vector<ProbeCol::ProbeLevel> _levels;
     bool _recalc = false;
 
     std::shared_ptr<my_kd_tree_t> _probe_tree;
     std::shared_ptr<const data2KD> _probe_dataKD;
+
+    typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<float, PBC_adaptor>, PBC_adaptor,
+        2 /* dim */>
+        my_2d_kd_tree_t;
+
+    std::shared_ptr<my_2d_kd_tree_t> _probe_mercator_tree;
+    std::shared_ptr<const PBC_adaptor> _probe_mercator_dataKD;
+
     std::vector<std::array<float, 3>> _probe_positions;
-    std::vector<std::array<float, 3>> _probe_positions_spherical_coodrinates;
+    std::vector<std::array<float, 3>> _probe_positions_spherical_coordinates;
     std::vector<std::array<float, 2>> _probe_positions_mercator;
-    std::vector<float> _mercator_bounds;
+    std::array<float,4> _mercator_bounds;
     std::array<float,3> _center;
 };
 
