@@ -67,7 +67,7 @@ private:
 
     uint32_t _version;
 
-    std::shared_ptr<ProbeCollection> _probes;
+    std::shared_ptr<ProbeCol> _probes;
 
     std::shared_ptr<mesh::MeshDataAccessCollection> _line;
     std::vector<std::vector<mesh::MeshDataAccessCollection::VertexAttribute>> _line_attribs;

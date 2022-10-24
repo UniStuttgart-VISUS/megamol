@@ -33,7 +33,7 @@ megamol::probe::TableToProbes::TableToProbes()
     this->MakeSlotAvailable(&this->_accumulate_clustered_slot);
 
     /* Feasibility test */
-    _probes = std::make_shared<ProbeCollection>();
+    _probes = std::make_shared<ProbeCol>();
     _probes->addProbe(FloatProbe());
 
     auto retrieved_probe = _probes->getProbe<FloatProbe>(0);
@@ -119,7 +119,7 @@ bool megamol::probe::TableToProbes::getMetaData(core::Call& call) {
 
 bool megamol::probe::TableToProbes::generateProbes() {
 
-    _probes = std::make_shared<ProbeCollection>();
+    _probes = std::make_shared<ProbeCol>();
 
     assert(_table != nullptr);
 

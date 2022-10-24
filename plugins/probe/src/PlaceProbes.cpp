@@ -89,7 +89,7 @@ megamol::probe::PlaceProbes::PlaceProbes()
     this->MakeSlotAvailable(&this->_skip_edges_corers_slot);
 
     /* Feasibility test */
-    _probes = std::make_shared<ProbeCollection>();
+    _probes = std::make_shared<ProbeCol>();
     _probes->addProbe(FloatProbe());
 
     auto retrieved_probe = _probes->getProbe<FloatProbe>(0);
@@ -649,7 +649,7 @@ void PlaceProbes::faceNormalSampling(mesh::MeshDataAccessCollection::VertexAttri
 bool megamol::probe::PlaceProbes::placeProbes() {
 
 
-    _probes = std::make_shared<ProbeCollection>();
+    _probes = std::make_shared<ProbeCol>();
 
     //assert(_mesh->accessMeshes().size() == 1);
 

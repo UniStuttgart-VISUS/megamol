@@ -64,7 +64,7 @@ bool FilterProbes::getData(core::Call& call) {
         if (rhs_dirty || _recalc) {
             ++_version;
             _recalc = false;
-            _filtered_probe_collection = std::make_shared<ProbeCollection>();
+            _filtered_probe_collection = std::make_shared<ProbeCol>();
 
             auto const probe_count = rhsProbesCall->getData()->getProbeCount();
             auto const probes = rhsProbesCall->getData();

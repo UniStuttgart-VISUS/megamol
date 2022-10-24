@@ -80,7 +80,7 @@ private:
     float getDistance(std::array<float, 3> const& point1, std::array<float, 3> const& point2);
     bool newPosDir(int const id_filtered, int const id_all);
 
-    std::shared_ptr<ProbeCollection> _filtered_probe_collection;
+    std::shared_ptr<ProbeCol> _filtered_probe_collection;
 
     bool _recalc;
 };

@@ -109,7 +109,7 @@ private:
 
     uint32_t _longest_edge_index;
 
-    std::shared_ptr<ProbeCollection> _probes;
+    std::shared_ptr<ProbeCol> _probes;
     std::shared_ptr<mesh::MeshDataAccessCollection> _mesh;
     std::shared_ptr<mesh::MeshDataAccessCollection> _centerline;
     std::array<float, 3> _whd;

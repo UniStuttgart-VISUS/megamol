@@ -142,7 +142,7 @@ private:
 
     std::shared_ptr<datatools::clustering::kd_tree_t<float, 3>> _kd_tree;
 
-    std::shared_ptr<ProbeCollection> _probes = nullptr;
+    std::shared_ptr<ProbeCol> _probes = nullptr;
 
     float const* _sim_matrix = nullptr;
 

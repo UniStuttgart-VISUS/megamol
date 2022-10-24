@@ -127,7 +127,7 @@ private:
 
     bool getMetaData(core::Call& call);
 
-    std::shared_ptr<ProbeCollection> _probes;
+    std::shared_ptr<ProbeCol> _probes;
 
     const geocalls::VolumetricDataCall::Metadata* _vol_metadata;
 

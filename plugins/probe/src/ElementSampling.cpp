@@ -78,7 +78,7 @@ ElementSampling::~ElementSampling() {
 }
 
 bool ElementSampling::create() {
-    _probes = std::make_shared<ProbeCollection>();
+    _probes = std::make_shared<ProbeCol>();
     return true;
 }
 

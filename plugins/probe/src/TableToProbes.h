@@ -77,7 +77,7 @@ private:
     const datatools::table::TableDataCall::ColumnInfo* _col_info;
     uint32_t _num_cols;
     uint32_t _num_rows;
-    std::shared_ptr<ProbeCollection> _probes;
+    std::shared_ptr<ProbeCol> _probes;
 
     std::array<float, 3> _whd;
     core::BoundingBoxes_2 _bbox;

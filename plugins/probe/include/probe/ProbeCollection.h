@@ -161,6 +161,7 @@ private:
 using GenericProbe = std::variant<FloatProbe, IntProbe, Vec4Probe, BaseProbe, FloatDistributionProbe>;
 using GenericMinMax = std::variant<std::array<double, 2>, std::array<float, 2>, std::array<int, 2>>;
 
+template <unsigned int NUM_LEVELS = 2>
 class ProbeCollection {
 public:
     struct ProbeLevel {
@@ -300,11 +301,13 @@ public:
 
 
 private:
-    std::array<ProbeLevel, 4> lod_collection;
-    int max_level = 3;
+    std::array<ProbeLevel, NUM_LEVELS> lod_collection;
+    int max_level = NUM_LEVELS - 1;
     GenericMinMax m_global_min_max;
 
 };
+
+typedef ProbeCollection<> ProbeCol;
 
 } // namespace probe
 } // namespace megamol

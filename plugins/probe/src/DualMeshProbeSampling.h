@@ -119,7 +119,7 @@ private:
     bool getParticleMetaData(core::Call& call);
     bool getParticleData(core::Call& call);
 
-    std::shared_ptr<ProbeCollection> _probes;
+    std::shared_ptr<ProbeCol> _probes;
 
     size_t _old_datahash;
     size_t _old_volume_datahash;

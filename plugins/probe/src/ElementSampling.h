@@ -99,7 +99,7 @@ private:
     void do_triangulation(Surface_mesh& mesh_);
     void placeProbes(const std::vector<std::vector<Surface_mesh>>& elements);
 
-    std::shared_ptr<ProbeCollection> _probes;
+    std::shared_ptr<ProbeCol> _probes;
 
     size_t _old_datahash;
     bool _trigger_recalc;

@@ -45,7 +45,7 @@ struct kd_adaptor {
         return false;
     }
 
-}; // end of PointCloudAdaptor
+};
 
 typedef kd_adaptor<std::vector<std::array<float, 3>>> data2KD;
 typedef nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<float, data2KD>, data2KD, 3 /* dim */>
