@@ -345,6 +345,7 @@ bool GenerateProbeLevels::calcLevels(std::shared_ptr<ProbeCol> inputProbes) {
 
             level.probes.emplace_back(probe);
             level.level_index = 0;
+            level.sub_probes = level_by_id;
 
         } else {
             // Vector distribution probe
