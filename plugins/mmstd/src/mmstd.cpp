@@ -10,7 +10,6 @@
 #include "event/EventStorage.h"
 #include "job/TickSwitch.h"
 #include "misc/FileStreamProvider.h"
-#include "misc/LuaHostSettingsModule.h"
 #include "misc/ResourceTestModule.h"
 #include "mmstd/data/DataWriterCtrlCall.h"
 #include "mmstd/data/DataWriterJob.h"
@@ -62,7 +61,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<core::view::light::TriDirectionalLighting>();
         this->module_descriptions.RegisterAutoDescription<core::special::StubModule>();
         this->module_descriptions.RegisterAutoDescription<core::job::DataWriterJob>();
-        this->module_descriptions.RegisterAutoDescription<core::utility::LuaHostSettingsModule>();
         this->module_descriptions.RegisterAutoDescription<core::job::TickSwitch>();
         this->module_descriptions.RegisterAutoDescription<core::job::JobThread>();
         this->module_descriptions.RegisterAutoDescription<core::view::ClipPlane>();

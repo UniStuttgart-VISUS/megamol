@@ -51,16 +51,6 @@
 namespace megamol {
 namespace core {
 
-/* forward declaration */
-class AbstractService;
-
-namespace utility {
-
-/* forward declaration */
-class ServiceManager;
-
-} /* end namespace utility */
-
 /**
  * class of core instances.
  */
@@ -370,54 +360,6 @@ public:
     }
 
     /**
-     * Callback to delete service objects
-     *
-     * @param The service to be deleted
-     */
-    typedef void (*ServiceDeletor)(AbstractService*&);
-
-    /**
-     * Installs a service object. The service object is initialized and potentially enabled
-     *
-     * @param Tp class of the service. Must be derived from AbstractService
-     *
-     * @return 0 in case of an error. Larger zero is the service ID.
-     */
-    template<class Tp>
-    inline unsigned int InstallService() {
-        AbstractService* s = new Tp(*this);
-        int retval = InstallServiceObject(s, [](AbstractService*& s) {
-            delete s;
-            s = nullptr;
-        });
-        if (retval == 0) {
-            delete s;
-        }
-        return retval;
-    }
-
-    /**
-     * Installs a service object. The service object is initialized and potentially enabled
-     *
-     * @param service The service object to be installed
-     *
-     * @return 0 in case of an error. Larger zero is the service ID. If zero
-     *         is returned, the caller is responsible for deleting the
-     *         service object. Otherwise the core instance takes control of
-     *         the memory.
-     */
-    unsigned int InstallServiceObject(AbstractService* service, ServiceDeletor deletor);
-
-    /**
-     * Answer the installed service object by it's ID.
-     *
-     * @param ID The id of the service object to be returned
-     *
-     * @return The installed service object with the provided ID or null if no such service exists.
-     */
-    AbstractService* GetInstalledService(unsigned int id);
-
-    /**
      * sets the current ImGui context, i.e. the one that was last touched when traversing the graph
      */
     inline void SetCurrentImGuiContext(void* ctx) {
@@ -523,9 +465,6 @@ private:
 
     /** The loaded plugins */
     std::vector<factories::AbstractPluginInstance::ptr_type> plugins;
-
-    /** The manager of registered services */
-    utility::ServiceManager* services;
 
     /**
      * Factory referencing all call descriptions from core and all loaded

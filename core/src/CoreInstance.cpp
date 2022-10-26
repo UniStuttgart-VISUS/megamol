@@ -41,8 +41,6 @@
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/PerformanceCounter.h"
 
-#include "utility/ServiceManager.h"
-
 #include "mmcore/utility/log/Log.h"
 #include "png.h"
 #include "vislib/Array.h"
@@ -63,7 +61,6 @@
 
 #include <sstream>
 
-#include "mmcore/utility/LuaHostService.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 
 /*****************************************************************************/
@@ -84,15 +81,11 @@ megamol::core::CoreInstance::CoreInstance(void)
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
 #endif /* ULTRA_SOCKET_STARTUP */
-    this->services = new utility::ServiceManager(*this);
 
     this->namespaceRoot = std::make_shared<RootModuleNamespace>();
 
     profiler::Manager::Instance().SetCoreInstance(this);
     this->namespaceRoot->SetCoreInstance(*this);
-
-    // megamol::core::utility::LuaHostService::ID =
-    //    this->InstallService<megamol::core::utility::LuaHostService>();
 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("Core Instance created");
 }
@@ -118,9 +111,6 @@ megamol::core::CoreInstance::~CoreInstance(void) {
             this->closeViewJob(mn);
         }
     }
-
-    delete this->services;
-    this->services = nullptr;
 
     // we need to manually clean up all data structures in the right order!
     // first view- and job-descriptions
@@ -555,25 +545,6 @@ void megamol::core::CoreInstance::ParameterValueUpdate(megamol::core::param::Par
         i.Next()->ParamUpdated(slot);
     }
     this->paramUpdates.emplace_back(slot.FullName(), slot.Param<param::AbstractParam>()->ValueString());
-}
-
-
-/*
- * megamol::core::CoreInstance::InstallService
- */
-unsigned int megamol::core::CoreInstance::InstallServiceObject(
-    megamol::core::AbstractService* service, ServiceDeletor deletor) {
-    assert(services != nullptr);
-    return services->InstallServiceObject(service, deletor);
-}
-
-
-/*
- * megamol::core::CoreInstance::GetInstalledService
- */
-megamol::core::AbstractService* megamol::core::CoreInstance::GetInstalledService(unsigned int id) {
-    assert(services != nullptr);
-    return services->GetInstalledService(id);
 }
 
 
