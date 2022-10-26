@@ -304,13 +304,6 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
     megamol::core::param::AbstractParam* param_ptr = nullptr;
     auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
     param_ptr = megamolgraph.FindParameter(std::string(parameter_name.PeekBuffer()));
-    // Alternatively, check core instance graph for available parameter:
-    if (param_ptr == nullptr) {
-        auto core_parameter_ptr = this->GetCoreInstance()->FindParameter(parameter_name, false, false);
-        if (core_parameter_ptr != nullptr) {
-            param_ptr = core_parameter_ptr.get();
-        }
-    }
     if (param_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to find parameter by name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);

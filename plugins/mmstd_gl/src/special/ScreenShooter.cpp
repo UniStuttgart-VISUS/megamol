@@ -465,7 +465,10 @@ void special::ScreenShooter::BeforeRender(core::view::AbstractView* view) {
         // to have a legal exif structure (lol)
 
         // todo: camera settings are not stored without magic knowledge about the view
-        megamol::core::utility::graphics::ScreenShotComments ssc(this->GetCoreInstance()->SerializeGraph());
+        std::string project;
+        auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
+        project = const_cast<megamol::core::MegaMolGraph&>(megamolgraph).Convenience().SerializeGraph();
+        megamol::core::utility::graphics::ScreenShotComments ssc(project);
 
         png_set_text(data.pngPtr, data.pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
 
@@ -985,19 +988,6 @@ bool special::ScreenShooter::triggerButtonClicked(core::param::ParamSlot& slot) 
                 //    playSlot->Param<core::param::BoolParam>()->SetValue(true);
             }
             av->RegisterHook(this);
-        } else {
-            // suppose a view was actually intended!
-            bool found = false;
-            const auto fun = [this, &found](core::view::AbstractView* v) {
-                v->RegisterHook(this);
-                found = true;
-            };
-            this->GetCoreInstance()->FindModuleNoLock<core::view::AbstractView>(mvn.PeekBuffer(), fun);
-            if (!found) {
-                if (av == nullptr) {
-                    Log::DefaultLog.WriteError("Unable to find view \"%s\" for ScreenShot", mvn.PeekBuffer());
-                }
-            }
         }
     }
 

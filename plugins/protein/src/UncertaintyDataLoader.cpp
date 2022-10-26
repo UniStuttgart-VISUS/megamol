@@ -15,6 +15,7 @@
 #include "UncertaintyDataLoader.h"
 
 #include <algorithm>
+#include <cfloat>
 #include <math.h>
 #include <string>
 

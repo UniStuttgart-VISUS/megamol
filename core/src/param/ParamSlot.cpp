@@ -69,7 +69,8 @@ void param::ParamSlot::QueueUpdateNotification(bool force) {
     if (this->Param<AbstractParam>()->ConsumeHasChanged() || force) {
         Module* m = dynamic_cast<Module*>(this->Parent().get());
         if ((m != nullptr) && (m->GetCoreInstance() != nullptr)) {
-            m->GetCoreInstance()->ParameterValueUpdate(*this);
+            // TODO
+            //m->GetCoreInstance()->ParameterValueUpdate(*this);
         }
     }
 }
