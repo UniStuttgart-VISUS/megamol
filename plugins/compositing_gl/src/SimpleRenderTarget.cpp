@@ -25,8 +25,7 @@ megamol::compositing_gl::SimpleRenderTarget::SimpleRenderTarget()
         CallTexture2D::ClassName(), "GetMetaData", &SimpleRenderTarget::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_normal_render_target);
 
-    this->m_depth_buffer.SetCallback(
-        CallTexture2D::ClassName(), "GetData", &SimpleRenderTarget::getDepthBuffer);
+    this->m_depth_buffer.SetCallback(CallTexture2D::ClassName(), "GetData", &SimpleRenderTarget::getDepthBuffer);
     this->m_depth_buffer.SetCallback(
         CallTexture2D::ClassName(), "GetMetaData", &SimpleRenderTarget::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_depth_buffer);

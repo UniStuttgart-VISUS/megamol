@@ -41,29 +41,29 @@ vec4 toLinear(vec4 sRGB)
 void main(void) {
 
     sampler2D base_tx_hndl = sampler2D(mesh_shader_params[draw_id].albedo_texture_handle);
-	sampler2D roughness_tx_hndl = sampler2D(mesh_shader_params[draw_id].metallicRoughness_texture_handle);
+    sampler2D roughness_tx_hndl = sampler2D(mesh_shader_params[draw_id].metallicRoughness_texture_handle);
     sampler2D normal_tx_hndl = sampler2D(mesh_shader_params[draw_id].normal_texture_handle);
 
-	vec4 albedo_tx_value = texture(base_tx_hndl, uv_coord);
-	vec4 roughness_tx_value = texture(roughness_tx_hndl, uv_coord);
-	vec4 normal_tx_value = texture(normal_tx_hndl, uv_coord);
+    vec4 albedo_tx_value = texture(base_tx_hndl, uv_coord);
+    vec4 roughness_tx_value = texture(roughness_tx_hndl, uv_coord);
+    vec4 normal_tx_value = texture(normal_tx_hndl, uv_coord);
 
-	bool is_sRGB = true;
-	if(is_sRGB){
-		albedo_tx_value = toLinear(albedo_tx_value);
-		//roughness_tx_value = toLinear(roughness_tx_value);
-	}
+    bool is_sRGB = true;
+    if(is_sRGB){
+        albedo_tx_value = toLinear(albedo_tx_value);
+        //roughness_tx_value = toLinear(roughness_tx_value);
+    }
 
-	if(albedo_tx_value.a < 0.01){
-		discard;
-	}
+    if(albedo_tx_value.a < 0.01){
+        discard;
+    }
 
-	vec2 metallicRoughness = roughness_tx_value.bg;
+    vec2 metallicRoughness = roughness_tx_value.bg;
 
-	vec3 tNormal = ( normal_tx_value.rgb * 2.0) - 1.0;
-	normal_out.xyz = (normalize(transpose(tangent_space_matrix) * tNormal));
-	
-	albedo_out = albedo_tx_value;
-	
-	metallic_roughness_out = vec3( metallicRoughness, 0.0 );
+    vec3 tNormal = ( normal_tx_value.rgb * 2.0) - 1.0;
+    normal_out.xyz = (normalize(transpose(tangent_space_matrix) * tNormal));
+    
+    albedo_out = albedo_tx_value;
+    
+    metallic_roughness_out = vec3( metallicRoughness, 0.0 );
 }

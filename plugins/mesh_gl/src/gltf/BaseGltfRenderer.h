@@ -89,7 +89,8 @@ inline void BaseGltfRenderer::updateRenderTaskCollection(mmstd_gl::CallRender3DG
                         if (sub_mesh.mesh != nullptr) {
                             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
                             auto const& shader = material_collection_->getMaterial("gltfMaterial").shader_program;
-                            auto const& textured_shader = material_collection_->getMaterial("gltfTexturedMaterial").shader_program;
+                            auto const& textured_shader =
+                                material_collection_->getMaterial("gltfTexturedMaterial").shader_program;
 
                             auto material_idx =
                                 model->meshes[model->nodes[node_idx].mesh].primitives[primitive_idx].material;
@@ -281,8 +282,6 @@ inline void BaseGltfRenderer::updateRenderTaskCollection(mmstd_gl::CallRender3DG
                                 render_task_collection_->addRenderTask(rt_identifier, shader, gpu_batch_mesh,
                                     sub_mesh.sub_mesh_draw_command, per_obj_data);
                             }
-
-                            
                         }
                     }
                 }

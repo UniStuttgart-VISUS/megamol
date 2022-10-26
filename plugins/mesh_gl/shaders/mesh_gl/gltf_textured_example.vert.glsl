@@ -29,26 +29,26 @@ void main()
 
     draw_id = gl_DrawIDARB;
 
-    /*	Construct matrices that use the model matrix*/
+    /*  Construct matrices that use the model matrix*/
     mat3 normal_matrix = transpose(inverse(mat3(object_transform)));
 
-    /*	Just to be on the safe side, normalize input vectors again */
+    /*  Just to be on the safe side, normalize input vectors again */
     vec3 normal = normalize(v_normal);
     vec3 tangent = normalize(v_tangent.xyz);
     vec3 bitangent = normalize( cross(normal, tangent) * v_tangent.w );
     
-    /*	Transform input vectors into view space */
+    /*  Transform input vectors into view space */
     normal = normalize(normal_matrix * normal);
     tangent = normalize(normal_matrix * tangent);
     bitangent = normalize(normal_matrix * bitangent);
 
-    /*	Compute transformation matrix for tangent space transformation */
+    /*  Compute transformation matrix for tangent space transformation */
     tangent_space_matrix = mat3(
         tangent.x, bitangent.x, normal.x,
         tangent.y, bitangent.y, normal.y,
         tangent.z, bitangent.z, normal.z);
     
-    /*	Transform vertex position to view space */
+    /*  Transform vertex position to view space */
     //vec3 world_pos = (object_transform * vec4(v_position,1.0)).xyz;
 
     vnormal = normalize(tangent).rgb;
