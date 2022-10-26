@@ -11,7 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/LuaState.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Map.h"
 #include "vislib/Pair.h"
@@ -66,9 +65,6 @@ class Configuration {
 public:
     /** only Entry may create Configuration objects */
     friend class megamol::core::CoreInstance;
-
-    /** LuaState is the new configuration, so it may set values */
-    friend class megamol::core::LuaState;
 
     /** dtor */
     virtual ~Configuration(void);

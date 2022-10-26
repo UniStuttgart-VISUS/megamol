@@ -16,7 +16,6 @@
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/JobInstance.h"
-#include "mmcore/LuaState.h"
 #include "mmcore/RootModuleNamespace.h"
 #include "mmcore/ViewInstance.h"
 #include "mmcore/factories/CallDescription.h"
@@ -56,8 +55,6 @@ namespace core {
  */
 class CoreInstance {
 public:
-    friend class megamol::core::LuaState;
-
     typedef std::unordered_map<std::string, size_t> ParamHashMap_t;
 
     /** ctor */
@@ -79,18 +76,6 @@ public:
      * @return The module description manager of the assembly.
      */
     virtual const factories::ModuleDescriptionManager& GetModuleDescriptionManager(void) const;
-
-    /** return the contained LuaState */
-    inline LuaState* GetLuaState(void) {
-        return this->lua;
-    }
-
-    /** return whether loaded project files are Lua-based or legacy */
-    inline bool IsLuaProject() const {
-        return this->loadedLuaProjects.Count() > 0;
-    }
-
-    vislib::StringA GetMergedLuaProject() const;
 
     /**
      * Initialises the instance. This method must only be called once!
@@ -435,19 +420,8 @@ private:
     /** The paths to the shaders */
     std::vector<std::filesystem::path> shaderPaths;
 
-    /** The Lua state */
-    megamol::core::LuaState* lua;
-
     /** illegal hack: the last ImGui context */
     void* lastImGuiContext = nullptr;
-
-    /**
-     * All of the verbatim loaded project files. We need to keep them to send them
-     * to interested parties, like the simpleclusterclient, so they can interpret
-     * them THEMSELVES. All control flow must be retained to allow for asymmetric
-     * MegaMol execution.
-     */
-    vislib::Array<vislib::Pair<vislib::StringA, vislib::StringA>> loadedLuaProjects;
 
     /** The module namespace root */
     RootModuleNamespace::ptr_type namespaceRoot;

@@ -7,6 +7,9 @@
 
 #include "mmstd/view/AbstractView.h"
 
+#include <climits>
+#include <fstream>
+
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/AbstractParam.h"
@@ -20,7 +23,6 @@
 #include "mmstd/renderer/CallRenderView.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/assert.h"
-#include <climits>
 
 using namespace megamol::core;
 using megamol::core::utility::log::Log;

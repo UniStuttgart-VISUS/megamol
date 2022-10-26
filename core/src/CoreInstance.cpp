@@ -70,9 +70,7 @@
  */
 megamol::core::CoreInstance::CoreInstance(void)
         : config()
-        , lua(nullptr)
         , namespaceRoot()
-        , loadedLuaProjects()
         , paramUpdateListeners()
         , plugins()
         , all_call_descriptions()
@@ -120,9 +118,6 @@ megamol::core::CoreInstance::~CoreInstance(void) {
     // finally plugins
     this->plugins.clear();
 
-    delete this->lua;
-    this->lua = nullptr;
-
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Cleanup();
 #endif /* ULTRA_SOCKET_STARTUP */
@@ -151,23 +146,6 @@ const megamol::core::factories::ModuleDescriptionManager& megamol::core::CoreIns
  * megamol::core::CoreInstance::Initialise
  */
 void megamol::core::CoreInstance::Initialise() {
-
-    this->lua = new LuaState(this);
-    if (this->lua == nullptr || !this->lua->StateOk()) {
-        throw vislib::IllegalStateException("Cannot initalise Lua", __FILE__, __LINE__);
-    }
-    std::string result;
-    const bool ok = lua->RunString("mmLog(LOGINFO, 'Lua loaded OK: Running on ', "
-                                   "mmGetBitWidth(), ' bit ', mmGetOS(), ' in ', mmGetConfiguration(),"
-                                   "' mode on ', mmGetMachineName(), '.')",
-        result);
-    if (ok) {
-        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("Lua execution is OK and returned '%s'", result.c_str());
-    } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Lua execution is NOT OK and returned '%s'", result.c_str());
-    }
-    // lua->RunString("mmLogInfo('Lua loaded Ok.')");
 
     // loading plugins
     for (const auto& plugin : factories::PluginRegister::getAll()) {
@@ -473,19 +451,6 @@ void megamol::core::CoreInstance::EnumModulesNoLock(
         }
     }
 }
-
-vislib::StringA megamol::core::CoreInstance::GetMergedLuaProject() const {
-    if (this->loadedLuaProjects.Count() == 1) {
-        return this->loadedLuaProjects[0].Second();
-    }
-    std::stringstream out;
-    for (auto x = 0; x < this->loadedLuaProjects.Count(); x++) {
-        out << this->loadedLuaProjects[x].Second();
-        out << std::endl;
-    }
-    return out.str().c_str();
-}
-
 
 /*
  * megamol::core::CoreInstance::CleanupModuleGraph
