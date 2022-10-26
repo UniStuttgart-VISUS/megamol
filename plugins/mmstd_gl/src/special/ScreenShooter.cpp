@@ -196,7 +196,7 @@ bool special::ScreenShooter::IsAvailable(void) {
 special::ScreenShooter::ScreenShooter(const bool reducedParameters)
         : core::job::AbstractJob()
         , Module()
-        , viewNameSlot("view", "The name of the view instance or view to be used")
+        , viewNameSlot("view", "The name of the view to be used")
         , imgWidthSlot("imgWidth", "The width in pixels of the resulting image")
         , imgHeightSlot("imgHeight", "The height in pixels of the resulting image")
         , tileWidthSlot("tileWidth", "The width of a rendering tile in pixels")
@@ -959,22 +959,12 @@ bool special::ScreenShooter::triggerButtonClicked(core::param::ParamSlot& slot) 
 
     vislib::sys::AutoLock lock(this->ModuleGraphLock());
     {
-        core::ViewInstance* vi = nullptr;
         core::view::AbstractView* av = nullptr;
 
         auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
         auto module_ptr = megamolgraph.FindModule(std::string(mvn.PeekBuffer()));
-        vi = dynamic_cast<core::ViewInstance*>(module_ptr.get());
         av = dynamic_cast<core::view::AbstractView*>(module_ptr.get());
 
-        if (vi != nullptr) {
-            if (vi->View() != nullptr) {
-                auto* tmp = dynamic_cast<core::view::AbstractView*>(vi->View());
-                if (tmp != nullptr) {
-                    av = tmp;
-                }
-            }
-        }
         if (av != nullptr) {
             if (this->makeAnimSlot.Param<core::param::BoolParam>()->Value()) {
                 core::param::ParamSlot* timeSlot = this->findTimeParam(av);
@@ -1004,14 +994,8 @@ bool special::ScreenShooter::triggerButtonClicked(core::param::ParamSlot& slot) 
             };
             this->GetCoreInstance()->FindModuleNoLock<core::view::AbstractView>(mvn.PeekBuffer(), fun);
             if (!found) {
-                if (vi == nullptr) {
-                    Log::DefaultLog.WriteError(
-                        "Unable to find view or viewInstance \"%s\" for ScreenShot", mvn.PeekBuffer());
-                } else if (av == nullptr) {
-                    Log::DefaultLog.WriteError(
-                        "ViewInstance \"%s\" is not usable for ScreenShot (Not initialized) and AbstractView \"%s\" "
-                        "does not exist either",
-                        vi->FullName().PeekBuffer(), mvn.PeekBuffer());
+                if (av == nullptr) {
+                    Log::DefaultLog.WriteError("Unable to find view \"%s\" for ScreenShot", mvn.PeekBuffer());
                 }
             }
         }
