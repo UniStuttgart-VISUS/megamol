@@ -6,8 +6,6 @@
 
 in vec4 obj_pos;
 in vec3 cam_pos;
-// TODO: scale radii below radii --> i.e. x * absradii with 0.0 < absradii < 1.0
-// to fit into the box (which is scaled by radii?)
 in vec3 absradii;
 in mat3 rotate_world_into_tensor;
 
@@ -20,13 +18,14 @@ out layout(location = 0) vec4 albedo_out;
 out layout(location = 1) vec3 normal_out;
 out layout(location = 2) float depth_out;
 
+
 void main() {
-    // transform fragment coordinates from window coordinates to view coordinates.
+    // transform fragment coordinates from screen coordinates to ndc coordinates.
     vec4 coord = gl_FragCoord
         * vec4(view_attr.z, view_attr.w, 2.0, 0.0)
         + vec4(-1.0, -1.0, -1.0, 1.0);
 
-    // transform fragment coordinates from view coordinates to object coordinates.
+    // transform ndc coordinates to object coordinates.
     coord = mvp_i * coord;
     coord /= coord.w;
     coord -= obj_pos; // ... and move
@@ -39,11 +38,17 @@ void main() {
 
     vec3 aligned_absradii = absradii;
     int alignment = 0;
-    // check which axis is used alignment
-    // 0 - x (default)
+    // check which axis is used for alignment
+    // 0 - x
     // 1 - y
     // 2 - z
-    // 3 - largest
+    // 3 - largest (default)
+    //
+    // The trick here is that we change the order of coordinates according to the alignment,
+    // so that the intersection calculation below can stay the same without having to cover
+    // all cases. So, the case distinction is implicitly done here
+    // CAUTION: If you change anything here, you to adjust the re-alignment (~line 88 and 223) accordingly!
+    // (can most probably be done better)
     if(orientation == 3) {
         if(absradii.y >= absradii.x && absradii.y >= absradii.z) {
             alignment = 1;
@@ -64,7 +69,6 @@ void main() {
     }
 
 
-    // TODO: which radius to use? y or z?
     // cylinder length
     float length_cylinder = aligned_absradii.x * radius_scaling;
     float length_cylinder_half = length_cylinder / 2.0;
@@ -121,7 +125,6 @@ void main() {
     // CONE
     // see: https://pbr-book.org/3ed-2018/Shapes/Other_Quadrics
     ////////////////////////////////////////
-    // TODO: which cone height to use? one of the radii of half the length of the cylinder or whatever?
     float k = radius_cone / height_cone;
     k = k * k;
     float cam_x_minus_height = cpos.x - height_cone;
@@ -177,10 +180,7 @@ void main() {
 
     // default disk normal
     // arrow looks in positive axis-direction, therefore normal has to look the opposite way
-    vec3 normal = vec3(0.0);
-    normal.x = alignment == 0 ? -1.0 : 0.0;
-    normal.y = alignment == 1 ? -1.0 : 0.0;
-    normal.z = alignment == 2 ? -1.0 : 0.0;
+    vec3 normal = vec3(-1.0, 0.0, 0.0);
     vec3 intersection = vec3(0.0);
 
     // be aware of coordinate order for alignments
@@ -192,34 +192,20 @@ void main() {
     if (!invalid.w) {
         invalid.xyz = bvec3(true, true, true);
         intersection = cpos + (ray * lambda.w);
-        vec2 norm_int = normalize(intersection.yz);
-        // norm_int = alignment == 0 ? normalize(intersection.yz) : norm_int;
-        // norm_int = alignment == 1 ? normalize(intersection.xz) : norm_int;
-        // norm_int = alignment == 2 ? normalize(intersection.xy) : norm_int;
-        normal = alignment == 0 ? normalize(vec3(TIP_RAD / TIP_LEN, norm_int.xy)) : normal;
-        normal = alignment == 1 ? normalize(vec3(norm_int.x, TIP_RAD / TIP_LEN, norm_int.y)) : normal;
-        normal = alignment == 2 ? normalize(vec3(norm_int.xy, TIP_RAD / TIP_LEN)) : normal;
-        //normal = normalize(vec3(-TIP_RAD / TIP_LEN, intersection.yz));
+        normal = normalize(vec3(TIP_RAD / TIP_LEN, normalize(intersection.yz)));
     }
     // cylinder
     if (!invalid.x) {
         invalid.zy = bvec2(true, true);
         intersection = cpos + (ray * lambda.x);
-        vec2 norm_int = normalize(intersection.yz);
-        // norm_int = alignment == 0 ? normalize(intersection.yz) : norm_int;
-        // norm_int = alignment == 1 ? normalize(intersection.xz) : norm_int;
-        // norm_int = alignment == 2 ? normalize(intersection.yx) : norm_int;
-        normal = alignment == 0 ? normalize(vec3(0.0, norm_int.xy)) : normal;
-        normal = alignment == 1 ? normalize(vec3(norm_int.x, 0.0, norm_int.y)) : normal;
-        normal = alignment == 2 ? normalize(vec3(norm_int.xy, 0.0)) : normal;
-        //normal = vec3(0.0, normalize(intersection.yz));
+        normal = normalize(vec3(0.0, normalize(intersection.yz)));
     }
-    // no need for alignment adjustment for disks, since it is already done
+    // no need for alignment adjustment for disks, since it is already implicitly done
     // when normal is initialized
     // left cylinder disk
     if (!invalid.z) {
         invalid.y = true;
-        lambda.z = (CYL_LEN - cpos.x) / ray.x;
+        lambda.z = (-CYL_LEN - cpos.x) / ray.x;
         intersection = cpos + (ray * lambda.z);
     }
     // cone disk
@@ -232,15 +218,42 @@ void main() {
         }
     }
 
+    // re-re-align coordinates
+    if(alignment == 1) {
+        intersection = intersection.yxz;
+        normal = normal.yxz;
+    }
+    else if(alignment == 2) {
+        intersection = intersection.yzx;
+        normal = normal.yzx;
+    }
+
+    // transform normal and intersection point into tensor
     normal = transpose(rotate_world_into_tensor) * normal;
+    normal = normalize(normal);
 
+    // translate point back to original position
+    intersection = inverse(rotate_world_into_tensor) * intersection;
+    intersection += obj_pos.xyz;
 
-    //albedo_out = vec4(normal, 1.0);
-    albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation),1.0);
-    normal_out = normal;
-
+    // calc depth
+    float far = gl_DepthRange.far;
+    float near = gl_DepthRange.near;
     vec4 ding = vec4(intersection, 1.0);
+    // calc non-linear depth
     float depth = dot(mvp_t[2], ding);
     float depth_w = dot(mvp_t[3], ding);
-    depth_out = ((depth / depth_w) + 1.0) * 0.5;
+    float depth_ndc = depth / depth_w;
+    float depth_ss = ((far - near) / 2.0) * depth_ndc + (far + near) / 2.0;
+
+    // linear depth
+    // near_ - and far_plane from camera view frustum
+    //depth_ss = (2.0 * near_plane * far_plane) / (far_plane + near_plane - depth_ndc * (far_plane - near_plane));
+    //depth_ss /= far_plane;
+
+
+    albedo_out = vec4(mix(normal, vert_color.rgb, color_interpolation), 1.0);
+    normal_out = normal;
+    depth_out = depth_ss;
+    gl_FragDepth = depth_ss;
 }

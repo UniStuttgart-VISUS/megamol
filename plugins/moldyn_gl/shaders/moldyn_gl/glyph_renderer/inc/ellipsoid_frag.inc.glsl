@@ -3,6 +3,7 @@ in vec3 cam_pos;
 in vec4 vert_color;
 
 in vec3 inv_rad;
+in vec3 absradii;
 
 in flat vec3 dir_color;
 in flat vec3 transformed_normal;
@@ -19,24 +20,22 @@ void main() {
     vec3 ray, tmp;
     float lambda;
 
-    // transform fragment coordinates from window coordinates to view coordinates.
+    // transform fragment coordinates from screen coordinates to ndc coordinates.
     coord = gl_FragCoord
         * vec4(view_attr.z, view_attr.w, 2.0, 0.0)
         + vec4(-1.0, -1.0, -1.0, 1.0);
 
-
-    // transform fragment coordinates from view coordinates to object coordinates.
+    // transform ndc coordinates to object coordinates.
     coord = mvp_i * coord;
-    // TODO: correct order? doesnt /w need to be after inverse(projection)?
     coord /= coord.w;
     coord -= obj_pos; // ... and move
 
     // ... and rotate with rot_mat transposed
-    ray = rotate_world_into_tensor * coord.xyz;
-    ray *= inv_rad;
+    tmp = rotate_world_into_tensor * coord.xyz;
+    tmp *= inv_rad;
 
     // calc the viewing ray
-    ray = normalize(ray - cam_pos.xyz);
+    ray = normalize(tmp - cam_pos.xyz);
 
     // calculate the geometry-ray-intersection (sphere with radius = 1)
     float d1 = -dot(cam_pos.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray
@@ -46,36 +45,30 @@ void main() {
     lambda = d1 - sqrt(radicand);                           // lambda
     vec3 sphereintersection = lambda * ray + cam_pos.xyz;    // intersection point
 
-
-    // "calc" normal at intersection point
-    vec3 normal = sphereintersection;
-    vec3 color = step(normal, vec3(0));
-
-    normal = rotate_points * normal;
-    ray = rotate_points * ray;
-
+    // re-scale intersection point
     tmp = sphereintersection / inv_rad;
 
-    //sphereintersection.x = dot(rot_mat_t0, tmp.xyz);
-    //sphereintersection.y = dot(rot_mat_t1, tmp.xyz);
-    //sphereintersection.z = dot(rot_mat_t2, tmp.xyz);
-    sphereintersection = rotate_world_into_tensor * tmp.xyz;
+    // calc normal at (re-scaled) intersection point
+    vec3 normal = normalize( ( sphereintersection / absradii ) / absradii);
+    normal = normalize(rotate_points * normal);
 
-    // phong lighting with directional light, colors are hardcoded as they're inaccessible for some reason
-    //out_frag_color = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
-    //out_frag_color = vec4(LocalLighting(ray, normalize(sphereintersection), lightPos.xyz, color), 1.0);
-
-    albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation), 1.0);
-    normal_out = normal;
-
+    // re-transform intersection into world space
+    sphereintersection = inverse(rotate_world_into_tensor) * tmp.xyz;
     sphereintersection += obj_pos.xyz;
 
+    // calc depth
+    float far = gl_DepthRange.far;
+    float near = gl_DepthRange.near;
     vec4 ding = vec4(sphereintersection, 1.0);
     float depth = dot(mvp_t[2], ding);
     float depth_w = dot(mvp_t[3], ding);
-    depth_out = ((depth / depth_w) + 1.0) * 0.5;
+    float depth_ndc = depth / depth_w;
+    float depth_ss = ((far - near) / 2.0) * depth_ndc + (far + near) / 2.0;
 
-    //depth_out = gl_FragCoord.z;
-    //albedo_out = mix(dir_color, vert_color.rgb, color_interpolation);
-    //normal_out = transformed_normal;
+
+    // outputs
+    albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation), 1.0);
+    normal_out = normal;
+    depth_out = depth_ss;
+    gl_FragDepth = depth_ss;
 }

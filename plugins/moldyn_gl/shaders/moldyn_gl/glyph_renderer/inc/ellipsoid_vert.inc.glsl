@@ -3,6 +3,7 @@ out vec3 cam_pos;
 out vec4 vert_color;
 
 out vec3 inv_rad;
+out vec3 absradii;
 
 out flat vec3 dir_color;
 out flat vec3 transformed_normal;
@@ -27,7 +28,7 @@ void main() {
 
 
     vec4 in_pos = vec4(pos_array[inst].x, pos_array[inst].y, pos_array[inst].z, 1.0);
-    vec3 absradii = abs(radii) * scaling;
+    absradii = abs(radii) * scaling;
     vec4 quat_c = vec4(quat_array[inst].x, quat_array[inst].y, quat_array[inst].z, quat_array[inst].w); //quat[inst];
     inv_rad = 1.0 / absradii;
 

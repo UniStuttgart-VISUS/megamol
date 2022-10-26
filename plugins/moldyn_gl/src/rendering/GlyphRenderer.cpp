@@ -352,6 +352,8 @@ bool GlyphRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     }
 
     view::Camera cam = call.GetCamera();
+    view::Camera::NearPlane near_plane = cam.get<view::Camera::NearPlane>();// TODO: is it used? delete if not
+    view::Camera::FarPlane far_plane = cam.get<view::Camera::FarPlane>();   // TODO: is it used? delete if not
     auto view_temp = cam.getViewMatrix();
     auto proj_temp = cam.getProjectionMatrix();
     auto cam_pos = cam.get<view::Camera::Pose>().position;
@@ -361,6 +363,7 @@ bool GlyphRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+
 
     int w = call.GetFramebuffer()->getWidth();
     int h = call.GetFramebuffer()->getHeight();
@@ -418,12 +421,18 @@ bool GlyphRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     }
     shader->use();
 
+    
+
     glUniform4fv(shader->getUniformLocation("view_attr"), 1, glm::value_ptr(viewport_stuff));
     glUniformMatrix4fv(shader->getUniformLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(shader->getUniformLocation("mv"), 1, GL_FALSE, glm::value_ptr(mv_matrix));
+    glUniformMatrix4fv(shader->getUniformLocation("mv_t"), 1, GL_TRUE, glm::value_ptr(mv_matrix));
     glUniformMatrix4fv(shader->getUniformLocation("mv_i"), 1, GL_FALSE, glm::value_ptr(mv_matrix_i));
     glUniformMatrix4fv(shader->getUniformLocation("mvp_t"), 1, GL_TRUE, glm::value_ptr(mvp_matrix));
     glUniformMatrix4fv(shader->getUniformLocation("mvp_i"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_i));
     glUniform4fv(shader->getUniformLocation("cam"), 1, glm::value_ptr(cam_pos));
+    glUniform1f(shader->getUniformLocation("near_plane"), near_plane.value()); // TODO: is it used? delete, if not. and also take out of uniform shader snippet!
+    glUniform1f(shader->getUniformLocation("far_plane"), far_plane.value());   // TODO: is it used? delete, if not. and also take out of uniform shader snippet!
     glUniform1f(shader->getUniformLocation("scaling"), this->scale_param_.Param<param::FloatParam>()->Value());
     glUniform1f(
         shader->getUniformLocation("radius_scaling"), this->radius_scale_param_.Param<param::FloatParam>()->Value());
