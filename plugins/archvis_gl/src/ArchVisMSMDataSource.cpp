@@ -85,7 +85,8 @@ bool megamol::archvis_gl::ArchVisMSMDataSource::create(void) {
 bool ArchVisMSMDataSource::getDataCallback(megamol::core::Call& caller) {
     static bool fontInitialized = false;
     if (!fontInitialized) {
-        if (font.Initialise(this->GetCoreInstance())) {
+        if (font.Initialise(
+                this->GetCoreInstance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
             std::cout << "Font Initialised. " << std::endl;
         }
         fontInitialized = true;

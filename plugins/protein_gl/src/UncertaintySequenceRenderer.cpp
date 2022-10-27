@@ -465,7 +465,8 @@ void UncertaintySequenceRenderer::calculateGeometryVertices(int samples) {
  * UncertaintySequenceRenderer::LoadShader
  */
 bool UncertaintySequenceRenderer::LoadShader(void) {
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         shader = core::utility::make_glowl_shader("shader", shader_options,

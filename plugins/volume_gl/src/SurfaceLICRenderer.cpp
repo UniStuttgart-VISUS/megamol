@@ -108,7 +108,8 @@ SurfaceLICRenderer::~SurfaceLICRenderer() {
 }
 
 bool SurfaceLICRenderer::create() {
-    auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shaderOptions =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         this->pre_compute_shdr =

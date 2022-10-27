@@ -187,7 +187,7 @@ public:
          *
          * @return 'true' on success, 'false' on failure.
          */
-        bool Initialise(megamol::core::CoreInstance* core_instance_ptr);
+        bool Initialise(megamol::core::CoreInstance* core_instance_ptr, megamol::frontend_resources::RuntimeConfig const& runtimeConf);
 
         /**
          * Deinitialises the object.
@@ -643,13 +643,13 @@ public:
         * functions
         **********************************************************************/
 
-        bool loadFont(megamol::core::CoreInstance *core_instance_ptr);
+        bool loadFont(megamol::core::CoreInstance *core_instance_ptr, megamol::frontend_resources::RuntimeConfig const& runtimeConf);
 
         bool loadFontBuffers();
 
         bool loadFontInfo(vislib::StringW filename);
 
-        bool loadFontShader(megamol::core::CoreInstance* core_instance_ptr);
+        bool loadFontShader(megamol::frontend_resources::RuntimeConfig const& runtimeConf);
 
         /**
         * Answer the number of lines in the glyph run

@@ -119,7 +119,8 @@ QuickSurf::~QuickSurf() {
 bool QuickSurf::create(void) {
 
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         meshShader_ = core::utility::make_glowl_shader("quicksurf_mesh", shdr_options,
             std::filesystem::path("protein_cuda/quicksurf/qsurf_mesh.vert.glsl"),
@@ -135,7 +136,7 @@ bool QuickSurf::create(void) {
             "[QuickSurf] Unable to compile shader: Unknown exception.");
     }
 
-    deferredProvider_.setup(this->GetCoreInstance());
+    deferredProvider_.setup(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     return true;
 }
 

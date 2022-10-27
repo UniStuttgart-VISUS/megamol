@@ -33,7 +33,8 @@ megamol::compositing::DrawToScreen::~DrawToScreen() {
 bool megamol::compositing::DrawToScreen::create() {
 
     // create shader program
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         m_drawToScreen_prgm = core::utility::make_glowl_shader("comp_drawToScreen", shader_options,

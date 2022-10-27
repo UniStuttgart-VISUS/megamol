@@ -166,7 +166,8 @@ bool megamol::compositing_gl::AntiAliasing::create() {
 #endif
 
     // create shader programs
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         copy_prgm_ = core::utility::make_glowl_shader("copy_texture", shader_options, "compositing_gl/copy.comp.glsl");

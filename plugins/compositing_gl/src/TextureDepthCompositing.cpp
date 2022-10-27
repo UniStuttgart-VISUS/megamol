@@ -54,7 +54,8 @@ megamol::compositing::TextureDepthCompositing::~TextureDepthCompositing() {
 
 bool megamol::compositing::TextureDepthCompositing::create() {
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         m_depthComp_prgm = core::utility::make_glowl_shader(

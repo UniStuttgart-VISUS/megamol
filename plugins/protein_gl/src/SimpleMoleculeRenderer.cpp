@@ -212,7 +212,8 @@ bool SimpleMoleculeRenderer::create(void) {
 
     // new shaders
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
             std::filesystem::path("protein_gl/simplemolecule/sm_sphere.vert.glsl"),
@@ -294,7 +295,7 @@ bool SimpleMoleculeRenderer::create(void) {
     glDisableVertexAttribArray(static_cast<int>(Buffers::FILTER));
 
     // setup all the deferred stuff
-    deferredProvider_.setup(this->GetCoreInstance());
+    deferredProvider_.setup(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     return true;
 }

@@ -318,7 +318,8 @@ bool megamol::compositing::SSAO::create() {
 
     prepare_depth_mip_prgms_.resize(SSAODepth_MIP_LEVELS - 1);
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         prepare_depths_prgm_ = core::utility::make_glowl_shader(

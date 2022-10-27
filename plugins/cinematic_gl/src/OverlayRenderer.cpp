@@ -185,7 +185,7 @@ void OverlayRenderer::release() {
 
 bool OverlayRenderer::create() {
 
-    if (!this->InitPrimitiveRendering(GetCoreInstance()->GetShaderPaths())) {
+    if (!this->InitPrimitiveRendering(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -284,7 +284,8 @@ bool OverlayRenderer::onFontName(param::ParamSlot& slot) {
     auto font_name =
         static_cast<utility::SDFFont::PresetFontName>(this->paramFontName.Param<param::EnumParam>()->Value());
     this->m_font_ptr = std::make_unique<utility::SDFFont>(font_name);
-    if (!this->m_font_ptr->Initialise(this->GetCoreInstance())) {
+    if (!this->m_font_ptr->Initialise(
+            this->GetCoreInstance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         return false;
     }
     return true;

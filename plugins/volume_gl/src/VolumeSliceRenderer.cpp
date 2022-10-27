@@ -58,7 +58,8 @@ megamol::volume_gl::VolumeSliceRenderer::~VolumeSliceRenderer() {
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
 bool megamol::volume_gl::VolumeSliceRenderer::create() {
-    auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shaderOptions =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         this->compute_shader = core::utility::make_glowl_shader(

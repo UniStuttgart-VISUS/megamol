@@ -310,7 +310,8 @@ ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() {
 }
 
 bool ScatterplotMatrixRenderer2D::create() {
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         minimalisticAxisShader = core::utility::make_glowl_shader("splom_axis_minimalistic", shader_options,
@@ -342,9 +343,11 @@ bool ScatterplotMatrixRenderer2D::create() {
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount[2]);
 
-    if (!this->axisFont.Initialise(this->GetCoreInstance()))
+    if (!this->axisFont.Initialise(
+            this->GetCoreInstance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>()))
         return false;
-    if (!this->textFont.Initialise(this->GetCoreInstance()))
+    if (!this->textFont.Initialise(
+            this->GetCoreInstance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>()))
         return false;
     this->axisFont.SetBatchDrawMode(true);
     this->textFont.SetBatchDrawMode(true);

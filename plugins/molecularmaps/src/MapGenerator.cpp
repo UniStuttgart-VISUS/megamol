@@ -2625,7 +2625,8 @@ bool MapGenerator::initialiseMapShader(bool shaderReload) {
     if (!this->map_shader_init || shaderReload) {
         this->map_shader_init = true;
 
-        auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+        auto const shader_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         try {
             // Create shader for map and build the programme.

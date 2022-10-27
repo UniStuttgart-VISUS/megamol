@@ -118,10 +118,11 @@ SDFFont::~SDFFont(void) {
 }
 
 
-bool SDFFont::Initialise(megamol::core::CoreInstance* core_instance_ptr) {
+bool SDFFont::Initialise(
+    megamol::core::CoreInstance* core_instance_ptr, megamol::frontend_resources::RuntimeConfig const& runtimeConf) {
 
     if (!this->initialised) {
-        this->initialised = this->loadFont(core_instance_ptr);
+        this->initialised = this->loadFont(core_instance_ptr, runtimeConf);
     }
     return this->initialised;
 }
@@ -827,7 +828,8 @@ void SDFFont::render(
 }
 
 
-bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
+bool SDFFont::loadFont(
+    megamol::core::CoreInstance* core_instance_ptr, megamol::frontend_resources::RuntimeConfig const& runtimeConf) {
 
     this->ResetRotation();
     this->SetBatchDrawMode(false);
@@ -877,7 +879,7 @@ bool SDFFont::loadFont(megamol::core::CoreInstance* core_instance_ptr) {
     }
 
     // (4) Load shaders --------------------------------------------------------
-    if (!this->loadFontShader(core_instance_ptr)) {
+    if (!this->loadFontShader(runtimeConf)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SDFFont] Failed to load font shaders. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -1120,9 +1122,9 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
 }
 
 
-bool SDFFont::loadFontShader(megamol::core::CoreInstance* core_instance_ptr) {
+bool SDFFont::loadFontShader(megamol::frontend_resources::RuntimeConfig const& runtimeConf) {
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(core_instance_ptr->GetShaderPaths());
+    auto const shader_options = core::utility::make_path_shader_options(runtimeConf);
 
     try {
         auto shader_options_globcol = shader_options;

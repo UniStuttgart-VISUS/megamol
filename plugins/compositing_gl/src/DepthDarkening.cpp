@@ -56,7 +56,8 @@ megamol::compositing::DepthDarkening::~DepthDarkening() {
 
 bool megamol::compositing::DepthDarkening::create() {
 
-    auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shdr_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     try {
 
         blurShader_ = core::utility::make_glowl_shader(

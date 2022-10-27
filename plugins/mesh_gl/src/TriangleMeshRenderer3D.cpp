@@ -109,7 +109,8 @@ void TriangleMeshRenderer3D::createMaterialCollection() {
         Log::DefaultLog.WriteError("GL version too low or required extensions not available.");
     }
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         this->shader_program = core::utility::make_shared_glowl_shader("triangle_mesh_renderer_3d", shader_options,

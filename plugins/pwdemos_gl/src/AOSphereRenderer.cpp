@@ -153,7 +153,8 @@ bool AOSphereRenderer::create(void) {
         return false;
     }
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     const char* maFragNames[] = {
         "pwdemos_gl/AOSphere/mainaxes_LightAO.frag.glsl",

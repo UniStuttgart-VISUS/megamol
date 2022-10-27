@@ -31,7 +31,8 @@ megamol::thermodyn_gl::rendering::BoxRenderer::~BoxRenderer() {
 
 
 bool megamol::thermodyn_gl::rendering::BoxRenderer::create() {
-    auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shaderOptions =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         boxShader_ = core::utility::make_glowl_shader(

@@ -122,7 +122,7 @@ The constructor of the wrapper requires paths to source files of all shader stag
 
 Here is a full example:
 ```cpp
-const auto shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+const auto shader_options = core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 auto program = core::utility::make_glowl_shader("name", shader_options, "pluginname/shader.comp.glsl");
 ```
 

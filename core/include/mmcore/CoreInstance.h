@@ -73,20 +73,6 @@ public:
     }
 
     /**
-     * sets the current ImGui context, i.e. the one that was last touched when traversing the graph
-     */
-    inline void SetCurrentImGuiContext(void* ctx) {
-        this->lastImGuiContext = ctx;
-    }
-
-    /**
-     * gets the current ImGui context, i.e. the one that was last touched when traversing the graph
-     */
-    inline void* GetCurrentImGuiContext() const {
-        return this->lastImGuiContext;
-    }
-
-    /**
      * get the number of the currently rendered frame
      */
     inline uint32_t GetFrameID(void) {
@@ -100,11 +86,6 @@ public:
     inline void SetFrameID(uint32_t frameID) {
         this->frameID = frameID;
     }
-
-    /**
-     * Getter for shader paths
-     */
-    std::vector<std::filesystem::path> GetShaderPaths() const;
 
     inline void SetConfigurationPaths_Frontend3000Compatibility(
         std::string app_dir, std::vector<std::string> shader_dirs, std::vector<std::string> resource_dirs) {
@@ -120,21 +101,8 @@ public:
     }
 
 private:
-    /**
-     * Translates shader paths to include paths in the compiler options for the ShaderFactory.
-     *
-     * @param config Configuration instance
-     */
-    void translateShaderPaths(megamol::core::utility::Configuration const& config);
-
     /** the cores configuration */
     megamol::core::utility::Configuration config;
-
-    /** The paths to the shaders */
-    std::vector<std::filesystem::path> shaderPaths;
-
-    /** illegal hack: the last ImGui context */
-    void* lastImGuiContext = nullptr;
 
     /** the count of rendered frames */
     uint32_t frameID;

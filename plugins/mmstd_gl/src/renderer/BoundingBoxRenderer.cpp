@@ -80,7 +80,8 @@ BoundingBoxRenderer::~BoundingBoxRenderer() {
 bool BoundingBoxRenderer::create() {
     using namespace megamol::core::utility::log;
 
-    auto const shader_options = ::msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     try {
         lineShader = core::utility::make_glowl_shader("boundingbox", shader_options,
             "mmstd_gl/boundingbox/boundingbox.vert.glsl", "mmstd_gl/boundingbox/boundingbox.frag.glsl");

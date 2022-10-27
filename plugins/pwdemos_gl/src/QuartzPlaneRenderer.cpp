@@ -54,7 +54,8 @@ QuartzPlaneRenderer::~QuartzPlaneRenderer(void) {
 bool QuartzPlaneRenderer::create(void) {
     using megamol::core::utility::log::Log;
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         this->errShader = core::utility::make_shared_glowl_shader("errShader", shader_options,
@@ -466,7 +467,8 @@ std::shared_ptr<glowl::GLSLProgram> QuartzPlaneRenderer::makeShader(const Crysta
     c.AssertMesh();
     const float* v = c.GetMeshVertexData();
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         vislib::StringA str, line;

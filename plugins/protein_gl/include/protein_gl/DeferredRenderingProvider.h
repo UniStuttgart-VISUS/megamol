@@ -5,9 +5,11 @@
  */
 #pragma once
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/FramebufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
+#include <glowl/BufferObject.hpp>
+#include <glowl/FramebufferObject.hpp>
+#include <glowl/GLSLProgram.hpp>
+
+#include "RuntimeConfig.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/light/CallLight.h"
@@ -19,7 +21,7 @@ class DeferredRenderingProvider {
 public:
     DeferredRenderingProvider(void);
     virtual ~DeferredRenderingProvider(void);
-    void setup(core::CoreInstance* coreInstance);
+    void setup(megamol::frontend_resources::RuntimeConfig const& runtimeConf);
     void draw(mmstd_gl::CallRender3DGL& call, core::view::light::CallLight* lightCall, bool noShading = false);
     void setFramebufferExtents(uint32_t width, uint32_t height);
     void bindDeferredFramebufferToDraw(void);

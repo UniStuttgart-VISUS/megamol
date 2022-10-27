@@ -174,13 +174,14 @@ bool RamachandranPlot::create() {
     sureHelixPolygons_.push_back(poly);
 
     // setup font
-    if (!font_.Initialise(GetCoreInstance())) {
+    if (!font_.Initialise(GetCoreInstance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         return false;
     }
     font_.SetBatchDrawMode(true);
 
     // create shaders
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     try {
         passthroughShader_ = core::utility::make_glowl_shader("passthrough", shader_options,
             "protein_gl/render2d/passthrough.vert.glsl", "protein_gl/render2d/passthrough.frag.glsl");

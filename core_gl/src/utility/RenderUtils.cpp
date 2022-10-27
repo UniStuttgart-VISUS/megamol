@@ -129,7 +129,7 @@ RenderUtils::RenderUtils()
 RenderUtils::~RenderUtils() {}
 
 
-bool RenderUtils::InitPrimitiveRendering(std::vector<std::filesystem::path> const& shader_paths) {
+bool RenderUtils::InitPrimitiveRendering(frontend_resources::RuntimeConfig const& runtimeConf) {
 
     if (this->init_once) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -140,7 +140,7 @@ bool RenderUtils::InitPrimitiveRendering(std::vector<std::filesystem::path> cons
     std::vector<std::pair<GLuint, std::string>> location_name_pairs = {{Buffers::POSITION, "inPosition"},
         {Buffers::COLOR, "inColor"}, {Buffers::TEXTURE_COORD, "inTexture"}, {Buffers::ATTRIBUTES, "inAttributes"}};
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(shader_paths);
+    auto const shader_options = core::utility::make_path_shader_options(runtimeConf);
 
     try {
         this->shaders[Primitives::POINTS] = core::utility::make_glowl_shader(

@@ -65,7 +65,8 @@ bool SimplestSphereRenderer::create() {
 
     using namespace megamol::core::utility::log;
 
-    auto const shader_options = ::msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         simpleShader = core::utility::make_glowl_shader("simplePoints", shader_options,

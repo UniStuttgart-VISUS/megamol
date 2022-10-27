@@ -249,7 +249,8 @@ UncertaintyCartoonRenderer::~UncertaintyCartoonRenderer(void) {
  */
 bool UncertaintyCartoonRenderer::loadTubeShader(void) {
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         tubeShader_ = core::utility::make_shared_glowl_shader("cartoon", shdr_options,
             std::filesystem::path("protein_gl/uncertaintycartoon/uncertain.vert.glsl"),

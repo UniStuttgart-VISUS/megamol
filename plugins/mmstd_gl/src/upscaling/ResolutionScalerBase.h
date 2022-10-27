@@ -84,7 +84,8 @@ protected:
      * @return 'true' on success, 'false' otherwise.
      */
     bool create() override {
-        auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shader_options = core::utility::make_path_shader_options(
+            this->frontend_resources.template get<megamol::frontend_resources::RuntimeConfig>());
 
         try {
             naive_upsample_prgm_ = core::utility::make_glowl_shader(

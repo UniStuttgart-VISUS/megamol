@@ -73,7 +73,8 @@ protected:
      */
     bool create() override {
         try {
-            auto const shdr_cp_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+            auto const shdr_cp_options = core::utility::make_path_shader_options(
+                frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
             shader_ = core::utility::make_shared_glowl_shader("simple_compositing", shdr_cp_options,
                 std::filesystem::path("core/simple_compositing.vert.glsl"),

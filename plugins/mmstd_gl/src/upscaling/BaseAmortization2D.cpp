@@ -31,7 +31,8 @@ bool BaseAmortization2D::create() {
         Log::DefaultLog.WriteWarn("Ignore glError() from previous modules: %i", error);
     }
 
-    auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shaderOptions =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     createImpl(shaderOptions);
 
     return true;

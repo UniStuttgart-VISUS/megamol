@@ -121,7 +121,6 @@ ClusterGraphRenderer::~ClusterGraphRenderer(void) {
  */
 std::vector<std::string> ClusterGraphRenderer::requested_lifetime_resources() {
     std::vector<std::string> resources = ModuleGL::requested_lifetime_resources();
-    resources.emplace_back("RuntimeConfig");
     resources.emplace_back("MegaMolGraph");
     return resources;
 }
@@ -193,7 +192,8 @@ bool ClusterGraphRenderer::OnMouseMove(double x, double y) {
 bool ClusterGraphRenderer::create(void) {
 
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(instance()->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         point_shader_ = core::utility::make_glowl_shader("vertices", shdr_options,
             std::filesystem::path("molsurfmapcluster_gl/passthrough.vert.glsl"),
@@ -273,7 +273,7 @@ bool ClusterGraphRenderer::create(void) {
     fbo_->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT);
     fbo_->createColorAttachment(GL_R32I, GL_RED, GL_INT);
 
-    if (!font_.Initialise(instance())) {
+    if (!font_.Initialise(instance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, "[ClusterGraphRenderer]: Unable to initialize the font");
     }

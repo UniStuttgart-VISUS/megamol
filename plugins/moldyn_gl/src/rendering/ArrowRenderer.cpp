@@ -77,7 +77,8 @@ bool ArrowRenderer::create(void) {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
 
     // create shader programs
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         // TODO: use std::filesystem::path?
