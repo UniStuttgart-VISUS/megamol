@@ -5,6 +5,7 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "GlobalValueStore.h"
 #include "RuntimeConfig.h"
@@ -17,27 +18,31 @@
 #include "ImagePresentation_Service.hpp"
 #include "Lua_Service_Wrapper.hpp"
 #include "OpenGL_GLFW_Service.hpp"
+#include "PluginsResource.h"
 #include "Profiling_Service.hpp"
 #include "ProjectLoader_Service.hpp"
 #include "Remote_Service.hpp"
 #include "Screenshot_Service.hpp"
 #include "VR_Service.hpp"
 
+using megamol::core::utility::log::Log;
 
 static void log(std::string const& text) {
     const std::string msg = "Main: " + text;
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
+    Log::DefaultLog.WriteInfo(msg.c_str());
 }
 
 static void log_warning(std::string const& text) {
     const std::string msg = "Main: " + text;
-    megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.c_str());
+    Log::DefaultLog.WriteWarn(msg.c_str());
 }
 
 static void log_error(std::string const& text) {
     const std::string msg = "Main: " + text;
-    megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
+    Log::DefaultLog.WriteError(msg.c_str());
 }
+
+void loadPlugins(megamol::frontend_resources::PluginsResource& pluginsRes);
 
 int main(const int argc, const char** argv) {
 
@@ -48,10 +53,10 @@ int main(const int argc, const char** argv) {
     const bool with_gl = !config.no_opengl;
 
     // setup log
-    megamol::core::utility::log::Log::DefaultLog.SetLevel(config.log_level);
-    megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(config.echo_level);
+    Log::DefaultLog.SetLevel(config.log_level);
+    Log::DefaultLog.SetEchoLevel(config.echo_level);
     if (!config.log_file.empty())
-        megamol::core::utility::log::Log::DefaultLog.AddFileTarget(config.log_file.data(), false);
+        Log::DefaultLog.AddFileTarget(config.log_file.data(), false);
 
     log(config.as_string());
     log(global_value_store.as_string());
@@ -221,11 +226,11 @@ int main(const int argc, const char** argv) {
         return 1;
     }
 
-    const megamol::core::factories::ModuleDescriptionManager& moduleProvider = core.GetModuleDescriptionManager();
-    const megamol::core::factories::CallDescriptionManager& callProvider = core.GetCallDescriptionManager();
+    megamol::frontend_resources::PluginsResource pluginsRes;
+    loadPlugins(pluginsRes);
+    services.getProvidedResources().push_back({"PluginsResource", pluginsRes});
 
-
-    megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
+    megamol::core::MegaMolGraph graph(core, pluginsRes.all_module_descriptions, pluginsRes.all_call_descriptions);
 
     // Graph and Config are also a resources that may be accessed by services
     services.getProvidedResources().push_back({megamol::frontend_resources::MegaMolGraph_Req_Name, graph});
@@ -348,4 +353,41 @@ int main(const int argc, const char** argv) {
     services.close();
 
     return ret;
+}
+
+void loadPlugins(megamol::frontend_resources::PluginsResource& pluginsRes) {
+    for (auto const& pluginDesc : megamol::core::factories::PluginRegister::getAll()) {
+        try {
+            auto new_plugin = pluginDesc->create();
+            pluginsRes.plugins.push_back(new_plugin);
+
+            // report success
+            Log::DefaultLog.WriteInfo("Plugin \"%s\" loaded: %u Modules, %u Calls",
+                new_plugin->GetObjectFactoryName().c_str(), new_plugin->GetModuleDescriptionManager().Count(),
+                new_plugin->GetCallDescriptionManager().Count());
+
+            for (auto const& md : new_plugin->GetModuleDescriptionManager()) {
+                try {
+                    pluginsRes.all_module_descriptions.Register(md);
+                } catch (std::invalid_argument const&) {
+                    Log::DefaultLog.WriteError(
+                        "Failed to load module description \"%s\": Naming conflict", md->ClassName());
+                }
+            }
+            for (auto const& cd : new_plugin->GetCallDescriptionManager()) {
+                try {
+                    pluginsRes.all_call_descriptions.Register(cd);
+                } catch (std::invalid_argument const&) {
+                    Log::DefaultLog.WriteError(
+                        "Failed to load call description \"%s\": Naming conflict", cd->ClassName());
+                }
+            }
+
+        } catch (vislib::Exception const& vex) {
+            Log::DefaultLog.WriteError(
+                "Unable to load Plugin: %s (%s, &d)", vex.GetMsgA(), vex.GetFile(), vex.GetLine());
+        } catch (std::exception const& ex) {
+            Log::DefaultLog.WriteError("Unable to load Plugin: %s", ex.what());
+        } catch (...) { Log::DefaultLog.WriteError("Unable to load Plugin: unknown exception"); }
+    }
 }

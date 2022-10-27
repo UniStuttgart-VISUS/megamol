@@ -6,6 +6,7 @@
 
 #include "StubModule.h"
 
+#include "PluginsResource.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
@@ -25,7 +26,8 @@ special::StubModule::~StubModule(void) {
 
 
 bool special::StubModule::create(void) {
-    for (auto cd : this->GetCoreInstance()->GetCallDescriptionManager()) {
+    auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
+    for (auto cd : pluginsRes.all_call_descriptions) {
         this->inSlot.SetCompatibleCall(cd);
         for (unsigned int idx = 0; idx < cd->FunctionCount(); idx++) {
             this->outSlot.SetCallback(cd->ClassName(), cd->FunctionName(idx), &StubModule::stub);
@@ -44,7 +46,8 @@ void special::StubModule::release(void) {}
 
 bool megamol::core::special::StubModule::stub(Call& c) {
     auto call = this->inSlot.CallAs<Call>();
-    for (auto cd : this->GetCoreInstance()->GetCallDescriptionManager()) {
+    auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
+    for (auto cd : pluginsRes.all_call_descriptions) {
         if (cd->IsDescribing(call)) {
             for (unsigned int idx = 0; idx < cd->FunctionCount(); idx++) {
                 try {

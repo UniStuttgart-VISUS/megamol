@@ -6,6 +6,7 @@
  */
 
 #include "CSVFileSequence.h"
+#include "PluginsResource.h"
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
@@ -166,7 +167,8 @@ bool datatools::CSVFileSequence::getDataCallback(core::Call& caller) {
         if (!(*ggdc)(0)) {
             return false; // unable to get data
         }
-        this->GetCoreInstance()->GetCallDescriptionManager().AssignmentCrowbar(pgdc, ggdc);
+        auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
+        pluginsRes.all_call_descriptions.AssignmentCrowbar(pgdc, ggdc);
         ggdc->SetUnlocker(nullptr, false);
 
         pgdc->SetFrameID(frameID);

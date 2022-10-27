@@ -41,10 +41,6 @@
 #include "vislib/sys/Lockable.h"
 
 
-#define GOES_INTO_GRAPH
-#define GOES_INTO_TRASH
-#define REMOVE_GRAPH
-
 namespace megamol {
 namespace core {
 
@@ -58,20 +54,6 @@ public:
 
     /** dtor */
     virtual ~CoreInstance(void);
-
-    /**
-     * Answer the call description manager of the assembly.
-     *
-     * @return The call description manager of the assembly.
-     */
-    virtual const factories::CallDescriptionManager& GetCallDescriptionManager(void) const;
-
-    /**
-     * Answer the module description manager of the assembly.
-     *
-     * @return The module description manager of the assembly.
-     */
-    virtual const factories::ModuleDescriptionManager& GetModuleDescriptionManager(void) const;
 
     /**
      * Initialises the instance. This method must only be called once!
@@ -88,15 +70,6 @@ public:
      */
     inline const megamol::core::utility::Configuration& Configuration(void) const {
         return this->config;
-    }
-
-    /**
-     * Access to the plugin manager
-     *
-     * @return The plugin manager
-     */
-    inline const std::vector<factories::AbstractPluginInstance::ptr_type>& GetPlugins() const {
-        return plugins;
     }
 
     /**
@@ -148,13 +121,6 @@ public:
 
 private:
     /**
-     * Loads the plugin 'filename'
-     *
-     * @param filename The plugin to load
-     */
-    void loadPlugin(const std::shared_ptr<factories::AbstractPluginDescriptor>& plugin);
-
-    /**
      * Translates shader paths to include paths in the compiler options for the ShaderFactory.
      *
      * @param config Configuration instance
@@ -172,21 +138,6 @@ private:
 
     /** the count of rendered frames */
     uint32_t frameID;
-
-    /** The loaded plugins */
-    std::vector<factories::AbstractPluginInstance::ptr_type> plugins;
-
-    /**
-     * Factory referencing all call descriptions from core and all loaded
-     * plugins.
-     */
-    factories::CallDescriptionManager all_call_descriptions;
-
-    /**
-     * Factory referencing all module descriptions from core and all loaded
-     * plugins.
-     */
-    factories::ModuleDescriptionManager all_module_descriptions;
 };
 
 } /* end namespace core */

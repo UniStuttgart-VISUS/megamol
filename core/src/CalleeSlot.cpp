@@ -49,15 +49,10 @@ bool CalleeSlot::ConnectCall(megamol::core::Call* call, factories::CallDescripti
     // for the new MegaMolGraph, we don't want to handle ConreInstances.
     // so now we pass the call_description, which the graph holds anyway, to satisfy the code filling call->funcMap[]
     if (call_description == nullptr) {
-        core::CoreInstance& coreInst = *this->GetCoreInstance();
-        for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
-            if ((desc = coreInst.GetCallDescriptionManager().Find(this->callbacks[i]->CallName()))->IsDescribing(call))
-                break;
-            desc.reset();
-        }
-        if (!desc) {
-            return false;
-        }
+        // This case was legacy support for the old mmconsole. It should now never be called. Keep this is as safety
+        // check, because the old function signature is still in use in the Call destructor, but that should trigger
+        // the above call == nullptr case.
+        throw std::runtime_error("CalleeSlot::ConnectCall() - This case should not happen!");
     } else {
         desc = call_description;
     }

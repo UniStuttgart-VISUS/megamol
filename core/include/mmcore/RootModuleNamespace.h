@@ -107,14 +107,6 @@ public:
     virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock(void) const;
 
     /**
-     * Serializes the whole module graph into raw memory.
-     * The deserialization method is located in CoreInstance
-     *
-     * @param outmem The memory to receive the serialized module graph
-     */
-    void SerializeGraph(vislib::RawStorage& outmem);
-
-    /**
      * Answer the core instance of this named object
      *
      * @return The core instance of this named object

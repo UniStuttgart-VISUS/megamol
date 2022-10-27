@@ -16,6 +16,7 @@
 #include "KeyboardMouse_Events.h"
 #include "ModuleGraphSubscription.h"
 #include "OpenGL_Context.h"
+#include "PluginsResource.h"
 #include "ProjectLoader.h"
 #include "RuntimeConfig.h"
 #include "ScriptPaths.h"
@@ -65,8 +66,9 @@ bool GUI_Service::init(const Config& config) {
         "ImagePresentationEntryPoints",                                 // 13 - Entry point
         "ExecuteLuaScript",                                             // 14 - Execute Lua Scripts (from Console)
         frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name, // 15 MegaMol Graph subscription
+        "PluginsResource",                                              // 16 - Plugins
 #ifdef MEGAMOL_USE_PROFILING
-        frontend_resources::PerformanceManager_Req_Name // 16 - Performance Manager
+        frontend_resources::PerformanceManager_Req_Name // 17 - Performance Manager
 #endif
     };
 
@@ -316,7 +318,10 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
         return;
     }
 
-    this->m_gui->InitializeGraphSynchronisation((*this->m_config.core_instance));
+    auto const& pluginsRes =
+        this->m_requestedResourceReferences[16].getResource<megamol::frontend_resources::PluginsResource>();
+
+    this->m_gui->InitializeGraphSynchronisation(pluginsRes);
 
     // Check render backend prerequisites
     auto maybe_opengl_context =
@@ -417,7 +422,7 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 #ifdef MEGAMOL_USE_PROFILING
     // PerformanceManager
     perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
-        &this->m_requestedResourceReferences[16].getResource<megamol::frontend_resources::PerformanceManager>());
+        &this->m_requestedResourceReferences[17].getResource<megamol::frontend_resources::PerformanceManager>());
     // this needs to happen before the first (gui) module is spawned to help it look up the timers
     m_gui->SetPerformanceManager(perf_manager);
     perf_manager->subscribe_to_updates(

@@ -123,7 +123,7 @@ megamol::gui::GraphPtr_t megamol::gui::GraphCollection::GetRunningGraph() {
 }
 
 
-bool megamol::gui::GraphCollection::load_call_stock(const megamol::core::CoreInstance& core_instance) {
+bool megamol::gui::GraphCollection::load_call_stock(const megamol::frontend_resources::PluginsResource& pluginsRes) {
 
     // Load only once
     if (!this->calls_stock.empty()) {
@@ -145,8 +145,7 @@ bool megamol::gui::GraphCollection::load_call_stock(const megamol::core::CoreIns
 
             // Get plugin calls (get prior to core calls for being  able to find duplicates in core instance call desc.
             // manager)
-            auto plugins = core_instance.GetPlugins();
-            for (auto& plugin : plugins) {
+            for (auto& plugin : pluginsRes.plugins) {
                 plugin_name = plugin->GetObjectFactoryName();
                 for (auto& c_desc : plugin->GetCallDescriptionManager()) {
                     Call::StockCall call;
@@ -179,7 +178,7 @@ bool megamol::gui::GraphCollection::load_call_stock(const megamol::core::CoreIns
 }
 
 
-bool megamol::gui::GraphCollection::load_module_stock(const megamol::core::CoreInstance& core_instance) {
+bool megamol::gui::GraphCollection::load_module_stock(const megamol::frontend_resources::PluginsResource& pluginsRes) {
 
     if (this->calls_stock.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -210,8 +209,7 @@ bool megamol::gui::GraphCollection::load_module_stock(const megamol::core::CoreI
 
             // Get plugin modules (get prior to core modules for being  able to find duplicates in core instance module
             // desc. manager)
-            auto plugins = core_instance.GetPlugins();
-            for (auto& plugin : plugins) {
+            for (auto& plugin : pluginsRes.plugins) {
                 plugin_name = plugin->GetObjectFactoryName();
                 for (auto& m_desc : plugin->GetModuleDescriptionManager()) {
                     Module::StockModule mod;
@@ -268,16 +266,17 @@ void megamol::gui::GraphCollection::SetLuaFunc(lua_func_type* func) {
 }
 
 
-bool megamol::gui::GraphCollection::InitializeGraphSynchronisation(const megamol::core::CoreInstance& core_instance) {
+bool megamol::gui::GraphCollection::InitializeGraphSynchronisation(
+    const megamol::frontend_resources::PluginsResource& pluginsRes) {
 
     // Load all known calls from core instance ONCE
-    if (!this->load_call_stock(core_instance)) {
+    if (!this->load_call_stock(pluginsRes)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Load all known modules from core instance ONCE
-    if (!this->load_module_stock(core_instance)) {
+    if (!this->load_module_stock(pluginsRes)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load module stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
