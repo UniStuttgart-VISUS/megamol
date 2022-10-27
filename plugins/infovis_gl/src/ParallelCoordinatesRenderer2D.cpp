@@ -61,6 +61,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
         , resetFiltersParam_("filter::resetFilters", "Reset dimension filters to initial state")
         , filterStateParam_("filter::filterState", "stores filter state for serialization")
         , debugFloatParam_("debugFloat", "debugging float")
+        , debugFloatBParam_("debugFloat2", "debugging float2")
         , currentTableDataHash_(std::numeric_limits<std::size_t>::max())
         , currentTableFrameId_(std::numeric_limits<unsigned int>::max())
         , dimensionCount_(0)
@@ -190,6 +191,8 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D()
 
     debugFloatParam_ << new ::core::param::FloatParam(0.0);
     MakeSlotAvailable(&debugFloatParam_);
+    debugFloatBParam_ << new ::core::param::FloatParam(0.0);
+    MakeSlotAvailable(&debugFloatBParam_);
 }
 
 ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D() {
@@ -883,6 +886,9 @@ void ParallelCoordinatesRenderer2D::drawDensity(std::shared_ptr<glowl::Framebuff
 }
 
 void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl::FramebufferObject> const& fbo) {
+    using fst = core::FlagStorageTypes;
+    using bits = fst::flag_bits;
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
     int axes_pixel_height =
         (cameraCopy_.value().getViewMatrix() * cameraCopy_.value().getProjectionMatrix() * glm::vec4(0, 1.0, 0, 0)).y *
@@ -890,11 +896,27 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl
     int axes_pixel_width =
         (cameraCopy_.value().getViewMatrix() * cameraCopy_.value().getProjectionMatrix() * glm::vec4(1.0, 0, 0, 0)).x *
         (dimensionCount_ - 1) * axisDistance_ * viewRes_.x / 2;
-    if (dualTexture_ == nullptr || dualTexture_->getHeigth() != axes_pixel_height) {
-        std::vector<uint32_t> zeroData(axes_pixel_height * axes_pixel_height, 0);
+    int thetas = static_cast<int>((3.141 / 2.0) / atan(1.0 / float(axes_pixel_width / dimensionCount_)))
+        +               debugFloatParam_.Param<core::param::FloatParam>()->Value();
+    int rhos = axes_pixel_height;
+    +debugFloatBParam_.Param<core::param::FloatParam>()->Value();
+    int textureWidth = 0;
+    int textureHeight = 0;
 
+    if (drawmode == DRAW_DUAL_HOUGH) {
+        textureWidth = thetas;
+        textureHeight = rhos;
+    } else {
+        textureWidth = axes_pixel_height;
+        textureHeight = axes_pixel_height;
+    }
+
+    // Texture resize always too large for theta rho space
+    // TODO reinstate correct conditional
+    if (dualTexture_ == nullptr || dualTexture_->getHeigth() != axes_pixel_height + 5 || true) {
         dualTexture_ = std::make_unique<glowl::Texture2DArray>("o_dualtex",
-            glowl::TextureLayout(GL_R32UI, axes_pixel_height, axes_pixel_height, dimensionCount_ - 1, GL_RED,
+            glowl::TextureLayout(GL_R32UI, textureWidth, textureHeight,
+                dimensionCount_ - 1, GL_RED,
                 GL_UNSIGNED_INT, 1,
                 {
                     {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER},
@@ -905,7 +927,19 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl
                 },
                 {}),
             nullptr);
-
+        dualSelectTexture_ = std::make_unique<glowl::Texture2DArray>("o_select_dualtex",
+            glowl::TextureLayout(GL_R32UI, textureWidth, textureHeight,
+                dimensionCount_ - 1,
+                GL_RED, GL_UNSIGNED_INT, 1,
+                {
+                    {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER},
+                    {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
+                    {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER},
+                    {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
+                    {GL_TEXTURE_MAG_FILTER, GL_LINEAR},
+                },
+                {}),
+            nullptr);
         //zeroData = std::vector<uint32_t>(axes_pixel_height * axes_pixel_height, 0);
     }
     std::shared_ptr<glowl::GLSLProgram> currentCompute;
@@ -921,14 +955,27 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl
             break;
         case DRAW_DUAL_HOUGH:
             useProgramAndBindCommon(dualHoughProgramC_);
-            dualHoughProgramC_->setUniform("axPxHeight", axes_pixel_height);
+            dualHoughProgramC_->setUniform("axPxHeight",
+                axes_pixel_height + static_cast<int>(debugFloatParam_.Param<core::param::FloatParam>()->Value()));
+            dualHoughProgramC_->setUniform(
+                "thetas", thetas);
+            dualHoughProgramC_->setUniform("rhos", rhos);
+
+            constexpr auto testMask = fst::to_integral(bits::ENABLED | bits::FILTERED | bits::SELECTED);
+            constexpr auto passMask = fst::to_integral(bits::ENABLED | bits::SELECTED);
+            dualHoughProgramC_->setUniform("itemTestMask", testMask);
+            dualHoughProgramC_->setUniform("itemPassMask", passMask);
             break;
     }
     dualTexture_->bindImage(7, GL_WRITE_ONLY);
+    dualSelectTexture_->bindImage(6, GL_WRITE_ONLY);
     //glTextureSubImage3D(dualTexture_->getName(), 0, 0, 0, 0, axes_pixel_height, axes_pixel_height, 1, GL_RED_INTEGER,
     //    GL_UNSIGNED_INT, zeroData.data());
     glClearTexImage(dualTexture_->getName(), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+    glClearTexImage(dualSelectTexture_->getName(), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
     //Log::DefaultLog.WriteInfo("%i", glGetError());
+
+    
 
     std::array<GLuint, 3> groupCounts{};
     computeDispatchSizes((itemCount_) * dimensionCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
@@ -951,7 +998,6 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl
             densityFbo_ = std::make_unique<glowl::FramebufferObject>(
                 "densityFbo", fboWidth, fboHeight, glowl::FramebufferObject::NONE);
             densityFbo_->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);
-            //densityFbo_->createColorAttachment(GL_R8, GL_RED, GL_UNSIGNED_BYTE);
         }
         densityFbo_->bind();
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -965,6 +1011,9 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl
         dualTexture_->bindImage(7, GL_READ_ONLY);
         //glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA);
         dualSpawnLinesProgramD_->setUniform("axPxHeight", axes_pixel_height);
+        dualSpawnLinesProgramD_->setUniform("fboHeight", densityFbo_->getHeight());
+        dualSpawnLinesProgramD_->setUniform("fboWidth", densityFbo_->getWidth());
+        dualSpawnLinesProgramD_->setUniform("debugFloat", debugFloatBParam_.Param<core::param::FloatParam>()->Value());
         glDrawArraysInstanced(GL_LINES, 0, 2, dimensionCount_ * axes_pixel_height * axes_pixel_height);
         //TODO reset blending mode, not sure if the following is default
         glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -991,13 +1040,48 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl
     case DRAW_DUAL_HOUGH:
         useProgramAndBindCommon(dualHoughProgramD_);
         tfCall->BindConvenience(dualHoughProgramD_, GL_TEXTURE5, 5);
-        dualHoughProgramD_->setUniform("axPxHeight", axes_pixel_height);
-        dualHoughProgramD_->setUniform("axPxWidth", axes_pixel_width);
+        //Log::DefaultLog.WriteInfo("%i", glGetError());
+        // TODO throws an error?
+        dualHoughProgramD_->setUniform("binsNr",
+            static_cast<int>((3.141 / 2.0)  / atan(1.0 / float(axes_pixel_width / dimensionCount_))));
+        //Log::DefaultLog.WriteInfo(
+        //    "%i", static_cast<int>((3.141 / 2.0) / atan(1.0 / float(axes_pixel_width / dimensionCount_))));
+        dualHoughProgramD_->setUniform("axPxHeight",
+            axes_pixel_height + static_cast<int>(debugFloatParam_.Param<core::param::FloatParam>()->Value()));
+        dualHoughProgramD_->setUniform("axPxWidth",
+            axes_pixel_width + static_cast<int> (debugFloatParam_.Param<core::param::FloatParam>()->Value()));
+        //Log::DefaultLog.WriteInfo("%i", axes_pixel_width / (dimensionCount_-1));
+        //Log::DefaultLog.WriteInfo("%i", axes_pixel_height);
         dualHoughProgramD_->setUniform("debugFloat", debugFloatParam_.Param<core::param::FloatParam>()->Value());
         glActiveTexture(GL_TEXTURE7);
         dualTexture_->bindTexture();
         //dualTexture_->bindImage(7, GL_READ_ONLY);
+        dualHoughProgramD_->setUniform("selectMode", false);
+
+        dualHoughProgramD_->setUniform("thetas", thetas);
+        dualHoughProgramD_->setUniform("rhos", rhos);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+        //Selected Part ***************************************************************************************
+        useProgramAndBindCommon(dualHoughProgramD_);
+        tfCall->BindConvenience(dualHoughProgramD_, GL_TEXTURE5, 5);
+        //Log::DefaultLog.WriteInfo("%i", glGetError());
+        // TODO throws an error?
+        dualHoughProgramD_->setUniform(
+            "binsNr", static_cast<int>((3.141 / 2.0) / atan(1.0 / float(axes_pixel_width / dimensionCount_))));
+        //Log::DefaultLog.WriteInfo(
+        //    "%i", static_cast<int>((3.141 / 2.0) / atan(1.0 / float(axes_pixel_width / dimensionCount_))));
+        dualHoughProgramD_->setUniform("axPxHeight",
+            axes_pixel_height + static_cast<int>(debugFloatParam_.Param<core::param::FloatParam>()->Value()));
+        dualHoughProgramD_->setUniform("axPxWidth",
+            axes_pixel_width + static_cast<int>(debugFloatParam_.Param<core::param::FloatParam>()->Value()));
+        dualHoughProgramD_->setUniform("debugFloat", debugFloatParam_.Param<core::param::FloatParam>()->Value());
+        glActiveTexture(GL_TEXTURE7);
+        dualSelectTexture_->bindTexture();
+        //dualTexture_->bindImage(7, GL_READ_ONLY);
+        dualHoughProgramD_->setUniform("selectMode", true);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
         break;
     }
     

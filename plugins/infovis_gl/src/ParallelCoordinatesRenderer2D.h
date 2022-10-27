@@ -194,6 +194,7 @@ protected:
     core::param::ParamSlot resetFiltersParam_;
     core::param::ParamSlot filterStateParam_;
     core::param::ParamSlot debugFloatParam_;
+    core::param::ParamSlot debugFloatBParam_;
 
     // Data Info
     std::size_t currentTableDataHash_;
@@ -270,6 +271,7 @@ protected:
 
     std::unique_ptr<glowl::FramebufferObject> densityFbo_;
     std::unique_ptr<glowl::Texture2DArray> dualTexture_;
+    std::unique_ptr<glowl::Texture2DArray> dualSelectTexture_;
 
     // View and camera state
     std::optional<core::view::Camera> cameraCopy_;

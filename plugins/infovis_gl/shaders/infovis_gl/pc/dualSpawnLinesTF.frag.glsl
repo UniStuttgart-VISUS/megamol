@@ -14,7 +14,8 @@ void main() {
     float fragmentCount = texture(fragmentCountTex, texCoord).r;
     if (fragmentCount > 0) {
         fragColor = tflookup(fragmentCount);
-        //fragColor = vec4(0.5);}
+        //fragColor = vec4(fragmentCount/500.0, 0, 0, 1);
+        //fragColor = vec4(0.5);
     }else{
         discard;
     }

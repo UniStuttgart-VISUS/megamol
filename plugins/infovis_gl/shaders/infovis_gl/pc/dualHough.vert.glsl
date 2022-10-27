@@ -8,6 +8,9 @@ out vec2 uvCoords;
 layout (binding=7) uniform usampler2DArray imgRead;
 uniform int axPxHeight;
 uniform int axPxWidth;
+uniform int binsNr;
+uniform int thetas;
+uniform int rhos;
 
 void main() {
     mat4 compMx = projMx * viewMx;
