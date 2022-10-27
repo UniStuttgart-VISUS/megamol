@@ -11,11 +11,10 @@ uniform int axPxHeight;
 void main() {
     uint invID = globalInvocationIndex();
     uint itemID = invID % (itemCount);
-    uint dimID = invID / (itemCount); // correct division of inv to item/dim
+    uint dimID = invID / (itemCount);
     float left = pc_dataValueNormalized(itemID, dimID);
     float right = pc_dataValueNormalized(itemID, dimID + 1);
 
-    //imageAtomicAdd(o_dualtex, ivec3(left * axisHeight, right* axisHeight, dimID), 1);
+    // Height - 1, because both left can be 0.0 and 1.0
     imageAtomicAdd(o_dualtex, ivec3(left * float(axPxHeight -1), right* float(axPxHeight -1), dimID), 1);
-    // write to texture at (left, right) atomically
 }

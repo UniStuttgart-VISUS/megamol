@@ -18,6 +18,4 @@ void main() {
     coord = (compMx * vec4(coord, 0, 1)).xy;
     gl_Position = vec4(coord, 0.0f, 1.0f);
     uvCoords = vec2(float(gl_VertexID % 2) * (dimensionCount-1), float(gl_VertexID / 2));
-    //gl_Position =  vec4(vec2(float(gl_VertexID % 2), float((gl_VertexID % 4) / 2)),0,1);
-    //uvCoords = vec2(float(gl_VertexID % 2), float((gl_VertexID % 4) / 2));
 }
