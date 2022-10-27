@@ -19,7 +19,6 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/profiler/Manager.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Array.h"
@@ -35,15 +34,9 @@
  */
 megamol::core::CoreInstance::CoreInstance(void)
         : config()
-        , namespaceRoot()
         , plugins()
         , all_call_descriptions()
         , all_module_descriptions() {
-
-    this->namespaceRoot = std::make_shared<RootModuleNamespace>();
-
-    profiler::Manager::Instance().SetCoreInstance(this);
-    this->namespaceRoot->SetCoreInstance(*this);
 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("Core Instance created");
 }
@@ -92,32 +85,6 @@ void megamol::core::CoreInstance::Initialise() {
     for (const auto& plugin : factories::PluginRegister::getAll()) {
         this->loadPlugin(plugin);
     }
-
-    // set up profiling manager
-    if (this->config.IsConfigValueSet("profiling")) {
-        vislib::StringA prof(this->config.ConfigValue("profiling"));
-        if (prof.Equals("all", false)) {
-            profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_ALL);
-        } else if (prof.Equals("selected", false)) {
-            profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_SELECTED);
-        } else if (prof.Equals("none", false)) {
-            profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
-        } else {
-            try {
-                bool b = vislib::CharTraitsA::ParseBool(prof);
-                if (b) {
-                    profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_SELECTED);
-                } else {
-                    profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
-                }
-            } catch (...) { profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE); }
-        }
-    } else {
-        // Do not profile on default
-        profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
-    }
-
-    //////////////////////////////////////////////////////////////////////
 
     translateShaderPaths(config);
 }

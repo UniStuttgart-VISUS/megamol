@@ -90,19 +90,6 @@ public:
         return this->config;
     }
 
-#ifdef REMOVE_GRAPH
-
-    /**
-     * Answer the root object of the module graph.
-     * Used for internal computations only
-     *
-     * @return The root object of the module graph
-     */
-    inline RootModuleNamespace::const_ptr_type GOES_INTO_TRASH ModuleGraphRoot(void) const {
-        return this->namespaceRoot;
-    }
-#endif
-
     /**
      * Access to the plugin manager
      *
@@ -182,9 +169,6 @@ private:
 
     /** illegal hack: the last ImGui context */
     void* lastImGuiContext = nullptr;
-
-    /** The module namespace root */
-    RootModuleNamespace::ptr_type namespaceRoot;
 
     /** the count of rendered frames */
     uint32_t frameID;
