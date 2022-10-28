@@ -1035,26 +1035,11 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl
         dualHoughProgramD_->setUniform("debugFloat", debugFloatParam_.Param<core::param::FloatParam>()->Value());
         glActiveTexture(GL_TEXTURE7);
         dualTexture_->bindTexture();
+        glActiveTexture(GL_TEXTURE8);
+        dualSelectTexture_->bindTexture();
         dualHoughProgramD_->setUniform("selectMode", false);
         dualHoughProgramD_->setUniform("thetas", thetas);
         dualHoughProgramD_->setUniform("rhos", rhos);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-        //Draw Selected Lines
-        useProgramAndBindCommon(dualHoughProgramD_);
-        tfCall->BindConvenience(dualHoughProgramD_, GL_TEXTURE5, 5);
-
-        dualHoughProgramD_->setUniform(
-            "binsNr", static_cast<int>((pi / 2.0) / atan(1.0 / float(axes_pixel_width / dimensionCount_))));
-
-        dualHoughProgramD_->setUniform("axPxHeight",
-            axes_pixel_height + static_cast<int>(debugFloatParam_.Param<core::param::FloatParam>()->Value()));
-        dualHoughProgramD_->setUniform("axPxWidth",
-            axes_pixel_width + static_cast<int>(debugFloatParam_.Param<core::param::FloatParam>()->Value()));
-        dualHoughProgramD_->setUniform("debugFloat", debugFloatParam_.Param<core::param::FloatParam>()->Value());
-        glActiveTexture(GL_TEXTURE7);
-        dualSelectTexture_->bindTexture();
-        dualHoughProgramD_->setUniform("selectMode", true);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
         break;

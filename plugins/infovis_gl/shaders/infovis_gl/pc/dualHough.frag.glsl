@@ -11,12 +11,13 @@ uniform int axPxHeight;
 uniform int axPxWidth;
 uniform float debugFloat;
 uniform int binsNr;
-uniform bool selectMode;
 uniform int thetas;
 uniform int rhos;
 layout (binding=7) uniform usampler2DArray imgRead;
+layout (binding=8) uniform usampler2DArray slctRead;
 
 void main() {
+    bool selected = false;
     int axPxDist = axPxWidth / int(dimensionCount-1);
     float PI = 3.1415926535;
     int cdim = int(floor(uvCoords.x));
@@ -31,29 +32,16 @@ void main() {
         //float rho = (dir.x * uvCoords.y - dir.y * relx) / (dir.x * orth.y - dir.y * orth.x);
         float rho = relx * cos(theta) + fract(uvCoords.y) * sin(theta);
         if (texelFetch(imgRead, ivec3(i, rho * (rhos-1), cdim), 0).x > 0) {
-            result += int(texelFetch(imgRead, ivec3(i, rho * (rhos-1), cdim), 0).x);
-            //result += 1;
-            //fragOut = vec4(theta/PI*2.0);
+            result += int(texelFetch(imgRead, ivec3(i, rho * (rhos-1), cdim), 0).x);  
+        }
+        if(texelFetch(slctRead, ivec3(i, rho * (rhos-1), cdim), 0).x != 0){
+            selected = true;
+            break;
         }
     }
-    /*
-    if (result == 1) {
-        //fragOut = tflookup(result-1);
-        //fragOut = vec4(theta/(PI/2.0));
-        fragOut = vec4(1,0,0,1);
-    }
-    if (result == 2) {
-        fragOut = vec4(0,1,0,1);
-    }
-    if (result == 3) {
-        fragOut = vec4(1,1,1,1);
-    }
-    if(result == 0){
-     discard;
-    }
-    */
-    if(result > 0){
-        if(!selectMode){
+
+    if(result > 0 || selected){
+        if(!selected){
             fragOut = tflookup(result-1);
         }else{
             fragOut = vec4(1,0,0,1);
