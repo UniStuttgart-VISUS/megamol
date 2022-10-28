@@ -155,7 +155,7 @@ bool SequenceRenderer::create() {
     glGenVertexArrays(1, &tex_vao_);
     glBindVertexArray(0);
 
-    if (!font_.Initialise(GetCoreInstance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
+    if (!font_.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         core::utility::log::Log::DefaultLog.WriteError(
             "[SequenceRenderer]: The font rendering could not be initialized");
         return false;

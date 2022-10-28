@@ -15,13 +15,15 @@ using namespace megamol::core::utility;
 /*
  * ResourceWrapper::getFileName
  */
-vislib::StringW ResourceWrapper::getFileName(const Configuration& config, const vislib::StringA& name) {
+vislib::StringW ResourceWrapper::getFileName(
+    frontend_resources::RuntimeConfig const& runtimeConf, const vislib::StringA& name) {
     using megamol::core::utility::log::Log;
 
     vislib::StringW filename;
-    const vislib::Array<vislib::StringW>& searchPaths = config.ResourceDirectories();
-    for (SIZE_T i = 0; i < searchPaths.Count(); i++) {
-        filename = vislib::sys::Path::Concatenate(searchPaths[i], vislib::StringW(name));
+
+    for (SIZE_T i = 0; i < runtimeConf.resource_directories.size(); i++) {
+        filename = vislib::sys::Path::Concatenate(
+            vislib::StringW(runtimeConf.resource_directories[i].c_str()), vislib::StringW(name));
         if (vislib::sys::File::Exists(filename)) {
             Log::DefaultLog.WriteInfo("Loading %s ...\n", vislib::StringA(filename).PeekBuffer());
             break;
@@ -36,12 +38,13 @@ vislib::StringW ResourceWrapper::getFileName(const Configuration& config, const 
 /*
  * ResourceWrapper::LoadResource
  */
-SIZE_T ResourceWrapper::LoadResource(const Configuration& config, const vislib::StringA& name, void** outData) {
+SIZE_T ResourceWrapper::LoadResource(
+    frontend_resources::RuntimeConfig const& runtimeConf, const vislib::StringA& name, void** outData) {
     using megamol::core::utility::log::Log;
 
     *outData = NULL;
 
-    vislib::StringW filename = ResourceWrapper::getFileName(config, name);
+    vislib::StringW filename = ResourceWrapper::getFileName(runtimeConf, name);
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteError("Unable to load resource \"%s\": not found\n", name.PeekBuffer());
         return 0;
@@ -73,11 +76,12 @@ SIZE_T ResourceWrapper::LoadResource(const Configuration& config, const vislib::
 /*
  * ResourceWrapper::LoadTextResource
  */
-SIZE_T ResourceWrapper::LoadTextResource(const Configuration& config, const vislib::StringA& name, char** outData) {
+SIZE_T ResourceWrapper::LoadTextResource(
+    frontend_resources::RuntimeConfig const& runtimeConf, const vislib::StringA& name, char** outData) {
     using megamol::core::utility::log::Log;
 
     *outData = NULL;
-    vislib::StringW filename = ResourceWrapper::getFileName(config, name);
+    vislib::StringW filename = ResourceWrapper::getFileName(runtimeConf, name);
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteError("Unable to load resource \"%s\": not found\n", name.PeekBuffer());
         return 0;

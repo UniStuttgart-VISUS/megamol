@@ -212,7 +212,7 @@ bool ProteinViewRenderer::create(void) {
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
 
-    font_.Initialise(instance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+    font_.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     return true;
 }

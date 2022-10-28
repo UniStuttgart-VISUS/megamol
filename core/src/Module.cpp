@@ -175,30 +175,6 @@ void Module::PerformCleanup() {
 
 
 /*
- * Module::getRelevantConfigValue
- */
-vislib::StringA Module::getRelevantConfigValue(vislib::StringA name) {
-    vislib::StringA ret = vislib::StringA::EMPTY;
-    const utility::Configuration& cfg = this->GetCoreInstance()->Configuration();
-    vislib::StringA drn = this->GetDemiRootName();
-    vislib::StringA test = drn;
-    test.Append("-");
-    test.Append(name);
-    vislib::StringA test2("*-");
-    test2.Append(name);
-    if (cfg.IsConfigValueSet(test)) {
-        ret = cfg.ConfigValue(test);
-    } else if (cfg.IsConfigValueSet(test2)) {
-        ret = cfg.ConfigValue(test2);
-    } else if (cfg.IsConfigValueSet(name)) {
-        ret = cfg.ConfigValue(name);
-    }
-
-    return ret;
-}
-
-
-/*
  * Module::MakeSlotAvailable
  */
 void Module::MakeSlotAvailable(AbstractSlot* slot) {

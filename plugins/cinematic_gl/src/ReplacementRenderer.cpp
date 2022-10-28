@@ -57,8 +57,7 @@ void ReplacementRenderer::release(void) {}
 bool ReplacementRenderer::create(void) {
 
     // Initialise render utils
-    if (!this->utils.Initialise(
-            this->GetCoreInstance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
+    if (!this->utils.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[REPLACEMENT RENDERER] [create] Couldn't initialize the font. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
             __LINE__);

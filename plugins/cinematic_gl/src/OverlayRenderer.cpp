@@ -243,7 +243,7 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
                 break;
             }
             std::wstring texture_filename(megamol::core::utility::ResourceWrapper::getFileName(
-                this->GetCoreInstance()->Configuration(), vislib::StringA(filename.c_str()))
+                frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), vislib::StringA(filename.c_str()))
                                               .PeekBuffer());
             if (!this->LoadTextureFromFile(
                     this->m_transpctrl_icons[i], megamol::core::utility::WChar2Utf8String(texture_filename))) {
@@ -284,8 +284,7 @@ bool OverlayRenderer::onFontName(param::ParamSlot& slot) {
     auto font_name =
         static_cast<utility::SDFFont::PresetFontName>(this->paramFontName.Param<param::EnumParam>()->Value());
     this->m_font_ptr = std::make_unique<utility::SDFFont>(font_name);
-    if (!this->m_font_ptr->Initialise(
-            this->GetCoreInstance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
+    if (!this->m_font_ptr->Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         return false;
     }
     return true;

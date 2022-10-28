@@ -146,8 +146,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
         // Initialise render utils once
         bool utils_success = this->utils.Initialized();
         if (!utils_success) {
-            if (this->utils.Initialise(
-                    this->GetCoreInstance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
+            if (this->utils.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
                 utils_success = true;
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(

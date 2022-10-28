@@ -26,13 +26,7 @@ CinematicUtils::CinematicUtils(void)
 CinematicUtils::~CinematicUtils(void) {}
 
 
-bool CinematicUtils::Initialise(
-    megamol::core::CoreInstance* core_instance, frontend_resources::RuntimeConfig const& runtimeConf) {
-
-    if (core_instance == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to core isntance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
+bool CinematicUtils::Initialise(frontend_resources::RuntimeConfig const& runtimeConf) {
 
     if (this->init_once) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -40,7 +34,7 @@ bool CinematicUtils::Initialise(
     }
 
     // Initialise font
-    if (!this->font.Initialise(core_instance, runtimeConf)) {
+    if (!this->font.Initialise(runtimeConf)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize the font. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;

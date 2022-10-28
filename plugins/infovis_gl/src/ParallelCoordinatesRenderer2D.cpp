@@ -189,7 +189,7 @@ ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D() {
 }
 
 bool ParallelCoordinatesRenderer2D::create() {
-    if (!font_.Initialise(GetCoreInstance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
+    if (!font_.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         return false;
     }
     font_.SetBatchDrawMode(true);

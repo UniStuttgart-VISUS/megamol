@@ -273,7 +273,7 @@ bool ClusterGraphRenderer::create(void) {
     fbo_->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT);
     fbo_->createColorAttachment(GL_R32I, GL_RED, GL_INT);
 
-    if (!font_.Initialise(instance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
+    if (!font_.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, "[ClusterGraphRenderer]: Unable to initialize the font");
     }
@@ -501,7 +501,8 @@ bool ClusterGraphRenderer::Render(core_gl::view::CallRender2DGL& call) {
         for (const auto& node_id : leaf_ids_) {
             auto const cur_node = clustering_data.nodes->at(node_id);
             auto const node_pos = node_positions_[node_id];
-            auto const classes = EnzymeClassProvider::RetrieveClassesForPdbId(cur_node.pdbID, *instance());
+            auto const classes = EnzymeClassProvider::RetrieveClassesForPdbId(
+                cur_node.pdbID, frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
             float cur_top = top_value;
             for (auto const brenda_class : classes) {
                 auto text = EnzymeClassProvider::ConvertEnzymeClassToString(brenda_class);
@@ -776,8 +777,8 @@ void ClusterGraphRenderer::applyClusterColoring(
                     auto min_val = 0.0f;
                     auto max_val = 0.0f;
                     if (colmode == ClusterColoringMode::BRENDA) {
-                        distance =
-                            EnzymeClassProvider::EnzymeClassDistance(left_node.pdbID, right_node.pdbID, *instance());
+                        distance = EnzymeClassProvider::EnzymeClassDistance(left_node.pdbID, right_node.pdbID,
+                            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
                         min_val = 0.0f;
                         max_val = 4.0f;
                     } else if (colmode == ClusterColoringMode::TM_SCORE) {
@@ -815,8 +816,8 @@ void ClusterGraphRenderer::applyClusterColoring(
                     auto min_val = 0.0f;
                     auto max_val = 0.0f;
                     if (colmode == ClusterColoringMode::BRENDA) {
-                        distance =
-                            EnzymeClassProvider::EnzymeClassDistance(left_node.pdbID, right_node.pdbID, *instance());
+                        distance = EnzymeClassProvider::EnzymeClassDistance(left_node.pdbID, right_node.pdbID,
+                            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
                         min_val = 0.0f;
                         max_val = 4.0f;
                     } else if (colmode == ClusterColoringMode::TM_SCORE) {

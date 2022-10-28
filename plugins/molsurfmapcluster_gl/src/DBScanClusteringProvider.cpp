@@ -34,9 +34,9 @@ DBScanClusteringProvider::~DBScanClusteringProvider(void) {
  * DBScanClusteringProvider::RetrieveClusterMap
  */
 const std::multimap<std::string, int>& DBScanClusteringProvider::RetrieveClusterMap(
-    const core::CoreInstance& coreInstance) {
+    frontend_resources::RuntimeConfig const& runtimeConf) {
     if (clusterMap.size() == 0) {
-        loadMapFromFile(coreInstance);
+        loadMapFromFile(runtimeConf);
     }
     return clusterMap;
 }
@@ -44,9 +44,10 @@ const std::multimap<std::string, int>& DBScanClusteringProvider::RetrieveCluster
 /*
  * DBScanClusteringProvider::RetrieveIdMap
  */
-const std::multimap<int, std::string>& DBScanClusteringProvider::RetrieveIdMap(const core::CoreInstance& coreInstance) {
+const std::multimap<int, std::string>& DBScanClusteringProvider::RetrieveIdMap(
+    frontend_resources::RuntimeConfig const& runtimeConf) {
     if (idMap.size() == 0) {
-        loadMapFromFile(coreInstance);
+        loadMapFromFile(runtimeConf);
     }
     return idMap;
 }
@@ -54,10 +55,11 @@ const std::multimap<int, std::string>& DBScanClusteringProvider::RetrieveIdMap(c
 /*
  * DBScanClusteringProvider::RetrieveClusterForPdbId
  */
-int DBScanClusteringProvider::RetrieveClusterForPdbId(std::string pdbId, const core::CoreInstance& coreInstance) {
+int DBScanClusteringProvider::RetrieveClusterForPdbId(
+    std::string pdbId, frontend_resources::RuntimeConfig const& runtimeConf) {
     int result = -1;
     if (clusterMap.size() == 0) {
-        loadMapFromFile(coreInstance);
+        loadMapFromFile(runtimeConf);
     }
     auto it = clusterMap.lower_bound(pdbId);
     if (it != clusterMap.end()) {
@@ -69,10 +71,11 @@ int DBScanClusteringProvider::RetrieveClusterForPdbId(std::string pdbId, const c
 /*
  * DBScanClusteringProvider::RetrievePDBIdForCluster
  */
-std::string DBScanClusteringProvider::RetrievePDBIdForCluster(int clusterId, const core::CoreInstance& coreInstance) {
+std::string DBScanClusteringProvider::RetrievePDBIdForCluster(
+    int clusterId, frontend_resources::RuntimeConfig const& runtimeConf) {
     std::string result = "";
     if (idMap.size() == 0) {
-        loadMapFromFile(coreInstance);
+        loadMapFromFile(runtimeConf);
     }
     auto it = idMap.lower_bound(clusterId);
     if (it != idMap.end()) {
@@ -85,10 +88,10 @@ std::string DBScanClusteringProvider::RetrievePDBIdForCluster(int clusterId, con
  * DBScanClusteringProvider::RetrieveClustersForPdbId
  */
 std::vector<int> DBScanClusteringProvider::RetrieveClustersForPdbId(
-    std::string pdbId, const core::CoreInstance& coreInstance) {
+    std::string pdbId, frontend_resources::RuntimeConfig const& runtimeConf) {
     std::vector<int> result;
     if (clusterMap.size() == 0) {
-        loadMapFromFile(coreInstance);
+        loadMapFromFile(runtimeConf);
     }
     auto lower = clusterMap.lower_bound(pdbId);
     auto upper = clusterMap.upper_bound(pdbId);
@@ -104,10 +107,10 @@ std::vector<int> DBScanClusteringProvider::RetrieveClustersForPdbId(
  * DBScanClusteringProvider::RetrievePDBIdsForCluster
  */
 std::vector<std::string> DBScanClusteringProvider::RetrievePDBIdsForCluster(
-    int clusterId, const core::CoreInstance& coreInstance) {
+    int clusterId, frontend_resources::RuntimeConfig const& runtimeConf) {
     std::vector<std::string> result;
     if (idMap.size() == 0) {
-        loadMapFromFile(coreInstance);
+        loadMapFromFile(runtimeConf);
     }
     auto lower = idMap.lower_bound(clusterId);
     auto upper = idMap.upper_bound(clusterId);
@@ -120,8 +123,8 @@ std::vector<std::string> DBScanClusteringProvider::RetrievePDBIdsForCluster(
 /*
  * DBScanClusteringProvider::loadMapFromFile
  */
-void DBScanClusteringProvider::loadMapFromFile(const core::CoreInstance& coreInstance) {
-    const auto filepath = determineFilePath(coreInstance);
+void DBScanClusteringProvider::loadMapFromFile(frontend_resources::RuntimeConfig const& runtimeConf) {
+    const auto filepath = determineFilePath(runtimeConf);
     idMap.clear();
     clusterMap.clear();
     std::ifstream file(filepath);
@@ -158,10 +161,11 @@ void DBScanClusteringProvider::loadMapFromFile(const core::CoreInstance& coreIns
 /*
  * DBScanClusteringProvider::determineFilePath
  */
-std::filesystem::path DBScanClusteringProvider::determineFilePath(const core::CoreInstance& coreInstance) {
+std::filesystem::path DBScanClusteringProvider::determineFilePath(
+    frontend_resources::RuntimeConfig const& runtimeConf) {
     std::filesystem::path result;
     vislib::StringA shortfile = "dbscan_protein_cluster_map.csv";
-    auto fname = core::utility::ResourceWrapper::getFileName(coreInstance.Configuration(), shortfile);
+    auto fname = core::utility::ResourceWrapper::getFileName(runtimeConf, shortfile);
     result = std::filesystem::path(W2A(fname));
     return result.make_preferred();
 }

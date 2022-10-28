@@ -13,7 +13,6 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/utility/Configuration.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/StringConverter.h"
@@ -145,6 +144,8 @@ void cluster::ClusterController::SendUserMsg(const cluster::ClusterController::P
  */
 bool cluster::ClusterController::create(void) {
 
+    // TODO core instance was removed
+    /*
     const utility::Configuration& cfg = this->GetCoreInstance()->Configuration();
 
     if (cfg.IsConfigValueSet("cdsname")) {
@@ -191,6 +192,7 @@ bool cluster::ClusterController::create(void) {
     if (this->cdsRunSlot.Param<param::BoolParam>()->Value()) {
         this->cdsRunSlot.ForceSetDirty();
     }
+    */
 
     return true;
 }

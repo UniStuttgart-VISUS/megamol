@@ -12,7 +12,6 @@
 #include <glm/glm.hpp>
 #include <glowl/glowl.h>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/RenderUtils.h"
 
 namespace megamol::core::utility {
@@ -187,7 +186,7 @@ public:
          *
          * @return 'true' on success, 'false' on failure.
          */
-        bool Initialise(megamol::core::CoreInstance* core_instance_ptr, megamol::frontend_resources::RuntimeConfig const& runtimeConf);
+        bool Initialise(megamol::frontend_resources::RuntimeConfig const& runtimeConf);
 
         /**
          * Deinitialises the object.
@@ -643,7 +642,7 @@ public:
         * functions
         **********************************************************************/
 
-        bool loadFont(megamol::core::CoreInstance *core_instance_ptr, megamol::frontend_resources::RuntimeConfig const& runtimeConf);
+        bool loadFont(megamol::frontend_resources::RuntimeConfig const& runtimeConf);
 
         bool loadFontBuffers();
 

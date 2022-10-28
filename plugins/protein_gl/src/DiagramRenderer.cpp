@@ -257,7 +257,7 @@ bool DiagramRenderer::LoadIcon(vislib::StringA filename, int ID) {
 
     // if (pbc.Load(filename)) {
     if ((size = megamol::core::utility::ResourceWrapper::LoadResource(
-             this->GetCoreInstance()->Configuration(), filename, &buf)) > 0) {
+             frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), filename, &buf)) > 0) {
         if (pbc.Load(buf, size)) {
             img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
             for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {

@@ -25,7 +25,6 @@
 #include "mmcore/factories/PluginDescriptor.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamUpdateListener.h"
-#include "mmcore/utility/Configuration.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Array.h"
 #include "vislib/IllegalStateException.h"
@@ -41,72 +40,24 @@
 #include "vislib/sys/Lockable.h"
 
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
-/**
- * class of core instances.
- */
 class CoreInstance {
 public:
-    /** ctor */
-    CoreInstance(void);
+    CoreInstance() = default;
 
-    /** dtor */
-    virtual ~CoreInstance(void);
+    virtual ~CoreInstance() = default;
 
-    /**
-     * Initialises the instance. This method must only be called once!
-     *
-     * @throws vislib::IllegalStateException if the instance already is
-     *         initialised.
-     */
-    void Initialise();
-
-    /**
-     * Returns the configuration object of this instance.
-     *
-     * @return The configuration object of this instance.
-     */
-    inline const megamol::core::utility::Configuration& Configuration(void) const {
-        return this->config;
-    }
-
-    /**
-     * get the number of the currently rendered frame
-     */
-    inline uint32_t GetFrameID(void) {
+    inline uint32_t GetFrameID() {
         return this->frameID;
     }
 
-    /**
-     * Set the number of the currently rendered frame. Whatever you think you are doing, don't: it's wrong.
-     * This method is for use by the frontend only.
-     */
     inline void SetFrameID(uint32_t frameID) {
         this->frameID = frameID;
     }
 
-    inline void SetConfigurationPaths_Frontend3000Compatibility(
-        std::string app_dir, std::vector<std::string> shader_dirs, std::vector<std::string> resource_dirs) {
-        this->config.SetApplicationDirectory(app_dir.c_str());
-
-        for (auto& sd : shader_dirs) {
-            this->config.AddShaderDirectory(sd.c_str());
-        }
-
-        for (auto& rd : resource_dirs) {
-            this->config.AddResourceDirectory(rd.c_str());
-        }
-    }
-
 private:
-    /** the cores configuration */
-    megamol::core::utility::Configuration config;
-
-    /** the count of rendered frames */
     uint32_t frameID;
 };
 
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core

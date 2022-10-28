@@ -118,11 +118,10 @@ SDFFont::~SDFFont(void) {
 }
 
 
-bool SDFFont::Initialise(
-    megamol::core::CoreInstance* core_instance_ptr, megamol::frontend_resources::RuntimeConfig const& runtimeConf) {
+bool SDFFont::Initialise(megamol::frontend_resources::RuntimeConfig const& runtimeConf) {
 
     if (!this->initialised) {
-        this->initialised = this->loadFont(core_instance_ptr, runtimeConf);
+        this->initialised = this->loadFont(runtimeConf);
     }
     return this->initialised;
 }
@@ -828,21 +827,13 @@ void SDFFont::render(
 }
 
 
-bool SDFFont::loadFont(
-    megamol::core::CoreInstance* core_instance_ptr, megamol::frontend_resources::RuntimeConfig const& runtimeConf) {
+bool SDFFont::loadFont(megamol::frontend_resources::RuntimeConfig const& runtimeConf) {
 
     this->ResetRotation();
     this->SetBatchDrawMode(false);
     this->ClearBatchDrawCache();
     this->SetBillboardMode(false);
     this->SetSmoothMode(true);
-
-    if (core_instance_ptr == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[SDFFont] Pointer to MegaMol CoreInstance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
-        return false;
-    }
 
     // (1) Load buffers --------------------------------------------------------
     if (!this->loadFontBuffers()) {
@@ -855,8 +846,7 @@ bool SDFFont::loadFont(
     std::string infoFile = this->fontFileName;
     infoFile.append(".fnt");
     vislib::StringW info_filename =
-        ResourceWrapper::getFileName(core_instance_ptr->Configuration(), vislib::StringA(infoFile.c_str()))
-            .PeekBuffer();
+        ResourceWrapper::getFileName(runtimeConf, vislib::StringA(infoFile.c_str())).PeekBuffer();
     if (!this->loadFontInfo(info_filename)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SDFFont] Failed to load font info file: \"%s\". [%s, %s, line %d]\n", infoFile.c_str(), __FILE__,
@@ -868,8 +858,7 @@ bool SDFFont::loadFont(
     std::string textureFile = this->fontFileName;
     textureFile.append(".png");
     auto texture_filename = static_cast<std::wstring>(
-        ResourceWrapper::getFileName(core_instance_ptr->Configuration(), vislib::StringA(textureFile.c_str()))
-            .PeekBuffer());
+        ResourceWrapper::getFileName(runtimeConf, vislib::StringA(textureFile.c_str())).PeekBuffer());
     if (!megamol::core_gl::utility::RenderUtils::LoadTextureFromFile(
             this->texture, megamol::core::utility::WChar2Utf8String(texture_filename))) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(

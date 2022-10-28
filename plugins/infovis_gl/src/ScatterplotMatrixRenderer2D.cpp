@@ -343,11 +343,9 @@ bool ScatterplotMatrixRenderer2D::create() {
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount[2]);
 
-    if (!this->axisFont.Initialise(
-            this->GetCoreInstance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>()))
+    if (!this->axisFont.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>()))
         return false;
-    if (!this->textFont.Initialise(
-            this->GetCoreInstance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>()))
+    if (!this->textFont.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>()))
         return false;
     this->axisFont.SetBatchDrawMode(true);
     this->textFont.SetBatchDrawMode(true);

@@ -1023,8 +1023,7 @@ bool SombreroMeshRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         glVertex3f(bb.Right(), closest.GetY(), closest.GetZ());
         glEnd();
 
-        if (this->theFont.Initialise(
-                this->GetCoreInstance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
+        if (this->theFont.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
             float distleft = std::abs(bbCenter.GetX() - closest.GetX());
             float distright = std::abs(closest.GetX() - bb.Right());
             vislib::StringA textleft = (trunc(distleft, 2) + " Å").c_str();

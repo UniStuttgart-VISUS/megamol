@@ -27,6 +27,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 
+#include "vislib/StringConverter.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"

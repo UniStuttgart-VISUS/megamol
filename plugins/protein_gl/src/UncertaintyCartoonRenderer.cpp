@@ -30,6 +30,7 @@
 #include "protein_calls/ProteinColor.h"
 #include "protein_calls/RMSF.h"
 
+#include "vislib/StringConverter.h"
 #include "vislib/assert.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowMatrix.h"

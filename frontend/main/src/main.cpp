@@ -62,9 +62,6 @@ int main(const int argc, const char** argv) {
     log(global_value_store.as_string());
 
     megamol::core::CoreInstance core;
-    core.SetConfigurationPaths_Frontend3000Compatibility(
-        config.application_directory, config.shader_directories, config.resource_directories);
-    core.Initialise();
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;

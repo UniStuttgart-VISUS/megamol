@@ -33,18 +33,16 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+#include "protein_calls/ProteinColor.h"
+#include "protein_calls/RamachandranDataCall.h"
+#include "vislib/StringConverter.h"
 #include "vislib/graphics/PngBitmapCodec.h"
-
+#include "vislib/math/Matrix.h"
 #include "vislib/math/Rectangle.h"
+#include "vislib/math/ShallowMatrix.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-
-#include "vislib/math/Matrix.h"
-#include "vislib/math/ShallowMatrix.h"
-
-#include "protein_calls/ProteinColor.h"
-#include "protein_calls/RamachandranDataCall.h"
 
 #include <iostream> // DEBUG
 
@@ -3918,7 +3916,7 @@ bool UncertaintySequenceRenderer::LoadTexture(vislib::StringA filename) {
     SIZE_T size = 0;
 
     if ((size = megamol::core::utility::ResourceWrapper::LoadResource(
-             this->GetCoreInstance()->Configuration(), filename, &buf)) > 0) {
+             frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), filename, &buf)) > 0) {
         if (pbc.Load(buf, size)) {
             img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
             for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {

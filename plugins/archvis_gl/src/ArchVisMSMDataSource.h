@@ -20,6 +20,12 @@ namespace megamol::archvis_gl {
 
 class ArchVisMSMDataSource : public megamol::core::Module {
 public:
+    std::vector<std::string> requested_lifetime_resources() override {
+        std::vector<std::string> resources = Module::requested_lifetime_resources();
+        resources.emplace_back("RuntimeConfig"); // resource paths
+        return resources;
+    }
+
     /**
      * Answer the name of this module.
      *

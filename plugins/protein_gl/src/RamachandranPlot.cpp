@@ -174,7 +174,7 @@ bool RamachandranPlot::create() {
     sureHelixPolygons_.push_back(poly);
 
     // setup font
-    if (!font_.Initialise(GetCoreInstance(), frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
+    if (!font_.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         return false;
     }
     font_.SetBatchDrawMode(true);
