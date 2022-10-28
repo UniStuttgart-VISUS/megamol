@@ -6,7 +6,6 @@
  */
 
 #include "SolPathRenderer.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/renderer/CallRender3D.h"

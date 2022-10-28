@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "MultiParticleRelister.h"
-#include "mmcore/CoreInstance.h"
 
 using namespace megamol;
 using namespace megamol::datatools;

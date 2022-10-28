@@ -3,7 +3,6 @@
 #include "FrameStatistics.h"
 #include "imgui.h"
 #include "imgui_internal.h"
-#include "mmcore/CoreInstance.h"
 
 using namespace megamol::datatools_gl::misc;
 using namespace megamol;

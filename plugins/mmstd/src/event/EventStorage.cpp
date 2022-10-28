@@ -1,7 +1,6 @@
 #include "EventStorage.h"
 
 #include "FrameStatistics.h"
-#include "mmcore/CoreInstance.h"
 #include "mmstd/event/EventCall.h"
 
 megamol::core::EventStorage::EventStorage()

@@ -10,7 +10,6 @@
 #include <typeinfo>
 
 #include "mmcore/AbstractSlot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
@@ -54,7 +53,6 @@ bool Module::Create(std::vector<megamol::frontend::FrontendResource> resources) 
 
     this->frontend_resources = {resources}; // put resources in hash map using type hashes of present resources
 
-    ASSERT(this->instance() != NULL);
     if (!this->created) {
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         auto p3 = dynamic_cast<core::view::Renderer3DModule*>(this);

@@ -8,7 +8,6 @@
 
 #include <glowl/FramebufferObject.hpp>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/renderer/CallRender3D.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"

@@ -6,7 +6,6 @@
 
 #include "BaseAmortization2D.h"
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/utility/log/Log.h"
 

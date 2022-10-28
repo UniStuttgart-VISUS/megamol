@@ -7,7 +7,6 @@
 
 #include "DataSetTimeRewriteModule.h"
 #include "PluginsResource.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/param/IntParam.h"
 #include "mmstd/data/AbstractGetData3DCall.h"

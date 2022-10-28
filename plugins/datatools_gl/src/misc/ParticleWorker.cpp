@@ -11,7 +11,6 @@
 #include <climits>
 
 #include "OpenGL_Context.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
@@ -62,9 +61,6 @@ bool ParticleWorker::create(void) {
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (!ogl_ctx.isVersionGEQ(4, 3))
-        return false;
-
-    if (!this->GetCoreInstance())
         return false;
 
     auto const shader_options =

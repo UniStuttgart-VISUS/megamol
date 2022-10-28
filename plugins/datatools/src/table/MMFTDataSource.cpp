@@ -8,7 +8,6 @@
 
 #include <fstream>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"
 

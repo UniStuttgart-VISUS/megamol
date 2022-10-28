@@ -9,7 +9,6 @@
 
 #include "MoleculeSESRenderer.h"
 #include "glm/gtx/string_cast.hpp"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -214,10 +213,6 @@ bool MoleculeSESRenderer::create(void) {
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
-
-    CoreInstance* ci = this->GetCoreInstance();
-    if (!ci)
-        return false;
 
     try {
         auto const shdr_options = core::utility::make_path_shader_options(

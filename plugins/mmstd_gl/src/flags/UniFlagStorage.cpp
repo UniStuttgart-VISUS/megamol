@@ -7,7 +7,6 @@
 #include "mmstd_gl/flags/UniFlagStorage.h"
 
 #include "OpenGL_Context.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/flags/FlagCalls.h"

@@ -6,7 +6,6 @@
 
 #include "Renderer2D.h"
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol;

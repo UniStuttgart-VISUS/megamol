@@ -8,7 +8,6 @@
 
 #include "compositing_gl/CompositingCalls.h"
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"

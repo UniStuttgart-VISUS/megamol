@@ -11,7 +11,6 @@
 #include <fstream>
 
 #include "mmcore/AbstractNamedObject.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"

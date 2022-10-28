@@ -4,7 +4,6 @@
 
 #include "OpenGL_Context.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "thermodyn/BoxDataCall.h"

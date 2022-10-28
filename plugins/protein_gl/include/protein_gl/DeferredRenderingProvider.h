@@ -10,7 +10,6 @@
 #include <glowl/GLSLProgram.hpp>
 
 #include "RuntimeConfig.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/light/CallLight.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"

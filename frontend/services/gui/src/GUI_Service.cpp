@@ -276,9 +276,9 @@ void GUI_Service::preGraphRender() {
 
     if (this->m_gui != nullptr) {
         // Propagate changes from the GUI graph to the MegaMol graph
-        if ((this->m_megamol_graph != nullptr) && (this->m_config.core_instance != nullptr)) {
+        if ((this->m_megamol_graph != nullptr)) {
             // Requires enabled OpenGL context, e.g. for textures used in parameters
-            this->m_gui->SynchronizeGraphs((*this->m_megamol_graph), (*this->m_config.core_instance));
+            this->m_gui->SynchronizeGraphs((*this->m_megamol_graph));
         }
         this->m_gui->PreDraw(this->m_framebuffer_size, this->m_window_size, this->m_time);
     }

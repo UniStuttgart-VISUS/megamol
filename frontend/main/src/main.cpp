@@ -3,7 +3,6 @@
 
 #include "mmcore/utility/log/Log.h"
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/factories/PluginRegister.h"
 
@@ -61,8 +60,6 @@ int main(const int argc, const char** argv) {
     log(config.as_string());
     log(global_value_store.as_string());
 
-    megamol::core::CoreInstance core;
-
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
     openglConfig.windowTitlePrefix = "MegaMol";
@@ -97,7 +94,6 @@ int main(const int argc, const char** argv) {
     megamol::frontend::GUI_Service gui_service;
     megamol::frontend::GUI_Service::Config guiConfig;
     guiConfig.backend = (with_gl) ? (megamol::gui::GUIRenderBackend::OPEN_GL) : (megamol::gui::GUIRenderBackend::CPU);
-    guiConfig.core_instance = &core;
     guiConfig.gui_show = config.gui_show;
     guiConfig.gui_scale = config.gui_scale;
     // priority must be higher than priority of gl_service (=1)
@@ -227,7 +223,7 @@ int main(const int argc, const char** argv) {
     loadPlugins(pluginsRes);
     services.getProvidedResources().push_back({"PluginsResource", pluginsRes});
 
-    megamol::core::MegaMolGraph graph(core, pluginsRes.all_module_descriptions, pluginsRes.all_call_descriptions);
+    megamol::core::MegaMolGraph graph(pluginsRes.all_module_descriptions, pluginsRes.all_call_descriptions);
 
     // Graph and Config are also a resources that may be accessed by services
     services.getProvidedResources().push_back({megamol::frontend_resources::MegaMolGraph_Req_Name, graph});

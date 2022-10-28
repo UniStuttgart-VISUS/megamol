@@ -17,7 +17,6 @@
 namespace megamol::core {
 
 /** forward declaration */
-class CoreInstance;
 class AbstractSlot;
 namespace factories {
 class ModuleDescription;
@@ -158,15 +157,6 @@ protected:
      * @return 'true' on success, 'false' otherwise.
      */
     virtual bool create() = 0;
-
-    /**
-     * Gets the instance of the core owning this module.
-     *
-     * @return The instance of the core owning this module.
-     */
-    inline class ::megamol::core::CoreInstance* instance() const {
-        return this->GetCoreInstance();
-    }
 
     /**
      * Implementation of 'Release'.

@@ -309,8 +309,7 @@ bool megamol::gui::GraphCollection::InitializeGraphSynchronisation(
 }
 
 
-bool megamol::gui::GraphCollection::SynchronizeGraphs(
-    megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
+bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph) {
 
     if (!this->initialized_syncing) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

@@ -15,7 +15,6 @@
 
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -31,6 +30,7 @@
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
 #include "vislib/math/mathfunctions.h"
+#include "vislib/sys/AutoLock.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/File.h"

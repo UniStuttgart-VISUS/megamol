@@ -6,7 +6,6 @@
 
 #include "mmcore/param/ParamSlot.h"
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
 #include "vislib/IllegalParamException.h"
@@ -68,10 +67,10 @@ bool param::ParamSlot::isSlotAvailable(void) const {
 void param::ParamSlot::QueueUpdateNotification(bool force) {
     if (this->Param<AbstractParam>()->ConsumeHasChanged() || force) {
         Module* m = dynamic_cast<Module*>(this->Parent().get());
-        if ((m != nullptr) && (m->GetCoreInstance() != nullptr)) {
-            // TODO
-            //m->GetCoreInstance()->ParameterValueUpdate(*this);
-        }
+        // TODO what to with this after core instance is removed?
+        //if ((m != nullptr) && (m->GetCoreInstance() != nullptr)) {
+        //    m->GetCoreInstance()->ParameterValueUpdate(*this);
+        //}
     }
 }
 

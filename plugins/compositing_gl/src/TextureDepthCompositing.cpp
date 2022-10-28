@@ -3,7 +3,6 @@
 #include <array>
 
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 

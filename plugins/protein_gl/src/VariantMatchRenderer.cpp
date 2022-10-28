@@ -12,7 +12,6 @@
 #include "ogl_error_check.h"
 #include "protein_calls/VariantMatchDataCall.h"
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"

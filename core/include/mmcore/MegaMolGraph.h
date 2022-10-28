@@ -23,7 +23,7 @@ namespace core {
 
 class MegaMolGraph {
 public:
-    MegaMolGraph(megamol::core::CoreInstance& core, factories::ModuleDescriptionManager const& moduleProvider,
+    MegaMolGraph(factories::ModuleDescriptionManager const& moduleProvider,
         factories::CallDescriptionManager const& callProvider);
 
     virtual ~MegaMolGraph();

@@ -24,7 +24,6 @@ namespace megamol {
 namespace core {
 
 // forward declarations of types
-class CoreInstance;
 class AbstractNamedObjectContainer;
 
 /**
@@ -231,16 +230,6 @@ public:
      * @return The reader-writer lock to lock the module graph
      */
     virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock(void) const;
-
-    /**
-     * Answer the core instance of this named object
-     *
-     * @return The core instance of this named object
-     */
-    virtual CoreInstance* GetCoreInstance(void) const {
-        const_ptr_type p = this->parent.lock();
-        return p ? p->GetCoreInstance() : nullptr;
-    }
 
 protected:
     /**

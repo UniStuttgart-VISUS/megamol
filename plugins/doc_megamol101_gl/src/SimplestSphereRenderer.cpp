@@ -7,7 +7,6 @@
 #include "SimplestSphereRenderer.h"
 
 #include "CallSpheres.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"

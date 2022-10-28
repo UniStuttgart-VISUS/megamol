@@ -355,8 +355,9 @@ const std::vector<float>* AmbientOcclusionCalculator::getVertexShadows(void) {
 /*
  * AmbientOcclusionCalculator::initialize
  */
-bool AmbientOcclusionCalculator::initilialize(core::CoreInstance* instance, const std::vector<float>* vertices,
-    const std::vector<float>* vertex_normals, protein_calls::MolecularDataCall* mdc) {
+bool AmbientOcclusionCalculator::initilialize(frontend_resources::RuntimeConfig const& runtimeConf,
+    const std::vector<float>* vertices, const std::vector<float>* vertex_normals,
+    protein_calls::MolecularDataCall* mdc) {
 
     this->vertices = vertices;
     this->vertex_normals = vertex_normals;
@@ -369,7 +370,7 @@ bool AmbientOcclusionCalculator::initilialize(core::CoreInstance* instance, cons
     }
     glGenTextures(1, &this->volTexture);
 
-    if (!this->loadShaders(instance))
+    if (!this->loadShaders(runtimeConf))
         return false;
 
     // create SSBOs
@@ -401,11 +402,10 @@ bool AmbientOcclusionCalculator::initilialize(core::CoreInstance* instance, cons
 /*
  * AmbientOcclusionCalculator::loadShaders
  */
-bool AmbientOcclusionCalculator::loadShaders(core::CoreInstance* instance) {
+bool AmbientOcclusionCalculator::loadShaders(frontend_resources::RuntimeConfig const& runtimeConf) {
     // load compute shader
 
-    auto const shader_options =
-        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+    auto const shader_options = core::utility::make_path_shader_options(runtimeConf);
     try {
         this->aoComputeShader =
             core::utility::make_glowl_shader("aoComputeShader", shader_options, "molecularmaps/aocompute.comp.glsl");

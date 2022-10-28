@@ -14,7 +14,6 @@
 #include "PluginsResource.h"
 #include "gui_render_backend.h"
 #include "implot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/Picking.h"
 #include "widgets/FileBrowserWidget.h"
@@ -244,7 +243,7 @@ public:
         return this->win_configurator_ptr->GetGraphCollection().InitializeGraphSynchronisation(pluginsRes);
     }
 
-    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
+    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph);
 
     /**
      * Register GUI hotkeys.

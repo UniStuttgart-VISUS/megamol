@@ -7,7 +7,6 @@
 #include "StubModule.h"
 
 #include "PluginsResource.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
 using namespace megamol;

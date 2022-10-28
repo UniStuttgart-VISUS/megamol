@@ -29,8 +29,8 @@ namespace megamol::core::utility {
  *     - Ctor:               this->sdfFont(megamol::core::utility::SDFFont::PRESET_EVOLVENTA_SANS, megamol::core::utility::SDFFont::RENDERMODE_FILL);
  *                           OR: this->sdfFont("filename-of-own-font");
  *
- *     - Initialise (once):  this->sdfFont.Initialise(this->GetCoreInstance());
- *                           !!! DO NOT CALL Initialise() in CTOR because CoreInstance is not available there yet (call once e.g. in create()) !!!
+ *     - Initialise (once):  this->sdfFont.Initialise(runtimeConfig);
+ *                           !!! DO NOT CALL Initialise() in CTOR because resources are not available there yet (call once e.g. in create()) !!!
  *
  *     - Draw:               this->sdfFont.DrawString(mvm, pm, color, x, y, z, size, false, text, megamol::core::utility::AbstractFont::ALIGN_LEFT_TOP);
  *

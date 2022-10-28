@@ -1,7 +1,6 @@
 #include "NormalFromDepth.h"
 
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 using megamol::core::utility::log::Log;

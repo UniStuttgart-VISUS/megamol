@@ -22,8 +22,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-#include "mmcore/CoreInstance.h"
-
 
 using namespace megamol;
 using namespace megamol::core;

@@ -11,7 +11,6 @@
 #include <stdexcept>
 
 #include "mesh/TriangleMeshCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FlexEnumParam.h"

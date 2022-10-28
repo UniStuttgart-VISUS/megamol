@@ -7,7 +7,6 @@
 
 #include "DataFileSequence.h"
 #include "PluginsResource.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"

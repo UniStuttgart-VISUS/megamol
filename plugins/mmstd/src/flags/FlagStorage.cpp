@@ -9,7 +9,6 @@
 #include <nlohmann/json.hpp>
 
 #include "FlagStorageBitsChecker.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmstd/flags/FlagCalls.h"

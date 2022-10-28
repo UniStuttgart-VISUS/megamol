@@ -9,7 +9,7 @@
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/CoreInstance.h"
+#include "vislib/sys/AutoLock.h"
 
 using namespace megamol::core;
 

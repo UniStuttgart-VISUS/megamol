@@ -3,7 +3,6 @@
 
 #include "FrameStatistics.h"
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd_gl/flags/FlagCallsGL.h"
 

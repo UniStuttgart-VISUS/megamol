@@ -13,7 +13,6 @@
 #include "CommonTypes.h"
 #include "Graph.h"
 #include "PluginsResource.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
@@ -70,7 +69,7 @@ public:
     // ! Has to be called once before calling SynchronizeGraphs() or NotifyRunningGraph_*()
     bool InitializeGraphSynchronisation(const megamol::frontend_resources::PluginsResource& pluginsRes);
 
-    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
+    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph);
 
     bool LoadOrAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
 

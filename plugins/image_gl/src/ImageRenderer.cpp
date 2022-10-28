@@ -15,7 +15,6 @@
 //#define _USE_MATH_DEFINES
 #include "cluster/mpi/MpiCall.h"
 #include "image_calls/Image2DCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"

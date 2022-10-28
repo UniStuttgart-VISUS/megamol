@@ -13,7 +13,6 @@
 #include <nlohmann/json.hpp>
 
 #include "datatools/table/TableDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"

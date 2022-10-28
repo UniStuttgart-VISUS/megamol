@@ -10,7 +10,6 @@
 
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/Call.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
