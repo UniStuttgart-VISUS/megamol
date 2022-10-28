@@ -392,7 +392,7 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             glUniform1ui(this->arrow_pgrm_->getUniformLocation("flagsAvailable"), use_flags ? 1 : 0);
 
 #ifdef MEGAMOL_USE_PROFILING
-            perf_manager_->start_timer(timers_[0], this->GetCoreInstance()->GetFrameID());
+            perf_manager_->start_timer(timers_[0]);
 #endif
 
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));

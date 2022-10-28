@@ -248,11 +248,7 @@ int main(const int argc, const char** argv) {
     };
     services.getProvidedResources().push_back({"FrontendResourcesList", resource_lister});
 
-    uint32_t frameID = 0;
     const auto render_next_frame = [&]() -> bool {
-        // set global Frame Counter
-        core.SetFrameID(frameID++);
-
         // services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua)
         services.updateProvidedResources();
 

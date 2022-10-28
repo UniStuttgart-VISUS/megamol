@@ -593,7 +593,7 @@ bool GlyphRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             }
 
 #ifdef MEGAMOL_USE_PROFILING
-            perf_manager_->start_timer(timers_[0], this->GetCoreInstance()->GetFrameID());
+            perf_manager_->start_timer(timers_[0]);
 #endif
 
             switch (this->glyph_param_.Param<core::param::EnumParam>()->Value()) {

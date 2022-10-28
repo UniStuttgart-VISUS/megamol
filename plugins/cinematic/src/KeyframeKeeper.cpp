@@ -6,6 +6,7 @@
  */
 
 #include "KeyframeKeeper.h"
+#include "FrameStatistics.h"
 #include "cinematic/CallKeyframeKeeper.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -702,7 +703,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     ccc->SetFps(this->fps);
 
     // GUI PopUp for total animation time modi
-    this->pendingTotalAnimTimePopUp(this->GetCoreInstance()->GetFrameID());
+    this->pendingTotalAnimTimePopUp(
+        frontend_resources.get<frontend_resources::FrameStatistics>().rendered_frames_count);
 
     return true;
 }

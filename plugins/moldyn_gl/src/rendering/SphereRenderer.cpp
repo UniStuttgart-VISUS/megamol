@@ -1152,7 +1152,7 @@ bool SphereRenderer::renderSimple(mmstd_gl::CallRender3DGL& call, MultiParticleD
         }
 
 #ifdef MEGAMOL_USE_PROFILING
-        perf_manager_->start_timer(timers_[1], this->GetCoreInstance()->GetFrameID());
+        perf_manager_->start_timer(timers_[1]);
 #endif
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 #ifdef MEGAMOL_USE_PROFILING

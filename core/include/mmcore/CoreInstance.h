@@ -47,17 +47,6 @@ public:
     CoreInstance() = default;
 
     virtual ~CoreInstance() = default;
-
-    inline uint32_t GetFrameID() {
-        return this->frameID;
-    }
-
-    inline void SetFrameID(uint32_t frameID) {
-        this->frameID = frameID;
-    }
-
-private:
-    uint32_t frameID;
 };
 
 } // namespace megamol::core

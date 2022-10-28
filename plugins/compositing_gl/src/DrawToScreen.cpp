@@ -1,6 +1,7 @@
 
 #include "DrawToScreen.h"
 
+#include "FrameStatistics.h"
 #include "compositing_gl/CompositingCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
@@ -125,7 +126,8 @@ bool megamol::compositing::DrawToScreen::Render(mmstd_gl::CallRender3DGL& call) 
         glUniform1i(m_drawToScreen_prgm->getUniformLocation("depth_tx2D"), 1);
 
         glUniform1ui(m_drawToScreen_prgm->getUniformLocation("flags_available"), readFlagsCall != nullptr ? 1 : 0);
-        glUniform1ui(m_drawToScreen_prgm->getUniformLocation("frame_id"), this->GetCoreInstance()->GetFrameID());
+        glUniform1ui(m_drawToScreen_prgm->getUniformLocation("frame_id"),
+            frontend_resources.get<frontend_resources::FrameStatistics>().rendered_frames_count);
         glUniform2i(m_drawToScreen_prgm->getUniformLocation("viewport_resolution"), width, height);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
