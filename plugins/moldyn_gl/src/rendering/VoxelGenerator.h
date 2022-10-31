@@ -2,7 +2,10 @@
 #define MEGAMOL_MOLDYN_VOXELGENERATOR_H_INCLUDED
 
 #pragma once
+#include "mmcore/Call.h"
+#include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
+//#include "geometry_calls/MultiParticleDataCall.h"
 
 namespace megamol {
 namespace moldyn_gl {
@@ -26,7 +29,7 @@ public:
     * @return A human readable description of this module.
     */
     static const char* Description(void) {
-        return "Generate Voxel texture for particle data"; //TODO
+        return "Generate voxel texture for particle data"; //TODO
     }
 
     /**
@@ -47,6 +50,34 @@ public:
     * Finalises an instance.
     */
     virtual ~VoxelGenerator(void);
+
+protected:
+
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
+
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
+
+private:
+    ///**
+    // * TODO: Document
+    // *
+    // * @param t           ...
+    // * @param outScaling  ...
+    // *
+    // * @return Pointer to MultiParticleDataCall ...
+    // */
+    //MultiParticleDataCall* getData(unsigned int t, float& out_scaling);
+
+    /** The slot that requests the data. */
+    core::CalleeSlot slotGetVoxels;
 };
 
 } // namespace rendering
