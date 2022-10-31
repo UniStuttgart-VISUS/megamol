@@ -337,6 +337,7 @@ private:
     megamol::core::CallerSlot get_tf_slot_;
     megamol::core::CallerSlot read_flags_slot_;
     megamol::core::CallerSlot get_lights_slot_;
+    megamol::core::CallerSlot get_voxels_; // voxel generator
 
     /*********************************************************************/
     /* PARAMETERS                                                        */

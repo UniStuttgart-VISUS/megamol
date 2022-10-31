@@ -2,10 +2,16 @@
 #define MEGAMOL_MOLDYN_VOXELGENERATOR_H_INCLUDED
 
 #pragma once
+
+
+#include "geometry_calls/MultiParticleDataCall.h"
+#include "geometry_calls/VolumetricDataCall.h"
+
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-//#include "geometry_calls/MultiParticleDataCall.h"
+
 
 namespace megamol {
 namespace moldyn_gl {
@@ -65,6 +71,15 @@ protected:
      */
     virtual void release(void);
 
+     /**
+     * Generates Voxels.
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool onGenerateVoxels(core::Call& call);
+
 private:
     ///**
     // * TODO: Document
@@ -77,7 +92,19 @@ private:
     //MultiParticleDataCall* getData(unsigned int t, float& out_scaling);
 
     /** The slot that requests the data. */
-    core::CalleeSlot slotGetVoxels;
+    core::CalleeSlot generate_voxels_slot_; //TODO VolumetricDataCall
+
+    core::CallerSlot get_data_slot_; // MultiParticleDataCall 
+
+    /**
+     * TODO: Document
+     *
+     * @param t           ...
+     * @param outScaling  ...
+     *
+     * @return Pointer to MultiParticleDataCall ...
+     */
+    geocalls::MultiParticleDataCall* getData(unsigned int t, float& out_scaling); // get particle data
 };
 
 } // namespace rendering

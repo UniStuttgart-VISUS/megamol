@@ -14,6 +14,7 @@
 #include "vislib_gl/graphics/gl/GLSLGeometryShader.h" // only for RequiredExtensions
 
 #include "OpenGL_Context.h"
+#include "geometry_calls/VolumetricDataCall.h"
 
 
 using namespace megamol::core;
@@ -42,6 +43,7 @@ SphereRenderer::SphereRenderer(void)
         , get_clip_plane_slot_("getclipplane", "The slot for the clipping plane module")
         , read_flags_slot_("readFlags", "The slot for reading the selection flags")
         , get_lights_slot_("lights", "Lights are retrieved over this slot.")
+        , get_voxels_("voxels", "Connects to the voxel generator")
         , cur_view_attrib_()
         , cur_clip_dat_()
         , old_clip_dat_()
@@ -136,6 +138,9 @@ SphereRenderer::SphereRenderer(void)
     this->get_lights_slot_.SetCompatibleCall<core::view::light::CallLightDescription>();
     this->get_lights_slot_.SetNecessity(AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->get_lights_slot_);
+
+    this->get_voxels_.SetCompatibleCall<VolumetricDataCallDescription>();
+    this->MakeSlotAvailable(&this->get_voxels_);
 
     this->get_clip_plane_slot_.SetCompatibleCall<view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->get_clip_plane_slot_);
