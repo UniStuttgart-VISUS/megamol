@@ -2,7 +2,7 @@
 
 #include "compositing_gl/CompositingCalls.h"
 
-megamol::compositing::InteractionRenderTarget::InteractionRenderTarget()
+megamol::compositing_gl::InteractionRenderTarget::InteractionRenderTarget()
         : SimpleRenderTarget()
         , m_objId_render_target("ObjectId", "Access the object id render target texture") {
     this->m_objId_render_target.SetCallback(
@@ -12,7 +12,7 @@ megamol::compositing::InteractionRenderTarget::InteractionRenderTarget()
     this->MakeSlotAvailable(&this->m_objId_render_target);
 }
 
-bool megamol::compositing::InteractionRenderTarget::create() {
+bool megamol::compositing_gl::InteractionRenderTarget::create() {
 
     SimpleRenderTarget::create();
 
@@ -23,7 +23,7 @@ bool megamol::compositing::InteractionRenderTarget::create() {
     return true;
 }
 
-bool megamol::compositing::InteractionRenderTarget::Render(mmstd_gl::CallRender3DGL& call) {
+bool megamol::compositing_gl::InteractionRenderTarget::Render(mmstd_gl::CallRender3DGL& call) {
 
     SimpleRenderTarget::Render(call);
 
@@ -33,7 +33,7 @@ bool megamol::compositing::InteractionRenderTarget::Render(mmstd_gl::CallRender3
     return true;
 }
 
-bool megamol::compositing::InteractionRenderTarget::getObjectIdRenderTarget(core::Call& caller) {
+bool megamol::compositing_gl::InteractionRenderTarget::getObjectIdRenderTarget(core::Call& caller) {
     auto ct = dynamic_cast<CallTexture2D*>(&caller);
 
     if (ct == NULL)
@@ -44,6 +44,6 @@ bool megamol::compositing::InteractionRenderTarget::getObjectIdRenderTarget(core
     return true;
 }
 
-bool megamol::compositing::InteractionRenderTarget::getMetaDataCallback(core::Call& caller) {
+bool megamol::compositing_gl::InteractionRenderTarget::getMetaDataCallback(core::Call& caller) {
     return true;
 }

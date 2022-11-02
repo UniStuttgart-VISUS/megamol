@@ -21,7 +21,7 @@ TextureHistogramRenderer2D::TextureHistogramRenderer2D()
         , flagStorageReadCallerSlot_("readFlagStorage", "Flag storage read input")
         , flagStorageWriteCallerSlot_("writeFlagStorage", "Flag storage write input") {
 
-    textureDataCallerSlot_.SetCompatibleCall<compositing::CallTexture2DDescription>();
+    textureDataCallerSlot_.SetCompatibleCall<compositing_gl::CallTexture2DDescription>();
     MakeSlotAvailable(&textureDataCallerSlot_);
 
     flagStorageReadCallerSlot_.SetCompatibleCall<mmstd_gl::FlagCallRead_GLDescription>();
@@ -68,7 +68,7 @@ void TextureHistogramRenderer2D::releaseImpl() {
 }
 
 bool TextureHistogramRenderer2D::handleCall(mmstd_gl::CallRender2DGL& call) {
-    auto textureCall = textureDataCallerSlot_.CallAs<compositing::CallTexture2D>();
+    auto textureCall = textureDataCallerSlot_.CallAs<compositing_gl::CallTexture2D>();
     if (textureCall == nullptr) {
         return false;
     }
@@ -92,7 +92,7 @@ bool TextureHistogramRenderer2D::handleCall(mmstd_gl::CallRender2DGL& call) {
     // if (lastFrame == currFrame)
     //    return true;
     // lastFrame = currFrame;
-    (*textureCall)(compositing::CallTexture2D::CallGetData);
+    (*textureCall)(compositing_gl::CallTexture2D::CallGetData);
     data_ = textureCall->getData();
 
     std::size_t numComponents = 0;

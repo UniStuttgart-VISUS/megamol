@@ -17,7 +17,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol::compositing {
+namespace megamol::compositing_gl {
 
 class TextureDepthCompositing : public core::Module {
 public:
@@ -36,7 +36,7 @@ public:
      * @return A human readable description of this module.
      */
     static const char* Description() {
-        return "Compositing module that combines two texture using depth aware alpha compositing.";
+        return "Compositing module that combines two texture using depth aware alpha compositing_gl.";
     }
 
     /**
@@ -112,4 +112,4 @@ private:
     megamol::core::CallerSlot m_depth_tex_1_slot;
 };
 
-} // namespace megamol::compositing
+} // namespace megamol::compositing_gl

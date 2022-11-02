@@ -130,15 +130,15 @@ megamol::compositing_gl::AntiAliasing::AntiAliasing()
     }
 
     this->output_tex_slot_.SetCallback(
-        compositing::CallTexture2D::ClassName(), "GetData", &AntiAliasing::getDataCallback);
+        compositing_gl::CallTexture2D::ClassName(), "GetData", &AntiAliasing::getDataCallback);
     this->output_tex_slot_.SetCallback(
-        compositing::CallTexture2D::ClassName(), "GetMetaData", &AntiAliasing::getMetaDataCallback);
+        compositing_gl::CallTexture2D::ClassName(), "GetMetaData", &AntiAliasing::getMetaDataCallback);
     this->MakeSlotAvailable(&this->output_tex_slot_);
 
-    this->input_tex_slot_.SetCompatibleCall<compositing::CallTexture2DDescription>();
+    this->input_tex_slot_.SetCompatibleCall<compositing_gl::CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->input_tex_slot_);
 
-    this->depth_tex_slot_.SetCompatibleCall<compositing::CallTexture2DDescription>();
+    this->depth_tex_slot_.SetCompatibleCall<compositing_gl::CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->depth_tex_slot_);
 }
 
@@ -522,9 +522,9 @@ void megamol::compositing_gl::AntiAliasing::copyTextureViaShader(
  * @megamol::compositing_gl::AntiAliasing::getDataCallback
  */
 bool megamol::compositing_gl::AntiAliasing::getDataCallback(core::Call& caller) {
-    auto lhs_tc = dynamic_cast<compositing::CallTexture2D*>(&caller);
-    auto rhs_call_input = input_tex_slot_.CallAs<compositing::CallTexture2D>();
-    auto rhs_call_depth = depth_tex_slot_.CallAs<compositing::CallTexture2D>();
+    auto lhs_tc = dynamic_cast<compositing_gl::CallTexture2D*>(&caller);
+    auto rhs_call_input = input_tex_slot_.CallAs<compositing_gl::CallTexture2D>();
+    auto rhs_call_depth = depth_tex_slot_.CallAs<compositing_gl::CallTexture2D>();
 
     if (lhs_tc == NULL)
         return false;
