@@ -47,9 +47,9 @@
 /////////////////////////////////////////////////////////////////////////
 
 /*
- * @megamol::compositing::SSAO::SSAO
+ * @megamol::compositing_gl::SSAO::SSAO
  */
-megamol::compositing::SSAO::SSAO()
+megamol::compositing_gl::SSAO::SSAO()
         : core::Module()
         , version_(0)
         , output_tex_slot_("OutputTexture", "Gives access to resulting output texture")
@@ -213,9 +213,9 @@ megamol::compositing::SSAO::SSAO()
 
 
 /*
- * @megamol::compositing::SSAO::ssaoModeCallback
+ * @megamol::compositing_gl::SSAO::ssaoModeCallback
  */
-bool megamol::compositing::SSAO::ssaoModeCallback(core::param::ParamSlot& slot) {
+bool megamol::compositing_gl::SSAO::ssaoModeCallback(core::param::ParamSlot& slot) {
     int mode = ps_ssao_mode_.Param<core::param::EnumParam>()->Value();
 
     // assao
@@ -264,9 +264,9 @@ bool megamol::compositing::SSAO::ssaoModeCallback(core::param::ParamSlot& slot) 
 
 
 /*
- * @megamol::compositing::SSAO::settingsCallback
+ * @megamol::compositing_gl::SSAO::settingsCallback
  */
-bool megamol::compositing::SSAO::settingsCallback(core::param::ParamSlot& slot) {
+bool megamol::compositing_gl::SSAO::settingsCallback(core::param::ParamSlot& slot) {
     settings_.Radius = ps_radius_.Param<core::param::FloatParam>()->Value();
     settings_.ShadowMultiplier = ps_shadow_multiplier_.Param<core::param::FloatParam>()->Value();
     settings_.ShadowPower = ps_shadow_power_.Param<core::param::FloatParam>()->Value();
@@ -291,17 +291,17 @@ bool megamol::compositing::SSAO::settingsCallback(core::param::ParamSlot& slot) 
 
 
 /*
- * @megamol::compositing::SSAO::~SSAO
+ * @megamol::compositing_gl::SSAO::~SSAO
  */
-megamol::compositing::SSAO::~SSAO() {
+megamol::compositing_gl::SSAO::~SSAO() {
     this->Release();
 }
 
 
 /*
- * @megamol::compositing::SSAO::create
+ * @megamol::compositing_gl::SSAO::create
  */
-bool megamol::compositing::SSAO::create() {
+bool megamol::compositing_gl::SSAO::create() {
     // profiling
 #ifdef MEGAMOL_USE_PROFILING
     perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
@@ -482,9 +482,9 @@ bool megamol::compositing::SSAO::create() {
 
 
 /*
- * @megamol::compositing::SSAO::release
+ * @megamol::compositing_gl::SSAO::release
  */
-void megamol::compositing::SSAO::release() {
+void megamol::compositing_gl::SSAO::release() {
 #ifdef MEGAMOL_USE_PROFILING
     perf_manager_->remove_timers(timers_);
 #endif
@@ -492,9 +492,9 @@ void megamol::compositing::SSAO::release() {
 
 
 /*
- * @megamol::compositing::SSAO::getDataCallback
+ * @megamol::compositing_gl::SSAO::getDataCallback
  */
-bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
+bool megamol::compositing_gl::SSAO::getDataCallback(core::Call& caller) {
     auto lhsTc = dynamic_cast<CallTexture2D*>(&caller);
     auto callNormal = normals_tex_slot_.CallAs<CallTexture2D>();
     auto callDepth = depth_tex_slot_.CallAs<CallTexture2D>();
@@ -707,9 +707,9 @@ bool megamol::compositing::SSAO::getDataCallback(core::Call& caller) {
 
 
 /*
- * @megamol::compositing::SSAO::prepareDepths
+ * @megamol::compositing_gl::SSAO::prepareDepths
  */
-void megamol::compositing::SSAO::prepareDepths(const ASSAO_Settings& settings,
+void megamol::compositing_gl::SSAO::prepareDepths(const ASSAO_Settings& settings,
     const std::shared_ptr<ASSAO_Inputs> inputs, std::shared_ptr<glowl::Texture2D> depthTexture,
     std::shared_ptr<glowl::Texture2D> normalTexture) {
     bool generateNormals = inputs->GenerateNormals;
@@ -775,9 +775,9 @@ void megamol::compositing::SSAO::prepareDepths(const ASSAO_Settings& settings,
 
 
 /*
- * @megamol::compositing::SSAO::generateSSAO
+ * @megamol::compositing_gl::SSAO::generateSSAO
  */
-void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
+void megamol::compositing_gl::SSAO::generateSSAO(const ASSAO_Settings& settings,
     const std::shared_ptr<ASSAO_Inputs> inputs, bool adaptiveBasePass,
     std::shared_ptr<glowl::Texture2D> normalTexture) {
 
@@ -905,17 +905,17 @@ void megamol::compositing::SSAO::generateSSAO(const ASSAO_Settings& settings,
 
 
 /*
- * @megamol::compositing::SSAO::getMetaDataCallback
+ * @megamol::compositing_gl::SSAO::getMetaDataCallback
  */
-bool megamol::compositing::SSAO::getMetaDataCallback(core::Call& caller) {
+bool megamol::compositing_gl::SSAO::getMetaDataCallback(core::Call& caller) {
     return true;
 }
 
 
 /*
- * @megamol::compositing::SSAO::updateTextures
+ * @megamol::compositing_gl::SSAO::updateTextures
  */
-void megamol::compositing::SSAO::updateTextures(const std::shared_ptr<ASSAO_Inputs> inputs) {
+void megamol::compositing_gl::SSAO::updateTextures(const std::shared_ptr<ASSAO_Inputs> inputs) {
     int width = inputs->ViewportWidth;
     int height = inputs->ViewportHeight;
 
@@ -964,9 +964,9 @@ void megamol::compositing::SSAO::updateTextures(const std::shared_ptr<ASSAO_Inpu
 
 
 /*
- * @megamol::compositing::SSAO::updateConstants
+ * @megamol::compositing_gl::SSAO::updateConstants
  */
-void megamol::compositing::SSAO::updateConstants(
+void megamol::compositing_gl::SSAO::updateConstants(
     const ASSAO_Settings& settings, const std::shared_ptr<ASSAO_Inputs> inputs, int pass) {
     bool generateNormals = inputs->GenerateNormals;
 
@@ -1099,9 +1099,9 @@ void megamol::compositing::SSAO::updateConstants(
 
 
 /*
- * @megamol::compositing::SSAO::reCreateIfNeeded
+ * @megamol::compositing_gl::SSAO::reCreateIfNeeded
  */
-bool megamol::compositing::SSAO::reCreateIfNeeded(
+bool megamol::compositing_gl::SSAO::reCreateIfNeeded(
     std::shared_ptr<glowl::Texture2D> tex, glm::ivec2 size, const glowl::TextureLayout& ly, bool generateMipMaps) {
     if ((size.x == 0) || (size.y == 0)) {
         // reset object
@@ -1127,9 +1127,9 @@ bool megamol::compositing::SSAO::reCreateIfNeeded(
 
 
 /*
- * @megamol::compositing::SSAO::reCreateIfNeeded
+ * @megamol::compositing_gl::SSAO::reCreateIfNeeded
  */
-bool megamol::compositing::SSAO::reCreateIfNeeded(
+bool megamol::compositing_gl::SSAO::reCreateIfNeeded(
     std::shared_ptr<glowl::Texture2DArray> tex, glm::ivec2 size, const glowl::TextureLayout& ly) {
     if ((size.x == 0) || (size.y == 0)) {
 
@@ -1152,9 +1152,9 @@ bool megamol::compositing::SSAO::reCreateIfNeeded(
 
 
 /*
- * @megamol::compositing::SSAO::reCreateArrayIfNeeded
+ * @megamol::compositing_gl::SSAO::reCreateArrayIfNeeded
  */
-bool megamol::compositing::SSAO::reCreateArrayIfNeeded(std::shared_ptr<glowl::Texture2DView> tex,
+bool megamol::compositing_gl::SSAO::reCreateArrayIfNeeded(std::shared_ptr<glowl::Texture2DView> tex,
     std::shared_ptr<glowl::Texture2DArray> original, glm::ivec2 size, int arraySlice) {
     if ((size.x == 0) || (size.y == 0)) {
 
@@ -1174,9 +1174,9 @@ bool megamol::compositing::SSAO::reCreateArrayIfNeeded(std::shared_ptr<glowl::Te
 
 
 /*
- * @megamol::compositing::SSAO::reCreateMIPViewIfNeeded
+ * @megamol::compositing_gl::SSAO::reCreateMIPViewIfNeeded
  */
-bool megamol::compositing::SSAO::reCreateMIPViewIfNeeded(
+bool megamol::compositing_gl::SSAO::reCreateMIPViewIfNeeded(
     std::shared_ptr<glowl::Texture2DView> current, std::shared_ptr<glowl::Texture2D> original, int mipViewSlice) {
 
     if (current != nullptr && original != nullptr) {
@@ -1193,9 +1193,9 @@ bool megamol::compositing::SSAO::reCreateMIPViewIfNeeded(
 
 
 /*
- * @megamol::compositing::SSAO::equalLayoutsWithoutSize
+ * @megamol::compositing_gl::SSAO::equalLayoutsWithoutSize
  */
-bool megamol::compositing::SSAO::equalLayoutsWithoutSize(
+bool megamol::compositing_gl::SSAO::equalLayoutsWithoutSize(
     const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
     bool depth = lhs.depth == rhs.depth;
     bool float_parameters = lhs.float_parameters == rhs.float_parameters;
@@ -1210,9 +1210,9 @@ bool megamol::compositing::SSAO::equalLayoutsWithoutSize(
 
 
 /*
- * @megamol::compositing::SSAO::equalLayouts
+ * @megamol::compositing_gl::SSAO::equalLayouts
  */
-bool megamol::compositing::SSAO::equalLayouts(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
+bool megamol::compositing_gl::SSAO::equalLayouts(const glowl::TextureLayout& lhs, const glowl::TextureLayout& rhs) {
     bool depth = lhs.depth == rhs.depth;
     bool float_parameters = lhs.float_parameters == rhs.float_parameters;
     bool format = lhs.format == rhs.format;

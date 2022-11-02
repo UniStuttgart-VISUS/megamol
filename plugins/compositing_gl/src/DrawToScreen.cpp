@@ -8,7 +8,7 @@
 
 using megamol::core::utility::log::Log;
 
-megamol::compositing::DrawToScreen::DrawToScreen()
+megamol::compositing_gl::DrawToScreen::DrawToScreen()
         : mmstd_gl::Renderer3DModuleGL()
         , m_dummy_color_tx(nullptr)
         , m_dummy_depth_tx(nullptr)
@@ -26,11 +26,11 @@ megamol::compositing::DrawToScreen::DrawToScreen()
     MakeSlotAvailable(&m_input_flags_call);
 }
 
-megamol::compositing::DrawToScreen::~DrawToScreen() {
+megamol::compositing_gl::DrawToScreen::~DrawToScreen() {
     this->Release();
 }
 
-bool megamol::compositing::DrawToScreen::create() {
+bool megamol::compositing_gl::DrawToScreen::create() {
 
     // create shader program
     auto const shader_options =
@@ -60,15 +60,15 @@ bool megamol::compositing::DrawToScreen::create() {
     return true;
 }
 
-void megamol::compositing::DrawToScreen::release() {
+void megamol::compositing_gl::DrawToScreen::release() {
     m_drawToScreen_prgm.reset();
 }
 
-bool megamol::compositing::DrawToScreen::GetExtents(mmstd_gl::CallRender3DGL& call) {
+bool megamol::compositing_gl::DrawToScreen::GetExtents(mmstd_gl::CallRender3DGL& call) {
     return true;
 }
 
-bool megamol::compositing::DrawToScreen::Render(mmstd_gl::CallRender3DGL& call) {
+bool megamol::compositing_gl::DrawToScreen::Render(mmstd_gl::CallRender3DGL& call) {
     // get lhs render call
     mmstd_gl::CallRender3DGL* cr = &call;
     if (cr == NULL)
@@ -139,4 +139,4 @@ bool megamol::compositing::DrawToScreen::Render(mmstd_gl::CallRender3DGL& call) 
     return true;
 }
 
-void megamol::compositing::DrawToScreen::PreRender(mmstd_gl::CallRender3DGL& call) {}
+void megamol::compositing_gl::DrawToScreen::PreRender(mmstd_gl::CallRender3DGL& call) {}

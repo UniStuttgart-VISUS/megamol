@@ -41,6 +41,10 @@ protected:
             "gltfMaterial",
             {"mesh_gl/gltf_example.vert.glsl",
                 /*"mesh_gl/gltf_example_geom.glsl",*/ "mesh_gl/dfr_gltf_example.frag.glsl"});
+        material_collection_->addMaterial(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(),
+            "gltfTexturedMaterial",
+            {"mesh_gl/gltf_textured_example.vert.glsl",
+                /*"mesh_gl/gltf_example_geom.glsl",*/ "mesh_gl/dfr_gltf_textured_example.frag.glsl"});
     }
 };
 

@@ -13,7 +13,7 @@
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-namespace megamol::compositing {
+namespace megamol::compositing_gl {
 
 /**
  * TODO
@@ -120,4 +120,4 @@ private:
     glm::ivec2 m_last_tex_size = glm::ivec2(0, 0);
 };
 
-} // namespace megamol::compositing
+} // namespace megamol::compositing_gl

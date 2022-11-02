@@ -341,57 +341,19 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
             case (Graph::QueueAction::ADD_MODULE): {
                 graph_sync_success &= std::get<0>(
                     (*input_lua_func)("mmCreateModule([=[" + data.class_name + "]=],[=[" + data.name_id + "]=])"));
-#ifdef MEGAMOL_USE_PROFILING
-                auto core_module_ptr = megamol_graph.FindModule(data.name_id);
-                // ! Search Queue for following module renaming action to get current name of gui graph module
-                auto module_rename_data =
-                    graph_ptr->FindQueueEntryByActionName(Graph::QueueAction::RENAME_MODULE, data.name_id);
-                auto gui_module_ptr = graph_ptr->GetModule(
-                    (module_rename_data.name_id.empty()) ? (data.name_id) : (module_rename_data.rename_id));
-                if (gui_module_ptr != nullptr) {
-                    gui_module_ptr->SetProfilingData(core_module_ptr.get(), perf_manager);
-                    this->module_to_module[core_module_ptr.get()] = gui_module_ptr;
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Failed to get gui module pointer for profiling. [%s, %s, line %d]\n", __FILE__,
-                        __FUNCTION__, __LINE__);
-                }
-#endif
             } break;
             case (Graph::QueueAction::RENAME_MODULE): {
                 graph_sync_success &= std::get<0>(
                     (*input_lua_func)("mmRenameModule([=[" + data.name_id + "]=],[=[" + data.rename_id + "]=])"));
             } break;
             case (Graph::QueueAction::DELETE_MODULE): {
-#ifdef MEGAMOL_USE_PROFILING
-                auto core_module_ptr = megamol_graph.FindModule(data.name_id);
-                this->module_to_module.erase(core_module_ptr.get());
-#endif
                 graph_sync_success &= std::get<0>((*input_lua_func)("mmDeleteModule([=[" + data.name_id + "]=])"));
             } break;
             case (Graph::QueueAction::ADD_CALL): {
                 graph_sync_success &= std::get<0>((*input_lua_func)(
                     "mmCreateCall([=[" + data.class_name + "]=],[=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
-#ifdef MEGAMOL_USE_PROFILING
-                auto core_call_ptr = megamol_graph.FindCall(data.caller, data.callee);
-                auto gui_call_ptr = graph_ptr->GetCall(data.class_name, data.caller, data.callee);
-                if (gui_call_ptr != nullptr) {
-                    gui_call_ptr->SetProfilingData(core_call_ptr.get(), core_call_ptr->GetCallbackCount());
-                    // printf("setting map for @ %p = %s \n", reinterpret_cast<void*>(cd.core_call.get()),
-                    //    cd.core_call.get()->GetDescriptiveText().c_str());
-                    this->call_to_call[core_call_ptr.get()] = gui_call_ptr;
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Failed to get gui call pointer for profiling. [%s, %s, line %d]\n", __FILE__,
-                        __FUNCTION__, __LINE__);
-                }
-#endif
             } break;
             case (Graph::QueueAction::DELETE_CALL): {
-#ifdef MEGAMOL_USE_PROFILING
-                auto core_call_ptr = megamol_graph.FindCall(data.caller, data.callee);
-                this->call_to_call.erase(core_call_ptr.get());
-#endif
                 graph_sync_success &=
                     std::get<0>((*input_lua_func)("mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
             } break;
