@@ -1,25 +1,17 @@
-/*
- * AbstractSlot.h
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTSLOT_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTSLOT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "factories/CallDescription.h"
 #include "mmcore/AbstractNamedObject.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/String.h"
 
-
-namespace megamol {
-namespace core {
-
+namespace megamol::core {
 
 /**
  * Abstract base class for all module slots.
@@ -197,7 +189,4 @@ private:
 };
 
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTSLOT_H_INCLUDED */
+} // namespace megamol::core

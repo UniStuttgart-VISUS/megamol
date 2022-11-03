@@ -1,27 +1,21 @@
-/*
- * LuaAPI.h
- *
- * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_LUAAPI_H_INCLUDED
-#define MEGAMOLCORE_LUAAPI_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "LuaInterpreter.h"
-#include "mmcore/MegaMolGraph.h"
 #include <mutex>
 #include <string>
 
 #include "LuaCallbacksCollection.h"
+#include "LuaInterpreter.h"
+#include "mmcore/MegaMolGraph.h"
 
 struct lua_State; // lua includes should stay in the core
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * This class holds a Lua state. It can be used to interact with a MegaMol instance.
@@ -144,6 +138,4 @@ private:
     std::string currentScriptPath = "";
 };
 
-} /* namespace core */
-} /* namespace megamol */
-#endif /* MEGAMOLCORE_LUAAPI_H_INCLUDED */
+} // namespace megamol::core

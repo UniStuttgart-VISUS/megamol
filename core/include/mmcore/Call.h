@@ -1,28 +1,22 @@
-/*
- * Call.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_CALL_H_INCLUDED
-#define MEGAMOLCORE_CALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-
-#include "CallCapabilities.h"
-#ifdef MEGAMOL_USE_PROFILING
-#include "PerformanceManager.h"
-#endif
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-namespace megamol {
-namespace core {
+#include "CallCapabilities.h"
+#ifdef MEGAMOL_USE_PROFILING
+#include "PerformanceManager.h"
+#endif
+
+namespace megamol::core {
 
 /** Forward declaration of description and slots */
 class CalleeSlot;
@@ -147,8 +141,4 @@ protected:
     CallCapabilities caps;
 };
 
-
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_CALL_H_INCLUDED */
+} // namespace megamol::core

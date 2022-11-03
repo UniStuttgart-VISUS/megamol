@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <functional>
@@ -18,8 +24,7 @@
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 class MegaMolGraph {
 public:
@@ -146,6 +151,4 @@ private:
     };
 };
 
-
-} /* namespace core */
-} // namespace megamol
+} // namespace megamol::core

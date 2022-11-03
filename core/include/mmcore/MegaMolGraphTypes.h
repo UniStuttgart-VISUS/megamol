@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include "mmcore/Call.h"
@@ -5,8 +11,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 using ModuleDeletionRequest_t = std::string;
 
@@ -49,5 +54,4 @@ struct CallInstance_t {
 
 using CallList_t = std::list<CallInstance_t>;
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core

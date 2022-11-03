@@ -1,21 +1,15 @@
-/*
- * BoundingBoxes_2.h
- *
- * Copyright (C) 2018-2019 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2018, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_BOUNDINGBOXES_2_H_INCLUDED
-#define MEGAMOLCORE_BOUNDINGBOXES_2_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/BoundingBoxes.h"
 #include "vislib/math/Cuboid.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * New variant of the Bounding Box class. The determination between object space and world space
@@ -235,8 +229,5 @@ private:
 #pragma warning(default : 4251)
 #endif
 };
-} // namespace core
-} // namespace megamol
 
-
-#endif /* MEGAMOLCORE_BOUNDINGBOXES_2_H_INCLUDED */
+} // namespace megamol::core

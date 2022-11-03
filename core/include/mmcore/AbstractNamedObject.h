@@ -1,15 +1,12 @@
-/*
- * AbstractNamedObject.h
- *
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTNAMEDOBJECT_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTNAMEDOBJECT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <memory>
 
 #include "mmcore/param/AbstractParam.h"
 #include "vislib/SingleLinkedList.h"
@@ -17,11 +14,8 @@
 #include "vislib/String.h"
 #include "vislib/sys/AbstractReaderWriterLock.h"
 #include "vislib/sys/SyncObject.h"
-#include <memory>
 
-
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 // forward declarations of types
 class AbstractNamedObjectContainer;
@@ -284,7 +278,4 @@ private:
 };
 
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTNAMEDOBJECT_H_INCLUDED */
+} // namespace megamol::core

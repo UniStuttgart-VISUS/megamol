@@ -1,24 +1,17 @@
-/*
- * AbstractThreadedJob.h
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTTHREADEDJOB_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTTHREADEDJOB_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/job/AbstractJob.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/sys/Thread.h"
 
 
-namespace megamol {
-namespace core {
-namespace job {
+namespace megamol::core::job {
 
 
 #ifdef _WIN32
@@ -89,9 +82,4 @@ private:
 #endif /* _WIN32 */
 };
 
-
-} /* end namespace job */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTTHREADEDJOB_H_INCLUDED */
+} // namespace megamol::core::job

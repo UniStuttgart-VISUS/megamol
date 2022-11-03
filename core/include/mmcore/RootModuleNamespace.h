@@ -1,15 +1,10 @@
-/*
- * RootModuleNamespace.h
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ROOTMODULENAMESPACE_H_INCLUDED
-#define MEGAMOLCORE_ROOTMODULENAMESPACE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/ModuleNamespace.h"
 #include "vislib/Array.h"
@@ -21,9 +16,7 @@
 #include "vislib/SingleLinkedList.h"
 #endif
 
-
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Class represents the root namespace for the module namespace
@@ -121,8 +114,4 @@ private:
 #endif /* _WIN32 */
 };
 
-
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ROOTMODULENAMESPACE_H_INCLUDED */
+} // namespace megamol::core

@@ -1,15 +1,10 @@
-/*
- * AbstractJob.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTJOB_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTJOB_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/param/AbstractParam.h"
 #include "vislib/SingleLinkedList.h"
@@ -18,9 +13,7 @@
 #include "vislib/assert.h"
 
 
-namespace megamol {
-namespace core {
-namespace job {
+namespace megamol::core::job {
 
 
 /**
@@ -84,8 +77,4 @@ private:
 };
 
 
-} /* end namespace job */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTJOB_H_INCLUDED */
+} // namespace megamol::core::job
