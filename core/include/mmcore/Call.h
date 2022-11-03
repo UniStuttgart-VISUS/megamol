@@ -50,10 +50,10 @@ public:
     using weak_ptr_type = std::weak_ptr<Call>;
 
     /** Ctor. */
-    Call(void);
+    Call();
 
     /** Dtor. */
-    virtual ~Call(void);
+    virtual ~Call();
 
     /**
      * Calls function 'func'.
@@ -69,7 +69,7 @@ public:
      *
      * @return The callee slot this call is connected to.
      */
-    inline const CalleeSlot* PeekCalleeSlot(void) const {
+    inline const CalleeSlot* PeekCalleeSlot() const {
         return this->callee;
     }
 
@@ -82,7 +82,7 @@ public:
      *
      * @return The caller slot this call is connected to.
      */
-    inline const CallerSlot* PeekCallerSlot(void) const {
+    inline const CallerSlot* PeekCallerSlot() const {
         return this->caller;
     }
 

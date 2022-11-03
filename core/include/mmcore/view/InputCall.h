@@ -70,7 +70,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 5;
     }
 
@@ -101,7 +101,7 @@ public:
     InputCall() = default;
 
     /** Dtor. */
-    virtual ~InputCall(void) = default;
+    virtual ~InputCall() = default;
 
 
     /**
@@ -109,7 +109,7 @@ public:
      *
      * @return The input event.
      */
-    inline const InputEvent& GetInputEvent(void) const {
+    inline const InputEvent& GetInputEvent() const {
         return this->e;
     }
 

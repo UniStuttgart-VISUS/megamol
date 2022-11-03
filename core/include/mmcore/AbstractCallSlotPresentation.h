@@ -21,16 +21,16 @@ public:
         this->necessity = n;
     }
 
-    Necessity GetNecessity(void) {
+    Necessity GetNecessity() {
         return this->necessity;
     }
 
 protected:
-    AbstractCallSlotPresentation(void) {
+    AbstractCallSlotPresentation() {
         this->necessity = Necessity::SLOT_OPTIONAL;
     }
 
-    virtual ~AbstractCallSlotPresentation(void) = default;
+    virtual ~AbstractCallSlotPresentation() = default;
 
 private:
     Necessity necessity;

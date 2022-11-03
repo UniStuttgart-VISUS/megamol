@@ -22,10 +22,10 @@ namespace megamol::core::job {
 class AbstractJob {
 public:
     /** Ctor. */
-    AbstractJob(void);
+    AbstractJob();
 
     /** Dtor. */
-    virtual ~AbstractJob(void);
+    virtual ~AbstractJob();
 
     /**
      * Answers whether the given parameter is relevant for this job.
@@ -42,14 +42,14 @@ public:
      * @return 'true' if this job is still running, 'false' if it has
      *         finished.
      */
-    virtual bool IsRunning(void) const = 0;
+    virtual bool IsRunning() const = 0;
 
     /**
      * Starts the job thread.
      *
      * @return true if the job has been successfully started.
      */
-    virtual bool Start(void) = 0;
+    virtual bool Start() = 0;
 
     /**
      * Terminates the job thread.
@@ -57,13 +57,13 @@ public:
      * @return true to acknowledge that the job will finish as soon
      *         as possible, false if termination is not possible.
      */
-    virtual bool Terminate(void) = 0;
+    virtual bool Terminate() = 0;
 
 protected:
     /**
      * Signals the application that the job has been started.
      */
-    void signalStart(void);
+    void signalStart();
 
     /**
      * Signals the application that the job has ended.

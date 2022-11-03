@@ -39,7 +39,7 @@ public:
      * All bounding boxes will be invalid and the object space scale will
      * be set to zero.
      */
-    BoundingBoxes(void);
+    BoundingBoxes();
 
     /**
      * Copy Ctor
@@ -51,13 +51,13 @@ public:
     /**
      * Dtor
      */
-    virtual ~BoundingBoxes(void);
+    virtual ~BoundingBoxes();
 
     /**
      * Clears all members to invalid bounding boxes and an object space
      * scale of zero.
      */
-    inline void Clear(void) {
+    inline void Clear() {
         this->clipBoxValid = false;
         this->osScale = 0.0;
         this->osBBoxValid = false;
@@ -75,7 +75,7 @@ public:
      *
      * @return The best match for a clipping bounding box.
      */
-    inline const vislib::math::Cuboid<float>& ClipBox(void) const {
+    inline const vislib::math::Cuboid<float>& ClipBox() const {
         if (!this->clipBoxValid) {
             this->calcClipBox();
         }
@@ -87,7 +87,7 @@ public:
      *
      * @return True if any of the boxes is valid
      */
-    inline bool IsAnyValid(void) const {
+    inline bool IsAnyValid() const {
         return this->clipBoxValid || this->osBBoxValid || this->osClipBoxValid || this->wsBBoxValid ||
                this->wsClipBoxValid;
     }
@@ -97,7 +97,7 @@ public:
      *
      * @return True if the object space bounding box is valid
      */
-    inline bool IsObjectSpaceBBoxValid(void) const {
+    inline bool IsObjectSpaceBBoxValid() const {
         return this->osBBoxValid;
     }
 
@@ -106,7 +106,7 @@ public:
      *
      * @return True if the object space clipping box is valid
      */
-    inline bool IsObjectSpaceClipBoxValid(void) const {
+    inline bool IsObjectSpaceClipBoxValid() const {
         return this->osClipBoxValid;
     }
 
@@ -115,7 +115,7 @@ public:
      *
      * @return True if the world space bounding box is valid
      */
-    inline bool IsWorldSpaceBBoxValid(void) const {
+    inline bool IsWorldSpaceBBoxValid() const {
         return this->wsBBoxValid;
     }
 
@@ -124,7 +124,7 @@ public:
      *
      * @return True if the world space clipping box is valid
      */
-    inline bool IsWorldSpaceClipBoxValid(void) const {
+    inline bool IsWorldSpaceClipBoxValid() const {
         return this->wsClipBoxValid;
     }
 
@@ -133,7 +133,7 @@ public:
      *
      * @return The object space bounding box
      */
-    inline const vislib::math::Cuboid<float>& ObjectSpaceBBox(void) const {
+    inline const vislib::math::Cuboid<float>& ObjectSpaceBBox() const {
         return this->osBBox;
     }
 
@@ -142,7 +142,7 @@ public:
      *
      * @return The object space clipping box
      */
-    inline const vislib::math::Cuboid<float>& ObjectSpaceClipBox(void) const {
+    inline const vislib::math::Cuboid<float>& ObjectSpaceClipBox() const {
         return this->osClipBox;
     }
 
@@ -160,7 +160,7 @@ public:
      *
      * @return The object space scale value
      */
-    inline double ObjectSpaceScale(void) const {
+    inline double ObjectSpaceScale() const {
         return this->osScale;
     }
 
@@ -291,7 +291,7 @@ public:
      *
      * @return The world space bounding box
      */
-    inline const vislib::math::Cuboid<float>& WorldSpaceBBox(void) const {
+    inline const vislib::math::Cuboid<float>& WorldSpaceBBox() const {
         return this->wsBBox;
     }
 
@@ -300,7 +300,7 @@ public:
      *
      * @return The world space clipping box
      */
-    inline const vislib::math::Cuboid<float>& WorldSpaceClipBox(void) const {
+    inline const vislib::math::Cuboid<float>& WorldSpaceClipBox() const {
         return this->wsClipBox;
     }
 
@@ -326,11 +326,8 @@ private:
     /**
      * Calculate the composed clipping box.
      */
-    void calcClipBox(void) const;
+    void calcClipBox() const;
 
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
     /** The composed clipping box */
     mutable vislib::math::Cuboid<float> clipBox;
 
@@ -363,9 +360,6 @@ private:
 
     /** The world space clipping box */
     vislib::math::Cuboid<float> wsClipBox;
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif /* _WIN32 */
 
     /** The valid flag for the world space clipping box */
     bool wsClipBoxValid;

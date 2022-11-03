@@ -75,7 +75,7 @@ public:
     /**
      * Answers the current project file path
      */
-    std::string GetScriptPath(void);
+    std::string GetScriptPath();
 
     /**
      * Sets the current project file path

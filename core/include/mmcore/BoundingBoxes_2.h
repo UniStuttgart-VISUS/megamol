@@ -21,7 +21,7 @@ public:
     /**
      * Constructor
      */
-    BoundingBoxes_2(void);
+    BoundingBoxes_2();
 
     /**
      * Copy Constructor
@@ -33,12 +33,12 @@ public:
     /**
      * Destructor
      */
-    virtual ~BoundingBoxes_2(void);
+    virtual ~BoundingBoxes_2();
 
     /**
      * Clears all members to invalid bounding boxes and a scale of zero.
      */
-    inline void Clear(void) {
+    inline void Clear() {
         this->clipBoxValid = false;
         this->boundingBoxValid = false;
     }
@@ -52,7 +52,7 @@ public:
      *
      * @return The best match for a clipping bounding box.
      */
-    inline const vislib::math::Cuboid<float>& ClipBox(void) const {
+    inline const vislib::math::Cuboid<float>& ClipBox() const {
         if (!this->clipBoxValid) {
             this->calcClipBox();
         }
@@ -64,7 +64,7 @@ public:
      *
      * @return True if any of the boxes is valid
      */
-    inline bool IsAnyValid(void) const {
+    inline bool IsAnyValid() const {
         return this->clipBoxValid || this->boundingBoxValid;
     }
 
@@ -73,7 +73,7 @@ public:
      *
      * @return True if the bounding box is valid
      */
-    inline bool IsBoundingBoxValid(void) const {
+    inline bool IsBoundingBoxValid() const {
         return this->boundingBoxValid;
     }
 
@@ -82,7 +82,7 @@ public:
      *
      * @return True if the clipping box is valid
      */
-    inline bool IsClipBoxValid(void) const {
+    inline bool IsClipBoxValid() const {
         return this->clipBoxValid;
     }
 
@@ -91,7 +91,7 @@ public:
      *
      * @return The bounding box
      */
-    inline const vislib::math::Cuboid<float>& BoundingBox(void) const {
+    inline const vislib::math::Cuboid<float>& BoundingBox() const {
         return this->boundingBox;
     }
 
@@ -209,11 +209,8 @@ private:
     /**
      * Calculate the composed clipping box.
      */
-    void calcClipBox(void) const;
+    void calcClipBox() const;
 
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif
     /** The composed clipping box */
     mutable vislib::math::Cuboid<float> clipBox;
 
@@ -225,9 +222,6 @@ private:
 
     /** The valid flag for the bounding box */
     bool boundingBoxValid;
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif
 };
 
 } // namespace megamol::core

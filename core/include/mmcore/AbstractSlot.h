@@ -31,14 +31,14 @@ public:
         /**
          * Ctor.
          */
-        inline Listener(void) {
+        inline Listener() {
             // intentionally empty
         }
 
         /**
          * Dtor.
          */
-        virtual ~Listener(void) {
+        virtual ~Listener() {
             // intentionally empty
         }
 
@@ -65,14 +65,14 @@ public:
     enum SlotStatus { STATUS_UNAVAILABLE, STATUS_ENABLED, STATUS_CONNECTED };
 
     /** Dtor. */
-    virtual ~AbstractSlot(void);
+    virtual ~AbstractSlot();
 
     /**
      * Gets a human readable description of this slot.
      *
      * @return A human readable description of this slot.
      */
-    inline const vislib::StringA& Description(void) const {
+    inline const vislib::StringA& Description() const {
         return this->desc;
     }
 
@@ -81,7 +81,7 @@ public:
      *
      * @return The status of the slot.
      */
-    inline const SlotStatus& GetStatus(void) const {
+    inline const SlotStatus& GetStatus() const {
         return this->status;
     }
 
@@ -89,8 +89,8 @@ public:
      * Makes this slot available. After this method was called the
      * settings of the slot can no longer be changed.
      */
-    virtual void MakeAvailable(void);
-    virtual void MakeUnavailable(void);
+    virtual void MakeAvailable();
+    virtual void MakeUnavailable();
 
     /**
      * Answers whether the given parameter is relevant for this view.
@@ -157,7 +157,7 @@ protected:
      * Sets the status of the Slot to indicate that the slot is no
      * longer connected.
      */
-    inline void SetStatusDisconnected(void) {
+    inline void SetStatusDisconnected() {
         this->SetStatusConnected(false);
     }
 
@@ -168,9 +168,6 @@ private:
     /** forbidden assignment */
     AbstractSlot& operator=(const AbstractSlot& rhs);
 
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
     /** A human readable description of the slot */
     vislib::StringA desc;
 
@@ -182,10 +179,6 @@ private:
 
     /** List of listeners */
     vislib::SingleLinkedList<Listener*> listeners;
-
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif /* _WIN32 */
 };
 
 

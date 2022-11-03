@@ -55,7 +55,7 @@ public:
     /**
      * Dtor.
      */
-    virtual ~AbstractNamedObjectContainer(void);
+    virtual ~AbstractNamedObjectContainer();
 
     /**
      * Adds a child to the list of children. The child object must not
@@ -137,18 +137,18 @@ public:
     /**
      * Sets the cleanup mark and all marks of all children
      */
-    virtual void SetAllCleanupMarks(void);
+    virtual void SetAllCleanupMarks();
 
     /**
      * Performs the cleanup operation by removing and deleteing of all
      * marked objects.
      */
-    virtual void PerformCleanup(void);
+    virtual void PerformCleanup();
 
     /**
      * Disconnects calls from all slots which are marked for cleanup.
      */
-    virtual void DisconnectCalls(void);
+    virtual void DisconnectCalls();
 
     /**
      * Answers whether the given parameter is relevant for this view.
@@ -165,7 +165,7 @@ protected:
     /**
      * Ctor.
      */
-    AbstractNamedObjectContainer(void);
+    AbstractNamedObjectContainer();
 
     /**
      * Adds a child to the list of children. The child object must not
@@ -195,7 +195,7 @@ protected:
     /**
      * Ensures that all children correctly reference their parent
      */
-    void fixParentBackreferences(void);
+    void fixParentBackreferences();
 
 private:
     /** The children of the container */

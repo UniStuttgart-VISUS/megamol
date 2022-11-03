@@ -56,12 +56,12 @@ public:
     /**
      * Ctor.
      */
-    RootModuleNamespace(void);
+    RootModuleNamespace();
 
     /**
      * Dtor.
      */
-    virtual ~RootModuleNamespace(void);
+    virtual ~RootModuleNamespace();
 
     /**
      * Answer the full namespace path for 'path' seen relative to 'base'.
@@ -90,28 +90,20 @@ public:
      *
      * @return The reader-writer lock to lock the module graph
      */
-    virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock(void);
+    virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock();
 
     /**
      * Answer the reader-writer lock to lock the module graph
      *
      * @return The reader-writer lock to lock the module graph
      */
-    virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock(void) const;
+    virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock() const;
 
 protected:
 private:
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
-
     /** The graph access synchronization object */
     //mutable vislib::sys::FatReaderWriterLock lock;
     mutable vislib::sys::ReaderWriterMutexWrapper lock;
-
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif /* _WIN32 */
 };
 
 } // namespace megamol::core

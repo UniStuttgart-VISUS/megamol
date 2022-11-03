@@ -91,7 +91,7 @@ public:
 
     LuaInterpreter& operator=(LuaInterpreter&& rhs) = delete;
 
-    ~LuaInterpreter(void);
+    ~LuaInterpreter();
 
     /**
      * Load an environment from a file. The environment is a table
@@ -325,7 +325,7 @@ template <class T> megamol::core::LuaInterpreter<T>::LuaInterpreter(T* t, std::s
 }
 
 
-template <class T> megamol::core::LuaInterpreter<T>::~LuaInterpreter(void) {
+template <class T> megamol::core::LuaInterpreter<T>::~LuaInterpreter() {
     if (L != nullptr) {
         lua_close(L);
     }

@@ -35,7 +35,7 @@ public:
     CalleeSlot(const vislib::StringA& name, const vislib::StringA& desc);
 
     /** Dtor. */
-    virtual ~CalleeSlot(void);
+    virtual ~CalleeSlot();
 
     /**
      * Connects a call to this slot.
@@ -59,7 +59,7 @@ public:
     /**
      * Clears the cleanup mark for this and all dependent objects.
      */
-    virtual void ClearCleanupMark(void);
+    virtual void ClearCleanupMark();
 
     /**
      * Answers whether a given call is compatible with this slot.
@@ -211,7 +211,7 @@ private:
         }
 
         /** Dtor */
-        virtual ~Callback(void) {
+        virtual ~Callback() {
             // intentionally empty
         }
 
@@ -230,7 +230,7 @@ private:
          *
          * @return The call class name.
          */
-        inline const char* CallName(void) const {
+        inline const char* CallName() const {
             return this->callName;
         }
 
@@ -239,7 +239,7 @@ private:
          *
          * @return The function name.
          */
-        inline const char* FuncName(void) const {
+        inline const char* FuncName() const {
             return this->funcName;
         }
 
@@ -269,7 +269,7 @@ private:
         }
 
         /** Dtor. */
-        virtual ~CallbackImpl(void) {
+        virtual ~CallbackImpl() {
             // intentionally empty
         }
 
@@ -312,7 +312,7 @@ private:
         }
 
         /** Dtor. */
-        virtual ~CallbackParentImpl(void) {
+        virtual ~CallbackParentImpl() {
             // intentionally empty
         }
 
@@ -335,14 +335,8 @@ private:
         C* parent;
     };
 
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
     /** The registered callbacks */
     vislib::Array<Callback*> callbacks;
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif /* _WIN32 */
 };
 
 } // namespace megamol::core
