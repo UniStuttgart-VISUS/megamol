@@ -59,18 +59,21 @@ bool Call::operator()(unsigned int func) {
 #ifdef MEGAMOL_USE_PROFILING
         const auto frameID = this->callee->GetCoreInstance()->GetFrameID();
         perf_man->start_timer(cpu_queries[func], frameID);
-        if (caps.OpenGLRequired())
+        if (caps.OpenGLRequired()) {
             perf_man->start_timer(gl_queries[func], frameID);
+        }
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);
 #ifdef MEGAMOL_USE_PROFILING
-        if (caps.OpenGLRequired())
+        if (caps.OpenGLRequired()) {
             perf_man->stop_timer(gl_queries[func]);
+        }
         perf_man->stop_timer(cpu_queries[func]);
 #endif
 #ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
-        if (caps.OpenGLRequired())
+        if (caps.OpenGLRequired()) {
             gl_helper->PopDebugGroup();
+        }
 #endif
     }
     // megamol::core::utility::log::Log::DefaultLog.WriteInfo("calling %s, idx %i, result %s (%s)", this->ClassName(), func,
