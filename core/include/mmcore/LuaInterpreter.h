@@ -372,11 +372,15 @@ bool megamol::core::LuaInterpreter<T>::RunString(
             L, -2, 1); // replace the environment with the one loaded from env.lua, disallowing some functions
         int ret = lua_pcall(L, 0, LUA_MULTRET, 0);
         if (ret != LUA_OK) {
-            const char* err = lua_tostring(
-                L, -1); // get error from top of stack...
-                        // megamol::core::utility::log::Log::DefaultLog.WriteError("Lua Error: %s at %s:%i\n", err, file, line);
-            result = std::string(err);
-            lua_pop(L, 1); // and remove it.
+            result = "";
+            auto height = lua_gettop(L);
+            for (auto i = 0; i < height; ++i) {
+                if (lua_type(L, i) == LUA_TSTRING) {
+                    const auto err = lua_tostring(L, i);
+                    result += err + std::string("\n");
+                }
+            }
+            lua_pop(L, height); // remove all stuff on the stack
             return false;
         } else {
             bool good = true;
