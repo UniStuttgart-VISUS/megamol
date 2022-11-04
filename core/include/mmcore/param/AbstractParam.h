@@ -32,7 +32,7 @@ class AbstractParamSlot;
 /**
  * Abstract base class for all parameter objects
  */
-class AbstractParam : public AbstractParamPresentation {
+class AbstractParam {
 public:
     friend class AbstractParamSlot;
 
@@ -109,6 +109,19 @@ public:
         this->change_callback = callback;
     }
 
+    // we need to route all changes to the GUI presentation via this function in the parameter
+    // because the parameter needs to indicate internal state changes
+    // to the frontend, in order for the frontend GUI
+    // to get notified of presentation changes
+    AbstractParamPresentation& GuiPresentation() {
+        indicateChange();
+        return gui_presentation;
+    };
+
+    AbstractParamPresentation const& GuiPresentation() const {
+        return gui_presentation;
+    };
+
 protected:
     /**
      * Ctor.
@@ -133,7 +146,7 @@ protected:
 
 private:
     /** The holding slot */
-    class AbstractParamSlot* slot;
+    class AbstractParamSlot* slot = nullptr;
 
     /**
      * Hash indicating fundamental changes in parameter definition
@@ -153,6 +166,8 @@ private:
     ParamChangeCallback change_callback = [](auto*) {
         // needs default init for randomly created modules/params not to crash for default SetValue() calls
     };
+
+    AbstractParamPresentation gui_presentation;
 };
 
 
