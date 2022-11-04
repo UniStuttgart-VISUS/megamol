@@ -309,16 +309,17 @@ bool megamol::gui::Parameter::SetValueString(const std::string& val_str, bool se
 bool megamol::gui::Parameter::ReadNewCoreParameterToStockParameter(
     megamol::core::param::ParamSlot& in_param_slot, megamol::gui::Parameter::StockParameter& out_param) {
 
-    auto parameter_ptr = in_param_slot.Parameter();
+    auto const parameter_ptr = in_param_slot.Parameter();
     if (parameter_ptr.IsNull()) {
         return false;
     }
 
     out_param.param_name = std::string(in_param_slot.Name().PeekBuffer());
     out_param.description = std::string(in_param_slot.Description().PeekBuffer());
-    out_param.gui_visibility = parameter_ptr->IsGUIVisible();
-    out_param.gui_read_only = parameter_ptr->IsGUIReadOnly();
-    out_param.gui_presentation = static_cast<Present_t>(parameter_ptr->GetGUIPresentation());
+
+    out_param.gui_visibility = parameter_ptr->GuiPresentation().IsGUIVisible();
+    out_param.gui_read_only = parameter_ptr->GuiPresentation().IsGUIReadOnly();
+    out_param.gui_presentation = static_cast<Present_t>(parameter_ptr->GuiPresentation().GetGUIPresentation());
 
     if (auto* p_ptr = in_param_slot.Param<core::param::ButtonParam>()) {
         out_param.type = ParamType_t::BUTTON;
@@ -407,7 +408,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
     std::shared_ptr<megamol::gui::Parameter>& out_param, bool set_default_val, bool set_dirty,
     bool save_core_param_pointer, const std::string& parent_module_name) {
 
-    auto parameter_ptr = in_param_slot.Parameter();
+    auto const parameter_ptr = in_param_slot.Parameter();
     if (parameter_ptr.IsNull()) {
         return false;
     }
@@ -503,9 +504,9 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
 
     out_param->SetParentModuleName(parent_module_name);
 
-    out_param->SetGUIVisible(parameter_ptr->IsGUIVisible());
-    out_param->SetGUIReadOnly(parameter_ptr->IsGUIReadOnly());
-    out_param->SetGUIPresentation(parameter_ptr->GetGUIPresentation());
+    out_param->SetGUIVisible(parameter_ptr->GuiPresentation().IsGUIVisible());
+    out_param->SetGUIReadOnly(parameter_ptr->GuiPresentation().IsGUIReadOnly());
+    out_param->SetGUIPresentation(parameter_ptr->GuiPresentation().GetGUIPresentation());
     if (save_core_param_pointer) {
         out_param->core_param_ptr = parameter_ptr;
     }
@@ -518,9 +519,13 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
     vislib::SmartPtr<megamol::core::param::AbstractParam> in_param_ptr, megamol::gui::Parameter& out_param,
     bool set_default_val, bool set_dirty) {
 
-    out_param.SetGUIVisible(in_param_ptr->IsGUIVisible());
-    out_param.SetGUIReadOnly(in_param_ptr->IsGUIReadOnly());
-    out_param.SetGUIPresentation(in_param_ptr->GetGUIPresentation());
+    // we use a const ptr here to avoid triggering a feedback loop with the graph subscribers mechanism
+    // when looking into the parameters GuiPresentation(), which normally notifies the graph about param changes upon GuiPresentation()
+    // access except when 'GuiPresentation() const' is accessed
+    auto const& in_param_ptr_const = in_param_ptr;
+    out_param.SetGUIVisible(in_param_ptr_const->GuiPresentation().IsGUIVisible());
+    out_param.SetGUIReadOnly(in_param_ptr_const->GuiPresentation().IsGUIReadOnly());
+    out_param.SetGUIPresentation(in_param_ptr_const->GuiPresentation().GetGUIPresentation());
 
     /// XXX Prioritizing currently changed value from GUI
     /// Do not read param value from core param if gui param has already updated value
@@ -674,7 +679,7 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
 bool megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(megamol::core::param::ParamSlot& in_param_slot,
     megamol::gui::Parameter& out_param, bool set_default_val, bool set_dirty, bool save_core_param_pointer) {
 
-    auto parameter_ptr = in_param_slot.Parameter();
+    auto const parameter_ptr = in_param_slot.Parameter();
     if (parameter_ptr.IsNull()) {
         return false;
     }
@@ -689,9 +694,9 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(megamol::c
 bool megamol::gui::Parameter::WriteCoreParameterGUIState(
     megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam> out_param_ptr) {
 
-    out_param_ptr->SetGUIVisible(in_param.IsGUIVisible());
-    out_param_ptr->SetGUIReadOnly(in_param.IsGUIReadOnly());
-    out_param_ptr->SetGUIPresentation(in_param.GetGUIPresentation());
+    out_param_ptr->GuiPresentation().SetGUIVisible(in_param.IsGUIVisible());
+    out_param_ptr->GuiPresentation().SetGUIReadOnly(in_param.IsGUIReadOnly());
+    out_param_ptr->GuiPresentation().SetGUIPresentation(in_param.GetGUIPresentation());
 
     return true;
 }
