@@ -7,8 +7,6 @@
 
 in vec4 obj_pos;
 in vec3 cam_pos;
-// TODO: scale radii below radii --> i.e. x * absradii with 0.0 < absradii < 1.0
-// to fit into the box (which is scaled by radii?)
 in vec3 absradii;
 in mat3 rotate_world_into_tensor;
 
@@ -22,16 +20,14 @@ out layout(location = 1) vec3 normal_out;
 out layout(location = 2) float depth_out;
 
 void main() {
-    // transform fragment coordinates from window coordinates to view coordinates.
+    // transform fragment coordinates from screen coordinates to ndc coordinates.
     vec4 coord = gl_FragCoord
         * vec4(view_attr.z, view_attr.w, 2.0, 0.0)
         + vec4(-1.0, -1.0, -1.0, 1.0);
 
-    // transform fragment coordinates from view coordinates to object coordinates.
+    // transform ndc coordinates to object coordinates.
     coord = mvp_i * coord;
     coord /= coord.w;
-    // is this the box position?
-    vec3 box_pos = coord.xyz;
     coord -= obj_pos; // ... and move
 
     // ... and rotate with rot_mat transposed
@@ -45,10 +41,7 @@ void main() {
     // see: http://cg.inf.h-bonn-rhein-sieg.de/wp-content/uploads/2009/04/introductiontoraytracing.pdf
     // start solution with box intersection
     float t = length(tmp - cpos);
-    // TODO: what radius to use?
     float radius = 1.0;
-    // TODO: what are the superqadrics parameters? the radii?
-    // TODO: what are the exponents? the radii?
     vec3 superquadric = absradii;
     float result = pow(abs((cpos.x + t * ray.x) / superquadric.x), exponent) +
                    pow(abs((cpos.y + t * ray.y) / superquadric.y), exponent) +
@@ -83,23 +76,35 @@ void main() {
     // normal calculation for superquadric
     // see: http://cg.inf.h-bonn-rhein-sieg.de/wp-content/uploads/2009/04/introductiontoraytracing.pdf
     vec3 normal = intersection / superquadric;
-    float k = exponent - 1;
-    if( normal.x > 0 ) normal.x = pow( normal.x, k );
+    float k = exponent - 1.0;
+    if( normal.x > 0.0 ) normal.x = pow( normal.x, k );
     else normal.x = -pow( -normal.x, k );
-    if( normal.y > 0 ) normal.y = pow( normal.y, k );
+    if( normal.y > 0.0 ) normal.y = pow( normal.y, k );
     else normal.y = -pow( -normal.y, k );
-    if( normal.z > 0 ) normal.z = pow( normal.z, k );
+    if( normal.z > 0.0 ) normal.z = pow( normal.z, k );
     else normal.z = -pow( -normal.z, k );
     normal = normalize( normal );
 
+    // transform normal and intersection point into tensor
     normal = transpose(rotate_world_into_tensor) * normal;
+    normal = normalize(normal);
 
-    //albedo_out = vec4(normal, 1.0);
-    albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation),1.0);
-    normal_out = normal;
+    // translate point back to original position
+    intersection = inverse(rotate_world_into_tensor) * intersection;
+    intersection += obj_pos.xyz;
 
+    // calc depth
+    float far = gl_DepthRange.far;
+    float near = gl_DepthRange.near;
     vec4 ding = vec4(intersection, 1.0);
+    // calc non-linear depth
     float depth = dot(mvp_t[2], ding);
     float depth_w = dot(mvp_t[3], ding);
-    depth_out = ((depth / depth_w) + 1.0) * 0.5;
+    float depth_ndc = depth / depth_w;
+    float depth_ss = ((far - near) * depth_ndc + (far + near)) / 2.0;
+
+    albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation),1.0);
+    normal_out = normal;
+    depth_out = depth_ss;
+    gl_FragDepth = depth_ss;
 }

@@ -6,8 +6,6 @@
 
 in vec4 obj_pos;
 in vec3 cam_pos;
-// TODO: scale radii below radii --> i.e. x * absradii with 0.0 < absradii < 1.0
-// to fit into the box (which is scaled by radii?)
 in flat vec3 radii;
 in vec3 absradii;
 in mat3 rotate_world_into_tensor;
@@ -57,11 +55,12 @@ void main() {
         vec3(0.0, 0.0, 1.0)
     };
     vec3 intersection_lengths = vec3(10000.0);
-    vec3 ray = ray_base;
 
     for(int i = 0; i < 3; ++i) {
+        // TODO: is something not reset here?
         normal = vec3(0.0);
-        intersection = vec3(0.0);
+        intersection = vec3(10000.0);
+        vec3 ray = ray_base;
 
         int orientation = i;
         vec3 aligned_absradii = absradii;
@@ -89,7 +88,6 @@ void main() {
 
         // shift cam, so that end of cylinder = start of cone = (0,0,0)
         vec3 shift = vec3(0.0);
-        // TODO: maybe not necessary
         float shift_value = length_cylinder;
         shift.x = alignment == 0 ? shift_value : 0.0;
         shift.y = alignment == 1 ? shift_value : 0.0;
@@ -98,7 +96,6 @@ void main() {
 
         // re-assign coordinates to account for the alignment change
         // this way the code below doesn't need to be changed
-        // TODO: maybe not necessary
         if(alignment == 1) {
             ray = ray_base.yxz;
             cpos = cpos.yxz;
@@ -198,11 +195,7 @@ void main() {
 
         // default disk normal
         // arrow looks in positive axis-direction, therefore normal has to look the opposite way
-        //vec3 normal = vec3(0.0);
-        normal.x = alignment == 0 ? -1.0 : 0.0;
-        normal.y = alignment == 1 ? -1.0 : 0.0;
-        normal.z = alignment == 2 ? -1.0 : 0.0;
-        //vec3 intersection = vec3(0.0);
+        vec3 normal = vec3(-1.0, 0.0, 0.0);
 
         // be aware of coordinate order for alignments
         // alignment 0 --> xyz
@@ -213,34 +206,20 @@ void main() {
         if (!invalid.w) {
             invalid.xyz = bvec3(true, true, true);
             intersection = cpos + (ray * lambda.w);
-            vec2 norm_int = normalize(intersection.yz);
-            // norm_int = alignment == 0 ? normalize(intersection.yz) : norm_int;
-            // norm_int = alignment == 1 ? normalize(intersection.xz) : norm_int;
-            // norm_int = alignment == 2 ? normalize(intersection.xy) : norm_int;
-            normal = alignment == 0 ? normalize(vec3(TIP_RAD / TIP_LEN, norm_int.xy)) : normal;
-            normal = alignment == 1 ? normalize(vec3(norm_int.x, TIP_RAD / TIP_LEN, norm_int.y)) : normal;
-            normal = alignment == 2 ? normalize(vec3(norm_int.xy, TIP_RAD / TIP_LEN)) : normal;
-            //normal = normalize(vec3(-TIP_RAD / TIP_LEN, intersection.yz));
+            normal = normalize(vec3(TIP_RAD / TIP_LEN, normalize(intersection.yz)));
         }
         // cylinder
         if (!invalid.x) {
             invalid.zy = bvec2(true, true);
             intersection = cpos + (ray * lambda.x);
-            vec2 norm_int = normalize(intersection.yz);
-            // norm_int = alignment == 0 ? normalize(intersection.yz) : norm_int;
-            // norm_int = alignment == 1 ? normalize(intersection.xz) : norm_int;
-            // norm_int = alignment == 2 ? normalize(intersection.yx) : norm_int;
-            normal = alignment == 0 ? normalize(vec3(0.0, norm_int.xy)) : normal;
-            normal = alignment == 1 ? normalize(vec3(norm_int.x, 0.0, norm_int.y)) : normal;
-            normal = alignment == 2 ? normalize(vec3(norm_int.xy, 0.0)) : normal;
-            //normal = vec3(0.0, normalize(intersection.yz));
+            normal = normalize(vec3(0.0, normalize(intersection.yz)));
         }
         // no need for alignment adjustment for disks, since it is already done
         // when normal is initialized
         // left cylinder disk
         if (!invalid.z) {
             invalid.y = true;
-            lambda.z = (CYL_LEN - cpos.x) / ray.x;
+            lambda.z = (-CYL_LEN - cpos.x) / ray.x;
             intersection = cpos + (ray * lambda.z);
         }
         // cone disk
@@ -255,33 +234,67 @@ void main() {
             }
         }
 
+        // this is a problem I think!
+        // because of rotation, it is possible, that a further away intersection
+        // gets closer than a previously closer intersection after rotation
+        intersection_lengths[i] = length(intersection - cpos);
+
+        // re-re-align coordinates
+        if(alignment == 1) {
+            intersection = intersection.yxz;
+            normal = normal.yxz;
+        }
+        else if(alignment == 2) {
+            intersection = intersection.yzx;
+            normal = normal.yzx;
+        }
+
         normals[i] = normal;
         intersections[i] = intersection;
-        intersection_lengths[i] = length(intersection - cpos);
     }
 
+    // is there a glsl command to check all? vec3() == vec3(true) or smth like that?
+    // 'early' exit
     if(discard_frag.x == true && discard_frag.y == true && discard_frag.z == true) {
         discard;
     }
-
+    // TODO: since ssao result is not optimal, there may be something wrong here
+    // decide, which intersection is closest to camera
+    // TODO: also, some cases are missing
     int inst = 0;
-    if(intersection_lengths[1] < intersection_lengths[0] && intersection_lengths[1] < intersection_lengths[2]) {
+    if(intersection_lengths[1] < intersection_lengths[0] && intersection_lengths[1] < intersection_lengths[2]
+        && discard_frag.y == false) {
         inst = 1;
-    } else if(intersection_lengths[2] < intersection_lengths[0] && intersection_lengths[2] < intersection_lengths[1]) {
+    } else if(intersection_lengths[2] < intersection_lengths[0] && intersection_lengths[2] < intersection_lengths[1]
+        && discard_frag.z == false) {
         inst = 2;
     }
+
+    // transform normal and intersection point into tensor
+    normal = transpose(rotate_world_into_tensor) * normals[inst];
+    normal = normalize(normal);
+
+    // translate point back to original position
+    intersection = inverse(rotate_world_into_tensor) * intersections[inst];
+    intersection += obj_pos.xyz;
+
+    // calc depth
+    float far = gl_DepthRange.far;
+    float near = gl_DepthRange.near;
+    vec4 ding = vec4(intersection, 1.0);
+    // calc non-linear depth
+    float depth = dot(mvp_t[2], ding);
+    float depth_w = dot(mvp_t[3], ding);
+    float depth_ndc = depth / depth_w;
+    float depth_ss = ((far - near) * depth_ndc + (far + near)) / 2.0;
+
 
     vec3 dir_color1 = max(vec3(0), arrow_dirs[inst] * sign(radii));
     vec3 dir_color2 = vec3(1) + arrow_dirs[inst] * sign(radii);
     vec3 dir_color = any(lessThan(dir_color2, vec3(0.5))) ? dir_color2 * vec3(0.5) : dir_color1;
 
-    normal = transpose(rotate_world_into_tensor) * normals[inst];
-
     albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation),1.0);
     normal_out = normal;
-
-    vec4 ding = vec4(intersections[inst], 1.0);
-    float depth = dot(mvp_t[2], ding);
-    float depth_w = dot(mvp_t[3], ding);
-    depth_out = ((depth / depth_w) + 1.0) * 0.5;
+    depth_out = depth_ss;
+    gl_FragDepth = depth_ss;
 }

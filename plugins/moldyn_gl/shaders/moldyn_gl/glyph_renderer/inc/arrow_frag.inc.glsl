@@ -244,7 +244,7 @@ void main() {
     float depth = dot(mvp_t[2], ding);
     float depth_w = dot(mvp_t[3], ding);
     float depth_ndc = depth / depth_w;
-    float depth_ss = ((far - near) / 2.0) * depth_ndc + (far + near) / 2.0;
+    float depth_ss = ((far - near) * depth_ndc + (far + near)) / 2.0;
 
     // linear depth
     // near_ - and far_plane from camera view frustum
