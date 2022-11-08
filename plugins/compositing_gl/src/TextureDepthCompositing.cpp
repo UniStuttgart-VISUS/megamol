@@ -7,7 +7,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
-megamol::compositing::TextureDepthCompositing::TextureDepthCompositing()
+megamol::compositing_gl::TextureDepthCompositing::TextureDepthCompositing()
         : core::Module()
         , m_version(0)
         , m_depthComp_prgm(nullptr)
@@ -46,11 +46,11 @@ megamol::compositing::TextureDepthCompositing::TextureDepthCompositing()
     this->MakeSlotAvailable(&this->m_depth_tex_1_slot);
 }
 
-megamol::compositing::TextureDepthCompositing::~TextureDepthCompositing() {
+megamol::compositing_gl::TextureDepthCompositing::~TextureDepthCompositing() {
     this->Release();
 }
 
-bool megamol::compositing::TextureDepthCompositing::create() {
+bool megamol::compositing_gl::TextureDepthCompositing::create() {
 
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
 
@@ -72,9 +72,9 @@ bool megamol::compositing::TextureDepthCompositing::create() {
     return true;
 }
 
-void megamol::compositing::TextureDepthCompositing::release() {}
+void megamol::compositing_gl::TextureDepthCompositing::release() {}
 
-bool megamol::compositing::TextureDepthCompositing::getOutputImageCallback(core::Call& caller) {
+bool megamol::compositing_gl::TextureDepthCompositing::getOutputImageCallback(core::Call& caller) {
     auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
     if (lhs_tc == NULL)
         return false;
@@ -86,7 +86,7 @@ bool megamol::compositing::TextureDepthCompositing::getOutputImageCallback(core:
     return true;
 }
 
-bool megamol::compositing::TextureDepthCompositing::getDepthImageCallback(core::Call& caller) {
+bool megamol::compositing_gl::TextureDepthCompositing::getDepthImageCallback(core::Call& caller) {
     auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
     if (lhs_tc == NULL)
         return false;
@@ -99,11 +99,11 @@ bool megamol::compositing::TextureDepthCompositing::getDepthImageCallback(core::
     return true;
 }
 
-bool megamol::compositing::TextureDepthCompositing::getMetaDataCallback(core::Call& caller) {
+bool megamol::compositing_gl::TextureDepthCompositing::getMetaDataCallback(core::Call& caller) {
     return true;
 }
 
-bool megamol::compositing::TextureDepthCompositing::computeDepthCompositing() {
+bool megamol::compositing_gl::TextureDepthCompositing::computeDepthCompositing() {
 
     auto rhs_tc0 = m_input_tex_0_slot.CallAs<CallTexture2D>();
     auto rhs_tc1 = m_input_tex_1_slot.CallAs<CallTexture2D>();
