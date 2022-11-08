@@ -49,7 +49,7 @@ void main() {
     tmp = sphereintersection / inv_rad;
 
     // calc normal at (re-scaled) intersection point
-    vec3 normal = normalize( ( tmp / absradii ) / absradii);
+    vec3 normal = normalize( ( tmp / absradii ) / absradii );
     normal = normalize(rotate_points * normal);
 
     // re-transform intersection into world space

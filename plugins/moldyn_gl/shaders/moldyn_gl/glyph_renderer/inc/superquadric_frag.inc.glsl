@@ -37,7 +37,7 @@ void main() {
     vec3 cpos = cam_pos;
     vec3 ray = normalize(tmp - cpos);
 
-    // iterative ray marching approch
+    // iterative ray marching approach
     // see: http://cg.inf.h-bonn-rhein-sieg.de/wp-content/uploads/2009/04/introductiontoraytracing.pdf
     // start solution with box intersection
     float t = length(tmp - cpos);
@@ -71,10 +71,11 @@ void main() {
         t -= tmp_t;
     }
 
-    vec3 intersection = cpos + t * ray;
+    vec3 intersection = cpos + t1 * ray;
 
     // normal calculation for superquadric
     // see: http://cg.inf.h-bonn-rhein-sieg.de/wp-content/uploads/2009/04/introductiontoraytracing.pdf
+    // basically just derivating the superquadric equation
     vec3 normal = intersection / superquadric;
     float k = exponent - 1.0;
     if( normal.x > 0.0 ) normal.x = pow( normal.x, k );
@@ -83,7 +84,7 @@ void main() {
     else normal.y = -pow( -normal.y, k );
     if( normal.z > 0.0 ) normal.z = pow( normal.z, k );
     else normal.z = -pow( -normal.z, k );
-    normal = normalize( normal );
+    normal = normalize( normal / superquadric );
 
     // transform normal and intersection point into tensor
     normal = transpose(rotate_world_into_tensor) * normal;
