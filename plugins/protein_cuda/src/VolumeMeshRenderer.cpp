@@ -522,7 +522,9 @@ void VolumeMeshRenderer::release(void) {
             CUDA_VERIFY(cudaFree(modified));
         if (segmentsRemoved)
             CUDA_VERIFY(cudaFree(segmentsRemoved));
-    } catch (vislib::Exception e) { Log::DefaultLog.WriteError("Unable to release CUDA resources: %s\n", e.GetMsgA()); }
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteError("Unable to release CUDA resources: %s\n", e.GetMsgA());
+    }
 }
 
 /*
@@ -1793,7 +1795,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
                         int test = smf->GetDataCount() - 1;
                         if (tmpFeatureListIdx[i] == this->featureListIdx[j]) {
                             Log::DefaultLog.WriteError(
-                                1, "%s, SplitMerge split partner list corrupted!", this->ClassName());
+                                "%s, SplitMerge split partner list corrupted!", this->ClassName());
                         } else {
                             this->transitionList.Add(
                                 new SplitMergeCall::SplitMergeTransition(tmpFeatureListIdx[i], 0, centroidAreasHost[i],
@@ -1864,8 +1866,7 @@ bool VolumeMeshRenderer::UpdateMesh(float* densityMap, vislib::math::Vector<floa
                 // Add transition for all merge partners
                 for (unsigned int mpIdx = 0; mpIdx < (*partners).Count(); mpIdx++) {
                     if (tmpFeatureListIdx[i] == (*partners)[mpIdx]) {
-                        Log::DefaultLog.WriteError(
-                            1, "%s, SplitMerge merge partner list corrupted!", this->ClassName());
+                        Log::DefaultLog.WriteError("%s, SplitMerge merge partner list corrupted!", this->ClassName());
                         continue;
                     }
                     // Add transition
