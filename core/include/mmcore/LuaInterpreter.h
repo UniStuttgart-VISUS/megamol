@@ -372,16 +372,32 @@ bool megamol::core::LuaInterpreter<T>::RunString(
             L, -2, 1); // replace the environment with the one loaded from env.lua, disallowing some functions
         int ret = lua_pcall(L, 0, LUA_MULTRET, 0);
         if (ret != LUA_OK) {
-            result = "";
-            auto height = lua_gettop(L);
-            for (auto i = 0; i < height; ++i) {
-                if (lua_type(L, i) == LUA_TSTRING) {
-                    const auto err = lua_tostring(L, i);
-                    result += err + std::string("\n");
+            auto dumpstack = [&]{
+                auto height = lua_gettop(L);
+                for (auto i = 0; i < height; ++i) {
+                    if (lua_type(L, i) == LUA_TSTRING) {
+                        const auto err = lua_tostring(L, i);
+                        result += err + std::string("\n");
+                    } else {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError("Unexpected type on stack after Lua error: %u", lua_type(L,i));
+                    }
                 }
+                lua_pop(L, height); // remove all stuff on the stack
+            };
+
+            switch(ret) {
+                case LUA_ERRRUN:
+                    result = "Lua runtime error. Check for uninitialized variables and such.\n";
+                    dumpstack();
+                    return false;
+                case LUA_ERRMEM:
+                    result = "Lua memory error.";
+                    return false;
+                case LUA_ERRSYNTAX:
+                    result = "Lua syntax error.\n";
+                    dumpstack();
+                    return false;
             }
-            lua_pop(L, height); // remove all stuff on the stack
-            return false;
         } else {
             bool good = true;
             // as a result, we still expect a string, if anything
