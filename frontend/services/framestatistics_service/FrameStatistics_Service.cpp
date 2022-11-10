@@ -47,7 +47,7 @@ bool FrameStatistics_Service::init(const Config& config) {
     this->m_requestedResourcesNames = {//"IOpenGL_Context", // for GL-specific measures?
         "RegisterLuaCallbacks"};
 
-    m_program_start_time = std::chrono::high_resolution_clock::now();
+    m_program_start_time = std::chrono::steady_clock::time_point::clock::now();
 
     log("initialized successfully");
     return true;
@@ -56,7 +56,7 @@ bool FrameStatistics_Service::init(const Config& config) {
 void FrameStatistics_Service::close() {}
 
 std::vector<FrontendResource>& FrameStatistics_Service::getProvidedResources() {
-    m_providedResourceReferences = {{"FrameStatistics", m_statistics}};
+    m_providedResourceReferences = {{frontend_resources::FrameStatistics_Req_Name, m_statistics}};
 
     return m_providedResourceReferences;
 }
@@ -87,22 +87,22 @@ void FrameStatistics_Service::postGraphRender() {}
 // TODO: maybe port FPS Counter from
 // #include "vislib/graphics/FpsCounter.h"
 void FrameStatistics_Service::start_frame() {
-    m_frame_start_time = std::chrono::high_resolution_clock::now();
+    m_frame_start_time = std::chrono::steady_clock::time_point::clock::now();
 }
 
 void FrameStatistics_Service::finish_frame() {
-    auto now = std::chrono::high_resolution_clock::now();
+    auto now = std::chrono::steady_clock::time_point::clock::now();
 
     m_statistics.rendered_frames_count++;
 
     m_statistics.elapsed_program_time_seconds =
-        std::chrono::duration_cast<std::chrono::milliseconds>(now - m_program_start_time).count() /
-        static_cast<double>(1000);
+        static_cast<double>(std::chrono::duration_cast<std::chrono::seconds>(now - m_program_start_time).count());
 
-    auto last_frame_till_now_micro =
+    const auto last_frame_till_now_micro =
         std::chrono::duration_cast<std::chrono::microseconds>(now - m_frame_start_time).count();
 
-    m_statistics.last_rendered_frame_time_milliseconds = last_frame_till_now_micro / static_cast<double>(1000);
+    m_statistics.last_rendered_frame_time_milliseconds =
+        static_cast<double>(last_frame_till_now_micro) / 1000.0;
 
     m_frame_times_micro[m_ring_buffer_ptr] = last_frame_till_now_micro;
     m_ring_buffer_ptr = (m_ring_buffer_ptr + 1) % m_frame_times_micro.size();
