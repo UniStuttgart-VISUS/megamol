@@ -40,6 +40,9 @@ protected:
         material_collection_->addMaterial(this->instance(), "gltfMaterial",
             {"mesh_gl/gltf_example.vert.glsl",
                 /*"mesh_gl/gltf_example_geom.glsl",*/ "mesh_gl/dfr_gltf_example.frag.glsl"});
+        material_collection_->addMaterial(this->instance(), "gltfTexturedMaterial",
+            {"mesh_gl/gltf_textured_example.vert.glsl",
+                /*"mesh_gl/gltf_example_geom.glsl",*/ "mesh_gl/dfr_gltf_textured_example.frag.glsl"});
     }
 };
 

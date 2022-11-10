@@ -4,14 +4,15 @@
  * Copyright (C) 2009-2021 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef MMPROTEINPLUGIN_MOLSESRENDERER_H_INCLUDED
-#define MMPROTEINPLUGIN_MOLSESRENDERER_H_INCLUDED
-#if (_MSC_VER > 1000)
 #pragma once
-#endif /* (_MSC_VER > 1000) */
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
+#include <algorithm>
+#include <list>
+#include <set>
+#include <vector>
+
+#include <glowl/glowl.h>
+
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Camera.h"
@@ -25,14 +26,7 @@
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include "vislib/math/Quaternion.h"
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
-#include <algorithm>
-#include <list>
-#include <set>
-#include <vector>
 
 namespace megamol {
 namespace protein_gl {
@@ -380,5 +374,3 @@ private:
 
 } // namespace protein_gl
 } /* end namespace megamol */
-
-#endif /* MMPROTEINPLUGIN_MOLSESRENDERER_H_INCLUDED */

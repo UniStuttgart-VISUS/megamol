@@ -21,7 +21,6 @@
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmstd/light/DistantLight.h"
 #include "mmstd/light/PointLight.h"
 #include "mmstd/renderer/CallClipPlane.h"

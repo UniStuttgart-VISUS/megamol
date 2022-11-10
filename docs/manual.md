@@ -68,8 +68,7 @@ While MegaMol might work on further platforms, the development team will current
 <!-- ---------------------------------------------------------------------- -->
 ### Building from Source
 
-It is recommended to use the latest [release 1.3](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) version of the source code.
-All bleeding edge features are available in the current [main branch](https://github.com/UniStuttgart-VISUS/megamol/tree/master).
+It is recommended to use the current [main branch](https://github.com/UniStuttgart-VISUS/megamol/tree/master).
 
 **Note**: 
 The *OSPRay plugin* is currently disabled by default. 

@@ -7,11 +7,14 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "AbstractMultiShaderQuartzRenderer.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/renderer/CallRender2DGL.h"
 #include "mmstd_gl/renderer/Renderer2DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 
 namespace megamol {
@@ -99,7 +102,7 @@ protected:
      *
      * @return The shader
      */
-    virtual vislib_gl::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c);
+    virtual std::shared_ptr<glowl::GLSLProgram> makeShader(const CrystalDataCall::Crystal& c);
 
 private:
     /** Use clipping plane or grain colour for grains */

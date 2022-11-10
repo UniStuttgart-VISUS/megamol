@@ -72,7 +72,6 @@ bool BezierCPUMeshRenderer::render(mmstd_gl::CallRender3DGL& call) {
     if (!(*data)(1))
         return false;
 
-    ::glDisable(GL_TEXTURE);
     ::glEnable(GL_DEPTH_TEST);
     ::glEnable(GL_COLOR_MATERIAL);
     ::glCullFace(GL_BACK);

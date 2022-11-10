@@ -7,23 +7,22 @@
  * $Id$
  */
 
-#ifndef MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H
-#define MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H
+#pragma once
+
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "CUDACurl.cuh"
 #include "UniGrid3D.h"
-#include "protein_calls/CrystalStructureDataCall.h"
-#include "quicksurf/CUDAMarchingCubes.h"
-
+#include "mmcore/BoundingBoxes.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/renderer/CallRender3D.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-
-#include "mmcore/BoundingBoxes.h"
+#include "protein_calls/CrystalStructureDataCall.h"
+#include "quicksurf/CUDAMarchingCubes.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -677,25 +676,25 @@ private:
 
 
     /// Shader for rendering volume slice
-    vislib_gl::graphics::gl::GLSLShader vrShader;
+    std::unique_ptr<glowl::GLSLProgram> vrShader;
 
     /// Shader for rendering spheres
-    vislib_gl::graphics::gl::GLSLShader sphereShader;
+    std::unique_ptr<glowl::GLSLProgram> sphereShader;
 
     /// Shader for rendering arrows
-    vislib_gl::graphics::gl::GLSLGeometryShader arrowShader;
+    std::unique_ptr<glowl::GLSLProgram> arrowShader;
 
     /// Shader for rendering cylinders
-    vislib_gl::graphics::gl::GLSLShader cylinderShader;
+    std::unique_ptr<glowl::GLSLProgram> cylinderShader;
 
     /// Shader for raycasting
-    vislib_gl::graphics::gl::GLSLShader rcShader;
+    std::unique_ptr<glowl::GLSLProgram> rcShader;
 
     /// Shader for rendering the cube backface
-    vislib_gl::graphics::gl::GLSLShader rcShaderDebug;
+    std::unique_ptr<glowl::GLSLProgram> rcShaderDebug;
 
     /// Shader for per pixel lighting and clipping
-    vislib_gl::graphics::gl::GLSLShader pplShaderClip;
+    std::unique_ptr<glowl::GLSLProgram> pplShaderClip;
 
     /// Attribute array for cylinder shader
     GLint attribLocInParams;
@@ -710,7 +709,7 @@ private:
     GLint attribLocColor2;
 
     /// Shader for per pixel lighting
-    vislib_gl::graphics::gl::GLSLShader pplShader;
+    std::unique_ptr<glowl::GLSLProgram> pplShader;
 
 
     /// Array for current frame
@@ -876,5 +875,3 @@ private:
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif /* MMPROTEINCUDAPLUGIN_CRYSTALSTRUCTUREVOLUMERENDERER_H */
