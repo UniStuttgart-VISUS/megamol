@@ -42,7 +42,7 @@ void main() {
 
     if(result > 0 || selected){
         if(!selected){
-            fragOut = tflookup(result-1);
+            fragOut = tflookup((result-1));
         }else{
             fragOut = vec4(1,0,0,1);
         }

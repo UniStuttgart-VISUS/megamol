@@ -29,7 +29,20 @@ void main() {
         float rho = abs((from.x * lineDir.y - from.y * lineDir.x)/(orthLine.x * lineDir.y - orthLine.y * lineDir.x));
     if(!bitflag_test(flags[itemID], itemTestMask, itemPassMask)){
         //imageAtomicAdd(o_dualtex, ivec3(left * axisHeight, right* axisHeight, dimID), 1);
-        imageAtomicAdd(o_dualtex, ivec3(int((theta - 3.141/4.0) * (thetas) / (3.141/2.0)), int(rho * (rhos-1)) , dimID), 1);
+
+        //weights
+        float binnedTheta = (theta - 3.141/4.0) * (thetas) / (3.141/2.0);
+        float binnedRho = rho * (rhos-1.0);
+
+        float wt = fract(binnedRho);
+        float wb = 1.0 - fract(binnedRho);
+        float wl = 1.0 - fract(binnedTheta);
+        float wr = fract(binnedTheta);
+
+        imageAtomicAdd(o_dualtex, ivec3(int(binnedTheta) + 1, int(binnedRho) , dimID), int(1000.0* wb * wr / ((wt+wb)*(wl+wr))));
+        imageAtomicAdd(o_dualtex, ivec3(int(binnedTheta) , int(binnedRho) , dimID), int(1000.0* wb * wl / ((wt+wb)*(wl+wr))));
+        imageAtomicAdd(o_dualtex, ivec3(int(binnedTheta) + 1, int(binnedRho) + 1 , dimID), int(1000.0* wt * wr / ((wt+wb)*(wl+wr))));
+        imageAtomicAdd(o_dualtex, ivec3(int(binnedTheta), int(binnedRho) +1, dimID), int(1000.0* wt * wl / ((wt+wb)*(wl+wr))));
         // write to texture at (left, right) atomically
     }
     else{

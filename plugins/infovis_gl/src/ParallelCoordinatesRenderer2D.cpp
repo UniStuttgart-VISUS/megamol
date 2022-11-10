@@ -900,25 +900,38 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl
     // number of bins for thetas and rhos of hough space
     // number chosen to sufficiently differentiate almost horizontal lines
     // TODO: better compromise between performance and accuracy?
-    int thetas = static_cast<int>((pi / 2.0) / atan(1.0 / float(axes_pixel_width / dimensionCount_)));
-    int rhos = axes_pixel_height;
+    //int thetas = static_cast<int>((pi / 2.0) / atan(1.0 / float(axes_pixel_width / dimensionCount_)));
+    int thetas = axes_pixel_height;
+    int rhos = 0.5 * axes_pixel_height;
     +debugFloatBParam_.Param<core::param::FloatParam>()->Value();
     int textureWidth = 0;
     int textureHeight = 0;
+    GLint internal_format = 0;
+    GLenum format = 0;
+    GLenum type = 0;
+    GLenum clear_format = 0;
 
     if (drawmode == DRAW_DUAL_HOUGH) {
         textureWidth = thetas;
         textureHeight = rhos;
+        internal_format = GL_R32F;
+        format = GL_RED;
+        type = GL_FLOAT;
+        clear_format = GL_RED;
     } else {
         textureWidth = axes_pixel_height;
         textureHeight = axes_pixel_height;
+        internal_format = GL_R32UI;
+        format = GL_RED;
+        type = GL_UNSIGNED_INT;
+        clear_format = GL_RED_INTEGER;
     }
 
     // resize dual space when visible axes height changes
     if (dualTexture_ == nullptr || dualTexture_->getHeigth() != textureHeight ||
         dualTexture_->getWidth() != textureWidth) {
         dualTexture_ = std::make_unique<glowl::Texture2DArray>("o_dualtex",
-            glowl::TextureLayout(GL_R32UI, textureWidth, textureHeight, dimensionCount_ - 1, GL_RED, GL_UNSIGNED_INT, 1,
+            glowl::TextureLayout(internal_format, textureWidth, textureHeight, dimensionCount_ - 1, format, type, 1,
                 {
                     {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER},
                     {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
@@ -929,7 +942,7 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl
                 {}),
             nullptr);
         dualSelectTexture_ = std::make_unique<glowl::Texture2DArray>("o_select_dualtex",
-            glowl::TextureLayout(GL_R32UI, textureWidth, textureHeight, dimensionCount_ - 1, GL_RED, GL_UNSIGNED_INT, 1,
+            glowl::TextureLayout(internal_format, textureWidth, textureHeight, dimensionCount_ - 1, format, type, 1,
                 {
                     {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER},
                     {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
@@ -968,8 +981,8 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl
     dualTexture_->bindImage(7, GL_WRITE_ONLY);
     dualSelectTexture_->bindImage(6, GL_WRITE_ONLY);
 
-    glClearTexImage(dualTexture_->getName(), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
-    glClearTexImage(dualSelectTexture_->getName(), 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
+    glClearTexImage(dualTexture_->getName(), 0, clear_format, type, 0);
+    glClearTexImage(dualSelectTexture_->getName(), 0, clear_format, type, 0);
 
     std::array<GLuint, 3> groupCounts{};
     computeDispatchSizes((itemCount_)*dimensionCount_, filterWorkgroupSize_, maxWorkgroupCount_, groupCounts);
