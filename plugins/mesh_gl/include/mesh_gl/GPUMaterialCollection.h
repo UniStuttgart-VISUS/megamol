@@ -8,21 +8,14 @@
 #ifndef GPU_MATERIAL_COLLECTION_H_INCLUDED
 #define GPU_MATERIAL_COLLECTION_H_INCLUDED
 
-//#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "mmcore/CoreInstance.h"
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
-
 #include <memory>
 #include <unordered_map>
 #include <variant>
 #include <vector>
 
-#include "glowl/GLSLProgram.hpp"
-#include "glowl/Texture.hpp"
-#include "glowl/Texture2D.hpp"
-#include "glowl/Texture2DArray.hpp"
-#include "glowl/Texture3D.hpp"
-#include "glowl/TextureCubemapArray.hpp"
+#include <glowl/glowl.h>
+
+#include "mmcore/CoreInstance.h"
 
 namespace megamol {
 namespace mesh_gl {

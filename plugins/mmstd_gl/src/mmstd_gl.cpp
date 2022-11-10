@@ -51,7 +51,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::TransferFunctionGL>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::BoundingBoxRenderer>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::PlaneRenderer>();
-        this->module_descriptions.RegisterAutoDescription<mmstd_gl::DeferredShading>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::UniFlagStorage>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::ImageSpaceAmortization2D>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::ResolutionScaler2D>();

@@ -4,7 +4,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
-megamol::compositing::NormalFromDepth::NormalFromDepth()
+megamol::compositing_gl::NormalFromDepth::NormalFromDepth()
         : m_version(0)
         , m_output_texture(nullptr)
         , m_output_tex_slot("NormalTexture", "Gives access to resulting output normal texture")
@@ -22,11 +22,11 @@ megamol::compositing::NormalFromDepth::NormalFromDepth()
     this->MakeSlotAvailable(&this->m_camera_slot);
 }
 
-megamol::compositing::NormalFromDepth::~NormalFromDepth() {
+megamol::compositing_gl::NormalFromDepth::~NormalFromDepth() {
     this->Release();
 }
 
-bool megamol::compositing::NormalFromDepth::create() {
+bool megamol::compositing_gl::NormalFromDepth::create() {
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
 
     try {
@@ -44,9 +44,9 @@ bool megamol::compositing::NormalFromDepth::create() {
     return true;
 }
 
-void megamol::compositing::NormalFromDepth::release() {}
+void megamol::compositing_gl::NormalFromDepth::release() {}
 
-bool megamol::compositing::NormalFromDepth::getDataCallback(core::Call& caller) {
+bool megamol::compositing_gl::NormalFromDepth::getDataCallback(core::Call& caller) {
 
     auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
     auto call_input = m_input_tex_slot.CallAs<CallTexture2D>();
@@ -122,7 +122,7 @@ bool megamol::compositing::NormalFromDepth::getDataCallback(core::Call& caller) 
     return true;
 }
 
-bool megamol::compositing::NormalFromDepth::getMetaDataCallback(core::Call& caller) {
+bool megamol::compositing_gl::NormalFromDepth::getMetaDataCallback(core::Call& caller) {
 
 
     return true;

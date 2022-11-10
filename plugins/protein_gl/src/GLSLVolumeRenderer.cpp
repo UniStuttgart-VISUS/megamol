@@ -243,10 +243,8 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
         return false;
     }
 
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-
     // Initialize render utils
-    if (!renderUtils.InitPrimitiveRendering(*ssf)) {
+    if (!renderUtils.InitPrimitiveRendering(GetCoreInstance()->GetShaderPaths())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
