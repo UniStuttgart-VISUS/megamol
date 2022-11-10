@@ -18,7 +18,6 @@
 #include "mmstd/renderer/CallRender3D.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include <memory>
 #include <vector>
 

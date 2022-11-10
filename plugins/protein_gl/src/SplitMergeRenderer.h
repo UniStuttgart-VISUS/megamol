@@ -18,7 +18,6 @@
 #include "protein_calls/IntSelectionCall.h"
 #include "protein_calls/SplitMergeCall.h"
 #include "vislib/math/Rectangle.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
 
 namespace megamol {

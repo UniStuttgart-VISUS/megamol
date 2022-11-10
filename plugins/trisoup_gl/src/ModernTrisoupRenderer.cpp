@@ -14,7 +14,6 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmstd/light/DistantLight.h"
 #include "mmstd/light/PointLight.h"
 

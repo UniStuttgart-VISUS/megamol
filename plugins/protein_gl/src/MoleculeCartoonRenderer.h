@@ -5,14 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMPROTEINPLUGIN_MOLECULECARTOONRENDERER_H_INCLUDED
-#define MMPROTEINPLUGIN_MOLECULECARTOONRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
+#include <memory>
+#include <vector>
+
+#include <glowl/glowl.h>
+
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
@@ -22,10 +21,7 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/ProteinColor.h"
 #include "vislib/Array.h"
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
-#include <vector>
 
 namespace megamol {
 namespace protein_gl {
@@ -264,18 +260,18 @@ private:
     megamol::core::param::ParamSlot recomputeAlwaysParam;
 
     // shader for per pixel lighting (polygonal view)
-    vislib_gl::graphics::gl::GLSLShader lightShader;
+    std::unique_ptr<glowl::GLSLProgram> lightShader;
     // shader for tube generation (cartoon view)
-    vislib_gl::graphics::gl::GLSLGeometryShader cartoonShader;
-    vislib_gl::graphics::gl::GLSLGeometryShader tubeShader;
-    vislib_gl::graphics::gl::GLSLGeometryShader arrowShader;
-    vislib_gl::graphics::gl::GLSLGeometryShader helixShader;
-    vislib_gl::graphics::gl::GLSLGeometryShader tubeSimpleShader;
-    vislib_gl::graphics::gl::GLSLGeometryShader arrowSimpleShader;
-    vislib_gl::graphics::gl::GLSLGeometryShader helixSimpleShader;
-    vislib_gl::graphics::gl::GLSLGeometryShader tubeSplineShader;
-    vislib_gl::graphics::gl::GLSLGeometryShader arrowSplineShader;
-    vislib_gl::graphics::gl::GLSLGeometryShader helixSplineShader;
+    std::unique_ptr<glowl::GLSLProgram> cartoonShader;
+    std::unique_ptr<glowl::GLSLProgram> tubeShader;
+    std::unique_ptr<glowl::GLSLProgram> arrowShader;
+    std::unique_ptr<glowl::GLSLProgram> helixShader;
+    std::unique_ptr<glowl::GLSLProgram> tubeSimpleShader;
+    std::unique_ptr<glowl::GLSLProgram> arrowSimpleShader;
+    std::unique_ptr<glowl::GLSLProgram> helixSimpleShader;
+    std::unique_ptr<glowl::GLSLProgram> tubeSplineShader;
+    std::unique_ptr<glowl::GLSLProgram> arrowSplineShader;
+    std::unique_ptr<glowl::GLSLProgram> helixSplineShader;
 
     std::shared_ptr<glowl::GLSLProgram> sphereShader_;
     std::shared_ptr<glowl::GLSLProgram> cylinderShader_;
@@ -376,5 +372,3 @@ private:
 
 } // namespace protein_gl
 } /* end namespace megamol */
-
-#endif // MMPROTEINPLUGIN_MOLECULECARTOONRENDERER_H_INCLUDED

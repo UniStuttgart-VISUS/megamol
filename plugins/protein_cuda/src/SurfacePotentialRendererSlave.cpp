@@ -13,9 +13,8 @@
 #include "VBODataCall.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "ogl_error_check.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;
@@ -65,30 +64,14 @@ bool SurfacePotentialRendererSlave::create(void) {
     }*/
 
     // Load shader sources
-    ShaderSource vertSrc, fragSrc, geomSrc;
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
 
-    core::CoreInstance* ci = this->GetCoreInstance();
-    if (!ci) {
-        return false;
-    }
-
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    // Load shader for per pixel lighting of the surface
-    if (!ssf->MakeShaderSource("electrostatics::pplsurface::vertex", vertSrc)) {
-        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
-        return false;
-    }
-    // Load ppl fragment shader
-    if (!ssf->MakeShaderSource("electrostatics::pplsurface::fragment", fragSrc)) {
-        Log::DefaultLog.WriteError("%s: Unable to load vertex shader source for the ppl shader", this->ClassName());
-        return false;
-    }
     try {
-        if (!this->pplSurfaceShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception& e) {
-        Log::DefaultLog.WriteError("%s: Unable to create the ppl shader: %s\n", this->ClassName(), e.GetMsgA());
+        this->pplSurfaceShader = core::utility::make_glowl_shader("pplSurfaceShader", shader_options,
+            "protein_cuda/electrostatics/pplsurface.vert.glsl", "protein_cuda/electrostatics/pplsurface.frag.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("SurfacePotentialRendererSlave: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -155,7 +138,7 @@ bool SurfacePotentialRendererSlave::GetExtents(mmstd_gl::CallRender3DGL& call) {
  * SurfacePotentialRendererSlave::release
  */
 void SurfacePotentialRendererSlave::release(void) {
-    this->pplSurfaceShader.Release();
+    this->pplSurfaceShader.reset();
 }
 
 
@@ -212,15 +195,15 @@ bool SurfacePotentialRendererSlave::renderSurface(VBODataCall* c) {
     glBindBufferARB(GL_ARRAY_BUFFER, c->GetVbo());
     CheckForGLError(); // OpenGL error check
 
-    this->pplSurfaceShader.Enable();
+    this->pplSurfaceShader->use();
     CheckForGLError(); // OpenGL error check
 
     // Note: glGetAttribLocation returnes -1 if the attribute if not used in
     // the shader code, because in this case the attribute is optimized out by
     // the compiler
-    attribLocPos = glGetAttribLocationARB(this->pplSurfaceShader.ProgramHandle(), "pos");
-    attribLocNormal = glGetAttribLocationARB(this->pplSurfaceShader.ProgramHandle(), "normal");
-    attribLocTexCoord = glGetAttribLocationARB(this->pplSurfaceShader.ProgramHandle(), "texCoord");
+    attribLocPos = glGetAttribLocationARB(this->pplSurfaceShader->getHandle(), "pos");
+    attribLocNormal = glGetAttribLocationARB(this->pplSurfaceShader->getHandle(), "normal");
+    attribLocTexCoord = glGetAttribLocationARB(this->pplSurfaceShader->getHandle(), "texCoord");
     CheckForGLError(); // OpenGL error check
 
     glEnableVertexAttribArrayARB(attribLocPos);
@@ -240,17 +223,17 @@ bool SurfacePotentialRendererSlave::renderSurface(VBODataCall* c) {
     /* Render */
 
     // Set uniform vars
-    glUniform1iARB(this->pplSurfaceShader.ParameterLocation("potentialTex"), 0);
-    glUniform1iARB(this->pplSurfaceShader.ParameterLocation("colorMode"), 3);  // Set color mode to 'surface potential'
-    glUniform1iARB(this->pplSurfaceShader.ParameterLocation("renderMode"), 3); // Set render mode to 'fill'
-    glUniform3fARB(this->pplSurfaceShader.ParameterLocation("colorMin"), 0.75f, 0.01f, 0.15f);
-    glUniform3fARB(this->pplSurfaceShader.ParameterLocation("colorZero"), 1.0f, 1.0f, 1.0f);
-    glUniform3fARB(this->pplSurfaceShader.ParameterLocation("colorMax"), 0.23f, 0.29f, 0.75f);
-    glUniform3fARB(this->pplSurfaceShader.ParameterLocation("colorUniform"), 1.0, 0.0, 0.0);
-    glUniform1fARB(this->pplSurfaceShader.ParameterLocation("minPotential"), c->GetTexValMin());
-    glUniform1fARB(this->pplSurfaceShader.ParameterLocation("midPotential"), 0.0f);
-    glUniform1fARB(this->pplSurfaceShader.ParameterLocation("maxPotential"), c->GetTexValMax());
-    glUniform1fARB(this->pplSurfaceShader.ParameterLocation("alphaScl"),
+    glUniform1iARB(this->pplSurfaceShader->getUniformLocation("potentialTex"), 0);
+    glUniform1iARB(this->pplSurfaceShader->getUniformLocation("colorMode"), 3); // Set color mode to 'surface potential'
+    glUniform1iARB(this->pplSurfaceShader->getUniformLocation("renderMode"), 3); // Set render mode to 'fill'
+    glUniform3fARB(this->pplSurfaceShader->getUniformLocation("colorMin"), 0.75f, 0.01f, 0.15f);
+    glUniform3fARB(this->pplSurfaceShader->getUniformLocation("colorZero"), 1.0f, 1.0f, 1.0f);
+    glUniform3fARB(this->pplSurfaceShader->getUniformLocation("colorMax"), 0.23f, 0.29f, 0.75f);
+    glUniform3fARB(this->pplSurfaceShader->getUniformLocation("colorUniform"), 1.0, 0.0, 0.0);
+    glUniform1fARB(this->pplSurfaceShader->getUniformLocation("minPotential"), c->GetTexValMin());
+    glUniform1fARB(this->pplSurfaceShader->getUniformLocation("midPotential"), 0.0f);
+    glUniform1fARB(this->pplSurfaceShader->getUniformLocation("maxPotential"), c->GetTexValMax());
+    glUniform1fARB(this->pplSurfaceShader->getUniformLocation("alphaScl"),
         this->surfAlphaSclSlot.Param<core::param::FloatParam>()->Value());
 
     glActiveTextureARB(GL_TEXTURE0);
@@ -271,7 +254,7 @@ bool SurfacePotentialRendererSlave::renderSurface(VBODataCall* c) {
 
     //    glDrawArrays(GL_POINTS, 0, 3*vertexCnt); // DEBUG
 
-    this->pplSurfaceShader.Disable();
+    glUseProgram(0);
 
     glDisableVertexAttribArrayARB(attribLocPos);
     glDisableVertexAttribArrayARB(attribLocNormal);

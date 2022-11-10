@@ -23,13 +23,11 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "vislib/sys/SystemInformation.h"
 //#include <cmath>
 
 #include "vislib/sys/SystemInformation.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 using namespace megamol::image_gl;
 using namespace megamol::core;

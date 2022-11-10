@@ -13,7 +13,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmstd/light/PointLight.h"
 #include "mmstd/renderer/CallClipPlane.h"
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
