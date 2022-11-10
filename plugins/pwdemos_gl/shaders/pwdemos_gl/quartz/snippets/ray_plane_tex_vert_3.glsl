@@ -9,9 +9,9 @@ uniform float outerRad;
 uniform sampler2D typeData;
 uniform ivec2 typeInfo; // type-row, num-faces
 
-varying vec3 objPos;
-varying vec4 quat;
-varying float rad;
+in vec3 objPos;
+in vec4 quat;
+in float rad;
 
 void main() {
   vec4 inquat = gl_MultiTexCoord0 * vec4(-1.0, -1.0, -1.0, 1.0); // inverted/conjugated quaternion

@@ -18,12 +18,12 @@ uniform float outerRad;
 
 uniform mat4 ModelViewProjectionMatrix;
 
-varying vec4 quat;
-varying vec4 camPos;
-varying vec4 objPos;
-varying float rad;
+out vec4 quat;
+out vec4 camPos;
+out vec4 objPos;
+out float rad;
 
-varying vec4 clipping;
+out vec4 clipping;
 
 void main() {
     // OLD quat = gl_MultiTexCoord0 * vec4(-1.0, -1.0, -1.0, 1.0); // inverted/conjugated quaternion

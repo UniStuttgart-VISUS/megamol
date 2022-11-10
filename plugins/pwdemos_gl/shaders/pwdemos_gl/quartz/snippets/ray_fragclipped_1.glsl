@@ -20,15 +20,15 @@ uniform vec4 specularCol;
 //uniform float lightIntensity;
 uniform int numLights;
 
-varying vec4 quat;
+in vec4 quat;
 uniform vec4 camPosInit;
-varying vec4 camPos;
-varying vec4 objPos;
+in vec4 camPos;
+in vec4 objPos;
 //uniform vec4 lightPos;
-varying float rad;
+in float rad;
 
 uniform mat4 ModelViewMatrixInverseTranspose;
 uniform mat4 ModelViewProjectionMatrixInverse;
 uniform mat4 ModelViewProjectionMatrixTranspose;
 
-varying vec4 clipping;
+in vec4 clipping;

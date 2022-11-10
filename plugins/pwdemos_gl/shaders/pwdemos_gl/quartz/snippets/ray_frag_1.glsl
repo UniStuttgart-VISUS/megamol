@@ -1,7 +1,7 @@
 uniform vec4 viewAttr;
 
-varying vec4 quat;
-varying vec4 camPos;
-varying vec4 objPos;
-varying vec4 lightPos;
-varying float rad;
+in vec4 quat;
+in vec4 camPos;
+in vec4 objPos;
+in vec4 lightPos;
+in float rad;

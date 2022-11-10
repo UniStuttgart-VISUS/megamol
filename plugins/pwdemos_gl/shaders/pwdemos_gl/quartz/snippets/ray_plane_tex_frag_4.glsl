@@ -1,2 +1,2 @@
-  gl_FragColor = col;
+  outColor = col;
 }

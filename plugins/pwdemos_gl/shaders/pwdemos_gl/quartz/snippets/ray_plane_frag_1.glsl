@@ -7,9 +7,9 @@ uniform vec3 posoffset;
 uniform vec3 bboxmin;
 uniform vec3 bboxmax;
 
-varying vec3 objPos;
-varying vec4 quat;
-varying float rad;
+in vec3 objPos;
+in vec4 quat;
+in float rad;
 
 void main() {
   // transform fragment coordinates from window coordinates to view coordinates.

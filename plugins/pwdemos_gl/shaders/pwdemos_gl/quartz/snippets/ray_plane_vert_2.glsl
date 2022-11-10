@@ -6,9 +6,9 @@ uniform vec3 bboxmin;
 uniform vec3 bboxmax;
 uniform vec3 posoffset;
 
-varying vec3 objPos;
-varying vec4 quat;
-varying float rad;
+in vec3 objPos;
+in vec4 quat;
+in float rad;
 
 void main() {
   vec4 inquat = gl_MultiTexCoord0 * vec4(-1.0, -1.0, -1.0, 1.0); // inverted/conjugated quaternion
