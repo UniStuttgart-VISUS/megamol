@@ -524,7 +524,7 @@ std::shared_ptr<glowl::GLSLProgram> QuartzRenderer::makeShader(const CrystalData
         vislib::StringA str, line;
         auto shader_options2 = shader_options;
 
-        str.Format("#define OUTERRAD %f\n", c.GetBoundingRadius());
+        str.Format("%f\n", c.GetBoundingRadius());
         shader_options2.addDefinition("REPLACE_VERT_SNIPPET", str.PeekBuffer());
 
         str = "vec2 ll;\n"

@@ -1,7 +1,7 @@
-varying vec4 x;
-varying vec4 y;
-varying vec4 z;
-varying vec4 quat;
+out vec4 x;
+out vec4 y;
+out vec4 z;
+out vec4 quat;
 
 void main() {
   quat = gl_MultiTexCoord0;

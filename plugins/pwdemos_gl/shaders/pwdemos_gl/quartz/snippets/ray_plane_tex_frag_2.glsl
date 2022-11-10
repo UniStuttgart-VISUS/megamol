@@ -9,9 +9,9 @@ uniform vec3 bboxmax;
 uniform sampler2D typeData;
 uniform ivec2 typeInfo; // type-row, num-faces
 
-varying vec3 objPos;
-varying vec4 quat;
-varying float rad;
+in vec3 objPos;
+in vec4 quat;
+in float rad;
 
 void main() {
   // transform fragment coordinates from window coordinates to view coordinates.

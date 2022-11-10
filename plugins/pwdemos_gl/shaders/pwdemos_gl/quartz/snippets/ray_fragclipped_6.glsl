@@ -5,7 +5,7 @@
       normal.xyz = ((2.0 * ((dot(iquat.xyz, normal.xyz) * iquat.xyz) + (iquat.w * cross(iquat.xyz, normal.xyz)))) + (((iquat.w * iquat.w) - dot(iquat.xyz, iquat.xyz)) * normal.xyz));
     }
 
-    gl_FragColor += DirectLight(normal, col);
+    outColor += DirectLight(normal, col);
 
     // fragment position
     // ... glyph-space

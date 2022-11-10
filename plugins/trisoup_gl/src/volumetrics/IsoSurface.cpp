@@ -112,7 +112,9 @@ bool IsoSurface::outDataCallback(core::Call& caller) {
         }
 
         cvd->SetFrameID(tmd->FrameID(), tmd->IsFrameForced());
-        if (!(*cvd)(0)) {
+        if ((!(*cvd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) ||
+            (!(*cvd)(geocalls::VolumetricDataCall::IDX_GET_METADATA)) ||
+            (!(*cvd)(geocalls::VolumetricDataCall::IDX_GET_DATA))) {
             recalc = false;
         } else {
             if ((this->dataHash != cvd->DataHash()) || (this->frameIdx != cvd->FrameID())) {
@@ -203,7 +205,8 @@ bool IsoSurface::outExtentCallback(megamol::core::Call& caller) {
     tmd->AccessBoundingBoxes().Clear();
     geocalls::VolumetricDataCall* cvd = this->inDataSlot.CallAs<geocalls::VolumetricDataCall>();
     cvd->SetFrameID(tmd->FrameID(), tmd->IsFrameForced());
-    if ((cvd == NULL) || (!(*cvd)(geocalls::VolumetricDataCall::IDX_GET_METADATA))) {
+    if ((cvd == NULL) || (!(*cvd)(geocalls::VolumetricDataCall::IDX_GET_EXTENTS)) ||
+        (!(*cvd)(geocalls::VolumetricDataCall::IDX_GET_METADATA))) {
         // no input data
         tmd->SetDataHash(0);
         tmd->SetFrameCount(1);

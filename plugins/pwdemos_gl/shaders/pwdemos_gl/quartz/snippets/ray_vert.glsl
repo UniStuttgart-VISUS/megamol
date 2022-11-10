@@ -4,11 +4,11 @@ uniform vec3 camIn;
 uniform vec3 camUp;
 uniform vec3 camRight;
 
-varying vec4 quat;
-varying vec4 camPos;
-varying vec4 objPos;
-varying vec4 lightPos;
-varying float rad;
+out vec4 quat;
+out vec4 camPos;
+out vec4 objPos;
+out vec4 lightPos;
+out float rad;
 
 void main() {
     quat = gl_MultiTexCoord0 * vec4(-1.0, -1.0, -1.0, 1.0); // inverted/conjugated quaternion

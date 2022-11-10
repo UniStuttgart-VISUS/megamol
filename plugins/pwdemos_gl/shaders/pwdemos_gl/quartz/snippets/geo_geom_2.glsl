@@ -1,4 +1,4 @@
-varying in vec4 x[];
-varying in vec4 y[];
-varying in vec4 z[];
-varying in vec4 quat[];
+in vec4 x[];
+in vec4 y[];
+in vec4 z[];
+in vec4 quat[];

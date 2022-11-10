@@ -9,9 +9,9 @@ uniform vec3 bboxmax;
 uniform sampler2D typeData;
 uniform ivec2 typeInfo; // type-row, num-faces
 
-varying vec3 objPos;
-varying vec4 quat;
-varying float rad;
+in vec3 objPos;
+in vec4 quat;
+in float rad;
 
 void main() {
   // transform fragment coordinates from window coordinates to view coordinates.
@@ -59,6 +59,6 @@ void main() {
     c = (pd.x + 1.0) * 0.5 * 0.48;
     c += (pd.y > 0.0) ? 0.52 : 0.02;
 
-    gl_FragColor = vec4(vec3(c), 1.0);
+    outColor = vec4(vec3(c), 1.0);
   }
 }
