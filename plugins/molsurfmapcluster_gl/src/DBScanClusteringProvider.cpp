@@ -163,9 +163,6 @@ void DBScanClusteringProvider::loadMapFromFile(frontend_resources::RuntimeConfig
  */
 std::filesystem::path DBScanClusteringProvider::determineFilePath(
     frontend_resources::RuntimeConfig const& runtimeConf) {
-    std::filesystem::path result;
-    vislib::StringA shortfile = "dbscan_protein_cluster_map.csv";
-    auto fname = core::utility::ResourceWrapper::getFileName(runtimeConf, shortfile);
-    result = std::filesystem::path(W2A(fname));
-    return result.make_preferred();
+    std::string shortfile = "dbscan_protein_cluster_map.csv";
+    return core::utility::ResourceWrapper::GetResourcePath(runtimeConf, shortfile).make_preferred();
 }

@@ -845,8 +845,7 @@ bool SDFFont::loadFont(megamol::frontend_resources::RuntimeConfig const& runtime
     // (2) Load font information -----------------------------------------------
     std::string infoFile = this->fontFileName;
     infoFile.append(".fnt");
-    vislib::StringW info_filename =
-        ResourceWrapper::getFileName(runtimeConf, vislib::StringA(infoFile.c_str())).PeekBuffer();
+    const auto info_filename = ResourceWrapper::GetResourcePath(runtimeConf, infoFile);
     if (!this->loadFontInfo(info_filename)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SDFFont] Failed to load font info file: \"%s\". [%s, %s, line %d]\n", infoFile.c_str(), __FILE__,
@@ -857,10 +856,8 @@ bool SDFFont::loadFont(megamol::frontend_resources::RuntimeConfig const& runtime
     // (3) Load font texture --------------------------------------------------------
     std::string textureFile = this->fontFileName;
     textureFile.append(".png");
-    auto texture_filename = static_cast<std::wstring>(
-        ResourceWrapper::getFileName(runtimeConf, vislib::StringA(textureFile.c_str())).PeekBuffer());
-    if (!megamol::core_gl::utility::RenderUtils::LoadTextureFromFile(
-            this->texture, megamol::core::utility::WChar2Utf8String(texture_filename))) {
+    const auto texture_filename = ResourceWrapper::GetResourcePath(runtimeConf, textureFile);
+    if (!megamol::core_gl::utility::RenderUtils::LoadTextureFromFile(this->texture, texture_filename)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[SDFFont] Failed to load font texture: \"%s\". [%s, %s, line %d]\n", textureFile.c_str(), __FILE__,
             __FUNCTION__, __LINE__);
@@ -964,7 +961,7 @@ bool SDFFont::loadFontBuffers() {
 
 
 // Bitmap Font file format: http://www.angelcode.com/products/fnont/doc/file_format.html
-bool SDFFont::loadFontInfo(vislib::StringW filename) {
+bool SDFFont::loadFontInfo(std::filesystem::path filepath) {
 
     // Reset font info
     for (unsigned int i = 0; i < this->glyphs.size(); i++) {
@@ -977,7 +974,7 @@ bool SDFFont::loadFontInfo(vislib::StringW filename) {
     this->glyphs.clear();
     this->glyphIdcs.clear();
 
-    std::ifstream input_file(this->to_string(filename.PeekBuffer()));
+    std::ifstream input_file(filepath);
     if (!input_file.is_open() || !input_file.good()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[SDFFont] Unable to open font file \"%s\": Bad file. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,

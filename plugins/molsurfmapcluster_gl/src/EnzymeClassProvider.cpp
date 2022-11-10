@@ -171,9 +171,6 @@ void EnzymeClassProvider::loadMapFromFile(frontend_resources::RuntimeConfig cons
  * EnzymeClassProvider::determineFilePath
  */
 std::filesystem::path EnzymeClassProvider::determineFilePath(frontend_resources::RuntimeConfig const& runtimeConf) {
-    std::filesystem::path result;
-    vislib::StringA shortfile = "brenda_enzyme_map.csv";
-    auto fname = core::utility::ResourceWrapper::getFileName(runtimeConf, shortfile);
-    result = std::filesystem::path(W2A(fname));
-    return result.make_preferred();
+    std::string shortfile = "brenda_enzyme_map.csv";
+    return core::utility::ResourceWrapper::GetResourcePath(runtimeConf, shortfile).make_preferred();
 }

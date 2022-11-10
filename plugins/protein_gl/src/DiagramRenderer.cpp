@@ -251,13 +251,12 @@ bool DiagramRenderer::LoadIcon(vislib::StringA filename, int ID) {
     static sg::graphics::PngBitmapCodec pbc;
     pbc.Image() = &img;
     ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    void* buf = NULL;
-    SIZE_T size = 0;
 
     // if (pbc.Load(filename)) {
-    if ((size = megamol::core::utility::ResourceWrapper::LoadResource(
-             frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), filename, &buf)) > 0) {
-        if (pbc.Load(buf, size)) {
+    try {
+        const auto buf = core::utility::ResourceWrapper::LoadResource(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), std::string(filename.PeekBuffer()));
+        if (pbc.Load(buf.data(), buf.size())) {
             img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
             for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
                 BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
@@ -275,18 +274,14 @@ bool DiagramRenderer::LoadIcon(vislib::StringA filename, int ID) {
             if (markerTextures.Last().Second()->Create(
                     img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
                 Log::DefaultLog.WriteError("could not load %s texture.", filename.PeekBuffer());
-                ARY_SAFE_DELETE(buf);
                 return false;
             }
             markerTextures.Last().Second()->SetFilter(GL_LINEAR, GL_LINEAR);
-            ARY_SAFE_DELETE(buf);
             return true;
         } else {
             Log::DefaultLog.WriteError("could not read %s texture.", filename.PeekBuffer());
         }
-    } else {
-        Log::DefaultLog.WriteError("could not find %s texture.", filename.PeekBuffer());
-    }
+    } catch (...) { Log::DefaultLog.WriteError("could not find %s texture.", filename.PeekBuffer()); }
     return false;
 }
 

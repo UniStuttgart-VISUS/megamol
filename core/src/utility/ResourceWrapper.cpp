@@ -1,111 +1,55 @@
-/*
- * ResourceWrapper.cpp
- *
- * Copyright (C) 2012 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2012, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/utility/ResourceWrapper.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/sys/Path.h"
+
+#include <fstream>
 
 using namespace megamol::core;
 using namespace megamol::core::utility;
 
-/*
- * ResourceWrapper::getFileName
- */
-vislib::StringW ResourceWrapper::getFileName(
-    frontend_resources::RuntimeConfig const& runtimeConf, const vislib::StringA& name) {
-    using megamol::core::utility::log::Log;
+using megamol::core::utility::log::Log;
 
-    vislib::StringW filename;
-
-    for (SIZE_T i = 0; i < runtimeConf.resource_directories.size(); i++) {
-        filename = vislib::sys::Path::Concatenate(
-            vislib::StringW(runtimeConf.resource_directories[i].c_str()), vislib::StringW(name));
-        if (vislib::sys::File::Exists(filename)) {
-            Log::DefaultLog.WriteInfo("Loading %s ...\n", vislib::StringA(filename).PeekBuffer());
-            break;
-        } else {
-            filename.Clear();
+std::filesystem::path ResourceWrapper::GetResourcePath(
+    frontend_resources::RuntimeConfig const& runtimeConf, const std::string& filename) {
+    for (const auto& resource_directory : runtimeConf.resource_directories) {
+        auto path = std::filesystem::path(resource_directory) / std::filesystem::path(filename);
+        if (std::filesystem::is_regular_file(path)) {
+            return path;
         }
     }
-    return filename;
+    throw std::runtime_error("Resource file not found: " + filename);
 }
 
+std::vector<char> ResourceWrapper::LoadResource(
+    frontend_resources::RuntimeConfig const& runtimeConf, const std::string& filename) {
+    const auto path = GetResourcePath(runtimeConf, filename);
 
-/*
- * ResourceWrapper::LoadResource
- */
-SIZE_T ResourceWrapper::LoadResource(
-    frontend_resources::RuntimeConfig const& runtimeConf, const vislib::StringA& name, void** outData) {
-    using megamol::core::utility::log::Log;
-
-    *outData = NULL;
-
-    vislib::StringW filename = ResourceWrapper::getFileName(runtimeConf, name);
-    if (filename.IsEmpty()) {
-        Log::DefaultLog.WriteError("Unable to load resource \"%s\": not found\n", name.PeekBuffer());
-        return 0;
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        throw std::runtime_error("Cannot read resource file \"" + path.string() + "\"!");
     }
+    file.seekg(0, std::ios::end);
+    auto filesize = file.tellg();
+    file.seekg(0, std::ios::beg);
 
-    SIZE_T size = static_cast<SIZE_T>(vislib::sys::File::GetSize(filename));
-    if (size < 1) {
-        Log::DefaultLog.WriteError("Unable to load resource \"%s\": file is empty\n", name.PeekBuffer());
-        return 0;
-    }
-    *outData = new BYTE[size];
-    vislib::sys::FastFile f;
-    if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        Log::DefaultLog.WriteError("Unable to load resource \"%s\": cannot open file\n", name.PeekBuffer());
-        ARY_SAFE_DELETE(*outData);
-        return 0;
-    }
-    SIZE_T num = static_cast<SIZE_T>(f.Read(*outData, size));
-    if (num != size) {
-        Log::DefaultLog.WriteError("Unable to load resource \"%s\": cannot read whole file\n", name.PeekBuffer());
-        ARY_SAFE_DELETE(*outData);
-        return 0;
-    }
-
-    return num;
+    std::vector<char> buf(filesize);
+    file.read(buf.data(), filesize);
+    return buf;
 }
 
+std::string ResourceWrapper::LoadTextResource(
+    frontend_resources::RuntimeConfig const& runtimeConf, const std::string& filename) {
+    const auto path = GetResourcePath(runtimeConf, filename);
 
-/*
- * ResourceWrapper::LoadTextResource
- */
-SIZE_T ResourceWrapper::LoadTextResource(
-    frontend_resources::RuntimeConfig const& runtimeConf, const vislib::StringA& name, char** outData) {
-    using megamol::core::utility::log::Log;
-
-    *outData = NULL;
-    vislib::StringW filename = ResourceWrapper::getFileName(runtimeConf, name);
-    if (filename.IsEmpty()) {
-        Log::DefaultLog.WriteError("Unable to load resource \"%s\": not found\n", name.PeekBuffer());
-        return 0;
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        throw std::runtime_error("Cannot read resource file \"" + path.string() + "\"!");
     }
-
-    SIZE_T size = static_cast<SIZE_T>(vislib::sys::File::GetSize(filename));
-    if (size < 1) {
-        Log::DefaultLog.WriteError("Unable to load resource \"%s\": file is empty\n", name.PeekBuffer());
-        return 0;
-    }
-
-    *outData = new char[size + 1];
-    vislib::sys::FastFile f;
-    if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        Log::DefaultLog.WriteError("Unable to load resource \"%s\": cannot open file\n", name.PeekBuffer());
-        ARY_SAFE_DELETE(*outData);
-        return 0;
-    }
-    SIZE_T num = static_cast<SIZE_T>(f.Read(*outData, size));
-    if (num != size) {
-        Log::DefaultLog.WriteError("Unable to load resource \"%s\": cannot read whole file\n", name.PeekBuffer());
-        ARY_SAFE_DELETE(*outData);
-        return 0;
-    }
-    (*outData)[num] = 0;
-    return num + 1;
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
 }

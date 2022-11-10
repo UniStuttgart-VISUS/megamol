@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <memory>
 
 #include <glm/glm.hpp>
@@ -534,11 +535,6 @@ public:
         * variables
         **********************************************************************/
 
-// Disable dll export warning for not exported classes in ::vislib and ::std 
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
-
         /** Indicating if font could be loaded successfully. */
         bool initialised;
 
@@ -634,10 +630,6 @@ public:
         /** The glyph kernings. */
         std::vector<SDFGlyphKerning> glyphKrns;
 
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
-
         /**********************************************************************
         * functions
         **********************************************************************/
@@ -646,7 +638,7 @@ public:
 
         bool loadFontBuffers();
 
-        bool loadFontInfo(vislib::StringW filename);
+        bool loadFontInfo(std::filesystem::path filepath);
 
         bool loadFontShader(megamol::frontend_resources::RuntimeConfig const& runtimeConf);
 

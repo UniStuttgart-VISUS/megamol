@@ -242,11 +242,9 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
             default:
                 break;
             }
-            std::wstring texture_filename(megamol::core::utility::ResourceWrapper::getFileName(
-                frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), vislib::StringA(filename.c_str()))
-                                              .PeekBuffer());
-            if (!this->LoadTextureFromFile(
-                    this->m_transpctrl_icons[i], megamol::core::utility::WChar2Utf8String(texture_filename))) {
+            const auto texture_filepath = megamol::core::utility::ResourceWrapper::GetResourcePath(
+                frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), filename);
+            if (!this->LoadTextureFromFile(this->m_transpctrl_icons[i], texture_filepath)) {
                 return false;
             }
         }
