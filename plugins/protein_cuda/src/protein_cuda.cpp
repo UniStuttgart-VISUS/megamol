@@ -23,7 +23,7 @@
 #include "SecStructRenderer2D.h"
 
 // data sources
-#include "Filter.h"
+//#include "Filter.h"
 
 // data interfaces (calls)
 #include "PlaneDataCall.h"

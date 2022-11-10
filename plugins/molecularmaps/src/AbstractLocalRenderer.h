@@ -9,7 +9,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 
 namespace megamol {
 namespace molecularmaps {

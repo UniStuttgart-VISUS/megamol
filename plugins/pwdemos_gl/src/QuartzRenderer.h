@@ -7,6 +7,10 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "AbstractMultiShaderQuartzRenderer.h"
 #include "QuartzCrystalDataCall.h"
 #include "QuartzParticleGridDataCall.h"
@@ -14,7 +18,6 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 
 namespace megamol {
@@ -99,7 +102,7 @@ private:
      *
      * @return The shader
      */
-    virtual vislib_gl::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c);
+    virtual std::shared_ptr<glowl::GLSLProgram> makeShader(const CrystalDataCall::Crystal& c);
 
     /** Shows/Hides the axes (x and y) of the clipping plane */
     core::param::ParamSlot showClipAxesSlot;

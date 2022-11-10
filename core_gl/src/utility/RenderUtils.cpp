@@ -7,6 +7,8 @@
 
 #include "mmcore_gl/utility/RenderUtils.h"
 
+#include "mmcore_gl/utility/ShaderFactory.h"
+
 namespace megamol::core_gl::utility {
 
 // STATIC functions -------------------------------------------------------
@@ -125,7 +127,7 @@ RenderUtils::RenderUtils()
 RenderUtils::~RenderUtils() {}
 
 
-bool RenderUtils::InitPrimitiveRendering(megamol::core_gl::utility::ShaderSourceFactory& shader_factory) {
+bool RenderUtils::InitPrimitiveRendering(std::vector<std::filesystem::path> const& shader_paths) {
 
     if (this->init_once) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -136,37 +138,29 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core_gl::utility::ShaderSource
     std::vector<std::pair<GLuint, std::string>> location_name_pairs = {{Buffers::POSITION, "inPosition"},
         {Buffers::COLOR, "inColor"}, {Buffers::TEXTURE_COORD, "inTexture"}, {Buffers::ATTRIBUTES, "inAttributes"}};
 
-    if (!this->createShader(this->shaders[Primitives::POINTS], shader_factory, "primitives::points::vertex",
-            "primitives::points::fragment")) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Failed to create point shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    this->shaders[Primitives::POINTS]->bindAttribLocations(location_name_pairs);
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(shader_paths);
 
-    if (!this->createShader(this->shaders[Primitives::LINES], shader_factory, "primitives::lines::vertex",
-            "primitives::lines::fragment")) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Failed to create line shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    this->shaders[Primitives::LINES]->bindAttribLocations(location_name_pairs);
+    try {
+        this->shaders[Primitives::POINTS] = core::utility::make_glowl_shader(
+            "POINTS", shader_options, "core/primitives/points.vert.glsl", "core/primitives/points.frag.glsl");
+        this->shaders[Primitives::POINTS]->bindAttribLocations(location_name_pairs);
 
-    if (!this->createShader(this->shaders[Primitives::QUADS], shader_factory, "primitives::quads::vertex",
-            "primitives::quads::fragment")) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Failed to create quad shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    this->shaders[Primitives::QUADS]->bindAttribLocations(location_name_pairs);
+        this->shaders[Primitives::LINES] = core::utility::make_glowl_shader(
+            "LINES", shader_options, "core/primitives/lines.vert.glsl", "core/primitives/lines.frag.glsl");
+        this->shaders[Primitives::LINES]->bindAttribLocations(location_name_pairs);
 
-    if (!this->createShader(this->shaders[Primitives::COLOR_TEXTURE], shader_factory,
-            "primitives::color_texture::vertex", "primitives::color_texture::fragment")) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Failed to create color texture shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        this->shaders[Primitives::QUADS] = core::utility::make_glowl_shader(
+            "QUADS", shader_options, "core/primitives/quads.vert.glsl", "core/primitives/quads.frag.glsl");
+        this->shaders[Primitives::QUADS]->bindAttribLocations(location_name_pairs);
+
+        this->shaders[Primitives::COLOR_TEXTURE] = core::utility::make_glowl_shader("COLOR_TEXTURE", shader_options,
+            "core/primitives/color_texture.vert.glsl", "core/primitives/color_texture.frag.glsl");
+        this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocations(location_name_pairs);
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("RenderUtils: " + std::string(e.what())).c_str());
         return false;
     }
-    this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocations(location_name_pairs);
 
     // Create buffers
     this->buffers[Buffers::POSITION] =
@@ -464,29 +458,6 @@ void RenderUtils::sortPrimitiveQueue(Primitives primitive) {
     default:
         break;
     }
-}
-
-
-bool RenderUtils::createShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_ptr,
-    megamol::core_gl::utility::ShaderSourceFactory& shader_factory, const std::string& vertex_btf_snipprt,
-    const std::string& fragment_btf_snippet) {
-
-    vislib_gl::graphics::gl::ShaderSource source;
-    if (!shader_factory.MakeShaderSource(vertex_btf_snipprt.c_str(), source)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Failed to make vertex shader source. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    auto vertex_code = std::string(source.WholeCode().PeekBuffer());
-
-    if (!shader_factory.MakeShaderSource(fragment_btf_snippet.c_str(), source)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Failed to make fragment shader source. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    auto fragment_code = std::string(source.WholeCode().PeekBuffer());
-
-    return RenderUtils::CreateShader(out_shader_ptr, vertex_code, fragment_code);
 }
 
 
