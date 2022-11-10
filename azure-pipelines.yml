@@ -51,7 +51,7 @@ jobs:
     - VisualStudio_16.0
 
   steps:
-  - template: .ci/check-pr-labels-step.yml
+  - template: .ci/check-pr-labels-step-pwsh.yml
   - powershell: |
       New-Item -ItemType "directory" -Path "$Env:VCPKG_DEFAULT_BINARY_CACHE" -Force
       New-Item -ItemType "directory" -Path "$Env:X_VCPKG_REGISTRIES_CACHE" -Force
@@ -73,48 +73,49 @@ jobs:
   strategy:
     matrix:
       ## Temporarily disabled until more CI machines are available!
-      #'GCC9 / Make / Release':
-      #  cCompiler: gcc-9
-      #  cxxCompiler: g++-9
+      #'GCC11 / Make / Release':
+      #  cCompiler: gcc-11
+      #  cxxCompiler: g++-11
       #  configuration: Release
       #  generator: 'Unix Makefiles'
       #  cmakeExtraArgs: '$(defaultConfig)'
-      'GCC9 / Make / Debug':
-        cCompiler: gcc-9
-        cxxCompiler: g++-9
+      'GCC11 / Make / Debug':
+        cCompiler: gcc-11
+        cxxCompiler: g++-11
         configuration: Debug
         generator: 'Unix Makefiles'
         cmakeExtraArgs: '$(defaultConfig)'
       ## Temporarily disabled until more CI machines are available!
-      #'GCC9 / Ninja / Release':
-      #  cCompiler: gcc-9
-      #  cxxCompiler: g++-9
+      #'GCC11 / Ninja / Release':
+      #  cCompiler: gcc-11
+      #  cxxCompiler: g++-11
       #  configuration: Release
       #  generator: 'Ninja'
       #  cmakeExtraArgs: '$(defaultConfig)'
       ## Temporarily changed to Ninja instead of Make until more CI machines are available!
-      'Clang10 / Ninja / Release':
-        cCompiler: clang-10
-        cxxCompiler: clang++-10
+      'Clang14 / Ninja / Release':
+        cCompiler: clang-14
+        cxxCompiler: clang++-14
         configuration: Release
         generator: 'Ninja'
         cmakeExtraArgs: '$(defaultConfig)'
-      'GCC9 / Make / Release (nonGL)':
-        cCompiler: gcc-9
-        cxxCompiler: g++-9
+      'GCC11 / Make / Release (nonGL)':
+        cCompiler: gcc-11
+        cxxCompiler: g++-11
         configuration: Release
         generator: 'Unix Makefiles'
         cmakeExtraArgs: '$(nonGlConfig)'
 
   pool:
-    name: 'default'
+    name: 'hardware'
     demands:
     - Agent.OS -equals Linux
-    - cmake
-    - megamol_build_enabled
+    - docker
+
+  container: ghcr.io/unistuttgart-visus/megamol_ci_ubuntu:master
 
   steps:
-  - template: .ci/check-pr-labels-step.yml
+  - template: .ci/check-pr-labels-step-bash.yml
   - bash: |
       mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
       mkdir -p $X_VCPKG_REGISTRIES_CACHE
