@@ -449,10 +449,10 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
 
     //if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
     //    this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, 0);
     //}
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
         glActiveTexture(GL_TEXTURE1);

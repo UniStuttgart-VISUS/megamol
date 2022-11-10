@@ -101,8 +101,7 @@ void FrameStatistics_Service::finish_frame() {
     const auto last_frame_till_now_micro =
         std::chrono::duration_cast<std::chrono::microseconds>(now - m_frame_start_time).count();
 
-    m_statistics.last_rendered_frame_time_milliseconds =
-        static_cast<double>(last_frame_till_now_micro) / 1000.0;
+    m_statistics.last_rendered_frame_time_milliseconds = static_cast<double>(last_frame_till_now_micro) / 1000.0;
 
     m_frame_times_micro[m_ring_buffer_ptr] = last_frame_till_now_micro;
     m_ring_buffer_ptr = (m_ring_buffer_ptr + 1) % m_frame_times_micro.size();

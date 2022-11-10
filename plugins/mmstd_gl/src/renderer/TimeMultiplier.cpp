@@ -46,9 +46,7 @@ bool TimeMultiplier::create() {
 /*
  * TimeMultiplier::release
  */
-void TimeMultiplier::release() {
-
-}
+void TimeMultiplier::release() {}
 
 /*
  * TimeMultiplier::GetExtents

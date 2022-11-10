@@ -77,7 +77,6 @@ protected:
     bool getExtentCallback(core::Call& caller);
 
 private:
-
     bool inquireDataVariables(CallADIOSData* cad);
     bool inquireMetaDataVariables(CallADIOSData* cad);
 

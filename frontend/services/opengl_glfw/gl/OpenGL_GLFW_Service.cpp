@@ -578,8 +578,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &ignorethis, GL_FALSE);
         glDebugMessageControl(
             GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PUSH_GROUP, GL_DONT_CARE, 0, nullptr, GL_FALSE);
-        glDebugMessageControl(
-            GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_POP_GROUP, GL_DONT_CARE, 0, nullptr, GL_FALSE);
+        glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_POP_GROUP, GL_DONT_CARE, 0, nullptr, GL_FALSE);
         glDebugMessageCallback(opengl_debug_message_callback, nullptr);
         log("Enabled OpenGL debug context. Will print debug messages.");
     }
@@ -626,7 +625,8 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {frontend_resources::WindowManipulation_Req_Name, m_windowManipulation},
         {frontend_resources::OpenGL_Helper_Req_Name, m_opengl_helper}};
 
-    m_requestedResourcesNames = {"FrameStatistics", "FramebufferEvents", frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name};
+    m_requestedResourcesNames = {
+        "FrameStatistics", "FramebufferEvents", frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name};
 
     m_pimpl->last_time = std::chrono::system_clock::now();
 

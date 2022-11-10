@@ -241,7 +241,8 @@ bool ADIOSFlexVolume::onGetExtents(core::Call& call) {
         return false;
     }
 
-    std::stringstream vel_shape_str(cad->getVarProperties(this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->ValueString())["Shape"]);
+    std::stringstream vel_shape_str(
+        cad->getVarProperties(this->flexVelocitySlot.Param<core::param::FlexEnumParam>()->ValueString())["Shape"]);
     std::vector<size_t> vel_shape;
     while (vel_shape_str.good()) {
         std::string substr;

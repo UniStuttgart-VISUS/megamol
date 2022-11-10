@@ -26,7 +26,8 @@ bool Profiling_Service::init(void* configPtr) {
         _perf_man.subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
             auto frame = fi.frame;
             if (frame > 0) {
-                auto& _frame_stats = _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>();
+                auto& _frame_stats =
+                    _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>();
                 log_file << (frame - 1) << ";MegaMol;FrameTime;;0;CPU;Duration;"
                          << _frame_stats.last_rendered_frame_time_milliseconds << std::endl;
             }
