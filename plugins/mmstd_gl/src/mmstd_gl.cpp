@@ -14,8 +14,6 @@
 #include "mmstd_gl/renderer/CallRender2DGL.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/CallRenderViewGL.h"
-#include "mmstd_gl/renderer/ContextToGL.h"
-#include "mmstd_gl/renderer/DeferredShading.h"
 #include "mmstd_gl/renderer/TimeMultiplier.h"
 #include "mmstd_gl/renderer/TransferFunctionGL.h"
 #include "mmstd_gl/special/CallbackScreenShooter.h"
