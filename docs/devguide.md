@@ -325,7 +325,7 @@ It also pollutes CMake with additional targets that confuse vcpkg.
 
 To make sure the megamol build finds the custom dependency build, you can set the corresponding environment variable manually or in your `CMakeUserPresets.json`.
 Keeping with the previous example, this could read `"environment": {"OSPRAY_ROOT": "drive:/some/directory/ospray/install"}`.
-You can then either copy the resulting dlls manually to the binary directory or TODO.
+You can then either copy the resulting dlls manually to the MegaMol binary directory or alternatively configure the local `PATH` environment variable to contain the path of the custom dependency dlls.
 
 <!-- ###################################################################### -->
 -----
