@@ -7,6 +7,7 @@
 #include "mmcore/utility/ResourceWrapper.h"
 
 #include <fstream>
+#include <sstream>
 
 using namespace megamol::core;
 using namespace megamol::core::utility;

@@ -8,6 +8,7 @@
 #include "ProjectLoader_Service.hpp"
 
 #include <fstream>
+#include <sstream>
 
 #include "Window_Events.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
