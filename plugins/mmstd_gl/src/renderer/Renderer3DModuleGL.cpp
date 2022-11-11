@@ -81,8 +81,7 @@ bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
         call.AccessBoundingBoxes().SetBoundingBox(newbb);
         call.AccessBoundingBoxes().SetClipBox(newcb);
 
-        // TODO machs richtig
-        call.SetTimeFramesCount(chainedCall->TimeFramesCount());
+        call.SetTimeFramesCount(std::min(chainedCall->TimeFramesCount(), call.TimeFramesCount()));
     }
 
     return true;
