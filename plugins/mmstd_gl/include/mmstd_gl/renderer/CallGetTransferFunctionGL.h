@@ -12,7 +12,6 @@
 #include <glowl/glowl.h>
 
 #include "mmstd/renderer/AbstractCallGetTransferFunction.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 namespace megamol::mmstd_gl {
@@ -86,9 +85,9 @@ public:
      * Bind convenience (to be used with tfconvenience snippet). Usually, one
      * wants to set `activeTexture` to `GL_TEXTURE0` and `textureUniform` to `0`.
      */
-    void BindConvenience(vislib_gl::graphics::gl::GLSLShader& shader, GLenum activeTexture, int textureUniform);
-
     void BindConvenience(std::unique_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform);
+
+    void BindConvenience(std::shared_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform);
 
     void BindConvenience(glowl::GLSLProgram& shader, GLenum activeTexture, int textureUniform);
 

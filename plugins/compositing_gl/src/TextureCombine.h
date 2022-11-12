@@ -16,7 +16,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol::compositing {
+namespace megamol::compositing_gl {
 
 class TextureCombine : public core::Module {
 public:
@@ -87,6 +87,9 @@ private:
     /** Shader program for texture multiply */
     std::unique_ptr<glowl::GLSLProgram> m_mult_prgm;
 
+    /** Shader program for texture multiply */
+    std::unique_ptr<glowl::GLSLProgram> m_over_prgm;
+
     /** Texture that the combination result will be written to */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
 
@@ -106,4 +109,4 @@ private:
     megamol::core::CallerSlot m_input_tex_1_slot;
 };
 
-} // namespace megamol::compositing
+} // namespace megamol::compositing_gl

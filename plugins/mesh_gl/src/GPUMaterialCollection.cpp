@@ -9,8 +9,6 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 
 namespace megamol {

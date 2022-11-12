@@ -1,0 +1,9 @@
+    vec3 aop = (inPos.xyz - posOrigin) / posExtents;
+    vec4 aod = vec4((vec3(rad) + aoSampDist) / posExtents, 0.0);
+    //vec4 aod = vec4(0.0);
+    aoPos.x = 1.0 - (texture3D(aoVol, aop + aod.xww).r * aoSampFact);
+    aoPos.y = 1.0 - (texture3D(aoVol, aop + aod.wyw).r * aoSampFact);
+    aoPos.z = 1.0 - (texture3D(aoVol, aop + aod.wwz).r * aoSampFact);
+    aoNeg.x = 1.0 - (texture3D(aoVol, aop - aod.xww).r * aoSampFact);
+    aoNeg.y = 1.0 - (texture3D(aoVol, aop - aod.wyw).r * aoSampFact);
+    aoNeg.z = 1.0 - (texture3D(aoVol, aop - aod.wwz).r * aoSampFact);

@@ -14,7 +14,6 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmstd/light/DistantLight.h"
 #include "mmstd/light/PointLight.h"
 
@@ -57,7 +56,7 @@ ModernTrisoupRenderer::ModernTrisoupRenderer(void)
     getLightsSlot_.SetNecessity(megamol::core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&getLightsSlot_);
 
-    getFramebufferSlot_.SetCompatibleCall<megamol::compositing::CallFramebufferGLDescription>();
+    getFramebufferSlot_.SetCompatibleCall<megamol::compositing_gl::CallFramebufferGLDescription>();
     this->MakeSlotAvailable(&getFramebufferSlot_);
 
     core::param::EnumParam* ep = new core::param::EnumParam(static_cast<int>(RenderingMode::FILLED));
@@ -208,11 +207,11 @@ bool ModernTrisoupRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     auto mvp_mat = proj_mat * view_mat;
 
     bool has_external_fbo = false;
-    auto cfbo = getFramebufferSlot_.CallAs<compositing::CallFramebufferGL>();
+    auto cfbo = getFramebufferSlot_.CallAs<compositing_gl::CallFramebufferGL>();
     auto fbo = call.GetFramebuffer();
     if (cfbo != nullptr) {
-        cfbo->operator()(compositing::CallFramebufferGL::CallGetMetaData);
-        cfbo->operator()(compositing::CallFramebufferGL::CallGetData);
+        cfbo->operator()(compositing_gl::CallFramebufferGL::CallGetMetaData);
+        cfbo->operator()(compositing_gl::CallFramebufferGL::CallGetData);
         if (cfbo->getData() != nullptr) {
             fbo = cfbo->getData();
             has_external_fbo = true;

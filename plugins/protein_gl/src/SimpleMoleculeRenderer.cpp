@@ -21,7 +21,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
@@ -38,7 +37,6 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core_gl;
 using namespace megamol::protein_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::core::utility::log;

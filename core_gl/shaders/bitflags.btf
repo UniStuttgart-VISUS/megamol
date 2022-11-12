@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<btf namespace="bitflags" type="MegaMolGLSLShader" version="1.0">
-  <snippet name="main" type="file">core/bitflags.inc.glsl</snippet>
-</btf>

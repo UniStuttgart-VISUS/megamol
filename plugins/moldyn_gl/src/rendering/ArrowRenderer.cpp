@@ -75,8 +75,6 @@ bool ArrowRenderer::create(void) {
 #endif
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
-        return false;
 
     // create shader programs
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
