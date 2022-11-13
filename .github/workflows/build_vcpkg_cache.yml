@@ -14,6 +14,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Configure
-      run: cmake -S . -B ${{ github.workspace }}/build -G "Visual Studio 16 2019" -DMEGAMOL_STOP_AFTER_VCPKG=ON -DMEGAMOL_USE_CGAL=ON -DMEGAMOL_USE_OSPRAY=ON -DMEGAMOL_USE_VTKM=ON
+      run: cmake -S . -B ${{ github.workspace }}/build -G "Visual Studio 16 2019" -DMEGAMOL_STOP_AFTER_VCPKG=ON -DMEGAMOL_USE_CGAL=ON -DMEGAMOL_USE_OSPRAY=ON
       env:
         VCPKG_BINARY_SOURCES: "clear;http,https://604f651a-6bcd-49cc-b256-2740663e4b03.ma.bw-cloud-instance.org/{triplet}-{name}-{sha},readwrite,Authorization: Token ${{ secrets.CACHING_SERVER_SECRET }}"
