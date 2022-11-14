@@ -39,7 +39,8 @@ public:
         WINDOW_ID_HOTKEYEDITOR = 4,
         WINDOW_ID_TRANSFER_FUNCTION = 5,
         WINDOW_ID_CONFIGURATOR = 6,
-        WINDOW_ID_LOGCONSOLE = 7
+        WINDOW_ID_LOGCONSOLE = 7,
+        WINDOW_ID_ANIMATIONEDITOR = 8
     };
 
     struct BasicConfig {
@@ -123,6 +124,7 @@ public:
             volatile_draw_callback(this->win_config);
             return true;
         }
+        return false;
     }
 
     virtual void PopUps() {}
