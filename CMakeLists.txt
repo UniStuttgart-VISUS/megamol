@@ -53,7 +53,7 @@ set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-download-src/s
 
 set(ENV{VCPKG_FORCE_DOWNLOADED_BINARIES} ON) # Vcpkg should always download tools (i.e. CMake) to have consistent versions over all systems.
 if (MEGAMOL_USE_VCPKG_CACHE)
-  set(ENV{VCPKG_BINARY_SOURCES} "clear;default,readwrite;http,https://604f651a-6bcd-49cc-b256-2740663e4b03.ma.bw-cloud-instance.org/{triplet}-{name}-{sha},read")
+  set(ENV{VCPKG_BINARY_SOURCES} "clear;default,readwrite;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},read")
 endif ()
 
 # Disable in source build
