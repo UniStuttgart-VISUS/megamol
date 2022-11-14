@@ -124,6 +124,9 @@
         }
       ]
     },
+    "use-opengl-debuggroups": {
+      "description": "Automatically inject OpenGL debug groups into MegaMol Call callback invocations"
+    },
     "use-profiling": {
       "description": "Use Profiling"
     },
