@@ -40,6 +40,7 @@ megamol_feature_option(VTKM "Enable VTK-m support" OFF)
 # dependent options
 megamol_feature_option(CUESDK "Enable Corsair CUESDK support" OFF "WIN32")
 megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "MEGAMOL_USE_OPENGL")
+megamol_feature_option(OPENGL_DEBUGGROUPS "Automatically inject OpenGL debug groups into MegaMol Call callback invocations" OFF "MEGAMOL_USE_OPENGL")
 option(MEGAMOL_USE_VCPKG_CACHE "Download prebuild dependency binaries if available" OFF)
 
 include(cmake/megamol_vcpkg_empty_port.cmake)

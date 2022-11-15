@@ -10,6 +10,7 @@
 #include <fstream>
 
 #include "AbstractFrontendService.hpp"
+#include "FrameStatistics.h"
 #include "PerformanceManager.h"
 
 namespace megamol {
@@ -48,7 +49,7 @@ private:
     std::vector<std::string> _requestedResourcesNames;
     std::vector<FrontendResource> _requestedResourcesReferences;
 
-    megamol::frontend_resources::PerformanceManager _perf_man;
+    frontend_resources::PerformanceManager _perf_man;
     std::ofstream log_file;
 };
 

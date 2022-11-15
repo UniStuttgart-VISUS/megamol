@@ -14,6 +14,9 @@
 namespace megamol {
 namespace frontend_resources {
 
+//static std::string WindowState_Req_Name = "WindowState";
+static std::string WindowEvents_Req_Name = "WindowEvents";
+
 struct WindowState {
     int width = 1;
     int height = 1;

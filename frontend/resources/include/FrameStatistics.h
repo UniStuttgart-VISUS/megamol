@@ -12,6 +12,8 @@
 namespace megamol {
 namespace frontend_resources {
 
+static std::string FrameStatistics_Req_Name = "FrameStatistics";
+
 struct FrameStatistics {
     double elapsed_program_time_seconds = 0.0;
     size_t rendered_frames_count = 0;
