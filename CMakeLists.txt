@@ -41,7 +41,6 @@ megamol_feature_option(VTKM "Enable VTK-m support" OFF)
 megamol_feature_option(CUESDK "Enable Corsair CUESDK support" OFF "WIN32")
 megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "MEGAMOL_USE_OPENGL")
 megamol_feature_option(OPENGL_DEBUGGROUPS "Automatically inject OpenGL debug groups into MegaMol Call callback invocations" OFF "MEGAMOL_USE_OPENGL")
-option(MEGAMOL_USE_VCPKG_CACHE "Download prebuild dependency binaries if available" OFF)
 
 include(cmake/megamol_vcpkg_empty_port.cmake)
 
@@ -53,7 +52,8 @@ set(VCPKG_INSTALL_OPTIONS "--clean-after-build" "--no-print-usage") # Build dirs
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-download-src/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 
 set(ENV{VCPKG_FORCE_DOWNLOADED_BINARIES} ON) # Vcpkg should always download tools (i.e. CMake) to have consistent versions over all systems.
-if (MEGAMOL_USE_VCPKG_CACHE)
+option(MEGAMOL_DOWNLOAD_VCPKG_CACHE "Download prebuild dependency binaries if available" OFF)
+if (MEGAMOL_DOWNLOAD_VCPKG_CACHE)
   set(ENV{VCPKG_BINARY_SOURCES} "clear;default,readwrite;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},read")
 endif ()
 
