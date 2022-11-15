@@ -90,7 +90,7 @@ const std::string& FloatAnimation::GetName() const {
 
 
 KeyTimeType FloatAnimation::GetStartTime() const {
-    if (keys.size() > 0) {
+    if (!keys.empty()) {
         return keys.begin()->second.time;
     } else {
         return 0;
@@ -99,7 +99,7 @@ KeyTimeType FloatAnimation::GetStartTime() const {
 
 
 KeyTimeType FloatAnimation::GetEndTime() const {
-    if (keys.size() > 0) {
+    if (!keys.empty()) {
         return keys.rbegin()->second.time;
     } else {
         return 1;
@@ -108,20 +108,28 @@ KeyTimeType FloatAnimation::GetEndTime() const {
 
 
 FloatAnimation::ValueType FloatAnimation::GetMinValue() const {
-    auto min = std::numeric_limits<float>::max();
-    for (auto& k: keys) {
-        min = std::min(min, k.second.value);
+    if (!keys.empty()) {
+        auto min = std::numeric_limits<float>::max();
+        for (auto& k : keys) {
+            min = std::min(min, k.second.value);
+        }
+        return min;
+    } else {
+        return 0.0f;
     }
-    return min;
 }
 
 
 FloatAnimation::ValueType FloatAnimation::GetMaxValue() const {
-    auto max = std::numeric_limits<float>::lowest();
-    for (auto& k: keys) {
-        max = std::max(max, k.second.value);
+    if (!keys.empty()) {
+        auto max = std::numeric_limits<float>::lowest();
+        for (auto& k : keys) {
+            max = std::max(max, k.second.value);
+        }
+        return max;
+    } else {
+        return 1.0f;
     }
-    return max;
 }
 
 
@@ -147,8 +155,9 @@ megamol::gui::AnimationEditor::AnimationEditor(const std::string& window_name)
     FloatAnimation f2("::view::anim::time");
     k.value = 0.0f;
     k2.value = 100.0f;
-    f.AddKey(k);
-    f.AddKey(k2);
+    k2.time = 100;
+    f2.AddKey(k);
+    f2.AddKey(k2);
     floatAnimations.push_back(f2);
 }
 
@@ -265,7 +274,7 @@ void AnimationEditor::DrawCurves() {
         if (selectedAnimation != -1) {
             auto& anim = floatAnimations[selectedAnimation];
             for (auto& k: anim) {
-                drawList->AddCircleFilled(ImVec2(k.second.time, k.second.value * value_scale * -1.0f), 4.0f, key_color);
+                drawList->AddCircleFilled(ImVec2(k.second.time, k.second.value * -1.0f), 4.0f, key_color);
             }
         }
         canvas.End();
@@ -294,44 +303,49 @@ void AnimationEditor::DrawVerticalSeparator() {
 
 void AnimationEditor::DrawGrid(
     const ImVec2& from, const ImVec2& to, float majorUnit, float minorUnit, float labelAlignment, float sign) {
-    //auto drawList  = ImGui::GetWindowDrawList();
-    //auto direction = (to - from) * ImInvLength(to - from, 0.0f);
-    //auto normal    = ImVec2(-direction.y, direction.x);
-    //auto distance  = sqrtf(ImLengthSqr(to - from));
+    auto drawList  = ImGui::GetWindowDrawList();
+    auto direction = (to - from) * ImInvLength(to - from, 0.0f);
+    auto normal    = ImVec2(-direction.y, direction.x);
+    auto distance  = sqrtf(ImLengthSqr(to - from));
 
-    //if (ImDot(direction, direction) < FLT_EPSILON)
-    //    return;
+    if (ImDot(direction, direction) < FLT_EPSILON)
+        return;
 
-    //auto minorSize = 5.0f;
-    //auto majorSize = 10.0f;
-    //auto labelDistance = 8.0f;
+    auto labelDistance = 8.0f;
 
-    //drawList->AddLine(from, to, IM_COL32(255, 255, 255, 255));
+    auto minorColor = ImGui::GetColorU32(ImGuiCol_Border);
+    auto textColor = ImGui::GetColorU32(ImGuiCol_Text);
 
-    //auto p = from;
-    //for (auto d = 0.0f; d <= distance; d += minorUnit, p += direction * minorUnit)
-    //    drawList->AddLine(p - normal * minorSize, p + normal * minorSize, IM_COL32(255, 255, 255, 255));
+    drawList->AddLine(from, to, IM_COL32(255, 255, 255, 255));
 
-    //for (auto d = 0.0f; d <= distance + majorUnit; d += majorUnit)
-    //{
-    //    p = from + direction * d;
+    auto p = from;
+    const auto top = canvas.ToLocal(ImVec2(0.0f, 0.0f));
+    const auto bottom = canvas.ToLocal(canvas.Rect().GetBR());
+    for (auto d = 0.0f; d <= distance; d += minorUnit, p += direction * minorUnit) {
+        drawList->AddLine(ImVec2(p.x, top.y), ImVec2(p.x, bottom.y), minorColor);
+    }
 
-    //    drawList->AddLine(p - normal * majorSize, p + normal * majorSize, IM_COL32(255, 255, 255, 255));
+    for (auto d = 0.0f; d <= distance + majorUnit; d += majorUnit)
+    {
+        p = from + direction * d;
 
-    //    if (d == 0.0f)
-    //        continue;
+        drawList->AddLine(ImVec2(p.x, top.y), ImVec2(p.x, bottom.y), IM_COL32(255, 255, 255, 255));
 
-    //    char label[16];
-    //    snprintf(label, 15, "%g", d * sign);
-    //    auto labelSize = ImGui::CalcTextSize(label);
+        if (d == 0.0f)
+            continue;
 
-    //    auto labelPosition    = p + ImVec2(fabsf(normal.x), fabsf(normal.y)) * labelDistance;
-    //    auto labelAlignedSize = ImDot(labelSize, direction);
-    //    labelPosition += direction * (-labelAlignedSize + labelAlignment * labelAlignedSize * 2.0f);
-    //    labelPosition = ImFloor(labelPosition + ImVec2(0.5f, 0.5f));
+        char label[16];
+        snprintf(label, 15, "%g", d * sign);
+        auto labelSize = ImGui::CalcTextSize(label);
 
-    //    drawList->AddText(labelPosition, IM_COL32(255, 255, 255, 255), label);
-    //}
+        auto labelPosition    = p + ImVec2(fabsf(normal.x), fabsf(normal.y)) * labelDistance;
+        labelPosition.y = bottom.y - 2.0f * labelDistance;
+        auto labelAlignedSize = ImDot(labelSize, direction);
+        labelPosition += direction * (-labelAlignedSize + labelAlignment * labelAlignedSize * 2.0f);
+        labelPosition = ImFloor(labelPosition + ImVec2(0.5f, 0.5f));
+
+        drawList->AddText(labelPosition, textColor, label);
+    }
 }
 
 void AnimationEditor::DrawScale(
