@@ -2,15 +2,7 @@
 # Copyright (c) 2020, MegaMol Dev Team
 # All rights reserved.
 #
-cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
-
-# Policies
-cmake_policy(SET CMP0054 NEW) # if arguments
-cmake_policy(SET CMP0079 NEW) # use targets from other directories
-cmake_policy(SET CMP0091 NEW) # MSVC runtime
-if (POLICY CMP0104)
-  cmake_policy(SET CMP0104 NEW) # CUDA architectures
-endif ()
+cmake_minimum_required(VERSION 3.15...3.24 FATAL_ERROR)
 
 # vcpkg
 include(FetchContent)
@@ -25,7 +17,7 @@ find_package(Git REQUIRED)
 
 FetchContent_Declare(vcpkg-download
   GIT_REPOSITORY https://github.com/microsoft/vcpkg.git
-  GIT_TAG 2022.08.15
+  GIT_TAG 2022.10.19 # Update default-registry baseline in vcpkg-configuration.json when changing!
   GIT_SHALLOW TRUE)
 FetchContent_GetProperties(vcpkg-download)
 if (NOT vcpkg-download_POPULATED)
@@ -54,9 +46,16 @@ include(cmake/megamol_vcpkg_empty_port.cmake)
 
 # option(X_VCPKG_APPLOCAL_DEPS_INSTALL "" ON) # Does currently not not work as expected, see comment on manual install below!
 set(VCPKG_OVERLAY_PORTS "${mm_empty_ports_dir}${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_ports")
+set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_CURRENT_LIST_DIR}/cmake/vcpkg_triplets") # We are using triplets with VCPKG_DISABLE_COMPILER_TRACKING set (on Windows).
 set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics") # Disable Telemetry
-set(VCPKG_INSTALL_OPTIONS "--clean-after-build") # Build dirs get quite large and are usually only needed for debugging new ports.
+set(VCPKG_INSTALL_OPTIONS "--clean-after-build" "--no-print-usage") # Build dirs get quite large and are usually only needed for debugging new ports.
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-download-src/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+
+set(ENV{VCPKG_FORCE_DOWNLOADED_BINARIES} ON) # Vcpkg should always download tools (i.e. CMake) to have consistent versions over all systems.
+option(MEGAMOL_DOWNLOAD_VCPKG_CACHE "Download prebuilt dependency binaries if available" OFF)
+if (MEGAMOL_DOWNLOAD_VCPKG_CACHE)
+  set(ENV{VCPKG_BINARY_SOURCES} "clear;default,readwrite;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},read")
+endif ()
 
 # Disable in source build
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
@@ -66,6 +65,11 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 project(megamol
   VERSION 1.3.0
   LANGUAGES C CXX)
+
+# Allow CI dependency build to stop here.
+if (MEGAMOL_STOP_AFTER_VCPKG)
+  return()
+endif ()
 
 # Default build type
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
