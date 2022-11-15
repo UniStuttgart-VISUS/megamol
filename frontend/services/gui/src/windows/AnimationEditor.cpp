@@ -51,12 +51,12 @@ void FloatAnimation::DeleteKey(KeyTimeType time) {
 }
 
 
-std::map<unsigned, Key>::iterator FloatAnimation::begin() {
+FloatAnimation::KeyMap::iterator FloatAnimation::begin() {
     return keys.begin();
 }
 
 
-std::map<unsigned, Key>::iterator FloatAnimation::end() {
+FloatAnimation::KeyMap::iterator FloatAnimation::end() {
     return keys.end();
 }
 
@@ -210,6 +210,12 @@ void AnimationEditor::DrawToolbar() {
     DrawVerticalSeparator();
     ImGui::SameLine();
     ImGui::Button("some other button");
+    ImGui::SameLine();
+    DrawVerticalSeparator();
+    ImGui::PushItemWidth(100.0f);
+    ImGui::SliderFloat("HZoom", &custom_zoom.x, 0.01f, 10.0f);
+    ImGui::SameLine();
+    ImGui::SliderFloat("VZoom", &custom_zoom.y, 0.01f, 10.0f);
 }
 
 
@@ -247,7 +253,8 @@ void AnimationEditor::DrawCurves() {
         auto canvas_region = ImGui::GetContentRegionAvail();
         auto line_color = ImGui::GetColorU32(ImGuiCol_Border);
         auto text_color = ImGui::GetColorU32(ImGuiCol_Text);
-        auto key_color = ImGui::GetColorU32(ImGuiCol_Button);
+        auto key_color = IM_COL32(255, 128, 0, 255);
+        auto active_key_color = IM_COL32(255, 192, 96, 255);
         ImDrawList* drawList = ImGui::GetWindowDrawList();
 
         if ((is_dragging || ImGui::IsItemHovered()) && ImGui::IsMouseDragging(ImGuiMouseButton_Right, 0.0f)) {
@@ -274,7 +281,19 @@ void AnimationEditor::DrawCurves() {
         if (selectedAnimation != -1) {
             auto& anim = floatAnimations[selectedAnimation];
             for (auto& k: anim) {
-                drawList->AddCircleFilled(ImVec2(k.second.time, k.second.value * -1.0f), 4.0f, key_color);
+                const float size = 4.0f;
+                const ImVec2 button_size = {4.0f, 4.0f};
+                auto pos = ImVec2(k.second.time, k.second.value * -1.0f) * custom_zoom;
+                ImGui::SetCursorScreenPos(ImVec2{ pos.x - (button_size.x / 2.0f), pos.y - (button_size.y / 2.0f) });
+                ImGui::InvisibleButton(std::string("##key" + k.second.time).c_str(), button_size);
+                if (ImGui::IsItemActivated()) {
+                    selectedKey = &k.second;
+                }
+                if (selectedKey == &k.second) {
+                    drawList->AddCircleFilled(pos, size, active_key_color);
+                } else {
+                    drawList->AddCircleFilled(pos, size, key_color);
+                }
             }
         }
         canvas.End();
@@ -288,7 +307,32 @@ void AnimationEditor::DrawProperties() {
     ImGui::BeginChild(
         "anim_props", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
     if (selectedAnimation > -1 && selectedKey != nullptr) {
-        // draw property sheet
+        ImGui::InputInt("Time", &selectedKey->time);
+        ImGui::InputFloat("Value", &selectedKey->value);
+        const char* items[] = {"Step", "Linear", "Hermite"};
+        auto current_item = items[static_cast<int32_t>(selectedKey->interpolation)];
+        if (ImGui::BeginCombo("Interpolation", current_item)) {
+            for (int n = 0; n < 3; n++) {
+                const bool is_selected = (current_item == items[n]);
+                if (ImGui::Selectable(items[n], is_selected)) {
+                    current_item = items[n];
+                    switch (n) {
+                    case 0:
+                        selectedKey->interpolation = InterpolationType::Step;
+                        break;
+                    case 1:
+                        selectedKey->interpolation = InterpolationType::Linear;
+                        break;
+                    case 2:
+                        selectedKey->interpolation = InterpolationType::Hermite;
+                        break;
+                    }
+                }
+                if (is_selected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
     }
     ImGui::EndChild();
 }
@@ -318,16 +362,17 @@ void AnimationEditor::DrawGrid(
 
     drawList->AddLine(from, to, IM_COL32(255, 255, 255, 255));
 
-    auto p = from;
+    auto p = from * custom_zoom;
     const auto top = canvas.ToLocal(ImVec2(0.0f, 0.0f));
     const auto bottom = canvas.ToLocal(canvas.Rect().GetBR());
-    for (auto d = 0.0f; d <= distance; d += minorUnit, p += direction * minorUnit) {
+    for (auto d = 0.0f; d <= distance; d += minorUnit * ImDot(direction, custom_zoom), p += direction * minorUnit * custom_zoom) {
         drawList->AddLine(ImVec2(p.x, top.y), ImVec2(p.x, bottom.y), minorColor);
     }
 
     for (auto d = 0.0f; d <= distance + majorUnit; d += majorUnit)
     {
         p = from + direction * d;
+        p *= custom_zoom;
 
         drawList->AddLine(ImVec2(p.x, top.y), ImVec2(p.x, bottom.y), IM_COL32(255, 255, 255, 255));
 
@@ -364,13 +409,14 @@ void AnimationEditor::DrawScale(
 
     drawList->AddLine(from, to, IM_COL32(255, 255, 255, 255));
 
-    auto p = from;
-    for (auto d = 0.0f; d <= distance; d += minorUnit, p += direction * minorUnit)
+    auto p = from * custom_zoom;
+    for (auto d = 0.0f; d <= distance; d += minorUnit * ImDot(direction * -sign, custom_zoom), p += direction * minorUnit * custom_zoom)
         drawList->AddLine(p - normal * minorSize, p + normal * minorSize, IM_COL32(255, 255, 255, 255));
 
     for (auto d = 0.0f; d <= distance + majorUnit; d += majorUnit)
     {
         p = from + direction * d;
+        p *= custom_zoom;
 
         drawList->AddLine(p - normal * majorSize, p + normal * majorSize, IM_COL32(255, 255, 255, 255));
 

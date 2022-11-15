@@ -19,12 +19,12 @@
 namespace megamol {
 namespace gui {
 
-using KeyTimeType = uint32_t;
+using KeyTimeType = int32_t;
 
-enum class InterpolationType {
-    Step,
-    Linear,
-    Hermite
+enum class InterpolationType : int32_t {
+    Step = 0,
+    Linear = 1,
+    Hermite = 2
 };
 
 struct Tangent {
@@ -35,7 +35,7 @@ struct Tangent {
 struct Key {
     KeyTimeType time;
     float value;
-    InterpolationType interpolation;
+    InterpolationType interpolation = InterpolationType::Linear;
     Tangent in_tangent;
     Tangent out_tangent;
 
@@ -90,7 +90,7 @@ private:
 
     void DrawGrid(
         const ImVec2& from, const ImVec2& to, float majorUnit, float minorUnit, float labelAlignment, float sign = 1.0f);
-    static void DrawScale(const ImVec2& from, const ImVec2& to, float majorUnit, float minorUnit, float labelAlignment,
+    void DrawScale(const ImVec2& from, const ImVec2& to, float majorUnit, float minorUnit, float labelAlignment,
         float sign = 1.0f);
     // VARIABLES --------------------------------------------------------------
 
@@ -108,6 +108,7 @@ private:
     ImVec2 drag_start = {0.0f, 0.0f};
     float zoom = 1.0f;
 
+    ImVec2 custom_zoom = {1.0f, 1.0f};
 };
 
 
