@@ -53,7 +53,7 @@ jobs:
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -A"x64" $(cmakeExtraArgs)'
+      cmakeArgs: '.. -G"$(generator)" -A"x64" $(cmakeExtraArgs) -DMEGAMOL_DOWNLOAD_VCPKG_CACHE=ON'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:
