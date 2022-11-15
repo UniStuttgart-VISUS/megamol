@@ -19,7 +19,6 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/RenderUtils.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 using namespace megamol;
 using namespace megamol::molsurfmapcluster_gl;

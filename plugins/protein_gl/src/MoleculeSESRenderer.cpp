@@ -19,7 +19,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmstd/light/DistantLight.h"
 #include "mmstd/light/PointLight.h"
 #include "protein_calls/ProteinColor.h"
@@ -30,9 +29,7 @@
 #include "vislib/assert.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/File.h"
-#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -40,7 +37,6 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core_gl;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_gl;
