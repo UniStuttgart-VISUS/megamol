@@ -270,7 +270,10 @@ protected:
     std::array<GLint, 3> maxWorkgroupCount_;
 
     std::unique_ptr<glowl::FramebufferObject> densityFbo_;
-    std::unique_ptr<glowl::Texture2DArray> dualTexture_;
+    std::unique_ptr<glowl::Texture2DArray> dualDensityTexture_;
+    std::unique_ptr<glowl::Texture2DArray> dualCentroidXTexture_;
+    std::unique_ptr<glowl::Texture2DArray> dualCentroidYTexture_;
+    std::unique_ptr<glowl::Texture2DArray> dualCoMomentTexture_;
     std::unique_ptr<glowl::Texture2DArray> dualSelectTexture_;
 
     // View and camera state
