@@ -52,7 +52,7 @@ set(VCPKG_INSTALL_OPTIONS "--clean-after-build" "--no-print-usage") # Build dirs
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_BINARY_DIR}/_deps/vcpkg-download-src/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 
 set(ENV{VCPKG_FORCE_DOWNLOADED_BINARIES} ON) # Vcpkg should always download tools (i.e. CMake) to have consistent versions over all systems.
-option(MEGAMOL_DOWNLOAD_VCPKG_CACHE "Download prebuild dependency binaries if available" OFF)
+option(MEGAMOL_DOWNLOAD_VCPKG_CACHE "Download prebuilt dependency binaries if available" OFF)
 if (MEGAMOL_DOWNLOAD_VCPKG_CACHE)
   set(ENV{VCPKG_BINARY_SOURCES} "clear;default,readwrite;http,https://vcpkg-cache.megamol.org/{triplet}-{name}-{sha},read")
 endif ()
