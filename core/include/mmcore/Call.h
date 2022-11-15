@@ -15,6 +15,9 @@
 #ifdef MEGAMOL_USE_PROFILING
 #include "PerformanceManager.h"
 #endif
+#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
+#include "OpenGL_Helper.h"
+#endif
 
 namespace megamol::core {
 
@@ -137,6 +140,10 @@ public:
     frontend_resources::PerformanceManager* perf_man = nullptr;
     frontend_resources::PerformanceManager::handle_vector cpu_queries, gl_queries;
 #endif // MEGAMOL_USE_PROFILING
+#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
+public:
+    frontend_resources::OpenGL_Helper* gl_helper = nullptr;
+#endif
 protected:
     CallCapabilities caps;
 };

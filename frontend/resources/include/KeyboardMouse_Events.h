@@ -15,6 +15,9 @@
 namespace megamol {
 namespace frontend_resources {
 
+static std::string KeyboardEvents_Req_Name = "KeyboardEvents";
+static std::string MouseEvents_Req_Name = "MouseEvents";
+
 struct KeyboardState {
     std::vector<std::tuple<Key, KeyAction, Modifiers>> keys;
     std::vector<unsigned int> codepoints;
