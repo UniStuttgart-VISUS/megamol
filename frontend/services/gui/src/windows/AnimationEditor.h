@@ -118,6 +118,7 @@ private:
     bool is_dragging = false;
     ImVec2 drag_start = {0.0f, 0.0f};
     float zoom = 1.0f;
+    float temp_x = 0.0f;
 
     ImVec2 custom_zoom = {1.0f, 1.0f};
 };

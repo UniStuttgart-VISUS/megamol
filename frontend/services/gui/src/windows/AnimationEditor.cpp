@@ -292,29 +292,24 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
 
     ImGui::SetCursorScreenPos(ImVec2{pos.x - (button_size.x / 2.0f), pos.y - (button_size.y / 2.0f)});
     ImGui::InvisibleButton((std::string("##key") + std::to_string(key.time)).c_str(), button_size);
-    static float cumulative_x = 0;
     if (ImGui::IsItemActivated()) {
         selectedKey = &key;
-        cumulative_x = 0.0f;
+        temp_x = selectedKey->time;
     }
     if (ImGui::IsItemActive()) {
         if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
             ImGuiIO& io = ImGui::GetIO();
             auto mp = io.MouseDelta / custom_zoom;
-            // do we need to capture the mouse to get proper MousePos?
-            cumulative_x += mp.x;
-            printf("cumulative_x %f", cumulative_x);
             key.value -= mp.y;
-            float fractional, integral;
-            fractional = modf(cumulative_x, &integral);
-            if (abs(integral) > 0) {
-                key.time += static_cast<int>(integral);
-                cumulative_x = fractional;
-            }
+            temp_x += mp.x;
         }
     }
+    if (ImGui::IsItemDeactivated()) {
+        key.time = static_cast<KeyTimeType>(temp_x);
+        temp_x = selectedKey->time;
+    }
     if (selectedKey == &key) {
-        drawList->AddCircleFilled(pos, size, active_key_color);
+        drawList->AddCircleFilled(ImVec2(temp_x, key.value * -1.0f) * custom_zoom, size, active_key_color);
     } else {
         drawList->AddCircleFilled(pos, size, key_color);
     }
