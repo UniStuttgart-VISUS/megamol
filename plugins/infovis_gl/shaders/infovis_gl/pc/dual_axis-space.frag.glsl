@@ -140,14 +140,17 @@ void main() {
     float left_range = (left_max-left_min);
     float right_range = (right_max-right_min);
 
+    float tri_area_left = 0.5 * left_range * relx;
+    float tri_area_right = 0.5 * right_range * (1.0-relx);
+
     for(int sample_idx = 0; sample_idx < dual_space_height; ++sample_idx){
         float left = left_min + (float(sample_idx)/float(dual_space_height-1)) * left_range;
         float right = right_max - (float(sample_idx)/float(dual_space_height-1)) * right_range;
 
-        result += bilinearInterpolation(imgRead, vec3(left,right,float(cdim))) * left_range*right_range;
+        result += bilinearInterpolation(imgRead, vec3(left,right,float(cdim))) * (tri_area_left+tri_area_right)/0.5;
     }
 
-    //fragOut = vec4((left_max-left_min),(right_max-right_min),0.0,1.0);
+    //fragOut = vec4(tri_area_left+tri_area_right,0.0,0.0,1.0);
     //return;
 
     if(result > 0 || selected){
