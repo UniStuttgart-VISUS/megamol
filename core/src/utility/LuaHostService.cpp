@@ -167,7 +167,9 @@ void megamol::core::utility::LuaHostService::serve() {
     } catch (std::exception& error) {
         Log::DefaultLog.WriteError("Error on LRH Server: %s", error.what());
 
-    } catch (...) { Log::DefaultLog.WriteError("Error on LRH Server: unknown exception"); }
+    } catch (...) {
+        Log::DefaultLog.WriteError("Error on LRH Server: unknown exception");
+    }
 
     try {
         socket.close();
@@ -216,7 +218,9 @@ void core::utility::LuaHostService::servePair() {
     } catch (std::exception& error) {
         Log::DefaultLog.WriteError("Error on LRH Pair Server: %s", error.what());
 
-    } catch (...) { Log::DefaultLog.WriteError("Error on LRH Pair Server: unknown exception"); }
+    } catch (...) {
+        Log::DefaultLog.WriteError("Error on LRH Pair Server: unknown exception");
+    }
 
     try {
         socket.close();

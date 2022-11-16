@@ -150,7 +150,9 @@ void EnzymeClassProvider::loadMapFromFile(const core::CoreInstance& coreInstance
                         int val;
                         try {
                             val = std::stoi(idsubstr);
-                        } catch (...) { val = -1; }
+                        } catch (...) {
+                            val = -1;
+                        }
                         res.second[j] = val;
                         ++j;
                     }

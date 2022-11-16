@@ -225,7 +225,9 @@ void AbstractOSPRayRenderer::setupOSPRay(const char* renderer_name) {
 
             return ret_tex;
 
-        } catch (std::runtime_error e) { std::cerr << e.what() << std::endl; }
+        } catch (std::runtime_error e) {
+            std::cerr << e.what() << std::endl;
+        }
     } else {
         std::cerr << "File type not supported. Only PPM file format allowed." << std::endl;
     }

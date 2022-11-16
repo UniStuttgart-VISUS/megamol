@@ -733,7 +733,9 @@ AbstractMatrix<T, 3, L, S>::operator Quaternion<T>(void) const {
             this->components[Super::indexOf(1, 1)], this->components[Super::indexOf(1, 2)],
             this->components[Super::indexOf(2, 0)], this->components[Super::indexOf(2, 1)],
             this->components[Super::indexOf(2, 2)]);
-    } catch (...) { throw IllegalStateException("Matrix is not rotation-only", __FILE__, __LINE__); }
+    } catch (...) {
+        throw IllegalStateException("Matrix is not rotation-only", __FILE__, __LINE__);
+    }
     return q;
 }
 
@@ -1031,7 +1033,9 @@ AbstractMatrix<T, 4, L, S>::operator Quaternion<T>(void) const {
             this->components[Super::indexOf(1, 1)], this->components[Super::indexOf(1, 2)],
             this->components[Super::indexOf(2, 0)], this->components[Super::indexOf(2, 1)],
             this->components[Super::indexOf(2, 2)]);
-    } catch (...) { throw IllegalStateException("Matrix is not rotation-only", __FILE__, __LINE__); }
+    } catch (...) {
+        throw IllegalStateException("Matrix is not rotation-only", __FILE__, __LINE__);
+    }
     return q;
 }
 

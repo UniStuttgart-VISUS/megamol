@@ -592,7 +592,9 @@ bool SequenceRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
     view::Camera::OrthographicParameters cam_intrin;
     try {
         cam_intrin = cam_.get<core::view::Camera::OrthographicParameters>();
-    } catch (...) { return consumeEvent; }
+    } catch (...) {
+        return consumeEvent;
+    }
     double world_x = ((x * 2.0 / static_cast<double>(screen_.x)) - 1.0);
     double world_y = 1.0 - (y * 2.0 / static_cast<double>(screen_.y));
     world_x = world_x * 0.5 * cam_intrin.frustrum_height * cam_intrin.aspect + cam_pose.position.x;

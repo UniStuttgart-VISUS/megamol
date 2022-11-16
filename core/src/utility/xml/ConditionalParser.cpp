@@ -586,12 +586,16 @@ bool ConditionalParser::evaluateCondition(
         if (tokenz[0].Equals("bitwidth", false)) {
             try {
                 return vislib::CharTraitsA::ParseInt(tokenz[2]) == int(vislib::sys::SystemInformation::SelfWordSize());
-            } catch (...) { return false; }
+            } catch (...) {
+                return false;
+            }
         }
         if (tokenz[2].Equals("bitwidth", false)) {
             try {
                 return vislib::CharTraitsA::ParseInt(tokenz[0]) == int(vislib::sys::SystemInformation::SelfWordSize());
-            } catch (...) { return false; }
+            } catch (...) {
+                return false;
+            }
         }
         if (tokenz[0].Equals("computer", false)) {
             return tokenz[2].Equals(vislib::sys::SystemInformation::ComputerNameA(), false);
