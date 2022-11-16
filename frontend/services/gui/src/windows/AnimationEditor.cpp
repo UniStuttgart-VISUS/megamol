@@ -245,17 +245,53 @@ void AnimationEditor::DrawParams() {
 }
 
 
+void AnimationEditor::DrawInterpolation(ImDrawList* dl, const Key& key, const Key& key2) {
+    const auto line_col = ImGui::GetColorU32(ImGuiCol_NavHighlight);
+    auto drawList = ImGui::GetWindowDrawList();
+    auto pos = ImVec2(key.time, key.value * -1.0f) * custom_zoom;
+    auto pos2 = ImVec2(key2.time, key2.value * -1.0f) * custom_zoom;
+    switch (key.interpolation) {
+    case InterpolationType::Step:
+        drawList->AddLine(pos, ImVec2(pos2.x, pos.y), line_col);
+        drawList->AddLine(ImVec2(pos2.x, pos.y), pos2, line_col);
+        break;
+    case InterpolationType::Linear:
+        drawList->AddLine(pos, pos2, line_col);
+        break;
+    case InterpolationType::Hermite:
+        break;
+    default:;
+    }
+}
+
+
+void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
+    const float size = 4.0f;
+    const ImVec2 button_size = {8.0f, 8.0f};
+    auto key_color = IM_COL32(255, 128, 0, 255);
+    auto active_key_color = IM_COL32(255, 192, 96, 255);
+
+    auto drawList = ImGui::GetWindowDrawList();
+    auto pos = ImVec2(key.time, key.value * -1.0f) * custom_zoom;
+    ImGui::SetCursorScreenPos(ImVec2{pos.x - (button_size.x / 2.0f), pos.y - (button_size.y / 2.0f)});
+    ImGui::InvisibleButton((std::string("##key") + std::to_string(key.time)).c_str(), button_size);
+    if (ImGui::IsItemActivated()) {
+        selectedKey = &key;
+    }
+    if (selectedKey == &key) {
+        drawList->AddCircleFilled(pos, size, active_key_color);
+    } else {
+        drawList->AddCircleFilled(pos, size, key_color);
+    }
+}
+
+
 void AnimationEditor::DrawCurves() {
     ImGui::Text("");
     ImGui::BeginChild("anim_curves", ImGui::GetContentRegionAvail(), true);
     canvas_visible = canvas.Begin("anim_curves", ImGui::GetContentRegionAvail());
     if (canvas_visible) {
-        auto canvas_region = ImGui::GetContentRegionAvail();
-        auto line_color = ImGui::GetColorU32(ImGuiCol_Border);
-        auto text_color = ImGui::GetColorU32(ImGuiCol_Text);
-        auto key_color = IM_COL32(255, 128, 0, 255);
-        auto active_key_color = IM_COL32(255, 192, 96, 255);
-        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        auto drawList = ImGui::GetWindowDrawList();
 
         if ((is_dragging || ImGui::IsItemHovered()) && ImGui::IsMouseDragging(ImGuiMouseButton_Right, 0.0f)) {
             if (!is_dragging) {
@@ -280,19 +316,15 @@ void AnimationEditor::DrawCurves() {
 
         if (selectedAnimation != -1) {
             auto& anim = floatAnimations[selectedAnimation];
-            for (auto& k: anim) {
-                const float size = 4.0f;
-                const ImVec2 button_size = {4.0f, 4.0f};
-                auto pos = ImVec2(k.second.time, k.second.value * -1.0f) * custom_zoom;
-                ImGui::SetCursorScreenPos(ImVec2{ pos.x - (button_size.x / 2.0f), pos.y - (button_size.y / 2.0f) });
-                ImGui::InvisibleButton(std::string("##key" + k.second.time).c_str(), button_size);
-                if (ImGui::IsItemActivated()) {
-                    selectedKey = &k.second;
-                }
-                if (selectedKey == &k.second) {
-                    drawList->AddCircleFilled(pos, size, active_key_color);
-                } else {
-                    drawList->AddCircleFilled(pos, size, key_color);
+            if (anim.GetSize() > 0) {
+                auto keys = anim.GetAllKeys();
+                for (auto i = 0; i < keys.size(); ++i) {
+                    auto& k = anim[keys[i]];
+                    if (i < keys.size() - 1) {
+                        auto& k2 = anim[keys[i + 1]];
+                        DrawInterpolation(drawList, k, k2);
+                    }
+                    DrawKey(drawList, k);
                 }
             }
         }
@@ -347,10 +379,10 @@ void AnimationEditor::DrawVerticalSeparator() {
 
 void AnimationEditor::DrawGrid(
     const ImVec2& from, const ImVec2& to, float majorUnit, float minorUnit, float labelAlignment, float sign) {
-    auto drawList  = ImGui::GetWindowDrawList();
+    auto drawList = ImGui::GetWindowDrawList();
     auto direction = (to - from) * ImInvLength(to - from, 0.0f);
-    auto normal    = ImVec2(-direction.y, direction.x);
-    auto distance  = sqrtf(ImLengthSqr(to - from));
+    auto normal = ImVec2(-direction.y, direction.x);
+    auto distance = sqrtf(ImLengthSqr(to - from));
 
     if (ImDot(direction, direction) < FLT_EPSILON)
         return;
@@ -365,12 +397,12 @@ void AnimationEditor::DrawGrid(
     auto p = from * custom_zoom;
     const auto top = canvas.ToLocal(ImVec2(0.0f, 0.0f));
     const auto bottom = canvas.ToLocal(canvas.Rect().GetBR());
-    for (auto d = 0.0f; d <= distance; d += minorUnit * ImDot(direction, custom_zoom), p += direction * minorUnit * custom_zoom) {
+    for (auto d = 0.0f; d <= distance;
+         d += minorUnit * ImDot(direction, custom_zoom), p += direction * minorUnit * custom_zoom) {
         drawList->AddLine(ImVec2(p.x, top.y), ImVec2(p.x, bottom.y), minorColor);
     }
 
-    for (auto d = 0.0f; d <= distance + majorUnit; d += majorUnit)
-    {
+    for (auto d = 0.0f; d <= distance + majorUnit; d += majorUnit) {
         p = from + direction * d;
         p *= custom_zoom;
 
@@ -383,7 +415,7 @@ void AnimationEditor::DrawGrid(
         snprintf(label, 15, "%g", d * sign);
         auto labelSize = ImGui::CalcTextSize(label);
 
-        auto labelPosition    = p + ImVec2(fabsf(normal.x), fabsf(normal.y)) * labelDistance;
+        auto labelPosition = p + ImVec2(fabsf(normal.x), fabsf(normal.y)) * labelDistance;
         labelPosition.y = bottom.y - 2.0f * labelDistance;
         auto labelAlignedSize = ImDot(labelSize, direction);
         labelPosition += direction * (-labelAlignedSize + labelAlignment * labelAlignedSize * 2.0f);
@@ -395,10 +427,10 @@ void AnimationEditor::DrawGrid(
 
 void AnimationEditor::DrawScale(
     const ImVec2& from, const ImVec2& to, float majorUnit, float minorUnit, float labelAlignment, float sign) {
-    auto drawList  = ImGui::GetWindowDrawList();
+    auto drawList = ImGui::GetWindowDrawList();
     auto direction = (to - from) * ImInvLength(to - from, 0.0f);
-    auto normal    = ImVec2(-direction.y, direction.x);
-    auto distance  = sqrtf(ImLengthSqr(to - from));
+    auto normal = ImVec2(-direction.y, direction.x);
+    auto distance = sqrtf(ImLengthSqr(to - from));
 
     if (ImDot(direction, direction) < FLT_EPSILON)
         return;
@@ -410,11 +442,11 @@ void AnimationEditor::DrawScale(
     drawList->AddLine(from, to, IM_COL32(255, 255, 255, 255));
 
     auto p = from * custom_zoom;
-    for (auto d = 0.0f; d <= distance; d += minorUnit * ImDot(direction * -sign, custom_zoom), p += direction * minorUnit * custom_zoom)
+    for (auto d = 0.0f; d <= distance;
+         d += minorUnit * ImDot(direction * -sign, custom_zoom), p += direction * minorUnit * custom_zoom)
         drawList->AddLine(p - normal * minorSize, p + normal * minorSize, IM_COL32(255, 255, 255, 255));
 
-    for (auto d = 0.0f; d <= distance + majorUnit; d += majorUnit)
-    {
+    for (auto d = 0.0f; d <= distance + majorUnit; d += majorUnit) {
         p = from + direction * d;
         p *= custom_zoom;
 
@@ -427,7 +459,7 @@ void AnimationEditor::DrawScale(
         snprintf(label, 15, "%g", d * sign);
         auto labelSize = ImGui::CalcTextSize(label);
 
-        auto labelPosition    = p + ImVec2(fabsf(normal.x), fabsf(normal.y)) * labelDistance;
+        auto labelPosition = p + ImVec2(fabsf(normal.x), fabsf(normal.y)) * labelDistance;
         auto labelAlignedSize = ImDot(labelSize, direction);
         labelPosition += direction * (-labelAlignedSize + labelAlignment * labelAlignedSize * 2.0f);
         labelPosition = ImFloor(labelPosition + ImVec2(0.5f, 0.5f));

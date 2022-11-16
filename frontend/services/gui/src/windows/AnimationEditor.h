@@ -60,6 +60,19 @@ public:
     KeyTimeType GetEndTime() const;
     ValueType GetMinValue() const;
     ValueType GetMaxValue() const;
+    KeyMap::size_type GetSize() const {
+        return keys.size();
+    }
+    Key& operator[](KeyTimeType k) {
+        return keys[k];
+    }
+    std::vector<KeyTimeType> GetAllKeys() const {
+        std::vector<KeyTimeType> the_keys;;
+        the_keys.reserve(keys.size());
+        std::transform(keys.begin(), keys.end(), std::back_inserter(the_keys),
+            [](const KeyMap::value_type& v) { return v.first; });
+        return the_keys;
+    }
 
 private:
     KeyMap keys;
@@ -83,6 +96,8 @@ public:
 private:
     void DrawToolbar();
     void DrawParams();
+    void DrawInterpolation(ImDrawList* dl, const Key& key, const Key& k2);
+    void DrawKey(ImDrawList* dl, Key& key);
     void DrawCurves();
     void DrawProperties();
 
