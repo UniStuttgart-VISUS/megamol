@@ -33,9 +33,11 @@ float Key::Interpolate(Key first, Key second, KeyTimeType time) {
         return (1.0f - t) * my_first.value + t * my_second.value;
     case InterpolationType::Hermite:
         const auto t2 = t * t, t3 = t2 * t;
+        const auto out_len = ImLengthSqr(my_first.out_tangent);
+        const auto in_len = ImLengthSqr(my_second.in_tangent);
         return my_first.value * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.value * (-2.0f * t3 + 3.0f * t2) +
-               my_first.out_tangent.length * my_first.out_tangent.offset * (t3 - 2.0f * t2 + t) +
-               my_second.in_tangent.length * my_second.in_tangent.offset * (t3 - t2);
+               out_len * my_first.out_tangent.y * (t3 - 2.0f * t2 + t) +
+               in_len * my_second.in_tangent.y * (t3 - t2);
     }
     return 0.0f;
 }
@@ -270,13 +272,46 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
     const ImVec2 button_size = {8.0f, 8.0f};
     auto key_color = IM_COL32(255, 128, 0, 255);
     auto active_key_color = IM_COL32(255, 192, 96, 255);
+    auto tangent_color = ImGui::GetColorU32(ImGuiCol_Border);
 
     auto drawList = ImGui::GetWindowDrawList();
+
     auto pos = ImVec2(key.time, key.value * -1.0f) * custom_zoom;
+    auto t_in = ImVec2(key.time + key.in_tangent.x, (key.value + key.in_tangent.y) * -1.0f) * custom_zoom;
+    auto t_out = ImVec2(key.time + key.out_tangent.x, (key.value + key.out_tangent.y) * -1.0f) * custom_zoom;
+    drawList->AddLine(t_in, pos, tangent_color);
+    drawList->AddLine(pos, t_out, tangent_color);
+
+    ImGui::SetCursorScreenPos(ImVec2{t_in.x - (button_size.x / 2.0f), t_in.y - (button_size.y / 2.0f)});
+    ImGui::InvisibleButton((std::string("##key_intan") + std::to_string(key.time)).c_str(), button_size);
+    drawList->AddCircleFilled(t_in, size, tangent_color, 4);
+
+    ImGui::SetCursorScreenPos(ImVec2{t_out.x - (button_size.x / 2.0f), t_out.y - (button_size.y / 2.0f)});
+    ImGui::InvisibleButton((std::string("##key_outtan") + std::to_string(key.time)).c_str(), button_size);
+    drawList->AddCircleFilled(t_out, size, tangent_color, 4);
+
     ImGui::SetCursorScreenPos(ImVec2{pos.x - (button_size.x / 2.0f), pos.y - (button_size.y / 2.0f)});
     ImGui::InvisibleButton((std::string("##key") + std::to_string(key.time)).c_str(), button_size);
+    static float cumulative_x = 0;
     if (ImGui::IsItemActivated()) {
         selectedKey = &key;
+        cumulative_x = 0.0f;
+    }
+    if (ImGui::IsItemActive()) {
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+            ImGuiIO& io = ImGui::GetIO();
+            auto mp = io.MouseDelta / custom_zoom;
+            // do we need to capture the mouse to get proper MousePos?
+            cumulative_x += mp.x;
+            printf("cumulative_x %f", cumulative_x);
+            key.value -= mp.y;
+            float fractional, integral;
+            fractional = modf(cumulative_x, &integral);
+            if (abs(integral) > 0) {
+                key.time += static_cast<int>(integral);
+                cumulative_x = fractional;
+            }
+        }
     }
     if (selectedKey == &key) {
         drawList->AddCircleFilled(pos, size, active_key_color);

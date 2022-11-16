@@ -27,17 +27,13 @@ enum class InterpolationType : int32_t {
     Hermite = 2
 };
 
-struct Tangent {
-    float length;
-    float offset;
-};
-
 struct Key {
     KeyTimeType time;
     float value;
     InterpolationType interpolation = InterpolationType::Linear;
-    Tangent in_tangent;
-    Tangent out_tangent;
+    bool tangents_linked = true;
+    ImVec2 in_tangent{-10.0f, 0.0f};
+    ImVec2 out_tangent{10.0f, 0.0f};
 
     static float Interpolate(Key first, Key second, KeyTimeType time);
 };
