@@ -15,7 +15,7 @@
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 
 namespace megamol {
-namespace compositing {
+namespace compositing_gl {
 
 /**
  * TODO
@@ -37,7 +37,7 @@ public:
      * @return A human readable description of this module.
      */
     static const char* Description(void) {
-        return "Binds a FBO with color, normal and depth render targets.";
+        return "Binds a FBO with color and normal render targets and a depth buffer.";
     }
 
     /**
@@ -102,7 +102,7 @@ protected:
     /**
      *
      */
-    bool getDepthRenderTarget(core::Call& caller);
+    bool getDepthBuffer(core::Call& caller);
 
     /**
      *
@@ -135,7 +135,7 @@ private:
 
     core::CalleeSlot m_color_render_target;
     core::CalleeSlot m_normal_render_target;
-    core::CalleeSlot m_depth_render_target;
+    core::CalleeSlot m_depth_buffer;
 
     /** Slot for accessing the camera that is propagated to the render chain from this module */
     core::CalleeSlot m_camera;
@@ -144,5 +144,5 @@ private:
     core::CalleeSlot m_framebuffer_slot;
 };
 
-} // namespace compositing
+} // namespace compositing_gl
 } // namespace megamol

@@ -7,6 +7,10 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -16,8 +20,6 @@
 #include "vislib/types.h"
 
 #include "glad/gl.h"
-
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
 
 namespace megamol::datatools_gl::misc {
@@ -121,7 +123,7 @@ private:
     vislib::Array<GLuint> glCB;
 
     GLuint glClusterInfos;
-    vislib_gl::graphics::gl::GLSLComputeShader shaderOnClusterComputation;
+    std::unique_ptr<glowl::GLSLProgram> shaderOnClusterComputation;
 
     /*
     GLuint glParticleList;

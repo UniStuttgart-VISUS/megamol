@@ -5,17 +5,18 @@
  * All rights reserved
  */
 
-#ifndef MMPROTEINCUDAPLUGIN_SECSTRUCTRENDERER2D_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_SECSTRUCTRENDERER2D_H_INCLUDED
+#pragma once
+
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/renderer/Renderer2DModuleGL.h"
-
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Rectangle.h"
-#include "vislib_gl/graphics/gl/GLSLTesselationShader.h"
 
 namespace megamol {
 namespace protein_cuda {
@@ -176,10 +177,10 @@ private:
     GLuint ssbo;
 
     /** Shader for the tesselated GL_LINES */
-    vislib_gl::graphics::gl::GLSLTesselationShader lineShader;
+    std::unique_ptr<glowl::GLSLProgram> lineShader;
 
     /** Shader for the tesselated tubes */
-    vislib_gl::graphics::gl::GLSLTesselationShader tubeShader;
+    std::unique_ptr<glowl::GLSLProgram> tubeShader;
 
     /** The bounding rectangle for the data */
     vislib::math::Rectangle<float> bbRect;
@@ -190,5 +191,3 @@ private:
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif // #ifndef MMPROTEINCUDAPLUGIN_SECSTRUCTRENDERER2D_H_INCLUDED

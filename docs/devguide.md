@@ -306,6 +306,27 @@ Further information on writing new ports is available in the [vcpkg documentatio
 Larger (especially in the meaning of build times) and/or very specialized libraries could be wrapped within vcpkg features in `vcpkg.json`.
 If doing so add an option to the beginning of `CMakeLists.txt` using `megamol_feature_option()` to allow using that feature.
 
+#### Overriding dependencies
+
+If you need customized veriants of a dependency, say, an OSPRay build with custom modules, you can switch to a version that lives somewhere else on your system.
+For this, you can (temporarily) create an additional port with the same name in cmake/vcpkg_ports. **NEVER COMMIT THIS PORT!**
+
+The port needs to contain a `vcpkg.json` that includes all relevant dependencies and features that are requested by megamol.
+You can just use the file from the port you are overriding.
+You also need to place a *completely empty* `portfile.cmake` in the port directory.
+
+You are responsible for building the custom version in the correct way yourself.
+A custom drop-in replacement OSPRay that re-uses all the dependencies that are built with MegaMol anyway would, for example, be configured using options along the lines of:
+
+```-DCMAKE_PREFIX_PATH="drive:/path/to/megamol/megamol/build/vs-ninja-22/vcpkg_installed/x64-windows" -DISPC_EXECUTABLE="drive:/path/to/megamol/megamol/build/vs-ninja-22/vcpkg_installed/x64-windows/tools/ispc/ispc.exe" -DOSPRAY_ENABLE_APPS_EXAMPLES="0" -DOSPRAY_ENABLE_APPS_TESTING="0" -DOSPRAY_ENABLE_APPS_BENCHMARK="0" -DOSPRAY_ENABLE_APPS_TUTORIALS="0"```
+
+Do not use the OSPRay superbuild as it includes and references its own set of transitive dependencies, which could mean that you end up with two different versions of TBB, for example.
+It also pollutes CMake with additional targets that confuse vcpkg.
+
+To make sure the megamol build finds the custom dependency build, you can set the corresponding environment variable manually or in your `CMakeUserPresets.json`.
+Keeping with the previous example, this could read `"environment": {"OSPRAY_ROOT": "drive:/some/directory/ospray/install"}`.
+You can then either copy the resulting dlls manually to the MegaMol binary directory or alternatively configure the local `PATH` environment variable to contain the path of the custom dependency dlls.
+
 ### Using third-party code
 
 Including third-party code as library with vcpkg is the preferred way, but may sometimes it is required to directly include thrid-party code within the MegaMol repository.

@@ -7,11 +7,13 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "mmcore/CallerSlot.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 
 namespace megamol {
@@ -87,7 +89,7 @@ protected:
     SIZE_T objsHash;
 
     /** The selected shader */
-    vislib_gl::graphics::gl::GLSLShader* shader;
+    std::unique_ptr<glowl::GLSLProgram> shader;
 
 private:
 };

@@ -381,62 +381,27 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(
             case (Graph::QueueAction::ADD_MODULE): {
                 graph_sync_success &= std::get<0>(
                     (*input_lua_func)("mmCreateModule([=[" + data.class_name + "]=],[=[" + data.name_id + "]=])"));
-#ifdef MEGAMOL_USE_PROFILING
-                auto core_module_ptr = megamol_graph.FindModule(data.name_id);
-                // ! Search Queue for following module renaming action to get current name of gui graph module
-                auto module_rename_data =
-                    graph_ptr->FindQueueEntryByActionName(Graph::QueueAction::RENAME_MODULE, data.name_id);
-                auto gui_module_ptr = graph_ptr->GetModule(
-                    (module_rename_data.name_id.empty()) ? (data.name_id) : (module_rename_data.rename_id));
-                if (gui_module_ptr != nullptr) {
-                    gui_module_ptr->SetProfilingData(core_module_ptr.get(), perf_manager);
-                    this->module_to_module[core_module_ptr.get()] = gui_module_ptr;
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Failed to get gui module pointer for profiling. [%s, %s, line %d]\n", __FILE__,
-                        __FUNCTION__, __LINE__);
-                }
-#endif
             } break;
             case (Graph::QueueAction::RENAME_MODULE): {
                 graph_sync_success &= std::get<0>(
                     (*input_lua_func)("mmRenameModule([=[" + data.name_id + "]=],[=[" + data.rename_id + "]=])"));
             } break;
             case (Graph::QueueAction::DELETE_MODULE): {
-#ifdef MEGAMOL_USE_PROFILING
-                auto core_module_ptr = megamol_graph.FindModule(data.name_id);
-                this->module_to_module.erase(core_module_ptr.get());
-#endif
                 graph_sync_success &= std::get<0>((*input_lua_func)("mmDeleteModule([=[" + data.name_id + "]=])"));
             } break;
             case (Graph::QueueAction::ADD_CALL): {
                 graph_sync_success &= std::get<0>((*input_lua_func)(
                     "mmCreateCall([=[" + data.class_name + "]=],[=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
-#ifdef MEGAMOL_USE_PROFILING
-                auto core_call_ptr = megamol_graph.FindCall(data.caller, data.callee);
-                auto gui_call_ptr = graph_ptr->GetCall(data.class_name, data.caller, data.callee);
-                if (gui_call_ptr != nullptr) {
-                    gui_call_ptr->SetProfilingData(core_call_ptr.get(), core_call_ptr->GetCallbackCount());
-                    // printf("setting map for @ %p = %s \n", reinterpret_cast<void*>(cd.core_call.get()),
-                    //    cd.core_call.get()->GetDescriptiveText().c_str());
-                    this->call_to_call[core_call_ptr.get()] = gui_call_ptr;
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Failed to get gui call pointer for profiling. [%s, %s, line %d]\n", __FILE__,
-                        __FUNCTION__, __LINE__);
-                }
-#endif
             } break;
             case (Graph::QueueAction::DELETE_CALL): {
-#ifdef MEGAMOL_USE_PROFILING
-                auto core_call_ptr = megamol_graph.FindCall(data.caller, data.callee);
-                this->call_to_call.erase(core_call_ptr.get());
-#endif
                 graph_sync_success &=
                     std::get<0>((*input_lua_func)("mmDeleteCall([=[" + data.caller + "]=],[=[" + data.callee + "]=])"));
             } break;
             case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
-                (*input_lua_func)("mmSetGraphEntryPoint([=[" + data.name_id + "]=])");
+                // megamol currently does not handle well having multiple entrypoints active
+                (*input_lua_func)("mmRemoveAllGraphEntryPoints()\n"
+                                  "mmSetGraphEntryPoint([=[" +
+                                  data.name_id + "]=])");
             } break;
             case (Graph::QueueAction::REMOVE_GRAPH_ENTRY): {
                 (*input_lua_func)("mmRemoveGraphEntryPoint([=[" + data.name_id + "]=])");
@@ -495,15 +460,15 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(
                 if (!p.CoreParamPtr().IsNull()) {
                     // Write changed gui state to core parameter
                     if (p.IsGUIStateDirty()) {
+                        p.ResetGUIStateDirty(); // ! Reset before calling lua cmd because of instantly triggered subscription callback
                         // TODO what gets logged in the historian here?
                         param_sync_success &= megamol::gui::Parameter::WriteCoreParameterGUIState(p, p.CoreParamPtr());
-                        p.ResetGUIStateDirty();
                     }
                     // Write changed parameter value to core parameter
                     if (p.IsValueDirty()) {
+                        p.ResetValueDirty(); // ! Reset before calling lua cmd because of instantly triggered subscription callback
                         param_sync_success &= std::get<0>((*input_lua_func)(
                             "mmSetParamValue([=[" + p.FullNameCore() + "]=],[=[" + p.GetValueString() + "]=])"));
-                        p.ResetValueDirty();
                     }
                 }
             }
@@ -621,12 +586,8 @@ bool megamol::gui::GraphCollection::LoadOrAddProjectFromFile(
                     continue;
                 }
 
-                ///XXX Remove all other graph entries first?
                 // Add new graph entry
-                graph_module->SetGraphEntryName(view_instance);
-                Graph::QueueData queue_data;
-                queue_data.name_id = graph_module->FullName();
-                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                graph_ptr->AddGraphEntry(graph_module, view_instance);
             }
         }
 
@@ -919,6 +880,7 @@ bool megamol::gui::GraphCollection::LoadOrAddProjectFromFile(
 bool megamol::gui::GraphCollection::SaveProjectToFile(
     ImGuiID in_graph_uid, const std::string& project_filename, const std::string& state_json) {
 
+    /// Should be same as: megamol::core::MegaMolGraph_Convenience::SerializeGraph()
     try {
         for (auto& graph_ptr : this->graphs) {
             if (graph_ptr->UID() == in_graph_uid) {
@@ -1050,7 +1012,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(Module::StockModule& o
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         //    "[GUI] [DEBUG] Created temporary module '%s'.", mod_desc->ClassName());
 
-        /// XXX VIEW TEST
+        /// XXX Better check if module is a 'view':
         std::shared_ptr<const core::view::AbstractViewInterface> viewptr =
             std::dynamic_pointer_cast<const core::view::AbstractViewInterface>(new_mod);
 
@@ -1531,13 +1493,13 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
 
     if (auto graph_ptr = this->GetRunningGraph()) {
 
-        std::string full_name(module_inst.modulePtr->Name().PeekBuffer()); /// Check only 'Name()'!
+        std::string full_name(module_inst.request.id);
 
         if (graph_ptr->ModuleExists(full_name)) {
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Module already exists: '%s' [%s, %s, line %d]\n", module_inst.modulePtr->Name().PeekBuffer(),
-                __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Module already exists: '%s' [%s, %s, line %d]\n", full_name.c_str(), __FILE__, __FUNCTION__,
+                __LINE__);
 #endif // GUI_VERBOSE
             /// Error tolerance to ignore redundant changes that have been triggered by the GUI
             return true;
@@ -1555,10 +1517,10 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
 
         ImGuiID moduel_uid = GUI_INVALID_ID;
         ModulePtr_t gui_module_ptr;
-        /// XXX ModuleDescriptionManager is only available via core instance graph yet.
+        /// XXX ModuleDescriptionManager is only available via core instance graph yet:
         std::string module_description = "[n/a]";
         std::string module_plugin = "[n/a]";
-        /// XXX Better check if module is a 'view'?
+        /// XXX Better check if module is a 'view':
         auto viewptr = dynamic_cast<core::view::AbstractViewInterface*>(module_inst.modulePtr.get());
         bool is_view = (viewptr != nullptr);
 
@@ -1567,8 +1529,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
 
             // Set remaining module data
             if (module_inst.isGraphEntryPoint) {
-                ///XXX Remove all other graph entries first?
-                gui_module_ptr->SetGraphEntryName(graph_ptr->GenerateUniqueGraphEntryName());
+                graph_ptr->AddGraphEntry(gui_module_ptr, graph_ptr->GenerateUniqueGraphEntryName(), false);
             }
 
 #ifdef MEGAMOL_USE_PROFILING
@@ -1619,8 +1580,8 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddModule(core::ModuleIns
         }
 
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to create module: '%s' [%s, %s, line %d]\n", module_inst.modulePtr->Name().PeekBuffer(),
-            __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unable to create module: '%s' [%s, %s, line %d]\n", full_name.c_str(), __FILE__, __FUNCTION__,
+            __LINE__);
         return false;
     }
     return false;
@@ -1638,7 +1599,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_DeleteModule(core::Module
     if (auto graph_ptr = this->GetRunningGraph()) {
 
         for (auto& module_ptr : graph_ptr->Modules()) {
-            if (module_ptr->FullName() == std::string(module_inst.modulePtr->Name().PeekBuffer())) {
+            if (module_ptr->FullName() == module_inst.request.id) {
 #ifdef MEGAMOL_USE_PROFILING
                 this->module_to_module.erase(module_ptr->GetProfilingParent());
 #endif
@@ -1649,8 +1610,8 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_DeleteModule(core::Module
 
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Could not find module for deletion: '%s' [%s, %s, line %d]\n",
-            module_inst.modulePtr->Name().PeekBuffer(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Could not find module for deletion: '%s' [%s, %s, line %d]\n", module_inst.request.id.c_str(),
+            __FILE__, __FUNCTION__, __LINE__);
 #endif // GUI_VERBOSE
         /// Error tolerance to ignore redundant changes that have been triggered by the GUI
         return true;
@@ -1673,8 +1634,8 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_RenameModule(
         if (graph_ptr->ModuleExists(new_name)) {
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Module already exists: '%s' [%s, %s, line %d]\n", module_inst.modulePtr->Name().PeekBuffer(),
-                __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Module already exists: '%s' [%s, %s, line %d]\n", module_inst.request.id.c_str(), __FILE__,
+                __FUNCTION__, __LINE__);
 #endif // GUI_VERBOSE
             /// Error tolerance to ignore redundant changes that have been triggered by the GUI
             return true;
@@ -1690,8 +1651,8 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_RenameModule(
 
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to find module for renaming: '%s' [%s, %s, line %d]\n",
-            module_inst.modulePtr->Name().PeekBuffer(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unable to find module for renaming: '%s' [%s, %s, line %d]\n", module_inst.request.id.c_str(),
+            __FILE__, __FUNCTION__, __LINE__);
 #endif // GUI_VERBOSE
         /// Error tolerance to ignore redundant changes that have been triggered by the GUI
         return true;
@@ -1703,6 +1664,7 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_RenameModule(
 bool megamol::gui::GraphCollection::NotifyRunningGraph_AddParameters(
     std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots) {
 
+    /// XXX Unused
     return true;
 }
 
@@ -1710,12 +1672,13 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_AddParameters(
 bool megamol::gui::GraphCollection::NotifyRunningGraph_RemoveParameters(
     std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots) {
 
+    /// XXX Unused
     return true;
 }
 
 
 bool megamol::gui::GraphCollection::NotifyRunningGraph_ParameterChanged(
-    megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot, std::string const& old_value,
+    megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
     std::string const& new_value) {
 
     if (!this->initialized_syncing) {
@@ -1871,6 +1834,50 @@ bool megamol::gui::GraphCollection::NotifyRunningGraph_DeleteCall(core::CallInst
 }
 
 
+bool megamol::gui::GraphCollection::NotifyRunningGraph_EnableEntryPoint(core::ModuleInstance_t const& module_inst) {
+
+    if (!this->initialized_syncing) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Graph synchronization not initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    if (auto graph_ptr = this->GetRunningGraph()) {
+        if (auto mod_ptr = graph_ptr->GetModule(module_inst.request.id)) {
+            return graph_ptr->AddGraphEntry(mod_ptr, graph_ptr->GenerateUniqueGraphEntryName(), false);
+        }
+    }
+
+    return false;
+}
+
+
+bool megamol::gui::GraphCollection::NotifyRunningGraph_DisableEntryPoint(core::ModuleInstance_t const& module_inst) {
+
+    if (!this->initialized_syncing) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Graph synchronization not initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    if (auto graph_ptr = this->GetRunningGraph()) {
+        if (auto mod_ptr = graph_ptr->GetModule(module_inst.request.id)) {
+            return graph_ptr->RemoveGraphEntry(mod_ptr, false);
+        } else {
+#ifdef GUI_VERBOSE
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to find module: '%s' [%s, %s, line %d]\n", module_inst.request.id.c_str(), __FILE__,
+                __FUNCTION__, __LINE__);
+#endif // GUI_VERBOSE
+            /// Error tolerance to ignore redundant changes that have been triggered by the GUI
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool& open_dialog) {
 
     bool confirmed, aborted;
@@ -1941,7 +1948,10 @@ bool megamol::gui::GraphCollection::change_running_graph(ImGuiID graph_uid) {
                     if (module_ptr->IsGraphEntry()) {
                         running_graph->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                     }
-                    running_graph->PushSyncQueue(Graph::QueueAction::DELETE_MODULE, queue_data);
+                    if (!running_graph->ModuleExists(module_ptr->FullName())) {
+                        // Do not delete module if module with same full name exists in new running graph (prevent double deletion and re-creation of module)
+                        running_graph->PushSyncQueue(Graph::QueueAction::DELETE_MODULE, queue_data);
+                    }
                     // Reset pointers to core parameters
                     for (auto& param : module_ptr->Parameters()) {
                         param.ResetCoreParamPtr();
@@ -1951,6 +1961,7 @@ bool megamol::gui::GraphCollection::change_running_graph(ImGuiID graph_uid) {
                 // 3] Create new modules and calls in core graph, but keep newly running GUI graph in project
                 // untouched
                 for (auto& module_ptr : running_graph->Modules()) {
+
                     Graph::QueueData queue_data;
                     queue_data.name_id = module_ptr->FullName();
                     queue_data.class_name = module_ptr->ClassName();
@@ -1984,7 +1995,6 @@ bool megamol::gui::GraphCollection::change_running_graph(ImGuiID graph_uid) {
                     }
                     running_graph->PushSyncQueue(Graph::QueueAction::ADD_CALL, queue_data);
                 }
-
                 return true;
             }
         }

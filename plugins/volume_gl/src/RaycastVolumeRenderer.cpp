@@ -53,12 +53,14 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
               "getTransferFunction", "Connects the volume renderer with a transfer function") {
 
     this->m_volumetricData_callerSlot.SetCompatibleCall<geocalls::VolumetricDataCallDescription>();
+    this->m_volumetricData_callerSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->m_volumetricData_callerSlot);
 
     this->m_lights_callerSlot.SetCompatibleCall<megamol::core::view::light::CallLightDescription>();
     this->MakeSlotAvailable(&this->m_lights_callerSlot);
 
     this->m_transferFunction_callerSlot.SetCompatibleCall<megamol::mmstd_gl::CallGetTransferFunctionGLDescription>();
+    this->m_transferFunction_callerSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->m_transferFunction_callerSlot);
 
     this->m_mode << new megamol::core::param::EnumParam(0);
@@ -131,15 +133,22 @@ bool RaycastVolumeRenderer::create() {
         shader_options_aggr.addDefinition("AGGR");
         rtf_aggr_shdr = core::utility::make_glowl_shader("RaycastVolumeRenderer-Aggr", shader_options_aggr,
             "volume_gl/RaycastVolumeRenderer.vert.glsl", "volume_gl/RaycastVolumeRenderer.frag.glsl");
+    } catch (glowl::GLSLProgramException const& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(ex.what());
+        return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile shader: Unknown exception\n");
         return false;
     }
 
+    glGenVertexArrays(1, &empty_vao);
+
     return true;
 }
 
-void RaycastVolumeRenderer::release() {}
+void RaycastVolumeRenderer::release() {
+    glDeleteVertexArrays(1, &empty_vao);
+}
 
 bool RaycastVolumeRenderer::GetExtents(mmstd_gl::CallRender3DGL& cr) {
     auto cd = m_volumetricData_callerSlot.CallAs<geocalls::VolumetricDataCall>();
@@ -357,9 +366,10 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
         compute_shdr->setUniform("opacity", this->m_opacity.Param<core::param::FloatParam>()->Value());
     }
 
-    this->m_opacity_threshold.Parameter()->SetGUIVisible(this->m_mode.Param<core::param::EnumParam>()->Value() == 0);
-    this->m_iso_value.Parameter()->SetGUIVisible(this->m_mode.Param<core::param::EnumParam>()->Value() == 1);
-    this->m_opacity.Parameter()->SetGUIVisible(this->m_mode.Param<core::param::EnumParam>()->Value() == 1);
+    const auto mode_val = this->m_mode.Param<core::param::EnumParam>()->Value();
+    this->m_opacity_threshold.Parameter()->SetGUIVisible(mode_val == 0);
+    this->m_iso_value.Parameter()->SetGUIVisible(mode_val == 1);
+    this->m_opacity.Parameter()->SetGUIVisible(mode_val == 1);
 
     // bind volume texture
     glActiveTexture(GL_TEXTURE0);
@@ -371,7 +381,10 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_1D, tf_texture);
         compute_shdr->setUniform("tf_tx1D", 1);
+    }
 
+    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
+        this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
         if (Renderer3DModuleGL::chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>() != nullptr) {
             glActiveTexture(GL_TEXTURE2);
             cr.GetFramebuffer()->bindColorbuffer(0);
@@ -383,6 +396,12 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
 
             compute_shdr->setUniform("use_depth_tx", 1);
         } else {
+            // AMD does not like unbound inputs, even if they are only used in inactive shader code paths.
+            glActiveTexture(GL_TEXTURE2);
+            compute_shdr->setUniform("color_tx2D", 2);
+            glActiveTexture(GL_TEXTURE3);
+            compute_shdr->setUniform("depth_tx2D", 3);
+
             compute_shdr->setUniform("use_depth_tx", 0);
         }
     }
@@ -399,6 +418,12 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
 
             compute_shdr->setUniform("use_depth_tx", 1);
         } else {
+            // AMD does not like unbound inputs, even if they are only used in inactive shader code paths.
+            glActiveTexture(GL_TEXTURE2);
+            compute_shdr->setUniform("color_tx2D", 2);
+            glActiveTexture(GL_TEXTURE3);
+            compute_shdr->setUniform("depth_tx2D", 3);
+
             compute_shdr->setUniform("use_depth_tx", 0);
         }
     }
@@ -422,13 +447,13 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
 
     glBindImageTexture(0, 0, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R8);
 
-    if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
-        this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
+    //if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
+    //    this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    //}
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0) {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_1D, 0);
@@ -521,7 +546,9 @@ bool RaycastVolumeRenderer::Render(mmstd_gl::CallRender3DGL& cr) {
         fbo_shdr->setUniform("valRange", rndr_min, rndr_max);
     }
 
+    glBindVertexArray(empty_vao);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
 
     if (this->m_mode.Param<core::param::EnumParam>()->Value() == 1) {
         glActiveTexture(GL_TEXTURE2);
@@ -678,11 +705,11 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
 bool RaycastVolumeRenderer::updateTransferFunction() {
     mmstd_gl::CallGetTransferFunctionGL* ct =
         this->m_transferFunction_callerSlot.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
-    if (valRangeNeedsUpdate) {
+    if (ct != nullptr && valRangeNeedsUpdate) {
         ct->SetRange(valRange);
         valRangeNeedsUpdate = false;
     }
-    if (ct != NULL && ((*ct)())) {
+    if (ct != nullptr && ((*ct)())) {
         tf_texture = ct->OpenGLTexture();
         valRange = ct->Range();
     }

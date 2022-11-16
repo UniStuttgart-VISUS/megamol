@@ -4,9 +4,10 @@
 #
 
 megamol_plugin(mmvtkm_gl
-  BUILD_DEFAULT OFF
+  BUILD_DEFAULT ON
   DEPENDS_FEATURES
     opengl
+    vtkm
   DEPENDS_PLUGINS
     mmstd
     mmstd_gl

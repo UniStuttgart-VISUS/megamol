@@ -151,6 +151,10 @@ public:
         return this->created;
     }
 
+    bool AnyParameterDirty() const;
+
+    void ResetAllDirtyFlags();
+
 protected:
     /**
      * Implementation of 'Create'.

@@ -483,7 +483,8 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
 
             bool active = (state.interact.button_active_uid == this->uid);
             bool hovered = (state.interact.button_hovered_uid == this->uid);
-            bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+            bool mouse_clicked_anywhere =
+                ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiPopupFlags_MouseButtonLeft);
 
             // Hovering
             if (hovered) {
@@ -508,7 +509,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             }
             // Deselection
             else if (this->gui_selected &&
-                     ((mouse_clicked_anywhere && !hovered) || (active && GUI_MULTISELECT_MODIFIER) ||
+                     ((mouse_clicked_anywhere && !hovered) || (active && ImGui::IsKeyPressed(ImGuiKey_ModShift)) ||
                          (state.interact.group_selected_uid != this->uid))) {
                 this->gui_selected = false;
                 if (state.interact.group_selected_uid == this->uid) {

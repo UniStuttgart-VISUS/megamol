@@ -41,47 +41,36 @@ ADIOSFlexConvert::ADIOSFlexConvert()
     this->MakeSlotAvailable(&this->adiosSlot);
 
     this->flexAlignedPosSlot << new core::param::FlexEnumParam("undef");
-    this->flexAlignedPosSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexAlignedPosSlot);
 
     this->flexPosSlot << new core::param::FlexEnumParam("undef");
-    this->flexPosSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexPosSlot);
 
     this->flexColSlot << new core::param::FlexEnumParam("undef");
-    this->flexColSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexColSlot);
 
     this->flexBoxSlot << new core::param::FlexEnumParam("undef");
-    this->flexBoxSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexBoxSlot);
 
     this->flexXSlot << new core::param::FlexEnumParam("undef");
-    this->flexXSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexXSlot);
 
     this->flexYSlot << new core::param::FlexEnumParam("undef");
-    this->flexYSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexYSlot);
 
     this->flexZSlot << new core::param::FlexEnumParam("undef");
-    this->flexZSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexZSlot);
 
     this->flexIDSlot << new core::param::FlexEnumParam("undef");
-    this->flexIDSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexIDSlot);
 
     this->flexVXSlot << new core::param::FlexEnumParam("undef");
-    this->flexVXSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexVXSlot);
 
     this->flexVYSlot << new core::param::FlexEnumParam("undef");
-    this->flexVYSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexVYSlot);
 
     this->flexVZSlot << new core::param::FlexEnumParam("undef");
-    this->flexVZSlot.SetUpdateCallback(&ADIOSFlexConvert::paramChanged);
     this->MakeSlotAvailable(&this->flexVZSlot);
 }
 
@@ -94,6 +83,108 @@ bool ADIOSFlexConvert::create() {
 }
 
 void ADIOSFlexConvert::release() {}
+
+
+bool ADIOSFlexConvert::inquireDataVariables(CallADIOSData* cad) {
+    const auto pos_str = this->flexPosSlot.Param<core::param::FlexEnumParam>()->ValueString();
+    const auto apos_str = this->flexAlignedPosSlot.Param<core::param::FlexEnumParam>()->ValueString();
+    const auto col_str = this->flexColSlot.Param<core::param::FlexEnumParam>()->ValueString();
+    const auto box_str = this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString();
+    const auto x_str = this->flexXSlot.Param<core::param::FlexEnumParam>()->ValueString();
+    const auto y_str = this->flexYSlot.Param<core::param::FlexEnumParam>()->ValueString();
+    const auto z_str = this->flexZSlot.Param<core::param::FlexEnumParam>()->ValueString();
+    const auto id_str = this->flexIDSlot.Param<core::param::FlexEnumParam>()->ValueString();
+    const auto vx_str = this->flexVXSlot.Param<core::param::FlexEnumParam>()->ValueString();
+    const auto vy_str = this->flexVYSlot.Param<core::param::FlexEnumParam>()->ValueString();
+    const auto vz_str = this->flexVZSlot.Param<core::param::FlexEnumParam>()->ValueString();
+
+    if (pos_str != "undef") {
+        if (!cad->inquireVar(pos_str)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[ADIOSFlexConvert] variable \"%s\" does not exist.", pos_str.c_str());
+        }
+    }
+    if (col_str != "undef") {
+        if (!cad->inquireVar(col_str)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[ADIOSFlexConvert] variable \"%s\" does not exist.", col_str.c_str());
+        }
+    }
+
+    if (x_str != "undef" || y_str != "undef" || z_str != "undef") {
+        if (!cad->inquireVar(x_str)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[ADIOSFlexConvert] variable \"%s\" does not exist.", x_str.c_str());
+        }
+
+        if (!cad->inquireVar(y_str)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[ADIOSFlexConvert] variable \"%s\" does not exist.", y_str.c_str());
+        }
+
+        if (!cad->inquireVar(z_str)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[ADIOSFlexConvert] variable \"%s\" does not exist.", z_str.c_str());
+        }
+    } else if (pos_str != "undef") {
+        if (!cad->inquireVar(pos_str)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[ADIOSFlexConvert] variable \"%s\" does not exist.", pos_str.c_str());
+        }
+    } else if (apos_str != "undef") {
+        if (!cad->inquireVar(apos_str)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[ADIOSFlexConvert] variable \"%s\" does not exist.", apos_str.c_str());
+        }
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] No positions set");
+        return false;
+    }
+
+    if (id_str != "undef") {
+        if (!cad->inquireVar(id_str)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[ADIOSFlexConvert] variable \"%s\" does not exist.", id_str.c_str());
+        } else {
+            hasID = true;
+        }
+    }
+
+    if (vx_str != "undef" || vy_str != "undef" || vz_str != "undef") {
+        hasVel = true;
+        if (!cad->inquireVar(vx_str)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[ADIOSFlexConvert] variable \"%s\" does not exist.", vx_str.c_str());
+            hasVel = false;
+        }
+
+        if (!cad->inquireVar(vy_str)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[ADIOSFlexConvert] variable \"%s\" does not exist.", vy_str.c_str());
+            hasVel = false;
+        }
+
+        if (!cad->inquireVar(vz_str)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[ADIOSFlexConvert] variable \"%s\" does not exist.", vz_str.c_str());
+            hasVel = false;
+        }
+    }
+    return true;
+}
+
+bool ADIOSFlexConvert::inquireMetaDataVariables(CallADIOSData* cad) {
+    if (this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString() != "undef") {
+        if (!cad->inquireVar(this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString())) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[ADIOSFlexConvert] variable \"%s\" does not exist.",
+                this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString().c_str());
+        }
+        return false;
+    }
+    return true;
+}
+
 
 bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
     geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);
@@ -108,10 +199,11 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetHeader");
         return false;
     }
+    auto anythingDirty = this->AnyParameterDirty();
     bool dathashChanged = (mpdc->DataHash() != cad->getDataHash());
-    if ((mpdc->FrameID() != currentFrame) || dathashChanged || _trigger_recalc) {
+    if ((mpdc->FrameID() != currentFrame) || dathashChanged || anythingDirty) {
 
-        _trigger_recalc = false;
+        this->ResetAllDirtyFlags();
 
         // get adios meta data
         auto availVars = cad->getAvailableVars();
@@ -131,99 +223,22 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
 
         cad->setFrameIDtoLoad(mpdc->FrameID());
 
-        const std::string pos_str = std::string(this->flexPosSlot.Param<core::param::FlexEnumParam>()->ValueString());
-        const std::string apos_str =
-            std::string(this->flexAlignedPosSlot.Param<core::param::FlexEnumParam>()->ValueString());
-        const std::string col_str = std::string(this->flexColSlot.Param<core::param::FlexEnumParam>()->ValueString());
-        const std::string box_str = std::string(this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString());
-        const std::string x_str = std::string(this->flexXSlot.Param<core::param::FlexEnumParam>()->ValueString());
-        const std::string y_str = std::string(this->flexYSlot.Param<core::param::FlexEnumParam>()->ValueString());
-        const std::string z_str = std::string(this->flexZSlot.Param<core::param::FlexEnumParam>()->ValueString());
-        const std::string id_str = std::string(this->flexIDSlot.Param<core::param::FlexEnumParam>()->ValueString());
-        const std::string vx_str = std::string(this->flexVXSlot.Param<core::param::FlexEnumParam>()->ValueString());
-        const std::string vy_str = std::string(this->flexVYSlot.Param<core::param::FlexEnumParam>()->ValueString());
-        const std::string vz_str = std::string(this->flexVZSlot.Param<core::param::FlexEnumParam>()->ValueString());
+        hasVel = hasID = false;
 
-        if (pos_str != "undef") {
-            if (!cad->inquireVar(pos_str)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", pos_str.c_str());
-            }
-        }
-        if (col_str != "undef") {
-            if (!cad->inquireVar(col_str)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", col_str.c_str());
-            }
-        }
-        if (box_str != "undef") {
-            if (!cad->inquireVar(box_str)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", box_str.c_str());
-            }
-        }
+        this->inquireMetaDataVariables(cad);
+        this->inquireDataVariables(cad);
 
-        if (x_str != "undef" || y_str != "undef" || z_str != "undef") {
-            if (!cad->inquireVar(x_str)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", x_str.c_str());
-            }
-
-            if (!cad->inquireVar(y_str)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", y_str.c_str());
-            }
-
-            if (!cad->inquireVar(z_str)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", z_str.c_str());
-            }
-        } else if (pos_str != "undef") {
-            if (!cad->inquireVar(pos_str)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", pos_str.c_str());
-            }
-        } else if (apos_str != "undef") {
-            if (!cad->inquireVar(apos_str)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", apos_str.c_str());
-            }
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] No positions set");
-            return false;
-        }
-
-        bool hasID = false;
-        if (id_str != "undef") {
-            if (!cad->inquireVar(id_str)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", id_str.c_str());
-            } else {
-                hasID = true;
-            }
-        }
-
-        bool hasVel = false;
-        if (vx_str != "undef" || vy_str != "undef" || vz_str != "undef") {
-            hasVel = true;
-            if (!cad->inquireVar(vx_str)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", vx_str.c_str());
-                hasVel = false;
-            }
-
-            if (!cad->inquireVar(vy_str)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", vy_str.c_str());
-                hasVel = false;
-            }
-
-            if (!cad->inquireVar(vz_str)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[ADIOSFlexConvert] variable \"%s\" does not exist.", vz_str.c_str());
-                hasVel = false;
-            }
-        }
+        const auto pos_str = this->flexPosSlot.Param<core::param::FlexEnumParam>()->ValueString();
+        const auto apos_str = this->flexAlignedPosSlot.Param<core::param::FlexEnumParam>()->ValueString();
+        const auto col_str = this->flexColSlot.Param<core::param::FlexEnumParam>()->ValueString();
+        const auto box_str = this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString();
+        const auto x_str = this->flexXSlot.Param<core::param::FlexEnumParam>()->ValueString();
+        const auto y_str = this->flexYSlot.Param<core::param::FlexEnumParam>()->ValueString();
+        const auto z_str = this->flexZSlot.Param<core::param::FlexEnumParam>()->ValueString();
+        const auto id_str = this->flexIDSlot.Param<core::param::FlexEnumParam>()->ValueString();
+        const auto vx_str = this->flexVXSlot.Param<core::param::FlexEnumParam>()->ValueString();
+        const auto vy_str = this->flexVYSlot.Param<core::param::FlexEnumParam>()->ValueString();
+        const auto vz_str = this->flexVZSlot.Param<core::param::FlexEnumParam>()->ValueString();
 
         if (!(*cad)(0)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error during GetData");
@@ -278,13 +293,6 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         }
 
         const int float_step = stride / sizeof(float);
-        // get bounding box
-        vislib::math::Cuboid<float> cubo;
-        if (box_str != "undef") {
-            auto box = cad->getData(box_str)->GetAsFloat();
-            cubo = vislib::math::Cuboid<float>(
-                box[0], box[1], std::min(box[5], box[2]), box[3], box[4], std::max(box[5], box[2]));
-        }
 
         mpdc->SetParticleListCount(1);
         mix.clear();
@@ -323,6 +331,7 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
 
         size_t vel_offset = 0;
         size_t id_offset = 0;
+        size_t col_offset = 0;
 
         for (size_t i = 0; i < p_count; i++) {
             if (pos_str != "undef") {
@@ -339,10 +348,13 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
                 mix[float_step * i + 2] = XYZW[4 * i + 2];
             }
 
+            size_t offset = 3;
             if (col_str != "undef") {
+                col_offset = offset;
                 mix[float_step * i + 3] = col[i];
                 imin = std::min(imin, col[i]);
                 imax = std::max(imax, col[i]);
+                offset += 1;
             }
             if (box_str == "undef") {
                 xmin = std::min(xmin, mix[float_step * i + 0]);
@@ -353,7 +365,6 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
                 zmax = std::max(zmax, mix[float_step * i + 2]);
             }
 
-            size_t offset = 4;
             if (hasVel) {
                 vel_offset = offset;
                 mix[float_step * i + offset + 0] = VX[i];
@@ -368,14 +379,12 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
                 offset += 1;
             }
         }
+        auto cubo = vislib::math::Cuboid<float>(xmin, ymin, zmin, xmax, ymax, zmax);
         if (box_str == "undef") {
-            cubo = vislib::math::Cuboid<float>(xmin, ymin, zmin, xmax, ymax, zmax);
+            // Set bounding box
+            mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(cubo);
+            mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(cubo);
         }
-
-        // Set bounding box
-        mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(cubo);
-        mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(cubo);
-
 
         // Set particles
         mpdc->AccessParticles(0).SetCount(p_count);
@@ -383,18 +392,13 @@ bool ADIOSFlexConvert::getDataCallback(core::Call& call) {
         mpdc->AccessParticles(0).SetVertexData(vertType, mix.data(), stride);
         //mpdc->AccessParticles(0).SetColourData(
         //    colType, mix.data() + geocalls::SimpleSphericalParticles::VertexDataSize[vertType], stride);
-        mpdc->AccessParticles(0).SetColourData(colType, &mix[3], stride);
-
+        mpdc->AccessParticles(0).SetColourData(colType, &mix[col_offset], stride);
         mpdc->AccessParticles(0).SetColourMapIndexValues(imin, imax);
-
         mpdc->AccessParticles(0).SetIDData(idType, &mix[id_offset], stride);
-
         mpdc->AccessParticles(0).SetDirData(dirType, &mix[vel_offset], stride);
-
         mpdc->AccessParticles(0).SetBBox(cubo);
     }
 
-    mpdc->SetFrameCount(cad->getFrameCount());
     mpdc->SetDataHash(cad->getDataHash());
     currentFrame = mpdc->FrameID();
 
@@ -411,15 +415,32 @@ bool ADIOSFlexConvert::getExtentCallback(core::Call& call) {
     if (cad == nullptr)
         return false;
 
-    if (!this->getDataCallback(call))
+    //if (!this->getDataCallback(call))
+    //    return false;
+
+    if (!(*cad)(1)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error fetching extents");
         return false;
+    }
 
-    return true;
-}
+    cad->setFrameIDtoLoad(mpdc->FrameID());
+    this->inquireMetaDataVariables(cad);
 
-bool ADIOSFlexConvert::paramChanged(core::param::ParamSlot& p) {
+    if (!(*cad)(0)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[ADIOSFlexConvert] Error fetching partial data");
+        return false;
+    }
 
-    _trigger_recalc = true;
+    // get bounding box
+    if (this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString() != "undef") {
+        auto the_box = cad->getData(this->flexBoxSlot.Param<core::param::FlexEnumParam>()->ValueString())->GetAsFloat();
+        bbox.Set(the_box[0], the_box[1], the_box[2], the_box[3], the_box[4], the_box[5]);
+        mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
+        mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(bbox);
+    }
+
+    mpdc->SetFrameCount(std::max<size_t>(cad->getFrameCount(), 1));
+
     return true;
 }
 

@@ -7,6 +7,10 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
@@ -15,7 +19,6 @@
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/Array.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 
 namespace megamol {
@@ -97,7 +100,7 @@ private:
      * TODO: Document
      */
     void resizeVolume();
-    void uploadCameraUniforms(mmstd_gl::CallRender3DGL& call, vislib_gl::graphics::gl::GLSLShader* sphereShader);
+    void uploadCameraUniforms(mmstd_gl::CallRender3DGL& call, glowl::GLSLProgram& sphereShader);
     void renderParticles(mmstd_gl::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2);
     void renderParticles(mmstd_gl::CallRender3DGL& call, protein_calls::MolecularDataCall* mol);
     void renderParticlesVBO(mmstd_gl::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2);
@@ -135,10 +138,10 @@ private:
 
 
     /** The sphere shader */
-    vislib_gl::graphics::gl::GLSLShader sphereShaderAOMainAxes[4];
+    std::unique_ptr<glowl::GLSLProgram> sphereShaderAOMainAxes[4];
 
     /** The sphere shader */
-    vislib_gl::graphics::gl::GLSLShader sphereShaderAONormals[4];
+    std::unique_ptr<glowl::GLSLProgram> sphereShaderAONormals[4];
 
     /** The call for data */
     megamol::core::CallerSlot getDataSlot;
@@ -192,7 +195,7 @@ private:
     GLuint volFBO;
 
     /** The volume generation shader */
-    vislib_gl::graphics::gl::GLSLShader updateVolumeShader;
+    std::unique_ptr<glowl::GLSLProgram> updateVolumeShader;
 
     // VBO for all particles
     GLuint particleVBO;
