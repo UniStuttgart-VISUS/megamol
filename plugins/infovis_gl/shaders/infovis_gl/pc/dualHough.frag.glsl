@@ -22,7 +22,7 @@ void main() {
     float PI = 3.1415926535;
     int cdim = int(floor(uvCoords.x));
     float relx = fract(uvCoords.x);
-    int result = 0;
+    float result = 0;
 
     for (int i = 0; i <= thetas; i++) {
         //int((theta + 45/360 * 2 * 3.141) / (90/360 * 2 * 3.141) * axPxHeight
@@ -32,7 +32,7 @@ void main() {
         //float rho = (dir.x * uvCoords.y - dir.y * relx) / (dir.x * orth.y - dir.y * orth.x);
         float rho = relx * cos(theta) + fract(uvCoords.y) * sin(theta);
         if (texelFetch(imgRead, ivec3(i, rho * (rhos-1), cdim), 0).x > 0) {
-            result += int(texelFetch(imgRead, ivec3(i, rho * (rhos-1), cdim), 0).x);  
+            result += float(texelFetch(imgRead, ivec3(i, rho * (rhos-1), cdim), 0).x) / 1000.0;
         }
         if(texelFetch(slctRead, ivec3(i, rho * (rhos-1), cdim), 0).x != 0){
             selected = true;
