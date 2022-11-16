@@ -250,8 +250,8 @@ void AnimationEditor::DrawParams() {
 void AnimationEditor::DrawInterpolation(ImDrawList* dl, const Key& key, const Key& key2) {
     const auto line_col = ImGui::GetColorU32(ImGuiCol_NavHighlight);
     auto drawList = ImGui::GetWindowDrawList();
-    auto pos = ImVec2(key.time, key.value * -1.0f) * custom_zoom;
-    auto pos2 = ImVec2(key2.time, key2.value * -1.0f) * custom_zoom;
+    auto pos = ImVec2(selectedKey == &key ? temp_x : key.time, key.value * -1.0f) * custom_zoom;
+    auto pos2 = ImVec2(selectedKey == &key2 ? temp_x : key2.time, key2.value * -1.0f) * custom_zoom;
     switch (key.interpolation) {
     case InterpolationType::Step:
         drawList->AddLine(pos, ImVec2(pos2.x, pos.y), line_col);
@@ -276,9 +276,10 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
 
     auto drawList = ImGui::GetWindowDrawList();
 
-    auto pos = ImVec2(key.time, key.value * -1.0f) * custom_zoom;
-    auto t_in = ImVec2(key.time + key.in_tangent.x, (key.value + key.in_tangent.y) * -1.0f) * custom_zoom;
-    auto t_out = ImVec2(key.time + key.out_tangent.x, (key.value + key.out_tangent.y) * -1.0f) * custom_zoom;
+    auto time = selectedKey == &key ? temp_x : key.time;
+    auto pos = ImVec2(time, key.value * -1.0f) * custom_zoom;
+    auto t_in = ImVec2(time + key.in_tangent.x, (key.value + key.in_tangent.y) * -1.0f) * custom_zoom;
+    auto t_out = ImVec2(time + key.out_tangent.x, (key.value + key.out_tangent.y) * -1.0f) * custom_zoom;
     drawList->AddLine(t_in, pos, tangent_color);
     drawList->AddLine(pos, t_out, tangent_color);
 
@@ -304,6 +305,7 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
             selectedKey->value -= mp.y;
             temp_x += mp.x;
             // what happens here
+            //printf("would set time to %u ", static_cast<KeyTimeType>(temp_x));
             //selectedKey->time = static_cast<KeyTimeType>(temp_x);
         }
     }
@@ -313,7 +315,7 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
         temp_x = selectedKey->time;
     }
     if (selectedKey == &key) {
-        drawList->AddCircleFilled(ImVec2(temp_x, selectedKey->value * -1.0f) * custom_zoom, size, active_key_color);
+        drawList->AddCircleFilled(pos, size, active_key_color);
     } else {
         drawList->AddCircleFilled(pos, size, key_color);
     }
@@ -373,7 +375,9 @@ void AnimationEditor::DrawProperties() {
     ImGui::BeginChild(
         "anim_props", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
     if (selectedAnimation > -1 && selectedKey != nullptr) {
-        ImGui::InputInt("Time", &selectedKey->time);
+        if (ImGui::InputInt("Time", &selectedKey->time)) {
+            temp_x = selectedKey->time;
+        }
         ImGui::InputFloat("Value", &selectedKey->value);
         const char* items[] = {"Step", "Linear", "Hermite"};
         auto current_item = items[static_cast<int32_t>(selectedKey->interpolation)];
