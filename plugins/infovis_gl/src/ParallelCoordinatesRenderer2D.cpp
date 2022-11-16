@@ -247,7 +247,7 @@ bool ParallelCoordinatesRenderer2D::create() {
         dualNormalizedAxesProgramC_ //computes space with start and end points of lines in pixels on each axes
             = core::utility::make_glowl_shader("pc_dual_C", shader_options, "infovis_gl/pc/dual.comp.glsl");
         dualHoughProgramC_ //computes space with theta and rho => real hough
-            = core::utility::make_glowl_shader("pc_dual_Hough_C", shader_options, "infovis_gl/pc/dual_mb-space.comp.glsl");
+            = core::utility::make_glowl_shader("pc_dual_Hough_C", shader_options, "infovis_gl/pc/dualHough.comp.glsl");
 
         // Displays result from normalizedAxesC, by placing vertices at coordinates and drawling line primitives
         dualSpawnLinesProgramD_ = core::utility::make_glowl_shader(
@@ -262,7 +262,7 @@ bool ParallelCoordinatesRenderer2D::create() {
             "pc_dualRelRayD", shader_options, "infovis_gl/pc/dualM.vert.glsl", "infovis_gl/pc/dualM.frag.glsl");
         // Displays result from houghC, according to real hough transformation
         dualHoughProgramD_ = core::utility::make_glowl_shader(
-            "pc_dualHoughD", shader_options, "infovis_gl/pc/dualHough.vert.glsl", "infovis_gl/pc/dual_mb-space.frag.glsl");
+            "pc_dualHoughD", shader_options, "infovis_gl/pc/dualHough.vert.glsl", "infovis_gl/pc/dualHough.frag.glsl");
     } catch (std::exception& e) {
         Log::DefaultLog.WriteError(("ParallelCoordinatesRenderer2D: " + std::string(e.what())).c_str());
         return false;
@@ -901,9 +901,9 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl
     // number chosen to sufficiently differentiate almost horizontal lines
     // TODO: better compromise between performance and accuracy?
     //int thetas = static_cast<int>((pi / 2.0) / atan(1.0 / float(axes_pixel_width / dimensionCount_)));
-    int thetas = 1024;//axes_pixel_height;
-    int rhos = 1024;   //0.5 * axes_pixel_height;
-    +debugFloatBParam_.Param<core::param::FloatParam>()->Value();
+    int thetas = axes_pixel_height;
+    int rhos = 0.5 * axes_pixel_height;
+    debugFloatBParam_.Param<core::param::FloatParam>()->Value();
     int textureWidth = 0;
     int textureHeight = 0;
     GLint internal_format = 0;
@@ -914,10 +914,10 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl
     if (drawmode == DRAW_DUAL_HOUGH) {
         textureWidth = thetas;
         textureHeight = rhos;
-        internal_format = GL_R32F;
+        internal_format = GL_R32UI;
         format = GL_RED;
-        type = GL_FLOAT;
-        clear_format = GL_RED;
+        type = GL_UNSIGNED_INT;
+        clear_format = GL_RED_INTEGER;
     } else {
         textureWidth = axes_pixel_height;
         textureHeight = axes_pixel_height;
