@@ -293,6 +293,7 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
     ImGui::SetCursorScreenPos(ImVec2{pos.x - (button_size.x / 2.0f), pos.y - (button_size.y / 2.0f)});
     ImGui::InvisibleButton((std::string("##key") + std::to_string(key.time)).c_str(), button_size);
     if (ImGui::IsItemActivated()) {
+        printf("A ");
         selectedKey = &key;
         temp_x = selectedKey->time;
     }
@@ -300,16 +301,19 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
         if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
             ImGuiIO& io = ImGui::GetIO();
             auto mp = io.MouseDelta / custom_zoom;
-            key.value -= mp.y;
+            selectedKey->value -= mp.y;
             temp_x += mp.x;
+            // what happens here
+            //selectedKey->time = static_cast<KeyTimeType>(temp_x);
         }
     }
     if (ImGui::IsItemDeactivated()) {
-        key.time = static_cast<KeyTimeType>(temp_x);
+        printf("D ");
+        selectedKey->time = static_cast<KeyTimeType>(temp_x);
         temp_x = selectedKey->time;
     }
     if (selectedKey == &key) {
-        drawList->AddCircleFilled(ImVec2(temp_x, key.value * -1.0f) * custom_zoom, size, active_key_color);
+        drawList->AddCircleFilled(ImVec2(temp_x, selectedKey->value * -1.0f) * custom_zoom, size, active_key_color);
     } else {
         drawList->AddCircleFilled(pos, size, key_color);
     }
