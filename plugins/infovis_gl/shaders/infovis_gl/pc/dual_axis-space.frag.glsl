@@ -6,13 +6,9 @@
 
 in vec2 uvCoords;
 out vec4 fragOut;
-// height is actually number of bins
-uniform int axPxHeight;
-uniform int axPxWidth;
-uniform float debugFloat;
-uniform int binsNr;
-uniform int thetas;
-uniform int rhos;
+
+uniform int dual_space_width;
+uniform int dual_space_height;
 layout (binding=7) uniform usampler2DArray imgRead;
 layout (binding=8) uniform usampler2DArray slctRead;
 
@@ -65,7 +61,6 @@ float rand(vec2 co){
 
 void main() {
     bool selected = false;
-    int axPxDist = axPxWidth / int(dimensionCount-1);
     int cdim = int(floor(uvCoords.x));
     float relx = fract(uvCoords.x);
     float result = 0.0;
@@ -78,12 +73,12 @@ void main() {
     //          float random_sample_cnt = 3.0;
     //          //if(relx > 0.0)
     //          {
-    //              for(int left_axis = 0; left_axis<rhos; ++left_axis){
-    //                  float left_axis_normalized = (float(left_axis))/float(rhos-1);
+    //              for(int left_axis = 0; left_axis<dual_space_height; ++left_axis){
+    //                  float left_axis_normalized = (float(left_axis))/float(dual_space_height-1);
     //      
     //                  for(float r_sample_idx = 0; r_sample_idx<random_sample_cnt; ++r_sample_idx)
     //                  {
-    //                      left_axis_normalized += (r_sample_idx/ max(1.0,(random_sample_cnt-1)*2.0) ) * rand(uvCoords*vec2(r_sample_idx)) / rhos;
+    //                      left_axis_normalized += (r_sample_idx/ max(1.0,(random_sample_cnt-1)*2.0) ) * rand(uvCoords*vec2(r_sample_idx)) / dual_space_height;
     //      
     //                      vec2 from = vec2(0.0,left_axis_normalized);
     //                      vec2 to = vec2(relx,uvCoords.y);
@@ -92,7 +87,7 @@ void main() {
     //                      float right_axis_normalized = from.y + v.y;
     //                      if(right_axis_normalized >= 0.0 && right_axis_normalized <= 1.0)
     //                      {
-    //                          //result += fromFixPoint(texelFetch(imgRead, ivec3(left_axis, int(round(right_axis_normalized*(rhos-1.0f))), cdim), 0).x);
+    //                          //result += fromFixPoint(texelFetch(imgRead, ivec3(left_axis, int(round(right_axis_normalized*(dual_space_height-1.0f))), cdim), 0).x);
     //                          left_sum_result += bilinearInterpolation(imgRead, vec3(left_axis_normalized,right_axis_normalized,float(cdim))) / random_sample_cnt;
     //                      }
     //                  }
@@ -100,12 +95,12 @@ void main() {
     //          }
     //          //else
     //          {
-    //              for(int right_axis = 0; right_axis<rhos; ++right_axis){
-    //                  float right_axis_normalized = (float(right_axis))/float(rhos-1);
+    //              for(int right_axis = 0; right_axis<dual_space_height; ++right_axis){
+    //                  float right_axis_normalized = (float(right_axis))/float(dual_space_height-1);
     //      
     //                  for(float r_sample_idx = 0; r_sample_idx<random_sample_cnt; ++r_sample_idx)
     //                  {
-    //                      right_axis_normalized += (r_sample_idx/ max(1.0,(random_sample_cnt-1)*2.0) ) * rand(uvCoords*vec2(r_sample_idx)) / rhos;
+    //                      right_axis_normalized += (r_sample_idx/ max(1.0,(random_sample_cnt-1)*2.0) ) * rand(uvCoords*vec2(r_sample_idx)) / dual_space_height;
     //      
     //                      vec2 from = vec2(1.0,right_axis_normalized);
     //                      vec2 to = vec2(relx,uvCoords.y);
@@ -114,7 +109,7 @@ void main() {
     //                      float left_axis_normalized = from.y + v.y;
     //                      if(left_axis_normalized >= 0.0 && left_axis_normalized <= 1.0)
     //                      {
-    //                          //result += fromFixPoint(texelFetch(imgRead, ivec3(left_axis_normalized*(rhos-1.0f), right_axis, cdim), 0).x);
+    //                          //result += fromFixPoint(texelFetch(imgRead, ivec3(left_axis_normalized*(dual_space_height-1.0f), right_axis, cdim), 0).x);
     //                          right_sum_result += bilinearInterpolation(imgRead, vec3(left_axis_normalized,right_axis_normalized,float(cdim))) / random_sample_cnt;
     //                      }
     //                  }
@@ -145,9 +140,9 @@ void main() {
     float left_range = (left_max-left_min);
     float right_range = (right_max-right_min);
 
-    for(int sample_idx = 0; sample_idx < rhos; ++sample_idx){
-        float left = left_min + (float(sample_idx)/float(rhos-1)) * left_range;
-        float right = right_max - (float(sample_idx)/float(rhos-1)) * right_range;
+    for(int sample_idx = 0; sample_idx < dual_space_height; ++sample_idx){
+        float left = left_min + (float(sample_idx)/float(dual_space_height-1)) * left_range;
+        float right = right_max - (float(sample_idx)/float(dual_space_height-1)) * right_range;
 
         result += bilinearInterpolation(imgRead, vec3(left,right,float(cdim))) * left_range*right_range;
     }

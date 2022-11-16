@@ -6,13 +6,9 @@
 
 in vec2 uvCoords;
 out vec4 fragOut;
-// height is actually number of bins
-uniform int axPxHeight;
-uniform int axPxWidth;
-uniform float debugFloat;
-uniform int binsNr;
-uniform int thetas;
-uniform int rhos;
+
+uniform int dual_space_width;
+uniform int dual_space_height;
 layout (binding=7) uniform usampler2DArray imgRead;
 layout (binding=8) uniform usampler2DArray slctRead;
 
@@ -47,25 +43,24 @@ float bilinearInterpolation(usampler2DArray sampler, vec3 coords){
 
 void main() {
     bool selected = false;
-    int axPxDist = axPxWidth / int(dimensionCount-1);
     int cdim = int(floor(uvCoords.x));
     float relx = fract(uvCoords.x);
     float result = 0.0;
 
     int prev_b_idx = 0;
 
-    for(int m_idx = 0; m_idx<thetas; ++m_idx){
-        float m_normalized = (float(m_idx)+0.5)/float(thetas);
+    for(int m_idx = 0; m_idx<dual_space_width; ++m_idx){
+        float m_normalized = (float(m_idx)+0.5)/float(dual_space_width);
         float m_angle = (m_normalized * HALF_PI + QUARTER_PI);
         float b_normalized = uvCoords.y + (relx * tan(HALF_PI - m_angle));
 
-        float b = b_normalized * (rhos-1);
+        float b = b_normalized * (dual_space_height-1);
         int current_b_idx = int(floor(b));
 
-        // need to scan all rhos between current hit and last theta's hit?
+        // need to scan all dual_space_height between current hit and last theta's hit?
         for(int b_idx = prev_b_idx; b_idx >= current_b_idx; --b_idx){
         
-            b_normalized = (float(b_idx)+0.5) / float(rhos);
+            b_normalized = (float(b_idx)+0.5) / float(dual_space_height);
         
             // filter out hits above/below axis
             if(b_normalized < 0.0 || b_normalized > 1.0){
@@ -79,7 +74,7 @@ void main() {
             vec2 orthLine = vec2(-lineDir.y, lineDir.x);
             float m_angle_corrected = acos(dot(orthLine, vec2(1.0, 0.0)));
             float m_normalized_corrected = (m_angle_corrected - QUARTER_PI)/(HALF_PI);
-            int theta_index_corrected = int(floor((m_angle_corrected - QUARTER_PI) * (thetas) / (HALF_PI))); 
+            int theta_index_corrected = int(floor((m_angle_corrected - QUARTER_PI) * (dual_space_width) / (HALF_PI))); 
             
             //result += fromFixPoint(texelFetch(imgRead, ivec3(m_idx, b_idx, cdim), 0).x);
             result += bilinearInterpolation(imgRead,vec3( m_normalized ,b_normalized,float(cdim)));
@@ -104,8 +99,8 @@ void main() {
     }
 
 
-    //      for(int b = 0; b<rhos; ++b){
-    //          float b_normalized = (float(b)+0.5)/float(rhos);
+    //      for(int b = 0; b<dual_space_height; ++b){
+    //          float b_normalized = (float(b)+0.5)/float(dual_space_height);
     //      
     //          // compute theta for current b and current pixel
     //          vec2 from = vec2(0.0, b_normalized);
@@ -116,7 +111,7 @@ void main() {
     //          if(m_angle < 2*quarterPI || m_angle > (3*quarterPI)){
     //              continue;
     //          }
-    //          float theta = (m_angle - quarterPI) * (thetas) / (halfPI);
+    //          float theta = (m_angle - quarterPI) * (dual_space_width) / (halfPI);
     //      
     //          // read from two closest theta entries
     //          int theta_0 = int(floor(theta));

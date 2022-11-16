@@ -11,9 +11,8 @@ layout(binding = 8, r32ui) uniform coherent uimage2DArray o_dual_centroidX_tex;
 layout(binding = 9, r32ui) uniform coherent uimage2DArray o_dual_centroidY_tex;
 layout(binding = 10, r32ui) uniform coherent uimage2DArray o_dual_comoment_tex;
 layout(binding = 6, r32ui) uniform coherent uimage2DArray o_select_dualtex;
-uniform int axPxHeight;
-uniform int thetas;
-uniform int rhos;
+uniform int dual_space_width;
+uniform int dual_space_height;
 uniform uint itemTestMask = 0;
 uniform uint itemPassMask = 0;
 
@@ -38,8 +37,8 @@ void main() {
     float right = pc_dataValueNormalized(itemID, dimID + 1);
 
     if(!bitflag_test(flags[itemID], itemTestMask, itemPassMask)){
-        float left_axis = (left * (thetas-1));
-        float right_axis = (right * (rhos-1));
+        float left_axis = (left * (dual_space_width-1));
+        float right_axis = (right * (dual_space_height-1));
 
         float wr = fract(left_axis);
         float wl = 1.0 - fract(left_axis);
@@ -53,6 +52,6 @@ void main() {
 
     }
     else{
-        //imageAtomicAdd(o_select_dualtex, ivec3(int((m - quarterPI) * (thetas) / (halfPI)), int(b * (rhos-1)) , dimID), 1);
+        //imageAtomicAdd(o_select_dualtex, ivec3(int((m - quarterPI) * (dual_space_width) / (halfPI)), int(b * (dual_space_height-1)) , dimID), 1);
     }
 }

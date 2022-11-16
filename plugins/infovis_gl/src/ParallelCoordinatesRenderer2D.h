@@ -111,6 +111,8 @@ protected:
         DRAW_DUAL_HOUGH,
         DRAW_DUAL_SPAWN_LINES,
         DRAW_DUAL_AXES_NORMALIZED,
+        DRAW_DUAL_MB_SPACE,
+        DRAW_DUAL_AXIS_SPACE
     };
 
     enum SelectionMode {
@@ -260,6 +262,13 @@ protected:
     std::unique_ptr<glowl::GLSLProgram> dualHoughProgramD_;
     std::unique_ptr<glowl::GLSLProgram> dualRayProgramD_;
     std::unique_ptr<glowl::GLSLProgram> dualRelRayProgramD_;
+
+    // Compute and draw shader program for dual m-b-space (slope and offset)
+    std::unique_ptr<glowl::GLSLProgram> dualMBSpaceProgramC_;
+    std::unique_ptr<glowl::GLSLProgram> dualMBSpaceProgramD_;
+    // Compute and draw shader program for dual axis-space (normalized start and end points)
+    std::unique_ptr<glowl::GLSLProgram> dualAxisSpaceProgramC_;
+    std::unique_ptr<glowl::GLSLProgram> dualAxisSpaceProgramD_;
 
     std::array<GLint, 3> filterWorkgroupSize_;
     std::array<GLint, 3> dualWorkgroupSize_;
