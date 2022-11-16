@@ -25,20 +25,21 @@ float fromFixPoint(uint v){
 }
 
 float bilinearInterpolation(usampler2DArray sampler, vec3 coords){
-    uvec4 integer_samples = textureGather(sampler, coords, 0);
     ivec3 texture_resolution = textureSize(sampler,0);
-    vec2 pixel_coords = vec2(coords.x * float(texture_resolution.x - 1),coords.y * float(texture_resolution.y - 1));
-    vec4 weights = vec4(
-        (1.0-fract(pixel_coords.x))*fract(pixel_coords.y),
-        fract(pixel_coords.x)*fract(pixel_coords.y),
-        fract(pixel_coords.x)*(1.0-fract(pixel_coords.y)),
-        (1.0-fract(pixel_coords.x))*(1.0-fract(pixel_coords.y))
+
+    vec2 shifted_coord = vec2(
+        clamp(coords.x * float(texture_resolution.x) - 0.5,0.0,float(texture_resolution.x)),
+        clamp(coords.y * float(texture_resolution.y) - 0.5,0.0,float(texture_resolution.y))
     );
+    ivec2 base_texel = ivec2( floor(shifted_coord.x), floor(shifted_coord.y));
+    vec2 f = vec2( fract(shifted_coord.x), fract(shifted_coord.y) );
 
-    vec4 samples = vec4(fromFixPoint(integer_samples.x),fromFixPoint(integer_samples.y),fromFixPoint(integer_samples.z),fromFixPoint(integer_samples.w));
-    vec4 weighted_samples = samples * weights;
+    float s00 = fromFixPoint(texelFetch(sampler, ivec3(base_texel+ivec2(0,0),int(coords.z)), 0).x);
+    float s10 = fromFixPoint(texelFetch(sampler, ivec3(base_texel+ivec2(1,0),int(coords.z)), 0).x);
+    float s01 = fromFixPoint(texelFetch(sampler, ivec3(base_texel+ivec2(0,1),int(coords.z)), 0).x);
+    float s11 = fromFixPoint(texelFetch(sampler, ivec3(base_texel+ivec2(1,1),int(coords.z)), 0).x);
 
-    return (weighted_samples.x + weighted_samples.y + weighted_samples.z + weighted_samples.w);
+    return mix( mix(s00,s10,f.x), mix(s01, s11, f.x), f.y);
 }
 
 void main() {
@@ -50,17 +51,17 @@ void main() {
     int prev_b_idx = 0;
 
     for(int m_idx = 0; m_idx<dual_space_width; ++m_idx){
-        float m_normalized = (float(m_idx)+0.5)/float(dual_space_width);
+        float m_normalized = float(m_idx)/float(dual_space_width-1);
         float m_angle = (m_normalized * HALF_PI + QUARTER_PI);
         float b_normalized = uvCoords.y + (relx * tan(HALF_PI - m_angle));
 
-        float b = b_normalized * (dual_space_height-1);
+        float b = b_normalized * dual_space_height;
         int current_b_idx = int(floor(b));
 
         // need to scan all dual_space_height between current hit and last theta's hit?
         for(int b_idx = prev_b_idx; b_idx >= current_b_idx; --b_idx){
         
-            b_normalized = (float(b_idx)+0.5) / float(dual_space_height);
+            b_normalized = float(b_idx)/ float(dual_space_height-1);
         
             // filter out hits above/below axis
             if(b_normalized < 0.0 || b_normalized > 1.0){

@@ -25,20 +25,7 @@ float fromFixPoint(uint v){
 }
 
 float bilinearInterpolation(usampler2DArray sampler, vec3 coords){
-    //uvec4 integer_samples = textureGather(sampler, coords, 0);
     ivec3 texture_resolution = textureSize(sampler,0);
-    //vec2 pixel_coords = vec2(coords.x * float(texture_resolution.x - 1),coords.y * float(texture_resolution.y - 1));
-    //vec4 weights = vec4(
-    //    (1.0-fract(pixel_coords.x))*fract(pixel_coords.y),
-    //    fract(pixel_coords.x)*fract(pixel_coords.y),
-    //    fract(pixel_coords.x)*(1.0-fract(pixel_coords.y)),
-    //    (1.0-fract(pixel_coords.x))*(1.0-fract(pixel_coords.y))
-    //);
-    //
-    //vec4 samples = vec4(fromFixPoint(integer_samples.x),fromFixPoint(integer_samples.y),fromFixPoint(integer_samples.z),fromFixPoint(integer_samples.w));
-    //vec4 weighted_samples = samples * weights;
-    //
-    //return (weighted_samples.x + weighted_samples.y + weighted_samples.z + weighted_samples.w);
 
     vec2 shifted_coord = vec2(
         clamp(coords.x * float(texture_resolution.x) - 0.5,0.0,float(texture_resolution.x)),
