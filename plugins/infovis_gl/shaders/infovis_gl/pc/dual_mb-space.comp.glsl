@@ -45,11 +45,11 @@ void main() {
     if(!bitflag_test(flags[itemID], itemTestMask, itemPassMask)){
         // map m and b to image coords
         m = (m - quarterPI) * (thetas) / (halfPI);
-        b = b * (rhos-1.0);
+        b = 0.5 + (b * (rhos-1.0));
 
         // select bin
-        float m_binned = round(m);
-        float b_binned = round(b);
+        //float m_binned = round(m);
+        //float b_binned = round(b);
 
         //TODO offset by half texel missing?
 

@@ -30,7 +30,14 @@ float fromFixPoint(uint v){
 
 float bilinearInterpolation(usampler2DArray sampler, vec3 coords){
     uvec4 integer_samples = textureGather(sampler, coords, 0);
-    vec4 weights = vec4((1.0-fract(coords.x))*fract(coords.y),fract(coords.x)*fract(coords.y),fract(coords.x)*(1.0-fract(coords.y)), (1.0-fract(coords.x))*(1.0-fract(coords.y)) );
+    ivec3 texture_resolution = textureSize(sampler,0);
+    vec2 pixel_coords = vec2(coords.x * float(texture_resolution.x - 1),coords.y * float(texture_resolution.y - 1));
+    vec4 weights = vec4(
+        (1.0-fract(pixel_coords.x))*fract(pixel_coords.y),
+        fract(pixel_coords.x)*fract(pixel_coords.y),
+        fract(pixel_coords.x)*(1.0-fract(pixel_coords.y)),
+        (1.0-fract(pixel_coords.x))*(1.0-fract(pixel_coords.y))
+    );
 
     vec4 samples = vec4(fromFixPoint(integer_samples.x),fromFixPoint(integer_samples.y),fromFixPoint(integer_samples.z),fromFixPoint(integer_samples.w));
     vec4 weighted_samples = samples * weights;
@@ -52,17 +59,19 @@ void main() {
         float m_angle = (m_normalized * HALF_PI + QUARTER_PI);
         float b_normalized = uvCoords.y + (relx * tan(HALF_PI - m_angle));
 
-        // filter out hits above/below axis
-        if(b_normalized < 0.0 || b_normalized > 1.0){
-            //continue;
-        }
-
         float b = b_normalized * (rhos-1);
-        int current_b_idx = int(ceil(b));
+        int current_b_idx = int(floor(b));
 
-        //TODO need to scan all rhos between current hit and last theta's hit?
-        for(int b_idx = prev_b_idx+1; b_idx >= current_b_idx; --b_idx){
-
+        // need to scan all rhos between current hit and last theta's hit?
+        for(int b_idx = prev_b_idx; b_idx >= current_b_idx; --b_idx){
+        
+            b_normalized = (float(b_idx)+0.5) / float(rhos);
+        
+            // filter out hits above/below axis
+            if(b_normalized < 0.0 || b_normalized > 1.0){
+                continue;
+            }
+        
             // update m_idx to match b
             vec2 from = vec2(0.0, b_normalized);
             vec2 to = vec2(relx, uvCoords.y);
@@ -74,6 +83,8 @@ void main() {
             
             //result += fromFixPoint(texelFetch(imgRead, ivec3(m_idx, b_idx, cdim), 0).x);
             result += bilinearInterpolation(imgRead,vec3( m_normalized ,b_normalized,float(cdim)));
+        
+            //result += 1.0;
         }
         prev_b_idx = current_b_idx;
 
