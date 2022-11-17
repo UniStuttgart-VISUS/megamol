@@ -33,8 +33,8 @@ float Key::Interpolate(Key first, Key second, KeyTimeType time) {
         return (1.0f - t) * my_first.value + t * my_second.value;
     case InterpolationType::Hermite:
         const auto t2 = t * t, t3 = t2 * t;
-        const auto out_len = ImLengthSqr(my_first.out_tangent);
-        const auto in_len = ImLengthSqr(my_second.in_tangent);
+        const auto out_len = 1.0f; // std::sqrtf(ImLengthSqr(my_first.out_tangent));
+        const auto in_len = -1.0f; //std::sqrtf(ImLengthSqr(my_second.in_tangent));
         return my_first.value * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.value * (-2.0f * t3 + 3.0f * t2) +
                out_len * my_first.out_tangent.y * (t3 - 2.0f * t2 + t) +
                in_len * my_second.in_tangent.y * (t3 - t2);
@@ -139,7 +139,7 @@ megamol::gui::AnimationEditor::AnimationEditor(const std::string& window_name)
         : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_ANIMATIONEDITOR) {
 
     // Configure HOTKEY EDITOR Window
-    this->win_config.size = ImVec2(500.0f * megamol::gui::gui_scaling.Get(), 400.0f * megamol::gui::gui_scaling.Get());
+    this->win_config.size = ImVec2(1200.0f * megamol::gui::gui_scaling.Get(), 800.0f * megamol::gui::gui_scaling.Get());
     this->win_config.reset_size = this->win_config.size;
     this->win_config.flags = ImGuiWindowFlags_NoNavInputs;
     this->win_config.hotkey =
@@ -207,7 +207,12 @@ void AnimationEditor::DrawToolbar() {
     ImGui::SameLine();
     ImGui::Button("link tangents");
     ImGui::SameLine();
-    ImGui::Button("flat tangents");
+    if (ImGui::Button("flat tangents")) {
+        if (selectedKey != nullptr) {
+            selectedKey->in_tangent = {-10.0f, 0.0f};
+            selectedKey->out_tangent = {10.0f, 0.0f};
+        }
+    }
     ImGui::SameLine();
     DrawVerticalSeparator();
     ImGui::SameLine();
@@ -261,6 +266,12 @@ void AnimationEditor::DrawInterpolation(ImDrawList* dl, const Key& key, const Ke
         drawList->AddLine(pos, pos2, line_col);
         break;
     case InterpolationType::Hermite:
+        for (auto t = key.time; t < key2.time - 1; ++t) {
+            auto v1 = key.Interpolate(key, key2, t);
+            auto v2 = key.Interpolate(key, key2, t + 1);
+            drawList->AddLine(
+                ImVec2(t, v1 * -1.0f) * custom_zoom, ImVec2(t + 1, v2 * -1.0f) * custom_zoom, line_col);
+        }
         break;
     default:;
     }
@@ -286,15 +297,32 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
     ImGui::SetCursorScreenPos(ImVec2{t_in.x - (button_size.x / 2.0f), t_in.y - (button_size.y / 2.0f)});
     ImGui::InvisibleButton((std::string("##key_intan") + std::to_string(key.time)).c_str(), button_size);
     drawList->AddCircleFilled(t_in, size, tangent_color, 4);
+    if (ImGui::IsItemActive()) {
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+            ImGuiIO& io = ImGui::GetIO();
+            auto mp = io.MouseDelta;
+            t_in += mp;
+            key.in_tangent.x = t_in.x / custom_zoom.x - time;
+            key.in_tangent.y = -1.0f * (t_in.y / custom_zoom.y) - key.value;
+        }
+    }
 
     ImGui::SetCursorScreenPos(ImVec2{t_out.x - (button_size.x / 2.0f), t_out.y - (button_size.y / 2.0f)});
     ImGui::InvisibleButton((std::string("##key_outtan") + std::to_string(key.time)).c_str(), button_size);
     drawList->AddCircleFilled(t_out, size, tangent_color, 4);
+    if (ImGui::IsItemActive()) {
+        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+            ImGuiIO& io = ImGui::GetIO();
+            auto mp = io.MouseDelta;
+            t_out += mp;
+            key.out_tangent.x = t_out.x / custom_zoom.x - time;
+            key.out_tangent.y = -1.0f * (t_out.y / custom_zoom.y) - key.value;
+        }
+    }
 
     ImGui::SetCursorScreenPos(ImVec2{pos.x - (button_size.x / 2.0f), pos.y - (button_size.y / 2.0f)});
     ImGui::InvisibleButton((std::string("##key") + std::to_string(key.time)).c_str(), button_size);
     if (ImGui::IsItemActivated()) {
-        printf("A ");
         selectedKey = &key;
         temp_x = selectedKey->time;
     }
@@ -310,7 +338,6 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
         }
     }
     if (ImGui::IsItemDeactivated()) {
-        printf("D ");
         selectedKey->time = static_cast<KeyTimeType>(temp_x);
         temp_x = selectedKey->time;
     }
