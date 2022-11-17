@@ -239,10 +239,7 @@ private:
         OUTLINE = 7
     };
 
-    enum ShadingMode {
-        FORWARD = 0,
-        DEFERRED = 1
-    };
+    enum ShadingMode { FORWARD = 0, DEFERRED = 1 };
 
     typedef std::map<std::tuple<int, int, bool>, std::shared_ptr<glowl::GLSLProgram>> shader_map;
 

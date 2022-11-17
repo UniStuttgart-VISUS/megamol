@@ -973,7 +973,8 @@ bool SphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // Checking for changed render mode
     auto current_render_mode = static_cast<RenderMode>(this->render_mode_param_.Param<param::EnumParam>()->Value());
     auto current_shading_mode = static_cast<ShadingMode>(this->shading_mode_param_.Param<param::EnumParam>()->Value());
-    if (this->init_resources_ || (current_render_mode != this->render_mode_) || (current_shading_mode != this->shading_mode_)) {
+    if (this->init_resources_ || (current_render_mode != this->render_mode_) ||
+        (current_shading_mode != this->shading_mode_)) {
         this->render_mode_ = current_render_mode;
         this->shading_mode_ = current_shading_mode;
         init_resources_ = false;
