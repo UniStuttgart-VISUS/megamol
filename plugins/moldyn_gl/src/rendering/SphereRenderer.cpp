@@ -56,6 +56,7 @@ SphereRenderer::SphereRenderer(void)
         , shader_options_flags_(nullptr)
         , init_resources_(true)
         , render_mode_(RenderMode::SIMPLE)
+        , shading_mode_(ShadingMode::FORWARD)
         , grey_tf_(0)
         , range_()
         , flags_enabled_(false)
@@ -98,6 +99,7 @@ SphereRenderer::SphereRenderer(void)
         , col_buf_array_()
 #endif // SPHERE_MIN_OGL_SSBO_STREAM
         , render_mode_param_("renderMode", "The sphere render mode.")
+        , shading_mode_param_("shaderMode", "The shading mode for selected render modes.")
         , radius_scaling_param_("scaling", "Scaling factor for particle radii.")
         , force_time_slot_(
               "forceTime", "Flag to force the time code to the specified value. Set to true when rendering a video.")
@@ -154,6 +156,15 @@ SphereRenderer::SphereRenderer(void)
     this->render_mode_param_ << rmp;
     this->MakeSlotAvailable(&this->render_mode_param_);
     rmp = nullptr;
+
+    // Initialising enum param with all possible modes (needed for configurator)
+    // (Removing not available render modes later in create function)
+    param::EnumParam* smp = new param::EnumParam(this->shading_mode_);
+    smp->SetTypePair(ShadingMode::FORWARD, this->getShadingModeString(ShadingMode::FORWARD).c_str());
+    smp->SetTypePair(ShadingMode::DEFERRED, this->getShadingModeString(ShadingMode::DEFERRED).c_str());
+    this->shading_mode_param_ << smp;
+    this->MakeSlotAvailable(&this->shading_mode_param_);
+    smp = nullptr;
 
     this->radius_scaling_param_ << new param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->radius_scaling_param_);
@@ -499,6 +510,10 @@ bool SphereRenderer::createResources() {
 
         case (RenderMode::SIMPLE):
         case (RenderMode::SIMPLE_CLUSTERED): {
+            if (shading_mode_ == ShadingMode::DEFERRED) {
+                shader_options_flags_->addDefinition("DEFERRED_SHADING");
+            }
+
             sphere_prgm_.reset();
             sphere_prgm_ = core::utility::make_glowl_shader("sphere_simple", *shader_options_flags_,
                 "moldyn_gl/sphere_renderer/sphere_simple.vert.glsl",
@@ -522,6 +537,10 @@ bool SphereRenderer::createResources() {
         } break;
 
         case (RenderMode::SSBO_STREAM): {
+            if (shading_mode_ == ShadingMode::DEFERRED) {
+                shader_options_flags_->addDefinition("DEFERRED_SHADING");
+            }
+
             this->use_static_data_param_.Param<param::BoolParam>()->SetGUIVisible(true);
 
             glGenVertexArrays(1, &this->vert_array_);
@@ -546,6 +565,10 @@ bool SphereRenderer::createResources() {
         } break;
 
         case (RenderMode::BUFFER_ARRAY): {
+            if (shading_mode_ == ShadingMode::DEFERRED) {
+                shader_options_flags_->addDefinition("DEFERRED_SHADING");
+            }
+
             sphere_prgm_.reset();
             sphere_prgm_ = core::utility::make_glowl_shader("sphere_bufferarray", *shader_options_flags_,
                 "moldyn_gl/sphere_renderer/sphere_bufferarray.vert.glsl",
@@ -913,6 +936,24 @@ std::string SphereRenderer::getRenderModeString(RenderMode rm) {
     return mode;
 }
 
+std::string megamol::moldyn_gl::rendering::SphereRenderer::getShadingModeString(ShadingMode sm) {
+    std::string mode;
+
+    switch (sm) {
+    case (ShadingMode::FORWARD):
+        mode = "Forward";
+        break;
+    case (ShadingMode::DEFERRED):
+        mode = "Deferred";
+        break;
+    default:
+        mode = "unknown";
+        break;
+    }
+
+    return mode;
+}
+
 
 bool SphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // timer.BeginFrame();
@@ -931,8 +972,11 @@ bool SphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     // Checking for changed render mode
     auto current_render_mode = static_cast<RenderMode>(this->render_mode_param_.Param<param::EnumParam>()->Value());
-    if (this->init_resources_ || (current_render_mode != this->render_mode_)) {
+    auto current_shading_mode = static_cast<ShadingMode>(this->shading_mode_param_.Param<param::EnumParam>()->Value());
+    if (this->init_resources_ || (current_render_mode != this->render_mode_) ||
+        (current_shading_mode != this->shading_mode_)) {
         this->render_mode_ = current_render_mode;
+        this->shading_mode_ = current_shading_mode;
         init_resources_ = false;
         if (!this->createResources()) {
             return false;
