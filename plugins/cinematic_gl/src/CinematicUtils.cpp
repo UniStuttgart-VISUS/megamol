@@ -47,9 +47,7 @@ bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
     this->font.SetBatchDrawMode(true);
 
     // Initialise rendering
-    auto ssf =
-        std::make_shared<core_gl::utility::ShaderSourceFactory>(core_instance->Configuration().ShaderDirectories());
-    if (!this->InitPrimitiveRendering(*ssf)) {
+    if (!this->InitPrimitiveRendering(core_instance->GetShaderPaths())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;

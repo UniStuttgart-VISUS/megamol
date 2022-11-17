@@ -11,6 +11,8 @@
 
 namespace megamol::frontend_resources {
 
+static std::string WindowManipulation_Req_Name = "WindowManipulation";
+
 struct WindowManipulation {
     void set_window_title(const char* title) const GL_STUB();
     void set_framebuffer_size(const unsigned int width, const unsigned int height) const GL_STUB();

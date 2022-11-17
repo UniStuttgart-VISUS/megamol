@@ -14,8 +14,7 @@
 #include "mmstd_gl/renderer/CallRender2DGL.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/CallRenderViewGL.h"
-#include "mmstd_gl/renderer/ContextToGL.h"
-#include "mmstd_gl/renderer/DeferredShading.h"
+#include "mmstd_gl/renderer/TimeMultiplier.h"
 #include "mmstd_gl/renderer/TransferFunctionGL.h"
 #include "mmstd_gl/special/CallbackScreenShooter.h"
 #include "mmstd_gl/special/ChronoGraph.h"
@@ -50,11 +49,11 @@ public:
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::TransferFunctionGL>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::BoundingBoxRenderer>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::PlaneRenderer>();
-        this->module_descriptions.RegisterAutoDescription<mmstd_gl::DeferredShading>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::UniFlagStorage>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::ImageSpaceAmortization2D>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::ResolutionScaler2D>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::ResolutionScaler3D>();
+        this->module_descriptions.RegisterAutoDescription<mmstd_gl::TimeMultiplier>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::ScreenShooter>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::CallbackScreenShooter>();
         this->module_descriptions.RegisterAutoDescription<mmstd_gl::special::ChronoGraph>();

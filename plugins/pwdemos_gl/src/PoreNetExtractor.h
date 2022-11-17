@@ -7,6 +7,10 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "AbstractQuartzModule.h"
 #include "ArxelBuffer.h"
 #include "BufferMTPConnection.h"
@@ -21,7 +25,6 @@
 #include "vislib/sys/File.h"
 #include "vislib/sys/RunnableThread.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
 
@@ -246,7 +249,7 @@ private:
     unsigned int slice;
 
     /** The crystalite shader */
-    vislib_gl::graphics::gl::GLSLShader cryShader;
+    std::unique_ptr<glowl::GLSLProgram> cryShader;
 
     /** The pore-net slice processor thread */
     vislib::sys::RunnableThread<PoreNetSliceProcessor> sliceProcessor;

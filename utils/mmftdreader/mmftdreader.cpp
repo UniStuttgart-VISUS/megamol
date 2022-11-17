@@ -4,16 +4,7 @@
 #include <string>
 #include <vector>
 
-#if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
 #include <filesystem>
-namespace fs = std::filesystem;
-#elif _WIN32
-#include <filesystem>
-namespace fs = std::experimental::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif
 
 struct ColumnInfo {
     uint16_t nameLength;
@@ -31,9 +22,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    fs::path filename(argv[1]);
+    std::filesystem::path filename(argv[1]);
 
-    if (!fs::is_regular_file(filename)) {
+    if (!std::filesystem::is_regular_file(filename)) {
         std::cerr << "File not found: " << filename.string() << std::endl;
         return 1;
     }

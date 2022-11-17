@@ -30,4 +30,5 @@ vcpkg_cmake_config_fixup(
   CONFIG_PATH lib/cmake/imgui_tex_inspect
 )
 
+file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
 file(INSTALL "${SOURCE_PATH}/LICENSE.txt" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
