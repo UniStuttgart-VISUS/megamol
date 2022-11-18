@@ -11,7 +11,7 @@
 #include "AbstractWindow.h"
 #include "WindowCollection.h"
 #include "mmcore/MegaMolGraph.h"
-#include "widgets/imgui_canvas.h"
+#include "imgui_canvas.h"
 
 #include <map>
 
@@ -24,7 +24,8 @@ using KeyTimeType = int32_t;
 enum class InterpolationType : int32_t {
     Step = 0,
     Linear = 1,
-    Hermite = 2
+    Hermite = 2,
+    CubicBezier = 3
 };
 
 enum class InteractionType : int32_t {

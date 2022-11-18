@@ -31,13 +31,21 @@ float Key::Interpolate(Key first, Key second, KeyTimeType time) {
         return my_first.value;
     case InterpolationType::Linear:
         return (1.0f - t) * my_first.value + t * my_second.value;
-    case InterpolationType::Hermite:
+    case InterpolationType::Hermite: {
         const auto t2 = t * t, t3 = t2 * t;
         const auto out_len = 1.0f; // std::sqrtf(ImLengthSqr(my_first.out_tangent));
         const auto in_len = -1.0f; //std::sqrtf(ImLengthSqr(my_second.in_tangent));
         return my_first.value * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.value * (-2.0f * t3 + 3.0f * t2) +
-               out_len * my_first.out_tangent.y * (t3 - 2.0f * t2 + t) +
-               in_len * my_second.in_tangent.y * (t3 - t2);
+               out_len * my_first.out_tangent.y * (t3 - 2.0f * t2 + t) + in_len * my_second.in_tangent.y * (t3 - t2);
+    }
+    case InterpolationType::CubicBezier: {
+        const auto t2 = t * t, t3 = t2 * t;
+        const auto invt2 = (1.0f - t) * (1.0f - t), invt3 = (1.0f - t) * (1.0f - t) * (1.0f - t);
+        auto p2 = my_first.value + my_first.out_tangent.y;
+        auto p3 = my_second.value + my_second.in_tangent.y;
+        return invt3 * my_first.value + 3.0f * invt2 * t * p2 +
+               3.0f * (1.0f - t) * t2 * p3 + t3 * my_second.value;
+    }
     }
     return 0.0f;
 }
@@ -139,7 +147,7 @@ megamol::gui::AnimationEditor::AnimationEditor(const std::string& window_name)
         : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_ANIMATIONEDITOR) {
 
     // Configure HOTKEY EDITOR Window
-    this->win_config.size = ImVec2(1200.0f * megamol::gui::gui_scaling.Get(), 800.0f * megamol::gui::gui_scaling.Get());
+    this->win_config.size = ImVec2(1600.0f * megamol::gui::gui_scaling.Get(), 800.0f * megamol::gui::gui_scaling.Get());
     this->win_config.reset_size = this->win_config.size;
     this->win_config.flags = ImGuiWindowFlags_NoNavInputs;
     this->win_config.hotkey =
@@ -266,6 +274,7 @@ void AnimationEditor::DrawInterpolation(ImDrawList* dl, const Key& key, const Ke
         drawList->AddLine(pos, pos2, line_col);
         break;
     case InterpolationType::Hermite:
+    case InterpolationType::CubicBezier:
         for (auto t = key.time; t < key2.time - 1; ++t) {
             auto v1 = key.Interpolate(key, key2, t);
             auto v2 = key.Interpolate(key, key2, t + 1);
@@ -399,10 +408,10 @@ void AnimationEditor::DrawProperties() {
     if (selectedAnimation > -1 && selectedKey != nullptr) {
         ImGui::InputInt("Time", &selectedKey->time);
         ImGui::InputFloat("Value", &selectedKey->value);
-        const char* items[] = {"Step", "Linear", "Hermite"};
+        const char* items[] = {"Step", "Linear", "Hermite", "Cubic Bezier"};
         auto current_item = items[static_cast<int32_t>(selectedKey->interpolation)];
         if (ImGui::BeginCombo("Interpolation", current_item)) {
-            for (int n = 0; n < 3; n++) {
+            for (int n = 0; n < 4; n++) {
                 const bool is_selected = (current_item == items[n]);
                 if (ImGui::Selectable(items[n], is_selected)) {
                     current_item = items[n];
@@ -416,7 +425,11 @@ void AnimationEditor::DrawProperties() {
                     case 2:
                         selectedKey->interpolation = InterpolationType::Hermite;
                         break;
+                    case 3:
+                        selectedKey->interpolation = InterpolationType::CubicBezier;
+                        break;
                     }
+
                 }
                 if (is_selected)
                     ImGui::SetItemDefaultFocus();
