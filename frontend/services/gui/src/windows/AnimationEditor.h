@@ -117,8 +117,10 @@ private:
     bool canvas_visible = false;
     bool is_dragging = false;
     ImVec2 drag_start = {0.0f, 0.0f};
+    float drag_start_value = 0.0f;
+    KeyTimeType drag_start_time = 0;
     float zoom = 1.0f;
-    float temp_x = 0.0f;
+    bool auto_capture = false;
 
     ImVec2 custom_zoom = {1.0f, 1.0f};
 };

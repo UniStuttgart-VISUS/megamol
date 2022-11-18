@@ -199,7 +199,7 @@ void megamol::gui::AnimationEditor::SpecificStateToJSON(nlohmann::json& inout_js
 
 
 void AnimationEditor::DrawToolbar() {
-    ImGui::Button("some button");
+    ImGui::Checkbox("auto capture", &auto_capture);
     ImGui::SameLine();
     DrawVerticalSeparator();
     ImGui::SameLine();
@@ -255,8 +255,8 @@ void AnimationEditor::DrawParams() {
 void AnimationEditor::DrawInterpolation(ImDrawList* dl, const Key& key, const Key& key2) {
     const auto line_col = ImGui::GetColorU32(ImGuiCol_NavHighlight);
     auto drawList = ImGui::GetWindowDrawList();
-    auto pos = ImVec2(selectedKey == &key ? temp_x : key.time, key.value * -1.0f) * custom_zoom;
-    auto pos2 = ImVec2(selectedKey == &key2 ? temp_x : key2.time, key2.value * -1.0f) * custom_zoom;
+    auto pos = ImVec2(key.time, key.value * -1.0f) * custom_zoom;
+    auto pos2 = ImVec2(key2.time, key2.value * -1.0f) * custom_zoom;
     switch (key.interpolation) {
     case InterpolationType::Step:
         drawList->AddLine(pos, ImVec2(pos2.x, pos.y), line_col);
@@ -287,7 +287,7 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
 
     auto drawList = ImGui::GetWindowDrawList();
 
-    auto time = selectedKey == &key ? temp_x : key.time;
+    auto time = key.time;
     auto pos = ImVec2(time, key.value * -1.0f) * custom_zoom;
     auto t_in = ImVec2(time + key.in_tangent.x, (key.value + key.in_tangent.y) * -1.0f) * custom_zoom;
     auto t_out = ImVec2(time + key.out_tangent.x, (key.value + key.out_tangent.y) * -1.0f) * custom_zoom;
@@ -324,22 +324,13 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
     ImGui::InvisibleButton((std::string("##key") + std::to_string(key.time)).c_str(), button_size);
     if (ImGui::IsItemActivated()) {
         selectedKey = &key;
-        temp_x = selectedKey->time;
+        drag_start_value = selectedKey->value;
+        drag_start_time = selectedKey->time;
     }
-    if (ImGui::IsItemActive()) {
-        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-            ImGuiIO& io = ImGui::GetIO();
-            auto mp = io.MouseDelta / custom_zoom;
-            selectedKey->value -= mp.y;
-            temp_x += mp.x;
-            // what happens here
-            //printf("would set time to %u ", static_cast<KeyTimeType>(temp_x));
-            //selectedKey->time = static_cast<KeyTimeType>(temp_x);
-        }
-    }
-    if (ImGui::IsItemDeactivated()) {
-        selectedKey->time = static_cast<KeyTimeType>(temp_x);
-        temp_x = selectedKey->time;
+    if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+        auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
+        selectedKey->value = drag_start_value - delta.y / custom_zoom.y;
+        selectedKey->time = drag_start_time + static_cast<KeyTimeType>(delta.x / custom_zoom.x);
     }
     if (selectedKey == &key) {
         drawList->AddCircleFilled(pos, size, active_key_color);
@@ -391,6 +382,7 @@ void AnimationEditor::DrawCurves() {
                 }
             }
         }
+        // TODO: draw play head
         canvas.End();
     }
     ImGui::EndChild();
@@ -402,9 +394,7 @@ void AnimationEditor::DrawProperties() {
     ImGui::BeginChild(
         "anim_props", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
     if (selectedAnimation > -1 && selectedKey != nullptr) {
-        if (ImGui::InputInt("Time", &selectedKey->time)) {
-            temp_x = selectedKey->time;
-        }
+        ImGui::InputInt("Time", &selectedKey->time);
         ImGui::InputFloat("Value", &selectedKey->value);
         const char* items[] = {"Step", "Linear", "Hermite"};
         auto current_item = items[static_cast<int32_t>(selectedKey->interpolation)];
@@ -432,6 +422,12 @@ void AnimationEditor::DrawProperties() {
         }
     }
     ImGui::EndChild();
+
+    //ImGui::BeginChild("Debug");
+    //ImGui::Text("drag_value: (%f, %f)", drag_value.x, drag_value.y);
+    //ImGui::Text("zoomed: (%f, %f)", drag_value.x / custom_zoom.x, drag_value.y / custom_zoom.y);
+    //ImGui::Text("cast: %i", static_cast<KeyTimeType>(drag_value.x / custom_zoom.x));
+    //ImGui::EndChild();
 }
 
 
