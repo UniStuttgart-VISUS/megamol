@@ -116,6 +116,14 @@ KeyTimeType FloatAnimation::GetEndTime() const {
     }
 }
 
+KeyTimeType FloatAnimation::GetLength() const {
+    if (!keys.empty()) {
+        return keys.rbegin()->second.time - keys.begin()->second.time;
+    } else {
+        return 1;
+    }
+}
+
 
 FloatAnimation::ValueType FloatAnimation::GetMinValue() const {
     if (!keys.empty()) {
@@ -217,22 +225,35 @@ void AnimationEditor::DrawToolbar() {
     ImGui::SameLine();
     if (ImGui::Button("flat tangents")) {
         if (selectedKey != nullptr) {
-            selectedKey->in_tangent = {-10.0f, 0.0f};
-            selectedKey->out_tangent = {10.0f, 0.0f};
+            selectedKey->in_tangent = {-1.0f, 0.0f};
+            selectedKey->out_tangent = {1.0f, 0.0f};
         }
     }
     ImGui::SameLine();
     DrawVerticalSeparator();
     ImGui::SameLine();
-    ImGui::Button("some other button");
+    if (ImGui::Button("frame view")) {
+        center_animation(floatAnimations[selectedAnimation]);
+    }
     ImGui::SameLine();
     DrawVerticalSeparator();
     ImGui::PushItemWidth(100.0f);
-    ImGui::SliderFloat("HZoom", &custom_zoom.x, 0.01f, 10.0f);
+    ImGui::SliderFloat("HZoom", &custom_zoom.x, 0.01f, 5000.0f);
     ImGui::SameLine();
-    ImGui::SliderFloat("VZoom", &custom_zoom.y, 0.01f, 10.0f);
+    ImGui::SliderFloat("VZoom", &custom_zoom.y, 0.01f, 5000.0f);
 }
 
+
+void AnimationEditor::center_animation(const FloatAnimation& anim) {
+    auto region = canvas.Rect();
+    custom_zoom.x =  0.9f * region.GetWidth() / static_cast<float>(anim.GetLength());
+    custom_zoom.y = 0.9f * region.GetHeight() / (anim.GetMaxValue() - anim.GetMinValue());
+    const auto h_start = static_cast<float>(-anim.GetStartTime());
+    const auto v_start = anim.GetMaxValue();
+    canvas.SetView(
+        ImVec2(h_start * custom_zoom.x + 0.05f * region.GetWidth(), v_start * custom_zoom.y + 0.05f * region.GetHeight()),
+        1.0f);
+}
 
 void AnimationEditor::DrawParams() {
     ImGui::Text("Available Parameters");
@@ -250,9 +271,7 @@ void AnimationEditor::DrawParams() {
         if (ImGui::IsItemActivated()) {
             selectedAnimation = a;
             if (canvas_visible) {
-                auto h_center = (anim.GetEndTime() - anim.GetStartTime()) * 0.5f + anim.GetStartTime();
-                auto v_center = (anim.GetMaxValue() - anim.GetMinValue()) * 0.5f + anim.GetMinValue();
-                canvas.SetView(ImVec2(h_center * frame_width, v_center * value_scale), 1.0f);
+                center_animation(floatAnimations[selectedAnimation]);
             }
         }
     }

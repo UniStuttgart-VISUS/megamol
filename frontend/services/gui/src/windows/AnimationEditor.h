@@ -40,8 +40,8 @@ struct Key {
     float value;
     InterpolationType interpolation = InterpolationType::Linear;
     bool tangents_linked = true;
-    ImVec2 in_tangent{-10.0f, 0.0f};
-    ImVec2 out_tangent{10.0f, 0.0f};
+    ImVec2 in_tangent{-1.0f, 0.0f};
+    ImVec2 out_tangent{1.0f, 0.0f};
 
     static float Interpolate(Key first, Key second, KeyTimeType time);
 };
@@ -62,6 +62,7 @@ public:
     const std::string& GetName() const;
     KeyTimeType GetStartTime() const;
     KeyTimeType GetEndTime() const;
+    KeyTimeType GetLength() const;
     ValueType GetMinValue() const;
     ValueType GetMaxValue() const;
     KeyMap::size_type GetSize() const {
@@ -99,6 +100,7 @@ public:
 
 private:
     void DrawToolbar();
+    void center_animation(const FloatAnimation& anim);
     void DrawParams();
     void DrawInterpolation(ImDrawList* dl, const Key& key, const Key& k2);
     void DrawKey(ImDrawList* dl, Key& key);
@@ -121,8 +123,6 @@ private:
     KeyTimeType anim_start = 0;
     KeyTimeType anim_end = 100;
 
-    const float frame_width = 10.0f;
-    const float value_scale = 10.0f;
     bool canvas_visible = false;
     bool is_dragging = false;
     ImVec2 drag_start = {0.0f, 0.0f};
