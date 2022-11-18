@@ -154,7 +154,7 @@ FloatAnimation::ValueType FloatAnimation::GetMaxValue() const {
 megamol::gui::AnimationEditor::AnimationEditor(const std::string& window_name)
         : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_ANIMATIONEDITOR) {
 
-    // Configure HOTKEY EDITOR Window
+    // Configure ANIMATION EDITOR Window
     this->win_config.size = ImVec2(1600.0f * megamol::gui::gui_scaling.Get(), 800.0f * megamol::gui::gui_scaling.Get());
     this->win_config.reset_size = this->win_config.size;
     this->win_config.flags = ImGuiWindowFlags_NoNavInputs;
@@ -281,7 +281,20 @@ void AnimationEditor::DrawParams() {
     ImGui::Text("Animation");
     ImGui::BeginChild(
         "anim_props", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
-    ImGui::InputInt2("Active Region", animation_bounds);
+    if (ImGui::Button("start")) {
+        current_frame = animation_bounds[0];
+    }
+    ImGui::SameLine();
+    ImGui::Button("reverse");
+    ImGui::SameLine();
+    ImGui::Button("play");
+    ImGui::SameLine();
+    if (ImGui::Button("end")) {
+        current_frame = animation_bounds[1];
+    }
+    if (ImGui::InputInt2("Active Region", animation_bounds)) {
+        current_frame = std::clamp(current_frame, animation_bounds[0], animation_bounds[1]);
+    }
     ImGui::SliderInt("Current Frame", &current_frame, animation_bounds[0], animation_bounds[1]);
     ImGui::EndChild();
 }
@@ -510,6 +523,9 @@ void AnimationEditor::DrawVerticalSeparator() {
 
 void AnimationEditor::DrawGrid(
     const ImVec2& from, const ImVec2& to, float majorUnit, float minorUnit, float labelAlignment, float sign) {
+
+    // TODO only show active region
+    // TODO auto compute Units based on zoom
     auto drawList = ImGui::GetWindowDrawList();
     auto direction = (to - from) * ImInvLength(to - from, 0.0f);
     auto normal = ImVec2(-direction.y, direction.x);
@@ -558,6 +574,8 @@ void AnimationEditor::DrawGrid(
 
 void AnimationEditor::DrawScale(
     const ImVec2& from, const ImVec2& to, float majorUnit, float minorUnit, float labelAlignment, float sign) {
+
+    // TODO auto compute Units based on zoom
     auto drawList = ImGui::GetWindowDrawList();
     auto direction = (to - from) * ImInvLength(to - from, 0.0f);
     auto normal = ImVec2(-direction.y, direction.x);
