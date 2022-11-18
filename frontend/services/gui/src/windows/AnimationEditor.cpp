@@ -237,6 +237,7 @@ void AnimationEditor::DrawToolbar() {
     }
     ImGui::SameLine();
     DrawVerticalSeparator();
+    ImGui::SameLine();
     ImGui::PushItemWidth(100.0f);
     ImGui::SliderFloat("HZoom", &custom_zoom.x, 0.01f, 5000.0f);
     ImGui::SameLine();
@@ -276,6 +277,13 @@ void AnimationEditor::DrawParams() {
         }
     }
     ImGui::EndChild();
+
+    ImGui::Text("Animation");
+    ImGui::BeginChild(
+        "anim_props", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
+    ImGui::InputInt2("Active Region", animation_bounds);
+    ImGui::SliderInt("Current Frame", &current_frame, animation_bounds[0], animation_bounds[1]);
+    ImGui::EndChild();
 }
 
 
@@ -294,7 +302,7 @@ void AnimationEditor::DrawInterpolation(ImDrawList* dl, const Key& key, const Ke
         break;
     case InterpolationType::Hermite:
     case InterpolationType::CubicBezier:
-        for (auto t = key.time; t < key2.time - 1; ++t) {
+        for (auto t = key.time; t < key2.time; ++t) {
             auto v1 = key.Interpolate(key, key2, t);
             auto v2 = key.Interpolate(key, key2, t + 1);
             drawList->AddLine(
@@ -335,6 +343,9 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
     }
     drawList->AddLine(t_in, pos, tangent_color);
     drawList->AddCircleFilled(t_in, size, tangent_color, 4);
+    if (ImGui::IsItemDeactivated()) {
+        curr_interaction = InteractionType::None;
+    }
 
     ImGui::SetCursorScreenPos(ImVec2{t_out.x - (button_size.x / 2.0f), t_out.y - (button_size.y / 2.0f)});
     ImGui::InvisibleButton((std::string("##key_outtan") + std::to_string(key.time)).c_str(), button_size);
@@ -348,6 +359,9 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
         draggingKey == &key) {
         const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
         key.out_tangent = drag_start + ImVec2(delta.x / custom_zoom.x, -1.0f * (delta.y / custom_zoom.y));
+    }
+    if (ImGui::IsItemDeactivated()) {
+        curr_interaction = InteractionType::None;
     }
 
     ImGui::SetCursorScreenPos(ImVec2{pos.x - (button_size.x / 2.0f), pos.y - (button_size.y / 2.0f)});
@@ -368,8 +382,33 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
     } else {
         drawList->AddCircleFilled(pos, size, key_color);
     }
+    if (ImGui::IsItemDeactivated()) {
+        curr_interaction = InteractionType::None;
+    }
 }
 
+
+void AnimationEditor::DrawPlayhead(ImDrawList* drawList) {
+    const ImVec2 playhead_size = {12.0f, 12.0f};
+    auto playhead_color = IM_COL32(255, 128, 0, 255);
+    auto ph_pos = ImVec2(current_frame * custom_zoom.x, -canvas.ViewOrigin().y);
+    ImGui::SetCursorScreenPos(ImVec2(ph_pos.x - playhead_size.x, ph_pos.y));
+    ImGui::InvisibleButton("##playhead", playhead_size * 2.0f);
+    if (ImGui::IsItemActivated()) {
+        curr_interaction = InteractionType::DraggingPlayhead;
+        drag_start_time = current_frame;
+    }
+    if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingPlayhead) {
+        const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
+        current_frame = drag_start_time + static_cast<KeyTimeType>(delta.x / custom_zoom.x);
+    }
+    drawList->AddTriangleFilled(ImVec2(ph_pos.x - playhead_size.x, ph_pos.y), ImVec2(ph_pos.x + playhead_size.x, ph_pos.y),
+        ImVec2(ph_pos.x, ph_pos.y + playhead_size.y), playhead_color);
+    drawList->AddLine(ph_pos, ImVec2(ph_pos.x, canvas.Rect().GetHeight()), playhead_color);
+    if (ImGui::IsItemDeactivated()) {
+        curr_interaction = InteractionType::None;
+    }
+}
 
 void AnimationEditor::DrawCurves() {
     ImGui::Text("");
@@ -413,7 +452,9 @@ void AnimationEditor::DrawCurves() {
                 }
             }
         }
-        // TODO: draw play head
+
+        DrawPlayhead(drawList);
+
         canvas.End();
     }
     ImGui::EndChild();
@@ -423,7 +464,7 @@ void AnimationEditor::DrawCurves() {
 void AnimationEditor::DrawProperties() {
     ImGui::Text("Properties");
     ImGui::BeginChild(
-        "anim_props", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
+        "key_props", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
     if (selectedAnimation > -1 && selectedKey != nullptr) {
         ImGui::InputInt("Time", &selectedKey->time);
         ImGui::InputFloat("Value", &selectedKey->value);
@@ -457,12 +498,6 @@ void AnimationEditor::DrawProperties() {
         }
     }
     ImGui::EndChild();
-
-    //ImGui::BeginChild("Debug");
-    //ImGui::Text("drag_value: (%f, %f)", drag_value.x, drag_value.y);
-    //ImGui::Text("zoomed: (%f, %f)", drag_value.x / custom_zoom.x, drag_value.y / custom_zoom.y);
-    //ImGui::Text("cast: %i", static_cast<KeyTimeType>(drag_value.x / custom_zoom.x));
-    //ImGui::EndChild();
 }
 
 

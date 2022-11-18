@@ -32,7 +32,8 @@ enum class InteractionType : int32_t {
     None = 0,
     DraggingKey,
     DraggingLeftTangent,
-    DraggingRightTangent
+    DraggingRightTangent,
+    DraggingPlayhead
 };
 
 struct Key {
@@ -104,6 +105,7 @@ private:
     void DrawParams();
     void DrawInterpolation(ImDrawList* dl, const Key& key, const Key& k2);
     void DrawKey(ImDrawList* dl, Key& key);
+    void DrawPlayhead(ImDrawList* drawList);
     void DrawCurves();
     void DrawProperties();
 
@@ -120,8 +122,6 @@ private:
     Key* selectedKey = nullptr;
     Key* draggingKey = nullptr;
     ImGuiEx::Canvas canvas = ImGuiEx::Canvas();
-    KeyTimeType anim_start = 0;
-    KeyTimeType anim_end = 100;
 
     bool canvas_visible = false;
     bool is_dragging = false;
@@ -131,6 +131,9 @@ private:
     float zoom = 1.0f;
     bool auto_capture = false;
     InteractionType curr_interaction = InteractionType::None;
+
+    KeyTimeType current_frame = 0;
+    KeyTimeType animation_bounds[2] = {0, 100};
 
     ImVec2 custom_zoom = {1.0f, 1.0f};
 };
