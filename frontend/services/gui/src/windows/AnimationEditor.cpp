@@ -283,41 +283,43 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
     const ImVec2 button_size = {8.0f, 8.0f};
     auto key_color = IM_COL32(255, 128, 0, 255);
     auto active_key_color = IM_COL32(255, 192, 96, 255);
-    auto tangent_color = ImGui::GetColorU32(ImGuiCol_Border);
+    auto tangent_color = IM_COL32(255, 255, 0, 255);
 
     auto drawList = ImGui::GetWindowDrawList();
 
     auto time = key.time;
     auto pos = ImVec2(time, key.value * -1.0f) * custom_zoom;
-    auto t_in = ImVec2(time + key.in_tangent.x, (key.value + key.in_tangent.y) * -1.0f) * custom_zoom;
     auto t_out = ImVec2(time + key.out_tangent.x, (key.value + key.out_tangent.y) * -1.0f) * custom_zoom;
-    drawList->AddLine(t_in, pos, tangent_color);
     drawList->AddLine(pos, t_out, tangent_color);
 
+    const auto t_in = ImVec2(time + key.in_tangent.x, (key.value + key.in_tangent.y) * -1.0f) * custom_zoom;
     ImGui::SetCursorScreenPos(ImVec2{t_in.x - (button_size.x / 2.0f), t_in.y - (button_size.y / 2.0f)});
     ImGui::InvisibleButton((std::string("##key_intan") + std::to_string(key.time)).c_str(), button_size);
-    drawList->AddCircleFilled(t_in, size, tangent_color, 4);
-    if (ImGui::IsItemActive()) {
-        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-            ImGuiIO& io = ImGui::GetIO();
-            auto mp = io.MouseDelta;
-            t_in += mp;
-            key.in_tangent.x = t_in.x / custom_zoom.x - time;
-            key.in_tangent.y = -1.0f * (t_in.y / custom_zoom.y) - key.value;
-        }
+    if (ImGui::IsItemActivated()) {
+        curr_interaction = InteractionType::DraggingLeftTangent;
+        drag_start = key.in_tangent;
+        draggingKey = &key;
     }
+    if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingLeftTangent &&
+        draggingKey == &key) {
+        const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
+        key.in_tangent = drag_start + ImVec2(delta.x / custom_zoom.x, -1.0f * (delta.y / custom_zoom.y));
+    }
+    drawList->AddLine(t_in, pos, tangent_color);
+    drawList->AddCircleFilled(t_in, size, tangent_color, 4);
 
     ImGui::SetCursorScreenPos(ImVec2{t_out.x - (button_size.x / 2.0f), t_out.y - (button_size.y / 2.0f)});
     ImGui::InvisibleButton((std::string("##key_outtan") + std::to_string(key.time)).c_str(), button_size);
     drawList->AddCircleFilled(t_out, size, tangent_color, 4);
-    if (ImGui::IsItemActive()) {
-        if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-            ImGuiIO& io = ImGui::GetIO();
-            auto mp = io.MouseDelta;
-            t_out += mp;
-            key.out_tangent.x = t_out.x / custom_zoom.x - time;
-            key.out_tangent.y = -1.0f * (t_out.y / custom_zoom.y) - key.value;
-        }
+    if (ImGui::IsItemActivated()) {
+        curr_interaction = InteractionType::DraggingRightTangent;
+        drag_start = key.out_tangent;
+        draggingKey = &key;
+    }
+    if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingRightTangent &&
+        draggingKey == &key) {
+        const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
+        key.out_tangent = drag_start + ImVec2(delta.x / custom_zoom.x, -1.0f * (delta.y / custom_zoom.y));
     }
 
     ImGui::SetCursorScreenPos(ImVec2{pos.x - (button_size.x / 2.0f), pos.y - (button_size.y / 2.0f)});
@@ -326,9 +328,10 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
         selectedKey = &key;
         drag_start_value = selectedKey->value;
         drag_start_time = selectedKey->time;
+        curr_interaction = InteractionType::DraggingKey;
     }
-    if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-        auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
+    if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingKey) {
+        const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
         selectedKey->value = drag_start_value - delta.y / custom_zoom.y;
         selectedKey->time = drag_start_time + static_cast<KeyTimeType>(delta.x / custom_zoom.x);
     }

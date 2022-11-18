@@ -27,6 +27,13 @@ enum class InterpolationType : int32_t {
     Hermite = 2
 };
 
+enum class InteractionType : int32_t {
+    None = 0,
+    DraggingKey,
+    DraggingLeftTangent,
+    DraggingRightTangent
+};
+
 struct Key {
     KeyTimeType time;
     float value;
@@ -108,6 +115,7 @@ private:
     std::vector<FloatAnimation> floatAnimations;
     int32_t selectedAnimation = -1;
     Key* selectedKey = nullptr;
+    Key* draggingKey = nullptr;
     ImGuiEx::Canvas canvas = ImGuiEx::Canvas();
     KeyTimeType anim_start = 0;
     KeyTimeType anim_end = 100;
@@ -121,6 +129,7 @@ private:
     KeyTimeType drag_start_time = 0;
     float zoom = 1.0f;
     bool auto_capture = false;
+    InteractionType curr_interaction = InteractionType::None;
 
     ImVec2 custom_zoom = {1.0f, 1.0f};
 };
