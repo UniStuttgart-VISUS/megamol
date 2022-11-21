@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Get PR Info
         id: pr-info
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             const pr = await github.rest.pulls.get({
@@ -21,15 +21,16 @@ jobs:
             core.setOutput('REPO', pr.data.head.repo.full_name);
             core.setOutput('REF', pr.data.head.ref);
       # Checkout master
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
+          ref: master
           path: master
           token: ${{ secrets.PAT_MEGAMOLSERVICE }}
       # Checkout PR repo/branch
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
-          repository: ${{steps.pr-info.outputs.REPO}}
-          ref: ${{steps.pr-info.outputs.REF}}
+          repository: ${{ steps.pr-info.outputs.REPO }}
+          ref: ${{ steps.pr-info.outputs.REF }}
           path: pr
           token: ${{ secrets.PAT_MEGAMOLSERVICE }}
       - name: Fix style
@@ -49,8 +50,8 @@ jobs:
             echo "Nothing to commit!"
           fi
       - name: Comment
-        if: failure()
-        uses: actions/github-script@v5
+        if: ${{ failure() }}
+        uses: actions/github-script@v6
         with:
           script: |
             await github.rest.issues.createComment({
