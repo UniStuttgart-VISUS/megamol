@@ -44,7 +44,10 @@ struct Key {
     ImVec2 in_tangent{-1.0f, 0.0f};
     ImVec2 out_tangent{1.0f, 0.0f};
 
+    // this is expensive (accurately hit time first!)...
     static float Interpolate(Key first, Key second, KeyTimeType time);
+    // ... and that is only good for drawing (x will not sit on the time grid)
+    static ImVec2 Interpolate(Key first, Key second, float t);
 };
 
 class FloatAnimation {

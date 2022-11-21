@@ -24,7 +24,7 @@ float Key::Interpolate(Key first, Key second, KeyTimeType time) {
         return my_second.value;
     }
 
-    const float t = static_cast<float>(time - my_first.time) / static_cast<float>(my_second.time - my_first.time);
+    float t = static_cast<float>(time - my_first.time) / static_cast<float>(my_second.time - my_first.time);
 
     switch (first.interpolation) {
     case InterpolationType::Step:
@@ -32,22 +32,104 @@ float Key::Interpolate(Key first, Key second, KeyTimeType time) {
     case InterpolationType::Linear:
         return (1.0f - t) * my_first.value + t * my_second.value;
     case InterpolationType::Hermite: {
-        const auto t2 = t * t, t3 = t2 * t;
-        const auto out_len = 1.0f; // std::sqrtf(ImLengthSqr(my_first.out_tangent));
-        const auto in_len = -1.0f; //std::sqrtf(ImLengthSqr(my_second.in_tangent));
+        float t2, t3;
+        auto recompute_ts = [&](){
+            t2 = t * t;
+            t3 = t2 * t;
+        };
+        recompute_ts();
+        auto x = my_first.time * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.time * (-2.0f * t3 + 3.0f * t2) +
+               my_first.out_tangent.x * (t3 - 2.0f * t2 + t) - my_second.in_tangent.x * (t3 - t2);
+        auto err = x - time;
+        int iter = 0;
+        while (std::abs(err) > 0.01f && iter < 100) {
+            t = t - 0.5 * err / static_cast<float>(my_second.time - my_first.time);
+            recompute_ts();
+            x = my_first.time * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.time * (-2.0f * t3 + 3.0f * t2) +
+               my_first.out_tangent.x * (t3 - 2.0f * t2 + t) - my_second.in_tangent.x * (t3 - t2);
+            err = x - time;
+            iter++;
+        }
         return my_first.value * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.value * (-2.0f * t3 + 3.0f * t2) +
-               out_len * my_first.out_tangent.y * (t3 - 2.0f * t2 + t) + in_len * my_second.in_tangent.y * (t3 - t2);
+               my_first.out_tangent.y * (t3 - 2.0f * t2 + t) - my_second.in_tangent.y * (t3 - t2);
+    }
+    case InterpolationType::CubicBezier: {
+        float t2, t3, invt2, invt3;
+        auto recompute_ts = [&]() {
+            t2 = t * t;
+            t3 = t2 * t;
+            invt2 = (1.0f - t) * (1.0f - t);
+            invt3 = (1.0f - t) * (1.0f - t) * (1.0f - t);
+        };
+        recompute_ts();
+        auto p1 = ImVec2(my_first.time, my_first.value);
+        auto p4 = ImVec2(my_second.time, my_second.value);
+        auto p2 = p1 + my_first.out_tangent;
+        auto p3 = p4 + my_second.in_tangent;
+        auto x = invt3 * p1.x + 3.0f * invt2 * t * p2.x +
+               3.0f * (1.0f - t) * t2 * p3.x + t3 * p4.x;
+        auto err = x - time;
+        int iter = 0;
+        while (std::abs(err) > 0.01f && iter < 100) {
+            t = t - 0.5 * err / static_cast<float>(my_second.time - my_first.time);
+            recompute_ts();
+            x = invt3 * p1.x + 3.0f * invt2 * t * p2.x +
+               3.0f * (1.0f - t) * t2 * p3.x + t3 * p4.x;
+            err = x - time;
+            iter++;
+        }
+        return invt3 * my_first.value + 3.0f * invt2 * t * p2.y +
+               3.0f * (1.0f - t) * t2 * p3.y + t3 * my_second.value;
+    }
+    }
+    return 0.0f;
+}
+
+ImVec2 Key::Interpolate(Key first, Key second, float t) {
+    Key my_first = first;
+    Key my_second = second;
+    if (my_first.time > my_second.time) {
+        my_first = second;
+        my_second = first;
+    }
+    if (t <= 0.0f) {
+        return {static_cast<float>(my_first.time), my_first.value};
+    }
+    if (t >= 1.0f) {
+        return {static_cast<float>(my_second.time), my_second.value};
+    }
+
+    switch (first.interpolation) {
+    case InterpolationType::Step:
+        return {
+            (1.0f - t) * static_cast<float>(my_first.time) + t * static_cast<float>(my_second.time), my_first.value};
+    case InterpolationType::Linear:
+        return {(1.0f - t) * static_cast<float>(my_first.time) + t * static_cast<float>(my_second.time),
+            (1.0f - t) * my_first.value + t * my_second.value};
+    case InterpolationType::Hermite: {
+        const auto t2 = t * t, t3 = t2 * t;
+        auto x = my_first.time * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.time * (-2.0f * t3 + 3.0f * t2) +
+               my_first.out_tangent.x * (t3 - 2.0f * t2 + t) - my_second.in_tangent.x * (t3 - t2);
+        auto y = my_first.value * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.value * (-2.0f * t3 + 3.0f * t2) +
+               my_first.out_tangent.y * (t3 - 2.0f * t2 + t) - my_second.in_tangent.y * (t3 - t2);
+        return {x, y};
     }
     case InterpolationType::CubicBezier: {
         const auto t2 = t * t, t3 = t2 * t;
         const auto invt2 = (1.0f - t) * (1.0f - t), invt3 = (1.0f - t) * (1.0f - t) * (1.0f - t);
-        auto p2 = my_first.value + my_first.out_tangent.y;
-        auto p3 = my_second.value + my_second.in_tangent.y;
-        return invt3 * my_first.value + 3.0f * invt2 * t * p2 +
-               3.0f * (1.0f - t) * t2 * p3 + t3 * my_second.value;
+        auto p1 = ImVec2(my_first.time, my_first.value);
+        auto p4 = ImVec2(my_second.time, my_second.value);
+        auto p2 = p1 + my_first.out_tangent;
+        auto p3 = p4 + my_second.in_tangent;
+        auto x = invt3 * p1.x + 3.0f * invt2 * t * p2.x +
+               3.0f * (1.0f - t) * t2 * p3.x + t3 * p4.x;
+        auto y = invt3 * p1.y + 3.0f * invt2 * t * p2.y +
+               3.0f * (1.0f - t) * t2 * p3.y + t3 * p4.y;
+        return {x,y};
     }
+    default:
+        return {0.0f, 0.0f};
     }
-    return 0.0f;
 }
 
 
@@ -171,11 +253,9 @@ megamol::gui::AnimationEditor::AnimationEditor(const std::string& window_name)
     floatAnimations.push_back(f);
 
     FloatAnimation f2("::view::anim::time");
-    k.value = 0.0f;
-    k2.value = 100.0f;
-    k2.time = 100;
-    f2.AddKey(k);
-    f2.AddKey(k2);
+    f2.AddKey({0, 0.0f, InterpolationType::CubicBezier});
+    f2.AddKey({100, 100.0f, InterpolationType::CubicBezier});
+    f2.AddKey({150, 70.0f, InterpolationType::CubicBezier});
     floatAnimations.push_back(f2);
 }
 
@@ -311,6 +391,7 @@ void AnimationEditor::DrawParams() {
 
 void AnimationEditor::DrawInterpolation(ImDrawList* dl, const Key& key, const Key& key2) {
     const auto line_col = ImGui::GetColorU32(ImGuiCol_NavHighlight);
+    const auto reference_col = IM_COL32(255, 0, 0, 255);
     auto drawList = ImGui::GetWindowDrawList();
     auto pos = ImVec2(key.time, key.value * -1.0f) * custom_zoom;
     auto pos2 = ImVec2(key2.time, key2.value * -1.0f) * custom_zoom;
@@ -323,14 +404,23 @@ void AnimationEditor::DrawInterpolation(ImDrawList* dl, const Key& key, const Ke
         drawList->AddLine(pos, pos2, line_col);
         break;
     case InterpolationType::Hermite:
-    case InterpolationType::CubicBezier:
+    case InterpolationType::CubicBezier: {
+        // draw reference
+        auto step = 0.02f;
+        for (auto f = 0.0f; f < 1.0f; f += step) {
+            auto v1 = key.Interpolate(key, key2, f);
+            v1.y *= -1.0f;
+            auto v2 = key.Interpolate(key, key2, f + step);
+            v2.y *= -1.0f;
+            drawList->AddLine(v1 * custom_zoom, v2 * custom_zoom, reference_col);
+        }
         for (auto t = key.time; t < key2.time; ++t) {
             auto v1 = key.Interpolate(key, key2, t);
             auto v2 = key.Interpolate(key, key2, t + 1);
-            drawList->AddLine(
-                ImVec2(t, v1 * -1.0f) * custom_zoom, ImVec2(t + 1, v2 * -1.0f) * custom_zoom, line_col);
+            drawList->AddLine(ImVec2(t, v1 * -1.0f) * custom_zoom, ImVec2(t + 1, v2 * -1.0f) * custom_zoom, line_col);
         }
         break;
+    }
     default:;
     }
 }
