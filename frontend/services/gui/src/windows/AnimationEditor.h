@@ -73,6 +73,9 @@ public:
     KeyMap::size_type GetSize() const {
         return keys.size();
     }
+    bool HasKey(KeyTimeType k) {
+        return keys.find(k) != keys.end();
+    }
     Key& operator[](KeyTimeType k) {
         return keys[k];
     }
@@ -102,6 +105,9 @@ public:
     bool Draw() override;
 
     void SetLuaFunc(lua_func_type* func);
+
+    bool NotifyParamChanged(
+        frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param, std::string const& new_value);
 
     void SpecificStateFromJSON(const nlohmann::json& in_json) override;
     void SpecificStateToJSON(nlohmann::json& inout_json) override;

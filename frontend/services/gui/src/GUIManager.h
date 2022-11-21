@@ -294,8 +294,10 @@ public:
     bool NotifyRunningGraph_ParameterChanged(
         megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
         std::string const& new_value) {
-        return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_ParameterChanged(
+        bool ret = this->win_animation_editor_ptr->NotifyParamChanged(param_slot, new_value);
+        ret |= this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_ParameterChanged(
             param_slot, new_value);
+        return ret;
     }
     bool NotifyRunningGraph_AddCall(core::CallInstance_t const& call_inst) {
         return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_AddCall(call_inst);
@@ -397,6 +399,7 @@ private:
 
     /** Shortcut pointer to configurator window */
     std::shared_ptr<Configurator> win_configurator_ptr;
+    std::shared_ptr<AnimationEditor> win_animation_editor_ptr;
 
     // Widgets
     FileBrowserWidget file_browser;

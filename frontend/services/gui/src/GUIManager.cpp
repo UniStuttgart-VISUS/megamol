@@ -30,6 +30,7 @@ GUIManager::GUIManager()
         , win_collection()
         , popup_collection()
         , notification_collection()
+        , win_animation_editor_ptr(nullptr)
         , win_configurator_ptr(nullptr)
         , file_browser()
         , tooltip()
@@ -52,7 +53,9 @@ GUIManager::GUIManager()
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_G, core::view::Modifier::CTRL), false};
 
     this->win_configurator_ptr = this->win_collection.GetWindow<Configurator>();
+    this->win_animation_editor_ptr = this->win_collection.GetWindow<AnimationEditor>();
     assert(this->win_configurator_ptr != nullptr);
+    assert(this->win_animation_editor_ptr != nullptr);
 
     this->init_state();
 }

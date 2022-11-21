@@ -7,6 +7,9 @@
 
 #include "AnimationEditor.h"
 
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
+
 using namespace megamol::gui;
 
 
@@ -292,8 +295,38 @@ bool megamol::gui::AnimationEditor::Draw() {
     return true;
 }
 
+
 void AnimationEditor::SetLuaFunc(lua_func_type* func) {
     this->input_lua_func = func;
+}
+
+
+bool AnimationEditor::NotifyParamChanged(
+    frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot, std::string const& new_value) {
+    if (auto_capture) {
+        std::string the_name = param_slot->FullName().PeekBuffer();
+        if (param_slot->Param<core::param::FloatParam>() || param_slot->Param<core::param::IntParam>()) {
+            const float the_val = std::stof(new_value);
+            bool found = false;
+            for (auto& a : floatAnimations) {
+                if (a.GetName() == the_name) {
+                    if (a.HasKey(current_frame)) {
+                        a[current_frame].value = the_val;
+                    } else {
+                        a.AddKey({current_frame, the_val});
+                    }
+                    found = true;
+                }
+            }
+            if (!found) {
+                FloatAnimation f ={the_name};
+                f.AddKey({current_frame, the_val});
+                floatAnimations.push_back(f);
+            }
+        }
+    }
+    // TODO: what else. Enum probably.
+    return true;
 }
 
 
@@ -330,9 +363,17 @@ void AnimationEditor::WriteValuesToGraph() {
 
 
 void AnimationEditor::DrawToolbar() {
-    ImGui::Checkbox("auto capture", &auto_capture);
+    if (ImGui::Checkbox("auto capture", &auto_capture)) {
+        if (auto_capture) {
+            write_to_graph = false;
+        }
+    }
     ImGui::SameLine();
-    ImGui::Checkbox("write to graph", &write_to_graph);
+    if (ImGui::Checkbox("write to graph", &write_to_graph)) {
+        if (write_to_graph) {
+            auto_capture = false;
+        }
+    }
     ImGui::SameLine();
     DrawVerticalSeparator();
     ImGui::SameLine();
@@ -373,13 +414,17 @@ void AnimationEditor::DrawToolbar() {
 
 void AnimationEditor::center_animation(const FloatAnimation& anim) {
     auto region = canvas.Rect();
-    custom_zoom.x =  0.9f * region.GetWidth() / static_cast<float>(anim.GetLength());
-    custom_zoom.y = 0.9f * region.GetHeight() / (anim.GetMaxValue() - anim.GetMinValue());
-    const auto h_start = static_cast<float>(-anim.GetStartTime());
-    const auto v_start = anim.GetMaxValue();
-    canvas.SetView(
-        ImVec2(h_start * custom_zoom.x + 0.05f * region.GetWidth(), v_start * custom_zoom.y + 0.05f * region.GetHeight()),
-        1.0f);
+    if (anim.GetLength() > 1) {
+        custom_zoom.x = 0.9f * region.GetWidth() / static_cast<float>(anim.GetLength());
+        custom_zoom.y = 0.9f * region.GetHeight() / (anim.GetMaxValue() - anim.GetMinValue());
+        const auto h_start = static_cast<float>(-anim.GetStartTime());
+        const auto v_start = anim.GetMaxValue();
+        canvas.SetView(ImVec2(h_start * custom_zoom.x + 0.05f * region.GetWidth(),
+                           v_start * custom_zoom.y + 0.05f * region.GetHeight()),
+            1.0f);
+    } else {
+        // TODO.
+    }
 }
 
 void AnimationEditor::DrawParams() {
