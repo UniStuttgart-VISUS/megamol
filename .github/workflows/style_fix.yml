@@ -6,7 +6,7 @@ jobs:
   style_fix:
     name: Style-Fix
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/format' }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Get PR Info
         id: pr-info

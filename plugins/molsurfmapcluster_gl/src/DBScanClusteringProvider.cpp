@@ -140,7 +140,9 @@ void DBScanClusteringProvider::loadMapFromFile(const core::CoreInstance& coreIns
                 } else if (i == 1) {
                     try {
                         res.second = std::stoi(substr);
-                    } catch (...) { res.second = -1; }
+                    } catch (...) {
+                        res.second = -1;
+                    }
                 }
                 ++i;
             }

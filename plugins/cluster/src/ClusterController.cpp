@@ -118,7 +118,9 @@ void cluster::ClusterController::SendUserMsg(const UINT32 msgType, const BYTE* m
         }
     } catch (vislib::Exception ex) {
         Log::DefaultLog.WriteError("Failed to send user message %u: %s\n", msgType, ex.GetMsgA());
-    } catch (...) { Log::DefaultLog.WriteError("Failed to send user message %u: unknown exception\n", msgType); }
+    } catch (...) {
+        Log::DefaultLog.WriteError("Failed to send user message %u: unknown exception\n", msgType);
+    }
 }
 
 
@@ -136,7 +138,9 @@ void cluster::ClusterController::SendUserMsg(const cluster::ClusterController::P
         }
     } catch (vislib::Exception ex) {
         Log::DefaultLog.WriteError("Failed to send user message %u: %s\n", msgType, ex.GetMsgA());
-    } catch (...) { Log::DefaultLog.WriteError("Failed to send user message %u: unknown exception\n", msgType); }
+    } catch (...) {
+        Log::DefaultLog.WriteError("Failed to send user message %u: unknown exception\n", msgType);
+    }
 }
 
 
@@ -382,7 +386,9 @@ void cluster::ClusterController::OnUserMessage(vislib::net::cluster::DiscoverySe
         }
     } catch (vislib::Exception ex) {
         VLTRACE(VISLIB_TRCELVL_ERROR, "Illegal vislib exception in OnUserMessage \"%s\"\n", ex.GetMsgA());
-    } catch (...) { VLTRACE(VISLIB_TRCELVL_ERROR, "Illegal exception in OnUserMessage\n"); }
+    } catch (...) {
+        VLTRACE(VISLIB_TRCELVL_ERROR, "Illegal exception in OnUserMessage\n");
+    }
 }
 
 

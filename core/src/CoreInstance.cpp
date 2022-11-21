@@ -276,7 +276,9 @@ void megamol::core::CoreInstance::Initialise() {
                 } else {
                     profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
                 }
-            } catch (...) { profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE); }
+            } catch (...) {
+                profiler::Manager::Instance().SetMode(profiler::Manager::PROFILE_NONE);
+            }
         }
     } else {
         // Do not profile on default

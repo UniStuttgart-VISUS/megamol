@@ -105,7 +105,9 @@ bool VIMDataSource::Frame::LoadFrame(
 
     try {
         lScale = static_cast<float>(vislib::CharTraitsA::ParseDouble(startLine.PeekBuffer()));
-    } catch (...) { lScale = 1.0f; }
+    } catch (...) {
+        lScale = 1.0f;
+    }
 
     this->frame = idx;
 
@@ -797,7 +799,9 @@ bool VIMDataSource::readHeader(const vislib::TString& filename) {
                     types.Last() = *element;
                 }
                 element = NULL;
-            } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteError("Error parsing type line."); }
+            } catch (...) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Error parsing type line.");
+            }
             SAFE_DELETE(element);
         } else if (line[0] == '>') {
             // very extream file redirection
