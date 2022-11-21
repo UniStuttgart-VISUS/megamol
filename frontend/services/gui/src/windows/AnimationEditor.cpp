@@ -219,9 +219,18 @@ void AnimationEditor::DrawToolbar() {
     ImGui::SameLine();
     DrawVerticalSeparator();
     ImGui::SameLine();
-    ImGui::Button("break tangents");
+    if (ImGui::Button("break tangents")) {
+        if (selectedKey != nullptr) {
+            selectedKey->tangents_linked = false;
+        }
+    }
     ImGui::SameLine();
-    ImGui::Button("link tangents");
+    if (ImGui::Button("link tangents")) {
+        if (selectedKey != nullptr) {
+            selectedKey->tangents_linked = true;
+            selectedKey->out_tangent = ImVec2(-selectedKey->in_tangent.x, -selectedKey->in_tangent.y);
+        }
+    }
     ImGui::SameLine();
     if (ImGui::Button("flat tangents")) {
         if (selectedKey != nullptr) {
@@ -353,6 +362,9 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
         draggingKey == &key) {
         const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
         key.in_tangent = drag_start + ImVec2(delta.x / custom_zoom.x, -1.0f * (delta.y / custom_zoom.y));
+        if (key.tangents_linked) {
+            key.out_tangent = ImVec2(-key.in_tangent.x, -key.in_tangent.y);
+        }
     }
     drawList->AddLine(t_in, pos, tangent_color);
     drawList->AddCircleFilled(t_in, size, tangent_color, 4);
@@ -372,6 +384,9 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
         draggingKey == &key) {
         const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
         key.out_tangent = drag_start + ImVec2(delta.x / custom_zoom.x, -1.0f * (delta.y / custom_zoom.y));
+        if (key.tangents_linked) {
+            key.in_tangent = ImVec2(-key.out_tangent.x, -key.out_tangent.y);
+        }
     }
     if (ImGui::IsItemDeactivated()) {
         curr_interaction = InteractionType::None;
