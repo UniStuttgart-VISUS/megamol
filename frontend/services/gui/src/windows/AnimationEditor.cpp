@@ -43,6 +43,7 @@ float Key::Interpolate(Key first, Key second, KeyTimeType time) {
         auto err = x - time;
         int iter = 0;
         while (std::abs(err) > 0.01f && iter < 100) {
+            // TODO: use the tangent to guesstimate the correction step. should converge much faster!
             t = t - 0.5 * err / static_cast<float>(my_second.time - my_first.time);
             recompute_ts();
             x = my_first.time * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.time * (-2.0f * t3 + 3.0f * t2) +
@@ -71,6 +72,7 @@ float Key::Interpolate(Key first, Key second, KeyTimeType time) {
         auto err = x - time;
         int iter = 0;
         while (std::abs(err) > 0.01f && iter < 100) {
+            // TODO: use the tangent to guesstimate the correction step. should converge much faster!
             t = t - 0.5 * err / static_cast<float>(my_second.time - my_first.time);
             recompute_ts();
             x = invt3 * p1.x + 3.0f * invt2 * t * p2.x +
@@ -290,6 +292,10 @@ bool megamol::gui::AnimationEditor::Draw() {
     return true;
 }
 
+void AnimationEditor::SetLuaFunc(lua_func_type* func) {
+    this->input_lua_func = func;
+}
+
 
 void megamol::gui::AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {}
 
@@ -298,12 +304,28 @@ void megamol::gui::AnimationEditor::SpecificStateToJSON(nlohmann::json& inout_js
 
 
 void AnimationEditor::WriteValuesToGraph() {
-    std::stringstream lua_commands;
-    for (auto a: floatAnimations) {
-        lua_commands << "mmSetParamValue(\"" << a.GetName() << "\",[=[" << a.GetValue(current_frame) << "]=])\n";
+    if (write_to_graph) {
+        std::stringstream lua_commands;
+        for (auto a : floatAnimations) {
+            lua_commands << "mmSetParamValue(\"" << a.GetName() << "\",[=[" << a.GetValue(current_frame) << "]=])\n";
+        }
+        auto res = (*input_lua_func)(lua_commands.str());
+        if (!std::get<0>(res)) {
+            // BUG: the error window does not appear
+            const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+            ImGui::SetNextWindowPos(center, 0, ImVec2(0.5f, 0.5f));
+            ImGui::OpenPopup("AnimEditorError");
+            if (ImGui::BeginPopupModal("AnimEditorError", nullptr,
+                    ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar)) {
+                ImGui::Text("error: %s", std::get<1>(res).c_str());
+                if (ImGui::Button("OK", ImVec2(120, 0))) {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+            playback_active = false;
+        }
     }
-    // TODO: to graph.
-    printf("%s", lua_commands.str().c_str());
 }
 
 
@@ -556,7 +578,7 @@ void AnimationEditor::DrawCurves() {
                 is_dragging = true;
                 drag_start = canvas.ViewOrigin();
             }
-            canvas.SetView(drag_start + ImGui::GetMouseDragDelta(ImGuiMouseButton_Right, 0.0f) * zoom, zoom);
+            canvas.SetView(drag_start + ImGui::GetMouseDragDelta(ImGuiMouseButton_Right, 0.0f), 1.0f);
         } else if (is_dragging) {
             is_dragging = false;
         }

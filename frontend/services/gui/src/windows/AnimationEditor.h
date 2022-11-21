@@ -9,6 +9,7 @@
 
 
 #include "AbstractWindow.h"
+#include "CommonTypes.h"
 #include "WindowCollection.h"
 #include "mmcore/MegaMolGraph.h"
 #include "imgui_canvas.h"
@@ -92,11 +93,15 @@ private:
 
 class AnimationEditor : public AbstractWindow {
 public:
+    using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
+
     explicit AnimationEditor(const std::string& window_name);
     ~AnimationEditor();
 
     bool Update() override;
     bool Draw() override;
+
+    void SetLuaFunc(lua_func_type* func);
 
     void SpecificStateFromJSON(const nlohmann::json& in_json) override;
     void SpecificStateToJSON(nlohmann::json& inout_json) override;
@@ -129,10 +134,10 @@ private:
 
     bool canvas_visible = false;
     bool is_dragging = false;
+    bool playback_active = false;
     ImVec2 drag_start = {0.0f, 0.0f};
     float drag_start_value = 0.0f;
     KeyTimeType drag_start_time = 0;
-    float zoom = 1.0f;
     bool auto_capture = false;
     bool write_to_graph = false;
     InteractionType curr_interaction = InteractionType::None;
@@ -141,6 +146,8 @@ private:
     KeyTimeType animation_bounds[2] = {0, 100};
 
     ImVec2 custom_zoom = {1.0f, 1.0f};
+
+    lua_func_type* input_lua_func;
 };
 
 

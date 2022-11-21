@@ -22,6 +22,7 @@
 #include "windows/Configurator.h"
 #include "windows/LogConsole.h"
 #include "windows/WindowCollection.h"
+#include "windows/AnimationEditor.h"
 
 
 namespace megamol {
@@ -256,6 +257,10 @@ public:
             cons->SetLuaFunc(lua_func);
         }
         this->win_configurator_ptr->GetGraphCollection().SetLuaFunc(lua_func);
+        auto anim = win_collection.GetWindow<AnimationEditor>();
+        if (anim) {
+            anim->SetLuaFunc(lua_func);
+        }
     }
 
 #ifdef MEGAMOL_USE_PROFILING
