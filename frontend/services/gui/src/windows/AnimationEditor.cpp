@@ -159,6 +159,9 @@ FloatAnimation::ValueType FloatAnimation::GetValue(KeyTimeType time) const {
     Key before_key = keys.begin()->second, after_key = keys.begin()->second;
     bool ok = false;
     for (auto it = keys.begin(); it != keys.end(); ++it) {
+        if (it->second.time == time) {
+            return it->second.value;
+        }
         if (it->second.time < time) {
             before_key = it->second;
         }
@@ -294,8 +297,20 @@ void megamol::gui::AnimationEditor::SpecificStateFromJSON(const nlohmann::json& 
 void megamol::gui::AnimationEditor::SpecificStateToJSON(nlohmann::json& inout_json) {}
 
 
+void AnimationEditor::WriteValuesToGraph() {
+    std::stringstream lua_commands;
+    for (auto a: floatAnimations) {
+        lua_commands << "mmSetParamValue(\"" << a.GetName() << "\",[=[" << a.GetValue(current_frame) << "]=])\n";
+    }
+    // TODO: to graph.
+    printf("%s", lua_commands.str().c_str());
+}
+
+
 void AnimationEditor::DrawToolbar() {
     ImGui::Checkbox("auto capture", &auto_capture);
+    ImGui::SameLine();
+    ImGui::Checkbox("write to graph", &write_to_graph);
     ImGui::SameLine();
     DrawVerticalSeparator();
     ImGui::SameLine();
@@ -519,6 +534,7 @@ void AnimationEditor::DrawPlayhead(ImDrawList* drawList) {
     if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingPlayhead) {
         const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
         current_frame = drag_start_time + static_cast<KeyTimeType>(delta.x / custom_zoom.x);
+        WriteValuesToGraph();
     }
     drawList->AddTriangleFilled(ImVec2(ph_pos.x - playhead_size.x, ph_pos.y), ImVec2(ph_pos.x + playhead_size.x, ph_pos.y),
         ImVec2(ph_pos.x, ph_pos.y + playhead_size.y), playhead_color);

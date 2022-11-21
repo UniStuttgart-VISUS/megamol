@@ -101,8 +101,9 @@ public:
     void SpecificStateFromJSON(const nlohmann::json& in_json) override;
     void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
-
 private:
+    void WriteValuesToGraph();
+
     void DrawToolbar();
     void center_animation(const FloatAnimation& anim);
     void DrawParams();
@@ -133,6 +134,7 @@ private:
     KeyTimeType drag_start_time = 0;
     float zoom = 1.0f;
     bool auto_capture = false;
+    bool write_to_graph = false;
     InteractionType curr_interaction = InteractionType::None;
 
     KeyTimeType current_frame = 0;
