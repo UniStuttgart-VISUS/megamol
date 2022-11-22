@@ -97,7 +97,9 @@ bool megamol::remote::ZMQCommFabric::Bind(std::string const& address) {
         bound_ = true;
         // this->socket_.setsockopt(ZMQ_CONFLATE, true);
         this->socket_.setsockopt(ZMQ_LINGER, 0);
-    } catch (zmq::error_t const& e) { printf("ZMQ ERROR: %s", e.what()); }
+    } catch (zmq::error_t const& e) {
+        printf("ZMQ ERROR: %s", e.what());
+    }
     return this->socket_.connected();
 }
 

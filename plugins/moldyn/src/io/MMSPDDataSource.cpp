@@ -1894,7 +1894,9 @@ bool MMSPDDataSource::filenameChanged(core::param::ParamSlot& slot) {
                 try {
                     UINT64 pc = vislib::CharTraitsA::ParseUInt64(ln);
                     pcnt = vislib::math::Max(pcnt, pc);
-                } catch (...) { _ERROR_OUT("Frame marker error"); }
+                } catch (...) {
+                    _ERROR_OUT("Frame marker error");
+                }
             }
 
             dataSizeInMem = static_cast<SIZE_T>(pcnt * maxFields * sizeof(float));

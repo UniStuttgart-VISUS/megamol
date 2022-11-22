@@ -1009,7 +1009,9 @@ void megamol::volume::VolumetricDataSource::release(void) {
             this->stopAsyncLoad(true);
         }
         ASSERT(!this->loaderThread.IsRunning());
-    } catch (vislib::Exception e) { Log::DefaultLog.WriteError(e.GetMsg()); } catch (...) {
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteError(e.GetMsg());
+    } catch (...) {
         Log::DefaultLog.WriteError(_T("Unexpected exception while ")
                                    _T("stopping volume loader thread during release of data source."));
     }
@@ -1069,7 +1071,9 @@ void megamol::volume::VolumetricDataSource::stopAsyncLoad(const bool isWait) {
             this->loaderThread.Join();
             ASSERT(this->loaderStatus.load() == LOADER_STATUS_STOPPED);
         }
-    } catch (vislib::Exception e) { Log::DefaultLog.WriteError(e.GetMsg()); }
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteError(e.GetMsg());
+    }
 }
 
 
@@ -1296,7 +1300,9 @@ size_t megamol::volume::VolumetricDataSource::assertBuffersUnsafe(size_t cntFram
         }
 
         retval = this->buffers.Count();
-    } catch (vislib::Exception e) { Log::DefaultLog.WriteError(e.GetMsg()); } catch (...) {
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteError(e.GetMsg());
+    } catch (...) {
         Log::DefaultLog.WriteError(_T("Unexpected exception while ")
                                    _T("preparing data buffers. Not all of the requested memory ")
                                    _T("might be available."));

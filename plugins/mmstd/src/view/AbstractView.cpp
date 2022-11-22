@@ -347,7 +347,9 @@ bool view::AbstractView::OnKeyCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Key && "Callback invocation mismatched input event");
         return this->OnKey(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
-    } catch (...) { ASSERT("OnKeyCallback call cast failed\n"); }
+    } catch (...) {
+        ASSERT("OnKeyCallback call cast failed\n");
+    }
     return false;
 }
 
@@ -357,7 +359,9 @@ bool view::AbstractView::OnCharCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Char && "Callback invocation mismatched input event");
         return this->OnChar(evt.charData.codePoint);
-    } catch (...) { ASSERT("OnCharCallback call cast failed\n"); }
+    } catch (...) {
+        ASSERT("OnCharCallback call cast failed\n");
+    }
     return false;
 }
 
@@ -367,7 +371,9 @@ bool view::AbstractView::OnMouseButtonCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseButton && "Callback invocation mismatched input event");
         return this->OnMouseButton(evt.mouseButtonData.button, evt.mouseButtonData.action, evt.mouseButtonData.mods);
-    } catch (...) { ASSERT("OnMouseButtonCallback call cast failed\n"); }
+    } catch (...) {
+        ASSERT("OnMouseButtonCallback call cast failed\n");
+    }
     return false;
 }
 
@@ -377,7 +383,9 @@ bool view::AbstractView::OnMouseMoveCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
         return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
-    } catch (...) { ASSERT("OnMouseMoveCallback call cast failed\n"); }
+    } catch (...) {
+        ASSERT("OnMouseMoveCallback call cast failed\n");
+    }
     return false;
 }
 
@@ -387,7 +395,9 @@ bool view::AbstractView::OnMouseScrollCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
         return this->OnMouseScroll(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
-    } catch (...) { ASSERT("OnMouseScrollCallback call cast failed\n"); }
+    } catch (...) {
+        ASSERT("OnMouseScrollCallback call cast failed\n");
+    }
     return false;
 }
 

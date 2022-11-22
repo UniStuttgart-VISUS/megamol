@@ -51,7 +51,9 @@ bool megamol::core::special::StubModule::stub(Call& c) {
             for (unsigned int idx = 0; idx < cd->FunctionCount(); idx++) {
                 try {
                     this->inSlot.Call(idx);
-                } catch (...) { return false; }
+                } catch (...) {
+                    return false;
+                }
             }
         }
     }

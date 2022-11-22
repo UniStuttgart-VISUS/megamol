@@ -68,12 +68,14 @@ jobs:
     matrix:
       ## Temporarily disabled until more CI machines are available!
       #'GCC11 / Make / Release':
+      #  dockerImage: megamol_ci_ubuntu
       #  cCompiler: gcc-11
       #  cxxCompiler: g++-11
       #  configuration: Release
       #  generator: 'Unix Makefiles'
       #  cmakeExtraArgs: '$(defaultConfig)'
       'GCC11 / Make / Debug':
+        dockerImage: megamol_ci_ubuntu
         cCompiler: gcc-11
         cxxCompiler: g++-11
         configuration: Debug
@@ -81,6 +83,7 @@ jobs:
         cmakeExtraArgs: '$(defaultConfig)'
       ## Temporarily disabled until more CI machines are available!
       #'GCC11 / Ninja / Release':
+      #  dockerImage: megamol_ci_ubuntu
       #  cCompiler: gcc-11
       #  cxxCompiler: g++-11
       #  configuration: Release
@@ -88,16 +91,18 @@ jobs:
       #  cmakeExtraArgs: '$(defaultConfig)'
       ## Temporarily changed to Ninja instead of Make until more CI machines are available!
       'Clang14 / Ninja / Release':
+        dockerImage: megamol_ci_ubuntu
         cCompiler: clang-14
         cxxCompiler: clang++-14
         configuration: Release
         generator: 'Ninja'
         cmakeExtraArgs: '$(defaultConfig)'
-      'GCC11 / Make / Release (nonGL)':
+      'GCC11 / Ninja / Release (nonGL)':
+        dockerImage: megamol_ci_ubuntu
         cCompiler: gcc-11
         cxxCompiler: g++-11
         configuration: Release
-        generator: 'Unix Makefiles'
+        generator: 'Ninja'
         cmakeExtraArgs: '$(nonGlConfig)'
 
   pool:
@@ -106,7 +111,7 @@ jobs:
     - Agent.OS -equals Linux
     - docker
 
-  container: ghcr.io/unistuttgart-visus/megamol_ci_ubuntu:master
+  container: ghcr.io/unistuttgart-visus/$(dockerImage):master
 
   steps:
   - template: .ci/check-pr-labels-step-bash.yml

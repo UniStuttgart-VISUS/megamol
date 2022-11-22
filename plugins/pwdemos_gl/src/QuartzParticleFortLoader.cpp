@@ -383,7 +383,9 @@ void ParticleFortLoader::assertData(void) {
 
         } catch (vislib::Exception ex) {
             Log::DefaultLog.WriteError("Unexpected exception: %s\n", ex.GetMsgA());
-        } catch (...) { Log::DefaultLog.WriteError("Unknown exception"); }
+        } catch (...) {
+            Log::DefaultLog.WriteError("Unknown exception");
+        }
     }
 }
 

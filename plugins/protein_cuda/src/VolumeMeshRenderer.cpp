@@ -404,7 +404,9 @@ void VolumeMeshRenderer::release(void) {
             CUDA_VERIFY(cudaFree(modified));
         if (segmentsRemoved)
             CUDA_VERIFY(cudaFree(segmentsRemoved));
-    } catch (vislib::Exception e) { Log::DefaultLog.WriteError("Unable to release CUDA resources: %s\n", e.GetMsgA()); }
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteError("Unable to release CUDA resources: %s\n", e.GetMsgA());
+    }
 }
 
 /*

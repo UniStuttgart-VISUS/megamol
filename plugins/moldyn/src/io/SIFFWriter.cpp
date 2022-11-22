@@ -242,7 +242,9 @@ bool SIFFWriter::run(void) {
         Log::DefaultLog.WriteInfo("Completed writing data\n");
     } catch (Exception ex) {
         Log::DefaultLog.WriteError("Failed to write: %s (%s, %d)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
-    } catch (...) { Log::DefaultLog.WriteError("Failed to write: unexpected exception\n"); }
+    } catch (...) {
+        Log::DefaultLog.WriteError("Failed to write: unexpected exception\n");
+    }
     file.Close();
 
     return true;

@@ -157,7 +157,9 @@ public:
 
         try {
             socket.close();
-        } catch (...) { Log::DefaultLog.WriteInfo("LRH Server socket close threw exception"); }
+        } catch (...) {
+            Log::DefaultLog.WriteInfo("LRH Server socket close threw exception");
+        }
         Log::DefaultLog.WriteInfo("LRH Server socket closed");
     }
 
@@ -228,7 +230,9 @@ public:
         } catch (std::exception& error) {
             Log::DefaultLog.WriteError("Error on LRH Pair Server: %s", error.what());
 
-        } catch (...) { Log::DefaultLog.WriteError("Error on LRH Pair Server: unknown exception"); }
+        } catch (...) {
+            Log::DefaultLog.WriteError("Error on LRH Pair Server: unknown exception");
+        }
 
         try {
             socket.close();

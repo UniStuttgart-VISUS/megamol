@@ -462,7 +462,9 @@ bool ScatterplotMatrixRenderer2D::Render(mmstd_gl::CallRender2DGL& call) {
 
         this->drawScreen();
 
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
 
     return true;
 }
