@@ -15,6 +15,8 @@
 #include "mmcore/MegaMolGraph.h"
 #include "widgets/FileBrowserWidget.h"
 
+#include <variant>
+
 namespace megamol {
 namespace gui {
 
@@ -68,7 +70,10 @@ private:
         float sign = 1.0f);
     // VARIABLES --------------------------------------------------------------
 
-    std::vector<animation::FloatAnimation> floatAnimations;
+    using animations = std::variant<animation::FloatAnimation, animation::StringAnimation>;
+    std::vector<animations> allAnimations;
+    //std::vector<animation::FloatAnimation> floatAnimations;
+    //std::vector<animation::StringAnimation> stringAnimations;
     int32_t selectedAnimation = -1;
     animation::FloatKey* selectedKey = nullptr;
     animation::FloatKey* draggingKey = nullptr;

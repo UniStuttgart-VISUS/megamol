@@ -69,23 +69,38 @@ bool AnimationEditor::NotifyParamChanged(
     frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot, std::string const& new_value) {
     if (auto_capture) {
         std::string the_name = param_slot->FullName().PeekBuffer();
+        int found_idx = -1;
+        for (auto i = 0; i < allAnimations.size(); ++i) {
+            auto& anim = allAnimations[i];
+            bool found = std::visit(
+                [&](auto&& arg) -> bool {
+                    if (arg.GetName() == the_name) {
+                        found_idx = i;
+                        return true;
+                    } else {
+                        return false;
+                    }
+                },
+                anim);
+            if (found) {
+                break;
+            }
+        }
+
         if (param_slot->Param<FloatParam>() || param_slot->Param<IntParam>()) {
             const float the_val = std::stof(new_value);
-            bool found = false;
-            for (auto& a : floatAnimations) {
-                if (a.GetName() == the_name) {
-                    if (a.HasKey(current_frame)) {
-                        a[current_frame].value = the_val;
-                    } else {
-                        a.AddKey({current_frame, the_val});
-                    }
-                    found = true;
+            if (found_idx != -1) {
+                auto& a = std::get<animation::FloatAnimation>(allAnimations[found_idx]);
+                if (a.HasKey(current_frame)) {
+                    a[current_frame].value = the_val;
+                } else {
+                    a.AddKey({current_frame, the_val});
                 }
             }
-            if (!found) {
+            if (found_idx == -1) {
                 animation::FloatAnimation f = {the_name};
                 f.AddKey({current_frame, the_val});
-                floatAnimations.push_back(f);
+                allAnimations.emplace_back(f);
             }
         }
         if (param_slot->Param<EnumParam>() || param_slot->Param<FlexEnumParam>() || param_slot->Param<StringParam>() ||
@@ -110,8 +125,13 @@ void megamol::gui::AnimationEditor::SpecificStateToJSON(nlohmann::json& inout_js
 void AnimationEditor::WriteValuesToGraph() {
     if (write_to_graph) {
         std::stringstream lua_commands;
-        for (auto a : floatAnimations) {
-            lua_commands << "mmSetParamValue(\"" << a.GetName() << "\",[=[" << a.GetValue(current_frame) << "]=])\n";
+        for (auto a : allAnimations) {
+            std::visit(
+                [&](auto&& arg) -> void {
+                    lua_commands << "mmSetParamValue(\"" << arg.GetName() << "\",[=[" << arg.GetValue(current_frame)
+                                 << "]=])\n";
+                },
+                a);
         }
         auto res = (*input_lua_func)(lua_commands.str());
         if (!std::get<0>(res)) {
@@ -126,10 +146,10 @@ void AnimationEditor::WriteValuesToGraph() {
 bool AnimationEditor::SaveToFile(const std::string& file) {
     nlohmann::json animation_data;
     nlohmann::json anims;
-    for (auto& fa : floatAnimations) {
-        anims.push_back(fa);
+    for (auto& fa : allAnimations) {
+        std::visit([&](auto&& arg) -> void { anims.push_back(arg); }, fa);
     }
-    animation_data["float_animations"] = anims;
+    animation_data["animations"] = anims;
     std::ofstream out(file);
     if (!out.is_open()) {
         return false;
@@ -142,7 +162,7 @@ bool AnimationEditor::SaveToFile(const std::string& file) {
 
 
 void AnimationEditor::ClearData() {
-    floatAnimations.clear();
+    allAnimations.clear();
     selectedAnimation = -1;
     selectedKey = nullptr;
     animation_file = "";
@@ -155,11 +175,17 @@ bool AnimationEditor::LoadFromFile(std::string file) {
         return false;
     }
     auto j_all = nlohmann::json::parse(in);
-    animation::FloatAnimation dummy("dummy");
-    for (auto& j : j_all["float_animations"]) {
-        // j.get<FloatAnimation>() does not work because no default constructor
-        from_json(j, dummy);
-        floatAnimations.push_back(dummy);
+    animation::FloatAnimation f_dummy("dummy");
+    animation::StringAnimation s_dummy("dummy");
+    for (auto& j : j_all["animations"]) {
+        if (j["type"] == "string") {
+            from_json(j, s_dummy);
+            allAnimations.emplace_back(s_dummy);
+        } else if (j["type"] == "float") {
+            // j.get<FloatAnimation>() does not work because no default constructor
+            from_json(j, f_dummy);
+            allAnimations.emplace_back(f_dummy);
+        }
     }
     animation_file = file;
     return true;
@@ -270,7 +296,7 @@ void AnimationEditor::DrawToolbar() {
     DrawVerticalSeparator();
     ImGui::SameLine();
     if (ImGui::Button("frame view")) {
-        center_animation(floatAnimations[selectedAnimation]);
+        center_animation(allAnimations[selectedAnimation]);
     }
     ImGui::SameLine();
     DrawVerticalSeparator();
@@ -301,19 +327,20 @@ void AnimationEditor::DrawParams() {
     ImGui::Text("Available Parameters");
     ImGui::BeginChild(
         "anim_params", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
-    for (int32_t a = 0; a < floatAnimations.size(); ++a) {
-        const auto& anim = floatAnimations[a];
+    for (int32_t a = 0; a < allAnimations.size(); ++a) {
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_SpanFullWidth |
                                    ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_FramePadding |
                                    ImGuiTreeNodeFlags_AllowItemOverlap;
         if (selectedAnimation == a) {
             flags |= ImGuiTreeNodeFlags_Selected;
         }
-        ImGui::TreeNodeEx(anim.GetName().c_str(), flags);
+        const auto& anim = allAnimations[a];
+        std::visit([&](auto&& arg) -> void { ImGui::TreeNodeEx(arg.GetName().c_str(), flags); }, anim);
+        //ImGui::TreeNodeEx(anim.GetName().c_str(), flags);
         if (ImGui::IsItemActivated()) {
             selectedAnimation = a;
             if (canvas_visible) {
-                center_animation(floatAnimations[selectedAnimation]);
+                center_animation(allAnimations[selectedAnimation]);
             }
         }
     }
