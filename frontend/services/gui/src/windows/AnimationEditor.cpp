@@ -341,7 +341,7 @@ void AnimationEditor::DrawParams() {
 }
 
 
-void AnimationEditor::DrawInterpolation(ImDrawList* dl, const animation::Key& key, const animation::Key& key2) {
+void AnimationEditor::DrawInterpolation(ImDrawList* dl, const animation::FloatKey& key, const animation::FloatKey& key2) {
     const auto line_col = ImGui::GetColorU32(ImGuiCol_NavHighlight);
     const auto reference_col = IM_COL32(255, 0, 0, 255);
     auto drawList = ImGui::GetWindowDrawList();
@@ -378,7 +378,7 @@ void AnimationEditor::DrawInterpolation(ImDrawList* dl, const animation::Key& ke
 }
 
 
-void AnimationEditor::DrawKey(ImDrawList* dl, animation::Key& key) {
+void AnimationEditor::DrawKey(ImDrawList* dl, animation::FloatKey& key) {
     const float size = 4.0f;
     const ImVec2 button_size = {8.0f, 8.0f};
     auto key_color = IM_COL32(255, 128, 0, 255);

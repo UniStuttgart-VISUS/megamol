@@ -14,8 +14,8 @@ namespace megamol {
 namespace gui {
 namespace animation {
 
-void to_json(nlohmann::json& j, const Key& k);
-void from_json(const nlohmann::json& j, Key& k);
+void to_json(nlohmann::json& j, const FloatKey& k);
+void from_json(const nlohmann::json& j, FloatKey& k);
 void to_json(nlohmann::json& j, const FloatAnimation& f);
 void from_json(const nlohmann::json& j, FloatAnimation& f);
 

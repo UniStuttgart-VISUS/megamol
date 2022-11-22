@@ -2,14 +2,14 @@
 
 using namespace megamol::gui;
 
-void megamol::gui::animation::to_json(nlohmann::json& j, const animation::Key& k) {
+void megamol::gui::animation::to_json(nlohmann::json& j, const animation::FloatKey& k) {
     j = nlohmann::json{{"time", k.time}, {"value", k.value}, {"tangents_linked", k.tangents_linked},
         {"interpolation", k.interpolation}, {"in_tangent", nlohmann::json{k.in_tangent.x, k.in_tangent.y}},
         {"out_tangent", nlohmann::json{k.out_tangent.x, k.out_tangent.y}}};
 }
 
 
-void megamol::gui::animation::from_json(const nlohmann::json& j, animation::Key& k) {
+void megamol::gui::animation::from_json(const nlohmann::json& j, animation::FloatKey& k) {
     j["time"].get_to(k.time);
     j["value"].get_to(k.value);
     j["tangents_linked"].get_to(k.tangents_linked);
@@ -34,7 +34,7 @@ void megamol::gui::animation::to_json(nlohmann::json& j, const animation::FloatA
 void megamol::gui::animation::from_json(const nlohmann::json& j, animation::FloatAnimation& f) {
     f = animation::FloatAnimation{j.at("name")};
     for (auto& j : j["keys"]) {
-        animation::Key k;
+        animation::FloatKey k;
         j.get_to(k);
         f.AddKey(k);
     }

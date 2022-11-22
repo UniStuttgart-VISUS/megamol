@@ -20,64 +20,164 @@ using KeyTimeType = int32_t;
 
 enum class InterpolationType : int32_t { Step = 0, Linear = 1, Hermite = 2, CubicBezier = 3 };
 
-struct Key {
+struct FloatKey {
+    using ValueType = float;
     KeyTimeType time;
-    float value;
+    ValueType value;
     InterpolationType interpolation = InterpolationType::Linear;
     bool tangents_linked = true;
     ImVec2 in_tangent{-1.0f, 0.0f};
     ImVec2 out_tangent{1.0f, 0.0f};
 
     // this is expensive (accurately hit time first!)...
-    static float Interpolate(Key first, Key second, KeyTimeType time);
+    static float Interpolate(FloatKey first, FloatKey second, KeyTimeType time);
     // ... and that is only good for drawing (x will not sit on the time grid)
-    static ImVec2 Interpolate(Key first, Key second, float t);
+    static ImVec2 Interpolate(FloatKey first, FloatKey second, float t);
 };
 
-class FloatAnimation {
+struct StringKey {
+    using ValueType = std::string;
+    KeyTimeType time;
+    ValueType value;
+};
+
+template<class KeyType>
+class GenericAnimation {
 public:
-    using KeyMap = std::map<KeyTimeType, Key>;
-    using ValueType = float;
+    using KeyMap = std::map<KeyTimeType, KeyType>;
+    using ValueType = KeyType;
 
-    FloatAnimation(std::string ParamName) : param_name(ParamName) {}
-    void AddKey(Key k);
-    void DeleteKey(KeyTimeType time);
+    GenericAnimation(std::string ParamName) : param_name(ParamName) {}
+    void AddKey(KeyType k) {
+        keys[k.time] = k;
+    }
+    void DeleteKey(KeyTimeType time) {
+        keys.erase(time);
+    }
 
-    KeyMap::iterator begin();
-    KeyMap::iterator end();
+    typename KeyMap::iterator begin() {
+        return keys.begin();
+    }
+    typename KeyMap::iterator end() {
+        return keys.end();
+    }
 
-    ValueType GetValue(KeyTimeType time) const;
-    const std::string& GetName() const;
-    KeyTimeType GetStartTime() const;
-    KeyTimeType GetEndTime() const;
-    KeyTimeType GetLength() const;
-    ValueType GetMinValue() const;
-    ValueType GetMaxValue() const;
-    KeyMap::size_type GetSize() const {
+    const std::string& GetName() const {
+        return param_name;
+    }
+    typename KeyMap::size_type GetSize() const {
         return keys.size();
     }
     bool HasKey(KeyTimeType k) {
         return keys.find(k) != keys.end();
     }
-    Key& operator[](KeyTimeType k) {
+    ValueType& operator[](KeyTimeType k) {
         return keys[k];
     }
-    const Key& operator[](KeyTimeType k) const {
+    const ValueType& operator[](KeyTimeType k) const {
         return keys.at(k);
     }
-    std::vector<KeyTimeType> GetAllKeys() const {
-        std::vector<KeyTimeType> the_keys;
-        ;
-        the_keys.reserve(keys.size());
-        std::transform(keys.begin(), keys.end(), std::back_inserter(the_keys),
-            [](const KeyMap::value_type& v) { return v.first; });
-        return the_keys;
+
+    KeyTimeType GetStartTime() const;
+    KeyTimeType GetEndTime() const;
+    KeyTimeType GetLength() const;
+
+    // these two are a bit special
+    float GetMinValue() const {
+        return -1.0f;    
     }
+    float GetMaxValue() const {
+        return 1.0f;
+    }
+
+
+    typename ValueType::ValueType GetValue(KeyTimeType time) const;
+    std::vector<KeyTimeType> GetAllKeys() const;
 
 private:
     KeyMap keys;
     std::string param_name;
 };
+
+template<class KeyType>
+KeyTimeType GenericAnimation<KeyType>::GetStartTime() const {
+    if (!keys.empty()) {
+        return keys.begin()->second.time;
+    } else {
+        return 0;
+    }
+}
+
+template<class KeyType>
+KeyTimeType GenericAnimation<KeyType>::GetEndTime() const {
+    if (!keys.empty()) {
+        return keys.rbegin()->second.time;
+    } else {
+        return 1;
+    }
+}
+
+template<class KeyType>
+KeyTimeType GenericAnimation<KeyType>::GetLength() const {
+    if (!keys.empty()) {
+        return keys.rbegin()->second.time - keys.begin()->second.time;
+    } else {
+        return 1;
+    }
+}
+
+template<class KeyType>
+typename KeyType::ValueType GenericAnimation<KeyType>::GetValue(KeyTimeType time) const {
+    if (keys.size() < 1) {
+        return KeyType::ValueType();
+    }
+    if (keys.size() < 2) {
+        return keys.begin()->second.value;
+    }
+    auto before_key = keys.begin()->second, after_key = keys.begin()->second;
+    bool ok = false;
+    for (auto it = keys.begin(); it != keys.end(); ++it) {
+        if (it->second.time == time) {
+            return it->second.value;
+        }
+        if (it->second.time < time) {
+            before_key = it->second;
+        }
+        if (it->second.time > time) {
+            after_key = it->second;
+            ok = true;
+            break;
+        }
+    }
+    // standard interpolation is step.
+    if (ok) {
+        return before_key.value;;
+    } else {
+        return KeyType::ValueType();
+    }    
+}
+
+template<class KeyType>
+std::vector<KeyTimeType> GenericAnimation<KeyType>::GetAllKeys() const {
+    std::vector<KeyTimeType> the_keys;
+    the_keys.reserve(keys.size());
+    std::transform(
+        keys.begin(), keys.end(), std::back_inserter(the_keys), [](const KeyMap::value_type& v) { return v.first; });
+    return the_keys;
+}
+
+using StringAnimation = GenericAnimation<StringKey>;
+using FloatAnimation = GenericAnimation<FloatKey>;
+
+// floats can actually interpolate!
+template<>
+float GenericAnimation<FloatKey>::GetValue(KeyTimeType time) const;
+
+// and tell about their extents
+template<>
+float GenericAnimation<FloatKey>::GetMinValue() const;
+template<>
+float GenericAnimation<FloatKey>::GetMaxValue() const;
 
 } // namespace animation
 } // namespace gui

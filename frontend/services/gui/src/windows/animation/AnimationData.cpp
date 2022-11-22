@@ -4,9 +4,9 @@
 
 using namespace megamol::gui::animation;
 
-float Key::Interpolate(Key first, Key second, KeyTimeType time) {
-    Key my_first = first;
-    Key my_second = second;
+float FloatKey::Interpolate(FloatKey first, FloatKey second, KeyTimeType time) {
+    FloatKey my_first = first;
+    FloatKey my_second = second;
     if (my_first.time > my_second.time) {
         my_first = second;
         my_second = first;
@@ -78,9 +78,9 @@ float Key::Interpolate(Key first, Key second, KeyTimeType time) {
     return 0.0f;
 }
 
-ImVec2 Key::Interpolate(Key first, Key second, float t) {
-    Key my_first = first;
-    Key my_second = second;
+ImVec2 FloatKey::Interpolate(FloatKey first, FloatKey second, float t) {
+    FloatKey my_first = first;
+    FloatKey my_second = second;
     if (my_first.time > my_second.time) {
         my_first = second;
         my_second = first;
@@ -123,31 +123,11 @@ ImVec2 Key::Interpolate(Key first, Key second, float t) {
     }
 }
 
-
-void FloatAnimation::AddKey(Key k) {
-    keys[k.time] = k;
-}
-
-
-void FloatAnimation::DeleteKey(KeyTimeType time) {
-    keys.erase(time);
-}
-
-
-FloatAnimation::KeyMap::iterator FloatAnimation::begin() {
-    return keys.begin();
-}
-
-
-FloatAnimation::KeyMap::iterator FloatAnimation::end() {
-    return keys.end();
-}
-
-
-FloatAnimation::ValueType FloatAnimation::GetValue(KeyTimeType time) const {
+template<>
+float GenericAnimation<FloatKey>::GetValue(KeyTimeType time) const {
     if (keys.size() < 2)
         return 0.0f;
-    Key before_key = keys.begin()->second, after_key = keys.begin()->second;
+    FloatKey before_key = keys.begin()->second, after_key = keys.begin()->second;
     bool ok = false;
     for (auto it = keys.begin(); it != keys.end(); ++it) {
         if (it->second.time == time) {
@@ -163,45 +143,14 @@ FloatAnimation::ValueType FloatAnimation::GetValue(KeyTimeType time) const {
         }
     }
     if (ok) {
-        return Key::Interpolate(before_key, after_key, time);
+        return FloatKey::Interpolate(before_key, after_key, time);
     } else {
         return 0.0f;
     }
 }
 
-
-const std::string& FloatAnimation::GetName() const {
-    return param_name;
-}
-
-
-KeyTimeType FloatAnimation::GetStartTime() const {
-    if (!keys.empty()) {
-        return keys.begin()->second.time;
-    } else {
-        return 0;
-    }
-}
-
-
-KeyTimeType FloatAnimation::GetEndTime() const {
-    if (!keys.empty()) {
-        return keys.rbegin()->second.time;
-    } else {
-        return 1;
-    }
-}
-
-KeyTimeType FloatAnimation::GetLength() const {
-    if (!keys.empty()) {
-        return keys.rbegin()->second.time - keys.begin()->second.time;
-    } else {
-        return 1;
-    }
-}
-
-
-FloatAnimation::ValueType FloatAnimation::GetMinValue() const {
+template<>
+float GenericAnimation<FloatKey>::GetMinValue() const {
     if (!keys.empty()) {
         auto min = std::numeric_limits<float>::max();
         for (auto& k : keys) {
@@ -213,8 +162,8 @@ FloatAnimation::ValueType FloatAnimation::GetMinValue() const {
     }
 }
 
-
-FloatAnimation::ValueType FloatAnimation::GetMaxValue() const {
+template<>
+float GenericAnimation<FloatKey>::GetMaxValue() const {
     if (!keys.empty()) {
         auto max = std::numeric_limits<float>::lowest();
         for (auto& k : keys) {
