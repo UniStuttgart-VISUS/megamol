@@ -38,32 +38,23 @@ void main() {
         vec2 from = vec2(0.0, left);
         vec2 to = vec2(1.0, right);
         vec2 lineDir = normalize(to - from);
-        vec2 orthLine = normalize(vec2(-lineDir.y, lineDir.x));
-        float m = acos(dot(orthLine, vec2(1.0, 0.0)));
-        float b = left;
+        float m = to.y > from.y ? acos(dot(lineDir, vec2(1.0, 0.0))) : -acos(dot(lineDir, vec2(1.0, 0.0)));
+        float b = (left+right)/2.0;
     if(!bitflag_test(flags[itemID], itemTestMask, itemPassMask)){
         // map m and b to image coords
-        m = (m - quarterPI) * (dual_space_width) / (halfPI);
-        b = 0.5 + (b * (dual_space_height-1.0));
+        m = (m + quarterPI) * (dual_space_width) / (halfPI);
+        //b = 0.5 + (b * (dual_space_height-1.0));
+        b = (b * dual_space_height);
 
-        // select bin
-        //float m_binned = round(m);
-        //float b_binned = round(b);
-
-        //TODO offset by half texel missing?
-
-        // increment bin density by one
-        //uint density = imageAtomicAdd(o_dual_density_tex, ivec3(int(m_binned), int(b_binned), dimID), 1);
-
-        float wt = fract(b);
-        float wb = 1.0 - fract(b);
-        float wl = 1.0 - fract(m);
         float wr = fract(m);
+        float wl = 1.0 - fract(m);
+        float wb = 1.0 - fract(b);
+        float wt = fract(b);
 
-        imageAtomicAdd(o_dual_density_tex, ivec3(int(floor(m)) + 1, int(floor(b)) , dimID), int(1000.0 * wb * wr) );
-        imageAtomicAdd(o_dual_density_tex, ivec3(int(floor(m)) , int(floor(b)) , dimID), int(1000.0 * wb * wl) );
-        imageAtomicAdd(o_dual_density_tex, ivec3(int(floor(m)) + 1, int(floor(b)) + 1 , dimID), int(1000.0 * wt * wr) );
-        imageAtomicAdd(o_dual_density_tex, ivec3(int(floor(m)), int(floor(b)) +1, dimID), int(1000.0 * wt * wl) );
+        imageAtomicAdd(o_dual_density_tex, ivec3(int(floor(m)) + 1, int(floor(b))    , dimID), toFixPoint(wb * wr) );
+        imageAtomicAdd(o_dual_density_tex, ivec3(int(floor(m))    , int(floor(b))    , dimID), toFixPoint(wb * wl) );
+        imageAtomicAdd(o_dual_density_tex, ivec3(int(floor(m)) + 1, int(floor(b)) + 1, dimID), toFixPoint(wt * wr) );
+        imageAtomicAdd(o_dual_density_tex, ivec3(int(floor(m))    , int(floor(b)) + 1, dimID), toFixPoint(wt * wl) );
 
         //  // compute centroid
         //  float n = float(density+1); //TODO can this even work?

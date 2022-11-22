@@ -926,7 +926,7 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl
         dual_space_width = axes_pixel_height;
         dual_space_height = axes_pixel_height;
     } else {
-        dual_space_width = std::min(axes_pixel_height,1024);
+        dual_space_width = std::min(axes_pixel_height, 1024);
         dual_space_height = std::min(axes_pixel_height, 1024);
     }
 

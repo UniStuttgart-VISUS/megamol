@@ -52,37 +52,40 @@ void main() {
 
     for(int m_idx = 0; m_idx<dual_space_width; ++m_idx){
         float m_normalized = float(m_idx)/float(dual_space_width-1);
-        float m_angle = (m_normalized * HALF_PI + QUARTER_PI);
-        float b_normalized = uvCoords.y + (relx * tan(HALF_PI - m_angle));
+        float m_angle = (m_normalized * HALF_PI - QUARTER_PI);
+        float b_normalized = uvCoords.y + ((0.5-relx) * tan(m_angle));
 
-        float b = b_normalized * dual_space_height;
-        int current_b_idx = int(floor(b));
+        result += bilinearInterpolation(imgRead,vec3( m_normalized ,b_normalized,float(cdim)));
 
-        // need to scan all dual_space_height between current hit and last theta's hit?
-        for(int b_idx = prev_b_idx; b_idx >= current_b_idx; --b_idx){
-        
-            b_normalized = float(b_idx)/ float(dual_space_height-1);
-        
-            // filter out hits above/below axis
-            if(b_normalized < 0.0 || b_normalized > 1.0){
-                continue;
-            }
-        
-            // update m_idx to match b
-            vec2 from = vec2(0.0, b_normalized);
-            vec2 to = vec2(relx, uvCoords.y);
-            vec2 lineDir = normalize(to - from);
-            vec2 orthLine = vec2(-lineDir.y, lineDir.x);
-            float m_angle_corrected = acos(dot(orthLine, vec2(1.0, 0.0)));
-            float m_normalized_corrected = (m_angle_corrected - QUARTER_PI)/(HALF_PI);
-            int theta_index_corrected = int(floor((m_angle_corrected - QUARTER_PI) * (dual_space_width) / (HALF_PI))); 
-            
-            //result += fromFixPoint(texelFetch(imgRead, ivec3(m_idx, b_idx, cdim), 0).x);
-            result += bilinearInterpolation(imgRead,vec3( m_normalized ,b_normalized,float(cdim)));
-        
-            //result += 1.0;
-        }
-        prev_b_idx = current_b_idx;
+        //  float b = b_normalized * dual_space_height;
+        //  int current_b_idx = int(floor(b));
+        //  // need to scan all dual_space_height between current hit and last theta's hit?
+        //  for(int b_idx = prev_b_idx; b_idx >= current_b_idx; --b_idx){
+        //  
+        //      b_normalized = float(b_idx)/ float(dual_space_height-1);
+        //  
+        //      // filter out hits above/below axis
+        //      if(b_normalized < 0.0 || b_normalized > 1.0){
+        //          continue;
+        //      }
+        //  
+        //      // update m_idx to match b
+        //      vec2 from = vec2(0.5, b_normalized);
+        //      vec2 to = vec2(relx, uvCoords.y);
+        //      if(to.x < from.x){
+        //          to = vec2(0.5, b_normalized);
+        //          from = vec2(relx, uvCoords.y);
+        //      }
+        //      vec2 lineDir = normalize(to - from);
+        //      float m_angle_corrected = to.y > from.y ? acos(dot(lineDir, vec2(1.0, 0.0))) : -acos(dot(lineDir, vec2(1.0, 0.0)));
+        //      float m_normalized_corrected = (m_angle_corrected + QUARTER_PI)/(HALF_PI);
+        //  
+        //      //result += fromFixPoint(texelFetch(imgRead, ivec3(m_idx, b_idx, cdim), 0).x);
+        //      result += bilinearInterpolation(imgRead,vec3( m_normalized ,b_normalized,float(cdim)));
+        //  
+        //      //result += 1.0;
+        //  }
+        //  prev_b_idx = current_b_idx;
 
         //int b_idx_0 = int(floor(b));
         //int b_idx_1 = int(ceil(b));
