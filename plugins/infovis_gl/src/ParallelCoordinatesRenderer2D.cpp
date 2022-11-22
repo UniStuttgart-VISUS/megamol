@@ -926,16 +926,16 @@ void ParallelCoordinatesRenderer2D::drawDual(int drawmode, std::shared_ptr<glowl
         dual_space_width = axes_pixel_height;
         dual_space_height = axes_pixel_height;
     } else {
-        dual_space_width = 512;
-        dual_space_height = 512;
+        dual_space_width = std::min(axes_pixel_height,1024);
+        dual_space_height = std::min(axes_pixel_height, 1024);
     }
 
     glowl::TextureLayout dual_space_texture_layout(GL_R32UI, dual_space_width, dual_space_height, dimensionCount_ - 1,
         GL_RED_INTEGER, GL_UNSIGNED_INT, 1,
         {
-            {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
-            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER},
+            {GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE},
+            {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE},
+            {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE},
             {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
             {GL_TEXTURE_MAG_FILTER, GL_LINEAR},
         },
