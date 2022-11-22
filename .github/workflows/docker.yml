@@ -8,10 +8,16 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/megamol_ci_ubuntu
 
 jobs:
   docker:
+    strategy:
+      matrix:
+        config:
+          - dockerfile_dir: ubuntu
+            image_name: megamol_ci_ubuntu
+          - dockerfile_dir: fedora
+            image_name: megamol_ci_fedora
     name: Docker-Build
     runs-on: ubuntu-22.04
     permissions:
@@ -30,11 +36,11 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.config.image_name }}
       - name: Docker build/push
         uses: docker/build-push-action@v3
         with:
-          context: .ci/docker/ubuntu
+          context: .ci/docker/${{ matrix.config.dockerfile_dir }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
