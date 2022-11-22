@@ -3939,7 +3939,9 @@ bool UncertaintySequenceRenderer::LoadTexture(vislib::StringA filename) {
         } else {
             Log::DefaultLog.WriteError("Could not read \"%s\" texture.", filename.PeekBuffer());
         }
-    } catch (...) { Log::DefaultLog.WriteError("Could not find \"%s\" texture.", filename.PeekBuffer()); }
+    } catch (...) {
+        Log::DefaultLog.WriteError("Could not find \"%s\" texture.", filename.PeekBuffer());
+    }
     return false;
 }
 

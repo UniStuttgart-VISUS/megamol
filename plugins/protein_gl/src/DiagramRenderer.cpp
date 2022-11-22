@@ -281,7 +281,9 @@ bool DiagramRenderer::LoadIcon(vislib::StringA filename, int ID) {
         } else {
             Log::DefaultLog.WriteError("could not read %s texture.", filename.PeekBuffer());
         }
-    } catch (...) { Log::DefaultLog.WriteError("could not find %s texture.", filename.PeekBuffer()); }
+    } catch (...) {
+        Log::DefaultLog.WriteError("could not find %s texture.", filename.PeekBuffer());
+    }
     return false;
 }
 

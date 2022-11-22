@@ -377,6 +377,8 @@ void loadPlugins(megamol::frontend_resources::PluginsResource& pluginsRes) {
                 "Unable to load Plugin: %s (%s, &d)", vex.GetMsgA(), vex.GetFile(), vex.GetLine());
         } catch (std::exception const& ex) {
             Log::DefaultLog.WriteError("Unable to load Plugin: %s", ex.what());
-        } catch (...) { Log::DefaultLog.WriteError("Unable to load Plugin: unknown exception"); }
+        } catch (...) {
+            Log::DefaultLog.WriteError("Unable to load Plugin: unknown exception");
+        }
     }
 }
