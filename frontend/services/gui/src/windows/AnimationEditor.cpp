@@ -7,304 +7,40 @@
 
 #include "AnimationEditor.h"
 
+#include "animation/AnimationUtils.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/StringParam.h"
+
 #include "nlohmann/json.hpp"
 
 #include <fstream>
 
 using namespace megamol::gui;
 
-
-float Key::Interpolate(Key first, Key second, KeyTimeType time) {
-    Key my_first = first;
-    Key my_second = second;
-    if (my_first.time > my_second.time) {
-        my_first = second;
-        my_second = first;
-    }
-    if (time <= my_first.time) {
-        return my_first.value;
-    }
-    if (time >= my_second.time) {
-        return my_second.value;
-    }
-
-    float t = static_cast<float>(time - my_first.time) / static_cast<float>(my_second.time - my_first.time);
-
-    switch (first.interpolation) {
-    case InterpolationType::Step:
-        return my_first.value;
-    case InterpolationType::Linear:
-        return (1.0f - t) * my_first.value + t * my_second.value;
-    case InterpolationType::Hermite: {
-        float t2, t3;
-        auto recompute_ts = [&](){
-            t2 = t * t;
-            t3 = t2 * t;
-        };
-        recompute_ts();
-        auto x = my_first.time * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.time * (-2.0f * t3 + 3.0f * t2) +
-               my_first.out_tangent.x * (t3 - 2.0f * t2 + t) - my_second.in_tangent.x * (t3 - t2);
-        auto err = x - time;
-        int iter = 0;
-        while (std::abs(err) > 0.01f && iter < 100) {
-            // TODO: use the tangent to guesstimate the correction step. should converge much faster!
-            t = t - 0.5 * err / static_cast<float>(my_second.time - my_first.time);
-            recompute_ts();
-            x = my_first.time * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.time * (-2.0f * t3 + 3.0f * t2) +
-               my_first.out_tangent.x * (t3 - 2.0f * t2 + t) - my_second.in_tangent.x * (t3 - t2);
-            err = x - time;
-            iter++;
-        }
-        return my_first.value * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.value * (-2.0f * t3 + 3.0f * t2) +
-               my_first.out_tangent.y * (t3 - 2.0f * t2 + t) - my_second.in_tangent.y * (t3 - t2);
-    }
-    case InterpolationType::CubicBezier: {
-        float t2, t3, invt2, invt3;
-        auto recompute_ts = [&]() {
-            t2 = t * t;
-            t3 = t2 * t;
-            invt2 = (1.0f - t) * (1.0f - t);
-            invt3 = (1.0f - t) * (1.0f - t) * (1.0f - t);
-        };
-        recompute_ts();
-        auto p1 = ImVec2(my_first.time, my_first.value);
-        auto p4 = ImVec2(my_second.time, my_second.value);
-        auto p2 = p1 + my_first.out_tangent;
-        auto p3 = p4 + my_second.in_tangent;
-        auto x = invt3 * p1.x + 3.0f * invt2 * t * p2.x +
-               3.0f * (1.0f - t) * t2 * p3.x + t3 * p4.x;
-        auto err = x - time;
-        int iter = 0;
-        while (std::abs(err) > 0.01f && iter < 100) {
-            // TODO: use the tangent to guesstimate the correction step. should converge much faster!
-            t = t - 0.5 * err / static_cast<float>(my_second.time - my_first.time);
-            recompute_ts();
-            x = invt3 * p1.x + 3.0f * invt2 * t * p2.x +
-               3.0f * (1.0f - t) * t2 * p3.x + t3 * p4.x;
-            err = x - time;
-            iter++;
-        }
-        return invt3 * my_first.value + 3.0f * invt2 * t * p2.y +
-               3.0f * (1.0f - t) * t2 * p3.y + t3 * my_second.value;
-    }
-    }
-    return 0.0f;
-}
-
-ImVec2 Key::Interpolate(Key first, Key second, float t) {
-    Key my_first = first;
-    Key my_second = second;
-    if (my_first.time > my_second.time) {
-        my_first = second;
-        my_second = first;
-    }
-    if (t <= 0.0f) {
-        return {static_cast<float>(my_first.time), my_first.value};
-    }
-    if (t >= 1.0f) {
-        return {static_cast<float>(my_second.time), my_second.value};
-    }
-
-    switch (first.interpolation) {
-    case InterpolationType::Step:
-        return {
-            (1.0f - t) * static_cast<float>(my_first.time) + t * static_cast<float>(my_second.time), my_first.value};
-    case InterpolationType::Linear:
-        return {(1.0f - t) * static_cast<float>(my_first.time) + t * static_cast<float>(my_second.time),
-            (1.0f - t) * my_first.value + t * my_second.value};
-    case InterpolationType::Hermite: {
-        const auto t2 = t * t, t3 = t2 * t;
-        auto x = my_first.time * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.time * (-2.0f * t3 + 3.0f * t2) +
-               my_first.out_tangent.x * (t3 - 2.0f * t2 + t) - my_second.in_tangent.x * (t3 - t2);
-        auto y = my_first.value * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.value * (-2.0f * t3 + 3.0f * t2) +
-               my_first.out_tangent.y * (t3 - 2.0f * t2 + t) - my_second.in_tangent.y * (t3 - t2);
-        return {x, y};
-    }
-    case InterpolationType::CubicBezier: {
-        const auto t2 = t * t, t3 = t2 * t;
-        const auto invt2 = (1.0f - t) * (1.0f - t), invt3 = (1.0f - t) * (1.0f - t) * (1.0f - t);
-        auto p1 = ImVec2(my_first.time, my_first.value);
-        auto p4 = ImVec2(my_second.time, my_second.value);
-        auto p2 = p1 + my_first.out_tangent;
-        auto p3 = p4 + my_second.in_tangent;
-        auto x = invt3 * p1.x + 3.0f * invt2 * t * p2.x +
-               3.0f * (1.0f - t) * t2 * p3.x + t3 * p4.x;
-        auto y = invt3 * p1.y + 3.0f * invt2 * t * p2.y +
-               3.0f * (1.0f - t) * t2 * p3.y + t3 * p4.y;
-        return {x,y};
-    }
-    default:
-        return {0.0f, 0.0f};
-    }
-}
-
-
-void FloatAnimation::AddKey(Key k) {
-    keys[k.time] = k;
-}
-
-
-void FloatAnimation::DeleteKey(KeyTimeType time) {
-    keys.erase(time);
-}
-
-
-FloatAnimation::KeyMap::iterator FloatAnimation::begin() {
-    return keys.begin();
-}
-
-
-FloatAnimation::KeyMap::iterator FloatAnimation::end() {
-    return keys.end();
-}
-
-
-FloatAnimation::ValueType FloatAnimation::GetValue(KeyTimeType time) const {
-    if (keys.size() < 2)
-        return 0.0f;
-    Key before_key = keys.begin()->second, after_key = keys.begin()->second;
-    bool ok = false;
-    for (auto it = keys.begin(); it != keys.end(); ++it) {
-        if (it->second.time == time) {
-            return it->second.value;
-        }
-        if (it->second.time < time) {
-            before_key = it->second;
-        }
-        if (it->second.time > time) {
-            after_key = it->second;
-            ok = true;
-            break;
-        }
-    }
-    if (ok) {
-        return Key::Interpolate(before_key, after_key, time);
-    } else {
-        return 0.0f;
-    }
-}
-
-
-const std::string& FloatAnimation::GetName() const {
-    return param_name;
-}
-
-
-KeyTimeType FloatAnimation::GetStartTime() const {
-    if (!keys.empty()) {
-        return keys.begin()->second.time;
-    } else {
-        return 0;
-    }
-}
-
-
-KeyTimeType FloatAnimation::GetEndTime() const {
-    if (!keys.empty()) {
-        return keys.rbegin()->second.time;
-    } else {
-        return 1;
-    }
-}
-
-KeyTimeType FloatAnimation::GetLength() const {
-    if (!keys.empty()) {
-        return keys.rbegin()->second.time - keys.begin()->second.time;
-    } else {
-        return 1;
-    }
-}
-
-
-FloatAnimation::ValueType FloatAnimation::GetMinValue() const {
-    if (!keys.empty()) {
-        auto min = std::numeric_limits<float>::max();
-        for (auto& k : keys) {
-            min = std::min(min, k.second.value);
-        }
-        return min;
-    } else {
-        return 0.0f;
-    }
-}
-
-
-FloatAnimation::ValueType FloatAnimation::GetMaxValue() const {
-    if (!keys.empty()) {
-        auto max = std::numeric_limits<float>::lowest();
-        for (auto& k : keys) {
-            max = std::max(max, k.second.value);
-        }
-        return max;
-    } else {
-        return 1.0f;
-    }
-}
-
-
-void megamol::gui::to_json(nlohmann::json& j, const Key& k) {
-    j = nlohmann::json{{"time", k.time}, {"value", k.value}, {"tangents_linked", k.tangents_linked},
-        {"interpolation", k.interpolation}, {"in_tangent", nlohmann::json{k.in_tangent.x, k.in_tangent.y}},
-        {"out_tangent", nlohmann::json{k.out_tangent.x, k.out_tangent.y}}};
-}
-
-
-void megamol::gui::from_json(const nlohmann::json& j, Key& k) {
-    j["time"].get_to(k.time);
-    j["value"].get_to(k.value);
-    j["tangents_linked"].get_to(k.tangents_linked);
-    j["interpolation"].get_to(k.interpolation);
-    j["in_tangent"][0].get_to(k.in_tangent.x);
-    j["in_tangent"][1].get_to(k.in_tangent.y);
-    j["out_tangent"][0].get_to(k.out_tangent.x);
-    j["out_tangent"][1].get_to(k.out_tangent.y);
-}
-
-
-void megamol::gui::to_json(nlohmann::json& j, const FloatAnimation& f) {
-    j = nlohmann::json{{"name", f.GetName()}};
-    auto k_array = nlohmann::json::array();
-    for (auto& k: f.GetAllKeys()) {
-        k_array.push_back(f[k]);
-    }
-    j["keys"] = k_array;
-}
-
-
-void megamol::gui::from_json(const nlohmann::json& j, FloatAnimation& f) {
-    f = FloatAnimation{j.at("name")};
-    for (auto& j: j["keys"]) {
-        Key k;
-        j.get_to(k);
-        f.AddKey(k);
-    }
-}
-
-
-megamol::gui::AnimationEditor::AnimationEditor(const std::string& window_name)
+AnimationEditor::AnimationEditor(const std::string& window_name)
         : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_ANIMATIONEDITOR) {
 
     // Configure ANIMATION EDITOR Window
     this->win_config.size = ImVec2(1600.0f * megamol::gui::gui_scaling.Get(), 800.0f * megamol::gui::gui_scaling.Get());
     this->win_config.reset_size = this->win_config.size;
     this->win_config.flags = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_MenuBar;
-    this->win_config.hotkey =
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F5, core::view::Modifier::NONE);
+    this->win_config.hotkey = core::view::KeyCode(core::view::Key::KEY_F5, core::view::Modifier::NONE);
 }
 
 
-megamol::gui::AnimationEditor::~AnimationEditor() {}
+AnimationEditor::~AnimationEditor() {}
 
 
-bool megamol::gui::AnimationEditor::Update() {
+bool AnimationEditor::Update() {
 
     return true;
 }
 
 
-bool megamol::gui::AnimationEditor::Draw() {
+bool AnimationEditor::Draw() {
     DrawToolbar();
     DrawPopups();
 
@@ -333,7 +69,7 @@ bool AnimationEditor::NotifyParamChanged(
     frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot, std::string const& new_value) {
     if (auto_capture) {
         std::string the_name = param_slot->FullName().PeekBuffer();
-        if (param_slot->Param<core::param::FloatParam>() || param_slot->Param<core::param::IntParam>()) {
+        if (param_slot->Param<FloatParam>() || param_slot->Param<IntParam>()) {
             const float the_val = std::stof(new_value);
             bool found = false;
             for (auto& a : floatAnimations) {
@@ -347,10 +83,17 @@ bool AnimationEditor::NotifyParamChanged(
                 }
             }
             if (!found) {
-                FloatAnimation f ={the_name};
+                animation::FloatAnimation f = {the_name};
                 f.AddKey({current_frame, the_val});
                 floatAnimations.push_back(f);
             }
+        }
+        if (param_slot->Param<EnumParam>() || param_slot->Param<FlexEnumParam>() || param_slot->Param<StringParam>() ||
+            param_slot->Param<FilePathParam>()) {
+            bool found = false;
+            //for (auto& a : stringAnimations) {
+            //
+            //}
         }
     }
     // TODO: what else. Enum probably.
@@ -383,7 +126,7 @@ void AnimationEditor::WriteValuesToGraph() {
 bool AnimationEditor::SaveToFile(const std::string& file) {
     nlohmann::json animation_data;
     nlohmann::json anims;
-    for (auto& fa: floatAnimations) {
+    for (auto& fa : floatAnimations) {
         anims.push_back(fa);
     }
     animation_data["float_animations"] = anims;
@@ -412,8 +155,8 @@ bool AnimationEditor::LoadFromFile(std::string file) {
         return false;
     }
     auto j_all = nlohmann::json::parse(in);
-    FloatAnimation dummy("dummy");
-    for (auto& j: j_all["float_animations"]) {
+    animation::FloatAnimation dummy("dummy");
+    for (auto& j : j_all["float_animations"]) {
         // j.get<FloatAnimation>() does not work because no default constructor
         from_json(j, dummy);
         floatAnimations.push_back(dummy);
@@ -425,7 +168,7 @@ bool AnimationEditor::LoadFromFile(std::string file) {
 
 void AnimationEditor::DrawPopups() {
     if (this->file_browser.PopUp_Load(
-        "Load Animation", animation_file, open_popup_load, {"anim"}, FilePathParam::Flag_File_RestrictExtension)) {
+            "Load Animation", animation_file, open_popup_load, {"anim"}, FilePathParam::Flag_File_RestrictExtension)) {
         if (!LoadFromFile(animation_file)) {
             error_popup_message = "Saving failed.";
             open_popup_error = true;
@@ -433,7 +176,7 @@ void AnimationEditor::DrawPopups() {
         open_popup_load = false;
     }
     if (this->file_browser.PopUp_Save("Save Animation", animation_file, open_popup_save, {"anim"},
-        FilePathParam::Flag_File_ToBeCreatedWithRestrExts, ternary)) {
+            FilePathParam::Flag_File_ToBeCreatedWithRestrExts, ternary)) {
         if (!SaveToFile(animation_file)) {
             error_popup_message = "Saving failed.";
             open_popup_error = true;
@@ -447,7 +190,7 @@ void AnimationEditor::DrawPopups() {
         ImGui::OpenPopup("AnimEditorError");
     }
     if (ImGui::BeginPopupModal("AnimEditorError", &open_popup_error,
-        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar)) {
+            ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar)) {
         ImGui::Text("error: %s", error_popup_message.c_str());
         if (ImGui::Button("OK", ImVec2(120, 0))) {
             ImGui::CloseCurrentPopup();
@@ -539,7 +282,7 @@ void AnimationEditor::DrawToolbar() {
 }
 
 
-void AnimationEditor::center_animation(const FloatAnimation& anim) {
+void AnimationEditor::center_animation(const animation::FloatAnimation& anim) {
     auto region = canvas.Rect();
     if (anim.GetLength() > 1) {
         custom_zoom.x = 0.9f * region.GetWidth() / static_cast<float>(anim.GetLength());
@@ -598,22 +341,22 @@ void AnimationEditor::DrawParams() {
 }
 
 
-void AnimationEditor::DrawInterpolation(ImDrawList* dl, const Key& key, const Key& key2) {
+void AnimationEditor::DrawInterpolation(ImDrawList* dl, const animation::Key& key, const animation::Key& key2) {
     const auto line_col = ImGui::GetColorU32(ImGuiCol_NavHighlight);
     const auto reference_col = IM_COL32(255, 0, 0, 255);
     auto drawList = ImGui::GetWindowDrawList();
     auto pos = ImVec2(key.time, key.value * -1.0f) * custom_zoom;
     auto pos2 = ImVec2(key2.time, key2.value * -1.0f) * custom_zoom;
     switch (key.interpolation) {
-    case InterpolationType::Step:
+    case animation::InterpolationType::Step:
         drawList->AddLine(pos, ImVec2(pos2.x, pos.y), line_col);
         drawList->AddLine(ImVec2(pos2.x, pos.y), pos2, line_col);
         break;
-    case InterpolationType::Linear:
+    case animation::InterpolationType::Linear:
         drawList->AddLine(pos, pos2, line_col);
         break;
-    case InterpolationType::Hermite:
-    case InterpolationType::CubicBezier: {
+    case animation::InterpolationType::Hermite:
+    case animation::InterpolationType::CubicBezier: {
         // draw reference
         auto step = 0.02f;
         for (auto f = 0.0f; f < 1.0f; f += step) {
@@ -635,7 +378,7 @@ void AnimationEditor::DrawInterpolation(ImDrawList* dl, const Key& key, const Ke
 }
 
 
-void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
+void AnimationEditor::DrawKey(ImDrawList* dl, animation::Key& key) {
     const float size = 4.0f;
     const ImVec2 button_size = {8.0f, 8.0f};
     auto key_color = IM_COL32(255, 128, 0, 255);
@@ -702,7 +445,7 @@ void AnimationEditor::DrawKey(ImDrawList* dl, Key& key) {
     if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingKey) {
         const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
         selectedKey->value = drag_start_value - delta.y / custom_zoom.y;
-        selectedKey->time = drag_start_time + static_cast<KeyTimeType>(delta.x / custom_zoom.x);
+        selectedKey->time = drag_start_time + static_cast<animation::KeyTimeType>(delta.x / custom_zoom.x);
     }
     if (selectedKey == &key) {
         drawList->AddCircleFilled(pos, size, active_key_color);
@@ -727,11 +470,11 @@ void AnimationEditor::DrawPlayhead(ImDrawList* drawList) {
     }
     if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingPlayhead) {
         const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
-        current_frame = drag_start_time + static_cast<KeyTimeType>(delta.x / custom_zoom.x);
+        current_frame = drag_start_time + static_cast<animation::KeyTimeType>(delta.x / custom_zoom.x);
         WriteValuesToGraph();
     }
-    drawList->AddTriangleFilled(ImVec2(ph_pos.x - playhead_size.x, ph_pos.y), ImVec2(ph_pos.x + playhead_size.x, ph_pos.y),
-        ImVec2(ph_pos.x, ph_pos.y + playhead_size.y), playhead_color);
+    drawList->AddTriangleFilled(ImVec2(ph_pos.x - playhead_size.x, ph_pos.y),
+        ImVec2(ph_pos.x + playhead_size.x, ph_pos.y), ImVec2(ph_pos.x, ph_pos.y + playhead_size.y), playhead_color);
     drawList->AddLine(ph_pos, ImVec2(ph_pos.x, canvas.Rect().GetHeight()), playhead_color);
     if (ImGui::IsItemDeactivated()) {
         curr_interaction = InteractionType::None;
@@ -805,19 +548,18 @@ void AnimationEditor::DrawProperties() {
                     current_item = items[n];
                     switch (n) {
                     case 0:
-                        selectedKey->interpolation = InterpolationType::Step;
+                        selectedKey->interpolation = animation::InterpolationType::Step;
                         break;
                     case 1:
-                        selectedKey->interpolation = InterpolationType::Linear;
+                        selectedKey->interpolation = animation::InterpolationType::Linear;
                         break;
                     case 2:
-                        selectedKey->interpolation = InterpolationType::Hermite;
+                        selectedKey->interpolation = animation::InterpolationType::Hermite;
                         break;
                     case 3:
-                        selectedKey->interpolation = InterpolationType::CubicBezier;
+                        selectedKey->interpolation = animation::InterpolationType::CubicBezier;
                         break;
                     }
-
                 }
                 if (is_selected)
                     ImGui::SetItemDefaultFocus();
