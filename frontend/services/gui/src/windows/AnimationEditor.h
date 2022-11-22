@@ -13,6 +13,7 @@
 #include "WindowCollection.h"
 #include "mmcore/MegaMolGraph.h"
 #include "imgui_canvas.h"
+#include "widgets/FileBrowserWidget.h"
 
 #include <map>
 
@@ -79,6 +80,9 @@ public:
     Key& operator[](KeyTimeType k) {
         return keys[k];
     }
+    const Key& operator[](KeyTimeType k) const {
+        return keys.at(k);
+    }
     std::vector<KeyTimeType> GetAllKeys() const {
         std::vector<KeyTimeType> the_keys;;
         the_keys.reserve(keys.size());
@@ -90,9 +94,12 @@ public:
 private:
     KeyMap keys;
     std::string param_name;
-    KeyTimeType timeline_offset = 0;
-    KeyTimeType playhead_position = 0;
 };
+
+void to_json(nlohmann::json& j, const Key& k);
+void from_json(const nlohmann::json& j, Key& k);
+void to_json(nlohmann::json& j, const FloatAnimation& f);
+void from_json(const nlohmann::json& j, FloatAnimation& f);
 
 class AnimationEditor : public AbstractWindow {
 public:
@@ -114,7 +121,11 @@ public:
 
 private:
     void WriteValuesToGraph();
+    bool SaveToFile(const std::string& file);
+    void ClearData();
+    bool LoadFromFile(std::string file);
 
+    void DrawPopups();
     void DrawToolbar();
     void center_animation(const FloatAnimation& anim);
     void DrawParams();
@@ -154,6 +165,11 @@ private:
     ImVec2 custom_zoom = {1.0f, 1.0f};
 
     lua_func_type* input_lua_func;
+    FileBrowserWidget file_browser;
+    bool open_popup_load = false, open_popup_save = false, open_popup_error = false;
+    std::string error_popup_message;
+    vislib::math::Ternary ternary = vislib::math::Ternary::TRI_FALSE;
+    std::string animation_file;
 };
 
 

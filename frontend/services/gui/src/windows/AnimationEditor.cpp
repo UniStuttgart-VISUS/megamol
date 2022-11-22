@@ -9,6 +9,9 @@
 
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
+#include "nlohmann/json.hpp"
+
+#include <fstream>
 
 using namespace megamol::gui;
 
@@ -241,30 +244,54 @@ FloatAnimation::ValueType FloatAnimation::GetMaxValue() const {
 }
 
 
+void megamol::gui::to_json(nlohmann::json& j, const Key& k) {
+    j = nlohmann::json{{"time", k.time}, {"value", k.value}, {"tangents_linked", k.tangents_linked},
+        {"interpolation", k.interpolation}, {"in_tangent", nlohmann::json{k.in_tangent.x, k.in_tangent.y}},
+        {"out_tangent", nlohmann::json{k.out_tangent.x, k.out_tangent.y}}};
+}
+
+
+void megamol::gui::from_json(const nlohmann::json& j, Key& k) {
+    j["time"].get_to(k.time);
+    j["value"].get_to(k.value);
+    j["tangents_linked"].get_to(k.tangents_linked);
+    j["interpolation"].get_to(k.interpolation);
+    j["in_tangent"][0].get_to(k.in_tangent.x);
+    j["in_tangent"][1].get_to(k.in_tangent.y);
+    j["out_tangent"][0].get_to(k.out_tangent.x);
+    j["out_tangent"][1].get_to(k.out_tangent.y);
+}
+
+
+void megamol::gui::to_json(nlohmann::json& j, const FloatAnimation& f) {
+    j = nlohmann::json{{"name", f.GetName()}};
+    auto k_array = nlohmann::json::array();
+    for (auto& k: f.GetAllKeys()) {
+        k_array.push_back(f[k]);
+    }
+    j["keys"] = k_array;
+}
+
+
+void megamol::gui::from_json(const nlohmann::json& j, FloatAnimation& f) {
+    f = FloatAnimation{j.at("name")};
+    for (auto& j: j["keys"]) {
+        Key k;
+        j.get_to(k);
+        f.AddKey(k);
+    }
+}
+
+
 megamol::gui::AnimationEditor::AnimationEditor(const std::string& window_name)
         : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_ANIMATIONEDITOR) {
 
     // Configure ANIMATION EDITOR Window
     this->win_config.size = ImVec2(1600.0f * megamol::gui::gui_scaling.Get(), 800.0f * megamol::gui::gui_scaling.Get());
     this->win_config.reset_size = this->win_config.size;
-    this->win_config.flags = ImGuiWindowFlags_NoNavInputs;
+    this->win_config.flags = ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_MenuBar;
     this->win_config.hotkey =
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F5, core::view::Modifier::NONE);
-
-    // TODO we actually want to subscribe to graph updates to be able to "record" parameter changes automatically
-    // TODO what do we do with parameters other than floats?
-    FloatAnimation f("::renderer::scaling");
-    Key k{0, 1.0f, InterpolationType::Linear};
-    Key k2{10, 1.5f, InterpolationType::Linear};
-    f.AddKey(k);
-    f.AddKey(k2);
-    floatAnimations.push_back(f);
-
-    FloatAnimation f2("::view::anim::time");
-    f2.AddKey({0, 0.0f, InterpolationType::CubicBezier});
-    f2.AddKey({100, 100.0f, InterpolationType::CubicBezier});
-    f2.AddKey({150, 70.0f, InterpolationType::CubicBezier});
-    floatAnimations.push_back(f2);
 }
 
 
@@ -279,6 +306,7 @@ bool megamol::gui::AnimationEditor::Update() {
 
 bool megamol::gui::AnimationEditor::Draw() {
     DrawToolbar();
+    DrawPopups();
 
     ImGui::BeginChild("AnimEditorContent");
     ImGui::Columns(3, "AnimEditorColumns", false);
@@ -344,25 +372,124 @@ void AnimationEditor::WriteValuesToGraph() {
         }
         auto res = (*input_lua_func)(lua_commands.str());
         if (!std::get<0>(res)) {
-            // BUG: the error window does not appear
-            const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-            ImGui::SetNextWindowPos(center, 0, ImVec2(0.5f, 0.5f));
-            ImGui::OpenPopup("AnimEditorError");
-            if (ImGui::BeginPopupModal("AnimEditorError", nullptr,
-                    ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar)) {
-                ImGui::Text("error: %s", std::get<1>(res).c_str());
-                if (ImGui::Button("OK", ImVec2(120, 0))) {
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::EndPopup();
-            }
+            open_popup_error = true;
+            error_popup_message = std::get<1>(res);
             playback_active = false;
         }
     }
 }
 
 
+bool AnimationEditor::SaveToFile(const std::string& file) {
+    nlohmann::json animation_data;
+    nlohmann::json anims;
+    for (auto& fa: floatAnimations) {
+        anims.push_back(fa);
+    }
+    animation_data["float_animations"] = anims;
+    std::ofstream out(file);
+    if (!out.is_open()) {
+        return false;
+    }
+    auto s = animation_data.dump(2);
+    out << s;
+    out.close();
+    return true;
+}
+
+
+void AnimationEditor::ClearData() {
+    floatAnimations.clear();
+    selectedAnimation = -1;
+    selectedKey = nullptr;
+    animation_file = "";
+}
+
+bool AnimationEditor::LoadFromFile(std::string file) {
+    ClearData();
+    std::ifstream in(file);
+    if (!in.is_open()) {
+        return false;
+    }
+    auto j_all = nlohmann::json::parse(in);
+    FloatAnimation dummy("dummy");
+    for (auto& j: j_all["float_animations"]) {
+        // j.get<FloatAnimation>() does not work because no default constructor
+        from_json(j, dummy);
+        floatAnimations.push_back(dummy);
+    }
+    animation_file = file;
+    return true;
+}
+
+
+void AnimationEditor::DrawPopups() {
+    if (this->file_browser.PopUp_Load(
+        "Load Animation", animation_file, open_popup_load, {"anim"}, FilePathParam::Flag_File_RestrictExtension)) {
+        if (!LoadFromFile(animation_file)) {
+            error_popup_message = "Saving failed.";
+            open_popup_error = true;
+        }
+        open_popup_load = false;
+    }
+    if (this->file_browser.PopUp_Save("Save Animation", animation_file, open_popup_save, {"anim"},
+        FilePathParam::Flag_File_ToBeCreatedWithRestrExts, ternary)) {
+        if (!SaveToFile(animation_file)) {
+            error_popup_message = "Saving failed.";
+            open_popup_error = true;
+        }
+        open_popup_save = false;
+    }
+
+    if (open_popup_error) {
+        const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+        ImGui::SetNextWindowPos(center, 0, ImVec2(0.5f, 0.5f));
+        ImGui::OpenPopup("AnimEditorError");
+    }
+    if (ImGui::BeginPopupModal("AnimEditorError", &open_popup_error,
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar)) {
+        ImGui::Text("error: %s", error_popup_message.c_str());
+        if (ImGui::Button("OK", ImVec2(120, 0))) {
+            ImGui::CloseCurrentPopup();
+            open_popup_error = false;
+        }
+        ImGui::EndPopup();
+    }
+}
+
 void AnimationEditor::DrawToolbar() {
+    // Menu
+    ImGui::PushID("AnimationEditor::Menu");
+    if (ImGui::BeginMenuBar()) {
+        if (ImGui::BeginMenu("Animation")) {
+            if (ImGui::MenuItem("Clear all")) {
+                ClearData();
+            }
+            if (ImGui::MenuItem("Load...")) {
+                open_popup_load = true;
+            }
+            if (animation_file.empty()) {
+                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            }
+            if (ImGui::MenuItem("Save")) {
+                if (!SaveToFile(animation_file)) {
+                    error_popup_message = "Saving failed.";
+                    open_popup_error = true;
+                }
+            }
+            if (animation_file.empty()) {
+                ImGui::PopItemFlag();
+            }
+            if (ImGui::MenuItem("Save as...")) {
+                open_popup_save = true;
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenuBar();
+    }
+    ImGui::PopID();
+
+    // what will be icons some day?
     if (ImGui::Checkbox("auto capture", &auto_capture)) {
         if (auto_capture) {
             write_to_graph = false;
@@ -423,7 +550,7 @@ void AnimationEditor::center_animation(const FloatAnimation& anim) {
                            v_start * custom_zoom.y + 0.05f * region.GetHeight()),
             1.0f);
     } else {
-        // TODO.
+        // TODO what do you want to see here...
     }
 }
 
