@@ -12,6 +12,7 @@ env:
 jobs:
   docker:
     strategy:
+      fail-fast: false
       matrix:
         config:
           - dockerfile_dir: ubuntu
