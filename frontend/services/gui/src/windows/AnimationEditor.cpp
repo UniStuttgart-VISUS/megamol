@@ -15,6 +15,7 @@
 #include "mmcore/param/StringParam.h"
 
 #include "nlohmann/json.hpp"
+#include "imgui_stdlib.h"
 
 #include <fstream>
 
@@ -96,19 +97,34 @@ bool AnimationEditor::NotifyParamChanged(
                 } else {
                     a.AddKey({current_frame, the_val});
                 }
+                CenterAnimation(a);
             }
             if (found_idx == -1) {
                 animation::FloatAnimation f = {the_name};
                 f.AddKey({current_frame, the_val});
                 allAnimations.emplace_back(f);
+                CenterAnimation(f);
             }
+            selectedStringKey = nullptr;
         }
         if (param_slot->Param<EnumParam>() || param_slot->Param<FlexEnumParam>() || param_slot->Param<StringParam>() ||
             param_slot->Param<FilePathParam>()) {
-            bool found = false;
-            //for (auto& a : stringAnimations) {
-            //
-            //}
+            if (found_idx != -1) {
+                auto& a = std::get<animation::StringAnimation>(allAnimations[found_idx]);
+                if (a.HasKey(current_frame)) {
+                    a[current_frame].value = new_value;
+                } else {
+                    a.AddKey({current_frame, new_value});
+                }
+                CenterAnimation(a);
+            }
+            if (found_idx == -1) {
+                animation::StringAnimation s = {the_name};
+                s.AddKey({current_frame, new_value});
+                allAnimations.emplace_back(s);
+                CenterAnimation(s);
+            }
+            selectedFloatKey = nullptr;
         }
     }
     // TODO: what else. Enum probably.
@@ -164,7 +180,7 @@ bool AnimationEditor::SaveToFile(const std::string& file) {
 void AnimationEditor::ClearData() {
     allAnimations.clear();
     selectedAnimation = -1;
-    selectedKey = nullptr;
+    selectedFloatKey = nullptr;
     animation_file = "";
 }
 
@@ -265,6 +281,7 @@ void AnimationEditor::DrawToolbar() {
     ImGui::PopID();
 
     // what will be icons some day?
+    // graph connections
     if (ImGui::Checkbox("auto capture", &auto_capture)) {
         if (auto_capture) {
             write_to_graph = false;
@@ -278,34 +295,79 @@ void AnimationEditor::DrawToolbar() {
     }
     ImGui::SameLine();
     DrawVerticalSeparator();
+
+    // keys
+    ImGui::SameLine();
+    if (ImGui::Button("add")) {
+        if (selectedAnimation != -1) {
+            if (std::holds_alternative<animation::FloatAnimation>(allAnimations[selectedAnimation])) {
+                auto& anim = std::get<animation::FloatAnimation>(allAnimations[selectedAnimation]);
+                if (!anim.HasKey(current_frame)) {
+                    animation::FloatKey f;
+                    f.time = current_frame;
+                    f.value = anim.GetValue(current_frame);
+                    f.interpolation = anim.GetInterpolation(current_frame);
+                    anim.AddKey(f);
+                }
+            }
+            if (std::holds_alternative<animation::StringAnimation>(allAnimations[selectedAnimation])) {
+                auto& anim = std::get<animation::StringAnimation>(allAnimations[selectedAnimation]);
+                if (!anim.HasKey(current_frame)) {
+                    animation::StringKey s;
+                    s.time = current_frame;
+                    s.value = std::string(anim.GetValue(current_frame));
+                    anim.AddKey(s);
+                }
+            }
+        }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("delete")) {
+        if (selectedAnimation != -1) {
+            if (std::holds_alternative<animation::FloatAnimation>(allAnimations[selectedAnimation]) &&
+                selectedFloatKey != nullptr) {
+                std::get<animation::FloatAnimation>(allAnimations[selectedAnimation]).DeleteKey(selectedFloatKey->time);
+                selectedFloatKey = nullptr;
+            }
+            if (std::holds_alternative<animation::StringAnimation>(allAnimations[selectedAnimation]) &&
+                selectedStringKey != nullptr) {
+                std::get<animation::StringAnimation>(allAnimations[selectedAnimation]).DeleteKey(selectedStringKey->time);
+                selectedStringKey = nullptr;
+            }
+        }
+    }
+    ImGui::SameLine();
+    DrawVerticalSeparator();
+
+    // tangent controls
     ImGui::SameLine();
     if (ImGui::Button("break tangents")) {
-        if (selectedKey != nullptr) {
-            selectedKey->tangents_linked = false;
+        if (selectedFloatKey != nullptr) {
+            selectedFloatKey->tangents_linked = false;
         }
     }
     ImGui::SameLine();
     if (ImGui::Button("link tangents")) {
-        if (selectedKey != nullptr) {
-            selectedKey->tangents_linked = true;
-            selectedKey->out_tangent = ImVec2(-selectedKey->in_tangent.x, -selectedKey->in_tangent.y);
+        if (selectedFloatKey != nullptr) {
+            selectedFloatKey->tangents_linked = true;
+            selectedFloatKey->out_tangent = ImVec2(-selectedFloatKey->in_tangent.x, -selectedFloatKey->in_tangent.y);
         }
     }
     ImGui::SameLine();
     if (ImGui::Button("flat tangents")) {
-        if (selectedKey != nullptr) {
-            selectedKey->in_tangent = {-1.0f, 0.0f};
-            selectedKey->out_tangent = {1.0f, 0.0f};
+        if (selectedFloatKey != nullptr) {
+            selectedFloatKey->in_tangent = {-1.0f, 0.0f};
+            selectedFloatKey->out_tangent = {1.0f, 0.0f};
         }
     }
     ImGui::SameLine();
     DrawVerticalSeparator();
+
+    // view controls
     ImGui::SameLine();
     if (ImGui::Button("frame view")) {
         CenterAnimation(allAnimations[selectedAnimation]);
     }
-    ImGui::SameLine();
-    DrawVerticalSeparator();
     ImGui::SameLine();
     ImGui::PushItemWidth(100.0f);
     ImGui::SliderFloat("HZoom", &custom_zoom.x, 0.01f, 5000.0f);
@@ -327,6 +389,8 @@ void AnimationEditor::CenterAnimation(const animations& anim) {
         auto& a = std::get<animation::StringAnimation>(anim);
         start = a.GetStartTime();
         len = static_cast<float>(a.GetLength());
+        min_val = -region.GetHeight() * 0.025f;
+        max_val = region.GetHeight() * 0.025f;
     }
     if (len > 1) {
         custom_zoom.x = 0.9f * region.GetWidth() / len;
@@ -339,6 +403,12 @@ void AnimationEditor::CenterAnimation(const animations& anim) {
     } else {
         // TODO what do you want to see here...
     }
+}
+
+void AnimationEditor::SelectAnimation(int32_t a) {
+    selectedAnimation = a;
+    selectedFloatKey = nullptr;
+    selectedStringKey = nullptr;
 }
 
 void AnimationEditor::DrawParams() {
@@ -356,7 +426,7 @@ void AnimationEditor::DrawParams() {
         std::visit([&](auto&& arg) -> void { ImGui::TreeNodeEx(arg.GetName().c_str(), flags); }, anim);
         //ImGui::TreeNodeEx(anim.GetName().c_str(), flags);
         if (ImGui::IsItemActivated()) {
-            selectedAnimation = a;
+            SelectAnimation(a);
             if (canvas_visible) {
                 CenterAnimation(allAnimations[selectedAnimation]);
             }
@@ -435,7 +505,6 @@ void AnimationEditor::DrawFloatKey(ImDrawList* dl, animation::FloatKey& key) {
     auto time = key.time;
     auto pos = ImVec2(time, key.value * -1.0f) * custom_zoom;
     auto t_out = ImVec2(time + key.out_tangent.x, (key.value + key.out_tangent.y) * -1.0f) * custom_zoom;
-    drawList->AddLine(pos, t_out, tangent_color);
 
     const auto t_in = ImVec2(time + key.in_tangent.x, (key.value + key.in_tangent.y) * -1.0f) * custom_zoom;
     ImGui::SetCursorScreenPos(ImVec2{t_in.x - (button_size.x / 2.0f), t_in.y - (button_size.y / 2.0f)});
@@ -443,63 +512,85 @@ void AnimationEditor::DrawFloatKey(ImDrawList* dl, animation::FloatKey& key) {
     if (ImGui::IsItemActivated()) {
         curr_interaction = InteractionType::DraggingLeftTangent;
         drag_start = key.in_tangent;
-        draggingKey = &key;
+        draggingFloatKey = &key;
     }
     if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingLeftTangent &&
-        draggingKey == &key) {
+        draggingFloatKey == &key) {
         const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
         key.in_tangent = drag_start + ImVec2(delta.x / custom_zoom.x, -1.0f * (delta.y / custom_zoom.y));
         if (key.tangents_linked) {
             key.out_tangent = ImVec2(-key.in_tangent.x, -key.in_tangent.y);
         }
     }
-    drawList->AddLine(t_in, pos, tangent_color);
-    drawList->AddCircleFilled(t_in, size, tangent_color, 4);
-    if (ImGui::IsItemDeactivated()) {
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingLeftTangent &&
+        &key == draggingFloatKey) {
         curr_interaction = InteractionType::None;
     }
+    drawList->AddLine(t_in, pos, tangent_color);
+    drawList->AddCircleFilled(t_in, size, tangent_color, 4);
 
     ImGui::SetCursorScreenPos(ImVec2{t_out.x - (button_size.x / 2.0f), t_out.y - (button_size.y / 2.0f)});
     ImGui::InvisibleButton((std::string("##key_outtan") + std::to_string(key.time)).c_str(), button_size);
-    drawList->AddCircleFilled(t_out, size, tangent_color, 4);
     if (ImGui::IsItemActivated()) {
         curr_interaction = InteractionType::DraggingRightTangent;
         drag_start = key.out_tangent;
-        draggingKey = &key;
+        draggingFloatKey = &key;
     }
     if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingRightTangent &&
-        draggingKey == &key) {
+        draggingFloatKey == &key) {
         const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
         key.out_tangent = drag_start + ImVec2(delta.x / custom_zoom.x, -1.0f * (delta.y / custom_zoom.y));
         if (key.tangents_linked) {
             key.in_tangent = ImVec2(-key.out_tangent.x, -key.out_tangent.y);
         }
     }
-    if (ImGui::IsItemDeactivated()) {
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingRightTangent &&
+        &key == draggingFloatKey) {
         curr_interaction = InteractionType::None;
+    }
+    drawList->AddLine(pos, t_out, tangent_color);
+    drawList->AddCircleFilled(t_out, size, tangent_color, 4);
+
+    if (selectedFloatKey == &key) {
+        drawList->AddCircleFilled(pos, size, active_key_color);
+    } else {
+        drawList->AddCircleFilled(pos, size, key_color);
     }
 
     ImGui::SetCursorScreenPos(ImVec2{pos.x - (button_size.x / 2.0f), pos.y - (button_size.y / 2.0f)});
     ImGui::InvisibleButton((std::string("##key") + std::to_string(key.time)).c_str(), button_size);
     if (ImGui::IsItemActivated()) {
-        selectedKey = &key;
-        drag_start_value = selectedKey->value;
-        drag_start_time = selectedKey->time;
+        selectedFloatKey = &key;
+        drag_start_value = selectedFloatKey->value;
+        drag_start_time = selectedFloatKey->time;
         curr_interaction = InteractionType::DraggingKey;
     }
     if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingKey) {
         const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
-        selectedKey->value = drag_start_value - delta.y / custom_zoom.y;
-        selectedKey->time = drag_start_time + static_cast<animation::KeyTimeType>(delta.x / custom_zoom.x);
+        selectedFloatKey->value = drag_start_value - delta.y / custom_zoom.y;
+        auto new_time = drag_start_time + static_cast<animation::KeyTimeType>(delta.x / custom_zoom.x);
+        if (new_time != selectedFloatKey->time) {
+            auto& anim = std::get<animation::FloatAnimation>(allAnimations[selectedAnimation]);
+            if (anim.HasKey(new_time)) {
+                // space is occupied. we do not want that.
+            } else {
+                selectedFloatKey->time = new_time;
+            }
+        }
     }
-    if (selectedKey == &key) {
-        drawList->AddCircleFilled(pos, size, active_key_color);
-    } else {
-        drawList->AddCircleFilled(pos, size, key_color);
-    }
-    if (ImGui::IsItemDeactivated()) {
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingKey &&
+        &key == selectedFloatKey) {
+        if (drag_start_time != selectedFloatKey->time) {
+            // fix sorting
+            auto k = *selectedFloatKey;
+            auto& anim = std::get<animation::FloatAnimation>(allAnimations[selectedAnimation]);
+            anim.DeleteKey(drag_start_time);
+            anim.AddKey(k);
+            selectedFloatKey = &anim[k.time];
+        }
         curr_interaction = InteractionType::None;
     }
+    // below here, do not touch key anymore, it might have been nuked by the sorting above
 }
 
 
@@ -518,13 +609,68 @@ void AnimationEditor::DrawPlayhead(ImDrawList* drawList) {
         current_frame = drag_start_time + static_cast<animation::KeyTimeType>(delta.x / custom_zoom.x);
         WriteValuesToGraph();
     }
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingPlayhead) {
+        curr_interaction = InteractionType::None;
+    }
     drawList->AddTriangleFilled(ImVec2(ph_pos.x - playhead_size.x, ph_pos.y),
         ImVec2(ph_pos.x + playhead_size.x, ph_pos.y), ImVec2(ph_pos.x, ph_pos.y + playhead_size.y), playhead_color);
     drawList->AddLine(ph_pos, ImVec2(ph_pos.x, canvas.Rect().GetHeight()), playhead_color);
-    if (ImGui::IsItemDeactivated()) {
+}
+
+
+void AnimationEditor::DrawStringKey(ImDrawList* im_draws, animation::StringKey& key) {
+    const float size = 4.0f;
+    const ImVec2 button_size = {8.0f, 8.0f};
+    auto key_color = IM_COL32(255, 128, 0, 255);
+    auto active_key_color = IM_COL32(255, 192, 96, 255);
+    auto tangent_color = IM_COL32(255, 255, 0, 255);
+
+    auto drawList = ImGui::GetWindowDrawList();
+
+    auto time = key.time;
+    auto pos = ImVec2(time, 0.0f) * custom_zoom;
+
+    drawList->AddText(pos + button_size, key_color, key.value.c_str());
+    if (selectedStringKey == &key) {
+        drawList->AddCircleFilled(pos, size, active_key_color);
+    } else {
+        drawList->AddCircleFilled(pos, size, key_color);
+    }
+
+    ImGui::SetCursorScreenPos(ImVec2{pos.x - (button_size.x / 2.0f), pos.y - (button_size.y / 2.0f)});
+    ImGui::InvisibleButton((std::string("##key") + std::to_string(key.time)).c_str(), button_size);
+    if (ImGui::IsItemActivated()) {
+        selectedStringKey = &key;
+        drag_start_time = selectedStringKey->time;
+        curr_interaction = InteractionType::DraggingKey;
+    }
+    if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingKey) {
+        const auto delta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
+        auto new_time = drag_start_time + static_cast<animation::KeyTimeType>(delta.x / custom_zoom.x);
+        if (new_time != selectedStringKey->time) {
+            auto& anim = std::get<animation::StringAnimation>(allAnimations[selectedAnimation]);
+            if (anim.HasKey(new_time)) {
+                // space is occupied. we do not want that.
+            } else {
+                selectedStringKey->time = new_time;
+            }
+        }
+    }
+    if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingKey &&
+        &key == selectedStringKey) {
+        if (drag_start_time != selectedStringKey->time) {
+            // fix sorting
+            auto k = *selectedStringKey;
+            auto& anim = std::get<animation::StringAnimation>(allAnimations[selectedAnimation]);
+            anim.DeleteKey(drag_start_time);
+            anim.AddKey(k);
+            selectedStringKey = &anim[k.time];
+        }
         curr_interaction = InteractionType::None;
     }
+    // below here, do not touch key anymore, it might have been nuked by the sorting above
 }
+
 
 void AnimationEditor::DrawCurves() {
     ImGui::Text("");
@@ -573,7 +719,8 @@ void AnimationEditor::DrawCurves() {
                 if (anim.GetSize() > 0) {
                     auto keys = anim.GetAllKeys();
                     for (auto i = 0; i < keys.size(); ++i) {
-                        
+                        auto& k = anim[keys[i]];
+                        DrawStringKey(drawList, k);
                     }
                 }
             }
@@ -591,35 +738,41 @@ void AnimationEditor::DrawProperties() {
     ImGui::Text("Properties");
     ImGui::BeginChild(
         "key_props", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
-    if (selectedAnimation > -1 && selectedKey != nullptr) {
-        ImGui::InputInt("Time", &selectedKey->time);
-        ImGui::InputFloat("Value", &selectedKey->value);
-        const char* items[] = {"Step", "Linear", "Hermite", "Cubic Bezier"};
-        auto current_item = items[static_cast<int32_t>(selectedKey->interpolation)];
-        if (ImGui::BeginCombo("Interpolation", current_item)) {
-            for (int n = 0; n < 4; n++) {
-                const bool is_selected = (current_item == items[n]);
-                if (ImGui::Selectable(items[n], is_selected)) {
-                    current_item = items[n];
-                    switch (n) {
-                    case 0:
-                        selectedKey->interpolation = animation::InterpolationType::Step;
-                        break;
-                    case 1:
-                        selectedKey->interpolation = animation::InterpolationType::Linear;
-                        break;
-                    case 2:
-                        selectedKey->interpolation = animation::InterpolationType::Hermite;
-                        break;
-                    case 3:
-                        selectedKey->interpolation = animation::InterpolationType::CubicBezier;
-                        break;
+    if (selectedAnimation > -1) {
+        auto anim = allAnimations[selectedAnimation];
+        if (std::holds_alternative<animation::FloatAnimation>(anim) && selectedFloatKey != nullptr) {
+            ImGui::InputInt("Time", &selectedFloatKey->time);
+            ImGui::InputFloat("Value", &selectedFloatKey->value);
+            const char* items[] = {"Step", "Linear", "Hermite", "Cubic Bezier"};
+            auto current_item = items[static_cast<int32_t>(selectedFloatKey->interpolation)];
+            if (ImGui::BeginCombo("Interpolation", current_item)) {
+                for (int n = 0; n < 4; n++) {
+                    const bool is_selected = (current_item == items[n]);
+                    if (ImGui::Selectable(items[n], is_selected)) {
+                        current_item = items[n];
+                        switch (n) {
+                        case 0:
+                            selectedFloatKey->interpolation = animation::InterpolationType::Step;
+                            break;
+                        case 1:
+                            selectedFloatKey->interpolation = animation::InterpolationType::Linear;
+                            break;
+                        case 2:
+                            selectedFloatKey->interpolation = animation::InterpolationType::Hermite;
+                            break;
+                        case 3:
+                            selectedFloatKey->interpolation = animation::InterpolationType::CubicBezier;
+                            break;
+                        }
                     }
+                    if (is_selected)
+                        ImGui::SetItemDefaultFocus();
                 }
-                if (is_selected)
-                    ImGui::SetItemDefaultFocus();
+                ImGui::EndCombo();
             }
-            ImGui::EndCombo();
+        } else if (std::holds_alternative<animation::StringAnimation>(anim) && selectedStringKey != nullptr) {
+            ImGui::InputInt("Time", &selectedStringKey->time);
+            ImGui::InputText("Value", &selectedStringKey->value);
         }
     }
     ImGui::EndChild();

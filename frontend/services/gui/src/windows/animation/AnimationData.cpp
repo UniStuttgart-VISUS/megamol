@@ -125,8 +125,12 @@ ImVec2 FloatKey::Interpolate(FloatKey first, FloatKey second, float t) {
 
 template<>
 float GenericAnimation<FloatKey>::GetValue(KeyTimeType time) const {
-    if (keys.size() < 2)
-        return 0.0f;
+    if (keys.size() < 2) {
+        if (keys.empty()) {
+            return ValueType::ValueType();
+        }
+        return keys.begin()->second.value;
+    }
     FloatKey before_key = keys.begin()->second, after_key = keys.begin()->second;
     bool ok = false;
     for (auto it = keys.begin(); it != keys.end(); ++it) {
@@ -145,9 +149,28 @@ float GenericAnimation<FloatKey>::GetValue(KeyTimeType time) const {
     if (ok) {
         return FloatKey::Interpolate(before_key, after_key, time);
     } else {
-        return 0.0f;
+        return before_key.value;
     }
 }
+
+
+template<>
+InterpolationType GenericAnimation<FloatKey>::GetInterpolation(KeyTimeType time) const {
+    InterpolationType interp = InterpolationType::Step;
+    for (auto it = keys.begin(); it != keys.end(); ++it) {
+        if (it->second.time == time) {
+            return it->second.interpolation;
+        }
+        if (it->second.time < time) {
+            interp = it->second.interpolation;
+        }
+        if (it->second.time > time) {
+            break;
+        }
+    }
+    return interp;
+}
+
 
 template<>
 float GenericAnimation<FloatKey>::GetMinValue() const {

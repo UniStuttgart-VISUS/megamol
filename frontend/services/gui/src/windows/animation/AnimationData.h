@@ -54,6 +54,9 @@ public:
     void DeleteKey(KeyTimeType time) {
         keys.erase(time);
     }
+    bool HasKey(KeyTimeType time) {
+        return keys.find(time) != keys.end();
+    }
 
     typename KeyMap::iterator begin() {
         return keys.begin();
@@ -68,14 +71,15 @@ public:
     typename KeyMap::size_type GetSize() const {
         return keys.size();
     }
-    bool HasKey(KeyTimeType k) {
-        return keys.find(k) != keys.end();
-    }
     ValueType& operator[](KeyTimeType k) {
         return keys[k];
     }
     const ValueType& operator[](KeyTimeType k) const {
         return keys.at(k);
+    }
+    InterpolationType GetInterpolation(KeyTimeType time) const {
+        // standard interpolation is step
+        return InterpolationType::Step;
     }
 
     KeyTimeType GetStartTime() const;
@@ -128,14 +132,13 @@ KeyTimeType GenericAnimation<KeyType>::GetLength() const {
 
 template<class KeyType>
 typename KeyType::ValueType GenericAnimation<KeyType>::GetValue(KeyTimeType time) const {
-    if (keys.size() < 1) {
-        return KeyType::ValueType();
-    }
     if (keys.size() < 2) {
+        if (keys.empty()) {
+            return ValueType::ValueType();
+        }
         return keys.begin()->second.value;
     }
     auto before_key = keys.begin()->second, after_key = keys.begin()->second;
-    bool ok = false;
     for (auto it = keys.begin(); it != keys.end(); ++it) {
         if (it->second.time == time) {
             return it->second.value;
@@ -145,16 +148,11 @@ typename KeyType::ValueType GenericAnimation<KeyType>::GetValue(KeyTimeType time
         }
         if (it->second.time > time) {
             after_key = it->second;
-            ok = true;
             break;
         }
     }
     // standard interpolation is step.
-    if (ok) {
-        return before_key.value;;
-    } else {
-        return KeyType::ValueType();
-    }    
+    return before_key.value;
 }
 
 template<class KeyType>
@@ -172,6 +170,8 @@ using FloatAnimation = GenericAnimation<FloatKey>;
 // floats can actually interpolate!
 template<>
 float GenericAnimation<FloatKey>::GetValue(KeyTimeType time) const;
+template<>
+InterpolationType GenericAnimation<FloatKey>::GetInterpolation(KeyTimeType time) const;
 
 // and tell about their extents
 template<>

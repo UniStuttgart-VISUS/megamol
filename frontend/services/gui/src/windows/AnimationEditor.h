@@ -57,10 +57,12 @@ private:
     void DrawPopups();
     void DrawToolbar();
     void CenterAnimation(const animations& anim);
+    void SelectAnimation(int32_t a);
     void DrawParams();
     void DrawInterpolation(ImDrawList* dl, const animation::FloatKey& key, const animation::FloatKey& k2);
     void DrawFloatKey(ImDrawList* dl, animation::FloatKey& key);
     void DrawPlayhead(ImDrawList* drawList);
+    void DrawStringKey(ImDrawList* im_draws, animation::StringKey& key);
     void DrawCurves();
     void DrawProperties();
 
@@ -76,8 +78,10 @@ private:
     //std::vector<animation::FloatAnimation> floatAnimations;
     //std::vector<animation::StringAnimation> stringAnimations;
     int32_t selectedAnimation = -1;
-    animation::FloatKey* selectedKey = nullptr;
-    animation::FloatKey* draggingKey = nullptr;
+    animation::FloatKey* selectedFloatKey = nullptr;
+    animation::FloatKey* draggingFloatKey = nullptr;
+    animation::StringKey* selectedStringKey = nullptr;
+    animation::StringKey* draggingStreingKey = nullptr;
     ImGuiEx::Canvas canvas = ImGuiEx::Canvas();
 
     bool canvas_visible = false;
