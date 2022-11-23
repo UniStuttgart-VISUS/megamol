@@ -49,19 +49,28 @@ public:
     ~ImageSpaceAmortization2D() override;
 
 protected:
+    enum AmortMode {
+        MODE_2D = 0,
+        MODE_HORIZONTAL = 1,
+        MODE_VERTICAL = 2,
+        MODE_NONE = -1,
+    };
+
     bool createImpl(const msf::ShaderFactoryOptionsOpenGL& shaderOptions) override;
 
     void releaseImpl() override;
 
     bool renderImpl(CallRender2DGL& call, CallRender2DGL& nextRendererCall) override;
 
-    void updateSize(int a, int w, int h);
+    void updateSize(AmortMode m, int a, int w, int h);
 
-    void setupCamera(core::view::Camera& cam, int width, int height, int a);
+    void setupCamera(core::view::Camera& cam, int width, int height, AmortMode m, int a);
 
-    void reconstruct(std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, int a);
+    void reconstruct(
+        std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, AmortMode m, int a);
 
 private:
+    core::param::ParamSlot amortModeParam;
     core::param::ParamSlot amortLevelParam;
     core::param::ParamSlot skipInterpolationParam;
 
@@ -74,12 +83,13 @@ private:
     std::unique_ptr<glowl::Texture2D> distTexRead_;
     std::unique_ptr<glowl::Texture2D> distTexWrite_;
 
+    AmortMode oldAmortMode_ = MODE_NONE;
+    int oldAmortLevel_ = -1;
     int oldWidth_ = -1;
     int oldHeight_ = -1;
-    int oldAmortLevel_ = -1;
 
     int frameIdx_ = 0;
-    int samplingSequencePosition_;
+    int samplingSequencePosition_ = 0;
     std::vector<int> samplingSequence_;
     std::vector<glm::vec3> camOffsets_;
     glm::mat4 viewProjMx_;

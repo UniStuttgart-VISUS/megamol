@@ -7,7 +7,7 @@ layout (binding=1, rgba8) uniform image2D imgWrite;
 layout (binding=2, rg32f) uniform image2D imgPosRead;
 layout (binding=3, rg32f) uniform image2D imgPosWrite;
 
-uniform int amortLevel;
+uniform ivec2 amortLevel;
 uniform ivec2 resolution;
 uniform ivec2 lowResResolution;
 uniform int frameIdx;
@@ -36,7 +36,7 @@ out vec4 fragOut;
  * Case 3: The low res pixel of the right block is nearest to the current high res pixel.
  *         This is the case if distance > amortLevel / 2 and low > high.
  */
-ivec2 pixelOffsetsHighLowRes1D(int highResPos, int lowResPos, int currentIdx, int totalSize) {
+ivec2 pixelOffsetsHighLowRes1D(int highResPos, int lowResPos, int currentIdx, int totalSize, int aLvl) {
     // Case 1
     if (highResPos == lowResPos) {
         return ivec2(0, 0);
@@ -44,14 +44,14 @@ ivec2 pixelOffsetsHighLowRes1D(int highResPos, int lowResPos, int currentIdx, in
 
     // Case 1
     int offset = lowResPos - highResPos;
-    if (abs(offset) <= amortLevel / 2) {
+    if (abs(offset) <= aLvl / 2) {
         return ivec2(offset, 0);
     }
 
     if (highResPos < lowResPos) {
         // Case 2
         if (currentIdx > 0) {
-            offset = lowResPos - (highResPos + amortLevel);
+            offset = lowResPos - (highResPos + aLvl);
             return ivec2(offset, -1);
         } else {
             return ivec2(offset, 0);
@@ -59,7 +59,7 @@ ivec2 pixelOffsetsHighLowRes1D(int highResPos, int lowResPos, int currentIdx, in
     } else {
         // Case 3
         if (currentIdx < totalSize - 1) {
-            offset = lowResPos + amortLevel - highResPos;
+            offset = lowResPos + aLvl - highResPos;
             return ivec2(offset, 1);
         } else {
             return ivec2(offset, 0);
@@ -81,7 +81,7 @@ void main() {
     const vec2 posWorldSpace = camCenter.xy + frustumSize * (uvCoords - 0.5f);
 
     const ivec2 quadCoord = imgCoord % amortLevel; // Position within the current a*a quad on the high res texture.
-    const int idx = (amortLevel * quadCoord.y + quadCoord.x); // Linear version of quadCoord as as frame id.
+    const int idx = (amortLevel.x * quadCoord.y + quadCoord.x); // Linear version of quadCoord as as frame id.
     vec4 color = vec4(0.0f);
 
     if (frameIdx == idx) {
@@ -98,12 +98,12 @@ void main() {
         const vec2 lastPosWorldSpace = readPosition(lastImgCoord);
 
         // Position of the current low res pixel within the a*a quad.
-        const ivec2 idxCoord = ivec2(frameIdx % amortLevel, frameIdx / amortLevel);
+        const ivec2 idxCoord = ivec2(frameIdx % amortLevel.x, frameIdx / amortLevel.x);
 
         ivec2 lowResImgCoord = imgCoord / amortLevel;
 
-        const ivec2 offsetsX = pixelOffsetsHighLowRes1D(quadCoord.x, idxCoord.x, lowResImgCoord.x, lowResResolution.x);
-        const ivec2 offsetsY = pixelOffsetsHighLowRes1D(quadCoord.y, idxCoord.y, lowResImgCoord.y, lowResResolution.y);
+        const ivec2 offsetsX = pixelOffsetsHighLowRes1D(quadCoord.x, idxCoord.x, lowResImgCoord.x, lowResResolution.x, amortLevel.x);
+        const ivec2 offsetsY = pixelOffsetsHighLowRes1D(quadCoord.y, idxCoord.y, lowResImgCoord.y, lowResResolution.y, amortLevel.y);
         const ivec2 offsetHighRes = ivec2(offsetsX.x, offsetsY.x); // Component wise offset to nearest sample.
         const ivec2 offsetLowRes = ivec2(offsetsX.y, offsetsY.y); // Tex coord offset for lookup in low res texture.
 

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -17,8 +18,17 @@ using megamol::core::utility::log::Log;
 
 ImageSpaceAmortization2D::ImageSpaceAmortization2D()
         : BaseAmortization2D()
+        , amortModeParam("AmortMode", "Amortization Mode")
         , amortLevelParam("AmortLevel", "Level of Amortization")
-        , skipInterpolationParam("SkipInterpolation", "Do not interpolate missing pixels.") {
+        , skipInterpolationParam("SkipInterpolation", "Do not interpolate missing pixels.")
+        , viewProjMx_(glm::mat4())
+        , lastViewProjMx_(glm::mat4()) {
+
+    amortModeParam << new core::param::EnumParam(MODE_2D);
+    amortModeParam.Param<core::param::EnumParam>()->SetTypePair(MODE_2D, "2D");
+    amortModeParam.Param<core::param::EnumParam>()->SetTypePair(MODE_HORIZONTAL, "Horizontal");
+    amortModeParam.Param<core::param::EnumParam>()->SetTypePair(MODE_VERTICAL, "Vertical");
+    MakeSlotAvailable(&amortModeParam);
 
     amortLevelParam << new core::param::IntParam(1, 1);
     MakeSlotAvailable(&amortLevelParam);
@@ -87,12 +97,14 @@ bool ImageSpaceAmortization2D::renderImpl(CallRender2DGL& call, CallRender2DGL& 
     auto const& cam = call.GetCamera();
     auto const& bg = call.BackgroundColor();
 
+    const auto m = static_cast<AmortMode>(amortModeParam.Param<core::param::EnumParam>()->Value());
     const int a = amortLevelParam.Param<core::param::IntParam>()->Value();
     const int w = fbo->getWidth();
     const int h = fbo->getHeight();
 
-    if (a != oldAmortLevel_ || w != oldWidth_ || h != oldHeight_) {
-        updateSize(a, w, h);
+    if (m != oldAmortMode_ || a != oldAmortLevel_ || w != oldWidth_ || h != oldHeight_) {
+        updateSize(m, a, w, h);
+        oldAmortMode_ = m;
         oldAmortLevel_ = a;
         oldWidth_ = w;
         oldHeight_ = h;
@@ -106,30 +118,33 @@ bool ImageSpaceAmortization2D::renderImpl(CallRender2DGL& call, CallRender2DGL& 
     viewProjMx_ = cam.getProjectionMatrix() * cam.getViewMatrix();
 
     auto lowResCam = cam;
-    setupCamera(lowResCam, w, h, a);
+    setupCamera(lowResCam, w, h, m, a);
 
     nextRendererCall.SetFramebuffer(lowResFBO_);
     nextRendererCall.SetCamera(lowResCam);
     (nextRendererCall)(core::view::AbstractCallRender::FnRender);
 
-    reconstruct(fbo, cam, a);
+    reconstruct(fbo, cam, m, a);
 
     return true;
 }
 
-void ImageSpaceAmortization2D::updateSize(int a, int w, int h) {
+void ImageSpaceAmortization2D::updateSize(AmortMode m, int a, int w, int h) {
     viewProjMx_ = glm::mat4(1.0f);
     lastViewProjMx_ = glm::mat4(1.0f);
-    camOffsets_.resize(a * a);
-    for (int j = 0; j < a; j++) {
-        for (int i = 0; i < a; i++) {
-            const float x = static_cast<float>(2 * i - a + 1) / static_cast<float>(w);
-            const float y = static_cast<float>(2 * j - a + 1) / static_cast<float>(h);
-            camOffsets_[j * a + i] = glm::vec3(x, y, 0.0f);
+    const int a_x = (m == MODE_VERTICAL) ? 1 : a;
+    const int a_y = (m == MODE_HORIZONTAL) ? 1 : a;
+
+    camOffsets_.resize(a_x * a_y);
+    for (int j = 0; j < a_y; j++) {
+        for (int i = 0; i < a_x; i++) {
+            const float x = static_cast<float>(2 * i - a_x + 1) / static_cast<float>(w);
+            const float y = static_cast<float>(2 * j - a_y + 1) / static_cast<float>(h);
+            camOffsets_[j * a_x + i] = glm::vec3(x, y, 0.0f);
         }
     }
 
-    lowResFBO_->resize((w + a - 1) / a, (h + a - 1) / a); // Integer division with round up.
+    lowResFBO_->resize((w + a_x - 1) / a_x, (h + a_y - 1) / a_y); // Integer division with round up.
 
     texLayout_.width = w;
     texLayout_.height = h;
@@ -145,25 +160,32 @@ void ImageSpaceAmortization2D::updateSize(int a, int w, int h) {
 
     samplingSequence_.clear();
 
-    const int nextPowerOfTwoExp = static_cast<int>(std::ceil(std::log2(a)));
-    const int nextPowerOfTwoVal = static_cast<int>(std::pow(2, nextPowerOfTwoExp));
+    if (m == MODE_2D) {
+        const int nextPowerOfTwoExp = static_cast<int>(std::ceil(std::log2(a)));
+        const int nextPowerOfTwoVal = static_cast<int>(std::pow(2, nextPowerOfTwoExp));
 
-    std::array<std::array<int, 2>, 4> offsetPattern{{{0, 0}, {1, 1}, {0, 1}, {1, 0}}};
-    std::vector<int> offsetLength(nextPowerOfTwoExp, 0);
-    for (int i = 0; i < nextPowerOfTwoExp; i++) {
-        offsetLength[i] = static_cast<int>(std::pow(2, nextPowerOfTwoExp - i - 1));
-    }
-
-    for (int i = 0; i < nextPowerOfTwoVal * nextPowerOfTwoVal; i++) {
-        int x = 0;
-        int y = 0;
-        for (int j = 0; j < nextPowerOfTwoExp; j++) {
-            const int levelIndex = (i / static_cast<int>(std::pow(4, j))) % 4;
-            x += offsetPattern[levelIndex][0] * offsetLength[j];
-            y += offsetPattern[levelIndex][1] * offsetLength[j];
+        std::array<std::array<int, 2>, 4> offsetPattern{{{0, 0}, {1, 1}, {0, 1}, {1, 0}}};
+        std::vector<int> offsetLength(nextPowerOfTwoExp, 0);
+        for (int i = 0; i < nextPowerOfTwoExp; i++) {
+            offsetLength[i] = static_cast<int>(std::pow(2, nextPowerOfTwoExp - i - 1));
         }
-        if (x < a && y < a) {
-            samplingSequence_.push_back(x + y * a);
+
+        for (int i = 0; i < nextPowerOfTwoVal * nextPowerOfTwoVal; i++) {
+            int x = 0;
+            int y = 0;
+            for (int j = 0; j < nextPowerOfTwoExp; j++) {
+                const int levelIndex = (i / static_cast<int>(std::pow(4, j))) % 4;
+                x += offsetPattern[levelIndex][0] * offsetLength[j];
+                y += offsetPattern[levelIndex][1] * offsetLength[j];
+            }
+            if (x < a && y < a) {
+                samplingSequence_.push_back(x + y * a);
+            }
+        }
+    } else {
+        // TODO linear sampling pattern is not nice
+        for (int i = 0; i < a; i++) {
+            samplingSequence_.push_back(i);
         }
     }
 
@@ -171,7 +193,7 @@ void ImageSpaceAmortization2D::updateSize(int a, int w, int h) {
     frameIdx_ = samplingSequence_[samplingSequencePosition_];
 }
 
-void ImageSpaceAmortization2D::setupCamera(core::view::Camera& cam, int width, int height, int a) {
+void ImageSpaceAmortization2D::setupCamera(core::view::Camera& cam, int width, int height, AmortMode m, int a) {
     auto intrinsics = cam.get<core::view::Camera::OrthographicParameters>();
     auto pose = cam.get<core::view::Camera::Pose>();
 
@@ -182,11 +204,14 @@ void ImageSpaceAmortization2D::setupCamera(core::view::Camera& cam, int width, i
     float wOffs = 0.5f * frustumWidth * camOffsets_[frameIdx_].x;
     float hOffs = 0.5f * frustumHeight * camOffsets_[frameIdx_].y;
 
-    const int lowResWidth = (width + a - 1) / a;
-    const int lowResHeight = (height + a - 1) / a;
+    const int a_x = (m == MODE_VERTICAL) ? 1 : a;
+    const int a_y = (m == MODE_HORIZONTAL) ? 1 : a;
 
-    const float wAdj = static_cast<float>(lowResWidth * a) / static_cast<float>(width);
-    const float hAdj = static_cast<float>(lowResHeight * a) / static_cast<float>(height);
+    const int lowResWidth = (width + a_x - 1) / a_x;
+    const int lowResHeight = (height + a_y - 1) / a_y;
+
+    float wAdj = static_cast<float>(lowResWidth * a_x) / static_cast<float>(width);
+    float hAdj = static_cast<float>(lowResHeight * a_y) / static_cast<float>(height);
 
     wOffs += 0.5f * (wAdj - 1.0f) * frustumWidth;
     hOffs += 0.5f * (hAdj - 1.0f) * frustumHeight;
@@ -200,7 +225,7 @@ void ImageSpaceAmortization2D::setupCamera(core::view::Camera& cam, int width, i
 }
 
 void ImageSpaceAmortization2D::reconstruct(
-    std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, int a) {
+    std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, AmortMode m, int a) {
     int w = fbo->getWidth();
     int h = fbo->getHeight();
 
@@ -213,7 +238,13 @@ void ImageSpaceAmortization2D::reconstruct(
     const auto intrinsics = cam.get<core::view::Camera::OrthographicParameters>();
 
     shader_->use();
-    shader_->setUniform("amortLevel", a);
+    if (m == MODE_HORIZONTAL) {
+        shader_->setUniform("amortLevel", a, 1);
+    } else if (m == MODE_VERTICAL) {
+        shader_->setUniform("amortLevel", 1, a);
+    } else {
+        shader_->setUniform("amortLevel", a, a);
+    }
     shader_->setUniform("resolution", w, h);
     shader_->setUniform("lowResResolution", lowResFBO_->getWidth(), lowResFBO_->getHeight());
     shader_->setUniform("frameIdx", frameIdx_);
@@ -237,7 +268,7 @@ void ImageSpaceAmortization2D::reconstruct(
 
     glUseProgram(0);
 
-    samplingSequencePosition_ = (samplingSequencePosition_ + 1) % (a * a);
+    samplingSequencePosition_ = (samplingSequencePosition_ + 1) % samplingSequence_.size();
     frameIdx_ = samplingSequence_[samplingSequencePosition_];
     texRead_.swap(texWrite_);
     distTexRead_.swap(distTexWrite_);
