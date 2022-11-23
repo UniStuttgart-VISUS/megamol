@@ -48,11 +48,26 @@ void main() {
     float relx = fract(uvCoords.x);
     float result = 0.0;
 
+    float m_min = ((relx + uvCoords.y) < 1.0) ? asin(uvCoords.y/length(vec2(1.0-relx,uvCoords.y))) : asin((1.0-uvCoords.y)/length(vec2(relx,1.0-uvCoords.y)));
+    float m_max = (((1.0-relx) + uvCoords.y) < 1.0) ? asin(uvCoords.y/length(vec2(relx,uvCoords.y))) : asin((1.0-uvCoords.y)/length(vec2(1.0-relx,1.0-uvCoords.y)));
+    float m_range = m_min + m_max;
+
+    float b_min = uvCoords.y + ((0.5-relx) * tan((-m_min + QUARTER_PI) / (HALF_PI)));
+    float b_max = uvCoords.y + ((0.5-relx) * tan((m_max + QUARTER_PI) / (HALF_PI)));
+
+    float dual_length = length(vec2( (-m_min + QUARTER_PI) / (HALF_PI),b_min)-vec2( (m_max + QUARTER_PI) / (HALF_PI),b_max));
+    float max_dual_length = length(vec2(1.0,1.0));
+
+    // set base sample rate as twice the dual resolution, then scale with length in dual space
+    // to avoid unnecessary oversampling and performance loss
+    int sample_cnt = int(float(dual_space_width) * min(dual_length,max_dual_length));
+    float weight = max(1.0/float(dual_space_width), dual_length);
+
     int prev_b_idx = 0;
 
-    for(int m_idx = 0; m_idx<dual_space_width; ++m_idx){
-        float m_normalized = float(m_idx)/float(dual_space_width-1);
-        float m_angle = (m_normalized * HALF_PI - QUARTER_PI);
+    for(int sample_idx = 0; sample_idx < sample_cnt; ++sample_idx){
+        float m_angle = (float(sample_idx)/float(sample_cnt-1)) * m_range - m_min;
+        float m_normalized = (m_angle + QUARTER_PI) / (HALF_PI);
         float b_normalized = uvCoords.y + ((0.5-relx) * tan(m_angle));
 
         result += bilinearInterpolation(imgRead,vec3( m_normalized ,b_normalized,float(cdim)));
@@ -136,6 +151,8 @@ void main() {
 
     //fragOut = vec4(relx,uvCoords.y,0,1);
     //return;
+
+    result = (result * weight) / float(sample_cnt);
 
     if(result > 0 || selected){
         if(!selected){
