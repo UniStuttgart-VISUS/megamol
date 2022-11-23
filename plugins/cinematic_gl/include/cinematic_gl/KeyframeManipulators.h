@@ -14,6 +14,7 @@
 #include "cinematic/Keyframe.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Camera.h"
 #include "vislib/math/Cuboid.h"
 #include <glm/glm.hpp>

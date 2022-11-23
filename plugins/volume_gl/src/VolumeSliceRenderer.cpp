@@ -14,7 +14,6 @@
 
 #include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/Call.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/renderer/CallClipPlane.h"
@@ -23,6 +22,8 @@
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Point.h"
+
+using megamol::core::utility::log::Log;
 
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
@@ -56,7 +57,8 @@ megamol::volume_gl::VolumeSliceRenderer::~VolumeSliceRenderer() {
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
 bool megamol::volume_gl::VolumeSliceRenderer::create() {
-    auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shaderOptions =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         this->compute_shader = core::utility::make_glowl_shader(

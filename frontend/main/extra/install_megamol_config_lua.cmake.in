@@ -1,7 +1,6 @@
-#
-# MegaMol™ Front End 3000
-# Copyright 2021, by MegaMol TEAM
-# Alle Rechte vorbehalten. All rights reserved.
+# MegaMol
+# Copyright (c) 2021, MegaMol Dev Team
+# All rights reserved.
 #
 
 set(TARGET_DIR "@CMAKE_INSTALL_PREFIX@/bin")

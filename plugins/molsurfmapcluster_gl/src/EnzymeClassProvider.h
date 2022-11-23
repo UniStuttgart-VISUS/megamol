@@ -27,7 +27,7 @@ public:
      * @return Reference to the stored map
      */
     static const std::multimap<std::string, std::array<int, 4>>& RetrieveEnzymeClassMap(
-        const core::CoreInstance& coreInstance);
+        frontend_resources::RuntimeConfig const& runtimeConf);
 
     /**
      * Returns the class of a given PDB id.
@@ -39,7 +39,8 @@ public:
      * @param coreInstance The core instance needed for file path retrieval.
      * @return Array with four entries, one for each subclass. If one subclass is not listed, the value will be -1.
      */
-    static std::array<int, 4> RetrieveClassForPdbId(std::string pdbId, const core::CoreInstance& coreInstance);
+    static std::array<int, 4> RetrieveClassForPdbId(
+        std::string pdbId, frontend_resources::RuntimeConfig const& runtimeConf);
 
     /**
      * Returns all classes a given PDB id lies in.
@@ -51,7 +52,7 @@ public:
      * @return Array with four entries, one for each subclass. If one subclass is not listed, the value will be -1.
      */
     static std::vector<std::array<int, 4>> RetrieveClassesForPdbId(
-        std::string pdbId, const core::CoreInstance& coreInstance);
+        std::string pdbId, frontend_resources::RuntimeConfig const& runtimeConf);
 
     /**
      * Converts a given enzyme class to the string representing it
@@ -80,7 +81,7 @@ public:
      * @return The distance between the two enzyme classes. Minimum value is 0, if both are identical, maximum is 4.
      */
     static float EnzymeClassDistance(
-        const std::string pdbid1, const std::string pdbid2, const core::CoreInstance& coreInstance);
+        const std::string pdbid1, const std::string pdbid2, frontend_resources::RuntimeConfig const& runtimeConf);
 
 private:
     /**
@@ -88,7 +89,7 @@ private:
      *
      * @param coreInstance The core instance needed for file path retrieval.
      */
-    static void loadMapFromFile(const core::CoreInstance& coreInstance);
+    static void loadMapFromFile(frontend_resources::RuntimeConfig const& runtimeConf);
 
     /**
      * Determines the file path of the file to load
@@ -96,7 +97,7 @@ private:
      * @param coreInstance The core instance needed for file path retrieval.
      * @return Path to the map file
      */
-    static std::filesystem::path determineFilePath(const core::CoreInstance& coreInstance);
+    static std::filesystem::path determineFilePath(frontend_resources::RuntimeConfig const& runtimeConf);
 
     /** map mapping pdb ids to classification numbers */
     static std::multimap<std::string, std::array<int, 4>> classMap;

@@ -7,7 +7,6 @@
 
 #include "io/VIMDataSource.h"
 #include "geometry_calls/EllipsoidalDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"

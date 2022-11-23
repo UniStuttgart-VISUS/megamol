@@ -1,10 +1,12 @@
 
 #include "DrawToScreen.h"
 
+#include "FrameStatistics.h"
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd_gl/flags/FlagCallsGL.h"
+
+using megamol::core::utility::log::Log;
 
 megamol::compositing_gl::DrawToScreen::DrawToScreen()
         : mmstd_gl::Renderer3DModuleGL()
@@ -31,7 +33,8 @@ megamol::compositing_gl::DrawToScreen::~DrawToScreen() {
 bool megamol::compositing_gl::DrawToScreen::create() {
 
     // create shader program
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         m_drawToScreen_prgm = core::utility::make_glowl_shader("comp_drawToScreen", shader_options,
@@ -122,7 +125,8 @@ bool megamol::compositing_gl::DrawToScreen::Render(mmstd_gl::CallRender3DGL& cal
         glUniform1i(m_drawToScreen_prgm->getUniformLocation("depth_tx2D"), 1);
 
         glUniform1ui(m_drawToScreen_prgm->getUniformLocation("flags_available"), readFlagsCall != nullptr ? 1 : 0);
-        glUniform1ui(m_drawToScreen_prgm->getUniformLocation("frame_id"), this->GetCoreInstance()->GetFrameID());
+        glUniform1ui(m_drawToScreen_prgm->getUniformLocation("frame_id"),
+            frontend_resources.get<frontend_resources::FrameStatistics>().rendered_frames_count);
         glUniform2i(m_drawToScreen_prgm->getUniformLocation("viewport_resolution"), width, height);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);

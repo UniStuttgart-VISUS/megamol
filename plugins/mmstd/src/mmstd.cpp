@@ -4,13 +4,12 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "event/EventStorage.h"
 #include "job/TickSwitch.h"
 #include "misc/FileStreamProvider.h"
-#include "misc/LuaHostSettingsModule.h"
 #include "misc/ResourceTestModule.h"
 #include "mmstd/data/DataWriterCtrlCall.h"
 #include "mmstd/data/DataWriterJob.h"
@@ -40,10 +39,10 @@
 #include "special/StubModule.h"
 
 namespace megamol::mmstd {
-class PluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class PluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(PluginInstance)
 public:
-    PluginInstance() : megamol::core::utility::plugins::AbstractPluginInstance("mmstd", "Core calls and modules."){};
+    PluginInstance() : megamol::core::factories::AbstractPluginInstance("mmstd", "Core calls and modules."){};
 
     ~PluginInstance() override = default;
 
@@ -62,7 +61,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<core::view::light::TriDirectionalLighting>();
         this->module_descriptions.RegisterAutoDescription<core::special::StubModule>();
         this->module_descriptions.RegisterAutoDescription<core::job::DataWriterJob>();
-        this->module_descriptions.RegisterAutoDescription<core::utility::LuaHostSettingsModule>();
         this->module_descriptions.RegisterAutoDescription<core::job::TickSwitch>();
         this->module_descriptions.RegisterAutoDescription<core::job::JobThread>();
         this->module_descriptions.RegisterAutoDescription<core::view::ClipPlane>();

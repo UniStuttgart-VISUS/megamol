@@ -1,22 +1,20 @@
 /**
  * MegaMol
- * Copyright (c) 2020-2021, MegaMol Dev Team
+ * Copyright (c) 2020, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_UTILITY_PLUGINS_PLUGINREGISTER_H_INCLUDED
-#define MEGAMOLCORE_UTILITY_PLUGINS_PLUGINREGISTER_H_INCLUDED
+#pragma once
 
 #include <memory>
 #include <vector>
 
 #include "PluginDescriptor.h"
 
-#define REGISTERPLUGIN(classname)                        \
-    [[maybe_unused]] static inline bool is_registered_ = \
-        megamol::core::utility::plugins::PluginRegister::add<classname>();
+#define REGISTERPLUGIN(classname) \
+    [[maybe_unused]] static inline bool is_registered_ = megamol::core::factories::PluginRegister::add<classname>();
 
-namespace megamol::core::utility::plugins {
+namespace megamol::core::factories {
 class PluginRegister {
 public:
     // Use PluginRegister only static!
@@ -54,6 +52,4 @@ private:
     static inline std::vector<std::shared_ptr<AbstractPluginDescriptor>> plugins_;
 };
 
-} // namespace megamol::core::utility::plugins
-
-#endif // MEGAMOLCORE_UTILITY_PLUGINS_PLUGINREGISTER_H_INCLUDED
+} // namespace megamol::core::factories

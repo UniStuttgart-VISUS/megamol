@@ -12,6 +12,7 @@
 #include "datatools/ParticleFilterMapDataCall.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include "vislib/RawStorage.h"
 #include "vislib/math/Cuboid.h"
 #include <vector>
 

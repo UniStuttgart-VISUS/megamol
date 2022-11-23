@@ -14,7 +14,6 @@
 
 #include "geometry_calls/VolumetricDataCall.h"
 #include "mmcore/Call.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -25,6 +24,8 @@
 #include "mmstd/renderer/AbstractCallRender.h"
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "mmstd_gl/renderer/TransferFunctionGL.h"
+
+using megamol::core::utility::log::Log;
 
 namespace megamol::volume_gl {
 
@@ -106,7 +107,8 @@ SurfaceLICRenderer::~SurfaceLICRenderer() {
 }
 
 bool SurfaceLICRenderer::create() {
-    auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shaderOptions =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         this->pre_compute_shdr =

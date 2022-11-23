@@ -7,11 +7,13 @@
 
 #include "ProjectLoader_Service.hpp"
 
+#include <fstream>
+#include <sstream>
+
 #include "Window_Events.h"
-
 #include "mmcore/utility/graphics/ScreenShotComments.h"
-
 #include "mmcore/utility/log/Log.h"
+
 static void log(const char* text) {
     const std::string msg = "ProjectLoader_Service: " + std::string(text);
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());

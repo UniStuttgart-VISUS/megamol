@@ -1,15 +1,13 @@
-/*
- * CallerSlot.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_CALLERSLOT_H_INCLUDED
-#define MEGAMOLCORE_CALLERSLOT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <memory>
+#include <vector>
 
 #include "mmcore/AbstractCallSlotPresentation.h"
 #include "mmcore/AbstractSlot.h"
@@ -17,12 +15,8 @@
 #include "mmcore/factories/CallDescription.h"
 #include "vislib/String.h"
 #include "vislib/macro_utils.h"
-#include <memory>
-#include <vector>
 
-
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /** forward declaration */
 class CalleeSlot;
@@ -43,7 +37,7 @@ public:
     CallerSlot(const vislib::StringA& name, const vislib::StringA& desc);
 
     /** Dtor. */
-    virtual ~CallerSlot(void);
+    virtual ~CallerSlot();
 
     /**
      * Calls the call function 'func'.
@@ -61,7 +55,7 @@ public:
      *         or the call could not be casted.
      */
     template<class T>
-    inline T* CallAs(void) {
+    inline T* CallAs() {
         return dynamic_cast<T*>(this->call);
     }
 
@@ -144,7 +138,7 @@ public:
      * this class can then be connected to this slot.
      */
     template<class T>
-    inline void SetCompatibleCall(void) {
+    inline void SetCompatibleCall() {
         factories::CallDescription::ptr d = std::make_shared<T>();
         for (unsigned int i = 0; i < this->compDesc.size(); i++) {
             if (vislib::StringA(this->compDesc[i]->ClassName()).Equals(d->ClassName())) {
@@ -191,12 +185,12 @@ public:
     /**
      * Clears the cleanup mark for this and all dependent objects.
      */
-    virtual void ClearCleanupMark(void);
+    virtual void ClearCleanupMark();
 
     /**
      * Disconnects calls from all slots which are marked for cleanup.
      */
-    virtual void DisconnectCalls(void);
+    virtual void DisconnectCalls();
 
     /**
      * Answers whether the given parameter is relevant for this view.
@@ -206,13 +200,13 @@ public:
      *
      * @return 'true' if 'param' is relevant, 'false' otherwise.
      */
-    virtual bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const vislib::SmartPtr<param::AbstractParam>& param) const;
+    bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
+        const std::shared_ptr<param::AbstractParam>& param) const override;
 
     /**
      * TODO: Document me
      */
-    inline SIZE_T GetCompCallCount(void) const {
+    inline SIZE_T GetCompCallCount() const {
         return this->compDesc.size();
     }
 
@@ -233,7 +227,4 @@ private:
 };
 
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_CALLERSLOT_H_INCLUDED */
+} // namespace megamol::core

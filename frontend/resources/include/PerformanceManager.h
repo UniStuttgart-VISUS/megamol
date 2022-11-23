@@ -213,7 +213,7 @@ public:
 
     void subscribe_to_updates(update_callback cb);
 
-    void start_timer(handle_type h, frame_type frame);
+    void start_timer(handle_type h);
     void stop_timer(handle_type h);
 
 private:
@@ -221,7 +221,8 @@ private:
 
     handle_type add_timer(std::unique_ptr<Itimer> t);
 
-    void startFrame() {
+    void startFrame(frame_type frame) {
+        current_frame = frame;
         gl_timer::last_query = 0;
     }
 

@@ -17,7 +17,6 @@
 namespace megamol::core {
 
 /** forward declaration */
-class CoreInstance;
 class AbstractSlot;
 namespace factories {
 class ModuleDescription;
@@ -162,31 +161,6 @@ protected:
      * @return 'true' on success, 'false' otherwise.
      */
     virtual bool create() = 0;
-
-    /**
-     * Check the configuration for a value for the parameter 'val'.
-     * It checks, in descending order of priority, for occurences
-     * of: [this.GetDemiRootName]-[name], *-[name], [name] and
-     * returns the respective value. If nothing is found,
-     * vislib::StringA::EMPTY is returned.
-     * Caution: This can only work after the module is properly
-     * inserted into the module graph, since otherwise the
-     * DemiRootName cannot be determined reliably
-     *
-     * @param name the name of the sought value
-     *
-     * @return the value or vislib::StringA::EMPTY
-     */
-    vislib::StringA getRelevantConfigValue(vislib::StringA name);
-
-    /**
-     * Gets the instance of the core owning this module.
-     *
-     * @return The instance of the core owning this module.
-     */
-    inline class ::megamol::core::CoreInstance* instance() const {
-        return this->GetCoreInstance();
-    }
 
     /**
      * Implementation of 'Release'.

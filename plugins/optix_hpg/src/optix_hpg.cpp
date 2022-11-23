@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "CUDAToGL.h"
 #include "optix/MeshGeometry.h"
@@ -17,12 +17,12 @@
 #include "optix/CallGeometry.h"
 
 namespace megamol::optix_hpg {
-class OptixHpgPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class OptixHpgPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(OptixHpgPluginInstance)
 
 public:
     OptixHpgPluginInstance(void)
-            : megamol::core::utility::plugins::AbstractPluginInstance("optix_hpg", "The optix_hpg plugin."){};
+            : megamol::core::factories::AbstractPluginInstance("optix_hpg", "The optix_hpg plugin."){};
 
     ~OptixHpgPluginInstance() override = default;
 

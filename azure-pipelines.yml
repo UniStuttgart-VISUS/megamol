@@ -8,16 +8,10 @@ pr:
 variables:
   defaultConfig: >-
     -DMEGAMOL_WARNING_LEVEL="Off"
-    -DMEGAMOL_PLUGIN_ASTRO=ON
-    -DMEGAMOL_PLUGIN_ASTRO_GL=ON
-    -DMEGAMOL_PLUGIN_IMAGE_GL=ON
     -DMEGAMOL_PLUGIN_MEGAMOL101_GL=ON
-    -DMEGAMOL_PLUGIN_MMADIOS=ON
-    -DMEGAMOL_PLUGIN_MMVTKM=ON
-    -DMEGAMOL_PLUGIN_MMVTKM_GL=ON
-    -DMEGAMOL_PLUGIN_PROTEIN=ON
-    -DMEGAMOL_PLUGIN_PROTEIN_GL=ON
-    -DMEGAMOL_PLUGIN_REMOTE=OFF
+    -DMEGAMOL_USE_CGAL=ON
+    -DMEGAMOL_USE_PROFILING=ON
+    -DMEGAMOL_USE_VTKM=ON
   nonGlConfig: >-
     -DMEGAMOL_WARNING_LEVEL="Off"
     -DMEGAMOL_USE_OPENGL=OFF
@@ -59,7 +53,7 @@ jobs:
   - task: CMake@1
     displayName: 'CMake Configure'
     inputs:
-      cmakeArgs: '.. -G"$(generator)" -A"x64" $(cmakeExtraArgs)'
+      cmakeArgs: '.. -G"$(generator)" -A"x64" $(cmakeExtraArgs) -DMEGAMOL_DOWNLOAD_VCPKG_CACHE=ON'
   - task: CMake@1
     displayName: 'CMake Build'
     inputs:

@@ -1,8 +1,7 @@
-/*
- * Vector3fParam.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -14,7 +13,6 @@
 #include "vislib/Array.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/math/Vector.h"
-
 
 namespace megamol::core::param {
 
@@ -30,28 +28,10 @@ public:
         vislib::math::Vector<float, 3> const& maxVal)
             : Super(initVal, minVal, maxVal) {}
 
-    virtual ~Vector3fParam() = default;
+    ~Vector3fParam() override = default;
 
     std::array<float, 3> getArray() const {
         return std::array<float, 3>({this->Value().GetX(), this->Value().GetY(), this->Value().GetZ()});
-    }
-
-    std::string Definition() const override {
-        std::string name = "MMVC3F";
-        std::string return_str;
-        return_str.resize(6 + 6 * sizeof(float));
-        std::copy(name.begin(), name.end(), return_str.begin());
-        for (int i = 0; i < 3; ++i) {
-            std::copy(reinterpret_cast<char const*>(&MinValue()[i]),
-                reinterpret_cast<char const*>(&MinValue()[i]) + sizeof(float),
-                return_str.begin() + name.size() + i * sizeof(float));
-        }
-        for (int i = 0; i < 3; ++i) {
-            std::copy(reinterpret_cast<char const*>(&MaxValue()[i]),
-                reinterpret_cast<char const*>(&MaxValue()[i]) + sizeof(float),
-                return_str.begin() + name.size() + 3 * sizeof(float) + i * sizeof(float));
-        }
-        return return_str;
     }
 
     bool ParseValue(std::string const& v) override {

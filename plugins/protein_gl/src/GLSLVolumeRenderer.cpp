@@ -15,7 +15,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "GLSLVolumeRenderer.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -217,7 +216,8 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
 
     using namespace vislib_gl::graphics::gl;
 
-    auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shaderOptions =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         updateVolumeShader = core::utility::make_glowl_shader("updateVolumeShader", shaderOptions,
@@ -244,7 +244,7 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
     }
 
     // Initialize render utils
-    if (!renderUtils.InitPrimitiveRendering(GetCoreInstance()->GetShaderPaths())) {
+    if (!renderUtils.InitPrimitiveRendering(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;

@@ -1,16 +1,12 @@
-/*
- * StringParam.cpp
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/param/ColorParam.h"
 
 #include "mmcore/utility/ColourParser.h"
-
-#include "vislib/StringConverter.h"
-
 
 using namespace megamol::core::param;
 
@@ -24,13 +20,9 @@ ColorParam::ColorParam(float initR, float initG, float initB, float initA) : Abs
     this->SetValue({initR, initG, initB, initA});
 }
 
-ColorParam::ColorParam(const vislib::TString& initVal) : AbstractParam(), val() {
+ColorParam::ColorParam(const std::string& initVal) : AbstractParam(), val() {
     this->InitPresentation(AbstractParamPresentation::ParamType::COLOR);
-    this->ParseValue(initVal.PeekBuffer());
-}
-
-std::string ColorParam::Definition() const {
-    return "MMCOLO";
+    this->ParseValue(initVal);
 }
 
 bool ColorParam::ParseValue(std::string const& v) {

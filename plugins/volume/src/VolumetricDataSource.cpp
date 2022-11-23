@@ -65,19 +65,19 @@ megamol::volume::VolumetricDataSource::VolumetricDataSource(void)
     this->MakeSlotAvailable(&this->paramFileName);
 
     enumParam = new core::param::EnumParam(-1);
-    enumParam->SetTypePair(-1, _T("Auto"));
-    enumParam->SetTypePair(1, _T("1 Byte/Scalar"));
-    enumParam->SetTypePair(2, _T("2 Bytes/Scalar"));
-    enumParam->SetTypePair(4, _T("4 Bytes/Scalar"));
-    enumParam->SetTypePair(8, _T("8 Bytes/Scalar"));
+    enumParam->SetTypePair(-1, "Auto");
+    enumParam->SetTypePair(1, "1 Byte/Scalar");
+    enumParam->SetTypePair(2, "2 Bytes/Scalar");
+    enumParam->SetTypePair(4, "4 Bytes/Scalar");
+    enumParam->SetTypePair(8, "8 Bytes/Scalar");
     this->paramOutputDataSize.SetParameter(enumParam);
     this->MakeSlotAvailable(&this->paramOutputDataSize);
 
     enumParam = new core::param::EnumParam(-1);
-    enumParam->SetTypePair(-1, _T("Auto"));
-    enumParam->SetTypePair(VolumetricDataCall::ScalarType::SIGNED_INTEGER, _T("int"));
-    enumParam->SetTypePair(VolumetricDataCall::ScalarType::UNSIGNED_INTEGER, _T("uint"));
-    enumParam->SetTypePair(VolumetricDataCall::ScalarType::FLOATING_POINT, _T("float"));
+    enumParam->SetTypePair(-1, "Auto");
+    enumParam->SetTypePair(VolumetricDataCall::ScalarType::SIGNED_INTEGER, "int");
+    enumParam->SetTypePair(VolumetricDataCall::ScalarType::UNSIGNED_INTEGER, "uint");
+    enumParam->SetTypePair(VolumetricDataCall::ScalarType::FLOATING_POINT, "float");
     this->paramOutputDataType.SetParameter(enumParam);
     this->MakeSlotAvailable(&this->paramOutputDataType);
 

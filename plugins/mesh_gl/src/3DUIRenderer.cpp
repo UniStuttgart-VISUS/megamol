@@ -28,8 +28,8 @@ megamol::mesh_gl::ThreeDimensionalUIRenderer::~ThreeDimensionalUIRenderer() {}
 
 void megamol::mesh_gl::ThreeDimensionalUIRenderer::createMaterialCollection() {
     material_collection_ = std::make_shared<GPUMaterialCollection>();
-    material_collection_->addMaterial(this->instance(), "3DUIMaterial",
-        {"mesh_gl/3DUI.vert.glsl", "mesh_gl/3DUI.geom.glsl", "mesh_gl/3DUI.frag.glsl"});
+    material_collection_->addMaterial(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(),
+        "3DUIMaterial", {"mesh_gl/3DUI.vert.glsl", "mesh_gl/3DUI.geom.glsl", "mesh_gl/3DUI.frag.glsl"});
 }
 
 void megamol::mesh_gl::ThreeDimensionalUIRenderer::updateRenderTaskCollection(

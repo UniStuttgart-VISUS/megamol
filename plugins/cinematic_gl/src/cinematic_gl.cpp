@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "CinematicView.h"
 #include "OverlayRenderer.h"
@@ -14,12 +14,12 @@
 #include "TrackingShotRenderer.h"
 
 namespace megamol::cinematic_gl {
-class CinematicGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class CinematicGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(CinematicGLPluginInstance)
 
 public:
     CinematicGLPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("cinematic_gl",
+            : megamol::core::factories::AbstractPluginInstance("cinematic_gl",
                   "The Cinematic plugin allows the video rendering (separate file per frame) of any rendering "
                   "output in MegaMol. By defining fixed keyframes for desired camera positions and specific "
                   "animation times, arbitrary tracking shots can be created."){};

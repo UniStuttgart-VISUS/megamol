@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "BlockVolumeMesh.h"
 #include "CoordSysMarker.h"
@@ -18,13 +18,12 @@
 #include "volumetrics/VoluMetricJob.h"
 
 namespace megamol::trisoup_gl {
-class TrisoupGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class TrisoupGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(TrisoupGLPluginInstance)
 
 public:
     TrisoupGLPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
-                  "trisoup_gl", "Plugin for rendering TriSoup mesh data") {
+            : megamol::core::factories::AbstractPluginInstance("trisoup_gl", "Plugin for rendering TriSoup mesh data") {
         vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL - 1);
     };
 

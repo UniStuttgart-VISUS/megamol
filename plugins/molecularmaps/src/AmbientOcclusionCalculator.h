@@ -11,7 +11,7 @@
 
 #include <glowl/glowl.h>
 
-#include "mmcore/CoreInstance.h"
+#include "RuntimeConfig.h"
 #include "protein_calls/MolecularDataCall.h"
 
 namespace megamol {
@@ -157,7 +157,7 @@ public:
      * @param mdc The call containing the necessary protein information.
      * @return True on success, false otherwise.
      */
-    bool initilialize(core::CoreInstance* instance, const std::vector<float>* vertices,
+    bool initilialize(frontend_resources::RuntimeConfig const& runtimeConf, const std::vector<float>* vertices,
         const std::vector<float>* vertex_normals, protein_calls::MolecularDataCall* mdc);
 
     /**
@@ -166,7 +166,7 @@ public:
      * @param instance Pointer to the megamol core instance.
      * @return True on success, false otherwise.
      */
-    bool loadShaders(core::CoreInstance* instance);
+    bool loadShaders(frontend_resources::RuntimeConfig const& runtimeConf);
 
 private:
     /**
