@@ -47,6 +47,8 @@ public:
     void SpecificStateToJSON(nlohmann::json& inout_json) override;
 
 private:
+    using animations = std::variant<animation::FloatAnimation, animation::StringAnimation>;
+
     void WriteValuesToGraph();
     bool SaveToFile(const std::string& file);
     void ClearData();
@@ -54,10 +56,10 @@ private:
 
     void DrawPopups();
     void DrawToolbar();
-    void center_animation(const animation::FloatAnimation& anim);
+    void CenterAnimation(const animations& anim);
     void DrawParams();
     void DrawInterpolation(ImDrawList* dl, const animation::FloatKey& key, const animation::FloatKey& k2);
-    void DrawKey(ImDrawList* dl, animation::FloatKey& key);
+    void DrawFloatKey(ImDrawList* dl, animation::FloatKey& key);
     void DrawPlayhead(ImDrawList* drawList);
     void DrawCurves();
     void DrawProperties();
@@ -70,7 +72,6 @@ private:
         float sign = 1.0f);
     // VARIABLES --------------------------------------------------------------
 
-    using animations = std::variant<animation::FloatAnimation, animation::StringAnimation>;
     std::vector<animations> allAnimations;
     //std::vector<animation::FloatAnimation> floatAnimations;
     //std::vector<animation::StringAnimation> stringAnimations;

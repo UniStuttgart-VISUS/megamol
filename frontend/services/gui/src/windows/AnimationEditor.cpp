@@ -177,6 +177,11 @@ bool AnimationEditor::LoadFromFile(std::string file) {
     auto j_all = nlohmann::json::parse(in);
     animation::FloatAnimation f_dummy("dummy");
     animation::StringAnimation s_dummy("dummy");
+    if (!j_all.contains("animations")) {
+        error_popup_message = "Loading failed: cannot find 'animations'";
+        open_popup_error = true;
+        return false;
+    }
     for (auto& j : j_all["animations"]) {
         if (j["type"] == "string") {
             from_json(j, s_dummy);
@@ -185,6 +190,10 @@ bool AnimationEditor::LoadFromFile(std::string file) {
             // j.get<FloatAnimation>() does not work because no default constructor
             from_json(j, f_dummy);
             allAnimations.emplace_back(f_dummy);
+        } else {
+            error_popup_message = "Loading failed: " + j["name"].get<std::string>() + " has no type";
+            open_popup_error = true;
+            return false;
         }
     }
     animation_file = file;
@@ -195,10 +204,7 @@ bool AnimationEditor::LoadFromFile(std::string file) {
 void AnimationEditor::DrawPopups() {
     if (this->file_browser.PopUp_Load(
             "Load Animation", animation_file, open_popup_load, {"anim"}, FilePathParam::Flag_File_RestrictExtension)) {
-        if (!LoadFromFile(animation_file)) {
-            error_popup_message = "Saving failed.";
-            open_popup_error = true;
-        }
+        LoadFromFile(animation_file);
         open_popup_load = false;
     }
     if (this->file_browser.PopUp_Save("Save Animation", animation_file, open_popup_save, {"anim"},
@@ -296,7 +302,7 @@ void AnimationEditor::DrawToolbar() {
     DrawVerticalSeparator();
     ImGui::SameLine();
     if (ImGui::Button("frame view")) {
-        center_animation(allAnimations[selectedAnimation]);
+        CenterAnimation(allAnimations[selectedAnimation]);
     }
     ImGui::SameLine();
     DrawVerticalSeparator();
@@ -308,13 +314,25 @@ void AnimationEditor::DrawToolbar() {
 }
 
 
-void AnimationEditor::center_animation(const animation::FloatAnimation& anim) {
+void AnimationEditor::CenterAnimation(const animations& anim) {
     auto region = canvas.Rect();
-    if (anim.GetLength() > 1) {
-        custom_zoom.x = 0.9f * region.GetWidth() / static_cast<float>(anim.GetLength());
-        custom_zoom.y = 0.9f * region.GetHeight() / (anim.GetMaxValue() - anim.GetMinValue());
-        const auto h_start = static_cast<float>(-anim.GetStartTime());
-        const auto v_start = anim.GetMaxValue();
+    float min_val = -1.0f, max_val = 1.0f, start = 0, len = 1;
+    if (std::holds_alternative<animation::FloatAnimation>(anim)) {
+        auto& a = std::get<animation::FloatAnimation>(anim);
+        min_val = a.GetMinValue();
+        max_val = a.GetMaxValue();
+        start = a.GetStartTime();
+        len = static_cast<float>(a.GetLength());
+    } else if (std::holds_alternative<animation::StringAnimation>(anim)) {
+        auto& a = std::get<animation::StringAnimation>(anim);
+        start = a.GetStartTime();
+        len = static_cast<float>(a.GetLength());
+    }
+    if (len > 1) {
+        custom_zoom.x = 0.9f * region.GetWidth() / len;
+        custom_zoom.y = 0.9f * region.GetHeight() / (max_val - min_val);
+        const auto h_start = static_cast<float>(-start);
+        const auto v_start = max_val;
         canvas.SetView(ImVec2(h_start * custom_zoom.x + 0.05f * region.GetWidth(),
                            v_start * custom_zoom.y + 0.05f * region.GetHeight()),
             1.0f);
@@ -340,7 +358,7 @@ void AnimationEditor::DrawParams() {
         if (ImGui::IsItemActivated()) {
             selectedAnimation = a;
             if (canvas_visible) {
-                center_animation(allAnimations[selectedAnimation]);
+                CenterAnimation(allAnimations[selectedAnimation]);
             }
         }
     }
@@ -405,7 +423,7 @@ void AnimationEditor::DrawInterpolation(ImDrawList* dl, const animation::FloatKe
 }
 
 
-void AnimationEditor::DrawKey(ImDrawList* dl, animation::FloatKey& key) {
+void AnimationEditor::DrawFloatKey(ImDrawList* dl, animation::FloatKey& key) {
     const float size = 4.0f;
     const ImVec2 button_size = {8.0f, 8.0f};
     auto key_color = IM_COL32(255, 128, 0, 255);
@@ -537,16 +555,26 @@ void AnimationEditor::DrawCurves() {
         }
 
         if (selectedAnimation != -1) {
-            auto& anim = floatAnimations[selectedAnimation];
-            if (anim.GetSize() > 0) {
-                auto keys = anim.GetAllKeys();
-                for (auto i = 0; i < keys.size(); ++i) {
-                    auto& k = anim[keys[i]];
-                    if (i < keys.size() - 1) {
-                        auto& k2 = anim[keys[i + 1]];
-                        DrawInterpolation(drawList, k, k2);
+            if (std::holds_alternative<animation::FloatAnimation>(allAnimations[selectedAnimation])) {
+                auto& anim = std::get<animation::FloatAnimation>(allAnimations[selectedAnimation]);
+                if (anim.GetSize() > 0) {
+                    auto keys = anim.GetAllKeys();
+                    for (auto i = 0; i < keys.size(); ++i) {
+                        auto& k = anim[keys[i]];
+                        if (i < keys.size() - 1) {
+                            auto& k2 = anim[keys[i + 1]];
+                            DrawInterpolation(drawList, k, k2);
+                        }
+                        DrawFloatKey(drawList, k);
                     }
-                    DrawKey(drawList, k);
+                }
+            } else if (std::holds_alternative<animation::StringAnimation>(allAnimations[selectedAnimation])) {
+                auto& anim = std::get<animation::StringAnimation>(allAnimations[selectedAnimation]);
+                if (anim.GetSize() > 0) {
+                    auto keys = anim.GetAllKeys();
+                    for (auto i = 0; i < keys.size(); ++i) {
+                        
+                    }
                 }
             }
         }
