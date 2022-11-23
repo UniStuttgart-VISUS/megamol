@@ -1,15 +1,10 @@
-/*
- * RootModuleNamespace.h
- *
- * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ROOTMODULENAMESPACE_H_INCLUDED
-#define MEGAMOLCORE_ROOTMODULENAMESPACE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/ModuleNamespace.h"
 #include "vislib/Array.h"
@@ -21,9 +16,7 @@
 #include "vislib/SingleLinkedList.h"
 #endif
 
-
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Class represents the root namespace for the module namespace
@@ -63,12 +56,12 @@ public:
     /**
      * Ctor.
      */
-    RootModuleNamespace(void);
+    RootModuleNamespace();
 
     /**
      * Dtor.
      */
-    virtual ~RootModuleNamespace(void);
+    virtual ~RootModuleNamespace();
 
     /**
      * Answer the full namespace path for 'path' seen relative to 'base'.
@@ -97,60 +90,20 @@ public:
      *
      * @return The reader-writer lock to lock the module graph
      */
-    virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock(void);
+    virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock();
 
     /**
      * Answer the reader-writer lock to lock the module graph
      *
      * @return The reader-writer lock to lock the module graph
      */
-    virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock(void) const;
-
-    /**
-     * Serializes the whole module graph into raw memory.
-     * The deserialization method is located in CoreInstance
-     *
-     * @param outmem The memory to receive the serialized module graph
-     */
-    void SerializeGraph(vislib::RawStorage& outmem);
-
-    /**
-     * Answer the core instance of this named object
-     *
-     * @return The core instance of this named object
-     */
-    virtual CoreInstance* GetCoreInstance(void) const {
-        return this->core_inst;
-    }
-
-    /**
-     * Answer the core instance of this named object
-     *
-     * @return The core instance of this named object
-     */
-    void SetCoreInstance(CoreInstance& coreInst) {
-        this->core_inst = &coreInst;
-    }
+    virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock() const;
 
 protected:
 private:
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
-
     /** The graph access synchronization object */
     //mutable vislib::sys::FatReaderWriterLock lock;
     mutable vislib::sys::ReaderWriterMutexWrapper lock;
-
-    CoreInstance* core_inst;
-
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif /* _WIN32 */
 };
 
-
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ROOTMODULENAMESPACE_H_INCLUDED */
+} // namespace megamol::core

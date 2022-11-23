@@ -507,8 +507,10 @@ bool datatools::ParticleThermodyn::assertData(
                         metricMax[threadIdx] = magnitude;
 #pragma omp atomic
                     ++counter;
+                    // TODO: we might need a critical section from here...
                     if ((counter % progressDivider) == 0)
                         cpb.Set(static_cast<vislib::sys::ConsoleProgressBar::Size>(counter / progressDivider));
+                    // ... to here, but the race condition is not completely clear yet.
                 }
             } // end #pragma omp parallel num_threads(num_thr)
             for (auto i = 0; i < num_thr; ++i) {

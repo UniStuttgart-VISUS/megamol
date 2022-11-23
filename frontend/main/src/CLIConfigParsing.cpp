@@ -643,7 +643,9 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
 
         return config_files;
 
-    } catch (cxxopts::OptionException ex) { exit(ex.what()); }
+    } catch (cxxopts::OptionException ex) {
+        exit(ex.what());
+    }
 }
 
 #define add_option(X) (std::get<0>(X), std::get<1>(X), std::get<2>(X))
@@ -832,7 +834,9 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
                 }
             }
 
-        } catch (cxxopts::OptionException ex) { exit(std::string(ex.what()) + "\nIn file: " + file); }
+        } catch (cxxopts::OptionException ex) {
+            exit(std::string(ex.what()) + "\nIn file: " + file);
+        }
 
         config.configuration_file_contents.push_back(file_contents);
         config.configuration_file_contents_as_cli.push_back(
@@ -882,7 +886,9 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(
             }
         }
 
-    } catch (cxxopts::OptionException ex) { exit(std::string(ex.what()) + "\n" + options.help({""})); }
+    } catch (cxxopts::OptionException ex) {
+        exit(std::string(ex.what()) + "\n" + options.help({""}));
+    }
 
     return config;
 }

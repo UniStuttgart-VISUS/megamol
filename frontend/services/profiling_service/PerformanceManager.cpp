@@ -210,9 +210,8 @@ void PerformanceManager::subscribe_to_updates(update_callback cb) {
     subscribers.push_back(cb);
 }
 
-void PerformanceManager::start_timer(handle_type h, frame_type frame) {
-    current_frame = frame;
-    timers[h]->start(frame);
+void PerformanceManager::start_timer(handle_type h) {
+    timers[h]->start(current_frame);
 }
 
 void PerformanceManager::stop_timer(handle_type h) {

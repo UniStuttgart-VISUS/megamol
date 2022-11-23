@@ -8,13 +8,11 @@
 
 #include "compositing_gl/CompositingCalls.h"
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmstd/light/DistantLight.h"
 #include "mmstd/light/PointLight.h"
 
@@ -120,7 +118,8 @@ ModernTrisoupRenderer::~ModernTrisoupRenderer(void) {
 bool ModernTrisoupRenderer::create(void) {
 
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
         meshShader_ = core::utility::make_shared_glowl_shader("mesh", shdr_options,
             std::filesystem::path("trisoup_gl/trisoup.vert.glsl"),
             std::filesystem::path("trisoup_gl/trisoup.frag.glsl"));

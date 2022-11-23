@@ -3,36 +3,28 @@
  * Copyright (C) 2006-2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMMOLMAPPLG_MAPGENERATOR_H_INCLUDED
-#define MMMOLMAPPLG_MAPGENERATOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/CallerSlot.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/utility/ColourParser.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include <filesystem>
+#include <memory>
 
-#include "geometry_calls_gl/CallTriMeshDataGL.h"
-#include "protein_calls/BindingSiteCall.h"
-
-#include "vislib/graphics/BitmapImage.h"
-#include "vislib/graphics/PngBitmapCodec.h"
-#include "vislib_gl/graphics/gl/OutlineFont.h"
-#include "vislib_gl/graphics/gl/Verdana.inc"
+#include <glowl/glowl.h>
 
 #include "AmbientOcclusionCalculator.h"
 #include "CUDAKernels.cuh"
 #include "Octree.h"
 #include "TriangleMeshRenderer.h"
 #include "VoronoiChannelCalculator.h"
-
-#include "glowl/BufferObject.hpp"
-
-#include <filesystem>
+#include "geometry_calls_gl/CallTriMeshDataGL.h"
+#include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/ColourParser.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
+#include "protein_calls/BindingSiteCall.h"
+#include "vislib/graphics/BitmapImage.h"
+#include "vislib/graphics/PngBitmapCodec.h"
+#include "vislib_gl/graphics/gl/OutlineFont.h"
+#include "vislib_gl/graphics/gl/Verdana.inc"
 
 namespace megamol {
 namespace molecularmaps {
@@ -740,7 +732,7 @@ private:
     core::param::ParamSlot geodesic_lines_param;
 
     /** The geodesic lines shader programme. */
-    vislib_gl::graphics::gl::GLSLGeometryShader geodesic_shader;
+    std::unique_ptr<glowl::GLSLProgram> geodesic_shader;
 
     /** Store the OpenGL vertex buffer for the geodesic lines. */
     std::vector<GLuint> geodesic_lines_vbos;
@@ -794,7 +786,7 @@ private:
     vislib_gl::graphics::gl::FramebufferObject map_fbo;
 
     /** The map shader programme */
-    vislib_gl::graphics::gl::GLSLGeometryShader map_shader;
+    std::unique_ptr<glowl::GLSLProgram> map_shader;
 
     /** The state of the shaders */
     bool map_shader_init;
@@ -955,5 +947,3 @@ private:
 
 } /* end namespace molecularmaps */
 } /* end namespace megamol */
-
-#endif

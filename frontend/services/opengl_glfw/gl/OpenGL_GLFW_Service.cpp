@@ -40,6 +40,8 @@
 #endif
 #endif
 
+#include "ModuleGraphSubscription.h"
+
 #include <functional>
 #include <iostream>
 
@@ -574,6 +576,9 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &ignorethis, GL_FALSE);
         ignorethis = 131204;
         glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &ignorethis, GL_FALSE);
+        glDebugMessageControl(
+            GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PUSH_GROUP, GL_DONT_CARE, 0, nullptr, GL_FALSE);
+        glDebugMessageControl(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_POP_GROUP, GL_DONT_CARE, 0, nullptr, GL_FALSE);
         glDebugMessageCallback(opengl_debug_message_callback, nullptr);
         log("Enabled OpenGL debug context. Will print debug messages.");
     }
@@ -612,12 +617,16 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     m_windowManipulation.set_mouse_cursor = [&](const int cursor_id) -> void { update_glfw_mouse_cursors(cursor_id); };
 
     // make the events and resources managed/provided by this service available to the outside world
-    m_renderResourceReferences = {{"KeyboardEvents", m_keyboardEvents}, {"MouseEvents", m_mouseEvents},
-        {"WindowEvents", m_windowEvents},
+    m_renderResourceReferences = {{frontend_resources::KeyboardEvents_Req_Name, m_keyboardEvents},
+        {frontend_resources::MouseEvents_Req_Name, m_mouseEvents},
+        {frontend_resources::WindowEvents_Req_Name, m_windowEvents},
         //{"FramebufferEvents", m_framebufferEvents}, // pushes own events into global FramebufferEvents
-        {"OpenGL_Context", m_opengl_context}, {"WindowManipulation", m_windowManipulation}};
+        {frontend_resources::OpenGL_Context_Req_Name, m_opengl_context},
+        {frontend_resources::WindowManipulation_Req_Name, m_windowManipulation},
+        {frontend_resources::OpenGL_Helper_Req_Name, m_opengl_helper}};
 
-    m_requestedResourcesNames = {"FrameStatistics", "FramebufferEvents"};
+    m_requestedResourcesNames = {
+        "FrameStatistics", "FramebufferEvents", frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name};
 
     m_pimpl->last_time = std::chrono::system_clock::now();
 
@@ -821,6 +830,23 @@ void OpenGL_GLFW_Service::setRequestedResources(std::vector<FrontendResource> re
 
     m_pimpl->frame_statistics = &const_cast<megamol::frontend_resources::FrameStatistics&>(
         resources[0].getResource<megamol::frontend_resources::FrameStatistics>());
+
+    auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(
+        resources[2].getResource<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
+
+#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
+    frontend_resources::ModuleGraphSubscription debug_helper_subscription("OpenGL Debug Helper");
+
+    debug_helper_subscription.AddCall = [&](core::CallInstance_t const& call_inst) {
+        auto the_call = call_inst.callPtr.get();
+        if (the_call->GetCapabilities().OpenGLRequired()) {
+            the_call->gl_helper = &m_opengl_helper;
+        }
+        return true;
+    };
+
+    megamolgraph_subscription.subscribe(debug_helper_subscription);
+#endif
 }
 
 void OpenGL_GLFW_Service::glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {

@@ -1,29 +1,21 @@
-/*
- * CalleeSlot.h
- *
- * Copyright (C) 2008-2009 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_CALLEESLOT_H_INCLUDED
-#define MEGAMOLCORE_CALLEESLOT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/AbstractCallSlotPresentation.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/factories/CallDescriptionManager.h"
-#include "mmcore/profiler/Connection.h"
 #include "vislib/Array.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 
-
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /** Forward declaration */
 class Module;
@@ -43,7 +35,7 @@ public:
     CalleeSlot(const vislib::StringA& name, const vislib::StringA& desc);
 
     /** Dtor. */
-    virtual ~CalleeSlot(void);
+    virtual ~CalleeSlot();
 
     /**
      * Connects a call to this slot.
@@ -67,7 +59,7 @@ public:
     /**
      * Clears the cleanup mark for this and all dependent objects.
      */
-    virtual void ClearCleanupMark(void);
+    virtual void ClearCleanupMark();
 
     /**
      * Answers whether a given call is compatible with this slot.
@@ -168,23 +160,16 @@ public:
      *
      * @return 'true' if 'param' is relevant, 'false' otherwise.
      */
-    virtual bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const vislib::SmartPtr<param::AbstractParam>& param) const;
+    bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
+        const std::shared_ptr<param::AbstractParam>& param) const override;
 
     /**
      * Answer the number of registered callback with names
      *
      * @return The number of registered callback with names
      */
-    inline SIZE_T GetCallbackCount(void) const {
-        SIZE_T allCnt = this->callbacks.Count();
-        SIZE_T valCnt = 0;
-        for (SIZE_T i = 0; i < allCnt; i++, valCnt++) {
-            Callback* cb = this->callbacks[i];
-            if (dynamic_cast<ProfilingCallback*>(cb) != NULL)
-                break;
-        }
-        return valCnt;
+    inline SIZE_T GetCallbackCount() const {
+        return this->callbacks.Count();
     }
 
     /**
@@ -209,29 +194,6 @@ public:
         return this->callbacks[idx]->FuncName();
     }
 
-    /**
-     * Answer if the specified call is profiling
-     *
-     * @param c The call to test
-     *
-     * @return True if the call 'c' is being profiled
-     */
-    bool IsCallProfiling(const Call* c) const;
-
-    /**
-     * Adds profiling mechanisms for the specified call
-     *
-     * @param c The call to add profiling for
-     */
-    void AddCallProfiling(const Call* c);
-
-    /**
-     * Removes call profiling mechanismus for the specified call
-     *
-     * @param c The call to remove profiling for
-     */
-    void RemoveCallProfiling(const Call* c);
-
 private:
     /**
      * Nested base class for callback storage
@@ -249,7 +211,7 @@ private:
         }
 
         /** Dtor */
-        virtual ~Callback(void) {
+        virtual ~Callback() {
             // intentionally empty
         }
 
@@ -268,7 +230,7 @@ private:
          *
          * @return The call class name.
          */
-        inline const char* CallName(void) const {
+        inline const char* CallName() const {
             return this->callName;
         }
 
@@ -277,7 +239,7 @@ private:
          *
          * @return The function name.
          */
-        inline const char* FuncName(void) const {
+        inline const char* FuncName() const {
             return this->funcName;
         }
 
@@ -307,7 +269,7 @@ private:
         }
 
         /** Dtor. */
-        virtual ~CallbackImpl(void) {
+        virtual ~CallbackImpl() {
             // intentionally empty
         }
 
@@ -350,7 +312,7 @@ private:
         }
 
         /** Dtor. */
-        virtual ~CallbackParentImpl(void) {
+        virtual ~CallbackParentImpl() {
             // intentionally empty
         }
 
@@ -373,70 +335,8 @@ private:
         C* parent;
     };
 
-    /**
-     * Special callback class for performance profiling
-     */
-    class ProfilingCallback : public Callback {
-    public:
-        /**
-         * Ctor
-         *
-         * @param cb The encapsuled callback
-         * @param conn The connection the the profiler
-         */
-        ProfilingCallback(Callback* cb, profiler::Connection::ptr_type conn);
-
-        /** Dtor */
-        virtual ~ProfilingCallback(void);
-
-        /**
-         * Call this callback.
-         *
-         * @param owner The owning object.
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        virtual bool CallMe(Module* owner, Call& call);
-
-        /**
-         * Answer the internal callback
-         *
-         * @return The internal callback
-         */
-        inline Callback* GetCallback(void) const {
-            return this->cb;
-        }
-
-        /**
-         * Answer the profiler connection
-         *
-         * @return The profiler connection
-         */
-        inline profiler::Connection::ptr_type GetConnection(void) const {
-            return this->conn;
-        }
-
-    private:
-        /** The actual callback */
-        Callback* cb;
-
-        /** The connection */
-        profiler::Connection::ptr_type conn;
-    };
-
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
     /** The registered callbacks */
     vislib::Array<Callback*> callbacks;
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif /* _WIN32 */
 };
 
-
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_CALLEESLOT_H_INCLUDED */
+} // namespace megamol::core

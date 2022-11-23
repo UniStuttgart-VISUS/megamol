@@ -4,18 +4,18 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "OSPRayToGL.h"
 
 namespace megamol::ospray_gl {
-class MMOSPRayGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class MMOSPRayGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(MMOSPRayGLPluginInstance)
 
 public:
     MMOSPRayGLPluginInstance(void)
-            : megamol::core::utility::plugins::AbstractPluginInstance("mmospray_gl", "CPU Raytracing"){};
+            : megamol::core::factories::AbstractPluginInstance("mmospray_gl", "CPU Raytracing"){};
 
     ~MMOSPRayGLPluginInstance() override = default;
 

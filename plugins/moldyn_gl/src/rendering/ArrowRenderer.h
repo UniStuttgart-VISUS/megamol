@@ -12,7 +12,6 @@
 #include "OpenGL_Context.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/renderer/CallClipPlane.h"

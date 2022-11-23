@@ -8,21 +8,15 @@
 #ifndef GPU_MATERIAL_COLLECTION_H_INCLUDED
 #define GPU_MATERIAL_COLLECTION_H_INCLUDED
 
-//#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "mmcore/CoreInstance.h"
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
-
+#include <filesystem>
 #include <memory>
 #include <unordered_map>
 #include <variant>
 #include <vector>
 
-#include "glowl/GLSLProgram.hpp"
-#include "glowl/Texture.hpp"
-#include "glowl/Texture2D.hpp"
-#include "glowl/Texture2DArray.hpp"
-#include "glowl/Texture3D.hpp"
-#include "glowl/TextureCubemapArray.hpp"
+#include <glowl/glowl.h>
+
+#include "RuntimeConfig.h"
 
 namespace megamol {
 namespace mesh_gl {
@@ -40,7 +34,7 @@ public:
         std::vector<std::shared_ptr<glowl::Texture>> textures;
     };
 
-    void addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string const& identifier,
+    void addMaterial(megamol::frontend_resources::RuntimeConfig const& runtimeConf, std::string const& identifier,
         std::vector<std::filesystem::path> const& shader_filepaths,
         std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
 

@@ -8,16 +8,15 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_SURFACEPOTENTIALRENDERERSLAVE_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_SURFACEPOTENTIALRENDERERSLAVE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "mmcore/CallerSlot.h"
 #include "mmstd/renderer/CallRender3D.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 //#include "vislib_vector_typedefs.h"
 #include "VBODataCall.h"
 #include "mmcore/param/ParamSlot.h"
@@ -123,10 +122,8 @@ private:
     core::BoundingBoxes bbox;
 
     /// Shader implementing per pixel lighting
-    vislib_gl::graphics::gl::GLSLShader pplSurfaceShader;
+    std::unique_ptr<glowl::GLSLProgram> pplSurfaceShader;
 };
 
 } // namespace protein_cuda
 } // namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_SURFACEPOTENTIALRENDERERSLAVE_H_INCLUDED

@@ -20,9 +20,9 @@
 #include <glowl/GLSLProgram.hpp>
 #include <glowl/Texture2D.hpp>
 
+#include "RuntimeConfig.h"
 #include "mmcore/utility/FileUtils.h"
 #include "mmcore_gl/utility/SDFFont.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "vislib/graphics/PngBitmapCodec.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Vector.h"
@@ -111,7 +111,7 @@ public:
 
     // LOCAL functions -------------------------------------------------------
 
-    bool InitPrimitiveRendering(megamol::core_gl::utility::ShaderSourceFactory& factory);
+    bool InitPrimitiveRendering(frontend_resources::RuntimeConfig const& runtimeConf);
 
     // Keeps the texture object in render utils for later access via texture id
     bool LoadTextureFromFile(GLuint& out_texture_id, const std::filesystem::path& filename, bool reload = false);
@@ -203,10 +203,6 @@ private:
     std::array<std::unique_ptr<glowl::BufferObject>, Buffers::BUFF_COUNT> buffers;
 
     // FUNCTIONS ------------------------------------------------------- //
-
-    bool createShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_ptr,
-        megamol::core_gl::utility::ShaderSourceFactory& shader_factory, const std::string& vertex_btf_snipprt,
-        const std::string& fragment_btf_snippet);
 
     void pushQuad(Primitives primitive, GLuint texture_id, const glm::vec3& pos_bottom_left,
         const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right,

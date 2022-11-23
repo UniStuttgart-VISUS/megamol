@@ -4,21 +4,20 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "mmvtkm_gl/mmvtkmStreamlineRenderer.h"
 //#include "mmvtkm_gl/mmvtkmRenderer.h"
 
 
 namespace megamol::mmvtkm_gl {
-class MmvtkmGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class MmvtkmGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(MmvtkmGLPluginInstance)
 
 public:
     MmvtkmGLPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
-                  "vtkm_gl", "Plugin to read and render vtkm data."){};
+            : megamol::core::factories::AbstractPluginInstance("vtkm_gl", "Plugin to read and render vtkm data."){};
 
     virtual ~MmvtkmGLPluginInstance() override = default;
 

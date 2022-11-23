@@ -11,9 +11,9 @@
 
 
 #include "CommandRegistry.h"
+#include "PluginsResource.h"
 #include "gui_render_backend.h"
 #include "implot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/Picking.h"
 #include "widgets/FileBrowserWidget.h"
@@ -239,11 +239,11 @@ public:
 
     void RegisterNotification(const std::string& name, std::weak_ptr<bool> open, const std::string& message);
 
-    bool InitializeGraphSynchronisation(const megamol::core::CoreInstance& core_instance) {
-        return this->win_configurator_ptr->GetGraphCollection().InitializeGraphSynchronisation(core_instance);
+    bool InitializeGraphSynchronisation(const megamol::frontend_resources::PluginsResource& pluginsRes) {
+        return this->win_configurator_ptr->GetGraphCollection().InitializeGraphSynchronisation(pluginsRes);
     }
 
-    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
+    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph);
 
     /**
      * Register GUI hotkeys.

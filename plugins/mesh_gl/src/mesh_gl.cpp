@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "3DUIRenderer.h"
 #include "MeshSTLDataSource.h"
@@ -15,12 +15,12 @@
 #include "gltf/DeferredGltfRenderer.h"
 
 namespace megamol::mesh_gl {
-class MeshGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class MeshGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(MeshGLPluginInstance)
 
 public:
     MeshGLPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("mesh_gl", "Plugin for rendering meshes."){};
+            : megamol::core::factories::AbstractPluginInstance("mesh_gl", "Plugin for rendering meshes."){};
 
     ~MeshGLPluginInstance() override = default;
 

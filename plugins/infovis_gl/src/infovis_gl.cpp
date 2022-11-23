@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 // Use extra block for renderer, so clang format does not change include order. Eigen3 (used in MDSProjection)
 // does not compile when X11 header (used in SDFFont, which is used in renderers) is included before.
@@ -15,12 +15,12 @@
 #include "histo/TextureHistogramRenderer2D.h"
 
 namespace megamol::infovis_gl {
-class InfovisGLPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class InfovisGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(InfovisGLPluginInstance)
 
 public:
     InfovisGLPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("infovis_gl", "Information visualization"){};
+            : megamol::core::factories::AbstractPluginInstance("infovis_gl", "Information visualization"){};
 
     ~InfovisGLPluginInstance() override = default;
 

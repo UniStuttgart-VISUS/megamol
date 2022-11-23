@@ -342,7 +342,9 @@ bool WavefrontObjDataSource::load(const vislib::TString& filename) {
         } catch (vislib::Exception ex) {
             Log::DefaultLog.WriteError(
                 "Error parsing line %u: %s (%s, %d)", li, ex.GetMsgA(), ex.GetFile(), ex.GetLine());
-        } catch (...) { Log::DefaultLog.WriteError("Error parsing line %u: unexpected exception", li); }
+        } catch (...) {
+            Log::DefaultLog.WriteError("Error parsing line %u: unexpected exception", li);
+        }
     }
     if (lineVerts.Count() > 0) {
         for (size_t loop = 0; loop < lineVerts.Count(); loop++) {
@@ -499,7 +501,9 @@ void WavefrontObjDataSource::loadMaterialLibrary(
         } catch (vislib::Exception ex) {
             Log::DefaultLog.WriteError(
                 "Error parsing line %u: %s (%s, %d)", li, ex.GetMsgA(), ex.GetFile(), ex.GetLine());
-        } catch (...) { Log::DefaultLog.WriteError("Error parsing line %u: unexpected exception", li); }
+        } catch (...) {
+            Log::DefaultLog.WriteError("Error parsing line %u: unexpected exception", li);
+        }
     }
 
     ASSERT(names.Count() == this->mats.Count());

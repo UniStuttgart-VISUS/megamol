@@ -1,24 +1,16 @@
-/*
- * FilePathParam.h
- *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_FILEPATHPARAM_H_INCLUDED
-#define MEGAMOLCORE_FILEPATHPARAM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-
-#include "AbstractParam.h"
 #include <filesystem>
 
+#include "AbstractParam.h"
 
-namespace megamol {
-namespace core {
-namespace param {
+namespace megamol::core::param {
 
 /// See MegaMol development guide for utf8 related explanations ///
 
@@ -61,14 +53,6 @@ public:
      * Dtor.
      */
     ~FilePathParam() override = default;
-
-    /**
-     * Returns a machine-readable definition of the parameter.
-     *
-     * @param outDef A memory block to receive a machine-readable
-     *               definition of the parameter.
-     */
-    std::string Definition() const override;
 
     /**
      * Tries to parse the given string as value for this parameter and
@@ -151,8 +135,4 @@ private:
 };
 
 
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_FILEPATHPARAM_H_INCLUDED */
+} // namespace megamol::core::param

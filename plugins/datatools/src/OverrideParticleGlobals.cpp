@@ -87,7 +87,9 @@ bool datatools::OverrideParticleGlobals::manipulateData(
     try {
         vislib::graphics::ColourParser::FromString(
             this->colorSlot.Param<core::param::StringParam>()->Value().c_str(), color[0], color[1], color[2], color[3]);
-    } catch (...) { ::memset(color, 0, 4); }
+    } catch (...) {
+        ::memset(color, 0, 4);
+    }
 
     outData = inData; // also transfers the unlocker to 'outData'
 

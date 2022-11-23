@@ -6,22 +6,19 @@
  */
 
 #include "AbstractMultiShaderQuartzRenderer.h"
+
 #include "OpenGL_Context.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /*
  * AbstractMultiShaderQuartzRenderer::AbstractMultiShaderQuartzRenderer
  */
-AbstractMultiShaderQuartzRenderer::AbstractMultiShaderQuartzRenderer(void)
+AbstractMultiShaderQuartzRenderer::AbstractMultiShaderQuartzRenderer()
         : AbstractQuartzRenderer()
-        , cntShaders(0)
-        , shaders(NULL)
+        , shaders()
         , errShader() {
     // intentionally empty
 }
@@ -30,7 +27,7 @@ AbstractMultiShaderQuartzRenderer::AbstractMultiShaderQuartzRenderer(void)
 /*
  * AbstractMultiShaderQuartzRenderer::~AbstractMultiShaderQuartzRenderer
  */
-AbstractMultiShaderQuartzRenderer::~AbstractMultiShaderQuartzRenderer(void) {
+AbstractMultiShaderQuartzRenderer::~AbstractMultiShaderQuartzRenderer() {
     this->releaseShaders();
 }
 
@@ -38,18 +35,16 @@ AbstractMultiShaderQuartzRenderer::~AbstractMultiShaderQuartzRenderer(void) {
 /*
  * AbstractMultiShaderQuartzRenderer::getCrystaliteData
  */
-CrystalDataCall* AbstractMultiShaderQuartzRenderer::getCrystaliteData(void) {
+CrystalDataCall* AbstractMultiShaderQuartzRenderer::getCrystaliteData() {
     CrystalDataCall* tdc = AbstractQuartzRenderer::getCrystaliteData();
     if (tdc != NULL) {
         if ((tdc->DataHash() == 0) || (this->typesDataHash != tdc->DataHash())) {
             this->releaseShaders();
-            ASSERT(this->shaders == NULL);
-            this->cntShaders = tdc->GetCount();
-            this->shaders = new vislib_gl::graphics::gl::GLSLShader*[this->cntShaders];
-            ::memset(this->shaders, 0, sizeof(vislib_gl::graphics::gl::GLSLShader*) * this->cntShaders);
+            ASSERT(this->shaders.empty());
+            this->shaders.resize(tdc->GetCount());
             this->typesDataHash = tdc->DataHash();
         }
-    } else if (this->shaders != NULL) {
+    } else if (!this->shaders.empty()) {
         this->releaseShaders();
     }
     return tdc;
@@ -59,15 +54,11 @@ CrystalDataCall* AbstractMultiShaderQuartzRenderer::getCrystaliteData(void) {
 /*
  * AbstractMultiShaderQuartzRenderer::ReleaseShaders
  */
-void AbstractMultiShaderQuartzRenderer::releaseShaders(void) {
-    if (this->shaders != NULL) {
-        for (unsigned int i = 0; i < this->cntShaders; i++) {
-            delete this->shaders[i];
-        }
-        this->cntShaders = 0;
-        ARY_SAFE_DELETE(this->shaders);
+void AbstractMultiShaderQuartzRenderer::releaseShaders() {
+    for (auto& s : shaders) {
+        s.reset();
     }
+    shaders.clear();
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

@@ -11,6 +11,8 @@
 #ifndef MMPROTEINCUDAPLUGIN_HOSTARR_H_INCLUDED
 #define MMPROTEINCUDAPLUGIN_HOSTARR_H_INCLUDED
 
+#include <cstdlib>
+
 namespace megamol {
 namespace protein_cuda {
 

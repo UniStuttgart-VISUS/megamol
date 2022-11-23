@@ -7,12 +7,14 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "AbstractQuartzRenderer.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * AbstractQuartzRenderer
@@ -24,19 +26,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /**
      * Ctor
      */
-    AbstractMultiShaderQuartzRenderer(void);
+    AbstractMultiShaderQuartzRenderer();
 
     /**
      * Dtor
      */
-    virtual ~AbstractMultiShaderQuartzRenderer(void);
+    virtual ~AbstractMultiShaderQuartzRenderer();
 
 protected:
     /**
@@ -45,12 +47,12 @@ protected:
      * @return The crystalite data from the connected module or NULL if no
      *         data could be received
      */
-    virtual CrystalDataCall* getCrystaliteData(void);
+    virtual CrystalDataCall* getCrystaliteData();
 
     /**
      * Releases all shader objects
      */
-    void releaseShaders(void);
+    void releaseShaders();
 
     /**
      * Creates a raycasting shader for the specified crystalite
@@ -59,17 +61,13 @@ protected:
      *
      * @return The shader
      */
-    virtual vislib_gl::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c) = 0;
-
-    /** The number of shader slots */
-    unsigned int cntShaders;
+    virtual std::shared_ptr<glowl::GLSLProgram> makeShader(const CrystalDataCall::Crystal& c) = 0;
 
     /** The crystalite shaders */
-    vislib_gl::graphics::gl::GLSLShader** shaders;
+    std::vector<std::shared_ptr<glowl::GLSLProgram>> shaders;
 
     /** The error shader indicating that the correct shader is not yet loaded */
-    vislib_gl::graphics::gl::GLSLShader errShader;
+    std::shared_ptr<glowl::GLSLProgram> errShader;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

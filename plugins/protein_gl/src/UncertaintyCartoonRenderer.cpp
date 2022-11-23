@@ -9,7 +9,6 @@
 #include <inttypes.h>
 #include <stdint.h>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -21,7 +20,6 @@
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmstd/light/DistantLight.h"
 #include "mmstd/light/PointLight.h"
 #include "mmstd/renderer/CallClipPlane.h"
@@ -31,6 +29,7 @@
 #include "protein_calls/ProteinColor.h"
 #include "protein_calls/RMSF.h"
 
+#include "vislib/StringConverter.h"
 #include "vislib/assert.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowMatrix.h"
@@ -250,7 +249,8 @@ UncertaintyCartoonRenderer::~UncertaintyCartoonRenderer(void) {
  */
 bool UncertaintyCartoonRenderer::loadTubeShader(void) {
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         tubeShader_ = core::utility::make_shared_glowl_shader("cartoon", shdr_options,
             std::filesystem::path("protein_gl/uncertaintycartoon/uncertain.vert.glsl"),

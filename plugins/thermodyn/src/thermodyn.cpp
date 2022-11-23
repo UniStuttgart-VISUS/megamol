@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "PhaseAnimator.h"
 #include "PhaseSeparator.h"
@@ -13,12 +13,12 @@
 #include "thermodyn/BoxDataCall.h"
 
 namespace megamol::thermodyn {
-class ThermodynPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class ThermodynPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(ThermodynPluginInstance)
 
 public:
     ThermodynPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("thermodyn", "The thermodyn plugin."){};
+            : megamol::core::factories::AbstractPluginInstance("thermodyn", "The thermodyn plugin."){};
 
     ~ThermodynPluginInstance() override = default;
 

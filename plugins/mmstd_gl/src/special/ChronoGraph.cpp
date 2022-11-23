@@ -7,7 +7,6 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#include "mmcore/CoreInstance.h"
 #include "mmstd_gl/special/ChronoGraph.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"

@@ -63,8 +63,8 @@ public:
 private:
     megamol::frontend_resources::FrameStatistics m_statistics;
 
-    std::chrono::high_resolution_clock::time_point m_program_start_time;
-    std::chrono::high_resolution_clock::time_point m_frame_start_time;
+    std::chrono::steady_clock::time_point m_program_start_time;
+    std::chrono::steady_clock::time_point m_frame_start_time;
 
     std::array<long long, 30> m_frame_times_micro = {};
     unsigned int m_ring_buffer_ptr = 0;

@@ -1,15 +1,12 @@
-/*
- * AbstractNamedObject.h
- *
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTNAMEDOBJECT_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTNAMEDOBJECT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <memory>
 
 #include "mmcore/param/AbstractParam.h"
 #include "vislib/SingleLinkedList.h"
@@ -17,14 +14,10 @@
 #include "vislib/String.h"
 #include "vislib/sys/AbstractReaderWriterLock.h"
 #include "vislib/sys/SyncObject.h"
-#include <memory>
 
-
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 // forward declarations of types
-class CoreInstance;
 class AbstractNamedObjectContainer;
 
 /**
@@ -59,21 +52,21 @@ public:
         /**
          * Dtor.
          */
-        virtual ~GraphLocker(void);
+        virtual ~GraphLocker();
 
         /**
          * Acquire the lock.
          *
          * @throws SystemException If the lock could not be acquired.
          */
-        virtual void Lock(void);
+        virtual void Lock();
 
         /**
          * Release the lock.
          *
          * @throw SystemException If the lock could not be released.
          */
-        virtual void Unlock(void);
+        virtual void Unlock();
 
     private:
         /** Flag if a write lock is required */
@@ -86,21 +79,21 @@ public:
     /**
      * Dtor.
      */
-    virtual ~AbstractNamedObject(void);
+    virtual ~AbstractNamedObject();
 
     /**
      * Answer the full name of the object
      *
      * @return The full name of the object
      */
-    vislib::StringA FullName(void) const;
+    vislib::StringA FullName() const;
 
     /**
      * Answer the name of the object.
      *
      * @return The name of the object.
      */
-    inline const vislib::StringA& Name(void) const {
+    inline const vislib::StringA& Name() const {
         return this->name;
     }
 
@@ -109,7 +102,7 @@ public:
      *
      * @return The owner identification pointer.
      */
-    inline const void* Owner(void) const {
+    inline const void* Owner() const {
         return this->owner;
     }
 
@@ -118,7 +111,7 @@ public:
      *
      * @return The parent of the object.
      */
-    inline ptr_type Parent(void) {
+    inline ptr_type Parent() {
         return this->parent.lock();
     }
 
@@ -127,7 +120,7 @@ public:
      *
      * @return The parent of the object.
      */
-    inline const const_ptr_type Parent(void) const {
+    inline const const_ptr_type Parent() const {
         return this->parent.lock();
     }
 
@@ -136,7 +129,7 @@ public:
      *
      * @return The root of the module graph
      */
-    inline ptr_type RootModule(void) {
+    inline ptr_type RootModule() {
         ptr_type rv = this->shared_from_this();
         ptr_type lrv = rv;
         while (rv) {
@@ -151,7 +144,7 @@ public:
      *
      * @return The root of the module graph
      */
-    inline const const_ptr_type RootModule(void) const {
+    inline const const_ptr_type RootModule() const {
         const_ptr_type rv = this->shared_from_this();
         const_ptr_type lrv = rv;
         while (rv) {
@@ -173,7 +166,7 @@ public:
      *
      * @return The cleanup mark
      */
-    inline bool CleanupMark(void) const {
+    inline bool CleanupMark() const {
         return this->cleanupMark;
     }
 
@@ -189,23 +182,23 @@ public:
     /**
      * Sets the cleanup mark
      */
-    virtual void SetAllCleanupMarks(void);
+    virtual void SetAllCleanupMarks();
 
     /**
      * Clears the cleanup mark for this and all dependent objects.
      */
-    virtual void ClearCleanupMark(void);
+    virtual void ClearCleanupMark();
 
     /**
      * Performs the cleanup operation by removing and deleteing of all
      * marked objects.
      */
-    virtual void PerformCleanup(void);
+    virtual void PerformCleanup();
 
     /**
      * Disconnects calls from all slots which are marked for cleanup.
      */
-    virtual void DisconnectCalls(void);
+    virtual void DisconnectCalls();
 
     /**
      * Answers whether the given parameter is relevant for this view.
@@ -216,31 +209,21 @@ public:
      * @return 'true' if 'param' is relevant, 'false' otherwise.
      */
     virtual bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const vislib::SmartPtr<param::AbstractParam>& param) const;
+        const std::shared_ptr<param::AbstractParam>& param) const;
 
     /**
      * Answer the reader-writer lock to lock the module graph
      *
      * @return The reader-writer lock to lock the module graph
      */
-    virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock(void);
+    virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock();
 
     /**
      * Answer the reader-writer lock to lock the module graph
      *
      * @return The reader-writer lock to lock the module graph
      */
-    virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock(void) const;
-
-    /**
-     * Answer the core instance of this named object
-     *
-     * @return The core instance of this named object
-     */
-    virtual CoreInstance* GetCoreInstance(void) const {
-        const_ptr_type p = this->parent.lock();
-        return p ? p->GetCoreInstance() : nullptr;
-    }
+    virtual vislib::sys::AbstractReaderWriterLock& ModuleGraphLock() const;
 
 protected:
     /**
@@ -265,7 +248,7 @@ public: // for new MegaMolGraph, make this public:
     /**
      * Ctor.
      */
-    AbstractNamedObject(void);
+    AbstractNamedObject();
 
     /**
      * Sets the parent for the object.
@@ -275,14 +258,8 @@ public: // for new MegaMolGraph, make this public:
     void setParent(weak_ptr_type parent);
 
 private:
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
     /** the name of the object */
     vislib::StringA name;
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif /* _WIN32 */
 
     /** The parent of the object. Weak reference, do not delete. */
     weak_ptr_type parent;
@@ -295,7 +272,4 @@ private:
 };
 
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTNAMEDOBJECT_H_INCLUDED */
+} // namespace megamol::core
