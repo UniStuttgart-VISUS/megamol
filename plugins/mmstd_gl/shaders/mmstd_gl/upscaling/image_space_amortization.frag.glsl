@@ -16,6 +16,7 @@ uniform vec3 camCenter;
 uniform float camAspect;
 uniform float frustumHeight;
 uniform bool skipInterpolation;
+uniform bool showQuadMarker;
 
 in vec2 uvCoords;
 
@@ -127,4 +128,8 @@ void main() {
 
     imageStore(imgWrite, imgCoord, color);
     fragOut = color;
+
+    if (showQuadMarker && quadCoord.x == 0 && quadCoord.y == 0) {
+        fragOut = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    }
 }

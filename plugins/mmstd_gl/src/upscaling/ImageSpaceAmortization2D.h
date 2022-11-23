@@ -72,6 +72,7 @@ private:
     core::param::ParamSlot amortModeParam;
     core::param::ParamSlot amortLevelParam;
     core::param::ParamSlot skipInterpolationParam;
+    core::param::ParamSlot showQuadMarkerParam;
 
     std::unique_ptr<glowl::GLSLProgram> shader_;
     std::shared_ptr<glowl::FramebufferObject> lowResFBO_;

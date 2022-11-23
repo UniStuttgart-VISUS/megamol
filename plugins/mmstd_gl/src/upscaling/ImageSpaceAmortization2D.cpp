@@ -20,7 +20,8 @@ ImageSpaceAmortization2D::ImageSpaceAmortization2D()
         : BaseAmortization2D()
         , amortModeParam("AmortMode", "Amortization Mode")
         , amortLevelParam("AmortLevel", "Level of Amortization")
-        , skipInterpolationParam("SkipInterpolation", "Do not interpolate missing pixels.")
+        , skipInterpolationParam("debug::SkipInterpolation", "Do not interpolate missing pixels.")
+        , showQuadMarkerParam("debug::ShowQuadMarker", "Mark bottom left pixel of amortization quad.")
         , viewProjMx_(glm::mat4())
         , lastViewProjMx_(glm::mat4()) {
 
@@ -35,6 +36,9 @@ ImageSpaceAmortization2D::ImageSpaceAmortization2D()
 
     skipInterpolationParam << new core::param::BoolParam(false);
     MakeSlotAvailable(&skipInterpolationParam);
+
+    showQuadMarkerParam << new core::param::BoolParam(false);
+    MakeSlotAvailable(&showQuadMarkerParam);
 }
 
 ImageSpaceAmortization2D::~ImageSpaceAmortization2D() {
@@ -236,6 +240,8 @@ void ImageSpaceAmortization2D::reconstruct(
     shader_->setUniform("frustumHeight", intrinsics.frustrum_height.value());
     shader_->setUniform(
         "skipInterpolation", static_cast<int>(skipInterpolationParam.Param<core::param::BoolParam>()->Value()));
+    shader_->setUniform(
+        "showQuadMarker", static_cast<int>(showQuadMarkerParam.Param<core::param::BoolParam>()->Value()));
 
     glActiveTexture(GL_TEXTURE0);
     lowResFBO_->bindColorbuffer(0);
