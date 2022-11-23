@@ -10,7 +10,7 @@
 #include <typeinfo>
 
 #include "mmcore/AbstractSlot.h"
-#include "mmcore/CoreInstance.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
@@ -47,7 +47,6 @@ bool Module::Create(std::vector<megamol::frontend::FrontendResource> resources) 
 
     this->frontend_resources = {resources}; // put resources in hash map using type hashes of present resources
 
-    ASSERT(this->instance() != NULL);
     if (!this->created) {
         this->created = this->create();
         Log::DefaultLog.WriteInfo(
@@ -170,30 +169,6 @@ void Module::ResetAllDirtyFlags() {
             paramSlot->ResetDirty();
         }
     }
-}
-
-
-/*
- * Module::getRelevantConfigValue
- */
-vislib::StringA Module::getRelevantConfigValue(vislib::StringA name) {
-    vislib::StringA ret = vislib::StringA::EMPTY;
-    const utility::Configuration& cfg = this->GetCoreInstance()->Configuration();
-    vislib::StringA drn = this->GetDemiRootName();
-    vislib::StringA test = drn;
-    test.Append("-");
-    test.Append(name);
-    vislib::StringA test2("*-");
-    test2.Append(name);
-    if (cfg.IsConfigValueSet(test)) {
-        ret = cfg.ConfigValue(test);
-    } else if (cfg.IsConfigValueSet(test2)) {
-        ret = cfg.ConfigValue(test2);
-    } else if (cfg.IsConfigValueSet(name)) {
-        ret = cfg.ConfigValue(name);
-    }
-
-    return ret;
 }
 
 

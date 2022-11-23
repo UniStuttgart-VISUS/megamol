@@ -1,18 +1,14 @@
-/*
- * AbstractCallSlotPresentation.h
- *
- * Copyright (C) 2020 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTCALLSLOTPRESENTATION_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTCALLSLOTPRESENTATION_H_INCLUDED
+#pragma once
 
 #include "mmcore/utility/log/Log.h"
 
-
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Provide flag to present caller/callee slot in GUI depending on necessity
@@ -25,22 +21,19 @@ public:
         this->necessity = n;
     }
 
-    Necessity GetNecessity(void) {
+    Necessity GetNecessity() {
         return this->necessity;
     }
 
 protected:
-    AbstractCallSlotPresentation(void) {
+    AbstractCallSlotPresentation() {
         this->necessity = Necessity::SLOT_OPTIONAL;
     }
 
-    virtual ~AbstractCallSlotPresentation(void) = default;
+    virtual ~AbstractCallSlotPresentation() = default;
 
 private:
     Necessity necessity;
 };
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTCALLSLOTPRESENTATION_H_INCLUDED */
+} // namespace megamol::core

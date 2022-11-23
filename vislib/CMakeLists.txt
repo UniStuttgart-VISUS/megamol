@@ -3,8 +3,6 @@ option(BUILD_VISLIB "Build vislib" ON)
 if(BUILD_VISLIB)
   project(vislib)
 
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
   find_package(PNG REQUIRED)
   find_package(spdlog REQUIRED)
 
@@ -16,7 +14,7 @@ if(BUILD_VISLIB)
   # Target definition
   add_library(vislib STATIC ${public_header_files} ${header_files} ${source_files})
 
-  target_link_libraries(vislib 
+  target_link_libraries(vislib
     PRIVATE ${CMAKE_THREAD_LIBS_INIT} PNG::PNG
     PUBLIC spdlog::spdlog)
 
@@ -33,10 +31,9 @@ if(BUILD_VISLIB)
     PRIVATE _GNU_SOURCE)
 
   if(UNIX)
-    find_package(UUID REQUIRED)
     set(CURSES_NEED_NCURSES True)
     find_package(Curses REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${UUID_LIBRARIES} ${CURSES_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${CURSES_LIBRARIES})
   endif()
 
   # Grouping in Visual Studio

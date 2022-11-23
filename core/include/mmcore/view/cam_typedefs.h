@@ -1,12 +1,10 @@
-/*
- * cam_typedes.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_CAM_TYPEDEFS_H_INCLUDED
-#define MEGAMOLCORE_CAM_TYPEDEFS_H_INCLUDED
+#pragma once
 
 #include "mmcore/thecam/arcball_manipulator.h"
 #include "mmcore/thecam/orbit_altitude_manipulator.h"
@@ -21,5 +19,3 @@ typedef megamol::core::thecam::translate_manipulator<cam_type> xlate_type;
 typedef megamol::core::thecam::rotate_manipulator<cam_type> rotate_type;
 typedef megamol::core::thecam::TurntableManipulator<cam_type> turntable_type;
 typedef megamol::core::thecam::OrbitAltitudeManipulator<cam_type> orbit_altitude_type;
-
-#endif // !MEGAMOLCORE_CAM_TYPEDEFS_H_INCLUDED

@@ -1,26 +1,20 @@
-/*
- * BoolParam.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
 #include "GenericParam.h"
 
-
 namespace megamol::core::param {
 
 class BoolParam : public GenericParam<bool, AbstractParamPresentation::ParamType::BOOL> {
 public:
-    BoolParam(float initVal) : Super(initVal) {}
+    BoolParam(bool initVal) : Super(initVal) {}
 
-    virtual ~BoolParam() = default;
-
-    std::string Definition() const override {
-        return "MMBOOL";
-    }
+    ~BoolParam() override = default;
 
     bool ParseValue(std::string const& v) override {
         try {

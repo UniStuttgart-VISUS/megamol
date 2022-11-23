@@ -1,19 +1,18 @@
 /**
  * MegaMol
- * Copyright (c) 2015-2021, MegaMol Dev Team
+ * Copyright (c) 2015, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_UTILITY_PLUGINS_ABSTRACTPLUGININSTANCE_H_INCLUDED
-#define MEGAMOLCORE_UTILITY_PLUGINS_ABSTRACTPLUGININSTANCE_H_INCLUDED
 #pragma once
 
 #include <memory>
 #include <string>
 
-#include "mmcore/factories/AbstractObjectFactoryInstance.h"
+#include "CallDescriptionManager.h"
+#include "ModuleDescriptionManager.h"
 
-namespace megamol::core::utility::plugins {
+namespace megamol::core::factories {
 
 /**
  * Abstract base class for all object descriptions.
@@ -21,23 +20,29 @@ namespace megamol::core::utility::plugins {
  * An object is described using a unique name. This name is compared case
  * insensitive!
  */
-class AbstractPluginInstance : public factories::AbstractObjectFactoryInstance {
+class AbstractPluginInstance {
 public:
     /** The shared pointer type to be used */
     typedef std::shared_ptr<AbstractPluginInstance const> ptr_type;
 
-    /** deleted copy ctor */
-    AbstractPluginInstance(const AbstractPluginInstance& src) = delete;
+    /** delete copy constructor */
+    AbstractPluginInstance(const AbstractPluginInstance&) = delete;
 
-    /** deleted assignment operatior */
-    AbstractPluginInstance& operator=(const AbstractPluginInstance& rhs) = delete;
+    /** delete move constructor */
+    AbstractPluginInstance(AbstractPluginInstance&&) = delete;
+
+    /** delete copy assignment */
+    AbstractPluginInstance& operator=(const AbstractPluginInstance&) = delete;
+
+    /** delete move assignment */
+    AbstractPluginInstance& operator=(AbstractPluginInstance&&) = delete;
 
     /**
      * Answer the (machine-readable) name of the plugin.
      *
      * @return The (machine-readable) name of the plugin
      */
-    const std::string& GetObjectFactoryName() const override {
+    inline const std::string& GetObjectFactoryName() const {
         return name;
     }
 
@@ -46,7 +51,7 @@ public:
      *
      * @return The (human-readable) description of the plugin.
      */
-    virtual const std::string& GetDescription() const {
+    inline const std::string& GetDescription() const {
         return description;
     }
 
@@ -55,21 +60,21 @@ public:
      *
      * @return The call description manager of the plugin.
      */
-    const factories::CallDescriptionManager& GetCallDescriptionManager() const override;
+    const factories::CallDescriptionManager& GetCallDescriptionManager() const;
 
     /**
      * Answer the module description manager of the plugin.
      *
      * @return The module description manager of the plugin.
      */
-    const factories::ModuleDescriptionManager& GetModuleDescriptionManager() const override;
+    const factories::ModuleDescriptionManager& GetModuleDescriptionManager() const;
 
 protected:
     /** Ctor. */
     AbstractPluginInstance(const char* name, const char* description);
 
     /** Dtor. */
-    ~AbstractPluginInstance() override;
+    virtual ~AbstractPluginInstance();
 
     /**
      * This factory methode registers all module and call classes exported
@@ -79,6 +84,12 @@ protected:
      *          accessed for the first time. Do not call manually.
      */
     virtual void registerClasses() = 0;
+
+    /** The call description manager of the factory. */
+    CallDescriptionManager call_descriptions;
+
+    /** The module description manager of the factory. */
+    ModuleDescriptionManager module_descriptions;
 
 private:
     /** Ensures that registered classes was called */
@@ -94,6 +105,4 @@ private:
     bool classes_registered;
 };
 
-} // namespace megamol::core::utility::plugins
-
-#endif // MEGAMOLCORE_UTILITY_PLUGINS_ABSTRACTPLUGININSTANCE_H_INCLUDED
+} // namespace megamol::core::factories

@@ -77,7 +77,8 @@ bool ArrowRenderer::create(void) {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
 
     // create shader programs
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         // TODO: use std::filesystem::path?
@@ -391,7 +392,7 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             glUniform1ui(this->arrow_pgrm_->getUniformLocation("flagsAvailable"), use_flags ? 1 : 0);
 
 #ifdef MEGAMOL_USE_PROFILING
-            perf_manager_->start_timer(timers_[0], this->GetCoreInstance()->GetFrameID());
+            perf_manager_->start_timer(timers_[0]);
 #endif
 
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));

@@ -497,7 +497,8 @@ bool SphereRenderer::createResources() {
     // Check for flag storage availability and get specific shader snippet
     // TODO: test flags!
     // create shader programs
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     shader_options_flags_ = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shader_options);
 
     std::string flags_shader_snippet;
@@ -1195,7 +1196,7 @@ bool SphereRenderer::renderSimple(mmstd_gl::CallRender3DGL& call, MultiParticleD
         }
 
 #ifdef MEGAMOL_USE_PROFILING
-        perf_manager_->start_timer(timers_[1], this->GetCoreInstance()->GetFrameID());
+        perf_manager_->start_timer(timers_[1]);
 #endif
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
 #ifdef MEGAMOL_USE_PROFILING
@@ -2432,7 +2433,8 @@ void SphereRenderer::rebuildWorkingData(
         }
     }
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     // Check if voxelization is even needed
     if (this->vol_gen_ == nullptr) {
         this->vol_gen_ = new misc::MDAOVolumeGenerator();

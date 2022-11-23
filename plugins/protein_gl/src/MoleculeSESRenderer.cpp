@@ -9,7 +9,6 @@
 
 #include "MoleculeSESRenderer.h"
 #include "glm/gtx/string_cast.hpp"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -215,12 +214,9 @@ bool MoleculeSESRenderer::create(void) {
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
 
-    CoreInstance* ci = this->GetCoreInstance();
-    if (!ci)
-        return false;
-
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(ci->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
             std::filesystem::path("protein_gl/moleculeses/mses_sphere.vert.glsl"),
@@ -357,7 +353,7 @@ bool MoleculeSESRenderer::create(void) {
         glDisableVertexAttribArray(i);
     }
 
-    deferredProvider_.setup(this->GetCoreInstance());
+    deferredProvider_.setup(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     return true;
 }

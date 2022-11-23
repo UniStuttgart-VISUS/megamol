@@ -7,8 +7,10 @@
 
 #include "mmstd/view/AbstractView.h"
 
+#include <climits>
+#include <fstream>
+
 #include "mmcore/AbstractNamedObject.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -20,7 +22,6 @@
 #include "mmstd/renderer/CallRenderView.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/assert.h"
-#include <climits>
 
 using namespace megamol::core;
 using megamol::core::utility::log::Log;
@@ -143,11 +144,11 @@ view::AbstractView::~AbstractView(void) {
 /*
  * view::AbstractView::IsParamRelevant
  */
-bool view::AbstractView::IsParamRelevant(const vislib::SmartPtr<param::AbstractParam>& param) const {
+bool view::AbstractView::IsParamRelevant(const std::shared_ptr<param::AbstractParam>& param) const {
     const AbstractNamedObject* ano = dynamic_cast<const AbstractNamedObject*>(this);
     if (ano == NULL)
         return false;
-    if (param.IsNull())
+    if (param == nullptr)
         return false;
 
     vislib::SingleLinkedList<const AbstractNamedObject*> searched;

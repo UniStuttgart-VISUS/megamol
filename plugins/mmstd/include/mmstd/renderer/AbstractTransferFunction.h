@@ -7,7 +7,6 @@
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmstd/renderer/CallGetTransferFunction.h"

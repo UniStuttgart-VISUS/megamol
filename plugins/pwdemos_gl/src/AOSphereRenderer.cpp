@@ -17,7 +17,6 @@
 #include <omp.h>
 
 #include "OpenGL_Context.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -39,6 +38,8 @@
             fprintf(stderr, "%s(%d) glError: %s\n", __FILE__, __LINE__, gluErrorString(err)); \
         }                                                                                     \
     } while (0)
+
+using megamol::core::utility::log::Log;
 
 namespace megamol {
 namespace demos_gl {
@@ -151,7 +152,8 @@ bool AOSphereRenderer::create(void) {
         return false;
     }
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     const char* maFragNames[] = {
         "pwdemos_gl/AOSphere/mainaxes_LightAO.frag.glsl",

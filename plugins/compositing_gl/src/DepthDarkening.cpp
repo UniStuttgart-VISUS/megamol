@@ -9,7 +9,6 @@
 #include <glm/glm.hpp>
 
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
@@ -56,7 +55,8 @@ megamol::compositing_gl::DepthDarkening::~DepthDarkening() {
 
 bool megamol::compositing_gl::DepthDarkening::create() {
 
-    auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shdr_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     try {
 
         blurShader_ = core::utility::make_glowl_shader(

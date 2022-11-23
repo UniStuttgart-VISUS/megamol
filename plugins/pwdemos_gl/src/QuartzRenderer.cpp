@@ -12,7 +12,6 @@
 #include <glm/ext.hpp>
 
 #include "OpenGL_Context.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
@@ -453,7 +452,8 @@ bool QuartzRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 bool QuartzRenderer::create(void) {
     using megamol::core::utility::log::Log;
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         this->errShader = core::utility::make_shared_glowl_shader("errShader", shader_options,
@@ -517,7 +517,8 @@ std::shared_ptr<glowl::GLSLProgram> QuartzRenderer::makeShader(const CrystalData
     c.AssertMesh();
     const float* v = c.GetMeshVertexData();
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         vislib::StringA str, line;

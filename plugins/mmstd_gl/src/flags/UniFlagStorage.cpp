@@ -7,7 +7,6 @@
 #include "mmstd_gl/flags/UniFlagStorage.h"
 
 #include "OpenGL_Context.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/flags/FlagCalls.h"
@@ -15,6 +14,7 @@
 
 using namespace megamol;
 using namespace megamol::mmstd_gl;
+using megamol::core::utility::log::Log;
 
 
 UniFlagStorage::UniFlagStorage()
@@ -50,7 +50,8 @@ bool UniFlagStorage::create() {
 
     // TODO beware this shader only compiles and has never been tested. It will probably release the kraken or something more sinister
     try {
-        auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shaderOptions = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
         compressGPUFlagsProgram = core::utility::make_glowl_shader(
             "compress_bitflags", shaderOptions, "mmstd_gl/flags/compress_bitflags.comp.glsl");
     } catch (std::exception& e) {

@@ -2,7 +2,6 @@
 
 #include "RuntimeConfig.h"
 #include "SequenceRenderer.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -100,12 +99,6 @@ SequenceRenderer::~SequenceRenderer(void) {
     this->Release();
 }
 
-std::vector<std::string> SequenceRenderer::requested_lifetime_resources() {
-    auto lr = Module::requested_lifetime_resources();
-    lr.emplace_back("RuntimeConfig");
-    return lr;
-}
-
 
 /*
  * SequenceRenderer::create
@@ -120,7 +113,8 @@ bool SequenceRenderer::create() {
     this->LoadTexture("stride-helix-right.png");
 
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(instance()->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
         passthrough_shader_ = core::utility::make_glowl_shader("passthr", shdr_options,
             std::filesystem::path("protein_gl/render2d/passthrough.vert.glsl"),
             std::filesystem::path("protein_gl/render2d/passthrough.frag.glsl"));
@@ -160,7 +154,7 @@ bool SequenceRenderer::create() {
     glGenVertexArrays(1, &tex_vao_);
     glBindVertexArray(0);
 
-    if (!font_.Initialise(GetCoreInstance())) {
+    if (!font_.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         core::utility::log::Log::DefaultLog.WriteError(
             "[SequenceRenderer]: The font rendering could not be initialized");
         return false;

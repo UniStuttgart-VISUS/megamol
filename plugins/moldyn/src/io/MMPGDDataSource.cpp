@@ -7,7 +7,6 @@
 
 #include "MMPGDDataSource.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "moldyn/ParticleGridDataCall.h"

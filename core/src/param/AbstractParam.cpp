@@ -1,11 +1,11 @@
-/*
- * AbstractParam.cpp
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/param/AbstractParam.h"
+
 #include "mmcore/param/AbstractParamSlot.h"
 
 using namespace megamol::core::param;
@@ -14,15 +14,15 @@ using namespace megamol::core::param;
 /*
  * AbstractParam::~AbstractParam
  */
-AbstractParam::~AbstractParam(void) {
-    this->slot = NULL; // DO NOT DELETE
+AbstractParam::~AbstractParam() {
+    this->slot = nullptr; // DO NOT DELETE
 }
 
 
 /*
  * AbstractParam::AbstractParam
  */
-AbstractParam::AbstractParam(void) : slot(NULL), hash(0), has_changed(false) {
+AbstractParam::AbstractParam() : slot(nullptr), hash(0), has_changed(false) {
     // intentionally empty
 }
 
@@ -30,16 +30,16 @@ AbstractParam::AbstractParam(void) : slot(NULL), hash(0), has_changed(false) {
 /*
  * AbstractParam::isSlotPublic
  */
-bool AbstractParam::isSlotPublic(void) const {
-    return (this->slot == NULL) ? false : (this->slot->isSlotAvailable());
+bool AbstractParam::isSlotPublic() const {
+    return (this->slot == nullptr) ? false : (this->slot->isSlotAvailable());
 }
 
 
 /*
  * AbstractParam::setDirty
  */
-void AbstractParam::setDirty(void) {
-    if (this->slot == NULL)
+void AbstractParam::setDirty() {
+    if (this->slot == nullptr)
         return; // fail silently
     this->slot->update();
 }
