@@ -6,27 +6,43 @@ This is the service that provides the GUI for MegaMol.
 
 <!-- TOC -->
 ## Contents
-- [Graphical User Interface (GUI)](#graphical-user-interface-gui) 
-    - [Main Menu](#main-menu) 
-    - [Configurator](#configurator) 
-        - [Main Menu](#main-menu) 
-        - [*Module Stock List* Sidebar](#module-stock-list-sidebar) 
-        - [*Module Parameters* Sidebar](#module-parameters-sidebar) 
-        - [Project Menu Bar](#project-menu-bar) 
-        - [Project Graph](#project-graph) 
-    - [Hotkey Overview](#hotkey-overview)             
-- [Modules](#modules) 
-    - [OverlayRenderer](#overlayrenderer) 
-        - [Parameters](#parameters) 
-- [Information for Developers](#information-for-developers) 
+- [MegaMol: GUI](#megamol-gui)
+  - [Contents](#contents)
+  - [Graphical User Interface (GUI)](#graphical-user-interface-gui)
+    - [Main Menu](#main-menu)
+    - [Configurator](#configurator)
+      - [Main Menu](#main-menu-1)
+      - [*Module Stock List* Sidebar](#module-stock-list-sidebar)
+      - [*Module Parameters* Sidebar](#module-parameters-sidebar)
+      - [Project Menu Bar](#project-menu-bar)
+      - [Project Graph](#project-graph)
+        - [Modules](#modules)
+        - [Calls](#calls)
+        - [Call Slots](#call-slots)
+        - [Module Groups](#module-groups)
+          - [Module Group Interface Slots](#module-group-interface-slots)
+    - [Hotkey Overview](#hotkey-overview)
+    - [Animation Editor](#animation-editor)
+      - [Menu](#menu)
+      - [Toolbar](#toolbar)
+      - [Available Parameters](#available-parameters)
+      - [Animation](#animation)
+      - [Graph](#graph)
+      - [Key Properties](#key-properties)
+  - [Modules](#modules-1)
+    - [OverlayRenderer](#overlayrenderer)
+      - [Parameters](#parameters)
+  - [Information for Developers](#information-for-developers)
     - [Using ImGui in Modules](#using-imgui-in-modules)
-    - [New Parameter Widgets](#new-parameter-widgets) 
-        - [How to add a new parameter widget](#how-to-add-a-new-parameter-widget) 
-        - [How to add a new parameter group widget](#how-to-add-a-new-parameter-group-widget) 
-    - [GUI Window/PopUp/Notification for Frontend Service](#gui-windowpopupnotification-for-frontend-service)
-    - [Default GUI State ](#default-gui-state) 
-    - [Graph Data Structure](#graph-data-structure) 
-    - [Class Dependencies](#class-dependencies) 
+    - [New Parameter Widgets](#new-parameter-widgets)
+      - [How to add a new parameter widget](#how-to-add-a-new-parameter-widget)
+      - [How to add a new parameter group widget](#how-to-add-a-new-parameter-group-widget)
+  - [GUI Window/PopUp/Notification for Frontend Service](#gui-windowpopupnotification-for-frontend-service)
+    - [GUI Window](#gui-window)
+    - [GUI PopUp](#gui-popup)
+    - [GUI Notification](#gui-notification)
+    - [Default GUI State](#default-gui-state)
+    - [Graph Data Structure](#graph-data-structure)
 <!-- /TOC -->
 
 ---
@@ -214,6 +230,42 @@ The following hotkeys are used in the GUI:
 * Context Menu:              **`Right Mouse Button`**
 * Zooming:                   **`Mouse Wheel`**
 * Scrolling:                 **`Middle Mouse Button`**
+
+### Animation Editor
+The animation editor is part of the GUI and can be opened via the main menu: `Windows`/`Animation Editor`.
+![animation editor demo picture](anim-editor.png)
+
+#### Menu
+Here you can clear, load, and save the current animation.
+
+#### Toolbar
+**auto capture** watches the MegaMol graph for changes and automatically inserts keys at the current frame. This currently works only for FloatParam and IntParam (treated the same way) as well as EnumParam, FlexEnumParam, StringParam, and FilePathParam (also treated the same way).
+
+**write to graph** when scrubbing with the play head/current frame, interpolate all values for all parameters and write them back to the running MegaMol graph
+
+**add** adds a key at the current frame for the selected parameter, interpolating the neighboring values
+
+**delete** removes the currently selected key
+
+**break tangents** unlinks the incoming/outgoing tangent of the currently selected key, so they can be manipulated separately
+
+**link tangents** links the tangents of the currently selected key, setting the outgoing one to the inverse of the incoming one
+
+**flat tangents** sets tangents of (-1,0) and (1,0) for the currently selected key
+
+#### Available Parameters
+This subwindow lists all parameters that currently have keys. You can add parameters by capturing their values. Click the names to select them and bring them up in the graph view.
+
+#### Animation
+General control of the current animation. Here you can find the transport buttons, start and end of the active region (that will be used when playing and rendering) and an active frame slider synchronized to the play head indicator in the graph.
+
+#### Graph
+In the middle you can see and manipulate the keys of the currently selected animations. You can click to select and drag around keys and their tangents, depending on the interpolation type (which can be set per key), this will change the resulting value curve.
+
+String parameters will not generate a curve, but disconnected keys. You can edit single keys to send the corresponding strings to the graph.
+
+#### Key Properties
+Here you can modify key properties depending on the animated parameter. Interpolation is currently only offered for numeric parameters.
 
 ## Modules
 
