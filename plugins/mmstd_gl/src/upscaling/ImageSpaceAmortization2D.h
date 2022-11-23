@@ -62,12 +62,11 @@ protected:
 
     bool renderImpl(CallRender2DGL& call, CallRender2DGL& nextRendererCall) override;
 
-    void updateSize(AmortMode m, int a, int w, int h);
+    void updateSize(glm::ivec2 a, int w, int h);
 
-    void setupCamera(core::view::Camera& cam, int width, int height, AmortMode m, int a);
+    void setupCamera(core::view::Camera& cam, int width, int height, glm::ivec2 a);
 
-    void reconstruct(
-        std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, AmortMode m, int a);
+    void reconstruct(std::shared_ptr<glowl::FramebufferObject> const& fbo, core::view::Camera const& cam, glm::ivec2 a);
 
 private:
     core::param::ParamSlot amortModeParam;
@@ -83,8 +82,7 @@ private:
     std::unique_ptr<glowl::Texture2D> distTexRead_;
     std::unique_ptr<glowl::Texture2D> distTexWrite_;
 
-    AmortMode oldAmortMode_ = MODE_NONE;
-    int oldAmortLevel_ = -1;
+    glm::ivec2 oldAmortLevel_ = glm::ivec2(-1);
     int oldWidth_ = -1;
     int oldHeight_ = -1;
 
