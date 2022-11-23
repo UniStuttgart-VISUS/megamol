@@ -365,7 +365,7 @@ void AnimationEditor::DrawToolbar() {
 
     // view controls
     ImGui::SameLine();
-    if (ImGui::Button("frame view")) {
+    if (ImGui::Button("frame view") && selectedAnimation != -1) {
         CenterAnimation(allAnimations[selectedAnimation]);
     }
     ImGui::SameLine();
