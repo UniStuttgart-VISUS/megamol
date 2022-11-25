@@ -8,10 +8,10 @@
 in vec4 obj_pos;
 in vec3 cam_pos;
 in vec3 absradii;
-in mat3 rotate_world_into_tensor;
+in vec3 radii;
+in mat3 rotate_tensor_into_world;
 
 in vec4 vert_color;
-in flat vec3 dir_color;
 
 uniform float exponent;
 
@@ -25,27 +25,28 @@ void main() {
         * vec4(view_attr.z, view_attr.w, 2.0, 0.0)
         + vec4(-1.0, -1.0, -1.0, 1.0);
 
-    // transform ndc coordinates to object coordinates.
+    // transform ndc coordinates to tensor coordinates.
     coord = mvp_i * coord;
     coord /= coord.w;
     coord -= obj_pos; // ... and move
 
-    // ... and rotate with rot_mat transposed
-    vec3 tmp = rotate_world_into_tensor * coord.xyz;
+    // since fragment coordinate is from rotated box
+    // we need to take out the rotation to get the object coordinates
+    vec3 os_coord = rotate_tensor_into_world * coord.xyz;
 
     // calc the viewing ray
-    vec3 cpos = cam_pos;
-    vec3 ray = normalize(tmp - cpos);
+    vec3 ray = normalize(os_coord - cam_pos);
+
 
     // iterative ray marching approach
     // see: http://cg.inf.h-bonn-rhein-sieg.de/wp-content/uploads/2009/04/introductiontoraytracing.pdf
     // start solution with box intersection
-    float t = length(tmp - cpos);
+    float t = length(os_coord - cam_pos);
     float radius = 1.0;
     vec3 superquadric = absradii;
-    float result = pow(abs((cpos.x + t * ray.x) / superquadric.x), exponent) +
-                   pow(abs((cpos.y + t * ray.y) / superquadric.y), exponent) +
-                   pow(abs((cpos.z + t * ray.z) / superquadric.z), exponent) -
+    float result = pow(abs((cam_pos.x + t * ray.x) / superquadric.x), exponent) +
+                   pow(abs((cam_pos.y + t * ray.y) / superquadric.y), exponent) +
+                   pow(abs((cam_pos.z + t * ray.z) / superquadric.z), exponent) -
                    radius;
 
     // set a threshold at which the result is good enough
@@ -55,9 +56,9 @@ void main() {
     // march along ray until we find a hit
     while(result > threshold) {
         float old_result = result;
-        result = pow(abs((cpos.x + t * ray.x) / superquadric.x), exponent) +
-                 pow(abs((cpos.y + t * ray.y) / superquadric.y), exponent) +
-                 pow(abs((cpos.z + t * ray.z) / superquadric.z), exponent) -
+        result = pow(abs((cam_pos.x + t * ray.x) / superquadric.x), exponent) +
+                 pow(abs((cam_pos.y + t * ray.y) / superquadric.y), exponent) +
+                 pow(abs((cam_pos.z + t * ray.z) / superquadric.z), exponent) -
                  radius;
 
         // if we move further away from the object
@@ -71,8 +72,9 @@ void main() {
         t -= tmp_t;
     }
 
-    vec3 intersection = cpos + t1 * ray;
+    vec3 intersection = cam_pos + t1 * ray;
 
+    // TODO: link is offline, new reference required!
     // normal calculation for superquadric
     // see: http://cg.inf.h-bonn-rhein-sieg.de/wp-content/uploads/2009/04/introductiontoraytracing.pdf
     // basically just derivating the superquadric equation
@@ -87,25 +89,41 @@ void main() {
     normal = normalize( normal / superquadric );
 
     // transform normal and intersection point into tensor
-    normal = transpose(rotate_world_into_tensor) * normal;
+    normal = transpose(rotate_tensor_into_world) * normal;
     normal = normalize(normal);
 
     // translate point back to original position
-    intersection = inverse(rotate_world_into_tensor) * intersection;
+    intersection = transpose(rotate_tensor_into_world) * intersection;
     intersection += obj_pos.xyz;
 
-    // calc depth
-    float far = gl_DepthRange.far;
-    float near = gl_DepthRange.near;
-    vec4 ding = vec4(intersection, 1.0);
+
+    // color stuff
+    vec3 dir_color1 = max( vec3(0), normal * sign(radii) );
+    vec3 dir_color2 = vec3(1) + normal * sign(radii);
+    vec3 dir_color = any( lessThan( dir_color2, vec3( 0.5 ) ) ) ? dir_color2 * vec3(0.5) : dir_color1;
+
+
     // calc non-linear depth
-    float depth = dot(mvp_t[2], ding);
-    float depth_w = dot(mvp_t[3], ding);
+    float far = gl_DepthRange.far;      // set by glDepthRange()
+    float near = gl_DepthRange.near;    // set by glDepthRange()
+    vec4 hc_int = vec4(intersection, 1.0);
+    // only rows 2 and 3 (or columns of transposed matrix) are needed
+    // to calc transformed depth
+    float depth = dot(mvp_t[2], hc_int);
+    float depth_w = dot(mvp_t[3], hc_int);
     float depth_ndc = depth / depth_w;
     float depth_ss = ((far - near) * depth_ndc + (far + near)) / 2.0;
 
+    // linear depth
+    // near_ - and far_plane from camera view frustum
+    // uniforms probably missing, add them in code if you need it
+    //depth_ss = (2.0 * near_plane * far_plane) / (far_plane + near_plane - depth_ndc * (far_plane - near_plane));
+    //depth_ss /= far_plane; // normalize for visualization
+
+
+    // outputs
     albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation),1.0);
     normal_out = normal;
-    depth_out = depth_ss;
+    depth_out = depth_ss; // can probably removed at some point (SimpleRrenderTarget doesn't use it anymore)
     gl_FragDepth = depth_ss;
 }

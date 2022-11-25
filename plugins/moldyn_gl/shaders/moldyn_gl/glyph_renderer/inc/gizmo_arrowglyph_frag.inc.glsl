@@ -92,7 +92,7 @@ void main() {
         shift.x = alignment == 0 ? shift_value : 0.0;
         shift.y = alignment == 1 ? shift_value : 0.0;
         shift.z = alignment == 2 ? shift_value : 0.0;
-        vec3 cpos = cam_pos - shift;
+        vec3 cpos = cam_pos;
 
         // re-assign coordinates to account for the alignment change
         // this way the code below doesn't need to be changed

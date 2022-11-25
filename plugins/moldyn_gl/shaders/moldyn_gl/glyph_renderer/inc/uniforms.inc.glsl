@@ -7,8 +7,6 @@ uniform uint options;
 uniform vec2 tf_range;
 
 uniform vec4 cam;
-uniform float near_plane;
-uniform float far_plane;
 
 uniform vec4 global_color;
 uniform vec4 view_attr;
@@ -17,9 +15,6 @@ uniform vec4 clip_data;
 uniform mat4 mvp;
 uniform mat4 mvp_i;
 uniform mat4 mvp_t;
-uniform mat4 mv;
-uniform mat4 mv_i;
-uniform mat4 mv_t;
 
 uniform sampler1D tf_texture;
 
