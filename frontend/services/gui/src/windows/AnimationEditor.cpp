@@ -14,8 +14,8 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 
-#include "nlohmann/json.hpp"
 #include "imgui_stdlib.h"
+#include "nlohmann/json.hpp"
 
 #include <fstream>
 
@@ -331,7 +331,8 @@ void AnimationEditor::DrawToolbar() {
             }
             if (std::holds_alternative<animation::StringAnimation>(allAnimations[selectedAnimation]) &&
                 selectedStringKey != nullptr) {
-                std::get<animation::StringAnimation>(allAnimations[selectedAnimation]).DeleteKey(selectedStringKey->time);
+                std::get<animation::StringAnimation>(allAnimations[selectedAnimation])
+                    .DeleteKey(selectedStringKey->time);
                 selectedStringKey = nullptr;
             }
         }
@@ -456,7 +457,8 @@ void AnimationEditor::DrawParams() {
 }
 
 
-void AnimationEditor::DrawInterpolation(ImDrawList* dl, const animation::FloatKey& key, const animation::FloatKey& key2) {
+void AnimationEditor::DrawInterpolation(
+    ImDrawList* dl, const animation::FloatKey& key, const animation::FloatKey& key2) {
     const auto line_col = ImGui::GetColorU32(ImGuiCol_NavHighlight);
     const auto reference_col = IM_COL32(255, 0, 0, 255);
     auto drawList = ImGui::GetWindowDrawList();
@@ -729,6 +731,33 @@ void AnimationEditor::DrawCurves() {
         DrawPlayhead(drawList);
 
         canvas.End();
+
+
+        if (ImGui::IsItemHovered() && isfinite(gui_mouse_wheel) && gui_mouse_wheel != 0) {
+            float factor = 1.0f;
+            auto old_zoom = custom_zoom;
+            if (gui_mouse_wheel > 0) {
+                factor = 1.25f * gui_mouse_wheel;
+            } else {
+                factor = 0.8f * std::abs(gui_mouse_wheel);
+            }
+            if (ImGui::IsKeyDown(ImGuiKey_ModShift)) {
+                custom_zoom.y *= factor;
+            } else if (ImGui::IsKeyDown(ImGuiKey_ModCtrl)) {
+                custom_zoom.x *= factor;
+            } else {
+                custom_zoom *= factor;
+            }
+            // TODO: fix math
+            auto widget_coords = canvas.ToLocal(ImGui::GetMousePos());
+            auto old_point = widget_coords / old_zoom;
+            auto mouse_pos = ImGui::GetMousePos() - canvas.Rect().GetTL();
+            auto new_origin = (mouse_pos - old_point * custom_zoom) / custom_zoom;
+            // these are the invariants
+            //auto old_point_screen_reconstructed = (old_point + old_orig) * old_zoom;
+            //auto new_point_screen_reconstructed = (old_point + new_origin) * custom_zoom;
+            canvas.SetView(new_origin * custom_zoom, 1.0);
+        }
     }
     ImGui::EndChild();
 }
