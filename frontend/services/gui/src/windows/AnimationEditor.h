@@ -45,6 +45,7 @@ public:
 
     void SpecificStateFromJSON(const nlohmann::json& in_json) override;
     void SpecificStateToJSON(nlohmann::json& inout_json) override;
+    void SetLastFrameMillis(float last_frame_ms);
 
 private:
     using animations = std::variant<animation::FloatAnimation, animation::StringAnimation>;
@@ -81,7 +82,7 @@ private:
     animation::FloatKey* selectedFloatKey = nullptr;
     animation::FloatKey* draggingFloatKey = nullptr;
     animation::StringKey* selectedStringKey = nullptr;
-    animation::StringKey* draggingStreingKey = nullptr;
+    animation::StringKey* draggingStringKey = nullptr;
     ImGuiEx::Canvas canvas = ImGuiEx::Canvas();
 
     bool canvas_visible = false;
@@ -95,6 +96,11 @@ private:
     InteractionType curr_interaction = InteractionType::None;
 
     animation::KeyTimeType current_frame = 0;
+    int32_t playback_fps = 30;
+    float targeted_frame_time = 1000.0f / static_cast<float>(playback_fps);
+    float last_frame_ms = 0.0f, accumulated_ms = 0.0f;
+
+    int32_t playing = 0;
     animation::KeyTimeType animation_bounds[2] = {0, 100};
 
     ImVec2 custom_zoom = {1.0f, 1.0f};

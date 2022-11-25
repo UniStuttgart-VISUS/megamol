@@ -42,6 +42,25 @@ bool AnimationEditor::Update() {
 
 
 bool AnimationEditor::Draw() {
+    if (playing != 0) {
+        accumulated_ms += last_frame_ms;
+        if (accumulated_ms > targeted_frame_time) {
+            auto frameskip = static_cast<int>(accumulated_ms / targeted_frame_time);
+            accumulated_ms = std::fmodf(accumulated_ms, targeted_frame_time);
+            current_frame += frameskip * playing;
+            if (playing > 0) {
+                if (current_frame > animation_bounds[1]) {
+                    current_frame -= animation_bounds[1] + 1;
+                    current_frame += animation_bounds[0];
+                }
+            } else {
+                if (current_frame < animation_bounds[0]) {
+                    current_frame += animation_bounds[1] + 1;
+                    current_frame -= animation_bounds[0];
+                }
+            }
+        }
+    }
     DrawToolbar();
     DrawPopups();
 
@@ -136,6 +155,11 @@ void megamol::gui::AnimationEditor::SpecificStateFromJSON(const nlohmann::json& 
 
 
 void megamol::gui::AnimationEditor::SpecificStateToJSON(nlohmann::json& inout_json) {}
+
+
+void AnimationEditor::SetLastFrameMillis(float last_frame_millis) {
+    last_frame_ms = last_frame_millis;
+}
 
 
 void AnimationEditor::WriteValuesToGraph() {
@@ -442,12 +466,25 @@ void AnimationEditor::DrawParams() {
         current_frame = animation_bounds[0];
     }
     ImGui::SameLine();
-    ImGui::Button("reverse");
+    if (ImGui::Button("reverse")) {
+        playing = -1;
+        accumulated_ms = 0.0f;
+    }
     ImGui::SameLine();
-    ImGui::Button("play");
+    if (ImGui::Button("stop")) {
+        playing = 0;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("play")) {
+        playing = 1;
+        accumulated_ms = 0.0f;
+    }
     ImGui::SameLine();
     if (ImGui::Button("end")) {
         current_frame = animation_bounds[1];
+    }
+    if (ImGui::InputInt("Playback fps target", &playback_fps)) {
+        targeted_frame_time = 1000.0f / static_cast<float>(playback_fps);
     }
     if (ImGui::InputInt2("Active Region", animation_bounds)) {
         current_frame = std::clamp(current_frame, animation_bounds[0], animation_bounds[1]);
@@ -748,7 +785,6 @@ void AnimationEditor::DrawCurves() {
             } else {
                 custom_zoom *= factor;
             }
-            // TODO: fix math
             auto widget_coords = canvas.ToLocal(ImGui::GetMousePos());
             auto old_point = widget_coords / old_zoom;
             auto mouse_pos = ImGui::GetMousePos() - canvas.Rect().GetTL();

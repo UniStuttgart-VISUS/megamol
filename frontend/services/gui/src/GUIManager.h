@@ -208,10 +208,12 @@ public:
     /**
      * Set current frame statistics.
      */
-    inline void SetFrameStatistics(double last_averaged_fps, double last_averaged_ms, size_t frame_count) {
+    inline void SetFrameStatistics(
+        double last_averaged_fps, double last_averaged_ms, size_t frame_count, double last_frame_millis) {
         this->gui_state.stat_averaged_fps = static_cast<float>(last_averaged_fps);
         this->gui_state.stat_averaged_ms = static_cast<float>(last_averaged_ms);
         this->gui_state.stat_frame_count = frame_count;
+        this->gui_state.last_frame_ms = static_cast<float>(last_frame_millis);
     }
 
     /**
@@ -359,7 +361,8 @@ private:
         std::string request_load_projet_file; // Project file name which should be loaded by fronted service
         float stat_averaged_fps;              // current average fps value
         float stat_averaged_ms;               // current average fps value
-        size_t stat_frame_count;              // current fame count
+        size_t stat_frame_count;              // current frame count
+        float last_frame_ms;                 // last frame time
         bool load_docking_preset;             // Flag indicating docking preset loading
         float window_alpha;                   // Global transparency value for window background
         float scale_input_float_buffer;       // Widget float buffer for scale input

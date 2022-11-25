@@ -228,6 +228,7 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         win_perfmon_ptr->SetData(
             this->gui_state.stat_averaged_fps, this->gui_state.stat_averaged_ms, this->gui_state.stat_frame_count);
     }
+    win_animation_editor_ptr->SetLastFrameMillis(gui_state.last_frame_ms);
 
     // Update windows
     this->win_collection.Update();
