@@ -69,8 +69,7 @@ private:
 
     void DrawVerticalSeparator();
 
-    void DrawGrid(const ImVec2& from, const ImVec2& to, float majorUnit, float minorUnit, float labelAlignment,
-        float sign = 1.0f);
+    void DrawGrid();
     void DrawScale(const ImVec2& from, const ImVec2& to, float majorUnit, float minorUnit, float labelAlignment,
         float sign = 1.0f);
     // VARIABLES --------------------------------------------------------------
