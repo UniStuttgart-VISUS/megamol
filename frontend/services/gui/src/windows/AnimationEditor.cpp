@@ -236,6 +236,7 @@ bool AnimationEditor::SaveToFile(const std::string& file) {
     auto s = animation_data.dump(2);
     out << s;
     out.close();
+    animation_file = file;
     return true;
 }
 
@@ -255,6 +256,7 @@ bool AnimationEditor::LoadFromFile(std::string file) {
     }
     auto j_all = nlohmann::json::parse(in);
     SpecificStateFromJSON(j_all);
+    animation_file = file;
     return true;
 }
 
@@ -318,6 +320,7 @@ void AnimationEditor::DrawToolbar() {
             }
             ImGui::EndMenu();
         }
+        ImGui::Text(animation_file.c_str());
         ImGui::EndMenuBar();
     }
     ImGui::PopID();

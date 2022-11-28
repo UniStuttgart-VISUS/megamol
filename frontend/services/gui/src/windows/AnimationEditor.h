@@ -104,7 +104,7 @@ private:
     FileBrowserWidget file_browser;
     bool open_popup_load = false, open_popup_save = false, open_popup_error = false;
     std::string error_popup_message;
-    vislib::math::Ternary ternary = vislib::math::Ternary::TRI_FALSE;
+    vislib::math::Ternary ternary = vislib::math::Ternary::TRI_UNKNOWN;
     std::string animation_file;
 };
 
