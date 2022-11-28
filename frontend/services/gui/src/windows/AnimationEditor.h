@@ -86,7 +86,6 @@ private:
 
     bool canvas_visible = false;
     bool is_dragging = false;
-    bool playback_active = false;
     ImVec2 drag_start = {0.0f, 0.0f};
     float drag_start_value = 0.0f;
     animation::KeyTimeType drag_start_time = 0;

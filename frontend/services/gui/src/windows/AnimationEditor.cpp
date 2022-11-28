@@ -151,10 +151,52 @@ bool AnimationEditor::NotifyParamChanged(
 }
 
 
-void megamol::gui::AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {}
+void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {
+    in_json["write_to_graph"].get_to(write_to_graph);
+    in_json["playing"].get_to(playing);
+    in_json["playback_fps"].get_to(playback_fps);
+    in_json["animation_bounds"].get_to(animation_bounds);
+    in_json["current_frame"].get_to(current_frame);
+    if (in_json.contains("animation_file")) {
+        in_json["animation_file"].get_to(animation_file);
+    }
+
+    animation::FloatAnimation f_dummy("dummy");
+    animation::StringAnimation s_dummy("dummy");
+    if (!in_json.contains("animations")) {
+        error_popup_message = "Loading failed: cannot find 'animations'";
+        open_popup_error = true;
+    }
+    for (auto& j : in_json["animations"]) {
+        if (j["type"] == "string") {
+            from_json(j, s_dummy);
+            allAnimations.emplace_back(s_dummy);
+        } else if (j["type"] == "float") {
+            // j.get<FloatAnimation>() does not work because no default constructor
+            from_json(j, f_dummy);
+            allAnimations.emplace_back(f_dummy);
+        } else {
+            error_popup_message = "Loading failed: " + j["name"].get<std::string>() + " has no type";
+            open_popup_error = true;
+        }
+    }
+}
 
 
-void megamol::gui::AnimationEditor::SpecificStateToJSON(nlohmann::json& inout_json) {}
+void AnimationEditor::SpecificStateToJSON(nlohmann::json& inout_json) {
+    inout_json["write_to_graph"] = write_to_graph;
+    inout_json["playing"] = playing;
+    inout_json["playback_fps"] = playback_fps;
+    inout_json["animation_bounds"] = animation_bounds;
+    inout_json["current_frame"] = current_frame;
+    inout_json["animation_file"] = animation_file;
+
+    nlohmann::json anims;
+    for (auto& fa : allAnimations) {
+        std::visit([&](auto&& arg) -> void { anims.push_back(arg); }, fa);
+    }
+    inout_json["animations"] = anims;
+}
 
 
 void AnimationEditor::SetLastFrameMillis(float last_frame_millis) {
@@ -177,23 +219,20 @@ void AnimationEditor::WriteValuesToGraph() {
         if (!std::get<0>(res)) {
             open_popup_error = true;
             error_popup_message = std::get<1>(res);
-            playback_active = false;
+            playing = 0;
         }
     }
 }
 
 
 bool AnimationEditor::SaveToFile(const std::string& file) {
-    nlohmann::json animation_data;
-    nlohmann::json anims;
-    for (auto& fa : allAnimations) {
-        std::visit([&](auto&& arg) -> void { anims.push_back(arg); }, fa);
-    }
-    animation_data["animations"] = anims;
     std::ofstream out(file);
     if (!out.is_open()) {
         return false;
     }
+    nlohmann::json animation_data;
+    SpecificStateToJSON(animation_data);
+    animation_data.erase("animation_file");
     auto s = animation_data.dump(2);
     out << s;
     out.close();
@@ -215,28 +254,7 @@ bool AnimationEditor::LoadFromFile(std::string file) {
         return false;
     }
     auto j_all = nlohmann::json::parse(in);
-    animation::FloatAnimation f_dummy("dummy");
-    animation::StringAnimation s_dummy("dummy");
-    if (!j_all.contains("animations")) {
-        error_popup_message = "Loading failed: cannot find 'animations'";
-        open_popup_error = true;
-        return false;
-    }
-    for (auto& j : j_all["animations"]) {
-        if (j["type"] == "string") {
-            from_json(j, s_dummy);
-            allAnimations.emplace_back(s_dummy);
-        } else if (j["type"] == "float") {
-            // j.get<FloatAnimation>() does not work because no default constructor
-            from_json(j, f_dummy);
-            allAnimations.emplace_back(f_dummy);
-        } else {
-            error_popup_message = "Loading failed: " + j["name"].get<std::string>() + " has no type";
-            open_popup_error = true;
-            return false;
-        }
-    }
-    animation_file = file;
+    SpecificStateFromJSON(j_all);
     return true;
 }
 
