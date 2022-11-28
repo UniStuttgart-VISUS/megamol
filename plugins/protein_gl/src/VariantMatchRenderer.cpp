@@ -12,7 +12,6 @@
 #include "ogl_error_check.h"
 #include "protein_calls/VariantMatchDataCall.h"
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
@@ -23,6 +22,7 @@
 
 using namespace megamol;
 using namespace megamol::protein_gl;
+using megamol::core::utility::log::Log;
 
 #pragma push_macro("min")
 #undef min
@@ -68,7 +68,8 @@ VariantMatchRenderer::~VariantMatchRenderer(void) {
  * VariantMatchRenderer::create
  */
 bool VariantMatchRenderer::create(void) {
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         matrixTexShader = core::utility::make_glowl_shader("matrixTexShader", shader_options,

@@ -13,7 +13,6 @@
 #include <nlohmann/json.hpp>
 
 #include "datatools/table/TableDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -189,12 +188,13 @@ ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D() {
 }
 
 bool ParallelCoordinatesRenderer2D::create() {
-    if (!font_.Initialise(GetCoreInstance())) {
+    if (!font_.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         return false;
     }
     font_.SetBatchDrawMode(true);
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         filterProgram_ =

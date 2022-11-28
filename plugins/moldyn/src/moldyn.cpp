@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "moldyn/BrickStatsCall.h"
 
@@ -30,12 +30,12 @@
 #include "moldyn/ParticleGridDataCall.h"
 
 namespace megamol::moldyn {
-class MoldynPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class MoldynPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(MoldynPluginInstance)
 
 public:
     MoldynPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
+            : megamol::core::factories::AbstractPluginInstance(
                   "moldyn", "MegaMol Plugins for Molecular Dynamics Data Visualization"){};
 
     ~MoldynPluginInstance() override = default;

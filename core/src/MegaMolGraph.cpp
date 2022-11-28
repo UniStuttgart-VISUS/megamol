@@ -66,25 +66,21 @@ static megamol::core::param::AbstractParam* getParameterFromParamSlot(megamol::c
                   ", slot is not available");
         return nullptr;
     }
-    if (param_slot->Parameter().IsNull()) {
+    if (param_slot->Parameter() == nullptr) {
         log_error("error. cannot find parameter: " + std::string(param_slot->Name().PeekBuffer()) +
                   ", slot has no parameter");
         return nullptr;
     }
 
-    return param_slot->Parameter().DynamicCast<megamol::core::param::AbstractParam>();
+    return param_slot->Parameter().get();
 }
 
-megamol::core::MegaMolGraph::MegaMolGraph(megamol::core::CoreInstance& core,
+megamol::core::MegaMolGraph::MegaMolGraph(
     factories::ModuleDescriptionManager const& moduleProvider, factories::CallDescriptionManager const& callProvider)
         : moduleProvider_ptr{&moduleProvider}
         , callProvider_ptr{&callProvider}
         , dummy_namespace{std::make_shared<RootModuleNamespace>()}
-        , convenience_functions{const_cast<MegaMolGraph*>(this)} {
-    // the Core Instance is a parasite that needs to be passed to all modules
-    // TODO: make it so there is no more core instance
-    dummy_namespace->SetCoreInstance(core);
-}
+        , convenience_functions{const_cast<MegaMolGraph*>(this)} {}
 
 megamol::core::MegaMolGraph::~MegaMolGraph() {
     moduleProvider_ptr = nullptr;

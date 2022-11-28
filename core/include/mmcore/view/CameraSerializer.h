@@ -1,21 +1,17 @@
-/*
- * CameraSerializer.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_CAMERASERIALIZER_H_INCLUDED
-#define MEGAMOLCORE_CAMERASERIALIZER_H_INCLUDED
+#pragma once
 
 #include <nlohmann/json.hpp>
 
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Camera.h"
 
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 /**
  * Class for the serialization and deserialization of camera parameters
@@ -152,10 +148,6 @@ private:
     bool prettyMode;
 };
 
-} // namespace view
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::view
 
 #include "mmcore/view/CameraSerializer.inl"
-
-#endif /* MEGAMOLCORE_CAMERASERIALIZER_H_INCLUDED */

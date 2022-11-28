@@ -184,7 +184,9 @@ bool CPERAWDataSource::getDataCallback(core::Call& c) {
             mdc->SetParticleListCount(0);
             return true;
         }
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
 
     return true;
 }
@@ -218,7 +220,9 @@ bool CPERAWDataSource::getExtentCallback(core::Call& c) {
         } else {
             return false;
         }
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
 
     return true;
 }

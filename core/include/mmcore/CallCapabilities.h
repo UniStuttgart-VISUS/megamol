@@ -1,15 +1,14 @@
-/*
- * Call.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
+
 #include <cstdint>
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 class CallCapabilities {
 public:
@@ -40,5 +39,4 @@ private:
     uint64_t cap_bits = 0;
 };
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core

@@ -101,7 +101,7 @@ Our CI pipeline tests the build with gcc-9 and clang-10 on Ubuntu 20.04.
 
 1. As prerequisites, following packages from the repository are required:
 
-    `$ sudo apt install cmake-curses-gui git xorg-dev libgl1-mesa-dev libglu1-mesa-dev libncurses-dev uuid-dev`
+    `$ sudo apt install cmake-curses-gui git xorg-dev libgl1-mesa-dev libglu1-mesa-dev libncurses-dev`
 
     - Hint: You can optionally install `libboost-stacktrace-dev` to enable stacktrace printout for KHR debug messages.
 

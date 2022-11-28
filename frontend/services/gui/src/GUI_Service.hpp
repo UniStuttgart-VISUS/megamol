@@ -16,7 +16,6 @@
 #include "GUIState.h"
 #include "PerformanceManager.h"
 #include "gui_render_backend.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 
 
@@ -32,7 +31,6 @@ class GUI_Service final : public AbstractFrontendService {
 public:
     struct Config {
         megamol::gui::GUIRenderBackend backend = megamol::gui::GUIRenderBackend::CPU;
-        megamol::core::CoreInstance* core_instance = nullptr;
         bool gui_show = true;
         float gui_scale = 1.0f;
     };

@@ -1,22 +1,18 @@
-/*
- * Camera.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_CAMERA_H_INCLUDED
-#define MEGAMOLCORE_CAMERA_H_INCLUDED
+#pragma once
 
 #include <variant>
 
-#include "glm/gtx/quaternion.hpp" // glm::rotate(quat, vector)
 #include <glm/ext.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp> // glm::rotate(quat, vector)
 
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 namespace {
 class FloatValue {
@@ -437,8 +433,4 @@ inline void Camera::updateProjectionMatrix() {
     }
 }
 
-} // namespace view
-} // namespace core
-} // namespace megamol
-
-#endif // !MEGAMOLCORE_CAMERA_H_INCLUDED
+} // namespace megamol::core::view

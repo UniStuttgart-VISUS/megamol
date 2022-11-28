@@ -61,12 +61,13 @@ BaseHistogramRenderer2D::BaseHistogramRenderer2D()
 }
 
 bool BaseHistogramRenderer2D::create() {
-    if (!font_.Initialise(GetCoreInstance())) {
+    if (!font_.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         return false;
     }
     font_.SetBatchDrawMode(true);
 
-    auto const shaderOptions = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shaderOptions =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         drawHistogramProgram_ = core::utility::make_glowl_shader("histo_base_draw", shaderOptions,

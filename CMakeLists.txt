@@ -85,6 +85,7 @@ endif ()
 set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "default install path" FORCE) # This will replace "\" by "/"
 
 # Modules
+include(GNUInstallDirs)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
 # Dependencies
@@ -124,13 +125,11 @@ add_subdirectory(remoteconsole)
 
 # Plugins
 add_subdirectory(plugins)
-if (BUILD_FRONTEND)
-  if (MEGAMOL_USE_OPENGL)
-    target_link_libraries(plugins INTERFACE core_gl)
-    target_sources(plugins INTERFACE $<TARGET_OBJECTS:core_gl>)
-  endif ()
-  target_link_libraries(megamol PRIVATE plugins)
+if (MEGAMOL_USE_OPENGL)
+  target_link_libraries(plugins INTERFACE core_gl)
+  target_sources(plugins INTERFACE $<TARGET_OBJECTS:core_gl>)
 endif ()
+target_link_libraries(megamol PRIVATE plugins)
 
 # Utils
 add_subdirectory(utils)

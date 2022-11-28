@@ -6,7 +6,6 @@
  */
 
 #include "io/VisIttDataSource.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -240,7 +239,9 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsig
             line[end] = 0;
             try {
                 typeId = vislib::CharTraitsA::ParseInt(line + start);
-            } catch (...) { typeId = 0; }
+            } catch (...) {
+                typeId = 0;
+            }
             line[end] = endChar;
         }
 
@@ -256,7 +257,9 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsig
             line[end] = 0;
             try {
                 pid = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(line + start));
-            } catch (...) { pid = static_cast<unsigned int>(pids[typeId].size()); }
+            } catch (...) {
+                pid = static_cast<unsigned int>(pids[typeId].size());
+            }
             line[end] = endChar;
             pids[typeId].push_back(
                 std::pair<unsigned int, unsigned int>(static_cast<unsigned int>(pids[typeId].size()), pid));
@@ -278,7 +281,9 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsig
             line[end] = 0;
             try {
                 pos[j] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line + start));
-            } catch (...) { pos[j] = 0.0f; }
+            } catch (...) {
+                pos[j] = 0.0f;
+            }
             line[end] = endChar;
         }
     }

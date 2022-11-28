@@ -18,8 +18,8 @@ megamol::mesh_gl::WavefrontObjRenderer::~WavefrontObjRenderer() {}
 
 void megamol::mesh_gl::WavefrontObjRenderer::createMaterialCollection() {
     material_collection_ = std::make_shared<GPUMaterialCollection>();
-    material_collection_->addMaterial(this->instance(), "wavefrontObjMaterial",
-        {"mesh_gl/wavefrontObj_example.vert.glsl", "mesh_gl/wavefrontObj_example.frag.glsl"});
+    material_collection_->addMaterial(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(),
+        "wavefrontObjMaterial", {"mesh_gl/wavefrontObj_example.vert.glsl", "mesh_gl/wavefrontObj_example.frag.glsl"});
 }
 
 void megamol::mesh_gl::WavefrontObjRenderer::updateRenderTaskCollection(

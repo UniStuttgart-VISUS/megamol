@@ -1,6 +1,5 @@
 #pragma once
 
-#include "mmcore/CoreInstance.h"
 #include "png.h"
 #include <filesystem>
 #include <map>

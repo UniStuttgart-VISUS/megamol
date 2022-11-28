@@ -313,7 +313,8 @@ bool VolumeMeshRenderer::create(void) {
         return false;
     }*/
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         this->normalShader =
@@ -403,7 +404,9 @@ void VolumeMeshRenderer::release(void) {
             CUDA_VERIFY(cudaFree(modified));
         if (segmentsRemoved)
             CUDA_VERIFY(cudaFree(segmentsRemoved));
-    } catch (vislib::Exception e) { Log::DefaultLog.WriteError("Unable to release CUDA resources: %s\n", e.GetMsgA()); }
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteError("Unable to release CUDA resources: %s\n", e.GetMsgA());
+    }
 }
 
 /*

@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <functional>
@@ -5,8 +11,7 @@
 
 #include "MegaMolGraphTypes.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 class MegaMolGraph_Convenience {
 public:
@@ -52,6 +57,4 @@ private:
     std::unordered_map<std::string, ParameterGroup> m_parameter_groups;
 };
 
-
-} /* namespace core */
-} // namespace megamol
+} // namespace megamol::core
