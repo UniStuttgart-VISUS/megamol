@@ -59,6 +59,9 @@ bool AnimationEditor::Draw() {
                     current_frame -= animation_bounds[0];
                 }
             }
+            if (frameskip > 0) {
+                WriteValuesToGraph();
+            }
         }
     }
     DrawToolbar();
