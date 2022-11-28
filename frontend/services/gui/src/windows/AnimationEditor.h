@@ -71,6 +71,7 @@ private:
 
     void DrawGrid();
     void DrawScale();
+
     // VARIABLES --------------------------------------------------------------
 
     std::vector<animations> allAnimations;
@@ -96,6 +97,7 @@ private:
     float last_frame_ms = 0.0f, accumulated_ms = 0.0f;
 
     int32_t playing = 0;
+    bool rendering = false;
     animation::KeyTimeType animation_bounds[2] = {0, 100};
 
     ImVec2 custom_zoom = {1.0f, 1.0f};
@@ -106,6 +108,7 @@ private:
     std::string error_popup_message;
     vislib::math::Ternary ternary = vislib::math::Ternary::TRI_UNKNOWN;
     std::string animation_file;
+    std::string output_prefix;
 };
 
 

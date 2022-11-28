@@ -24,6 +24,10 @@ void from_json(const nlohmann::json& j, FloatAnimation& f);
 void to_json(nlohmann::json& j, const StringAnimation& s);
 void from_json(const nlohmann::json& j, StringAnimation& s);
 
+// PD code from https://github.com/ocornut/imgui/issues/1496#issuecomment-1287772456
+void BeginGroupPanel(const char* name, const ImVec2& size);
+void EndGroupPanel();
+
 } // namespace animation
 } // namespace gui
 } // namespace megamol

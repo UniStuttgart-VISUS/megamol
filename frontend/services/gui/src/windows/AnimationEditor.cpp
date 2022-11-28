@@ -160,6 +160,7 @@ void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {
     in_json["playback_fps"].get_to(playback_fps);
     in_json["animation_bounds"].get_to(animation_bounds);
     in_json["current_frame"].get_to(current_frame);
+    in_json["output_prefix"].get_to(output_prefix);
     if (in_json.contains("animation_file")) {
         in_json["animation_file"].get_to(animation_file);
     }
@@ -193,6 +194,7 @@ void AnimationEditor::SpecificStateToJSON(nlohmann::json& inout_json) {
     inout_json["animation_bounds"] = animation_bounds;
     inout_json["current_frame"] = current_frame;
     inout_json["animation_file"] = animation_file;
+    inout_json["output_prefix"] = output_prefix;
 
     nlohmann::json anims;
     for (auto& fa : allAnimations) {
@@ -483,9 +485,7 @@ void AnimationEditor::DrawParams() {
     }
     ImGui::EndChild();
 
-    ImGui::Text("Animation");
-    ImGui::BeginChild(
-        "anim_props", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
+    animation::BeginGroupPanel("Animation", ImVec2(0.0f, 0.0f));
     if (ImGui::Button("start")) {
         current_frame = animation_bounds[0];
     }
@@ -514,7 +514,19 @@ void AnimationEditor::DrawParams() {
         current_frame = std::clamp(current_frame, animation_bounds[0], animation_bounds[1]);
     }
     ImGui::SliderInt("Current Frame", &current_frame, animation_bounds[0], animation_bounds[1]);
-    ImGui::EndChild();
+    ImGui::InputText("Output prefix", &output_prefix);
+    if (output_prefix.empty()) {
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+    }
+    if (ImGui::Button("render")) {
+        current_frame = animation_bounds[0];
+        rendering = true;
+    }
+    if (output_prefix.empty()) {
+        ImGui::PopItemFlag();
+    }
+    ImGui::Dummy(ImVec2(0.0f, 2.0f));
+    animation::EndGroupPanel();
 }
 
 
