@@ -47,6 +47,8 @@ public:
     void SpecificStateToJSON(nlohmann::json& inout_json) override;
     void SetLastFrameMillis(float last_frame_ms);
 
+    void RenderAnimation();
+
 private:
     using animations = std::variant<animation::FloatAnimation, animation::StringAnimation>;
 

@@ -208,6 +208,27 @@ void AnimationEditor::SetLastFrameMillis(float last_frame_millis) {
     last_frame_ms = last_frame_millis;
 }
 
+void AnimationEditor::RenderAnimation() {
+    if (rendering) {
+        // make screenshot and such
+        std::stringstream command;
+        //command << "mmSetCliOption(\"privacynote\", \"off\")\n";
+        // TODO: without gui, obviously. Or optionally?
+        command << "mmScreenshot(\"" << output_prefix << "_" << std::setw(5) << std::setfill('0') << current_frame << ".png\")";
+        auto res = (*input_lua_func)(command.str());
+        if (!std::get<0>(res)) {
+            open_popup_error = true;
+            error_popup_message = std::get<1>(res);
+            playing = 0;
+        }
+        if (current_frame < animation_bounds[1]) {
+            current_frame++;
+        } else {
+            rendering = false;
+        }
+    }
+}
+
 
 void AnimationEditor::WriteValuesToGraph() {
     if (write_to_graph) {

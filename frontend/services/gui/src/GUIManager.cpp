@@ -415,6 +415,8 @@ bool GUIManager::PostDraw() {
     // Assume pending changes in scaling as applied  --------------------------
     megamol::gui::gui_scaling.ConsumePendingChange();
 
+    this->win_animation_editor_ptr->RenderAnimation();
+
     return true;
 }
 
