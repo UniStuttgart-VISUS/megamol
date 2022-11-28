@@ -33,9 +33,6 @@ void main() {
     // we need to take out the rotation to get the object coordinates
     vec3 os_coord = rotate_tensor_into_world * coord.xyz;
 
-    // calc the viewing ray
-    vec3 ray_base = normalize(os_coord - cam_pos);
-
     bvec3 discard_frag = bvec3(false);
     vec3 normal;
     vec3 normals[3] = {
@@ -78,7 +75,6 @@ void main() {
             aligned_absradii = absradii.zxy;
         }
 
-
         // cylinder length
         float length_cylinder = 0.8 * aligned_absradii.x * radius_scaling;
         float length_cylinder_half = length_cylinder / 2.0;
@@ -86,8 +82,21 @@ void main() {
         float radius_cone = 1.5 * radius_cylinder * radius_scaling;
         float height_cone = 0.2 * aligned_absradii.x * radius_scaling;
 
+        vec3 shift = vec3(length_cylinder - radius_cylinder, 0.0, 0.0);
+        if(alignment == 1) {
+            shift = shift.yxz; // only matters that x is in middle
+        }
+        else if(alignment == 2) {
+            shift = shift.yzx; // only matters that x is last
+        }
+
+        // calc the viewing ray
+        vec3 shifted_coord = os_coord - shift;
+        vec3 shifted_cam = cam_pos - shift;
+        vec3 ray_base = normalize(shifted_coord - shifted_cam);
+
         vec3 ray = ray_base;
-        vec3 aligned_cam = cam_pos;
+        vec3 aligned_cam = shifted_cam;
 
         // re-assign coordinates to account for the alignment change
         // this way the code below doesn't need to be changed
