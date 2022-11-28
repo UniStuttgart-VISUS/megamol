@@ -504,7 +504,7 @@ void AnimationEditor::DrawParams() {
     if (ImGui::InputInt("Playback fps target", &playback_fps)) {
         targeted_frame_time = 1000.0f / static_cast<float>(playback_fps);
     }
-    if (ImGui::InputInt2("Active Region", animation_bounds)) {
+    if (ImGui::InputInt2("Active Region", animation_bounds, ImGuiInputTextFlags_EnterReturnsTrue)) {
         current_frame = std::clamp(current_frame, animation_bounds[0], animation_bounds[1]);
     }
     ImGui::SliderInt("Current Frame", &current_frame, animation_bounds[0], animation_bounds[1]);
@@ -671,7 +671,7 @@ void AnimationEditor::DrawPlayhead(ImDrawList* drawList) {
     }
     drawList->AddTriangleFilled(ImVec2(ph_pos.x - playhead_size.x, ph_pos.y),
         ImVec2(ph_pos.x + playhead_size.x, ph_pos.y), ImVec2(ph_pos.x, ph_pos.y + playhead_size.y), playhead_color);
-    drawList->AddLine(ph_pos, ImVec2(ph_pos.x, canvas.Rect().GetHeight()), playhead_color);
+    drawList->AddLine(ph_pos, ImVec2(ph_pos.x, -canvas.ViewOrigin().y + canvas.Rect().GetHeight()), playhead_color);
 }
 
 
@@ -746,14 +746,8 @@ void AnimationEditor::DrawCurves() {
             is_dragging = false;
         }
 
-        const auto viewRect = canvas.ViewRect();
         DrawGrid();
-        if (viewRect.Max.y > 0.0f) {
-            DrawScale(ImVec2(0.0f, 0.0f), ImVec2(0.0f, viewRect.Max.y), 100.0f, 10.0f, 0.6f, -1.0f);
-        }
-        if (viewRect.Min.y < 0.0f) {
-            DrawScale(ImVec2(0.0f, 0.0f), ImVec2(0.0f, viewRect.Min.y), 100.0f, 10.0f, 0.6f);
-        }
+        DrawScale();
 
         if (selectedAnimation != -1) {
             if (std::holds_alternative<animation::FloatAnimation>(allAnimations[selectedAnimation])) {
@@ -868,16 +862,13 @@ void AnimationEditor::DrawVerticalSeparator() {
 
 
 void AnimationEditor::DrawGrid() {
-    // TODO only show active region
-    // TODO auto compute Units based on zoom
     auto drawList = ImGui::GetWindowDrawList();
     const auto top = canvas.ToLocal(ImVec2(0.0f, 0.0f));
     const auto bottom = canvas.ToLocal(canvas.Rect().GetBR());
     auto minorColor = ImGui::GetColorU32(ImGuiCol_Border);
     auto majorColor = ImGui::GetColorU32(ImGuiCol_Text);
     auto textColor = ImGui::GetColorU32(ImGuiCol_Text);
-
-
+    
     auto region_start = ImVec2(-canvas.ViewOrigin().x, - canvas.Rect().GetHeight() + canvas.ViewOrigin().y);
     auto region_end = ImVec2(canvas.Rect().GetWidth() - canvas.ViewOrigin().x, canvas.ViewOrigin().y);
     region_start /= custom_zoom;
@@ -889,7 +880,9 @@ void AnimationEditor::DrawGrid() {
     auto minorUnit = majorUnit / 10.0f;
 
     auto minor_start = std::nearbyintf(region_start.x / minorUnit) * minorUnit;
-    for (auto s = minor_start; s < region_end.x; s += minorUnit) {
+    minor_start = std::min(std::max<float>(minor_start, animation_bounds[0]), region_end.x);
+    auto minor_end = std::max(std::min<float>(region_end.x, animation_bounds[1]), minor_start);
+    for (auto s = minor_start; s < minor_end; s += minorUnit) {
         drawList->AddLine(ImVec2(s * custom_zoom.x, top.y), ImVec2(s * custom_zoom.x, bottom.y), minorColor);
     }
 
@@ -906,47 +899,44 @@ void AnimationEditor::DrawGrid() {
     }
 }
 
-void AnimationEditor::DrawScale(
-    const ImVec2& from, const ImVec2& to, float majorUnit, float minorUnit, float labelAlignment, float sign) {
+void AnimationEditor::DrawScale() {
 
-    // TODO auto compute Units based on zoom
     auto drawList = ImGui::GetWindowDrawList();
-    auto direction = (to - from) * ImInvLength(to - from, 0.0f);
-    auto normal = ImVec2(-direction.y, direction.x);
-    auto distance = sqrtf(ImLengthSqr(to - from));
+    const auto top = canvas.ToLocal(ImVec2(0.0f, 0.0f));
+    const auto bottom = canvas.ToLocal(canvas.Rect().GetBR());
+    auto minorColor = ImGui::GetColorU32(ImGuiCol_Border);
+    auto majorColor = ImGui::GetColorU32(ImGuiCol_Text);
+    auto textColor = ImGui::GetColorU32(ImGuiCol_Text);
+    const auto minorSize = 10.0f;
+    const auto majorSize = 15.0f;
 
-    if (ImDot(direction, direction) < FLT_EPSILON)
-        return;
+    auto region_start = ImVec2(-canvas.ViewOrigin().x, - canvas.Rect().GetHeight() + canvas.ViewOrigin().y);
+    auto region_end = ImVec2(canvas.Rect().GetWidth() - canvas.ViewOrigin().x, canvas.ViewOrigin().y);
+    region_start /= custom_zoom;
+    region_end /= custom_zoom;
+    auto height = region_end.y - region_start.y;
 
-    auto minorSize = 5.0f;
-    auto majorSize = 10.0f;
-    auto labelDistance = 8.0f;
+    auto dist_order = round(std::log10(height));
+    auto majorUnit = std::powf(10, dist_order - 1.0f);
+    auto minorUnit = majorUnit / 10.0f;
 
-    drawList->AddLine(from, to, IM_COL32(255, 255, 255, 255));
+    auto minor_start = std::nearbyintf(region_start.y / minorUnit) * minorUnit;
+    auto ref_pt =
+        ImVec2(std::max(region_start.x + minorSize, 0.0f * custom_zoom.x), 0.0f);
+    ref_pt.x = std::min(ref_pt.x,  region_end.x - minorSize);
+    for (auto s = minor_start; s < region_end.y; s += minorUnit) {
+        drawList->AddLine(ref_pt + ImVec2(-minorSize, -s * custom_zoom.y), ref_pt + ImVec2(minorSize, -s * custom_zoom.y), minorColor);
+    }
 
-    auto p = from * custom_zoom;
-    for (auto d = 0.0f; d <= distance;
-         d += minorUnit * ImDot(direction * -sign, custom_zoom), p += direction * minorUnit * custom_zoom)
-        drawList->AddLine(p - normal * minorSize, p + normal * minorSize, IM_COL32(255, 255, 255, 255));
-
-    for (auto d = 0.0f; d <= distance + majorUnit; d += majorUnit) {
-        p = from + direction * d;
-        p *= custom_zoom;
-
-        drawList->AddLine(p - normal * majorSize, p + normal * majorSize, IM_COL32(255, 255, 255, 255));
-
-        if (d == 0.0f)
-            continue;
+    auto major_start = std::nearbyintf(region_start.y / majorUnit) * majorUnit;
+    for (auto s = major_start; s < region_end.y; s += majorUnit) {
+        drawList->AddLine(ref_pt + ImVec2(-minorSize, -s * custom_zoom.y), ref_pt + ImVec2(minorSize, -s * custom_zoom.y), majorColor);
 
         char label[16];
-        snprintf(label, 15, "%g", d * sign);
+        snprintf(label, 15, "%g", s);
         auto labelSize = ImGui::CalcTextSize(label);
 
-        auto labelPosition = p + ImVec2(fabsf(normal.x), fabsf(normal.y)) * labelDistance;
-        auto labelAlignedSize = ImDot(labelSize, direction);
-        labelPosition += direction * (-labelAlignedSize + labelAlignment * labelAlignedSize * 2.0f);
-        labelPosition = ImFloor(labelPosition + ImVec2(0.5f, 0.5f));
-
-        drawList->AddText(labelPosition, IM_COL32(255, 255, 255, 255), label);
+        auto labelPosition = ImVec2(ref_pt + ImVec2(minorSize, -s * custom_zoom.y));
+        drawList->AddText(labelPosition, textColor, label);
     }
 }

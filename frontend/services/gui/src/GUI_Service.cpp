@@ -352,7 +352,7 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 
     /// Image Presentation = resource index 13
     // the image presentation will issue the rendering and provide the view with resources for rendering
-    // probably we dont care or dont check wheter the same view is added as entry point multiple times
+    // probably we don't care or don't check whether the same view is added as entry point multiple times
     auto& image_presentation = const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
         this->m_requestedResourceReferences[13]
             .getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());

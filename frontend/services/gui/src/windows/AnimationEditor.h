@@ -70,13 +70,10 @@ private:
     void DrawVerticalSeparator();
 
     void DrawGrid();
-    void DrawScale(const ImVec2& from, const ImVec2& to, float majorUnit, float minorUnit, float labelAlignment,
-        float sign = 1.0f);
+    void DrawScale();
     // VARIABLES --------------------------------------------------------------
 
     std::vector<animations> allAnimations;
-    //std::vector<animation::FloatAnimation> floatAnimations;
-    //std::vector<animation::StringAnimation> stringAnimations;
     int32_t selectedAnimation = -1;
     animation::FloatKey* selectedFloatKey = nullptr;
     animation::FloatKey* draggingFloatKey = nullptr;
