@@ -19,10 +19,10 @@
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/PopUps.h"
+#include "windows/AnimationEditor.h"
 #include "windows/Configurator.h"
 #include "windows/LogConsole.h"
 #include "windows/WindowCollection.h"
-#include "windows/AnimationEditor.h"
 
 
 namespace megamol {
@@ -297,8 +297,8 @@ public:
         megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
         std::string const& new_value) {
         bool ret = this->win_animation_editor_ptr->NotifyParamChanged(param_slot, new_value);
-        ret |= this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_ParameterChanged(
-            param_slot, new_value);
+        ret |=
+            this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_ParameterChanged(param_slot, new_value);
         return ret;
     }
     bool NotifyRunningGraph_AddCall(core::CallInstance_t const& call_inst) {
@@ -362,7 +362,7 @@ private:
         float stat_averaged_fps;              // current average fps value
         float stat_averaged_ms;               // current average fps value
         size_t stat_frame_count;              // current frame count
-        float last_frame_ms;                 // last frame time
+        float last_frame_ms;                  // last frame time
         bool load_docking_preset;             // Flag indicating docking preset loading
         float window_alpha;                   // Global transparency value for window background
         float scale_input_float_buffer;       // Widget float buffer for scale input

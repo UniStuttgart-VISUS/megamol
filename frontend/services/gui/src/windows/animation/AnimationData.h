@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "mmcore/MegaMolGraph.h"
 #include "gui_utils.h"
+#include "mmcore/MegaMolGraph.h"
 #include <map>
 
 
@@ -88,7 +88,7 @@ public:
 
     // these two are a bit special
     float GetMinValue() const {
-        return -1.0f;    
+        return -1.0f;
     }
     float GetMaxValue() const {
         return 1.0f;

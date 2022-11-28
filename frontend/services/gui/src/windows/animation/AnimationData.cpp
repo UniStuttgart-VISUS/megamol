@@ -1,7 +1,6 @@
 #include "AnimationData.h"
 
 
-
 using namespace megamol::gui::animation;
 
 float FloatKey::Interpolate(FloatKey first, FloatKey second, KeyTimeType time) {
