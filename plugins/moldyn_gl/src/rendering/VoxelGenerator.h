@@ -35,7 +35,7 @@ public:
     * @return A human readable description of this module.
     */
     static const char* Description(void) {
-        return "Generate voxel texture for particle data"; //TODO
+        return "Generate voxel texture for particle data";
     }
 
     /**
@@ -44,7 +44,7 @@ public:
     * @return 'true' if the module is available, 'false' otherwise.
     */
     static inline bool IsAvailable(void) {
-        return true;   //TODO
+        return true;
     }
 
     /**
@@ -78,9 +78,13 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool onGenerateVoxels(core::Call& call);
+    bool getDataCallback(core::Call& call);
 
-    bool GetExtents(core::Call& call);
+    bool getExtentCallback(core::Call& call);
+
+    bool dummyCallback(core::Call& call);
+
+    bool generateVoxels(geocalls::MultiParticleDataCall* particle_call);
 
 private:
     ///**
@@ -94,19 +98,11 @@ private:
     //MultiParticleDataCall* getData(unsigned int t, float& out_scaling);
 
     /** The slot that requests the data. */
-    core::CalleeSlot generate_voxels_slot_; //TODO VolumetricDataCall
+    core::CalleeSlot generate_voxels_slot_; // VolumetricDataCall (left slot)
 
-    core::CallerSlot get_data_slot_; // MultiParticleDataCall 
+    core::CallerSlot get_data_slot_; // MultiParticleDataCall (right slot)
 
-    /**
-     * TODO: Document
-     *
-     * @param t           ...
-     * @param outScaling  ...
-     *
-     * @return Pointer to MultiParticleDataCall ...
-     */
-    geocalls::MultiParticleDataCall* getData(unsigned int t, float& out_scaling); // get particle data
+    
 
     geocalls::VolumetricDataCall::Metadata metadata;
 };

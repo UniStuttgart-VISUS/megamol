@@ -718,51 +718,6 @@ MultiParticleDataCall* SphereRenderer::getData(unsigned int t, float& out_scalin
     }
 }
 
-//VolumetricDataCall* SphereRenderer::getVoxelData() {
-//
-//    //// TODO
-//    //// Voxel generator
-//    //VolumetricDataCall* c_voxel = this->get_voxels_.CallAs<VolumetricDataCall>();
-//    //if (c_voxel != nullptr) {
-//    //    auto voxel_data = c_voxel->GetData();
-//    //}
-//
-//    VolumetricDataCall* c2 = this->get_voxels_.CallAs<VolumetricDataCall>();
-//    c2->GetMetadata();
-//    //out_scaling = 1.0f;
-//    if (c2 != nullptr) {
-//    //    c2->SetFrameID(t, this->force_time_slot_.Param<param::BoolParam>()->Value());
-//    //    if (!(*c2)(1))
-//    //        return nullptr;
-//
-//    //    // calculate scaling
-//    //    auto const plcount = c2->GetParticleListCount();
-//    //    if (this->use_local_bbox_param_.Param<param::BoolParam>()->Value() && plcount > 0) {
-//    //        out_scaling = c2->AccessParticles(0).GetBBox().LongestEdge();
-//    //        for (unsigned pidx = 0; pidx < plcount; ++pidx) {
-//    //            auto const temp = c2->AccessParticles(pidx).GetBBox().LongestEdge();
-//    //            if (out_scaling < temp) {
-//    //                out_scaling = temp;
-//    //            }
-//    //        }
-//    //    } else {
-//    //        out_scaling = c2->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-//    //    }
-//    //    if (out_scaling > 0.0000001) {
-//    //        out_scaling = 10.0f / out_scaling;
-//    //    } else {
-//    //        out_scaling = 1.0f;
-//    //    }
-//
-//    //    c2->SetFrameID(t, this->force_time_slot_.Param<param::BoolParam>()->Value());
-//    //    if (!(*c2)(0))
-//    //        return nullptr;
-//
-//        return c2;
-//    } else {
-//        return nullptr;
-//    }
-//}
 
 void SphereRenderer::getClipData(glm::vec4& out_clip_dat, glm::vec4& out_clip_col) {
 
@@ -1053,7 +1008,7 @@ bool SphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
         c_voxel->SetFrameID(static_cast<unsigned int>(call.Time()), this->force_time_slot_.Param<param::BoolParam>()->Value());
         bool test = false;
-        if (!(*c_voxel)(0)) { //from IsoSurface.cpp
+        if (!(*c_voxel)(1)) { //from IsoSurface.cpp (0)
             test = false;
         } else {
             auto dataHash = c_voxel->DataHash();
