@@ -74,6 +74,14 @@ void animation::from_json(const nlohmann::json& j, StringAnimation& s) {
     }
 }
 
+void animation::to_json(nlohmann::json& j, const Vec3Animation& v) {
+    // TODO
+}
+
+void animation::from_json(const nlohmann::json& j, Vec3Animation& s) {
+    // TODO
+}
+
 static ImVector<ImRect> s_GroupPanelLabelStack;
 
 void animation::BeginGroupPanel(const char* name, const ImVec2& size) {
@@ -198,4 +206,14 @@ void animation::EndGroupPanel() {
     ImGui::Dummy(ImVec2(0.0f, 0.0f));
 
     ImGui::EndGroup();
+}
+
+std::vector<float> animation::GetFloats(std::string vector_string) {
+    std::vector<float> ret;
+    auto stream = std::stringstream(vector_string);
+    std::string token;
+    while(std::getline(stream, token, ';')) {
+        ret.push_back(std::stof(token));
+    }
+    return ret;
 }

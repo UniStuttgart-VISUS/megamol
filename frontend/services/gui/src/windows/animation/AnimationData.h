@@ -9,11 +9,14 @@
 
 #include "mmcore/MegaMolGraph.h"
 #include "gui_utils.h"
+
 #include <map>
+#include "glm/glm.hpp"
 
 
 namespace megamol {
 namespace gui {
+
 namespace animation {
 
 using KeyTimeType = int32_t;
@@ -30,9 +33,20 @@ struct FloatKey {
     ImVec2 out_tangent{1.0f, 0.0f};
 
     // this is expensive (accurately hit time first!)...
-    static float Interpolate(FloatKey first, FloatKey second, KeyTimeType time);
+    static ValueType Interpolate(FloatKey first, FloatKey second, KeyTimeType time);
     // ... and that is only good for drawing (x will not sit on the time grid)
     static ImVec2 Interpolate(FloatKey first, FloatKey second, float t);
+};
+
+struct Vec3Key {
+    using ValueType = glm::vec3;
+    ValueType value;
+    std::array<FloatKey, 3> nestedData;
+
+    // this is expensive (accurately hit time first!)...
+    static glm::vec3 Interpolate(Vec3Key first, Vec3Key second, KeyTimeType time);
+    // ... and that is only good for drawing (x will not sit on the time grid)
+    static std::array<ImVec2, 3> Interpolate(Vec3Key first, Vec3Key second, float t);
 };
 
 struct StringKey {
@@ -63,6 +77,16 @@ public:
     }
     typename KeyMap::iterator end() {
         return keys.end();
+    }
+
+    void FixSorting() {
+        for (auto& k: keys) {
+            if (k.first != k.second.time) {
+                auto wrong = keys.extract(k.first);
+                wrong.key() = k.second.time;
+                keys.insert(std::move(wrong));
+            }
+        }
     }
 
     const std::string& GetName() const {
@@ -166,10 +190,11 @@ std::vector<KeyTimeType> GenericAnimation<KeyType>::GetAllKeys() const {
 
 using StringAnimation = GenericAnimation<StringKey>;
 using FloatAnimation = GenericAnimation<FloatKey>;
+using Vec3Animation = GenericAnimation<Vec3Key>;
 
 // floats can actually interpolate!
 template<>
-float GenericAnimation<FloatKey>::GetValue(KeyTimeType time) const;
+GenericAnimation<FloatKey>::ValueType::ValueType GenericAnimation<FloatKey>::GetValue(KeyTimeType time) const;
 template<>
 InterpolationType GenericAnimation<FloatKey>::GetInterpolation(KeyTimeType time) const;
 
@@ -179,6 +204,29 @@ float GenericAnimation<FloatKey>::GetMinValue() const;
 template<>
 float GenericAnimation<FloatKey>::GetMaxValue() const;
 
+// same goes for vec3 keys, plus some more specialization
+template<>
+void GenericAnimation<Vec3Key>::AddKey(Vec3Key k);
+template<>
+GenericAnimation<Vec3Key>::ValueType::ValueType GenericAnimation<Vec3Key>::GetValue(KeyTimeType time) const;
+template<>
+InterpolationType GenericAnimation<Vec3Key>::GetInterpolation(KeyTimeType time) const;
+template<>
+KeyTimeType GenericAnimation<Vec3Key>::GetStartTime() const;
+template<>
+KeyTimeType GenericAnimation<Vec3Key>::GetEndTime() const;
+template<>
+KeyTimeType GenericAnimation<Vec3Key>::GetLength() const;
+template<>
+float GenericAnimation<Vec3Key>::GetMinValue() const;
+template<>
+float GenericAnimation<Vec3Key>::GetMaxValue() const;
+template<>
+void GenericAnimation<Vec3Key>::FixSorting();
+
 } // namespace animation
+
+std::ostream& operator<<(std::ostream& outs, const animation::Vec3Key::ValueType& value);
+
 } // namespace gui
 } // namespace megamol

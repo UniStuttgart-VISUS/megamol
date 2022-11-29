@@ -123,8 +123,165 @@ ImVec2 FloatKey::Interpolate(FloatKey first, FloatKey second, float t) {
     }
 }
 
+
 template<>
-float GenericAnimation<FloatKey>::GetValue(KeyTimeType time) const {
+void GenericAnimation<Vec3Key>::AddKey(Vec3Key k) {
+    keys[k.nestedData[0].time] = k;
+}
+
+
+glm::vec3 Vec3Key::Interpolate(Vec3Key first, Vec3Key second, KeyTimeType time) {
+    glm::vec3 ret;
+    ret.x = FloatKey::Interpolate(first.nestedData[0], second.nestedData[0], time);
+    ret.y = FloatKey::Interpolate(first.nestedData[1], second.nestedData[1], time);
+    ret.z = FloatKey::Interpolate(first.nestedData[2], second.nestedData[2], time);
+    return ret;
+}
+
+
+std::array<ImVec2, 3> Vec3Key::Interpolate(Vec3Key first, Vec3Key second, float t) {
+    std::array<ImVec2, 3> ret;
+    ret[0] = FloatKey::Interpolate(first.nestedData[0], second.nestedData[0], t);
+    ret[1] = FloatKey::Interpolate(first.nestedData[1], second.nestedData[1], t);
+    ret[2] = FloatKey::Interpolate(first.nestedData[2], second.nestedData[2], t);
+    return ret;
+}
+
+
+std::ostream& megamol::gui::operator<<(std::ostream& outs, const Vec3Key::ValueType& value) {
+    return outs << value[0] << ";" << value[1] << ";" << value[2];
+}
+
+template<>
+GenericAnimation<Vec3Key>::ValueType::ValueType GenericAnimation<Vec3Key>::GetValue(KeyTimeType time) const {
+    if (keys.size() < 2) {
+        if (keys.empty()) {
+            return ValueType::ValueType();
+        }
+        return {keys.begin()->second.nestedData[0].value, keys.begin()->second.nestedData[1].value,
+            keys.begin()->second.nestedData[2].value};
+    }
+    Vec3Key before_key = keys.begin()->second, after_key = keys.begin()->second;
+    bool ok = false;
+    for (auto it = keys.begin(); it != keys.end(); ++it) {
+        if (it->second.nestedData[0].time == time) {
+        return {it->second.nestedData[0].value, it->second.nestedData[1].value,
+            it->second.nestedData[2].value};
+        }
+        if (it->second.nestedData[0].time < time) {
+            before_key = it->second;
+        }
+        if (it->second.nestedData[0].time > time) {
+            after_key = it->second;
+            ok = true;
+            break;
+        }
+    }
+    if (ok) {
+        return {FloatKey::Interpolate(before_key.nestedData[0], after_key.nestedData[0], time),
+            FloatKey::Interpolate(before_key.nestedData[1], after_key.nestedData[1], time),
+            FloatKey::Interpolate(before_key.nestedData[2], after_key.nestedData[2], time)};
+    } else {
+        return {before_key.nestedData[0].value, before_key.nestedData[1].value,
+            before_key.nestedData[2].value};
+    }
+}
+
+
+template<>
+InterpolationType GenericAnimation<Vec3Key>::GetInterpolation(KeyTimeType time) const {
+    InterpolationType interp = InterpolationType::Step;
+    for (auto it = keys.begin(); it != keys.end(); ++it) {
+        if (it->second.nestedData[0].time == time) {
+            return it->second.nestedData[0].interpolation;
+        }
+        if (it->second.nestedData[0].time < time) {
+            interp = it->second.nestedData[0].interpolation;
+        }
+        if (it->second.nestedData[0].time > time) {
+            break;
+        }
+    }
+    return interp;
+}
+
+
+template<>
+KeyTimeType GenericAnimation<Vec3Key>::GetStartTime() const {
+    if (!keys.empty()) {
+        return keys.begin()->second.nestedData[0].time;
+    } else {
+        return 0;
+    }
+}
+
+
+template<>
+KeyTimeType GenericAnimation<Vec3Key>::GetEndTime() const {
+    if (!keys.empty()) {
+        return keys.rbegin()->second.nestedData[0].time;
+    } else {
+        return 1;
+    }
+}
+
+
+template<>
+KeyTimeType GenericAnimation<Vec3Key>::GetLength() const {
+    if (!keys.empty()) {
+        return keys.rbegin()->second.nestedData[0].time - keys.begin()->second.nestedData[0].time;
+    } else {
+        return 1;
+    }
+}
+
+
+template<>
+float GenericAnimation<Vec3Key>::GetMinValue() const {
+    if (!keys.empty()) {
+        auto min = std::numeric_limits<float>::max();
+        for (auto& k : keys) {
+            for (int i = 0; i < 3; ++i) {
+                min = std::min(min, k.second.nestedData[i].value);
+            }
+        }
+        return min;
+    } else {
+        return 0.0f;
+    }
+}
+
+
+template<>
+float GenericAnimation<Vec3Key>::GetMaxValue() const {
+    if (!keys.empty()) {
+        auto max = std::numeric_limits<float>::lowest();
+        for (auto& k : keys) {
+            for (int i = 0; i < 3; ++i) {
+                max = std::max(max, k.second.nestedData[i].value);
+            }
+        }
+        return max;
+    } else {
+        return 1.0f;
+    }
+}
+
+
+template<>
+void GenericAnimation<Vec3Key>::FixSorting() {
+        for (auto& k: keys) {
+            if (k.first != k.second.nestedData[0].time) {
+                auto wrong = keys.extract(k.first);
+                wrong.key() = k.second.nestedData[0].time;
+                keys.insert(std::move(wrong));
+            }
+        }
+    }
+
+
+template<>
+GenericAnimation<FloatKey>::ValueType::ValueType GenericAnimation<FloatKey>::GetValue(KeyTimeType time) const {
     if (keys.size() < 2) {
         if (keys.empty()) {
             return ValueType::ValueType();
