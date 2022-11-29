@@ -82,7 +82,7 @@ private:
     animation::FloatKey* selectedFloatKey = nullptr;
     animation::FloatKey* draggingFloatKey = nullptr;
     animation::StringKey* selectedStringKey = nullptr;
-    animation::Vec3Key* current_parent = nullptr; 
+    animation::Vec3Key* current_parent = nullptr;
     ImGuiEx::Canvas canvas = ImGuiEx::Canvas();
 
     bool canvas_visible = false;

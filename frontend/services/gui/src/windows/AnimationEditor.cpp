@@ -249,7 +249,8 @@ void AnimationEditor::RenderAnimation() {
         std::stringstream command;
         //command << "mmSetCliOption(\"privacynote\", \"off\")\n";
         // TODO: without gui, obviously. Or optionally?
-        command << "mmScreenshot(\"" << output_prefix << "_" << std::setw(5) << std::setfill('0') << current_frame << ".png\")";
+        command << "mmScreenshot(\"" << output_prefix << "_" << std::setw(5) << std::setfill('0') << current_frame
+                << ".png\")";
         auto res = (*input_lua_func)(command.str());
         if (!std::get<0>(res)) {
             open_popup_error = true;
@@ -469,8 +470,7 @@ void AnimationEditor::DrawToolbar() {
             }
             if (std::holds_alternative<animation::Vec3Animation>(allAnimations[selectedAnimation]) &&
                 selectedFloatKey != nullptr) {
-                std::get<animation::Vec3Animation>(allAnimations[selectedAnimation])
-                    .DeleteKey(selectedFloatKey->time);
+                std::get<animation::Vec3Animation>(allAnimations[selectedAnimation]).DeleteKey(selectedFloatKey->time);
                 selectedFloatKey = nullptr;
             }
         }
@@ -483,36 +483,36 @@ void AnimationEditor::DrawToolbar() {
     if (ImGui::Button("break tangents")) {
         if (selectedFloatKey != nullptr) {
             selectedFloatKey->tangents_linked = false;
-        }/* else if (selectedVec3Key != nullptr) {
-            for (int i = 0; i < 3; ++i) {
-                selectedVec3Key->nestedData[i].tangents_linked = false;
-            }
-        }*/
+        } /* else if (selectedVec3Key != nullptr) {
+             for (int i = 0; i < 3; ++i) {
+                 selectedVec3Key->nestedData[i].tangents_linked = false;
+             }
+         }*/
     }
     ImGui::SameLine();
     if (ImGui::Button("link tangents")) {
         if (selectedFloatKey != nullptr) {
             selectedFloatKey->tangents_linked = true;
             selectedFloatKey->out_tangent = ImVec2(-selectedFloatKey->in_tangent.x, -selectedFloatKey->in_tangent.y);
-        }/* else if (selectedVec3Key != nullptr) {
-            for (int i = 0; i < 3; ++i) {
-                selectedVec3Key->nestedData[i].tangents_linked = true;
-                selectedVec3Key->nestedData[i].out_tangent =
-                    ImVec2(-selectedVec3Key->nestedData[i].in_tangent.x, -selectedVec3Key->nestedData[i].in_tangent.y);
-            }
-        }*/
+        } /* else if (selectedVec3Key != nullptr) {
+             for (int i = 0; i < 3; ++i) {
+                 selectedVec3Key->nestedData[i].tangents_linked = true;
+                 selectedVec3Key->nestedData[i].out_tangent =
+                     ImVec2(-selectedVec3Key->nestedData[i].in_tangent.x, -selectedVec3Key->nestedData[i].in_tangent.y);
+             }
+         }*/
     }
     ImGui::SameLine();
     if (ImGui::Button("flat tangents")) {
         if (selectedFloatKey != nullptr) {
             selectedFloatKey->in_tangent = {-1.0f, 0.0f};
             selectedFloatKey->out_tangent = {1.0f, 0.0f};
-        }/* else if (selectedVec3Key != nullptr) {
-            for (int i = 0; i < 3; ++i) {
-                selectedVec3Key->nestedData[i].in_tangent = {-1.0f, 0.0f};
-                selectedVec3Key->nestedData[i].out_tangent = {1.0f, 0.0f};
-            }
-        }*/
+        } /* else if (selectedVec3Key != nullptr) {
+             for (int i = 0; i < 3; ++i) {
+                 selectedVec3Key->nestedData[i].in_tangent = {-1.0f, 0.0f};
+                 selectedVec3Key->nestedData[i].out_tangent = {1.0f, 0.0f};
+             }
+         }*/
     }
     ImGui::SameLine();
     DrawVerticalSeparator();
@@ -691,7 +691,8 @@ void AnimationEditor::DrawFloatKey(ImDrawList* dl, animation::FloatKey& key, ImU
 
     const auto t_in = ImVec2(time + key.in_tangent.x, (key.value + key.in_tangent.y) * -1.0f) * custom_zoom;
     ImGui::SetCursorScreenPos(ImVec2{t_in.x - (button_size.x / 2.0f), t_in.y - (button_size.y / 2.0f)});
-    ImGui::InvisibleButton((std::string("##key_intan") + std::to_string(key.time) + std::to_string(col)).c_str(), button_size);
+    ImGui::InvisibleButton(
+        (std::string("##key_intan") + std::to_string(key.time) + std::to_string(col)).c_str(), button_size);
     if (ImGui::IsItemActivated()) {
         curr_interaction = InteractionType::DraggingLeftTangent;
         drag_start = key.in_tangent;
@@ -713,7 +714,8 @@ void AnimationEditor::DrawFloatKey(ImDrawList* dl, animation::FloatKey& key, ImU
     drawList->AddCircleFilled(t_in, size, tangent_color, 4);
 
     ImGui::SetCursorScreenPos(ImVec2{t_out.x - (button_size.x / 2.0f), t_out.y - (button_size.y / 2.0f)});
-    ImGui::InvisibleButton((std::string("##key_outtan") + std::to_string(key.time) + std::to_string(col)).c_str(), button_size);
+    ImGui::InvisibleButton(
+        (std::string("##key_outtan") + std::to_string(key.time) + std::to_string(col)).c_str(), button_size);
     if (ImGui::IsItemActivated()) {
         curr_interaction = InteractionType::DraggingRightTangent;
         drag_start = key.out_tangent;
@@ -741,7 +743,8 @@ void AnimationEditor::DrawFloatKey(ImDrawList* dl, animation::FloatKey& key, ImU
     }
 
     ImGui::SetCursorScreenPos(ImVec2{pos.x - (button_size.x / 2.0f), pos.y - (button_size.y / 2.0f)});
-    ImGui::InvisibleButton((std::string("##key") + std::to_string(key.time) + std::to_string(col)).c_str(), button_size);
+    ImGui::InvisibleButton(
+        (std::string("##key") + std::to_string(key.time) + std::to_string(col)).c_str(), button_size);
     if (ImGui::IsItemActivated()) {
         selectedFloatKey = &key;
         current_parent = parent;
@@ -910,12 +913,8 @@ void AnimationEditor::DrawCurves() {
                 auto& anim = std::get<animation::Vec3Animation>(allAnimations[selectedAnimation]);
                 if (anim.GetSize() > 0) {
                     auto keys = anim.GetAllKeys();
-                    const ImU32 cols[] = {
-                        IM_COL32(255, 0, 0, 255),
-                        IM_COL32(0, 255, 0, 255),
-                        IM_COL32(0, 0, 255, 255),
-                        IM_COL32(255, 255, 255, 255)
-                    };
+                    const ImU32 cols[] = {IM_COL32(255, 0, 0, 255), IM_COL32(0, 255, 0, 255), IM_COL32(0, 0, 255, 255),
+                        IM_COL32(255, 255, 255, 255)};
                     for (auto i = 0; i < keys.size(); ++i) {
                         auto& k = anim[keys[i]];
                         for (int j = 0; j < 3; ++j) {
@@ -1111,8 +1110,7 @@ void AnimationEditor::DrawScale() {
         char label[16];
         snprintf(label, 15, "%g", s);
         auto labelSize = ImGui::CalcTextSize(label);
-        float label_offset =
-            ref_pt.x > (region_end.x + region_start.x) / 2.0f ? -labelSize.x - minorSize : minorSize;
+        float label_offset = ref_pt.x > (region_end.x + region_start.x) / 2.0f ? -labelSize.x - minorSize : minorSize;
 
         auto labelPosition = ImVec2(ref_pt * custom_zoom + ImVec2(label_offset, -s * custom_zoom.y));
         drawList->AddText(labelPosition, textColor, label);

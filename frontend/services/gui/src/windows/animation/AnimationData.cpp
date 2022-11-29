@@ -164,8 +164,7 @@ GenericAnimation<Vec3Key>::ValueType::ValueType GenericAnimation<Vec3Key>::GetVa
     bool ok = false;
     for (auto it = keys.begin(); it != keys.end(); ++it) {
         if (it->second.nestedData[0].time == time) {
-        return {it->second.nestedData[0].value, it->second.nestedData[1].value,
-            it->second.nestedData[2].value};
+            return {it->second.nestedData[0].value, it->second.nestedData[1].value, it->second.nestedData[2].value};
         }
         if (it->second.nestedData[0].time < time) {
             before_key = it->second;
@@ -181,8 +180,7 @@ GenericAnimation<Vec3Key>::ValueType::ValueType GenericAnimation<Vec3Key>::GetVa
             FloatKey::Interpolate(before_key.nestedData[1], after_key.nestedData[1], time),
             FloatKey::Interpolate(before_key.nestedData[2], after_key.nestedData[2], time)};
     } else {
-        return {before_key.nestedData[0].value, before_key.nestedData[1].value,
-            before_key.nestedData[2].value};
+        return {before_key.nestedData[0].value, before_key.nestedData[1].value, before_key.nestedData[2].value};
     }
 }
 
@@ -269,14 +267,14 @@ float GenericAnimation<Vec3Key>::GetMaxValue() const {
 
 template<>
 void GenericAnimation<Vec3Key>::FixSorting() {
-        for (auto& k: keys) {
-            if (k.first != k.second.nestedData[0].time) {
-                auto wrong = keys.extract(k.first);
-                wrong.key() = k.second.nestedData[0].time;
-                keys.insert(std::move(wrong));
-            }
+    for (auto& k : keys) {
+        if (k.first != k.second.nestedData[0].time) {
+            auto wrong = keys.extract(k.first);
+            wrong.key() = k.second.nestedData[0].time;
+            keys.insert(std::move(wrong));
         }
     }
+}
 
 
 template<>
