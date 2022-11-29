@@ -1096,23 +1096,25 @@ void AnimationEditor::DrawScale() {
     auto minorUnit = majorUnit / 10.0f;
 
     auto minor_start = std::nearbyintf(region_start.y / minorUnit) * minorUnit;
-    auto ref_pt = ImVec2(std::max(region_start.x + minorSize, 0.0f * custom_zoom.x), 0.0f);
-    ref_pt.x = std::min(ref_pt.x, region_end.x - minorSize);
+    auto ref_pt = ImVec2(std::max(region_start.x, 0.0f * custom_zoom.x), 0.0f);
+    ref_pt.x = std::min(ref_pt.x, region_end.x);
     for (auto s = minor_start; s < region_end.y; s += minorUnit) {
-        drawList->AddLine(ref_pt + ImVec2(-minorSize, -s * custom_zoom.y),
-            ref_pt + ImVec2(minorSize, -s * custom_zoom.y), minorColor);
+        drawList->AddLine(ref_pt * custom_zoom + ImVec2(-minorSize, -s * custom_zoom.y),
+            ref_pt * custom_zoom + ImVec2(minorSize, -s * custom_zoom.y), minorColor);
     }
 
     auto major_start = std::nearbyintf(region_start.y / majorUnit) * majorUnit;
     for (auto s = major_start; s < region_end.y; s += majorUnit) {
-        drawList->AddLine(ref_pt + ImVec2(-minorSize, -s * custom_zoom.y),
-            ref_pt + ImVec2(minorSize, -s * custom_zoom.y), majorColor);
+        drawList->AddLine(ref_pt * custom_zoom + ImVec2(-minorSize, -s * custom_zoom.y),
+            ref_pt * custom_zoom + ImVec2(minorSize, -s * custom_zoom.y), majorColor);
 
         char label[16];
         snprintf(label, 15, "%g", s);
         auto labelSize = ImGui::CalcTextSize(label);
+        float label_offset =
+            ref_pt.x > (region_end.x + region_start.x) / 2.0f ? -labelSize.x - minorSize : minorSize;
 
-        auto labelPosition = ImVec2(ref_pt + ImVec2(minorSize, -s * custom_zoom.y));
+        auto labelPosition = ImVec2(ref_pt * custom_zoom + ImVec2(label_offset, -s * custom_zoom.y));
         drawList->AddText(labelPosition, textColor, label);
     }
 }
