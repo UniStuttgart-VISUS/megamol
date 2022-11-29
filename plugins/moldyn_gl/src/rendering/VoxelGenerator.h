@@ -17,7 +17,7 @@ namespace megamol {
 namespace moldyn_gl {
 namespace rendering {
 
-class VoxelGenerator : public core::Module { // TODO is code::Module correct?
+class VoxelGenerator : public core::Module { // TODO is code::Module correct? // or ModuleGL?
 
 public:
     /**
@@ -80,6 +80,8 @@ protected:
      */
     bool onGenerateVoxels(core::Call& call);
 
+    bool GetExtents(core::Call& call);
+
 private:
     ///**
     // * TODO: Document
@@ -105,6 +107,8 @@ private:
      * @return Pointer to MultiParticleDataCall ...
      */
     geocalls::MultiParticleDataCall* getData(unsigned int t, float& out_scaling); // get particle data
+
+    geocalls::VolumetricDataCall::Metadata metadata;
 };
 
 } // namespace rendering
