@@ -149,16 +149,17 @@ bool AnimationEditor::NotifyParamChanged(
             }
             selectedFloatKey = nullptr;
         }
-        if (param_slot->Param<Vector3fParam>()) {
+        if (param_slot->Param<Vector2fParam>() || param_slot->Param<Vector3fParam>() || param_slot->Param<Vector4fParam>()) {
             const auto vec = animation::GetFloats(new_value);
             if (found_idx != -1) {
-                auto& a = std::get<animation::Vec3Animation>(allAnimations[found_idx]);
+                auto& a = std::get<animation::FloatVectorAnimation>(allAnimations[found_idx]);
                 if (a.HasKey(current_frame)) {
                     for (int i = 0; i < vec.size(); ++i) {
                         a[current_frame].nestedData[i].value = vec[i];
                     }
                 } else {
-                    animation::Vec3Key k;
+                    animation::VectorKey<animation::FloatKey> k;
+                    k.nestedData.resize(vec.size());
                     for (int i = 0; i < vec.size(); ++i) {
                         k.nestedData[i].value = vec[i];
                         k.nestedData[i].time = current_frame;
@@ -167,8 +168,9 @@ bool AnimationEditor::NotifyParamChanged(
                 }
                 CenterAnimation(a);
             } else {
-                animation::Vec3Animation v = {the_name};
-                animation::Vec3Key k;
+                animation::FloatVectorAnimation v{the_name};
+                animation::VectorKey<animation::FloatKey> k;
+                k.nestedData.resize(vec.size());
                 for (int i = 0; i < vec.size(); ++i) {
                     k.nestedData[i].value = vec[i];
                     k.nestedData[i].time = current_frame;
@@ -198,7 +200,7 @@ void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {
 
     animation::FloatAnimation f_dummy("dummy");
     animation::StringAnimation s_dummy("dummy");
-    animation::Vec3Animation v_dummy("dummy");
+    animation::FloatVectorAnimation v_dummy("dummy");
     if (!in_json.contains("animations")) {
         error_popup_message = "Loading failed: cannot find 'animations'";
         open_popup_error = true;
@@ -211,7 +213,7 @@ void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {
             // j.get<FloatAnimation>() does not work because no default constructor
             from_json(j, f_dummy);
             allAnimations.emplace_back(f_dummy);
-        } else if (j["type"] == "vec3") {
+        } else if (j["type"] == "float_vector") {
             from_json(j, v_dummy);
             allAnimations.emplace_back(v_dummy);
         } else {
@@ -429,12 +431,13 @@ void AnimationEditor::DrawToolbar() {
                     // TODO: compute sensible tangent
                     anim.AddKey(f);
                 }
-            } else if (std::holds_alternative<animation::Vec3Animation>(allAnimations[selectedAnimation])) {
-                auto& anim = std::get<animation::Vec3Animation>(allAnimations[selectedAnimation]);
+            } else if (std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])) {
+                auto& anim = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
                 if (!anim.HasKey(current_frame)) {
-                    animation::Vec3Key v;
+                    animation::FloatVectorAnimation::KeyType v;
                     auto temp = anim.GetValue(current_frame);
-                    for (int i = 0; i < 3; ++i) {
+                    v.nestedData.resize(temp.size());
+                    for (int i = 0; i < temp.size(); ++i) {
                         v.nestedData[i].time = current_frame;
                         v.nestedData[i].value = temp[i];
                         v.nestedData[i].interpolation = anim.GetInterpolation(current_frame);
@@ -467,9 +470,9 @@ void AnimationEditor::DrawToolbar() {
                     .DeleteKey(selectedStringKey->time);
                 selectedStringKey = nullptr;
             }
-            if (std::holds_alternative<animation::Vec3Animation>(allAnimations[selectedAnimation]) &&
+            if (std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]) &&
                 selectedFloatKey != nullptr) {
-                std::get<animation::Vec3Animation>(allAnimations[selectedAnimation])
+                std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])
                     .DeleteKey(selectedFloatKey->time);
                 selectedFloatKey = nullptr;
             }
@@ -539,8 +542,8 @@ void AnimationEditor::CenterAnimation(const animations& anim) {
         max_val = a.GetMaxValue();
         start = a.GetStartTime();
         len = static_cast<float>(a.GetLength());
-    } else if (std::holds_alternative<animation::Vec3Animation>(anim)) {
-        auto& a = std::get<animation::Vec3Animation>(anim);
+    } else if (std::holds_alternative<animation::FloatVectorAnimation>(anim)) {
+        auto& a = std::get<animation::FloatVectorAnimation>(anim);
         min_val = a.GetMinValue();
         max_val = a.GetMaxValue();
         start = a.GetStartTime();
@@ -677,7 +680,7 @@ void AnimationEditor::DrawInterpolation(
 }
 
 
-void AnimationEditor::DrawFloatKey(ImDrawList* dl, animation::FloatKey& key, ImU32 col, animation::Vec3Key* parent) {
+void AnimationEditor::DrawFloatKey(ImDrawList* dl, animation::FloatKey& key, ImU32 col, animation::VectorKey<animation::FloatKey>* parent) {
     const float size = 4.0f;
     const ImVec2 button_size = {8.0f, 8.0f};
     auto active_key_color = IM_COL32(255, 192, 96, 255);
@@ -763,7 +766,7 @@ void AnimationEditor::DrawFloatKey(ImDrawList* dl, animation::FloatKey& key, ImU
                     selectedFloatKey->time = new_time;
                 }
             } else {
-                auto& anim = std::get<animation::Vec3Animation>(allAnimations[selectedAnimation]);
+                auto& anim = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
                 if (anim.HasKey(new_time)) {
                     // space is occupied. we do not want that.
                 } else {
@@ -783,7 +786,7 @@ void AnimationEditor::DrawFloatKey(ImDrawList* dl, animation::FloatKey& key, ImU
                 auto& anim = std::get<animation::FloatAnimation>(allAnimations[selectedAnimation]);
                 anim.FixSorting();
             } else {
-                auto& anim = std::get<animation::Vec3Animation>(allAnimations[selectedAnimation]);
+                auto& anim = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
                 anim.FixSorting();
             }
         }
@@ -906,8 +909,8 @@ void AnimationEditor::DrawCurves() {
                         DrawFloatKey(drawList, k);
                     }
                 }
-            } else if (std::holds_alternative<animation::Vec3Animation>(allAnimations[selectedAnimation])) {
-                auto& anim = std::get<animation::Vec3Animation>(allAnimations[selectedAnimation]);
+            } else if (std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])) {
+                auto& anim = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
                 if (anim.GetSize() > 0) {
                     auto keys = anim.GetAllKeys();
                     const ImU32 cols[] = {
@@ -918,7 +921,7 @@ void AnimationEditor::DrawCurves() {
                     };
                     for (auto i = 0; i < keys.size(); ++i) {
                         auto& k = anim[keys[i]];
-                        for (int j = 0; j < 3; ++j) {
+                        for (int j = 0; j < k.nestedData.size(); ++j) {
                             if (i < keys.size() - 1) {
                                 auto& k2 = anim[keys[i + 1]];
                                 DrawInterpolation(drawList, k.nestedData[j], k2.nestedData[j]);
@@ -980,13 +983,14 @@ void AnimationEditor::DrawProperties() {
     if (selectedAnimation > -1) {
         auto anim = allAnimations[selectedAnimation];
         if ((std::holds_alternative<animation::FloatAnimation>(anim) ||
-                std::holds_alternative<animation::Vec3Animation>(anim)) &&
+                std::holds_alternative<animation::FloatVectorAnimation>(anim)) &&
             selectedFloatKey != nullptr) {
             if (ImGui::InputInt("Time", &selectedFloatKey->time)) {
                 // TODO: explosion when we move a key on top of another one (not okay for the map!)
                 if (current_parent != nullptr) {
                     auto t = selectedFloatKey->time;
-                    for (int i = 0; i < 3; ++i) {
+                    auto float_anim = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
+                    for (int i = 0; i < float_anim.VectorLength(); ++i) {
                         current_parent->nestedData[i].time = t;
                     }
                 }

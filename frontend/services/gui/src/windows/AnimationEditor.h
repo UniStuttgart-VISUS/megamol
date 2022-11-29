@@ -50,7 +50,7 @@ public:
     void RenderAnimation();
 
 private:
-    using animations = std::variant<animation::FloatAnimation, animation::StringAnimation, animation::Vec3Animation>;
+    using animations = std::variant<animation::FloatAnimation, animation::StringAnimation, animation::FloatVectorAnimation>;
 
     void WriteValuesToGraph();
     bool SaveToFile(const std::string& file);
@@ -64,7 +64,7 @@ private:
     void DrawParams();
     void DrawInterpolation(ImDrawList* dl, const animation::FloatKey& key, const animation::FloatKey& k2);
     void DrawFloatKey(ImDrawList* dl, animation::FloatKey& key, ImU32 col = IM_COL32(255, 128, 0, 255),
-        animation::Vec3Key* parent = nullptr);
+        animation::VectorKey<animation::FloatKey>* parent = nullptr);
     void DrawPlayhead(ImDrawList* drawList);
     void DrawStringKey(ImDrawList* im_draws, animation::StringKey& key, ImU32 col = IM_COL32(255, 128, 0, 255));
     void DrawCurves();
@@ -82,7 +82,7 @@ private:
     animation::FloatKey* selectedFloatKey = nullptr;
     animation::FloatKey* draggingFloatKey = nullptr;
     animation::StringKey* selectedStringKey = nullptr;
-    animation::Vec3Key* current_parent = nullptr; 
+    animation::VectorKey<animation::FloatKey>* current_parent = nullptr; 
     ImGuiEx::Canvas canvas = ImGuiEx::Canvas();
 
     bool canvas_visible = false;

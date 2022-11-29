@@ -35,17 +35,18 @@ void animation::from_json(const nlohmann::json& j, StringKey& k) {
 }
 
 
-void animation::to_json(nlohmann::json& j, const Vec3Key& k) {
+void animation::to_json(nlohmann::json& j, const VectorKey<FloatKey>& k) {
     auto k_array = nlohmann::json::array();
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < k.nestedData.size(); ++i) {
         k_array.push_back(k.nestedData[i]);
     }
     j["nested_data"] = k_array;
 }
 
 
-void animation::from_json(const nlohmann::json& j, Vec3Key& k) {
-    for (int i = 0; i < 3; ++i) {
+void animation::from_json(const nlohmann::json& j, VectorKey<FloatKey>& k) {
+    auto num = j["nested_data"].size();
+    for (int i = 0; i < num; ++i) {
         j["nested_data"][i].get_to(k.nestedData[i]);
     }
 }
@@ -90,8 +91,8 @@ void animation::from_json(const nlohmann::json& j, StringAnimation& s) {
     }
 }
 
-void animation::to_json(nlohmann::json& j, const Vec3Animation& v) {
-    j = nlohmann::json{{"name", v.GetName()}, {"type", "vec3"}};
+void animation::to_json(nlohmann::json& j, const FloatVectorAnimation& v) {
+    j = nlohmann::json{{"name", v.GetName()}, {"type", "float_vector"}};
     auto v_array = nlohmann::json::array();
     for (auto& k : v.GetAllKeys()) {
         v_array.push_back(v[k]);
@@ -99,11 +100,11 @@ void animation::to_json(nlohmann::json& j, const Vec3Animation& v) {
     j["keys"] = v_array;
 }
 
-void animation::from_json(const nlohmann::json& j, Vec3Animation& v) {
-    v = Vec3Animation{j.at("name")};
-    assert(j.at("type") == "vec3");
+void animation::from_json(const nlohmann::json& j, FloatVectorAnimation& v) {
+    v = FloatVectorAnimation{j.at("name")};
+    assert(j.at("type") == "float_vector");
     for (auto& j : j["keys"]) {
-        Vec3Key k;
+        FloatVectorAnimation::KeyType k;
         j.get_to(k);
         v.AddKey(k);
     }
