@@ -240,7 +240,7 @@ std::vector<float> animation::GetFloats(std::string vector_string) {
     std::vector<float> ret;
     auto stream = std::stringstream(vector_string);
     std::string token;
-    while(std::getline(stream, token, ';')) {
+    while (std::getline(stream, token, ';')) {
         ret.push_back(std::stof(token));
     }
     return ret;

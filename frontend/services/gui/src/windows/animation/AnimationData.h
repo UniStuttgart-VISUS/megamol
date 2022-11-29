@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include "mmcore/MegaMolGraph.h"
 #include "gui_utils.h"
+#include "mmcore/MegaMolGraph.h"
 
-#include <map>
 #include "glm/glm.hpp"
+#include <map>
 
 
 namespace megamol {
@@ -80,7 +80,7 @@ public:
     }
 
     void FixSorting() {
-        for (auto& k: keys) {
+        for (auto& k : keys) {
             if (k.first != k.second.time) {
                 auto wrong = keys.extract(k.first);
                 wrong.key() = k.second.time;
