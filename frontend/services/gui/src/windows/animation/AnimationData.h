@@ -40,7 +40,6 @@ struct FloatKey {
 
 struct Vec3Key {
     using ValueType = glm::vec3;
-    ValueType value;
     std::array<FloatKey, 3> nestedData;
 
     // this is expensive (accurately hit time first!)...

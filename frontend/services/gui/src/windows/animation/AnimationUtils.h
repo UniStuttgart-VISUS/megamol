@@ -18,6 +18,8 @@ void to_json(nlohmann::json& j, const FloatKey& k);
 void from_json(const nlohmann::json& j, FloatKey& k);
 void to_json(nlohmann::json& j, const StringKey& k);
 void from_json(const nlohmann::json& j, StringKey& k);
+void to_json(nlohmann::json& j, const Vec3Key& k);
+void from_json(const nlohmann::json& j, Vec3Key& k);
 
 void to_json(nlohmann::json& j, const FloatAnimation& f);
 void from_json(const nlohmann::json& j, FloatAnimation& f);

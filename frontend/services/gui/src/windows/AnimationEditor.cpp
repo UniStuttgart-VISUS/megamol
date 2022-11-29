@@ -198,6 +198,7 @@ void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {
 
     animation::FloatAnimation f_dummy("dummy");
     animation::StringAnimation s_dummy("dummy");
+    animation::Vec3Animation v_dummy("dummy");
     if (!in_json.contains("animations")) {
         error_popup_message = "Loading failed: cannot find 'animations'";
         open_popup_error = true;
@@ -210,8 +211,11 @@ void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {
             // j.get<FloatAnimation>() does not work because no default constructor
             from_json(j, f_dummy);
             allAnimations.emplace_back(f_dummy);
+        } else if (j["type"] == "vec3") {
+            from_json(j, v_dummy);
+            allAnimations.emplace_back(v_dummy);
         } else {
-            error_popup_message = "Loading failed: " + j["name"].get<std::string>() + " has no type";
+            error_popup_message = "Loading failed: " + j["name"].get<std::string>() + " has no known type";
             open_popup_error = true;
         }
     }
@@ -394,6 +398,19 @@ void AnimationEditor::DrawToolbar() {
         if (write_to_graph) {
             auto_capture = false;
         }
+        WriteValuesToGraph();
+    }
+    ImGui::SameLine();
+    DrawVerticalSeparator();
+
+    ImGui::SameLine();
+    if (ImGui::Button("delete animation")) {
+        if (selectedAnimation != -1) {
+            allAnimations.erase(allAnimations.begin() + selectedAnimation);
+            selectedFloatKey = nullptr;
+            selectedStringKey = nullptr;
+            selectedAnimation = -1;
+        }
     }
     ImGui::SameLine();
     DrawVerticalSeparator();
@@ -409,19 +426,10 @@ void AnimationEditor::DrawToolbar() {
                     f.time = current_frame;
                     f.value = anim.GetValue(current_frame);
                     f.interpolation = anim.GetInterpolation(current_frame);
+                    // TODO: compute sensible tangent
                     anim.AddKey(f);
                 }
-            }
-            if (std::holds_alternative<animation::StringAnimation>(allAnimations[selectedAnimation])) {
-                auto& anim = std::get<animation::StringAnimation>(allAnimations[selectedAnimation]);
-                if (!anim.HasKey(current_frame)) {
-                    animation::StringKey s;
-                    s.time = current_frame;
-                    s.value = std::string(anim.GetValue(current_frame));
-                    anim.AddKey(s);
-                }
-            }
-            if (std::holds_alternative<animation::Vec3Animation>(allAnimations[selectedAnimation])) {
+            } else if (std::holds_alternative<animation::Vec3Animation>(allAnimations[selectedAnimation])) {
                 auto& anim = std::get<animation::Vec3Animation>(allAnimations[selectedAnimation]);
                 if (!anim.HasKey(current_frame)) {
                     animation::Vec3Key v;
@@ -429,8 +437,18 @@ void AnimationEditor::DrawToolbar() {
                     for (int i = 0; i < 3; ++i) {
                         v.nestedData[i].time = current_frame;
                         v.nestedData[i].value = temp[i];
+                        v.nestedData[i].interpolation = anim.GetInterpolation(current_frame);
+                        // TODO: compute sensible tangent
                     }
                     anim.AddKey(v);
+                }
+            } else if (std::holds_alternative<animation::StringAnimation>(allAnimations[selectedAnimation])) {
+                auto& anim = std::get<animation::StringAnimation>(allAnimations[selectedAnimation]);
+                if (!anim.HasKey(current_frame)) {
+                    animation::StringKey s;
+                    s.time = current_frame;
+                    s.value = std::string(anim.GetValue(current_frame));
+                    anim.AddKey(s);
                 }
             }
         }
@@ -754,6 +772,7 @@ void AnimationEditor::DrawFloatKey(ImDrawList* dl, animation::FloatKey& key, ImU
                     }
                 }
             }
+            WriteValuesToGraph();
         }
     }
     if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && curr_interaction == InteractionType::DraggingKey &&
@@ -767,31 +786,8 @@ void AnimationEditor::DrawFloatKey(ImDrawList* dl, animation::FloatKey& key, ImU
                 auto& anim = std::get<animation::Vec3Animation>(allAnimations[selectedAnimation]);
                 anim.FixSorting();
             }
-
-            //if (parent == nullptr) {
-            //    auto k = *selectedFloatKey;
-            //    auto& anim = std::get<animation::FloatAnimation>(allAnimations[selectedAnimation]);
-            //    anim.DeleteKey(drag_start_time);
-            //    anim.AddKey(k);
-            //    selectedFloatKey = &anim[k.time];
-            //} else {
-            //    int selectedIdx = -1;
-            //    for (auto i = 0; i < 3; ++i) {
-            //        if (&parent->nestedData[i] == selectedFloatKey) {
-            //            selectedIdx = i;
-            //        }
-            //    }
-            //    auto old = *parent;
-            //    auto& anim = std::get<animation::Vec3Animation>(allAnimations[selectedAnimation]);
-            //    anim.DeleteKey(drag_start_time);
-            //    anim.AddKey(old);
-            //    if (selectedIdx != -1) {
-            //        selectedFloatKey = &anim[old.nestedData[0].time].nestedData[selectedIdx];
-            //    } else {
-            //        selectedFloatKey = nullptr;
-            //    }
-            //}
         }
+        WriteValuesToGraph();
         curr_interaction = InteractionType::None;
     }
     // below here, do not touch key anymore, it might have been nuked by the sorting above
@@ -987,6 +983,7 @@ void AnimationEditor::DrawProperties() {
                 std::holds_alternative<animation::Vec3Animation>(anim)) &&
             selectedFloatKey != nullptr) {
             if (ImGui::InputInt("Time", &selectedFloatKey->time)) {
+                // TODO: explosion when we move a key on top of another one (not okay for the map!)
                 if (current_parent != nullptr) {
                     auto t = selectedFloatKey->time;
                     for (int i = 0; i < 3; ++i) {

@@ -35,6 +35,22 @@ void animation::from_json(const nlohmann::json& j, StringKey& k) {
 }
 
 
+void animation::to_json(nlohmann::json& j, const Vec3Key& k) {
+    auto k_array = nlohmann::json::array();
+    for (int i = 0; i < 3; ++i) {
+        k_array.push_back(k.nestedData[i]);
+    }
+    j["nested_data"] = k_array;
+}
+
+
+void animation::from_json(const nlohmann::json& j, Vec3Key& k) {
+    for (int i = 0; i < 3; ++i) {
+        j["nested_data"][i].get_to(k.nestedData[i]);
+    }
+}
+
+
 void animation::to_json(nlohmann::json& j, const FloatAnimation& f) {
     j = nlohmann::json{{"name", f.GetName()}, {"type", "float"}};
     auto k_array = nlohmann::json::array();
@@ -75,11 +91,22 @@ void animation::from_json(const nlohmann::json& j, StringAnimation& s) {
 }
 
 void animation::to_json(nlohmann::json& j, const Vec3Animation& v) {
-    // TODO
+    j = nlohmann::json{{"name", v.GetName()}, {"type", "vec3"}};
+    auto v_array = nlohmann::json::array();
+    for (auto& k : v.GetAllKeys()) {
+        v_array.push_back(v[k]);
+    }
+    j["keys"] = v_array;
 }
 
-void animation::from_json(const nlohmann::json& j, Vec3Animation& s) {
-    // TODO
+void animation::from_json(const nlohmann::json& j, Vec3Animation& v) {
+    v = Vec3Animation{j.at("name")};
+    assert(j.at("type") == "vec3");
+    for (auto& j : j["keys"]) {
+        Vec3Key k;
+        j.get_to(k);
+        v.AddKey(k);
+    }
 }
 
 static ImVector<ImRect> s_GroupPanelLabelStack;
