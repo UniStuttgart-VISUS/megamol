@@ -111,7 +111,7 @@ public:
 
     // these two are a bit special
     float GetMinValue() const {
-        return -1.0f;    
+        return -1.0f;
     }
     float GetMaxValue() const {
         return 1.0f;

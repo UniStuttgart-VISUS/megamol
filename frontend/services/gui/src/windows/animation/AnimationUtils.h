@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "nlohmann/json.hpp"
 #include "AnimationData.h"
+#include "nlohmann/json.hpp"
 
 namespace megamol {
 namespace gui {
