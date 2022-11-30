@@ -243,7 +243,8 @@ bool megamol::core::MegaMolGraph::Broadcast_graph_subscribers_parameter_changes(
             auto abstract_parameter_ptr = changed_param_ptr->Parameter();
 
             if (abstract_parameter_ptr.IsNull()) {
-                log_error(" casting AbstractParamSlot* to AbstractParam* failed. Can not propagate changed param value.");
+                log_error(
+                    " casting AbstractParamSlot* to AbstractParam* failed. Can not propagate changed param value.");
                 return false;
             }
 

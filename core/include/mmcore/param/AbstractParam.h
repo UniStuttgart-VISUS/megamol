@@ -109,6 +109,40 @@ public:
         this->change_callback = callback;
     }
 
+    // TODO Temporary add wrappers around GuiPresentation() to avoid breaking changes for modules and merge hotfix
+    //  until we know how this should be solved cleanly.
+    inline bool InitPresentation(AbstractParamPresentation::ParamType param_type) {
+        return GuiPresentation().InitPresentation(param_type);
+    }
+
+    inline bool IsGUIVisible() const {
+        AbstractParamPresentation const& tmp = GuiPresentation();
+        return tmp.IsGUIVisible();
+    }
+
+    inline void SetGUIVisible(bool visible) {
+        GuiPresentation().SetGUIVisible(visible);
+    }
+
+    inline bool IsGUIReadOnly() const {
+        AbstractParamPresentation const& tmp = GuiPresentation();
+        return tmp.IsGUIReadOnly();
+    }
+
+    inline void SetGUIReadOnly(bool read_only) {
+        GuiPresentation().SetGUIReadOnly(read_only);
+    }
+
+    inline AbstractParamPresentation::Presentation GetGUIPresentation() const {
+        AbstractParamPresentation const& tmp = GuiPresentation();
+        return tmp.GetGUIPresentation();
+    }
+
+    void SetGUIPresentation(AbstractParamPresentation::Presentation presentS) {
+        GuiPresentation().SetGUIPresentation(presentS);
+    }
+
+protected:
     // we need to route all changes to the GUI presentation via this function in the parameter
     // because the parameter needs to indicate internal state changes
     // to the frontend, in order for the frontend GUI
