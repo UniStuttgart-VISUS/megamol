@@ -981,12 +981,12 @@ void AnimationEditor::DrawProperties() {
     ImGui::BeginChild(
         "key_props", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
     if (selectedAnimation > -1) {
-        auto anim = allAnimations[selectedAnimation];
+        auto& anim = allAnimations[selectedAnimation];
         if ((std::holds_alternative<animation::FloatAnimation>(anim) ||
                 std::holds_alternative<animation::FloatVectorAnimation>(anim)) &&
             selectedFloatKey != nullptr) {
             if (ImGui::InputInt("Time", &selectedFloatKey->time)) {
-                // TODO: explosion when we move a key on top of another one (not okay for the map!)
+                // TODO BUG explosion when we move a key on top of another one (not okay for the map!)
                 if (current_parent != nullptr) {
                     auto t = selectedFloatKey->time;
                     auto float_anim = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
@@ -999,6 +999,7 @@ void AnimationEditor::DrawProperties() {
             ImGui::InputFloat("Value", &selectedFloatKey->value);
             const char* items[] = {"Step", "Linear", "Hermite", "Cubic Bezier"};
             auto current_item = items[static_cast<int32_t>(selectedFloatKey->interpolation)];
+            bool do_propagate = false;
             if (ImGui::BeginCombo("Interpolation", current_item)) {
                 for (int n = 0; n < 4; n++) {
                     const bool is_selected = (current_item == items[n]);
@@ -1018,11 +1019,38 @@ void AnimationEditor::DrawProperties() {
                             selectedFloatKey->interpolation = animation::InterpolationType::CubicBezier;
                             break;
                         }
+                        do_propagate = true;
                     }
                     if (is_selected)
                         ImGui::SetItemDefaultFocus();
                 }
                 ImGui::EndCombo();
+            }
+            if (current_parent != nullptr) {
+                if (ImGui::Checkbox("Propagate interpolation to siblings", &propagate_to_siblings)) {
+                    do_propagate = true;
+                }
+                if (propagate_to_siblings && do_propagate) {
+                    auto interp = selectedFloatKey->interpolation;
+                    for (int i = 0; i < current_parent->nestedData.size(); ++i) {
+                        current_parent->nestedData[i].interpolation = interp;
+                    }
+                }
+            }
+            if (ImGui::Button("Set on all keys")) {
+                if (std::holds_alternative<animation::FloatAnimation>(anim)) {
+                    auto& fa = std::get<animation::FloatAnimation>(anim);
+                    for (auto& k : fa) {
+                        k.second.interpolation = selectedFloatKey->interpolation;
+                    }
+                } else if (std::holds_alternative<animation::VectorAnimation<animation::FloatKey>>(anim)) {
+                    auto& va = std::get<animation::VectorAnimation<animation::FloatKey>>(anim);
+                    for (auto& k : va) {
+                        for (int i = 0; i < k.second.nestedData.size(); ++i) {
+                            k.second.nestedData[i].interpolation = selectedFloatKey->interpolation;
+                        }
+                    }
+                }
             }
         } else if (std::holds_alternative<animation::StringAnimation>(anim) && selectedStringKey != nullptr) {
             ImGui::InputInt("Time", &selectedStringKey->time);

@@ -46,6 +46,7 @@ void animation::to_json(nlohmann::json& j, const VectorKey<FloatKey>& k) {
 
 void animation::from_json(const nlohmann::json& j, VectorKey<FloatKey>& k) {
     auto num = j["nested_data"].size();
+    k.nestedData.resize(num);
     for (int i = 0; i < num; ++i) {
         j["nested_data"][i].get_to(k.nestedData[i]);
     }

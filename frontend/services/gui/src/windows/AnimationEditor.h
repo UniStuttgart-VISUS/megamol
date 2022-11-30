@@ -108,6 +108,7 @@ private:
     lua_func_type* input_lua_func = nullptr;
     FileBrowserWidget file_browser;
     bool open_popup_load = false, open_popup_save = false, open_popup_error = false;
+    bool propagate_to_siblings = false;
     std::string error_popup_message;
     vislib::math::Ternary ternary = vislib::math::Ternary::TRI_UNKNOWN;
     std::string animation_file;
