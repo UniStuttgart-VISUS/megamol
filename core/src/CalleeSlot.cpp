@@ -9,46 +9,11 @@
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/profiler/Manager.h"
+#include "vislib/sys/AutoLock.h"
 
 using namespace megamol::core;
 
 /****************************************************************************/
-
-/*
- * CalleeSlot::ProfilingCallback::ProfilingCallback
- */
-CalleeSlot::ProfilingCallback::ProfilingCallback(Callback* cb, profiler::Connection::ptr_type conn)
-        : Callback(nullptr, nullptr)
-        , cb(cb)
-        , conn(conn) {
-    // intentionally empty
-}
-
-
-/*
- * CalleeSlot::ProfilingCallback::~ProfilingCallback
- */
-CalleeSlot::ProfilingCallback::~ProfilingCallback(void) {
-    this->cb = NULL; // do not delete
-    this->conn.reset();
-}
-
-
-/*
- * CalleeSlot::ProfilingCallback::CallMe
- */
-bool CalleeSlot::ProfilingCallback::CallMe(Module* owner, Call& call) {
-    ASSERT(this->conn);
-    this->conn->begin_measure();
-    bool rv = this->cb->CallMe(owner, call);
-    this->conn->end_measure();
-    return rv;
-}
-
-/****************************************************************************/
-
 
 /*
  * CalleeSlot::CalleeSlot
@@ -84,15 +49,10 @@ bool CalleeSlot::ConnectCall(megamol::core::Call* call, factories::CallDescripti
     // for the new MegaMolGraph, we don't want to handle ConreInstances.
     // so now we pass the call_description, which the graph holds anyway, to satisfy the code filling call->funcMap[]
     if (call_description == nullptr) {
-        core::CoreInstance& coreInst = *this->GetCoreInstance();
-        for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
-            if ((desc = coreInst.GetCallDescriptionManager().Find(this->callbacks[i]->CallName()))->IsDescribing(call))
-                break;
-            desc.reset();
-        }
-        if (!desc) {
-            return false;
-        }
+        // This case was legacy support for the old mmconsole. It should now never be called. Keep this is as safety
+        // check, because the old function signature is still in use in the Call destructor, but that should trigger
+        // the above call == nullptr case.
+        throw std::runtime_error("CalleeSlot::ConnectCall() - This case should not happen!");
     } else {
         desc = call_description;
     }
@@ -141,7 +101,7 @@ void CalleeSlot::ClearCleanupMark(void) {
  * CalleeSlot::IsParamRelevant
  */
 bool CalleeSlot::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const vislib::SmartPtr<param::AbstractParam>& param) const {
+    const std::shared_ptr<param::AbstractParam>& param) const {
     if (searched.Contains(this)) {
         return false;
     } else {
@@ -183,135 +143,4 @@ bool CalleeSlot::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObj
     }
 
     return false;
-}
-
-
-/*
- * CalleeSlot::IsCallProfiling
- */
-bool CalleeSlot::IsCallProfiling(const Call* c) const {
-    ASSERT(c->PeekCalleeSlot() == this);
-
-    // find call description to know how many functions are required
-    factories::CallDescription::ptr desc = nullptr;
-    for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
-        if ((desc = this->GetCoreInstance()->GetCallDescriptionManager().Find(this->callbacks[i]->CallName()))
-                ->IsDescribing(c))
-            break;
-        desc = nullptr;
-    }
-    ASSERT(desc != nullptr);
-
-    // number of function callbacks
-    unsigned int func_cnt = desc->FunctionCount();
-    if (func_cnt == 0)
-        return false; // WTF?
-
-    // test if at least one function callback is a profiling callback
-    for (unsigned int i = 0; i < func_cnt; i++) {
-        unsigned int func_idx = c->funcMap[i];
-        ASSERT(func_idx < this->callbacks.Count());
-
-        Callback* cb = this->callbacks[func_idx];
-        if (dynamic_cast<ProfilingCallback*>(cb) != nullptr) {
-            // Callback cb is a profiling callback
-            return true;
-        }
-    }
-
-    return false;
-}
-
-
-/*
- * CalleeSlot::AddCallProfiling
- */
-void CalleeSlot::AddCallProfiling(const Call* c) {
-    ASSERT(this->IsCallProfiling(c) == false);
-    ASSERT(c->PeekCalleeSlot() == this);
-
-    // find call description to know how many functions are required
-    factories::CallDescription::ptr desc = nullptr;
-    for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
-        if ((desc = this->GetCoreInstance()->GetCallDescriptionManager().Find(this->callbacks[i]->CallName()))
-                ->IsDescribing(c))
-            break;
-        desc = nullptr;
-    }
-    ASSERT(desc != nullptr);
-
-    // number of function callbacks
-    unsigned int func_cnt = desc->FunctionCount();
-    if (func_cnt == 0)
-        return; // WTF?
-
-    // Change callbacks to be profiling
-    for (unsigned int i = 0; i < func_cnt; i++) {
-        unsigned int func_idx = c->funcMap[i];
-        ASSERT(func_idx < this->callbacks.Count());
-
-        ProfilingCallback* pcb = new ProfilingCallback(
-            this->callbacks[func_idx], profiler::Connection::ptr_type(new profiler::Connection()));
-        this->callbacks.Add(pcb);
-        c->funcMap[i] = static_cast<unsigned int>(this->callbacks.Count() - 1);
-        pcb->GetConnection()->set_call(c);
-        pcb->GetConnection()->set_function_id(i);
-
-        profiler::Manager::Instance().AddConnection(pcb->GetConnection());
-    }
-}
-
-
-/*
- * CalleeSlot::RemoveCallProfiling
- */
-void CalleeSlot::RemoveCallProfiling(const Call* c) {
-    ASSERT(c->PeekCalleeSlot() == this);
-
-    // find call description to know how many functions are required
-    factories::CallDescription::ptr desc = nullptr;
-    for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
-        if ((desc = this->GetCoreInstance()->GetCallDescriptionManager().Find(this->callbacks[i]->CallName()))
-                ->IsDescribing(c))
-            break;
-        desc = nullptr;
-    }
-    ASSERT(desc != nullptr);
-
-    // number of function callbacks
-    unsigned int func_cnt = desc->FunctionCount();
-    if (func_cnt == 0)
-        return; // WTF?
-
-    // switch from profiling callback to normal callbacks
-    for (unsigned int i = 0; i < func_cnt; i++) {
-        unsigned int func_idx = c->funcMap[i];
-        ASSERT(func_idx < this->callbacks.Count());
-
-        Callback* cb = this->callbacks[func_idx];
-        if (dynamic_cast<ProfilingCallback*>(cb) != nullptr) {
-            // Callback cb is a profiling callback
-
-            Callback* tcb = cb;
-            while (dynamic_cast<ProfilingCallback*>(tcb) != nullptr)
-                tcb = dynamic_cast<ProfilingCallback*>(tcb)->GetCallback();
-            // HAZARD: we assume this loop is run exactly one time! In other cases memory leaks appear.
-
-            // now tcb is the 'real' non-profiling callback
-            unsigned int t_func_idx(static_cast<unsigned int>(this->callbacks.Count() + 1));
-            for (unsigned int j = 0; j < this->callbacks.Count(); j++) {
-                if (this->callbacks[j] == tcb) {
-                    t_func_idx = j;
-                    break;
-                }
-            }
-            ASSERT(t_func_idx < this->callbacks.Count() - 1);
-
-            // found new target
-            c->funcMap[i] = t_func_idx;
-            this->callbacks.Remove(cb); // remove old profiling callback
-            profiler::Manager::Instance().RemoveConnection(dynamic_cast<ProfilingCallback*>(cb)->GetConnection());
-            delete cb;
-        }
-    }
 }

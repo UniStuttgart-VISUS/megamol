@@ -1,7 +1,10 @@
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 
+#include <cstring>
+
 #include "mmcore/utility/DateTime.h"
 #include "mmcore/utility/buildinfo/BuildInfo.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/platform/RuntimeInfo.h"
 
 #ifdef _WIN32

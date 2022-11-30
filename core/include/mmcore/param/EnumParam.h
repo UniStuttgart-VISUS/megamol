@@ -1,26 +1,17 @@
-/*
- * EnumParam.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ENUMPARAM_H_INCLUDED
-#define MEGAMOLCORE_ENUMPARAM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <map>
+#include <string>
 
 #include "AbstractParam.h"
-#include "vislib/Map.h"
-#include "vislib/String.h"
-#include "vislib/tchar.h"
 
-
-namespace megamol {
-namespace core {
-namespace param {
-
+namespace megamol::core::param {
 
 /**
  * class for enumeration parameter objects
@@ -37,20 +28,12 @@ public:
     /**
      * Dtor.
      */
-    virtual ~EnumParam(void);
+    ~EnumParam() override;
 
     /**
      * Clears TypePairs storage.
      */
-    virtual void ClearTypePairs(void);
-
-    /**
-     * Returns a machine-readable definition of the parameter.
-     *
-     * @param outDef A memory block to receive a machine-readable
-     *               definition of the parameter.
-     */
-    std::string Definition() const override;
+    virtual void ClearTypePairs();
 
     /**
      * Tries to parse the given string as value for this parameter and
@@ -82,24 +65,6 @@ public:
     EnumParam* SetTypePair(int value, const char* name);
 
     /**
-     * Sets a type pair for the enum type. Although the parameter can hold
-     * any integer number as value, gui mechanisms will only be able to
-     * represent values associated with a name.
-     *
-     * Calling the method for a value which already has a name will
-     * overwrite the previously set name.
-     *
-     * You must not call this method after the slot this parameter is
-     * assigned to has been made public.
-     *
-     * @param value The value to set the name for.
-     * @param name The name of the value specified.
-     *
-     * @return 'this'
-     */
-    EnumParam* SetTypePair(int value, const wchar_t* name);
-
-    /**
      * Sets the value of the parameter and optionally sets the dirty flag
      * of the owning parameter slot.
      *
@@ -114,7 +79,7 @@ public:
      *
      * @return The value of the parameter
      */
-    inline int Value(void) const {
+    inline int Value() const {
         return this->val;
     }
 
@@ -123,7 +88,7 @@ public:
      *
      * @return The TypePairs storage.
      */
-    inline vislib::Map<int, vislib::TString> getMap() {
+    inline std::map<int, std::string> getMap() {
         return this->typepairs;
     }
 
@@ -132,14 +97,14 @@ public:
      *
      * @return The value of the parameter as string.
      */
-    std::string ValueString(void) const override;
+    std::string ValueString() const override;
 
     /**
      * Gets the value of the parameter
      *
      * @return The value of the parameter
      */
-    inline operator int(void) const {
+    inline operator int() const {
         return this->val;
     }
 
@@ -148,27 +113,17 @@ public:
      *
      * @return The number of currently owned typepairs
      */
-    inline size_t ContentCount() const {
-        return typepairs.Count();
+    inline std::size_t ContentCount() const {
+        return typepairs.size();
     }
 
 private:
     /** The value of the parameter */
     int val;
 
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
     /** The type pairs for values and names */
-    vislib::Map<int, vislib::TString> typepairs;
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif /* _WIN32 */
+    std::map<int, std::string> typepairs;
 };
 
 
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ENUMPARAM_H_INCLUDED */
+} // namespace megamol::core::param

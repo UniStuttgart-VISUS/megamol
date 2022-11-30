@@ -1,8 +1,9 @@
 #include "NormalFromDepth.h"
 
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+
+using megamol::core::utility::log::Log;
 
 megamol::compositing_gl::NormalFromDepth::NormalFromDepth()
         : m_version(0)
@@ -27,7 +28,8 @@ megamol::compositing_gl::NormalFromDepth::~NormalFromDepth() {
 }
 
 bool megamol::compositing_gl::NormalFromDepth::create() {
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         m_normal_from_depth_prgm = core::utility::make_glowl_shader(

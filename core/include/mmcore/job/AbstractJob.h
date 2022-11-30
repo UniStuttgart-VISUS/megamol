@@ -1,15 +1,10 @@
-/*
- * AbstractJob.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTJOB_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTJOB_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/param/AbstractParam.h"
 #include "vislib/SingleLinkedList.h"
@@ -18,9 +13,7 @@
 #include "vislib/assert.h"
 
 
-namespace megamol {
-namespace core {
-namespace job {
+namespace megamol::core::job {
 
 
 /**
@@ -29,10 +22,10 @@ namespace job {
 class AbstractJob {
 public:
     /** Ctor. */
-    AbstractJob(void);
+    AbstractJob();
 
     /** Dtor. */
-    virtual ~AbstractJob(void);
+    virtual ~AbstractJob();
 
     /**
      * Answers whether the given parameter is relevant for this job.
@@ -41,7 +34,7 @@ public:
      *
      * @return 'true' if 'param' is relevant, 'false' otherwise.
      */
-    virtual bool IsParamRelevant(const vislib::SmartPtr<param::AbstractParam>& param) const;
+    virtual bool IsParamRelevant(const std::shared_ptr<param::AbstractParam>& param) const;
 
     /**
      * Answers whether or not this job is still running.
@@ -49,14 +42,14 @@ public:
      * @return 'true' if this job is still running, 'false' if it has
      *         finished.
      */
-    virtual bool IsRunning(void) const = 0;
+    virtual bool IsRunning() const = 0;
 
     /**
      * Starts the job thread.
      *
      * @return true if the job has been successfully started.
      */
-    virtual bool Start(void) = 0;
+    virtual bool Start() = 0;
 
     /**
      * Terminates the job thread.
@@ -64,13 +57,13 @@ public:
      * @return true to acknowledge that the job will finish as soon
      *         as possible, false if termination is not possible.
      */
-    virtual bool Terminate(void) = 0;
+    virtual bool Terminate() = 0;
 
 protected:
     /**
      * Signals the application that the job has been started.
      */
-    void signalStart(void);
+    void signalStart();
 
     /**
      * Signals the application that the job has ended.
@@ -84,8 +77,4 @@ private:
 };
 
 
-} /* end namespace job */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTJOB_H_INCLUDED */
+} // namespace megamol::core::job

@@ -1,14 +1,13 @@
-/*
- * EnumParam.cpp
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/param/EnumParam.h"
+
 #include "vislib/IllegalStateException.h"
 #include "vislib/StringConverter.h"
-#include "vislib/UTF8Encoder.h"
 
 using namespace megamol::core::param;
 
@@ -25,7 +24,7 @@ EnumParam::EnumParam(int initVal) : AbstractParam(), val(), typepairs() {
 /*
  * EnumParam::~EnumParam
  */
-EnumParam::~EnumParam(void) {
+EnumParam::~EnumParam() {
     // intentionally empty
 }
 
@@ -33,53 +32,12 @@ EnumParam::~EnumParam(void) {
 /*
  * EnumParam::ClearTypePairs
  */
-void megamol::core::param::EnumParam::ClearTypePairs(void) {
+void megamol::core::param::EnumParam::ClearTypePairs() {
     if (this->isSlotPublic()) {
         throw vislib::IllegalStateException(
             "You must not modify an enum parameter which is already public", __FILE__, __LINE__);
     }
-    this->typepairs.Clear();
-}
-
-
-/*
- * EnumParam::Definition
- */
-std::string EnumParam::Definition() const {
-    vislib::StringA utf8;
-    unsigned int s = 6;
-    unsigned int c = 0;
-    vislib::ConstIterator<vislib::Map<int, vislib::TString>::Iterator> constIter = this->typepairs.GetConstIterator();
-    while (constIter.HasNext()) {
-        const vislib::Map<int, vislib::TString>::ElementPair& pair = constIter.Next();
-        s += sizeof(int) + vislib::UTF8Encoder::CalcUTF8Size(pair.Value());
-    }
-    s += sizeof(unsigned int);
-
-    vislib::RawStorage outDef;
-    outDef.AssertSize(s);
-    memcpy(outDef.AsAt<char>(0), "MMENUM", 6);
-    s = 6 + sizeof(unsigned int);
-    constIter = this->typepairs.GetConstIterator();
-    while (constIter.HasNext()) {
-        const vislib::Map<int, vislib::TString>::ElementPair& pair = constIter.Next();
-        if (!vislib::UTF8Encoder::Encode(utf8, pair.Value())) {
-            continue;
-        }
-        unsigned int utf8size = utf8.Length() + 1;
-
-        *outDef.AsAt<int>(s) = pair.Key();
-        s += sizeof(int);
-        memcpy(outDef.AsAt<char>(s), utf8.PeekBuffer(), utf8size);
-        s += utf8size;
-        c++;
-    }
-    *outDef.AsAt<unsigned int>(6) = c;
-
-    std::string return_str;
-    return_str.resize(outDef.GetSize());
-    std::copy(outDef.AsAt<char>(0), outDef.AsAt<char>(0) + outDef.GetSize(), return_str.begin());
-    return return_str;
+    this->typepairs.clear();
 }
 
 
@@ -87,13 +45,14 @@ std::string EnumParam::Definition() const {
  * EnumParam::ParseValue
  */
 bool EnumParam::ParseValue(std::string const& v) {
-    try {
-        vislib::SingleLinkedList<int> keys = this->typepairs.FindKeys(v.c_str());
-        if (keys.IsEmpty()) {
-            this->SetValue(vislib::TCharTraits::ParseInt(v.c_str()));
-        } else {
-            this->SetValue(keys.First());
+    for (auto const& el : typepairs) {
+        if (el.second == v) {
+            this->SetValue(el.first);
+            return true;
         }
+    }
+    try {
+        this->SetValue(vislib::TCharTraits::ParseInt(v.c_str()));
         return true;
     } catch (...) {}
     return false;
@@ -114,19 +73,6 @@ EnumParam* EnumParam::SetTypePair(int value, const char* name) {
 
 
 /*
- * EnumParam::SetTypePair
- */
-EnumParam* EnumParam::SetTypePair(int value, const wchar_t* name) {
-    if (this->isSlotPublic()) {
-        throw vislib::IllegalStateException(
-            "You must not modify an enum parameter which is already public", __FILE__, __LINE__);
-    }
-    this->typepairs[value] = W2T(name);
-    return this;
-}
-
-
-/*
  * EnumParam::SetValue
  */
 void EnumParam::SetValue(int v, bool setDirty) {
@@ -142,11 +88,9 @@ void EnumParam::SetValue(int v, bool setDirty) {
 /*
  * EnumParam::ValueString
  */
-std::string EnumParam::ValueString(void) const {
-    const vislib::TString* v = this->typepairs.FindValue(this->val);
-    if (v != NULL)
-        return (*v).PeekBuffer();
-    vislib::TString str;
-    str.Format(_T("%d"), this->val);
-    return str.PeekBuffer();
+std::string EnumParam::ValueString() const {
+    if (typepairs.count(val) > 0) {
+        return typepairs.at(val);
+    }
+    return std::to_string(val);
 }

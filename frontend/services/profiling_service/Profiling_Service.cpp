@@ -1,11 +1,11 @@
 #include "Profiling_Service.hpp"
 
-#include "FrameStatistics.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/SampleCameraScenes.h"
 #include "mmcore/view/AbstractViewInterface.h"
 #include "mmcore/view/CameraSerializer.h"
 
+#include "FrameStatistics.h"
 #include "LuaCallbacksCollection.h"
 #include "ModuleGraphSubscription.h"
 
@@ -100,7 +100,8 @@ void Profiling_Service::close() {
 }
 
 void Profiling_Service::updateProvidedResources() {
-    _perf_man.startFrame();
+    _perf_man.startFrame(
+        _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
 }
 
 void Profiling_Service::resetProvidedResources() {

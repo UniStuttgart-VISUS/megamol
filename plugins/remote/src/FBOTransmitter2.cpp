@@ -396,7 +396,9 @@ void megamol::remote::FBOTransmitter2::transmitterJob() {
                 }
             }
         }
-    } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: TransmitterJob died\n"); }
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("FBOTransmitter2: TransmitterJob died\n");
+    }
 }
 
 

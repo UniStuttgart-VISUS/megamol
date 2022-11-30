@@ -1,6 +1,5 @@
 #include "BindingSiteDataSource.h"
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"

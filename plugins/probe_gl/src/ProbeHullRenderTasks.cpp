@@ -31,7 +31,8 @@ bool megamol::probe_gl::ProbeHullRenderTasks::create() {
     try {
         std::vector<std::filesystem::path> shaderfiles = {"hull/dfr_hull_patch.vert.glsl", "hull/dfr_hull.frag.glsl",
             "hull/dfr_hull.tesc.glsl", "hull/dfr_hull.tese.glsl"};
-        m_material_collection->addMaterial(this->instance(), "ProbeHull", shaderfiles);
+        m_material_collection->addMaterial(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), "ProbeHull", shaderfiles);
     } catch (const std::exception& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -39,7 +40,8 @@ bool megamol::probe_gl::ProbeHullRenderTasks::create() {
     }
     try {
         std::vector<std::filesystem::path> shaderfiles = {"hull/dfr_hull_tri.vert.glsl", "hull/dfr_hull.frag.glsl"};
-        m_material_collection->addMaterial(this->instance(), "ProbeTriangleHull", shaderfiles);
+        m_material_collection->addMaterial(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), "ProbeTriangleHull", shaderfiles);
     } catch (const std::exception& ex) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);

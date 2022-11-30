@@ -13,7 +13,6 @@
 #include <math.h>
 #include <time.h>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -244,7 +243,8 @@ bool MoleculeCartoonRenderer::create(void) {
 
     using namespace vislib_gl::graphics::gl;
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         ////////////////////////////////////////////////////

@@ -1222,7 +1222,9 @@ float vislib::net::NetworkInformation::guessRemoteEndPoint(IPEndPoint& outEndPoi
                         if (al[i].GetPrefix(prefixLen) != address.GetPrefix(prefixLen)) {
                             retval += NetworkInformation::PENALTY_WRONG_PREFIX;
                         }
-                    } catch (...) { retval += NetworkInformation::PENALTY_WRONG_PREFIX; }
+                    } catch (...) {
+                        retval += NetworkInformation::PENALTY_WRONG_PREFIX;
+                    }
                 }
 
                 if (al[i].GetAddressFamily() != address.GetAddressFamily()) {
@@ -1412,12 +1414,16 @@ void vislib::net::NetworkInformation::initAdapters(void) {
         /* Retrieve adapter type. */
         try {
             adapter.type.Set(NetworkInformation::mapAdapterType(cur->IfType), VALID);
-        } catch (IllegalParamException) { adapter.type.Set(Adapter::TYPE_OTHER, GUESSED); }
+        } catch (IllegalParamException) {
+            adapter.type.Set(Adapter::TYPE_OTHER, GUESSED);
+        }
 
         /* Retrieve adapter status. */
         try {
             adapter.status.Set(NetworkInformation::mapOperationStatus(cur->OperStatus), VALID);
-        } catch (IllegalParamException) { adapter.status.Set(Adapter::OPERSTATUS_UNKNOWN, GUESSED); }
+        } catch (IllegalParamException) {
+            adapter.status.Set(Adapter::OPERSTATUS_UNKNOWN, GUESSED);
+        }
 
         //pDnServer = pCurrAddresses->FirstDnsServerAddress;
         //if (pDnServer) {
@@ -1542,7 +1548,9 @@ void vislib::net::NetworkInformation::initAdapters(void) {
                         NetworkInformation::guessBroadcastAddress(
                             static_cast<IPAddress>(addr.GetIPAddress()), static_cast<IPAddress>(mask.GetIPAddress())),
                         GUESSED);
-                } catch (...) { adapter->broadcastAddress.SetConfidence(INVALID); }
+                } catch (...) {
+                    adapter->broadcastAddress.SetConfidence(INVALID);
+                }
             } /* end if (cur->ifa_broadaddr != NULL) */
         } break;
 
@@ -1619,7 +1627,9 @@ void vislib::net::NetworkInformation::initAdapters(void) {
 
             try {
                 adapter.type.Set(NetworkInformation::mapAdapterType(sll->sll_family), VALID);
-            } catch (IllegalParamException) { adapter.type.SetConfidence(INVALID); }
+            } catch (IllegalParamException) {
+                adapter.type.SetConfidence(INVALID);
+            }
         }
 
     } /* end for (SIZE_T i = 0; i < NetworkInformation::adapters.Count(); ... */
@@ -2135,7 +2145,9 @@ float vislib::net::NetworkInformation::wildGuessAdapter(Adapter& outAdapter, con
                 (a.GetStatus() == Adapter::OPERSTATUS_LOWER_LAYER_DOWN)) {
                 wildness[i] += NetworkInformation::PENALTY_ADAPTER_DOWN;
             }
-        } catch (NoConfidenceException) { wildness[i] += NetworkInformation::PENALTY_ADAPTER_DOWN / 2.0f; }
+        } catch (NoConfidenceException) {
+            wildness[i] += NetworkInformation::PENALTY_ADAPTER_DOWN / 2.0f;
+        }
     } /* end for (SIZE_T i = 0; i < NetworkInformation::adapters.Count() ... */
 
     retval = NetworkInformation::consolidateWildness(wildness, candidateIdx);

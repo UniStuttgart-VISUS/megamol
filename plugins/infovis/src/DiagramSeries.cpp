@@ -102,7 +102,9 @@ bool megamol::infovis::DiagramSeries::seriesSelectionCB(core::Call& c) {
                 return false;
             }
         }
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
 
     return true;
 }

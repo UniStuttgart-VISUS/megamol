@@ -392,7 +392,8 @@ This method simply tells the connected View that the Renderer is able to render,
 As stated, most of the shader creation and compilation should happen in the create method. In our example this looks like the following, including error handling:
 
 ```cpp
-auto const shader_options = ::msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+auto const shader_options =
+    core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
 try {
     simpleShader = core::utility::make_glowl_shader("simplePoints", shader_options,

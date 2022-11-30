@@ -1,8 +1,7 @@
-/*
- * IntParam.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -23,17 +22,7 @@ public:
 
     IntParam(int initVal, int minVal, int maxVal, int stepSize) : Super(initVal, minVal, maxVal, stepSize) {}
 
-    virtual ~IntParam() = default;
-
-    std::string Definition() const override {
-        std::ostringstream outDef;
-        outDef << "MMINTR";
-        outDef.write(reinterpret_cast<char const*>(&MinValue()), sizeof(MinValue()));
-        outDef.write(reinterpret_cast<char const*>(&MaxValue()), sizeof(MaxValue()));
-        outDef.write(reinterpret_cast<char const*>(&StepSize()), sizeof(StepSize()));
-
-        return outDef.str();
-    }
+    ~IntParam() override = default;
 
     bool ParseValue(std::string const& v) override {
         try {

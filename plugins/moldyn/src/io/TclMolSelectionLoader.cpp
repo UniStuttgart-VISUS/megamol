@@ -5,7 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 #include "TclMolSelectionLoader.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include <deque>

@@ -108,12 +108,16 @@ void CrystalDataSource::loadFile(const vislib::TString& filename) {
                     static_cast<float>(vislib::CharTraitsA::ParseDouble(file[l].Word(2))));
                 // Do not normalize! Length of v is radius of base-sphere for that plane
                 crystal.AddFace(v);
-            } catch (...) { Log::DefaultLog.WriteWarn("Error parsing vector line \"%d\"", static_cast<int>(l)); }
+            } catch (...) {
+                Log::DefaultLog.WriteWarn("Error parsing vector line \"%d\"", static_cast<int>(l));
+            }
         } else if (file[l].Count() == 2) {
             try {
                 crystal.SetBaseRadius(static_cast<float>(vislib::CharTraitsA::ParseDouble(file[l].Word(1))));
                 crystal.SetBoundingRadius(static_cast<float>(vislib::CharTraitsA::ParseDouble(file[l].Word(0))));
-            } catch (...) { Log::DefaultLog.WriteWarn("Error parsing radius line \"%d\"", static_cast<int>(l)); }
+            } catch (...) {
+                Log::DefaultLog.WriteWarn("Error parsing radius line \"%d\"", static_cast<int>(l));
+            }
             if (!crystal.IsEmpty())
                 this->crystals.Add(crystal);
             crystal.Clear();

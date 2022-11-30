@@ -23,7 +23,6 @@
 #include <cmath>
 #include <ctime>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -33,18 +32,16 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+#include "protein_calls/ProteinColor.h"
+#include "protein_calls/RamachandranDataCall.h"
+#include "vislib/StringConverter.h"
 #include "vislib/graphics/PngBitmapCodec.h"
-
+#include "vislib/math/Matrix.h"
 #include "vislib/math/Rectangle.h"
+#include "vislib/math/ShallowMatrix.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-
-#include "vislib/math/Matrix.h"
-#include "vislib/math/ShallowMatrix.h"
-
-#include "protein_calls/ProteinColor.h"
-#include "protein_calls/RamachandranDataCall.h"
 
 #include <iostream> // DEBUG
 
@@ -465,7 +462,8 @@ void UncertaintySequenceRenderer::calculateGeometryVertices(int samples) {
  * UncertaintySequenceRenderer::LoadShader
  */
 bool UncertaintySequenceRenderer::LoadShader(void) {
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         shader = core::utility::make_glowl_shader("shader", shader_options,
@@ -3913,12 +3911,11 @@ bool UncertaintySequenceRenderer::LoadTexture(vislib::StringA filename) {
     static sg::graphics::PngBitmapCodec pbc;
     pbc.Image() = &img;
     ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    void* buf = NULL;
-    SIZE_T size = 0;
+    try {
+        const auto buf = core::utility::ResourceWrapper::LoadResource(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), std::string(filename.PeekBuffer()));
 
-    if ((size = megamol::core::utility::ResourceWrapper::LoadResource(
-             this->GetCoreInstance()->Configuration(), filename, &buf)) > 0) {
-        if (pbc.Load(buf, size)) {
+        if (pbc.Load(buf.data(), buf.size())) {
             img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
             for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
                 BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
@@ -3935,16 +3932,14 @@ bool UncertaintySequenceRenderer::LoadTexture(vislib::StringA filename) {
             if (markerTextures.Last()->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) !=
                 GL_NO_ERROR) {
                 Log::DefaultLog.WriteError("Could not load \"%s\" texture.", filename.PeekBuffer());
-                ARY_SAFE_DELETE(buf);
                 return false;
             }
             markerTextures.Last()->SetFilter(GL_LINEAR, GL_LINEAR);
-            ARY_SAFE_DELETE(buf);
             return true;
         } else {
             Log::DefaultLog.WriteError("Could not read \"%s\" texture.", filename.PeekBuffer());
         }
-    } else {
+    } catch (...) {
         Log::DefaultLog.WriteError("Could not find \"%s\" texture.", filename.PeekBuffer());
     }
     return false;

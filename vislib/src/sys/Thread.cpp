@@ -163,7 +163,9 @@ bool vislib::sys::Thread::IsRunning(void) const {
         return ((this->id != 0)
 #endif /* _WIN32 */
                 && (this->GetExitCode() == STILL_ACTIVE));
-    } catch (SystemException) { return false; }
+    } catch (SystemException) {
+        return false;
+    }
 }
 
 

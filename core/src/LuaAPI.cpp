@@ -5,13 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#if (_MSC_VER > 1000)
-#pragma warning(disable : 4996)
-#endif /* (_MSC_VER > 1000) */
-#if (_MSC_VER > 1000)
-#pragma warning(default : 4996)
-#endif /* (_MSC_VER > 1000) */
-
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
@@ -26,7 +19,6 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/LuaAPI.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/AutoLock.h"

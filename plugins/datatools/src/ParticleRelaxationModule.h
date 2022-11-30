@@ -13,6 +13,7 @@
 
 #include "datatools/AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
+#include "vislib/RawStorage.h"
 
 
 namespace megamol {

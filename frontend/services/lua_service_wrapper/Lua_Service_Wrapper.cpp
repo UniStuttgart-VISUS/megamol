@@ -565,7 +565,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
                 answer << ps->Name() << "\1";
                 answer << ps->Description() << "\1";
                 auto par = ps->Parameter();
-                if (par.IsNull()) {
+                if (par == nullptr) {
                     return Error{
                         "ParamSlot does not seem to hold a parameter: " + std::string(ps->FullName().PeekBuffer())};
                 }

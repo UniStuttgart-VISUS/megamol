@@ -8,9 +8,6 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#ifdef MEGAMOL_USE_PROFILING
-#include "mmcore/CoreInstance.h"
-#endif
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
@@ -57,10 +54,9 @@ bool Call::operator()(unsigned int func) {
         }
 #endif
 #ifdef MEGAMOL_USE_PROFILING
-        const auto frameID = this->callee->GetCoreInstance()->GetFrameID();
-        perf_man->start_timer(cpu_queries[func], frameID);
+        perf_man->start_timer(cpu_queries[func]);
         if (caps.OpenGLRequired()) {
-            perf_man->start_timer(gl_queries[func], frameID);
+            perf_man->start_timer(gl_queries[func]);
         }
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);

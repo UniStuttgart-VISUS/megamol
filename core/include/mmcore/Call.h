@@ -1,15 +1,15 @@
-/*
- * Call.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_CALL_H_INCLUDED
-#define MEGAMOLCORE_CALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "CallCapabilities.h"
 #ifdef MEGAMOL_USE_PROFILING
@@ -19,13 +19,7 @@
 #include "OpenGL_Helper.h"
 #endif
 
-#include <memory>
-#include <string>
-#include <utility>
-#include <vector>
-
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /** Forward declaration of description and slots */
 class CalleeSlot;
@@ -59,10 +53,10 @@ public:
     using weak_ptr_type = std::weak_ptr<Call>;
 
     /** Ctor. */
-    Call(void);
+    Call();
 
     /** Dtor. */
-    virtual ~Call(void);
+    virtual ~Call();
 
     /**
      * Calls function 'func'.
@@ -78,7 +72,7 @@ public:
      *
      * @return The callee slot this call is connected to.
      */
-    inline const CalleeSlot* PeekCalleeSlot(void) const {
+    inline const CalleeSlot* PeekCalleeSlot() const {
         return this->callee;
     }
 
@@ -91,7 +85,7 @@ public:
      *
      * @return The caller slot this call is connected to.
      */
-    inline const CallerSlot* PeekCallerSlot(void) const {
+    inline const CallerSlot* PeekCallerSlot() const {
         return this->caller;
     }
 
@@ -154,8 +148,4 @@ protected:
     CallCapabilities caps;
 };
 
-
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_CALL_H_INCLUDED */
+} // namespace megamol::core

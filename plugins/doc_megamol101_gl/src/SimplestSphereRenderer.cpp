@@ -7,7 +7,6 @@
 #include "SimplestSphereRenderer.h"
 
 #include "CallSpheres.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -65,7 +64,8 @@ bool SimplestSphereRenderer::create() {
 
     using namespace megamol::core::utility::log;
 
-    auto const shader_options = ::msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         simpleShader = core::utility::make_glowl_shader("simplePoints", shader_options,

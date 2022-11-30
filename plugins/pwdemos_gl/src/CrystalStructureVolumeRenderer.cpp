@@ -25,7 +25,6 @@
 #include "CritPoints.h"
 #include "LIC.h"
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -1266,7 +1265,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
         return false;
     }
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         this->vrShader = core::utility::make_glowl_shader(

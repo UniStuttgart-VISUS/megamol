@@ -1,24 +1,16 @@
-/*
- * AbstractParamSlot.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VISUS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTPARAMSLOT_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTPARAMSLOT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <memory>
 
 #include "AbstractParam.h"
-#include "vislib/SmartPtr.h"
 
-
-namespace megamol {
-namespace core {
-namespace param {
-
+namespace megamol::core::param {
 
 /**
  * Abstract base class for all parameter slot classes
@@ -30,7 +22,7 @@ public:
     /**
      * Dtor.
      */
-    virtual ~AbstractParamSlot(void);
+    virtual ~AbstractParamSlot();
 
     /**
      * Answers whether this parameter is dirty (updated) or not.
@@ -38,7 +30,7 @@ public:
      * @return 'true' if the parameter is dirty (updated),
      *         'false' otherwise.
      */
-    inline bool IsDirty(void) const {
+    inline bool IsDirty() const {
         return this->dirty;
     }
 
@@ -49,8 +41,8 @@ public:
      * @return A pointer to the parameter object of the slot.
      */
     template<class C>
-    C* Param(void) {
-        return this->param.DynamicCast<C>();
+    C* Param() {
+        return dynamic_cast<C*>(this->param.get());
     }
 
     /**
@@ -60,8 +52,8 @@ public:
      * @return A pointer to the parameter object of the slot.
      */
     template<class C>
-    const C* Param(void) const {
-        return this->param.DynamicCast<C>();
+    const C* Param() const {
+        return dynamic_cast<C*>(this->param.get());
     }
 
     /**
@@ -69,7 +61,7 @@ public:
      *
      * @return The parameter of the slot.
      */
-    inline vislib::SmartPtr<AbstractParam> Parameter(void) {
+    inline std::shared_ptr<AbstractParam> Parameter() {
         return this->param;
     }
 
@@ -78,14 +70,14 @@ public:
      *
      * @return The parameter of the slot.
      */
-    inline const vislib::SmartPtr<AbstractParam>& Parameter(void) const {
+    inline const std::shared_ptr<AbstractParam>& Parameter() const {
         return this->param;
     }
 
     /**
      * Resets the dirty flag.
      */
-    inline void ResetDirty(void) {
+    inline void ResetDirty() {
         this->dirty = false;
     }
 
@@ -118,7 +110,7 @@ public:
     /**
      * Sets the dirty flag.
      */
-    inline void ForceSetDirty(void) {
+    inline void ForceSetDirty() {
         this->update();
     }
 
@@ -126,15 +118,15 @@ protected:
     /**
      * Ctor.
      */
-    AbstractParamSlot(void);
+    AbstractParamSlot();
 
     /**
      * Answers whether the parameter member has already been set.
      *
      * @return 'true' if the parameter member has been set.
      */
-    inline bool isParamSet(void) const {
-        return this->param != NULL;
+    inline bool isParamSet() const {
+        return this->param != nullptr;
     }
 
     /**
@@ -144,30 +136,20 @@ protected:
      *
      * @return 'true' if the slot has already been made available.
      */
-    virtual bool isSlotAvailable(void) const = 0;
+    virtual bool isSlotAvailable() const = 0;
 
     /**
      * Sets the dirty flag.
      */
-    virtual void update(void);
+    virtual void update();
 
 private:
     /** The slots dirty flag */
     bool dirty;
 
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
     /** The slots parameter */
-    vislib::SmartPtr<AbstractParam> param;
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif /* _WIN32 */
+    std::shared_ptr<AbstractParam> param;
 };
 
 
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTPARAMSLOT_H_INCLUDED */
+} // namespace megamol::core::param

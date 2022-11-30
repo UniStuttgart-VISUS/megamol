@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "mmstd_gl/flags/FlagCallsGL.h"
 #include "mmstd_gl/flags/UniFlagStorage.h"
@@ -30,11 +30,10 @@
 #include "upscaling/ResolutionScaler3D.h"
 
 namespace megamol::mmstd_gl {
-class PluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class PluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(PluginInstance)
 public:
-    PluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("mmstd_gl", "CoreGL calls and modules."){};
+    PluginInstance() : megamol::core::factories::AbstractPluginInstance("mmstd_gl", "CoreGL calls and modules."){};
 
     ~PluginInstance() override = default;
 

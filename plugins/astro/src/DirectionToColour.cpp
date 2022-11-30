@@ -59,10 +59,10 @@ megamol::astro::DirectionToColour::DirectionToColour(void)
         this->MakeSlotAvailable(&this->paramMode);
     }
 
-    this->paramColour1 << new core::param::ColorParam(_T("Chartreuse"));
+    this->paramColour1 << new core::param::ColorParam("Chartreuse");
     this->MakeSlotAvailable(&this->paramColour1);
 
-    this->paramColour2 << new core::param::ColorParam(_T("Cyan"));
+    this->paramColour2 << new core::param::ColorParam("Cyan");
     this->MakeSlotAvailable(&this->paramColour2);
 }
 

@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "DepthFunction.h"
 #include "DiagramSeries.h"
@@ -15,12 +15,12 @@
 #include "TSNEProjection.h"
 
 namespace megamol::infovis {
-class InfovisPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class InfovisPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(InfovisPluginInstance)
 
 public:
     InfovisPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("infovis", "Information visualization"){};
+            : megamol::core::factories::AbstractPluginInstance("infovis", "Information visualization"){};
 
     ~InfovisPluginInstance() override = default;
 
