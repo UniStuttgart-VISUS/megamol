@@ -334,12 +334,12 @@ You can then either copy the resulting dlls manually to the MegaMol binary direc
 
 ### Using third-party code
 
-Including third-party code as library with vcpkg is the preferred way, but may sometimes it is required to directly include thrid-party code within the MegaMol repository.
-In that case all external code must be placed within a `3rd` directory in the corresponding plugin root (`plugins/<plugin-name>/3rd/<code-name>`).
+Including third-party code as library with vcpkg is the preferred way, but in rare cases, it may is required to directly include third-party code into MegaMol.
+In this case, all external code must be placed within a `3rd` directory in the corresponding plugin root (`plugins/<plugin-name>/3rd/<code-name>`).
 In addition, a readme and license file must be included with the third-party code.
-The readme must contain the exact source of the third-party code (meaning including the exact version, repo hash, download URL etc., not just a project website).
-The motivation is that may for future updates of upstream changes future MegaMol developers are able to reconstruct the exact source and may be able to diff upstream changes.
-Therefore, also the MegaMol styleguide does not apply to third-party code and third-party code should be kept in its original state.
+The readme must contain the exact source of the third-party code (meaning including the exact version, repo hash, download URL, etc., not just a project website).
+This should allow to easily compare the files to their original source, i.e. in case of future upstream updates.
+Therefore, also the MegaMol style guide does not apply to third-party code and third-party code should be kept in its original state.
 
 (TODO: how should third-party shaders be organized?)
 
@@ -349,7 +349,7 @@ The code must still remain in the `3rd` directory.
 Having any third-party code within regular MegaMol source files (so everything not in a `3rd` directory) must be avoided at any possible cost!
 In addition to the above points, the changes must be documented in a reasonable way, i.e. using comments within the code, including a patch file, or writing a descriptive changelog.
 Again the motivation is maintainability, that another developer is able to understand the changes made and can merge possible upstream updates.
-Therefore, it is recommended to keep changes/patches as small as possible and implement extension within regular MegaMol source files, while the third-party code is included using the standard C++ includes.
+Therefore, it is strongly recommended to keep changes/patches as small as possible and implement extensions within regular MegaMol source files, while the third-party code is included using the standard C++ includes.
 
 
 <!-- ###################################################################### -->
