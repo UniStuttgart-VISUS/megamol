@@ -185,7 +185,7 @@ Usage: ```DATACallRead```
 - In the ```GetData``` callback, make sure you can **supply unchanged data very cheaply**.
   - If parameters or incoming data (downstream) have changed, modify your ```DATA``` accordingly, **increasing** ```version_DATA```.
   - **ALWAYS** set the data in the call, supplying the version.
-  
+
 Usage: ```DataCallWrite```
 - In the ```GetData``` callback
   - If the incoming set data is newer than what you last got: ```call::hasUpdate()```
@@ -370,50 +370,59 @@ See [developer information for GUI Service](../../frontend/services/gui#gui-wind
 
 ### OpenGL Error Callback
 
-You can enable OpenGL error reporting by using the command line switch ```--khrdebug```. Note that this enables ```GL_DEBUG_OUTPUT_SYNCHRONOUS```, which will affect performance, but is required to enable the output of valid stack traces.
+You can enable OpenGL error reporting by using the command line switch `--khrdebug`.
+Note that this enables `GL_DEBUG_OUTPUT_SYNCHRONOUS`, which will affect performance, but is required to enable the output of valid stack traces.
 
 ### Profiling
 
-You can enable internal profiling at compile time using ```MEGAMOL_USE_PROFILING``` via CMake. This comes at a performance cost, but gives CPU and OpenGL timings for all calls in the graph out of the box (small speedometer icons in the graph editor).
+You can enable internal profiling at compile time using `MEGAMOL_USE_PROFILING` via CMake.
+This comes at a performance cost, but gives CPU and OpenGL timings for all calls in the graph out of the box (small speedometer icons in the graph editor).
 
 #### Custom Regions
 
-Inside guarded ```#ifdef MEGAMOL_USE_PROFILING``` regions, you can declare a local ```frontend_resources::PerformanceManager::handle_vector``` of timers in any Module.
-1. In ```requested_lifetime_resources()```, make sure you ask for the ```PerformanceManager``` as a resource:
-```
+Inside guarded `#ifdef MEGAMOL_USE_PROFILING` regions, you can declare a local `frontend_resources::PerformanceManager::handle_vector` of timers in any Module.
+1. In `requested_lifetime_resources()`, make sure you ask for the `PerformanceManager` as a resource:
+```cpp
 resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
 ```
-2. In ```create()```, fetch the ```frontend_resources::PerformanceManager``` as a resource, e.g.,:
-```
+2. In `create()`, fetch the `frontend_resources::PerformanceManager` as a resource, e.g.,:
+```cpp
 perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
         &frontend_resources.get<frontend_resources::PerformanceManager>());
 ```
-3. In ```create()```, declare one or several timers, configure them
-```
+3. In `create()`, declare one or several timers, configure them
+```cpp
 frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer;
 upload_timer.name = "upload";
 upload_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
 ```
-4. Pass them to the ```PerformanceManager```:
-```
+4. Pass them to the `PerformanceManager`:
+```cpp
 timers_ = perf_manager_->add_timers(this, {upload_timer});
 ```
 These timers also automatically show up in the graph.
 
 #### Timer Dumps
 
-Once profiling is enabled, you can ask MegaMol to log all timings to a CSV file using the command line switch ```--profiling-log <filename>```. 
+Once profiling is enabled, you can ask MegaMol to log all timings to a CSV file using the command line switch `--profiling-log <filename>`.
 
 ### OpenGL DebugGroups
 
-Similar to thee automatic profiling regions, all calls with OpenGL capability can automatically Push/Pop OpenGL DebugGroups if you switch on ```MEGAMOL_USE_OPENGL_DEBUGGROUPS``` in CMake. These are interpreted by RenderDoc or NSight, making the output easier to parse. **Note: there currently seems to be a race condition or some other issue with this. MegaMol has been observed to crash in NVOGL.dll occasionally, so only use this when necessary.**
+Similar to the automatic profiling regions, all calls with OpenGL capability can automatically Push/Pop OpenGL DebugGroups if you switch on `MEGAMOL_USE_OPENGL_DEBUGGROUPS` in CMake.
+These are interpreted by RenderDoc or NSight, making the output easier to parse.
+**Note: there currently seems to be a race condition or some other issue with this.
+MegaMol has been observed to crash in NVOGL.dll occasionally, so only use this when necessary.**
 
 ### RenderDoc Integration
 
-You can use the RenderDoc API to programmatically ask for frame captures. This is not generally implemented yet as the logic asking for the capture could be required anywhere. Integration basically works as described here https://renderdoc.org/docs/in_application_api.html.
+You can use the RenderDoc API to programmatically ask for frame captures.
+This is not generally implemented yet as the logic asking for the capture could be required anywhere.
+Integration basically works as described here https://renderdoc.org/docs/in_application_api.html.
 
-You could, for example, place the ProcAddress fetching in ```megamol::gui::GUIManager::init_state()```, and put ```if (rdoc_api) rdoc_api->StartFrameCapture(nullptr, nullptr);``` in ```GUIManager::PreDraw```. If the ```GUIManager``` has enough information to decide whether to capture or not, you can just augment ```GUIManager::PostDraw``` like so:
-```
+You could, for example, place the ProcAddress fetching in `megamol::gui::GUIManager::init_state()`,
+and put `if (rdoc_api) rdoc_api->StartFrameCapture(nullptr, nullptr);` in `GUIManager::PreDraw`.
+If the `GUIManager` has enough information to decide whether to capture or not, you can just augment `GUIManager::PostDraw` like so:
+```cpp
 if (some_weird_condition) {
     if(rdoc_api) rdoc_api->EndFrameCapture(nullptr, nullptr);
 } else {
@@ -421,4 +430,4 @@ if (some_weird_condition) {
 }
 ```
 
-Do not forget to include the headers installed with RenderDoc, e.g. ```#include "C:/Program Files/RenderDoc/renderdoc_app.h"```
+Do not forget to include the headers installed with RenderDoc, e.g. `#include "C:/Program Files/RenderDoc/renderdoc_app.h"`
