@@ -12,18 +12,17 @@
 #include "ogl_error_check.h"
 #include "protein_calls/VariantMatchDataCall.h"
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "vislib_gl/graphics/gl/OutlineFont.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
 #include <algorithm>
 
 using namespace megamol;
 using namespace megamol::protein_gl;
+using megamol::core::utility::log::Log;
 
 #pragma push_macro("min")
 #undef min
@@ -69,52 +68,18 @@ VariantMatchRenderer::~VariantMatchRenderer(void) {
  * VariantMatchRenderer::create
  */
 bool VariantMatchRenderer::create(void) {
-    vislib_gl::graphics::gl::ShaderSource vertSrc;
-    vislib_gl::graphics::gl::ShaderSource fragSrc;
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
-    megamol::core::CoreInstance* ci = this->GetCoreInstance();
-    if (!ci) {
-        return false;
-    }
-
-    // Try to load the ssao shader
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    if (!ssf->MakeShaderSource("2dplot::variantMatrix::vertex", vertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "%s: Unable to load variant matrix vertex shader source", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("2dplot::variantMatrix::fragment", fragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "%s: Unable to load variant matrix fragment shader source", this->ClassName());
-        return false;
-    }
     try {
-        if (!this->matrixTexShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-    } catch (vislib::Exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        matrixTexShader = core::utility::make_glowl_shader("matrixTexShader", shader_options,
+            "protein_gl/2dplot/variantMatrix.vert.glsl", "protein_gl/2dplot/variantMatrix.frag.glsl");
 
-    // Try to load the ssao shader
-    if (!ssf->MakeShaderSource("2dplot::variantMatrix::vertexCM", vertSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "%s: Unable to load variant matrix vertex shader source", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("2dplot::variantMatrix::fragmentCM", fragSrc)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "%s: Unable to load variant matrix fragment shader source", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->colorMapShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-    } catch (vislib::Exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
+        colorMapShader = core::utility::make_glowl_shader("colorMapShader", shader_options,
+            "protein_gl/2dplot/variantMatrix_CM.vert.glsl", "protein_gl/2dplot/variantMatrix_CM.frag.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("VariantMatchRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -135,8 +100,6 @@ bool VariantMatchRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
  * VariantMatchRenderer::release
  */
 void VariantMatchRenderer::release(void) {
-    this->matrixTexShader.Release();
-    CheckForGLError();
     if (this->matrixTex) {
         glDeleteTextures(1, &this->matrixTex);
     }
@@ -210,10 +173,10 @@ bool VariantMatchRenderer::Render(mmstd_gl::CallRender2DGL& call) {
 
     // Draw matrix texture
     //    ::glColor3f(0.0f, 0.6f, 0.6f);
-    this->matrixTexShader.Enable();
-    glUniform1iARB(this->matrixTexShader.ParameterLocation("matrixTex"), 0);
-    glUniform1fARB(this->matrixTexShader.ParameterLocation("minVal"), this->minCol);
-    glUniform1fARB(this->matrixTexShader.ParameterLocation("maxVal"), this->maxCol);
+    this->matrixTexShader->use();
+    glUniform1iARB(this->matrixTexShader->getUniformLocation("matrixTex"), 0);
+    glUniform1fARB(this->matrixTexShader->getUniformLocation("minVal"), this->minCol);
+    glUniform1fARB(this->matrixTexShader->getUniformLocation("maxVal"), this->maxCol);
     ::glBegin(GL_QUADS);
     ::glTexCoord2f(1.0f, 0.0f);
     ::glVertex2f(-1.0, -1.0);
@@ -224,7 +187,7 @@ bool VariantMatchRenderer::Render(mmstd_gl::CallRender2DGL& call) {
     ::glTexCoord2f(0.0f, 0.0f);
     ::glVertex2f(-1.0, 1.0f);
     ::glEnd();
-    this->matrixTexShader.Disable();
+    glUseProgram(0);
 
     // Draw color map
     if (!this->drawColorMap()) {
@@ -320,9 +283,9 @@ bool VariantMatchRenderer::drawColorMap() {
 
     // Draw color gradient
 
-    this->colorMapShader.Enable();
-    glUniform1fARB(this->colorMapShader.ParameterLocation("minVal"), this->minCol);
-    glUniform1fARB(this->colorMapShader.ParameterLocation("maxVal"), this->maxCol);
+    this->colorMapShader->use();
+    glUniform1fARB(this->colorMapShader->getUniformLocation("minVal"), this->minCol);
+    glUniform1fARB(this->colorMapShader->getUniformLocation("maxVal"), this->maxCol);
 
     ::glBegin(GL_QUADS);
     ::glVertex2f(-1.0f, -1.2f);
@@ -330,7 +293,7 @@ bool VariantMatchRenderer::drawColorMap() {
     ::glVertex2f(1.0f, -1.1f);
     ::glVertex2f(-1.0f, -1.1f);
     ::glEnd();
-    this->colorMapShader.Disable();
+    glUseProgram(0);
 
     ::glBegin(GL_LINE_STRIP);
     ::glVertex2f(-1.0f, -1.2f);

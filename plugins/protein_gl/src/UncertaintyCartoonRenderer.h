@@ -8,23 +8,18 @@
 #include <map>
 #include <utility>
 
+#include <glowl/glowl.h>
+
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/light/CallLight.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-
-#include "glowl/BufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/GLSLTesselationShader.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/ResidueSelectionCall.h"
 #include "protein_calls/UncertaintyDataCall.h"
 #include "protein_gl/DeferredRenderingProvider.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
 namespace megamol {

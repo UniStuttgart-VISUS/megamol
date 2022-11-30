@@ -74,7 +74,9 @@ GLenum vislib_gl::graphics::gl::OpenGLTexture2D::Create(const uint32_t width, co
     if (!this->IsValid()) {
         try {
             this->createId();
-        } catch (OpenGLException e) { return e.GetErrorCode(); }
+        } catch (OpenGLException e) {
+            return e.GetErrorCode();
+        }
     }
 
     GL_VERIFY_EXPR_RETURN(this->Bind());

@@ -28,12 +28,6 @@ namespace cinematic_gl {
  */
 class TimeLineRenderer : public mmstd_gl::Renderer2DModuleGL {
 public:
-    std::vector<std::string> requested_lifetime_resources() {
-        auto lifetime_resources = Module::requested_lifetime_resources();
-        lifetime_resources.push_back("RuntimeConfig");
-        return lifetime_resources;
-    }
-
     /**
      * Answer the name of this module.
      *

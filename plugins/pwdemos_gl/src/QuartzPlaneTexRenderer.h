@@ -7,11 +7,14 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "AbstractTexQuartzRenderer.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/renderer/CallRender2DGL.h"
 #include "mmstd_gl/renderer/Renderer2DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
 
@@ -95,7 +98,7 @@ protected:
 
 private:
     /** The crystalite shader */
-    vislib_gl::graphics::gl::GLSLShader cryShader;
+    std::unique_ptr<glowl::GLSLProgram> cryShader;
 
     /** Use clipping plane or grain colour for grains */
     core::param::ParamSlot useClipColSlot;

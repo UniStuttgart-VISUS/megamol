@@ -11,7 +11,6 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmstd/light/DistantLight.h"
 #include "mmstd/light/PointLight.h"
 
@@ -55,9 +54,9 @@ DeferredRenderingProvider::~DeferredRenderingProvider(void) {
     // TODO
 }
 
-void DeferredRenderingProvider::setup(core::CoreInstance* coreIntstance) {
+void DeferredRenderingProvider::setup(megamol::frontend_resources::RuntimeConfig const& runtimeConf) {
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(coreIntstance->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(runtimeConf);
 
         lightingShader_ = core::utility::make_shared_glowl_shader("lighting", shdr_options,
             std::filesystem::path("protein_gl/deferred/lighting.vert.glsl"),

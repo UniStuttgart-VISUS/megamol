@@ -8,16 +8,15 @@
 //     Author: scharnkn
 //
 
-#ifndef MEGAMOLCORE_VARIANTMATCHRENDERER_H_INCLUDED
-#define MEGAMOLCORE_VARIANTMATCHRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
+
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/renderer/Renderer2DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/OutlineFont.h"
 #include "vislib_gl/graphics/gl/Verdana.inc"
 
@@ -122,10 +121,10 @@ private:
     float maxCol;
 
     /// The texturing shader
-    vislib_gl::graphics::gl::GLSLShader matrixTexShader;
+    std::unique_ptr<glowl::GLSLProgram> matrixTexShader;
 
     /// The texturing shader
-    vislib_gl::graphics::gl::GLSLShader colorMapShader;
+    std::unique_ptr<glowl::GLSLProgram> colorMapShader;
 
     /// The matix texture handle
     GLuint matrixTex;
@@ -138,5 +137,3 @@ private:
 
 } // namespace protein_gl
 } // end namespace megamol
-
-#endif // MEGAMOLCORE_VARIANTMATCHRENDERER_H_INCLUDED

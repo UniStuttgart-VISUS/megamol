@@ -8,11 +8,11 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_STREAMLINERENDERER_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_STREAMLINERENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
+
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "CUDAStreamlines.h"
 #include "CudaDevArr.h"
@@ -22,8 +22,6 @@
 #include "mmstd/renderer/CallRender3D.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/VTIDataCall.h"
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 typedef vislib::math::Vector<int, 3> Vec3i;
 typedef unsigned int uint;
@@ -213,10 +211,10 @@ private:
     /* Rendering */
 
     // Shader for stream tubes
-    vislib_gl::graphics::gl::GLSLGeometryShader tubeShader;
+    std::unique_ptr<glowl::GLSLProgram> tubeShader;
 
     // Shader for illuminated streamlines
-    vislib_gl::graphics::gl::GLSLGeometryShader illumShader;
+    std::unique_ptr<glowl::GLSLProgram> illumShader;
 
     /// The uniform color for surface #1
     static const Vec3f uniformColor;
@@ -228,5 +226,3 @@ private:
 
 } // end namespace protein_cuda
 } // end namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_STREAMLINERENDERER_H_INCLUDED

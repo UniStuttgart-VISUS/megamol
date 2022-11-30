@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "cluster/CallRegisterAtController.h"
 #include "cluster/ClusterController.h"
@@ -14,10 +14,10 @@
 #include "cluster/mpi/MpiProvider.h"
 
 namespace megamol::cluster {
-class PluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class PluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(PluginInstance)
 public:
-    PluginInstance() : megamol::core::utility::plugins::AbstractPluginInstance("cluster", "Cluster plugin."){};
+    PluginInstance() : megamol::core::factories::AbstractPluginInstance("cluster", "Cluster plugin."){};
 
     ~PluginInstance() override = default;
 

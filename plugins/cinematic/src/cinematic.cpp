@@ -4,19 +4,19 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "KeyframeKeeper.h"
 #include "cinematic/CallKeyframeKeeper.h"
 
 namespace megamol::cinematic {
-class CinematicPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class CinematicPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(CinematicPluginInstance)
 
 public:
     CinematicPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("cinematic",
+            : megamol::core::factories::AbstractPluginInstance("cinematic",
                   "The Cinematic plugin allows the video rendering (separate file per frame) of any rendering "
                   "output in MegaMol. By defining fixed keyframes for desired camera positions and specific "
                   "animation times, arbitrary tracking shots can be created."){};

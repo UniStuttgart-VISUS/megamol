@@ -8,6 +8,7 @@
 #include "SiffCSplineFitter.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "vislib/RawStorage.h"
 #include "vislib/math/BezierCurve.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/ShallowPoint.h"

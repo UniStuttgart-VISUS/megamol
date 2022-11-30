@@ -20,6 +20,7 @@ uniform int use_depth_tx;
 void compute(float t, const float tfar, const Ray ray, const float rayStep, const ivec2 pixel_coords) {
     // Get pixel texture coordinates and depth value at original position
     vec2 pixel_tex_coords = vec2(pixel_coords.x / rt_resolution.x, pixel_coords.y / rt_resolution.y);
+    pixel_tex_coords += vec2(0.5/rt_resolution.x, 0.5/rt_resolution.y);
 
     // Initialize results
     vec4 result = vec4(0.0f);

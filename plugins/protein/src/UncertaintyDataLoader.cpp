@@ -15,10 +15,10 @@
 #include "UncertaintyDataLoader.h"
 
 #include <algorithm>
+#include <cfloat>
 #include <math.h>
 #include <string>
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
@@ -26,6 +26,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 
+#include "vislib/StringConverter.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/BufferedFile.h"
 #include "vislib/sys/sysfunctions.h"

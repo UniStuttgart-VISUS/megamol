@@ -6,7 +6,7 @@
  */
 
 #include "DataFileSequence.h"
-#include "mmcore/CoreInstance.h"
+#include "PluginsResource.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -91,7 +91,8 @@ datatools::DataFileSequence::~DataFileSequence(void) {
  * moldyn::DataFileSequence::create
  */
 bool datatools::DataFileSequence::create(void) {
-    for (auto cd : this->GetCoreInstance()->GetCallDescriptionManager()) {
+    auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
+    for (auto cd : pluginsRes.all_call_descriptions) {
         if (IsCallDescriptionCompatible(cd)) {
             this->outDataSlot.SetCallback(cd->ClassName(), "GetData", &DataFileSequence::getDataCallback);
             this->outDataSlot.SetCallback(cd->ClassName(), "GetExtent", &DataFileSequence::getExtentCallback);
@@ -167,7 +168,8 @@ bool datatools::DataFileSequence::getDataCallback(core::Call& caller) {
         if (!(*ggdc)(0)) {
             return false; // unable to get data
         }
-        this->GetCoreInstance()->GetCallDescriptionManager().AssignmentCrowbar(pgdc, ggdc);
+        auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
+        pluginsRes.all_call_descriptions.AssignmentCrowbar(pgdc, ggdc);
         ggdc->SetUnlocker(nullptr, false);
 
         pgdc->SetFrameID(frameID, true);
@@ -251,7 +253,8 @@ bool datatools::DataFileSequence::checkConnections(core::Call* outCall) {
     core::Call* inCall = this->inDataSlot.CallAs<core::Call>();
     if ((inCall == NULL) || (outCall == NULL))
         return false;
-    for (auto cd : this->GetCoreInstance()->GetCallDescriptionManager()) {
+    auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
+    for (auto cd : pluginsRes.all_call_descriptions) {
         if (IsCallDescriptionCompatible(cd)) {
             if (cd->IsDescribing(inCall) && cd->IsDescribing(outCall))
                 return true;

@@ -65,19 +65,19 @@ megamol::volume::VolumetricDataSource::VolumetricDataSource(void)
     this->MakeSlotAvailable(&this->paramFileName);
 
     enumParam = new core::param::EnumParam(-1);
-    enumParam->SetTypePair(-1, _T("Auto"));
-    enumParam->SetTypePair(1, _T("1 Byte/Scalar"));
-    enumParam->SetTypePair(2, _T("2 Bytes/Scalar"));
-    enumParam->SetTypePair(4, _T("4 Bytes/Scalar"));
-    enumParam->SetTypePair(8, _T("8 Bytes/Scalar"));
+    enumParam->SetTypePair(-1, "Auto");
+    enumParam->SetTypePair(1, "1 Byte/Scalar");
+    enumParam->SetTypePair(2, "2 Bytes/Scalar");
+    enumParam->SetTypePair(4, "4 Bytes/Scalar");
+    enumParam->SetTypePair(8, "8 Bytes/Scalar");
     this->paramOutputDataSize.SetParameter(enumParam);
     this->MakeSlotAvailable(&this->paramOutputDataSize);
 
     enumParam = new core::param::EnumParam(-1);
-    enumParam->SetTypePair(-1, _T("Auto"));
-    enumParam->SetTypePair(VolumetricDataCall::ScalarType::SIGNED_INTEGER, _T("int"));
-    enumParam->SetTypePair(VolumetricDataCall::ScalarType::UNSIGNED_INTEGER, _T("uint"));
-    enumParam->SetTypePair(VolumetricDataCall::ScalarType::FLOATING_POINT, _T("float"));
+    enumParam->SetTypePair(-1, "Auto");
+    enumParam->SetTypePair(VolumetricDataCall::ScalarType::SIGNED_INTEGER, "int");
+    enumParam->SetTypePair(VolumetricDataCall::ScalarType::UNSIGNED_INTEGER, "uint");
+    enumParam->SetTypePair(VolumetricDataCall::ScalarType::FLOATING_POINT, "float");
     this->paramOutputDataType.SetParameter(enumParam);
     this->MakeSlotAvailable(&this->paramOutputDataType);
 
@@ -1009,7 +1009,9 @@ void megamol::volume::VolumetricDataSource::release(void) {
             this->stopAsyncLoad(true);
         }
         ASSERT(!this->loaderThread.IsRunning());
-    } catch (vislib::Exception e) { Log::DefaultLog.WriteError(e.GetMsg()); } catch (...) {
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteError(e.GetMsg());
+    } catch (...) {
         Log::DefaultLog.WriteError(_T("Unexpected exception while ")
                                    _T("stopping volume loader thread during release of data source."));
     }
@@ -1069,7 +1071,9 @@ void megamol::volume::VolumetricDataSource::stopAsyncLoad(const bool isWait) {
             this->loaderThread.Join();
             ASSERT(this->loaderStatus.load() == LOADER_STATUS_STOPPED);
         }
-    } catch (vislib::Exception e) { Log::DefaultLog.WriteError(e.GetMsg()); }
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteError(e.GetMsg());
+    }
 }
 
 
@@ -1296,7 +1300,9 @@ size_t megamol::volume::VolumetricDataSource::assertBuffersUnsafe(size_t cntFram
         }
 
         retval = this->buffers.Count();
-    } catch (vislib::Exception e) { Log::DefaultLog.WriteError(e.GetMsg()); } catch (...) {
+    } catch (vislib::Exception e) {
+        Log::DefaultLog.WriteError(e.GetMsg());
+    } catch (...) {
         Log::DefaultLog.WriteError(_T("Unexpected exception while ")
                                    _T("preparing data buffers. Not all of the requested memory ")
                                    _T("might be available."));

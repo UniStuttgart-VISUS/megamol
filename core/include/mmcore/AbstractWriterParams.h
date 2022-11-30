@@ -1,20 +1,19 @@
-/*
- * AbstractWriterParams.h
- *
- * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
  */
-#pragma once
 
-#include "mmcore/AbstractSlot.h"
-#include "mmcore/param/ParamSlot.h"
+#pragma once
 
 #include <functional>
 #include <string>
 #include <utility>
 
-namespace megamol {
-namespace core {
+#include "mmcore/AbstractSlot.h"
+#include "mmcore/param/ParamSlot.h"
+
+namespace megamol::core {
 
 /**
  * Abstract class for providing parameters for writers.
@@ -63,5 +62,4 @@ private:
     unsigned int count;
 };
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core

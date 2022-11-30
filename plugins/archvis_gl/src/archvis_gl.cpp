@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "ArchVisMSMDataSource.h"
 #include "CreateFEMModel.h"
@@ -17,12 +17,11 @@
 #include "MSMRenderer.h"
 
 namespace megamol::archvis_gl {
-class ArchvisPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class ArchvisPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(ArchvisPluginInstance)
 
 public:
-    ArchvisPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("archvis", "The archvis plugin."){};
+    ArchvisPluginInstance() : megamol::core::factories::AbstractPluginInstance("archvis", "The archvis plugin."){};
 
     ~ArchvisPluginInstance() override = default;
 

@@ -10,19 +10,12 @@
 #include <typeinfo>
 
 #include "mmcore/AbstractSlot.h"
-#include "mmcore/CoreInstance.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
 #include "vislib/assert.h"
 #include "vislib/sys/AutoLock.h"
-
-#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
-#include "mmcore/view/Renderer2DModule.h"
-#include "mmcore/view/Renderer3DModule.h"
-#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#endif
 
 using namespace megamol::core;
 
@@ -54,23 +47,8 @@ bool Module::Create(std::vector<megamol::frontend::FrontendResource> resources) 
 
     this->frontend_resources = {resources}; // put resources in hash map using type hashes of present resources
 
-    ASSERT(this->instance() != NULL);
     if (!this->created) {
-#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
-        auto p3 = dynamic_cast<core::view::Renderer3DModule*>(this);
-        auto p3_2 = dynamic_cast<mmstd_gl::Renderer3DModuleGL*>(this);
-        auto p2 = dynamic_cast<core::view::Renderer2DModule*>(this);
-        if (p2 || p3 || p3_2) {
-            std::string output = this->ClassName();
-            output += "::create";
-            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
-        }
-#endif
         this->created = this->create();
-#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
-        if (p2 || p3 || p3_2)
-            glPopDebugGroup();
-#endif
         Log::DefaultLog.WriteInfo(
             "%s module \"%s\"\n", ((this->created) ? "Created" : "Failed to create"), typeid(*this).name());
     }
@@ -174,27 +152,23 @@ void Module::PerformCleanup() {
 }
 
 
-/*
- * Module::getRelevantConfigValue
- */
-vislib::StringA Module::getRelevantConfigValue(vislib::StringA name) {
-    vislib::StringA ret = vislib::StringA::EMPTY;
-    const utility::Configuration& cfg = this->GetCoreInstance()->Configuration();
-    vislib::StringA drn = this->GetDemiRootName();
-    vislib::StringA test = drn;
-    test.Append("-");
-    test.Append(name);
-    vislib::StringA test2("*-");
-    test2.Append(name);
-    if (cfg.IsConfigValueSet(test)) {
-        ret = cfg.ConfigValue(test);
-    } else if (cfg.IsConfigValueSet(test2)) {
-        ret = cfg.ConfigValue(test2);
-    } else if (cfg.IsConfigValueSet(name)) {
-        ret = cfg.ConfigValue(name);
+bool Module::AnyParameterDirty() const {
+    auto ret = false;
+    for (auto it = ChildList_Begin(); it != ChildList_End(); ++it) {
+        if (const auto paramSlot = dynamic_cast<param::ParamSlot*>((*it).get())) {
+            ret = ret || paramSlot->IsDirty();
+        }
     }
-
     return ret;
+}
+
+
+void Module::ResetAllDirtyFlags() {
+    for (auto it = ChildList_Begin(); it != ChildList_End(); ++it) {
+        if (const auto paramSlot = dynamic_cast<param::ParamSlot*>((*it).get())) {
+            paramSlot->ResetDirty();
+        }
+    }
 }
 
 

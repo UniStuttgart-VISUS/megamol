@@ -6,22 +6,22 @@
  */
 
 #include "QuartzRenderer.h"
+
+#include <cfloat>
+
+#include <glm/ext.hpp>
+
 #include "OpenGL_Context.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmstd/light/PointLight.h"
 #include "mmstd/renderer/CallClipPlane.h"
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/memutils.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib_gl/graphics/gl/glfunctions.h"
-#include <cfloat>
-#include <glm/ext.hpp>
-
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 namespace megamol {
 namespace demos_gl {
@@ -55,7 +55,7 @@ QuartzRenderer::QuartzRenderer(void)
  */
 QuartzRenderer::~QuartzRenderer(void) {
     this->Release();
-    ASSERT(this->shaders == NULL);
+    ASSERT(this->shaders.empty());
 }
 
 
@@ -268,9 +268,9 @@ bool QuartzRenderer::Render(mmstd_gl::CallRender3DGL& call) {
                     const ParticleGridDataCall::List& list = cell.Lists()[l];
                     // if (list.Type() != 0) continue; // TODO: DEBUG! Remove me!
 
-                    vislib_gl::graphics::gl::GLSLShader* shader = this->shaders[list.Type() % this->cntShaders];
+                    std::shared_ptr<glowl::GLSLProgram> shader = this->shaders[list.Type() % this->shaders.size()];
                     if ((shader == NULL) && (shaderInitCnt > 0)) {
-                        unsigned int t = list.Type() % this->cntShaders;
+                        unsigned int t = list.Type() % this->shaders.size();
                         try {
                             shader = this->shaders[t] = this->makeShader(tdc->GetCrystals()[t]);
                         } catch (...) {}
@@ -278,51 +278,51 @@ bool QuartzRenderer::Render(mmstd_gl::CallRender3DGL& call) {
                     }
 
                     if (shader != NULL) {
-                        shader->Enable();
+                        shader->use();
                         ::glPointSize(shaderPointSize);
-                        ::glUniform4fv(shader->ParameterLocation("viewAttr"), 1, glm::value_ptr(viewport));
-                        ::glUniform3fv(shader->ParameterLocation("camIn"), 1,
+                        ::glUniform4fv(shader->getUniformLocation("viewAttr"), 1, glm::value_ptr(viewport));
+                        ::glUniform3fv(shader->getUniformLocation("camIn"), 1,
                             glm::value_ptr(glm::vec3(camView.x, camView.y, camView.z)));
-                        ::glUniform3fv(shader->ParameterLocation("camRight"), 1,
+                        ::glUniform3fv(shader->getUniformLocation("camRight"), 1,
                             glm::value_ptr(glm::vec3(camRight.x, camRight.y, camRight.z)));
-                        ::glUniform3fv(shader->ParameterLocation("camUp"), 1,
+                        ::glUniform3fv(shader->getUniformLocation("camUp"), 1,
                             glm::value_ptr(glm::vec3(camUp.x, camUp.y, camUp.z)));
-                        ::glUniform4fv(shader->ParameterLocation("camPosInit"), 1, glm::value_ptr(camPos));
-                        ::glUniform4fv(shader->ParameterLocation("color"), 1, glm::value_ptr(grainColor));
-                        ::glUniform4fv(shader->ParameterLocation("ambientCol"), 1, glm::value_ptr(ambient));
-                        ::glUniform4fv(shader->ParameterLocation("diffuseCol"), 1, glm::value_ptr(diffuse));
-                        ::glUniform4fv(shader->ParameterLocation("specularCol"), 1, glm::value_ptr(specular));
-                        ::glUniform1i(shader->ParameterLocation("numLights"), numLights);
+                        ::glUniform4fv(shader->getUniformLocation("camPosInit"), 1, glm::value_ptr(camPos));
+                        ::glUniform4fv(shader->getUniformLocation("color"), 1, glm::value_ptr(grainColor));
+                        ::glUniform4fv(shader->getUniformLocation("ambientCol"), 1, glm::value_ptr(ambient));
+                        ::glUniform4fv(shader->getUniformLocation("diffuseCol"), 1, glm::value_ptr(diffuse));
+                        ::glUniform4fv(shader->getUniformLocation("specularCol"), 1, glm::value_ptr(specular));
+                        ::glUniform1i(shader->getUniformLocation("numLights"), numLights);
                         ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssboLights);
                         //::glUniformMatrix4fv(
-                        //    shader->ParameterLocation("ModelViewMatrixInverse"), 1, GL_FALSE, glm::value_ptr(MVinv));
-                        ::glUniformMatrix4fv(shader->ParameterLocation("ModelViewMatrixInverseTranspose"), 1, GL_FALSE,
+                        //    shader->getUniformLocation("ModelViewMatrixInverse"), 1, GL_FALSE, glm::value_ptr(MVinv));
+                        ::glUniformMatrix4fv(shader->getUniformLocation("ModelViewMatrixInverseTranspose"), 1, GL_FALSE,
                             glm::value_ptr(glm::transpose(MVinv)));
                         ::glUniformMatrix4fv(
-                            shader->ParameterLocation("ModelViewProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(MVP));
-                        ::glUniformMatrix4fv(shader->ParameterLocation("ModelViewProjectionMatrixInverse"), 1, GL_FALSE,
-                            glm::value_ptr(MVPinv));
-                        ::glUniformMatrix4fv(shader->ParameterLocation("ModelViewProjectionMatrixTranspose"), 1,
+                            shader->getUniformLocation("ModelViewProjectionMatrix"), 1, GL_FALSE, glm::value_ptr(MVP));
+                        ::glUniformMatrix4fv(shader->getUniformLocation("ModelViewProjectionMatrixInverse"), 1,
+                            GL_FALSE, glm::value_ptr(MVPinv));
+                        ::glUniformMatrix4fv(shader->getUniformLocation("ModelViewProjectionMatrixTranspose"), 1,
                             GL_FALSE, glm::value_ptr(MVPtransp));
                         if (ccp != NULL) {
-                            shader->SetParameter("clipcol", static_cast<float>(ccp->GetColour()[0]) / 255.0f,
+                            shader->setUniform("clipcol", static_cast<float>(ccp->GetColour()[0]) / 255.0f,
                                 static_cast<float>(ccp->GetColour()[1]) / 255.0f,
                                 static_cast<float>(ccp->GetColour()[2]) / 255.0f);
                         }
-                        shader->SetParameterArray3("bboxmin", 1, bboxmin.PeekCoordinates());
-                        shader->SetParameterArray3("bboxmax", 1, bboxmax.PeekCoordinates());
-                        shader->SetParameter("posoffset", xoff, yoff, zoff);
+                        glUniform3fv(shader->getUniformLocation("bboxmin"), 1, bboxmin.PeekCoordinates());
+                        glUniform3fv(shader->getUniformLocation("bboxmax"), 1, bboxmax.PeekCoordinates());
+                        shader->setUniform("posoffset", xoff, yoff, zoff);
 
                     } else {
                         ::glPointSize(4.0f);
-                        this->errShader.Enable();
-                        shader = &this->errShader;
+                        this->errShader->use();
+                        shader = this->errShader;
                     }
                     if (ccp != NULL) {
-                        shader->SetParameter("clipplane", ccp->GetPlane().A(), ccp->GetPlane().B(), ccp->GetPlane().C(),
+                        shader->setUniform("clipplane", ccp->GetPlane().A(), ccp->GetPlane().B(), ccp->GetPlane().C(),
                             ccp->GetPlane().D());
                     } else {
-                        shader->SetParameter("clipplane", 0.0f, 0.0f, 0.0f, 0.0f);
+                        shader->setUniform("clipplane", 0.0f, 0.0f, 0.0f, 0.0f);
                     }
 
                     ::glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -341,7 +341,7 @@ bool QuartzRenderer::Render(mmstd_gl::CallRender3DGL& call) {
                     ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
                     ::glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-                    shader->Disable();
+                    glUseProgram(0);
                 }
             }
         }
@@ -451,31 +451,16 @@ bool QuartzRenderer::Render(mmstd_gl::CallRender3DGL& call) {
  */
 bool QuartzRenderer::create(void) {
     using megamol::core::utility::log::Log;
-    using vislib_gl::graphics::gl::GLSLShader;
-    using vislib_gl::graphics::gl::ShaderSource;
 
-    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
-        return false;
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
-    ShaderSource vert, frag;
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
     try {
-        if (!ssf->MakeShaderSource("quartz::simple::errVert", vert)) {
-            throw vislib::Exception("Generic vertex shader build failure", __FILE__, __LINE__);
-        }
-        if (!ssf->MakeShaderSource("quartz::simple::frag", frag)) {
-            throw vislib::Exception("Generic fragment shader build failure", __FILE__, __LINE__);
-        }
-        if (!this->errShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            throw vislib::Exception("Generic shader create failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception ex) {
-        Log::DefaultLog.WriteError("Unable to compile shader: %s", ex.GetMsgA());
-        this->release(); // Because I know that 'release' ONLY releases all the shaders
-        return false;
-    } catch (...) {
-        Log::DefaultLog.WriteError("Unable to compile shader: Unexpected Exception");
+        this->errShader = core::utility::make_shared_glowl_shader("errShader", shader_options,
+            "pwdemos_gl/quartz/simple_err.vert.glsl", "pwdemos_gl/quartz/simple.frag.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("QuartzRenderer: " + std::string(e.what())).c_str());
         this->release(); // Because I know that 'release' ONLY releases all the shaders
         return false;
     }
@@ -511,7 +496,7 @@ bool QuartzRenderer::create(void) {
  */
 void QuartzRenderer::release(void) {
     this->releaseShaders();
-    this->errShader.Release();
+    this->errShader.reset();
 
     ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     ::glDeleteBuffers(1, &ssboLights);
@@ -524,31 +509,23 @@ void QuartzRenderer::release(void) {
 /*
  * QuartzRenderer::makeShader
  */
-vislib_gl::graphics::gl::GLSLShader* QuartzRenderer::makeShader(const CrystalDataCall::Crystal& c) {
+std::shared_ptr<glowl::GLSLProgram> QuartzRenderer::makeShader(const CrystalDataCall::Crystal& c) {
     using megamol::core::utility::log::Log;
-    using vislib_gl::graphics::gl::GLSLShader;
-    using vislib_gl::graphics::gl::ShaderSource;
 
-    GLSLShader* s = new GLSLShader();
+    std::shared_ptr<glowl::GLSLProgram> s;
 
     c.AssertMesh();
     const float* v = c.GetMeshVertexData();
 
-    ShaderSource vert, frag;
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+
     try {
-
-        if (!ssf->MakeShaderSource("quartz::ray::vertclipped", vert)) {
-            throw vislib::Exception("Generic vertex shader build failure", __FILE__, __LINE__);
-        }
-        if (!ssf->MakeShaderSource("quartz::ray::fragclipped", frag)) {
-            throw vislib::Exception("Generic fragment shader build failure", __FILE__, __LINE__);
-        }
-
         vislib::StringA str, line;
+        auto shader_options2 = shader_options;
 
-        str.Format("#define OUTERRAD %f\n", c.GetBoundingRadius());
-        vert.Replace(1 /* HAZARD */, new ShaderSource::StringSnippet(str));
+        str.Format("%f\n", c.GetBoundingRadius());
+        shader_options2.addDefinition("REPLACE_VERT_SNIPPET", str.PeekBuffer());
 
         str = "vec2 ll;\n"
               "vec2 lams = vec2(-1000000.0, 1000000.0);\n";
@@ -575,23 +552,14 @@ vislib_gl::graphics::gl::GLSLShader* QuartzRenderer::makeShader(const CrystalDat
         }
         str.Append("if (lams.y < lams.x) discard;\n");
         str.Append("lambda = lams.x;\n");
-        frag.Replace(5 /* HAZARD */, new ShaderSource::StringSnippet(str));
+        shader_options2.addDefinition("REPLACE_FRAG_SNIPPET", str.PeekBuffer());
 
-        if (!s->Compile(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            throw vislib::Exception("Generic compilation failure", __FILE__, __LINE__);
-        }
-        if (!s->Link()) {
-            throw vislib::Exception("Generic linking failure", __FILE__, __LINE__);
-        }
+        s = core::utility::make_shared_glowl_shader("shader", shader_options2,
+            "pwdemos_gl/quartz/ray_clipped.vert.glsl", "pwdemos_gl/quartz/ray_clipped.frag.glsl");
 
-    } catch (vislib::Exception ex) {
-        Log::DefaultLog.WriteError("Unable to compile shader: %s", ex.GetMsgA());
-        delete s;
-        return NULL;
-    } catch (...) {
-        Log::DefaultLog.WriteError("Unable to compile shader: Unexpected Exception");
-        delete s;
-        return NULL;
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("QuartzRenderer: " + std::string(e.what())).c_str());
+        return nullptr;
     }
 
     return s;

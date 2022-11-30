@@ -6,11 +6,13 @@
 
 #include "MapGenerator.h"
 
+#include <numeric>
+
+#include "RuntimeConfig.h"
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
-
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -19,8 +21,6 @@
 #include "mmcore_gl/view/CallRender3DGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/ProteinColor.h"
-
-#include <numeric>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -1333,17 +1333,17 @@ void MapGenerator::drawMap(void) {
     glColorPointer(3, GL_FLOAT, 0, this->vertexColors_rebuild.data());
 
     // Render
-    this->map_shader.Enable();
+    this->map_shader->use();
     this->bufferIDs->bind(12);
     this->bufferValues->bind(13);
-    this->map_shader.SetParameter("sphere", this->sphere_data.GetX(), this->sphere_data.GetY(),
-        this->sphere_data.GetZ(), this->sphere_data.GetW());
-    this->map_shader.SetParameter("frontVertex", this->vertices_sphere[this->look_at_id * 3],
+    this->map_shader->setUniform("sphere", this->sphere_data.GetX(), this->sphere_data.GetY(), this->sphere_data.GetZ(),
+        this->sphere_data.GetW());
+    this->map_shader->setUniform("frontVertex", this->vertices_sphere[this->look_at_id * 3],
         this->vertices_sphere[this->look_at_id * 3 + 1], this->vertices_sphere[this->look_at_id * 3 + 2]);
-    this->map_shader.SetParameter("mirrorMap", this->mirror_map_param.Param<param::BoolParam>()->Value());
+    this->map_shader->setUniform("mirrorMap", this->mirror_map_param.Param<param::BoolParam>()->Value());
     glDrawElements(
         GL_TRIANGLES, static_cast<GLsizei>(this->faces_rebuild.size()), GL_UNSIGNED_INT, this->faces_rebuild.data());
-    this->map_shader.Disable();
+    glUseProgram(0);
 
     // Draw FBO
     glPopMatrix();
@@ -1361,13 +1361,13 @@ void MapGenerator::drawMap(void) {
         glVertexPointer(3, GL_FLOAT, 0, 0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glColorPointer(3, GL_FLOAT, 0, this->geodesic_lines_colours[i].data());
-        this->geodesic_shader.Enable();
-        this->geodesic_shader.SetParameter("sphere", this->sphere_data.GetX(), this->sphere_data.GetY(),
+        this->geodesic_shader->use();
+        this->geodesic_shader->setUniform("sphere", this->sphere_data.GetX(), this->sphere_data.GetY(),
             this->sphere_data.GetZ(), this->sphere_data.GetW());
-        this->geodesic_shader.SetParameter("frontVertex", this->vertices_sphere[this->look_at_id * 3],
+        this->geodesic_shader->setUniform("frontVertex", this->vertices_sphere[this->look_at_id * 3],
             this->vertices_sphere[this->look_at_id * 3 + 1], this->vertices_sphere[this->look_at_id * 3 + 2]);
         glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(this->geodesic_lines[i].size() / 3));
-        this->geodesic_shader.Disable();
+        glUseProgram(0);
     }
     glDisable(GL_LINE_SMOOTH);
 
@@ -2626,118 +2626,32 @@ bool MapGenerator::initialiseMapShader(bool shaderReload) {
     if (!this->map_shader_init || shaderReload) {
         this->map_shader_init = true;
 
-        auto ssf = std::make_shared<megamol::core_gl::utility::ShaderSourceFactory>(
-            instance()->Configuration().ShaderDirectories());
+        auto const shader_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
-        if (shaderReload) {
-            ssf->LoadBTF("mapShader", true);
-        }
-
-        vislib_gl::graphics::gl::ShaderSource vert, frag, geom;
-
-        // Create shader for map and build the programme.
-        if (!ssf->MakeShaderSource("mapShader::vertex", vert)) {
-            core::utility::log::Log::DefaultLog.WriteMsg(
-                core::utility::log::Log::LEVEL_ERROR, "Unable to load vertex shader source for map shader");
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mapShader::geometry", geom)) {
-            core::utility::log::Log::DefaultLog.WriteMsg(
-                core::utility::log::Log::LEVEL_ERROR, "Unable to load geometry shader source for map shader");
-            return false;
-        }
-        if (!ssf->MakeShaderSource("mapShader::fragment", frag)) {
-            core::utility::log::Log::DefaultLog.WriteMsg(
-                core::utility::log::Log::LEVEL_ERROR, "Unable to load fragment shader source for map shader");
-            return false;
-        }
-
-        const char* buildState = "compile";
         try {
-            if (!this->map_shader.Compile(
-                    vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
-                core::utility::log::Log::DefaultLog.WriteMsg(
-                    core::utility::log::Log::LEVEL_ERROR, "Unable to compile map shader: Unknown error\n");
-                return false;
-            }
-            buildState = "setup";
-            this->map_shader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES);
-            this->map_shader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-            this->map_shader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 6);
-            buildState = "link";
-            if (!this->map_shader.Link()) {
-                core::utility::log::Log::DefaultLog.WriteMsg(
-                    core::utility::log::Log::LEVEL_ERROR, "Unable to link map shader: Unknown error\n");
-                return false;
-            }
+            // Create shader for map and build the programme.
+            this->map_shader =
+                core::utility::make_glowl_shader("map_shader", shader_options, "molecularmaps/mapShader.vert.glsl",
+                    "molecularmaps/mapShader.geom.glsl", "molecularmaps/mapShader.frag.glsl");
+            glProgramParameteriEXT(map_shader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES);
+            glProgramParameteriEXT(map_shader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+            glProgramParameteriEXT(map_shader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 6);
+            // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+            glLinkProgram(map_shader->getHandle());
 
-        } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
-                "Unable to %s map shader (@%s): %s\n", buildState,
-                vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-                ce.GetMsgA());
-            return false;
+            // Create shader for geodesic lines and build the programme.
+            this->geodesic_shader = core::utility::make_glowl_shader("geodesic_shader", shader_options,
+                "molecularmaps/geolinesShader.vert.glsl", "molecularmaps/geolinesShader.geom.glsl",
+                "molecularmaps/geolinesShader.frag.glsl");
+            glProgramParameteriEXT(geodesic_shader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES);
+            glProgramParameteriEXT(geodesic_shader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
+            glProgramParameteriEXT(geodesic_shader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 4);
+            // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+            glLinkProgram(geodesic_shader->getHandle());
 
-        } catch (vislib::Exception e) {
-            core::utility::log::Log::DefaultLog.WriteMsg(
-                core::utility::log::Log::LEVEL_ERROR, "Unable to %s map shader: %s\n", buildState, e.GetMsgA());
-            return false;
-
-        } catch (...) {
-            core::utility::log::Log::DefaultLog.WriteMsg(
-                core::utility::log::Log::LEVEL_ERROR, "Unable to %s map shader: Unknown exception\n", buildState);
-            return false;
-        }
-
-        // Create shader for geodesic lines and build the programme.
-        if (!ssf->MakeShaderSource("geolinesShader::vertex", vert)) {
-            core::utility::log::Log::DefaultLog.WriteMsg(
-                core::utility::log::Log::LEVEL_ERROR, "Unable to load vertex shader source for geodesic lines shader");
-            return false;
-        }
-        if (!ssf->MakeShaderSource("geolinesShader::geometry", geom)) {
-            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
-                "Unable to load geometry shader source for geodesic lines shader");
-            return false;
-        }
-        if (!ssf->MakeShaderSource("geolinesShader::fragment", frag)) {
-            core::utility::log::Log::DefaultLog.WriteMsg(
-                core::utility::log::Log::LEVEL_ERROR, "Unable to load vertex shader source for geodesic lines shader");
-            return false;
-        }
-
-        buildState = "compile";
-        try {
-            if (!this->geodesic_shader.Compile(
-                    vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
-                core::utility::log::Log::DefaultLog.WriteMsg(
-                    core::utility::log::Log::LEVEL_ERROR, "Unable to compile geodesic lines shader: Unknown error\n");
-                return false;
-            }
-            buildState = "setup";
-            this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES);
-            this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
-            this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 4);
-            buildState = "link";
-            if (!this->geodesic_shader.Link()) {
-                core::utility::log::Log::DefaultLog.WriteMsg(
-                    core::utility::log::Log::LEVEL_ERROR, "Unable to link geodesic lines shader: Unknown error\n");
-                return false;
-            }
-
-        } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
-                "Unable to %s geodesic lines shader (@%s): %s\n", buildState,
-                vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-                ce.GetMsgA());
-            return false;
-        } catch (vislib::Exception e) {
-            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
-                "Unable to %s geodesic lines shader: %s\n", buildState, e.GetMsgA());
-            return false;
-        } catch (...) {
-            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
-                "Unable to %s geodesic lines shader: Unknown exception\n", buildState);
+        } catch (std::exception& e) {
+            Log::DefaultLog.WriteError(("MapGenerator: " + std::string(e.what())).c_str());
             return false;
         }
     }
@@ -3699,7 +3613,7 @@ bool MapGenerator::Render(core_gl::view::CallRender3DGL& call) {
     // Check if we need to reload the shaders.
     bool shaderReloaded = false;
     if (this->shaderReloadButtonParam.IsDirty()) {
-        this->aoCalculator.loadShaders(this->GetCoreInstance());
+        this->aoCalculator.loadShaders(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
         this->initialiseMapShader(true);
         this->shaderReloadButtonParam.ResetDirty();
         shaderReloaded = true;
@@ -3880,7 +3794,9 @@ bool MapGenerator::Render(core_gl::view::CallRender3DGL& call) {
                     settings.volSizeX = this->aoVolSizeXParam.Param<param::IntParam>()->Value();
                     settings.volSizeY = this->aoVolSizeYParam.Param<param::IntParam>()->Value();
                     settings.volSizeZ = this->aoVolSizeZParam.Param<param::IntParam>()->Value();
-                    this->aoCalculator.initilialize(instance(), &this->vertices, &this->normals, mdc);
+                    this->aoCalculator.initilialize(
+                        frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), &this->vertices,
+                        &this->normals, mdc);
                     auto result = this->aoCalculator.calculateVertexShadows(settings);
                     if (result != nullptr) {
                         // Process the output to identify tunnels and create the cuts.
@@ -4282,7 +4198,8 @@ bool MapGenerator::Render(core_gl::view::CallRender3DGL& call) {
         auto vector = this->aoCalculator.getVertexShadows();
         if (vector == nullptr) {
             // Texture is empty create one.
-            this->aoCalculator.initilialize(this->GetCoreInstance(), &this->vertices, &this->normals, mdc);
+            this->aoCalculator.initilialize(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(),
+                &this->vertices, &this->normals, mdc);
             AmbientOcclusionCalculator::AOSettings settings;
             settings.angleFactor = this->aoAngleFactorParam.Param<param::FloatParam>()->Value();
             settings.evalFactor = this->aoEvalParam.Param<param::FloatParam>()->Value();
@@ -4640,10 +4557,10 @@ void MapGenerator::renderLatLonLines(
     if (p_project) {
         // We render onto the map so use the geodesic lines shader and disable the depth test.
         glDisable(GL_DEPTH_TEST);
-        this->geodesic_shader.Enable();
-        this->geodesic_shader.SetParameter("sphere", this->sphere_data.GetX(), this->sphere_data.GetY(),
+        this->geodesic_shader->use();
+        this->geodesic_shader->setUniform("sphere", this->sphere_data.GetX(), this->sphere_data.GetY(),
             this->sphere_data.GetZ(), this->sphere_data.GetW());
-        this->geodesic_shader.SetParameter("frontVertex", this->vertices_sphere[this->look_at_id * 3],
+        this->geodesic_shader->setUniform("frontVertex", this->vertices_sphere[this->look_at_id * 3],
             this->vertices_sphere[this->look_at_id * 3 + 1], this->vertices_sphere[this->look_at_id * 3 + 2]);
 
         // Render the lines.
@@ -4655,7 +4572,7 @@ void MapGenerator::renderLatLonLines(
     // Check if we render onto the 3D sphere or the 2D map.
     if (p_project) {
         // Disable the shader and enable the depth test.
-        this->geodesic_shader.Disable();
+        glUseProgram(0);
         glEnable(GL_DEPTH_TEST);
     }
 

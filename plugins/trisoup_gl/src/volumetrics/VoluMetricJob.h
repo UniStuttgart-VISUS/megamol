@@ -20,6 +20,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "trisoup/trisoupVolumetricDataCall.h"
 #include "trisoup/volumetrics/JobStructures.h"
+#include "vislib/RawStorage.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"
 

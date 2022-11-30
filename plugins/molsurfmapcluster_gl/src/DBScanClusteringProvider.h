@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mmcore/CoreInstance.h"
+#include "RuntimeConfig.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include <array>
 #include <filesystem>
@@ -26,9 +26,10 @@ public:
      * @param coreInstance The core instance needed for file path retrieval.
      * @return Reference to the stored map
      */
-    static const std::multimap<std::string, int>& RetrieveClusterMap(const core::CoreInstance& coreInstance);
+    static const std::multimap<std::string, int>& RetrieveClusterMap(
+        frontend_resources::RuntimeConfig const& runtimeConf);
 
-    static const std::multimap<int, std::string>& RetrieveIdMap(const core::CoreInstance& coreInstance);
+    static const std::multimap<int, std::string>& RetrieveIdMap(frontend_resources::RuntimeConfig const& runtimeConf);
 
     /**
      * Returns the class of a given PDB id.
@@ -40,9 +41,9 @@ public:
      * @param coreInstance The core instance needed for file path retrieval.
      * @return Array with four entries, one for each subclass. If one subclass is not listed, the value will be -1.
      */
-    static int RetrieveClusterForPdbId(std::string pdbId, const core::CoreInstance& coreInstance);
+    static int RetrieveClusterForPdbId(std::string pdbId, frontend_resources::RuntimeConfig const& runtimeConf);
 
-    static std::string RetrievePDBIdForCluster(int clusterId, const core::CoreInstance& coreInstance);
+    static std::string RetrievePDBIdForCluster(int clusterId, frontend_resources::RuntimeConfig const& runtimeConf);
 
     /**
      * Returns all classes a given PDB id lies in.
@@ -53,9 +54,11 @@ public:
      * @param coreInstance The core instance needed for file path retrieval.
      * @return Array with four entries, one for each subclass. If one subclass is not listed, the value will be -1.
      */
-    static std::vector<int> RetrieveClustersForPdbId(std::string pdbId, const core::CoreInstance& coreInstance);
+    static std::vector<int> RetrieveClustersForPdbId(
+        std::string pdbId, frontend_resources::RuntimeConfig const& runtimeConf);
 
-    static std::vector<std::string> RetrievePDBIdsForCluster(int clusterId, const core::CoreInstance& coreInstance);
+    static std::vector<std::string> RetrievePDBIdsForCluster(
+        int clusterId, frontend_resources::RuntimeConfig const& runtimeConf);
 
 private:
     /**
@@ -63,7 +66,7 @@ private:
      *
      * @param coreInstance The core instance needed for file path retrieval.
      */
-    static void loadMapFromFile(const core::CoreInstance& coreInstance);
+    static void loadMapFromFile(frontend_resources::RuntimeConfig const& runtimeConf);
 
     /**
      * Determines the file path of the file to load
@@ -71,7 +74,7 @@ private:
      * @param coreInstance The core instance needed for file path retrieval.
      * @return Path to the map file
      */
-    static std::filesystem::path determineFilePath(const core::CoreInstance& coreInstance);
+    static std::filesystem::path determineFilePath(frontend_resources::RuntimeConfig const& runtimeConf);
 
     /** map mapping pdb ids to cluster ids */
     static std::multimap<std::string, int> clusterMap;

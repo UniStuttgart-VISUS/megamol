@@ -1,28 +1,25 @@
-/*
- * Call.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_CALL_H_INCLUDED
-#define MEGAMOLCORE_CALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-
-#include "CallCapabilities.h"
-#ifdef MEGAMOL_USE_PROFILING
-#include "PerformanceManager.h"
-#endif
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-namespace megamol {
-namespace core {
+#include "CallCapabilities.h"
+#ifdef MEGAMOL_USE_PROFILING
+#include "PerformanceManager.h"
+#endif
+#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
+#include "OpenGL_Helper.h"
+#endif
+
+namespace megamol::core {
 
 /** Forward declaration of description and slots */
 class CalleeSlot;
@@ -56,10 +53,10 @@ public:
     using weak_ptr_type = std::weak_ptr<Call>;
 
     /** Ctor. */
-    Call(void);
+    Call();
 
     /** Dtor. */
-    virtual ~Call(void);
+    virtual ~Call();
 
     /**
      * Calls function 'func'.
@@ -75,7 +72,7 @@ public:
      *
      * @return The callee slot this call is connected to.
      */
-    inline const CalleeSlot* PeekCalleeSlot(void) const {
+    inline const CalleeSlot* PeekCalleeSlot() const {
         return this->callee;
     }
 
@@ -88,7 +85,7 @@ public:
      *
      * @return The caller slot this call is connected to.
      */
-    inline const CallerSlot* PeekCallerSlot(void) const {
+    inline const CallerSlot* PeekCallerSlot() const {
         return this->caller;
     }
 
@@ -143,12 +140,12 @@ public:
     frontend_resources::PerformanceManager* perf_man = nullptr;
     frontend_resources::PerformanceManager::handle_vector cpu_queries, gl_queries;
 #endif // MEGAMOL_USE_PROFILING
+#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
+public:
+    frontend_resources::OpenGL_Helper* gl_helper = nullptr;
+#endif
 protected:
     CallCapabilities caps;
 };
 
-
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_CALL_H_INCLUDED */
+} // namespace megamol::core

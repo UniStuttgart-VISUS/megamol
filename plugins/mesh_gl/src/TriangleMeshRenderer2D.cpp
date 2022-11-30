@@ -11,12 +11,13 @@
 #include <stdexcept>
 
 #include "mesh/TriangleMeshCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/TransferFunctionParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+
+using megamol::core::utility::log::Log;
 
 namespace megamol::mesh_gl {
 
@@ -64,7 +65,8 @@ TriangleMeshRenderer2D::~TriangleMeshRenderer2D() {
 }
 
 bool TriangleMeshRenderer2D::create() {
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         this->render_data.shader_program = core::utility::make_glowl_shader("triangle_mesh_renderer_2d", shader_options,

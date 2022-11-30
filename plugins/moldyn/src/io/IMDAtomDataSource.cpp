@@ -248,7 +248,9 @@ private:
             this->pos = 0;
             try {
                 return (this->file.Read(dst, size) == size);
-            } catch (...) { return false; }
+            } catch (...) {
+                return false;
+            }
         }
 
         try {
@@ -286,7 +288,9 @@ private:
             try {
                 this->file.Seek(size, vislib::sys::File::CURRENT);
                 return true;
-            } catch (...) { return false; }
+            } catch (...) {
+                return false;
+            }
         }
 
         try { // read into buffer
@@ -352,7 +356,9 @@ public:
         const char* c = this->sift(fail);
         try {
             return static_cast<UINT32>(vislib::CharTraitsA::ParseInt(c));
-        } catch (...) { fail = true; }
+        } catch (...) {
+            fail = true;
+        }
         return 0;
     }
 
@@ -368,7 +374,9 @@ public:
         const char* c = this->sift(fail);
         try {
             return static_cast<float>(vislib::CharTraitsA::ParseDouble(c));
-        } catch (...) { fail = true; }
+        } catch (...) {
+            fail = true;
+        }
         return 0.0f;
     }
 
@@ -1405,7 +1413,9 @@ bool IMDAtomDataSource::readHeader(vislib::sys::File& file, IMDAtomDataSource::H
 
     } catch (vislib::Exception ex) {
         Log::DefaultLog.WriteError("Failed to parse IMD header: %s\n", ex.GetMsgA());
-    } catch (...) { Log::DefaultLog.WriteError("Failed to parse IMD header: unexpected exception\n"); }
+    } catch (...) {
+        Log::DefaultLog.WriteError("Failed to parse IMD header: unexpected exception\n");
+    }
 
     return false;
 }
@@ -1527,7 +1537,9 @@ bool IMDAtomDataSource::readData(
                         static_cast<int>(header.captions.Count()) - 1);
                     typecolumn = UINT_MAX;
                 }
-            } catch (...) { typecolumn = UINT_MAX; }
+            } catch (...) {
+                typecolumn = UINT_MAX;
+            }
         }
 
         if (typecolumn == UINT_MAX) {
@@ -1568,7 +1580,9 @@ bool IMDAtomDataSource::readData(
                         static_cast<int>(header.captions.Count()) - 1);
                     colcolumn = UINT_MAX;
                 }
-            } catch (...) { colcolumn = UINT_MAX; }
+            } catch (...) {
+                colcolumn = UINT_MAX;
+            }
         }
 
         if (colcolumn == UINT_MAX) {
@@ -1606,7 +1620,9 @@ bool IMDAtomDataSource::readData(
                         static_cast<int>(header.captions.Count()) - 1);
                     dircolcolumn = UINT_MAX;
                 }
-            } catch (...) { dircolcolumn = UINT_MAX; }
+            } catch (...) {
+                dircolcolumn = UINT_MAX;
+            }
         }
         if (dircolcolumn == UINT_MAX) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(

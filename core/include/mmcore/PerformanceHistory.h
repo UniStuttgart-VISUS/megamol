@@ -1,11 +1,16 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <algorithm>
 #include <array>
 #include <cstdint>
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Class encapsulating the results captured from single performance region. It contains a ring buffer of length
@@ -67,5 +72,4 @@ private:
     uint32_t num_samples = 0;
 };
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core

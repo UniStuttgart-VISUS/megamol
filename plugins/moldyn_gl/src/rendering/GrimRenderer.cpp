@@ -128,11 +128,11 @@ bool GrimRenderer::create(void) {
     // TODO: RequiredExtensions for glowl::GLSLProgram and glowl::fbo_
     if (!ogl_ctx.isExtAvailable("GL_NV_occlusion_query") || !ogl_ctx.isExtAvailable("GL_ARB_multitexture") ||
         !ogl_ctx.isExtAvailable("GL_ARB_vertex_buffer_object") ||
-        !ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()) ||
         !ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::FramebufferObject::RequiredExtensions()))
         return false;
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         sphere_shader_ = core::utility::make_glowl_shader("sphere_shader", shader_options,

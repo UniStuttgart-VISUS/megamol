@@ -1,19 +1,15 @@
 /**
  * MegaMol
- * Copyright (c) 2008-2021, MegaMol Dev Team
+ * Copyright (c) 2008, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_FACTORIES_MODULEAUTODESCRIPTION_H_INCLUDED
-#define MEGAMOLCORE_FACTORIES_MODULEAUTODESCRIPTION_H_INCLUDED
 #pragma once
 
 #include <typeinfo>
 
 #include "ModuleDescription.h"
 #include "mmcore/utility/log/Log.h"
-
-using megamol::core::utility::log::Log;
 
 namespace megamol::core::factories {
 
@@ -101,6 +97,7 @@ protected:
      *         error.
      */
     Module::ptr_type createModuleImpl() const override {
+        using megamol::core::utility::log::Log;
         try {
             Module::ptr_type m = std::make_shared<C>();
             m->SetClassName(this->ClassName());
@@ -117,5 +114,3 @@ protected:
 };
 
 } // namespace megamol::core::factories
-
-#endif // MEGAMOLCORE_FACTORIES_MODULEAUTODESCRIPTION_H_INCLUDED

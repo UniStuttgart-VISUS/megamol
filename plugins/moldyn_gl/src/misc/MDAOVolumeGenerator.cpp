@@ -1,7 +1,6 @@
 
 #include "misc/MDAOVolumeGenerator.h"
 #include "mmcore/AbstractNamedObject.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/utility/log/Log.h"
 
 #include <algorithm>

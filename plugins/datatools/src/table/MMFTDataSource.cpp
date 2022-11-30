@@ -6,7 +6,8 @@
 
 #include "MMFTDataSource.h"
 
-#include "mmcore/CoreInstance.h"
+#include <fstream>
+
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"
 

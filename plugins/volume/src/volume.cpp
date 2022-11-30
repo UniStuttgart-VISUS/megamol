@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "BuckyBall.h"
 #include "DatRawWriter.h"
@@ -13,13 +13,12 @@
 #include "VolumetricDataSource.h"
 
 namespace megamol::volume {
-class VolumePluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class VolumePluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(VolumePluginInstance)
 
 public:
     VolumePluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
-                  "volume", "Provides modules for volume rendering"){};
+            : megamol::core::factories::AbstractPluginInstance("volume", "Provides modules for volume rendering"){};
 
     ~VolumePluginInstance() override = default;
 

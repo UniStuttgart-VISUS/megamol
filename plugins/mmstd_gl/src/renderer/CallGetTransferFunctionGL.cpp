@@ -24,16 +24,12 @@ CallGetTransferFunctionGL::~CallGetTransferFunctionGL(void) {
 }
 
 void CallGetTransferFunctionGL::BindConvenience(
-    vislib_gl::graphics::gl::GLSLShader& shader, GLenum activeTexture, int textureUniform) {
-    glEnable(GL_TEXTURE_1D);
-    glActiveTexture(activeTexture);
-    glBindTexture(GL_TEXTURE_1D, this->texID);
-    glUniform1i(shader.ParameterLocation("tfTexture"), textureUniform);
-    glUniform2fv(shader.ParameterLocation("tfRange"), 1, this->range.data());
+    std::unique_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform) {
+    BindConvenience(*shader, activeTexture, textureUniform);
 }
 
 void CallGetTransferFunctionGL::BindConvenience(
-    std::unique_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform) {
+    std::shared_ptr<glowl::GLSLProgram>& shader, GLenum activeTexture, int textureUniform) {
     BindConvenience(*shader, activeTexture, textureUniform);
 }
 
@@ -42,7 +38,7 @@ void CallGetTransferFunctionGL::BindConvenience(glowl::GLSLProgram& shader, GLen
     glActiveTexture(activeTexture);
     glBindTexture(GL_TEXTURE_1D, this->texID);
     shader.setUniform("tfTexture", textureUniform);
-    glUniform2fv(shader.getUniformLocation("tfRange"), 1, this->range.data());
+    shader.setUniform("tfRange", range[0], range[1]);
 }
 
 void CallGetTransferFunctionGL::UnbindConvenience() {

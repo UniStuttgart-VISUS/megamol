@@ -13,13 +13,19 @@
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-namespace megamol::compositing {
+namespace megamol::compositing_gl {
 
 /**
  * TODO
  */
 class DrawToScreen : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
+    std::vector<std::string> requested_lifetime_resources() override {
+        std::vector<std::string> resources = Renderer3DModuleGL::requested_lifetime_resources();
+        resources.emplace_back("FrameStatistics");
+        return resources;
+    }
+
     /**
      * Answer the name of this module.
      *
@@ -114,4 +120,4 @@ private:
     glm::ivec2 m_last_tex_size = glm::ivec2(0, 0);
 };
 
-} // namespace megamol::compositing
+} // namespace megamol::compositing_gl

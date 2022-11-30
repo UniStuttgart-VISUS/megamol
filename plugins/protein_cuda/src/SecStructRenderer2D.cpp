@@ -11,11 +11,10 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/math/ShallowMatrix.h"
 #include "vislib/math/Vector.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
 #include <limits>
 #include <map>
@@ -167,97 +166,26 @@ SecStructRenderer2D::~SecStructRenderer2D(void) {
  * SecStructRenderer2D::create
  */
 bool SecStructRenderer2D::create(void) {
-    using namespace vislib::sys;
-    using namespace vislib_gl::graphics::gl;
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
-    /**************************** Line Shader ********************************/
-    vislib::SmartPtr<ShaderSource> vert, tessCont, tessEval, geom, frag;
-    vert = new ShaderSource();
-    tessCont = new ShaderSource();
-    tessEval = new ShaderSource();
-    geom = new ShaderSource();
-    frag = new ShaderSource();
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    if (!ssf->MakeShaderSource("linetessellation::vertex", *vert)) {
-        return false;
-    }
-    if (!ssf->MakeShaderSource("linetessellation::tesscontrol", *tessCont)) {
-        return false;
-    }
-    if (!ssf->MakeShaderSource("linetessellation::tesseval", *tessEval)) {
-        return false;
-    }
-    if (!ssf->MakeShaderSource("linetessellation::geometry", *geom)) {
-        return false;
-    }
-    if (!ssf->MakeShaderSource("linetessellation::fragment", *frag)) {
-        return false;
-    }
     try {
-        // compile
-        if (!this->lineShader.Compile(vert->Code(), vert->Count(), tessCont->Code(), tessCont->Count(),
-                tessEval->Code(), tessEval->Count(), geom->Code(), geom->Count(), frag->Code(), frag->Count())) {
-            throw vislib::Exception("Could not compile line shader. ", __FILE__, __LINE__);
-        }
-        // link
-        if (!this->lineShader.Link()) {
-            throw vislib::Exception("Could not link line shader", __FILE__, __LINE__);
-        }
-    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile line shader (@%s): %s\n",
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile line shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile line shader: Unknown exception\n");
-        return false;
-    }
+        this->lineShader = core::utility::make_glowl_shader("lineShader", shader_options,
+            "protein_cuda/linetessellation/linetessellation.vert.glsl",
+            "protein_cuda/linetessellation/linetessellation.tesc.glsl",
+            "protein_cuda/linetessellation/linetessellation.tese.glsl",
+            "protein_cuda/linetessellation/linetessellation.geom.glsl",
+            "protein_cuda/linetessellation/linetessellation.frag.glsl");
 
-    /**************************** Tube Shader ********************************/
+        this->tubeShader = core::utility::make_glowl_shader("tubeShader", shader_options,
+            "protein_cuda/tubetessellation/tubetessellation.vert.glsl",
+            "protein_cuda/tubetessellation/tubetessellation.tesc.glsl",
+            "protein_cuda/tubetessellation/tubetessellation.tese.glsl",
+            "protein_cuda/tubetessellation/tubetessellation.geom.glsl",
+            "protein_cuda/tubetessellation/tubetessellation.frag.glsl");
 
-    vert = new ShaderSource();
-    tessCont = new ShaderSource();
-    tessEval = new ShaderSource();
-    geom = new ShaderSource();
-    frag = new ShaderSource();
-    if (!ssf->MakeShaderSource("tubetessellation::vertex", *vert)) {
-        return false;
-    }
-    if (!ssf->MakeShaderSource("tubetessellation::tesscontrol", *tessCont)) {
-        return false;
-    }
-    if (!ssf->MakeShaderSource("tubetessellation::tesseval", *tessEval)) {
-        return false;
-    }
-    if (!ssf->MakeShaderSource("tubetessellation::geometry", *geom)) {
-        return false;
-    }
-    if (!ssf->MakeShaderSource("tubetessellation::fragment", *frag)) {
-        return false;
-    }
-    try {
-        // compile
-        if (!this->tubeShader.Compile(vert->Code(), vert->Count(), tessCont->Code(), tessCont->Count(),
-                tessEval->Code(), tessEval->Count(), geom->Code(), geom->Count(), frag->Code(), frag->Count())) {
-            throw vislib::Exception("Could not compile tube shader. ", __FILE__, __LINE__);
-        }
-        // link
-        if (!this->tubeShader.Link()) {
-            throw vislib::Exception("Could not link tube shader", __FILE__, __LINE__);
-        }
-    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile tube shader (@%s): %s\n",
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile tube shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to compile tube shader: Unknown exception\n");
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("SecStructRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -514,64 +442,64 @@ bool SecStructRenderer2D::Render(mmstd_gl::CallRender2DGL& call) {
 
 
     if (this->showBackboneParam.Param<param::BoolParam>()->Value()) {
-        this->lineShader.Enable();
-        glUniformMatrix4fv(this->lineShader.ParameterLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
+        this->lineShader->use();
+        glUniformMatrix4fv(this->lineShader->getUniformLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
         glUniformMatrix4fv(
-            this->lineShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+            this->lineShader->getUniformLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
         glUniformMatrix4fv(
-            this->lineShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+            this->lineShader->getUniformLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
         glUniformMatrix4fv(
-            this->lineShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
+            this->lineShader->getUniformLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
         glUniformMatrix4fv(
-            this->lineShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
+            this->lineShader->getUniformLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
         glUniformMatrix4fv(
-            this->lineShader.ParameterLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
+            this->lineShader->getUniformLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
         glUniformMatrix4fv(
-            this->lineShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
+            this->lineShader->getUniformLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
 
         glPointSize(5.0f);
         glLineWidth(1.0f);
         unsigned int startingIndex = 0;
         for (unsigned int i = 0; i < molSizes.size(); i++) {
-            glUniform1i(this->lineShader.ParameterLocation("instanceOffset"), startingIndex);
+            glUniform1i(this->lineShader->getUniformLocation("instanceOffset"), startingIndex);
             glPatchParameteri(GL_PATCH_VERTICES, 1);
             glDrawArrays(GL_PATCHES, 0, molSizes[i] - 3);
             startingIndex += molSizes[i];
         }
-        this->lineShader.Disable();
+        glUseProgram(0);
     }
 
     if (this->showTubesParam.Param<param::BoolParam>()->Value()) {
-        this->tubeShader.Enable();
-        glUniformMatrix4fv(this->tubeShader.ParameterLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
+        this->tubeShader->use();
+        glUniformMatrix4fv(this->tubeShader->getUniformLocation("MV"), 1, GL_FALSE, modelViewMatrix.PeekComponents());
         glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
+            this->tubeShader->getUniformLocation("MVinv"), 1, GL_FALSE, modelViewMatrixInv.PeekComponents());
         glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
+            this->tubeShader->getUniformLocation("MVP"), 1, GL_FALSE, modelViewProjMatrix.PeekComponents());
         glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
+            this->tubeShader->getUniformLocation("MVPinv"), 1, GL_FALSE, modelViewProjMatrixInv.PeekComponents());
         glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
+            this->tubeShader->getUniformLocation("MVPtransp"), 1, GL_FALSE, modelViewProjMatrixTransp.PeekComponents());
         glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
+            this->tubeShader->getUniformLocation("MVinvtrans"), 1, GL_FALSE, modelViewMatrixInvTrans.PeekComponents());
         glUniformMatrix4fv(
-            this->tubeShader.ParameterLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
+            this->tubeShader->getUniformLocation("ProjInv"), 1, GL_FALSE, projectionMatrixInv.PeekComponents());
 
-        glUniform1f(
-            this->tubeShader.ParameterLocation("tubewidth"), this->coilWidthParam.Param<param::FloatParam>()->Value());
-        glUniform1f(this->tubeShader.ParameterLocation("structurewidth"),
+        glUniform1f(this->tubeShader->getUniformLocation("tubewidth"),
+            this->coilWidthParam.Param<param::FloatParam>()->Value());
+        glUniform1f(this->tubeShader->getUniformLocation("structurewidth"),
             this->structureWidthParam.Param<param::FloatParam>()->Value());
 
         glPointSize(5.0f);
         glLineWidth(1.0f);
         unsigned int startingIndex = 0;
         for (unsigned int i = 0; i < molSizes.size(); i++) {
-            glUniform1i(this->tubeShader.ParameterLocation("instanceOffset"), startingIndex);
+            glUniform1i(this->tubeShader->getUniformLocation("instanceOffset"), startingIndex);
             glPatchParameteri(GL_PATCH_VERTICES, 1);
             glDrawArrays(GL_PATCHES, 0, molSizes[i] - 3);
             startingIndex += molSizes[i];
         }
-        this->tubeShader.Disable();
+        glUseProgram(0);
     }
 
     if (this->showAtomPositionsParam.Param<param::BoolParam>()->Value()) {

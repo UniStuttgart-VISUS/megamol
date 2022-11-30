@@ -7,21 +7,18 @@
 
 #include "mesh_gl/GPUMaterialCollection.h"
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 
 namespace megamol {
 namespace mesh_gl {
 
-void GPUMaterialCollection::addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string const& identifier,
-    std::vector<std::filesystem::path> const& shader_filepaths,
+void GPUMaterialCollection::addMaterial(megamol::frontend_resources::RuntimeConfig const& runtimeConf,
+    std::string const& identifier, std::vector<std::filesystem::path> const& shader_filepaths,
     std::vector<std::shared_ptr<glowl::Texture>> const& textures) {
 
     msf::LineTranslator translator;
-    auto const shader_options = ::msf::ShaderFactoryOptionsOpenGL(mm_core_inst->GetShaderPaths());
+    auto const shader_options = core::utility::make_path_shader_options(runtimeConf);
 
     glowl::GLSLProgram::ShaderSourceList shader_src_list;
 

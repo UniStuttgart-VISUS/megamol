@@ -4,19 +4,18 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "ImageLoader.h"
 #include "ImageRenderer.h"
 
 namespace megamol::image_gl {
-class ImageGlPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class ImageGlPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(ImageGlPluginInstance)
 
 public:
-    ImageGlPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("image_gl", "The image_gl plugin."){};
+    ImageGlPluginInstance() : megamol::core::factories::AbstractPluginInstance("image_gl", "The image_gl plugin."){};
 
     ~ImageGlPluginInstance() override = default;
 

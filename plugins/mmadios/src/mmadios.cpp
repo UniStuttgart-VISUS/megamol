@@ -4,10 +4,11 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "ADIOSFlexConvert.h"
+#include "ADIOSFlexVolume.h"
 #include "ADIOStoMultiParticle.h"
 #include "ADIOStoTable.h"
 #include "MultiParticletoADIOS.h"
@@ -18,11 +19,11 @@
 #include "mmadios/CallADIOSData.h"
 
 namespace megamol::adios {
-class MMADIOSPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class MMADIOSPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(MMADIOSPluginInstance)
 
 public:
-    MMADIOSPluginInstance() : megamol::core::utility::plugins::AbstractPluginInstance("mmadios", "The adios plugin."){};
+    MMADIOSPluginInstance() : megamol::core::factories::AbstractPluginInstance("mmadios", "The adios plugin."){};
 
     ~MMADIOSPluginInstance() override = default;
 
@@ -38,6 +39,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOSFlexConvert>();
         this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOStoTable>();
         this->module_descriptions.RegisterAutoDescription<megamol::adios::ls1ParticleFormat>();
+        this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOSFlexVolume>();
 
         // register calls
         this->call_descriptions.RegisterAutoDescription<megamol::adios::CallADIOSData>();
