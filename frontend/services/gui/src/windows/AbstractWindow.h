@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+#include "FrontendResource.h"
+
 
 namespace megamol {
 namespace gui {
@@ -39,7 +41,8 @@ public:
         WINDOW_ID_HOTKEYEDITOR = 4,
         WINDOW_ID_TRANSFER_FUNCTION = 5,
         WINDOW_ID_CONFIGURATOR = 6,
-        WINDOW_ID_LOGCONSOLE = 7
+        WINDOW_ID_LOGCONSOLE = 7,
+        WINDOW_IF_RENDERING_ENDPOINT = 8
     };
 
     struct BasicConfig {
@@ -55,6 +58,12 @@ public:
     };
 
     typedef std::function<void(AbstractWindow::BasicConfig&)> VolatileDrawCallback_t;
+
+    virtual std::vector<std::string> requested_lifetime_resources() const {
+        return std::vector<std::string>();
+    }
+
+    virtual void setRequestedResources(std::vector<frontend::FrontendResource> resources){};
 
     AbstractWindow(const std::string& name, WindowConfigID window_id)
             : win_config()

@@ -16,6 +16,7 @@
 #include "widgets/DefaultStyle.h"
 #include "windows/HotkeyEditor.h"
 #include "windows/PerformanceMonitor.h"
+#include "windows/RenderingEndPoint.h"
 
 
 using namespace megamol::gui;
@@ -53,6 +54,8 @@ GUIManager::GUIManager()
 
     this->win_configurator_ptr = this->win_collection.GetWindow<Configurator>();
     assert(this->win_configurator_ptr != nullptr);
+
+    requested_resources = win_collection.requested_lifetime_resources();
 
     this->init_state();
 }
@@ -1540,4 +1543,9 @@ void GUIManager::RegisterHotkeys(
     if (auto win_hkeditor_ptr = this->win_collection.GetWindow<HotkeyEditor>()) {
         win_hkeditor_ptr->RegisterHotkeys(&cmdregistry, &megamolgraph, &this->win_collection, &this->gui_hotkeys);
     }
+}
+
+
+void megamol::gui::GUIManager::setRequestedResources(std::vector<frontend::FrontendResource> resources) {
+    win_collection.setRequestedResources(resources);
 }

@@ -22,6 +22,7 @@
 #include "windows/Configurator.h"
 #include "windows/LogConsole.h"
 #include "windows/WindowCollection.h"
+#include "FrontendResource.h"
 
 
 namespace megamol {
@@ -176,6 +177,11 @@ public:
         return this->render_backend.GetImage();
     }
 
+
+    std::vector<megamol::frontend_resources::ImagePresentationEntryPoints::SubscriberFunction> GetSubscribers(){
+        return std::vector<megamol::frontend_resources::ImagePresentationEntryPoints::SubscriberFunction>();
+    }
+
     ///////// SET ///////////
 
     /**
@@ -305,6 +311,12 @@ public:
         return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_DisableEntryPoint(module_inst);
     }
 
+    std::vector<std::string> requested_lifetime_resources() const {
+        return requested_resources;
+    }
+
+    void setRequestedResources(std::vector<frontend::FrontendResource> resources);
+
     ///////////////////////////////////////////////////////////////////////
 
 private:
@@ -376,6 +388,9 @@ private:
 
     /** GUI element collections. */
     WindowCollection win_collection;
+
+    std::vector<std::string> requested_resources;
+    std::vector<frontend::FrontendResource> requested_ResourceReferences;
 
     struct PopUpData {
         std::weak_ptr<bool> open_flag;

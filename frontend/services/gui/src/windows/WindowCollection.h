@@ -18,6 +18,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "FrontendResource.h"
+#include <unordered_map>
 
 
 namespace megamol {
@@ -66,10 +68,20 @@ public:
 
     bool DeleteWindow(size_t hash_id);
 
+    std::vector<std::string> requested_lifetime_resources() const {
+        return requested_resources;
+    }
+
+    void setRequestedResources(std::vector<frontend::FrontendResource> resources);
+
 private:
     // VARIABLES ------------------------------------------------------
 
     std::vector<std::shared_ptr<AbstractWindow>> windows;
+
+    std::vector<std::string> requested_resources;
+
+    std::unordered_map<std::string, std::vector<std::shared_ptr<AbstractWindow>>> requested_resources_map;
 
     // FUNCTIONS ------------------------------------------------------
 
