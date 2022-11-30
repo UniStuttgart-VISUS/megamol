@@ -11,6 +11,7 @@
 
 
 #include "CommandRegistry.h"
+#include "FrontendResource.h"
 #include "PluginsResource.h"
 #include "gui_render_backend.h"
 #include "implot.h"
@@ -305,6 +306,12 @@ public:
         return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_DisableEntryPoint(module_inst);
     }
 
+    std::vector<std::string> requested_lifetime_resources() const {
+        return requested_resources;
+    }
+
+    void setRequestedResources(std::vector<frontend::FrontendResource> resources);
+
     ///////////////////////////////////////////////////////////////////////
 
 private:
@@ -376,6 +383,9 @@ private:
 
     /** GUI element collections. */
     WindowCollection win_collection;
+
+    /** Resource requests from the GUI windows. */
+    std::vector<std::string> requested_resources;
 
     struct PopUpData {
         std::weak_ptr<bool> open_flag;

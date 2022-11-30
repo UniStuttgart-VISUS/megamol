@@ -73,6 +73,8 @@ bool GUI_Service::init(const Config& config) {
     };
 
     this->m_gui = std::make_shared<megamol::gui::GUIManager>();
+    auto gui_resources = m_gui->requested_lifetime_resources();
+    m_requestedResourcesNames.insert(m_requestedResourcesNames.end(), gui_resources.begin(), gui_resources.end());
 
     // Set function pointer in state resource once
     this->m_providedStateResource.request_gui_state = [&](bool as_lua) -> std::string {
@@ -419,6 +421,8 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 
     megamolgraph_subscription.subscribe(gui_subscription);
 
+    auto gui_win_it = m_requestedResourceReferences.begin() + 17;
+
 #ifdef MEGAMOL_USE_PROFILING
     // PerformanceManager
     perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
@@ -427,7 +431,11 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     m_gui->SetPerformanceManager(perf_manager);
     perf_manager->subscribe_to_updates(
         [&](const frontend_resources::PerformanceManager::frame_info& fi) { m_gui->AppendPerformanceData(fi); });
+    gui_win_it = m_requestedResourceReferences.begin() + 18;
 #endif
+
+    // now come the resources for the gui windows
+    m_gui->setRequestedResources({gui_win_it, m_requestedResourceReferences.end()});
 }
 
 

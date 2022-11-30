@@ -11,12 +11,14 @@
 
 
 #include "AbstractWindow.h"
+#include "FrontendResource.h"
 #include "imgui.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
 #include <functional>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 
@@ -66,10 +68,20 @@ public:
 
     bool DeleteWindow(size_t hash_id);
 
+    std::vector<std::string> requested_lifetime_resources() const {
+        return requested_resources;
+    }
+
+    void setRequestedResources(std::vector<frontend::FrontendResource> resources);
+
 private:
     // VARIABLES ------------------------------------------------------
 
     std::vector<std::shared_ptr<AbstractWindow>> windows;
+
+    std::vector<std::string> requested_resources;
+
+    std::unordered_map<std::string, std::vector<std::shared_ptr<AbstractWindow>>> requested_resources_map;
 
     // FUNCTIONS ------------------------------------------------------
 

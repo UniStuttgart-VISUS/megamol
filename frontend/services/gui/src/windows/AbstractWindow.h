@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+#include "FrontendResource.h"
+
 
 namespace megamol {
 namespace gui {
@@ -55,6 +57,12 @@ public:
     };
 
     typedef std::function<void(AbstractWindow::BasicConfig&)> VolatileDrawCallback_t;
+
+    virtual std::vector<std::string> requested_lifetime_resources() const {
+        return std::vector<std::string>();
+    }
+
+    virtual void setRequestedResources(std::vector<frontend::FrontendResource> resources){};
 
     AbstractWindow(const std::string& name, WindowConfigID window_id)
             : win_config()
