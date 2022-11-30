@@ -48,6 +48,7 @@ public:
     void SetLastFrameMillis(float last_frame_ms);
 
     void RenderAnimation();
+    std::string GenerateLuaForFrame(animation::KeyTimeType time);
 
 private:
     using animations = std::variant<animation::FloatAnimation, animation::StringAnimation, animation::FloatVectorAnimation>;
@@ -57,6 +58,8 @@ private:
     void ClearData();
     bool LoadFromFile(std::string file);
 
+    bool AnyParamHasKey(animation::KeyTimeType key_time);
+    bool ExportToFile(const std::string& export_file);
     void DrawPopups();
     void DrawToolbar();
     void CenterAnimation(const animations& anim);
@@ -108,10 +111,12 @@ private:
     lua_func_type* input_lua_func = nullptr;
     FileBrowserWidget file_browser;
     bool open_popup_load = false, open_popup_save = false, open_popup_error = false;
+    bool open_popup_export = false;
+    int export_screenshot_option = 0;
     bool propagate_to_siblings = false;
     std::string error_popup_message;
     vislib::math::Ternary ternary = vislib::math::Ternary::TRI_UNKNOWN;
-    std::string animation_file;
+    std::string animation_file, export_file;
     std::string output_prefix;
 };
 

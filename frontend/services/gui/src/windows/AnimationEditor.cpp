@@ -268,18 +268,23 @@ void AnimationEditor::RenderAnimation() {
 }
 
 
+std::string AnimationEditor::GenerateLuaForFrame(animation::KeyTimeType time) {
+    std::stringstream lua_commands;
+    for (auto a : allAnimations) {
+        std::visit(
+            [&](auto&& arg) -> void {
+                lua_commands << "mmSetParamValue(\"" << arg.GetName() << "\",[=[" << arg.GetValue(time)
+                    << "]=])\n";
+            },
+            a);
+    }
+    return lua_commands.str();
+}
+
 void AnimationEditor::WriteValuesToGraph() {
     if (write_to_graph) {
-        std::stringstream lua_commands;
-        for (auto a : allAnimations) {
-            std::visit(
-                [&](auto&& arg) -> void {
-                    lua_commands << "mmSetParamValue(\"" << arg.GetName() << "\",[=[" << arg.GetValue(current_frame)
-                                 << "]=])\n";
-                },
-                a);
-        }
-        auto res = (*input_lua_func)(lua_commands.str());
+        const auto lua_commands = GenerateLuaForFrame(current_frame);
+        const auto res = (*input_lua_func)(lua_commands);
         if (!std::get<0>(res)) {
             open_popup_error = true;
             error_popup_message = std::get<1>(res);
@@ -325,6 +330,39 @@ bool AnimationEditor::LoadFromFile(std::string file) {
 }
 
 
+bool AnimationEditor::AnyParamHasKey(animation::KeyTimeType key_time) {
+    bool has_key = false;
+    for (auto& a: allAnimations) {
+        std::visit([&](auto&& arg) -> void { has_key = has_key || arg.HasKey(key_time); }, a);
+    }
+    return has_key;
+}
+
+
+bool AnimationEditor::ExportToFile(const std::string& export_file) {
+    std::ofstream out(export_file);
+    if (!out.is_open()) {
+        return false;
+    }
+    for (auto i = animation_bounds[0]; i <= animation_bounds[1]; ++i) {
+        out << GenerateLuaForFrame(i);
+        out << "mmRenderNextFrame()\n";
+        switch(export_screenshot_option) {
+        case 0: // never
+            break;
+        case 1: // every frame
+            out << "mmScreenshot()\n";
+            break;
+        case 2: // if key
+            if (AnyParamHasKey(i)) {
+                out << "mmScreenshot()\n";
+            }
+        }
+    }
+    return true;
+}
+
+
 void AnimationEditor::DrawPopups() {
     if (this->file_browser.PopUp_Load(
             "Load Animation", animation_file, open_popup_load, {"anim"}, FilePathParam::Flag_File_RestrictExtension)) {
@@ -338,6 +376,14 @@ void AnimationEditor::DrawPopups() {
             open_popup_error = true;
         }
         open_popup_save = false;
+    }
+    if (this->file_browser.PopUp_Save("Export Lua Script", export_file, open_popup_export, {"lua"},
+            FilePathParam::Flag_File_ToBeCreatedWithRestrExts, ternary)) {
+        if (!ExportToFile(export_file)) {
+            error_popup_message = "Exporting failed.";
+            open_popup_error = true;
+        }
+        open_popup_export = false;
     }
 
     if (open_popup_error) {
@@ -364,6 +410,7 @@ void AnimationEditor::DrawToolbar() {
             if (ImGui::MenuItem("Clear all")) {
                 ClearData();
             }
+            ImGui::Separator();
             if (ImGui::MenuItem("Load...")) {
                 open_popup_load = true;
             }
@@ -381,6 +428,20 @@ void AnimationEditor::DrawToolbar() {
             }
             if (ImGui::MenuItem("Save as...")) {
                 open_popup_save = true;
+            }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Export Lua...")) {
+                open_popup_export = true;
+            }
+            const char* items[] = {"Never", "Every Frame", "On Key"};
+            if (ImGui::BeginCombo("Screenshot", items[export_screenshot_option])) {
+                for (int n = 0; n < 3; n++) {
+                    const bool is_selected = (export_screenshot_option == n);
+                    if (ImGui::Selectable(items[n], is_selected)) {
+                        export_screenshot_option = n;
+                    }
+                }
+                ImGui::EndCombo();
             }
             ImGui::EndMenu();
         }
