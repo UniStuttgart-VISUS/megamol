@@ -65,7 +65,7 @@ private:
     void CenterAnimation(const animations& anim);
     void SelectAnimation(int32_t a);
     void DrawParams();
-    void DrawInterpolation(ImDrawList* dl, const animation::FloatKey& key, const animation::FloatKey& k2);
+    void DrawInterpolation(ImDrawList* dl, const animation::FloatKey& key, const animation::FloatKey& k2, ImU32 col = ImGui::GetColorU32(ImGuiCol_NavHighlight));
     void DrawFloatKey(ImDrawList* dl, animation::FloatKey& key, ImU32 col = IM_COL32(255, 128, 0, 255),
         animation::VectorKey<animation::FloatKey>* parent = nullptr);
     void DrawPlayhead(ImDrawList* drawList);

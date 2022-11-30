@@ -249,10 +249,10 @@ void AnimationEditor::RenderAnimation() {
     if (rendering) {
         // make screenshot and such
         std::stringstream command;
-        //command << "mmSetCliOption(\"privacynote\", \"off\")\n";
-        // TODO: without gui, obviously. Or optionally?
-        command << "mmScreenshot(\"" << output_prefix << "_" << std::setw(5) << std::setfill('0') << current_frame
-                << ".png\")";
+        if (current_frame >= animation_bounds[0] && current_frame <= animation_bounds[1]) {
+            command << "mmScreenshot(\"" << output_prefix << "_" << std::setw(5) << std::setfill('0') << current_frame
+                    << ".png\")\n";
+        }
         auto res = (*input_lua_func)(command.str());
         if (!std::get<0>(res)) {
             open_popup_error = true;
@@ -261,8 +261,12 @@ void AnimationEditor::RenderAnimation() {
         }
         if (current_frame < animation_bounds[1]) {
             current_frame++;
+            // this will set the state for the NEXT frame.
+            // but we can grab only the front buffer, so we might need to wait one more frame. argh.
+            (*input_lua_func)(GenerateLuaForFrame(current_frame));
         } else {
             rendering = false;
+            auto res = (*input_lua_func)("mmExecCommand(\"_hotkey_gui_window_Animation Editor\")");
         }
     }
 }
@@ -618,6 +622,10 @@ void AnimationEditor::CenterAnimation(const animations& anim) {
         max_val = region.GetHeight() * 0.025f;
     }
     if (len > 1) {
+        if (std::fabs(max_val - min_val) < 0.1f) {
+            max_val *= 1.0f;
+            min_val -= 1.0f;
+        }
         custom_zoom.x = 0.9f * region.GetWidth() / len;
         custom_zoom.y = 0.9f * region.GetHeight() / (max_val - min_val);
         const auto h_start = static_cast<float>(-start);
@@ -687,13 +695,17 @@ void AnimationEditor::DrawParams() {
     if (ImGui::InputInt2("Active Region", animation_bounds, ImGuiInputTextFlags_EnterReturnsTrue)) {
         current_frame = std::clamp(current_frame, animation_bounds[0], animation_bounds[1]);
     }
-    ImGui::SliderInt("Current Frame", &current_frame, animation_bounds[0], animation_bounds[1]);
+    if (ImGui::SliderInt("Current Frame", &current_frame, animation_bounds[0], animation_bounds[1])) {
+        WriteValuesToGraph();
+    }
     ImGui::InputText("Output prefix", &output_prefix);
     if (output_prefix.empty()) {
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
     }
     if (ImGui::Button("render")) {
-        current_frame = animation_bounds[0];
+        current_frame = animation_bounds[0] - 10; // a bit of pre-roll to let the GUI state settle
+        auto res = (*input_lua_func)("mmExecCommand(\"_hotkey_gui_window_Animation Editor\")");
+        write_to_graph = false;
         rendering = true;
     }
     if (output_prefix.empty()) {
@@ -705,8 +717,7 @@ void AnimationEditor::DrawParams() {
 
 
 void AnimationEditor::DrawInterpolation(
-    ImDrawList* dl, const animation::FloatKey& key, const animation::FloatKey& key2) {
-    const auto line_col = ImGui::GetColorU32(ImGuiCol_NavHighlight);
+    ImDrawList* dl, const animation::FloatKey& key, const animation::FloatKey& key2, ImU32 line_col) {
     const auto reference_col = IM_COL32(255, 0, 0, 255);
     auto drawList = ImGui::GetWindowDrawList();
     auto pos = ImVec2(key.time, key.value * -1.0f) * custom_zoom;
@@ -724,17 +735,22 @@ void AnimationEditor::DrawInterpolation(
         // draw reference
         auto step = 0.02f;
         for (auto f = 0.0f; f < 1.0f; f += step) {
-            auto v1 = key.Interpolate(key, key2, f);
+            auto v1 = animation::FloatKey::Interpolate(key, key2, f);
             v1.y *= -1.0f;
-            auto v2 = key.Interpolate(key, key2, f + step);
+            auto v2 = animation::FloatKey::Interpolate(key, key2, f + step);
             v2.y *= -1.0f;
             drawList->AddLine(v1 * custom_zoom, v2 * custom_zoom, reference_col);
         }
         for (auto t = key.time; t < key2.time; ++t) {
-            auto v1 = key.Interpolate(key, key2, t);
-            auto v2 = key.Interpolate(key, key2, t + 1);
+            auto v1 = animation::FloatKey::Interpolate(key, key2, t);
+            auto v2 = animation::FloatKey::Interpolate(key, key2, t + 1);
             drawList->AddLine(ImVec2(t, v1 * -1.0f) * custom_zoom, ImVec2(t + 1, v2 * -1.0f) * custom_zoom, line_col);
         }
+        break;
+    }
+    case animation::InterpolationType::SLERP: {
+        // should never happen
+        assert(false);
         break;
     }
     default:;
@@ -982,11 +998,30 @@ void AnimationEditor::DrawCurves() {
                         IM_COL32(255, 255, 255, 255)};
                     for (auto i = 0; i < keys.size(); ++i) {
                         auto& k = anim[keys[i]];
-                        for (int j = 0; j < k.nestedData.size(); ++j) {
-                            if (i < keys.size() - 1) {
-                                auto& k2 = anim[keys[i + 1]];
-                                DrawInterpolation(drawList, k.nestedData[j], k2.nestedData[j]);
+                        if (i < keys.size() - 1) {
+                            auto& k2 = anim[keys[i + 1]];
+                            if (k.nestedData[0].interpolation == animation::InterpolationType::SLERP) {
+                                glm::quat q1(k.nestedData[3].value, k.nestedData[0].value, k.nestedData[1].value,
+                                    k.nestedData[2].value);
+                                glm::quat q2(k2.nestedData[3].value, k2.nestedData[0].value, k2.nestedData[1].value,
+                                    k2.nestedData[2].value);
+                                for (auto t = k.nestedData[0].time; t < k2.nestedData[0].time; ++t) {
+                                    auto frac_t = (t - k.nestedData[0].time) / static_cast<float>(k2.nestedData[0].time - k.nestedData[0].time);
+                                    auto frac_t1 = (t + 1 - k.nestedData[0].time) / static_cast<float>(k2.nestedData[0].time - k.nestedData[0].time);
+                                    auto qi1 = glm::slerp(q1, q2, frac_t);
+                                    auto qi2 = glm::slerp(q1, q2, frac_t1);
+                                    for (int i = 0; i < 4; ++i) {
+                                        drawList->AddLine(ImVec2(t, qi1[i] * -1.0f) * custom_zoom,
+                                            ImVec2(t + 1, qi2[i] * -1.0f) * custom_zoom, cols[i]);
+                                    }
+                                }
+                            } else {
+                                for (int j = 0; j < k.nestedData.size(); ++j) {
+                                    DrawInterpolation(drawList, k.nestedData[j], k2.nestedData[j], cols[j]);
+                                }
                             }
+                        }
+                        for (int j = 0; j < k.nestedData.size(); ++j) {
                             DrawFloatKey(drawList, k.nestedData[j], cols[j], &k);
                         }
                     }
@@ -1058,11 +1093,12 @@ void AnimationEditor::DrawProperties() {
                 std::visit([&](auto&& arg) -> void { arg.FixSorting(); }, anim);
             }
             ImGui::InputFloat("Value", &selectedFloatKey->value);
-            const char* items[] = {"Step", "Linear", "Hermite", "Cubic Bezier"};
+            const char* items[] = {"Step", "Linear", "Hermite", "Cubic Bezier", "SLERP"};
             auto current_item = items[static_cast<int32_t>(selectedFloatKey->interpolation)];
             bool do_propagate = false;
             if (ImGui::BeginCombo("Interpolation", current_item)) {
-                for (int n = 0; n < 4; n++) {
+                auto max_interp = current_parent != nullptr && current_parent->nestedData.size() == 4 ? 5 : 4;
+                for (int n = 0; n < max_interp; n++) {
                     const bool is_selected = (current_item == items[n]);
                     if (ImGui::Selectable(items[n], is_selected)) {
                         current_item = items[n];
@@ -1079,6 +1115,8 @@ void AnimationEditor::DrawProperties() {
                         case 3:
                             selectedFloatKey->interpolation = animation::InterpolationType::CubicBezier;
                             break;
+                        case 4:
+                            selectedFloatKey->interpolation = animation::InterpolationType::SLERP;
                         }
                         do_propagate = true;
                     }
@@ -1091,7 +1129,9 @@ void AnimationEditor::DrawProperties() {
                 if (ImGui::Checkbox("Propagate interpolation to siblings", &propagate_to_siblings)) {
                     do_propagate = true;
                 }
-                if (propagate_to_siblings && do_propagate) {
+                // SLERP cannot be selected for a single dimension.
+                if ((propagate_to_siblings || selectedFloatKey->interpolation == animation::InterpolationType::SLERP) &&
+                    do_propagate) {
                     auto interp = selectedFloatKey->interpolation;
                     for (int i = 0; i < current_parent->nestedData.size(); ++i) {
                         current_parent->nestedData[i].interpolation = interp;

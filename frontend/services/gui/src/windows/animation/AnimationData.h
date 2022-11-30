@@ -11,6 +11,7 @@
 #include "mmcore/MegaMolGraph.h"
 
 #include "glm/glm.hpp"
+#include "glm/gtc/quaternion.hpp"
 #include <map>
 
 
@@ -21,7 +22,7 @@ namespace animation {
 
 using KeyTimeType = int32_t;
 
-enum class InterpolationType : int32_t { Step = 0, Linear = 1, Hermite = 2, CubicBezier = 3 };
+enum class InterpolationType : int32_t { Step = 0, Linear = 1, Hermite = 2, CubicBezier = 3, SLERP = 4 };
 
 struct FloatKey {
     using ValueType = float;
@@ -208,6 +209,7 @@ template<class C>
 class VectorAnimation : public GenericAnimation<VectorKey<C>> {
 public:
     using KeyType = VectorKey<C>;
+    using ValueType = std::vector<typename C::ValueType>;
 
     VectorAnimation(std::string ParamName) : GenericAnimation<KeyType>(ParamName) {}
 
@@ -216,26 +218,57 @@ public:
         this->vec_length = k.nestedData.size();
     }
 
-    typename KeyType::ValueType Interpolate(C first, C second, KeyTimeType time) {
-        typename KeyType::ValueType ret;
+    ValueType Interpolate(KeyType first, KeyType second, KeyTimeType time) const {
+        ValueType ret;
         ret.resize(vec_length);
-        for (int i = 0; i < vec_length; ++i) {
-            ret[i] = C::Interpolate(first.nestedData[i], second.nestedData[i], time);
+        if (first.nestedData[0].interpolation == InterpolationType::SLERP && vec_length == 4) {
+            KeyType my_first = first;
+            KeyType my_second = second;
+            if (my_first.nestedData[0].time > my_second.nestedData[0].time) {
+                my_first = second;
+                my_second = first;
+            }
+            if (time <= my_first.nestedData[0].time) {
+                return GetValue(my_first.nestedData[0].time);
+            }
+            if (time >= my_second.nestedData[0].time) {
+                return GetValue(my_second.nestedData[0].time);
+            }
+
+            float t = static_cast<float>(time - my_first.nestedData[0].time) / static_cast<float>(my_second.nestedData[0].time - my_first.nestedData[0].time);
+            glm::quat q1(first.nestedData[3].value, first.nestedData[0].value, first.nestedData[1].value,
+                first.nestedData[2].value);
+            glm::quat q2(second.nestedData[3].value, second.nestedData[0].value, second.nestedData[1].value,
+                second.nestedData[2].value);
+            auto q = glm::slerp(q1, q2, t);
+            ret[0] = q.x;
+            ret[1] = q.y;
+            ret[2] = q.z;
+            ret[3] = q.w;
+            return ret;
+        } else {
+            for (int i = 0; i < vec_length; ++i) {
+                ret[i] = C::Interpolate(first.nestedData[i], second.nestedData[i], time);
+            }
         }
         return ret;
     }
 
-    std::vector<ImVec2> Interpolate(C first, C second, float t) {
+    std::vector<ImVec2> Interpolate(C first, C second, float t) const {
         std::vector<ImVec2> ret;
         ret.resize(vec_length);
-        for (int i = 0; i < vec_length; ++i) {
-            ret[i] = C::Interpolate(first.nestedData[i], second.nestedData[i], t);
+        if (first.nestedData[0].interpolation == InterpolationType::SLERP) {
+            // TODO
+        } else {
+            for (int i = 0; i < vec_length; ++i) {
+                ret[i] = C::Interpolate(first.nestedData[i], second.nestedData[i], t);
+            }
         }
         return ret;
     }
 
-    typename KeyType::ValueType GetValue(KeyTimeType time) const {
-        KeyType::ValueType ret;
+    ValueType GetValue(KeyTimeType time) const {
+        ValueType ret;
         ret.resize(vec_length);
         if (this->keys.size() < 2) {
             if (this->keys.empty()) {
@@ -265,10 +298,7 @@ public:
             }
         }
         if (ok) {
-            for (int i = 0; i < vec_length; ++i) {
-                ret[i] = C::Interpolate(before_key.nestedData[i], after_key.nestedData[i], time);
-            }
-            return ret;
+            return Interpolate(before_key, after_key, time);
         } else {
             for (int i = 0; i < vec_length; ++i) {
                 ret[i] = before_key.nestedData[i].value;
@@ -342,6 +372,7 @@ public:
     int32_t VectorLength() const {
         return vec_length;
     }
+
 private:
     int32_t vec_length = 4;
 };

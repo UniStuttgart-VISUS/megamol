@@ -133,26 +133,6 @@ ImVec2 FloatKey::Interpolate(FloatKey first, FloatKey second, float t) {
 }
 
 
-template<class C>
-typename VectorKey<C>::ValueType VectorKey<C>::Interpolate(VectorKey first, VectorKey second, KeyTimeType time) {
-    ValueType ret;
-    ret.resize(first.nestedData.size());
-    for (int i = 0; i < first.nestedData.size(); ++i) {
-        ret[i] = FloatKey::Interpolate(first.nestedData[i], second.nestedData[i], time);
-    }
-    return ret;
-}
-
-template<class C>
-std::vector<ImVec2> VectorKey<C>::Interpolate(VectorKey first, VectorKey second, float t) {
-    ValueType ret;
-    ret.resize(first.nestedData.size());
-    for (int i = 0; i < first.nestedData.size(); ++i) {
-        ret[i] = FloatKey::Interpolate(first.nestedData[i], second.nestedData[i], t);
-    }
-    return ret;
-}
-
 template<>
 GenericAnimation<FloatKey>::ValueType::ValueType GenericAnimation<FloatKey>::GetValue(KeyTimeType time) const {
     if (keys.size() < 2) {
