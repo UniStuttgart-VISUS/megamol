@@ -32,7 +32,9 @@ class OverlayRenderer : public megamol::core::view::RendererModule<mmstd_gl::Cal
                         megamol::core_gl::utility::RenderUtils {
 public:
     virtual std::vector<std::string> requested_lifetime_resources() {
-        return {"MegaMolGraph"};
+        auto resources = ModuleGL::requested_lifetime_resources();
+        resources.emplace_back("MegaMolGraph");
+        return resources;
     }
 
     /**

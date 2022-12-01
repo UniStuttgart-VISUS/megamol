@@ -252,6 +252,9 @@ void AnimationEditor::RenderAnimation() {
         if (current_frame >= animation_bounds[0] && current_frame <= animation_bounds[1]) {
             command << "mmScreenshot(\"" << output_prefix << "_" << std::setw(5) << std::setfill('0') << current_frame
                     << ".png\")\n";
+            // that is without UI but without frame lag.
+            //command << "mmScreenshotEntryPoint(\"\", \"" << output_prefix << "_" << std::setw(5) << std::setfill('0') << current_frame
+            //        << ".png\")\n";
         }
         auto res = (*input_lua_func)(command.str());
         if (!std::get<0>(res)) {
