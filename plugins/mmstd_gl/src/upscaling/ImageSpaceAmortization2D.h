@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <chrono>
+#include <optional>
+
 #include <glm/glm.hpp>
 #include <glowl/glowl.h>
 
@@ -62,7 +65,11 @@ protected:
 
     bool renderImpl(CallRender2DGL& call, CallRender2DGL& nextRendererCall) override;
 
-    void updateSize(glm::ivec2 a, int w, int h);
+    bool resetCallback(core::param::ParamSlot& slot);
+
+    void updateTextureSize(int w, int h);
+
+    void updateAmortSize(glm::ivec2 a, int w, int h);
 
     void setupCamera(core::view::Camera& cam, int width, int height, glm::ivec2 a);
 
@@ -71,8 +78,11 @@ protected:
 private:
     core::param::ParamSlot amortModeParam;
     core::param::ParamSlot amortLevelParam;
+    core::param::ParamSlot autoLevelParam;
+    core::param::ParamSlot targetFpsParam;
     core::param::ParamSlot skipInterpolationParam;
     core::param::ParamSlot showQuadMarkerParam;
+    core::param::ParamSlot resetParam;
 
     std::unique_ptr<glowl::GLSLProgram> shader_;
     std::shared_ptr<glowl::FramebufferObject> lowResFBO_;
@@ -87,6 +97,8 @@ private:
     int oldWidth_ = -1;
     int oldHeight_ = -1;
 
+    std::optional<std::chrono::steady_clock::time_point> lastTime_;
+    std::vector<float> lastFrameTimes_;
     int frameIdx_ = 0;
     int samplingSequencePosition_ = 0;
     std::vector<int> samplingSequence_;

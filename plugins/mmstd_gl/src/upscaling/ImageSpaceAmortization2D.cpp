@@ -6,9 +6,11 @@
 
 #include "ImageSpaceAmortization2D.h"
 
+#include <numeric>
 #include <vector>
 
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
@@ -20,8 +22,11 @@ ImageSpaceAmortization2D::ImageSpaceAmortization2D()
         : BaseAmortization2D()
         , amortModeParam("AmortMode", "Amortization Mode")
         , amortLevelParam("AmortLevel", "Level of Amortization")
+        , autoLevelParam("AutoLevel", "Automatic level selection.")
+        , targetFpsParam("TargetFPS", "Target FPS for automatic level selection.")
         , skipInterpolationParam("debug::SkipInterpolation", "Do not interpolate missing pixels.")
         , showQuadMarkerParam("debug::ShowQuadMarker", "Mark bottom left pixel of amortization quad.")
+        , resetParam("debug::Reset", "Reset all textures and buffers.")
         , viewProjMx_(glm::mat4())
         , lastViewProjMx_(glm::mat4()) {
 
@@ -34,11 +39,21 @@ ImageSpaceAmortization2D::ImageSpaceAmortization2D()
     amortLevelParam << new core::param::IntParam(1, 1);
     MakeSlotAvailable(&amortLevelParam);
 
+    autoLevelParam << new core::param::BoolParam(false);
+    MakeSlotAvailable(&autoLevelParam);
+
+    targetFpsParam << new core::param::IntParam(15, 1);
+    MakeSlotAvailable(&targetFpsParam);
+
     skipInterpolationParam << new core::param::BoolParam(false);
     MakeSlotAvailable(&skipInterpolationParam);
 
     showQuadMarkerParam << new core::param::BoolParam(false);
     MakeSlotAvailable(&showQuadMarkerParam);
+
+    resetParam << new core::param::ButtonParam();
+    resetParam.SetUpdateCallback(&ImageSpaceAmortization2D::resetCallback);
+    MakeSlotAvailable(&resetParam);
 }
 
 ImageSpaceAmortization2D::~ImageSpaceAmortization2D() {
@@ -102,13 +117,51 @@ bool ImageSpaceAmortization2D::renderImpl(CallRender2DGL& call, CallRender2DGL& 
     auto const& bg = call.BackgroundColor();
 
     const auto m = static_cast<AmortMode>(amortModeParam.Param<core::param::EnumParam>()->Value());
-    const int aParam = amortLevelParam.Param<core::param::IntParam>()->Value();
+    int aParam = amortLevelParam.Param<core::param::IntParam>()->Value();
+
+    const bool autoAmort = autoLevelParam.Param<core::param::BoolParam>()->Value();
+    if (autoAmort) {
+        amortLevelParam.Param<core::param::IntParam>()->SetGUIReadOnly(true);
+        const int targetFps = targetFpsParam.Param<core::param::IntParam>()->Value();
+        const float targetTimeMs = 1000.0f / static_cast<float>(targetFps);
+
+        auto now = std::chrono::steady_clock::now();
+        if (lastTime_.has_value()) {
+            const float frame_time =
+                std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(now - lastTime_.value()).count();
+
+            // TODO algorithm for amort level, this is a very stupid placeholder algorithm for now
+            lastFrameTimes_.push_back(frame_time);
+            if (lastFrameTimes_.size() > 10) {
+                auto avg_frame_time = std::reduce(lastFrameTimes_.begin(), lastFrameTimes_.end()) /
+                                      static_cast<float>(lastFrameTimes_.size());
+
+                if (avg_frame_time > targetTimeMs) {
+                    aParam++;
+                } else {
+                    aParam--;
+                }
+                aParam = std::clamp(aParam, 1, 32);
+                amortLevelParam.Param<core::param::IntParam>()->SetValue(aParam);
+                lastFrameTimes_.clear();
+            }
+        }
+        lastTime_ = now;
+    } else {
+        amortLevelParam.Param<core::param::AbstractParam>()->SetGUIReadOnly(false);
+        lastTime_ = std::nullopt;
+        lastFrameTimes_.clear();
+    }
+
     const glm::ivec2 a((m == MODE_VERTICAL) ? 1 : aParam, (m == MODE_HORIZONTAL) ? 1 : aParam);
     const int w = fbo->getWidth();
     const int h = fbo->getHeight();
 
     if (a != oldAmortLevel_ || w != oldWidth_ || h != oldHeight_) {
-        updateSize(a, w, h);
+        if (w != oldWidth_ || h != oldHeight_) {
+            updateTextureSize(w, h);
+        }
+        updateAmortSize(a, w, h);
         oldAmortLevel_ = a;
         oldWidth_ = w;
         oldHeight_ = h;
@@ -133,20 +186,16 @@ bool ImageSpaceAmortization2D::renderImpl(CallRender2DGL& call, CallRender2DGL& 
     return true;
 }
 
-void ImageSpaceAmortization2D::updateSize(glm::ivec2 a, int w, int h) {
+bool ImageSpaceAmortization2D::resetCallback(core::param::ParamSlot& slot) {
+    oldAmortLevel_ = glm::ivec2(-1);
+    oldWidth_ = -1;
+    oldHeight_ = -1;
+    return true;
+}
+
+void ImageSpaceAmortization2D::updateTextureSize(int w, int h) {
     viewProjMx_ = glm::mat4(1.0f);
     lastViewProjMx_ = glm::mat4(1.0f);
-
-    camOffsets_.resize(a.x * a.y);
-    for (int j = 0; j < a.y; j++) {
-        for (int i = 0; i < a.x; i++) {
-            const float x = static_cast<float>(2 * i - a.x + 1) / static_cast<float>(w);
-            const float y = static_cast<float>(2 * j - a.y + 1) / static_cast<float>(h);
-            camOffsets_[j * a.x + i] = glm::vec3(x, y, 0.0f);
-        }
-    }
-
-    lowResFBO_->resize((w + a.x - 1) / a.x, (h + a.y - 1) / a.y); // Integer division with round up.
 
     texLayout_.width = w;
     texLayout_.height = h;
@@ -159,6 +208,19 @@ void ImageSpaceAmortization2D::updateSize(glm::ivec2 a, int w, int h) {
     const std::vector<float> posInit(2 * w * h, std::numeric_limits<float>::lowest()); // RG32F
     distTexRead_ = std::make_unique<glowl::Texture2D>("distTexRead", distTexLayout_, posInit.data());
     distTexWrite_ = std::make_unique<glowl::Texture2D>("distTexWrite", distTexLayout_, posInit.data());
+}
+
+void ImageSpaceAmortization2D::updateAmortSize(glm::ivec2 a, int w, int h) {
+    camOffsets_.resize(a.x * a.y);
+    for (int j = 0; j < a.y; j++) {
+        for (int i = 0; i < a.x; i++) {
+            const float x = static_cast<float>(2 * i - a.x + 1) / static_cast<float>(w);
+            const float y = static_cast<float>(2 * j - a.y + 1) / static_cast<float>(h);
+            camOffsets_[j * a.x + i] = glm::vec3(x, y, 0.0f);
+        }
+    }
+
+    lowResFBO_->resize((w + a.x - 1) / a.x, (h + a.y - 1) / a.y); // Integer division with round up.
 
     samplingSequence_.clear();
 
