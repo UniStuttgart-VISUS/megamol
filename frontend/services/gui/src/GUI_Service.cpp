@@ -351,7 +351,7 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     // the image presentation will issue the rendering and provide the view with resources for rendering
     // probably we dont care or dont check wheter the same view is added as entry point multiple times
     auto& image_presentation = const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
-        frontend_resources->get <megamol::frontend_resources::ImagePresentationEntryPoints>());
+        frontend_resources->get<megamol::frontend_resources::ImagePresentationEntryPoints>());
     const std::string gui_entry_point_name = "GUI_Service";
     bool view_presentation_ok = image_presentation.add_entry_point(
         gui_entry_point_name, {static_cast<void*>(this->m_gui.get()), std::function{gui_rendering_execution},
@@ -369,7 +369,7 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 
     // MegaMol Graph Subscription
     auto& megamolgraph_subscription = const_cast<frontend_resources::MegaMolGraph_SubscriptionRegistry&>(
-        frontend_resources->get <frontend_resources::MegaMolGraph_SubscriptionRegistry>());
+        frontend_resources->get<frontend_resources::MegaMolGraph_SubscriptionRegistry>());
 
     frontend_resources::ModuleGraphSubscription gui_subscription("GUI");
 
