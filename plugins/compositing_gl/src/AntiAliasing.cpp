@@ -28,7 +28,7 @@
  * @megamol::compositing_gl::AntiAliasing::AntiAliasing
  */
 megamol::compositing_gl::AntiAliasing::AntiAliasing()
-        : core::Module()
+        : mmstd_gl::ModuleGL()
         , version_(0)
         , tex_inspector_({"Edges", "BlendingWeights", "Output"})
         , output_tx2D_(nullptr)

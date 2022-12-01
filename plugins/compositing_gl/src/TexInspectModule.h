@@ -10,6 +10,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
+#include "mmstd_gl/ModuleGL.h"
 #include "mmstd_gl/special/TextureInspector.h"
 
 namespace megamol::compositing_gl {
@@ -17,7 +18,7 @@ namespace megamol::compositing_gl {
 /**
  * Class implementing the texture inspector
  */
-class TexInspectModule : public core::Module {
+class TexInspectModule : public mmstd_gl::ModuleGL {
 public:
     /**
      * Answer the name of this module.

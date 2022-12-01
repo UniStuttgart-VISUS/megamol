@@ -16,7 +16,7 @@ using namespace megamol;
 using namespace megamol::compositing_gl;
 
 PNGDataSource::PNGDataSource(void)
-        : core::Module()
+        : mmstd_gl::ModuleGL()
         , m_filename_slot("Filename", "Filename to read from")
         , m_image_width_slot("ImageWidth", "Width of the loaded image")
         , m_image_height_slot("ImageHeight", "Height of the loaded image")

@@ -11,8 +11,9 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+
+#include "mmstd_gl/ModuleGL.h"
 
 namespace megamol::compositing_gl {
 /**
@@ -22,7 +23,7 @@ namespace megamol::compositing_gl {
  *
  * For fast calculation it seperates the needed gauss kernel.
  */
-class DepthDarkening : public core::Module {
+class DepthDarkening : public mmstd_gl::ModuleGL {
 public:
     /**
      * Answer the name of this module.
