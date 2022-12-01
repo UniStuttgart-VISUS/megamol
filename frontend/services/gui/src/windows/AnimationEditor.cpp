@@ -257,7 +257,7 @@ void AnimationEditor::RenderAnimation() {
         if (current_frame >= animation_bounds[0] && current_frame <= animation_bounds[1]) {
             command << "mmScreenshot(\"" << output_prefix << "_" << std::setw(5) << std::setfill('0') << current_frame
                     << ".png\")\n";
-            // that is without UI but without frame lag.
+            // that is without UI but without frame lag?
             //command << "mmScreenshotEntryPoint(\"\", \"" << output_prefix << "_" << std::setw(5) << std::setfill('0') << current_frame
             //        << ".png\")\n";
         }
@@ -1089,16 +1089,23 @@ void AnimationEditor::DrawProperties() {
         if ((std::holds_alternative<animation::FloatAnimation>(anim) ||
                 std::holds_alternative<animation::FloatVectorAnimation>(anim)) &&
             selectedFloatKey != nullptr) {
+            auto old_time = selectedFloatKey->time;
             if (ImGui::InputInt("Time", &selectedFloatKey->time)) {
-                // TODO BUG explosion when we move a key on top of another one (not okay for the map!)
-                if (current_parent != nullptr) {
-                    auto t = selectedFloatKey->time;
-                    auto float_anim = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
-                    for (int i = 0; i < float_anim.VectorLength(); ++i) {
-                        current_parent->nestedData[i].time = t;
+                // we must not move on top of another key -> map clash
+                auto occupied =
+                    std::visit([&](auto&& arg) -> bool { return arg.HasKey(selectedFloatKey->time); }, anim);
+                if (occupied) {
+                    selectedFloatKey->time = old_time;
+                } else {
+                    if (current_parent != nullptr) {
+                        auto t = selectedFloatKey->time;
+                        auto float_anim = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
+                        for (int i = 0; i < float_anim.VectorLength(); ++i) {
+                            current_parent->nestedData[i].time = t;
+                        }
                     }
+                    std::visit([&](auto&& arg) -> void { arg.FixSorting(); }, anim);
                 }
-                std::visit([&](auto&& arg) -> void { arg.FixSorting(); }, anim);
             }
             ImGui::InputFloat("Value", &selectedFloatKey->value);
             const char* items[] = {"Step", "Linear", "Hermite", "Cubic Bezier", "SLERP"};
@@ -1162,7 +1169,17 @@ void AnimationEditor::DrawProperties() {
                 }
             }
         } else if (std::holds_alternative<animation::StringAnimation>(anim) && selectedStringKey != nullptr) {
-            ImGui::InputInt("Time", &selectedStringKey->time);
+            auto old_time = selectedStringKey->time;
+            if (ImGui::InputInt("Time", &selectedStringKey->time)) {
+                // we must not move on top of another key -> map clash
+                auto occupied =
+                    std::visit([&](auto&& arg) -> bool { return arg.HasKey(selectedStringKey->time); }, anim);
+                if (occupied) {
+                    selectedStringKey->time = old_time;
+                } else {
+                    std::visit([&](auto&& arg) -> void { arg.FixSorting(); }, anim);
+                }
+            }
             ImGui::InputText("Value", &selectedStringKey->value);
         }
     }
