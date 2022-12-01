@@ -187,44 +187,49 @@ bool AnimationEditor::NotifyParamChanged(
 }
 
 
-void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json) {
-    in_json["write_to_graph"].get_to(write_to_graph);
-    in_json["playing"].get_to(playing);
-    in_json["playback_fps"].get_to(playback_fps);
-    in_json["animation_bounds"].get_to(animation_bounds);
-    in_json["current_frame"].get_to(current_frame);
-    in_json["output_prefix"].get_to(output_prefix);
-    if (in_json.contains("animation_file")) {
-        in_json["animation_file"].get_to(animation_file);
-    }
+void AnimationEditor::SpecificStateFromJSON(const nlohmann::json& in_json_all) {
+    if (in_json_all.contains("AnimationEditor_State")) {
+        auto& in_json = in_json_all["AnimationEditor_State"];
+        in_json["write_to_graph"].get_to(write_to_graph);
+        in_json["playing"].get_to(playing);
+        in_json["playback_fps"].get_to(playback_fps);
+        targeted_frame_time = 1000.0f / static_cast<float>(playback_fps);
+        in_json["animation_bounds"].get_to(animation_bounds);
+        in_json["current_frame"].get_to(current_frame);
+        in_json["output_prefix"].get_to(output_prefix);
+        if (in_json.contains("animation_file")) {
+            in_json["animation_file"].get_to(animation_file);
+        }
 
-    animation::FloatAnimation f_dummy("dummy");
-    animation::StringAnimation s_dummy("dummy");
-    animation::FloatVectorAnimation v_dummy("dummy");
-    if (!in_json.contains("animations")) {
-        error_popup_message = "Loading failed: cannot find 'animations'";
-        open_popup_error = true;
-    }
-    for (auto& j : in_json["animations"]) {
-        if (j["type"] == "string") {
-            from_json(j, s_dummy);
-            allAnimations.emplace_back(s_dummy);
-        } else if (j["type"] == "float") {
-            // j.get<FloatAnimation>() does not work because no default constructor
-            from_json(j, f_dummy);
-            allAnimations.emplace_back(f_dummy);
-        } else if (j["type"] == "float_vector") {
-            from_json(j, v_dummy);
-            allAnimations.emplace_back(v_dummy);
-        } else {
-            error_popup_message = "Loading failed: " + j["name"].get<std::string>() + " has no known type";
+        animation::FloatAnimation f_dummy("dummy");
+        animation::StringAnimation s_dummy("dummy");
+        animation::FloatVectorAnimation v_dummy("dummy");
+        if (!in_json.contains("animations")) {
+            error_popup_message = "Loading failed: cannot find 'animations'";
             open_popup_error = true;
+        }
+        for (auto& j : in_json["animations"]) {
+            if (j["type"] == "string") {
+                from_json(j, s_dummy);
+                allAnimations.emplace_back(s_dummy);
+            } else if (j["type"] == "float") {
+                // j.get<FloatAnimation>() does not work because no default constructor
+                from_json(j, f_dummy);
+                allAnimations.emplace_back(f_dummy);
+            } else if (j["type"] == "float_vector") {
+                from_json(j, v_dummy);
+                allAnimations.emplace_back(v_dummy);
+            } else {
+                error_popup_message = "Loading failed: " + j["name"].get<std::string>() + " has no known type";
+                open_popup_error = true;
+            }
         }
     }
 }
 
 
-void AnimationEditor::SpecificStateToJSON(nlohmann::json& inout_json) {
+void AnimationEditor::SpecificStateToJSON(nlohmann::json& inout_json_all) {
+    auto& inout_json = inout_json_all["AnimationEditor_State"];
     inout_json["write_to_graph"] = write_to_graph;
     inout_json["playing"] = playing;
     inout_json["playback_fps"] = playback_fps;
