@@ -18,7 +18,6 @@
 #include <functional>
 #include <map>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 
@@ -80,8 +79,6 @@ private:
     std::vector<std::shared_ptr<AbstractWindow>> windows;
 
     std::vector<std::string> requested_resources;
-
-    std::unordered_map<std::string, std::vector<std::shared_ptr<AbstractWindow>>> requested_resources_map;
 
     // FUNCTIONS ------------------------------------------------------
 
