@@ -11,6 +11,7 @@
 
 
 #include "CommandRegistry.h"
+#include "FrontendResource.h"
 #include "PluginsResource.h"
 #include "gui_render_backend.h"
 #include "implot.h"
@@ -315,7 +316,7 @@ public:
         return requested_resources;
     }
 
-    void setRequestedResources(std::vector<frontend::FrontendResource> resources);
+    void setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources);
 
     ///////////////////////////////////////////////////////////////////////
 
@@ -389,8 +390,8 @@ private:
     /** GUI element collections. */
     WindowCollection win_collection;
 
+    /** Resource requests from the GUI windows. */
     std::vector<std::string> requested_resources;
-    std::vector<frontend::FrontendResource> requested_ResourceReferences;
 
     struct PopUpData {
         std::weak_ptr<bool> open_flag;

@@ -11,6 +11,7 @@
 
 
 #include "AbstractWindow.h"
+#include "FrontendResource.h"
 #include "imgui.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
@@ -72,7 +73,7 @@ public:
         return requested_resources;
     }
 
-    void setRequestedResources(std::vector<frontend::FrontendResource> resources);
+    void setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources);
 
 private:
     // VARIABLES ------------------------------------------------------
@@ -80,8 +81,6 @@ private:
     std::vector<std::shared_ptr<AbstractWindow>> windows;
 
     std::vector<std::string> requested_resources;
-
-    std::unordered_map<std::string, std::vector<std::shared_ptr<AbstractWindow>>> requested_resources_map;
 
     // FUNCTIONS ------------------------------------------------------
 

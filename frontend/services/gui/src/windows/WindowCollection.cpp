@@ -42,10 +42,9 @@ WindowCollection::WindowCollection() : windows() {
     for (auto const& win : windows) {
         auto res = win->requested_lifetime_resources();
         requested_resources.insert(requested_resources.end(), res.begin(), res.end());
-        for (auto const& r : res) {
-            requested_resources_map[r].push_back(win);
-        }
     }
+    requested_resources.erase(
+        std::unique(requested_resources.begin(), requested_resources.end()), requested_resources.end());
 }
 
 
@@ -232,18 +231,10 @@ bool WindowCollection::DeleteWindow(size_t win_hash_id) {
 }
 
 
-void megamol::gui::WindowCollection::setRequestedResources(std::vector<frontend::FrontendResource> resources) {
-    if (resources.size() == requested_resources.size()) {
-        std::unordered_map<std::shared_ptr<AbstractWindow>, std::vector<frontend::FrontendResource>> res_map;
-        for (uint64_t i = 0; i < requested_resources.size(); ++i) {
-            auto ptrs = requested_resources_map[requested_resources[i]];
-            for (auto& ptr : ptrs) {
-                res_map[ptr].push_back(resources[i]);
-            }
-        }
-        for (auto& [ptr, res] : res_map) {
-            ptr->setRequestedResources(res);
-        }
+void megamol::gui::WindowCollection::setRequestedResources(
+    std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources) {
+    for (auto& win : windows) {
+        win->setRequestedResources(resources);
     }
 }
 

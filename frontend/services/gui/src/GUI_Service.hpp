@@ -84,8 +84,8 @@ private:
     std::vector<std::string> m_queuedProjectFiles;
 
     std::vector<FrontendResource> m_providedResourceReferences;
-    std::vector<FrontendResource> m_requestedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
+    std::shared_ptr<frontend_resources::FrontendResourcesMap> frontend_resources;
 
     megamol::frontend_resources::GUIState m_providedStateResource;
     megamol::frontend_resources::GUIRegisterWindow m_providedRegisterWindowResource;
