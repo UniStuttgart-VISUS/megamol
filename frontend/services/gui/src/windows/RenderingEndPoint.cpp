@@ -2,7 +2,7 @@
 
 
 megamol::gui::RenderingEndPoint::RenderingEndPoint(std::string const& window_name)
-        : AbstractWindow(window_name, AbstractWindow::WINDOW_IF_RENDERING_ENDPOINT) {}
+        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_RENDERING_ENDPOINT) {}
 
 
 void megamol::gui::RenderingEndPoint::SetTexture(GLuint texture, uint32_t x, uint32_t y) {
@@ -20,7 +20,7 @@ bool megamol::gui::RenderingEndPoint::Draw() {
         ImGui::EndMainMenuBar();
     }*/
 
-    auto& img_pres_ep_resource_ptr = resources_[0].getResource<frontend_resources::ImagePresentationEntryPoints>();
+    auto& img_pres_ep_resource_ptr = frontend_resources->get<frontend_resources::ImagePresentationEntryPoints>();
 
     bool isSelected = false;
     if (ImGui::BeginCombo("Views", current_item)) {

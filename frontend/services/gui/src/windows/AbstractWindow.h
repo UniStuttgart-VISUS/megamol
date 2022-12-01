@@ -43,7 +43,7 @@ public:
         WINDOW_ID_TRANSFER_FUNCTION = 5,
         WINDOW_ID_CONFIGURATOR = 6,
         WINDOW_ID_LOGCONSOLE = 7,
-        WINDOW_IF_RENDERING_ENDPOINT = 8
+        WINDOW_ID_RENDERING_ENDPOINT = 8
     };
 
     struct BasicConfig {

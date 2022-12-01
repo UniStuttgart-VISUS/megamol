@@ -19,9 +19,9 @@ public:
         return res;
     }
 
-    void setRequestedResources(std::vector<frontend::FrontendResource> resources) override {
-        resources_ = resources;
-        auto& img_pres_ep_resource_ptr = resources[0].getResource<frontend_resources::ImagePresentationEntryPoints>();
+    void setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources) override {
+        AbstractWindow::setRequestedResources(resources);
+        auto& img_pres_ep_resource_ptr = frontend_resources->get<frontend_resources::ImagePresentationEntryPoints>();
 
         auto sub_func = [&](frontend_resources::ImagePresentationEntryPoints::SubscriptionEvent const& event,
                             std::vector<std::any> const& args) -> void {
@@ -57,6 +57,5 @@ private:
     ImTextureID tex_;
     ImVec2 size_;
     std::map<std::string, frontend::ImagePresentation_Service::EntryPointRenderFunctions> entry_points_;
-    std::vector<frontend::FrontendResource> resources_;
 };
 } // namespace megamol::gui
