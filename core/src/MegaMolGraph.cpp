@@ -230,19 +230,26 @@ bool megamol::core::MegaMolGraph::SetParameter(std::string const& paramName, std
 bool megamol::core::MegaMolGraph::Broadcast_graph_subscribers_parameter_changes() {
     for (auto& subscriber : graph_subscribers.subscribers) {
 
-        for (megamol::core::param::AbstractParamSlot* changed_param_ptr : module_param_changes_queue) {
+        for (auto changed_param_ptr : module_param_changes_queue) {
             if (!changed_param_ptr) {
                 log_error("AbstractParamSlot* of a changed module parameter turned out nullptr. can not propagate "
                           "changed param value to graph subscribers.");
                 return false;
             }
+            auto abstract_parameter_ptr = changed_param_ptr->Parameter();
 
-            auto param_value = changed_param_ptr->Parameter()->ValueString();
+            if (abstract_parameter_ptr == nullptr) {
+                log_error(
+                    " casting AbstractParamSlot* to AbstractParam* failed. Can not propagate changed param value.");
+                return false;
+            }
+
+            auto param_value = abstract_parameter_ptr->ValueString();
+
             param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(changed_param_ptr);
 
             if (!param_slot_ptr) {
-                log_error(" casting AbstractParamSlot* to ParamSlot* failed. Can not propagate changed param value " +
-                          param_value + " to graph subscribers");
+                log_error("Parameter at ParamSlot* is Null. Can not propagate changed param value.");
                 return false;
             }
 
