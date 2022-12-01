@@ -1545,6 +1545,6 @@ void GUIManager::RegisterHotkeys(
 }
 
 
-void megamol::gui::GUIManager::setRequestedResources(std::vector<frontend::FrontendResource> resources) {
+void megamol::gui::GUIManager::setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources) {
     win_collection.setRequestedResources(resources);
 }

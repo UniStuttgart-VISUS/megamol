@@ -63,8 +63,8 @@ public:
         return std::vector<std::string>();
     }
 
-    virtual void setRequestedResources(std::vector<frontend::FrontendResource> resources) {
-        frontend_resources = {resources};
+    virtual void setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources) {
+        frontend_resources = resources;
     };
 
     AbstractWindow(const std::string& name, WindowConfigID window_id)
@@ -146,7 +146,7 @@ protected:
     BasicConfig win_config;
     megamol::gui::HotkeyMap_t win_hotkeys;
     WindowConfigID window_id; // [SAVED] ID of the predefined callback drawing the window content
-    frontend_resources::FrontendResourcesMap frontend_resources;
+    std::shared_ptr<frontend_resources::FrontendResourcesMap> frontend_resources;
 
 private:
     size_t hash_id;   // unique hash generated from name to omit string comparison

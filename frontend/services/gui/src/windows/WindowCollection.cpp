@@ -229,7 +229,7 @@ bool WindowCollection::DeleteWindow(size_t win_hash_id) {
 }
 
 
-void megamol::gui::WindowCollection::setRequestedResources(std::vector<frontend::FrontendResource> resources) {
+void megamol::gui::WindowCollection::setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources) {
     for (auto& win : windows) {
         win->setRequestedResources(resources);
     }

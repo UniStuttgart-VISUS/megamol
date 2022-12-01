@@ -71,7 +71,7 @@ public:
         return requested_resources;
     }
 
-    void setRequestedResources(std::vector<frontend::FrontendResource> resources);
+    void setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources);
 
 private:
     // VARIABLES ------------------------------------------------------
