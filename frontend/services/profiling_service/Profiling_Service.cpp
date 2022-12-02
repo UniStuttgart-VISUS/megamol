@@ -120,6 +120,11 @@ void Profiling_Service::fill_lua_callbacks() {
     auto& graph = const_cast<core::MegaMolGraph&>(_requestedResourcesReferences[1].getResource<core::MegaMolGraph>());
     auto& render_next_frame = _requestedResourcesReferences[2].getResource<std::function<bool()>>();
 
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, bool>(
+        "mmSetProfilingLogging", "(bool on)", {[&](bool on) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            this->profiling_logging.active = on;
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, int>(
         "mmGenerateCameraScenes", "(string entrypoint, string camera_path_pattern, uint num_samples)",
