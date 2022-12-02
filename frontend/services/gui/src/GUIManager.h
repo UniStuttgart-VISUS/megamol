@@ -263,6 +263,12 @@ public:
     void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
         this->win_configurator_ptr->GetGraphCollection().SetPerformanceManager(perf_manager);
     }
+
+    frontend_resources::ProfilingLoggingStatus* perf_logging;
+
+    void SetProfilingLoggingStatus(frontend_resources::ProfilingLoggingStatus* perf_logging_status) {
+        this->perf_logging = perf_logging_status;
+    }
     void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi) {
         this->win_configurator_ptr->GetGraphCollection().AppendPerformanceData(fi);
     }

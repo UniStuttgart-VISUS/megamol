@@ -23,6 +23,12 @@ class Profiling_Service;
 namespace megamol {
 namespace frontend_resources {
 
+static std::string Performance_Logging_Status_Req_Name = "ProfilingLoggingStatuse";
+
+struct ProfilingLoggingStatus {
+    bool active = true;
+};
+
 static std::string PerformanceManager_Req_Name = "PerformanceManager";
 
 class PerformanceManager {

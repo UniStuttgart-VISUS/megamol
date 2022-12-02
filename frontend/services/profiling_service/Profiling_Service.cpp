@@ -14,16 +14,22 @@ namespace frontend {
 
 bool Profiling_Service::init(void* configPtr) {
     _providedResourceReferences = {
-        {"PerformanceManager", _perf_man},
+        {frontend_resources::PerformanceManager_Req_Name, _perf_man},
+        {frontend_resources::Performance_Logging_Status_Req_Name, profiling_logging}
     };
 
 #ifdef MEGAMOL_USE_PROFILING
     const auto conf = static_cast<Config*>(configPtr);
+    profiling_logging.active = conf->autostart_profiling;
+
     if (conf != nullptr && !conf->log_file.empty()) {
         log_file = std::ofstream(conf->log_file, std::ofstream::trunc);
         // header
         log_file << "frame;parent;name;comment;frame_index;api;type;time (ms)" << std::endl;
         _perf_man.subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
+            if (!profiling_logging.active) {
+                return;
+            }
             auto frame = fi.frame;
             if (frame > 0) {
                 auto& _frame_stats =

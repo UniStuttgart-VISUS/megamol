@@ -55,6 +55,7 @@ GUIManager::GUIManager()
     assert(this->win_configurator_ptr != nullptr);
 
     requested_resources = win_collection.requested_lifetime_resources();
+    requested_resources.push_back(frontend_resources::Performance_Logging_Status_Req_Name);
 
     this->init_state();
 }
@@ -1004,6 +1005,11 @@ void GUIManager::draw_menu() {
         if (ImGui::MenuItem("Font")) {
             this->gui_state.open_popup_font = true;
         }
+#ifdef MEGAMOL_USE_PROFILING
+        if (ImGui::MenuItem(this->perf_logging->active ? "Pause performance logging" : "Resume performance logging")) {
+            this->perf_logging->active = !this->perf_logging->active;
+        }
+#endif
 
         ImGui::EndMenu();
     }
