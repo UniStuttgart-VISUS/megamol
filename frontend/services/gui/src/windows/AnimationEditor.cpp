@@ -560,36 +560,21 @@ void AnimationEditor::DrawToolbar() {
     if (ImGui::Button("break tangents")) {
         if (selectedFloatKey != nullptr) {
             selectedFloatKey->tangents_linked = false;
-        } /* else if (selectedVec3Key != nullptr) {
-             for (int i = 0; i < 3; ++i) {
-                 selectedVec3Key->nestedData[i].tangents_linked = false;
-             }
-         }*/
+        }
     }
     ImGui::SameLine();
     if (ImGui::Button("link tangents")) {
         if (selectedFloatKey != nullptr) {
             selectedFloatKey->tangents_linked = true;
             selectedFloatKey->out_tangent = ImVec2(-selectedFloatKey->in_tangent.x, -selectedFloatKey->in_tangent.y);
-        } /* else if (selectedVec3Key != nullptr) {
-             for (int i = 0; i < 3; ++i) {
-                 selectedVec3Key->nestedData[i].tangents_linked = true;
-                 selectedVec3Key->nestedData[i].out_tangent =
-                     ImVec2(-selectedVec3Key->nestedData[i].in_tangent.x, -selectedVec3Key->nestedData[i].in_tangent.y);
-             }
-         }*/
+        }
     }
     ImGui::SameLine();
     if (ImGui::Button("flat tangents")) {
         if (selectedFloatKey != nullptr) {
             selectedFloatKey->in_tangent = {-1.0f, 0.0f};
             selectedFloatKey->out_tangent = {1.0f, 0.0f};
-        } /* else if (selectedVec3Key != nullptr) {
-             for (int i = 0; i < 3; ++i) {
-                 selectedVec3Key->nestedData[i].in_tangent = {-1.0f, 0.0f};
-                 selectedVec3Key->nestedData[i].out_tangent = {1.0f, 0.0f};
-             }
-         }*/
+        }
     }
     ImGui::SameLine();
     DrawVerticalSeparator();

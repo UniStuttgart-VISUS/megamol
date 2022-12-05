@@ -37,6 +37,11 @@ struct FloatKey {
     static ValueType Interpolate(FloatKey first, FloatKey second, KeyTimeType time);
     // ... and that is only good for drawing (x will not sit on the time grid)
     static ImVec2 Interpolate(FloatKey first, FloatKey second, float t);
+
+    static float CubicBezierValue(float value1, float value2, float value3, float value4, float t);
+
+    static float CubicHermiteValue(float value1, float outTangent1, float inTangent2, float value2, float t);
+    //static float FindTForValue()
 };
 
 template<class C>

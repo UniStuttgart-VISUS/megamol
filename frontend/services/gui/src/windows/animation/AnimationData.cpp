@@ -35,53 +35,33 @@ float FloatKey::Interpolate(FloatKey first, FloatKey second, KeyTimeType time) {
     case InterpolationType::Linear:
         return (1.0f - t) * my_first.value + t * my_second.value;
     case InterpolationType::Hermite: {
-        float t2, t3;
-        auto recompute_ts = [&]() {
-            t2 = t * t;
-            t3 = t2 * t;
-        };
-        recompute_ts();
-        auto x = my_first.time * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.time * (-2.0f * t3 + 3.0f * t2) +
-                 my_first.out_tangent.x * (t3 - 2.0f * t2 + t) - my_second.in_tangent.x * (t3 - t2);
+        auto x = CubicHermiteValue(my_first.time, my_first.out_tangent.x, my_second.in_tangent.x, my_second.time, t);
         auto err = x - time;
         int iter = 0;
         while (std::abs(err) > 0.01f && iter < 100) {
             // TODO: use the tangent to guesstimate the correction step. should converge much faster!
-            t = t - 0.5 * err / static_cast<float>(my_second.time - my_first.time);
-            recompute_ts();
-            x = my_first.time * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.time * (-2.0f * t3 + 3.0f * t2) +
-                my_first.out_tangent.x * (t3 - 2.0f * t2 + t) - my_second.in_tangent.x * (t3 - t2);
+            t = t - 0.5f * err / static_cast<float>(my_second.time - my_first.time);
+            x = CubicHermiteValue(my_first.time, my_first.out_tangent.x, my_second.in_tangent.x, my_second.time, t);
             err = x - time;
             iter++;
         }
-        return my_first.value * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.value * (-2.0f * t3 + 3.0f * t2) +
-               my_first.out_tangent.y * (t3 - 2.0f * t2 + t) - my_second.in_tangent.y * (t3 - t2);
+        return CubicHermiteValue(my_first.value, my_first.out_tangent.y, my_second.in_tangent.y, my_second.value, t);
     }
     case InterpolationType::CubicBezier: {
-        float t2, t3, invt2, invt3;
-        auto recompute_ts = [&]() {
-            t2 = t * t;
-            t3 = t2 * t;
-            invt2 = (1.0f - t) * (1.0f - t);
-            invt3 = (1.0f - t) * (1.0f - t) * (1.0f - t);
-        };
-        recompute_ts();
-        auto p1 = ImVec2(my_first.time, my_first.value);
-        auto p4 = ImVec2(my_second.time, my_second.value);
-        auto p2 = p1 + my_first.out_tangent;
-        auto p3 = p4 + my_second.in_tangent;
-        auto x = invt3 * p1.x + 3.0f * invt2 * t * p2.x + 3.0f * (1.0f - t) * t2 * p3.x + t3 * p4.x;
+        auto x = CubicBezierValue(my_first.time, my_first.time + my_first.out_tangent.x,
+            my_second.time + my_second.in_tangent.x, my_second.time, t);
         auto err = x - time;
         int iter = 0;
         while (std::abs(err) > 0.01f && iter < 100) {
             // TODO: use the tangent to guesstimate the correction step. should converge much faster!
-            t = t - 0.5 * err / static_cast<float>(my_second.time - my_first.time);
-            recompute_ts();
-            x = invt3 * p1.x + 3.0f * invt2 * t * p2.x + 3.0f * (1.0f - t) * t2 * p3.x + t3 * p4.x;
+            t = t - 0.5f * err / static_cast<float>(my_second.time - my_first.time);
+            x = CubicBezierValue(my_first.time, my_first.time + my_first.out_tangent.x,
+                my_second.time + my_second.in_tangent.x, my_second.time, t);
             err = x - time;
             iter++;
         }
-        return invt3 * my_first.value + 3.0f * invt2 * t * p2.y + 3.0f * (1.0f - t) * t2 * p3.y + t3 * my_second.value;
+        return CubicBezierValue(my_first.value, my_first.value + my_first.out_tangent.y,
+            my_second.value + my_second.in_tangent.y, my_second.value, t);
     }
     }
     return 0.0f;
@@ -109,27 +89,35 @@ ImVec2 FloatKey::Interpolate(FloatKey first, FloatKey second, float t) {
         return {(1.0f - t) * static_cast<float>(my_first.time) + t * static_cast<float>(my_second.time),
             (1.0f - t) * my_first.value + t * my_second.value};
     case InterpolationType::Hermite: {
-        const auto t2 = t * t, t3 = t2 * t;
-        auto x = my_first.time * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.time * (-2.0f * t3 + 3.0f * t2) +
-                 my_first.out_tangent.x * (t3 - 2.0f * t2 + t) - my_second.in_tangent.x * (t3 - t2);
-        auto y = my_first.value * (2.0f * t3 - 3.0f * t2 + 1.0f) + my_second.value * (-2.0f * t3 + 3.0f * t2) +
-                 my_first.out_tangent.y * (t3 - 2.0f * t2 + t) - my_second.in_tangent.y * (t3 - t2);
+        auto x = CubicHermiteValue(my_first.time, my_first.out_tangent.x, my_second.in_tangent.x, my_second.time, t);
+        auto y = CubicHermiteValue(my_first.value, my_first.out_tangent.y, my_second.in_tangent.y, my_second.value, t);
         return {x, y};
     }
     case InterpolationType::CubicBezier: {
-        const auto t2 = t * t, t3 = t2 * t;
-        const auto invt2 = (1.0f - t) * (1.0f - t), invt3 = (1.0f - t) * (1.0f - t) * (1.0f - t);
-        auto p1 = ImVec2(my_first.time, my_first.value);
-        auto p4 = ImVec2(my_second.time, my_second.value);
-        auto p2 = p1 + my_first.out_tangent;
-        auto p3 = p4 + my_second.in_tangent;
-        auto x = invt3 * p1.x + 3.0f * invt2 * t * p2.x + 3.0f * (1.0f - t) * t2 * p3.x + t3 * p4.x;
-        auto y = invt3 * p1.y + 3.0f * invt2 * t * p2.y + 3.0f * (1.0f - t) * t2 * p3.y + t3 * p4.y;
+        auto x = CubicBezierValue(my_first.time, my_first.time + my_first.out_tangent.x,
+            my_second.time + my_second.in_tangent.x, my_second.time, t);
+        auto y = CubicBezierValue(my_first.value, my_first.value + my_first.out_tangent.y,
+            my_second.value + my_second.in_tangent.y, my_second.value, t);
         return {x, y};
     }
     default:
         return {0.0f, 0.0f};
     }
+}
+
+float FloatKey::CubicBezierValue(float value1, float value2, float value3, float value4, float t) {
+    const auto invt2 = (1.0f - t) * (1.0f - t);
+    const auto invt3 = invt2 * (1.0f - t);
+    const auto t2 = t * t;
+    const auto t3 = t2 * t;
+    return invt3 * value1 + 3.0f * invt2 * t * value2 + 3.0f * (1.0f - t) * t2 * value3 + t3 * value4;
+}
+
+float FloatKey::CubicHermiteValue(float value1, float outTangent1, float inTangent2, float value2, float t) {
+    const auto t2 = t * t;
+    const auto t3 = t2 * t;
+    return value1 * (2.0f * t3 - 3.0f * t2 + 1.0f) + value2 * (-2.0f * t3 + 3.0f * t2) +
+                 outTangent1 * (t3 - 2.0f * t2 + t) - inTangent2 * (t3 - t2);
 }
 
 
