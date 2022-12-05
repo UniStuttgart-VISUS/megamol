@@ -169,7 +169,7 @@ template<class KeyType>
 typename KeyType::ValueType GenericAnimation<KeyType>::GetValue(KeyTimeType time) const {
     if (keys.size() < 2) {
         if (keys.empty()) {
-            return ValueType::ValueType();
+            return KeyType::ValueType();
         }
         return keys.begin()->second.value;
     }
@@ -200,8 +200,8 @@ template<class KeyType>
 std::vector<KeyTimeType> GenericAnimation<KeyType>::GetAllKeys() const {
     std::vector<KeyTimeType> the_keys;
     the_keys.reserve(keys.size());
-    std::transform(
-        keys.begin(), keys.end(), std::back_inserter(the_keys), [](const KeyMap::value_type& v) { return v.first; });
+    std::transform(keys.begin(), keys.end(), std::back_inserter(the_keys),
+        [](const typename KeyMap::value_type& v) { return v.first; });
     return the_keys;
 }
 

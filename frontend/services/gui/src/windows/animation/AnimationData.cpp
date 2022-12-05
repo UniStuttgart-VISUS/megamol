@@ -1,5 +1,6 @@
 #include "AnimationData.h"
 
+#include <cmath>
 
 using namespace megamol::gui::animation;
 

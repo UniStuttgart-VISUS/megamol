@@ -21,6 +21,7 @@
 #include "nlohmann/json.hpp"
 
 #include <fstream>
+#include <cmath>
 
 using namespace megamol::gui;
 
