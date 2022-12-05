@@ -13,12 +13,10 @@ namespace megamol {
 namespace frontend {
 
 bool Profiling_Service::init(void* configPtr) {
-    _providedResourceReferences = {
-        {frontend_resources::PerformanceManager_Req_Name, _perf_man},
-        {frontend_resources::Performance_Logging_Status_Req_Name, profiling_logging}
-    };
-
 #ifdef MEGAMOL_USE_PROFILING
+    _providedResourceReferences = {{frontend_resources::PerformanceManager_Req_Name, _perf_man},
+        {frontend_resources::Performance_Logging_Status_Req_Name, profiling_logging}};
+
     const auto conf = static_cast<Config*>(configPtr);
     profiling_logging.active = conf->autostart_profiling;
 

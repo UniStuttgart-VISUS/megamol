@@ -55,7 +55,9 @@ GUIManager::GUIManager()
     assert(this->win_configurator_ptr != nullptr);
 
     requested_resources = win_collection.requested_lifetime_resources();
+#ifdef MEGAMOL_USE_PROFILING
     requested_resources.push_back(frontend_resources::Performance_Logging_Status_Req_Name);
+#endif
 
     this->init_state();
 }
