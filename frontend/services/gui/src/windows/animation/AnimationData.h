@@ -34,13 +34,17 @@ struct FloatKey {
     ImVec2 out_tangent{1.0f, 0.0f};
 
     // this is expensive (accurately hit time first!)...
-    static ValueType Interpolate(FloatKey first, FloatKey second, KeyTimeType time);
+    static ValueType InterpolateForTime(FloatKey first, FloatKey second, KeyTimeType time);
+    static ImVec2 TangentForTime(FloatKey first, FloatKey second, KeyTimeType time);
     // ... and that is only good for drawing (x will not sit on the time grid)
-    static ImVec2 Interpolate(FloatKey first, FloatKey second, float t);
+    static ImVec2 InterpolateForParameter(FloatKey first, FloatKey second, float t);
+    static ImVec2 TangentForParameter(FloatKey first, FloatKey second, float t);
 
     static float CubicBezierValue(float value1, float value2, float value3, float value4, float t);
+    static float CubicBezierTangent(float value1, float value2, float value3, float value4, float t);
 
     static float CubicHermiteValue(float value1, float outTangent1, float inTangent2, float value2, float t);
+    static float CubicHermiteTangent(float value1, float outTangent1, float inTangent2, float value2, float t);
     //static float FindTForValue()
 };
 
@@ -50,9 +54,9 @@ struct VectorKey {
     std::vector<C> nestedData;
 
     // this is expensive (accurately hit time first!)...
-    static ValueType Interpolate(VectorKey first, VectorKey second, KeyTimeType time);
+    static ValueType InterpolateForTime(VectorKey first, VectorKey second, KeyTimeType time);
     // ... and that is only good for drawing (x will not sit on the time grid)
-    static std::vector<ImVec2> Interpolate(VectorKey first, VectorKey second, float t);
+    static std::vector<ImVec2> InterpolateForParameter(VectorKey first, VectorKey second, float t);
 };
 
 struct StringKey {
@@ -126,6 +130,7 @@ public:
 
 
     typename ValueType::ValueType GetValue(KeyTimeType time) const;
+    ImVec2 GetTangent(KeyTimeType time) const;
     std::vector<KeyTimeType> GetAllKeys() const;
 
 protected:
@@ -186,6 +191,12 @@ typename KeyType::ValueType GenericAnimation<KeyType>::GetValue(KeyTimeType time
 }
 
 template<class KeyType>
+ImVec2 GenericAnimation<KeyType>::GetTangent(KeyTimeType time) const {
+    // generally speaking, useless
+    return ImVec2{1.0f, 0.0f};
+}
+
+template<class KeyType>
 std::vector<KeyTimeType> GenericAnimation<KeyType>::GetAllKeys() const {
     std::vector<KeyTimeType> the_keys;
     the_keys.reserve(keys.size());
@@ -200,6 +211,8 @@ using FloatAnimation = GenericAnimation<FloatKey>;
 // floats can actually interpolate!
 template<>
 GenericAnimation<FloatKey>::ValueType::ValueType GenericAnimation<FloatKey>::GetValue(KeyTimeType time) const;
+template<>
+ImVec2 GenericAnimation<FloatKey>::GetTangent(KeyTimeType time) const;
 template<>
 InterpolationType GenericAnimation<FloatKey>::GetInterpolation(KeyTimeType time) const;
 
@@ -253,7 +266,7 @@ public:
             return ret;
         } else {
             for (int i = 0; i < vec_length; ++i) {
-                ret[i] = C::Interpolate(first.nestedData[i], second.nestedData[i], time);
+                ret[i] = C::InterpolateForTime(first.nestedData[i], second.nestedData[i], time);
             }
         }
         return ret;
@@ -266,7 +279,7 @@ public:
             // TODO
         } else {
             for (int i = 0; i < vec_length; ++i) {
-                ret[i] = C::Interpolate(first.nestedData[i], second.nestedData[i], t);
+                ret[i] = C::InterpolateForParameter(first.nestedData[i], second.nestedData[i], t);
             }
         }
         return ret;

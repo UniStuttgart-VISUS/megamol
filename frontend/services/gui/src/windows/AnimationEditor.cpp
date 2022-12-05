@@ -503,6 +503,9 @@ void AnimationEditor::DrawToolbar() {
                     f.value = anim.GetValue(current_frame);
                     f.interpolation = anim.GetInterpolation(current_frame);
                     // TODO: compute sensible tangent
+                    auto t = anim.GetTangent(current_frame);
+                    f.out_tangent = t;
+                    f.in_tangent = ImVec2(-f.out_tangent.x, -f.out_tangent.y);
                     anim.AddKey(f);
                 }
             } else if (std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])) {
@@ -728,15 +731,15 @@ void AnimationEditor::DrawInterpolation(
         // draw reference
         auto step = 0.02f;
         for (auto f = 0.0f; f < 1.0f; f += step) {
-            auto v1 = animation::FloatKey::Interpolate(key, key2, f);
+            auto v1 = animation::FloatKey::InterpolateForParameter(key, key2, f);
             v1.y *= -1.0f;
-            auto v2 = animation::FloatKey::Interpolate(key, key2, f + step);
+            auto v2 = animation::FloatKey::InterpolateForParameter(key, key2, f + step);
             v2.y *= -1.0f;
             drawList->AddLine(v1 * custom_zoom, v2 * custom_zoom, reference_col);
         }
         for (auto t = key.time; t < key2.time; ++t) {
-            auto v1 = animation::FloatKey::Interpolate(key, key2, t);
-            auto v2 = animation::FloatKey::Interpolate(key, key2, t + 1);
+            auto v1 = animation::FloatKey::InterpolateForTime(key, key2, t);
+            auto v2 = animation::FloatKey::InterpolateForTime(key, key2, t + 1);
             drawList->AddLine(ImVec2(t, v1 * -1.0f) * custom_zoom, ImVec2(t + 1, v2 * -1.0f) * custom_zoom, line_col);
         }
         break;
