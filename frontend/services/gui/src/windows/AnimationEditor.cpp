@@ -50,7 +50,7 @@ bool AnimationEditor::Draw() {
         accumulated_ms += last_frame_ms;
         if (accumulated_ms > targeted_frame_time) {
             auto frameskip = static_cast<int>(accumulated_ms / targeted_frame_time);
-            accumulated_ms = std::fmodf(accumulated_ms, targeted_frame_time);
+            accumulated_ms = fmodf(accumulated_ms, targeted_frame_time);
             current_frame += frameskip * playing;
             if (playing > 0) {
                 if (current_frame > animation_bounds[1]) {
@@ -1198,7 +1198,7 @@ void AnimationEditor::DrawGrid() {
     auto width = region_end.x - region_start.x;
 
     auto dist_order = round(std::log10(width));
-    auto majorUnit = std::powf(10, dist_order - 1.0f);
+    auto majorUnit = powf(10, dist_order - 1.0f);
     auto minorUnit = majorUnit / 10.0f;
 
     auto minor_start = std::nearbyintf(region_start.x / minorUnit) * minorUnit;

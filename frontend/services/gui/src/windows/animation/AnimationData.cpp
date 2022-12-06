@@ -193,7 +193,7 @@ ImVec2 FloatKey::TangentForParameter(FloatKey first, FloatKey second, float t) {
         } else {
             ImVec2 r = {static_cast<float>(second.time - first.time), second.value - first.value};
             // TODO normalize to what actually
-            return r / std::sqrtf(ImLengthSqr(r));
+            return r / sqrtf(ImLengthSqr(r));
         }
     }
     case InterpolationType::Hermite: {
