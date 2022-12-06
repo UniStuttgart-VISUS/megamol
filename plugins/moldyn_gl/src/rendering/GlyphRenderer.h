@@ -11,8 +11,6 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "PerformanceManager.h"
-
 #include "geometry_calls/EllipsoidalDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
@@ -33,14 +31,6 @@ namespace rendering {
  */
 class GlyphRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
-#ifdef PROFILING
-    std::vector<std::string> requested_lifetime_resources() override {
-        std::vector<std::string> resources = ModuleGL::requested_lifetime_resources();
-        resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
-        return resources;
-    }
-#endif
-
     /**
      * Answer the name of this module.
      *

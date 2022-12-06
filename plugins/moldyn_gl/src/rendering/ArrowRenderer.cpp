@@ -143,18 +143,6 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         c2->SetFrameID(static_cast<unsigned int>(call.Time()));
         if (!(*c2)(0))
             return false;
-
-        if (in_data_hash_ != c2->DataHash() || in_frame_id_ != c2->FrameID()) {
-#ifdef PROFILING
-            pm.start_timer(timing_handles_[0], this->GetCoreInstance()->GetFrameID());
-#endif
-            loadData(*c2);
-#ifdef PROFILING
-            pm.stop_timer(timing_handles_[0]);
-#endif
-            in_data_hash_ = c2->DataHash();
-            in_frame_id_ = c2->FrameID();
-        }
     } else {
         return false;
     }
@@ -257,12 +245,6 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         }
     }
 
-#ifdef PROFILING
-    pm.set_transient_comment(timing_handles_[1], "std");
-    if (this->GetCoreInstance()->GetFrameID() > 100)
-        pm.start_timer(timing_handles_[1], this->GetCoreInstance()->GetFrameID());
-#endif
-
     glDisable(GL_BLEND);
 
     glEnable(GL_DEPTH_TEST);
@@ -307,7 +289,7 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
             // colour
             switch (parts.GetColourDataType()) {
-            /*case MultiParticleDataCall::Particles::COLDATA_NONE:
+            case MultiParticleDataCall::Particles::COLDATA_NONE:
                 glColor3ubv(parts.GetGlobalColour());
                 break;
             case MultiParticleDataCall::Particles::COLDATA_UINT8_RGB:
@@ -325,7 +307,7 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
             case MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA:
                 glEnableClientState(GL_COLOR_ARRAY);
                 glColorPointer(4, GL_FLOAT, parts.GetColourDataStride(), parts.GetColourData());
-                break;*/
+                break;
             case MultiParticleDataCall::Particles::COLDATA_DOUBLE_I:
             case MultiParticleDataCall::Particles::COLDATA_FLOAT_I: {
                 glEnableVertexAttribArrayARB(cial);
@@ -383,17 +365,17 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
                 continue;
             }
 
-            //// direction
-            //switch (parts.GetDirDataType()) {
-            //case MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ:
-            //    glEnableVertexAttribArrayARB(tpal);
-            //    glVertexAttribPointerARB(tpal, 3, GL_FLOAT, GL_FALSE, parts.GetDirDataStride(), parts.GetDirData());
-            //    break;
-            //default:
-            //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            //        "ArrowRenderer: cannot render arrows without directional data!");
-            //    continue;
-            //}
+            // direction
+            switch (parts.GetDirDataType()) {
+            case MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ:
+                glEnableVertexAttribArrayARB(tpal);
+                glVertexAttribPointerARB(tpal, 3, GL_FLOAT, GL_FALSE, parts.GetDirDataStride(), parts.GetDirData());
+                break;
+            default:
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "ArrowRenderer: cannot render arrows without directional data!");
+                continue;
+            }
 
             unsigned int fal = 0;
             if (use_flags) {
@@ -448,58 +430,5 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-#ifdef PROFILING
-    if (this->GetCoreInstance()->GetFrameID() > 100)
-        pm.stop_timer(timing_handles_[1]);
-#endif
-
     return true;
-}
-
-
-void megamol::moldyn_gl::rendering::ArrowRenderer::loadData(geocalls::MultiParticleDataCall& in_data) {
-    auto const pl_count = in_data.GetParticleListCount();
-
-    glDeleteBuffers(data_buf_.size(), data_buf_.data());
-    data_buf_.resize(pl_count);
-    glCreateBuffers(data_buf_.size(), data_buf_.data());
-
-    for (std::decay_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
-        auto const& parts = in_data.AccessParticles(pl_idx);
-
-        auto const xAcc = parts.GetParticleStore().GetXAcc();
-        auto const yAcc = parts.GetParticleStore().GetYAcc();
-        auto const zAcc = parts.GetParticleStore().GetZAcc();
-        auto const radAcc = parts.GetParticleStore().GetRAcc();
-
-        auto const crAcc = parts.GetParticleStore().GetCRAcc();
-        auto const cgAcc = parts.GetParticleStore().GetCGAcc();
-        auto const cbAcc = parts.GetParticleStore().GetCBAcc();
-        auto const caAcc = parts.GetParticleStore().GetCAAcc();
-
-        auto const dxAcc = parts.GetParticleStore().GetDXAcc();
-        auto const dyAcc = parts.GetParticleStore().GetDYAcc();
-        auto const dzAcc = parts.GetParticleStore().GetDZAcc();
-
-        auto const p_count = parts.GetCount();
-
-        std::vector<float> data;
-        data.reserve(p_count * 8);
-
-        for (std::decay_t<decltype(p_count)> p_idx = 0; p_idx < p_count; ++p_idx) {
-            data.push_back(xAcc->Get_f(p_idx));
-            data.push_back(yAcc->Get_f(p_idx));
-            data.push_back(zAcc->Get_f(p_idx));
-            data.push_back(radAcc->Get_f(p_idx));
-            unsigned int col = glm::packUnorm4x8(
-                glm::vec4(crAcc->Get_f(p_idx), cgAcc->Get_f(p_idx), cbAcc->Get_f(p_idx), caAcc->Get_f(p_idx)));
-            data.push_back(*reinterpret_cast<float*>(&col));
-            data.push_back(dxAcc->Get_f(p_idx));
-            data.push_back(dyAcc->Get_f(p_idx));
-            data.push_back(dzAcc->Get_f(p_idx));
-        }
-
-        glNamedBufferStorage(
-            data_buf_[pl_idx], data.size() * sizeof(std::decay_t<decltype(data)>::value_type), data.data(), 0);
-    }
 }

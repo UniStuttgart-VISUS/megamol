@@ -12,8 +12,8 @@
 #include "rendering/GrimRenderer.h"
 #include "rendering/SRTest.h"
 #include "rendering/SphereRenderer.h"
-#include "rendering/MeshArrowRenderer.h"
-#include "rendering/MeshGlyphRenderer.h"
+//#include "rendering/MeshArrowRenderer.h"
+//#include "rendering/MeshGlyphRenderer.h"
 
 namespace megamol::moldyn_gl {
 class MoldynGLPluginInstance : public megamol::core::factories::AbstractPluginInstance {
@@ -35,8 +35,8 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::SphereRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::GlyphRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::SRTest>();
-        this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::MeshArrowRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::MeshGlyphRenderer>();
+        /*this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::MeshArrowRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::moldyn_gl::rendering::MeshGlyphRenderer>();*/
     }
 };
 } // namespace megamol::moldyn_gl

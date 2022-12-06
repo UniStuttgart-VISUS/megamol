@@ -1,12 +1,11 @@
 #include "SRTest.h"
 
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/view/light/CallLight.h"
-#include "mmcore/view/light/DistantLight.h"
+#include "mmstd/light/CallLight.h"
+#include "mmstd/light/DistantLight.h"
 
 
 #define SCALE 0.0001f
@@ -72,18 +71,20 @@ megamol::moldyn_gl::rendering::SRTest::~SRTest() {
 
 bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
     try {
-        auto shdr_vao_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto base_options =
+            core::utility::make_path_shader_options(frontend_resources.get<frontend_resources::RuntimeConfig>());
+        auto shdr_vao_options = base_options;
         shdr_vao_options.addDefinition("__SRTEST_VAO__");
-        auto shdr_tex_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto shdr_tex_options = base_options;
         shdr_tex_options.addDefinition("__SRTEST_TEX__");
-        auto shdr_ssbo_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto shdr_ssbo_options = base_options;
         shdr_ssbo_options.addDefinition("__SRTEST_SSBO__");
-        auto shdr_ssbo_vert_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto shdr_ssbo_vert_options = base_options;
         shdr_ssbo_vert_options.addDefinition("__SRTEST_SSBO__");
         shdr_ssbo_vert_options.addDefinition("BASE_IDX", VERT_BASE_IDX);
         shdr_ssbo_vert_options.addDefinition("INV_IDX", VERT_INV_IDX);
         shdr_ssbo_vert_options.addDefinition("BUMP_IDX", VERT_BUMP_IDX);
-        auto shdr_ssbo_quads_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto shdr_ssbo_quads_options = base_options;
         shdr_ssbo_quads_options.addDefinition("__SRTEST_SSBO__");
         shdr_ssbo_quads_options.addDefinition("__SRTEST_QUAD__");
 #ifdef __SRTEST_CAM_ALIGNED__
@@ -92,45 +93,45 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         shdr_ssbo_quads_options.addDefinition("BASE_IDX", QUADS_BASE_IDX);
         shdr_ssbo_quads_options.addDefinition("INV_IDX", QUADS_INV_IDX);
         shdr_ssbo_quads_options.addDefinition("BUMP_IDX", QUADS_BUMP_IDX);
-        auto shdr_ssbo_strip_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto shdr_ssbo_strip_options = base_options;
         shdr_ssbo_strip_options.addDefinition("__SRTEST_SSBO__");
         shdr_ssbo_strip_options.addDefinition("BASE_IDX", STRIP_BASE_IDX);
         shdr_ssbo_strip_options.addDefinition("INV_IDX", STRIP_INV_IDX);
         shdr_ssbo_strip_options.addDefinition("BUMP_IDX", STRIP_BUMP_IDX);
-        auto shdr_ssbo_muzic_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto shdr_ssbo_muzic_options = base_options;
         shdr_ssbo_muzic_options.addDefinition("__SRTEST_SSBO__");
         shdr_ssbo_muzic_options.addDefinition("__SRTEST_MUZIC__");
         shdr_ssbo_muzic_options.addDefinition("BASE_IDX", MUZIC_BASE_IDX);
         shdr_ssbo_muzic_options.addDefinition("INV_IDX", MUZIC_INV_IDX);
         shdr_ssbo_muzic_options.addDefinition("BUMP_IDX", MUZIC_BUMP_IDX);
-        auto shdr_copy_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto shdr_copy_options = base_options;
         shdr_copy_options.addDefinition("__SRTEST_SSBO__");
         shdr_copy_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
-        auto shdr_copy_vert_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto shdr_copy_vert_options = base_options;
         shdr_copy_vert_options.addDefinition("__SRTEST_SSBO__");
         shdr_copy_vert_options.addDefinition("__SRTEST_UPLOAD_NO_SEP__");
         shdr_copy_vert_options.addDefinition("BASE_IDX", VERT_BASE_IDX);
         shdr_copy_vert_options.addDefinition("INV_IDX", VERT_INV_IDX);
         shdr_copy_vert_options.addDefinition("BUMP_IDX", VERT_BUMP_IDX);
-        auto shdr_mesh_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto shdr_mesh_options = base_options;
         shdr_mesh_options.addDefinition("__SRTEST_MESH__");
         shdr_mesh_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
-        auto shdr_mesh_altn_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto shdr_mesh_altn_options = base_options;
         shdr_mesh_altn_options.addDefinition("__SRTEST_MESH_ALTN__");
         shdr_mesh_altn_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
-        auto shdr_mesh_geo_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto shdr_mesh_geo_options = base_options;
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
 #ifdef __SRTEST_CAM_ALIGNED__
         shdr_mesh_geo_options.addDefinition("__SRTEST_CAM_ALIGNED__");
 #endif
         shdr_mesh_geo_options.addDefinition("__SRTEST_MESH_GEO__");
         shdr_mesh_geo_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
-        auto shdr_mesh_geo_altn_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto shdr_mesh_geo_altn_options = base_options;
         shdr_mesh_geo_altn_options.addDefinition("__SRTEST_MESH_GEO_ALTN__");
         shdr_mesh_geo_altn_options.addDefinition("WARP", std::to_string(MESH_WARP_SIZE));
         auto mode = static_cast<upload_mode>(upload_mode_slot_.Param<core::param::EnumParam>()->Value());
 
-        auto shdr_mesh_geo_cam_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto shdr_mesh_geo_cam_options = base_options;
         shdr_mesh_geo_cam_options.addDefinition("__SRTEST_MESH_GEO__");
         shdr_mesh_geo_cam_options.addDefinition("__SRTEST_CAM_ALIGNED__");
         shdr_mesh_geo_cam_options.addDefinition("__SRTEST_MESH_GEO__");
@@ -257,7 +258,7 @@ bool megamol::moldyn_gl::rendering::SRTest::update_upload_setting() {
 
 
 bool megamol::moldyn_gl::rendering::SRTest::create() {
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     auto& pm = const_cast<frontend_resources::PerformanceManager&>(
         frontend_resources.get<frontend_resources::PerformanceManager>());
     frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer, compute_timer;
@@ -314,8 +315,8 @@ void blit_fbo(std::shared_ptr<glowl::FramebufferObject>& org, std::shared_ptr<gl
 }
 
 
-bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallRender3DGL& cr) {
-#ifdef PROFILING
+bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender3DGL& cr) {
+#ifdef MEGAMOL_USE_PROFILING
     auto& pm = const_cast<frontend_resources::PerformanceManager&>(
         frontend_resources.get<frontend_resources::PerformanceManager>());
 #endif
@@ -453,23 +454,21 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
 
     glQueryCounter(queryID[0], GL_TIMESTAMP);*/
     if (new_data || enforce_upload_slot_.Param<core::param::BoolParam>()->Value() /* || clip_thres_slot_.IsDirty()*/) {
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         pm.set_transient_comment(
             timing_handles_[0], method_strings[static_cast<method_ut>(method)] + std::string(" ") +
                                     upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
-        pm.start_timer(timing_handles_[0], this->GetCoreInstance()->GetFrameID());
+        pm.start_timer(timing_handles_[0]);
 #endif
         if (method == method_e::COPY) {
-            std::dynamic_pointer_cast<copy_rt>(rt)->upload(
-                data_, pm, timing_handles_[2], this->GetCoreInstance()->GetFrameID());
+            std::dynamic_pointer_cast<copy_rt>(rt)->upload(data_, pm, timing_handles_[2]);
         } else if (method == method_e::COPY_VERT) {
-            std::dynamic_pointer_cast<copy_vert_rt>(rt)->upload(
-                data_, pm, timing_handles_[2], this->GetCoreInstance()->GetFrameID());
+            std::dynamic_pointer_cast<copy_vert_rt>(rt)->upload(data_, pm, timing_handles_[2]);
         } else {
             rt->upload(data_);
         }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         pm.stop_timer(timing_handles_[0]);
 #endif
 
@@ -483,11 +482,11 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
 #ifdef __SRTEST_CON_RAS__
     glEnable(GL_CONSERVATIVE_RASTERIZATION_NV);
 #endif
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     // glQueryCounter(queryID[1], GL_TIMESTAMP);
     pm.set_transient_comment(timing_handles_[1], method_strings[static_cast<method_ut>(method)] + std::string(" ") +
                                                      upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
-    pm.start_timer(timing_handles_[1], this->GetCoreInstance()->GetFrameID());
+    pm.start_timer(timing_handles_[1]);
 #endif
     /*glEnable(GL_STENCIL_TEST);
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
@@ -496,7 +495,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
     rt->render(ubo_);
     /*glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     glDisable(GL_STENCIL_TEST);*/
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     pm.stop_timer(timing_handles_[1]);
 #endif
     glDisable(GL_DEPTH_TEST);
@@ -531,7 +530,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::core_gl::view::CallR
 }
 
 
-bool megamol::moldyn_gl::rendering::SRTest::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
+bool megamol::moldyn_gl::rendering::SRTest::GetExtents(megamol::mmstd_gl::CallRender3DGL& call) {
     auto cr = &call;
     if (cr == nullptr)
         return false;
@@ -547,7 +546,7 @@ bool megamol::moldyn_gl::rendering::SRTest::GetExtents(megamol::core_gl::view::C
         cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
         /*auto const bbox = c2->AccessBoundingBoxes().ObjectSpaceBBox();
         auto const cbox = c2->AccessBoundingBoxes().ObjectSpaceClipBox();
-        
+
         cr->AccessBoundingBoxes().SetBoundingBox(lower_.x, lower_.y, lower_.z,
             upper_.x, upper_.y, upper_.z);
         cr->AccessBoundingBoxes().SetClipBox(lower_.x, lower_.y, lower_.z, upper_.x, upper_.y, upper_.z);*/
@@ -579,8 +578,8 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
 
     auto const trafo = glm::scale(glm::mat4(1.0f), glm::vec3(SCALE, SCALE, SCALE));
 
-    auto const scale_coord = [&trafo](float x, float y, float z) { return glm::vec3(trafo * glm::vec4(x, y, z, 1.0f));
-    };
+    auto const scale_coord = [&trafo](
+                                 float x, float y, float z) { return glm::vec3(trafo * glm::vec4(x, y, z, 1.0f)); };
 
     auto const scale_rad = [](float rad) { return rad * SCALE; };
 
@@ -635,8 +634,8 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
             data_.pl_data.use_global_color[pl_idx] = 0;
         } else {
             data_.pl_data.use_global_color[pl_idx] = 1;
-            data_.pl_data.global_color[pl_idx] = glm::vec4(parts.GetGlobalColour()[0]/255, parts.GetGlobalColour()[1]/255,
-                parts.GetGlobalColour()[2]/255, parts.GetGlobalColour()[3]/255);
+            data_.pl_data.global_color[pl_idx] = glm::vec4(parts.GetGlobalColour()[0] / 255,
+                parts.GetGlobalColour()[1] / 255, parts.GetGlobalColour()[2] / 255, parts.GetGlobalColour()[3] / 255);
         }
 
         if (parts.GetVertexDataType() != geocalls::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR) {
@@ -647,8 +646,7 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
                 "[SRTest] Having global radius: %f", data_.pl_data.global_radii[pl_idx]);
         } else {
             data_.pl_data.use_global_radii[pl_idx] = 0;
-            core::utility::log::Log::DefaultLog.WriteInfo(
-                "[SRTest] Having no global radius");
+            core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] Having no global radius");
         }
 
         auto const p_count = parts.GetCount();
@@ -659,7 +657,7 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
 
         //#define ADDED_STUFF
 
-        #ifdef ADDED_STUFF
+#ifdef ADDED_STUFF
         X.clear();
         X.reserve(p_count);
         Y.clear();
@@ -678,7 +676,7 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
         A.reserve(p_count);
         IDX.clear();
         IDX.reserve(p_count * 6);
-        #endif
+#endif
 
         data_.data_sizes[pl_idx] = p_count;
 
@@ -728,7 +726,7 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
             Z.push_back(z_acc->Get_f(p_idx));
             RAD.push_back(rad_acc->Get_f(p_idx));*/
 
-            #ifdef ADDED_STUFF
+#ifdef ADDED_STUFF
             X.push_back(pos.x);
             Y.push_back(pos.y);
             Z.push_back(pos.z);
@@ -744,7 +742,7 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
             IDX.push_back(p_idx * 4 + 3);
             IDX.push_back(p_idx * 4 + 3);
             IDX.push_back(p_idx * 4 + 4);
-            #endif
+#endif
         }
 
         if (mode == upload_mode::BUFFER_ARRAY) {
@@ -752,7 +750,6 @@ void megamol::moldyn_gl::rendering::SRTest::loadData(geocalls::MultiParticleData
             bufA.SetDataWithSize(positions.data(), 16, 16, parts.GetCount(), (GLuint)(2 * 1024 * 1024 * 1024 - 1));
         }
     }
-
 }
 
 
@@ -1146,8 +1143,7 @@ bool megamol::moldyn_gl::rendering::copy_rt::upload(data_package_t const& packag
 }
 
 bool megamol::moldyn_gl::rendering::copy_rt::upload(data_package_t const& package,
-    frontend_resources::PerformanceManager& pm, frontend_resources::PerformanceManager::handle_type handle,
-    frontend_resources::PerformanceManager::frame_type id) {
+    frontend_resources::PerformanceManager& pm, frontend_resources::PerformanceManager::handle_type handle) {
     auto const num_ssbos = package.positions.size();
 
     glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
@@ -1219,9 +1215,9 @@ bool megamol::moldyn_gl::rendering::copy_rt::upload(data_package_t const& packag
 
     pl_data_ = package.pl_data;
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     pm.set_transient_comment(handle, "COPY");
-    pm.start_timer(handle, id);
+    pm.start_timer(handle);
 #endif
 
     comp_program_->use();
@@ -1246,7 +1242,7 @@ bool megamol::moldyn_gl::rendering::copy_rt::upload(data_package_t const& packag
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glUseProgram(0);
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     pm.stop_timer(handle);
 #endif
 
@@ -1431,8 +1427,7 @@ bool megamol::moldyn_gl::rendering::copy_vert_rt::upload(data_package_t const& p
 }
 
 bool megamol::moldyn_gl::rendering::copy_vert_rt::upload(data_package_t const& package,
-    frontend_resources::PerformanceManager& pm, frontend_resources::PerformanceManager::handle_type handle,
-    frontend_resources::PerformanceManager::frame_type id) {
+    frontend_resources::PerformanceManager& pm, frontend_resources::PerformanceManager::handle_type handle) {
     auto const num_ssbos = package.positions.size();
 
     glDeleteBuffers(copy_bos_.size(), copy_bos_.data());
@@ -1504,9 +1499,9 @@ bool megamol::moldyn_gl::rendering::copy_vert_rt::upload(data_package_t const& p
 
     pl_data_ = package.pl_data;
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     pm.set_transient_comment(handle, "COPY_VERT");
-    pm.start_timer(handle, id);
+    pm.start_timer(handle);
 #endif
 
     comp_program_->use();
@@ -1531,7 +1526,7 @@ bool megamol::moldyn_gl::rendering::copy_vert_rt::upload(data_package_t const& p
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glUseProgram(0);
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     pm.stop_timer(handle);
 #endif
 

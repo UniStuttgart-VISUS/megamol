@@ -8,7 +8,6 @@
 #ifndef MEGAMOLCORE_ARROWRENDERER_H_INCLUDED
 #define MEGAMOLCORE_ARROWRENDERER_H_INCLUDED
 
-#include "PerformanceManager.h"
 
 #include "OpenGL_Context.h"
 #include "geometry_calls/MultiParticleDataCall.h"
@@ -39,14 +38,6 @@ using namespace megamol::core;
  */
 class ArrowRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
-#ifdef PROFILING
-    std::vector<std::string> requested_lifetime_resources() override {
-        std::vector<std::string> resources = ModuleGL::requested_lifetime_resources();
-        resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
-        return resources;
-    }
-#endif
-
     /**
      * Answer the name of this module.
      *
