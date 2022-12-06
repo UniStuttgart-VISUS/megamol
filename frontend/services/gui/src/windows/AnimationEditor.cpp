@@ -20,8 +20,8 @@
 #include "imgui_stdlib.h"
 #include "nlohmann/json.hpp"
 
-#include <fstream>
 #include <cmath>
+#include <fstream>
 
 using namespace megamol::gui;
 
@@ -150,7 +150,8 @@ bool AnimationEditor::NotifyParamChanged(
             }
             selectedFloatKey = nullptr;
         }
-        if (param_slot->Param<Vector2fParam>() || param_slot->Param<Vector3fParam>() || param_slot->Param<Vector4fParam>()) {
+        if (param_slot->Param<Vector2fParam>() || param_slot->Param<Vector3fParam>() ||
+            param_slot->Param<Vector4fParam>()) {
             const auto vec = animation::GetFloats(new_value);
             if (found_idx != -1) {
                 auto& a = std::get<animation::FloatVectorAnimation>(allAnimations[found_idx]);
@@ -286,8 +287,7 @@ std::string AnimationEditor::GenerateLuaForFrame(animation::KeyTimeType time) {
     for (auto a : allAnimations) {
         std::visit(
             [&](auto&& arg) -> void {
-                lua_commands << "mmSetParamValue(\"" << arg.GetName() << "\",[=[" << arg.GetValue(time)
-                    << "]=])\n";
+                lua_commands << "mmSetParamValue(\"" << arg.GetName() << "\",[=[" << arg.GetValue(time) << "]=])\n";
             },
             a);
     }
@@ -345,7 +345,7 @@ bool AnimationEditor::LoadFromFile(std::string file) {
 
 bool AnimationEditor::AnyParamHasKey(animation::KeyTimeType key_time) {
     bool has_key = false;
-    for (auto& a: allAnimations) {
+    for (auto& a : allAnimations) {
         std::visit([&](auto&& arg) -> void { has_key = has_key || arg.HasKey(key_time); }, a);
     }
     return has_key;
@@ -360,7 +360,7 @@ bool AnimationEditor::ExportToFile(const std::string& export_file) {
     for (auto i = animation_bounds[0]; i <= animation_bounds[1]; ++i) {
         out << GenerateLuaForFrame(i);
         out << "mmRenderNextFrame()\n";
-        switch(export_screenshot_option) {
+        switch (export_screenshot_option) {
         case 0: // never
             break;
         case 1: // every frame
@@ -755,7 +755,8 @@ void AnimationEditor::DrawInterpolation(
 }
 
 
-void AnimationEditor::DrawFloatKey(ImDrawList* dl, animation::FloatKey& key, ImU32 col, animation::VectorKey<animation::FloatKey>* parent) {
+void AnimationEditor::DrawFloatKey(
+    ImDrawList* dl, animation::FloatKey& key, ImU32 col, animation::VectorKey<animation::FloatKey>* parent) {
     const float size = 4.0f;
     const ImVec2 button_size = {8.0f, 8.0f};
     auto active_key_color = IM_COL32(255, 192, 96, 255);
@@ -1003,8 +1004,10 @@ void AnimationEditor::DrawCurves() {
                                 glm::quat q2(k2.nestedData[3].value, k2.nestedData[0].value, k2.nestedData[1].value,
                                     k2.nestedData[2].value);
                                 for (auto t = k.nestedData[0].time; t < k2.nestedData[0].time; ++t) {
-                                    auto frac_t = (t - k.nestedData[0].time) / static_cast<float>(k2.nestedData[0].time - k.nestedData[0].time);
-                                    auto frac_t1 = (t + 1 - k.nestedData[0].time) / static_cast<float>(k2.nestedData[0].time - k.nestedData[0].time);
+                                    auto frac_t = (t - k.nestedData[0].time) /
+                                                  static_cast<float>(k2.nestedData[0].time - k.nestedData[0].time);
+                                    auto frac_t1 = (t + 1 - k.nestedData[0].time) /
+                                                   static_cast<float>(k2.nestedData[0].time - k.nestedData[0].time);
                                     auto qi1 = glm::slerp(q1, q2, frac_t);
                                     auto qi2 = glm::slerp(q1, q2, frac_t1);
                                     for (int i = 0; i < 4; ++i) {

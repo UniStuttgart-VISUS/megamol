@@ -245,7 +245,7 @@ float FloatKey::CubicHermiteTangent(float value1, float outTangent1, float inTan
     //             outTangent1 * (3.0f * t2 - 4.0f * t + 1) - inTangent2 * (2.0f * t2 - 2.0f * t);
     // shortening by "degree"
     auto out = value1 * (6.0f * t2 - 6.0f * t) + value2 * (-6.0f * t2 + 6.0f * t) +
-           outTangent1 * (3.0f * t2 - 4.0f * t + 1.0f) - inTangent2 * (3.0f * t2 - 2.0f * t);
+               outTangent1 * (3.0f * t2 - 4.0f * t + 1.0f) - inTangent2 * (3.0f * t2 - 2.0f * t);
     return out / 3.0f;
 }
 

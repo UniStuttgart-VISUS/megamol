@@ -253,7 +253,8 @@ public:
                 return GetValue(my_second.nestedData[0].time);
             }
 
-            float t = static_cast<float>(time - my_first.nestedData[0].time) / static_cast<float>(my_second.nestedData[0].time - my_first.nestedData[0].time);
+            float t = static_cast<float>(time - my_first.nestedData[0].time) /
+                      static_cast<float>(my_second.nestedData[0].time - my_first.nestedData[0].time);
             glm::quat q1(first.nestedData[3].value, first.nestedData[0].value, first.nestedData[1].value,
                 first.nestedData[2].value);
             glm::quat q2(second.nestedData[3].value, second.nestedData[0].value, second.nestedData[1].value,
