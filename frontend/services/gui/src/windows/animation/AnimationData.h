@@ -169,7 +169,7 @@ template<class KeyType>
 typename KeyType::ValueType GenericAnimation<KeyType>::GetValue(KeyTimeType time) const {
     if (keys.size() < 2) {
         if (keys.empty()) {
-            return KeyType::ValueType();
+            return typename KeyType::ValueType();
         }
         return keys.begin()->second.value;
     }
