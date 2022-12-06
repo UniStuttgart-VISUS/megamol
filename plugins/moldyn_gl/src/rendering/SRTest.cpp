@@ -6,6 +6,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmstd/light/CallLight.h"
 #include "mmstd/light/DistantLight.h"
+#include "OpenGL_Context.h"
 
 
 #define SCALE 0.0001f
@@ -270,6 +271,13 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
     compute_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
     timing_handles_ = pm.add_timers(this, {upload_timer, render_timer, compute_timer});
 #endif
+    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
+    if (!ogl_ctx.isExtAvailable("GL_NV_mesh_shader")) {
+        core::utility::log::Log::DefaultLog.WriteWarn("[SRTest]: GL_NV_mesh_shader extension not available");
+    } else {
+        core::utility::log::Log::DefaultLog.WriteInfo("[SRTest]: GL_NV_mesh_shader extension is available");
+    }
+
     if (!create_shaders())
         return false;
 
