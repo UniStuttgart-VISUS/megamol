@@ -16,6 +16,8 @@
 
 #include "mesh/MeshCalls.h"
 
+#include "vtkm/Particle.h"
+
 
 typedef vislib::math::Point<float, 3> visPoint3f;
 typedef vislib::math::Vector<float, 3> visVec3f;
@@ -441,7 +443,7 @@ private:
     std::vector<glm::vec3> originalSeedPlane_;
     std::vector<glm::vec3> stpqSeedPlane_;
     std::vector<Triangle> seedPlaneTriangles_;
-    std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> seeds_;
+    std::vector<vtkm::Particle> seeds_;
 
     int planeMode_;
 

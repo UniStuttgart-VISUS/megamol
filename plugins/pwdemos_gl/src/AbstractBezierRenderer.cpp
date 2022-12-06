@@ -7,7 +7,7 @@
 
 #define _USE_MATH_DEFINES
 #include "AbstractBezierRenderer.h"
-#include "mmcore/AbstractGetData3DCall.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 #include "OpenGL_Context.h"
@@ -21,10 +21,10 @@ namespace demos_gl {
  * AbstractBezierRenderer::AbstractBezierRenderer
  */
 AbstractBezierRenderer::AbstractBezierRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , getDataSlot("getdata", "Connects to the data source")
         , objsHash(0)
-        , shader(NULL) {
+        , shader(nullptr) {
     // intentionally empty
 }
 
@@ -42,8 +42,6 @@ AbstractBezierRenderer::~AbstractBezierRenderer(void) {
  */
 bool AbstractBezierRenderer::create(void) {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
-        return false;
 
     return true;
 }
@@ -52,7 +50,7 @@ bool AbstractBezierRenderer::create(void) {
 /*
  * AbstractBezierRenderer::GetExtents
  */
-bool AbstractBezierRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool AbstractBezierRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     core::AbstractGetData3DCall* gd = this->getDataSlot.CallAs<core::AbstractGetData3DCall>();
     if ((gd != NULL) && ((*gd)(1))) {
@@ -78,7 +76,7 @@ void AbstractBezierRenderer::release(void) {
 /*
  * AbstractBezierRenderer::Render
  */
-bool AbstractBezierRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool AbstractBezierRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     if (this->shader_required() && (this->shader == NULL))
         return false;

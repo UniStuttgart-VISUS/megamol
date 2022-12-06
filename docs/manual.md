@@ -68,8 +68,7 @@ While MegaMol might work on further platforms, the development team will current
 <!-- ---------------------------------------------------------------------- -->
 ### Building from Source
 
-It is recommended to use the latest [release 1.3](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) version of the source code.
-All bleeding edge features are available in the current [main branch](https://github.com/UniStuttgart-VISUS/megamol/tree/master).
+It is recommended to use the current [main branch](https://github.com/UniStuttgart-VISUS/megamol/tree/master).
 
 **Note**: 
 The *OSPRay plugin* is currently disabled by default. 
@@ -102,7 +101,7 @@ Our CI pipeline tests the build with gcc-9 and clang-10 on Ubuntu 20.04.
 
 1. As prerequisites, following packages from the repository are required:
 
-    `$ sudo apt install cmake-curses-gui git xorg-dev libgl1-mesa-dev libglu1-mesa-dev libncurses-dev uuid-dev`
+    `$ sudo apt install cmake-curses-gui git xorg-dev libgl1-mesa-dev libglu1-mesa-dev libncurses-dev`
 
     - Hint: You can optionally install `libboost-stacktrace-dev` to enable stacktrace printout for KHR debug messages.
 

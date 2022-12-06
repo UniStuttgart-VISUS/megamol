@@ -15,6 +15,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
+#include "vislib/sys/Path.h"
 
 
 using namespace megamol;
@@ -27,7 +28,7 @@ using namespace vislib;
 
 
 CinematicView::CinematicView(void)
-        : core_gl::view::View3DGL()
+        : mmstd_gl::view::View3DGL()
         , keyframeKeeperSlot("keyframeData", "Connects to the Keyframe Keeper.")
         , renderParam("cinematic::renderAnim", "Toggle rendering of complete animation to PNG files.")
         , toggleAnimPlayParam("cinematic::playPreview", "Toggle playing animation as preview")
@@ -122,7 +123,7 @@ CinematicView::~CinematicView(void) {
 ImageWrapper CinematicView::Render(double time, double instanceTime) {
 
     // Get update data from keyframe keeper -----------------------------------
-    auto cr3d = this->_rhsRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
+    auto cr3d = this->_rhsRenderSlot.CallAs<mmstd_gl::CallRender3DGL>();
     auto ccc = this->keyframeKeeperSlot.CallAs<cinematic::CallKeyframeKeeper>();
 
     // init camera
@@ -145,7 +146,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
         // Initialise render utils once
         bool utils_success = this->utils.Initialized();
         if (!utils_success) {
-            if (this->utils.Initialise(this->GetCoreInstance())) {
+            if (this->utils.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
                 utils_success = true;
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(

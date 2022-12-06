@@ -8,26 +8,26 @@
 
 #define _USE_MATH_DEFINES 1
 
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include <GL/glu.h>
-
 #include "AOSphereRenderer.h"
+
+#include <vector>
+
+#include <GL/glu.h>
+#include <glm/ext.hpp>
+#include <omp.h>
+
 #include "OpenGL_Context.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/view/CallGetTransferFunctionGL.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd/renderer/CallClipPlane.h"
+#include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/assert.h"
 #include "vislib/math/ShallowVector.h"
-#include <glm/ext.hpp>
-#include <omp.h>
-#include <vector>
-
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
 #define CHECK_FOR_OGL_ERROR()                                                                 \
@@ -39,13 +39,15 @@
         }                                                                                     \
     } while (0)
 
+using megamol::core::utility::log::Log;
+
 namespace megamol {
 namespace demos_gl {
 /*
  * AOSphereRenderer::AOSphereRenderer
  */
 AOSphereRenderer::AOSphereRenderer(void)
-        : megamol::core_gl::view::Renderer3DModuleGL()
+        : megamol::mmstd_gl::Renderer3DModuleGL()
         , sphereShaderAOMainAxes()
         , sphereShaderAONormals()
         , getDataSlot("getdata", "Connects to the data source")
@@ -73,7 +75,7 @@ AOSphereRenderer::AOSphereRenderer(void)
     this->getDataSlot.SetCompatibleCall<protein_calls::MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
-    this->getTFSlot.SetCompatibleCall<megamol::core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->getTFSlot.SetCompatibleCall<megamol::mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
 
     this->getClipPlaneSlot.SetCompatibleCall<megamol::core::view::CallClipPlaneDescription>();
@@ -146,80 +148,41 @@ AOSphereRenderer::~AOSphereRenderer(void) {
 bool AOSphereRenderer::create(void) {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (!ogl_ctx.isExtAvailable("GL_ARB_multitexture") || !ogl_ctx.isExtAvailable("GL_EXT_framebuffer_object") ||
-        !ogl_ctx.isVersionGEQ(2, 0) ||
-        !ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions())) {
+        !ogl_ctx.isVersionGEQ(2, 0)) {
         return false;
     }
-    const char* maFragNames[] = {"AOSphere::mainaxes::fragLightAO", "AOSphere::mainaxes::fragColourAO",
-        "AOSphere::mainaxes::fragAO", "AOSphere::mainaxes::fragMultipleRT"};
-    const char* nFragNames[] = {"AOSphere::normals::fragLightAO", "AOSphere::normals::fragColourAO",
-        "AOSphere::normals::fragAO", "AOSphere::normals::fragMultipleRT"};
-    vislib::StringA shaderName("unknown");
-    vislib_gl::graphics::gl::ShaderSource vert, frag;
 
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+
+    const char* maFragNames[] = {
+        "pwdemos_gl/AOSphere/mainaxes_LightAO.frag.glsl",
+        "pwdemos_gl/AOSphere/mainaxes_ColourAO.frag.glsl",
+        "pwdemos_gl/AOSphere/mainaxes_AO.frag.glsl",
+        "pwdemos_gl/AOSphere/mainaxes_MultipleRT.frag.glsl",
+    };
+    const char* nFragNames[] = {
+        "pwdemos_gl/AOSphere/normals_LightAO.frag.glsl",
+        "pwdemos_gl/AOSphere/normals_ColourAO.frag.glsl",
+        "pwdemos_gl/AOSphere/normals_AO.frag.glsl",
+        "pwdemos_gl/AOSphere/normals_MultipleRT.frag.glsl",
+    };
 
     try {
         for (int i = 0; i < 4; i++) {
-            shaderName.Format("main axes %d", i);
-            if (!ssf->MakeShaderSource("AOSphere::mainaxes::vertex", vert)) {
-                throw vislib::Exception("Unable to load vertex shader", __FILE__, __LINE__);
-            }
-            if (!ssf->MakeShaderSource(maFragNames[i], frag)) {
-                throw vislib::Exception("Unable to load fragment shader", __FILE__, __LINE__);
-            }
+            this->sphereShaderAOMainAxes[i] = core::utility::make_glowl_shader("main axes " + std::to_string(i),
+                shader_options, "pwdemos_gl/AOSphere/mainaxes.vert.glsl", maFragNames[i]);
 
-            if (!this->sphereShaderAOMainAxes[i].Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-                throw vislib::Exception("Shader creation failed", __FILE__, __LINE__);
-            }
-
-            shaderName.Format("normals %d", i);
-            if (!ssf->MakeShaderSource("AOSphere::normals::vertex", vert)) {
-                throw vislib::Exception("Unable to load vertex shader", __FILE__, __LINE__);
-            }
-            if (!ssf->MakeShaderSource(nFragNames[i], frag)) {
-                throw vislib::Exception("Unable to load fragment shader", __FILE__, __LINE__);
-            }
-
-            if (!this->sphereShaderAONormals[i].Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-                throw vislib::Exception("Shader creation failed", __FILE__, __LINE__);
-            }
+            this->sphereShaderAONormals[i] = core::utility::make_glowl_shader(
+                "normals " + std::to_string(i), shader_options, "pwdemos_gl/AOSphere/normals.vert.glsl", nFragNames[i]);
         }
 
-    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile sphere shader (%s) (@%s): %s\n", shaderName.PeekBuffer(),
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile sphere shader (%s): %s\n", shaderName.PeekBuffer(), e.GetMsgA());
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile sphere shader (%s): Unknown exception\n", shaderName.PeekBuffer());
-        return false;
-    }
+        // Load volume texture generation shader
+        this->updateVolumeShader = core::utility::make_glowl_shader("updateVolumeShader", shader_options,
+            "pwdemos_gl/AOSphere/volume_updateVolume.vert.glsl", "pwdemos_gl/AOSphere/volume_updateVolume.frag.glsl");
 
-    // Load volume texture generation shader
-    if (!ssf->MakeShaderSource("AOSphere::volume::updateVolumeVertex", vert)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%: Unable to load vertex shader source for volume texture update shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("AOSphere::volume::updateVolumeFragment", frag)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source for volume texture update shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->updateVolumeShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "%s: Unable to create volume texture update shader: %s\n", this->ClassName(), e.GetMsgA());
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("AOSphereRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -248,7 +211,7 @@ bool AOSphereRenderer::create(void) {
 /*
  * AOSphereRenderer::GetExtents
  */
-bool AOSphereRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
+bool AOSphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     geocalls::MultiParticleDataCall* c2 = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     protein_calls::MolecularDataCall* mol = this->getDataSlot.CallAs<protein_calls::MolecularDataCall>();
     if ((c2 != NULL) && ((*c2)(1))) {
@@ -272,9 +235,9 @@ bool AOSphereRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) 
  * AOSphereRenderer::release
  */
 void AOSphereRenderer::release(void) {
-    for (unsigned int i = 0; i < 3; i++) {
-        this->sphereShaderAOMainAxes[i].Release();
-        this->sphereShaderAONormals[i].Release();
+    for (unsigned int i = 0; i < 4; i++) {
+        this->sphereShaderAOMainAxes[i].reset();
+        this->sphereShaderAONormals[i].reset();
     }
     ::glDeleteTextures(1, &this->greyTF);
     this->greyTF = 0;
@@ -290,7 +253,7 @@ void AOSphereRenderer::release(void) {
 /*
  * AOSphereRenderer::Render
  */
-bool AOSphereRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
+bool AOSphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     geocalls::MultiParticleDataCall* c2 = this->getDataSlot.CallAs<geocalls::MultiParticleDataCall>();
     protein_calls::MolecularDataCall* mol = this->getDataSlot.CallAs<protein_calls::MolecularDataCall>();
@@ -457,8 +420,7 @@ void AOSphereRenderer::resizeVolume() {
     }
 }
 
-void AOSphereRenderer::uploadCameraUniforms(
-    megamol::core_gl::view::CallRender3DGL& call, vislib_gl::graphics::gl::GLSLShader* sphereShader) {
+void AOSphereRenderer::uploadCameraUniforms(mmstd_gl::CallRender3DGL& call, glowl::GLSLProgram& sphereShader) {
 
     float viewportStuff[4];
     ::glGetFloatv(GL_VIEWPORT, viewportStuff);
@@ -481,15 +443,15 @@ void AOSphereRenderer::uploadCameraUniforms(
     glm::vec3 camRight = glm::cross(camView, camUp);
     glm::vec3 camPos = cam_pose.position;
 
-    glUniform4fvARB(sphereShader->ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(sphereShader->ParameterLocation("camIn"), 1, glm::value_ptr(camView));
-    glUniform4fvARB(sphereShader->ParameterLocation("camPosIn"), 1, glm::value_ptr(camPos));
-    glUniform3fvARB(sphereShader->ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
-    glUniform3fvARB(sphereShader->ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
-    glUniform2f(sphereShader->ParameterLocation("frustumPlanes"), cam_intrinsics.near_plane, cam_intrinsics.far_plane);
+    glUniform4fvARB(sphereShader.getUniformLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(sphereShader.getUniformLocation("camIn"), 1, glm::value_ptr(camView));
+    glUniform4fvARB(sphereShader.getUniformLocation("camPosIn"), 1, glm::value_ptr(camPos));
+    glUniform3fvARB(sphereShader.getUniformLocation("camRight"), 1, glm::value_ptr(camRight));
+    glUniform3fvARB(sphereShader.getUniformLocation("camUp"), 1, glm::value_ptr(camUp));
+    glUniform2f(sphereShader.getUniformLocation("frustumPlanes"), cam_intrinsics.near_plane, cam_intrinsics.far_plane);
 
-    glUniform4fvARB(sphereShader->ParameterLocation("clipDat"), 1, clipDat);
-    glUniform3fvARB(sphereShader->ParameterLocation("clipCol"), 1, clipCol);
+    glUniform4fvARB(sphereShader.getUniformLocation("clipDat"), 1, clipDat);
+    glUniform3fvARB(sphereShader.getUniformLocation("clipCol"), 1, clipCol);
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -503,28 +465,22 @@ void AOSphereRenderer::uploadCameraUniforms(
 /*
  * AOSphereRenderer::renderParticles
  */
-void AOSphereRenderer::renderParticles(
-    megamol::core_gl::view::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2) {
-
-    vislib_gl::graphics::gl::GLSLShader* sphereShader = NULL;
+void AOSphereRenderer::renderParticles(mmstd_gl::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2) {
 
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
-    if (this->volAccSlot.Param<megamol::core::param::EnumParam>()->Value() == 1) {
-        sphereShader = &this->sphereShaderAONormals[shadMod];
-    } else {
-        sphereShader = &this->sphereShaderAOMainAxes[shadMod];
-    }
+    bool normal = this->volAccSlot.Param<megamol::core::param::EnumParam>()->Value() == 1;
+    glowl::GLSLProgram& sphereShader = normal ? *sphereShaderAONormals[shadMod] : *sphereShaderAOMainAxes[shadMod];
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    sphereShader->Enable();
+    sphereShader.use();
 
     ::glActiveTexture(GL_TEXTURE0);
     ::glEnable(GL_TEXTURE_3D);
     ::glBindTexture(GL_TEXTURE_3D, this->volTex);
-    sphereShader->SetParameter("aoVol", 0);
+    sphereShader.setUniform("aoVol", 0);
 
     uploadCameraUniforms(call, sphereShader);
 
@@ -546,22 +502,22 @@ void AOSphereRenderer::renderParticles(
     minOSy -= rangeOSy / static_cast<float>(sy);
     minOSz -= rangeOSz / static_cast<float>(sz);
 
-    sphereShader->SetParameter("posOrigin", minOSx, minOSy, minOSz);
-    sphereShader->SetParameter("posExtents", rangeOSx, rangeOSy, rangeOSz);
+    sphereShader.setUniform("posOrigin", minOSx, minOSy, minOSz);
+    sphereShader.setUniform("posExtents", rangeOSx, rangeOSy, rangeOSz);
     float aoSampDist = this->aoStepLengthSlot.Param<megamol::core::param::FloatParam>()->Value();
-    sphereShader->SetParameter("aoSampDist",
+    sphereShader.setUniform("aoSampDist",
         aoSampDist * (c2->AccessBoundingBoxes().ObjectSpaceClipBox().Width() /
                          this->volSizeXSlot.Param<megamol::core::param::IntParam>()->Value()),
         aoSampDist * (c2->AccessBoundingBoxes().ObjectSpaceClipBox().Height() /
                          this->volSizeYSlot.Param<megamol::core::param::IntParam>()->Value()),
         aoSampDist * (c2->AccessBoundingBoxes().ObjectSpaceClipBox().Depth() /
                          this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value()));
-    sphereShader->SetParameter("aoSampFact", this->aoEvalFacSlot.Param<megamol::core::param::FloatParam>()->Value());
+    sphereShader.setUniform("aoSampFact", this->aoEvalFacSlot.Param<megamol::core::param::FloatParam>()->Value());
 
     ::glActiveTexture(GL_TEXTURE1);
 
     if (c2 != NULL) {
-        unsigned int cial = glGetAttribLocationARB(*sphereShader, "colIdx");
+        unsigned int cial = glGetAttribLocationARB(sphereShader.getHandle(), "colIdx");
 
         for (unsigned int i = 0; i < c2->GetParticleListCount(); i++) {
             geocalls::MultiParticleDataCall::Particles& parts = c2->AccessParticles(i);
@@ -596,8 +552,8 @@ void AOSphereRenderer::renderParticles(
 
                 glEnable(GL_TEXTURE_1D);
 
-                megamol::core_gl::view::CallGetTransferFunctionGL* cgtf =
-                    this->getTFSlot.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
+                megamol::mmstd_gl::CallGetTransferFunctionGL* cgtf =
+                    this->getTFSlot.CallAs<megamol::mmstd_gl::CallGetTransferFunctionGL>();
                 if ((cgtf != NULL) && ((*cgtf)())) {
                     glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
                     colTabSize = cgtf->TextureSize();
@@ -606,7 +562,7 @@ void AOSphereRenderer::renderParticles(
                     colTabSize = 2;
                 }
 
-                glUniform1iARB(sphereShader->ParameterLocation("colTab"), 1);
+                glUniform1iARB(sphereShader.getUniformLocation("colTab"), 1);
                 minC = parts.GetMinColourIndexValue();
                 maxC = parts.GetMaxColourIndexValue();
                 glColor3ub(127, 127, 127);
@@ -622,13 +578,13 @@ void AOSphereRenderer::renderParticles(
                 continue;
             case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
                 glEnableClientState(GL_VERTEX_ARRAY);
-                glUniform4fARB(sphereShader->ParameterLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC,
+                glUniform4fARB(sphereShader.getUniformLocation("inConsts1"), parts.GetGlobalRadius(), minC, maxC,
                     float(colTabSize));
                 glVertexPointer(3, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                 break;
             case geocalls::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
                 glEnableClientState(GL_VERTEX_ARRAY);
-                glUniform4fARB(sphereShader->ParameterLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
+                glUniform4fARB(sphereShader.getUniformLocation("inConsts1"), -1.0f, minC, maxC, float(colTabSize));
                 glVertexPointer(4, GL_FLOAT, parts.GetVertexDataStride(), parts.GetVertexData());
                 break;
             default:
@@ -644,7 +600,7 @@ void AOSphereRenderer::renderParticles(
         }
     }
 
-    sphereShader->Disable();
+    glUseProgram(0);
 
     ::glActiveTexture(GL_TEXTURE0);
     ::glBindTexture(GL_TEXTURE_3D, 0);
@@ -656,27 +612,23 @@ void AOSphereRenderer::renderParticles(
 /*
  * AOSphereRenderer::renderParticles
  */
-void AOSphereRenderer::renderParticles(
-    megamol::core_gl::view::CallRender3DGL& call, protein_calls::MolecularDataCall* mol) {
+void AOSphereRenderer::renderParticles(mmstd_gl::CallRender3DGL& call, protein_calls::MolecularDataCall* mol) {
 
-    vislib_gl::graphics::gl::GLSLShader* sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
-    if (this->volAccSlot.Param<megamol::core::param::EnumParam>()->Value() == 1) {
-        sphereShader = &this->sphereShaderAONormals[shadMod];
-    } else {
-        sphereShader = &this->sphereShaderAOMainAxes[shadMod];
-    }
+    bool normal = this->volAccSlot.Param<megamol::core::param::EnumParam>()->Value() == 1;
+    glowl::GLSLProgram& sphereShader = normal ? *sphereShaderAONormals[shadMod] : *sphereShaderAOMainAxes[shadMod];
+
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    sphereShader->Enable();
+    sphereShader.use();
 
     ::glActiveTexture(GL_TEXTURE0);
     ::glEnable(GL_TEXTURE_3D);
     ::glBindTexture(GL_TEXTURE_3D, this->volTex);
-    sphereShader->SetParameter("aoVol", 0);
+    sphereShader.setUniform("aoVol", 0);
 
     uploadCameraUniforms(call, sphereShader);
 
@@ -698,22 +650,22 @@ void AOSphereRenderer::renderParticles(
     minOSy -= rangeOSy / static_cast<float>(sy);
     minOSz -= rangeOSz / static_cast<float>(sz);
 
-    sphereShader->SetParameter("posOrigin", minOSx, minOSy, minOSz);
-    sphereShader->SetParameter("posExtents", rangeOSx, rangeOSy, rangeOSz);
+    sphereShader.setUniform("posOrigin", minOSx, minOSy, minOSz);
+    sphereShader.setUniform("posExtents", rangeOSx, rangeOSy, rangeOSz);
     float aoSampDist = this->aoStepLengthSlot.Param<megamol::core::param::FloatParam>()->Value();
-    sphereShader->SetParameter("aoSampDist",
+    sphereShader.setUniform("aoSampDist",
         aoSampDist * (mol->AccessBoundingBoxes().ObjectSpaceClipBox().Width() /
                          this->volSizeXSlot.Param<megamol::core::param::IntParam>()->Value()),
         aoSampDist * (mol->AccessBoundingBoxes().ObjectSpaceClipBox().Height() /
                          this->volSizeYSlot.Param<megamol::core::param::IntParam>()->Value()),
         aoSampDist * (mol->AccessBoundingBoxes().ObjectSpaceClipBox().Depth() /
                          this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value()));
-    sphereShader->SetParameter("aoSampFact", this->aoEvalFacSlot.Param<megamol::core::param::FloatParam>()->Value());
+    sphereShader.setUniform("aoSampFact", this->aoEvalFacSlot.Param<megamol::core::param::FloatParam>()->Value());
 
     ::glActiveTexture(GL_TEXTURE1);
 
     if (mol != NULL) {
-        unsigned int cial = glGetAttribLocationARB(*sphereShader, "colIdx");
+        unsigned int cial = glGetAttribLocationARB(sphereShader.getHandle(), "colIdx");
 
         float minC = 0.0f, maxC = 0.0f;
         unsigned int colTabSize = 0;
@@ -741,7 +693,7 @@ void AOSphereRenderer::renderParticles(
             this->vertSpheres[4 * cnt + 3] = mol->AtomTypes()[mol->AtomTypeIndices()[cnt]].Radius();
         }
         glEnableClientState(GL_VERTEX_ARRAY);
-        glUniform4fARB(sphereShader->ParameterLocation("inConsts1"), -1.0, minC, maxC, float(colTabSize));
+        glUniform4fARB(sphereShader.getUniformLocation("inConsts1"), -1.0, minC, maxC, float(colTabSize));
         glVertexPointer(4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
 
         glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(mol->AtomCount()));
@@ -752,7 +704,7 @@ void AOSphereRenderer::renderParticles(
         glDisable(GL_TEXTURE_1D);
     }
 
-    sphereShader->Disable();
+    glUseProgram(0);
 
     ::glActiveTexture(GL_TEXTURE0);
     ::glBindTexture(GL_TEXTURE_3D, 0);
@@ -764,27 +716,22 @@ void AOSphereRenderer::renderParticles(
 /*
  * AOSphereRenderer::renderParticlesVBO
  */
-void AOSphereRenderer::renderParticlesVBO(
-    megamol::core_gl::view::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2) {
+void AOSphereRenderer::renderParticlesVBO(mmstd_gl::CallRender3DGL& call, geocalls::MultiParticleDataCall* c2) {
 
-    vislib_gl::graphics::gl::GLSLShader* sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
-    if (this->volAccSlot.Param<megamol::core::param::EnumParam>()->Value() == 1) {
-        sphereShader = &this->sphereShaderAONormals[shadMod];
-    } else {
-        sphereShader = &this->sphereShaderAOMainAxes[shadMod];
-    }
+    bool normal = this->volAccSlot.Param<megamol::core::param::EnumParam>()->Value() == 1;
+    glowl::GLSLProgram& sphereShader = normal ? *sphereShaderAONormals[shadMod] : *sphereShaderAOMainAxes[shadMod];
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    sphereShader->Enable();
+    sphereShader.use();
 
     ::glActiveTexture(GL_TEXTURE0);
     ::glEnable(GL_TEXTURE_3D);
     ::glBindTexture(GL_TEXTURE_3D, this->volTex);
-    sphereShader->SetParameter("aoVol", 0);
+    sphereShader.setUniform("aoVol", 0);
 
     uploadCameraUniforms(call, sphereShader);
 
@@ -806,28 +753,28 @@ void AOSphereRenderer::renderParticlesVBO(
     minOSy -= rangeOSy / static_cast<float>(sy);
     minOSz -= rangeOSz / static_cast<float>(sz);
 
-    sphereShader->SetParameter("posOrigin", minOSx, minOSy, minOSz);
-    sphereShader->SetParameter("posExtents", rangeOSx, rangeOSy, rangeOSz);
+    sphereShader.setUniform("posOrigin", minOSx, minOSy, minOSz);
+    sphereShader.setUniform("posExtents", rangeOSx, rangeOSy, rangeOSz);
     float aoSampDist = this->aoStepLengthSlot.Param<megamol::core::param::FloatParam>()->Value();
-    sphereShader->SetParameter("aoSampDist",
+    sphereShader.setUniform("aoSampDist",
         aoSampDist * (c2->AccessBoundingBoxes().ObjectSpaceClipBox().Width() /
                          this->volSizeXSlot.Param<megamol::core::param::IntParam>()->Value()),
         aoSampDist * (c2->AccessBoundingBoxes().ObjectSpaceClipBox().Height() /
                          this->volSizeYSlot.Param<megamol::core::param::IntParam>()->Value()),
         aoSampDist * (c2->AccessBoundingBoxes().ObjectSpaceClipBox().Depth() /
                          this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value()));
-    sphereShader->SetParameter("aoSampFact", this->aoEvalFacSlot.Param<megamol::core::param::FloatParam>()->Value());
+    sphereShader.setUniform("aoSampFact", this->aoEvalFacSlot.Param<megamol::core::param::FloatParam>()->Value());
 
     ::glActiveTexture(GL_TEXTURE1);
 
     if (this->particleCountVBO > 0) {
-        unsigned int cial = glGetAttribLocationARB(*sphereShader, "colIdx");
+        unsigned int cial = glGetAttribLocationARB(sphereShader.getHandle(), "colIdx");
 
         glColor3ub(255, 175, 0);
 
         glEnableClientState(GL_VERTEX_ARRAY);
         glUniform4fARB(
-            sphereShader->ParameterLocation("inConsts1"), c2->AccessParticles(0).GetGlobalRadius(), 0.0f, 0.0f, 0.0f);
+            sphereShader.getUniformLocation("inConsts1"), c2->AccessParticles(0).GetGlobalRadius(), 0.0f, 0.0f, 0.0f);
 
         glBindBuffer(GL_ARRAY_BUFFER, this->particleVBO);
         glVertexPointer(3, GL_FLOAT, 0, 0);
@@ -840,7 +787,7 @@ void AOSphereRenderer::renderParticlesVBO(
         glDisable(GL_TEXTURE_1D);
     }
 
-    sphereShader->Disable();
+    glUseProgram(0);
 
     ::glActiveTexture(GL_TEXTURE0);
     ::glBindTexture(GL_TEXTURE_3D, 0);
@@ -852,27 +799,22 @@ void AOSphereRenderer::renderParticlesVBO(
 /*
  * AOSphereRenderer::renderParticlesVBO
  */
-void AOSphereRenderer::renderParticlesVBO(
-    megamol::core_gl::view::CallRender3DGL& call, protein_calls::MolecularDataCall* mol) {
+void AOSphereRenderer::renderParticlesVBO(mmstd_gl::CallRender3DGL& call, protein_calls::MolecularDataCall* mol) {
 
-    vislib_gl::graphics::gl::GLSLShader* sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
-    if (this->volAccSlot.Param<megamol::core::param::EnumParam>()->Value() == 1) {
-        sphereShader = &this->sphereShaderAONormals[shadMod];
-    } else {
-        sphereShader = &this->sphereShaderAOMainAxes[shadMod];
-    }
+    bool normal = this->volAccSlot.Param<megamol::core::param::EnumParam>()->Value() == 1;
+    glowl::GLSLProgram& sphereShader = normal ? *sphereShaderAONormals[shadMod] : *sphereShaderAOMainAxes[shadMod];
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    sphereShader->Enable();
+    sphereShader.use();
 
     ::glActiveTexture(GL_TEXTURE0);
     ::glEnable(GL_TEXTURE_3D);
     ::glBindTexture(GL_TEXTURE_3D, this->volTex);
-    sphereShader->SetParameter("aoVol", 0);
+    sphereShader.setUniform("aoVol", 0);
 
     uploadCameraUniforms(call, sphereShader);
 
@@ -894,28 +836,28 @@ void AOSphereRenderer::renderParticlesVBO(
     minOSy -= rangeOSy / static_cast<float>(sy);
     minOSz -= rangeOSz / static_cast<float>(sz);
 
-    sphereShader->SetParameter("posOrigin", minOSx, minOSy, minOSz);
-    sphereShader->SetParameter("posExtents", rangeOSx, rangeOSy, rangeOSz);
+    sphereShader.setUniform("posOrigin", minOSx, minOSy, minOSz);
+    sphereShader.setUniform("posExtents", rangeOSx, rangeOSy, rangeOSz);
     float aoSampDist = this->aoStepLengthSlot.Param<megamol::core::param::FloatParam>()->Value();
-    sphereShader->SetParameter("aoSampDist",
+    sphereShader.setUniform("aoSampDist",
         aoSampDist * (mol->AccessBoundingBoxes().ObjectSpaceClipBox().Width() /
                          this->volSizeXSlot.Param<megamol::core::param::IntParam>()->Value()),
         aoSampDist * (mol->AccessBoundingBoxes().ObjectSpaceClipBox().Height() /
                          this->volSizeYSlot.Param<megamol::core::param::IntParam>()->Value()),
         aoSampDist * (mol->AccessBoundingBoxes().ObjectSpaceClipBox().Depth() /
                          this->volSizeZSlot.Param<megamol::core::param::IntParam>()->Value()));
-    sphereShader->SetParameter("aoSampFact", this->aoEvalFacSlot.Param<megamol::core::param::FloatParam>()->Value());
+    sphereShader.setUniform("aoSampFact", this->aoEvalFacSlot.Param<megamol::core::param::FloatParam>()->Value());
 
     ::glActiveTexture(GL_TEXTURE1);
 
     if (this->particleCountVBO > 0) {
-        unsigned int cial = glGetAttribLocationARB(*sphereShader, "colIdx");
+        unsigned int cial = glGetAttribLocationARB(sphereShader.getHandle(), "colIdx");
 
         glColor3ub(255, 175, 0);
 
         glEnableClientState(GL_VERTEX_ARRAY);
         //TODO fix radius
-        glUniform4fARB(sphereShader->ParameterLocation("inConsts1"), 1.7f, 0.0f, 0.0f, 0.0f);
+        glUniform4fARB(sphereShader.getUniformLocation("inConsts1"), 1.7f, 0.0f, 0.0f, 0.0f);
 
         glBindBuffer(GL_ARRAY_BUFFER, this->particleVBO);
         glVertexPointer(3, GL_FLOAT, 0, 0);
@@ -928,7 +870,7 @@ void AOSphereRenderer::renderParticlesVBO(
         glDisable(GL_TEXTURE_1D);
     }
 
-    sphereShader->Disable();
+    glUseProgram(0);
 
     ::glActiveTexture(GL_TEXTURE0);
     ::glBindTexture(GL_TEXTURE_3D, 0);
@@ -1149,14 +1091,14 @@ void AOSphereRenderer::createVolumeGLSL(class geocalls::MultiParticleDataCall& c
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
 
-    this->updateVolumeShader.Enable();
+    this->updateVolumeShader->use();
 
     // set shader params
-    glUniform3f(this->updateVolumeShader.ParameterLocation("minOS"), minOSx, minOSy, minOSz);
-    glUniform3f(this->updateVolumeShader.ParameterLocation("rangeOS"), rangeOSx, rangeOSy, rangeOSz);
-    glUniform1f(this->updateVolumeShader.ParameterLocation("genFac"), volGenFac);
-    glUniform1f(this->updateVolumeShader.ParameterLocation("voxelVol"), voxelVol);
-    glUniform3f(this->updateVolumeShader.ParameterLocation("volSize"), float(sx), float(sy), float(sz));
+    glUniform3f(this->updateVolumeShader->getUniformLocation("minOS"), minOSx, minOSy, minOSz);
+    glUniform3f(this->updateVolumeShader->getUniformLocation("rangeOS"), rangeOSx, rangeOSy, rangeOSz);
+    glUniform1f(this->updateVolumeShader->getUniformLocation("genFac"), volGenFac);
+    glUniform1f(this->updateVolumeShader->getUniformLocation("voxelVol"), voxelVol);
+    glUniform3f(this->updateVolumeShader->getUniformLocation("volSize"), float(sx), float(sy), float(sz));
 
 #if 1
     UINT64 numParticles = 0;
@@ -1214,11 +1156,11 @@ void AOSphereRenderer::createVolumeGLSL(class geocalls::MultiParticleDataCall& c
 
     glPointSize(1.0f);
     glEnableClientState(GL_VERTEX_ARRAY);
-    glUniform1f(this->updateVolumeShader.ParameterLocation("radius"), -1.0f);
+    glUniform1f(this->updateVolumeShader->getUniformLocation("radius"), -1.0f);
     for (z = 0; z < sz; ++z) {
         // attach texture slice to FBO
         glFramebufferTexture3DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volTex, 0, z + 1);
-        glUniform1f(this->updateVolumeShader.ParameterLocation("sliceDepth"), float(z + 1));
+        glUniform1f(this->updateVolumeShader->getUniformLocation("sliceDepth"), float(z + 1));
         // set vertex pointers and draw them
         glVertexPointer(4, GL_FLOAT, 0, this->sphereSlices[z].PeekElements());
         glDrawArrays(GL_POINTS, 0, this->sphereCountSlices[z]);
@@ -1261,7 +1203,7 @@ void AOSphereRenderer::createVolumeGLSL(class geocalls::MultiParticleDataCall& c
     // END TEST
 #endif
 
-    this->updateVolumeShader.Disable();
+    glUseProgram(0);
 
     // restore viewport
     glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
@@ -1349,14 +1291,14 @@ void AOSphereRenderer::createVolumeGLSL(protein_calls::MolecularDataCall& mol) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
 
-    this->updateVolumeShader.Enable();
+    this->updateVolumeShader->use();
 
     // set shader params
-    glUniform3f(this->updateVolumeShader.ParameterLocation("minOS"), minOSx, minOSy, minOSz);
-    glUniform3f(this->updateVolumeShader.ParameterLocation("rangeOS"), rangeOSx, rangeOSy, rangeOSz);
-    glUniform1f(this->updateVolumeShader.ParameterLocation("genFac"), volGenFac);
-    glUniform1f(this->updateVolumeShader.ParameterLocation("voxelVol"), voxelVol);
-    glUniform3f(this->updateVolumeShader.ParameterLocation("volSize"), float(sx), float(sy), float(sz));
+    glUniform3f(this->updateVolumeShader->getUniformLocation("minOS"), minOSx, minOSy, minOSz);
+    glUniform3f(this->updateVolumeShader->getUniformLocation("rangeOS"), rangeOSx, rangeOSy, rangeOSz);
+    glUniform1f(this->updateVolumeShader->getUniformLocation("genFac"), volGenFac);
+    glUniform1f(this->updateVolumeShader->getUniformLocation("voxelVol"), voxelVol);
+    glUniform3f(this->updateVolumeShader->getUniformLocation("volSize"), float(sx), float(sy), float(sz));
 
     UINT64 particleCnt = 0;
 
@@ -1389,18 +1331,18 @@ void AOSphereRenderer::createVolumeGLSL(protein_calls::MolecularDataCall& mol) {
 
     glPointSize(1.0f);
     glEnableClientState(GL_VERTEX_ARRAY);
-    glUniform1f(this->updateVolumeShader.ParameterLocation("radius"), -1.0f);
+    glUniform1f(this->updateVolumeShader->getUniformLocation("radius"), -1.0f);
     for (z = 0; z < sz; ++z) {
         // attach texture slice to FBO
         glFramebufferTexture3DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volTex, 0, z + 1);
-        glUniform1f(this->updateVolumeShader.ParameterLocation("sliceDepth"), float(z + 1));
+        glUniform1f(this->updateVolumeShader->getUniformLocation("sliceDepth"), float(z + 1));
         // set vertex pointers and draw them
         glVertexPointer(4, GL_FLOAT, 0, this->sphereSlices[z].PeekElements());
         glDrawArrays(GL_POINTS, 0, this->sphereCountSlices[z]);
     }
     glDisableClientState(GL_VERTEX_ARRAY);
 
-    this->updateVolumeShader.Disable();
+    glUseProgram(0);
 
     // restore viewport
     glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);

@@ -1,9 +1,19 @@
-#ifndef CAMERA_CONTROLLER_H_INCLUDED
-#define CAMERA_CONTROLLER_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include <glm/gtx/quaternion.hpp>    // glm::rotate(quat, vector)
+#include <glm/gtx/rotate_vector.hpp> // glm::rotate(quaternion, vector)
+
+#include "KeyboardMouseInput.h"
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -13,12 +23,14 @@
 #include "mmcore/view/Camera.h"
 #include "mmcore/view/cam_typedefs.h"
 
-#include "glm/gtx/quaternion.hpp"    // glm::rotate(quat, vector)
-#include "glm/gtx/rotate_vector.hpp" // glm::rotate(quaternion, vector)
+namespace megamol::core::view {
 
-namespace megamol {
-namespace core {
-namespace view {
+using megamol::frontend_resources::Key;
+using megamol::frontend_resources::KeyAction;
+using megamol::frontend_resources::Modifier;
+using megamol::frontend_resources::Modifiers;
+using megamol::frontend_resources::MouseButton;
+using megamol::frontend_resources::MouseButtonAction;
 
 class Camera3DController {
 public:
@@ -1582,8 +1594,4 @@ private:
     float _mouseY;
 };
 
-} // namespace view
-} // namespace core
-} // namespace megamol
-
-#endif // !CAMERA_CONTROLLER_H_INCLUDED
+} // namespace megamol::core::view

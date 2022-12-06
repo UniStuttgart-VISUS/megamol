@@ -1,5 +1,4 @@
 #include "DiagramRenderer.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -29,7 +28,7 @@ using megamol::core::utility::log::Log;
  * DiagramRenderer::DiagramRenderer (CTOR)
  */
 DiagramRenderer::DiagramRenderer(void)
-        : core_gl::view::Renderer2DModuleGL()
+        : mmstd_gl::Renderer2DModuleGL()
         , dataCallerSlot("getData", "Connects the diagram rendering with data storage.")
         , selectionCallerSlot("getSelection", "Connects the diagram rendering with selection storage.")
         , hiddenCallerSlot("getHidden", "Connects the diagram rendering with visibility storage.")
@@ -235,7 +234,7 @@ bool DiagramRenderer::CalcExtents() {
     return true;
 }
 
-bool DiagramRenderer::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool DiagramRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
     // set the bounding box to 0..1
     call.AccessBoundingBoxes().SetBoundingBox(0.0f - legendOffset - legendWidth, 0.0f - 2.0f * fontSize, 0,
         this->aspectRatioParam.Param<param::FloatParam>()->Value() + fontSize, 1.0f + fontSize, 0);
@@ -252,13 +251,12 @@ bool DiagramRenderer::LoadIcon(vislib::StringA filename, int ID) {
     static sg::graphics::PngBitmapCodec pbc;
     pbc.Image() = &img;
     ::glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    void* buf = NULL;
-    SIZE_T size = 0;
 
     // if (pbc.Load(filename)) {
-    if ((size = megamol::core::utility::ResourceWrapper::LoadResource(
-             this->GetCoreInstance()->Configuration(), filename, &buf)) > 0) {
-        if (pbc.Load(buf, size)) {
+    try {
+        const auto buf = core::utility::ResourceWrapper::LoadResource(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), std::string(filename.PeekBuffer()));
+        if (pbc.Load(buf.data(), buf.size())) {
             img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
             for (unsigned int i = 0; i < img.Width() * img.Height(); i++) {
                 BYTE r = img.PeekDataAs<BYTE>()[i * 4 + 0];
@@ -276,16 +274,14 @@ bool DiagramRenderer::LoadIcon(vislib::StringA filename, int ID) {
             if (markerTextures.Last().Second()->Create(
                     img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
                 Log::DefaultLog.WriteError("could not load %s texture.", filename.PeekBuffer());
-                ARY_SAFE_DELETE(buf);
                 return false;
             }
             markerTextures.Last().Second()->SetFilter(GL_LINEAR, GL_LINEAR);
-            ARY_SAFE_DELETE(buf);
             return true;
         } else {
             Log::DefaultLog.WriteError("could not read %s texture.", filename.PeekBuffer());
         }
-    } else {
+    } catch (...) {
         Log::DefaultLog.WriteError("could not find %s texture.", filename.PeekBuffer());
     }
     return false;
@@ -518,7 +514,7 @@ bool DiagramRenderer::onHideAllButton(param::ParamSlot& p) {
 /*
  * Diagram2DRenderer::Render
  */
-bool DiagramRenderer::Render(core_gl::view::CallRender2DGL& call) {
+bool DiagramRenderer::Render(mmstd_gl::CallRender2DGL& call) {
     // get pointer to Diagram2DCall
     diagram = this->dataCallerSlot.CallAs<protein_calls::DiagramCall>();
     if (diagram == NULL)
@@ -1223,7 +1219,7 @@ void DiagramRenderer::dump() {
             } else if (m->GetType() == protein_calls::DiagramCall::DIAGRAM_MARKER_SPLIT && m->GetUserData() != NULL) {
                 vislib::Array<int>* partners = reinterpret_cast<vislib::Array<int>*>(m->GetUserData());
                 for (int p = 0; p < (int)partners->Count(); p++) {
-                    // Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "#F %u[%u]=>%u[%u] %u", s + 1, m->GetIndex(),
+                    // Log::DefaultLog.WriteInfo( "#F %u[%u]=>%u[%u] %u", s + 1, m->GetIndex(),
                     // (*partners)[p] + 1, m->GetIndex() + 1, 3);
                     int idx = localXIndexToGlobal[s][m->GetIndex()];
                     vislib::sys::WriteFormattedLineToFile(

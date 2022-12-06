@@ -7,11 +7,14 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "AbstractMultiShaderQuartzRenderer.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/CallRender2DGL.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "mmstd_gl/renderer/CallRender2DGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 
 
 namespace megamol {
@@ -20,7 +23,7 @@ namespace demos_gl {
 /**
  * QuartzPlaneRenderer
  */
-class QuartzPlaneRenderer : public core_gl::view::Renderer2DModuleGL, public AbstractMultiShaderQuartzRenderer {
+class QuartzPlaneRenderer : public mmstd_gl::Renderer2DModuleGL, public AbstractMultiShaderQuartzRenderer {
 public:
     /**
      * Answer the name of this module.
@@ -76,7 +79,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender2DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender2DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -90,7 +93,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender2DGL& call);
+    virtual bool Render(mmstd_gl::CallRender2DGL& call);
 
     /**
      * Creates a raycasting shader for the specified crystalite
@@ -99,7 +102,7 @@ protected:
      *
      * @return The shader
      */
-    virtual vislib_gl::graphics::gl::GLSLShader* makeShader(const CrystalDataCall::Crystal& c);
+    virtual std::shared_ptr<glowl::GLSLProgram> makeShader(const CrystalDataCall::Crystal& c);
 
 private:
     /** Use clipping plane or grain colour for grains */

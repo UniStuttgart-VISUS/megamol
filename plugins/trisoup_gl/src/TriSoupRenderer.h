@@ -15,7 +15,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/memutils.h"
 
@@ -27,7 +27,7 @@ namespace trisoup_gl {
 /**
  * Renderer for tri-mesh data
  */
-class TriSoupRenderer : public core_gl::view::Renderer3DModuleGL {
+class TriSoupRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -79,7 +79,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -93,7 +93,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
 private:
     /** The slot to fetch the data */

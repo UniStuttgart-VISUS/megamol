@@ -5,11 +5,22 @@
 
 megamol_plugin(mmstd_gl
   ALWAYS_BUILD
-  DEPENDS_GL
-  DEPENDS_EXTERNALS
-    glowl)
+  DEPENDS_FEATURES
+    opengl
+  DEPENDS_PLUGINS
+    mmstd)
 
 if (mmstd_gl_PLUGIN_ENABLED)
+  find_package(glowl CONFIG REQUIRED)
+  find_package(imgui CONFIG REQUIRED)
+  find_package(imgui_tex_inspect CONFIG REQUIRED)
+
+  target_link_libraries(mmstd_gl
+    PUBLIC
+      glowl::glowl
+      imgui::imgui
+      imgui_tex_inspect::imgui_tex_inspect)
+
   # Additional sources
   file(GLOB_RECURSE extra_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*.h")
   file(GLOB_RECURSE extra_source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "3rd/*.cpp")

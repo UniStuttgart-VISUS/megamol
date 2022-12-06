@@ -8,10 +8,10 @@
 #pragma once
 
 #ifndef GL_STUB
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
 #define GL_STUB(value)
-#else // WITH_GL
+#else // MEGAMOL_USE_OPENGL
 #define GL_STUB(value) \
     { return value; }
-#endif // WITH_GL
+#endif // MEGAMOL_USE_OPENGL
 #endif // GL_STUB

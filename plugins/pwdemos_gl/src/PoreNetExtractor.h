@@ -7,6 +7,10 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "AbstractQuartzModule.h"
 #include "ArxelBuffer.h"
 #include "BufferMTPConnection.h"
@@ -16,12 +20,11 @@
 #include "QuartzCrystalDataCall.h"
 #include "QuartzParticleGridDataCall.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd/renderer/CallClipPlane.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib/sys/File.h"
 #include "vislib/sys/RunnableThread.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
 
@@ -31,7 +34,7 @@ namespace demos_gl {
 /**
  * Module for extracting and rendering PoreNetwork
  */
-class PoreNetExtractor : public core_gl::view::Renderer3DModuleGL, public AbstractQuartzModule {
+class PoreNetExtractor : public mmstd_gl::Renderer3DModuleGL, public AbstractQuartzModule {
 public:
     /**
      * Answer the name of this module.
@@ -80,7 +83,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -89,7 +92,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Implementation of 'Create'.
@@ -246,7 +249,7 @@ private:
     unsigned int slice;
 
     /** The crystalite shader */
-    vislib_gl::graphics::gl::GLSLShader cryShader;
+    std::unique_ptr<glowl::GLSLProgram> cryShader;
 
     /** The pore-net slice processor thread */
     vislib::sys::RunnableThread<PoreNetSliceProcessor> sliceProcessor;

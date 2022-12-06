@@ -8,7 +8,7 @@
 #ifndef PROBE_EVENTS_H_INCLUDED
 #define PROBE_EVENTS_H_INCLUDED
 
-#include "mmcore/EventCollection.h"
+#include "mmstd/event/EventCollection.h"
 
 namespace megamol {
 namespace probe_gl {

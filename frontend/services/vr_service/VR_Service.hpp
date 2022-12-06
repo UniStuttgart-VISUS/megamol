@@ -28,9 +28,9 @@ public:
     struct Config {
         enum class Mode {
             Off,
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
             UnityKolabBW,
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#endif // MEGAMOL_USE_VR_INTEROP
         };
 
         Mode mode = Mode::Off;

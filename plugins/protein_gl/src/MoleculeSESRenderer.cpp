@@ -9,7 +9,6 @@
 
 #include "MoleculeSESRenderer.h"
 #include "glm/gtx/string_cast.hpp"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -18,10 +17,9 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/light/DistantLight.h"
-#include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/light/DistantLight.h"
+#include "mmstd/light/PointLight.h"
 #include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/StringConverter.h"
@@ -30,9 +28,7 @@
 #include "vislib/assert.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/File.h"
-#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -40,7 +36,6 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core_gl;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_gl;
@@ -219,12 +214,9 @@ bool MoleculeSESRenderer::create(void) {
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
 
-    CoreInstance* ci = this->GetCoreInstance();
-    if (!ci)
-        return false;
-
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(ci->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
             std::filesystem::path("protein_gl/moleculeses/mses_sphere.vert.glsl"),
@@ -238,13 +230,12 @@ bool MoleculeSESRenderer::create(void) {
             std::filesystem::path("protein_gl/moleculeses/mses_spherical_triangle.vert.glsl"),
             std::filesystem::path("protein_gl/moleculeses/mses_spherical_triangle.frag.glsl"));
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[MoleculeSESRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[MoleculeSESRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[MoleculeSESRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[MoleculeSESRenderer] Unable to compile shader: Unknown exception.");
     }
 
@@ -362,7 +353,7 @@ bool MoleculeSESRenderer::create(void) {
         glDisableVertexAttribArray(i);
     }
 
-    deferredProvider_.setup(this->GetCoreInstance());
+    deferredProvider_.setup(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     return true;
 }
@@ -370,7 +361,7 @@ bool MoleculeSESRenderer::create(void) {
 /*
  * MoleculeSESRenderer::GetExtents
  */
-bool MoleculeSESRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool MoleculeSESRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
@@ -387,7 +378,7 @@ bool MoleculeSESRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * MoleculeSESRenderer::Render
  */
-bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool MoleculeSESRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // temporary variables
     unsigned int cntRS = 0;
 
@@ -466,7 +457,7 @@ bool MoleculeSESRenderer::Render(core_gl::view::CallRender3DGL& call) {
                 }
             }
         }
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
             "%s: RS computed in: %f s\n", this->ClassName(), (double(clock() - t) / double(CLOCKS_PER_SEC)));
     }
     // update the data / the RS

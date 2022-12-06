@@ -465,7 +465,9 @@ bool vislib_gl::graphics::gl::FramebufferObject::IsValid(void) const throw() {
             // FBO without colour attachment cannot be valid.
             return false;
         }
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
 }
 
 

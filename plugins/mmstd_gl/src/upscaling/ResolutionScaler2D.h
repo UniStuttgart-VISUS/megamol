@@ -7,7 +7,7 @@
 #pragma once
 
 #include "ResolutionScalerBase.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 
 namespace megamol::mmstd_gl {
 
@@ -17,7 +17,7 @@ namespace megamol::mmstd_gl {
  * and returns the re-scaled framebuffer to the initial caller.
  */
 
-class ResolutionScaler2D : public ResolutionScalerBase<core_gl::view::CallRender2DGL> {
+class ResolutionScaler2D : public ResolutionScalerBase<mmstd_gl::CallRender2DGL> {
 public:
     /**
      * Answer the name of this module.

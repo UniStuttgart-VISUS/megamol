@@ -19,17 +19,19 @@ while read -r file; do
     continue
   fi
 
-  # ignore 3rd dirs in plugins
-  if [[ $file == "./plugins/"* ]]; then
-    if [[ $file == *"/3rd/"* ]]; then
+  # ignore vcpkg ports, which are taken from upstream
+  if [[ $file == "./cmake/vcpkg_ports/"* ]]; then
+    if [[ $file == *"/implot/"* ]]; then
       continue
     fi
-    if [[ $file == *"/archvis/external/"* ]]; then
-      continue
-    fi
-    if [[ $file == *"/protein/msms/"* ]]; then
-      continue
-    fi
+  fi
+
+  # ignore 3rd party dirs
+  if [[ $file == *"/3rd/"* ]]; then
+    continue
+  fi
+  if [[ $file == "./plugins/protein_gl/msms/"* ]]; then
+    continue
   fi
 
   # ignore externals
@@ -49,17 +51,17 @@ while read -r file; do
   # ClangFormat
   if [[ "$is_cpp" == true ]]; then
     if [[ $1 == "fix" ]]; then
-      clang-format-12 -i "$file"
+      clang-format-14 -i "$file"
     else
       # Workaround "set -e" and store exit code
       format_exit_code=0
-      output="$(clang-format-12 --dry-run --Werror "$file" 2>&1)" || format_exit_code=$?
+      output="$(clang-format-14 --dry-run --Werror "$file" 2>&1)" || format_exit_code=$?
       if [[ $format_exit_code -ne 0 ]]; then
         EXIT_CODE=1
         echo "::error::ClangFormat found issues in: $file"
         #echo "$output"
         # Show detailed diff. Requires ClangFormat to run again, but should mostly affect only a few files.
-        clang-format-12 "$file" | diff --color=always -u "$file" - || true
+        clang-format-14 "$file" | diff --color=always -u "$file" - || true
       fi
     fi
   fi

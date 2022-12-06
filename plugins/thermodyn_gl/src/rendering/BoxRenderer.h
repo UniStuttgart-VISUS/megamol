@@ -1,25 +1,25 @@
 #pragma once
 
-#include "mmcore/CallerSlot.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include <memory>
 
+#include <glowl/glowl.h>
+
+#include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "thermodyn/BoxDataCall.h"
 
 
-namespace megamol {
-namespace thermodyn_gl {
-namespace rendering {
+namespace megamol::thermodyn_gl::rendering {
 
-class BoxRenderer : public core_gl::view::Renderer3DModuleGL {
+class BoxRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BoxRenderer";
     }
 
@@ -28,7 +28,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for box glyphs.";
     }
 
@@ -37,7 +37,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
 #ifdef _WIN32
 #if defined(DEBUG) || defined(_DEBUG)
         HDC dc = ::wglGetCurrentDC();
@@ -50,10 +50,10 @@ public:
     }
 
     /** Ctor. */
-    BoxRenderer(void);
+    BoxRenderer();
 
     /** Dtor. */
-    virtual ~BoxRenderer(void);
+    virtual ~BoxRenderer();
 
 protected:
     /**
@@ -61,12 +61,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * The render callback.
@@ -75,9 +75,9 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(megamol::core_gl::view::CallRender3DGL& call) override;
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
-    bool GetExtents(core_gl::view::CallRender3DGL& call) override;
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     std::pair<std::vector<float>, std::vector<float>> drawData;
@@ -220,7 +220,7 @@ private:
 
     unsigned int frameID_ = 0;
 
-    vislib_gl::graphics::gl::GLSLShader boxShader_;
+    std::unique_ptr<glowl::GLSLProgram> boxShader_;
 
     GLuint vao_, vvbo_, cvbo_;
 
@@ -228,6 +228,4 @@ private:
 
 }; // end class BoxRenderer
 
-} // end namespace rendering
-} // namespace thermodyn_gl
-} // end namespace megamol
+} // namespace megamol::thermodyn_gl::rendering

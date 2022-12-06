@@ -1,5 +1,5 @@
 #include "adiosDataSource.h"
-#include "mmcore/cluster/mpi/MpiCall.h"
+#include "cluster/mpi/MpiCall.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/StringConverter.h"
@@ -45,7 +45,7 @@ adiosDataSource::~adiosDataSource() {
  */
 bool adiosDataSource::create() {
     try {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         MpiInitialized = this->initMPI();
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Initializing with MPI");
         if (MpiInitialized) {
@@ -62,7 +62,7 @@ bool adiosDataSource::create() {
         this->io = std::make_shared<adios2::IO>(adiosInst->DeclareIO("Input"));
 
     } catch (std::invalid_argument& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[adiosDataSource] Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -71,7 +71,7 @@ bool adiosDataSource::create() {
 #endif
         megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
     } catch (std::ios_base::failure& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[adiosDataSource] IO System base failure exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -80,7 +80,7 @@ bool adiosDataSource::create() {
 #endif
         megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
     } catch (std::exception& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[adiosDataSource] Exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -154,7 +154,12 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
                 return false;
             }
 
-            auto const frameIDtoLoad = cad->getFrameIDtoLoad();
+            auto const frameIDtoLoad = std::min(frameCount - 1, cad->getFrameIDtoLoad());
+            if (frameIDtoLoad != cad->getFrameIDtoLoad()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[adiosDataSource] Could not load frame %u, returning last frame (%u) instead",
+                    cad->getFrameIDtoLoad(), frameIDtoLoad);
+            }
             std::vector<adios2Params> content = variables;
             content.insert(content.end(), attributes.begin(), attributes.end());
 
@@ -203,10 +208,11 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[adiosDataSource] Time spent for reading frame: %d ms", duration);
 
-            loadedFrameID = cad->getFrameIDtoLoad();
+            loadedFrameID = frameIDtoLoad;
+            cad->setLoadedFrameID(loadedFrameID);
             // here data is loaded
         } catch (std::invalid_argument& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosDataSource] Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -215,7 +221,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 #endif
             megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
         } catch (std::ios_base::failure& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosDataSource] IO System base failure exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -224,7 +230,7 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 #endif
             megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
         } catch (std::exception& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosDataSource] Exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -259,7 +265,8 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
     if (cad == nullptr)
         return false;
 
-    if (dataHashChanged || loadedFrameID != cad->getFrameIDtoLoad()) {
+    if (dataHashChanged || loadedFrameID != cad->getFrameIDtoLoad() || this->filenameSlot.IsDirty()) {
+        this->filenameSlot.ResetDirty();
         if (loadedFrameID != cad->getFrameIDtoLoad())
             this->dataMap.clear();
 
@@ -275,8 +282,12 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             std::replace(fname.begin(), fname.end(), '/', '\\');
 #endif
 
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Opening File %s", fname.c_str());
-
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[adiosDataSource] Opening File '%s'", fname.c_str());
+            if (!std::filesystem::exists(fname)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("[adiosDataSource] File does not exist.");
+                return false;
+            }
             if (this->reader && dataHashChanged) {
                 this->reader->Close();
                 io->RemoveAllVariables();
@@ -300,6 +311,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 
             availVars.clear();
             availVars.reserve(tmp_variables.size());
+            allVariables = tmp_variables;
             variables.clear();
             variables.reserve(tmp_variables.size());
             availAttribs.clear();
@@ -338,7 +350,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             this->data_hash++;
 
         } catch (std::invalid_argument& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosDataSource] Invalid argument exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -347,7 +359,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 #endif
             megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
         } catch (std::ios_base::failure& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosDataSource] IO System base failure exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -356,7 +368,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 #endif
             megamol::core::utility::log::Log::DefaultLog.WriteError(e.what());
         } catch (std::exception& e) {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[adiosDataSource] Exception, STOPPING PROGRAM from rank %d", this->mpiRank);
 #else
@@ -367,14 +379,16 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
     }
 
     cad->setAvailableVars(availVars);
+    cad->setAllVars(allVariables);
     cad->setAvailableAttributes(availAttribs);
     if (timesteps.size() != 1) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[adiosDataSource] Detected variables with different count of time steps - Using lowest");
-        cad->setFrameCount(*std::min_element(timesteps.begin(), timesteps.end()));
+        frameCount = *std::min_element(timesteps.begin(), timesteps.end());
     } else {
-        cad->setFrameCount(timesteps[0]);
+        frameCount = timesteps[0];
     }
+    cad->setFrameCount(frameCount);
 
     cad->setDataHash(this->data_hash);
     dataHashChanged = false;
@@ -384,7 +398,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
 }
 
 bool adiosDataSource::initMPI() {
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     if (this->mpi_comm_ == MPI_COMM_NULL) {
         auto c = this->callRequestMpi.CallAs<core::cluster::mpi::MpiCall>();
         if (c != nullptr) {
@@ -428,7 +442,7 @@ bool adiosDataSource::initMPI() {
     return retval;
 #else
     return false;
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 }
 
 vislib::StringA adiosDataSource::getCommandLine(void) {

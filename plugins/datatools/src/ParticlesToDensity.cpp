@@ -18,7 +18,7 @@
 
 #include "mmcore/utility/log/Log.h"
 
-#include "simultaneous_sort.h"
+#include "simultaneous_sort/simultaneous_sort.h"
 
 #include "omp.h"
 

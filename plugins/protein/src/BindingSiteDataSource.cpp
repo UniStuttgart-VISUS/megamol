@@ -1,6 +1,5 @@
 #include "BindingSiteDataSource.h"
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
@@ -22,31 +21,31 @@ using namespace megamol::protein_calls;
  */
 BindingSiteDataSource::BindingSiteDataSource(void)
         : megamol::core::Module()
-        , dataOutSlot("dataout", "The slot providing the binding site data")
-        , pdbFilenameSlot("pdbFilename", "The PDB file containing the binding site information")
-        , colorTableFileParam("ColorTableFilename", "The filename of the color table.")
-        , enzymeModeParam("enzymeMode", "Activates the enzyme-mode, coloring only the relevant parts of the residues")
-        , gxTypeFlag("gxType", "Flag whether the protein used is a gx type or not") {
+        , dataOutSlot_("dataout", "The slot providing the binding site data")
+        , pdbFilenameSlot_("pdbFilename", "The PDB file containing the binding site information")
+        , colorTableFileParam_("ColorTableFilename", "The filename of the color table.")
+        , enzymeModeParam_("enzymeMode", "Activates the enzyme-mode, coloring only the relevant parts of the residues")
+        , gxTypeFlag_("gxType", "Flag whether the protein used is a gx type or not") {
 
-    this->pdbFilenameSlot << new param::FilePathParam("");
-    this->MakeSlotAvailable(&this->pdbFilenameSlot);
+    this->pdbFilenameSlot_ << new param::FilePathParam("");
+    this->MakeSlotAvailable(&this->pdbFilenameSlot_);
 
-    this->dataOutSlot.SetCallback(BindingSiteCall::ClassName(),
+    this->dataOutSlot_.SetCallback(BindingSiteCall::ClassName(),
         BindingSiteCall::FunctionName(BindingSiteCall::CallForGetData), &BindingSiteDataSource::getData);
-    this->MakeSlotAvailable(&this->dataOutSlot);
+    this->MakeSlotAvailable(&this->dataOutSlot_);
 
     // fill color table with default values and set the filename param
-    this->colorTableFileParam.SetParameter(
+    this->colorTableFileParam_.SetParameter(
         new param::FilePathParam("colors.txt", core::param::FilePathParam::FilePathFlags_::Flag_File_ToBeCreated));
-    this->MakeSlotAvailable(&this->colorTableFileParam);
+    this->MakeSlotAvailable(&this->colorTableFileParam_);
     ProteinColor::ReadColorTableFromFile(
-        this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorLookupTable);
+        this->colorTableFileParam_.Param<param::FilePathParam>()->Value(), this->colorLookupTable_);
 
-    this->enzymeModeParam.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->enzymeModeParam);
+    this->enzymeModeParam_.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->enzymeModeParam_);
 
-    this->gxTypeFlag.SetParameter(new param::BoolParam(true));
-    this->MakeSlotAvailable(&this->gxTypeFlag);
+    this->gxTypeFlag_.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->gxTypeFlag_);
 }
 
 /*
@@ -80,33 +79,32 @@ bool BindingSiteDataSource::getData(Call& call) {
         return false;
 
     // read and update the color table, if necessary
-    if (this->colorTableFileParam.IsDirty()) {
+    if (this->colorTableFileParam_.IsDirty()) {
         ProteinColor::ReadColorTableFromFile(
-            this->colorTableFileParam.Param<param::FilePathParam>()->Value(), this->colorLookupTable);
-        this->colorTableFileParam.ResetDirty();
-        this->enzymeModeParam.ResetDirty();
-        this->gxTypeFlag.ResetDirty();
+            this->colorTableFileParam_.Param<param::FilePathParam>()->Value(), this->colorLookupTable_);
+        this->colorTableFileParam_.ResetDirty();
+        this->enzymeModeParam_.ResetDirty();
+        this->gxTypeFlag_.ResetDirty();
     }
 
     // try to load file, if necessary
-    if (this->pdbFilenameSlot.IsDirty()) {
-        this->pdbFilenameSlot.ResetDirty();
-        this->loadPDBFile(this->pdbFilenameSlot.Param<core::param::FilePathParam>()->Value().string());
+    if (this->pdbFilenameSlot_.IsDirty()) {
+        this->pdbFilenameSlot_.ResetDirty();
+        this->loadPDBFile(this->pdbFilenameSlot_.Param<core::param::FilePathParam>()->Value().string());
     }
 
     // pass data to call, if available
-    if (this->bindingSites.IsEmpty()) {
+    if (this->bindingSites_.empty()) {
         return false;
     } else {
         // site->SetDataHash( this->datahash);
-        site->SetBindingSiteNames(&this->bindingSiteNames);
-        site->SetBindingSiteDescriptions(&this->bindingSiteDescription);
-        site->SetBindingSiteResNames(&this->bindingSiteResNames);
-        site->SetBindingSite(&this->bindingSites);
-        site->SetBindingSiteColors(
-            reinterpret_cast<vislib::Array<vislib::math::Vector<float, 3>>*>(&this->bindingSiteColors));
-        site->SetEnzymeMode(this->enzymeModeParam.Param<param::BoolParam>()->Value());
-        site->SetGXTypeFlag(this->gxTypeFlag.Param<param::BoolParam>()->Value());
+        site->SetBindingSiteNames(&this->bindingSiteNames_);
+        site->SetBindingSiteDescriptions(&this->bindingSiteDescription_);
+        site->SetBindingSiteResNames(&this->bindingSiteResNames_);
+        site->SetBindingSite(&this->bindingSites_);
+        site->SetBindingSiteColors(reinterpret_cast<std::vector<glm::vec3>*>(&this->bindingSiteColors_));
+        site->SetEnzymeMode(this->enzymeModeParam_.Param<param::BoolParam>()->Value());
+        site->SetGXTypeFlag(this->gxTypeFlag_.Param<param::BoolParam>()->Value());
         return true;
     }
 }
@@ -119,52 +117,47 @@ void BindingSiteDataSource::loadPDBFile(const std::string& filename) {
 
     // temp variables
     unsigned int i, j, lineCnt, bsIdx, /*resCnt,*/ cnt;
-    vislib::StringA line, seqNumString, tmpBSName;
+    std::string line, seqNumString, tmpBSName;
     char chainId;
     unsigned int resId;
     vislib::sys::ASCIIFileBuffer file;
-    vislib::Array<vislib::StringA> bsEntries;
-    vislib::Array<vislib::StringA> remarkEntries;
+    std::vector<std::string> bsEntries;
+    std::vector<std::string> remarkEntries;
     SIZE_T entriesCapacity = 100;
-    bsEntries.AssertCapacity(entriesCapacity);
-    bsEntries.SetCapacityIncrement(entriesCapacity);
-    remarkEntries.AssertCapacity(entriesCapacity);
-    remarkEntries.SetCapacityIncrement(entriesCapacity);
+    bsEntries.reserve(entriesCapacity);
+    remarkEntries.reserve(entriesCapacity);
 
     // reset data
-    for (i = 0; i < this->bindingSites.Count(); i++) {
-        this->bindingSites[i].Clear();
-        this->bindingSiteResNames[i].Clear();
+    for (i = 0; i < this->bindingSites_.size(); i++) {
+        this->bindingSites_[i].clear();
+        this->bindingSiteResNames_[i].clear();
     }
-    this->bindingSites.Clear();
-    this->bindingSites.AssertCapacity(20);
-    this->bindingSites.SetCapacityIncrement(10);
-    this->bindingSiteResNames.Clear();
-    this->bindingSiteResNames.AssertCapacity(20);
-    this->bindingSiteResNames.SetCapacityIncrement(10);
-    this->bindingSiteNames.Clear();
-    this->bindingSiteNames.AssertCapacity(20);
-    this->bindingSiteNames.SetCapacityIncrement(10);
+    this->bindingSites_.clear();
+    this->bindingSites_.reserve(20);
+    this->bindingSiteResNames_.clear();
+    this->bindingSiteResNames_.reserve(20);
+    this->bindingSiteNames_.clear();
+    this->bindingSiteNames_.reserve(20);
 
     // try to load the file
     if (file.LoadFile(filename.c_str())) {
         // file successfully loaded, read first frame
         lineCnt = 0;
-        while (lineCnt < file.Count() && !line.StartsWith("END")) {
+        while (lineCnt < file.Count() && !strStartsWith(line, "END")) {
             // get the current line from the file
             line = file.Line(lineCnt);
             // store all site entries
-            if (line.StartsWith("SITE") || line.StartsWith("BSITE")) {
+            if (strStartsWith(line, "SITE") || strStartsWith(line, "BSITE")) {
                 // add site entry
-                bsEntries.Add(line);
+                bsEntries.emplace_back(line);
             }
             // store all remark 800 entries
-            if (line.StartsWith("REMARK 800")) {
-                line = line.Substring(10);
-                line.TrimSpaces();
+            if (strStartsWith(line, "REMARK 800")) {
+                line = line.substr(10);
+                strTrimSpaces(line);
                 // add remark entry
-                if (!line.IsEmpty()) {
-                    remarkEntries.Add(line);
+                if (!line.empty()) {
+                    remarkEntries.emplace_back(line);
                 }
             }
             // next line
@@ -172,26 +165,26 @@ void BindingSiteDataSource::loadPDBFile(const std::string& filename) {
         }
 
         // parse site entries
-        for (unsigned int i = 0; i < bsEntries.Count(); i++) {
+        for (unsigned int i = 0; i < bsEntries.size(); i++) {
             // write binding site name (check if this is the first entry)
-            if (this->bindingSiteNames.IsEmpty()) {
-                this->bindingSiteNames.Add(bsEntries[i].Substring(11, 4));
-                this->bindingSiteNames.Last().TrimSpaces();
-                this->bindingSites.Add(vislib::Array<vislib::Pair<char, unsigned int>>(10, 10));
-                this->bindingSiteResNames.Add(vislib::Array<vislib::StringA>(10, 10));
+            if (this->bindingSiteNames_.empty()) {
+                this->bindingSiteNames_.emplace_back(bsEntries[i].substr(11, 4));
+                strTrimSpaces(this->bindingSiteNames_.back());
+                this->bindingSites_.emplace_back(std::vector<std::pair<char, unsigned int>>(10));
+                this->bindingSiteResNames_.emplace_back(std::vector<std::string>(10));
                 bsIdx = 0;
             } else {
                 // check if next entry is still the same binding site
-                tmpBSName = bsEntries[i].Substring(11, 4);
-                tmpBSName.TrimSpaces();
-                if (!tmpBSName.Equals(bindingSiteNames.Last())) {
-                    seqNumString = bsEntries[i].Substring(7, 3);
-                    seqNumString.TrimSpaces();
-                    if (atoi(seqNumString) == 1) {
-                        this->bindingSiteNames.Add(bsEntries[i].Substring(11, 4));
-                        this->bindingSiteNames.Last().TrimSpaces();
-                        this->bindingSites.Add(vislib::Array<vislib::Pair<char, unsigned int>>(10, 10));
-                        this->bindingSiteResNames.Add(vislib::Array<vislib::StringA>(10, 10));
+                tmpBSName = bsEntries[i].substr(11, 4);
+                strTrimSpaces(tmpBSName);
+                if (tmpBSName != bindingSiteNames_.back()) {
+                    seqNumString = bsEntries[i].substr(7, 3);
+                    strTrimSpaces(seqNumString);
+                    if (std::stoi(seqNumString) == 1) {
+                        this->bindingSiteNames_.emplace_back(bsEntries[i].substr(11, 4));
+                        strTrimSpaces(this->bindingSiteNames_.back());
+                        this->bindingSites_.emplace_back(std::vector<std::pair<char, unsigned int>>(10));
+                        this->bindingSiteResNames_.emplace_back(std::vector<std::string>(10));
                         bsIdx++;
                     }
                 }
@@ -215,33 +208,33 @@ void BindingSiteDataSource::loadPDBFile(const std::string& filename) {
             // for( j = 0; j < resCnt; j++ ) {
             for (j = 0; j < 4; j++) {
                 // resName
-                line = bsEntries[i].Substring(18 + 11 * cnt, 3);
-                line.TrimSpaces();
-                if (line.IsEmpty())
+                line = bsEntries[i].substr(18 + 11 * cnt, 3);
+                strTrimSpaces(line);
+                if (line.empty())
                     break;
-                this->bindingSiteResNames[bsIdx].Add(line);
+                this->bindingSiteResNames_[bsIdx].emplace_back(line);
                 // chainID
-                line = bsEntries[i].Substring(22 + 11 * cnt, 1);
+                line = bsEntries[i].substr(22 + 11 * cnt, 1);
                 chainId = line[0];
                 // seq (res seq num)
-                line = bsEntries[i].Substring(23 + 11 * cnt, 4);
-                line.TrimSpaces();
-                resId = static_cast<unsigned int>(atoi(line));
+                line = bsEntries[i].substr(23 + 11 * cnt, 4);
+                strTrimSpaces(line);
+                resId = static_cast<unsigned int>(std::stoi(line));
                 // add binding site information
-                this->bindingSites[bsIdx].Add(vislib::Pair<char, unsigned int>(chainId, resId));
+                this->bindingSites_[bsIdx].emplace_back(std::pair<char, unsigned int>(chainId, resId));
                 cnt++;
             }
         }
         // get binding site descriptons and set colors
-        this->bindingSiteDescription.SetCount(this->bindingSiteNames.Count());
-        this->bindingSiteColors.resize(this->bindingSiteNames.Count());
-        for (unsigned int i = 0; i < this->bindingSiteNames.Count(); i++) {
-            this->bindingSiteDescription[i] =
-                this->ExtractBindingSiteDescripton(this->bindingSiteNames[i], remarkEntries);
-            this->bindingSiteColors[i] = this->colorLookupTable[i % this->colorLookupTable.size()];
+        this->bindingSiteDescription_.resize(this->bindingSiteNames_.size());
+        this->bindingSiteColors_.resize(this->bindingSiteNames_.size());
+        for (unsigned int i = 0; i < this->bindingSiteNames_.size(); i++) {
+            this->bindingSiteDescription_[i] =
+                this->ExtractBindingSiteDescripton(this->bindingSiteNames_[i], remarkEntries);
+            this->bindingSiteColors_[i] = this->colorLookupTable_[i % this->colorLookupTable_.size()];
         }
 
-        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "Bindings Site count: %i", bindingSiteNames.Count()); // DEBUG
+        Log::DefaultLog.WriteInfo("Bindings Site count: %i", bindingSiteNames_.size()); // DEBUG
     }
 }
 
@@ -249,18 +242,18 @@ void BindingSiteDataSource::loadPDBFile(const std::string& filename) {
 /*
  *
  */
-vislib::StringA BindingSiteDataSource::ExtractBindingSiteDescripton(
-    vislib::StringA bsName, vislib::Array<vislib::StringA> remarkArray) {
-    vislib::StringA retStr("");
-    for (unsigned int i = 0; i < remarkArray.Count(); i++) {
+std::string BindingSiteDataSource::ExtractBindingSiteDescripton(
+    std::string bsName, std::vector<std::string> remarkArray) {
+    std::string retStr("");
+    for (unsigned int i = 0; i < remarkArray.size(); i++) {
         // search for binding site name
-        if (remarkArray[i].EndsWith(bsName)) {
-            if ((i + 2) < remarkArray.Count() && remarkArray[i + 2].StartsWith("SITE_DESCRIPTION:")) {
-                retStr = remarkArray[i + 2].Substring(17);
-                retStr.TrimSpaces();
-                remarkArray.RemoveAt(i);
-                remarkArray.RemoveAt(i);
-                remarkArray.RemoveAt(i);
+        if (strEndsWith(remarkArray[i], bsName)) {
+            if ((i + 2) < remarkArray.size() && strStartsWith(remarkArray[i + 2], "SITE_DESCRIPTION:")) {
+                retStr = remarkArray[i + 2].substr(17);
+                strTrimSpaces(retStr);
+                remarkArray.erase(remarkArray.begin() + i);
+                remarkArray.erase(remarkArray.begin() + i);
+                remarkArray.erase(remarkArray.begin() + i);
                 return retStr;
             }
         }

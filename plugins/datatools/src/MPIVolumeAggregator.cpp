@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 #include "MPIVolumeAggregator.h"
+#include "cluster/mpi/MpiCall.h"
 #include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "vislib/sys/SystemInformation.h"
 #include <chrono>
@@ -56,7 +56,7 @@ bool datatools::MPIVolumeAggregator::manipulateData(
                                         // original data will be unlocked through outData
 
 // without mpi, this module does nothing at all
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     bool useMpi = initMPI();
 
     if (!useMpi) {
@@ -102,7 +102,7 @@ bool datatools::MPIVolumeAggregator::manipulateData(
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "MPIVolumeAggregator: multi-component volume detected! Computing min/max density on the first component "
             "only. Op %s is applied on all components.",
-            this->operatorSlot.Param<core::param::EnumParam>()->getMap()[opVal].PeekBuffer());
+            this->operatorSlot.Param<core::param::EnumParam>()->getMap()[opVal].c_str());
     }
     switch (opVal) {
     case 0:
@@ -164,14 +164,14 @@ bool datatools::MPIVolumeAggregator::manipulateData(
     metadata.MinValues[0] = globalmin;
     metadata.MaxValues[0] = globalmax;
     outData.SetMetadata(&metadata);
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
 
     return true;
 }
 
 bool datatools::MPIVolumeAggregator::initMPI() {
     bool retval = false;
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     if (this->comm == MPI_COMM_NULL) {
         auto c = this->callRequestMpi.CallAs<core::cluster::mpi::MpiCall>();
         if (c != nullptr) {
@@ -200,7 +200,7 @@ bool datatools::MPIVolumeAggregator::initMPI() {
 
     /* Determine success of the whole operation. */
     retval = (this->comm != MPI_COMM_NULL);
-#endif /* WITH_MPI */
+#endif /* MEGAMOL_USE_MPI */
     return retval;
 }
 

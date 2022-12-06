@@ -6,10 +6,10 @@
  */
 
 #include "DataSetTimeRewriteModule.h"
-#include "mmcore/AbstractGetData3DCall.h"
-#include "mmcore/CoreInstance.h"
+#include "PluginsResource.h"
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/param/IntParam.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 #include <algorithm>
 
 using namespace megamol;
@@ -60,7 +60,8 @@ datatools::DataSetTimeRewriteModule::~DataSetTimeRewriteModule(void) {
  * datatools::DataSetTimeRewriteModule::create
  */
 bool datatools::DataSetTimeRewriteModule::create(void) {
-    for (auto cd : this->GetCoreInstance()->GetCallDescriptionManager()) {
+    auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
+    for (auto cd : pluginsRes.all_call_descriptions) {
         if (IsCallDescriptionCompatible(cd)) {
             this->outDataSlot.SetCallback(cd->ClassName(), "GetData", &DataSetTimeRewriteModule::getDataCallback);
             this->outDataSlot.SetCallback(cd->ClassName(), "GetExtent", &DataSetTimeRewriteModule::getExtentCallback);
@@ -108,14 +109,16 @@ bool datatools::DataSetTimeRewriteModule::getDataCallback(core::Call& caller) {
     int maxF = this->lastFrameSlot.Param<core::param::IntParam>()->Value();
     int lenF = this->frameStepSlot.Param<core::param::IntParam>()->Value();
 
-    this->GetCoreInstance()->GetCallDescriptionManager().AssignmentCrowbar(ggdc, pgdc);
+    auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
+
+    pluginsRes.all_call_descriptions.AssignmentCrowbar(ggdc, pgdc);
     // Change time code
     ggdc->SetFrameID(minF + pgdc->FrameID() * lenF, pgdc->IsFrameForced());
 
     if (!(*ggdc)(0))
         return false;
 
-    this->GetCoreInstance()->GetCallDescriptionManager().AssignmentCrowbar(pgdc, ggdc);
+    pluginsRes.all_call_descriptions.AssignmentCrowbar(pgdc, ggdc);
     ggdc->SetUnlocker(nullptr, false);
     // Change time code
     unsigned int fid = ggdc->FrameID();
@@ -149,14 +152,16 @@ bool datatools::DataSetTimeRewriteModule::getExtentCallback(core::Call& caller) 
     int maxF = this->lastFrameSlot.Param<core::param::IntParam>()->Value();
     int lenF = this->frameStepSlot.Param<core::param::IntParam>()->Value();
 
-    this->GetCoreInstance()->GetCallDescriptionManager().AssignmentCrowbar(ggdc, pgdc);
+    auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
+
+    pluginsRes.all_call_descriptions.AssignmentCrowbar(ggdc, pgdc);
     // Change time code
     ggdc->SetFrameID(minF + pgdc->FrameID() * lenF);
 
     if (!(*ggdc)(1))
         return false;
 
-    this->GetCoreInstance()->GetCallDescriptionManager().AssignmentCrowbar(pgdc, ggdc);
+    pluginsRes.all_call_descriptions.AssignmentCrowbar(pgdc, ggdc);
     ggdc->SetUnlocker(nullptr, false);
     // Change time code
     unsigned int fid = ggdc->FrameID();
@@ -181,7 +186,8 @@ bool datatools::DataSetTimeRewriteModule::checkConnections(core::Call* outCall) 
     core::Call* inCall = this->inDataSlot.CallAs<core::Call>();
     if ((inCall == NULL) || (outCall == NULL))
         return false;
-    for (auto cd : this->GetCoreInstance()->GetCallDescriptionManager()) {
+    auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
+    for (auto cd : pluginsRes.all_call_descriptions) {
         if (IsCallDescriptionCompatible(cd)) {
             if (cd->IsDescribing(inCall) && cd->IsDescribing(outCall))
                 return true;

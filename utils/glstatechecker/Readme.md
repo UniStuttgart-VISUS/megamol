@@ -1,7 +1,7 @@
 ## GLStateChecker.py
 
 This utility automatically checks the GL state when a callback of a Renderer[23]DModule is entered and left. Same applies to Create(). To use it, follow these steps:
-1. compile MegaMol after uncommenting `#define RIG_RENDERCALLS_WITH_DEBUGGROUPS` in core\include\mmcore\RigRendering.h
+1. compile MegaMol after enabling MEGAMOL_USE_OPENGL_DEBUGGROUPS in CMake
 1. have Python 3.7 or newer installed
 1. have jsondiff installed `pip install jsondiff --user`
 1. install apitrace https://apitrace.github.io/ somewhere

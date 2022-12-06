@@ -33,14 +33,13 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 #include "mmcore/utility/log/Log.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #include "mmcore/view/Input.h"
 
@@ -771,7 +770,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
             gausslim, false);
 
         if (rc != 0) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
+            Log::DefaultLog.WriteError(
                 "%s::CalcDensityTex: Quicksurf class returned val (number of data points %u)!= 0\n", this->ClassName(),
                 gridPos.Count() / 4);
             return false;
@@ -821,12 +820,11 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcDensityTex(
         // Check for opengl error
         GLenum err = glGetError();
         if (err != GL_NO_ERROR) {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "%s::CalcDensityMap: glError %s\n", this->ClassName(), gluErrorString(err));
+            Log::DefaultLog.WriteError("%s::CalcDensityMap: glError %s\n", this->ClassName(), gluErrorString(err));
             return false;
         }
 
-        //        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: time for computing density map: %f",
+        //        Log::DefaultLog.WriteInfo( "%s: time for computing density map: %f",
         //                this->ClassName(),
         //                (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
 
@@ -923,9 +921,8 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
 
     cudaErr = protein_cuda::CUDASetCurlParams(&this->params);
     if (cudaErr != cudaSuccess) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s::CalcMagCurlTex: unable to copy grid params to device memory (%s)\n", this->ClassName(),
-            cudaGetErrorString(cudaErr));
+        Log::DefaultLog.WriteError("%s::CalcMagCurlTex: unable to copy grid params to device memory (%s)\n",
+            this->ClassName(), cudaGetErrorString(cudaErr));
         return false;
     }
 
@@ -937,7 +934,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
         cqs->getColorMap(), this->gridCurlD, this->gridCurlMagD, nVoxels, this->gridSpacing);
 
     if (cudaErr != cudaSuccess) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s::CalcMagCurlTex: unable to compute curl vector magnitude (%s)\n",
+        Log::DefaultLog.WriteError("%s::CalcMagCurlTex: unable to compute curl vector magnitude (%s)\n",
             this->ClassName(), cudaGetErrorString(cudaErr));
         return false;
     }
@@ -967,15 +964,15 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcMagCurlTex() {
     glBindTexture(GL_TEXTURE_3D, 0);
     glDisable(GL_TEXTURE_3D);
 
-    //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%s: time for computing curl: %f",
+    //    Log::DefaultLog.WriteInfo( "%s: time for computing curl: %f",
     //            this->ClassName(),
     //            (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
 
     // Check for opengl error
     glErr = glGetError();
     if (glErr != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s::CalcMagCurlTex: unable to setup curl texture (glError %s)\n",
-            this->ClassName(), gluErrorString(glErr));
+        Log::DefaultLog.WriteError("%s::CalcMagCurlTex: unable to setup curl texture (glError %s)\n", this->ClassName(),
+            gluErrorString(glErr));
         return false;
     }
 
@@ -1095,8 +1092,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid(
 
 
     if (rc != 0) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s::CalcUniGrid: Quicksurf class returned val != 0\n", this->ClassName());
+        Log::DefaultLog.WriteError("%s::CalcUniGrid: Quicksurf class returned val != 0\n", this->ClassName());
         this->recalcGrid = false;
         return false;
     }
@@ -1116,7 +1112,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid(
         }
     }*/
 
-    //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    //    Log::DefaultLog.WriteInfo(
     //            "%s: time for computing uni grid %f",
     //            this->ClassName(),
     //            (double(clock()-t)/double(CLOCKS_PER_SEC))); // DEBUG
@@ -1142,8 +1138,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CalcUniGrid(
     // Check for opengl error
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s::CalcUniGrid: glError %s\n", this->ClassName(), gluErrorString(err));
+        Log::DefaultLog.WriteError("%s::CalcUniGrid: glError %s\n", this->ClassName(), gluErrorString(err));
 
         delete[] gridDataPos;
         delete[] gridData;
@@ -1243,7 +1238,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::ApplyPosFilter(const protein_
 
     this->recalcArrowData = true;
 
-    //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    //    Log::DefaultLog.WriteInfo(
     //            "%s: done filtering - #atoms %u, #edges %u",
     //            this->ClassName(),
     //            this->visAtomIdx.Count(),
@@ -1272,185 +1267,41 @@ bool protein_cuda::CrystalStructureVolumeRenderer::create(void) {
         return false;
     }*/
 
-    // Load shader sources
-    ShaderSource vertSrc, fragSrc, geomSrc;
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
-    core::CoreInstance* ci = this->GetCoreInstance();
-    if (!ci)
-        return false;
-
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    if (!ssf->MakeShaderSource("scivis::slice::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load vertex shader source", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("scivis::slice::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to load fragment shader source", this->ClassName());
-        return false;
-    }
     try {
-        if (!this->vrShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count()))
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        this->vrShader = core::utility::make_glowl_shader(
+            "vrShader", shader_options, "protein_cuda/scivis/slice.vert.glsl", "protein_cuda/scivis/slice.frag.glsl");
 
-    // Load sphere vertex shader
-    if (!ssf->MakeShaderSource("protein_cuda::std::sphereVertex", vertSrc)) {
+        this->sphereShader = core::utility::make_glowl_shader("sphereShader", shader_options,
+            "protein_cuda/protein_cuda/std_sphere.vert.glsl", "protein_cuda/protein_cuda/std_sphere.frag.glsl");
 
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
-        return false;
-    }
-    // Load sphere fragment shader
-    if (!ssf->
-         //MakeShaderSource("protein_cuda::std::sphereFragmentFog", fragSrc)) {
-         MakeShaderSource("protein_cuda::std::sphereFragment", fragSrc)) {
+        this->rcShader = core::utility::make_glowl_shader("rcShader", shader_options,
+            "protein_cuda/scivis/raycasting.vert.glsl", "protein_cuda/scivis/raycasting.frag.glsl");
 
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->sphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        this->rcShaderDebug = core::utility::make_glowl_shader("rcShaderDebug", shader_options,
+            "protein_cuda/scivis/raycastingDebug.vert.glsl", "protein_cuda/scivis/raycastingDebug.frag.glsl");
 
-    // Load raycasting vertex shader
-    if (!ssf->MakeShaderSource("scivis::raycasting::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
-        return false;
-    }
-    // Load raycasting fragment shader
-    if (!ssf->MakeShaderSource("scivis::raycasting::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->rcShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        this->arrowShader = core::utility::make_glowl_shader("arrowShader", shader_options,
+            "protein_cuda/protein_cuda/std_arrow.vert.glsl", "protein_cuda/protein_cuda/std_arrow.geom.glsl",
+            "protein_cuda/protein_cuda/std_arrow.frag.glsl");
 
-    // Load raycasting vertex shader
-    if (!ssf->MakeShaderSource("scivis::raycasting::vertexDebug", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
-        return false;
-    }
-    // Load raycasting fragment shader
-    if (!ssf->MakeShaderSource("scivis::raycasting::fragmentDebug", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for the raycasting shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->rcShaderDebug.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create the raycasting shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        this->cylinderShader = core::utility::make_glowl_shader("cylinderShader", shader_options,
+            "protein_cuda/protein_cuda/std_cylinder.vert.glsl", "protein_cuda/protein_cuda/std_cylinder.frag.glsl");
 
-    // Load alternative arrow shader (uses geometry shader)
-    if (!ssf->MakeShaderSource("protein_cuda::std::arrowVertexGeom", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for arrow shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein_cuda::std::arrowGeom", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for arrow shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein_cuda::std::arrowFragmentGeom", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for arrow shader");
-        return false;
-    }
-    this->arrowShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    this->arrowShader.Link();
+        this->pplShader = core::utility::make_glowl_shader("pplShader", shader_options,
+            "protein_cuda/protein_cuda/std_perpixellight.vert.glsl",
+            "protein_cuda/protein_cuda/std_perpixellight.frag.glsl");
 
-    // Load cylinder vertex shader
-    if (!ssf->MakeShaderSource("protein_cuda::std::cylinderVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cylinder shader");
+        // TODO
+        this->pplShaderClip = core::utility::make_glowl_shader("pplShaderClip", shader_options,
+            "protein_cuda/scivis/perpixellight.vert.glsl", "protein_cuda/scivis/perpixellight.frag.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("CrystalStructureVolumeRenderer: " + std::string(e.what())).c_str());
         return false;
     }
-    // Load cylinder fragment shader
-    if (!ssf->MakeShaderSource("protein_cuda::std::cylinderFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cylinder shader");
-        return false;
-    }
-    try {
-        if (!this->cylinderShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create cylinder shader: %s\n", e.GetMsgA());
-        return false;
-    }
-
-    // Load per pixel lighting shader
-    if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightVertex", vertSrc)) {
-
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
-        return false;
-    }
-
-    if (!ssf->MakeShaderSource("protein_cuda::std::perpixellightFragment", fragSrc)) {
-
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->pplShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create shader for per pixel lighting: %s\n",
-            this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-
-    // TODO
-    if (!ssf->MakeShaderSource("scivis::ppl::perpixellightVertex", vertSrc)) {
-
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
-        return false;
-    }
-
-    if (!ssf->MakeShaderSource("scivis::ppl::perpixellightFragment", fragSrc)) {
-
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for per pixel lighting", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->pplShaderClip.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create shader for per pixel lighting: %s\n",
-            this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
 
     return true;
 }
@@ -1464,8 +1315,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CreateFbo(UINT width, UINT he
     using namespace vislib::sys;
     using namespace vislib_gl::graphics::gl;
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-        megamol::core::utility::log::Log::LEVEL_INFO, "%s: (re)creating raycasting fbo.", this->ClassName());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("%s: (re)creating raycasting fbo.", this->ClassName());
 
     glEnable(GL_TEXTURE_2D);
 
@@ -1500,8 +1350,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CreateSrcFbo(size_t width, si
     using namespace vislib::sys;
     using namespace vislib_gl::graphics::gl;
 
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-        megamol::core::utility::log::Log::LEVEL_INFO, "%s: (re)creating source fbo.", this->ClassName());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("%s: (re)creating source fbo.", this->ClassName());
 
     glEnable(GL_TEXTURE_2D);
 
@@ -1710,7 +1559,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::FilterVecField(
 /*
  * protein_cuda::CrystalStructureVolumeRenderer::GetExtents
  */
-bool protein_cuda::CrystalStructureVolumeRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool protein_cuda::CrystalStructureVolumeRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     protein_calls::CrystalStructureDataCall* dc =
         this->dataCallerSlot.CallAs<protein_calls::CrystalStructureDataCall>();
     if (dc == NULL)
@@ -1774,7 +1623,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::InitLIC() {
     // Check for opengl error
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s::InitLIC: glError %s\n", this->ClassName(), gluErrorString(err));
+        Log::DefaultLog.WriteError("%s::InitLIC: glError %s\n", this->ClassName(), gluErrorString(err));
         return false;
     }
 
@@ -1787,13 +1636,13 @@ bool protein_cuda::CrystalStructureVolumeRenderer::InitLIC() {
  */
 void protein_cuda::CrystalStructureVolumeRenderer::release(void) {
     this->FreeBuffs();
-    this->vrShader.Release();
-    this->sphereShader.Release();
-    this->arrowShader.Release();
-    this->cylinderShader.Release();
-    this->rcShader.Release();
-    this->rcShaderDebug.Release();
-    this->pplShader.Release();
+    this->vrShader.reset();
+    this->sphereShader.reset();
+    this->arrowShader.reset();
+    this->cylinderShader.reset();
+    this->rcShader.reset();
+    this->rcShaderDebug.reset();
+    this->pplShader.reset();
     if (this->cudaqsurf != NULL) {
         CUDAQuickSurf* cqs = (CUDAQuickSurf*)this->cudaqsurf;
         delete cqs;
@@ -1804,7 +1653,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::release(void) {
 /*
  * protein_cuda::CrystalStructureVolumeRenderer::Render
  */
-bool protein_cuda::CrystalStructureVolumeRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool protein_cuda::CrystalStructureVolumeRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     using namespace vislib::math;
     GLenum err;
 
@@ -1819,7 +1668,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core_gl::view::CallRen
 
     // Update parameters if necessary
     if (!this->UpdateParams(dc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to update parameters", this->ClassName());
+        Log::DefaultLog.WriteError("%s: Unable to update parameters", this->ClassName());
         return false;
     }
 
@@ -1993,7 +1842,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core_gl::view::CallRen
         0) {
 
         if (!this->InitLIC()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to setup random texture", this->ClassName());
+            Log::DefaultLog.WriteError("%s: Unable to setup random texture", this->ClassName());
             return false;
         }
     }
@@ -2054,7 +1903,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core_gl::view::CallRen
     // Render arrow glyphs representing the vector field
     if (this->vecRM == VEC_ARROWS) {
         if (!this->RenderVecFieldArrows(dc, this->posInter.PeekElements(), this->atomColor.PeekElements())) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to render arrow glyphs", this->ClassName());
+            Log::DefaultLog.WriteError("%s: Unable to render arrow glyphs", this->ClassName());
         }
     }
 
@@ -2161,23 +2010,23 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core_gl::view::CallRen
         float texCoordY = (this->yPlane - gridMinCoord[1]) / (gridMaxCoord[1] - gridMinCoord[1]);
         float texCoordZ = (this->zPlane - gridMinCoord[2]) / (gridMaxCoord[2] - gridMinCoord[2]);
 
-        this->vrShader.Enable();
-        glUniform1iARB(this->vrShader.ParameterLocation("uniGridTex"), 0);
-        glUniform1iARB(this->vrShader.ParameterLocation("curlMagTex"), 1);
-        glUniform1iARB(this->vrShader.ParameterLocation("randNoiseTex"), 2);
-        glUniform1iARB(this->vrShader.ParameterLocation("densityMapTex"), 3);
-        glUniform1iARB(this->vrShader.ParameterLocation("colorTex"), 4);
-        glUniform1iARB(this->vrShader.ParameterLocation("sliceRM"), static_cast<int>(this->sliceRM));
-        glUniform1fARB(this->vrShader.ParameterLocation("licDirScl"), this->licDirScl);
-        glUniform1iARB(this->vrShader.ParameterLocation("licLen"), this->licStreamlineLength);
-        glUniform1fARB(this->vrShader.ParameterLocation("dataScl"), this->sliceDataScl);
-        glUniform1fARB(this->vrShader.ParameterLocation("licContrast"), this->licContrastStretching);
-        glUniform1fARB(this->vrShader.ParameterLocation("licBrightness"), this->licBright);
-        glUniform1fARB(this->vrShader.ParameterLocation("licTCScl"), this->licTCScl);
+        this->vrShader->use();
+        glUniform1iARB(this->vrShader->getUniformLocation("uniGridTex"), 0);
+        glUniform1iARB(this->vrShader->getUniformLocation("curlMagTex"), 1);
+        glUniform1iARB(this->vrShader->getUniformLocation("randNoiseTex"), 2);
+        glUniform1iARB(this->vrShader->getUniformLocation("densityMapTex"), 3);
+        glUniform1iARB(this->vrShader->getUniformLocation("colorTex"), 4);
+        glUniform1iARB(this->vrShader->getUniformLocation("sliceRM"), static_cast<int>(this->sliceRM));
+        glUniform1fARB(this->vrShader->getUniformLocation("licDirScl"), this->licDirScl);
+        glUniform1iARB(this->vrShader->getUniformLocation("licLen"), this->licStreamlineLength);
+        glUniform1fARB(this->vrShader->getUniformLocation("dataScl"), this->sliceDataScl);
+        glUniform1fARB(this->vrShader->getUniformLocation("licContrast"), this->licContrastStretching);
+        glUniform1fARB(this->vrShader->getUniformLocation("licBrightness"), this->licBright);
+        glUniform1fARB(this->vrShader->getUniformLocation("licTCScl"), this->licTCScl);
         if (this->projectVec2D)
-            glUniform1iARB(this->vrShader.ParameterLocation("licProj2D"), 1);
+            glUniform1iARB(this->vrShader->getUniformLocation("licProj2D"), 1);
         else
-            glUniform1iARB(this->vrShader.ParameterLocation("licProj2D"), 0);
+            glUniform1iARB(this->vrShader->getUniformLocation("licProj2D"), 0);
 
 
         glEnable(GL_TEXTURE_3D);
@@ -2199,7 +2048,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core_gl::view::CallRen
         glBindTexture(GL_TEXTURE_3D, this->uniGridTex);
 
         if (this->showXPlane) { // Render x plane
-            glUniform1iARB(this->vrShader.ParameterLocation("plane"), 0);
+            glUniform1iARB(this->vrShader->getUniformLocation("plane"), 0);
             glBegin(GL_QUADS);
 
             glMultiTexCoord3fARB(GL_TEXTURE0, texCoordX, 1.0f, 0.0f);
@@ -2221,7 +2070,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core_gl::view::CallRen
             glEnd();
         }
         if (this->showYPlane) { // Render y plane
-            glUniform1iARB(this->vrShader.ParameterLocation("plane"), 1);
+            glUniform1iARB(this->vrShader->getUniformLocation("plane"), 1);
             glBegin(GL_QUADS);
 
             glMultiTexCoord3fARB(GL_TEXTURE0, 0.0f, texCoordY, 1.0f);
@@ -2243,7 +2092,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core_gl::view::CallRen
             glEnd();
         }
         if (this->showZPlane) { // Render z plane
-            glUniform1iARB(this->vrShader.ParameterLocation("plane"), 2);
+            glUniform1iARB(this->vrShader->getUniformLocation("plane"), 2);
             glBegin(GL_QUADS);
 
             glMultiTexCoord3fARB(GL_TEXTURE0, 0.0f, 1.0f, texCoordZ);
@@ -2267,7 +2116,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core_gl::view::CallRen
         glActiveTextureARB(GL_TEXTURE0);
         glDisable(GL_TEXTURE_3D);
         glDisable(GL_TEXTURE_2D);
-        this->vrShader.Disable();
+        glUseProgram(0);
     }
 
     // Disable rendering to framebuffer
@@ -2313,7 +2162,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core_gl::view::CallRen
     // Note: uses depth and color buffer the rest of the scene has been rendered to
     if (this->volShow) {
         if (!this->RenderVolume()) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to render volume\n", this->ClassName());
+            Log::DefaultLog.WriteError("%s: Unable to render volume\n", this->ClassName());
             return false;
         }
     }
@@ -2321,7 +2170,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::Render(core_gl::view::CallRen
     // Check for opengl error
     err = glGetError();
     if (err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s::Render: glError %s\n", this->ClassName(), gluErrorString(err));
+        Log::DefaultLog.WriteError("%s::Render: glError %s\n", this->ClassName(), gluErrorString(err));
         return false;
     }
 
@@ -2477,20 +2326,20 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
     auto cp = cameraInfo.getPose();
 
     // Enable geometry shader
-    this->arrowShader.Enable();
-    glUniform4fvARB(this->arrowShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->arrowShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
-    glUniform3fvARB(this->arrowShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
-    glUniform3fvARB(this->arrowShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    glUniform1fARB(this->arrowShader.ParameterLocation("radScale"), this->arrowRad);
-    glUniformMatrix4fvARB(this->arrowShader.ParameterLocation("modelview"), 1, false, modelMatrix_column);
-    glUniformMatrix4fvARB(this->arrowShader.ParameterLocation("proj"), 1, false, projMatrix_column);
-    glUniform4fvARB(this->arrowShader.ParameterLocation("lightPos"), 1, lightPos);
+    this->arrowShader->use();
+    glUniform4fvARB(this->arrowShader->getUniformLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(this->arrowShader->getUniformLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->arrowShader->getUniformLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->arrowShader->getUniformLocation("camUp"), 1, glm::value_ptr(cp.up));
+    glUniform1fARB(this->arrowShader->getUniformLocation("radScale"), this->arrowRad);
+    glUniformMatrix4fvARB(this->arrowShader->getUniformLocation("modelview"), 1, false, modelMatrix_column);
+    glUniformMatrix4fvARB(this->arrowShader->getUniformLocation("proj"), 1, false, projMatrix_column);
+    glUniform4fvARB(this->arrowShader->getUniformLocation("lightPos"), 1, lightPos);
 
     // Get attribute locations
-    GLint attribPos0 = glGetAttribLocationARB(this->arrowShader, "pos0");
-    GLint attribPos1 = glGetAttribLocationARB(this->arrowShader, "pos1");
-    GLint attribColor = glGetAttribLocationARB(this->arrowShader, "color");
+    GLint attribPos0 = glGetAttribLocationARB(this->arrowShader->getHandle(), "pos0");
+    GLint attribPos1 = glGetAttribLocationARB(this->arrowShader->getHandle(), "pos1");
+    GLint attribColor = glGetAttribLocationARB(this->arrowShader->getHandle(), "color");
 
     // Enable arrays for attributes
     glEnableVertexAttribArrayARB(attribPos0);
@@ -2511,7 +2360,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVecFieldArrows(
     glDisableVertexAttribArrayARB(attribPos1);
     glDisableVertexAttribArrayARB(attribColor);
 
-    this->arrowShader.Disable();
+    glUseProgram(0);
 
     return true;
 }
@@ -2534,7 +2383,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres(
     glDisable(GL_BLEND);
 
     // Render spheres for all visible atoms
-    this->sphereShader.Enable();
+    this->sphereShader->use();
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
@@ -2543,11 +2392,11 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres(
     auto cv = this->cameraInfo.get<core::view::Camera::PerspectiveParameters>();
 
     // Set shader variables
-    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    glUniform2fARB(this->sphereShader.ParameterLocation("zValues"), cv.near_plane, cv.far_plane);
+    glUniform4fvARB(this->sphereShader->getUniformLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(this->sphereShader->getUniformLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->sphereShader->getUniformLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->sphereShader->getUniformLocation("camUp"), 1, glm::value_ptr(cp.up));
+    glUniform2fARB(this->sphereShader->getUniformLocation("zValues"), cv.near_plane, cv.far_plane);
 
     // Set vertex and color pointers and draw them
     glVertexPointer(4, GL_FLOAT, 0, this->posInter.PeekElements());
@@ -2559,7 +2408,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderAtomsSpheres(
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
 
-    this->sphereShader.Disable();
+    glUseProgram(0);
 }
 
 
@@ -2622,7 +2471,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     // Render spheres for all visible atoms
-    this->sphereShader.Enable();
+    this->sphereShader->use();
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
@@ -2631,11 +2480,11 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
     auto cv = this->cameraInfo.get<core::view::Camera::PerspectiveParameters>();
 
     // Set shader variables
-    glUniform4fvARB(this->sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
-    glUniform3fvARB(this->sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    glUniform2fARB(this->sphereShader.ParameterLocation("zValues"), cv.near_plane, cv.far_plane);
+    glUniform4fvARB(this->sphereShader->getUniformLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(this->sphereShader->getUniformLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->sphereShader->getUniformLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->sphereShader->getUniformLocation("camUp"), 1, glm::value_ptr(cp.up));
+    glUniform2fARB(this->sphereShader->getUniformLocation("zValues"), cv.near_plane, cv.far_plane);
 
     // Set vertex and color pointers and draw them
     glVertexPointer(4, GL_FLOAT, 0, sphPos.PeekElements());
@@ -2646,7 +2495,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderCritPointsSpheres(
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    this->sphereShader.Disable();
+    glUseProgram(0);
 }
 
 
@@ -2762,15 +2611,15 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaStick(
     auto cv = this->cameraInfo.get<core::view::Camera::PerspectiveParameters>();
 
     // Enable cylinder shader
-    this->cylinderShader.Enable();
-    glUniform4fvARB(this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    this->attribLocInParams = glGetAttribLocationARB(this->cylinderShader, "inParams");
-    this->attribLocQuatC = glGetAttribLocationARB(this->cylinderShader, "quatC");
-    this->attribLocColor1 = glGetAttribLocationARB(this->cylinderShader, "color1");
-    this->attribLocColor2 = glGetAttribLocationARB(this->cylinderShader, "color2");
+    this->cylinderShader->use();
+    glUniform4fvARB(this->cylinderShader->getUniformLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(this->cylinderShader->getUniformLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->cylinderShader->getUniformLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->cylinderShader->getUniformLocation("camUp"), 1, glm::value_ptr(cp.up));
+    this->attribLocInParams = glGetAttribLocationARB(this->cylinderShader->getHandle(), "inParams");
+    this->attribLocQuatC = glGetAttribLocationARB(this->cylinderShader->getHandle(), "quatC");
+    this->attribLocColor1 = glGetAttribLocationARB(this->cylinderShader->getHandle(), "color1");
+    this->attribLocColor2 = glGetAttribLocationARB(this->cylinderShader->getHandle(), "color2");
 
     glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -2796,7 +2645,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesBaStick(
     glDisableClientState(GL_VERTEX_ARRAY);
 
     // disable cylinder shader
-    this->cylinderShader.Disable();
+    glUseProgram(0);
 }
 
 
@@ -2903,15 +2752,15 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiStick(
     auto cp = this->cameraInfo.getPose();
 
     // Enable cylinder shader
-    this->cylinderShader.Enable();
-    glUniform4fvARB(this->cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camIn"), 1, glm::value_ptr(cp.direction));
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camRight"), 1, glm::value_ptr(cp.right));
-    glUniform3fvARB(this->cylinderShader.ParameterLocation("camUp"), 1, glm::value_ptr(cp.up));
-    this->attribLocInParams = glGetAttribLocationARB(this->cylinderShader, "inParams");
-    this->attribLocQuatC = glGetAttribLocationARB(this->cylinderShader, "quatC");
-    this->attribLocColor1 = glGetAttribLocationARB(this->cylinderShader, "color1");
-    this->attribLocColor2 = glGetAttribLocationARB(this->cylinderShader, "color2");
+    this->cylinderShader->use();
+    glUniform4fvARB(this->cylinderShader->getUniformLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fvARB(this->cylinderShader->getUniformLocation("camIn"), 1, glm::value_ptr(cp.direction));
+    glUniform3fvARB(this->cylinderShader->getUniformLocation("camRight"), 1, glm::value_ptr(cp.right));
+    glUniform3fvARB(this->cylinderShader->getUniformLocation("camUp"), 1, glm::value_ptr(cp.up));
+    this->attribLocInParams = glGetAttribLocationARB(this->cylinderShader->getHandle(), "inParams");
+    this->attribLocQuatC = glGetAttribLocationARB(this->cylinderShader->getHandle(), "quatC");
+    this->attribLocColor1 = glGetAttribLocationARB(this->cylinderShader->getHandle(), "color1");
+    this->attribLocColor2 = glGetAttribLocationARB(this->cylinderShader->getHandle(), "color2");
 
     glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -2937,7 +2786,7 @@ void protein_cuda::CrystalStructureVolumeRenderer::RenderEdgesTiStick(
     glDisableClientState(GL_VERTEX_ARRAY);
 
     // disable cylinder shader
-    this->cylinderShader.Disable();
+    glUseProgram(0);
 }
 
 
@@ -3067,7 +2916,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
             NULL,   // Output
             nVerticesMC); // Maximum number of vertices*/
 
-    //Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    //Log::DefaultLog.WriteInfo(
     //      "Time for computing isosurface by CUDA marching cubes %f",
     //          (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
     //t = clock();
@@ -3081,7 +2930,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
     checkCudaErrors(cudaMemcpy(this->mcNormOut, this->mcNormOut_D, this->cudaMC->GetVertexCount() * 3 * sizeof(float),
         cudaMemcpyDeviceToHost));
 
-    /* Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    /* Log::DefaultLog.WriteInfo(
              "Time for CUDA memcopy %f",
              (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG
      t = clock();*/
@@ -3089,7 +2938,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
 
     // Render
 
-    this->pplShader.Enable();
+    this->pplShader->use();
     glEnable(GL_LIGHTING);
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_TEXTURE_3D);
@@ -3109,11 +2958,11 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderIsoSurfMC() {
 
     glDisable(GL_LIGHTING);
 
-    this->pplShader.Disable();
+    glUseProgram(0);
 
     glColor4f(1.0, 1.0f, 1.0f, 1.0f);
 
-    /*Log::DefaultLog.WriteMsg(Log::LEVEL_INFO,
+    /*Log::DefaultLog.WriteInfo(
             "Time for rendering marching cubes triangles %f",
             (double(clock()-t)/double(CLOCKS_PER_SEC) )); // DEBUG*/
 
@@ -3323,9 +3172,9 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    this->rcShaderDebug.Enable();
+    this->rcShaderDebug->use();
     this->RenderVolCube(); // Render back of the cube and store depth values in fbo texture
-    this->rcShaderDebug.Disable();
+    glUseProgram(0);
 
     this->rcFbo.Disable();
 
@@ -3339,29 +3188,29 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
 
     auto cv = this->cameraInfo.get<core::view::Camera::PerspectiveParameters>();
 
-    this->rcShader.Enable();
-    glUniform1iARB(this->rcShader.ParameterLocation("tcBuff"), 0);
-    glUniform1iARB(this->rcShader.ParameterLocation("densityTex"), 1);
-    glUniform1iARB(this->rcShader.ParameterLocation("uniGridTex"), 2);
-    glUniform1iARB(this->rcShader.ParameterLocation("srcColorBuff"), 3);
-    glUniform1iARB(this->rcShader.ParameterLocation("srcDepthBuff"), 4);
-    glUniform1iARB(this->rcShader.ParameterLocation("posESBuff"), 5);
-    glUniform1iARB(this->rcShader.ParameterLocation("posWinSBuff"), 6);
-    glUniform1iARB(this->rcShader.ParameterLocation("randNoiseTex"), 7);
-    glUniform1iARB(this->rcShader.ParameterLocation("curlMagTex"), 8);
-    glUniform1iARB(this->rcShader.ParameterLocation("colorTex"), 9);
-    glUniform1fARB(this->rcShader.ParameterLocation("delta"), this->volDelta * 0.01f);
-    glUniform1fARB(this->rcShader.ParameterLocation("isoVal"), this->volIsoVal);
-    glUniform1fARB(this->rcShader.ParameterLocation("alphaScl"), this->volAlphaScl);
-    glUniform1fARB(this->rcShader.ParameterLocation("licDirScl"), this->volLicDirScl);
-    glUniform1iARB(this->rcShader.ParameterLocation("licLen"), this->volLicLen);
-    glUniform1fARB(this->rcShader.ParameterLocation("licContrast"), this->volLicContrastStretching);
-    glUniform1fARB(this->rcShader.ParameterLocation("licBright"), this->volLicBright);
-    glUniform1fARB(this->rcShader.ParameterLocation("licTCScl"), this->volLicTCScl);
-    glUniform4fARB(this->rcShader.ParameterLocation("viewportDim"), static_cast<float>(fboDim.X()),
+    this->rcShader->use();
+    glUniform1iARB(this->rcShader->getUniformLocation("tcBuff"), 0);
+    glUniform1iARB(this->rcShader->getUniformLocation("densityTex"), 1);
+    glUniform1iARB(this->rcShader->getUniformLocation("uniGridTex"), 2);
+    glUniform1iARB(this->rcShader->getUniformLocation("srcColorBuff"), 3);
+    glUniform1iARB(this->rcShader->getUniformLocation("srcDepthBuff"), 4);
+    glUniform1iARB(this->rcShader->getUniformLocation("posESBuff"), 5);
+    glUniform1iARB(this->rcShader->getUniformLocation("posWinSBuff"), 6);
+    glUniform1iARB(this->rcShader->getUniformLocation("randNoiseTex"), 7);
+    glUniform1iARB(this->rcShader->getUniformLocation("curlMagTex"), 8);
+    glUniform1iARB(this->rcShader->getUniformLocation("colorTex"), 9);
+    glUniform1fARB(this->rcShader->getUniformLocation("delta"), this->volDelta * 0.01f);
+    glUniform1fARB(this->rcShader->getUniformLocation("isoVal"), this->volIsoVal);
+    glUniform1fARB(this->rcShader->getUniformLocation("alphaScl"), this->volAlphaScl);
+    glUniform1fARB(this->rcShader->getUniformLocation("licDirScl"), this->volLicDirScl);
+    glUniform1iARB(this->rcShader->getUniformLocation("licLen"), this->volLicLen);
+    glUniform1fARB(this->rcShader->getUniformLocation("licContrast"), this->volLicContrastStretching);
+    glUniform1fARB(this->rcShader->getUniformLocation("licBright"), this->volLicBright);
+    glUniform1fARB(this->rcShader->getUniformLocation("licTCScl"), this->volLicTCScl);
+    glUniform4fARB(this->rcShader->getUniformLocation("viewportDim"), static_cast<float>(fboDim.X()),
         static_cast<float>(fboDim.Y()), cv.near_plane, cv.far_plane);
-    glUniform1iARB(this->rcShader.ParameterLocation("vColorMode"), this->vColorMode);
-    glUniform1iARB(this->rcShader.ParameterLocation("rayMarchTex"), this->rmTex);
+    glUniform1iARB(this->rcShader->getUniformLocation("vColorMode"), this->vColorMode);
+    glUniform1iARB(this->rcShader->getUniformLocation("rayMarchTex"), this->rmTex);
 
     glActiveTextureARB(GL_TEXTURE1_ARB);
     glBindTexture(GL_TEXTURE_3D, this->uniGridDensityTex);
@@ -3401,13 +3250,12 @@ bool protein_cuda::CrystalStructureVolumeRenderer::RenderVolume() {
     glDisable(GL_TEXTURE_3D);
     glDisable(GL_TEXTURE_2D);
 
-    this->rcShader.Disable();
+    glUseProgram(0);
 
     // Check for opengl error
     err = glGetError();
     if (err != GL_NO_ERROR) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s:RenderVolume:: glError %s \n", this->ClassName(), gluErrorString(err));
+        Log::DefaultLog.WriteError("%s:RenderVolume:: glError %s \n", this->ClassName(), gluErrorString(err));
         return false;
     }
 

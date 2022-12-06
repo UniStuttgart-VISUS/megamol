@@ -69,8 +69,6 @@ private:
 
     core::CallerSlot m_event_slot;
 
-    core::CallerSlot m_material_slot;
-
     core::param::ParamSlot m_billboard_size_slot;
 
     core::param::ParamSlot m_rendering_mode_slot;
@@ -80,6 +78,8 @@ private:
     core::param::ParamSlot m_show_canvas_slot;
 
     core::param::ParamSlot m_canvas_color_slot;
+
+    std::shared_ptr<mesh_gl::GPUMaterialCollection> m_material_collection;
 
     std::shared_ptr<glowl::Mesh> m_billboard_dummy_mesh;
 

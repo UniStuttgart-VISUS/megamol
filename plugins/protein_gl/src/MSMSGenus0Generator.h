@@ -79,7 +79,11 @@ protected:
     vislib::math::Cuboid<float> bbox;
 
     /** The data update hash */
-    SIZE_T datahash;
+    //SIZE_T datahash;
+
+    SIZE_T last_datahash;
+    SIZE_T hash_offset;
+    bool reloadMolecule;
 
     /**
      * Loads the specified file
@@ -169,8 +173,12 @@ private:
     /** the number of atoms */
     unsigned int atomCount;
 
+    float lowval;
+    float highval;
+
     /** the index of the vertex attribute */
-    unsigned int attIdx;
+    unsigned int idAttIdx;
+    unsigned int valueAttIdx;
 
     vislib::Array<geocalls_gl::CallTriMeshDataGL::Mesh*> obj;
 

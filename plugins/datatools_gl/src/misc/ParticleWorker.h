@@ -7,17 +7,19 @@
 
 #pragma once
 
+#include <memory>
+
+#include <glowl/glowl.h>
+
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/ModuleGL.h"
+#include "mmstd_gl/ModuleGL.h"
 #include "vislib/RawStorage.h"
 #include "vislib/types.h"
 
 #include "glad/gl.h"
-
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
 
 
 namespace megamol::datatools_gl::misc {
@@ -26,7 +28,7 @@ namespace megamol::datatools_gl::misc {
  * Module to filter calls with multiple particle lists by list index
  */
 // TODO this module looks quite broken and will probably not work at all for particles having a direction
-class ParticleWorker : public core_gl::ModuleGL {
+class ParticleWorker : public mmstd_gl::ModuleGL {
 public:
     class VAOUnlocker : public core::AbstractGetDataCall::Unlocker {
     public:
@@ -121,7 +123,7 @@ private:
     vislib::Array<GLuint> glCB;
 
     GLuint glClusterInfos;
-    vislib_gl::graphics::gl::GLSLComputeShader shaderOnClusterComputation;
+    std::unique_ptr<glowl::GLSLProgram> shaderOnClusterComputation;
 
     /*
     GLuint glParticleList;

@@ -5,22 +5,23 @@
  * All rights reserved
  */
 
-#ifndef MMPROTEINCUDAPLUGIN_SECSTRUCTRENDERER2D_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_SECSTRUCTRENDERER2D_H_INCLUDED
+#pragma once
+
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer2DModuleGL.h"
-
+#include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Rectangle.h"
-#include "vislib_gl/graphics/gl/GLSLTesselationShader.h"
 
 namespace megamol {
 namespace protein_cuda {
 
-class SecStructRenderer2D : public core_gl::view::Renderer2DModuleGL {
+class SecStructRenderer2D : public mmstd_gl::Renderer2DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -105,7 +106,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender2DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender2DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -113,7 +114,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender2DGL& call);
+    virtual bool Render(mmstd_gl::CallRender2DGL& call);
 
     /**
      * Rotates a given 3D plane to the xy plane and returns the needed matrix for the operation.
@@ -176,10 +177,10 @@ private:
     GLuint ssbo;
 
     /** Shader for the tesselated GL_LINES */
-    vislib_gl::graphics::gl::GLSLTesselationShader lineShader;
+    std::unique_ptr<glowl::GLSLProgram> lineShader;
 
     /** Shader for the tesselated tubes */
-    vislib_gl::graphics::gl::GLSLTesselationShader tubeShader;
+    std::unique_ptr<glowl::GLSLProgram> tubeShader;
 
     /** The bounding rectangle for the data */
     vislib::math::Rectangle<float> bbRect;
@@ -190,5 +191,3 @@ private:
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif // #ifndef MMPROTEINCUDAPLUGIN_SECSTRUCTRENDERER2D_H_INCLUDED

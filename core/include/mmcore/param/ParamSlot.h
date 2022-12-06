@@ -1,30 +1,23 @@
-/*
- * ParamSlot.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_PARAMSLOT_H_INCLUDED
-#define MEGAMOLCORE_PARAMSLOT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <memory>
 
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/param/AbstractParamSlot.h"
-#include "vislib/SmartPtr.h"
 #include "vislib/assert.h"
 
-
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /** Forward declaration */
 class Module;
 
 namespace param {
-
 
 /**
  * Class of parameter slots holding parameter object.
@@ -43,13 +36,13 @@ public:
     ParamSlot(const vislib::StringA& name, const vislib::StringA& desc);
 
     /** Dtor. */
-    virtual ~ParamSlot(void);
+    virtual ~ParamSlot();
 
     /**
      * Makes this slot available. After this method was called the
      * settings of the slot can no longer be changed.
      */
-    virtual void MakeAvailable(void);
+    virtual void MakeAvailable();
 
     /**
      * Sets an update callback method, which is called whenever the dirty
@@ -73,7 +66,7 @@ public:
      */
     template<class C>
     void SetUpdateCallback(C* obj, bool (C::*func)(ParamSlot&)) {
-        if (this->callback != NULL) {
+        if (this->callback != nullptr) {
             delete this->callback;
         }
         this->callback = new CallbackImpl<C>(obj, func);
@@ -105,7 +98,7 @@ public:
      */
     template<class C>
     void SetUpdateCallback(bool (C::*func)(ParamSlot&)) {
-        if (this->callback != NULL) {
+        if (this->callback != nullptr) {
             delete this->callback;
         }
         this->callback = new CallbackImpl<C>(NULL, func);
@@ -119,8 +112,8 @@ public:
      *
      * @return 'true' if 'param' is relevant, 'false' otherwise.
      */
-    virtual bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const vislib::SmartPtr<param::AbstractParam>& param) const;
+    bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
+        const std::shared_ptr<param::AbstractParam>& param) const override;
 
     /**
      * Queue a notification that the parameter value has changed, to notify
@@ -141,7 +134,7 @@ protected:
      *
      * @return 'true' if the slot has already been made available.
      */
-    virtual bool isSlotAvailable(void) const;
+    virtual bool isSlotAvailable() const;
 
 private:
     /**
@@ -150,12 +143,12 @@ private:
     class Callback {
     public:
         /** Ctor. */
-        Callback(void) {
+        Callback() {
             // intentionally empty
         }
 
         /** Dtor. */
-        virtual ~Callback(void) {
+        virtual ~Callback() {
             // intentionally empty
         }
 
@@ -188,7 +181,7 @@ private:
         }
 
         /** Dtor. */
-        virtual ~CallbackImpl(void) {
+        virtual ~CallbackImpl() {
             this->func = NULL; // DO NOT DELETE
         }
 
@@ -229,7 +222,7 @@ private:
      * Sets the dirty flag and triggers the update callback if the dirty
      * flag was not set before.
      */
-    virtual void update(void);
+    virtual void update();
 
     /** The update callback object */
     Callback* callback;
@@ -237,7 +230,4 @@ private:
 
 
 } /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_PARAMSLOT_H_INCLUDED */
+} // namespace megamol::core

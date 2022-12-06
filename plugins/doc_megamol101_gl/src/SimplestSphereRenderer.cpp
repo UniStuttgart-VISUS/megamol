@@ -7,12 +7,11 @@
 #include "SimplestSphereRenderer.h"
 
 #include "CallSpheres.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowMatrix.h"
 
@@ -23,7 +22,7 @@ using namespace megamol::megamol101_gl;
  * SimplestSphereRenderer::SimplestSphereRenderer
  */
 SimplestSphereRenderer::SimplestSphereRenderer()
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , sphereDataSlot("inData", "The input data slot for sphere data.")
         , sphereModeSlot("sphere rendering", "Switch for the pretty sphere rendering mode")
         , sizeScalingSlot("scaling factor", "Scaling factor for the size of the rendered GL_POINTS") {
@@ -65,7 +64,8 @@ bool SimplestSphereRenderer::create() {
 
     using namespace megamol::core::utility::log;
 
-    auto const shader_options = ::msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         simpleShader = core::utility::make_glowl_shader("simplePoints", shader_options,
@@ -75,7 +75,7 @@ bool SimplestSphereRenderer::create() {
                 "megamol101_gl/pretty_points.geom.glsl", "megamol101_gl/pretty_points.frag.glsl");
 
     } catch (std::exception& e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, ("SimplestSphereRenderer: " + std::string(e.what())).c_str());
+        Log::DefaultLog.WriteError(("SimplestSphereRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -85,8 +85,8 @@ bool SimplestSphereRenderer::create() {
 /*
  * SimplestSphereRenderer::GetExtents
  */
-bool SimplestSphereRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
-    core_gl::view::CallRender3DGL* cr3d = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
+bool SimplestSphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
+    mmstd_gl::CallRender3DGL* cr3d = dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (cr3d == nullptr)
         return false;
 
@@ -117,8 +117,8 @@ void SimplestSphereRenderer::release() {
 /*
  * SimplestSphereRenderer::Render
  */
-bool SimplestSphereRenderer::Render(core_gl::view::CallRender3DGL& call) {
-    core_gl::view::CallRender3DGL* cr3d = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
+bool SimplestSphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
+    mmstd_gl::CallRender3DGL* cr3d = dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (cr3d == nullptr)
         return false;
 

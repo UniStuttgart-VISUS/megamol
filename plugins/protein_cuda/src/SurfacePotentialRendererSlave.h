@@ -8,16 +8,15 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_SURFACEPOTENTIALRENDERERSLAVE_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_SURFACEPOTENTIALRENDERERSLAVE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "mmstd/renderer/CallRender3D.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 //#include "vislib_vector_typedefs.h"
 #include "VBODataCall.h"
 #include "mmcore/param/ParamSlot.h"
@@ -25,7 +24,7 @@
 namespace megamol {
 namespace protein_cuda {
 
-class SurfacePotentialRendererSlave : public core_gl::view::Renderer3DModuleGL {
+class SurfacePotentialRendererSlave : public mmstd_gl::Renderer3DModuleGL {
 
 public:
     /**
@@ -84,7 +83,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
 
     /**
@@ -99,7 +98,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Renders the isosurface using different rendering modes and surface
@@ -123,10 +122,8 @@ private:
     core::BoundingBoxes bbox;
 
     /// Shader implementing per pixel lighting
-    vislib_gl::graphics::gl::GLSLShader pplSurfaceShader;
+    std::unique_ptr<glowl::GLSLProgram> pplSurfaceShader;
 };
 
 } // namespace protein_cuda
 } // namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_SURFACEPOTENTIALRENDERERSLAVE_H_INCLUDED

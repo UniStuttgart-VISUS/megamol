@@ -6,7 +6,9 @@
 
 #include "ScatterplotMatrixRenderer2D.h"
 
-#include "mmcore/CoreInstance.h"
+#include <sstream>
+
+#include "delaunator.hpp"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -17,11 +19,8 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd_gl/flags/FlagCallsGL.h"
 #include "vislib/math/ShallowMatrix.h"
-
-#include "delaunator.hpp"
-#include "mmcore_gl/flags/FlagCallsGL.h"
-#include <sstream>
 
 using namespace megamol;
 using namespace megamol::infovis_gl;
@@ -135,13 +134,13 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     this->floatTableInSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->floatTableInSlot);
 
-    this->transferFunctionInSlot.SetCompatibleCall<core_gl::view::CallGetTransferFunctionGLDescription>();
+    this->transferFunctionInSlot.SetCompatibleCall<mmstd_gl::CallGetTransferFunctionGLDescription>();
     this->MakeSlotAvailable(&this->transferFunctionInSlot);
 
-    this->readFlagStorageSlot.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    this->readFlagStorageSlot.SetCompatibleCall<mmstd_gl::FlagCallRead_GLDescription>();
     this->MakeSlotAvailable(&this->readFlagStorageSlot);
 
-    this->writeFlagStorageSlot.SetCompatibleCall<core_gl::FlagCallWrite_GLDescription>();
+    this->writeFlagStorageSlot.SetCompatibleCall<mmstd_gl::FlagCallWrite_GLDescription>();
     this->MakeSlotAvailable(&this->writeFlagStorageSlot);
 
 
@@ -310,7 +309,8 @@ ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() {
 }
 
 bool ScatterplotMatrixRenderer2D::create() {
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         minimalisticAxisShader = core::utility::make_glowl_shader("splom_axis_minimalistic", shader_options,
@@ -331,7 +331,7 @@ bool ScatterplotMatrixRenderer2D::create() {
             "splom_screen", shader_options, "infovis_gl/splom/screen.vert.glsl", "infovis_gl/splom/screen.frag.glsl");
         pickProgram = core::utility::make_glowl_shader("splom_pick", shader_options, "infovis_gl/splom/pick.comp.glsl");
     } catch (std::exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             ("ScatterplotMatrixRenderer2D: " + std::string(e.what())).c_str());
         return false;
     }
@@ -342,9 +342,9 @@ bool ScatterplotMatrixRenderer2D::create() {
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount[2]);
 
-    if (!this->axisFont.Initialise(this->GetCoreInstance()))
+    if (!this->axisFont.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>()))
         return false;
-    if (!this->textFont.Initialise(this->GetCoreInstance()))
+    if (!this->textFont.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>()))
         return false;
     this->axisFont.SetBatchDrawMode(true);
     this->textFont.SetBatchDrawMode(true);
@@ -396,7 +396,7 @@ bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
     return false;
 }
 
-bool ScatterplotMatrixRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
+bool ScatterplotMatrixRenderer2D::Render(mmstd_gl::CallRender2DGL& call) {
     try {
 
         // get camera
@@ -462,12 +462,14 @@ bool ScatterplotMatrixRenderer2D::Render(core_gl::view::CallRender2DGL& call) {
 
         this->drawScreen();
 
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
 
     return true;
 }
 
-bool ScatterplotMatrixRenderer2D::GetExtents(core_gl::view::CallRender2DGL& call) {
+bool ScatterplotMatrixRenderer2D::GetExtents(mmstd_gl::CallRender2DGL& call) {
     this->validate(call, true);
     call.AccessBoundingBoxes() = this->bounds;
     return true;
@@ -501,10 +503,10 @@ void ScatterplotMatrixRenderer2D::resetDirtyScreen() {
     }
 }
 
-bool ScatterplotMatrixRenderer2D::validate(core_gl::view::CallRender2DGL& call, bool ignoreMVP) {
+bool ScatterplotMatrixRenderer2D::validate(mmstd_gl::CallRender2DGL& call, bool ignoreMVP) {
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
 
-    this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core_gl::view::CallGetTransferFunctionGL>();
+    this->transferFunction = this->transferFunctionInSlot.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
     if ((this->transferFunction == nullptr) || !(*(this->transferFunction))(0))
         return false;
 
@@ -521,10 +523,10 @@ bool ScatterplotMatrixRenderer2D::validate(core_gl::view::CallRender2DGL& call, 
     if (this->floatTable->GetColumnsCount() == 0)
         return false;
 
-    this->readFlags = this->readFlagStorageSlot.CallAs<core_gl::FlagCallRead_GL>();
+    this->readFlags = this->readFlagStorageSlot.CallAs<mmstd_gl::FlagCallRead_GL>();
     if (this->readFlags == nullptr)
         return false;
-    (*this->readFlags)(core_gl::FlagCallRead_GL::CallGetData);
+    (*this->readFlags)(mmstd_gl::FlagCallRead_GL::CallGetData);
 
     auto columnInfos = this->floatTable->GetColumnsInfos();
     const size_t colCount = this->floatTable->GetColumnsCount();
@@ -543,7 +545,7 @@ bool ScatterplotMatrixRenderer2D::validate(core_gl::view::CallRender2DGL& call, 
         this->transferFunction->ResetDirty();
     }
     if (hasDirtyData()) {
-        // Update transfer fucntion range
+        // Update transfer function range
         map.valueIdx =
             nameToIndex(this->floatTable, this->valueSelectorParam.Param<core::param::FlexEnumParam>()->Value());
         map.labelIdx =
@@ -596,10 +598,18 @@ void ScatterplotMatrixRenderer2D::updateColumns() {
     for (GLuint y = 0; y < columnCount; ++y) {
         GLfloat offsetY = (invertY ? (columnCount - y - 1) : y) * (size + margin);
         for (GLuint x = 0; x < y; ++x) {
-            plots.push_back({x, y, x * (size + margin), offsetY, size, size, columnInfos[x].MinimumValue(),
-                columnInfos[y].MinimumValue(), columnInfos[x].MaximumValue(), columnInfos[y].MaximumValue(),
-                rangeToSmallStep(columnInfos[x].MinimumValue(), columnInfos[x].MaximumValue()),
-                rangeToSmallStep(columnInfos[y].MinimumValue(), columnInfos[y].MaximumValue())});
+            auto minXValue = columnInfos[x].MinimumValue();
+            auto minYValue = columnInfos[y].MinimumValue();
+            auto maxXValue = columnInfos[x].MaximumValue();
+            auto maxYValue = columnInfos[y].MaximumValue();
+            if (maxXValue - minXValue < 0.00001f) {
+                maxXValue = minXValue + 0.00001f;
+            }
+            if (maxYValue - minYValue < 0.00001f) {
+                maxYValue = minYValue + 0.00001f;
+            }
+            plots.push_back({x, y, x * (size + margin), offsetY, size, size, minXValue, minYValue, maxXValue, maxYValue,
+                rangeToSmallStep(minXValue, maxXValue), rangeToSmallStep(minYValue, maxYValue)});
         }
     }
 
@@ -1471,10 +1481,10 @@ void ScatterplotMatrixRenderer2D::updateSelection() {
 
     this->flagsBufferVersion++;
 
-    auto writeFlags = writeFlagStorageSlot.CallAs<core_gl::FlagCallWrite_GL>();
+    auto writeFlags = writeFlagStorageSlot.CallAs<mmstd_gl::FlagCallWrite_GL>();
     if (this->readFlags != nullptr && writeFlags != nullptr) {
         writeFlags->setData(this->readFlags->getData(), this->flagsBufferVersion);
-        (*writeFlags)(core_gl::FlagCallWrite_GL::CallGetData);
+        (*writeFlags)(mmstd_gl::FlagCallWrite_GL::CallGetData);
     }
     this->debugPop();
     this->screenValid = false;

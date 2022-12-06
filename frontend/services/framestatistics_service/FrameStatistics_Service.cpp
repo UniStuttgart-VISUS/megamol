@@ -9,7 +9,13 @@
 // you should also delete the FAQ comments in these template files after you read and understood them
 #include "FrameStatistics_Service.hpp"
 
+#include <chrono>
 #include <numeric>
+#include <sstream>
+
+#include "mmcore/utility/Timestamp.h"
+
+#include "LuaCallbacksCollection.h"
 
 
 // local logging wrapper for your convenience until central MegaMol logger established
@@ -38,11 +44,10 @@ bool FrameStatistics_Service::init(void* configPtr) {
 
 bool FrameStatistics_Service::init(const Config& config) {
 
-    this->m_requestedResourcesNames = {
-        //"IOpenGL_Context", // for GL-specific measures?
-    };
+    this->m_requestedResourcesNames = {//"IOpenGL_Context", // for GL-specific measures?
+        "RegisterLuaCallbacks"};
 
-    m_program_start_time = std::chrono::high_resolution_clock::now();
+    m_program_start_time = std::chrono::steady_clock::time_point::clock::now();
 
     log("initialized successfully");
     return true;
@@ -51,7 +56,7 @@ bool FrameStatistics_Service::init(const Config& config) {
 void FrameStatistics_Service::close() {}
 
 std::vector<FrontendResource>& FrameStatistics_Service::getProvidedResources() {
-    m_providedResourceReferences = {{"FrameStatistics", m_statistics}};
+    m_providedResourceReferences = {{frontend_resources::FrameStatistics_Req_Name, m_statistics}};
 
     return m_providedResourceReferences;
 }
@@ -62,6 +67,7 @@ const std::vector<std::string> FrameStatistics_Service::getRequestedResourceName
 
 void FrameStatistics_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     this->m_requestedResourceReferences = resources;
+    fill_lua_callbacks();
 }
 
 void FrameStatistics_Service::updateProvidedResources() {
@@ -81,29 +87,46 @@ void FrameStatistics_Service::postGraphRender() {}
 // TODO: maybe port FPS Counter from
 // #include "vislib/graphics/FpsCounter.h"
 void FrameStatistics_Service::start_frame() {
-    m_frame_start_time = std::chrono::high_resolution_clock::now();
+    m_frame_start_time = std::chrono::steady_clock::time_point::clock::now();
 }
 
 void FrameStatistics_Service::finish_frame() {
-    auto now = std::chrono::high_resolution_clock::now();
+    auto now = std::chrono::steady_clock::time_point::clock::now();
 
     m_statistics.rendered_frames_count++;
 
-    m_statistics.elapsed_program_time_seconds =
-        std::chrono::duration_cast<std::chrono::milliseconds>(now - m_program_start_time).count() /
-        static_cast<double>(1000);
+    using double_seconds = std::chrono::duration<double>;
+    using double_microseconds = std::chrono::duration<double, std::micro>;
 
-    auto last_frame_till_now_micro =
-        std::chrono::duration_cast<std::chrono::microseconds>(now - m_frame_start_time).count();
+    m_statistics.elapsed_program_time_seconds = double_seconds(now - m_program_start_time).count();
+    const auto last_frame_till_now_micro = double_microseconds(now - m_frame_start_time).count();
 
-    m_statistics.last_rendered_frame_time_milliseconds = last_frame_till_now_micro / static_cast<double>(1000);
+    m_statistics.last_rendered_frame_time_milliseconds = last_frame_till_now_micro / 1000.0;
 
-    m_frame_times_micro[m_ring_buffer_ptr] = last_frame_till_now_micro;
+    m_frame_times_micro[m_ring_buffer_ptr] = static_cast<long long>(last_frame_till_now_micro);
     m_ring_buffer_ptr = (m_ring_buffer_ptr + 1) % m_frame_times_micro.size();
 
     m_statistics.last_averaged_mspf = std::accumulate(m_frame_times_micro.begin(), m_frame_times_micro.end(), 0) /
                                       m_frame_times_micro.size() / static_cast<double>(1000);
     m_statistics.last_averaged_fps = 1000.0 / m_statistics.last_averaged_mspf;
+}
+
+void FrameStatistics_Service::fill_lua_callbacks() {
+    frontend_resources::LuaCallbacksCollection callbacks;
+
+    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult>("mmGetTimeStamp",
+        "(void)\n\tReturns a timestamp in ISO format.",
+        {[&]() -> frontend_resources::LuaCallbacksCollection::StringResult {
+            auto const tp = std::chrono::system_clock::now();
+            auto const timestamp = core::utility::serialize_timestamp(tp);
+            return frontend_resources::LuaCallbacksCollection::StringResult(timestamp);
+        }});
+
+    auto& register_callbacks =
+        m_requestedResourceReferences[0]
+            .getResource<std::function<void(frontend_resources::LuaCallbacksCollection const&)>>();
+
+    register_callbacks(callbacks);
 }
 
 } // namespace frontend

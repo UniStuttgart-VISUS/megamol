@@ -12,7 +12,6 @@
 
 #include "SimpleMoleculeRenderer.h"
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -21,7 +20,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
@@ -38,7 +36,6 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core_gl;
 using namespace megamol::protein_gl;
 using namespace megamol::protein_calls;
 using namespace megamol::core::utility::log;
@@ -47,7 +44,7 @@ using namespace megamol::core::utility::log;
  * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
  */
 SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , getLightsSlot("getLights", "Connects the molecule rendering with availabel light sources")
@@ -214,7 +211,8 @@ bool SimpleMoleculeRenderer::create(void) {
 
     // new shaders
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
             std::filesystem::path("protein_gl/simplemolecule/sm_sphere.vert.glsl"),
@@ -229,13 +227,12 @@ bool SimpleMoleculeRenderer::create(void) {
             std::filesystem::path("protein_gl/simplemolecule/sm_line.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[SimpleMoleculeRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SimpleMoleculeRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception.");
     }
 
@@ -297,7 +294,7 @@ bool SimpleMoleculeRenderer::create(void) {
     glDisableVertexAttribArray(static_cast<int>(Buffers::FILTER));
 
     // setup all the deferred stuff
-    deferredProvider_.setup(this->GetCoreInstance());
+    deferredProvider_.setup(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     return true;
 }
@@ -306,7 +303,7 @@ bool SimpleMoleculeRenderer::create(void) {
 /*
  * protein::SimpleMoleculeRenderer::GetExtents
  */
-bool SimpleMoleculeRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool SimpleMoleculeRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
         return false;
@@ -328,7 +325,7 @@ bool SimpleMoleculeRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * protein::SimpleMoleculeRenderer::Render
  */
-bool SimpleMoleculeRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool SimpleMoleculeRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     auto call_fbo = call.GetFramebuffer();
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -623,7 +620,7 @@ void SimpleMoleculeRenderer::RenderStick(
         secondAtomPos.SetZ(atomPos[3 * idx1 + 2]);
 
         // Set filter information for this connection
-        if ((mol->Filter()[idx0] == 1) && (mol->Filter()[idx1] == 1))
+        if ((mol->Filter() != nullptr) && (mol->Filter()[idx0] == 1) && (mol->Filter()[idx1] == 1))
             conFilter_[cnt] = 1;
         else
             conFilter_[cnt] = 0;

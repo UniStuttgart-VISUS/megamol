@@ -10,10 +10,9 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/light/DistantLight.h"
-#include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/light/DistantLight.h"
+#include "mmstd/light/PointLight.h"
 
 using namespace megamol;
 using namespace megamol::protein_gl;
@@ -55,22 +54,21 @@ DeferredRenderingProvider::~DeferredRenderingProvider(void) {
     // TODO
 }
 
-void DeferredRenderingProvider::setup(core::CoreInstance* coreIntstance) {
+void DeferredRenderingProvider::setup(megamol::frontend_resources::RuntimeConfig const& runtimeConf) {
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(coreIntstance->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(runtimeConf);
 
         lightingShader_ = core::utility::make_shared_glowl_shader("lighting", shdr_options,
             std::filesystem::path("protein_gl/deferred/lighting.vert.glsl"),
             std::filesystem::path("protein_gl/deferred/lighting.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[DeferredRenderingProvider] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[DeferredRenderingProvider] %s", ex.what());
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[DeferredRenderingProvider] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[DeferredRenderingProvider] Unable to compile shader: Unknown exception.");
     }
 
@@ -124,7 +122,7 @@ void DeferredRenderingProvider::refreshLights(core::view::light::CallLight* ligh
 }
 
 void DeferredRenderingProvider::draw(
-    core_gl::view::CallRender3DGL& call, core::view::light::CallLight* lightCall, bool noShading) {
+    mmstd_gl::CallRender3DGL& call, core::view::light::CallLight* lightCall, bool noShading) {
 
     bool no_lighting = !this->enableShadingParam.Param<core::param::BoolParam>()->Value();
     if (noShading) {

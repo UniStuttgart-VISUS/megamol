@@ -1,0 +1,29 @@
+{
+  "name": "glowl",
+  "version-date": "2022-09-23",
+  "port-version": 0,
+  "description": "OpenGL Object-Wrapper-Library.",
+  "homepage": "https://github.com/invor/glowl",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ],
+  "features": {
+    "glm": {
+      "description": "Use glm functions.",
+      "dependencies": [
+        "glm"
+      ]
+    },
+    "gl-extensions": {
+      "description": "Use ARB_bindless_texture and NV_mesh_shader extensions."
+    }
+  }
+}

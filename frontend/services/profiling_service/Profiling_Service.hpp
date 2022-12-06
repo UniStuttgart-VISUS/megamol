@@ -10,6 +10,7 @@
 #include <fstream>
 
 #include "AbstractFrontendService.hpp"
+#include "FrameStatistics.h"
 #include "PerformanceManager.h"
 
 namespace megamol {
@@ -39,12 +40,16 @@ public:
     const std::vector<std::string> getRequestedResourceNames() const override {
         return _requestedResourcesNames;
     }
-    void setRequestedResources(std::vector<FrontendResource> resources) override {}
+    void setRequestedResources(std::vector<FrontendResource> resources) override;
+
+private:
+    void fill_lua_callbacks();
 
     std::vector<FrontendResource> _providedResourceReferences;
     std::vector<std::string> _requestedResourcesNames;
+    std::vector<FrontendResource> _requestedResourcesReferences;
 
-    megamol::frontend_resources::PerformanceManager _perf_man;
+    frontend_resources::PerformanceManager _perf_man;
     std::ofstream log_file;
 };
 

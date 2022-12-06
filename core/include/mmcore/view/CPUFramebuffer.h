@@ -1,11 +1,12 @@
-/*
- * CPUFramebuffer.h
- *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
+
+#include <cstdint>
 #include <vector>
 
 #include "Framebuffer.h"

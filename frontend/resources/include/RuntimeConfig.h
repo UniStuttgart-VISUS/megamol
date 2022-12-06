@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "mmcore/utility/buildinfo/BuildInfo.h"
+#include "mmcore/utility/log/Log.h"
 
 namespace megamol {
 namespace frontend_resources {
@@ -36,10 +37,12 @@ struct RuntimeConfig {
     std::vector<Path> resource_directories = {}; // mmAddResourceDir
     std::vector<Path> shader_directories = {};   // mmAddShaderDir
     Path log_file = "megamol_log.txt";           // mmSetLogFile
-    unsigned int log_level = 200;                // mmSetLogLevel
-    unsigned int echo_level = 200;               // mmSetEchoLevel
-    std::vector<Path> project_files = {};        // NEW: mmLoadProject - project files are loaded after services are up
-    std::vector<StringPair> global_values = {};  // use GlobalValueStore resource for access to global values!
+    megamol::core::utility::log::Log::log_level log_level =
+        megamol::core::utility::log::Log::log_level::info; // mmSetLogLevel
+    megamol::core::utility::log::Log::log_level echo_level =
+        megamol::core::utility::log::Log::log_level::info; // mmSetEchoLevel
+    std::vector<Path> project_files = {};       // NEW: mmLoadProject - project files are loaded after services are up
+    std::vector<StringPair> global_values = {}; // use GlobalValueStore resource for access to global values!
     std::string cli_execute_lua_commands;
 
     // detailed and service-specific configurations
@@ -50,8 +53,8 @@ struct RuntimeConfig {
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool lua_host_port_retry = true;
     // Different default values for a present openGL
-    // In the WITH_GL not defined case, the user cannot overwrite the default
-#ifdef WITH_GL
+    // In the MEGAMOL_USE_OPENGL not defined case, the user cannot overwrite the default
+#ifdef MEGAMOL_USE_OPENGL
     bool no_opengl = false;
 #else
     bool no_opengl = true;
@@ -101,9 +104,9 @@ struct RuntimeConfig {
 
     enum class VRMode {
         Off,
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
         UnityKolab,
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#endif // MEGAMOL_USE_VR_INTEROP
     };
     VRMode vr_mode = VRMode::Off;
 
@@ -130,8 +133,8 @@ struct RuntimeConfig {
             std::string("\n\tResource directories: " ) + summarize(resource_directories) +
             std::string("\n\tShader directories: "   ) + summarize(shader_directories) +
             std::string("\n\tLog file: "             ) + log_file +
-            std::string("\n\tLog level: "            ) + std::to_string(log_level) +
-            std::string("\n\tEcho level: "           ) + std::to_string(echo_level) +
+            std::string("\n\tLog level: "            ) + megamol::core::utility::log::Log::print_log_level(log_level) +
+            std::string("\n\tEcho level: "           ) + megamol::core::utility::log::Log::print_log_level(echo_level) +
             std::string("\n\tProject files: "        ) + summarize(project_files) +
             std::string("\n\tLua host address: "     ) + lua_host_address
             ;

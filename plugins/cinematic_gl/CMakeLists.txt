@@ -5,9 +5,19 @@
 
 megamol_plugin(cinematic_gl
   BUILD_DEFAULT ON
-  DEPENDS_GL
+  DEPENDS_FEATURES
+    opengl
   DEPENDS_PLUGINS
-    cinematic
-  DEPENDS_EXTERNALS
-    libpng
-    imgui)
+    mmstd
+    mmstd_gl
+    cinematic)
+
+if (cinematic_gl_PLUGIN_ENABLED)
+  find_package(imgui CONFIG REQUIRED)
+  find_package(PNG REQUIRED)
+
+  target_link_libraries(cinematic_gl
+    PRIVATE
+      imgui::imgui
+      PNG::PNG)
+endif ()

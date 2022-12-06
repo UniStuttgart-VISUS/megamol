@@ -5,11 +5,11 @@
 
 megamol_plugin(infovis_gl
   BUILD_DEFAULT ON
-  DEPENDS_GL
+  DEPENDS_FEATURES
+    opengl
   DEPENDS_PLUGINS
+    mmstd
     mmstd_gl
     infovis
     datatools
-    compositing_gl
-  DEPENDS_EXTERNALS
-    Delaunator)
+    compositing_gl)

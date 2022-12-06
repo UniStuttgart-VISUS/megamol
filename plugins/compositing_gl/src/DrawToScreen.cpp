@@ -1,15 +1,15 @@
 
 #include "DrawToScreen.h"
 
-#include "mmcore/CoreInstance.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-
+#include "FrameStatistics.h"
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore_gl/flags/FlagCallsGL.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd_gl/flags/FlagCallsGL.h"
 
-megamol::compositing::DrawToScreen::DrawToScreen()
-        : core_gl::view::Renderer3DModuleGL()
+using megamol::core::utility::log::Log;
+
+megamol::compositing_gl::DrawToScreen::DrawToScreen()
+        : mmstd_gl::Renderer3DModuleGL()
         , m_dummy_color_tx(nullptr)
         , m_dummy_depth_tx(nullptr)
         , m_drawToScreen_prgm(nullptr)
@@ -22,46 +22,27 @@ megamol::compositing::DrawToScreen::DrawToScreen()
     this->m_input_depth_texture_call.SetCompatibleCall<CallTexture2DDescription>();
     this->MakeSlotAvailable(&this->m_input_depth_texture_call);
 
-    m_input_flags_call.SetCompatibleCall<core_gl::FlagCallRead_GLDescription>();
+    m_input_flags_call.SetCompatibleCall<mmstd_gl::FlagCallRead_GLDescription>();
     MakeSlotAvailable(&m_input_flags_call);
 }
 
-megamol::compositing::DrawToScreen::~DrawToScreen() {
+megamol::compositing_gl::DrawToScreen::~DrawToScreen() {
     this->Release();
 }
 
-bool megamol::compositing::DrawToScreen::create() {
+bool megamol::compositing_gl::DrawToScreen::create() {
 
     // create shader program
-    vislib_gl::graphics::gl::ShaderSource vert_shader_src;
-    vislib_gl::graphics::gl::ShaderSource frag_shader_src;
-
-    vislib::StringA shader_base_name("comp_drawToScreen");
-    vislib::StringA vertShaderName = shader_base_name + "::vertex";
-    vislib::StringA fragShaderName = shader_base_name + "::fragment";
-
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    ssf->MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
-    ssf->MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
-        m_drawToScreen_prgm = std::make_unique<GLSLShader>();
-        m_drawToScreen_prgm->Create(
-            vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
-    } catch (vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile %s (@%s):\n%s\n", shader_base_name.PeekBuffer(),
-            vislib_gl::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        // return false;
-    } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile %s:\n%s\n", shader_base_name.PeekBuffer(), e.GetMsgA());
-        // return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile %s: Unknown exception\n", shader_base_name.PeekBuffer());
-        // return false;
+        m_drawToScreen_prgm = core::utility::make_glowl_shader("comp_drawToScreen", shader_options,
+            "compositing_gl/drawToScreen.vert.glsl", "compositing_gl/drawToScreen.frag.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("DrawToScreen: " + std::string(e.what())).c_str());
+        return false;
     }
 
     auto err = glGetError();
@@ -79,17 +60,17 @@ bool megamol::compositing::DrawToScreen::create() {
     return true;
 }
 
-void megamol::compositing::DrawToScreen::release() {
+void megamol::compositing_gl::DrawToScreen::release() {
     m_drawToScreen_prgm.reset();
 }
 
-bool megamol::compositing::DrawToScreen::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool megamol::compositing_gl::DrawToScreen::GetExtents(mmstd_gl::CallRender3DGL& call) {
     return true;
 }
 
-bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& call) {
+bool megamol::compositing_gl::DrawToScreen::Render(mmstd_gl::CallRender3DGL& call) {
     // get lhs render call
-    megamol::core_gl::view::CallRender3DGL* cr = &call;
+    mmstd_gl::CallRender3DGL* cr = &call;
     if (cr == NULL)
         return false;
 
@@ -116,9 +97,9 @@ bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& c
     auto width = call.GetFramebuffer()->getWidth();
     auto height = call.GetFramebuffer()->getHeight();
 
-    auto readFlagsCall = m_input_flags_call.CallAs<core_gl::FlagCallRead_GL>();
+    auto readFlagsCall = m_input_flags_call.CallAs<mmstd_gl::FlagCallRead_GL>();
     if (readFlagsCall != nullptr) {
-        (*readFlagsCall)(core_gl::FlagCallRead_GL::CallGetData);
+        (*readFlagsCall)(mmstd_gl::FlagCallRead_GL::CallGetData);
 
         if (m_last_tex_size != glm::ivec2(color_texture->getWidth(), color_texture->getHeight()) ||
             readFlagsCall->hasUpdate()) {
@@ -133,23 +114,24 @@ bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& c
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     if (m_drawToScreen_prgm != nullptr) {
-        m_drawToScreen_prgm->Enable();
+        m_drawToScreen_prgm->use();
 
         glActiveTexture(GL_TEXTURE0);
         color_texture->bindTexture();
-        glUniform1i(m_drawToScreen_prgm->ParameterLocation("input_tx2D"), 0);
+        glUniform1i(m_drawToScreen_prgm->getUniformLocation("input_tx2D"), 0);
 
         glActiveTexture(GL_TEXTURE1);
         depth_texture->bindTexture();
-        glUniform1i(m_drawToScreen_prgm->ParameterLocation("depth_tx2D"), 1);
+        glUniform1i(m_drawToScreen_prgm->getUniformLocation("depth_tx2D"), 1);
 
-        glUniform1ui(m_drawToScreen_prgm->ParameterLocation("flags_available"), readFlagsCall != nullptr ? 1 : 0);
-        glUniform1ui(m_drawToScreen_prgm->ParameterLocation("frame_id"), this->GetCoreInstance()->GetFrameID());
-        glUniform2i(m_drawToScreen_prgm->ParameterLocation("viewport_resolution"), width, height);
+        glUniform1ui(m_drawToScreen_prgm->getUniformLocation("flags_available"), readFlagsCall != nullptr ? 1 : 0);
+        glUniform1ui(m_drawToScreen_prgm->getUniformLocation("frame_id"),
+            frontend_resources.get<frontend_resources::FrameStatistics>().rendered_frames_count);
+        glUniform2i(m_drawToScreen_prgm->getUniformLocation("viewport_resolution"), width, height);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        m_drawToScreen_prgm->Disable();
+        glUseProgram(0);
     }
 
     glDisable(GL_BLEND);
@@ -157,4 +139,4 @@ bool megamol::compositing::DrawToScreen::Render(core_gl::view::CallRender3DGL& c
     return true;
 }
 
-void megamol::compositing::DrawToScreen::PreRender(core_gl::view::CallRender3DGL& call) {}
+void megamol::compositing_gl::DrawToScreen::PreRender(mmstd_gl::CallRender3DGL& call) {}

@@ -8,23 +8,18 @@
 #include <map>
 #include <utility>
 
+#include <glowl/glowl.h>
+
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/light/CallLight.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
-
-#include "glowl/BufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
-#include "vislib_gl/graphics/gl/GLSLTesselationShader.h"
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-
+#include "mmstd/light/CallLight.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/ResidueSelectionCall.h"
 #include "protein_calls/UncertaintyDataCall.h"
 #include "protein_gl/DeferredRenderingProvider.h"
+#include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
 namespace megamol {
@@ -37,7 +32,7 @@ using namespace vislib_gl::graphics::gl;
 /**
  * Renderer for uncertain cartoon renderings
  */
-class UncertaintyCartoonRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+class UncertaintyCartoonRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -94,7 +89,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The ...
@@ -113,7 +108,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
 private:
     /**

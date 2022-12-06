@@ -5,22 +5,17 @@
  * All rights reserved.
  */
 
-#ifndef LOCAL_LIGHTING_H_INCLUDED
-#define LOCAL_LIGHTING_H_INCLUDED
+#pragma once
+
+#include <glowl/glowl.h>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
-
-#include "glowl/BufferObject.hpp"
-#include "glowl/Texture2D.hpp"
-
-namespace megamol {
-namespace compositing {
+namespace megamol::compositing_gl {
 
 class LocalLighting : public core::Module {
 public:
@@ -82,15 +77,16 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
-    typedef vislib_gl::graphics::gl::GLSLComputeShader GLSLComputeShader;
-
     uint32_t m_version;
 
     /** Shader program for texture add (Lambert Illumination) */
-    std::unique_ptr<GLSLComputeShader> m_lambert_prgm;
+    std::unique_ptr<glowl::GLSLProgram> m_lambert_prgm;
 
     /** Shader program for texture add (Blinn-Phong Illumination) */
-    std::unique_ptr<GLSLComputeShader> m_phong_prgm;
+    std::unique_ptr<glowl::GLSLProgram> m_phong_prgm;
+
+    /** Shader program for texture add (Blinn-Phong Illumination) */
+    std::unique_ptr<glowl::GLSLProgram> m_toon_prgm;
 
     /** Texture that the lighting result will be written to */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
@@ -120,6 +116,9 @@ private:
     megamol::core::param::ParamSlot m_phong_k_specular;
     megamol::core::param::ParamSlot m_phong_k_exp;
 
+    megamol::core::param::ParamSlot m_toon_exposure_avg_intensity;
+    megamol::core::param::ParamSlot m_toon_roughness;
+
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;
 
@@ -142,8 +141,4 @@ private:
     megamol::core::CallerSlot m_camera_slot;
 };
 
-} // namespace compositing
-} // namespace megamol
-
-
-#endif // !LOCAL_LIGHTING_H_INCLUDED
+} // namespace megamol::compositing_gl

@@ -10,11 +10,35 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include <thrust\device_vector.h>
-#include <thrust\sort.h>
-#include "helper_includes\exception.h"
-#include "helper_includes\helper_cuda.h"
+#include <thrust/device_vector.h>
+#include <thrust/sort.h>
+#include "helper_includes/exception.h"
+#include "helper_includes/helper_cuda.h"
+#include <glm/glm.hpp>
 
+#include "vislib/types.h"
+#include "Types.h"
+#include <memory.h>
+
+#include "mmcore/utility/log/Log.h"
+#include "vislib_gl/graphics/gl/FramebufferObject.h"
+#include "vislib/math/Matrix.h"
+#include "vislib/math/Vector.h"
+
+// C++ includes
+#include <algorithm>
+#include <array>
+#include <cfloat>
+#include <ctime>
+#include <iostream>
+#include <map>
+#include <mutex>
+#include <ppl.h>
+#include <queue>
+#include <set>
+#include <thread>
+#include <valarray>
+#include <vector>
 
 /**
  * The equal operator for the CUDA float3 type.
@@ -157,7 +181,7 @@ namespace molecularmaps {
          */
         std::vector<FaceGroup> GroupFaces(const std::vector<bool>& p_face_shadowed,
             const std::vector<std::vector<Edge>>& p_face_edge_offset, const std::vector<uint>& p_face_edge_offset_depth,
-            const vislib::Array<vec3f>& p_group_colour_table, const std::vector<uint>& p_faces,
+            const std::vector<glm::vec3>& p_group_colour_table, const std::vector<uint>& p_faces,
             std::vector<float>& p_vertexColors_group);
 
         /**

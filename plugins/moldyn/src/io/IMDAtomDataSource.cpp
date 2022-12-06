@@ -248,7 +248,9 @@ private:
             this->pos = 0;
             try {
                 return (this->file.Read(dst, size) == size);
-            } catch (...) { return false; }
+            } catch (...) {
+                return false;
+            }
         }
 
         try {
@@ -286,7 +288,9 @@ private:
             try {
                 this->file.Seek(size, vislib::sys::File::CURRENT);
                 return true;
-            } catch (...) { return false; }
+            } catch (...) {
+                return false;
+            }
         }
 
         try { // read into buffer
@@ -352,7 +356,9 @@ public:
         const char* c = this->sift(fail);
         try {
             return static_cast<UINT32>(vislib::CharTraitsA::ParseInt(c));
-        } catch (...) { fail = true; }
+        } catch (...) {
+            fail = true;
+        }
         return 0;
     }
 
@@ -368,7 +374,9 @@ public:
         const char* c = this->sift(fail);
         try {
             return static_cast<float>(vislib::CharTraitsA::ParseDouble(c));
-        } catch (...) { fail = true; }
+        } catch (...) {
+            fail = true;
+        }
         return 0.0f;
     }
 
@@ -934,8 +942,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
             this->defCol[2] =
                 static_cast<unsigned char>(vislib::math::Clamp<int>(static_cast<int>(b * 255.0f), 0, 255));
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "Unable to parse default colour \"%s\"\n",
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to parse default colour \"%s\"\n",
                 this->colourSlot.Param<core::param::StringParam>()->Value().c_str());
         }
     }
@@ -958,8 +965,7 @@ bool IMDAtomDataSource::getDataCallback(core::Call& caller) {
             this->dirdefCol[2] =
                 static_cast<unsigned char>(vislib::math::Clamp<int>(static_cast<int>(b * 255.0f), 0, 255));
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "Unable to parse default dir::colour \"%s\"\n",
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to parse default dir::colour \"%s\"\n",
                 this->dircolourSlot.Param<core::param::StringParam>()->Value().c_str());
         }
     }
@@ -1134,11 +1140,11 @@ void IMDAtomDataSource::assertData(void) {
 
     vislib::sys::FastFile file;
     auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
-    //    Log::DefaultLog.WriteInfo(50, _T("Loading \"%s\""), filename.PeekBuffer());
+    //    Log::DefaultLog.WriteInfo( _T("Loading \"%s\""), filename.PeekBuffer());
     // this->datahash = static_cast<SIZE_T>(filename.HashCode());
     if (!file.Open(filename.native().c_str(), vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
             vislib::sys::File::OPEN_ONLY)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to open imd file %s\n", filename.generic_u8string().c_str());
+        Log::DefaultLog.WriteError("Unable to open imd file %s\n", filename.generic_u8string().c_str());
         return;
     }
 
@@ -1149,10 +1155,10 @@ void IMDAtomDataSource::assertData(void) {
         return;
     }
 
-    //    Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100,
+    //    Log::DefaultLog.WriteInfo(
     //        "IMDAtom with %d data colums:\n", static_cast<int>(header.captions.Count()));
     //    for (SIZE_T i = 0; i < header.captions.Count(); i++) {
-    //        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100,
+    //        Log::DefaultLog.WriteInfo(
     //            "\t%s\n", header.captions[i].PeekBuffer());
     //    }
 
@@ -1194,7 +1200,7 @@ void IMDAtomDataSource::assertData(void) {
                                        : this->readData<AtomReaderFloatSwitched>(file, header, loadDir, splitLoadDir);
         break;
     default:
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to read imd file: Illegal format\n");
+        Log::DefaultLog.WriteError("Unable to read imd file: Illegal format\n");
         break;
     }
 
@@ -1215,8 +1221,8 @@ void IMDAtomDataSource::assertData(void) {
                 cnt += this->posData[i]->GetSize() / (sizeof(float) * 3);
             }
         }
-        //        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO, "%d Atoms loaded\n", cnt);
-        //        Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Data bounding box = (%f, %f, %f) ... (%f, %f, %f)\n",
+        //        Log::DefaultLog.WriteInfo( "%d Atoms loaded\n", cnt);
+        //        Log::DefaultLog.WriteInfo( "Data bounding box = (%f, %f, %f) ... (%f, %f, %f)\n",
         //            this->minX, this->minY, this->minZ, this->maxX, this->maxY, this->maxZ);
 
         // this->datahash = (this->datahash << (sizeof(SIZE_T) / 2))
@@ -1255,8 +1261,7 @@ bool IMDAtomDataSource::readHeader(vislib::sys::File& file, IMDAtomDataSource::H
         file.SeekToBegin();
         line = vislib::sys::ReadLineFromFileA(file);
         if (line[0] != '#') {
-            Log::DefaultLog.WriteMsg(
-                Log::LEVEL_ERROR, "Failed to parse IMD header: Illegal first line character %c\n", line[0]);
+            Log::DefaultLog.WriteError("Failed to parse IMD header: Illegal first line character %c\n", line[0]);
             return false;
         }
 
@@ -1276,8 +1281,7 @@ bool IMDAtomDataSource::readHeader(vislib::sys::File& file, IMDAtomDataSource::H
             linePos++;
 
             if (line[0] != '#') {
-                Log::DefaultLog.WriteMsg(
-                    Log::LEVEL_WARN, "Line %d has illegal first character: %c\n", linePos, line[0]);
+                Log::DefaultLog.WriteWarn("Line %d has illegal first character: %c\n", linePos, line[0]);
                 warnCnt++;
                 if (warnCnt == 10) {
                     throw new vislib::Exception("Too many warnings", __FILE__, __LINE__);
@@ -1390,14 +1394,14 @@ bool IMDAtomDataSource::readHeader(vislib::sys::File& file, IMDAtomDataSource::H
                     cnt += header.pos + header.vel + header.dat;
                     int hcnt = static_cast<int>(header.captions.Count());
                     if (hcnt < cnt) {
-                        Log::DefaultLog.WriteMsg(
-                            Log::LEVEL_WARN, "Too few data column captions specified (%d instead of %d)", hcnt, cnt);
+                        Log::DefaultLog.WriteWarn(
+                            "Too few data column captions specified (%d instead of %d)", hcnt, cnt);
                         for (; hcnt < cnt; hcnt++) {
                             header.captions.Add("unnamed");
                         }
                     } else if (hcnt > cnt) {
-                        Log::DefaultLog.WriteMsg(
-                            Log::LEVEL_WARN, "Too many data column captions specified (%d instead of %d)", hcnt, cnt);
+                        Log::DefaultLog.WriteWarn(
+                            "Too many data column captions specified (%d instead of %d)", hcnt, cnt);
                         header.captions.Erase(cnt, hcnt - cnt);
                     }
                 }
@@ -1405,11 +1409,13 @@ bool IMDAtomDataSource::readHeader(vislib::sys::File& file, IMDAtomDataSource::H
                 return true;
             }
         }
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to parse IMD header: unexpected end of file\n");
+        Log::DefaultLog.WriteError("Failed to parse IMD header: unexpected end of file\n");
 
     } catch (vislib::Exception ex) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to parse IMD header: %s\n", ex.GetMsgA());
-    } catch (...) { Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Failed to parse IMD header: unexpected exception\n"); }
+        Log::DefaultLog.WriteError("Failed to parse IMD header: %s\n", ex.GetMsgA());
+    } catch (...) {
+        Log::DefaultLog.WriteError("Failed to parse IMD header: unexpected exception\n");
+    }
 
     return false;
 }
@@ -1526,16 +1532,18 @@ bool IMDAtomDataSource::readData(
             try {
                 typecolumn = vislib::CharTraitsA::ParseInt(typecolname);
                 if (typecolumn >= static_cast<unsigned int>(header.captions.Count())) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "The parsed type column index is out of range (%u not in 0..%d)\n", typecolumn,
                         static_cast<int>(header.captions.Count()) - 1);
                     typecolumn = UINT_MAX;
                 }
-            } catch (...) { typecolumn = UINT_MAX; }
+            } catch (...) {
+                typecolumn = UINT_MAX;
+            }
         }
 
         if (typecolumn == UINT_MAX) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Failed to parse type column selection: %s\n", typecolname.PeekBuffer());
         }
     }
@@ -1567,16 +1575,18 @@ bool IMDAtomDataSource::readData(
             try {
                 colcolumn = vislib::CharTraitsA::ParseInt(colcolname);
                 if (colcolumn >= static_cast<unsigned int>(header.captions.Count())) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "The parsed colouring column index is out of range (%u not in 0..%d)\n", colcolumn,
                         static_cast<int>(header.captions.Count()) - 1);
                     colcolumn = UINT_MAX;
                 }
-            } catch (...) { colcolumn = UINT_MAX; }
+            } catch (...) {
+                colcolumn = UINT_MAX;
+            }
         }
 
         if (colcolumn == UINT_MAX) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Failed to parse colour column selection: %s\n", colcolname.PeekBuffer());
         }
     }
@@ -1605,15 +1615,17 @@ bool IMDAtomDataSource::readData(
             try {
                 dircolcolumn = vislib::CharTraitsA::ParseInt(dircolcolname);
                 if (dircolcolumn >= static_cast<unsigned int>(header.captions.Count())) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "The parsed dir colouring column index is out of range (%u not in 0..%d)\n", dircolcolumn,
                         static_cast<int>(header.captions.Count()) - 1);
                     dircolcolumn = UINT_MAX;
                 }
-            } catch (...) { dircolcolumn = UINT_MAX; }
+            } catch (...) {
+                dircolcolumn = UINT_MAX;
+            }
         }
         if (dircolcolumn == UINT_MAX) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Failed to parse dir colour column selection: %s\n", dircolcolname.PeekBuffer());
         }
     }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mmcore/AbstractGetDataCall.h"
+#include "mmstd/data/AbstractGetDataCall.h"
 
 #include "cuda.h"
 #include "optix.h"

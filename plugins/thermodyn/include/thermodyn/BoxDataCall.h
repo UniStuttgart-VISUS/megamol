@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "mmcore/AbstractGetData3DCall.h"
+#include "mmstd/data/AbstractGetData3DCall.h"
 
 #include "vislib/math/Cuboid.h"
 

@@ -9,13 +9,13 @@
 
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataAccessCollection.h"
-#include "mmcore/AbstractDataWriter.h"
+#include "mmstd/data/AbstractDataWriter.h"
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "obj_io/obj_io.h"
+#include "obj_io.h"
 
 namespace megamol {
 namespace mesh {

@@ -55,7 +55,7 @@ bool megamol::gui::PopUps::Rename(const std::string& label_id, bool open_popup, 
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
-        if (ImGui::Button("Cancel") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+        if (ImGui::Button("Cancel") || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
             ImGui::CloseCurrentPopup();
         }
 
@@ -104,7 +104,7 @@ bool megamol::gui::PopUps::Minimal(const std::string& label_id, bool open_popup,
                 ImGui::CloseCurrentPopup();
             }
         }
-        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+        if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
             ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();

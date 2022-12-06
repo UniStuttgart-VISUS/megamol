@@ -26,6 +26,15 @@ namespace datatools {
  */
 class CSVFileSequence : public core::Module {
 public:
+    typedef core::Module Base;
+
+    std::vector<std::string> requested_lifetime_resources() override {
+        auto lifetime_resources = Base::requested_lifetime_resources();
+        lifetime_resources.push_back("MegaMolGraph");
+        lifetime_resources.emplace_back("PluginsResource");
+        return lifetime_resources;
+    }
+
     /**
      * Answer the name of this module.
      *

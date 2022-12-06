@@ -11,17 +11,17 @@ jobs:
   style_check_comment:
     name: Style-Check-Comment
     if: ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'failure' }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
       - name: Download artifact
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             var artifacts = await github.rest.actions.listWorkflowRunArtifacts({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              run_id: ${{github.event.workflow_run.id }},
+              run_id: ${{ github.event.workflow_run.id }},
             });
             var prArtifact = artifacts.data.artifacts.filter((artifact) => artifact.name == "pr")[0];
             var download = await github.rest.actions.downloadArtifact({
@@ -31,7 +31,7 @@ jobs:
               archive_format: 'zip',
             });
             var fs = require('fs');
-            fs.writeFileSync('${{github.workspace}}/pr.zip', Buffer.from(download.data));
+            fs.writeFileSync('${{ github.workspace }}/pr.zip', Buffer.from(download.data));
             await github.rest.actions.deleteArtifact({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -39,7 +39,7 @@ jobs:
             });
       - run: unzip pr.zip
       - name: Comment
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             var fs = require('fs');
@@ -49,6 +49,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: 'Style check found [formatting issues](https://github.com/'
-                    + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + ${{github.event.workflow_run.id }} + ')! '
+                    + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + ${{ github.event.workflow_run.id }} + ')! '
                     + 'Comment `/format`, to automatically commit the suggested changes.'
             })

@@ -12,6 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "datatools/AbstractParticleManipulator.h"
+#include "vislib/RawStorage.h"
 #include "vislib/math/Dimension.h"
 #include <vector>
 

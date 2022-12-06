@@ -9,6 +9,7 @@
 #include <iostream>
 #include <numeric> // std::accumulate
 #include <string>
+#include <type_traits>
 
 
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
@@ -65,25 +66,21 @@ static megamol::core::param::AbstractParam* getParameterFromParamSlot(megamol::c
                   ", slot is not available");
         return nullptr;
     }
-    if (param_slot->Parameter().IsNull()) {
+    if (param_slot->Parameter() == nullptr) {
         log_error("error. cannot find parameter: " + std::string(param_slot->Name().PeekBuffer()) +
                   ", slot has no parameter");
         return nullptr;
     }
 
-    return param_slot->Parameter().DynamicCast<megamol::core::param::AbstractParam>();
+    return param_slot->Parameter().get();
 }
 
-megamol::core::MegaMolGraph::MegaMolGraph(megamol::core::CoreInstance& core,
+megamol::core::MegaMolGraph::MegaMolGraph(
     factories::ModuleDescriptionManager const& moduleProvider, factories::CallDescriptionManager const& callProvider)
         : moduleProvider_ptr{&moduleProvider}
         , callProvider_ptr{&callProvider}
         , dummy_namespace{std::make_shared<RootModuleNamespace>()}
-        , convenience_functions{const_cast<MegaMolGraph*>(this)} {
-    // the Core Instance is a parasite that needs to be passed to all modules
-    // TODO: make it so there is no more core instance
-    dummy_namespace->SetCoreInstance(core);
-}
+        , convenience_functions{const_cast<MegaMolGraph*>(this)} {}
 
 megamol::core::MegaMolGraph::~MegaMolGraph() {
     moduleProvider_ptr = nullptr;
@@ -130,23 +127,6 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& old, std::stri
     module_it->request.id = newId;
     module_it->modulePtr->setName(newId.c_str());
 
-    for (auto child = module_it->modulePtr->ChildList_Begin(); child != module_it->modulePtr->ChildList_End();
-         ++child) {
-        auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
-        if (ps != nullptr) {
-            auto p = ps->Param<param::ButtonParam>();
-            if (p != nullptr) {
-                auto command_name = oldId + std::string("_") + ps->Name().PeekBuffer();
-                auto updated_command_name = newId + std::string("_") + ps->Name().PeekBuffer();
-                auto c = m_command_registry->get_command(command_name);
-                m_command_registry->remove_command_by_name(command_name);
-                c.name = updated_command_name;
-                c.parent = ps->FullName();
-                m_command_registry->add_command(c);
-            }
-        }
-    }
-
     const auto matches_old_prefix = [&](std::string const& call_slot) {
         auto res = call_slot.find(oldId);
         return (res != std::string::npos) && res == 0;
@@ -175,6 +155,12 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& old, std::stri
                       " -> " + newId);
             return false;
         }
+    }
+
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.RenameModule(oldId, newId, *module_it); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second + " failed to process module rename: " + oldId + " -> " + newId);
+        return false;
     }
 
     return true;
@@ -216,7 +202,70 @@ megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
 }
 
 megamol::core::param::AbstractParam* megamol::core::MegaMolGraph::FindParameter(std::string const& paramName) const {
-    return getParameterFromParamSlot(this->FindParameterSlot(clean(paramName)));
+    return getParameterFromParamSlot(this->FindParameterSlot(paramName));
+}
+
+bool megamol::core::MegaMolGraph::SetParameter(std::string const& paramName, std::string const& value) {
+    auto param_slot_ptr = FindParameterSlot(paramName);
+    auto param_ptr = getParameterFromParamSlot(param_slot_ptr);
+
+    if (!param_ptr)
+        return false;
+
+    // unused since generic param changes mechanism does not allow passing 'old value' to graph subscribers
+    auto old_value = param_ptr->ValueString();
+
+    bool success = param_ptr->ParseValue(value);
+
+    // param changes are queued in the graphs parameter changes queue
+    // and get passed to graph subscribers at beginning of each frame by the Lua Service
+    // using MegaMolGraph::Broadcast_graph_subscribers_parameter_changes()
+
+    if (!success)
+        return false;
+
+    return true;
+}
+
+bool megamol::core::MegaMolGraph::Broadcast_graph_subscribers_parameter_changes() {
+    for (auto& subscriber : graph_subscribers.subscribers) {
+
+        for (auto changed_param_ptr : module_param_changes_queue) {
+            if (!changed_param_ptr) {
+                log_error("AbstractParamSlot* of a changed module parameter turned out nullptr. can not propagate "
+                          "changed param value to graph subscribers.");
+                return false;
+            }
+            auto abstract_parameter_ptr = changed_param_ptr->Parameter();
+
+            if (abstract_parameter_ptr == nullptr) {
+                log_error(
+                    " casting AbstractParamSlot* to AbstractParam* failed. Can not propagate changed param value.");
+                return false;
+            }
+
+            auto param_value = abstract_parameter_ptr->ValueString();
+
+            param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(changed_param_ptr);
+
+            if (!param_slot_ptr) {
+                log_error("Parameter at ParamSlot* is Null. Can not propagate changed param value.");
+                return false;
+            }
+
+            auto param_name = std::string{param_slot_ptr->FullName().PeekBuffer()};
+
+            if (!subscriber.ParameterChanged(param_slot_ptr, param_value)) {
+                log_error("graph subscriber " + subscriber.Name() +
+                          " failed to process parameter change: " + param_name + " to " + param_value);
+                return false;
+            }
+        }
+    }
+
+    module_param_changes_queue.clear();
+
+    return true;
 }
 
 megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& param) const {
@@ -323,7 +372,7 @@ std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::ListP
 
 bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string module) {
     auto moduleName = clean(module);
-    // currently, we expect the entry point to be derived from AbstractView
+    // currently, we expect the entry point to be derived from AbstractViewInterface
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
@@ -335,8 +384,10 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string module) {
     auto& module_ref = *module_shared_ptr;
     auto* module_raw_ptr = &module_ref;
 
-    if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_raw_ptr); view_ptr == nullptr) {
-        log_error("error adding graph entry point. module is not an entry point type (AbstractView): " + moduleName);
+    if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractViewInterface*>(module_raw_ptr);
+        view_ptr == nullptr) {
+        log_error(
+            "error adding graph entry point. module is not an entry point type (AbstractViewInterface): " + moduleName);
         return false;
     }
 
@@ -355,6 +406,13 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string module) {
 
     module_it->isGraphEntryPoint = true;
     log("set graph entry point: " + moduleName);
+
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.EnableEntryPoint(*module_it); });
+        result.first == false) {
+        log_error(
+            "graph subscriber " + result.second + " failed to process enabling entry point " + module_it->request.id);
+        return false;
+    }
 
     return true;
 }
@@ -384,6 +442,13 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string module) {
     module_it->isGraphEntryPoint = false;
     log("remove graph entry point: " + moduleName);
 
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.DisableEntryPoint(*module_it); });
+        result.first == false) {
+        log_error(
+            "graph subscriber " + result.second + " failed to process disabling entry point " + module_it->request.id);
+        return false;
+    }
+
     return true;
 }
 
@@ -391,26 +456,15 @@ bool megamol::core::MegaMolGraph::AddFrontendResources(
     std::vector<megamol::frontend::FrontendResource> const& resources) {
     this->provided_resources_lookup = {resources};
 
-    auto [success, graph_resources] = provided_resources_lookup.get_requested_resources(
-        {"ImagePresentationEntryPoints", megamol::frontend_resources::CommandRegistry_Req_Name,
-#ifdef PROFILING
-            megamol::frontend_resources::PerformanceManager_Req_Name
-#endif
-        });
+    auto [success, graph_resources] = provided_resources_lookup.get_requested_resources({
+        "ImagePresentationEntryPoints",
+    });
 
     if (!success)
         return false;
 
     m_image_presentation = &const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
         graph_resources[0].getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
-
-    m_command_registry = &const_cast<megamol::frontend_resources::CommandRegistry&>(
-        graph_resources[1].getResource<megamol::frontend_resources::CommandRegistry>());
-
-#ifdef PROFILING
-    m_perf_manager = &const_cast<frontend_resources::PerformanceManager&>(
-        graph_resources[2].getResource<megamol::frontend_resources::PerformanceManager>());
-#endif
 
     return true;
 }
@@ -419,13 +473,24 @@ megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenienc
     return this->convenience_functions;
 }
 
+megamol::frontend_resources::MegaMolGraph_SubscriptionRegistry& megamol::core::MegaMolGraph::GraphSubscribers() {
+    return this->graph_subscribers;
+}
+
 void megamol::core::MegaMolGraph::Clear() {
+    while (!call_list_.empty()) {
+        auto& call = call_list_.front().request;
+        delete_call(CallDeletionRequest_t{call.from, call.to});
+    }
     call_list_.clear();
-    for (auto& m : module_list_)
-        if (m.isGraphEntryPoint)
-            m_image_presentation->remove_entry_point(m.request.id);
-    graph_entry_points.clear();
+
+    while (!module_list_.empty()) {
+        auto& module = module_list_.front().request;
+        delete_module(ModuleDeletionRequest_t{module.id});
+    }
     module_list_.clear();
+    graph_entry_points.clear();
+    module_param_changes_queue.clear();
 }
 
 /*
@@ -525,25 +590,37 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
 
     bool isCreateOk = create_module(this->module_list_.front().lifetime_resources);
 
+    // tell subscribers about module
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.AddModule(this->module_list_.front()); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second + " failed to process module add: " + request.className + "(" +
+                  request.id + ")");
+        isCreateOk = false;
+    }
+
+    // tell subscribers about parameters of module
+    using ParamSlotPtr = frontend_resources::ModuleGraphSubscription::ParamSlotPtr;
+    std::vector<ParamSlotPtr> param_ptrs = module_ptr->GetSlots<std::remove_pointer<ParamSlotPtr>::type>();
+    for (auto& param_ptr : param_ptrs) {
+        assert(param_ptr != nullptr);
+        param_ptr->Parameter()->setChangeCallback(this->param_change_callback);
+    }
+
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.AddParameters(param_ptrs); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second +
+                  " failed to process added parameters of module: " + request.className + "(" + request.id + ")" +
+                  std::accumulate(param_ptrs.begin(), param_ptrs.end(), std::string("Parameters: "),
+                      [](std::string const& left, ParamSlotPtr const& right) {
+                          return left + "\n   " + std::string(right->FullName());
+                      }));
+        isCreateOk = false;
+    }
+
     if (!isCreateOk) {
         this->module_list_.pop_front();
-    } else {
-        // iterate parameters, add hotkeys to CommandRegistry
-        for (auto child = module_ptr->ChildList_Begin(); child != module_ptr->ChildList_End(); ++child) {
-            auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
-            if (ps != nullptr) {
-                auto p = ps->Param<param::ButtonParam>();
-                if (p != nullptr) {
-                    frontend_resources::Command c;
-                    c.key = p->GetKeyCode();
-                    c.parent = ps->FullName();
-                    c.name = module_ptr->Name().PeekBuffer() + std::string("_") + ps->Name().PeekBuffer();
-                    c.effect = this->Parameter_Lambda;
-                    m_command_registry->add_command(c);
-                }
-            }
-        }
     }
+
     return isCreateOk;
 }
 
@@ -658,17 +735,13 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 
     log("create call: " + request.from + " -> " + request.to + " (" + std::string(call_description->ClassName()) + ")");
     this->call_list_.emplace_front(CallInstance_t{call, request});
-#ifdef PROFILING
-    auto the_call = call.get();
-    //printf("adding timers for @ %p = %s \n", reinterpret_cast<void*>(the_call), the_call->GetDescriptiveText().c_str());
-    the_call->cpu_queries =
-        m_perf_manager->add_timers(the_call, frontend_resources::PerformanceManager::query_api::CPU);
-    if (the_call->GetCapabilities().OpenGLRequired()) {
-        the_call->gl_queries =
-            m_perf_manager->add_timers(the_call, frontend_resources::PerformanceManager::query_api::OPENGL);
+
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.AddCall(this->call_list_.front()); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second + " failed to process call add : " + request.from + " -> " +
+                  request.to);
+        return false;
     }
-    the_call->perf_man = m_perf_manager;
-#endif
 
     return true;
 }
@@ -701,15 +774,21 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
         return false;
     }
 
-    // iterate parameters, remove hotkeys from CommandRegistry
-    for (auto child = module_ptr->ChildList_Begin(); child != module_ptr->ChildList_End(); ++child) {
-        auto ps = dynamic_cast<param::ParamSlot*>((*child).get());
-        if (ps != nullptr) {
-            auto p = ps->Param<param::ButtonParam>();
-            if (p != nullptr) {
-                m_command_registry->remove_command_by_parent(ps->FullName().PeekBuffer());
-            }
-        }
+    // tell subscribers about parameters of module
+    using ParamSlotPtr = frontend_resources::ModuleGraphSubscription::ParamSlotPtr;
+    std::vector<ParamSlotPtr> param_ptrs = module_ptr->GetSlots<std::remove_pointer<ParamSlotPtr>::type>();
+    for (auto& param_ptr : param_ptrs) {
+        assert(param_ptr != nullptr);
+    }
+
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.RemoveParameters(param_ptrs); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second +
+                  " failed to process removal of parameters of module: " + +module_it->modulePtr->FullName() +
+                  std::accumulate(param_ptrs.begin(), param_ptrs.end(), std::string("Parameters: "),
+                      [](std::string const& left, ParamSlotPtr const& right) {
+                          return left + "\n   " + std::string(right->FullName());
+                      }));
     }
 
     // delete all outgoing/incoming calls
@@ -722,18 +801,21 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
         delete_call(CallDeletionRequest_t{call_it->request.from, call_it->request.to});
     });
 
-    if (module_it->isGraphEntryPoint)
+    if (module_it->isGraphEntryPoint) {
+        if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.DisableEntryPoint(*module_it); });
+            result.first == false) {
+            log_error("graph subscriber " + result.second + " failed to process disabling entry point: " + request);
+        }
         this->RemoveGraphEntryPoint(request);
+    }
 
-    const auto release_module = [module_ptr](auto& module_lifetime_dependencies) -> bool {
-        module_ptr->Release(module_lifetime_dependencies);
-        log("release module: " + std::string(module_ptr->Name().PeekBuffer()));
-        return true;
-        // end of lambda scope deletes last shared_ptr to module
-        // thus the module gets deleted after execution and deletion of this command callback
-    };
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.DeleteModule(*module_it); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second + " failed to process module deletion: " + request);
+    }
 
-    release_module(module_it->lifetime_resources);
+    module_ptr->Release(module_it->lifetime_resources);
+    log("release module: " + std::string(module_ptr->Name().PeekBuffer()));
 
     this->module_list_.erase(module_it);
 
@@ -759,13 +841,12 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
         return false;
     }
 
-#ifdef PROFILING
-    auto the_call = call_it->callPtr;
-    m_perf_manager->remove_timers(the_call->cpu_queries);
-    if (the_call->GetCapabilities().OpenGLRequired()) {
-        m_perf_manager->remove_timers(the_call->gl_queries);
+    if (auto result = graph_subscribers.tell_all([&](auto& s) { return s.DeleteCall(*call_it); });
+        result.first == false) {
+        log_error("graph subscriber " + result.second + " failed to process call deletion: " + request.from + " -> " +
+                  request.to);
+        return false;
     }
-#endif
 
     source->SetCleanupMark(true);
     source->DisconnectCalls();
@@ -796,4 +877,16 @@ megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_mo
     std::string const& request) const {
     return std::find_if(module_list_.begin(), module_list_.end(),
         [&](auto const& module) { return check_module_is_prefix(request, module); });
+}
+
+void megamol::frontend_resources::MegaMolGraph_SubscriptionRegistry::subscribe(ModuleGraphSubscription subscriber) {
+    subscribers.push_back(subscriber);
+}
+
+void megamol::frontend_resources::MegaMolGraph_SubscriptionRegistry::unsubscribe(std::string const& subscriber_name) {
+    auto find_it = std::find_if(
+        subscribers.begin(), subscribers.end(), [&](auto const& elem) { return elem.Name() == subscriber_name; });
+
+    if (find_it != subscribers.end())
+        subscribers.erase(find_it);
 }

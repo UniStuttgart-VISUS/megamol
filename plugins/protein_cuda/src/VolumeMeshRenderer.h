@@ -5,18 +5,18 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_VOLUMEMESHRENDERER_H_INCLUDED
-#define MEGAMOLCORE_VOLUMEMESHRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "CenterLineGenerator.h"
 #include "MolecularAOShader.h"
 #include "VolumeMeshRenderer.cuh"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/DiagramCall.h"
 #include "protein_calls/MolecularDataCall.h"
@@ -27,7 +27,6 @@
 #include "quicksurf/WKFUtils.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib_gl/graphics/gl/FramebufferObject.h"
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
 #include <cuda_runtime.h>
 
 namespace megamol {
@@ -36,7 +35,7 @@ namespace protein_cuda {
 /**
  * Volume Mesh Renderer class
  */
-class VolumeMeshRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+class VolumeMeshRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     enum PolygonMode { POINT, LINE, FILL };
 
@@ -101,7 +100,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -109,7 +108,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Calculate the density map and surface.
@@ -383,8 +382,8 @@ private:
     struct cudaGraphicsResource* colorResource;
 
     /** */
-    vislib_gl::graphics::gl::GLSLGeometryShader normalShader;
-    vislib_gl::graphics::gl::GLSLShader lightShader;
+    std::unique_ptr<glowl::GLSLProgram> normalShader;
+    std::unique_ptr<glowl::GLSLProgram> lightShader;
 
     /** parameter slot for positional interpolation */
     megamol::core::param::ParamSlot interpolParam;
@@ -500,11 +499,11 @@ private:
     megamol::core::param::ParamSlot haloEnableParam;
     megamol::core::param::ParamSlot haloAlphaParam;
     megamol::core::param::ParamSlot haloColorParam;
-    vislib_gl::graphics::gl::GLSLShader haloGenerateShader;
-    vislib_gl::graphics::gl::GLSLShader haloGrowShader;
-    vislib_gl::graphics::gl::GLSLShader haloGaussianHoriz;
-    vislib_gl::graphics::gl::GLSLShader haloGaussianVert;
-    vislib_gl::graphics::gl::GLSLShader haloDifferenceShader;
+    std::unique_ptr<glowl::GLSLProgram> haloGenerateShader;
+    std::unique_ptr<glowl::GLSLProgram> haloGrowShader;
+    std::unique_ptr<glowl::GLSLProgram> haloGaussianHoriz;
+    std::unique_ptr<glowl::GLSLProgram> haloGaussianVert;
+    std::unique_ptr<glowl::GLSLProgram> haloDifferenceShader;
 
     bool setCUDAGLDevice;
 };
@@ -512,5 +511,3 @@ private:
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif // MEGAMOLCORE_VOLUMEMESHRENDERER_H_INCLUDED

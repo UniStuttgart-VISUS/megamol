@@ -6,14 +6,12 @@
  */
 
 #include "SolPathRenderer.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd/renderer/CallRender3D.h"
 #include "protein/SolPathDataCall.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 using namespace megamol;
 using namespace megamol::protein_gl;
@@ -23,7 +21,7 @@ using namespace megamol::protein_gl;
  * SolPathRenderer::SolPathRenderer
  */
 SolPathRenderer::SolPathRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , getdataslot("getdata", "Fetches data")
         , pathlineShader() {
 
@@ -46,57 +44,18 @@ SolPathRenderer::~SolPathRenderer(void) {
 bool SolPathRenderer::create(void) {
     using megamol::core::utility::log::Log;
 
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
-        vislib_gl::graphics::gl::ShaderSource vertSrc;
-        vislib_gl::graphics::gl::ShaderSource fragSrc;
+        pathlineShader = core::utility::make_glowl_shader("pathlineShader", shader_options,
+            "protein_gl/solpath/pathline.vert.glsl", "protein_gl/solpath/pathline.frag.glsl");
 
-        if (!ssf->MakeShaderSource("solpath::pathline::vert", vertSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load pathline vertex shader source");
-            return false;
-        }
-        if (!ssf->MakeShaderSource("solpath::pathline::frag", fragSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load pathline fragment shader source");
-            return false;
-        }
+        dotsShader = core::utility::make_glowl_shader(
+            "dotsShader", shader_options, "protein_gl/solpath/dots.vert.glsl", "protein_gl/solpath/dots.vert.glsl");
 
-        if (!this->pathlineShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create pathline shader");
-            return false;
-        }
-
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create pathline shader: %s", e.GetMsgA());
-        return false;
-    } catch (...) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create pathline shader");
-        return false;
-    }
-
-    try {
-        vislib_gl::graphics::gl::ShaderSource vertSrc;
-        vislib_gl::graphics::gl::ShaderSource fragSrc;
-
-        if (!ssf->MakeShaderSource("solpath::dots::vert", vertSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load dots vertex shader source");
-            return false;
-        }
-        if (!ssf->MakeShaderSource("solpath::dots::frag", fragSrc)) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load dots fragment shader source");
-            return false;
-        }
-
-        if (!this->dotsShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create dots shader");
-            return false;
-        }
-
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create dots shader: %s", e.GetMsgA());
-        return false;
-    } catch (...) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to create dots shader");
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("SolPathRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -106,7 +65,7 @@ bool SolPathRenderer::create(void) {
 /*
  * SolPathRenderer::GetExtents
  */
-bool SolPathRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool SolPathRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL)
         return false;
@@ -126,16 +85,13 @@ bool SolPathRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * SolPathRenderer::release
  */
-void SolPathRenderer::release(void) {
-    this->pathlineShader.Release();
-    this->dotsShader.Release();
-}
+void SolPathRenderer::release(void) {}
 
 
 /*
  * SolPathRenderer::Render
  */
-bool SolPathRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool SolPathRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     core::view::CallRender3D* cr3d = dynamic_cast<core::view::CallRender3D*>(&call);
     if (cr3d == NULL)
         return false;
@@ -153,11 +109,11 @@ bool SolPathRenderer::Render(core_gl::view::CallRender3DGL& call) {
     ::glPointSize(2.0f);
     ::glEnable(GL_POINT_SMOOTH);
 
-    this->pathlineShader.Enable();
-    GLint attrloc = ::glGetAttribLocationARB(this->pathlineShader.ProgramHandle(), "params");
+    this->pathlineShader->use();
+    GLint attrloc = ::glGetAttribLocationARB(this->pathlineShader->getHandle(), "params");
     ::glEnableClientState(GL_VERTEX_ARRAY);
     ::glEnableVertexAttribArrayARB(attrloc);
-    this->pathlineShader.SetParameter("paramSpan", spdc->MinTime(),
+    this->pathlineShader->setUniform("paramSpan", spdc->MinTime(),
         1.0f / vislib::math::Max(1.0f, spdc->MaxTime() - spdc->MinTime()), spdc->MinSpeed(),
         1.0f / vislib::math::Max(1.0f, spdc->MaxSpeed() - spdc->MinSpeed()));
 
@@ -168,7 +124,7 @@ bool SolPathRenderer::Render(core_gl::view::CallRender3DGL& call) {
             attrloc, 2, GL_FLOAT, GL_FALSE, sizeof(protein::SolPathDataCall::Vertex), &path->data->time);
         ::glDrawArrays(GL_LINE_STRIP, 0, path->length);
     }
-    this->pathlineShader.Disable();
+    glUseProgram(0);
 
     // this->dotsShader.Enable();
     //::glDisableVertexAttribArrayARB(attrloc);

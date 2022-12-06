@@ -12,7 +12,7 @@ using namespace megamol::protein_calls;
 using namespace megamol::protein_cuda;
 
 QuickSurf::QuickSurf()
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , dataInSlot_("dataIn", "Connects this module to the data provider.")
         , lightInSlot_("lightIn", "Connects this module to the light information.")
         , qs_qualityParam_(
@@ -119,24 +119,24 @@ QuickSurf::~QuickSurf() {
 bool QuickSurf::create(void) {
 
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         meshShader_ = core::utility::make_glowl_shader("quicksurf_mesh", shdr_options,
             std::filesystem::path("protein_cuda/quicksurf/qsurf_mesh.vert.glsl"),
             std::filesystem::path("protein_cuda/quicksurf/qsurf_mesh.frag.glsl"));
 
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[QuickSurf] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[QuickSurf] %s", ex.what());
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[QuickSurf] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[QuickSurf] Unable to compile shader: Unknown exception.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[QuickSurf] Unable to compile shader: Unknown exception.");
     }
 
-    deferredProvider_.setup(this->GetCoreInstance());
+    deferredProvider_.setup(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     return true;
 }
 
@@ -144,7 +144,7 @@ void QuickSurf::release(void) {
     // TODO
 }
 
-bool QuickSurf::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool QuickSurf::GetExtents(mmstd_gl::CallRender3DGL& call) {
     MolecularDataCall* mol = dataInSlot_.CallAs<MolecularDataCall>();
     geocalls::MultiParticleDataCall* mpdc = dataInSlot_.CallAs<geocalls::MultiParticleDataCall>();
     if (mol == nullptr && mpdc == nullptr) {
@@ -172,7 +172,7 @@ bool QuickSurf::GetExtents(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-bool QuickSurf::Render(core_gl::view::CallRender3DGL& call) {
+bool QuickSurf::Render(mmstd_gl::CallRender3DGL& call) {
     auto call_fbo = call.GetFramebuffer();
     deferredProvider_.setFramebufferExtents(call_fbo->getWidth(), call_fbo->getHeight());
 

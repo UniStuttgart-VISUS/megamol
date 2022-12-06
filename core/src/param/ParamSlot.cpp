@@ -1,12 +1,11 @@
-/*
- * ParamSlot.cpp
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/CoreInstance.h"
+
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
 #include "vislib/IllegalParamException.h"
@@ -50,7 +49,7 @@ void param::ParamSlot::MakeAvailable(void) {
  * param::ParamSlot::IsParamRelevant
  */
 bool param::ParamSlot::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const vislib::SmartPtr<param::AbstractParam>& param) const {
+    const std::shared_ptr<param::AbstractParam>& param) const {
     return (this->Parameter() == param);
 }
 
@@ -68,9 +67,10 @@ bool param::ParamSlot::isSlotAvailable(void) const {
 void param::ParamSlot::QueueUpdateNotification(bool force) {
     if (this->Param<AbstractParam>()->ConsumeHasChanged() || force) {
         Module* m = dynamic_cast<Module*>(this->Parent().get());
-        if ((m != nullptr) && (m->GetCoreInstance() != nullptr)) {
-            m->GetCoreInstance()->ParameterValueUpdate(*this);
-        }
+        // TODO what to with this after core instance is removed?
+        //if ((m != nullptr) && (m->GetCoreInstance() != nullptr)) {
+        //    m->GetCoreInstance()->ParameterValueUpdate(*this);
+        //}
     }
 }
 

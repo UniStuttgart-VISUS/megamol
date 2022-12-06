@@ -97,7 +97,6 @@ bool megamol::mesh::WavefrontObjWriter::run() {
         ++affix;
     }
 
-
     return true;
 }
 

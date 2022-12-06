@@ -11,12 +11,15 @@
 #include <string>
 #include <type_traits>
 
-#include "msf/LineTranslator.h"
-#include "msf/ShaderFactoryOptionsOpenGL.h"
+#include <glowl/GLSLProgram.hpp>
+#include <msf/LineTranslator.h>
+#include <msf/ShaderFactoryOptionsOpenGL.h>
 
-#include "glowl/GLSLProgram.hpp"
+#include "RuntimeConfig.h"
 
 namespace megamol::core::utility {
+
+msf::ShaderFactoryOptionsOpenGL make_path_shader_options(frontend_resources::RuntimeConfig const& conf);
 
 glowl::GLSLProgram::ShaderSourceList::value_type make_glowl_shader_source(
     std::filesystem::path const& shader_source_path, msf::ShaderFactoryOptionsOpenGL const& options,

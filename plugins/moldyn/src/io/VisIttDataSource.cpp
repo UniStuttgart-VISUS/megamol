@@ -6,7 +6,6 @@
  */
 
 #include "io/VisIttDataSource.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -240,7 +239,9 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsig
             line[end] = 0;
             try {
                 typeId = vislib::CharTraitsA::ParseInt(line + start);
-            } catch (...) { typeId = 0; }
+            } catch (...) {
+                typeId = 0;
+            }
             line[end] = endChar;
         }
 
@@ -256,7 +257,9 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsig
             line[end] = 0;
             try {
                 pid = static_cast<unsigned int>(vislib::CharTraitsA::ParseInt(line + start));
-            } catch (...) { pid = static_cast<unsigned int>(pids[typeId].size()); }
+            } catch (...) {
+                pid = static_cast<unsigned int>(pids[typeId].size());
+            }
             line[end] = endChar;
             pids[typeId].push_back(
                 std::pair<unsigned int, unsigned int>(static_cast<unsigned int>(pids[typeId].size()), pid));
@@ -278,7 +281,9 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsig
             line[end] = 0;
             try {
                 pos[j] = static_cast<float>(vislib::CharTraitsA::ParseDouble(line + start));
-            } catch (...) { pos[j] = 0.0f; }
+            } catch (...) {
+                pos[j] = 0.0f;
+            }
             line[end] = endChar;
         }
     }
@@ -305,7 +310,7 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsig
         }
     }
 
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo(100, "Frame %u loaded", idx);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Frame %u loaded", idx);
 }
 
 
@@ -485,12 +490,12 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
     if (cacheSize < CACHE_SIZE_MIN) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n", CACHE_SIZE_MIN, cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg);
     }
     if (this->frameTable.Count() > 0) {
         // refine bounding box using more frames

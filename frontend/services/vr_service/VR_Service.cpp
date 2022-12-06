@@ -7,21 +7,22 @@
 
 #include "VR_Service.hpp"
 
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
 #include <glm/gtc/matrix_transform.hpp>
-#include <include/interop.hpp>
+#include <interop.hpp>
 
 #include "ImageWrapper_to_GLTexture.hpp"
 #include "ViewRenderInputs.h"
 
 #include "mmcore/Module.h"
-#include "mmcore/view/View3D.h"
-#include "mmcore_gl/view/View3DGL.h"
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#include "mmcore/view/AbstractViewInterface.h"
+#endif // MEGAMOL_USE_VR_INTEROP
 
 #include "mmcore/MegaMolGraph.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/log/Log.h"
 
 
@@ -61,20 +62,20 @@ bool VR_Service::init(const Config& config) {
     m_requestedResourcesNames = {
         "ImagePresentationEntryPoints",
         "MegaMolGraph",
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
         "OpenGL_Context",
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#endif // MEGAMOL_USE_VR_INTEROP
     };
 
     switch (config.mode) {
     case Config::Mode::Off:
         break;
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
     case Config::Mode::UnityKolabBW:
         log("running Unity KolabBW VR mode. Duplicating and sending View3D Entry Points via Spout.");
         m_vr_device_ptr = std::make_unique<VR_Service::KolabBW>();
         break;
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#endif // MEGAMOL_USE_VR_INTEROP
     default:
         log_error("Unknown VR Service Mode: " + std::to_string(static_cast<int>(config.mode)));
         return false;
@@ -170,16 +171,16 @@ void VR_Service::setRequestedResources(std::vector<FrontendResource> resources) 
     m_entry_points_registry.rename_entry_point = [&](auto const& name, auto const& newname) -> bool { return true; };
     m_entry_points_registry.clear_entry_points = [&]() -> void { vr_device(clear_entry_points()); };
     m_entry_points_registry.subscribe_to_entry_point_changes = [&](auto const& func) -> void {};
-    m_entry_points_registry.get_entry_point = [&](std::string const& name) -> auto {
+    m_entry_points_registry.get_entry_point = [&](std::string const& name) -> auto{
         return std::nullopt;
     };
 
     auto& megamol_graph = m_requestedResourceReferences[1].getResource<core::MegaMolGraph>();
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
     // Unity Kolab wants to manipulate graph modules like clipping plane or views
     static_cast<VR_Service::KolabBW*>(m_vr_device_ptr.get())
         ->add_graph(const_cast<core::MegaMolGraph*>(&megamol_graph));
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#endif // MEGAMOL_USE_VR_INTEROP
 }
 
 void VR_Service::updateProvidedResources() {}
@@ -200,7 +201,7 @@ void VR_Service::postGraphRender() {
 } // namespace frontend
 } // namespace megamol
 
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
 namespace {
 glm::vec4 toGlm(const interop::vec4& v) {
     return glm::vec4{v.x, v.y, v.z, v.w};
@@ -426,7 +427,7 @@ void megamol::frontend::VR_Service::KolabBW::send_image_data() {
         left.as_gl_handle(), right.as_gl_handle(), 0, 0, left.size.width, left.size.height);
 
     if (!pimpl.has_bbox) {
-        auto maybe_bbox = static_cast<core::view::AbstractView*>(pimpl.left_ep->modulePtr)->GetBoundingBoxes();
+        auto maybe_bbox = static_cast<core::view::AbstractViewInterface*>(pimpl.left_ep->modulePtr)->GetBoundingBoxes();
 
         if (!maybe_bbox.IsBoundingBoxValid())
             return;
@@ -485,12 +486,10 @@ bool megamol::frontend::VR_Service::KolabBW::add_entry_point(std::string const& 
     }
 
     // if the entry point is not a 3d view there is no point in doing stereo for it
-    auto* view3d = dynamic_cast<megamol::core::view::View3D*>(ptr);
-    auto* view3dgl = dynamic_cast<megamol::core_gl::view::View3DGL*>(ptr);
-    if (!view3d && !view3dgl) {
-        log_error(
-            "entry point " + entry_point_name +
-            " does not seem to be a supported View Type (View3D or View3DGL). Not using it for stereo rendering.");
+    const auto* view = dynamic_cast<megamol::core::view::AbstractViewInterface*>(ptr);
+    if (view == nullptr || view->GetViewDimension() != core::view::AbstractViewInterface::ViewDimension::VIEW_3D) {
+        log_error("entry point " + entry_point_name +
+                  " does not seem to be a supported 3D View Type. Not using it for stereo rendering.");
         return false;
     }
 
@@ -619,4 +618,4 @@ void megamol::frontend::VR_Service::KolabBW::preGraphRender() {
 void megamol::frontend::VR_Service::KolabBW::postGraphRender() {
     this->send_image_data();
 }
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#endif // MEGAMOL_USE_VR_INTEROP

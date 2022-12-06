@@ -220,12 +220,12 @@ private:
     /**
      * Forbidden ctor
      */
-    ColourParser(void);
+    ColourParser();
 
     /**
      * Forbidden dtor
      */
-    ~ColourParser(void);
+    ~ColourParser();
 
     /**
      * Answers the numeric value of a hex character (0-15) or 255 in case

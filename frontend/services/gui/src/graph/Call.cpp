@@ -11,12 +11,12 @@
 #include "Module.h"
 #include "widgets/ColorPalettes.h"
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 #include "ProfilingUtils.h"
 #include "implot.h"
 #define CALL_PROFILING_PLOT_HEIGHT (150.0f * megamol::gui::gui_scaling.Get())
 #define CALL_PROFILING_WINDOW_WIDTH (300.0f * megamol::gui::gui_scaling.Get())
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 
 using namespace megamol;
 using namespace megamol::gui;
@@ -30,13 +30,17 @@ megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::
         , plugin_name(plugin_name)
         , functions(functions)
         , connected_callslots()
-        , gui_selected(false)
         , caller_slot_name()
         , callee_slot_name()
         , gui_tooltip()
         , gui_profiling_button()
         , gui_profiling_btn_hovered(false)
-#ifdef PROFILING
+        , gui_hidden(false)
+        , gui_selected(false)
+        , gui_set_active(false)
+        , gui_set_hovered(false)
+        , gui_hovered(false)
+#ifdef MEGAMOL_USE_PROFILING
         , cpu_perf_history()
         , gl_perf_history()
         , profiling_parent_pointer(nullptr)
@@ -45,7 +49,7 @@ megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::
         , gui_profiling_run_button()
         , pause_profiling_history_update(false)
         , profiling_button_position()
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
 {
 
     this->connected_callslots.emplace(CallSlotType::CALLER, nullptr);
@@ -158,7 +162,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
             this->caller_slot_name = callerslot_ptr->Name();
             this->callee_slot_name = calleeslot_ptr->Name();
 
-            bool hidden = false;
+            this->gui_hidden = false;
             bool connect_interface_slot = true;
             size_t curve_color_index = 0;
             if (callerslot_ptr->IsParentModuleConnected() && calleeslot_ptr->IsParentModuleConnected()) {
@@ -166,7 +170,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                 // Calls lie only completely inside or outside groups
                 if (callerslot_ptr->GetParentModule()->GroupUID() == calleeslot_ptr->GetParentModule()->GroupUID()) {
                     connect_interface_slot = false;
-                    hidden = callerslot_ptr->GetParentModule()->IsHidden();
+                    this->gui_hidden = callerslot_ptr->GetParentModule()->IsHidden();
                 }
 
                 if (state.interact.call_coloring_mode == 0) {
@@ -185,7 +189,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                 }
             }
 
-            if (!hidden) {
+            if (!this->gui_hidden) {
 
                 ImVec2 caller_pos = callerslot_ptr->Position();
                 ImVec2 callee_pos = calleeslot_ptr->Position();
@@ -260,13 +264,13 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                     if (state.interact.call_show_label && state.interact.call_show_slots_label) {
                         rect_size.y += (ImGui::GetFontSize() + (style.ItemSpacing.y * state.canvas.zooming));
                     }
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                     rect_size.x += 2.0f * ImGui::GetTextLineHeightWithSpacing();
                     rect_size.y = std::max(rect_size.y, ImGui::GetTextLineHeightWithSpacing());
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
                     ImVec2 call_rect_min =
                         ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                     /*
                     /// Draw profiling data inplace
                     if (this->show_profiling_data) {
@@ -276,7 +280,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                                 (style.ItemSpacing.y * 2.0f * state.canvas.zooming) + rect_size.y));
                     }
                     */
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
 
                     const float min_curve_zoom = 0.2f;
@@ -301,12 +305,14 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         auto curve_hovered = (fabs(diff_vec.x) <= std::max(1.0f, bez_linewidth / 2.0f)) &&
                                              (fabs(diff_vec.y) <= std::max(1.0f, bez_linewidth / 2.0f));
 
-                        if (ImGui::IsItemActivated() ||
+                        if (this->gui_set_active || ImGui::IsItemActivated() ||
                             (curve_hovered && ImGui::IsMouseReleased(ImGuiMouseButton_Left))) {
                             state.interact.button_active_uid = this->uid;
+                            this->gui_set_active = false;
                         }
-                        if (ImGui::IsItemHovered() || curve_hovered) {
+                        if (this->gui_set_hovered || ImGui::IsItemHovered() || curve_hovered) {
                             state.interact.button_hovered_uid = this->uid;
+                            this->gui_set_hovered = false;
                         }
 
                         // Context Menu
@@ -348,13 +354,14 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 
                     } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 
-                        bool active = (state.interact.button_active_uid == this->uid);
-                        bool hovered = (state.interact.button_hovered_uid == this->uid);
-                        bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
+                        bool gui_active = (state.interact.button_active_uid == this->uid);
+                        this->gui_hovered = (state.interact.button_hovered_uid == this->uid);
+                        bool mouse_clicked_anywhere =
+                            ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiPopupFlags_MouseButtonLeft);
 
                         // Draw Curve
                         ImU32 color_curve = COLOR_CALL_CURVE;
-                        if (hovered || this->gui_selected) {
+                        if (this->gui_hovered || this->gui_selected) {
                             color_curve = COLOR_CALL_CURVE_HIGHLIGHT;
                         }
                         /// Draw simple line if zooming is too small for nice bezier curves.
@@ -365,7 +372,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         }
 
                         // Selection
-                        if (!this->gui_selected && active) {
+                        if (!this->gui_selected && gui_active) {
                             state.interact.call_selected_uid = this->uid;
                             this->gui_selected = true;
                             state.interact.callslot_selected_uid = GUI_INVALID_ID;
@@ -374,7 +381,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                             state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
                         }
                         // Deselection
-                        else if (this->gui_selected && ((mouse_clicked_anywhere && !hovered) ||
+                        else if (this->gui_selected && ((mouse_clicked_anywhere && !this->gui_hovered) ||
                                                            (state.interact.call_selected_uid != this->uid))) {
                             this->gui_selected = false;
                             if (state.interact.call_selected_uid == this->uid) {
@@ -383,21 +390,21 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         }
 
                         // Hovering
-                        if (hovered) {
+                        if (this->gui_hovered) {
                             state.interact.call_hovered_uid = this->uid;
                         }
-                        if (!hovered && (state.interact.call_hovered_uid == this->uid)) {
+                        if (!this->gui_hovered && (state.interact.call_hovered_uid == this->uid)) {
                             state.interact.call_hovered_uid = GUI_INVALID_ID;
                         }
 
                         // Draw Background
-                        ImU32 call_bg_color =
-                            (this->gui_selected || hovered) ? (COLOR_CALL_HIGHTLIGHT) : (COLOR_CALL_BACKGROUND);
+                        ImU32 call_bg_color = (this->gui_selected || this->gui_hovered) ? (COLOR_CALL_HIGHTLIGHT)
+                                                                                        : (COLOR_CALL_BACKGROUND);
                         draw_list->AddRectFilled(call_rect_min, call_rect_max, call_bg_color, GUI_RECT_CORNER_RADIUS);
                         draw_list->AddRect(
                             call_rect_min, call_rect_max, COLOR_CALL_GROUP_BORDER, GUI_RECT_CORNER_RADIUS);
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
                         // Lazy loading of performance button texture
                         const auto profiling_button_size = ImGui::GetTextLineHeight();
                         if (!this->gui_profiling_button.IsLoaded()) {
@@ -448,7 +455,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                             ImGui::EndChild();
                             */
                         }
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING
                         // Draw Text
                         ImVec2 text_pos_left_upper =
                             (call_center + ImVec2(-(class_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
@@ -495,7 +502,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 }
 
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
 
 void megamol::gui::Call::AppendPerformanceData(frontend_resources::PerformanceManager::frame_type frame,
     const frontend_resources::PerformanceManager::timer_entry& entry) {
@@ -586,4 +593,4 @@ void megamol::gui::Call::DrawProfiling(GraphItemsState_t& state) {
 }
 
 
-#endif // PROFILING
+#endif // MEGAMOL_USE_PROFILING

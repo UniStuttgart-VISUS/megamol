@@ -10,8 +10,9 @@
 #pragma once
 
 
+#include "CommonTypes.h"
 #include "Graph.h"
-#include "mmcore/CoreInstance.h"
+#include "PluginsResource.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
@@ -35,6 +36,8 @@ typedef std::vector<GraphPtr_t> GraphPtrVector_t;
  */
 class GraphCollection {
 public:
+    using lua_func_type = megamol::frontend_resources::common_types::lua_func_type;
+
     GraphCollection();
     ~GraphCollection() = default;
 
@@ -61,16 +64,12 @@ public:
         return (!this->modules_stock.empty());
     }
 
-    /**
-     * Load or update project from graph of core instance or directly from megamol graph.
-     *
-     * @param inout_graph_uid  The graph uid to use. If graph uid is GUI_INVALID_ID a new graph is created.
-     * @param megamol_graph    The megamol graph.
-     *
-     * @return                 True on success, false otherwise.
-     */
-    bool SyncRunningGUIGraphWithCoreGraph(
-        megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
+    void SetLuaFunc(lua_func_type* func);
+
+    // ! Has to be called once before calling SynchronizeGraphs() or NotifyRunningGraph_*()
+    bool InitializeGraphSynchronisation(const megamol::frontend_resources::PluginsResource& pluginsRes);
+
+    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph);
 
     bool LoadOrAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
 
@@ -82,12 +81,28 @@ public:
         this->change_running_graph(graph_uid);
     }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
         this->perf_manager = perf_manager;
     }
     void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi);
 #endif
+
+    bool NotifyRunningGraph_AddModule(core::ModuleInstance_t const& module_inst);
+    bool NotifyRunningGraph_DeleteModule(core::ModuleInstance_t const& module_inst);
+    bool NotifyRunningGraph_RenameModule(
+        std::string const& old_name, std::string const& new_name, core::ModuleInstance_t const& module_inst);
+    bool NotifyRunningGraph_AddParameters(
+        std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots);
+    bool NotifyRunningGraph_RemoveParameters(
+        std::vector<megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr> const& param_slots);
+    bool NotifyRunningGraph_ParameterChanged(
+        megamol::frontend_resources::ModuleGraphSubscription::ParamSlotPtr const& param_slot,
+        std::string const& new_value);
+    bool NotifyRunningGraph_AddCall(core::CallInstance_t const& call_inst);
+    bool NotifyRunningGraph_DeleteCall(core::CallInstance_t const& call_inst);
+    bool NotifyRunningGraph_EnableEntryPoint(core::ModuleInstance_t const& module_inst);
+    bool NotifyRunningGraph_DisableEntryPoint(core::ModuleInstance_t const& module_inst);
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -100,12 +115,15 @@ private:
     FileBrowserWidget gui_file_browser;
     ImGuiID gui_graph_delete_uid;
 
+    lua_func_type* input_lua_func = nullptr;
+
+    bool created_running_graph;
+    bool initialized_syncing;
+
     // FUNCTIONS --------------------------------------------------------------
 
-    bool update_running_graph_from_core(megamol::core::MegaMolGraph& megamol_graph, bool use_stock);
-
-    bool load_module_stock(const megamol::core::CoreInstance& core_instance);
-    bool load_call_stock(const megamol::core::CoreInstance& core_instance);
+    bool load_module_stock(const megamol::frontend_resources::PluginsResource& pluginsRes);
+    bool load_call_stock(const megamol::frontend_resources::PluginsResource& pluginsRes);
 
     std::string get_state(ImGuiID graph_id, const std::string& filename);
 
@@ -133,7 +151,7 @@ private:
 
     bool change_running_graph(ImGuiID graph_uid);
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     std::unordered_map<void*, std::weak_ptr<megamol::gui::Call>> call_to_call;
     std::unordered_map<void*, std::weak_ptr<megamol::gui::Module>> module_to_module;
     frontend_resources::PerformanceManager* perf_manager = nullptr;

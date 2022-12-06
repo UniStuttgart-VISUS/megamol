@@ -31,8 +31,7 @@ AbstractNamedObjectContainer::~AbstractNamedObjectContainer(void) {
         }
         msg.Format(
             "Possible memory problem detected: NamedObjectContainer (%s) with children destructed", name.PeekBuffer());
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_WARN, msg.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.PeekBuffer());
         this->children.clear();
     }
     // The child list should already be empty at this time
@@ -205,7 +204,7 @@ void AbstractNamedObjectContainer::DisconnectCalls(void) {
  * AbstractNamedObjectContainer::IsParamRelevant
  */
 bool AbstractNamedObjectContainer::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const vislib::SmartPtr<param::AbstractParam>& param) const {
+    const std::shared_ptr<param::AbstractParam>& param) const {
     // ensure each container is only asked ones
     // We need this, because this call might propagate through the graph and not only through the tree
     if (searched.Contains(this)) {

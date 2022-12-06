@@ -6,9 +6,9 @@
  */
 
 
-#include "mmcore/EventCall.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmstd/event/EventCall.h"
 
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
@@ -18,25 +18,37 @@
 #include "mesh/MeshCalls.h"
 
 bool megamol::probe_gl::ProbeHullRenderTasks::create() {
-
-    m_rendertask_collection.first = std::make_shared<mesh_gl::GPURenderTaskCollection>();
+    auto retval = AbstractGPURenderTaskDataSource::create();
 
     struct PerFrameData {
         int shading_mode;
     };
-
     std::array<PerFrameData, 1> per_frame_data;
     per_frame_data[0].shading_mode = m_shading_mode_slot.Param<core::param::EnumParam>()->Value();
-
     m_rendertask_collection.first->addPerFrameDataBuffer("", per_frame_data, 1);
 
     m_material_collection = std::make_shared<mesh_gl::GPUMaterialCollection>();
-    m_material_collection->addMaterial(this->instance(), "ProbeHull", "ProbeHull");
+    try {
+        std::vector<std::filesystem::path> shaderfiles = {"hull/dfr_hull_patch.vert.glsl", "hull/dfr_hull.frag.glsl",
+            "hull/dfr_hull.tesc.glsl", "hull/dfr_hull.tese.glsl"};
+        m_material_collection->addMaterial(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), "ProbeHull", shaderfiles);
+    } catch (const std::exception& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
+        retval = false;
+    }
+    try {
+        std::vector<std::filesystem::path> shaderfiles = {"hull/dfr_hull_tri.vert.glsl", "hull/dfr_hull.frag.glsl"};
+        m_material_collection->addMaterial(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), "ProbeTriangleHull", shaderfiles);
+    } catch (const std::exception& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "%s [%s, %s, line %d]\n", ex.what(), __FILE__, __FUNCTION__, __LINE__);
+        retval = false;
+    }
 
-    m_material_collection->addMaterial(this->instance(), "ProbeTriangleHull", "ProbeTriangleHull");
-    //TODO add other shader for e.g. triangle-based meshes ? switch automatically of course
-
-    return true;
+    return retval;
 }
 
 megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks()
@@ -71,7 +83,7 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
 
     mesh_gl::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh_gl::CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>> gpu_render_tasks;
+    auto gpu_render_tasks = std::make_shared<std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>>>();
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
@@ -81,7 +93,7 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
         }
         gpu_render_tasks = rhs_rtc->getData();
     }
-    gpu_render_tasks.push_back(m_rendertask_collection.first);
+    gpu_render_tasks->push_back(m_rendertask_collection.first);
 
     mesh_gl::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh_gl::CallGPUMeshData>();
 
@@ -139,7 +151,7 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
 
             auto gpu_mesh_storage = mc->getData();
 
-            for (auto& mesh_collection : gpu_mesh_storage) {
+            for (auto& mesh_collection : *gpu_mesh_storage) {
 
                 std::shared_ptr<glowl::Mesh> prev_mesh(nullptr);
 

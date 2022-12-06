@@ -38,7 +38,7 @@
 #include <glm/glm.hpp>
 
 namespace megamol {
-namespace compositing {
+namespace compositing_gl {
 
 typedef std::tuple<std::shared_ptr<glowl::Texture2D>, std::string, std::shared_ptr<glowl::Sampler>> TextureSamplerTuple;
 typedef std::tuple<std::shared_ptr<glowl::Texture2DView>, std::string, std::shared_ptr<glowl::Sampler>>
@@ -211,7 +211,7 @@ public:
         return true;
     }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     std::vector<std::string> requested_lifetime_resources() override {
         std::vector<std::string> resources = Module::requested_lifetime_resources();
         resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
@@ -363,7 +363,7 @@ private:
     bool ssaoModeCallback(core::param::ParamSlot& slot);
 
     // profiling
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     frontend_resources::PerformanceManager::handle_vector timers_;
     frontend_resources::PerformanceManager* perf_manager_ = nullptr;
 #endif
@@ -572,7 +572,7 @@ void SSAO::fullscreenPassDraw(const std::unique_ptr<glowl::GLSLProgram>& prgm, c
     }
 }
 
-} // namespace compositing
+} // namespace compositing_gl
 } // namespace megamol
 
 #endif // !ASSAO_H_INCLUDED

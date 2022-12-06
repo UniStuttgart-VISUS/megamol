@@ -12,10 +12,10 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "mmcore/CallGeneric.h"
 #include "mmcore/factories/CallAutoDescription.h"
+#include "mmstd/generic/CallGeneric.h"
 #include <memory>
-//#include "mmcore/AbstractGetData3DCall.h"
+//#include "mmstd/data/AbstractGetData3DCall.h"
 
 #include "vtkm/cont/DataSet.h"
 

@@ -13,15 +13,11 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "protein_calls/MolecularDataCall.h"
-
-#include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include <GL/glu.h>
 
 #include "TrajectorySmoothFilter.h"
 

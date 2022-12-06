@@ -131,8 +131,8 @@ bool datatools::ParticleTranslateRotateScale::manipulateData(
             //std::vector<float> rgba;
             //rgba.reserve(cnt * 4);
             //unsigned int texSize = 0;
-            //megamol::core_gl::view::CallGetTransferFunctionGL* cgtf =
-            //    this->getTFSlot.CallAs<core_gl::view::CallGetTransferFunctionGL>();
+            //megamol::mmstd_gl::CallGetTransferFunctionGL* cgtf =
+            //    this->getTFSlot.CallAs<mmstd_gl::CallGetTransferFunctionGL>();
             //if (cgtf != NULL && ((*cgtf)())) {
             //    float const* tfTex = cgtf->GetTextureData();
             //    texSize = cgtf->TextureSize();

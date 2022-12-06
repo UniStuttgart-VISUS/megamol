@@ -1,22 +1,14 @@
-/*
- * MouseFlags.h
- *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_MOUSEFLAGS_H_INCLUDED
-#define MEGAMOLCORE_MOUSEFLAGS_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib/types.h"
 
-
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 /**
  * Type for storing mouse flags
@@ -111,8 +103,4 @@ inline void MouseFlagsClearFlag(MouseFlags& flags, MouseFlags flag) {
     MouseFlagsSetFlag(flags, flag, false);
 }
 
-} /* end namespace view */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_MOUSEFLAGS_H_INCLUDED */
+} // namespace megamol::core::view

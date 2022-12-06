@@ -116,7 +116,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "RenderNextFrame",                      // LuaAPI can render one frame
         "GlobalValueStore",                     // LuaAPI can read and set global values
         frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>", "RuntimeConfig",
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         frontend_resources::PerformanceManager_Req_Name
 #endif
     }; //= {"ZMQ_Context"};
@@ -181,6 +181,12 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
         return;
 
 void Lua_Service_Wrapper::updateProvidedResources() {
+    // during the previous frame module parameters of the graph may have changed.
+    // submit the queued parameter changes to graph subscribers before other services do their thing
+    auto& graph = const_cast<megamol::core::MegaMolGraph&>(
+        m_requestedResourceReferences[5].getResource<megamol::core::MegaMolGraph>());
+    graph.Broadcast_graph_subscribers_parameter_changes();
+
     recursion_guard;
     // we want lua to be the first thing executed in main loop
     // so we do all the lua work here
@@ -288,6 +294,13 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
             auto& frame_statistics =
                 m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FrameStatistics>();
             return DoubleResult{frame_statistics.last_rendered_frame_time_milliseconds};
+        }});
+
+    callbacks.add<DoubleResult>("mmLastRenderedFramesCount",
+        "()\n\tReturns the number of rendered frames up until to the last frame.", {[&]() -> DoubleResult {
+            auto& frame_statistics =
+                m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FrameStatistics>();
+            return DoubleResult{static_cast<double>(frame_statistics.rendered_frames_count)};
         }});
 
 
@@ -497,6 +510,15 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
             return VoidResult{};
         }});
 
+    callbacks.add<VoidResult, std::string, std::string>("mmRenameModule",
+        "(string oldName, string newName)\n\tRenames the module called <oldname> to <newname>.",
+        {[&](std::string oldName, std::string newName) -> VoidResult {
+            if (!graph.RenameModule(oldName, newName)) {
+                return Error{"graph could not rename module: " + oldName + " to " + newName};
+            }
+            return VoidResult{};
+        }});
+
     callbacks.add<VoidResult, std::string, std::string, std::string>("mmCreateCall",
         "(string className, string from, string to)\n\tCreate a call of type <className>, connecting CallerSlot <from> "
         "and CalleeSlot <to>.",
@@ -543,7 +565,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
                 answer << ps->Name() << "\1";
                 answer << ps->Description() << "\1";
                 auto par = ps->Parameter();
-                if (par.IsNull()) {
+                if (par == nullptr) {
                     return Error{
                         "ParamSlot does not seem to hold a parameter: " + std::string(ps->FullName().PeekBuffer())};
                 }
@@ -579,12 +601,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string, std::string>("mmSetParamValue",
         "(string name, string value)\n\tSet the value of a parameter slot.",
         {[&](std::string paramName, std::string paramValue) -> VoidResult {
-            auto* param = graph.FindParameter(paramName);
-            if (param == nullptr) {
-                return Error{"graph could not find parameter: " + paramName};
-            }
-
-            if (!param->ParseValue(paramValue.c_str())) {
+            if (!graph.SetParameter(paramName, paramValue.c_str())) {
                 return Error{"parameter could not be set to value: " + paramName + " : " + paramValue};
             }
 
@@ -672,7 +689,37 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
 
         return StringResult{answer.str().c_str()};
     }});
-#ifdef PROFILING
+
+    callbacks.add<VoidResult, std::string>("mmSetGraphEntryPoint",
+        "(string moduleName)\n\tSet active graph entry point to one specific module.",
+        {[&](std::string moduleName) -> VoidResult {
+            auto res = graph.SetGraphEntryPoint(moduleName);
+            if (!res) {
+                return Error{"Could not set graph entry point " + moduleName};
+            }
+            return VoidResult{};
+        }});
+    callbacks.add<VoidResult, std::string>("mmRemoveGraphEntryPoint",
+        "(string moduleName)\n\tRemove active graph entry point from one specific module.",
+        {[&](std::string moduleName) -> VoidResult {
+            auto res = graph.RemoveGraphEntryPoint(moduleName);
+            if (!res) {
+                return Error{"Could not remove graph entry point " + moduleName};
+            }
+            return VoidResult{};
+        }});
+    callbacks.add<VoidResult>(
+        "mmRemoveAllGraphEntryPoints", "\n\tRemove any and all active graph entry points.", {[&]() -> VoidResult {
+            for (auto& m : graph.ListModules()) {
+                if (m.isGraphEntryPoint) {
+                    graph.RemoveGraphEntryPoint(m.modulePtr->FullName().PeekBuffer());
+                }
+            }
+            return VoidResult{};
+        }});
+
+
+#ifdef MEGAMOL_USE_PROFILING
     callbacks.add<StringResult, std::string>("mmListModuleTimers",
         "(string name)\n\tList the registered timers of a module.", {[&](std::string name) -> StringResult {
             auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(

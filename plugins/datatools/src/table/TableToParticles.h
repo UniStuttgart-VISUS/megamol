@@ -144,6 +144,9 @@ private:
     /** The name of the float column holding the z-coordinate. */
     core::param::ParamSlot slotColumnZ;
 
+    /** The name of the int column holding the particle id. */
+    core::param::ParamSlot slotColumnID;
+
     /** The name of the float column holding the vx-coordinate. */
     core::param::ParamSlot slotColumnVX;
 
@@ -164,6 +167,7 @@ private:
 
     std::vector<float> everything;
 
+    bool haveIDs = false;
     bool haveVelocities = false;
     bool haveTensor = false;
     bool haveTensorMagnitudes = false;

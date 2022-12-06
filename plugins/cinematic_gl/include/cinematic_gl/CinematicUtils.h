@@ -51,7 +51,7 @@ public:
         MANIPULATOR_CTRLPOINT
     };
 
-    bool Initialise(megamol::core::CoreInstance* core_instance);
+    bool Initialise(frontend_resources::RuntimeConfig const& runtimeConf);
 
     const glm::vec4 Color(CinematicUtils::Colors color) const;
 

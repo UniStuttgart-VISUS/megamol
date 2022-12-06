@@ -5,22 +5,16 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AnimDataModule.h"
+#include "mmstd/data/AnimDataModule.h"
 #include "vislib/String.h"
 #include "vislib/math/Cuboid.h"
 #include <adios2.h>
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
 #include <mpi.h>
 #endif
 
 namespace megamol {
 namespace adios {
-
-struct adios2Params {
-    std::string name;
-    adios2::Params params;
-    bool isAttribute = false;
-};
 
 class adiosDataSource : public core::Module {
 public:
@@ -85,7 +79,7 @@ private:
     core::CallerSlot callRequestMpi;
     bool initMPI();
 
-#ifdef WITH_MPI
+#ifdef MEGAMOL_USE_MPI
     MPI_Comm mpi_comm_ = MPI_COMM_NULL;
     int mpiRank = -1, mpiSize = -1;
     bool MpiInitialized = false;
@@ -119,6 +113,7 @@ private:
     std::shared_ptr<adios2::IO> io;
     std::shared_ptr<adios2::Engine> reader;
     std::vector<adios2Params> variables;
+    std::map<std::string, std::map<std::string, std::string>> allVariables;
     std::vector<adios2Params> attributes;
     adiosDataMap dataMap;
 

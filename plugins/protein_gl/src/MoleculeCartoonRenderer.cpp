@@ -9,7 +9,10 @@
 #define _USE_MATH_DEFINES 1
 
 #include "MoleculeCartoonRenderer.h"
-#include "mmcore/CoreInstance.h"
+
+#include <math.h>
+#include <time.h>
+
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -18,9 +21,8 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/Camera.h"
-#include "mmcore/view/light/DistantLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/light/DistantLight.h"
 #include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
@@ -30,15 +32,10 @@
 #include "vislib/math/Quaternion.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/File.h"
-#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-#include <math.h>
-#include <time.h>
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core_gl;
 using namespace megamol::protein;
 using namespace megamol::protein_gl;
 using namespace megamol::protein_calls;
@@ -47,7 +44,7 @@ using namespace megamol::protein_calls;
  * MoleculeCartoonRenderer::MoleculeCartoonRenderer (CTOR)
  */
 MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , molDataCallerSlot("getdata", "Connects the protein rendering with protein data storage")
         , getLightsSlot("getlights", "Connects the protein rendering with light sources")
         , molRendererCallerSlot("renderMolecule", "Connects the cartoon rendering with another molecule renderer")
@@ -78,7 +75,7 @@ MoleculeCartoonRenderer::MoleculeCartoonRenderer(void)
     this->getLightsSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getLightsSlot);
 
-    this->molRendererCallerSlot.SetCompatibleCall<core_gl::view::CallRender3DGLDescription>();
+    this->molRendererCallerSlot.SetCompatibleCall<mmstd_gl::CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->molRendererCallerSlot);
 
 
@@ -224,6 +221,19 @@ void MoleculeCartoonRenderer::release(void) {}
 bool MoleculeCartoonRenderer::create(void) {
     using megamol::core::utility::log::Log;
 
+    {
+        // TODO Note from shader factory migration:
+        // The old shaders did not set a #version, which is required with the shader factory. The problem is, geometry
+        // shaders require at least version 150, but the code within the geometry shaders uses a lot of deprecated
+        // functions only available before version 150. So some refactoring is needed within this module.
+        // Please do this, whoever wants to use this stuff!
+        Log::DefaultLog.WriteError("MoleculeCartoonRenderer is currently broken and requires some refactoring after "
+                                   "the shader factory migration. If you are a maintainer or user of this module "
+                                   "please do this. For more info see comment above this error message in code.");
+        return false;
+    }
+
+
     glEnable(GL_DEPTH_TEST);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
@@ -233,275 +243,171 @@ bool MoleculeCartoonRenderer::create(void) {
 
     using namespace vislib_gl::graphics::gl;
 
-    ShaderSource vertSrc;
-    ShaderSource fragSrc;
-    ShaderSource geomSrc;
-
-    ////////////////////////////////////////////////////
-    // load the shader sources for the cartoon shader //
-    ////////////////////////////////////////////////////
-
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::geometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for cartoon shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
-        return false;
-    }
-    this->cartoonShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    // setup geometry shader
-    // set GL_TRIANGLES_ADJACENCY_EXT primitives as INPUT
-    this->cartoonShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
-    // set TRIANGLE_STRIP as OUTPUT
-    this->cartoonShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    // set maximum number of vertices to be generated by geometry shader to
-    this->cartoonShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-    // link the shader
-    this->cartoonShader.Link();
-
-    /////////////////////////////////////////////////
-    // load the shader sources for the tube shader //
-    /////////////////////////////////////////////////
-    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::tubeGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for tube shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
-        return false;
-    }
-    this->tubeShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    this->tubeShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
-    this->tubeShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    this->tubeShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-    this->tubeShader.Link();
-
-    //////////////////////////////////////////////////
-    // load the shader sources for the arrow shader //
-    //////////////////////////////////////////////////
-    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::arrowGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for arrow shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
-        return false;
-    }
-    this->arrowShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    this->arrowShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
-    this->arrowShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    this->arrowShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-    this->arrowShader.Link();
-
-    /////////////////////////////////////////////////
-    // load the shader sources for the helix shader //
-    /////////////////////////////////////////////////
-    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for cartoon shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::helixGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for helix shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::cartoon::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for cartoon shader");
-        return false;
-    }
-    this->helixShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    this->helixShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
-    this->helixShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    this->helixShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-    this->helixShader.Link();
-
-    /////////////////////////////////////////////////
-    // load the shader sources for the tube shader //
-    /////////////////////////////////////////////////
-    if (!ssf->MakeShaderSource("protein::cartoon::simple::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for simple cartoon shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::simple::tubeGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for simple tube shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::simple::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for simple cartoon shader");
-        return false;
-    }
-    this->tubeSimpleShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    this->tubeSimpleShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
-    this->tubeSimpleShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    this->tubeSimpleShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-    this->tubeSimpleShader.Link();
-
-    //////////////////////////////////////////////////
-    // load the shader sources for the arrow shader //
-    //////////////////////////////////////////////////
-    if (!ssf->MakeShaderSource("protein::cartoon::simple::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for simple cartoon shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::simple::arrowGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for simple arrow shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::simple::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for simple cartoon shader");
-        return false;
-    }
-    this->arrowSimpleShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    this->arrowSimpleShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
-    this->arrowSimpleShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    this->arrowSimpleShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-    this->arrowSimpleShader.Link();
-
-    /////////////////////////////////////////////////
-    // load the shader sources for the helix shader //
-    /////////////////////////////////////////////////
-    if (!ssf->MakeShaderSource("protein::cartoon::simple::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for simple cartoon shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::simple::helixGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for simple helix shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::simple::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for simple cartoon shader");
-        return false;
-    }
-    this->helixSimpleShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    this->helixSimpleShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
-    this->helixSimpleShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    this->helixSimpleShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 200);
-    this->helixSimpleShader.Link();
-
-    /////////////////////////////////////////////////////////
-    // load the shader sources for the spline arrow shader //
-    /////////////////////////////////////////////////////////
-    if (!ssf->MakeShaderSource("protein::cartoon::spline::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for spline cartoon shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::spline::arrowGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for spline arrow shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::spline::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for spline cartoon shader");
-        return false;
-    }
-    this->arrowSplineShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    this->arrowSplineShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY_EXT);
-    this->arrowSplineShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    this->arrowSplineShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 1024);
-    this->arrowSplineShader.Link();
-
-    ////////////////////////////////////////////////////////
-    // load the shader sources for the spline tube shader //
-    ////////////////////////////////////////////////////////
-    if (!ssf->MakeShaderSource("protein::cartoon::spline::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for spline cartoon shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::spline::tubeGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for spline tube shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::spline::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for spline cartoon shader");
-        return false;
-    }
-    this->tubeSplineShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    this->tubeSplineShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY_EXT);
-    this->tubeSplineShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    this->tubeSplineShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 1024);
-    this->tubeSplineShader.Link();
-
-    ////////////////////////////////////////////////////////
-    // load the shader sources for the spline helix shader //
-    ////////////////////////////////////////////////////////
-    if (!ssf->MakeShaderSource("protein::cartoon::spline::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for spline cartoon shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::spline::helixGeometry", geomSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load geometry shader source for spline helix shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::spline::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for spline cartoon shader");
-        return false;
-    }
-    this->helixSplineShader.Compile(
-        vertSrc.Code(), vertSrc.Count(), geomSrc.Code(), geomSrc.Count(), fragSrc.Code(), fragSrc.Count());
-    this->helixSplineShader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY_EXT);
-    this->helixSplineShader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-    this->helixSplineShader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 1024);
-    this->helixSplineShader.Link();
-
-    //////////////////////////////////////////////////////
-    // load the shader files for the per pixel lighting //
-    //////////////////////////////////////////////////////
-    // vertex shader
-    if (!ssf->MakeShaderSource("protein::cartoon::perpixellight::vertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load vertex shader source for perpixellight shader");
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::cartoon::perpixellight::fragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to load fragment shader source for perpixellight shader");
-        return false;
-    }
-    this->lightShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        ////////////////////////////////////////////////////
+        // load the shader sources for the cartoon shader //
+        ////////////////////////////////////////////////////
 
-        sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
+        this->cartoonShader = core::utility::make_glowl_shader("cartoonShader", shader_options,
+            "protein_gl/protein/cartoon_cartoon.vert.glsl", "protein_gl/protein/cartoon_cartoon.geom.glsl",
+            "protein_gl/protein/cartoon_cartoon.frag.glsl");
+        // set GL_TRIANGLES_ADJACENCY_EXT primitives as INPUT
+        glProgramParameteriEXT(cartoonShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
+        // set TRIANGLE_STRIP as OUTPUT
+        glProgramParameteriEXT(cartoonShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+        // set maximum number of vertices to be generated by geometry shader to
+        glProgramParameteriEXT(cartoonShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(cartoonShader->getHandle());
+
+        /////////////////////////////////////////////////
+        // load the shader sources for the tube shader //
+        /////////////////////////////////////////////////
+
+        this->tubeShader = core::utility::make_glowl_shader("tubeShader", shader_options,
+            "protein_gl/protein/cartoon_cartoon.vert.glsl", "protein_gl/protein/cartoon_tube.geom.glsl",
+            "protein_gl/protein/cartoon_cartoon.frag.glsl");
+        glProgramParameteriEXT(tubeShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
+        glProgramParameteriEXT(tubeShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+        glProgramParameteriEXT(tubeShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(tubeShader->getHandle());
+
+        //////////////////////////////////////////////////
+        // load the shader sources for the arrow shader //
+        //////////////////////////////////////////////////
+
+        this->arrowShader = core::utility::make_glowl_shader("arrowShader", shader_options,
+            "protein_gl/protein/cartoon_cartoon.vert.glsl", "protein_gl/protein/cartoon_arrow.geom.glsl",
+            "protein_gl/protein/cartoon_cartoon.frag.glsl");
+        glProgramParameteriEXT(arrowShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
+        glProgramParameteriEXT(arrowShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+        glProgramParameteriEXT(arrowShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(arrowShader->getHandle());
+
+        /////////////////////////////////////////////////
+        // load the shader sources for the helix shader //
+        /////////////////////////////////////////////////
+
+        this->helixShader = core::utility::make_glowl_shader("helixShader", shader_options,
+            "protein_gl/protein/cartoon_cartoon.vert.glsl", "protein_gl/protein/cartoon_helix.geom.glsl",
+            "protein_gl/protein/cartoon_cartoon.frag.glsl");
+        glProgramParameteriEXT(helixShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
+        glProgramParameteriEXT(helixShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+        glProgramParameteriEXT(helixShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(helixShader->getHandle());
+
+        /////////////////////////////////////////////////
+        // load the shader sources for the tube shader //
+        /////////////////////////////////////////////////
+
+        this->tubeSimpleShader = core::utility::make_glowl_shader("tubeSimpleShader", shader_options,
+            "protein_gl/protein/cartoon_simple.vert.glsl", "protein_gl/protein/cartoon_simple_tube.geom.glsl",
+            "protein_gl/protein/cartoon_simple.frag.glsl");
+        glProgramParameteriEXT(tubeSimpleShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
+        glProgramParameteriEXT(tubeSimpleShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+        glProgramParameteriEXT(tubeSimpleShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(tubeSimpleShader->getHandle());
+
+        //////////////////////////////////////////////////
+        // load the shader sources for the arrow shader //
+        //////////////////////////////////////////////////
+
+        this->arrowSimpleShader = core::utility::make_glowl_shader("arrowSimpleShader", shader_options,
+            "protein_gl/protein/cartoon_simple.vert.glsl", "protein_gl/protein/cartoon_simple_arrow.geom.glsl",
+            "protein_gl/protein/cartoon_simple.frag.glsl");
+        glProgramParameteriEXT(arrowSimpleShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
+        glProgramParameteriEXT(arrowSimpleShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+        glProgramParameteriEXT(arrowSimpleShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(arrowSimpleShader->getHandle());
+
+        /////////////////////////////////////////////////
+        // load the shader sources for the helix shader //
+        /////////////////////////////////////////////////
+
+        this->helixSimpleShader = core::utility::make_glowl_shader("helixSimpleShader", shader_options,
+            "protein_gl/protein/cartoon_simple.vert.glsl", "protein_gl/protein/cartoon_simple_helix.geom.glsl",
+            "protein_gl/protein/cartoon_simple.frag.glsl");
+        glProgramParameteriEXT(helixSimpleShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES_ADJACENCY_EXT);
+        glProgramParameteriEXT(helixSimpleShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+        glProgramParameteriEXT(helixSimpleShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 200);
+
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(helixSimpleShader->getHandle());
+
+        /////////////////////////////////////////////////////////
+        // load the shader sources for the spline arrow shader //
+        /////////////////////////////////////////////////////////
+
+        this->arrowSplineShader = core::utility::make_glowl_shader("arrowSplineShader", shader_options,
+            "protein_gl/protein/cartoon_spline.vert.glsl", "protein_gl/protein/cartoon_spline_arrow.geom.glsl",
+            "protein_gl/protein/cartoon_spline.frag.glsl");
+        glProgramParameteriEXT(arrowSplineShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY_EXT);
+        glProgramParameteriEXT(arrowSplineShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+        glProgramParameteriEXT(arrowSplineShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 1024);
+
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(arrowSplineShader->getHandle());
+
+        ////////////////////////////////////////////////////////
+        // load the shader sources for the spline tube shader //
+        ////////////////////////////////////////////////////////
+
+        this->tubeSplineShader = core::utility::make_glowl_shader("tubeSplineShader", shader_options,
+            "protein_gl/protein/cartoon_spline.vert.glsl", "protein_gl/protein/cartoon_spline_tube.geom.glsl",
+            "protein_gl/protein/cartoon_spline.frag.glsl");
+        glProgramParameteriEXT(tubeSplineShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY_EXT);
+        glProgramParameteriEXT(tubeSplineShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+        glProgramParameteriEXT(tubeSplineShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 1024);
+
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(tubeSplineShader->getHandle());
+
+        ////////////////////////////////////////////////////////
+        // load the shader sources for the spline helix shader //
+        ////////////////////////////////////////////////////////
+
+        this->helixSplineShader = core::utility::make_glowl_shader("helixSplineShader", shader_options,
+            "protein_gl/protein/cartoon_spline.vert.glsl", "protein_gl/protein/cartoon_spline_helix.geom.glsl",
+            "protein_gl/protein/cartoon_spline.frag.glsl");
+        glProgramParameteriEXT(helixSplineShader->getHandle(), GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES_ADJACENCY_EXT);
+        glProgramParameteriEXT(helixSplineShader->getHandle(), GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+        glProgramParameteriEXT(helixSplineShader->getHandle(), GL_GEOMETRY_VERTICES_OUT_EXT, 1024);
+
+        // TODO Note from shader factory migration: No idea if relink is ok or setting parameter must happen before initial link within glowl.
+        glLinkProgram(helixSplineShader->getHandle());
+
+        //////////////////////////////////////////////////////
+        // load the shader files for the per pixel lighting //
+        //////////////////////////////////////////////////////
+
+        this->lightShader = core::utility::make_glowl_shader("lightShader", shader_options,
+            "protein_gl/protein/cartoon_perpixellight.vert.glsl", "protein_gl/protein/cartoon_perpixellight.frag.glsl");
+
+
+        sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shader_options,
             std::filesystem::path("protein_gl/simplemolecule/sm_sphere.vert.glsl"),
             std::filesystem::path("protein_gl/simplemolecule/sm_sphere.frag.glsl"));
 
-        cylinderShader_ = core::utility::make_shared_glowl_shader("cylinder", shdr_options,
+        cylinderShader_ = core::utility::make_shared_glowl_shader("cylinder", shader_options,
             std::filesystem::path("protein_gl/simplemolecule/sm_cylinder.vert.glsl"),
             std::filesystem::path("protein_gl/simplemolecule/sm_cylinder.frag.glsl"));
 
-    } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[SimpleMoleculeRenderer] %s", ex.what());
-    } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "[SimpleMoleculeRenderer] Unable to compile shader: Unknown exception.");
-    }
-
-    if (!this->tubeShader.Link()) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Unable to link the streamtube shader");
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("MoleculeCartoonRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -573,7 +479,7 @@ bool MoleculeCartoonRenderer::create(void) {
 /*
  * MoleculeCartoonRenderer::GetExtents
  */
-bool MoleculeCartoonRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool MoleculeCartoonRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     core::view::AbstractCallRender* cr3d = dynamic_cast<core::view::AbstractCallRender*>(&call);
     if (cr3d == NULL)
         return false;
@@ -599,7 +505,7 @@ bool MoleculeCartoonRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     // Get the pointer to CallRender3D (protein renderer) or CallRenderDeferred3D
     // if offscreen rendering is enabled
 
-    core_gl::view::CallRender3DGL* molrencr3d = this->molRendererCallerSlot.CallAs<core_gl::view::CallRender3DGL>();
+    mmstd_gl::CallRender3DGL* molrencr3d = this->molRendererCallerSlot.CallAs<mmstd_gl::CallRender3DGL>();
     if (molrencr3d) {
         (*molrencr3d)(core::view::AbstractCallRender::FnGetExtents);
     }
@@ -615,7 +521,7 @@ bool MoleculeCartoonRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * MoleculeCartoonRenderer::Render
  */
-bool MoleculeCartoonRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool MoleculeCartoonRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // cast the call to Render3D
     core::view::AbstractCallRender* cr3d = dynamic_cast<core::view::AbstractCallRender*>(&call);
     if (cr3d == NULL)
@@ -911,8 +817,8 @@ void MoleculeCartoonRenderer::UpdateParameters(
                 cmWeightParam.Param<param::FloatParam>()->Value(),
                 1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), this->atomColorTable, this->colorLookupTable,
                 this->fileLookupTable, this->rainbowColors, bs, nullptr, true);
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-                megamol::core::utility::log::Log::LEVEL_INFO, "Recomputing atom color table WITHOUT color module!");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "Recomputing atom color table WITHOUT color module!");
         }
 
         this->coloringModeParam0.ResetDirty();
@@ -1291,9 +1197,9 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid(const MolecularDataCall* mol, 
 
     // enable tube shader
     if (this->currentRenderMode == CartoonRenderMode::CARTOON)
-        this->tubeShader.Enable();
+        this->tubeShader->use();
     else
-        this->tubeSimpleShader.Enable();
+        this->tubeSimpleShader->use();
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
@@ -1305,9 +1211,9 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid(const MolecularDataCall* mol, 
 
     // enable arrow shader
     if (this->currentRenderMode == CartoonRenderMode::CARTOON)
-        this->arrowShader.Enable();
+        this->arrowShader->use();
     else
-        this->arrowSimpleShader.Enable();
+        this->arrowSimpleShader->use();
     glVertexPointer(3, GL_FLOAT, 0, this->vertArrow);
     glColorPointer(3, GL_FLOAT, 0, this->colorsParamsArrow);
     glDrawArrays(GL_TRIANGLES_ADJACENCY_EXT, 0, this->totalCountArrow * 6);
@@ -1316,9 +1222,9 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid(const MolecularDataCall* mol, 
 
     // enable helix shader
     if (this->currentRenderMode == CartoonRenderMode::CARTOON)
-        this->helixShader.Enable();
+        this->helixShader->use();
     else
-        this->helixSimpleShader.Enable();
+        this->helixSimpleShader->use();
     glVertexPointer(3, GL_FLOAT, 0, this->vertHelix);
     glColorPointer(3, GL_FLOAT, 0, this->colorsParamsHelix);
     glDrawArrays(GL_TRIANGLES_ADJACENCY_EXT, 0, this->totalCountHelix * 6);
@@ -2035,7 +1941,7 @@ void MoleculeCartoonRenderer::RenderCartoonCPU(const MolecularDataCall* mol, flo
     glEnableClientState(GL_COLOR_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
 
-    this->lightShader.Enable();
+    this->lightShader->use();
     // glDisable(GL_LIGHTING);
 
     // tube
@@ -2222,16 +2128,16 @@ void MoleculeCartoonRenderer::RenderCartoonGPU(const MolecularDataCall* mol, flo
                 }
 
                 if (mol->SecondaryStructures()[idx].Type() == MolecularDataCall::SecStructure::TYPE_HELIX) {
-                    this->helixSplineShader.Enable();
+                    this->helixSplineShader->use();
                 } else if (mol->SecondaryStructures()[idx].Type() == MolecularDataCall::SecStructure::TYPE_SHEET) {
-                    this->arrowSplineShader.Enable();
+                    this->arrowSplineShader->use();
                     if ((cntAA + 3) == countAA) {
                         factor = 1.0f;
                     } else {
                         factor = 0.0f;
                     }
                 } else {
-                    this->tubeSplineShader.Enable();
+                    this->tubeSplineShader->use();
                 }
 
                 glBegin(GL_LINES_ADJACENCY_EXT);
@@ -2577,9 +2483,9 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly(const MolecularDataCall* 
 
     // enable tube shader
     if (this->currentRenderMode == CartoonRenderMode::CARTOON)
-        this->tubeShader.Enable();
+        this->tubeShader->use();
     else
-        this->tubeSimpleShader.Enable();
+        this->tubeSimpleShader->use();
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, this->vertTube);
@@ -2684,14 +2590,14 @@ void MoleculeCartoonRenderer::RenderStick(
                 firstRes = mol->Molecules()[mCnt].FirstResidueIndex();
                 for (unsigned int rCnt = 0; rCnt < mol->Molecules()[mCnt].ResidueCount(); rCnt++) {
                     // try to match binding sites
-                    vislib::Pair<char, unsigned int> bsRes;
+                    std::pair<char, unsigned int> bsRes;
                     // loop over all binding sites
                     for (unsigned int bsCnt = 0; bsCnt < bs->GetBindingSiteCount(); bsCnt++) {
-                        for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->Count(); bsResCnt++) {
+                        for (unsigned int bsResCnt = 0; bsResCnt < bs->GetBindingSite(bsCnt)->size(); bsResCnt++) {
                             bsRes = bs->GetBindingSite(bsCnt)->operator[](bsResCnt);
-                            if (mol->Chains()[cCnt].Name() == bsRes.First() &&
-                                mol->Residues()[firstRes + rCnt]->OriginalResIndex() == bsRes.Second() &&
-                                mol->ResidueTypeNames()[mol->Residues()[firstRes + rCnt]->Type()] ==
+                            if (mol->Chains()[cCnt].Name() == bsRes.first &&
+                                mol->Residues()[firstRes + rCnt]->OriginalResIndex() == bsRes.second &&
+                                mol->ResidueTypeNames()[mol->Residues()[firstRes + rCnt]->Type()].PeekBuffer() ==
                                     bs->GetBindingSiteResNames(bsCnt)->operator[](bsResCnt)) {
                                 // TODO loop over all atoms and add the color
                                 firstAtom = mol->Residues()[firstRes + rCnt]->FirstAtomIndex();

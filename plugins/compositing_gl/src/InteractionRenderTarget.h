@@ -5,14 +5,12 @@
  * All rights reserved.
  */
 
-#ifndef INTERACTION_RENDER_TARGET_H_INCLUDED
-#define INTERACTION_RENDER_TARGET_H_INCLUDED
-
+#pragma once
 
 #include "SimpleRenderTarget.h"
 
 namespace megamol {
-namespace compositing {
+namespace compositing_gl {
 
 class InteractionRenderTarget : public SimpleRenderTarget {
 public:
@@ -52,7 +50,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core_gl::view::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      *
@@ -68,8 +66,5 @@ private:
     core::CalleeSlot m_objId_render_target;
 };
 
-} // namespace compositing
+} // namespace compositing_gl
 } // namespace megamol
-
-
-#endif // !INTERACTION_RENDER_TARGET_H_INCLUDED

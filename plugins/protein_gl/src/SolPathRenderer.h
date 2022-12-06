@@ -4,18 +4,17 @@
  * Copyright (C) 2010 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_PROTEIN_SOLPATHRENDERER_H_INCLUDED
-#define MEGAMOL_PROTEIN_SOLPATHRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
@@ -25,7 +24,7 @@ namespace protein_gl {
 /**
  * Renderer for solvent path raw data
  */
-class SolPathRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+class SolPathRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -77,7 +76,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -91,20 +90,18 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
 private:
     /** The slot to get the data */
     core::CallerSlot getdataslot;
 
     /** The shader for shading the path lines */
-    vislib_gl::graphics::gl::GLSLShader pathlineShader;
+    std::unique_ptr<glowl::GLSLProgram> pathlineShader;
 
     /** The shader for shading the dots */
-    vislib_gl::graphics::gl::GLSLShader dotsShader;
+    std::unique_ptr<glowl::GLSLProgram> dotsShader;
 };
 
 } // namespace protein_gl
 } /* end namespace megamol */
-
-#endif /*  MEGAMOL_PROTEIN_SOLPATHRENDERER_H_INCLUDED */

@@ -27,7 +27,7 @@ using namespace vislib;
 
 
 TrackingShotRenderer::TrackingShotRenderer(void)
-        : megamol::core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , keyframeKeeperSlot("keyframeData", "Connects to the Keyframe Keeper.")
         , stepsParam("splineSubdivision", "Amount of interpolation steps between keyframes.")
         , toggleHelpTextParam("helpText", "Show/hide help text for key assignments.")
@@ -69,7 +69,7 @@ TrackingShotRenderer::~TrackingShotRenderer(void) {
 bool TrackingShotRenderer::create(void) {
 
     // Initialise render utils
-    if (!this->utils.Initialise(this->GetCoreInstance())) {
+    if (!this->utils.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[TRACKINGSHOT RENDERER] [create] Couldn't initialize render utils. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
@@ -83,10 +83,10 @@ bool TrackingShotRenderer::create(void) {
 void TrackingShotRenderer::release(void) {}
 
 
-bool TrackingShotRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& call) {
+bool TrackingShotRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     // Propagate changes made in GetExtents() from outgoing CallRender3DGL (cr3d_out) to incoming CallRender3DGL (cr3d_in).
-    auto cr3d_out = this->chainRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
+    auto cr3d_out = this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>();
 
     if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetExtents)) {
         cinematic::CallKeyframeKeeper* ccc = this->keyframeKeeperSlot.CallAs<cinematic::CallKeyframeKeeper>();
@@ -127,9 +127,9 @@ bool TrackingShotRenderer::GetExtents(megamol::core_gl::view::CallRender3DGL& ca
 }
 
 
-bool TrackingShotRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
+bool TrackingShotRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
-    auto cr3d_out = this->chainRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
+    auto cr3d_out = this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>();
     if (cr3d_out == nullptr)
         return false;
 
@@ -245,7 +245,7 @@ bool TrackingShotRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) 
 
 bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
 
-    auto cr = this->chainRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
+    auto cr = this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>();
     if (cr != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseButton;
@@ -253,7 +253,7 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
         evt.mouseButtonData.action = action;
         evt.mouseButtonData.mods = mods;
         cr->SetInputEvent(evt);
-        if ((*cr)(core_gl::view::CallRender3DGL::FnOnMouseButton))
+        if ((*cr)(mmstd_gl::CallRender3DGL::FnOnMouseButton))
             return true;
     }
 
@@ -321,14 +321,14 @@ bool TrackingShotRenderer::OnMouseButton(MouseButton button, MouseButtonAction a
 
 bool TrackingShotRenderer::OnMouseMove(double x, double y) {
 
-    auto cr = this->chainRenderSlot.CallAs<core_gl::view::CallRender3DGL>();
+    auto cr = this->chainRenderSlot.CallAs<mmstd_gl::CallRender3DGL>();
     if (cr != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseMove;
         evt.mouseMoveData.x = x;
         evt.mouseMoveData.y = y;
         cr->SetInputEvent(evt);
-        if ((*cr)(core_gl::view::CallRender3DGL::FnOnMouseMove))
+        if ((*cr)(mmstd_gl::CallRender3DGL::FnOnMouseMove))
             return true;
     }
 

@@ -6,18 +6,17 @@
 
 #pragma once
 
-#include "glowl/glowl.h"
+#include <glm/ext.hpp>
+#include <glm/glm.hpp>
+#include <glowl/glowl.h>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
-
-#include <glm/ext.hpp>
-#include <glm/glm.hpp>
+#include "mmstd_gl/special/TextureInspector.h"
 
 namespace megamol::compositing_gl {
 
@@ -100,7 +99,7 @@ public:
         return true;
     }
 
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     std::vector<std::string> requested_lifetime_resources() override {
         std::vector<std::string> resources = Module::requested_lifetime_resources();
         resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
@@ -213,7 +212,7 @@ private:
         const std::shared_ptr<glowl::Texture2D>& tgt, const std::shared_ptr<glowl::Texture2D>& src);
 
     // profiling
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
     frontend_resources::PerformanceManager::handle_vector timers_;
     frontend_resources::PerformanceManager* perf_manager_ = nullptr;
 #endif
@@ -222,6 +221,8 @@ private:
     std::vector<unsigned char> search_;
 
     uint32_t version_;
+
+    mmstd_gl::special::TextureInspector tex_inspector_;
 
     /** Shader program to copy a texture to another */
     std::unique_ptr<glowl::GLSLProgram> copy_prgm_;
@@ -270,9 +271,6 @@ private:
      * SMAA 4x:  includes all SMAA 1x features plus spatial and temporal multi/supersampling (not implemented yet)
      */
     megamol::core::param::ParamSlot smaa_mode_;
-
-    /** Parameter for selecting which texture to show, e.g. final output, edges, or weights */
-    megamol::core::param::ParamSlot smaa_view_;
 
     /** Parameter for selecting the smaa quality level
      * as stated in the original work http://www.iryoku.com/smaa/

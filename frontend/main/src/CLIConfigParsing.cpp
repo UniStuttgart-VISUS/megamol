@@ -255,33 +255,17 @@ static void logfile_handler(
 
 static const std::string accepted_log_level_strings =
     "('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')";
-static unsigned int parse_log_level(std::string const& value) {
-    if (value.front() == '-')
-        exit("log level value must be positive. seems to be negative: " + value);
-
-    unsigned int value_as_uint = 0;
-
-    try {
-        if (std::string(value).find_first_of("0123456789") != std::string::npos) {
-            value_as_uint = std::stoi(value);
-        } else {
-            value_as_uint = megamol::core::utility::log::Log::ParseLevelAttribute(value);
-        }
-    } catch (...) {
-        exit("Could not parse valid log level string or positive integer from argument \"" + value + "\"");
-    }
-
-    return value_as_uint;
-}
 
 static void loglevel_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.log_level = parse_log_level(parsed_options[option_name].as<std::string>());
+    config.log_level =
+        megamol::core::utility::log::Log::ParseLevelAttribute(parsed_options[option_name].as<std::string>());
 };
 
 static void echolevel_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    config.echo_level = parse_log_level(parsed_options[option_name].as<std::string>());
+    config.echo_level =
+        megamol::core::utility::log::Log::ParseLevelAttribute(parsed_options[option_name].as<std::string>());
 };
 
 static void project_handler(
@@ -384,7 +368,7 @@ static void vsync_handler(
 static void no_opengl_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     // User cannot overwrite default value when there is no openGL present
-#ifdef WITH_GL
+#ifdef MEGAMOL_USE_OPENGL
     config.no_opengl = parsed_options[option_name].as<bool>();
 #endif
 };
@@ -488,9 +472,9 @@ static void vr_service_handler(
 
     std::vector<std::pair<std::string, RuntimeConfig::VRMode>> options = {
         {"off", RuntimeConfig::VRMode::Off},
-#ifdef WITH_VR_SERVICE_UNITY_KOLABBW
+#ifdef MEGAMOL_USE_VR_INTEROP
         {"unitykolab", RuntimeConfig::VRMode::UnityKolab},
-#endif // WITH_VR_SERVICE_UNITY_KOLABBW
+#endif // MEGAMOL_USE_VR_INTEROP
     };
 
     auto match = [&](std::string const& string) -> RuntimeConfig::VRMode {
@@ -560,7 +544,7 @@ std::vector<OptionsListEntry> cli_options_list =
             cxxopts::value<bool>(), privacynote_handler},
         {versionnote_option, "Show version warning when loading a project, use '=false' to disable",
             cxxopts::value<bool>(), versionnote_handler}
-#ifdef PROFILING
+#ifdef MEGAMOL_USE_PROFILING
         ,
         {profile_log_option, "Enable performance counters and set output to file", cxxopts::value<std::string>(),
             profile_log_handler}
@@ -659,7 +643,9 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
 
         return config_files;
 
-    } catch (cxxopts::OptionException ex) { exit(ex.what()); }
+    } catch (cxxopts::OptionException ex) {
+        exit(ex.what());
+    }
 }
 
 #define add_option(X) (std::get<0>(X), std::get<1>(X), std::get<2>(X))
@@ -848,7 +834,9 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(
                 }
             }
 
-        } catch (cxxopts::OptionException ex) { exit(std::string(ex.what()) + "\nIn file: " + file); }
+        } catch (cxxopts::OptionException ex) {
+            exit(std::string(ex.what()) + "\nIn file: " + file);
+        }
 
         config.configuration_file_contents.push_back(file_contents);
         config.configuration_file_contents_as_cli.push_back(
@@ -898,7 +886,9 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(
             }
         }
 
-    } catch (cxxopts::OptionException ex) { exit(std::string(ex.what()) + "\n" + options.help({""})); }
+    } catch (cxxopts::OptionException ex) {
+        exit(std::string(ex.what()) + "\n" + options.help({""}));
+    }
 
     return config;
 }

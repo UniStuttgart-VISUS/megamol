@@ -1,12 +1,11 @@
 #include "NormalFromDepth.h"
 
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
-megamol::compositing::NormalFromDepth::NormalFromDepth()
+using megamol::core::utility::log::Log;
+
+megamol::compositing_gl::NormalFromDepth::NormalFromDepth()
         : m_version(0)
         , m_output_texture(nullptr)
         , m_output_tex_slot("NormalTexture", "Gives access to resulting output normal texture")
@@ -24,31 +23,21 @@ megamol::compositing::NormalFromDepth::NormalFromDepth()
     this->MakeSlotAvailable(&this->m_camera_slot);
 }
 
-megamol::compositing::NormalFromDepth::~NormalFromDepth() {
+megamol::compositing_gl::NormalFromDepth::~NormalFromDepth() {
     this->Release();
 }
 
-bool megamol::compositing::NormalFromDepth::create() {
-    vislib_gl::graphics::gl::ShaderSource compute_shader_src;
-
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-
-    ssf->MakeShaderSource("Compositing::normalFromDepth", compute_shader_src);
-
-    std::string vertex_src(compute_shader_src.WholeCode(), (compute_shader_src.WholeCode()).Length());
-
-    std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
-
-    if (!vertex_src.empty()) {
-        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Compute, vertex_src});
-    }
+bool megamol::compositing_gl::NormalFromDepth::create() {
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
-        m_normal_from_depth_prgm = std::make_unique<glowl::GLSLProgram>(shader_srcs);
-    } catch (glowl::GLSLProgramException const& exc) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n", "Compositing::normalFromDepth",
-            exc.what(), __FILE__, __FUNCTION__, __LINE__);
+        m_normal_from_depth_prgm = core::utility::make_glowl_shader(
+            "Compositing_normalFromDepth", shader_options, "compositing_gl/normalFromDepth.comp.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("NormalFromDepth: " + std::string(e.what())).c_str());
+        return false;
     }
 
     glowl::TextureLayout tx_layout(GL_RGBA16F, 1, 1, 1, GL_RGBA, GL_HALF_FLOAT, 1);
@@ -57,9 +46,9 @@ bool megamol::compositing::NormalFromDepth::create() {
     return true;
 }
 
-void megamol::compositing::NormalFromDepth::release() {}
+void megamol::compositing_gl::NormalFromDepth::release() {}
 
-bool megamol::compositing::NormalFromDepth::getDataCallback(core::Call& caller) {
+bool megamol::compositing_gl::NormalFromDepth::getDataCallback(core::Call& caller) {
 
     auto lhs_tc = dynamic_cast<CallTexture2D*>(&caller);
     auto call_input = m_input_tex_slot.CallAs<CallTexture2D>();
@@ -135,7 +124,7 @@ bool megamol::compositing::NormalFromDepth::getDataCallback(core::Call& caller) 
     return true;
 }
 
-bool megamol::compositing::NormalFromDepth::getMetaDataCallback(core::Call& caller) {
+bool megamol::compositing_gl::NormalFromDepth::getMetaDataCallback(core::Call& caller) {
 
 
     return true;

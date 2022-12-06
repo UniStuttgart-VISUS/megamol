@@ -4,19 +4,20 @@
  * Copyright (C) 2009-2021 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef MMPROTEINPLUGIN_MOLSESRENDERER_H_INCLUDED
-#define MMPROTEINPLUGIN_MOLSESRENDERER_H_INCLUDED
-#if (_MSC_VER > 1000)
 #pragma once
-#endif /* (_MSC_VER > 1000) */
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
+#include <algorithm>
+#include <list>
+#include <set>
+#include <vector>
+
+#include <glowl/glowl.h>
+
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Camera.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein/ReducedSurface.h"
 #include "protein_calls/BindingSiteCall.h"
 #include "protein_calls/MolecularDataCall.h"
@@ -25,14 +26,7 @@
 #include "vislib/Array.h"
 #include "vislib/String.h"
 #include "vislib/math/Quaternion.h"
-#include "vislib_gl/graphics/gl/GLSLComputeShader.h"
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
-#include <algorithm>
-#include <list>
-#include <set>
-#include <vector>
 
 namespace megamol {
 namespace protein_gl {
@@ -41,7 +35,7 @@ namespace protein_gl {
  * Molecular Surface Renderer class.
  * Computes and renders the solvent excluded (Connolly) surface.
  */
-class MoleculeSESRenderer : public megamol::core_gl::view::Renderer3DModuleGL {
+class MoleculeSESRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
     /** render modi */
     enum RenderMode {
@@ -189,7 +183,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Open GL Render call.
@@ -197,7 +191,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Deinitialises this renderer. This is only called if there was a
@@ -380,5 +374,3 @@ private:
 
 } // namespace protein_gl
 } /* end namespace megamol */
-
-#endif /* MMPROTEINPLUGIN_MOLSESRENDERER_H_INCLUDED */

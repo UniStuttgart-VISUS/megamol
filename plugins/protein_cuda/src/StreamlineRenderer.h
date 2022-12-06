@@ -8,22 +8,20 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_STREAMLINERENDERER_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_STREAMLINERENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
+
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "CUDAStreamlines.h"
 #include "CudaDevArr.h"
 #include "VBODataCall.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore_gl/view/Renderer3DModuleGL.h"
+#include "mmstd/renderer/CallRender3D.h"
+#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "protein_calls/VTIDataCall.h"
-#include "vislib_gl/graphics/gl/GLSLGeometryShader.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 
 typedef vislib::math::Vector<int, 3> Vec3i;
 typedef unsigned int uint;
@@ -31,7 +29,7 @@ typedef unsigned int uint;
 namespace megamol {
 namespace protein_cuda {
 
-class StreamlineRenderer : public core_gl::view::Renderer3DModuleGL {
+class StreamlineRenderer : public mmstd_gl::Renderer3DModuleGL {
 
 public:
     enum RenderModes { NONE = 0, LINES, ILLUMINATED_LINES, TUBES };
@@ -93,7 +91,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core_gl::view::CallRender3DGL& call);
+    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Open GL Render call.
@@ -101,7 +99,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core_gl::view::CallRender3DGL& call);
+    virtual bool Render(mmstd_gl::CallRender3DGL& call);
 
     /**
      * Callback called when the clipping plane is requested.
@@ -213,10 +211,10 @@ private:
     /* Rendering */
 
     // Shader for stream tubes
-    vislib_gl::graphics::gl::GLSLGeometryShader tubeShader;
+    std::unique_ptr<glowl::GLSLProgram> tubeShader;
 
     // Shader for illuminated streamlines
-    vislib_gl::graphics::gl::GLSLGeometryShader illumShader;
+    std::unique_ptr<glowl::GLSLProgram> illumShader;
 
     /// The uniform color for surface #1
     static const Vec3f uniformColor;
@@ -228,5 +226,3 @@ private:
 
 } // end namespace protein_cuda
 } // end namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_STREAMLINERENDERER_H_INCLUDED

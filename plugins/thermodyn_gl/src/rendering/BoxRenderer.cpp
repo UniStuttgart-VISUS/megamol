@@ -1,19 +1,14 @@
 #include "BoxRenderer.h"
 
-#include "geometry_calls/MultiParticleDataCall.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
-
-#include "thermodyn/BoxDataCall.h"
-#include "vislib/math/Matrix.h"
-#include "vislib/math/ShallowMatrix.h"
-
-#include "glm/gtc/type_ptr.hpp"
-#include "glm/gtx/transform.hpp"
+#include <glm/gtx/transform.hpp>
 
 #include "OpenGL_Context.h"
+#include "geometry_calls/MultiParticleDataCall.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "thermodyn/BoxDataCall.h"
 
+using megamol::core::utility::log::Log;
 
 megamol::thermodyn_gl::rendering::BoxRenderer::BoxRenderer()
         : dataInSlot_("dataIn", "Input of boxes to render")
@@ -35,31 +30,15 @@ megamol::thermodyn_gl::rendering::BoxRenderer::~BoxRenderer() {
 
 
 bool megamol::thermodyn_gl::rendering::BoxRenderer::create() {
-    auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
-        return false;
-
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    core_gl::utility::ShaderSourceFactory& factory = *ssf;
+    auto const shaderOptions =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
-        vislib_gl::graphics::gl::ShaderSource vert, frag;
+        boxShader_ = core::utility::make_glowl_shader(
+            "boxShader", shaderOptions, "thermodyn_gl/therm_box.vert.glsl", "thermodyn_gl/therm_box.frag.glsl");
 
-        factory.MakeShaderSource("therm_box::vertex", vert);
-        factory.MakeShaderSource("therm_box::fragment", frag);
-
-        boxShader_.Compile(vert.Code(), vert.Count(), frag.Code(), frag.Count());
-
-        boxShader_.Link();
-    } catch (vislib_gl::graphics::gl::GLSLShader::CompileException& ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "BoxRenderer: Unable to compile therm_box shader: %s ... %s\n",
-            vislib_gl::graphics::gl::GLSLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
-        return false;
-    } catch (vislib_gl::graphics::gl::OpenGLException& oe) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "BoxRenderer: Failed to create therm_box shader: %s\n", oe.GetMsgA());
-
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("BoxRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -72,15 +51,13 @@ bool megamol::thermodyn_gl::rendering::BoxRenderer::create() {
 
 
 void megamol::thermodyn_gl::rendering::BoxRenderer::release() {
-    boxShader_.Release();
-
     glDeleteBuffers(1, &vvbo_);
     glDeleteBuffers(1, &cvbo_);
     glDeleteVertexArrays(1, &vao_);
 }
 
 
-bool megamol::thermodyn_gl::rendering::BoxRenderer::Render(megamol::core_gl::view::CallRender3DGL& call) {
+bool megamol::thermodyn_gl::rendering::BoxRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     std::vector<thermodyn::BoxDataCall::box_entry_t> boxes;
 
     thermodyn::BoxDataCall* inBoxCall = nullptr;
@@ -141,13 +118,13 @@ bool megamol::thermodyn_gl::rendering::BoxRenderer::Render(megamol::core_gl::vie
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    boxShader_.Enable();
+    boxShader_->use();
 
-    glUniformMatrix4fv(boxShader_.ParameterLocation("mvp"), 1, false, glm::value_ptr(MVP));
+    boxShader_->setUniform("mvp", MVP);
 
     glDrawArrays(GL_QUADS, 0, this->drawData.first.size() / 3);
 
-    boxShader_.Disable();
+    glUseProgram(0);
 
     glDisable(GL_BLEND);
     // glDisable(GL_DEPTH_TEST);
@@ -160,7 +137,7 @@ bool megamol::thermodyn_gl::rendering::BoxRenderer::Render(megamol::core_gl::vie
 }
 
 
-bool megamol::thermodyn_gl::rendering::BoxRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool megamol::thermodyn_gl::rendering::BoxRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     thermodyn::BoxDataCall* inBoxCall = nullptr;
     geocalls::MultiParticleDataCall* inParCall = nullptr;
     if ((inBoxCall = dataInSlot_.CallAs<thermodyn::BoxDataCall>()) != nullptr) {

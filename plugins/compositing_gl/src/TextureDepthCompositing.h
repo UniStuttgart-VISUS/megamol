@@ -5,21 +5,19 @@
  * All rights reserved.
  */
 
-#ifndef TEXTURE_DEPTH_COMPOSITING_H_INCLUDED
-#define TEXTURE_DEPTH_COMPOSITING_H_INCLUDED
+#pragma once
 
 #include <memory>
+
+#include <glowl/GLSLProgram.hpp>
+#include <glowl/Texture2D.hpp>
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-#include "glowl/GLSLProgram.hpp"
-#include "glowl/Texture2D.hpp"
-
-namespace megamol {
-namespace compositing {
+namespace megamol::compositing_gl {
 
 class TextureDepthCompositing : public core::Module {
 public:
@@ -38,7 +36,7 @@ public:
      * @return A human readable description of this module.
      */
     static const char* Description() {
-        return "Compositing module that combines two texture using depth aware alpha compositing.";
+        return "Compositing module that combines two texture using depth aware alpha compositing_gl.";
     }
 
     /**
@@ -114,7 +112,4 @@ private:
     megamol::core::CallerSlot m_depth_tex_1_slot;
 };
 
-} // namespace compositing
-} // namespace megamol
-
-#endif // !TEXTURE_DEPTH_COMPOSITING_H_INCLUDED
+} // namespace megamol::compositing_gl

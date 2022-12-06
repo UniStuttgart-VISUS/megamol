@@ -1,0 +1,32 @@
+{
+  "name": "imgui-tex-inspect",
+  "version": "2022-09-02",
+  "port-version": 0,
+  "description": "A texture inspector tool for Dear ImGui",
+  "homepage": "https://github.com/andyborrell/imgui_tex_inspect",
+  "license": "MIT",
+  "dependencies": [
+    "imgui",
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ],
+  "features": {
+    "opengl3-binding": {
+      "description": "Make available OpenGL3/ES/ES2 (modern) binding",
+      "dependencies": [
+        {
+          "name": "imgui",
+          "features": [
+            "opengl3-binding"
+          ]
+        }
+      ]
+    }
+  }
+}

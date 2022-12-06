@@ -42,6 +42,7 @@ TableToParticles::TableToParticles(void)
         , slotColumnX("xcolumnname", "The name of the column holding the x-coordinate.")
         , slotColumnY("ycolumnname", "The name of the column holding the y-coordinate.")
         , slotColumnZ("zcolumnname", "The name of the column holding the z-coordinate.")
+        , slotColumnID("idcolumnname", "The name of the column holding the particle id. Stored as uint32_t.")
         , slotColumnVX("direction::vxcolumnname", "The name of the column holding the vx-coordinate.")
         , slotColumnVY("direction::vycolumnname", "The name of the column holding the vy-coordinate.")
         , slotColumnVZ("direction::vzcolumnname", "The name of the column holding the vz-coordinate.")
@@ -116,6 +117,10 @@ TableToParticles::TableToParticles(void)
     this->slotColumnZ << zColumnEp;
     this->MakeSlotAvailable(&this->slotColumnZ);
 
+    core::param::FlexEnumParam* idColumnEp = new core::param::FlexEnumParam("undef");
+    this->slotColumnID << idColumnEp;
+    this->MakeSlotAvailable(&this->slotColumnID);
+
     core::param::FlexEnumParam* vxColumnEp = new core::param::FlexEnumParam("undef");
     this->slotColumnVX << vxColumnEp;
     this->MakeSlotAvailable(&this->slotColumnVX);
@@ -183,7 +188,8 @@ bool TableToParticles::anythingDirty() {
            this->slotColumnI.IsDirty() || this->slotGlobalColor.IsDirty() || this->slotColorMode.IsDirty() ||
            this->slotColumnRadius.IsDirty() || this->slotGlobalRadius.IsDirty() || this->slotRadiusMode.IsDirty() ||
            this->slotColumnX.IsDirty() || this->slotColumnY.IsDirty() || this->slotColumnZ.IsDirty() ||
-           this->slotColumnVX.IsDirty() || this->slotColumnVY.IsDirty() || this->slotColumnVZ.IsDirty();
+           this->slotColumnID.IsDirty() || this->slotColumnVX.IsDirty() || this->slotColumnVY.IsDirty() ||
+           this->slotColumnVZ.IsDirty();
 }
 
 void TableToParticles::resetAllDirty() {
@@ -199,6 +205,7 @@ void TableToParticles::resetAllDirty() {
     this->slotColumnX.ResetDirty();
     this->slotColumnY.ResetDirty();
     this->slotColumnZ.ResetDirty();
+    this->slotColumnID.ResetDirty();
     this->slotColumnVX.ResetDirty();
     this->slotColumnVY.ResetDirty();
     this->slotColumnVZ.ResetDirty();
@@ -245,6 +252,7 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
         this->slotColumnX.Param<core::param::FlexEnumParam>()->ClearValues();
         this->slotColumnY.Param<core::param::FlexEnumParam>()->ClearValues();
         this->slotColumnZ.Param<core::param::FlexEnumParam>()->ClearValues();
+        this->slotColumnID.Param<core::param::FlexEnumParam>()->ClearValues();
         this->slotColumnVX.Param<core::param::FlexEnumParam>()->ClearValues();
         this->slotColumnVY.Param<core::param::FlexEnumParam>()->ClearValues();
         this->slotColumnVZ.Param<core::param::FlexEnumParam>()->ClearValues();
@@ -267,6 +275,7 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
             this->slotColumnX.Param<core::param::FlexEnumParam>()->AddValue(n);
             this->slotColumnY.Param<core::param::FlexEnumParam>()->AddValue(n);
             this->slotColumnZ.Param<core::param::FlexEnumParam>()->AddValue(n);
+            this->slotColumnID.Param<core::param::FlexEnumParam>()->AddValue(n);
             this->slotColumnVX.Param<core::param::FlexEnumParam>()->AddValue(n);
             this->slotColumnVY.Param<core::param::FlexEnumParam>()->AddValue(n);
             this->slotColumnVZ.Param<core::param::FlexEnumParam>()->AddValue(n);
@@ -316,6 +325,16 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
     retValue = retValue && pushColumnIndex(indicesToCollect,
                                this->slotColumnZ.Param<core::param::FlexEnumParam>()->ValueString().c_str());
 
+    std::string c = cleanUpColumnHeader(this->slotColumnID.Param<core::param::FlexEnumParam>()->ValueString());
+    haveIDs = this->columnIndex.find(c) != columnIndex.end();
+    size_t idOffset;
+    if (haveIDs) {
+        retValue = retValue && pushColumnIndex(indicesToCollect,
+                                   this->slotColumnID.Param<core::param::FlexEnumParam>()->ValueString().c_str());
+        idOffset = indicesToCollect.size() - 1;
+        stride += 1;
+    }
+
     if (this->slotRadiusMode.Param<core::param::EnumParam>()->Value() == 0) { // particle
         if (!pushColumnIndex(
                 indicesToCollect, this->slotColumnRadius.Param<core::param::FlexEnumParam>()->ValueString().c_str())) {
@@ -351,7 +370,7 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
 
     bool vx, vy, vz;
     vx = vy = vz = false;
-    std::string c = cleanUpColumnHeader(this->slotColumnVX.Param<core::param::FlexEnumParam>()->ValueString());
+    c = cleanUpColumnHeader(this->slotColumnVX.Param<core::param::FlexEnumParam>()->ValueString());
     if (this->columnIndex.find(c) != columnIndex.end())
         vx = true;
     c = cleanUpColumnHeader(this->slotColumnVY.Param<core::param::FlexEnumParam>()->ValueString());
@@ -432,6 +451,11 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
         for (uint32_t j = 0; j < numIndices; j++) {
             currOut[j] = ftData[cols * i + indicesToCollect[j]];
         }
+        if (this->haveIDs) {
+            // First cast the float to a int, then save bits w/o casting in currOut
+            uint32_t id = static_cast<uint32_t>(currOut[idOffset]);
+            currOut[idOffset] = *reinterpret_cast<float*>(&id);
+        }
         if (this->haveTensor) {
             glm::mat3 rotate_world_into_tensor;
             glm::vec3 xvec, yvec, zvec;
@@ -478,17 +502,17 @@ bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID
             glm::vec4 tmp1(quatC.x, quatC.y, quatC.z, quatC.w);
             tmp1 *= quatC.w;
             tmp1.w = -quatConst.z;
-            rotMatT0.xyz() = tmp1.wzy() * quatConst.xxy() + tmp.wxy(); // matrix0 <- (ww-0.5, xy+zw, xz-yw, %)
-            rotMatT0.x = quatC.x * quatC.x + rotMatT0.x;               // matrix0 <- (ww+x*x-0.5, xy+zw, xz-yw, %)
-            rotMatT0 = rotMatT0 + rotMatT0; // matrix0 <- (2(ww+x*x)-1, 2(xy+zw), 2(xz-yw), %)
+            rotMatT0 = tmp1.wzy() * quatConst.xxy() + tmp.wxy(); // matrix0 <- (ww-0.5, xy+zw, xz-yw, %)
+            rotMatT0.x = quatC.x * quatC.x + rotMatT0.x;         // matrix0 <- (ww+x*x-0.5, xy+zw, xz-yw, %)
+            rotMatT0 = rotMatT0 + rotMatT0;                      // matrix0 <- (2(ww+x*x)-1, 2(xy+zw), 2(xz-yw), %)
 
-            rotMatT1.xyz() = tmp1.zwx() * quatConst.yxx() + tmp.xwz(); // matrix1 <- (xy-zw, ww-0.5, yz+xw, %)
-            rotMatT1.y = quatC.y * quatC.y + rotMatT1.y;               // matrix1 <- (xy-zw, ww+y*y-0.5, yz+xw, %)
-            rotMatT1 = rotMatT1 + rotMatT1; // matrix1 <- (2(xy-zw), 2(ww+y*y)-1, 2(yz+xw), %)
+            rotMatT1 = tmp1.zwx() * quatConst.yxx() + tmp.xwz(); // matrix1 <- (xy-zw, ww-0.5, yz+xw, %)
+            rotMatT1.y = quatC.y * quatC.y + rotMatT1.y;         // matrix1 <- (xy-zw, ww+y*y-0.5, yz+xw, %)
+            rotMatT1 = rotMatT1 + rotMatT1;                      // matrix1 <- (2(xy-zw), 2(ww+y*y)-1, 2(yz+xw), %)
 
-            rotMatT2.xyz() = tmp1.yxw() * quatConst.xyx() + tmp.yzw(); // matrix2 <- (xz+yw, yz-xw, ww-0.5, %)
-            rotMatT2.z = quatC.z * quatC.z + rotMatT2.z;               // matrix2 <- (xz+yw, yz-xw, ww+zz-0.5, %)
-            rotMatT2 = rotMatT2 + rotMatT2;                            // matrix2 <- (2(xz+yw), 2(yz-xw), 2(ww+zz)-1, %)
+            rotMatT2 = tmp1.yxw() * quatConst.xyx() + tmp.yzw(); // matrix2 <- (xz+yw, yz-xw, ww-0.5, %)
+            rotMatT2.z = quatC.z * quatC.z + rotMatT2.z;         // matrix2 <- (xz+yw, yz-xw, ww+zz-0.5, %)
+            rotMatT2 = rotMatT2 + rotMatT2;                      // matrix2 <- (2(xz+yw), 2(yz-xw), 2(ww+zz)-1, %)
             // End: Holy code!
 
             rotMatRec = glm::mat3(rotMatT0, rotMatT1, rotMatT2);
@@ -589,6 +613,12 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                     break;
                 }
 
+                if (haveIDs) {
+                    c->AccessParticles(0).SetIDData(geocalls::MultiParticleDataCall::Particles::IDDATA_UINT32,
+                        this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
+                    colOffset += 1;
+                }
+
                 switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // RGB
                     c->AccessParticles(0).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
@@ -650,6 +680,12 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
                     break;
                 }
 
+                if (haveIDs) {
+                    c->AccessParticles(0).SetIDData(geocalls::MultiParticleDataCall::Particles::IDDATA_UINT32,
+                        this->everything.data() + colOffset, static_cast<unsigned int>(stride * sizeof(float)));
+                    colOffset += 1;
+                }
+
                 switch (this->slotColorMode.Param<core::param::EnumParam>()->Value()) {
                 case 0: // RGB
                     e->AccessParticles(0).SetColourData(geocalls::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB,
@@ -684,11 +720,11 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
         }
         return true;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(e.GetMsg());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
-                                                                   _T("in callback getMultiParticleData."));
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Unexpected exception ")
+                                                                _T("in callback getMultiParticleData."));
         return false;
     }
 }
@@ -738,11 +774,11 @@ bool TableToParticles::getMultiparticleExtent(core::Call& call) {
         }
         return true;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, e.GetMsg());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(e.GetMsg());
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(1, _T("Unexpected exception ")
-                                                                   _T("in callback getMultiparticleExtent."));
+        megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Unexpected exception ")
+                                                                _T("in callback getMultiparticleExtent."));
         return false;
     }
 }

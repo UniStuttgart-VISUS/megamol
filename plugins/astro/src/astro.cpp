@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "AstroParticleConverter.h"
 #include "AstroSchulz.h"
@@ -18,11 +18,11 @@
 #include "astro/AstroDataCall.h"
 
 namespace megamol::astro {
-class AstroPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class AstroPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(AstroPluginInstance)
 
 public:
-    AstroPluginInstance() : megamol::core::utility::plugins::AbstractPluginInstance("astro", "The astro plugin."){};
+    AstroPluginInstance() : megamol::core::factories::AbstractPluginInstance("astro", "The astro plugin."){};
 
     ~AstroPluginInstance() override = default;
 

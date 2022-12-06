@@ -8,15 +8,13 @@
 
 #include "compositing_gl/CompositingCalls.h"
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/view/light/DistantLight.h"
-#include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmstd/light/DistantLight.h"
+#include "mmstd/light/PointLight.h"
 
 using namespace megamol;
 using namespace megamol::trisoup_gl;
@@ -57,7 +55,7 @@ ModernTrisoupRenderer::ModernTrisoupRenderer(void)
     getLightsSlot_.SetNecessity(megamol::core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&getLightsSlot_);
 
-    getFramebufferSlot_.SetCompatibleCall<megamol::compositing::CallFramebufferGLDescription>();
+    getFramebufferSlot_.SetCompatibleCall<megamol::compositing_gl::CallFramebufferGLDescription>();
     this->MakeSlotAvailable(&getFramebufferSlot_);
 
     core::param::EnumParam* ep = new core::param::EnumParam(static_cast<int>(RenderingMode::FILLED));
@@ -120,18 +118,18 @@ ModernTrisoupRenderer::~ModernTrisoupRenderer(void) {
 bool ModernTrisoupRenderer::create(void) {
 
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
         meshShader_ = core::utility::make_shared_glowl_shader("mesh", shdr_options,
             std::filesystem::path("trisoup_gl/trisoup.vert.glsl"),
             std::filesystem::path("trisoup_gl/trisoup.frag.glsl"));
     } catch (glowl::GLSLProgramException const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-            megamol::core::utility::log::Log::LEVEL_ERROR, "[ModernTrisoupRenderer] %s", ex.what());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[ModernTrisoupRenderer] %s", ex.what());
     } catch (std::exception const& ex) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[ModernTrisoupRenderer] Unable to compile shader: Unknown exception: %s", ex.what());
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[ModernTrisoupRenderer] Unable to compile shader: Unknown exception.");
     }
 
@@ -182,7 +180,7 @@ void ModernTrisoupRenderer::release(void) {
     }
 }
 
-bool ModernTrisoupRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool ModernTrisoupRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 
     auto ctmd = this->getDataSlot_.CallAs<geocalls_gl::CallTriMeshDataGL>();
     if (ctmd == nullptr) {
@@ -200,7 +198,7 @@ bool ModernTrisoupRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
     return true;
 }
 
-bool ModernTrisoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool ModernTrisoupRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     auto call_fbo = call.GetFramebuffer();
     auto cam = call.GetCamera();
 
@@ -209,11 +207,11 @@ bool ModernTrisoupRenderer::Render(core_gl::view::CallRender3DGL& call) {
     auto mvp_mat = proj_mat * view_mat;
 
     bool has_external_fbo = false;
-    auto cfbo = getFramebufferSlot_.CallAs<compositing::CallFramebufferGL>();
+    auto cfbo = getFramebufferSlot_.CallAs<compositing_gl::CallFramebufferGL>();
     auto fbo = call.GetFramebuffer();
     if (cfbo != nullptr) {
-        cfbo->operator()(compositing::CallFramebufferGL::CallGetMetaData);
-        cfbo->operator()(compositing::CallFramebufferGL::CallGetData);
+        cfbo->operator()(compositing_gl::CallFramebufferGL::CallGetMetaData);
+        cfbo->operator()(compositing_gl::CallFramebufferGL::CallGetData);
         if (cfbo->getData() != nullptr) {
             fbo = cfbo->getData();
             has_external_fbo = true;
@@ -465,26 +463,24 @@ void ModernTrisoupRenderer::updateLights(core::view::light::CallLight* lightCall
         core::utility::log::Log::DefaultLog.WriteWarn(
             "[ModernTrisoupRenderer]: There are no proper lights connected, no shading is happening");
     } else {
-        if (lightCall->hasUpdate()) {
-            auto& lights = lightCall->getData();
+        auto& lights = lightCall->getData();
 
-            pointLights_.clear();
-            directionalLights_.clear();
+        pointLights_.clear();
+        directionalLights_.clear();
 
-            auto point_lights = lights.get<core::view::light::PointLightType>();
-            auto distant_lights = lights.get<core::view::light::DistantLightType>();
+        auto point_lights = lights.get<core::view::light::PointLightType>();
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
 
-            for (const auto& pl : point_lights) {
-                pointLights_.push_back({pl.position[0], pl.position[1], pl.position[2], pl.intensity});
-            }
+        for (const auto& pl : point_lights) {
+            pointLights_.push_back({pl.position[0], pl.position[1], pl.position[2], pl.intensity});
+        }
 
-            for (const auto& dl : distant_lights) {
-                if (dl.eye_direction) {
-                    auto cd = glm::normalize(camDir); // paranoia
-                    directionalLights_.push_back({cd.x, cd.y, cd.z, dl.intensity});
-                } else {
-                    directionalLights_.push_back({dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
-                }
+        for (const auto& dl : distant_lights) {
+            if (dl.eye_direction) {
+                auto cd = glm::normalize(camDir); // paranoia
+                directionalLights_.push_back({cd.x, cd.y, cd.z, dl.intensity});
+            } else {
+                directionalLights_.push_back({dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
             }
         }
     }

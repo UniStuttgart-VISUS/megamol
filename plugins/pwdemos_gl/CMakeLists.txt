@@ -5,7 +5,10 @@
 
 megamol_plugin(pwdemos_gl
   BUILD_DEFAULT ON
-  DEPENDS_GL
+  DEPENDS_FEATURES
+    opengl
   DEPENDS_PLUGINS
+    mmstd
+    mmstd_gl
     geometry_calls
     protein_calls)

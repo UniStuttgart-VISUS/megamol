@@ -8,8 +8,13 @@
 
 #define _USE_MATH_DEFINES 1
 
+#include <cmath>
+#include <ctime>
+#include <iostream>
+
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "GLSLVolumeRenderer.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -18,8 +23,8 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/AbstractCallRender.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd/renderer/AbstractCallRender.h"
 #include "protein_calls/ProteinColor.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
@@ -30,15 +35,9 @@
 #include "vislib/math/Quaternion.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/File.h"
-#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include "vislib_gl/graphics/gl/glverify.h"
-#include <iostream>
-#include <math.h>
-#include <time.h>
 
-#include <glm/gtc/matrix_transform.hpp>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -51,7 +50,7 @@ using namespace megamol::core::utility::log;
  * protein::GLSLVolumeRenderer::GLSLVolumeRenderer (CTOR)
  */
 protein_gl::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , protDataCallerSlot("getData", "Connects the volume rendering with data storage")
         , protRendererCallerSlot("renderProtein", "Connects the volume rendering with a protein renderer")
         , coloringModeParam("coloringMode", "Coloring Mode")
@@ -95,7 +94,7 @@ protein_gl::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
     this->MakeSlotAvailable(&this->protDataCallerSlot);
 
     // set renderer caller slot
-    this->protRendererCallerSlot.SetCompatibleCall<core_gl::view::CallRender3DGLDescription>();
+    this->protRendererCallerSlot.SetCompatibleCall<mmstd_gl::CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->protRendererCallerSlot);
 
     // --- set the coloring mode ---
@@ -217,201 +216,35 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
 
     using namespace vislib_gl::graphics::gl;
 
-    ShaderSource vertSrc;
-    ShaderSource fragSrc;
+    auto const shaderOptions =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
-    // Load sphere shader
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
-    if (!ssf->MakeShaderSource("protein::std::sphereVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for sphere shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::std::sphereFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for sphere shader", this->ClassName());
-        return false;
-    }
     try {
-        if (!this->sphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create sphere shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        updateVolumeShader = core::utility::make_glowl_shader("updateVolumeShader", shaderOptions,
+            "protein_gl/volume/updateVolume.vert.glsl", "protein_gl/volume/updateVolume.frag.glsl");
 
-    // Load clipped sphere shader
-    if (!ssf->MakeShaderSource("protein::std::sphereClipPlaneVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for clipped sphere shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::std::sphereClipPlaneFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for clipped sphere shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->clippedSphereShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create clipped sphere shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        volRayStartShader = core::utility::make_glowl_shader("volRayStartShader", shaderOptions,
+            "protein_gl/volume/rayStart.vert.glsl", "protein_gl/volume/rayStart.frag.glsl");
 
-    // Load cylinder shader
-    if (!ssf->MakeShaderSource("protein::std::cylinderVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%: Unable to load vertex shader source for cylinder shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("protein::std::cylinderFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for cylinder shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->cylinderShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create cylinder shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        volRayStartEyeShader = core::utility::make_glowl_shader("volRayStartEyeShader", shaderOptions,
+            "protein_gl/volume/rayStartEye.vert.glsl", "protein_gl/volume/rayStartEye.frag.glsl");
 
-    // Load volume texture generation shader
-    if (!ssf->MakeShaderSource("volume::std::updateVolumeVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%: Unable to load vertex shader source for volume texture update shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("volume::std::updateVolumeFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-            "%s: Unable to load fragment shader source for volume texture update shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->updateVolumeShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "%s: Unable to create volume texture update shader: %s\n",
-            this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        volRayLengthShader = core::utility::make_glowl_shader("volRayLengthShader", shaderOptions,
+            "protein_gl/volume/rayStart.vert.glsl", "protein_gl/volume/rayLength.frag.glsl");
 
-    // Load ray start shader
-    if (!ssf->MakeShaderSource("volume::std::rayStartVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray start shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("volume::std::rayStartFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray start shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->volRayStartShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create ray start shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        volumeShader = core::utility::make_glowl_shader(
+            "volumeShader", shaderOptions, "protein_gl/volume/volume.vert.glsl", "protein_gl/volume/volume.frag.glsl");
 
-    // Load ray start eye shader
-    if (!ssf->MakeShaderSource("volume::std::rayStartEyeVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray start eye shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("volume::std::rayStartEyeFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray start eye shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->volRayStartEyeShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create ray start eye shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
+        colorWriterShader = core::utility::make_glowl_shader("colorWriterShader", shaderOptions,
+            "protein_gl/volume/colorWriter.vert.glsl", "protein_gl/volume/colorWriter.frag.glsl");
 
-    // Load ray length shader (uses same vertex shader as ray start shader)
-    if (!ssf->MakeShaderSource("volume::std::rayStartVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%: Unable to load vertex shader source for ray length shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("volume::std::rayLengthFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load fragment shader source for ray length shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->volRayLengthShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create ray length shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-    // Load volume rendering shader
-    if (!ssf->MakeShaderSource("volume::std::volumeVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%: Unable to load vertex shader source for volume rendering shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("volume::std::volumeFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for volume rendering shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->volumeShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create volume rendering shader: %s\n", this->ClassName(), e.GetMsgA());
-        return false;
-    }
-
-    // Write a uniform color to all fragments
-    if (!ssf->MakeShaderSource("volume::std::colorWriterVertex", vertSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%: Unable to load vertex shader source for color writing shader", this->ClassName());
-        return false;
-    }
-    if (!ssf->MakeShaderSource("volume::std::colorWriterFragment", fragSrc)) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to load vertex shader source for color writing shader", this->ClassName());
-        return false;
-    }
-    try {
-        if (!this->colorWriterShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())) {
-            throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception e) {
-        Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "%s: Unable to create color writing shader: %s\n", this->ClassName(), e.GetMsgA());
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("GLSLVolumeRenderer: " + std::string(e.what())).c_str());
         return false;
     }
 
     // Initialize render utils
-    if (!renderUtils.InitPrimitiveRendering(*ssf)) {
+    if (!renderUtils.InitPrimitiveRendering(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -429,8 +262,8 @@ bool protein_gl::GLSLVolumeRenderer::create(void) {
 /*
  * protein::ProteinRenderer::GetExtents
  */
-bool protein_gl::GLSLVolumeRenderer::GetExtents(core_gl::view::CallRender3DGL& call) {
-    core_gl::view::CallRender3DGL* cr3d = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
+bool protein_gl::GLSLVolumeRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
+    mmstd_gl::CallRender3DGL* cr3d = dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (cr3d == NULL)
         return false;
 
@@ -468,7 +301,7 @@ bool protein_gl::GLSLVolumeRenderer::GetExtents(core_gl::view::CallRender3DGL& c
     bbox.SetBoundingBox(boundingBox);
 
     // get the pointer to CallRender3DGL (protein renderer)
-    core_gl::view::CallRender3DGL* protrencr3d = this->protRendererCallerSlot.CallAs<core_gl::view::CallRender3DGL>();
+    mmstd_gl::CallRender3DGL* protrencr3d = this->protRendererCallerSlot.CallAs<mmstd_gl::CallRender3DGL>();
     vislib::math::Point<float, 3> protrenbbc;
     if (protrencr3d) {
         (*protrencr3d)(core::view::AbstractCallRender::FnGetExtents);
@@ -488,7 +321,7 @@ bool protein_gl::GLSLVolumeRenderer::GetExtents(core_gl::view::CallRender3DGL& c
 /*
  * protein::GLSLVolumeRenderer::Render
  */
-bool protein_gl::GLSLVolumeRenderer::Render(core_gl::view::CallRender3DGL& call) {
+bool protein_gl::GLSLVolumeRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 #if 0
     // generate volume, if necessary
     if( !glIsTexture( this->volumeTex) ) {
@@ -594,11 +427,11 @@ bool protein_gl::GLSLVolumeRenderer::Render(core_gl::view::CallRender3DGL& call)
     return true;
 #else
     // cast the call to Render3D
-    core_gl::view::CallRender3DGL* cr3d = dynamic_cast<core_gl::view::CallRender3DGL*>(&call);
+    mmstd_gl::CallRender3DGL* cr3d = dynamic_cast<mmstd_gl::CallRender3DGL*>(&call);
     if (!cr3d)
         return false;
     // get the pointer to CallRender3DGL (protein renderer)
-    core_gl::view::CallRender3DGL* protrencr3d = this->protRendererCallerSlot.CallAs<core_gl::view::CallRender3DGL>();
+    mmstd_gl::CallRender3DGL* protrencr3d = this->protRendererCallerSlot.CallAs<mmstd_gl::CallRender3DGL>();
     // get pointer to MolecularDataCall
     MolecularDataCall* mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
 
@@ -689,7 +522,7 @@ bool protein_gl::GLSLVolumeRenderer::Render(core_gl::view::CallRender3DGL& call)
 /*
  * Volume rendering using molecular data.
  */
-bool protein_gl::GLSLVolumeRenderer::RenderMolecularData(core_gl::view::CallRender3DGL* call, MolecularDataCall* mol) {
+bool protein_gl::GLSLVolumeRenderer::RenderMolecularData(mmstd_gl::CallRender3DGL* call, MolecularDataCall* mol) {
 
     // check last atom count with current atom count
     if (this->atomCount != mol->AtomCount()) {
@@ -769,7 +602,7 @@ bool protein_gl::GLSLVolumeRenderer::RenderMolecularData(core_gl::view::CallRend
 /*
  * refresh parameters
  */
-void protein_gl::GLSLVolumeRenderer::ParameterRefresh(core_gl::view::CallRender3DGL* call) {
+void protein_gl::GLSLVolumeRenderer::ParameterRefresh(mmstd_gl::CallRender3DGL* call) {
 
     // parameter refresh
     if (this->coloringModeParam.IsDirty()) {
@@ -957,14 +790,14 @@ void protein_gl::GLSLVolumeRenderer::UpdateVolumeTexture(MolecularDataCall* mol)
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 
     // clear 3d texture
-    this->colorWriterShader.Enable();
-    glUniform4f(this->colorWriterShader.ParameterLocation("color"), 0.1f, 0.1f, 0.1f, 0.0f);
+    this->colorWriterShader->use();
+    glUniform4f(this->colorWriterShader->getUniformLocation("color"), 0.1f, 0.1f, 0.1f, 0.0f);
     for (z = 0; z < this->volumeSize; ++z) {
         // attach texture slice to FBO
         glFramebufferTexture3DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, this->volumeTex, 0, z);
         glRecti(-1, -1, 1, 1);
     }
-    this->colorWriterShader.Disable();
+    glUseProgram(0);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
@@ -992,21 +825,21 @@ void protein_gl::GLSLVolumeRenderer::UpdateVolumeTexture(MolecularDataCall* mol)
     this->volScaleInv[1] = 1.0f / this->volScale[1];
     this->volScaleInv[2] = 1.0f / this->volScale[2];
 
-    this->updateVolumeShader.Enable();
+    this->updateVolumeShader->use();
     vislib::math::Vector<float, 3> orig(
         mol->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().PeekCoordinates());
     orig = (orig + this->translation) * this->scale;
     vislib::math::Vector<float, 3> nullVec(0.0f, 0.0f, 0.0f);
 
     // set shader params
-    glUniform1f(this->updateVolumeShader.ParameterLocation("filterRadius"), this->volFilterRadius);
-    glUniform1f(this->updateVolumeShader.ParameterLocation("densityScale"), this->volDensityScale);
-    glUniform3fv(this->updateVolumeShader.ParameterLocation("scaleVol"), 1, this->volScale);
-    glUniform3fv(this->updateVolumeShader.ParameterLocation("scaleVolInv"), 1, this->volScaleInv);
-    glUniform3f(this->updateVolumeShader.ParameterLocation("invVolRes"), 1.0f / float(this->volumeSize),
+    glUniform1f(this->updateVolumeShader->getUniformLocation("filterRadius"), this->volFilterRadius);
+    glUniform1f(this->updateVolumeShader->getUniformLocation("densityScale"), this->volDensityScale);
+    glUniform3fv(this->updateVolumeShader->getUniformLocation("scaleVol"), 1, this->volScale);
+    glUniform3fv(this->updateVolumeShader->getUniformLocation("scaleVolInv"), 1, this->volScaleInv);
+    glUniform3f(this->updateVolumeShader->getUniformLocation("invVolRes"), 1.0f / float(this->volumeSize),
         1.0f / float(this->volumeSize), 1.0f / float(this->volumeSize));
-    glUniform3fv(this->updateVolumeShader.ParameterLocation("translate"), 1, orig.PeekComponents());
-    glUniform1f(this->updateVolumeShader.ParameterLocation("volSize"), float(this->volumeSize));
+    glUniform3fv(this->updateVolumeShader->getUniformLocation("translate"), 1, orig.PeekComponents());
+    glUniform1f(this->updateVolumeShader->getUniformLocation("volSize"), float(this->volumeSize));
 
     float* atoms = new float[mol->AtomCount() * 4];
     int atomCnt;
@@ -1026,7 +859,7 @@ void protein_gl::GLSLVolumeRenderer::UpdateVolumeTexture(MolecularDataCall* mol)
         // attach texture slice to FBO
         glFramebufferTexture3DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_3D, this->volumeTex, 0, z);
         glUniform1f(
-            this->updateVolumeShader.ParameterLocation("sliceDepth"), (float(z) + 0.5f) / float(this->volumeSize));
+            this->updateVolumeShader->getUniformLocation("sliceDepth"), (float(z) + 0.5f) / float(this->volumeSize));
         // set vertex and color pointers and draw them
         glDrawArrays(GL_POINTS, 0, mol->AtomCount());
     }
@@ -1035,7 +868,7 @@ void protein_gl::GLSLVolumeRenderer::UpdateVolumeTexture(MolecularDataCall* mol)
 
     delete[] atoms;
 
-    this->updateVolumeShader.Disable();
+    glUseProgram(0);
 #endif
 
     // restore viewport
@@ -1075,36 +908,36 @@ void protein_gl::GLSLVolumeRenderer::RenderVolume(vislib::math::Cuboid<float> bo
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, prevFBO);
 
     // glUseProgram(_app->shader->volume->progId);
-    this->volumeShader.Enable();
+    this->volumeShader->use();
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // glUniform4fv(_app->shader->paramsCvolume.scaleVol, 1, vd->scale);
-    glUniform4fv(this->volumeShader.ParameterLocation("scaleVol"), 1, this->volScale);
+    glUniform4fv(this->volumeShader->getUniformLocation("scaleVol"), 1, this->volScale);
     // glUniform4fv(_app->shader->paramsCvolume.scaleVolInv, 1, vd->scaleInv);
-    glUniform4fv(this->volumeShader.ParameterLocation("scaleVolInv"), 1, this->volScaleInv);
+    glUniform4fv(this->volumeShader->getUniformLocation("scaleVolInv"), 1, this->volScaleInv);
     // glUniform1f(_app->shader->paramsCvolume.stepSize, stepWidth);
-    glUniform1f(this->volumeShader.ParameterLocation("stepSize"), stepWidth);
+    glUniform1f(this->volumeShader->getUniformLocation("stepSize"), stepWidth);
 
     // glUniform1f(_app->shader->paramsCvolume.alphaCorrection, _app->volStepSize/512.0f);
     // TODO: what is the correct value for volStepSize??
-    glUniform1f(this->volumeShader.ParameterLocation("alphaCorrection"), this->volumeSize / 256.0f);
+    glUniform1f(this->volumeShader->getUniformLocation("alphaCorrection"), this->volumeSize / 256.0f);
     // glUniform1i(_app->shader->paramsCvolume.numIterations, 255);
-    glUniform1i(this->volumeShader.ParameterLocation("numIterations"), 255);
+    glUniform1i(this->volumeShader->getUniformLocation("numIterations"), 255);
     // glUniform2f(_app->shader->paramsCvolume.screenResInv, 1.0f/_fboWidth, 1.0f/_fboHeight);
     glUniform2f(
-        this->volumeShader.ParameterLocation("screenResInv"), 1.0f / float(this->width), 1.0f / float(this->height));
+        this->volumeShader->getUniformLocation("screenResInv"), 1.0f / float(this->width), 1.0f / float(this->height));
 
     // bind depth texture
-    glUniform1i(this->volumeShader.ParameterLocation("volumeSampler"), 0);
-    glUniform1i(this->volumeShader.ParameterLocation("transferRGBASampler"), 1);
-    glUniform1i(this->volumeShader.ParameterLocation("rayStartSampler"), 2);
-    glUniform1i(this->volumeShader.ParameterLocation("rayLengthSampler"), 3);
+    glUniform1i(this->volumeShader->getUniformLocation("volumeSampler"), 0);
+    glUniform1i(this->volumeShader->getUniformLocation("transferRGBASampler"), 1);
+    glUniform1i(this->volumeShader->getUniformLocation("rayStartSampler"), 2);
+    glUniform1i(this->volumeShader->getUniformLocation("rayLengthSampler"), 3);
 
-    glUniform1f(this->volumeShader.ParameterLocation("isoValue"), this->isoValue);
-    glUniform1f(this->volumeShader.ParameterLocation("isoOpacity"), this->volIsoOpacity);
-    glUniform1f(this->volumeShader.ParameterLocation("clipPlaneOpacity"), this->volClipPlaneOpacity);
+    glUniform1f(this->volumeShader->getUniformLocation("isoValue"), this->isoValue);
+    glUniform1f(this->volumeShader->getUniformLocation("isoOpacity"), this->volIsoOpacity);
+    glUniform1f(this->volumeShader->getUniformLocation("clipPlaneOpacity"), this->volClipPlaneOpacity);
 
     // transfer function
     glActiveTexture(GL_TEXTURE1);
@@ -1123,7 +956,7 @@ void protein_gl::GLSLVolumeRenderer::RenderVolume(vislib::math::Cuboid<float> bo
     // draw a screen-filling quad
     glRectf(-1.0f, -1.0f, 1.0f, 1.0f);
 
-    this->volumeShader.Disable();
+    glUseProgram(0);
 
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
@@ -1219,7 +1052,7 @@ void protein_gl::GLSLVolumeRenderer::RayParamTextures(vislib::math::Cuboid<float
     glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
 
     // the shader transforms camera coords back to object space
-    this->volRayStartEyeShader.Enable();
+    this->volRayStartEyeShader->use();
 
     float fovy = 0.0;
     float near_plane = 0.0;
@@ -1245,20 +1078,20 @@ void protein_gl::GLSLVolumeRenderer::RayParamTextures(vislib::math::Cuboid<float
     glVertex3f(-r, u, -near_plane);
     glEnd();
 
-    this->volRayStartEyeShader.Disable();
+    glUseProgram(0);
 
     glDrawBuffers(1, db);
 
     // glUseProgram(_app->shader->volRayStart->progId);
-    this->volRayStartShader.Enable();
+    this->volRayStartShader->use();
 
     // ------------ !useSphere && iso -------------
     vislib::math::Vector<float, 3> trans(boundingbox.GetSize().PeekDimension());
     trans *= this->scale * 0.5f;
     if (this->renderIsometric) {
-        glUniform3f(this->volRayStartShader.ParameterLocation("translate"), 0.0f, 0.0f, 0.0f);
+        glUniform3f(this->volRayStartShader->getUniformLocation("translate"), 0.0f, 0.0f, 0.0f);
     } else {
-        glUniform3fv(this->volRayStartShader.ParameterLocation("translate"), 1, trans.PeekComponents());
+        glUniform3fv(this->volRayStartShader->getUniformLocation("translate"), 1, trans.PeekComponents());
     }
 
     glDepthMask(GL_TRUE);
@@ -1284,7 +1117,7 @@ void protein_gl::GLSLVolumeRenderer::RayParamTextures(vislib::math::Cuboid<float
     // draw bBox
     this->DrawBoundingBox(boundingbox);
 
-    this->volRayStartShader.Disable();
+    glUseProgram(0);
 
     // --------------------------------
     // -------- ray length ------------
@@ -1303,20 +1136,20 @@ void protein_gl::GLSLVolumeRenderer::RayParamTextures(vislib::math::Cuboid<float
     glClearColor(clearCol[0], clearCol[1], clearCol[2], clearCol[3]);
 
     // glUseProgram(_app->shader->volRayLength->progId);
-    this->volRayLengthShader.Enable();
+    this->volRayLengthShader->use();
 
-    glUniform1i(this->volRayLengthShader.ParameterLocation("sourceTex"), 0);
-    glUniform1i(this->volRayLengthShader.ParameterLocation("depthTex"), 1);
-    glUniform2f(this->volRayLengthShader.ParameterLocation("screenResInv"), 1.0f / float(this->width),
+    glUniform1i(this->volRayLengthShader->getUniformLocation("sourceTex"), 0);
+    glUniform1i(this->volRayLengthShader->getUniformLocation("depthTex"), 1);
+    glUniform2f(this->volRayLengthShader->getUniformLocation("screenResInv"), 1.0f / float(this->width),
         1.0f / float(this->height));
-    glUniform2f(this->volRayLengthShader.ParameterLocation("zNearFar"), near_plane, far_plane);
+    glUniform2f(this->volRayLengthShader->getUniformLocation("zNearFar"), near_plane, far_plane);
 
     if (this->renderIsometric) {
-        glUniform3f(this->volRayLengthShader.ParameterLocation("translate"), 0.0f, 0.0f, 0.0f);
+        glUniform3f(this->volRayLengthShader->getUniformLocation("translate"), 0.0f, 0.0f, 0.0f);
     } else {
-        glUniform3fv(this->volRayLengthShader.ParameterLocation("translate"), 1, trans.PeekComponents());
+        glUniform3fv(this->volRayLengthShader->getUniformLocation("translate"), 1, trans.PeekComponents());
     }
-    glUniform1f(this->volRayLengthShader.ParameterLocation("scale"), this->scale);
+    glUniform1f(this->volRayLengthShader->getUniformLocation("scale"), this->scale);
 
     glActiveTexture(GL_TEXTURE1);
     // glBindTexture( GL_TEXTURE_2D, _depthTexId[0]);
@@ -1332,7 +1165,7 @@ void protein_gl::GLSLVolumeRenderer::RayParamTextures(vislib::math::Cuboid<float
     // draw bBox
     this->DrawBoundingBox(boundingbox);
 
-    this->volRayLengthShader.Disable();
+    glUseProgram(0);
 
     glDrawBuffers(1, db);
     glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, 0, 0);

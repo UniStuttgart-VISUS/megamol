@@ -1,0 +1,15 @@
+#version 430
+
+#include "moldyn_gl/sphere_renderer/inc/mdao_vertex_extensions.inc.glsl"
+#include "moldyn_gl/sphere_renderer/inc/flags_snippet.inc.glsl"
+#include "commondefines.glsl"
+#include "moldyn_gl/sphere_renderer/inc/vertex_attributes.inc.glsl"
+#include "mmstd_gl/flags/bitflags.inc.glsl"
+#include "mmstd_gl/common/tflookup.inc.glsl"
+#include "mmstd_gl/common/tfconvenience.inc.glsl"
+#include "moldyn_gl/sphere_renderer/inc/sphere_flags_vertex_attributes.inc.glsl"
+#include "moldyn_gl/sphere_renderer/inc/mdao_vertex_mainstart.inc.glsl"
+#include "moldyn_gl/sphere_renderer/inc/sphere_flags_vertex_getflag.inc.glsl"
+#include "moldyn_gl/sphere_renderer/inc/vertex_color.inc.glsl"
+#include "moldyn_gl/sphere_renderer/inc/vertex_spheretouchplane.inc.glsl"
+#include "moldyn_gl/sphere_renderer/inc/mdao_vertex_mainend.inc.glsl"

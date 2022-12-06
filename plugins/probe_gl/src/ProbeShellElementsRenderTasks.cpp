@@ -6,16 +6,14 @@
  */
 
 
-#include "mmcore/EventCall.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmstd/event/EventCall.h"
 
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "ProbeShellElementsRenderTasks.h"
 #include "probe/ProbeCalls.h"
-
-#include "mesh_gl/MeshCalls_gl.h"
 
 bool megamol::probe_gl::ProbeShellElementsRenderTasks::create() {
 
@@ -31,7 +29,10 @@ bool megamol::probe_gl::ProbeShellElementsRenderTasks::create() {
     m_rendertask_collection.first->addPerFrameDataBuffer("", per_frame_data, 1);
 
     m_material_collection = std::make_shared<mesh_gl::GPUMaterialCollection>();
-    m_material_collection->addMaterial(this->instance(), "ProbeShellElements", "ProbeShellElements");
+    std::vector<std::filesystem::path> shaderfiles = {
+        "hull/dfr_shell_elements_vertex.glsl", "hull/dfr_shell_elements_fragment.glsl"};
+    m_material_collection->addMaterial(
+        frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(), "ProbeShellElements", shaderfiles);
 
     return true;
 }
@@ -69,7 +70,7 @@ bool megamol::probe_gl::ProbeShellElementsRenderTasks::getDataCallback(core::Cal
 
     mesh_gl::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh_gl::CallGPURenderTaskData>();
 
-    std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>> gpu_render_tasks;
+    auto gpu_render_tasks = std::make_shared<std::vector<std::shared_ptr<mesh_gl::GPURenderTaskCollection>>>();
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
@@ -79,7 +80,7 @@ bool megamol::probe_gl::ProbeShellElementsRenderTasks::getDataCallback(core::Cal
         }
         gpu_render_tasks = rhs_rtc->getData();
     }
-    gpu_render_tasks.push_back(m_rendertask_collection.first);
+    gpu_render_tasks->push_back(m_rendertask_collection.first);
 
     mesh_gl::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh_gl::CallGPUMeshData>();
 
@@ -138,7 +139,7 @@ bool megamol::probe_gl::ProbeShellElementsRenderTasks::getDataCallback(core::Cal
 
             auto gpu_mesh_storage = mc->getData();
 
-            for (auto& mesh_collection : gpu_mesh_storage) {
+            for (auto& mesh_collection : *gpu_mesh_storage) {
 
                 std::shared_ptr<glowl::Mesh> prev_mesh(nullptr);
 

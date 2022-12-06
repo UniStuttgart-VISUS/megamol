@@ -68,8 +68,6 @@ void megamol::gui::GUIManager::init_state() {
 
     this->gui_state.gui_visible = true;
     this->gui_state.gui_visible_post = true;
-    this->gui_state.gui_restore_hidden_windows.clear();
-    this->gui_state.gui_hide_next_frame = 0;
     this->gui_state.style = GUIManager::Styles::DarkColors;
     this->gui_state.style_changed = true;
     this->gui_state.new_gui_state = "";
@@ -289,6 +287,8 @@ bool GUIManager::PostDraw() {
         auto height = static_cast<int>(io.DisplaySize.y);
         this->render_backend.EnableRendering(width, height);
 
+        megamol::gui::gui_mouse_wheel = io.MouseWheel;
+
         try {
 
             // Draw global menu -----------------------------------------------
@@ -411,32 +411,6 @@ bool GUIManager::PostDraw() {
     // Assume pending changes in scaling as applied  --------------------------
     megamol::gui::gui_scaling.ConsumePendingChange();
 
-    // Apply hiding GUI if it is currently shown ------------------------------
-    if (this->gui_state.gui_visible && (this->gui_state.gui_hide_next_frame > 0)) {
-        /// Disabling ImGui window focus required 3 frames (!?)
-        if (this->gui_state.gui_hide_next_frame == 3) {
-            // First frame
-            this->gui_state.gui_hide_next_frame--;
-            // Save 'open' state of windows for later restore. Closing all windows before omitting GUI rendering is
-            // required to set right ImGui state for mouse handling
-            this->gui_state.gui_restore_hidden_windows.clear();
-            const auto func = [&](AbstractWindow& wc) {
-                if (wc.Config().show) {
-                    this->gui_state.gui_restore_hidden_windows.push_back(wc.Name());
-                    wc.Config().show = false;
-                }
-            };
-            this->win_collection.EnumWindows(func);
-        } else if (this->gui_state.gui_hide_next_frame == 2) {
-            // Second frame
-            this->gui_state.gui_hide_next_frame--;
-        } else if (this->gui_state.gui_hide_next_frame == 1) {
-            // Third frame
-            this->gui_state.gui_hide_next_frame = 0;
-            this->gui_state.gui_visible = false;
-        }
-    }
-
     return true;
 }
 
@@ -450,70 +424,24 @@ bool GUIManager::OnKey(core::view::Key key, core::view::KeyAction action, core::
 
     ImGuiIO& io = ImGui::GetIO();
 
-    bool last_return_key = io.KeysDown[static_cast<size_t>(core::view::Key::KEY_ENTER)];
-    bool last_num_enter_key = io.KeysDown[static_cast<size_t>(core::view::Key::KEY_KP_ENTER)];
+    auto imgui_key_index = gui_utils::GlfwKeyToImGuiKey(key);
+    io.AddKeyEvent(imgui_key_index, (core::view::KeyAction::PRESS == action));
 
-    auto keyIndex = static_cast<size_t>(key);
-    switch (action) {
-    case core::view::KeyAction::PRESS:
-        io.KeysDown[keyIndex] = true;
-        break;
-    case core::view::KeyAction::RELEASE:
-        io.KeysDown[keyIndex] = false;
-        break;
-    default:
-        break;
-    }
-    io.KeyCtrl = mods.test(core::view::Modifier::CTRL);
-    io.KeyShift = mods.test(core::view::Modifier::SHIFT);
-    io.KeyAlt = mods.test(core::view::Modifier::ALT);
+    io.AddKeyEvent(ImGuiKey_ModCtrl, (mods.equals(megamol::frontend_resources::Modifier::CTRL)));
+    io.AddKeyEvent(ImGuiKey_ModShift, (mods.equals(megamol::frontend_resources::Modifier::SHIFT)));
+    io.AddKeyEvent(ImGuiKey_ModAlt, (mods.equals(megamol::frontend_resources::Modifier::ALT)));
 
     // Pass NUM 'Enter' as alternative for 'Return' to ImGui
-    bool cur_return_key = ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_ENTER));
-    bool cur_num_enter_key = ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_KP_ENTER));
-    bool return_pressed = (!last_return_key && cur_return_key);
-    bool enter_pressed = (!last_num_enter_key && cur_num_enter_key);
-    io.KeysDown[static_cast<size_t>(core::view::Key::KEY_ENTER)] = (return_pressed || enter_pressed);
-
-    bool hotkeyPressed = false;
-
-    // Check for additional text modification hotkeys
-    if (action == core::view::KeyAction::RELEASE) {
-        io.KeysDown[static_cast<size_t>(GuiTextModHotkeys::CTRL_A)] = false;
-        io.KeysDown[static_cast<size_t>(GuiTextModHotkeys::CTRL_C)] = false;
-        io.KeysDown[static_cast<size_t>(GuiTextModHotkeys::CTRL_V)] = false;
-        io.KeysDown[static_cast<size_t>(GuiTextModHotkeys::CTRL_X)] = false;
-        io.KeysDown[static_cast<size_t>(GuiTextModHotkeys::CTRL_Y)] = false;
-        io.KeysDown[static_cast<size_t>(GuiTextModHotkeys::CTRL_Z)] = false;
-    }
-    hotkeyPressed = true;
-    if (io.KeyCtrl && ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_A))) {
-        keyIndex = static_cast<size_t>(GuiTextModHotkeys::CTRL_A);
-    } else if (io.KeyCtrl && ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_C))) {
-        keyIndex = static_cast<size_t>(GuiTextModHotkeys::CTRL_C);
-    } else if (io.KeyCtrl && ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_V))) {
-        keyIndex = static_cast<size_t>(GuiTextModHotkeys::CTRL_V);
-    } else if (io.KeyCtrl && ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_X))) {
-        keyIndex = static_cast<size_t>(GuiTextModHotkeys::CTRL_X);
-    } else if (io.KeyCtrl && ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_Y))) {
-        keyIndex = static_cast<size_t>(GuiTextModHotkeys::CTRL_Y);
-    } else if (io.KeyCtrl && ImGui::IsKeyDown(static_cast<int>(core::view::Key::KEY_Z))) {
-        keyIndex = static_cast<size_t>(GuiTextModHotkeys::CTRL_Z);
-    } else {
-        hotkeyPressed = false;
-    }
-    if (hotkeyPressed && (action == core::view::KeyAction::PRESS)) {
-        io.KeysDown[keyIndex] = true;
-        return true;
+    if (imgui_key_index == ImGuiKey_KeypadEnter) {
+        io.AddKeyEvent(ImGuiKey_Enter, (core::view::KeyAction::PRESS == action));
     }
 
-    // Always consume keyboard input if requested by any imgui widget (e.g. text input).
-    // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
+    // Consume keyboard input if requested by any imgui widget (e.g. text input)
     if (io.WantTextInput) {
         return true;
     }
 
-    return hotkeyPressed;
+    return false;
 }
 
 
@@ -542,13 +470,9 @@ bool GUIManager::OnMouseMove(double x, double y) {
     ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.MousePos = ImVec2(static_cast<float>(x), static_cast<float>(y));
+    io.AddMousePosEvent(static_cast<float>(x), static_cast<float>(y));
 
-    auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
-                      ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
-
-    // Always consumed if any imgui windows is hovered.
-    bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    bool consumed = io.WantCaptureMouse;
     if (!consumed) {
         consumed = this->picking_buffer.ProcessMouseMove(x, y);
     }
@@ -569,13 +493,13 @@ bool GUIManager::OnMouseButton(
     auto buttonIndex = static_cast<size_t>(button);
     ImGuiIO& io = ImGui::GetIO();
 
-    auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
-                      ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
+    io.AddKeyEvent(ImGuiKey_ModCtrl, (mods.equals(megamol::frontend_resources::Modifier::CTRL)));
+    io.AddKeyEvent(ImGuiKey_ModShift, (mods.equals(megamol::frontend_resources::Modifier::SHIFT)));
+    io.AddKeyEvent(ImGuiKey_ModAlt, (mods.equals(megamol::frontend_resources::Modifier::ALT)));
 
-    io.MouseDown[buttonIndex] = down;
+    io.AddMouseButtonEvent(buttonIndex, down);
 
-    // Always consumed if any imgui windows is hovered.
-    bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    bool consumed = io.WantCaptureMouse;
     if (!consumed) {
         consumed = this->picking_buffer.ProcessMouseClick(button, action, mods);
     }
@@ -592,36 +516,10 @@ bool GUIManager::OnMouseScroll(double dx, double dy) {
     ImGui::SetCurrentContext(this->imgui_context);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.MouseWheelH += (float)dx;
-    io.MouseWheel += (float)dy;
+    io.AddMouseWheelEvent(static_cast<float>(dx), static_cast<float>(dy));
 
-    auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
-                      ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
-
-    // Always consumed if any imgui windows is hovered.
-    bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    bool consumed = io.WantCaptureMouse;
     return consumed;
-}
-
-
-void megamol::gui::GUIManager::SetVisibility(bool visible) {
-    if (this->gui_state.gui_visible && !visible) {
-        // Trigger GUI hiding
-        this->gui_state.gui_hide_next_frame = 3;
-    } else if (!this->gui_state.gui_visible && visible) {
-        // Show GUI after it was hidden
-        // Restore window 'open' state (Always restore at least HOTKEY_GUI_MENU)
-        const auto func = [&](AbstractWindow& wc) {
-            if (std::find(this->gui_state.gui_restore_hidden_windows.begin(),
-                    this->gui_state.gui_restore_hidden_windows.end(),
-                    wc.Name()) != this->gui_state.gui_restore_hidden_windows.end()) {
-                wc.Config().show = true;
-            }
-        };
-        this->win_collection.EnumWindows(func);
-        this->gui_state.gui_restore_hidden_windows.clear();
-        this->gui_state.gui_visible = true;
-    }
 }
 
 
@@ -667,15 +565,13 @@ void megamol::gui::GUIManager::SetClipboardFunc(const char* (*get_clipboard_func
 }
 
 
-bool megamol::gui::GUIManager::GraphSynchronization(
-    megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance) {
+bool megamol::gui::GUIManager::SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph) {
 
     // Synchronization is not required when no gui element is visible (?)
     if (!this->gui_state.gui_visible)
         return true;
 
-    if (this->win_configurator_ptr->GetGraphCollection().SyncRunningGUIGraphWithCoreGraph(
-            megamol_graph, core_instance)) {
+    if (this->win_configurator_ptr->GetGraphCollection().SynchronizeGraphs(megamol_graph)) {
 
         // Check for new GUI state
         if (!this->gui_state.new_gui_state.empty()) {
@@ -739,11 +635,11 @@ bool GUIManager::create_context() {
 
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
-    io.IniSavingRate = 5.0f;                              //  in seconds - unused
-    io.IniFilename = nullptr;                             // "imgui.ini" - disabled, using own window settings profile
-    io.LogFilename = nullptr;                             // "imgui_log.txt" - disabled
-    io.FontAllowUserScaling = false;                      // disable font scaling using ctrl + mouse wheel
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
+    io.IniSavingRate = 5.0f;         // in seconds - unused
+    io.IniFilename = nullptr;        // "imgui.ini" - disabled, using own window settings profile
+    io.LogFilename = nullptr;        // "imgui_log.txt" - disabled
+    io.FontAllowUserScaling = false; // disable font scaling using ctrl + mouse wheel
+    /// XXX IO io.ConfigFlags |=  ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation, required for log console -> possible conflict with param hotkeys. io.WantCaptureKeyboard in GUIManager::OnKey blocks all hokeys when GUI window is selected..
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors; // GetMouseCursor() is processed in frontend service
 
 /// DOCKING https://github.com/ocornut/imgui/issues/2109
@@ -769,32 +665,6 @@ bool GUIManager::create_context() {
     ImGui_ImplGlfw_NewFrame();
     */
 #endif
-
-    // ImGui Key Map
-    io.KeyMap[ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
-    io.KeyMap[ImGuiKey_LeftArrow] = static_cast<int>(core::view::Key::KEY_LEFT);
-    io.KeyMap[ImGuiKey_RightArrow] = static_cast<int>(core::view::Key::KEY_RIGHT);
-    io.KeyMap[ImGuiKey_UpArrow] = static_cast<int>(core::view::Key::KEY_UP);
-    io.KeyMap[ImGuiKey_DownArrow] = static_cast<int>(core::view::Key::KEY_DOWN);
-    io.KeyMap[ImGuiKey_PageUp] = static_cast<int>(core::view::Key::KEY_PAGE_UP);
-    io.KeyMap[ImGuiKey_PageDown] = static_cast<int>(core::view::Key::KEY_PAGE_DOWN);
-    io.KeyMap[ImGuiKey_Home] = static_cast<int>(core::view::Key::KEY_HOME);
-    io.KeyMap[ImGuiKey_End] = static_cast<int>(core::view::Key::KEY_END);
-    io.KeyMap[ImGuiKey_Insert] = static_cast<int>(core::view::Key::KEY_INSERT);
-    io.KeyMap[ImGuiKey_Delete] = static_cast<int>(core::view::Key::KEY_DELETE);
-    io.KeyMap[ImGuiKey_Backspace] = static_cast<int>(core::view::Key::KEY_BACKSPACE);
-    io.KeyMap[ImGuiKey_Space] = static_cast<int>(core::view::Key::KEY_SPACE);
-    io.KeyMap[ImGuiKey_Enter] = static_cast<int>(core::view::Key::KEY_ENTER);
-    io.KeyMap[ImGuiKey_Escape] = static_cast<int>(core::view::Key::KEY_ESCAPE);
-    io.KeyMap[ImGuiKey_A] = static_cast<int>(GuiTextModHotkeys::CTRL_A);
-    io.KeyMap[ImGuiKey_C] = static_cast<int>(GuiTextModHotkeys::CTRL_C);
-    io.KeyMap[ImGuiKey_V] = static_cast<int>(GuiTextModHotkeys::CTRL_V);
-    io.KeyMap[ImGuiKey_X] = static_cast<int>(GuiTextModHotkeys::CTRL_X);
-    io.KeyMap[ImGuiKey_Y] = static_cast<int>(GuiTextModHotkeys::CTRL_Y);
-    io.KeyMap[ImGuiKey_Z] = static_cast<int>(GuiTextModHotkeys::CTRL_Z);
-
-    // Init global state -------------------------------------------------------
-    this->init_state();
 
     // Adding additional utf-8 glyph ranges
     // (there is no error if glyph has no representation in font atlas)
@@ -852,6 +722,9 @@ bool GUIManager::destroy_context() {
         }
         this->imgui_context = nullptr;
     }
+
+    // Reset global state
+    this->init_state();
 
     return true;
 }
@@ -1046,25 +919,9 @@ void GUIManager::draw_menu() {
                     if (module_ptr->IsView()) {
                         if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsGraphEntry())) {
                             if (!module_ptr->IsGraphEntry()) {
-                                // Remove all graph entries
-                                for (auto& rem_module_ptr : graph_ptr->Modules()) {
-                                    if (rem_module_ptr->IsView() && rem_module_ptr->IsGraphEntry()) {
-                                        rem_module_ptr->SetGraphEntryName("");
-                                        Graph::QueueData queue_data;
-                                        queue_data.name_id = rem_module_ptr->FullName();
-                                        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
-                                    }
-                                }
-                                // Add new graph entry
-                                module_ptr->SetGraphEntryName(graph_ptr->GenerateUniqueGraphEntryName());
-                                Graph::QueueData queue_data;
-                                queue_data.name_id = module_ptr->FullName();
-                                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                                graph_ptr->AddGraphEntry(module_ptr, graph_ptr->GenerateUniqueGraphEntryName());
                             } else {
-                                module_ptr->SetGraphEntryName("");
-                                Graph::QueueData queue_data;
-                                queue_data.name_id = module_ptr->FullName();
-                                graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
+                                graph_ptr->RemoveGraphEntry(module_ptr);
                             }
                         }
                     }
@@ -1181,7 +1038,7 @@ void megamol::gui::GUIManager::draw_popups() {
         }
         if (ImGui::BeginPopupModal(it->first.c_str(), nullptr, popup_flags)) {
             it->second.draw_callback();
-            if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+            if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
@@ -1212,7 +1069,7 @@ void megamol::gui::GUIManager::draw_popups() {
                 // Disable further notifications
                 it->second.disable = true;
             }
-            if (close || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+            if (close || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
@@ -1289,7 +1146,7 @@ void megamol::gui::GUIManager::draw_popups() {
         }
 
         ImGui::Separator();
-        if (ImGui::Button("Close") || close_popup || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+        if (ImGui::Button("Close") || close_popup || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
             ImGui::CloseCurrentPopup();
         }
 
@@ -1320,7 +1177,18 @@ void megamol::gui::GUIManager::draw_popups() {
         const std::string gitstr = std::string("Git-Hub: ") + github_link;
         const std::string imguistr = ("Dear ImGui - Version ") + std::string(IMGUI_VERSION) + ("\n");
         const std::string imguigitstr = std::string("Git-Hub: ") + imgui_link;
-        const std::string about = "Copyright (C) 2009-2020 by University of Stuttgart (VISUS).\nAll rights reserved.";
+        std::string commit_date = megamol::core::utility::buildinfo::MEGAMOL_GIT_LAST_COMMIT_DATE();
+        std::string year;
+        if (commit_date.empty()) {
+            // Backup when commit date is no available via build script info
+            std::time_t t = std::time(0);
+            std::tm* now = std::localtime(&t);
+            year = std::to_string(now->tm_year + 1900);
+        } else {
+            year = commit_date.substr(0, 4);
+        }
+        const std::string about =
+            "Copyright (C) 2009-" + year + " by University of Stuttgart (VISUS).\nAll rights reserved.";
 
         ImGui::TextUnformatted(mmstr.c_str());
 
@@ -1354,7 +1222,7 @@ void megamol::gui::GUIManager::draw_popups() {
         ImGui::TextUnformatted(about.c_str());
 
         ImGui::Separator();
-        if (ImGui::Button("Close") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+        if (ImGui::Button("Close") || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
             ImGui::CloseCurrentPopup();
         }
 

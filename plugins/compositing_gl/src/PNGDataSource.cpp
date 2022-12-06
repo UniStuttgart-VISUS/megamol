@@ -6,13 +6,11 @@
 
 #include "PNGDataSource.h"
 
-#include "mmcore/CoreInstance.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/IntParam.h"
+#include <png.h>
 
 #include "compositing_gl/CompositingCalls.h"
-
-#include "png.h"
+#include "mmcore/param/FilePathParam.h"
+#include "mmcore/param/IntParam.h"
 
 using namespace megamol;
 using namespace megamol::compositing_gl;
@@ -36,9 +34,9 @@ PNGDataSource::PNGDataSource(void)
     this->MakeSlotAvailable(&this->m_image_height_slot);
 
     this->m_output_tex_slot.SetCallback(
-        compositing::CallTexture2D::ClassName(), "GetData", &PNGDataSource::getDataCallback);
+        compositing_gl::CallTexture2D::ClassName(), "GetData", &PNGDataSource::getDataCallback);
     this->m_output_tex_slot.SetCallback(
-        compositing::CallTexture2D::ClassName(), "GetMetaData", &PNGDataSource::getMetaDataCallback);
+        compositing_gl::CallTexture2D::ClassName(), "GetMetaData", &PNGDataSource::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_output_tex_slot);
 }
 
@@ -56,7 +54,7 @@ bool PNGDataSource::create(void) {
 void PNGDataSource::release(void) {}
 
 bool PNGDataSource::getDataCallback(core::Call& caller) {
-    auto lhs_tc = dynamic_cast<compositing::CallTexture2D*>(&caller);
+    auto lhs_tc = dynamic_cast<compositing_gl::CallTexture2D*>(&caller);
 
     if (lhs_tc == NULL)
         return false;

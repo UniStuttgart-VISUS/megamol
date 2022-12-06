@@ -5,17 +5,22 @@
  * Alle Rechte vorbehalten.
  */
 #define _USE_MATH_DEFINES
+
 #include "PoreNetExtractor.h"
+
+#include <climits>
+#include <cmath>
+
 #include "OpenGL_Context.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/CallClipPlane.h"
-#include "mmcore_gl/view/CallRender3DGL.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
+#include "mmstd/renderer/CallClipPlane.h"
+#include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "vislib/Array.h"
 #include "vislib/Exception.h"
 #include "vislib/String.h"
@@ -25,11 +30,6 @@
 #include "vislib/math/Vector.h"
 #include "vislib/sys/MemmappedFile.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
-#include <climits>
-#include <cmath>
-
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 
 namespace megamol {
@@ -40,7 +40,7 @@ namespace demos_gl {
  * PoreNetExtractor::PoreNetExtractor
  */
 PoreNetExtractor::PoreNetExtractor(void)
-        : core_gl::view::Renderer3DModuleGL()
+        : mmstd_gl::Renderer3DModuleGL()
         , AbstractQuartzModule()
         , typeTexture(0)
         , bbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0)
@@ -131,7 +131,7 @@ PoreNetExtractor::~PoreNetExtractor(void) {
 /*
  * PoreNetExtractor::GetExtents
  */
-bool PoreNetExtractor::GetExtents(core_gl::view::CallRender3DGL& call) {
+bool PoreNetExtractor::GetExtents(mmstd_gl::CallRender3DGL& call) {
     call.AccessBoundingBoxes().SetBoundingBox(this->bbox);
     call.AccessBoundingBoxes().SetClipBox(this->cbox);
     call.SetTimeFramesCount(1);
@@ -143,7 +143,7 @@ bool PoreNetExtractor::GetExtents(core_gl::view::CallRender3DGL& call) {
 /*
  * PoreNetExtractor::Render
  */
-bool PoreNetExtractor::Render(core_gl::view::CallRender3DGL& call) {
+bool PoreNetExtractor::Render(mmstd_gl::CallRender3DGL& call) {
     if (this->isExtractionRunning()) {
         this->performExtraction();
     } else if (this->saveFile) {
@@ -179,35 +179,23 @@ bool PoreNetExtractor::Render(core_gl::view::CallRender3DGL& call) {
  */
 bool PoreNetExtractor::create(void) {
     using megamol::core::utility::log::Log;
-    using vislib_gl::graphics::gl::GLSLShader;
-    using vislib_gl::graphics::gl::ShaderSource;
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (!ogl_ctx.isVersionGEQ(2, 0) || !ogl_ctx.isExtAvailable("GL_ARB_multitexture") ||
-        !ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()) ||
         !ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::FramebufferObject::RequiredExtensions())) {
         Log::DefaultLog.WriteError("GL2.0 not present");
         return false;
     }
 
-    ShaderSource vert, frag;
-    auto ssf = std::make_shared<core_gl::utility::ShaderSourceFactory>(instance()->Configuration().ShaderDirectories());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
+
     try {
-        if (!ssf->MakeShaderSource("quartz::ray::plane::tex::vert", vert)) {
-            throw vislib::Exception("Generic vertex shader build failure", __FILE__, __LINE__);
-        }
-        if (!ssf->MakeShaderSource("quartz::ray::plane::tex::fragfaced", frag)) {
-            throw vislib::Exception("Generic fragment shader build failure", __FILE__, __LINE__);
-        }
-        if (!this->cryShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            throw vislib::Exception("Generic shader create failure", __FILE__, __LINE__);
-        }
-    } catch (vislib::Exception ex) {
-        Log::DefaultLog.WriteError("Unable to compile shader: %s", ex.GetMsgA());
-        this->release(); // Because I know that 'release' ONLY releases all the shaders
-        return false;
-    } catch (...) {
-        Log::DefaultLog.WriteError("Unable to compile shader: Unexpected Exception");
+        this->cryShader = core::utility::make_glowl_shader("cryShader", shader_options,
+            "pwdemos_gl/quartz/ray_plane_tex.vert.glsl", "pwdemos_gl/quartz/ray_plane_tex_faced.frag.glsl");
+
+    } catch (std::exception& e) {
+        Log::DefaultLog.WriteError(("PoreNetExtractor: " + std::string(e.what())).c_str());
         this->release(); // Because I know that 'release' ONLY releases all the shaders
         return false;
     }
@@ -226,7 +214,7 @@ void PoreNetExtractor::release(void) {
         this->abortExtraction();
     }
     this->releaseTypeTexture();
-    this->cryShader.Release();
+    this->cryShader.reset();
 
     // TODO: Implement
 }
@@ -998,18 +986,18 @@ void PoreNetExtractor::drawParticles(ParticleGridDataCall* pgdc, CrystalDataCall
         bboxmax.Set(0.0f, 0.0f, 0.0f);
     }
 
-    this->cryShader.Enable();
-    this->cryShader.SetParameterArray4("viewAttr", 1, viewportStuff);
-    this->cryShader.SetParameterArray3("camX", 1, cx.PeekComponents());
-    this->cryShader.SetParameterArray3("camY", 1, cy.PeekComponents());
-    this->cryShader.SetParameterArray3("camZ", 1, cz.PeekComponents());
-    this->cryShader.SetParameterArray3("bboxmin", 1, bboxmin.PeekCoordinates());
-    this->cryShader.SetParameterArray3("bboxmax", 1, bboxmax.PeekCoordinates());
-    this->cryShader.SetParameter("planeZ", planeZ);
+    this->cryShader->use();
+    glUniform4fv(this->cryShader->getUniformLocation("viewAttr"), 1, viewportStuff);
+    glUniform3fv(this->cryShader->getUniformLocation("camX"), 1, cx.PeekComponents());
+    glUniform3fv(this->cryShader->getUniformLocation("camY"), 1, cy.PeekComponents());
+    glUniform3fv(this->cryShader->getUniformLocation("camZ"), 1, cz.PeekComponents());
+    glUniform3fv(this->cryShader->getUniformLocation("bboxmin"), 1, bboxmin.PeekCoordinates());
+    glUniform3fv(this->cryShader->getUniformLocation("bboxmax"), 1, bboxmax.PeekCoordinates());
+    this->cryShader->setUniform("planeZ", planeZ);
 
     ::glActiveTexture(GL_TEXTURE0);
     ::glBindTexture(GL_TEXTURE_2D, this->typeTexture);
-    this->cryShader.SetParameter("typeData", 0);
+    this->cryShader->setUniform("typeData", 0);
 
     for (int cellX = (fixPBC ? -1 : 0); cellX < static_cast<int>(pgdc->SizeX() + (fixPBC ? 1 : 0)); cellX++) {
         int ccx = cellX;
@@ -1046,7 +1034,7 @@ void PoreNetExtractor::drawParticles(ParticleGridDataCall* pgdc, CrystalDataCall
                     ccz = 0;
                     zoff += this->bbox.Depth();
                 }
-                GL_VERIFY(this->cryShader.SetParameter("posoffset", xoff, yoff, zoff));
+                this->cryShader->setUniform("posoffset", xoff, yoff, zoff);
 
                 unsigned int cellIdx = static_cast<unsigned int>(ccx + pgdc->SizeX() * (ccy + pgdc->SizeY() * ccz));
 
@@ -1109,9 +1097,9 @@ void PoreNetExtractor::drawParticles(ParticleGridDataCall* pgdc, CrystalDataCall
                 for (unsigned int listIdx = 0; listIdx < cell.Count(); listIdx++) {
                     const ParticleGridDataCall::List& list = cell.Lists()[listIdx];
 
-                    this->cryShader.SetParameter("typeInfo", static_cast<int>(list.Type()),
+                    this->cryShader->setUniform("typeInfo", static_cast<int>(list.Type()),
                         static_cast<int>(tdc->GetCrystals()[list.Type()].GetFaceCount()));
-                    this->cryShader.SetParameter("outerRad", tdc->GetCrystals()[list.Type()].GetBoundingRadius());
+                    this->cryShader->setUniform("outerRad", tdc->GetCrystals()[list.Type()].GetBoundingRadius());
 
                     ::glVertexPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data());
                     ::glTexCoordPointer(4, GL_FLOAT, 8 * sizeof(float), list.Data() + 4);
@@ -1121,7 +1109,7 @@ void PoreNetExtractor::drawParticles(ParticleGridDataCall* pgdc, CrystalDataCall
         }
     }
 
-    this->cryShader.Disable();
+    glUseProgram(0);
     ::glBindTexture(GL_TEXTURE_2D, 0);
     ::glDisableClientState(GL_VERTEX_ARRAY);        // xyzr
     ::glDisableClientState(GL_TEXTURE_COORD_ARRAY); // quart
