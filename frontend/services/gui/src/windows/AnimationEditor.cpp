@@ -1239,7 +1239,7 @@ void AnimationEditor::DrawScale() {
     auto height = region_end.y - region_start.y;
 
     auto dist_order = round(std::log10(height));
-    auto majorUnit = std::powf(10, dist_order - 1.0f);
+    auto majorUnit = powf(10, dist_order - 1.0f);
     auto minorUnit = majorUnit / 10.0f;
 
     auto minor_start = std::nearbyintf(region_start.y / minorUnit) * minorUnit;
