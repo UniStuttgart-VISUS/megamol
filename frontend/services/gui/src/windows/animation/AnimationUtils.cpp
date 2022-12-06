@@ -111,6 +111,8 @@ void animation::from_json(const nlohmann::json& j, FloatVectorAnimation& v) {
     }
 }
 
+// this does not seem okay
+#if 0
 static ImVector<ImRect> s_GroupPanelLabelStack;
 
 void animation::BeginGroupPanel(const char* name, const ImVec2& size) {
@@ -236,6 +238,7 @@ void animation::EndGroupPanel() {
 
     ImGui::EndGroup();
 }
+#endif
 
 std::vector<float> animation::GetFloats(std::string vector_string) {
     std::vector<float> ret;

@@ -29,9 +29,12 @@ void to_json(nlohmann::json& j, const FloatVectorAnimation& v);
 void from_json(const nlohmann::json& j, FloatVectorAnimation& s);
 
 
+// this does not seem okay
 // PD code from https://github.com/ocornut/imgui/issues/1496#issuecomment-1287772456
+#if 0
 void BeginGroupPanel(const char* name, const ImVec2& size);
 void EndGroupPanel();
+#endif
 
 std::vector<float> GetFloats(std::string vector_string);
 

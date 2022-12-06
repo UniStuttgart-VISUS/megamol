@@ -664,7 +664,10 @@ void AnimationEditor::DrawParams() {
     }
     ImGui::EndChild();
 
-    animation::BeginGroupPanel("Animation", ImVec2(0.0f, 0.0f));
+    //animation::BeginGroupPanel("Animation", ImVec2(0.0f, 0.0f));
+    ImGui::Text("Animation");
+    ImGui::BeginChild(
+        "Animation_SubWin", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
     if (ImGui::Button("start")) {
         current_frame = animation_bounds[0];
     }
@@ -708,8 +711,9 @@ void AnimationEditor::DrawParams() {
     if (output_prefix.empty()) {
         ImGui::PopItemFlag();
     }
-    ImGui::Dummy(ImVec2(0.0f, 2.0f));
-    animation::EndGroupPanel();
+    //ImGui::Dummy(ImVec2(0.0f, 2.0f));
+    //animation::EndGroupPanel();
+    ImGui::EndChild();
 }
 
 
