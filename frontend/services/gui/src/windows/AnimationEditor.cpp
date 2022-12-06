@@ -513,13 +513,18 @@ void AnimationEditor::DrawToolbar() {
                 auto& anim = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
                 if (!anim.HasKey(current_frame)) {
                     animation::FloatVectorAnimation::KeyType v;
-                    auto temp = anim.GetValue(current_frame);
-                    v.nestedData.resize(temp.size());
-                    for (int i = 0; i < temp.size(); ++i) {
+                    auto val_temp = anim.GetValue(current_frame);
+                    auto int_temp = anim.GetInterpolation(current_frame);
+                    auto tan_temp = anim.GetTangent(current_frame);
+                    v.nestedData.resize(val_temp.size());
+                    for (int i = 0; i < val_temp.size(); ++i) {
                         v.nestedData[i].time = current_frame;
-                        v.nestedData[i].value = temp[i];
-                        v.nestedData[i].interpolation = anim.GetInterpolation(current_frame);
+                        v.nestedData[i].value = val_temp[i];
+                        v.nestedData[i].interpolation = int_temp[i];
                         // TODO: compute sensible tangent
+                        v.nestedData[i].out_tangent = tan_temp[i];
+                        v.nestedData[i].in_tangent =
+                            ImVec2(-v.nestedData[i].out_tangent.x, -v.nestedData[i].out_tangent.y);
                     }
                     anim.AddKey(v);
                 }

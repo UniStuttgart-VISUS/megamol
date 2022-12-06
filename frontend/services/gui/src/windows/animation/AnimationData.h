@@ -236,7 +236,7 @@ public:
         this->vec_length = k.nestedData.size();
     }
 
-    ValueType Interpolate(KeyType first, KeyType second, KeyTimeType time) const {
+    ValueType InterpolateForTime(KeyType first, KeyType second, KeyTimeType time) const {
         ValueType ret;
         ret.resize(vec_length);
         if (first.nestedData[0].interpolation == InterpolationType::SLERP && vec_length == 4) {
@@ -273,7 +273,7 @@ public:
         return ret;
     }
 
-    std::vector<ImVec2> Interpolate(C first, C second, float t) const {
+    std::vector<ImVec2> InterpolateForParameter(C first, C second, float t) const {
         std::vector<ImVec2> ret;
         ret.resize(vec_length);
         if (first.nestedData[0].interpolation == InterpolationType::SLERP) {
@@ -286,26 +286,27 @@ public:
         return ret;
     }
 
-    ValueType GetValue(KeyTimeType time) const {
-        ValueType ret;
+    template<class R>
+    bool TrivialReturn(KeyTimeType time, std::function<R(const C&)> accessor, std::vector<R>& ret, KeyType& before_key,
+        KeyType& after_key) const {
         ret.resize(vec_length);
         if (this->keys.size() < 2) {
             if (this->keys.empty()) {
-                return ret;
+                return true;
             }
             for (int i = 0; i < vec_length; ++i) {
-                ret[i] = this->keys.begin()->second.nestedData[i].value;
+                ret[i] = accessor(this->keys.begin()->second.nestedData[i]);
             }
-            return ret;
+            return true;
         }
-        auto before_key = this->keys.begin()->second, after_key = this->keys.begin()->second;
+        before_key = this->keys.begin()->second, after_key = this->keys.begin()->second;
         bool ok = false;
         for (auto it = this->keys.begin(); it != this->keys.end(); ++it) {
             if (it->second.nestedData[0].time == time) {
                 for (int i = 0; i < vec_length; ++i) {
-                    ret[i] = it->second.nestedData[i].value;
+                    ret[i] = accessor(it->second.nestedData[i]);
                 }
-                return ret;
+                return true;
             }
             if (it->second.nestedData[0].time < time) {
                 before_key = it->second;
@@ -317,10 +318,56 @@ public:
             }
         }
         if (ok) {
-            return Interpolate(before_key, after_key, time);
+            // read: interpolate yourself
+            return false;
         } else {
             for (int i = 0; i < vec_length; ++i) {
-                ret[i] = before_key.nestedData[i].value;
+                ret[i] = accessor(before_key.nestedData[i]);
+            }
+            return true;
+        }
+    }
+
+    std::vector<InterpolationType> GetInterpolation(KeyTimeType time) const {
+        std::vector<InterpolationType> ret;
+        ret.resize(vec_length);
+        KeyType before, after;
+        // extract the value from the key
+        auto getter = [](const C& k) -> InterpolationType { return k.interpolation; };
+        if (TrivialReturn<InterpolationType>(time, getter, ret, before, after)) {
+            return ret;
+        } else {
+            for (int i = 0; i < vec_length; ++i) {
+                ret[i] = before.nestedData[i].interpolation;
+            }
+            return ret;
+        }
+    }
+
+    ValueType GetValue(KeyTimeType time) const {
+        ValueType ret;
+        ret.resize(vec_length);
+        KeyType before, after;
+        // extract the value from the key
+        auto getter = [](const C& k) -> typename C::ValueType { return k.value; };
+        if (TrivialReturn<C::ValueType>(time, getter, ret, before, after)) {
+            return ret;
+        } else {
+            return InterpolateForTime(before, after, time);
+        }
+    }
+
+    std::vector<ImVec2> GetTangent(KeyTimeType time) const {
+        std::vector<ImVec2> ret;
+        ret.resize(vec_length);
+        KeyType before, after;
+        // extract the value from the key
+        auto getter = [](const C& k) -> ImVec2 { return k.out_tangent; };
+        if (TrivialReturn<ImVec2>(time, getter, ret, before, after)) {
+            return ret;
+        } else {
+            for (int i = 0; i < vec_length; ++i) {
+                ret[i] = FloatKey::TangentForTime(before.nestedData[i], after.nestedData[i], time);
             }
             return ret;
         }
