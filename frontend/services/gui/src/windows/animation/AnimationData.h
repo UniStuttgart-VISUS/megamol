@@ -350,7 +350,7 @@ public:
         KeyType before, after;
         // extract the value from the key
         auto getter = [](const C& k) -> typename C::ValueType { return k.value; };
-        if (TrivialReturn<C::ValueType>(time, getter, ret, before, after)) {
+        if (TrivialReturn<typename C::ValueType>(time, getter, ret, before, after)) {
             return ret;
         } else {
             return InterpolateForTime(before, after, time);
