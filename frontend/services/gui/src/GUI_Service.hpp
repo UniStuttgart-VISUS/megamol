@@ -80,12 +80,13 @@ private:
     Config m_config;
     megamol::core::MegaMolGraph* m_megamol_graph;
     megamol::frontend_resources::PerformanceManager* perf_manager = nullptr;
+    frontend_resources::ProfilingLoggingStatus* perf_logging = nullptr;
     std::shared_ptr<megamol::gui::GUIManager> m_gui = nullptr;
     std::vector<std::string> m_queuedProjectFiles;
 
     std::vector<FrontendResource> m_providedResourceReferences;
-    std::vector<FrontendResource> m_requestedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
+    std::shared_ptr<frontend_resources::FrontendResourcesMap> frontend_resources;
 
     megamol::frontend_resources::GUIState m_providedStateResource;
     megamol::frontend_resources::GUIRegisterWindow m_providedRegisterWindowResource;
