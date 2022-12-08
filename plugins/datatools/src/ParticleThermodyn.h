@@ -27,6 +27,7 @@ public:
     enum searchTypeEnum { RADIUS, NUM_NEIGHBORS };
 
     enum metricsEnum {
+        DRIFT,
         TEMPERATURE,
         FRACTIONAL_ANISOTROPY,
         DENSITY,
@@ -88,6 +89,8 @@ protected:
 private:
     bool assertData(geocalls::MultiParticleDataCall* in, geocalls::MultiParticleDataCall* outMPDC);
 
+    float computeDriftVelocity(
+        std::vector<std::pair<size_t, float>>& matches, size_t num_matches, float mass, float freedom);
     float computeTemperature(
         std::vector<std::pair<size_t, float>>& matches, size_t num_matches, float mass, float freedom);
     float computeFractionalAnisotropy(std::vector<std::pair<size_t, float>>& matches, size_t num_matches);
