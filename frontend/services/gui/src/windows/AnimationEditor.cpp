@@ -823,10 +823,9 @@ void AnimationEditor::DrawFloatKey(
     drawList->AddCircleFilled(t_out, size, tangent_color, 4);
 
     if (selectedFloatKey == &key) {
-        drawList->AddCircleFilled(pos, size, active_key_color);
-    } else {
-        drawList->AddCircleFilled(pos, size, col);
+        drawList->AddCircle(pos, size * 2.0f, col);
     }
+    drawList->AddCircleFilled(pos, size, col);
 
     ImGui::SetCursorScreenPos(ImVec2{pos.x - (button_size.x / 2.0f), pos.y - (button_size.y / 2.0f)});
     ImGui::InvisibleButton(
@@ -920,10 +919,9 @@ void AnimationEditor::DrawStringKey(ImDrawList* im_draws, animation::StringKey& 
 
     drawList->AddText(pos + button_size, col, key.value.c_str());
     if (selectedStringKey == &key) {
-        drawList->AddCircleFilled(pos, size, active_key_color);
-    } else {
-        drawList->AddCircleFilled(pos, size, col);
+        drawList->AddCircle(pos, size * 2.0f, col);
     }
+    drawList->AddCircleFilled(pos, size, col);
 
     ImGui::SetCursorScreenPos(ImVec2{pos.x - (button_size.x / 2.0f), pos.y - (button_size.y / 2.0f)});
     ImGui::InvisibleButton((std::string("##key") + std::to_string(key.time)).c_str(), button_size);
@@ -1010,6 +1008,14 @@ void AnimationEditor::DrawCurves() {
                                     k.nestedData[2].value);
                                 glm::quat q2(k2.nestedData[3].value, k2.nestedData[0].value, k2.nestedData[1].value,
                                     k2.nestedData[2].value);
+                                // fix "flipping" orientations while we are at it
+                                if (glm::dot(q1, q2) < 0.0f) {
+                                    q2 = -q2;
+                                    k2.nestedData[0].value = q2.x;
+                                    k2.nestedData[1].value = q2.y;
+                                    k2.nestedData[2].value = q2.z;
+                                    k2.nestedData[3].value = q2.w;
+                                }
                                 for (auto t = k.nestedData[0].time; t < k2.nestedData[0].time; ++t) {
                                     auto frac_t = (t - k.nestedData[0].time) /
                                                   static_cast<float>(k2.nestedData[0].time - k.nestedData[0].time);
