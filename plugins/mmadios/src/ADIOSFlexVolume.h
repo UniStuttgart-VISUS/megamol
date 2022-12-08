@@ -82,6 +82,7 @@ private:
     vislib::math::Cuboid<float> bbox;
 
     size_t currentFrame = -1;
+    size_t myDataHash = -1, oldDataHash = -1;
 };
 
 } // end namespace adios
