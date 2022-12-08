@@ -116,72 +116,70 @@ bool AnimationEditor::NotifyParamChanged(
 
         if (param_slot->Param<FloatParam>() || param_slot->Param<IntParam>()) {
             const float the_val = std::stof(new_value);
-            if (found_idx != -1) {
-                auto& a = std::get<animation::FloatAnimation>(allAnimations[found_idx]);
-                if (a.HasKey(current_frame)) {
-                    a[current_frame].value = the_val;
-                } else {
-                    a.AddKey({current_frame, the_val});
-                }
-                CenterAnimation(a);
-            } else {
+            if (found_idx == -1) {
                 animation::FloatAnimation f = {the_name};
-                f.AddKey({current_frame, the_val});
                 allAnimations.emplace_back(f);
-                CenterAnimation(f);
+                found_idx = static_cast<int>(allAnimations.size()) - 1;
+            }
+            auto& a = std::get<animation::FloatAnimation>(allAnimations[found_idx]);
+            if (a.HasKey(current_frame)) {
+                a[current_frame].value = the_val;
+            } else {
+                a.AddKey({current_frame, the_val});
             }
             selectedStringKey = nullptr;
+            if (found_idx == selectedAnimation) {
+                selectedFloatKey = &a[current_frame];
+            }
         }
         if (param_slot->Param<EnumParam>() || param_slot->Param<FlexEnumParam>() || param_slot->Param<StringParam>() ||
             param_slot->Param<FilePathParam>()) {
-            if (found_idx != -1) {
-                auto& a = std::get<animation::StringAnimation>(allAnimations[found_idx]);
-                if (a.HasKey(current_frame)) {
-                    a[current_frame].value = new_value;
-                } else {
-                    a.AddKey({current_frame, new_value});
-                }
-                CenterAnimation(a);
-            } else {
+            if (found_idx == -1) {
                 animation::StringAnimation s = {the_name};
-                s.AddKey({current_frame, new_value});
                 allAnimations.emplace_back(s);
-                CenterAnimation(s);
+                found_idx = static_cast<int>(allAnimations.size()) - 1;
+            }
+            auto& a = std::get<animation::StringAnimation>(allAnimations[found_idx]);
+            if (a.HasKey(current_frame)) {
+                a[current_frame].value = new_value;
+            } else {
+                a.AddKey({current_frame, new_value});
             }
             selectedFloatKey = nullptr;
+            if (found_idx == selectedAnimation) {
+                selectedStringKey = &a[current_frame];
+            }
         }
         if (param_slot->Param<Vector2fParam>() || param_slot->Param<Vector3fParam>() ||
             param_slot->Param<Vector4fParam>()) {
             const auto vec = animation::GetFloats(new_value);
-            if (found_idx != -1) {
-                auto& a = std::get<animation::FloatVectorAnimation>(allAnimations[found_idx]);
-                if (a.HasKey(current_frame)) {
-                    for (int i = 0; i < vec.size(); ++i) {
-                        a[current_frame].nestedData[i].value = vec[i];
-                    }
-                } else {
-                    animation::VectorKey<animation::FloatKey> k;
-                    k.nestedData.resize(vec.size());
-                    for (int i = 0; i < vec.size(); ++i) {
-                        k.nestedData[i].value = vec[i];
-                        k.nestedData[i].time = current_frame;
-                    }
-                    a.AddKey(k);
-                }
-                CenterAnimation(a);
-            } else {
+            if (found_idx == -1) {
                 animation::FloatVectorAnimation v{the_name};
+                allAnimations.emplace_back(v);
+                found_idx = static_cast<int>(allAnimations.size()) - 1;
+            }
+            auto& a = std::get<animation::FloatVectorAnimation>(allAnimations[found_idx]);
+            if (a.HasKey(current_frame)) {
+                auto& k = a[current_frame];
+                for (int i = 0; i < vec.size(); ++i) {
+                    k.nestedData[i].value = vec[i];
+                }
+            } else {
                 animation::VectorKey<animation::FloatKey> k;
                 k.nestedData.resize(vec.size());
                 for (int i = 0; i < vec.size(); ++i) {
                     k.nestedData[i].value = vec[i];
                     k.nestedData[i].time = current_frame;
                 }
-                v.AddKey(k);
-                allAnimations.emplace_back(v);
-                CenterAnimation(v);
+                a.AddKey(k);
             }
-            selectedFloatKey = nullptr;
+            selectedStringKey = nullptr;
+            if (found_idx == selectedAnimation) {
+                selectedFloatKey = &a[current_frame].nestedData.data()[0];
+            }
+        }
+        if (found_idx == selectedAnimation) {
+            CenterAnimation(allAnimations[found_idx]);
         }
     }
     // TODO: what else. Enum probably.
