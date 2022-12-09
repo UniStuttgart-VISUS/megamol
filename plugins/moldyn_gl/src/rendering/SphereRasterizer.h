@@ -11,6 +11,7 @@ class SphereRasterizer {
 public:
     struct config {
         glm::uvec2 res;
+        glm::vec2 fres;
         glm::vec2 near_far;
         float global_radius;
         glm::mat4 MVP;

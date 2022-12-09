@@ -458,6 +458,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
     SphereRasterizer sr;
     SphereRasterizer::config_t sr_cfg;
     sr_cfg.res = glm::uvec2(cr_fbo->getWidth(), cr_fbo->getHeight());
+    sr_cfg.fres = glm::vec2(cr_fbo->getWidth(), cr_fbo->getHeight());
     sr_cfg.global_radius = 0.5f;
     sr_cfg.MVP = proj * view;
     sr_cfg.MVPinv = glm::inverse(sr_cfg.MVP);
