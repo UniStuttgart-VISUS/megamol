@@ -149,8 +149,8 @@ MoleculeSESRenderer::MoleculeSESRenderer(void)
     this->drawSASParam << saspm;
 
     // ----- molecular indices list param -----
-    this->molIdxList.Add("0");
-    this->molIdxListParam.SetParameter(new param::StringParam("0"));
+    this->molIdxList.Add("");
+    this->molIdxListParam.SetParameter(new param::StringParam(""));
     this->MakeSlotAvailable(&this->molIdxListParam);
 
     // fill color table with default values and set the filename param
