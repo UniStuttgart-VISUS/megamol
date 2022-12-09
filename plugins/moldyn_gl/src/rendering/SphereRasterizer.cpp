@@ -116,6 +116,33 @@ bool intersection_old(megamol::moldyn_gl::rendering::SphereRasterizer::config_t 
 }
 
 
+bool pre_intersection(megamol::moldyn_gl::rendering::SphereRasterizer::config_t const& config, glm::vec4 fragCoord,
+    glm::vec3 oc_pos, float sqrRad, float rad) {
+    // transform fragment coordinates from window coordinates to view coordinates.
+    /*vec4 coord =
+        vec4(2.0f * (gl_FragCoord.xy / viewAttr.zw) - 1.0f, (2.0f * gl_FragCoord.z) / (far - near) - 1.0f, 1.0f);*/
+
+    //glm::vec4 coord = fragCoord * glm::vec4(2.0f / static_cast<float>(config.res.x), 2.0f / static_cast<float>(config.res.y), 2.0, 0.0) + glm::vec4(-1.0, -1.0, -1.0, 1.0);
+    auto coord = fragCoord;
+
+    // transform fragment coordinates from view coordinates to object coordinates.
+    coord = config.MVPinv * coord;
+    //coord /= coord.w;
+
+    auto ray = glm::normalize(glm::vec3(coord) - config.camPos);
+
+    // calculate the geometry-ray-intersection
+    float b = dot(oc_pos, ray); // projected length of the cam-sphere-vector onto the ray
+    glm::vec3 temp = b * ray - oc_pos;
+    float delta = sqrRad - dot(temp, temp); // Raytracing Gem Magic (http://www.realtimerendering.com/raytracinggems/)
+
+    if (delta < 0.0f)
+        return false;
+
+    return true;
+}
+
+
 struct Ray {
     glm::vec3 o;
     glm::vec3 d;
@@ -174,8 +201,8 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
 
     std::vector<std::tuple<float, int, glm::vec3, float>> depth_buffer(num_pixels, std::make_tuple(config.near_far.y, -1, glm::vec3(0.0), 1.0));
 
-    float min_z = std::numeric_limits<float>::max();
-    float max_z = std::numeric_limits<float>::lowest();
+    /*float min_z = std::numeric_limits<float>::max();
+    float max_z = std::numeric_limits<float>::lowest();*/
 
     glm::mat4 win_trans = glm::transpose(glm::mat4(glm::vec4(config.res.x * 0.5f, 0, 0, config.res.x * 0.5f),
         glm::vec4(0, config.res.y * 0.5f, 0, config.res.y * 0.5f),
@@ -192,16 +219,17 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
         /*if (projPos.w < -config.near_far.y || projPos.w > -config.near_far.x)
             continue;*/
         // check frustum
+        //auto const pw = projPos.w;
         projPos = projPos / projPos.w;
         if (projPos.x < -1.0f || projPos.x > 1.0f)
             continue;
         if (projPos.y < -1.0f || projPos.x > 1.0f)
             continue;
         // check depth
-        if (projPos.z < min_z)
+        /*if (projPos.z < min_z)
             min_z = projPos.z;
         if (projPos.z > max_z)
-            max_z = projPos.z;
+            max_z = projPos.z;*/
 
         /*{
             auto pos = config.MVP* glm::vec4(part, 1.0f);
@@ -209,30 +237,39 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
             pos = win_trans * pos;
             pos = pos * 1.0f;
         }*/
-        auto pos = config.MVP * glm::vec4(part, 1.0f);
+        auto const tmp_dir = glm::normalize(part - config.camPos);
+        auto pos = config.MVP * glm::vec4(part + tmp_dir * config.global_radius, 1.0f);
         auto const pw = pos.w;
         pos = pos / pos.w;
         pos = win_trans * pos;
+        //auto pos = win_trans * projPos;
+
         /*auto const screen_x = static_cast<int>((projPos.x + 1.0f) * 0.5f * config.res.x);
         auto const screen_y = static_cast<int>((projPos.y + 1.0f) * 0.5f * config.res.y);*/
         auto const screen_x = static_cast<int>(pos.x);
         auto const screen_y = static_cast<int>(pos.y);
         auto const i_l = static_cast<int>(std::ceilf(l * 0.5f));
-        for (int y = glm::clamp<int>(screen_y - i_l, 0, config.res.y);
-            y < glm::clamp<int>(screen_y + i_l, 0, config.res.y); ++y) {
-            for (int x = glm::clamp<int>(screen_x - i_l, 0, config.res.x);
-                x < glm::clamp<int>(screen_x + i_l, 0, config.res.x); ++x) {
+        for (int y = glm::clamp<int>(screen_y - i_l, 0, config.res.y - 1);
+            y <= glm::clamp<int>(screen_y + i_l, 0, config.res.y - 1); ++y) {
+            for (int x = glm::clamp<int>(screen_x - i_l, 0, config.res.x - 1);
+                x <= glm::clamp<int>(screen_x + i_l, 0, config.res.x - 1); ++x) {
                 auto const idx = x + y * config.res.x;
-                auto& d_val = depth_buffer[idx];
-                if (pos.z >= std::get<0>(d_val))
-                    continue;
-                d_val = std::make_tuple(pos.z, i, glm::vec3(part), pw);
+
+                auto ndc = win_trans_inv * glm::vec4(x, y, pos.z, 1.0);
+                ndc = ndc * pw;
+                if (pre_intersection(config, ndc, part - config.camPos, config.global_radius * config.global_radius,
+                        config.global_radius)) {
+                    auto& d_val = depth_buffer[idx];
+                    if (pos.z >= std::get<0>(d_val))
+                        continue;
+                    d_val = std::make_tuple(pos.z, i, glm::vec3(part), pw);
+                }
             }
         }
     }
 
-    std::cout << "[SphereRasterizer] min_z " << min_z << " max_z " << max_z << " near " << config.near_far.x << " far "
-              << config.near_far.y << std::endl;
+    /*std::cout << "[SphereRasterizer] min_z " << min_z << " max_z " << max_z << " near " << config.near_far.x << " far "
+              << config.near_far.y << std::endl;*/
 
     std::vector<glm::u8vec4> image(num_pixels, glm::u8vec4(0));
     for (unsigned int y = 0; y < config.res.y; ++y) {
@@ -261,20 +298,20 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
             auto ndc = win_trans_inv * glm::vec4(x, y, std::get<0>(d_val), 1.0);
             ndc = ndc * std::get<3>(d_val);
 
-            if (intersection_old(config, ndc,
-                    std::get<2>(d_val) - config.camPos,
+            if (intersection_old(config, ndc, std::get<2>(d_val) - config.camPos,
                     config.global_radius * config.global_radius, config.global_radius, normal, ray, t)) {
-                /*auto col = LocalLighting(ray, normal, config.lightDir, glm::vec3(1));
+                auto col = LocalLighting(ray, normal, config.lightDir, glm::vec3(1));
                 col = col * 255.f;
-                image[idx] = glm::u8vec4(static_cast<uint8_t>(col.x), static_cast<uint8_t>(col.y), static_cast<uint8_t>(col.z), 255);*/
-                image[idx] = glm::u8vec4(255);
-            } else {
+                image[idx] = glm::u8vec4(static_cast<uint8_t>(col.x), static_cast<uint8_t>(col.y), static_cast<uint8_t>(col.z), 255);
+                //image[idx] = glm::u8vec4(255);
+            } /*else {
                 image[idx] = glm::u8vec4(255, 0, 0, 255);
-            }
+            }*/
+            //image[idx] = glm::u8vec4(255);
             /*r.d = r.d * 255.0f;
             image[idx] = glm::u8vec4(r.d.x, r.d.y, r.d.z, 255);*/
-            ray = ray * 255.0f;
-            image[idx] = glm::u8vec4(ray.x, ray.y, 0, 255);
+            /*ray = ray * 255.0f;
+            image[idx] = glm::u8vec4(ray.x, ray.y, 0, 255);*/
         }
     }
     /*for (int idx = 0; idx < num_pixels; ++idx) {
