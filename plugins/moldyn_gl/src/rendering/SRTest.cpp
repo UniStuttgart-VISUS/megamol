@@ -8,6 +8,9 @@
 #include "mmstd/light/DistantLight.h"
 #include "OpenGL_Context.h"
 
+#include "SphereRasterizer.h"
+
+#include "stb/stb_image_write.h"
 
 #define SCALE 0.0001f
 //#define __SRTEST_CON_RAS__
@@ -450,6 +453,26 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
 
         old_cam_ = cam;
     }
+
+    #if 1
+    SphereRasterizer sr;
+    SphereRasterizer::config_t sr_cfg;
+    sr_cfg.res = glm::uvec2(cr_fbo->getWidth(), cr_fbo->getHeight());
+    sr_cfg.global_radius = 0.5f;
+    sr_cfg.MVP = proj * view;
+    sr_cfg.MVPinv = glm::inverse(sr_cfg.MVP);
+    sr_cfg.near_far = glm::vec2(cam.get<core::view::Camera::NearPlane>(), cam.get<core::view::Camera::FarPlane>());
+    sr_cfg.camDir = cam_pose.direction;
+    sr_cfg.camPos = cam_pose.position;
+    sr_cfg.camRight = glm::normalize(glm::cross(cam_pose.direction, cam_pose.up));
+    sr_cfg.camUp = cam_pose.up;
+    sr_cfg.fovy = cam.get<core::view::Camera::FieldOfViewY>();
+    sr_cfg.ratio = cam.get<core::view::Camera::AspectRatio>();
+    sr_cfg.lightDir = curlightDir;
+    auto img_data = sr.Compute(sr_cfg, data_);
+    stbi_write_png("sr_img.png", cr_fbo->getWidth(), cr_fbo->getHeight(), 4, img_data.data(),
+        cr_fbo->getWidth() * sizeof(glm::u8vec4));
+    #endif
 
     // data_.pl_data.clip_distance = clip_thres_slot_.Param<core::param::FloatParam>()->Value();
 
