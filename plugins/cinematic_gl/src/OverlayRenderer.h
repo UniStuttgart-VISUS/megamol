@@ -10,6 +10,7 @@
 #pragma once
 
 
+#include "ModuleGraphSubscription.h"
 #include "mmcore_gl/utility/RenderUtils.h"
 #include "mmstd/renderer/RendererModule.h"
 #include "mmstd/view/AbstractView.h"
@@ -33,7 +34,7 @@ class OverlayRenderer : public megamol::core::view::RendererModule<mmstd_gl::Cal
 public:
     virtual std::vector<std::string> requested_lifetime_resources() {
         auto resources = ModuleGL::requested_lifetime_resources();
-        resources.emplace_back("MegaMolGraph");
+        resources.emplace_back(frontend_resources::MegaMolGraph_Req_Name);
         return resources;
     }
 

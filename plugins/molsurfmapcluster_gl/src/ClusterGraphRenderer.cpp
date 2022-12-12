@@ -121,7 +121,7 @@ ClusterGraphRenderer::~ClusterGraphRenderer(void) {
  */
 std::vector<std::string> ClusterGraphRenderer::requested_lifetime_resources() {
     std::vector<std::string> resources = ModuleGL::requested_lifetime_resources();
-    resources.emplace_back("MegaMolGraph");
+    resources.emplace_back(frontend_resources::MegaMolGraph_Req_Name);
     return resources;
 }
 

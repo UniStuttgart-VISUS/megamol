@@ -50,7 +50,7 @@ bool GUI_Service::init(const Config& config) {
     this->m_requestedResourceReferences.clear();
     this->m_providedResourceReferences.clear();
     this->m_requestedResourcesNames = {
-        "MegaMolGraph",                                                 // 0 - sync graphs
+        frontend_resources::MegaMolGraph_Req_Name,                      // 0 - sync graphs
         "optional<WindowEvents>",                                       // 1 - time, size, clipboard
         "optional<KeyboardEvents>",                                     // 2 - key press
         "optional<MouseEvents>",                                        // 3 - mouse click

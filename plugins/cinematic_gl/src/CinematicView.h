@@ -10,6 +10,7 @@
 #pragma once
 
 
+#include "ModuleGraphSubscription.h"
 #include "mmcore/CallerSlot.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/CallRenderViewGL.h"
@@ -38,7 +39,8 @@ public:
 
     std::vector<std::string> requested_lifetime_resources() override {
         auto lifetime_resources = Base::requested_lifetime_resources();
-        lifetime_resources.insert(lifetime_resources.end(), {"MegaMolGraph", "RuntimeConfig"});
+        lifetime_resources.insert(
+            lifetime_resources.end(), {frontend_resources::MegaMolGraph_Req_Name, "RuntimeConfig"});
         return lifetime_resources;
     }
 

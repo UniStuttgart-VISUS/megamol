@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "ModuleGraphSubscription.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -30,7 +31,7 @@ public:
 
     std::vector<std::string> requested_lifetime_resources() override {
         auto lifetime_resources = Base::requested_lifetime_resources();
-        lifetime_resources.push_back("MegaMolGraph");
+        lifetime_resources.push_back(frontend_resources::MegaMolGraph_Req_Name);
         lifetime_resources.emplace_back("PluginsResource");
         return lifetime_resources;
     }

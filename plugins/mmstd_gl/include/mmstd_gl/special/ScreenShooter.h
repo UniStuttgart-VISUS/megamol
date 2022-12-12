@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "ModuleGraphSubscription.h"
+
 #include <glowl/FramebufferObject.hpp>
 
 #include "mmcore/Module.h"
@@ -22,7 +24,7 @@ class ScreenShooter : public core::job::AbstractJob, public core::Module, public
 public:
     std::vector<std::string> requested_lifetime_resources() override {
         auto lifetime_resources = Module::requested_lifetime_resources();
-        lifetime_resources.push_back("MegaMolGraph");
+        lifetime_resources.push_back(frontend_resources::MegaMolGraph_Req_Name);
         return lifetime_resources;
     }
 
