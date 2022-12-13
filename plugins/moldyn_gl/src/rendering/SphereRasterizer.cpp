@@ -4,10 +4,14 @@
 #include <tuple>
 
 #include <omp.h>
+#include <oneapi/tbb.h>
+
+#include <immintrin.h>
 
 
 float touchplane_old(megamol::moldyn_gl::rendering::SphereRasterizer::config_t const& config, glm::vec3 objPos,
     float sqrRad, float rad, glm::vec3 co_pos) {
+#if 0
     // Sphere-Touch-Plane-Approach
 
     //glm::vec2 winHalf = glm::vec2(config.res.x, config.res.y); // window size
@@ -25,7 +29,8 @@ float touchplane_old(megamol::moldyn_gl::rendering::SphereRasterizer::config_t c
     //float sqrRad = rad * rad;
 
     // projected camera vector
-    glm::vec3 c2 = glm::vec3(glm::dot(co_pos, config.camRight), glm::dot(co_pos, config.camUp), glm::dot(co_pos, config.camDir));
+    glm::vec3 c2 =
+        glm::vec3(glm::dot(co_pos, config.camRight), glm::dot(co_pos, config.camUp), glm::dot(co_pos, config.camDir));
 
     glm::vec3 cpj1 = config.camDir * c2.z + config.camRight * c2.x;
     glm::vec3 cpm1 = config.camDir * c2.x - config.camRight * c2.z;
@@ -82,13 +87,66 @@ float touchplane_old(megamol::moldyn_gl::rendering::SphereRasterizer::config_t c
     projPos = glm::vec4((mins + maxs) * glm::vec2(0.5), projPos.z, 1.0);*/
     maxs = (maxs - mins) * glm::vec2(0.5) * config.fres;
     l = glm::max(maxs.x, maxs.y) + 0.5;
+#else
+    glm::vec2 mins, maxs;
+
+    glm::vec3 di = objPos - config.camPos;
+    float dd = glm::dot(di, di);
+
+    float s = (sqrRad) / (dd);
+
+    float p = sqrRad / sqrt(dd);
+
+    float v = rad / sqrt(1.0f - s);
+    //v = v / sqrt(dd) * (sqrt(dd) - p);
+    v = v - v * sqrRad / dd;
+
+    glm::vec3 vr = glm::normalize(glm::cross(di, config.camUp)) * v;
+    glm::vec3 vu = glm::normalize(glm::cross(di, vr)) * v;
+
+    glm::vec3 base = objPos - p * config.camDir;
+
+    glm::vec4 v1 = config.MVP * glm::vec4(base + vr, 1.0f);
+    glm::vec4 v2 = config.MVP * glm::vec4(base - vr, 1.0f);
+    glm::vec4 v3 = config.MVP * glm::vec4(base + vu, 1.0f);
+    glm::vec4 v4 = config.MVP * glm::vec4(base - vu, 1.0f);
+
+    v1 /= v1.w;
+    v2 /= v2.w;
+    v3 /= v3.w;
+    v4 /= v4.w;
+
+    mins = glm::vec2(v1);
+    maxs = glm::vec2(v1);
+    mins = glm::min(mins, glm::vec2(v2));
+    maxs = glm::max(maxs, glm::vec2(v2));
+    mins = glm::min(mins, glm::vec2(v3));
+    maxs = glm::max(maxs, glm::vec2(v3));
+    mins = glm::min(mins, glm::vec2(v4));
+    maxs = glm::max(maxs, glm::vec2(v4));
+
+    glm::vec2 factor = 0.5f * glm::vec2(config.res);
+    v1 = glm::vec4(factor * (glm::vec2(v1) + 1.0f), 0, 0);
+    v2 = glm::vec4(factor * (glm::vec2(v2) + 1.0f), 0, 0);
+    v3 = glm::vec4(factor * (glm::vec2(v3) + 1.0f), 0, 0);
+    v4 = glm::vec4(factor * (glm::vec2(v4) + 1.0f), 0, 0);
+
+    glm::vec2 vw = glm::vec2(v1 - v2);
+    glm::vec2 vh = glm::vec2(v3 - v4);
+
+    /*auto projPos = config.MVP * glm::vec4(objPos - p * config.camDir, 1.0f);
+    projPos = projPos / projPos.w;*/
+
+    //projPos.xy = (mins + maxs) * 0.5f;
+    auto l = glm::max(length(vw), length(vh));
+#endif
 
     return l;
 }
 
 
-bool intersection_old(megamol::moldyn_gl::rendering::SphereRasterizer::config_t const& config, glm::vec3 ray, glm::vec3 oc_pos,
-    float sqrRad, float rad, glm::vec3& normal, float& t) {
+bool intersection_old(megamol::moldyn_gl::rendering::SphereRasterizer::config_t const& config, glm::vec3 ray,
+    glm::vec3 oc_pos, float sqrRad, float rad, glm::vec3& normal, float& t) {
     // transform fragment coordinates from window coordinates to view coordinates.
     /*vec4 coord =
         vec4(2.0f * (gl_FragCoord.xy / viewAttr.zw) - 1.0f, (2.0f * gl_FragCoord.z) / (far - near) - 1.0f, 1.0f);*/
@@ -160,8 +218,8 @@ Ray generateRay(megamol::moldyn_gl::rendering::SphereRasterizer::config_t const&
     Ray ray;
 
     // Transform pixel to clip coordinates
-    glm::vec2 clip_space_pixel_coords =
-        glm::vec2((pixel_coords.x / static_cast<float>(config.res.x)) * 2.0f - 1.0f, (pixel_coords.y / static_cast<float>(config.res.y)) * 2.0f - 1.0f);
+    glm::vec2 clip_space_pixel_coords = glm::vec2((pixel_coords.x / static_cast<float>(config.res.x)) * 2.0f - 1.0f,
+        (pixel_coords.y / static_cast<float>(config.res.y)) * 2.0f - 1.0f);
 
     // Unproject a point on the near plane and use as an origin
     glm::mat4 inv_view_proj_mx = config.MVPinv;
@@ -202,14 +260,18 @@ glm::vec3 LocalLighting(const glm::vec3 ray, const glm::vec3 normal, const glm::
 }
 
 
-std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Compute(config_t const& config, data_package_t const& data) {
+std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Compute(
+    config_t const& config, data_package_t const& data) {
     auto const num_pixels = config.res.x * config.res.y;
     auto const num_particles = data.positions[0].size() / 4;
 
-    std::vector<std::vector<std::tuple<float, int, glm::vec3 /*oc_pos*/, glm::vec3 /*ray*/>>> depth_buffer(
-        omp_get_max_threads());
-    for (int i = 0; i < omp_get_max_threads(); ++i) {
-        depth_buffer[i] = std::vector<std::tuple<float, int, glm::vec3 /*oc_pos*/, glm::vec3 /*ray*/>>(num_pixels, std::make_tuple(config.near_far.y, -1, glm::vec3(0.0), glm::vec3(0.0)));
+    //auto const max_threads = omp_get_max_threads();
+    auto const max_threads = oneapi::tbb::this_task_arena::max_concurrency();
+
+    std::vector<std::vector<std::tuple<float, int, glm::vec3 /*oc_pos*/, glm::vec3 /*ray*/>>> depth_buffer(max_threads);
+    for (int i = 0; i < max_threads; ++i) {
+        depth_buffer[i] = std::vector<std::tuple<float, int, glm::vec3 /*oc_pos*/, glm::vec3 /*ray*/>>(
+            num_pixels, std::make_tuple(config.near_far.y, -1, glm::vec3(0.0), glm::vec3(0.0)));
     }
 
     /*float min_z = std::numeric_limits<float>::max();
@@ -221,11 +283,82 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
         glm::vec4(0, 0, 0, 1)));
     glm::mat4 win_trans_inv = glm::inverse(win_trans);
 
+    //std::cout << "[SphereRasterizer] Max TBB threads " << oneapi::tbb::this_task_arena::max_concurrency() << std::endl;
+
     float rad = config.global_radius;
     float sqRad = config.global_radius * config.global_radius;
 
     auto start = std::chrono::high_resolution_clock::now();
 
+    auto vertex_shader = [&config, &data, &sqRad, &rad, &depth_buffer, &win_trans, &win_trans_inv](int item_id) {
+        auto const part = glm::vec3(
+            data.positions[0][item_id * 4 + 0], data.positions[0][item_id * 4 + 1], data.positions[0][item_id * 4 + 2]);
+        /*glm::vec4 projPos;*/
+        auto const oc_pos = part - config.camPos;
+        auto const l = touchplane_old(config, part, sqRad, rad, -oc_pos);
+        // check w
+        /*if (projPos.w < -config.near_far.y || projPos.w > -config.near_far.x)
+            continue;*/
+        // check frustum
+        //auto const pw = projPos.w;
+        /*projPos = projPos / projPos.w;
+        if (projPos.x < -1.0f || projPos.x > 1.0f)
+            continue;
+        if (projPos.y < -1.0f || projPos.x > 1.0f)
+            continue;*/
+        // check depth
+        /*if (projPos.z < min_z)
+            min_z = projPos.z;
+        if (projPos.z > max_z)
+            max_z = projPos.z;*/
+
+        /*{
+            auto pos = config.MVP* glm::vec4(part, 1.0f);
+            pos = pos / pos.w;
+            pos = win_trans * pos;
+            pos = pos * 1.0f;
+        }*/
+        auto const tmp_dir = glm::normalize(oc_pos);
+        auto pos = config.MVP * glm::vec4(part + tmp_dir * rad, 1.0f);
+        auto const pw = pos.w;
+        pos = pos / pos.w;
+        if (pos.x < -1.0f || pos.x > 1.0f)
+            return;
+        if (pos.y < -1.0f || pos.y > 1.0f)
+            return;
+        pos = win_trans * pos;
+        //auto pos = win_trans * projPos;
+
+        /*auto const screen_x = static_cast<int>((projPos.x + 1.0f) * 0.5f * config.res.x);
+        auto const screen_y = static_cast<int>((projPos.y + 1.0f) * 0.5f * config.res.y);*/
+        auto const screen_x = static_cast<int>(pos.x);
+        auto const screen_y = static_cast<int>(pos.y);
+        auto const i_l = static_cast<int>(std::ceilf(l * 0.5f));
+        auto const y_low = glm::clamp<int>(screen_y - i_l, 0, config.res.y - 1);
+        auto const y_high = glm::clamp<int>(screen_y + i_l, 0, config.res.y - 1);
+        auto const x_low = glm::clamp<int>(screen_x - i_l, 0, config.res.x - 1);
+        auto const x_high = glm::clamp<int>(screen_x + i_l, 0, config.res.x - 1);
+        for (int y = y_low; y <= y_high; ++y) {
+            for (int x = x_low; x <= x_high; ++x) {
+
+                auto ndc = win_trans_inv * glm::vec4(x, y, pos.z, 1.0);
+                ndc = ndc * pw;
+                ndc = config.MVPinv * ndc;
+                auto const ray = glm::normalize(glm::vec3(ndc) - config.camPos);
+                if (pre_intersection(config, ray, oc_pos, sqRad)) {
+                    auto const idx = x + y * config.res.x;
+                    auto& d_val = depth_buffer[oneapi::tbb::this_task_arena::current_thread_index()][idx];
+                    if (pos.z >= std::get<0>(d_val))
+                        continue;
+                    d_val = std::make_tuple(pos.z, item_id, oc_pos, ray);
+                }
+            }
+        }
+    };
+
+    oneapi::tbb::parallel_for((int)0, (int)num_particles, vertex_shader);
+
+#if 0
 #pragma omp parallel for
     for (int i = 0; i < num_particles; ++i) {
         auto const part = glm::vec3(data.positions[0][i * 4 + 0], data.positions[0][i * 4 + 1], data.positions[0][i * 4 + 2]);
@@ -291,6 +424,7 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
             }
         }
     }
+#endif
 
     auto end = std::chrono::high_resolution_clock::now();
 
@@ -305,7 +439,7 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
         for (unsigned int x = 0; x < config.res.x; ++x) {
             auto const idx = x + y * config.res.x;
             auto& d_val_0 = depth_buffer[0][idx];
-            for (int i = 1; i < omp_get_max_threads(); ++i) {
+            for (int i = 1; i < max_threads; ++i) {
                 auto const& d_val = depth_buffer[i][idx];
                 if (std::get<0>(d_val) < std::get<0>(d_val_0))
                     d_val_0 = d_val;
@@ -339,11 +473,11 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
             auto ndc = win_trans_inv * glm::vec4(x, y, std::get<0>(d_val), 1.0);
             ndc = ndc * std::get<3>(d_val);*/
 
-            if (intersection_old(config, std::get<3>(d_val), std::get<2>(d_val),
-                    sqRad, rad, normal, t)) {
+            if (intersection_old(config, std::get<3>(d_val), std::get<2>(d_val), sqRad, rad, normal, t)) {
                 auto col = LocalLighting(std::get<3>(d_val), normal, config.lightDir, glm::vec3(1));
                 col = col * 255.f;
-                image[idx] = glm::u8vec4(static_cast<uint8_t>(col.x), static_cast<uint8_t>(col.y), static_cast<uint8_t>(col.z), 255);
+                image[idx] = glm::u8vec4(
+                    static_cast<uint8_t>(col.x), static_cast<uint8_t>(col.y), static_cast<uint8_t>(col.z), 255);
                 //image[idx] = glm::u8vec4(255);
             } /*else {
                 image[idx] = glm::u8vec4(255, 0, 0, 255);
