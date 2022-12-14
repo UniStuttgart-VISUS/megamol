@@ -27,6 +27,11 @@ ImageSpaceAmortization2D::ImageSpaceAmortization2D()
         , skipInterpolationParam("debug::SkipInterpolation", "Do not interpolate missing pixels.")
         , showQuadMarkerParam("debug::ShowQuadMarker", "Mark bottom left pixel of amortization quad.")
         , resetParam("debug::Reset", "Reset all textures and buffers.")
+        , history_cnt(5)
+        , history_idx(0)
+        , lastFrameTimes_(history_cnt, 0.0f)
+        , lastDeltaToTargetTimes_(history_cnt, 0.0f)
+        , lastAmortLevels_(history_cnt, glm::ivec2(0))
         , viewProjMx_(glm::mat4())
         , lastViewProjMx_(glm::mat4()) {
 
@@ -129,28 +134,95 @@ bool ImageSpaceAmortization2D::renderImpl(CallRender2DGL& call, CallRender2DGL& 
         if (lastTime_.has_value()) {
             const float frame_time =
                 std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(now - lastTime_.value()).count();
+            auto tgt_delta_time = frame_time - targetTimeMs;
 
-            // TODO algorithm for amort level, this is a very stupid placeholder algorithm for now
-            lastFrameTimes_.push_back(frame_time);
-            if (lastFrameTimes_.size() > 10) {
-                auto avg_frame_time = std::reduce(lastFrameTimes_.begin(), lastFrameTimes_.end()) /
-                                      static_cast<float>(lastFrameTimes_.size());
+            history_idx = (history_idx + 1) % history_cnt;
+            lastFrameTimes_[history_idx] = frame_time;
+            lastDeltaToTargetTimes_[history_idx] = tgt_delta_time;
+            lastAmortLevels_[history_idx] = glm::ivec2(aParam);
 
-                if (avg_frame_time > targetTimeMs) {
-                    aParam++;
-                } else {
-                    aParam--;
-                }
-                aParam = std::clamp(aParam, 1, 32);
-                amortLevelParam.Param<core::param::IntParam>()->SetValue(aParam);
-                lastFrameTimes_.clear();
+            // compute frame n+1 using last rendered frames n to n - (history_cnt-1)
+            auto history_idx_minus_one = (history_idx - 1 + history_cnt) % history_cnt;
+
+            auto amort_level_n = lastAmortLevels_[history_idx];
+            auto amort_level_n_minus_one = lastAmortLevels_[history_idx_minus_one];
+
+            float delta_to_target_avg = 0.0;
+            float abs_delta_to_target_avg = 0.0;
+            for (auto& delta : lastDeltaToTargetTimes_) {
+                delta_to_target_avg += delta / static_cast<float>(history_cnt);
+                abs_delta_to_target_avg += abs(delta / static_cast<float>(history_cnt));
             }
+            auto delta_to_target_n = lastDeltaToTargetTimes_[history_idx];
+            auto abs_dist_delta = abs(abs(delta_to_target_n) - abs_delta_to_target_avg);
+
+            float margin = 0.25f; // 10 percent margin
+
+            if (amort_level_n.x == amort_level_n_minus_one.x) {
+                //case one: amort level was not changed, check if delta to target has increased or decreased significantly
+                if (delta_to_target_n > delta_to_target_avg && abs_dist_delta > (margin * delta_to_target_avg)) {
+                    // delta to target got worse, increase amort level
+                    aParam += 1;
+                } else if (abs_dist_delta > (margin * delta_to_target_avg)) {
+                    // delta to target improved, reduce amort level
+                    aParam -= 1;
+                }
+
+            } else if (amort_level_n.x > amort_level_n_minus_one.x) {
+                //case two: amort level increase, check if delta to target improved
+                if (delta_to_target_n < delta_to_target_avg && delta_to_target_n > 0.0 &&
+                    abs_dist_delta > (margin * delta_to_target_avg)) {
+                    // delta to target improved but target not reached, keep increasing amort level
+                    aParam += 1;
+                } else if (delta_to_target_n > delta_to_target_avg) {
+                    // delta to target did not improve, reduce amort level again
+                    aParam -= 1;
+                }
+
+            } else if (amort_level_n.x < amort_level_n_minus_one.x) {
+                //case two: amort level decreased, check if delta to target got worse
+                if (delta_to_target_n > delta_to_target_avg && delta_to_target_n > 0.0 &&
+                    abs_dist_delta > (margin * delta_to_target_avg)) {
+                    // delta to target got worse and target not reached, increase amort level again
+                    aParam += 1;
+                //} else if (delta_to_target_n < delta_to_target_avg) {
+                //    // delta to target improved, keep reducing amort level
+                //    aParam -= 1;
+                } else if (delta_to_target_n < 0.0 && abs_dist_delta > (margin * delta_to_target_avg)) {
+                    // delta to target improved or didn't get worse and target is reached, keep reducing amort level
+                    aParam -= 1;
+                }
+            }
+
+             aParam = std::clamp(aParam, 1, 16);
+
+             amortLevelParam.Param<core::param::IntParam>()->SetValue(aParam);
+
+            //// TODO algorithm for amort level, this is a very stupid placeholder algorithm for now
+            //lastFrameTimes_.push_back(frame_time);
+            //if (lastFrameTimes_.size() > 10) {
+            //    auto avg_frame_time = std::reduce(lastFrameTimes_.begin(), lastFrameTimes_.end()) /
+            //                          static_cast<float>(lastFrameTimes_.size());
+            //
+            //    if (avg_frame_time > targetTimeMs) {
+            //        aParam++;
+            //    } else {
+            //        aParam--;
+            //    }
+            //    aParam = std::clamp(aParam, 1, 32);
+            //    amortLevelParam.Param<core::param::IntParam>()->SetValue(aParam);
+            //    lastFrameTimes_.clear();
+            //}
         }
         lastTime_ = now;
     } else {
         amortLevelParam.Param<core::param::AbstractParam>()->SetGUIReadOnly(false);
         lastTime_ = std::nullopt;
-        lastFrameTimes_.clear();
+        //lastFrameTimes_.clear();
+        history_idx = 0;
+        lastFrameTimes_ = std::vector<float>(history_cnt, 0.0f);
+        lastDeltaToTargetTimes_ = std::vector<float>(history_cnt, 0.0f);
+        lastAmortLevels_ = std::vector<glm::ivec2>(history_cnt, glm::ivec2(0));
     }
 
     const glm::ivec2 a((m == MODE_VERTICAL) ? 1 : aParam, (m == MODE_HORIZONTAL) ? 1 : aParam);

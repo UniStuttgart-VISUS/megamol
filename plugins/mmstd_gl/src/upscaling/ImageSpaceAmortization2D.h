@@ -97,8 +97,14 @@ private:
     int oldWidth_ = -1;
     int oldHeight_ = -1;
 
+    // auto-scaling-level
     std::optional<std::chrono::steady_clock::time_point> lastTime_;
+    size_t history_cnt;
+    size_t history_idx;
     std::vector<float> lastFrameTimes_;
+    std::vector<float> lastDeltaToTargetTimes_;
+    std::vector<glm::ivec2> lastAmortLevels_;
+
     int frameIdx_ = 0;
     int samplingSequencePosition_ = 0;
     std::vector<int> samplingSequence_;
