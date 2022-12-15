@@ -657,7 +657,7 @@ glm::quat megamol::core::utility::get_default_camera_orientation(DefaultView dv,
     return default_orientation;
 }
 
-glm::vec2 megamol::core::utility::get_min_max_dist_to_bbox(BoundingBoxes_2 const& bboxs, view::Camera* cam) {
+glm::vec2 megamol::core::utility::get_min_max_dist_to_bbox(BoundingBoxes_2 const& bboxs, const view::Camera::Pose& pose) {
     // compute min and max distance from camera to bounding box corners
     auto pointPlaneDist = [](std::array<float, 3> point, std::array<float, 3> point_on_plane,
                               std::array<float, 3> plane_normal) -> float {
@@ -666,10 +666,8 @@ glm::vec2 megamol::core::utility::get_min_max_dist_to_bbox(BoundingBoxes_2 const
                (std::get<2>(point) - std::get<2>(point_on_plane)) * std::get<2>(plane_normal);
     };
 
-    std::array<float, 3> point = {cam->get<view::Camera::Pose>().position.x, cam->get<view::Camera::Pose>().position.y,
-        cam->get<view::Camera::Pose>().position.z};
-    std::array<float, 3> plane_normal = {-cam->get<view::Camera::Pose>().direction.x,
-        -cam->get<view::Camera::Pose>().direction.y, -cam->get<view::Camera::Pose>().direction.z};
+    std::array<float, 3> point = {pose.position.x, pose.position.y, pose.position.z};
+    std::array<float, 3> plane_normal = {-pose.direction.x, -pose.direction.y, -pose.direction.z};
 
     float left_bottom_back_dist = pointPlaneDist(point,
         {bboxs.ClipBox().GetLeftBottomBack().GetX(), bboxs.ClipBox().GetLeftBottomBack().GetY(),

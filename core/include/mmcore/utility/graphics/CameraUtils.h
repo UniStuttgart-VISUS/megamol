@@ -55,7 +55,7 @@ glm::vec4 get_default_camera_position(BoundingBoxes_2 const& bboxs, view::Camera
 
 glm::quat get_default_camera_orientation(DefaultView dv, DefaultOrientation dor);
 
-glm::vec2 get_min_max_dist_to_bbox(BoundingBoxes_2 const& bboxs, view::Camera* cam);
+glm::vec2 get_min_max_dist_to_bbox(BoundingBoxes_2 const& bboxs, const view::Camera::Pose& cam);
 
 
 } // namespace megamol::core::utility

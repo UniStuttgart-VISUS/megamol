@@ -287,12 +287,12 @@ public:
 
         auto cam_orientation = utility::get_default_camera_orientation(dv, dor);
         auto cam_position = utility::get_default_camera_position(bboxs, cam_intrinsics, cam_orientation, dv);
+        Camera::Pose cam_pose(glm::vec3(cam_position), cam_orientation);
 
-        auto min_max_dist = utility::get_min_max_dist_to_bbox(bboxs, _target_camera);
+        auto min_max_dist = utility::get_min_max_dist_to_bbox(bboxs, cam_pose);
         cam_intrinsics.far_plane = std::max(0.0f, min_max_dist.y);
         cam_intrinsics.near_plane = std::max(cam_intrinsics.far_plane / 10000.0f, min_max_dist.x);
 
-        Camera::Pose cam_pose(glm::vec3(cam_position), cam_orientation);
 
         *_target_camera = Camera(cam_pose, cam_intrinsics);
 
@@ -393,7 +393,7 @@ public:
             if (true) // TODO
             {
                 // compute auto-adjusted near far plane
-                auto min_max_dist = utility::get_min_max_dist_to_bbox(bboxs, _target_camera);
+                auto min_max_dist = utility::get_min_max_dist_to_bbox(bboxs, cam_pose);
                 far_plane = std::max(0.0f, min_max_dist.y);
                 near_plane = std::max(far_plane / 10000.0f, min_max_dist.x);
             } else {
