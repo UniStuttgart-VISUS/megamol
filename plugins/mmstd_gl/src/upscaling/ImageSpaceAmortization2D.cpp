@@ -27,7 +27,7 @@ ImageSpaceAmortization2D::ImageSpaceAmortization2D()
         , skipInterpolationParam("debug::SkipInterpolation", "Do not interpolate missing pixels.")
         , showQuadMarkerParam("debug::ShowQuadMarker", "Mark bottom left pixel of amortization quad.")
         , resetParam("debug::Reset", "Reset all textures and buffers.")
-        , history_cnt(10)
+        , history_cnt(5)
         , history_idx(0)
         , lastFrameTimes_(history_cnt, 0.0f)
         , lastDeltaToTargetTimes_(history_cnt, 0.0f)
@@ -165,14 +165,16 @@ bool ImageSpaceAmortization2D::renderImpl(CallRender2DGL& call, CallRender2DGL& 
             auto delta_to_target_n = lastDeltaToTargetTimes_[history_idx];
             auto delta_to_target_n_minus_one = lastDeltaToTargetTimes_[history_idx_minus_one];
 
-            float margin = 0.4f;
+            float low_margin = 0.2f;
+            float high_margin = 0.4f;
+            float steady_state_margin = 0.2f;
 
             if (amort_level_n.x == amort_level_n_minus_one.x) {
                 //case one: amort level was not changed, check if delta to target has increased or decreased significantly
-                if (avg_deriv_delta_to_target > (margin * avg_abs_delta_to_target)) {
+                if (avg_deriv_delta_to_target > (steady_state_margin * avg_abs_delta_to_target)) {
                     // delta to target got worse, increase amort level
                     aParam += 1;
-                } else if (avg_deriv_delta_to_target < -(margin * avg_abs_delta_to_target)) {
+                } else if (avg_deriv_delta_to_target < -(steady_state_margin * avg_abs_delta_to_target)) {
                     // delta to target improved, reduce amort level
                     aParam -= 1;
                 }
@@ -180,11 +182,12 @@ bool ImageSpaceAmortization2D::renderImpl(CallRender2DGL& call, CallRender2DGL& 
             } else if (amort_level_n.x > amort_level_n_minus_one.x) {
                 //case two: amort level increase, check if delta to target improved
                 if (delta_to_target_n > 0.0 && delta_to_target_n < delta_to_target_n_minus_one && 
-                    abs(abs(delta_to_target_n) - abs(delta_to_target_n_minus_one)) > (margin * avg_abs_delta_to_target)) {
+                    abs(delta_to_target_n - delta_to_target_n_minus_one) >
+                        (high_margin * delta_to_target_n_minus_one)) {
                     // delta to target improved but target not reached, keep increasing amort level
                     aParam += 1;
-                } else if ((abs(delta_to_target_n) - abs(delta_to_target_n_minus_one)) >
-                           (margin * avg_abs_delta_to_target)) {
+                } else if (abs(abs(delta_to_target_n) - abs(delta_to_target_n_minus_one)) <
+                           (low_margin * abs(delta_to_target_n_minus_one))) {
                     // absolute delta to target did not improve, reduce amort level again
                     aParam -= 1;
                 }
@@ -192,14 +195,14 @@ bool ImageSpaceAmortization2D::renderImpl(CallRender2DGL& call, CallRender2DGL& 
             } else if (amort_level_n.x < amort_level_n_minus_one.x) {
                 //case two: amort level decreased, check if delta to target got worse
                 if (delta_to_target_n > 0.0 && delta_to_target_n > delta_to_target_n_minus_one &&
-                    (abs(delta_to_target_n) - abs(delta_to_target_n_minus_one)) >
-                        (margin * avg_abs_delta_to_target)) {
+                    abs(abs(delta_to_target_n) - abs(delta_to_target_n_minus_one)) >
+                        (high_margin * abs(delta_to_target_n_minus_one))) {
                     // delta to target got worse and target not reached, increase amort level again
                     aParam += 1;
                 //} else if (delta_to_target_n < delta_to_target_avg) {
                 //    // delta to target improved, keep reducing amort level
                 //    aParam -= 1;
-                } else if (delta_to_target_n < 0.0 && delta_to_target_n > delta_to_target_n_minus_one) {
+                } else if (delta_to_target_n < 0.0) {
                     // delta to target improved or didn't get worse and target is reached, keep reducing amort level
                     aParam -= 1;
                 }
