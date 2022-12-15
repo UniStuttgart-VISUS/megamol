@@ -57,6 +57,11 @@ GUIManager::GUIManager()
     assert(this->win_configurator_ptr != nullptr);
     assert(this->win_animation_editor_ptr != nullptr);
 
+    requested_resources = win_collection.requested_lifetime_resources();
+#ifdef MEGAMOL_USE_PROFILING
+    requested_resources.push_back(frontend_resources::Performance_Logging_Status_Req_Name);
+#endif
+
     this->init_state();
 }
 
@@ -1010,6 +1015,11 @@ void GUIManager::draw_menu() {
         if (ImGui::MenuItem("Font")) {
             this->gui_state.open_popup_font = true;
         }
+#ifdef MEGAMOL_USE_PROFILING
+        if (ImGui::MenuItem(this->perf_logging->active ? "Pause performance logging" : "Resume performance logging")) {
+            this->perf_logging->active = !this->perf_logging->active;
+        }
+#endif
 
         ImGui::EndMenu();
     }
@@ -1548,4 +1558,10 @@ void GUIManager::RegisterHotkeys(
     if (auto win_hkeditor_ptr = this->win_collection.GetWindow<HotkeyEditor>()) {
         win_hkeditor_ptr->RegisterHotkeys(&cmdregistry, &megamolgraph, &this->win_collection, &this->gui_hotkeys);
     }
+}
+
+
+void megamol::gui::GUIManager::setRequestedResources(
+    std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources) {
+    win_collection.setRequestedResources(resources);
 }
