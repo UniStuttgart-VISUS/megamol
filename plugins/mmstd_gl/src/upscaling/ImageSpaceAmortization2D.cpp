@@ -27,7 +27,7 @@ ImageSpaceAmortization2D::ImageSpaceAmortization2D()
         , skipInterpolationParam("debug::SkipInterpolation", "Do not interpolate missing pixels.")
         , showQuadMarkerParam("debug::ShowQuadMarker", "Mark bottom left pixel of amortization quad.")
         , resetParam("debug::Reset", "Reset all textures and buffers.")
-        , history_cnt(5)
+        , history_cnt(10)
         , history_idx(0)
         , lastFrameTimes_(history_cnt, 0.0f)
         , lastDeltaToTargetTimes_(history_cnt, 0.0f)
@@ -147,48 +147,59 @@ bool ImageSpaceAmortization2D::renderImpl(CallRender2DGL& call, CallRender2DGL& 
             auto amort_level_n = lastAmortLevels_[history_idx];
             auto amort_level_n_minus_one = lastAmortLevels_[history_idx_minus_one];
 
-            float delta_to_target_avg = 0.0;
-            float abs_delta_to_target_avg = 0.0;
-            for (auto& delta : lastDeltaToTargetTimes_) {
-                delta_to_target_avg += delta / static_cast<float>(history_cnt);
-                abs_delta_to_target_avg += abs(delta / static_cast<float>(history_cnt));
-            }
-            auto delta_to_target_n = lastDeltaToTargetTimes_[history_idx];
-            auto abs_dist_delta = abs(abs(delta_to_target_n) - abs_delta_to_target_avg);
+            std::vector<float> deriv_delta_to_target(history_cnt-1,0.0f);
+            float avg_deriv_delta_to_target = 0.0;
+            for (int i = 0; i < history_cnt-1; ++i) {
+                auto idx_0 = ((history_idx - i) + history_cnt) % history_cnt;
+                auto idx_1 = ((history_idx - i - 1) + history_cnt) % history_cnt;
+                deriv_delta_to_target[i] = lastDeltaToTargetTimes_[idx_0] - lastDeltaToTargetTimes_[idx_1];
 
-            float margin = 0.25f; // 10 percent margin
+                avg_deriv_delta_to_target += deriv_delta_to_target[i] / static_cast<float>(history_cnt - 1);
+            }
+
+            float avg_abs_delta_to_target = 0.0;
+            for (int i = 0; i < history_cnt; ++i) {
+                avg_abs_delta_to_target += abs(lastDeltaToTargetTimes_[i]) / static_cast<float>(history_cnt);
+            }
+
+            auto delta_to_target_n = lastDeltaToTargetTimes_[history_idx];
+            auto delta_to_target_n_minus_one = lastDeltaToTargetTimes_[history_idx_minus_one];
+
+            float margin = 0.4f;
 
             if (amort_level_n.x == amort_level_n_minus_one.x) {
                 //case one: amort level was not changed, check if delta to target has increased or decreased significantly
-                if (delta_to_target_n > delta_to_target_avg && abs_dist_delta > (margin * delta_to_target_avg)) {
+                if (avg_deriv_delta_to_target > (margin * avg_abs_delta_to_target)) {
                     // delta to target got worse, increase amort level
                     aParam += 1;
-                } else if (abs_dist_delta > (margin * delta_to_target_avg)) {
+                } else if (avg_deriv_delta_to_target < -(margin * avg_abs_delta_to_target)) {
                     // delta to target improved, reduce amort level
                     aParam -= 1;
                 }
 
             } else if (amort_level_n.x > amort_level_n_minus_one.x) {
                 //case two: amort level increase, check if delta to target improved
-                if (delta_to_target_n < delta_to_target_avg && delta_to_target_n > 0.0 &&
-                    abs_dist_delta > (margin * delta_to_target_avg)) {
+                if (delta_to_target_n > 0.0 && delta_to_target_n < delta_to_target_n_minus_one && 
+                    abs(abs(delta_to_target_n) - abs(delta_to_target_n_minus_one)) > (margin * avg_abs_delta_to_target)) {
                     // delta to target improved but target not reached, keep increasing amort level
                     aParam += 1;
-                } else if (delta_to_target_n > delta_to_target_avg) {
-                    // delta to target did not improve, reduce amort level again
+                } else if ((abs(delta_to_target_n) - abs(delta_to_target_n_minus_one)) >
+                           (margin * avg_abs_delta_to_target)) {
+                    // absolute delta to target did not improve, reduce amort level again
                     aParam -= 1;
                 }
 
             } else if (amort_level_n.x < amort_level_n_minus_one.x) {
                 //case two: amort level decreased, check if delta to target got worse
-                if (delta_to_target_n > delta_to_target_avg && delta_to_target_n > 0.0 &&
-                    abs_dist_delta > (margin * delta_to_target_avg)) {
+                if (delta_to_target_n > 0.0 && delta_to_target_n > delta_to_target_n_minus_one &&
+                    (abs(delta_to_target_n) - abs(delta_to_target_n_minus_one)) >
+                        (margin * avg_abs_delta_to_target)) {
                     // delta to target got worse and target not reached, increase amort level again
                     aParam += 1;
                 //} else if (delta_to_target_n < delta_to_target_avg) {
                 //    // delta to target improved, keep reducing amort level
                 //    aParam -= 1;
-                } else if (delta_to_target_n < 0.0 && abs_dist_delta > (margin * delta_to_target_avg)) {
+                } else if (delta_to_target_n < 0.0 && delta_to_target_n > delta_to_target_n_minus_one) {
                     // delta to target improved or didn't get worse and target is reached, keep reducing amort level
                     aParam -= 1;
                 }
