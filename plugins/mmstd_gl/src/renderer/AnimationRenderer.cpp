@@ -42,32 +42,25 @@ bool megamol::mmstd_gl::AnimationRenderer::create() {
     // layout: xyz(RGBA)xyz(RGBA) etc. for each view.
     GLsizeiptr size = xres * yres * 4 * sizeof(float) * 6;
 
-    //struct point {
-    //    float x;
-    //    float y;
-    //    float z;
-    //    // packed unorm 4x8
-    //    glm::uint col;
-    //};
-    //std::vector<point> hurz;
-    //hurz.resize(size);
-    //for (auto x = 0; x < size; ++x) {
-    //    hurz[x].x = -1.0f;
-    //    hurz[x].y = 2.0f;
-    //    hurz[x].z = 12.0f;
-    //    hurz[x].col = 0xFF00FF00;
-    //}
-
     the_points = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, size, GL_DYNAMIC_COPY);
 
+    auto const shaderOptions =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     try {
-        auto const shaderOptions = core::utility::make_path_shader_options(
-            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
         fbo_to_points_program = core::utility::make_glowl_shader(
-            "fbo_to_points", shaderOptions, "mmstd_gl/fbo_to_points.comp.glsl");
+            "fbo_to_points", shaderOptions, "mmstd_gl/animation/fbo_to_points.comp.glsl");
     } catch (std::exception& e) {
         core::utility::log::Log::DefaultLog.WriteError(
-            ("AnimationRenderer: could not compile compute shader: " + std::string(e.what())).c_str());
+            ("AnimationRenderer: could not compile point generator shader: " + std::string(e.what())).c_str());
+        return false;
+    }
+
+    try {
+        render_points_program = core::utility::make_glowl_shader("fbo_to_points", shaderOptions,
+            "mmstd_gl/animation/points.vert.glsl", "mmstd_gl/animation/points.frag.glsl");
+    } catch (std::exception& e) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            ("AnimationRenderer: could not compile point rendering shader: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -79,6 +72,11 @@ void megamol::mmstd_gl::AnimationRenderer::release() {}
 
 
 bool megamol::mmstd_gl::AnimationRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
+    // TODO: joint bbox of points and path!
+    call.AccessBoundingBoxes() = lastBBox;
+    //call.AccessBoundingBoxes().SetBoundingBox(0.0f, 0.0f, 0.0f, xres, yres, xres);
+    //call.AccessBoundingBoxes().SetBoundingBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+    //call.AccessBoundingBoxes().SetClipBox(call.AccessBoundingBoxes().BoundingBox());
     return true;
 }
 
@@ -91,8 +89,7 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
         glClear(GL_COLOR_BUFFER_BIT);
         debugHijackSlot.ResetDirty();
     }
-
-
+    auto const incoming_fbo = call.GetFramebuffer();
     if (AnyParameterDirty()) {
         const auto mod_name = approximationSourceSlot.Param<core::param::StringParam>()->Value();
         auto mod = theGraph->FindModule(mod_name);
@@ -113,6 +110,7 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
         }
         if (hijack && call_to_hijack) {
             approx_fbo->bind();
+            glViewport(0, 0, approx_fbo->getWidth(), approx_fbo->getHeight());
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             call_to_hijack->SetFramebuffer(approx_fbo);
@@ -134,7 +132,8 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
                 call_to_hijack->GetBoundingBoxes(), cam_intrinsics, cam_orientation, dv);
             core::view::Camera::Pose cam_pose(glm::vec3(cam_position), cam_orientation);
 
-            auto min_max_dist = core::utility::get_min_max_dist_to_bbox(call_to_hijack->GetBoundingBoxes(), cam_pose);
+            lastBBox = call_to_hijack->GetBoundingBoxes();
+            auto min_max_dist = core::utility::get_min_max_dist_to_bbox(lastBBox, cam_pose);
             cam_intrinsics.far_plane = std::max(0.0f, min_max_dist.y);
             cam_intrinsics.near_plane = std::max(cam_intrinsics.far_plane / 10000.0f, min_max_dist.x);
             cam = core::view::Camera(cam_pose, cam_intrinsics);
@@ -144,22 +143,38 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
             call_to_hijack->operator()(callback_idx);
             // some sync thingy?
             glFlush();
-            call.GetFramebuffer()->bind();
-
+            incoming_fbo->bind();
             fbo_to_points_program->use();
-            //the_points->bind();
             the_points->bindAs(GL_SHADER_STORAGE_BUFFER, 1);
             glActiveTexture(GL_TEXTURE1);
             approx_fbo->bindColorbuffer(0);
             glActiveTexture(GL_TEXTURE2);
             approx_fbo->bindDepthbuffer();
-
+            fbo_to_points_program->setUniform("mvp", cam.getProjectionMatrix() * cam.getViewMatrix());
             glDispatchCompute(xres / 16, yres / 16, 1);
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
             glUseProgram(0);
 
+            // TODO: grab bbox of points from gpu
         }
     }
+
+    core::view::Camera cam = call.GetCamera();
+    glm::mat4 view = cam.getViewMatrix();
+    glm::mat4 proj = cam.getProjectionMatrix();
+    glm::mat4 mvp = proj * view;
+
+    // draw points all the time
+    incoming_fbo->bind();
+    glViewport(0, 0, incoming_fbo->getWidth(), incoming_fbo->getHeight());
+    glEnable(GL_CLIP_DISTANCE0);
+    render_points_program->use();
+    the_points->bindAs(GL_SHADER_STORAGE_BUFFER, 1);
+    render_points_program->setUniform("mvp", mvp);
+    // TODO: all 6
+    glDrawArrays(GL_POINTS, 0, xres * yres * 1);
+    glUseProgram(0);
+    glDisable(GL_CLIP_DISTANCE0);
 
     if (tex_inspector_.GetShowInspectorSlotValue()) {
         GLuint tex_to_show = 0;

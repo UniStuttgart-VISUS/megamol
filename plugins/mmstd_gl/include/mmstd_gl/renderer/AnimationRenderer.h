@@ -94,6 +94,7 @@ private:
 
     core::param::ParamSlot approximationSourceSlot;
     core::param::ParamSlot debugHijackSlot;
+    core::BoundingBoxes_2 lastBBox;
 
     std::shared_ptr<glowl::FramebufferObject> approx_fbo;
 
