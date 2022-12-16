@@ -284,11 +284,11 @@ static void project_handler(
 
 static void execute_lua_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
-    auto commands = parsed_options[option_name].as<std::vector<std::string>>();
-
-    for (auto& cmd : commands) {
-        config.cli_execute_lua_commands += cmd + ";";
-    }
+    auto commands = parsed_options[option_name].as<std::string>();
+    config.cli_execute_lua_commands += commands + ";";
+    //for (auto& cmd : commands) {
+    //    config.cli_execute_lua_commands += cmd + ";";
+    //}
 };
 
 static void param_handler(
@@ -516,7 +516,7 @@ std::vector<OptionsListEntry> cli_options_list =
         {project_option, "Project file(s) to load at startup", cxxopts::value<std::vector<std::string>>(),
             project_handler},
         {execute_lua_option, "Execute Lua command(s). Commands separated by ;",
-            cxxopts::value<std::vector<std::string>>(), execute_lua_handler},
+            cxxopts::value<std::string>(), execute_lua_handler},
         {global_option, "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value",
             cxxopts::value<std::vector<std::string>>(), global_value_handler}
 
