@@ -7,13 +7,15 @@ layout(binding = 1) uniform sampler2D colTex;
 layout(binding = 2) uniform sampler2D depthTex;
 
 uniform mat4 mvp;
+uniform uint output_offset;
 
 layout(local_size_x = 16, local_size_y = 16) in;
 
 void main(void) {
     // which one are we
     ivec2 texelPos = ivec2(gl_GlobalInvocationID.xy);
-    uint outputPos = texelPos.x + textureSize(colTex, 0).x * texelPos.y;
+    uint output_pos = texelPos.x + textureSize(colTex, 0).x * texelPos.y;
+    output_pos += output_offset;
 
     // grab a sample
     vec4 col = texelFetch(colTex, texelPos, 0);
@@ -28,11 +30,9 @@ void main(void) {
     mat4 invMVP = inverse(mvp);
     vec4 pos = invMVP * vec4(clip_coord, 1.0f);
 
-    //pos.xyz = clip_coord.xyz;
-
     // store
-    points[outputPos].x = pos.x;
-    points[outputPos].y = pos.y;
-    points[outputPos].z = pos.z;
-    points[outputPos].col = packUnorm4x8(col);
+    points[output_pos].x = pos.x;
+    points[output_pos].y = pos.y;
+    points[output_pos].z = pos.z;
+    points[output_pos].col = packUnorm4x8(col);
 }

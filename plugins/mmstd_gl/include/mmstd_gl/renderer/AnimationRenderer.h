@@ -14,6 +14,7 @@
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmcore/utility/graphics/CameraUtils.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 #include "mmstd_gl/special/TextureInspector.h"
@@ -95,6 +96,11 @@ private:
     core::param::ParamSlot approximationSourceSlot;
     core::param::ParamSlot debugHijackSlot;
     core::BoundingBoxes_2 lastBBox;
+
+    std::vector<std::pair<core::utility::DefaultView, core::utility::DefaultOrientation>> snaps_to_take = {
+        {core::utility::DEFAULTVIEW_FACE_FRONT, core::utility::DEFAULTORIENTATION_TOP},
+        {core::utility::DEFAULTVIEW_FACE_BACK, core::utility::DEFAULTORIENTATION_TOP}
+    };
 
     std::shared_ptr<glowl::FramebufferObject> approx_fbo;
 
