@@ -2,6 +2,7 @@
 
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/graphics/CameraUtils.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
@@ -9,15 +10,19 @@
 
 megamol::mmstd_gl::AnimationRenderer::AnimationRenderer()
         : Renderer3DModuleGL()
-        , approximationSourceSlot("approxSource", "renderer output to approximate as scene proxy")
-        , debugHijackSlot("debugHijack", "you do not want to know")
+        , approximationSourceSlot("approximation source", "renderer output to approximate as scene proxy")
+        , snapshotSlot("make snapshot", "grab current representation of the source")
+        , numberOfViewsSlot("number of Views", "how many snapshots are taken, using camera reset variants")
         , tex_inspector_({"Color", "Depth"}) {
 
     approximationSourceSlot.SetParameter(new core::param::StringParam(""));
     this->MakeSlotAvailable(&approximationSourceSlot);
 
-    debugHijackSlot.SetParameter(new core::param::ButtonParam());
-    this->MakeSlotAvailable(&debugHijackSlot);
+    snapshotSlot.SetParameter(new core::param::ButtonParam());
+    this->MakeSlotAvailable(&snapshotSlot);
+
+    numberOfViewsSlot.SetParameter(new core::param::IntParam(snaps_to_take.size()));
+    this->MakeSlotAvailable(&numberOfViewsSlot);
 
     auto tex_inspector_slots = this->tex_inspector_.GetParameterSlots();
     for (auto& tex_slot : tex_inspector_slots) {
@@ -79,12 +84,14 @@ bool megamol::mmstd_gl::AnimationRenderer::GetExtents(mmstd_gl::CallRender3DGL& 
 
 
 bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call) {
-    bool hijack = debugHijackSlot.IsDirty();
+    bool hijack = snapshotSlot.IsDirty();
     if (hijack) {
         glClear(GL_COLOR_BUFFER_BIT);
-        debugHijackSlot.ResetDirty();
+        snapshotSlot.ResetDirty();
     }
     auto const incoming_fbo = call.GetFramebuffer();
+    auto const actual_snaps_to_take =
+        std::min<int>(snaps_to_take.size(), numberOfViewsSlot.Param<core::param::IntParam>()->Value());
     if (AnyParameterDirty()) {
         const auto mod_name = approximationSourceSlot.Param<core::param::StringParam>()->Value();
         auto mod = theGraph->FindModule(mod_name);
@@ -104,8 +111,9 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
             }
         }
         if (hijack && call_to_hijack) {
-            approx_fbo->bind();
-            for (int i = 0; i < snaps_to_take.size(); ++i) {
+            lastBBox = call_to_hijack->GetBoundingBoxes();
+            for (int i = 0; i < actual_snaps_to_take; ++i) {
+                approx_fbo->bind();
                 glViewport(0, 0, approx_fbo->getWidth(), approx_fbo->getHeight());
                 glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -124,11 +132,9 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
                 auto dor = snaps_to_take[i].second;
 
                 auto cam_orientation = core::utility::get_default_camera_orientation(dv, dor);
-                auto cam_position = core::utility::get_default_camera_position(
-                    call_to_hijack->GetBoundingBoxes(), cam_intrinsics, cam_orientation, dv);
+                auto cam_position = core::utility::get_default_camera_position(lastBBox, cam_intrinsics, cam_orientation, dv);
                 core::view::Camera::Pose cam_pose(glm::vec3(cam_position), cam_orientation);
 
-                lastBBox = call_to_hijack->GetBoundingBoxes();
                 auto min_max_dist = core::utility::get_min_max_dist_to_bbox(lastBBox, cam_pose);
                 cam_intrinsics.far_plane = std::max(0.0f, min_max_dist.y);
                 cam_intrinsics.near_plane = std::max(cam_intrinsics.far_plane / 10000.0f, min_max_dist.x);
@@ -146,11 +152,13 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
                 approx_fbo->bindColorbuffer(0);
                 glActiveTexture(GL_TEXTURE2);
                 approx_fbo->bindDepthbuffer();
+                fbo_to_points_program->setUniform("view", cam.getViewMatrix());
+                fbo_to_points_program->setUniform("projection", cam.getProjectionMatrix());
                 fbo_to_points_program->setUniform("mvp", cam.getProjectionMatrix() * cam.getViewMatrix());
                 fbo_to_points_program->setUniform("output_offset", i * xres * yres);
                 glDispatchCompute(xres / 16, yres / 16, 1);
+                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
             }
-            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
             glUseProgram(0);
 
             // TODO: grab bbox of points from gpu
@@ -171,7 +179,7 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
     render_points_program->use();
     the_points->bindAs(GL_SHADER_STORAGE_BUFFER, 1);
     render_points_program->setUniform("mvp", mvp);
-    glDrawArrays(GL_POINTS, 0, xres * yres * snaps_to_take.size());
+    glDrawArrays(GL_POINTS, 0, xres * yres * actual_snaps_to_take);
     glUseProgram(0);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CLIP_DISTANCE0);

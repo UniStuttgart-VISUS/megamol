@@ -94,12 +94,17 @@ private:
     std::unique_ptr<glowl::BufferObject> the_points;
 
     core::param::ParamSlot approximationSourceSlot;
-    core::param::ParamSlot debugHijackSlot;
+    core::param::ParamSlot snapshotSlot;
+    core::param::ParamSlot numberOfViewsSlot;
     core::BoundingBoxes_2 lastBBox;
 
     std::vector<std::pair<core::utility::DefaultView, core::utility::DefaultOrientation>> snaps_to_take = {
         {core::utility::DEFAULTVIEW_FACE_FRONT, core::utility::DEFAULTORIENTATION_TOP},
-        {core::utility::DEFAULTVIEW_FACE_BACK, core::utility::DEFAULTORIENTATION_TOP}
+        {core::utility::DEFAULTVIEW_FACE_BACK, core::utility::DEFAULTORIENTATION_TOP},
+        {core::utility::DEFAULTVIEW_FACE_LEFT, core::utility::DEFAULTORIENTATION_TOP},
+        {core::utility::DEFAULTVIEW_FACE_RIGHT, core::utility::DEFAULTORIENTATION_TOP},
+        {core::utility::DEFAULTVIEW_FACE_TOP, core::utility::DEFAULTORIENTATION_TOP},
+        {core::utility::DEFAULTVIEW_FACE_BOTTOM, core::utility::DEFAULTORIENTATION_TOP}
     };
 
     std::shared_ptr<glowl::FramebufferObject> approx_fbo;

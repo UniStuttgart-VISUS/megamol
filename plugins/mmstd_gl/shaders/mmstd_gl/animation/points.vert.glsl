@@ -14,6 +14,4 @@ void main(void) {
 
     // throw away background / empty pixels
     gl_ClipDistance[0] = vertColor.a > 0.0 ? 1.0 : -1.0;
-    //gl_ClipDistance[0] = 1.0;
-    //vertColor = vec4(1.0, 0.0, 0.0, 1.0);
 }
