@@ -84,8 +84,8 @@ bool megamol::mmstd_gl::AnimationRenderer::GetExtents(mmstd_gl::CallRender3DGL& 
 
 
 bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call) {
-    bool hijack = snapshotSlot.IsDirty();
-    if (hijack) {
+    bool make_snapshot = snapshotSlot.IsDirty();
+    if (make_snapshot) {
         glClear(GL_COLOR_BUFFER_BIT);
         snapshotSlot.ResetDirty();
     }
@@ -110,7 +110,7 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
                 }
             }
         }
-        if (hijack && call_to_hijack) {
+        if (make_snapshot && call_to_hijack) {
             lastBBox = call_to_hijack->GetBoundingBoxes();
             for (int i = 0; i < actual_snaps_to_take; ++i) {
                 approx_fbo->bind();
