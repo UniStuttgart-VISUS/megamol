@@ -135,7 +135,7 @@ public:
      *
      * @return The presentation name map.
      */
-    const std::map<AbstractParamPresentation::Presentation, std::string>& GetPresentationNameMap() {
+    const std::map<AbstractParamPresentation::Presentation, std::string>& GetPresentationNameMap() const {
         return this->presentation_name_map;
     }
 
@@ -146,8 +146,8 @@ public:
      *
      * @return The human readable name of the given presentation.
      */
-    std::string GetPresentationName(AbstractParamPresentation::Presentation present) {
-        return this->presentation_name_map[present];
+    std::string GetPresentationName(AbstractParamPresentation::Presentation const present) const {
+        return this->presentation_name_map.at(present);
     }
 
     /**
@@ -165,7 +165,6 @@ public:
     bool StateFromJSON(const nlohmann::json& in_json, const std::string& param_fullname);
     bool StateToJSON(nlohmann::json& inout_json, const std::string& param_fullname);
 
-protected:
     AbstractParamPresentation();
 
     virtual ~AbstractParamPresentation() = default;

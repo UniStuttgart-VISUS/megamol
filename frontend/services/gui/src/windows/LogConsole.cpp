@@ -424,7 +424,7 @@ bool megamol::gui::LogConsole::Draw() {
                                            ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackAlways;
     if (ImGui::InputText("###console_input", &this->input_buffer, input_text_flags, Input_Text_Callback,
             (void*)this->input_shared_data.get())) {
-        std::string command = "return " + this->input_buffer;
+        std::string command = this->input_buffer;
         auto result = (*this->input_lua_func)(command);
         if (std::get<0>(result)) {
             // command was fine, no editing required

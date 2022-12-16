@@ -26,14 +26,12 @@ while read -r file; do
     fi
   fi
 
-  # ignore 3rd dirs in plugins
-  if [[ $file == "./plugins/"* ]]; then
-    if [[ $file == *"/3rd/"* ]]; then
-      continue
-    fi
-    if [[ $file == *"/protein/msms/"* ]]; then
-      continue
-    fi
+  # ignore 3rd party dirs
+  if [[ $file == *"/3rd/"* ]]; then
+    continue
+  fi
+  if [[ $file == "./plugins/protein_gl/msms/"* ]]; then
+    continue
   fi
 
   # ignore externals

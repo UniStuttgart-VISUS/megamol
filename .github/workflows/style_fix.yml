@@ -1,6 +1,8 @@
 name: Style-Fix
 
-on: issue_comment
+on:
+  issue_comment:
+    types: [created, edited]
 
 jobs:
   style_fix:

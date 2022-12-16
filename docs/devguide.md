@@ -32,6 +32,11 @@ This guide is intended to give MegaMol developers a useful insight into the inte
   - [GUI](#gui)
     - [Parameter Widgets](#parameter-widgets)
     - [Window/PopUp/Notification for Frontend Service](#windowpopupnotification-for-frontend-service)
+  - [Debugging / Introspection](#debugging--introspection)
+    - [OpenGL Error Callback](#opengl-error-callback)
+    - [Profiling](#profiling)
+    - [OpenGL DebugGroups](#opengl-debuggroups)
+    - [RenderDoc Integration](#renderdoc-integration)
 
 <!-- TODO
 - Add section describing all available LUA commands
@@ -180,7 +185,7 @@ Usage: ```DATACallRead```
 - In the ```GetData``` callback, make sure you can **supply unchanged data very cheaply**.
   - If parameters or incoming data (downstream) have changed, modify your ```DATA``` accordingly, **increasing** ```version_DATA```.
   - **ALWAYS** set the data in the call, supplying the version.
-  
+
 Usage: ```DataCallWrite```
 - In the ```GetData``` callback
   - If the incoming set data is newer than what you last got: ```call::hasUpdate()```
@@ -327,6 +332,26 @@ To make sure the megamol build finds the custom dependency build, you can set th
 Keeping with the previous example, this could read `"environment": {"OSPRAY_ROOT": "drive:/some/directory/ospray/install"}`.
 You can then either copy the resulting dlls manually to the MegaMol binary directory or alternatively configure the local `PATH` environment variable to contain the path of the custom dependency dlls.
 
+### Using third-party code
+
+Including third-party code as library with vcpkg is the preferred way, but in rare cases, it may is required to directly include third-party code into MegaMol.
+In this case, all external code must be placed within a `3rd` directory in the corresponding plugin root (`plugins/<plugin-name>/3rd/<code-name>`).
+In addition, a readme and license file must be included with the third-party code.
+The readme must contain the exact source of the third-party code (meaning including the exact version, repo hash, download URL, etc., not just a project website).
+This should allow to easily compare the files to their original source, i.e. in case of future upstream updates.
+Therefore, also the MegaMol style guide does not apply to third-party code and third-party code should be kept in its original state.
+
+(TODO: how should third-party shaders be organized?)
+
+#### Third-party code requires changes or patches?
+
+The code must still remain in the `3rd` directory.
+Having any third-party code within regular MegaMol source files (so everything not in a `3rd` directory) must be avoided at any possible cost!
+In addition to the above points, the changes must be documented in a reasonable way, i.e. using comments within the code, including a patch file, or writing a descriptive changelog.
+Again the motivation is maintainability, that another developer is able to understand the changes made and can merge possible upstream updates.
+Therefore, it is strongly recommended to keep changes/patches as small as possible and implement extensions within regular MegaMol source files, while the third-party code is included using the standard C++ includes.
+
+
 <!-- ###################################################################### -->
 -----
 ## GUI
@@ -338,3 +363,71 @@ See [developer information for GUI Service](../../frontend/services/gui#new-para
 ### Window/PopUp/Notification for other Frontend Services
 
 See [developer information for GUI Service](../../frontend/services/gui#gui-windowpopupnotification-for-frontend-service).
+
+<!-- ###################################################################### -->
+-----
+## Debugging / Introspection
+
+### OpenGL Error Callback
+
+You can enable OpenGL error reporting by using the command line switch `--khrdebug`.
+Note that this enables `GL_DEBUG_OUTPUT_SYNCHRONOUS`, which will affect performance, but is required to enable the output of valid stack traces.
+
+### Profiling
+
+You can enable internal profiling at compile time using `MEGAMOL_USE_PROFILING` via CMake.
+This comes at a performance cost, but gives CPU and OpenGL timings for all calls in the graph out of the box (small speedometer icons in the graph editor).
+
+#### Custom Regions
+
+Inside guarded `#ifdef MEGAMOL_USE_PROFILING` regions, you can declare a local `frontend_resources::PerformanceManager::handle_vector` of timers in any Module.
+1. In `requested_lifetime_resources()`, make sure you ask for the `PerformanceManager` as a resource:
+```cpp
+resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
+```
+2. In `create()`, fetch the `frontend_resources::PerformanceManager` as a resource, e.g.,:
+```cpp
+perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
+        &frontend_resources.get<frontend_resources::PerformanceManager>());
+```
+3. In `create()`, declare one or several timers, configure them
+```cpp
+frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer;
+upload_timer.name = "upload";
+upload_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
+```
+4. Pass them to the `PerformanceManager`:
+```cpp
+timers_ = perf_manager_->add_timers(this, {upload_timer});
+```
+These timers also automatically show up in the graph.
+
+#### Timer Dumps
+
+Once profiling is enabled, you can ask MegaMol to log all timings to a CSV file using the command line switch `--profiling-log <filename>`.
+
+### OpenGL DebugGroups
+
+Similar to the automatic profiling regions, all calls with OpenGL capability can automatically Push/Pop OpenGL DebugGroups if you switch on `MEGAMOL_USE_OPENGL_DEBUGGROUPS` in CMake.
+These are interpreted by RenderDoc or NSight, making the output easier to parse.
+**Note: there currently seems to be a race condition or some other issue with this.
+MegaMol has been observed to crash in NVOGL.dll occasionally, so only use this when necessary.**
+
+### RenderDoc Integration
+
+You can use the RenderDoc API to programmatically ask for frame captures.
+This is not generally implemented yet as the logic asking for the capture could be required anywhere.
+Integration basically works as described here https://renderdoc.org/docs/in_application_api.html.
+
+You could, for example, place the ProcAddress fetching in `megamol::gui::GUIManager::init_state()`,
+and put `if (rdoc_api) rdoc_api->StartFrameCapture(nullptr, nullptr);` in `GUIManager::PreDraw`.
+If the `GUIManager` has enough information to decide whether to capture or not, you can just augment `GUIManager::PostDraw` like so:
+```cpp
+if (some_weird_condition) {
+    if(rdoc_api) rdoc_api->EndFrameCapture(nullptr, nullptr);
+} else {
+    if(rdoc_api) rdoc_api->DiscardFrameCapture(nullptr, nullptr);
+}
+```
+
+Do not forget to include the headers installed with RenderDoc, e.g. `#include "C:/Program Files/RenderDoc/renderdoc_app.h"`
