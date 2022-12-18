@@ -20,6 +20,8 @@ public:
         float fovy;
         float ratio;
         glm::vec3 lightDir;
+        glm::vec3 lower;
+        glm::vec3 upper;
     };
 
     using config_t = config;
