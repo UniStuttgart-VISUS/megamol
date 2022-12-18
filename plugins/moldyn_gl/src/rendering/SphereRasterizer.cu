@@ -16,7 +16,9 @@
 #include <thrust/unique.h>
 
 
-#define SR_SUBDIVISIONS 10
+#define SR_SUBDIVISIONS 640
+#define VECTOR_T device_vector
+#define POLICY thrust::device
 
 
 float touchplane_old(megamol::moldyn_gl::rendering::SphereRasterizer::config_t const& config, glm::vec3 objPos,
@@ -327,15 +329,15 @@ std::vector<worklet> create_worklets(megamol::moldyn_gl::rendering::SphereRaster
     mins = glm::clamp(mins, glm::vec2(0), glm ::vec2(config.res));
     maxs = glm::clamp(maxs, glm::vec2(0), glm ::vec2(config.res));
 
-    /*glm::vec2 res = maxs - mins;
+    glm::vec2 res = maxs - mins;
 
     auto const sub_x = res.x / subdivision;
-    auto const sub_y = res.y / subdivision;*/
+    auto const sub_y = res.y / subdivision;
 
-    mins = glm::vec2(0);
+    /*mins = glm::vec2(0);
     maxs = glm::vec2(config.res);
     auto const sub_x = config.res.x / subdivision;
-    auto const sub_y = config.res.y / subdivision;
+    auto const sub_y = config.res.y / subdivision;*/
 
 
     //std::vector<worklet> worklets;
@@ -362,13 +364,13 @@ std::vector<worklet> create_worklets(megamol::moldyn_gl::rendering::SphereRaster
         }
     }
 
-    /*final_mins = mins;
+    final_mins = mins;
     final_res = res;
-    subs = glm::vec2(sub_x, sub_y);*/
-
-    final_mins = glm::vec2(0);
-    final_res = glm::vec2(config.res);
     subs = glm::vec2(sub_x, sub_y);
+
+    /*final_mins = glm::vec2(0);
+    final_res = glm::vec2(config.res);
+    subs = glm::vec2(sub_x, sub_y);*/
 
     return worklets;
 }
@@ -532,15 +534,15 @@ struct hash_functor {
 
 
 struct hash_transform_functor {
-    __host__ __device__ std::array<int, 3> operator()(int begin, int end) {
-        return {-1, begin, end};
+    __host__ __device__ glm::ivec3 operator()(int begin, int end) {
+        return glm::ivec3(-1, begin, end);
     }
 };
 
 
 struct hash_id_transform_functor {
-    __host__ __device__ std::array<int, 3> operator()(std::array<int, 3>& arr, int id) {
-        arr[0] = id;
+    __host__ __device__ glm::ivec3 operator()(glm::ivec3& arr, int id) {
+        arr.x = id;
         return arr;
     }
 };
@@ -555,8 +557,8 @@ struct d_db_entry {
 
 
 struct render_functor {
-    thrust::host_vector<glm::vec3> const& data;
-    thrust::host_vector<d_db_entry>& depth_buffer;
+    glm::vec3 const* data;
+    d_db_entry* depth_buffer;
 
     glm::mat4 MVP;
     glm::mat4 MVPinv;
@@ -567,15 +569,15 @@ struct render_functor {
     glm::vec3 camUp;
     glm::uvec2 res;
 
-    thrust::host_vector<glm::uvec4> const& rects;
+    glm::uvec4 const* rects;
 
     float sqRad;
     float rad;
 
 
-    render_functor(thrust::host_vector<glm::vec3> const& data, thrust::host_vector<d_db_entry>& depth_buffer,
-        glm::mat4 MVP, glm::mat4 MVPinv, glm::mat4 win_trans, glm::mat4 win_trans_inv, glm::vec3 camPos,
-        glm::vec3 camDir, glm::vec3 camUp, glm::uvec2 res, thrust::host_vector<glm::uvec4> const& rects, float sqRad,
+    render_functor(glm::vec3 const* data, d_db_entry* depth_buffer,
+        glm::mat4 MVP, glm::mat4 MVPinv, glm::mat4 win_trans, glm::mat4 win_trans_inv, glm::vec3 camPos, glm::vec3 camDir,
+        glm::vec3 camUp, glm::uvec2 res, glm::uvec4 const* rects, float sqRad,
         float rad)
             : data(data)
             , depth_buffer(depth_buffer)
@@ -661,10 +663,10 @@ struct render_functor {
     }
 
 
-    __host__ __device__ void operator()(std::array<int, 3> const& job) {
-        auto w_id = job[0];
-        auto const p_begin = job[1];
-        auto const p_end = job[2];
+    __host__ __device__ void operator()(glm::ivec3 const& job) {
+        auto w_id = job.x;
+        auto const p_begin = job.y;
+        auto const p_end = job.z;
 
         if (w_id < 0)
             return;
@@ -688,9 +690,9 @@ struct render_functor {
 
             auto const screen_x = static_cast<int>(pos.x);
             auto const screen_y = static_cast<int>(pos.y);
-            if (screen_x < rectangle.x || screen_x >= rectangle.z || screen_y < rectangle.y ||
+            /*if (screen_x < rectangle.x || screen_x >= rectangle.z || screen_y < rectangle.y ||
                 screen_y >= rectangle.w)
-                continue;
+                continue;*/
             auto const i_l = static_cast<int>(std::ceilf(l * 0.5f));
             auto y_low = glm::clamp<int>(screen_y - i_l, 0, res.y - 1);
             auto y_high = glm::clamp<int>(screen_y + i_l, 0, res.y - 1);
@@ -698,10 +700,10 @@ struct render_functor {
             auto x_high = glm::clamp<int>(screen_x + i_l, 0, res.x - 1);
 
             //if (x_low >= rectangle.x && x_low < rectangle.z && y_low >= rectangle.y && y_high < rectangle.w) {
-                y_low = glm::clamp<int>(y_low, rectangle.y, rectangle.w - 1);
+                /*y_low = glm::clamp<int>(y_low, rectangle.y, rectangle.w - 1);
                 y_high = glm::clamp<int>(y_high, rectangle.y, rectangle.w - 1);
                 x_low = glm::clamp<int>(x_low, rectangle.x, rectangle.z - 1);
-                x_high = glm::clamp<int>(x_high, rectangle.x, rectangle.z - 1);
+                x_high = glm::clamp<int>(x_high, rectangle.x, rectangle.z - 1);*/
 
                 for (int y = y_low; y <= y_high; ++y) {
                     for (int x = x_low; x <= x_high; ++x) {
@@ -783,18 +785,20 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
             glm::vec3(data.positions[0][i * 4 + 0], data.positions[0][i * 4 + 1], data.positions[0][i * 4 + 2]);
     }
 
-    thrust::host_vector<glm::vec3> d_in_data(tmp_data);
-    thrust::host_vector<int> d_cell_id(num_particles, -1);
+    
+
+    thrust::VECTOR_T<glm::vec3> d_in_data(tmp_data);
+    thrust::VECTOR_T<int> d_cell_id(num_particles, -1);
 
     /*auto const sub_x = config.res.x / SR_SUBDIVISIONS;
     auto const sub_y = config.res.y / SR_SUBDIVISIONS;*/
 
     auto hash_func = hash_functor(config.MVP, win_trans, f_mins, f_res, f_subs);
 
-    thrust::host_vector<int> d_histo(SR_SUBDIVISIONS * SR_SUBDIVISIONS +1);
-    thrust::host_vector<int> d_h_begin(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1);
-    thrust::host_vector<int> d_h_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1);
-    thrust::host_vector<std::array<int, 3>> d_h_id_begin_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS);
+    thrust::VECTOR_T<int> d_histo(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1);
+    thrust::VECTOR_T<int> d_h_begin(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1);
+    thrust::VECTOR_T<int> d_h_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1);
+    thrust::VECTOR_T<glm::ivec3> d_h_id_begin_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS);
 
     d_db_entry fill_db_entry;
     fill_db_entry.z = config.near_far.y;
@@ -802,44 +806,45 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
     fill_db_entry.oc_pos = glm::vec3(0.0);
     fill_db_entry.ray = glm::vec3(0.0);
 
-    thrust::host_vector<d_db_entry> d_depth_buffer(num_pixels, fill_db_entry);
-    thrust::host_vector<glm::uvec4> d_worklets(v_worklets);
+    thrust::VECTOR_T<d_db_entry> d_depth_buffer(num_pixels, fill_db_entry);
+    thrust::VECTOR_T<glm::uvec4> d_worklets(v_worklets);
 
-    std::vector<int> test_list(num_particles);
+    thrust::VECTOR_T<int> test_list(num_particles);
 
-    auto render_func = render_functor(d_in_data, d_depth_buffer, config.MVP, config.MVPinv, win_trans, win_trans_inv,
-        config.camPos, config.camDir, config.camUp, config.res, d_worklets, sqRad, rad);
+    auto render_func = render_functor(thrust::raw_pointer_cast(&d_in_data[0]), thrust::raw_pointer_cast(&d_depth_buffer[0]), config.MVP,
+        config.MVPinv, win_trans,
+        win_trans_inv, config.camPos, config.camDir, config.camUp, config.res, thrust::raw_pointer_cast(&d_worklets[0]), sqRad, rad);
 
     auto start_x = std::chrono::high_resolution_clock::now();
 
-    thrust::transform(d_in_data.begin(), d_in_data.end(), d_cell_id.begin(), hash_func);
-    thrust::sort_by_key(d_cell_id.begin(), d_cell_id.end(), d_in_data.begin());
+    thrust::transform(POLICY, d_in_data.begin(), d_in_data.end(), d_cell_id.begin(), hash_func);
+    thrust::sort_by_key(POLICY, d_cell_id.begin(), d_cell_id.end(), d_in_data.begin());
     //auto first_it = thrust::find_if(d_cell_id.begin(), d_cell_id.end(), [](auto const& val) { return val != -1; });
     //auto offset = thrust::distance(d_cell_id.begin(), first_it);
-    auto offset = 0;
-    thrust::copy(d_cell_id.begin(), d_cell_id.end(), test_list.begin());
-    test_list.erase(std::unique(test_list.begin(), test_list.end()), test_list.end());
-    thrust::counting_iterator<int> search_begin(-1);
+    //auto offset = 0;
+    thrust::copy(POLICY, d_cell_id.begin(), d_cell_id.end(), test_list.begin());
+    test_list.erase(thrust::unique(POLICY, test_list.begin(), test_list.end()), test_list.end());
+    //thrust::counting_iterator<int> search_begin(-1);
     /*thrust::upper_bound(d_cell_id.begin() + offset, d_cell_id.end(), search_begin,
         search_begin + (SR_SUBDIVISIONS * SR_SUBDIVISIONS) + 1, d_histo.begin());*/
     thrust::upper_bound(
-        d_cell_id.begin() + offset, d_cell_id.end(), test_list.begin(), test_list.end(), d_histo.begin());
-    d_histo.erase(d_histo.begin() + test_list.size(), d_histo.end());
-    thrust::adjacent_difference(d_histo.begin(), d_histo.end(), d_histo.begin());
-    d_h_begin = thrust::host_vector<int>(test_list.size());
-    d_h_end = thrust::host_vector<int>(test_list.size());
-    thrust::exclusive_scan(d_histo.begin(), d_histo.end(), d_h_begin.begin());
-    thrust::inclusive_scan(d_histo.begin(), d_histo.end(), d_h_end.begin());
-    d_h_id_begin_end = thrust::host_vector<std::array<int, 3>>(test_list.size());
-    thrust::transform(d_h_begin.begin(), d_h_begin.end(), d_h_end.begin(), d_h_id_begin_end.begin(),
-        hash_transform_functor());
-    thrust::counting_iterator<int> hash_begin(0);
+        POLICY, d_cell_id.begin(), d_cell_id.end(), test_list.begin(), test_list.end(), d_histo.begin());
+    //d_histo.erase(d_histo.begin() + test_list.size(), d_histo.end());
+    thrust::adjacent_difference(POLICY, d_histo.begin(), d_histo.begin() + test_list.size(), d_histo.begin());
+    //d_h_begin = thrust::VECTOR_T<int>(test_list.size());
+    //d_h_end = thrust::VECTOR_T<int>(test_list.size());
+    thrust::exclusive_scan(POLICY, d_histo.begin(), d_histo.begin() + test_list.size(), d_h_begin.begin());
+    thrust::inclusive_scan(POLICY, d_histo.begin(), d_histo.begin() + test_list.size(), d_h_end.begin());
+    //d_h_id_begin_end = thrust::VECTOR_T<std::array<int, 3>>(test_list.size());
+    thrust::transform(POLICY, d_h_begin.begin(), d_h_begin.begin() + test_list.size(), d_h_end.begin(),
+        d_h_id_begin_end.begin(), hash_transform_functor());
+    //thrust::counting_iterator<int> hash_begin(0);
     /*thrust::transform(d_h_id_begin_end.begin(), d_h_id_begin_end.end(), hash_begin,
         d_h_id_begin_end.begin(), hash_id_transform_functor());*/
-    thrust::transform(d_h_id_begin_end.begin(), d_h_id_begin_end.end(), test_list.begin(), d_h_id_begin_end.begin(),
-        hash_id_transform_functor());
-    thrust::for_each(d_h_id_begin_end.begin(), d_h_id_begin_end.end(), render_func);
-    //cudaDeviceSynchronize();
+    thrust::transform(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(), test_list.begin(),
+        d_h_id_begin_end.begin(), hash_id_transform_functor());
+    thrust::for_each(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(), render_func);
+    cudaDeviceSynchronize();
 
     #if 0
     worker_hash w(data.positions[0], counter, config, win_trans, config.res.x / 20, config.res.y / 20);
@@ -884,12 +889,12 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
 
     std::cout << "[SphereRasterizer] hashing processing time "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end_x - start_x).count() << "ms" << std::endl;
-    thrust::copy(d_histo.begin(), d_histo.end(), std::ostream_iterator<int>(std::cout, " "));
-    std::cout << std::endl;
+    //thrust::copy(d_h_end.begin(), d_h_end.end(), std::ostream_iterator<int>(std::cout, " "));
+    /*std::cout << std::endl;
     for (auto const& el : d_h_id_begin_end) {
         std::cout << el[2] << " ";
     }
-    std::cout << std::endl;
+    std::cout << std::endl;*/
 
     auto start = std::chrono::high_resolution_clock::now();
 
