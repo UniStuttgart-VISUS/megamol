@@ -23,7 +23,7 @@ TextureInspector::TextureInspector(const std::vector<std::string>& textures)
     auto bp = new core::param::BoolParam(true);
     show_inspector_.SetParameter(bp);
 
-    auto ep = new core::param::EnumParam(2);
+    auto ep = new core::param::EnumParam(0);
     for (int i = 0; i < textures.size(); i++) {
         ep->SetTypePair(i, textures[i].c_str());
     }
