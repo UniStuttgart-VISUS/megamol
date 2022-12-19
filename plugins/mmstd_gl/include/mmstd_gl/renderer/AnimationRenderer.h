@@ -8,6 +8,7 @@
 
 #include "AnimationEditorData.h"
 #include "ModuleGraphSubscription.h"
+#include "AnimationEditorData.h"
 
 #include <glowl/GLSLProgram.hpp>
 #include <glowl/BufferObject.hpp>

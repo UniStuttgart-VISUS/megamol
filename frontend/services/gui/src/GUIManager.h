@@ -170,13 +170,20 @@ public:
         return ((!ImGui::GetIO().MouseDrawCursor) ? (ImGui::GetMouseCursor()) : (ImGuiMouseCursor_None));
     }
 
-
     /**
      * Get image data containing rendered image.
      */
     inline megamol::frontend_resources::ImageWrapper GetImage() {
         return this->render_backend.GetImage();
     }
+
+    /**
+     * Get the updated animation editor data.
+     */
+    frontend_resources::AnimationEditorData& GetAnimationEditorData() {
+        return this->win_animation_editor_ptr->GetAnimationEditorData();
+    }
+
 
     ///////// SET ///////////
 
@@ -260,10 +267,7 @@ public:
             cons->SetLuaFunc(lua_func);
         }
         this->win_configurator_ptr->GetGraphCollection().SetLuaFunc(lua_func);
-        auto anim = win_collection.GetWindow<AnimationEditor>();
-        if (anim) {
-            anim->SetLuaFunc(lua_func);
-        }
+        this->win_animation_editor_ptr->SetLuaFunc(lua_func);
     }
 
 #ifdef MEGAMOL_USE_PROFILING
