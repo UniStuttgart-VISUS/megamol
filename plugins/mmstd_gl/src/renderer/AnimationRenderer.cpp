@@ -76,6 +76,15 @@ bool megamol::mmstd_gl::AnimationRenderer::create() {
         return false;
     }
 
+    try {
+        campath_program = core::utility::make_glowl_shader("campath", shaderOptions,
+            "mmstd_gl/animation/campath.vert.glsl", "mmstd_gl/animation/campath.frag.glsl");
+    } catch (std::exception& e) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            ("AnimationRenderer: could not compile cam path rendering shader: " + std::string(e.what())).c_str());
+        return false;
+    }
+
     return true;
 }
 
@@ -87,92 +96,96 @@ void megamol::mmstd_gl::AnimationRenderer::release() {
 
 bool megamol::mmstd_gl::AnimationRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     // TODO: joint bbox of points and path!
-    call.AccessBoundingBoxes() = lastBBox;
+    //call.AccessBoundingBoxes() = lastBBox;
+    auto box = lastBBox.BoundingBox();
+    for (int i = 0; i < line_vertices.size() / 3; ++i) {
+        box.GrowToPoint(vislib::math::Point<float, 3>(
+            line_vertices[i * 3 + 0], line_vertices[i * 3 + 1], line_vertices[i * 3 + 2]));
+    }
+    call.AccessBoundingBoxes().SetClipBox(box);
+    call.AccessBoundingBoxes().SetBoundingBox(box);
     return true;
 }
 
 
 bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     bool make_snapshot = snapshotSlot.IsDirty();
-    if (make_snapshot) {
-        glClear(GL_COLOR_BUFFER_BIT);
-        snapshotSlot.ResetDirty();
-    }
+
     auto const incoming_fbo = call.GetFramebuffer();
     auto const actual_snaps_to_take =
         std::min<int>(snaps_to_take.size(), numberOfViewsSlot.Param<core::param::IntParam>()->Value());
     if (AnyParameterDirty()) {
         const auto mod_name = approximationSourceSlot.Param<core::param::StringParam>()->Value();
         auto mod = theGraph->FindModule(mod_name);
-        CallRender3DGL* call_to_hijack = nullptr;
-        uint32_t callback_idx = 0;
+        call_to_hijack = nullptr;
+        hijack_callback_idx = 0;
         if (mod) {
             for (auto& c : theGraph->ListCalls()) {
                 if (c.callPtr->PeekCalleeSlot()->Parent()->FullName() == mod->FullName()) {
                     for (uint32_t x = 0; x < c.callPtr->GetCallbackCount(); ++x) {
                         if (c.callPtr->GetCallbackName(x) == "Render") {
                             call_to_hijack = dynamic_cast<CallRender3DGL*>(c.callPtr.get());
-                            callback_idx = x;
+                            hijack_callback_idx = x;
                             break;
                         }
                     }
                 }
             }
         }
-        if (make_snapshot && call_to_hijack) {
-            lastBBox = call_to_hijack->GetBoundingBoxes();
-            for (int i = 0; i < actual_snaps_to_take; ++i) {
-                approx_fbo->bind();
-                glViewport(0, 0, approx_fbo->getWidth(), approx_fbo->getHeight());
-                glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                call_to_hijack->SetFramebuffer(approx_fbo);
+    }
+    if (make_snapshot && call_to_hijack) {
+        lastBBox = call_to_hijack->GetBoundingBoxes();
+        for (int i = 0; i < actual_snaps_to_take; ++i) {
+            approx_fbo->bind();
+            glViewport(0, 0, approx_fbo->getWidth(), approx_fbo->getHeight());
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            call_to_hijack->SetFramebuffer(approx_fbo);
 
-                core::view::Camera cam;
-                core::view::Camera::PerspectiveParameters cam_intrinsics;
-                cam_intrinsics.near_plane = 0.01f;
-                cam_intrinsics.far_plane = 100.0f;
-                cam_intrinsics.fovy = 0.5;
-                cam_intrinsics.aspect = aspect;
-                cam_intrinsics.image_plane_tile =
-                    core::view::Camera::ImagePlaneTile(); // view is in control -> no tiling -> use default tile values
+            core::view::Camera cam;
+            core::view::Camera::PerspectiveParameters cam_intrinsics;
+            cam_intrinsics.near_plane = 0.01f;
+            cam_intrinsics.far_plane = 100.0f;
+            cam_intrinsics.fovy = 0.5;
+            cam_intrinsics.aspect = aspect;
+            cam_intrinsics.image_plane_tile =
+                core::view::Camera::ImagePlaneTile(); // view is in control -> no tiling -> use default tile values
 
-                auto dv = snaps_to_take[i].first;
-                auto dor = snaps_to_take[i].second;
+            auto dv = snaps_to_take[i].first;
+            auto dor = snaps_to_take[i].second;
 
-                auto cam_orientation = core::utility::get_default_camera_orientation(dv, dor);
-                auto cam_position = core::utility::get_default_camera_position(lastBBox, cam_intrinsics, cam_orientation, dv);
-                core::view::Camera::Pose cam_pose(glm::vec3(cam_position), cam_orientation);
+            auto cam_orientation = core::utility::get_default_camera_orientation(dv, dor);
+            auto cam_position = core::utility::get_default_camera_position(lastBBox, cam_intrinsics, cam_orientation, dv);
+            core::view::Camera::Pose cam_pose(glm::vec3(cam_position), cam_orientation);
 
-                auto min_max_dist = core::utility::get_min_max_dist_to_bbox(lastBBox, cam_pose);
-                cam_intrinsics.far_plane = std::max(0.0f, min_max_dist.y);
-                cam_intrinsics.near_plane = std::max(cam_intrinsics.far_plane / 10000.0f, min_max_dist.x);
-                cam = core::view::Camera(cam_pose, cam_intrinsics);
-                call_to_hijack->SetCamera(cam);
+            auto min_max_dist = core::utility::get_min_max_dist_to_bbox(lastBBox, cam_pose);
+            cam_intrinsics.far_plane = std::max(0.0f, min_max_dist.y);
+            cam_intrinsics.near_plane = std::max(cam_intrinsics.far_plane / 10000.0f, min_max_dist.x);
+            cam = core::view::Camera(cam_pose, cam_intrinsics);
+            call_to_hijack->SetCamera(cam);
 
-                // render and convert the result to "point geometry"
-                call_to_hijack->operator()(callback_idx);
-                // TODO: is that needed?
-                glFlush();
-                incoming_fbo->bind();
-                fbo_to_points_program->use();
-                the_points->bindAs(GL_SHADER_STORAGE_BUFFER, 1);
-                glActiveTexture(GL_TEXTURE1);
-                approx_fbo->bindColorbuffer(0);
-                glActiveTexture(GL_TEXTURE2);
-                approx_fbo->bindDepthbuffer();
-                fbo_to_points_program->setUniform("view", cam.getViewMatrix());
-                fbo_to_points_program->setUniform("projection", cam.getProjectionMatrix());
-                fbo_to_points_program->setUniform("mvp", cam.getProjectionMatrix() * cam.getViewMatrix());
-                fbo_to_points_program->setUniform("output_offset", i * xres * yres);
-                glDispatchCompute(xres / 16, yres / 16, 1);
-            }
-            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-            glUseProgram(0);
-
-            // TODO: grab bbox of points from gpu
-            // do we really need that? we have the original one anyway.
+            // render and convert the result to "point geometry"
+            call_to_hijack->operator()(hijack_callback_idx);
+            // TODO: is that needed?
+            glFlush();
+            incoming_fbo->bind();
+            fbo_to_points_program->use();
+            the_points->bindAs(GL_SHADER_STORAGE_BUFFER, 1);
+            glActiveTexture(GL_TEXTURE1);
+            approx_fbo->bindColorbuffer(0);
+            glActiveTexture(GL_TEXTURE2);
+            approx_fbo->bindDepthbuffer();
+            fbo_to_points_program->setUniform("view", cam.getViewMatrix());
+            fbo_to_points_program->setUniform("projection", cam.getProjectionMatrix());
+            fbo_to_points_program->setUniform("mvp", cam.getProjectionMatrix() * cam.getViewMatrix());
+            fbo_to_points_program->setUniform("output_offset", i * xres * yres);
+            glDispatchCompute(xres / 16, yres / 16, 1);
         }
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        glUseProgram(0);
+
+        // TODO: grab bbox of points from gpu
+        // do we really need that? we have the original one anyway.
     }
 
     core::view::Camera cam = call.GetCamera();
@@ -189,23 +202,33 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
     the_points->bindAs(GL_SHADER_STORAGE_BUFFER, 1);
     render_points_program->setUniform("mvp", mvp);
     glDrawArrays(GL_POINTS, 0, xres * yres * actual_snaps_to_take);
-    glUseProgram(0);
-    glDisable(GL_DEPTH_TEST);
     glDisable(GL_CLIP_DISTANCE0);
 
     if (theAnimation->pos_animation != nullptr) {
         auto anim = theAnimation->pos_animation;
-        auto vertices = std::vector<float>();
-        vertices.reserve(3 * anim->GetLength());
+        line_vertices.clear();
+        line_vertices.reserve(3 * anim->GetLength());
         glBindVertexArray(line_vao);
         for (auto t = anim->GetStartTime(); t <= anim->GetEndTime(); ++t) {
             auto v = anim->GetValue(t);
-            vertices.emplace_back(v[0]);
-            vertices.emplace_back(v[1]);
-            vertices.emplace_back(v[2]);
+            line_vertices.emplace_back(v[0]);
+            line_vertices.emplace_back(v[1]);
+            line_vertices.emplace_back(v[2]);
         }
-        animation_positions->rebuffer(vertices.data(), vertices.size() * sizeof(float));
+        animation_positions->rebuffer(line_vertices.data(), line_vertices.size() * sizeof(float));
+        glBindBuffer(GL_ARRAY_BUFFER, animation_positions->getName());
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+        campath_program->use();
+        campath_program->setUniform("mvp", mvp);
+        campath_program->setUniform("line_len", anim->GetLength());
+        glDrawArrays(GL_LINE_STRIP, 0, anim->GetLength());
+        //glDrawArrays(GL_LINE_STRIP, 0, 10);
+        glBindVertexArray(0);
     }
+
+    glUseProgram(0);
+    glDisable(GL_DEPTH_TEST);
 
     if (tex_inspector_.GetShowInspectorSlotValue()) {
         GLuint tex_to_show = 0;

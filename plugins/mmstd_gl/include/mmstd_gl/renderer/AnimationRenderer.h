@@ -92,6 +92,7 @@ protected:
 private:
     std::unique_ptr<glowl::GLSLProgram> render_points_program;
     std::unique_ptr<glowl::GLSLProgram> fbo_to_points_program;
+    std::unique_ptr<glowl::GLSLProgram> campath_program;
 
     std::unique_ptr<glowl::BufferObject> the_points;
     std::unique_ptr<glowl::BufferObject> animation_positions;
@@ -112,6 +113,9 @@ private:
     };
 
     std::shared_ptr<glowl::FramebufferObject> approx_fbo;
+    CallRender3DGL* call_to_hijack = nullptr;
+    uint32_t hijack_callback_idx;
+    std::vector<float> line_vertices;
 
     core::MegaMolGraph* theGraph = nullptr;
     frontend_resources::AnimationEditorData* theAnimation = nullptr;
