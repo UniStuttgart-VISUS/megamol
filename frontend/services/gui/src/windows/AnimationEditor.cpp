@@ -481,6 +481,15 @@ void AnimationEditor::DrawToolbar() {
     ImGui::SameLine();
     if (ImGui::Button("delete animation")) {
         if (selectedAnimation != -1) {
+            if (std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])) {
+                const auto& anim = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
+                if (animEditorData.orientation_animation == &anim) {
+                    animEditorData.orientation_animation = nullptr;
+                }
+                if (animEditorData.pos_animation == &anim) {
+                    animEditorData.pos_animation = nullptr;
+                }
+            }
             allAnimations.erase(allAnimations.begin() + selectedAnimation);
             selectedFloatKey = nullptr;
             selectedStringKey = nullptr;
