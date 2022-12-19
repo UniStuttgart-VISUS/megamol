@@ -10,6 +10,8 @@
 namespace megamol {
 namespace frontend_resources {
 
+static std::string GUIState_Req_Name = "GUIState";
+
 struct GUIState {
 
     // Request GUI state: true  -> containing updated GUI state, GUI visibility and GUI scale already wrapped into respective lua commands

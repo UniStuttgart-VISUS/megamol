@@ -40,8 +40,7 @@ megamol::mmstd_gl::AnimationRenderer::~AnimationRenderer() {}
 bool megamol::mmstd_gl::AnimationRenderer::create() {
     // yuck
     theGraph = const_cast<core::MegaMolGraph*>(&frontend_resources.get<core::MegaMolGraph>());
-    //theAnimation = const_cast<frontend_resources::AnimationEditorData*>(
-    //    &frontend_resources.get<frontend_resources::AnimationEditorData>());
+    theAnimation = const_cast<frontend_resources::AnimationEditorData*>(&frontend_resources.get<frontend_resources::AnimationEditorData>());
 
     approx_fbo = std::make_shared<glowl::FramebufferObject>(xres, yres);
     approx_fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "ModuleGraphSubscription.h"
+#include "AnimationEditorData.h"
 
 #include <glowl/GLSLProgram.hpp>
 #include <glowl/BufferObject.hpp>
@@ -57,7 +58,7 @@ public:
     std::vector<std::string> requested_lifetime_resources() override {
         std::vector<std::string> resources = Renderer3DModuleGL::requested_lifetime_resources();
         resources.emplace_back(frontend_resources::MegaMolGraph_Req_Name);
-        resources.emplace_back("AnimationEditorData");
+        resources.emplace_back(frontend_resources::AnimationEditorData_Req_Name);
         return resources;
     }
 
@@ -113,7 +114,7 @@ private:
     std::shared_ptr<glowl::FramebufferObject> approx_fbo;
 
     core::MegaMolGraph* theGraph = nullptr;
-    //frontend_resources::AnimationEditorData* theAnimation = nullptr;
+    frontend_resources::AnimationEditorData* theAnimation = nullptr;
 
     mmstd_gl::special::TextureInspector tex_inspector_;
 };

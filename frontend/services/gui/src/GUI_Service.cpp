@@ -261,6 +261,10 @@ void GUI_Service::digestChangedRequestedResources() {
         const_cast<megamol::frontend_resources::WindowManipulation&>(window_manipulation)
             .set_mouse_cursor(this->m_gui->GetMouseCursor());
     }
+
+
+    // Set current animation editor data
+    this->m_providedAnimationEditorData = this->m_gui->GetAnimationEditorData();
 }
 
 
@@ -291,8 +295,9 @@ void GUI_Service::postGraphRender() {
 std::vector<FrontendResource>& GUI_Service::getProvidedResources() {
 
     this->m_providedResourceReferences = {
-        {"GUIState", this->m_providedStateResource},
-        {"GUIRegisterWindow", this->m_providedRegisterWindowResource},
+        {megamol::frontend_resources::GUIState_Req_Name, this->m_providedStateResource},
+        {megamol::frontend_resources::GUIRegisterWindow_Req_Name, this->m_providedRegisterWindowResource},
+        {megamol::frontend_resources::AnimationEditorData_Req_Name, this->m_providedAnimationEditorData}
     };
     return this->m_providedResourceReferences;
 }

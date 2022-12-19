@@ -53,6 +53,10 @@ public:
     void RenderAnimation();
     std::string GenerateLuaForFrame(animation::KeyTimeType time);
 
+    frontend_resources::AnimationEditorData& GetAnimationEditorData() {
+        return this->animEditorData;
+    }
+
 private:
     using animations =
         std::variant<animation::FloatAnimation, animation::StringAnimation, animation::FloatVectorAnimation>;

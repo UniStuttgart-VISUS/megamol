@@ -14,8 +14,8 @@ namespace megamol::frontend_resources {
 static std::string AnimationEditorData_Req_Name = "AnimationEditorData";
 
 struct AnimationEditorData {
-    core::utility::animation::FloatVectorAnimation* pos_animation;
-    core::utility::animation::FloatVectorAnimation* orientation_animation;
+    core::utility::animation::FloatVectorAnimation* pos_animation = nullptr;
+    core::utility::animation::FloatVectorAnimation* orientation_animation = nullptr;
 };
 
 } // namespace megamol::frontend_resources
