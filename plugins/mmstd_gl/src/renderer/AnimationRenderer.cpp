@@ -50,10 +50,20 @@ bool megamol::mmstd_gl::AnimationRenderer::create() {
 
     the_points = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, size, GL_DYNAMIC_COPY);
     animation_positions = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    animation_keys = std::make_unique<glowl::BufferObject>(GL_ELEMENT_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
     glGenVertexArrays(1, &line_vao);
     glBindVertexArray(line_vao);
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, animation_positions->getName());
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    glGenVertexArrays(1, &keys_vao);
+    glBindVertexArray(keys_vao);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, animation_positions->getName());
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, animation_keys->getName());
+
     glBindVertexArray(0);
 
     auto const shaderOptions =
@@ -85,6 +95,15 @@ bool megamol::mmstd_gl::AnimationRenderer::create() {
         return false;
     }
 
+    try {
+        keys_program = core::utility::make_glowl_shader(
+            "keys", shaderOptions, "mmstd_gl/animation/keys.vert.glsl", "mmstd_gl/animation/keys.frag.glsl");
+    } catch (std::exception& e) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            ("AnimationRenderer: could not compile key rendering shader: " + std::string(e.what())).c_str());
+        return false;
+    }
+
     return true;
 }
 
@@ -98,9 +117,9 @@ bool megamol::mmstd_gl::AnimationRenderer::GetExtents(mmstd_gl::CallRender3DGL& 
     // TODO: joint bbox of points and path!
     //call.AccessBoundingBoxes() = lastBBox;
     auto box = lastBBox.BoundingBox();
-    for (int i = 0; i < line_vertices.size() / 3; ++i) {
+    for (int i = 0; i < trajectory_vertices.size() / 3; ++i) {
         box.GrowToPoint(vislib::math::Point<float, 3>(
-            line_vertices[i * 3 + 0], line_vertices[i * 3 + 1], line_vertices[i * 3 + 2]));
+            trajectory_vertices[i * 3 + 0], trajectory_vertices[i * 3 + 1], trajectory_vertices[i * 3 + 2]));
     }
     call.AccessBoundingBoxes().SetClipBox(box);
     call.AccessBoundingBoxes().SetBoundingBox(box);
@@ -206,24 +225,38 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
 
     if (theAnimation->pos_animation != nullptr) {
         auto anim = theAnimation->pos_animation;
-        line_vertices.clear();
-        line_vertices.reserve(3 * anim->GetLength());
+        trajectory_vertices.clear();
+        trajectory_vertices.reserve(3 * anim->GetLength());
         glBindVertexArray(line_vao);
         for (auto t = anim->GetStartTime(); t <= anim->GetEndTime(); ++t) {
             auto v = anim->GetValue(t);
-            line_vertices.emplace_back(v[0]);
-            line_vertices.emplace_back(v[1]);
-            line_vertices.emplace_back(v[2]);
+            trajectory_vertices.emplace_back(v[0]);
+            trajectory_vertices.emplace_back(v[1]);
+            trajectory_vertices.emplace_back(v[2]);
         }
-        animation_positions->rebuffer(line_vertices.data(), line_vertices.size() * sizeof(float));
-        glBindBuffer(GL_ARRAY_BUFFER, animation_positions->getName());
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+        animation_positions->rebuffer(trajectory_vertices.data(), trajectory_vertices.size() * sizeof(float));
 
         campath_program->use();
         campath_program->setUniform("mvp", mvp);
         campath_program->setUniform("line_len", anim->GetLength());
         glDrawArrays(GL_LINE_STRIP, 0, anim->GetLength());
-        //glDrawArrays(GL_LINE_STRIP, 0, 10);
+        //glBindVertexArray(0);
+
+        auto keys = anim->GetAllKeys();
+        key_indices.clear();
+        key_indices.reserve(keys.size());
+        for (auto key : keys) {
+            key_indices.emplace_back(key);
+        }
+        glBindVertexArray(keys_vao);
+        animation_keys->rebuffer(
+            key_indices.data(), key_indices.size() * sizeof(int));
+
+        keys_program->use();
+        keys_program->setUniform("mvp", mvp);
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+        glDrawElements(GL_POINTS, keys.size(), GL_UNSIGNED_INT, nullptr);
+        glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
         glBindVertexArray(0);
     }
 
