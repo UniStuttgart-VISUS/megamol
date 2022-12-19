@@ -387,7 +387,7 @@ public:
 
     KeyTimeType GetLength() const {
         if (this->keys.size() > 1) {
-            return this->keys.rbegin()->second.nestedData[0].time - this->keys.begin()->second.nestedData[0].time;
+            return this->keys.rbegin()->second.nestedData[0].time - this->keys.begin()->second.nestedData[0].time + 1;
         } else {
             return 1;
         }

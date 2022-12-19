@@ -80,13 +80,14 @@ bool megamol::mmstd_gl::AnimationRenderer::create() {
 }
 
 
-void megamol::mmstd_gl::AnimationRenderer::release() {}
+void megamol::mmstd_gl::AnimationRenderer::release() {
+    glDeleteVertexArrays(1, &line_vao);
+}
 
 
 bool megamol::mmstd_gl::AnimationRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     // TODO: joint bbox of points and path!
     call.AccessBoundingBoxes() = lastBBox;
-    glDeleteVertexArrays(1, &line_vao);
     return true;
 }
 
@@ -165,8 +166,8 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
                 fbo_to_points_program->setUniform("mvp", cam.getProjectionMatrix() * cam.getViewMatrix());
                 fbo_to_points_program->setUniform("output_offset", i * xres * yres);
                 glDispatchCompute(xres / 16, yres / 16, 1);
-                glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
             }
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
             glUseProgram(0);
 
             // TODO: grab bbox of points from gpu
@@ -192,7 +193,19 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CLIP_DISTANCE0);
 
-
+    if (theAnimation->pos_animation != nullptr) {
+        auto anim = theAnimation->pos_animation;
+        auto vertices = std::vector<float>();
+        vertices.reserve(3 * anim->GetLength());
+        glBindVertexArray(line_vao);
+        for (auto t = anim->GetStartTime(); t <= anim->GetEndTime(); ++t) {
+            auto v = anim->GetValue(t);
+            vertices.emplace_back(v[0]);
+            vertices.emplace_back(v[1]);
+            vertices.emplace_back(v[2]);
+        }
+        animation_positions->rebuffer(vertices.data(), vertices.size() * sizeof(float));
+    }
 
     if (tex_inspector_.GetShowInspectorSlotValue()) {
         GLuint tex_to_show = 0;
