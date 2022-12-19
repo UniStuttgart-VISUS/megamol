@@ -7,7 +7,6 @@
 
 #include "AnimationEditor.h"
 
-#include "animation/AnimationUtils.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -16,6 +15,7 @@
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
+#include "mmcore/utility/animation/AnimationUtils.h"
 
 #include "imgui_stdlib.h"
 #include "nlohmann/json.hpp"
@@ -647,6 +647,34 @@ void AnimationEditor::SelectAnimation(int32_t a) {
 
 void AnimationEditor::DrawParams() {
     ImGui::Text("Available Parameters");
+    bool have_pos = false, have_orient = false;
+    if (selectedAnimation > -1 && std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])) {
+        const auto& fva =
+            std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
+        have_pos = fva.VectorLength() == 3;
+        have_orient = fva.VectorLength() == 4;
+    }
+    if (!have_pos) {
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+    }
+    if (ImGui::Button("use as 3D position")) {
+        auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
+        animEditorData.pos_animation = &fva;
+    }
+    if (!have_pos) {
+        ImGui::PopItemFlag();
+    }
+    ImGui::SameLine();
+    if (!have_orient) {
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+    }
+    if (ImGui::Button("use as orientation")) {
+        auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
+        animEditorData.orientation_animation = &fva;
+    }
+    if (!have_orient) {
+        ImGui::PopItemFlag();
+    }
     ImGui::BeginChild(
         "anim_params", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y / 2.5f), true);
     for (int32_t a = 0; a < allAnimations.size(); ++a) {

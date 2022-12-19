@@ -11,8 +11,8 @@
 #include <glowl/GLSLProgram.hpp>
 #include <glowl/BufferObject.hpp>
 
-#include "mmcore/MegaMolGraph.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/graphics/CameraUtils.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
@@ -57,6 +57,7 @@ public:
     std::vector<std::string> requested_lifetime_resources() override {
         std::vector<std::string> resources = Renderer3DModuleGL::requested_lifetime_resources();
         resources.emplace_back(frontend_resources::MegaMolGraph_Req_Name);
+        resources.emplace_back("AnimationEditorData");
         return resources;
     }
 
@@ -92,6 +93,8 @@ private:
     std::unique_ptr<glowl::GLSLProgram> fbo_to_points_program;
 
     std::unique_ptr<glowl::BufferObject> the_points;
+    std::unique_ptr<glowl::BufferObject> animation_positions;
+    GLuint line_vao;
 
     core::param::ParamSlot approximationSourceSlot;
     core::param::ParamSlot snapshotSlot;
@@ -110,6 +113,7 @@ private:
     std::shared_ptr<glowl::FramebufferObject> approx_fbo;
 
     core::MegaMolGraph* theGraph = nullptr;
+    //frontend_resources::AnimationEditorData* theAnimation = nullptr;
 
     mmstd_gl::special::TextureInspector tex_inspector_;
 };

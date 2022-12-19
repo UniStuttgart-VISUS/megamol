@@ -1,9 +1,11 @@
-#include "AnimationUtils.h"
+#include "mmcore/utility/animation/AnimationUtils.h"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
-using namespace megamol::gui;
+#include <sstream>
+
+using namespace megamol::core::utility;
 
 void animation::to_json(nlohmann::json& j, const animation::FloatKey& k) {
     j = nlohmann::json{{"time", k.time}, {"value", k.value}, {"tangents_linked", k.tangents_linked},

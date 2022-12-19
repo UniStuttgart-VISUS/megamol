@@ -10,15 +10,18 @@
 
 #include "AbstractWindow.h"
 #include "CommonTypes.h"
-#include "animation/AnimationData.h"
+#include "AnimationEditorData.h"
 #include "imgui_canvas.h"
 #include "mmcore/MegaMolGraph.h"
+#include "mmcore/utility/animation/AnimationData.h"
 #include "widgets/FileBrowserWidget.h"
 
 #include <variant>
 
 namespace megamol {
 namespace gui {
+
+using namespace core::utility;
 
 enum class InteractionType : int32_t {
     None = 0,
@@ -120,6 +123,8 @@ private:
     vislib::math::Ternary ternary = vislib::math::Ternary::TRI_UNKNOWN;
     std::string animation_file, export_file;
     std::string output_prefix;
+
+    frontend_resources::AnimationEditorData animEditorData;
 };
 
 

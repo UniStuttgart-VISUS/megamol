@@ -40,6 +40,8 @@ megamol::mmstd_gl::AnimationRenderer::~AnimationRenderer() {}
 bool megamol::mmstd_gl::AnimationRenderer::create() {
     // yuck
     theGraph = const_cast<core::MegaMolGraph*>(&frontend_resources.get<core::MegaMolGraph>());
+    //theAnimation = const_cast<frontend_resources::AnimationEditorData*>(
+    //    &frontend_resources.get<frontend_resources::AnimationEditorData>());
 
     approx_fbo = std::make_shared<glowl::FramebufferObject>(xres, yres);
     approx_fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
@@ -48,6 +50,12 @@ bool megamol::mmstd_gl::AnimationRenderer::create() {
     GLsizeiptr size = xres * yres * 4 * sizeof(float) * snaps_to_take.size();
 
     the_points = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, size, GL_DYNAMIC_COPY);
+    animation_positions = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    glGenVertexArrays(1, &line_vao);
+    glBindVertexArray(line_vao);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, animation_positions->getName());
+    glBindVertexArray(0);
 
     auto const shaderOptions =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
@@ -79,6 +87,7 @@ void megamol::mmstd_gl::AnimationRenderer::release() {}
 bool megamol::mmstd_gl::AnimationRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     // TODO: joint bbox of points and path!
     call.AccessBoundingBoxes() = lastBBox;
+    glDeleteVertexArrays(1, &line_vao);
     return true;
 }
 
@@ -183,6 +192,8 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
     glUseProgram(0);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CLIP_DISTANCE0);
+
+
 
     if (tex_inspector_.GetShowInspectorSlotValue()) {
         GLuint tex_to_show = 0;

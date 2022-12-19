@@ -7,12 +7,10 @@
 
 #pragma once
 
-#include "AnimationData.h"
+#include "mmcore/utility/animation/AnimationData.h"
 #include "nlohmann/json.hpp"
 
-namespace megamol {
-namespace gui {
-namespace animation {
+namespace megamol::core::utility::animation {
 
 void to_json(nlohmann::json& j, const FloatKey& k);
 void from_json(const nlohmann::json& j, FloatKey& k);
@@ -38,6 +36,4 @@ void EndGroupPanel();
 
 std::vector<float> GetFloats(std::string vector_string);
 
-} // namespace animation
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::core::utility::animation

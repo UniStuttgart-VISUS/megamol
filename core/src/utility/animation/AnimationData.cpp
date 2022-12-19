@@ -1,10 +1,14 @@
-#include "AnimationData.h"
+#include "mmcore/utility/animation/AnimationData.h"
+
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui_internal.h"
 
 #include <cmath>
+#include <sstream>
 
-using namespace megamol::gui::animation;
+using namespace megamol::core::utility::animation;
 
-std::ostream& megamol::gui::operator<<(
+std::ostream& megamol::core::utility::operator<<(
     std ::ostream& outs, const animation::VectorKey<animation::FloatKey>::ValueType& value) {
     std::stringstream ss;
     ss << value[0];

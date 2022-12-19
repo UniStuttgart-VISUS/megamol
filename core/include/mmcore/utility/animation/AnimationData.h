@@ -7,18 +7,14 @@
 
 #pragma once
 
-#include "gui_utils.h"
+#include "imgui.h"
 #include "mmcore/MegaMolGraph.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include <map>
 
-
-namespace megamol {
-namespace gui {
-
-namespace animation {
+namespace megamol::core::utility::animation {
 
 using KeyTimeType = int32_t;
 
@@ -445,9 +441,9 @@ private:
 
 using FloatVectorAnimation = VectorAnimation<FloatKey>;
 
-} // namespace animation
+} // namespace megamol::core::utility::animation
 
+namespace megamol::core::utility {
 std::ostream& operator<<(std::ostream& outs, const animation::VectorKey<animation::FloatKey>::ValueType& value);
+}
 
-} // namespace gui
-} // namespace megamol
