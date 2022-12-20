@@ -15,10 +15,25 @@
 #include <thrust/adjacent_difference.h>
 #include <thrust/unique.h>
 
+#include <thrust/async/sort.h>
+#include <thrust/async/scan.h>
+#include <thrust/async/for_each.h>
+#include <thrust/async/copy.h>
+#include <thrust/async/transform.h>
+
+#include <thrust/mr/allocator.h>
+#include <thrust/mr/pool.h>
+#include <thrust/mr/disjoint_pool.h>
+#include <thrust/mr/device_memory_resource.h>
+
+#include <thrust/system/cuda/execution_policy.h>
+
 
 #define SR_SUBDIVISIONS 640
 #define VECTOR_T device_vector
 #define POLICY thrust::device
+
+struct my_policy : thrust::cuda::execution_policy<my_policy> {};
 
 
 float touchplane_old(megamol::moldyn_gl::rendering::SphereRasterizer::config_t const& config, glm::vec3 objPos,
@@ -784,21 +799,36 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
         tmp_data[i] =
             glm::vec3(data.positions[0][i * 4 + 0], data.positions[0][i * 4 + 1], data.positions[0][i * 4 + 2]);
     }
-
     
+    using Pool = thrust::mr::disjoint_unsynchronized_pool_resource<thrust::device_memory_resource, thrust::mr::new_delete_resource>;
+    using IntAlloc = thrust::mr::allocator<int, Pool>;
+    using Vec3Alloc = thrust::mr::allocator<glm::vec3, Pool>;
+    using IVec3Alloc = thrust::mr::allocator<glm::ivec3, Pool>;
+    using UVec4Alloc = thrust::mr::allocator<glm::uvec4, Pool>;
+    using DBAlloc = thrust::mr::allocator<d_db_entry, Pool>;
 
-    thrust::VECTOR_T<glm::vec3> d_in_data(tmp_data);
-    thrust::VECTOR_T<int> d_cell_id(num_particles, -1);
+    thrust::device_memory_resource dev_memres;
+    thrust::mr::new_delete_resource memres;
+    Pool pool(&dev_memres, &memres);
+    IntAlloc int_alloc(&pool);
+    Vec3Alloc vec3_alloc(&pool);
+    IVec3Alloc ivec3_alloc(&pool);
+    UVec4Alloc uvec4_alloc(&pool);
+    DBAlloc db_alloc(&pool);
+
+
+    thrust::VECTOR_T<glm::vec3, Vec3Alloc> d_in_data(tmp_data.begin(), tmp_data.end(), vec3_alloc);
+    thrust::VECTOR_T<int, IntAlloc> d_cell_id(num_particles, -1, int_alloc);
 
     /*auto const sub_x = config.res.x / SR_SUBDIVISIONS;
     auto const sub_y = config.res.y / SR_SUBDIVISIONS;*/
 
     auto hash_func = hash_functor(config.MVP, win_trans, f_mins, f_res, f_subs);
 
-    thrust::VECTOR_T<int> d_histo(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1);
-    thrust::VECTOR_T<int> d_h_begin(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1);
-    thrust::VECTOR_T<int> d_h_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1);
-    thrust::VECTOR_T<glm::ivec3> d_h_id_begin_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS);
+    thrust::VECTOR_T<int, IntAlloc> d_histo(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 2, 0, int_alloc);
+    thrust::VECTOR_T<int, IntAlloc> d_h_begin(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1, int_alloc);
+    thrust::VECTOR_T<int, IntAlloc> d_h_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1, int_alloc);
+    thrust::VECTOR_T<glm::ivec3, IVec3Alloc> d_h_id_begin_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS, ivec3_alloc);
 
     d_db_entry fill_db_entry;
     fill_db_entry.z = config.near_far.y;
@@ -806,30 +836,36 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
     fill_db_entry.oc_pos = glm::vec3(0.0);
     fill_db_entry.ray = glm::vec3(0.0);
 
-    thrust::VECTOR_T<d_db_entry> d_depth_buffer(num_pixels, fill_db_entry);
-    thrust::VECTOR_T<glm::uvec4> d_worklets(v_worklets);
+    thrust::VECTOR_T<d_db_entry, DBAlloc> d_depth_buffer(num_pixels, fill_db_entry, db_alloc);
+    thrust::VECTOR_T<glm::uvec4, UVec4Alloc> d_worklets(v_worklets.begin(), v_worklets.end(), uvec4_alloc);
 
-    thrust::VECTOR_T<int> test_list(num_particles);
+    thrust::VECTOR_T<int, IntAlloc> test_list(num_particles, int_alloc);
 
     auto render_func = render_functor(thrust::raw_pointer_cast(&d_in_data[0]), thrust::raw_pointer_cast(&d_depth_buffer[0]), config.MVP,
         config.MVPinv, win_trans,
         win_trans_inv, config.camPos, config.camDir, config.camUp, config.res, thrust::raw_pointer_cast(&d_worklets[0]), sqRad, rad);
 
+    cudaStream_t s1;
+    cudaStreamCreate(&s1);
+
     auto start_x = std::chrono::high_resolution_clock::now();
 
-    thrust::transform(POLICY, d_in_data.begin(), d_in_data.end(), d_cell_id.begin(), hash_func);
-    thrust::sort_by_key(POLICY, d_cell_id.begin(), d_cell_id.end(), d_in_data.begin());
+    thrust::transform(
+        thrust::cuda::par(int_alloc).on(s1), d_in_data.begin(), d_in_data.end(), d_cell_id.begin(), hash_func);
+    thrust::sort_by_key(thrust::cuda::par(int_alloc).on(s1), d_cell_id.begin(), d_cell_id.end(), d_in_data.begin());
     //auto first_it = thrust::find_if(d_cell_id.begin(), d_cell_id.end(), [](auto const& val) { return val != -1; });
     //auto offset = thrust::distance(d_cell_id.begin(), first_it);
     //auto offset = 0;
-    thrust::copy(POLICY, d_cell_id.begin(), d_cell_id.end(), test_list.begin());
-    test_list.erase(thrust::unique(POLICY, test_list.begin(), test_list.end()), test_list.end());
+    thrust::copy(thrust::cuda::par(int_alloc).on(s1), d_cell_id.begin(), d_cell_id.end(), test_list.begin());
+    test_list.erase(
+        thrust::unique(thrust::cuda::par(int_alloc).on(s1), test_list.begin(), test_list.end()), test_list.end());
     //thrust::counting_iterator<int> search_begin(-1);
     /*thrust::upper_bound(d_cell_id.begin() + offset, d_cell_id.end(), search_begin,
         search_begin + (SR_SUBDIVISIONS * SR_SUBDIVISIONS) + 1, d_histo.begin());*/
-    thrust::upper_bound(
-        POLICY, d_cell_id.begin(), d_cell_id.end(), test_list.begin(), test_list.end(), d_histo.begin());
+    thrust::upper_bound(thrust::cuda::par(int_alloc).on(s1), d_cell_id.begin(), d_cell_id.end(), test_list.begin(),
+        test_list.end(), d_histo.begin() + 1);
     //d_histo.erase(d_histo.begin() + test_list.size(), d_histo.end());
+#if 0
     thrust::adjacent_difference(POLICY, d_histo.begin(), d_histo.begin() + test_list.size(), d_histo.begin());
     //d_h_begin = thrust::VECTOR_T<int>(test_list.size());
     //d_h_end = thrust::VECTOR_T<int>(test_list.size());
@@ -841,10 +877,14 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
     //thrust::counting_iterator<int> hash_begin(0);
     /*thrust::transform(d_h_id_begin_end.begin(), d_h_id_begin_end.end(), hash_begin,
         d_h_id_begin_end.begin(), hash_id_transform_functor());*/
-    thrust::transform(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(), test_list.begin(),
-        d_h_id_begin_end.begin(), hash_id_transform_functor());
-    thrust::for_each(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(), render_func);
-    cudaDeviceSynchronize();
+#endif
+    thrust::transform(thrust::cuda::par(int_alloc).on(s1), d_histo.begin(), d_histo.begin() + test_list.size(),
+        d_histo.begin() + 1, d_h_id_begin_end.begin(), hash_transform_functor());
+    thrust::transform(thrust::cuda::par(int_alloc).on(s1), d_h_id_begin_end.begin(),
+        d_h_id_begin_end.begin() + test_list.size(), test_list.begin(), d_h_id_begin_end.begin(),
+        hash_id_transform_functor());
+    thrust::for_each(thrust::cuda::par(int_alloc).on(s1), d_h_id_begin_end.begin(),
+        d_h_id_begin_end.begin() + test_list.size(), render_func);
 
     #if 0
     worker_hash w(data.positions[0], counter, config, win_trans, config.res.x / 20, config.res.y / 20);
@@ -884,7 +924,7 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
     #endif
 
 
-
+    cudaDeviceSynchronize();
     auto end_x = std::chrono::high_resolution_clock::now();
 
     std::cout << "[SphereRasterizer] hashing processing time "
