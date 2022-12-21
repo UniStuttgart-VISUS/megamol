@@ -48,6 +48,7 @@ megamol::moldyn_gl::rendering::SRTest::SRTest()
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO_TASK), "MESH_GEO_TASK");
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO_ALTN), "MESH_GEO_ALTN");
     ep->SetTypePair(static_cast<method_ut>(method_e::MESH_GEO_CAM), "MESH_GEO_CAM");
+    ep->SetTypePair(static_cast<method_ut>(method_e::THRUST), "THRUST");
     method_slot_ << ep;
     MakeSlotAvailable(&method_slot_);
 
@@ -265,14 +266,16 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
 #ifdef MEGAMOL_USE_PROFILING
     auto& pm = const_cast<frontend_resources::PerformanceManager&>(
         frontend_resources.get<frontend_resources::PerformanceManager>());
-    frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer, compute_timer;
+    frontend_resources::PerformanceManager::basic_timer_config upload_timer, render_timer, compute_timer, thrust_timer;
     upload_timer.name = "upload";
     upload_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
     render_timer.name = "render";
     render_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
     compute_timer.name = "compute";
     compute_timer.api = frontend_resources::PerformanceManager::query_api::OPENGL;
-    timing_handles_ = pm.add_timers(this, {upload_timer, render_timer, compute_timer});
+    thrust_timer.name = "thrust";
+    thrust_timer.api = frontend_resources::PerformanceManager::query_api::CPU;
+    timing_handles_ = pm.add_timers(this, {upload_timer, render_timer, compute_timer, thrust_timer});
 #endif
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (!ogl_ctx.isExtAvailable("GL_NV_mesh_shader")) {
@@ -455,31 +458,39 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
     }
 
     #if 1
-    SphereRasterizer sr;
-    SphereRasterizer::config_t sr_cfg;
-    sr_cfg.res = glm::uvec2(cr_fbo->getWidth(), cr_fbo->getHeight());
-    sr_cfg.fres = glm::vec2(cr_fbo->getWidth(), cr_fbo->getHeight());
-    sr_cfg.global_radius = 0.5f;
-    sr_cfg.MVP = proj * view;
-    sr_cfg.MVPinv = glm::inverse(sr_cfg.MVP);
-    sr_cfg.near_far = glm::vec2(cam.get<core::view::Camera::NearPlane>(), cam.get<core::view::Camera::FarPlane>());
-    sr_cfg.camDir = cam_pose.direction;
-    sr_cfg.camPos = cam_pose.position;
-    sr_cfg.camRight = glm::normalize(glm::cross(cam_pose.direction, cam_pose.up));
-    sr_cfg.camUp = cam_pose.up;
-    sr_cfg.fovy = cam.get<core::view::Camera::FieldOfViewY>();
-    sr_cfg.ratio = cam.get<core::view::Camera::AspectRatio>();
-    sr_cfg.lightDir = curlightDir;
-    sr_cfg.lower = glm::vec3(in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetX(),
-        in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetY(),
-        in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetZ());
-    sr_cfg.upper = glm::vec3(in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetRightTopFront().GetX(),
-        in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetRightTopFront().GetY(),
-        in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetRightTopFront().GetZ());
-    auto img_data = sr.Compute(sr_cfg, data_);
-    stbi_write_png("sr_img.png", cr_fbo->getWidth(), cr_fbo->getHeight(), 4, img_data.data(),
-        cr_fbo->getWidth() * sizeof(glm::u8vec4));
-    //std::exit(0);
+    if (method == method_e::THRUST) {
+        SphereRasterizer sr;
+        SphereRasterizer::config_t sr_cfg;
+        sr_cfg.res = glm::uvec2(cr_fbo->getWidth(), cr_fbo->getHeight());
+        sr_cfg.fres = glm::vec2(cr_fbo->getWidth(), cr_fbo->getHeight());
+        sr_cfg.global_radius = 0.5f;
+        sr_cfg.MVP = proj * view;
+        sr_cfg.MVPinv = glm::inverse(sr_cfg.MVP);
+        sr_cfg.near_far = glm::vec2(cam.get<core::view::Camera::NearPlane>(), cam.get<core::view::Camera::FarPlane>());
+        sr_cfg.camDir = cam_pose.direction;
+        sr_cfg.camPos = cam_pose.position;
+        sr_cfg.camRight = glm::normalize(glm::cross(cam_pose.direction, cam_pose.up));
+        sr_cfg.camUp = cam_pose.up;
+        sr_cfg.fovy = cam.get<core::view::Camera::FieldOfViewY>();
+        sr_cfg.ratio = cam.get<core::view::Camera::AspectRatio>();
+        sr_cfg.lightDir = curlightDir;
+        sr_cfg.lower = glm::vec3(in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetX(),
+            in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetY(),
+            in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetZ());
+        sr_cfg.upper = glm::vec3(in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetRightTopFront().GetX(),
+            in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetRightTopFront().GetY(),
+            in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetRightTopFront().GetZ());
+        sr.pm = &pm;
+        sr.timing_handles_ = &timing_handles_;
+        auto img_data = sr.Compute(sr_cfg, data_);
+        stbi_write_png("sr_img.png", cr_fbo->getWidth(), cr_fbo->getHeight(), 4, img_data.data(),
+            cr_fbo->getWidth() * sizeof(glm::u8vec4));
+        //std::exit(0);
+
+        in_call->Unlock();
+
+        return true;
+    }
     #endif
 
     // data_.pl_data.clip_distance = clip_thres_slot_.Param<core::param::FloatParam>()->Value();

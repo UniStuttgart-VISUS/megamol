@@ -1,38 +1,38 @@
 #include "SphereRasterizer.h"
 
 #include <chrono>
-#include <tuple>
 #include <map>
+#include <tuple>
 
 #include <omp.h>
 #include <oneapi/tbb.h>
 
 #include <immintrin.h>
 
+#include <thrust/adjacent_difference.h>
+#include <thrust/binary_search.h>
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #include <thrust/sort.h>
-#include <thrust/binary_search.h>
-#include <thrust/adjacent_difference.h>
 #include <thrust/unique.h>
 
-#include <thrust/async/sort.h>
-#include <thrust/async/scan.h>
-#include <thrust/async/for_each.h>
 #include <thrust/async/copy.h>
+#include <thrust/async/for_each.h>
+#include <thrust/async/scan.h>
+#include <thrust/async/sort.h>
 #include <thrust/async/transform.h>
 
 #include <thrust/mr/allocator.h>
-#include <thrust/mr/pool.h>
-#include <thrust/mr/disjoint_pool.h>
 #include <thrust/mr/device_memory_resource.h>
+#include <thrust/mr/disjoint_pool.h>
+#include <thrust/mr/pool.h>
 
 #include <thrust/system/cuda/execution_policy.h>
 #include <thrust/system/cuda/vector.h>
 
+#include <thrust/iterator/permutation_iterator.h>
 #include <thrust/iterator/transform_iterator.h>
 #include <thrust/iterator/zip_iterator.h>
-#include <thrust/iterator/permutation_iterator.h>
 
 
 #define SR_SUBDIVISIONS 640
@@ -40,7 +40,6 @@
 #define POLICY thrust::cuda::par(alloc)
 
 struct my_policy : thrust::cuda::execution_policy<my_policy> {};
-
 
 
 struct not_my_pointer {
@@ -145,8 +144,6 @@ private:
 };
 
 static cached_allocator alloc;
-
-
 
 
 float touchplane_old(megamol::moldyn_gl::rendering::SphereRasterizer::config_t const& config, glm::vec3 objPos,
@@ -412,7 +409,8 @@ glm::vec4 obj2win(glm::vec4 obj, glm::mat4 mvp, glm::mat4 win_trans) {
 }
 
 
-std::vector<worklet> create_worklets(megamol::moldyn_gl::rendering::SphereRasterizer::config_t config, glm::mat4 win_trans, glm::vec2& final_mins, glm::vec2& final_res, glm::vec2& subs) {
+std::vector<worklet> create_worklets(megamol::moldyn_gl::rendering::SphereRasterizer::config_t config,
+    glm::mat4 win_trans, glm::vec2& final_mins, glm::vec2& final_res, glm::vec2& subs) {
     unsigned int subdivision = SR_SUBDIVISIONS;
 
     std::vector<worklet> worklets(subdivision * subdivision);
@@ -551,7 +549,7 @@ struct worker_vertex {
     //worklet worklet_;
     std::vector<float> const& data;
     std::vector<std::tuple<float, int, glm::vec3 /*oc_pos*/, glm::vec3 /*ray*/>>& depth_buffer;
-    
+
     glm::uvec4 rectangle;
     unsigned int num_particles;
     glm::mat4 win_trans;
@@ -728,6 +726,7 @@ struct render_functor {
     glm::vec3 camPos;
     glm::vec3 camDir;
     glm::vec3 camUp;
+    glm::vec3 camRight;
     glm::uvec2 res;
 
     glm::uvec4 const* rects;
@@ -736,10 +735,9 @@ struct render_functor {
     float rad;
 
 
-    render_functor(glm::vec3 const* data, d_db_entry* depth_buffer,
-        glm::mat4 MVP, glm::mat4 MVPinv, glm::mat4 win_trans, glm::mat4 win_trans_inv, glm::vec3 camPos, glm::vec3 camDir,
-        glm::vec3 camUp, glm::uvec2 res, glm::uvec4 const* rects, float sqRad,
-        float rad)
+    render_functor(glm::vec3 const* data, d_db_entry* depth_buffer, glm::mat4 MVP, glm::mat4 MVPinv,
+        glm::mat4 win_trans, glm::mat4 win_trans_inv, glm::vec3 camPos, glm::vec3 camDir, glm::vec3 camUp,
+        glm::vec3 camRight, glm::uvec2 res, glm::uvec4 const* rects, float sqRad, float rad)
             : data(data)
             , depth_buffer(depth_buffer)
             , MVP(MVP)
@@ -749,15 +747,15 @@ struct render_functor {
             , camPos(camPos)
             , camDir(camDir)
             , camUp(camUp)
+            , camRight(camRight)
             , res(res)
             , rects(rects)
             , sqRad(sqRad)
-            , rad(rad) {
-
-    }
+            , rad(rad) {}
 
 
-    __host__ __device__ float touchplane_old(glm::vec3 const& objPos) {
+    __host__ __device__ float touchplane_old(glm::vec3 const& objPos, glm::vec3 const& co_pos) {
+#if 0
         glm::vec2 mins, maxs;
 
         glm::vec3 di = objPos - camPos;
@@ -805,6 +803,82 @@ struct render_functor {
         glm::vec2 vh = glm::vec2(v3 - v4);
 
         auto l = glm::max(length(vw), length(vh));
+#else
+        // Sphere-Touch-Plane-Approach
+
+        //glm::vec2 winHalf = glm::vec2(config.res.x, config.res.y); // window size
+
+        glm::vec2 d, p, q, h, dd;
+
+        // get camera orthonormal coordinate system
+        glm::vec4 tmp;
+
+        glm::vec2 mins, maxs;
+        glm::vec3 testPos;
+        glm::vec4 projPos;
+        float l;
+
+        //float sqrRad = rad * rad;
+
+        // projected camera vector
+        glm::vec3 c2 = glm::vec3(glm::dot(co_pos, camRight), glm::dot(co_pos, camUp), glm::dot(co_pos, camDir));
+
+        glm::vec3 cpj1 = camDir * c2.z + camRight * c2.x;
+        glm::vec3 cpm1 = camDir * c2.x - camRight * c2.z;
+
+        glm::vec3 cpj2 = camDir * c2.z + camUp * c2.y;
+        glm::vec3 cpm2 = camDir * c2.y - camUp * c2.z;
+
+        d.x = glm::length(cpj1);
+        d.y = glm::length(cpj2);
+
+        dd = glm::vec2(1.0) / d;
+
+        p = sqRad * dd;
+        q = d - p;
+        h = glm::sqrt(p * q);
+
+        p *= dd;
+        h *= dd;
+
+        cpj1 *= p.x;
+        cpm1 *= h.x;
+        cpj2 *= p.y;
+        cpm2 *= h.y;
+
+        // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
+        testPos = glm::vec3(objPos) + cpj1 + cpm1;
+        projPos = MVP * glm::vec4(testPos, 1.0);
+        projPos /= projPos.w;
+        mins = glm::vec2(projPos);
+        maxs = glm::vec2(projPos);
+
+        testPos -= glm::vec3(2.0) * cpm1;
+        projPos = MVP * glm::vec4(testPos, 1.0);
+        projPos /= projPos.w;
+        mins = glm::min(mins, glm::vec2(projPos));
+        maxs = glm::max(maxs, glm::vec2(projPos));
+
+        testPos = glm::vec3(objPos) + cpj2 + cpm2;
+        projPos = MVP * glm::vec4(testPos, 1.0);
+        projPos /= projPos.w;
+        mins = glm::min(mins, glm::vec2(projPos));
+        maxs = glm::max(maxs, glm::vec2(projPos));
+
+        testPos -= glm::vec3(2.0) * cpm2;
+        projPos = MVP * glm::vec4(testPos, 1.0);
+        projPos /= projPos.w;
+        mins = glm::min(mins, glm::vec2(projPos));
+        maxs = glm::max(maxs, glm::vec2(projPos));
+
+        /*testPos = glm::vec3(objPos) - config.camDir * rad;
+        projPos = config.MVP * glm::vec4(testPos, 1.0);
+        projPos /= projPos.w;
+
+        projPos = glm::vec4((mins + maxs) * glm::vec2(0.5), projPos.z, 1.0);*/
+        maxs = (maxs - mins) * glm::vec2(0.5) * glm::vec2(res);
+        l = glm::max(maxs.x, maxs.y) + 0.5;
+#endif
 
         return l;
     }
@@ -835,13 +909,13 @@ struct render_functor {
         /*if ((w_id % SR_SUBDIVISIONS)%2 == 1)
             return;*/
 
-        glm::uvec4 const rectangle = rects[w_id];
+        //glm::uvec4 const rectangle = rects[w_id];
 
         for (int p_idx = p_begin; p_idx < p_end; ++p_idx) {
             glm::vec3 const p = data[p_idx];
 
             auto const oc_pos = p - camPos;
-            auto const l = touchplane_old(p);
+            auto const l = touchplane_old(p, -oc_pos);
 
             auto const tmp_dir = glm::normalize(oc_pos);
             auto pos = MVP * glm::vec4(p + tmp_dir * rad, 1.0f);
@@ -861,32 +935,140 @@ struct render_functor {
             auto x_high = glm::clamp<int>(screen_x + i_l, 0, res.x - 1);
 
             //if (x_low >= rectangle.x && x_low < rectangle.z && y_low >= rectangle.y && y_high < rectangle.w) {
-                /*y_low = glm::clamp<int>(y_low, rectangle.y, rectangle.w - 1);
-                y_high = glm::clamp<int>(y_high, rectangle.y, rectangle.w - 1);
-                x_low = glm::clamp<int>(x_low, rectangle.x, rectangle.z - 1);
-                x_high = glm::clamp<int>(x_high, rectangle.x, rectangle.z - 1);*/
+            /*y_low = glm::clamp<int>(y_low, rectangle.y, rectangle.w - 1);
+            y_high = glm::clamp<int>(y_high, rectangle.y, rectangle.w - 1);
+            x_low = glm::clamp<int>(x_low, rectangle.x, rectangle.z - 1);
+            x_high = glm::clamp<int>(x_high, rectangle.x, rectangle.z - 1);*/
 
-                for (int y = y_low; y <= y_high; ++y) {
-                    for (int x = x_low; x <= x_high; ++x) {
-                        auto ndc = win_trans_inv * glm::vec4(x, y, pos.z, 1.0);
-                        ndc = ndc * pw;
-                        ndc = MVPinv * ndc;
-                        auto const ray = glm::normalize(glm::vec3(ndc) - camPos);
-                        if (pre_intersection(ray, oc_pos, sqRad)) {
-                            auto const idx = x + y * res.x;
-                            d_db_entry d_val = depth_buffer[idx];
-                            if (pos.z < d_val.z) {
-                                d_val.z = pos.z;
-                                d_val.id = p_idx;
-                                d_val.oc_pos = oc_pos;
-                                d_val.ray = ray;
-                            }
-                            depth_buffer[idx] = d_val;
+            for (int y = y_low; y <= y_high; ++y) {
+                for (int x = x_low; x <= x_high; ++x) {
+                    auto ndc = win_trans_inv * glm::vec4(x, y, pos.z, 1.0);
+                    ndc = ndc * pw;
+                    ndc = MVPinv * ndc;
+                    auto const ray = glm::normalize(glm::vec3(ndc) - camPos);
+                    if (pre_intersection(ray, oc_pos, sqRad)) {
+                        auto const idx = x + y * res.x;
+                        d_db_entry& d_val = depth_buffer[idx];
+                        if (pos.z < d_val.z) {
+                            d_val.z = pos.z;
+                            d_val.id = p_idx;
+                            d_val.oc_pos = oc_pos;
+                            d_val.ray = ray;
                         }
+                        //depth_buffer[idx] = d_val;
                     }
                 }
+            }
             //}
         }
+    }
+};
+
+
+struct blit_functor {
+    d_db_entry* depth_buffer;
+
+    glm::vec3 lightDir;
+
+    float sqRad;
+    float rad;
+
+    blit_functor(d_db_entry* depth_buffer, glm::vec3 lightDir, float sqRad, float rad)
+            : depth_buffer(depth_buffer)
+            , lightDir(lightDir)
+            , sqRad(sqRad)
+            , rad(rad) {}
+
+    __host__ __device__ bool intersection_old(
+        glm::vec3 ray, glm::vec3 oc_pos, float sqrRad, float rad, glm::vec3& normal, float& t) const {
+        // transform fragment coordinates from window coordinates to view coordinates.
+        /*vec4 coord =
+            vec4(2.0f * (gl_FragCoord.xy / viewAttr.zw) - 1.0f, (2.0f * gl_FragCoord.z) / (far - near) - 1.0f, 1.0f);*/
+
+        //glm::vec4 coord = fragCoord * glm::vec4(2.0f / static_cast<float>(config.res.x), 2.0f / static_cast<float>(config.res.y), 2.0, 0.0) + glm::vec4(-1.0, -1.0, -1.0, 1.0);
+        //auto coord = fragCoord;
+
+        // transform fragment coordinates from view coordinates to object coordinates.
+        //coord = config.MVPinv * coord;
+        //coord /= coord.w;
+
+        //ray = glm::normalize(glm::vec3(coord) - config.camPos);
+
+        // calculate the geometry-ray-intersection
+        float b = dot(oc_pos, ray); // projected length of the cam-sphere-vector onto the ray
+        glm::vec3 temp = b * ray - oc_pos;
+        float delta =
+            sqrRad - dot(temp, temp); // Raytracing Gem Magic (http://www.realtimerendering.com/raytracinggems/)
+
+        if (delta < 0.0f)
+            return false;
+
+        float c = dot(oc_pos, oc_pos) - sqrRad;
+
+        float s = b < 0.0f ? -1.0f : 1.0f;
+        float q = b + s * sqrt(delta);
+        t = std::fmin(c / q, q);
+
+        glm::vec3 sphereintersection = t * ray - oc_pos; // intersection point
+        normal = (sphereintersection) / rad;
+
+        return true;
+    }
+
+    __host__ __device__ glm::vec3 LocalLighting(
+        const glm::vec3 ray, const glm::vec3 normal, const glm::vec3 lightdir, const glm::vec3 color) const {
+
+        glm::vec3 lightdirn = normalize(-lightdir); // (negativ light dir for directional lighting)
+
+        glm::vec4 lightparams = glm::vec4(0.2, 0.8, 0.4, 10.0);
+#define LIGHT_AMBIENT lightparams.x
+#define LIGHT_DIFFUSE lightparams.y
+#define LIGHT_SPECULAR lightparams.z
+#define LIGHT_EXPONENT lightparams.w
+
+        float nDOTl = dot(normal, lightdirn);
+
+        glm::vec3 specular_color = glm::vec3(0.0, 0.0, 0.0);
+#ifdef USE_SPECULAR_COMPONENT
+        vec3 r = normalize(2.0 * vec3(nDOTl) * normal - lightdirn);
+        specular_color = LIGHT_SPECULAR * vec3(pow(max(dot(r, -ray), 0.0), LIGHT_EXPONENT));
+#endif // USE_SPECULAR_COMPONENT
+
+        return LIGHT_AMBIENT * color + LIGHT_DIFFUSE * color * glm::max(nDOTl, 0.0f) + specular_color;
+    }
+
+    __host__ __device__ glm::uvec4 operator()(d_db_entry const& d_val) const {
+        //auto const idx = x + y * res.x;
+        //auto const& d_val = depth_buffer[idx];
+        if (d_val.id == -1)
+            return glm::uvec4(0, 0, 0, 255);
+        auto const i = d_val.id;
+        /*auto const pos =
+            glm::vec3(data.positions[0][i * 4 + 0], data.positions[0][i * 4 + 1], data.positions[0][i * 4 + 2]);*/
+        glm::vec3 normal;
+        float t;
+
+        /*float d = 1.0f / (std::tanf(config.fovy * 0.5f));
+        float p_x = x + 0.5f;
+        float p_y = y + 0.5f;
+
+        glm::vec3 dir = glm::vec3(config.ratio * (2.0f * p_x / static_cast<float>(config.res.x)) - 1.0f,
+            2.0f * p_y / static_cast<float>(config.res.y) - 1.0f, -d);
+        dir = glm::normalize(dir);*/
+
+        /*auto r = generateRay(config, glm::ivec2(x, y));
+
+        auto ndc = win_trans_inv * glm::vec4(x, y, std::get<0>(d_val), 1.0);
+        ndc = ndc * std::get<3>(d_val);*/
+
+        if (intersection_old(d_val.ray, d_val.oc_pos, sqRad, rad, normal, t)) {
+            auto col = LocalLighting(d_val.ray, normal, lightDir, glm::vec3(1));
+            col = col * 255.f;
+            return glm::u8vec4(
+                static_cast<uint8_t>(col.x), static_cast<uint8_t>(col.y), static_cast<uint8_t>(col.z), 255);
+            //image[idx] = glm::u8vec4(255);
+        }
+        return glm::uvec4(0, 0, 0, 1);
     }
 };
 
@@ -991,7 +1173,7 @@ struct render_functor2 {
             sqrRad - dot(temp, temp); // Raytracing Gem Magic (http://www.realtimerendering.com/raytracinggems/)
 
         if (delta < 0.0f)
-                return false;
+            return false;
 
         return true;
     }
@@ -1003,7 +1185,7 @@ struct render_functor2 {
         auto const p_end = job.z;
 
         if (w_id < 0)
-                return;
+            return;
 
         /*if ((w_id % SR_SUBDIVISIONS)%2 == 1)
             return;*/
@@ -1011,54 +1193,54 @@ struct render_functor2 {
         //glm::uvec4 const rectangle = rects[w_id];
 
         for (int p_idx = p_begin; p_idx < p_end; ++p_idx) {
-                glm::vec3 const p = data[thrust::get<0>(ids[p_idx])];
+            glm::vec3 const p = data[thrust::get<0>(ids[p_idx])];
 
-                auto const oc_pos = p - camPos;
-                auto const l = touchplane_old(p);
+            auto const oc_pos = p - camPos;
+            auto const l = touchplane_old(p);
 
-                auto const tmp_dir = glm::normalize(oc_pos);
-                auto pos = MVP * glm::vec4(p + tmp_dir * rad, 1.0f);
-                auto const pw = pos.w;
-                pos = pos / pos.w;
-                pos = win_trans * pos;
+            auto const tmp_dir = glm::normalize(oc_pos);
+            auto pos = MVP * glm::vec4(p + tmp_dir * rad, 1.0f);
+            auto const pw = pos.w;
+            pos = pos / pos.w;
+            pos = win_trans * pos;
 
-                auto const screen_x = static_cast<int>(pos.x);
-                auto const screen_y = static_cast<int>(pos.y);
-                /*if (screen_x < rectangle.x || screen_x >= rectangle.z || screen_y < rectangle.y ||
-                    screen_y >= rectangle.w)
-                    continue;*/
-                auto const i_l = static_cast<int>(std::ceilf(l * 0.5f));
-                auto y_low = glm::clamp<int>(screen_y - i_l, 0, res.y - 1);
-                auto y_high = glm::clamp<int>(screen_y + i_l, 0, res.y - 1);
-                auto x_low = glm::clamp<int>(screen_x - i_l, 0, res.x - 1);
-                auto x_high = glm::clamp<int>(screen_x + i_l, 0, res.x - 1);
+            auto const screen_x = static_cast<int>(pos.x);
+            auto const screen_y = static_cast<int>(pos.y);
+            /*if (screen_x < rectangle.x || screen_x >= rectangle.z || screen_y < rectangle.y ||
+                screen_y >= rectangle.w)
+                continue;*/
+            auto const i_l = static_cast<int>(std::ceilf(l * 0.5f));
+            auto y_low = glm::clamp<int>(screen_y - i_l, 0, res.y - 1);
+            auto y_high = glm::clamp<int>(screen_y + i_l, 0, res.y - 1);
+            auto x_low = glm::clamp<int>(screen_x - i_l, 0, res.x - 1);
+            auto x_high = glm::clamp<int>(screen_x + i_l, 0, res.x - 1);
 
-                //if (x_low >= rectangle.x && x_low < rectangle.z && y_low >= rectangle.y && y_high < rectangle.w) {
-                /*y_low = glm::clamp<int>(y_low, rectangle.y, rectangle.w - 1);
-                y_high = glm::clamp<int>(y_high, rectangle.y, rectangle.w - 1);
-                x_low = glm::clamp<int>(x_low, rectangle.x, rectangle.z - 1);
-                x_high = glm::clamp<int>(x_high, rectangle.x, rectangle.z - 1);*/
+            //if (x_low >= rectangle.x && x_low < rectangle.z && y_low >= rectangle.y && y_high < rectangle.w) {
+            /*y_low = glm::clamp<int>(y_low, rectangle.y, rectangle.w - 1);
+            y_high = glm::clamp<int>(y_high, rectangle.y, rectangle.w - 1);
+            x_low = glm::clamp<int>(x_low, rectangle.x, rectangle.z - 1);
+            x_high = glm::clamp<int>(x_high, rectangle.x, rectangle.z - 1);*/
 
-                for (int y = y_low; y <= y_high; ++y) {
-                    for (int x = x_low; x <= x_high; ++x) {
-                        auto ndc = win_trans_inv * glm::vec4(x, y, pos.z, 1.0);
-                        ndc = ndc * pw;
-                        ndc = MVPinv * ndc;
-                        auto const ray = glm::normalize(glm::vec3(ndc) - camPos);
-                        if (pre_intersection(ray, oc_pos, sqRad)) {
-                            auto const idx = x + y * res.x;
-                            d_db_entry& d_val = depth_buffer[idx];
-                            if (pos.z < d_val.z) {
-                                d_val.z = pos.z;
-                                d_val.id = p_idx;
-                                d_val.oc_pos = oc_pos;
-                                d_val.ray = ray;
-                            }
-                            //depth_buffer[idx] = d_val;
+            for (int y = y_low; y <= y_high; ++y) {
+                for (int x = x_low; x <= x_high; ++x) {
+                    auto ndc = win_trans_inv * glm::vec4(x, y, pos.z, 1.0);
+                    ndc = ndc * pw;
+                    ndc = MVPinv * ndc;
+                    auto const ray = glm::normalize(glm::vec3(ndc) - camPos);
+                    if (pre_intersection(ray, oc_pos, sqRad)) {
+                        auto const idx = x + y * res.x;
+                        d_db_entry& d_val = depth_buffer[idx];
+                        if (pos.z < d_val.z) {
+                            d_val.z = pos.z;
+                            d_val.id = p_idx;
+                            d_val.oc_pos = oc_pos;
+                            d_val.ray = ray;
                         }
+                        //depth_buffer[idx] = d_val;
                     }
                 }
-                //}
+            }
+            //}
         }
     }
 };
@@ -1136,8 +1318,9 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
         tmp_data[i] =
             glm::vec3(data.positions[0][i * 4 + 0], data.positions[0][i * 4 + 1], data.positions[0][i * 4 + 2]);
     }
-    
-    using Pool = thrust::mr::disjoint_unsynchronized_pool_resource<thrust::device_memory_resource, thrust::mr::new_delete_resource>;
+
+    using Pool = thrust::mr::disjoint_unsynchronized_pool_resource<thrust::device_memory_resource,
+        thrust::mr::new_delete_resource>;
     using IntAlloc = thrust::mr::allocator<int, Pool>;
     using Vec3Alloc = thrust::mr::allocator<glm::vec3, Pool>;
     using IVec3Alloc = thrust::mr::allocator<glm::ivec3, Pool>;
@@ -1176,12 +1359,16 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
 
     thrust::VECTOR_T<d_db_entry> d_depth_buffer(num_pixels, fill_db_entry);
     thrust::VECTOR_T<glm::uvec4> d_worklets(v_worklets.begin(), v_worklets.end());
+    thrust::VECTOR_T<glm::uvec4> d_image(num_pixels, glm::uvec4(0));
 
     thrust::VECTOR_T<int> test_list(num_particles);
 
-    auto render_func = render_functor(thrust::raw_pointer_cast(&d_in_data[0]), thrust::raw_pointer_cast(&d_depth_buffer[0]), config.MVP,
-        config.MVPinv, win_trans,
-        win_trans_inv, config.camPos, config.camDir, config.camUp, config.res, thrust::raw_pointer_cast(&d_worklets[0]), sqRad, rad);
+    auto render_func =
+        render_functor(thrust::raw_pointer_cast(&d_in_data[0]), thrust::raw_pointer_cast(&d_depth_buffer[0]),
+            config.MVP, config.MVPinv, win_trans, win_trans_inv, config.camPos, config.camDir, config.camUp,
+            config.camRight, config.res, thrust::raw_pointer_cast(&d_worklets[0]), sqRad, rad);
+
+    auto blit_func = blit_functor(thrust::raw_pointer_cast(&d_depth_buffer[0]), config.lightDir, sqRad, rad);
 
     /*cudaStream_t s1;
     cudaStreamCreate(&s1);*/
@@ -1189,19 +1376,19 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
     thrust::VECTOR_T<int> p_id(num_particles);
     thrust::VECTOR_T<thrust::tuple<int, int>> t_cell(num_particles);
 
-    auto render_func2 = render_functor2(thrust::raw_pointer_cast(&d_in_data[0]),
-        thrust::raw_pointer_cast(&d_depth_buffer[0]), thrust::raw_pointer_cast(&t_cell[0]), config.MVP,
-        config.MVPinv, win_trans, win_trans_inv,
-        config.camPos, config.camDir, config.camUp, config.res, thrust::raw_pointer_cast(&d_worklets[0]), sqRad, rad);
+    auto render_func2 =
+        render_functor2(thrust::raw_pointer_cast(&d_in_data[0]), thrust::raw_pointer_cast(&d_depth_buffer[0]),
+            thrust::raw_pointer_cast(&t_cell[0]), config.MVP, config.MVPinv, win_trans, win_trans_inv, config.camPos,
+            config.camDir, config.camUp, config.res, thrust::raw_pointer_cast(&d_worklets[0]), sqRad, rad);
 
     thrust::copy(
         thrust::device, thrust::counting_iterator<int>(0), thrust::counting_iterator<int>(num_particles), p_id.begin());
-    //thrust::copy(p_id.begin(), p_id.begin()+10, std::ostream_iterator<int>(std::cout, " "));
+//thrust::copy(p_id.begin(), p_id.begin()+10, std::ostream_iterator<int>(std::cout, " "));
 
 
-    /*auto s_iter_begin = thrust::make_zip_iterator(thrust::make_tuple(p_id.begin(), thrust::make_transform_iterator(d_in_data.begin(), hash_func)));
-    auto s_iter_end = thrust::make_zip_iterator(thrust::make_tuple(p_id.end(), thrust::make_transform_iterator(d_in_data.end(), hash_func)));*/
-    #if 0
+/*auto s_iter_begin = thrust::make_zip_iterator(thrust::make_tuple(p_id.begin(), thrust::make_transform_iterator(d_in_data.begin(), hash_func)));
+auto s_iter_end = thrust::make_zip_iterator(thrust::make_tuple(p_id.end(), thrust::make_transform_iterator(d_in_data.end(), hash_func)));*/
+#if 0
     auto start_s = std::chrono::high_resolution_clock::now();
     thrust::transform(
         POLICY, d_in_data.begin(), d_in_data.end(), thrust::counting_iterator<int>(0), t_cell.begin(), hash_func2);
@@ -1220,14 +1407,18 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
     auto end_s = std::chrono::high_resolution_clock::now();
     std::cout << "[SphereRasterizer] test processing time "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end_s - start_s).count() << "ms" << std::endl;
-    #endif
-    #if 1
+#endif
+#if 1
 
-    
+
     /*auto temp_ptr = alloc.allocate(1024 * 1024 * 1024);
     alloc.deallocate(temp_ptr, 1024 * 1024 * 1024);*/
 
     auto start_x = std::chrono::high_resolution_clock::now();
+#ifdef MEGAMOL_USE_PROFILING
+    pm->set_transient_comment((*timing_handles_)[3], "thrust");
+    pm->start_timer((*timing_handles_)[3]);
+#endif
     thrust::transform(POLICY, d_in_data.begin(), d_in_data.end(), d_cell_id.begin(), hash_func);
     thrust::sort_by_key(POLICY, d_cell_id.begin(), d_cell_id.end(), d_in_data.begin());
     //auto first_it = thrust::find_if(d_cell_id.begin(), d_cell_id.end(), [](auto const& val) { return val != -1; });
@@ -1260,10 +1451,14 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
         d_h_id_begin_end.begin(), hash_id_transform_functor());
     //cudaDeviceSynchronize();
     thrust::for_each(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(), render_func);
+    thrust::transform(POLICY, d_depth_buffer.begin(), d_depth_buffer.end(), d_image.begin(), blit_func);
     cudaDeviceSynchronize();
+#ifdef MEGAMOL_USE_PROFILING
+    pm->stop_timer((*timing_handles_)[3]);
+#endif
     auto end_x = std::chrono::high_resolution_clock::now();
 
-    #if 0
+#if 0
     worker_hash w(data.positions[0], counter, config, win_trans, config.res.x / 20, config.res.y / 20);
     oneapi::tbb::parallel_for((unsigned int)0, (unsigned int)num_particles, [&w](unsigned int i) { w(i); });
 
@@ -1298,13 +1493,12 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
 
     //    id_list[idx][idx_vec[idx]] = id;
     //    });
-    #endif
-
+#endif
 
 
     std::cout << "[SphereRasterizer] hashing processing time "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end_x - start_x).count() << "ms" << std::endl;
-    #endif
+#endif
     //thrust::copy(d_histo.begin(), d_histo.end(), std::ostream_iterator<int>(std::cout, " "));
     /*std::cout << std::endl;
     for (auto const& el : d_h_id_begin_end) {
@@ -1533,6 +1727,8 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
             continue;
         image[idx] = glm::u8vec4(255);
     }*/
+
+    thrust::copy(d_image.begin(), d_image.end(), image.begin());
 
     // per pixel ray casting
     return image;

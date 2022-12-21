@@ -318,14 +318,15 @@ private:
         MESH_GEO,
         MESH_GEO_TASK,
         MESH_GEO_ALTN,
-        MESH_GEO_CAM
+        MESH_GEO_CAM,
+        THRUST
     };
 
     using method_ut = std::underlying_type_t<method_e>;
 
-    std::array<std::string, 16> method_strings = {"VAO", "TEX", "COPY", "COPY_VERT", "SSBO", "SSBO_GEO", "SSBO_VERT",
+    std::array<std::string, 17> method_strings = {"VAO", "TEX", "COPY", "COPY_VERT", "SSBO", "SSBO_GEO", "SSBO_VERT",
         "SSBO_QUAD", "SSBO_STRIP", "SSBO_MUZIC", "MESH", "MESH_ALTN", "MESH_GEO", "MESH_GEO_TASK", "MESH_GEO_ALTN",
-        "MESH_GEO_CAM"};
+        "MESH_GEO_CAM", "THRUST"};
 
     bool Render(mmstd_gl::CallRender3DGL& call) override;
 

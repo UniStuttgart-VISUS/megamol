@@ -6,6 +6,10 @@
 
 #include "srtest/rendering_task.h"
 
+#ifdef MEGAMOL_USE_PROFILING
+#include "PerformanceManager.h"
+#endif
+
 namespace megamol::moldyn_gl::rendering {
 class SphereRasterizer {
 public:
@@ -28,8 +32,12 @@ public:
 
     std::vector<glm::u8vec4> Compute(config_t const& config, data_package_t const& data);
 
+#ifdef MEGAMOL_USE_PROFILING
+    megamol::frontend_resources::PerformanceManager::handle_vector* timing_handles_;
+
+    megamol::frontend_resources::PerformanceManager* pm;
+#endif
 protected:
 private:
-    
 };
 } // namespace megamol::moldyn_gl::rendering
