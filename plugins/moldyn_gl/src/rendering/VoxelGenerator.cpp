@@ -88,11 +88,11 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
 
         do {
             particle_call->SetFrameID(frameID, true);
-            if (!(*particle_call)(1)) {
+            if (!(*particle_call)(VolumetricDataCall::IDX_GET_EXTENTS)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("VoxelGenerator: Unable to get extents.");
                 return false;
             }
-            if (!(*particle_call)(0)) {
+            if (!(*particle_call)(VolumetricDataCall::IDX_GET_DATA)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("VoxelGenerator: Unable to get data.");
                 return false;
             }
@@ -152,7 +152,31 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
     // TODO
 
     // see SphereRenderer.cpp
-    // MDAOVolumeGenerator? (vol_gen_)
+
+
+    //----------------------------------------
+    // use MDAOVolumeGenerator? (vol_gen_)
+ 
+    //  SetShaderSourceFactory(..)
+    //  Init(..)
+ 
+    //  SetResolution(width, height, depth)
+    //  ClearVolume()
+    //  StartInsertion(..)
+    //  for
+    //      InsertParticles(..)
+    //  EndInsertion()
+    //  RecreateMipMap()
+
+    // GetVolumeTextureHandle()
+
+    //----------------------------------------
+
+
+
+    // inDensityTex
+
+
 
     return true;
 }

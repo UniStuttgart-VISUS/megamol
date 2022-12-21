@@ -257,6 +257,26 @@ bool SphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     }
     this->cur_clip_box_ = cr->AccessBoundingBoxes().ClipBox();
 
+    // TODO
+    // Voxel generator
+    VolumetricDataCall* c_voxel = this->get_voxels_.CallAs<VolumetricDataCall>();
+    if (c_voxel != nullptr) {
+        // checkout megamol\plugins\mmospray\src\OSPRayStructuredVolume.cpp     //c_voxel->SetFrameID(0,true); //do while...
+        c_voxel->SetFrameID(
+            static_cast<unsigned int>(cr->Time()), this->force_time_slot_.Param<param::BoolParam>()->Value());
+        if (!(*c_voxel)(VolumetricDataCall::IDX_GET_EXTENTS)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("SphereRenderer: could not get all extents (VolumetricDataCall)");
+        } else {
+            //TODO get voxel extents?
+            
+            //auto dataHash = c_voxel->DataHash();
+            //auto frameId = c_voxel->FrameID();
+            //auto const metadata = c_voxel->GetMetadata();
+            //auto voxel_data = c_voxel->GetData();
+            //auto test = false;
+        }
+    }
+
     return true;
 }
 
@@ -997,27 +1017,6 @@ bool SphereRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     this->cur_mvp_ = proj * view;
     this->cur_mvp_inv_ = glm::inverse(this->cur_mvp_);
     this->cur_mvp_transp_ = glm::transpose(this->cur_mvp_);
-
-    // TODO
-    // Voxel generator
-    VolumetricDataCall* c_voxel = this->get_voxels_.CallAs<VolumetricDataCall>();
-    //VolumetricDataCall c_voxel = this->getVoxelData();
-    if (c_voxel != nullptr) {
-        // checkout megamol\plugins\mmospray\src\OSPRayStructuredVolume.cpp
-        //c_voxel->SetFrameID(0,true); //do while...
-
-        c_voxel->SetFrameID(static_cast<unsigned int>(call.Time()), this->force_time_slot_.Param<param::BoolParam>()->Value());
-        bool test = false;
-        if (!(*c_voxel)(1)) { //from IsoSurface.cpp (0)
-            test = false;
-        } else {
-            auto dataHash = c_voxel->DataHash();
-            auto frameId = c_voxel->FrameID();
-            test = true;
-        }
-        auto const metadata = c_voxel->GetMetadata(); //TODO remove (data lcoation not set correctly..)
-        auto voxel_data = c_voxel->GetData();
-    }
 
     // Lights
     this->cur_light_dir_ = {0.0f, 0.0f, 0.0f, 1.0f};
