@@ -515,8 +515,8 @@ std::vector<OptionsListEntry> cli_options_list =
             echolevel_handler},
         {project_option, "Project file(s) to load at startup", cxxopts::value<std::vector<std::string>>(),
             project_handler},
-        {execute_lua_option, "Execute Lua command(s). Commands separated by ;",
-            cxxopts::value<std::string>(), execute_lua_handler},
+        {execute_lua_option, "Execute Lua command(s). Commands separated by ;", cxxopts::value<std::string>(),
+            execute_lua_handler},
         {global_option, "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value",
             cxxopts::value<std::vector<std::string>>(), global_value_handler}
 

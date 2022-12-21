@@ -8,10 +8,9 @@
 
 #include "AnimationEditorData.h"
 #include "ModuleGraphSubscription.h"
-#include "AnimationEditorData.h"
 
-#include <glowl/GLSLProgram.hpp>
 #include <glowl/BufferObject.hpp>
+#include <glowl/GLSLProgram.hpp>
 
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/param/ParamSlot.h"
@@ -111,8 +110,7 @@ private:
         {core::utility::DEFAULTVIEW_FACE_LEFT, core::utility::DEFAULTORIENTATION_TOP},
         {core::utility::DEFAULTVIEW_FACE_RIGHT, core::utility::DEFAULTORIENTATION_TOP},
         {core::utility::DEFAULTVIEW_FACE_TOP, core::utility::DEFAULTORIENTATION_TOP},
-        {core::utility::DEFAULTVIEW_FACE_BOTTOM, core::utility::DEFAULTORIENTATION_TOP}
-    };
+        {core::utility::DEFAULTVIEW_FACE_BOTTOM, core::utility::DEFAULTORIENTATION_TOP}};
 
     std::shared_ptr<glowl::FramebufferObject> approx_fbo;
     CallRender3DGL* call_to_hijack = nullptr;

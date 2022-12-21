@@ -7,8 +7,7 @@
 #include <vector>
 
 glm::vec4 megamol::core::utility::get_default_camera_position(BoundingBoxes_2 const& bboxs,
-    view::Camera::PerspectiveParameters cam_intrinsics,
-    glm::quat const& camera_orientation, DefaultView dv) {
+    view::Camera::PerspectiveParameters cam_intrinsics, glm::quat const& camera_orientation, DefaultView dv) {
 
     glm::vec4 default_position = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -657,7 +656,8 @@ glm::quat megamol::core::utility::get_default_camera_orientation(DefaultView dv,
     return default_orientation;
 }
 
-glm::vec2 megamol::core::utility::get_min_max_dist_to_bbox(BoundingBoxes_2 const& bboxs, const view::Camera::Pose& pose) {
+glm::vec2 megamol::core::utility::get_min_max_dist_to_bbox(
+    BoundingBoxes_2 const& bboxs, const view::Camera::Pose& pose) {
     // compute min and max distance from camera to bounding box corners
     auto pointPlaneDist = [](std::array<float, 3> point, std::array<float, 3> point_on_plane,
                               std::array<float, 3> plane_normal) -> float {

@@ -5,8 +5,8 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/graphics/CameraUtils.h"
-#include "mmcore_gl/utility/ShaderFactory.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore_gl/utility/ShaderFactory.h"
 
 megamol::mmstd_gl::AnimationRenderer::AnimationRenderer()
         : Renderer3DModuleGL()
@@ -87,8 +87,8 @@ bool megamol::mmstd_gl::AnimationRenderer::create() {
     }
 
     try {
-        campath_program = core::utility::make_glowl_shader("campath", shaderOptions,
-            "mmstd_gl/animation/campath.vert.glsl", "mmstd_gl/animation/campath.frag.glsl");
+        campath_program = core::utility::make_glowl_shader(
+            "campath", shaderOptions, "mmstd_gl/animation/campath.vert.glsl", "mmstd_gl/animation/campath.frag.glsl");
     } catch (std::exception& e) {
         core::utility::log::Log::DefaultLog.WriteError(
             ("AnimationRenderer: could not compile cam path rendering shader: " + std::string(e.what())).c_str());
@@ -174,7 +174,8 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
             auto dor = snaps_to_take[i].second;
 
             auto cam_orientation = core::utility::get_default_camera_orientation(dv, dor);
-            auto cam_position = core::utility::get_default_camera_position(lastBBox, cam_intrinsics, cam_orientation, dv);
+            auto cam_position =
+                core::utility::get_default_camera_position(lastBBox, cam_intrinsics, cam_orientation, dv);
             core::view::Camera::Pose cam_pose(glm::vec3(cam_position), cam_orientation);
 
             auto min_max_dist = core::utility::get_min_max_dist_to_bbox(lastBBox, cam_pose);
@@ -249,8 +250,7 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
             key_indices.emplace_back(key);
         }
         glBindVertexArray(keys_vao);
-        animation_keys->rebuffer(
-            key_indices.data(), key_indices.size() * sizeof(int));
+        animation_keys->rebuffer(key_indices.data(), key_indices.size() * sizeof(int));
 
         keys_program->use();
         keys_program->setUniform("mvp", mvp);

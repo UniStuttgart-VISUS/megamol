@@ -12,7 +12,7 @@
 
 namespace megamol::core::utility {
 
-    /** Enum for default views from the respective direction */
+/** Enum for default views from the respective direction */
 enum DefaultView : int {
     DEFAULTVIEW_FACE_FRONT = 0,
     DEFAULTVIEW_FACE_BACK = 1,

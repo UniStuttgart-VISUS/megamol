@@ -9,8 +9,8 @@
 
 
 #include "AbstractWindow.h"
-#include "CommonTypes.h"
 #include "AnimationEditorData.h"
+#include "CommonTypes.h"
 #include "imgui_canvas.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/animation/AnimationData.h"

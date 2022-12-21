@@ -657,9 +657,9 @@ void AnimationEditor::SelectAnimation(int32_t a) {
 void AnimationEditor::DrawParams() {
     ImGui::Text("Available Parameters");
     bool have_pos = false, have_orient = false;
-    if (selectedAnimation > -1 && std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])) {
-        const auto& fva =
-            std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
+    if (selectedAnimation > -1 &&
+        std::holds_alternative<animation::FloatVectorAnimation>(allAnimations[selectedAnimation])) {
+        const auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
         have_pos = fva.VectorLength() == 3;
         have_orient = fva.VectorLength() == 4;
     }

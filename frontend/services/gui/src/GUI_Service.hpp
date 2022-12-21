@@ -11,10 +11,10 @@
 
 
 #include "AbstractFrontendService.hpp"
+#include "AnimationEditorData.h"
 #include "CommonTypes.h"
 #include "GUIRegisterWindow.h"
 #include "GUIState.h"
-#include "AnimationEditorData.h"
 #include "PerformanceManager.h"
 #include "gui_render_backend.h"
 #include "mmcore/MegaMolGraph.h"

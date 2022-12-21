@@ -297,8 +297,7 @@ std::vector<FrontendResource>& GUI_Service::getProvidedResources() {
     this->m_providedResourceReferences = {
         {megamol::frontend_resources::GUIState_Req_Name, this->m_providedStateResource},
         {megamol::frontend_resources::GUIRegisterWindow_Req_Name, this->m_providedRegisterWindowResource},
-        {megamol::frontend_resources::AnimationEditorData_Req_Name, this->m_providedAnimationEditorData}
-    };
+        {megamol::frontend_resources::AnimationEditorData_Req_Name, this->m_providedAnimationEditorData}};
     return this->m_providedResourceReferences;
 }
 

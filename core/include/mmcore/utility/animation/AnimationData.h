@@ -446,4 +446,3 @@ using FloatVectorAnimation = VectorAnimation<FloatKey>;
 namespace megamol::core::utility {
 std::ostream& operator<<(std::ostream& outs, const animation::VectorKey<animation::FloatKey>::ValueType& value);
 }
-
