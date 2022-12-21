@@ -28,6 +28,10 @@
 
 #include <thrust/system/cuda/execution_policy.h>
 
+#include <thrust/iterator/transform_iterator.h>
+#include <thrust/iterator/zip_iterator.h>
+#include <thrust/iterator/permutation_iterator.h>
+
 
 #define SR_SUBDIVISIONS 640
 #define VECTOR_T device_vector
@@ -514,7 +518,7 @@ struct worker_vertex {
 };
 
 
-struct hash_functor {
+struct hash_functor : public thrust::unary_function<glm::vec3, int> {
     glm::mat4 MVP;
     glm::mat4 win_trans;
     glm::vec2 mins;
@@ -526,7 +530,7 @@ struct hash_functor {
             , mins(mins)
             , res(res)
             , subs(subs) {}
-    __host__ __device__ int operator()(glm::vec3 const& p) {
+    __host__ __device__ int operator()(glm::vec3 p) const {
         auto pos = MVP * glm::vec4(p, 1);
         pos = pos / pos.w;
         if (pos.x < -1.0f || pos.x > 1.0f)
@@ -544,6 +548,39 @@ struct hash_functor {
         auto const idx = x + y * SR_SUBDIVISIONS;
 
         return idx;
+    }
+};
+
+struct hash_functor2 {
+    glm::mat4 MVP;
+    glm::mat4 win_trans;
+    glm::vec2 mins;
+    glm::vec2 res;
+    glm::vec2 subs;
+    hash_functor2(glm::mat4 MVP, glm::mat4 win_trans, glm::vec2 mins, glm::vec2 res, glm::vec2 subs)
+            : MVP(MVP)
+            , win_trans(win_trans)
+            , mins(mins)
+            , res(res)
+            , subs(subs) {}
+    __host__ __device__ thrust::tuple<int, int> operator()(glm::vec3 const& p, int id) const {
+        auto pos = MVP * glm::vec4(p, 1);
+        pos = pos / pos.w;
+        if (pos.x < -1.0f || pos.x > 1.0f)
+            return -1;
+        if (pos.y < -1.0f || pos.y > 1.0f)
+            return -1;
+        pos = win_trans * pos;
+
+        auto const screen_x = static_cast<int>(pos.x);
+        auto const screen_y = static_cast<int>(pos.y);
+
+        int const x = (screen_x - mins.x) / subs.x;
+        int const y = (screen_y - mins.y) / subs.y;
+
+        auto const idx = x + y * SR_SUBDIVISIONS;
+
+        return thrust::make_tuple(id, idx);
     }
 };
 
@@ -745,7 +782,198 @@ struct render_functor {
 };
 
 
+struct render_functor2 {
+    glm::vec3 const* data;
+    d_db_entry* depth_buffer;
+    thrust::tuple<int, int>* ids;
 
+    glm::mat4 MVP;
+    glm::mat4 MVPinv;
+    glm::mat4 win_trans;
+    glm::mat4 win_trans_inv;
+    glm::vec3 camPos;
+    glm::vec3 camDir;
+    glm::vec3 camUp;
+    glm::uvec2 res;
+
+    //glm::uvec4 const* rects;
+
+    float sqRad;
+    float rad;
+
+
+    render_functor2(glm::vec3 const* data, d_db_entry* depth_buffer, thrust::tuple<int, int>* ids, glm::mat4 MVP,
+        glm::mat4 MVPinv, glm::mat4 win_trans, glm::mat4 win_trans_inv, glm::vec3 camPos, glm::vec3 camDir,
+        glm::vec3 camUp, glm::uvec2 res, glm::uvec4 const* rects, float sqRad, float rad)
+            : data(data)
+            , depth_buffer(depth_buffer)
+            , ids(ids)
+            , MVP(MVP)
+            , MVPinv(MVPinv)
+            , win_trans(win_trans)
+            , win_trans_inv(win_trans_inv)
+            , camPos(camPos)
+            , camDir(camDir)
+            , camUp(camUp)
+            , res(res)
+            //, rects(rects)
+            , sqRad(sqRad)
+            , rad(rad) {}
+
+
+    __host__ __device__ float touchplane_old(glm::vec3 const& objPos) {
+        glm::vec2 mins, maxs;
+
+        glm::vec3 di = objPos - camPos;
+        float dd = glm::dot(di, di);
+
+        float s = sqRad / dd;
+
+        float p = sqRad / sqrt(dd);
+
+        float v = rad / sqrt(1.0f - s);
+        //v = v / sqrt(dd) * (sqrt(dd) - p);
+        v = v - v * sqRad / dd;
+
+        glm::vec3 vr = glm::normalize(glm::cross(di, camUp)) * v;
+        glm::vec3 vu = glm::normalize(glm::cross(di, vr)) * v;
+
+        glm::vec3 base = objPos - p * camDir;
+
+        glm::vec4 v1 = MVP * glm::vec4(base + vr, 1.0f);
+        glm::vec4 v2 = MVP * glm::vec4(base - vr, 1.0f);
+        glm::vec4 v3 = MVP * glm::vec4(base + vu, 1.0f);
+        glm::vec4 v4 = MVP * glm::vec4(base - vu, 1.0f);
+
+        v1 /= v1.w;
+        v2 /= v2.w;
+        v3 /= v3.w;
+        v4 /= v4.w;
+
+        mins = glm::vec2(v1);
+        maxs = glm::vec2(v1);
+        mins = glm::min(mins, glm::vec2(v2));
+        maxs = glm::max(maxs, glm::vec2(v2));
+        mins = glm::min(mins, glm::vec2(v3));
+        maxs = glm::max(maxs, glm::vec2(v3));
+        mins = glm::min(mins, glm::vec2(v4));
+        maxs = glm::max(maxs, glm::vec2(v4));
+
+        glm::vec2 factor = 0.5f * glm::vec2(res);
+        v1 = glm::vec4(factor * (glm::vec2(v1) + 1.0f), 0, 0);
+        v2 = glm::vec4(factor * (glm::vec2(v2) + 1.0f), 0, 0);
+        v3 = glm::vec4(factor * (glm::vec2(v3) + 1.0f), 0, 0);
+        v4 = glm::vec4(factor * (glm::vec2(v4) + 1.0f), 0, 0);
+
+        glm::vec2 vw = glm::vec2(v1 - v2);
+        glm::vec2 vh = glm::vec2(v3 - v4);
+
+        auto l = glm::max(length(vw), length(vh));
+
+        return l;
+    }
+
+
+    __host__ __device__ bool pre_intersection(glm::vec3 ray, glm::vec3 oc_pos, float sqrRad) {
+        // calculate the geometry-ray-intersection
+        float b = dot(oc_pos, ray); // projected length of the cam-sphere-vector onto the ray
+        glm::vec3 temp = b * ray - oc_pos;
+        float delta =
+            sqrRad - dot(temp, temp); // Raytracing Gem Magic (http://www.realtimerendering.com/raytracinggems/)
+
+        if (delta < 0.0f)
+                return false;
+
+        return true;
+    }
+
+
+    __host__ __device__ void operator()(glm::ivec3 const& job) {
+        auto w_id = job.x;
+        auto const p_begin = job.y;
+        auto const p_end = job.z;
+
+        if (w_id < 0)
+                return;
+
+        /*if ((w_id % SR_SUBDIVISIONS)%2 == 1)
+            return;*/
+
+        //glm::uvec4 const rectangle = rects[w_id];
+
+        for (int p_idx = p_begin; p_idx < p_end; ++p_idx) {
+                glm::vec3 const p = data[thrust::get<0>(ids[p_idx])];
+
+                auto const oc_pos = p - camPos;
+                auto const l = touchplane_old(p);
+
+                auto const tmp_dir = glm::normalize(oc_pos);
+                auto pos = MVP * glm::vec4(p + tmp_dir * rad, 1.0f);
+                auto const pw = pos.w;
+                pos = pos / pos.w;
+                pos = win_trans * pos;
+
+                auto const screen_x = static_cast<int>(pos.x);
+                auto const screen_y = static_cast<int>(pos.y);
+                /*if (screen_x < rectangle.x || screen_x >= rectangle.z || screen_y < rectangle.y ||
+                    screen_y >= rectangle.w)
+                    continue;*/
+                auto const i_l = static_cast<int>(std::ceilf(l * 0.5f));
+                auto y_low = glm::clamp<int>(screen_y - i_l, 0, res.y - 1);
+                auto y_high = glm::clamp<int>(screen_y + i_l, 0, res.y - 1);
+                auto x_low = glm::clamp<int>(screen_x - i_l, 0, res.x - 1);
+                auto x_high = glm::clamp<int>(screen_x + i_l, 0, res.x - 1);
+
+                //if (x_low >= rectangle.x && x_low < rectangle.z && y_low >= rectangle.y && y_high < rectangle.w) {
+                /*y_low = glm::clamp<int>(y_low, rectangle.y, rectangle.w - 1);
+                y_high = glm::clamp<int>(y_high, rectangle.y, rectangle.w - 1);
+                x_low = glm::clamp<int>(x_low, rectangle.x, rectangle.z - 1);
+                x_high = glm::clamp<int>(x_high, rectangle.x, rectangle.z - 1);*/
+
+                for (int y = y_low; y <= y_high; ++y) {
+                    for (int x = x_low; x <= x_high; ++x) {
+                        auto ndc = win_trans_inv * glm::vec4(x, y, pos.z, 1.0);
+                        ndc = ndc * pw;
+                        ndc = MVPinv * ndc;
+                        auto const ray = glm::normalize(glm::vec3(ndc) - camPos);
+                        if (pre_intersection(ray, oc_pos, sqRad)) {
+                            auto const idx = x + y * res.x;
+                            d_db_entry& d_val = depth_buffer[idx];
+                            if (pos.z < d_val.z) {
+                                d_val.z = pos.z;
+                                d_val.id = p_idx;
+                                d_val.oc_pos = oc_pos;
+                                d_val.ray = ray;
+                            }
+                            //depth_buffer[idx] = d_val;
+                        }
+                    }
+                }
+                //}
+        }
+    }
+};
+
+
+struct sort_functor {
+    __host__ __device__ bool operator()(thrust::tuple<int, int> const& lhs, thrust::tuple<int, int> const& rhs) const {
+        return thrust::get<1>(lhs) < thrust::get<1>(rhs);
+    }
+};
+
+
+struct copy_functor {
+    __host__ __device__ int operator()(thrust::tuple<int, int> const& lhs) const {
+        return thrust::get<1>(lhs);
+    }
+};
+
+
+struct bound_functor {
+    __host__ __device__ bool operator()(int lhs, thrust::tuple<int, int> const& rhs) const {
+        return lhs < thrust::get<1>(rhs);
+    }
+};
 
 
 std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Compute(
@@ -817,18 +1045,19 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
     DBAlloc db_alloc(&pool);
 
 
-    thrust::VECTOR_T<glm::vec3, Vec3Alloc> d_in_data(tmp_data.begin(), tmp_data.end(), vec3_alloc);
-    thrust::VECTOR_T<int, IntAlloc> d_cell_id(num_particles, -1, int_alloc);
+    thrust::VECTOR_T<glm::vec3> d_in_data(tmp_data.begin(), tmp_data.end());
+    thrust::VECTOR_T<int> d_cell_id(num_particles, -1);
 
     /*auto const sub_x = config.res.x / SR_SUBDIVISIONS;
     auto const sub_y = config.res.y / SR_SUBDIVISIONS;*/
 
     auto hash_func = hash_functor(config.MVP, win_trans, f_mins, f_res, f_subs);
+    auto hash_func2 = hash_functor2(config.MVP, win_trans, f_mins, f_res, f_subs);
 
-    thrust::VECTOR_T<int, IntAlloc> d_histo(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 2, 0, int_alloc);
-    thrust::VECTOR_T<int, IntAlloc> d_h_begin(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1, int_alloc);
-    thrust::VECTOR_T<int, IntAlloc> d_h_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1, int_alloc);
-    thrust::VECTOR_T<glm::ivec3, IVec3Alloc> d_h_id_begin_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS, ivec3_alloc);
+    thrust::VECTOR_T<int> d_histo(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 2, 0);
+    thrust::VECTOR_T<int> d_h_begin(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1);
+    thrust::VECTOR_T<int> d_h_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1);
+    thrust::VECTOR_T<glm::ivec3> d_h_id_begin_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS);
 
     d_db_entry fill_db_entry;
     fill_db_entry.z = config.near_far.y;
@@ -836,34 +1065,67 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
     fill_db_entry.oc_pos = glm::vec3(0.0);
     fill_db_entry.ray = glm::vec3(0.0);
 
-    thrust::VECTOR_T<d_db_entry, DBAlloc> d_depth_buffer(num_pixels, fill_db_entry, db_alloc);
-    thrust::VECTOR_T<glm::uvec4, UVec4Alloc> d_worklets(v_worklets.begin(), v_worklets.end(), uvec4_alloc);
+    thrust::VECTOR_T<d_db_entry> d_depth_buffer(num_pixels, fill_db_entry);
+    thrust::VECTOR_T<glm::uvec4> d_worklets(v_worklets.begin(), v_worklets.end());
 
-    thrust::VECTOR_T<int, IntAlloc> test_list(num_particles, int_alloc);
+    thrust::VECTOR_T<int> test_list(num_particles);
 
     auto render_func = render_functor(thrust::raw_pointer_cast(&d_in_data[0]), thrust::raw_pointer_cast(&d_depth_buffer[0]), config.MVP,
         config.MVPinv, win_trans,
         win_trans_inv, config.camPos, config.camDir, config.camUp, config.res, thrust::raw_pointer_cast(&d_worklets[0]), sqRad, rad);
 
-    cudaStream_t s1;
-    cudaStreamCreate(&s1);
+    /*cudaStream_t s1;
+    cudaStreamCreate(&s1);*/
 
-    auto start_x = std::chrono::high_resolution_clock::now();
+    thrust::device_vector<int> p_id(num_particles);
+    thrust::device_vector<thrust::tuple<int, int>> t_cell(num_particles);
 
+    auto render_func2 = render_functor2(thrust::raw_pointer_cast(&d_in_data[0]),
+        thrust::raw_pointer_cast(&d_depth_buffer[0]), thrust::raw_pointer_cast(&t_cell[0]), config.MVP,
+        config.MVPinv, win_trans, win_trans_inv,
+        config.camPos, config.camDir, config.camUp, config.res, thrust::raw_pointer_cast(&d_worklets[0]), sqRad, rad);
+
+    thrust::copy(
+        thrust::device, thrust::counting_iterator<int>(0), thrust::counting_iterator<int>(num_particles), p_id.begin());
+    //thrust::copy(p_id.begin(), p_id.begin()+10, std::ostream_iterator<int>(std::cout, " "));
+
+
+    /*auto s_iter_begin = thrust::make_zip_iterator(thrust::make_tuple(p_id.begin(), thrust::make_transform_iterator(d_in_data.begin(), hash_func)));
+    auto s_iter_end = thrust::make_zip_iterator(thrust::make_tuple(p_id.end(), thrust::make_transform_iterator(d_in_data.end(), hash_func)));*/
+    #if 1
+    auto start_s = std::chrono::high_resolution_clock::now();
     thrust::transform(
-        thrust::cuda::par(int_alloc).on(s1), d_in_data.begin(), d_in_data.end(), d_cell_id.begin(), hash_func);
-    thrust::sort_by_key(thrust::cuda::par(int_alloc).on(s1), d_cell_id.begin(), d_cell_id.end(), d_in_data.begin());
+        POLICY, d_in_data.begin(), d_in_data.end(), thrust::counting_iterator<int>(0), t_cell.begin(), hash_func2);
+    thrust::sort(POLICY, t_cell.begin(), t_cell.end(), sort_functor());
+    thrust::transform(POLICY, t_cell.begin(), t_cell.end(), test_list.begin(), copy_functor());
+    test_list.erase(thrust::unique(POLICY, test_list.begin(), test_list.end()), test_list.end());
+    thrust::upper_bound(
+        POLICY, t_cell.begin(), t_cell.end(), test_list.begin(), test_list.end(), d_histo.begin() + 1, bound_functor());
+    thrust::transform(POLICY, d_histo.begin(), d_histo.begin() + test_list.size(), d_histo.begin() + 1,
+        d_h_id_begin_end.begin(), hash_transform_functor());
+    thrust::transform(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(), test_list.begin(),
+        d_h_id_begin_end.begin(), hash_id_transform_functor());
+    //cudaDeviceSynchronize();
+    thrust::for_each(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(), render_func2);
+    cudaDeviceSynchronize();
+    auto end_s = std::chrono::high_resolution_clock::now();
+    std::cout << "[SphereRasterizer] test processing time "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(end_s - start_s).count() << "ms" << std::endl;
+    #endif
+    #if 0
+
+    thrust::transform(POLICY, d_in_data.begin(), d_in_data.end(), d_cell_id.begin(), hash_func);
+    thrust::sort_by_key(POLICY, d_cell_id.begin(), d_cell_id.end(), d_in_data.begin());
     //auto first_it = thrust::find_if(d_cell_id.begin(), d_cell_id.end(), [](auto const& val) { return val != -1; });
     //auto offset = thrust::distance(d_cell_id.begin(), first_it);
     //auto offset = 0;
-    thrust::copy(thrust::cuda::par(int_alloc).on(s1), d_cell_id.begin(), d_cell_id.end(), test_list.begin());
-    test_list.erase(
-        thrust::unique(thrust::cuda::par(int_alloc).on(s1), test_list.begin(), test_list.end()), test_list.end());
+    thrust::copy(POLICY, d_cell_id.begin(), d_cell_id.end(), test_list.begin());
+    test_list.erase(thrust::unique(POLICY, test_list.begin(), test_list.end()), test_list.end());
     //thrust::counting_iterator<int> search_begin(-1);
     /*thrust::upper_bound(d_cell_id.begin() + offset, d_cell_id.end(), search_begin,
         search_begin + (SR_SUBDIVISIONS * SR_SUBDIVISIONS) + 1, d_histo.begin());*/
-    thrust::upper_bound(thrust::cuda::par(int_alloc).on(s1), d_cell_id.begin(), d_cell_id.end(), test_list.begin(),
-        test_list.end(), d_histo.begin() + 1);
+    thrust::upper_bound(
+        POLICY, d_cell_id.begin(), d_cell_id.end(), test_list.begin(), test_list.end(), d_histo.begin() + 1);
     //d_histo.erase(d_histo.begin() + test_list.size(), d_histo.end());
 #if 0
     thrust::adjacent_difference(POLICY, d_histo.begin(), d_histo.begin() + test_list.size(), d_histo.begin());
@@ -878,13 +1140,15 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
     /*thrust::transform(d_h_id_begin_end.begin(), d_h_id_begin_end.end(), hash_begin,
         d_h_id_begin_end.begin(), hash_id_transform_functor());*/
 #endif
-    thrust::transform(thrust::cuda::par(int_alloc).on(s1), d_histo.begin(), d_histo.begin() + test_list.size(),
-        d_histo.begin() + 1, d_h_id_begin_end.begin(), hash_transform_functor());
-    thrust::transform(thrust::cuda::par(int_alloc).on(s1), d_h_id_begin_end.begin(),
-        d_h_id_begin_end.begin() + test_list.size(), test_list.begin(), d_h_id_begin_end.begin(),
-        hash_id_transform_functor());
-    thrust::for_each(thrust::cuda::par(int_alloc).on(s1), d_h_id_begin_end.begin(),
-        d_h_id_begin_end.begin() + test_list.size(), render_func);
+    thrust::transform(POLICY, d_histo.begin(), d_histo.begin() + test_list.size(), d_histo.begin() + 1,
+        d_h_id_begin_end.begin(), hash_transform_functor());
+    thrust::transform(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(), test_list.begin(),
+        d_h_id_begin_end.begin(), hash_id_transform_functor());
+    cudaDeviceSynchronize();
+    auto start_x = std::chrono::high_resolution_clock::now();
+    thrust::for_each(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(), render_func);
+    cudaDeviceSynchronize();
+    auto end_x = std::chrono::high_resolution_clock::now();
 
     #if 0
     worker_hash w(data.positions[0], counter, config, win_trans, config.res.x / 20, config.res.y / 20);
@@ -924,12 +1188,11 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
     #endif
 
 
-    cudaDeviceSynchronize();
-    auto end_x = std::chrono::high_resolution_clock::now();
 
     std::cout << "[SphereRasterizer] hashing processing time "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end_x - start_x).count() << "ms" << std::endl;
-    //thrust::copy(d_h_end.begin(), d_h_end.end(), std::ostream_iterator<int>(std::cout, " "));
+    #endif
+    //thrust::copy(d_histo.begin(), d_histo.end(), std::ostream_iterator<int>(std::cout, " "));
     /*std::cout << std::endl;
     for (auto const& el : d_h_id_begin_end) {
         std::cout << el[2] << " ";
