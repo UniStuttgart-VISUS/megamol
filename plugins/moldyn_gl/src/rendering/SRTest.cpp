@@ -470,9 +470,16 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
     sr_cfg.fovy = cam.get<core::view::Camera::FieldOfViewY>();
     sr_cfg.ratio = cam.get<core::view::Camera::AspectRatio>();
     sr_cfg.lightDir = curlightDir;
+    sr_cfg.lower = glm::vec3(in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetX(),
+        in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetY(),
+        in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetLeftBottomBack().GetZ());
+    sr_cfg.upper = glm::vec3(in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetRightTopFront().GetX(),
+        in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetRightTopFront().GetY(),
+        in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetRightTopFront().GetZ());
     auto img_data = sr.Compute(sr_cfg, data_);
     stbi_write_png("sr_img.png", cr_fbo->getWidth(), cr_fbo->getHeight(), 4, img_data.data(),
         cr_fbo->getWidth() * sizeof(glm::u8vec4));
+    //std::exit(0);
     #endif
 
     // data_.pl_data.clip_distance = clip_thres_slot_.Param<core::param::FloatParam>()->Value();
