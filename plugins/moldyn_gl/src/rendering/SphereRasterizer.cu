@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <tuple>
+#include <map>
 
 #include <omp.h>
 #include <oneapi/tbb.h>
@@ -27,6 +28,7 @@
 #include <thrust/mr/device_memory_resource.h>
 
 #include <thrust/system/cuda/execution_policy.h>
+#include <thrust/system/cuda/vector.h>
 
 #include <thrust/iterator/transform_iterator.h>
 #include <thrust/iterator/zip_iterator.h>
@@ -34,10 +36,117 @@
 
 
 #define SR_SUBDIVISIONS 640
-#define VECTOR_T device_vector
-#define POLICY thrust::device
+#define VECTOR_T cuda::vector
+#define POLICY thrust::cuda::par(alloc)
 
 struct my_policy : thrust::cuda::execution_policy<my_policy> {};
+
+
+
+struct not_my_pointer {
+    not_my_pointer(void* p) : message() {
+        std::stringstream s;
+        s << "Pointer `" << p << "` was not allocated by this allocator.";
+        message = s.str();
+    }
+
+    virtual ~not_my_pointer() {}
+
+    virtual const char* what() const {
+        return message.c_str();
+    }
+
+private:
+    std::string message;
+};
+
+// A simple allocator for caching cudaMalloc allocations.
+struct cached_allocator {
+    typedef char value_type;
+
+    cached_allocator() {}
+
+    ~cached_allocator() {
+        free_all();
+    }
+
+    char* allocate(std::ptrdiff_t num_bytes) {
+        std::cout << "cached_allocator::allocate(): num_bytes == " << num_bytes << std::endl;
+
+        char* result = 0;
+
+        // Search the cache for a free block.
+        free_blocks_type::iterator free_block = free_blocks.find(num_bytes);
+
+        if (free_block != free_blocks.end()) {
+            std::cout << "cached_allocator::allocate(): found a free block" << std::endl;
+
+            result = free_block->second;
+
+            // Erase from the `free_blocks` map.
+            free_blocks.erase(free_block);
+        } else {
+            // No allocation of the right size exists, so create a new one with
+            // `thrust::cuda::malloc`.
+            try {
+                std::cout << "cached_allocator::allocate(): allocating new block" << std::endl;
+
+                // Allocate memory and convert the resulting `thrust::cuda::pointer` to
+                // a raw pointer.
+                result = thrust::cuda::malloc<char>(num_bytes).get();
+            } catch (std::runtime_error&) {
+                throw;
+            }
+        }
+
+        // Insert the allocated pointer into the `allocated_blocks` map.
+        allocated_blocks.insert(std::make_pair(result, num_bytes));
+
+        return result;
+    }
+
+    void deallocate(char* ptr, size_t) {
+        std::cout << "cached_allocator::deallocate(): ptr == " << reinterpret_cast<void*>(ptr) << std::endl;
+
+        // Erase the allocated block from the allocated blocks map.
+        allocated_blocks_type::iterator iter = allocated_blocks.find(ptr);
+
+        if (iter == allocated_blocks.end())
+            throw not_my_pointer(reinterpret_cast<void*>(ptr));
+
+        std::ptrdiff_t num_bytes = iter->second;
+        allocated_blocks.erase(iter);
+
+        // Insert the block into the free blocks map.
+        free_blocks.insert(std::make_pair(num_bytes, ptr));
+    }
+
+private:
+    typedef std::multimap<std::ptrdiff_t, char*> free_blocks_type;
+    typedef std::map<char*, std::ptrdiff_t> allocated_blocks_type;
+
+    free_blocks_type free_blocks;
+    allocated_blocks_type allocated_blocks;
+
+    void free_all() {
+        std::cout << "cached_allocator::free_all()" << std::endl;
+
+        // Deallocate all outstanding blocks in both lists.
+        for (free_blocks_type::iterator i = free_blocks.begin(); i != free_blocks.end(); ++i) {
+            // Transform the pointer to cuda::pointer before calling cuda::free.
+            thrust::cuda::free(thrust::cuda::pointer<char>(i->second));
+        }
+
+        for (allocated_blocks_type::iterator i = allocated_blocks.begin(); i != allocated_blocks.end(); ++i) {
+            // Transform the pointer to cuda::pointer before calling cuda::free.
+            thrust::cuda::free(thrust::cuda::pointer<char>(i->first));
+        }
+    }
+};
+
+static cached_allocator alloc;
+
+
 
 
 float touchplane_old(megamol::moldyn_gl::rendering::SphereRasterizer::config_t const& config, glm::vec3 objPos,
@@ -1077,8 +1186,8 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
     /*cudaStream_t s1;
     cudaStreamCreate(&s1);*/
 
-    thrust::device_vector<int> p_id(num_particles);
-    thrust::device_vector<thrust::tuple<int, int>> t_cell(num_particles);
+    thrust::VECTOR_T<int> p_id(num_particles);
+    thrust::VECTOR_T<thrust::tuple<int, int>> t_cell(num_particles);
 
     auto render_func2 = render_functor2(thrust::raw_pointer_cast(&d_in_data[0]),
         thrust::raw_pointer_cast(&d_depth_buffer[0]), thrust::raw_pointer_cast(&t_cell[0]), config.MVP,
@@ -1092,7 +1201,7 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
 
     /*auto s_iter_begin = thrust::make_zip_iterator(thrust::make_tuple(p_id.begin(), thrust::make_transform_iterator(d_in_data.begin(), hash_func)));
     auto s_iter_end = thrust::make_zip_iterator(thrust::make_tuple(p_id.end(), thrust::make_transform_iterator(d_in_data.end(), hash_func)));*/
-    #if 1
+    #if 0
     auto start_s = std::chrono::high_resolution_clock::now();
     thrust::transform(
         POLICY, d_in_data.begin(), d_in_data.end(), thrust::counting_iterator<int>(0), t_cell.begin(), hash_func2);
@@ -1112,8 +1221,13 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
     std::cout << "[SphereRasterizer] test processing time "
               << std::chrono::duration_cast<std::chrono::milliseconds>(end_s - start_s).count() << "ms" << std::endl;
     #endif
-    #if 0
+    #if 1
 
+    
+    /*auto temp_ptr = alloc.allocate(1024 * 1024 * 1024);
+    alloc.deallocate(temp_ptr, 1024 * 1024 * 1024);*/
+
+    auto start_x = std::chrono::high_resolution_clock::now();
     thrust::transform(POLICY, d_in_data.begin(), d_in_data.end(), d_cell_id.begin(), hash_func);
     thrust::sort_by_key(POLICY, d_cell_id.begin(), d_cell_id.end(), d_in_data.begin());
     //auto first_it = thrust::find_if(d_cell_id.begin(), d_cell_id.end(), [](auto const& val) { return val != -1; });
@@ -1144,8 +1258,7 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
         d_h_id_begin_end.begin(), hash_transform_functor());
     thrust::transform(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(), test_list.begin(),
         d_h_id_begin_end.begin(), hash_id_transform_functor());
-    cudaDeviceSynchronize();
-    auto start_x = std::chrono::high_resolution_clock::now();
+    //cudaDeviceSynchronize();
     thrust::for_each(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(), render_func);
     cudaDeviceSynchronize();
     auto end_x = std::chrono::high_resolution_clock::now();

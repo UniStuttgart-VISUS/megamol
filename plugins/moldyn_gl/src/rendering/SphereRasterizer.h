@@ -30,5 +30,6 @@ public:
 
 protected:
 private:
+    
 };
 } // namespace megamol::moldyn_gl::rendering
