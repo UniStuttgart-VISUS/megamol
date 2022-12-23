@@ -15,7 +15,7 @@
 #include "stb/stb_image_write.h"
 
 #define SCALE 0.0001f
-//#define __SRTEST_CON_RAS__
+#define __SRTEST_CON_RAS__
 //#define __SRTEST_CAM_ALIGNED__
 
 megamol::moldyn_gl::rendering::SRTest::SRTest()
