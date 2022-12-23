@@ -115,10 +115,10 @@ void Profiling_Service::fill_lua_callbacks() {
     auto& render_next_frame = _requestedResourcesReferences[2].getResource<std::function<bool()>>();
 
 
-    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, int>(
-        "mmGenerateCameraScenes", "(string entrypoint, string camera_path_pattern, uint num_samples)",
+    callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, int, float>(
+        "mmGenerateCameraScenes", "(string entrypoint, string camera_path_pattern, uint num_samples, float dis_of_le)",
         {[&graph](std::string entrypoint, std::string camera_path_pattern,
-             int num_samples) -> frontend_resources::LuaCallbacksCollection::StringResult {
+             int num_samples, float dis_of_le) -> frontend_resources::LuaCallbacksCollection::StringResult {
             auto entry = graph.FindModule(entrypoint);
             if (!entry)
                 return frontend_resources::LuaCallbacksCollection::Error{"could not find entrypoint"};
@@ -128,7 +128,7 @@ void Profiling_Service::fill_lua_callbacks() {
             auto cam_func = megamol::core::utility::GetCamScenesFunctional(camera_path_pattern);
             if (!cam_func)
                 return frontend_resources::LuaCallbacksCollection::Error{"could not request camera path pattern"};
-            auto camera_samples = megamol::core::utility::SampleCameraScenes(view, cam_func, num_samples);
+            auto camera_samples = megamol::core::utility::SampleCameraScenes(view, cam_func, num_samples, dis_of_le);
             if (camera_samples.empty())
                 return frontend_resources::LuaCallbacksCollection::Error{"could not sample camera"};
             return frontend_resources::LuaCallbacksCollection::StringResult{camera_samples};
