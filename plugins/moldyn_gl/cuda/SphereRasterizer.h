@@ -4,7 +4,7 @@
 
 #include <glm/glm.hpp>
 
-#include "srtest/rendering_task.h"
+#include "rendering/srtest/rendering_task.h"
 
 #ifdef MEGAMOL_USE_PROFILING
 #include "PerformanceManager.h"

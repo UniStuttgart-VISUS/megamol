@@ -8,7 +8,9 @@
 #include "mmstd/light/DistantLight.h"
 #include "OpenGL_Context.h"
 
+#ifdef MEGAMOL_USE_CUDA
 #include "SphereRasterizer.h"
+#endif
 
 #include "stb/stb_image_write.h"
 
@@ -457,6 +459,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
         old_cam_ = cam;
     }
 
+    #ifdef MEGAMOL_USE_CUDA
     #if 1
     if (method == method_e::THRUST) {
         SphereRasterizer sr;
@@ -499,6 +502,7 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
 
         return true;
     }
+    #endif
     #endif
 
     // data_.pl_data.clip_distance = clip_thres_slot_.Param<core::param::FloatParam>()->Value();
