@@ -449,10 +449,10 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
         /*core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] x_angle %f y_angle %f ratio %f",
             static_cast<float>(x_angle), static_cast<float>(y_angle), static_cast<float>(ratio));*/
 
-        ubo_st.frustum_ratio_x = 1.0f / std::cosf(x_angle);
-        ubo_st.frustum_ratio_y = 1.0f / std::cosf(y_angle);
-        ubo_st.frustum_ratio_w = std::tanf(x_angle);
-        ubo_st.frustum_ratio_h = std::tanf(y_angle);
+        ubo_st.frustum_ratio_x = 1.0f / std::cos(x_angle);
+        ubo_st.frustum_ratio_y = 1.0f / std::cos(y_angle);
+        ubo_st.frustum_ratio_w = std::tan(x_angle);
+        ubo_st.frustum_ratio_h = std::tan(y_angle);
 
         glNamedBufferSubData(ubo_, 0, sizeof(ubo_params_t), &ubo_st);
 
@@ -1024,7 +1024,7 @@ bool megamol::moldyn_gl::rendering::tex_rt::upload(data_package_t const& package
             package.positions[i].data(), 0);
 
         auto total_tex_size = package.positions[i].size() / 4;
-        auto base_size = std::floorf(sqrt(total_tex_size));
+        auto base_size = std::floor(sqrt(total_tex_size));
         auto left_size = total_tex_size / base_size;
         glBindTexture(GL_TEXTURE_BUFFER, tex_[i]);
         // glTextureStorage2D(tex_[i], 0, GL_RGBA32F, base_size, left_size);
