@@ -227,28 +227,28 @@ bool SphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     if (cr == nullptr)
         return false;
 
-    MultiParticleDataCall* c2 = this->get_data_slot_.CallAs<MultiParticleDataCall>();
-    if ((c2 != nullptr)) {
-        c2->SetFrameID(
+    MultiParticleDataCall* c_particle = this->get_data_slot_.CallAs<MultiParticleDataCall>();
+    if ((c_particle != nullptr)) {
+        c_particle->SetFrameID(
             static_cast<unsigned int>(cr->Time()), this->force_time_slot_.Param<param::BoolParam>()->Value());
-        if (!(*c2)(1))
+        if (!(*c_particle)(1))
             return false;
-        cr->SetTimeFramesCount(c2->FrameCount());
-        auto const plcount = c2->GetParticleListCount();
+        cr->SetTimeFramesCount(c_particle->FrameCount());
+        auto const plcount = c_particle->GetParticleListCount();
         if (this->use_local_bbox_param_.Param<param::BoolParam>()->Value() && plcount > 0) {
-            auto bbox = c2->AccessParticles(0).GetBBox();
+            auto bbox = c_particle->AccessParticles(0).GetBBox();
             auto cbbox = bbox;
-            cbbox.Grow(c2->AccessParticles(0).GetGlobalRadius());
+            cbbox.Grow(c_particle->AccessParticles(0).GetGlobalRadius());
             for (unsigned pidx = 1; pidx < plcount; ++pidx) {
-                auto temp = c2->AccessParticles(pidx).GetBBox();
+                auto temp = c_particle->AccessParticles(pidx).GetBBox();
                 bbox.Union(temp);
-                temp.Grow(c2->AccessParticles(pidx).GetGlobalRadius());
+                temp.Grow(c_particle->AccessParticles(pidx).GetGlobalRadius());
                 cbbox.Union(temp);
             }
             cr->AccessBoundingBoxes().SetBoundingBox(bbox);
             cr->AccessBoundingBoxes().SetClipBox(cbbox);
         } else {
-            cr->AccessBoundingBoxes() = c2->AccessBoundingBoxes();
+            cr->AccessBoundingBoxes() = c_particle->AccessBoundingBoxes();
         }
 
     } else {
@@ -266,14 +266,10 @@ bool SphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
             static_cast<unsigned int>(cr->Time()), this->force_time_slot_.Param<param::BoolParam>()->Value());
         if (!(*c_voxel)(VolumetricDataCall::IDX_GET_EXTENTS)) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("SphereRenderer: could not get all extents (VolumetricDataCall)");
-        } else {
-            //TODO get voxel extents?
-            
-            //auto dataHash = c_voxel->DataHash();
-            //auto frameId = c_voxel->FrameID();
-            //auto const metadata = c_voxel->GetMetadata();
-            //auto voxel_data = c_voxel->GetData();
-            //auto test = false;
+        }
+        if (!(*c_voxel)(VolumetricDataCall::IDX_GET_METADATA)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "SphereRenderer: could not get metadata (VolumetricDataCall)");
         }
     }
 
@@ -2436,6 +2432,9 @@ void SphereRenderer::rebuildWorkingData(
         this->vol_gen_->Init(frontend_resources.get<frontend_resources::OpenGL_Context>());
     }
 
+    // TODO
+    bool test = updateVolumeData(call.Time());
+
     // Recreate the volume if neccessary
     bool equal_clip_data = true;
     for (size_t i = 0; i < 4; i++) {
@@ -2596,4 +2595,37 @@ std::string SphereRenderer::generateDirectionShaderArrayString(
     result << ");" << std::endl;
 
     return result.str();
+}
+
+
+bool SphereRenderer::updateVolumeData(const unsigned int frameID) {
+    VolumetricDataCall* c_voxel = this->get_voxels_.CallAs<VolumetricDataCall>();
+
+    if (c_voxel != nullptr) {
+        c_voxel->SetFrameID(frameID, this->force_time_slot_.Param<param::BoolParam>()->Value());   
+        do {
+            if (!(*c_voxel)(VolumetricDataCall::IDX_GET_EXTENTS)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "SphereRenderer: could not get all extents (VolumetricDataCall)");
+            }
+            if (!(*c_voxel)(VolumetricDataCall::IDX_GET_METADATA)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "SphereRenderer: could not get metadata (VolumetricDataCall)");
+            }
+            if (!(*c_voxel)(VolumetricDataCall::IDX_GET_DATA)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                    "SphereRenderer: could not get data (VolumetricDataCall)");
+            }
+        } while (c_voxel->FrameID() != frameID);
+
+        // TODO get datahash and frameId
+
+        auto const metadata = c_voxel->GetMetadata();
+
+        auto test = c_voxel->GetVRAMData();
+
+        int i = 0;
+    }
+
+    return true;
 }

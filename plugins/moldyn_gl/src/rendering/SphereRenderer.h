@@ -663,6 +663,8 @@ private:
      * @param apex        ...
      */
     void generate3ConeDirections(std::vector<glm::vec4>& out_directions, float apex);
+
+    bool updateVolumeData(const unsigned int frameID);
 };
 
 } /* end namespace rendering */

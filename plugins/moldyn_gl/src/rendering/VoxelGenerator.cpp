@@ -134,6 +134,7 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
         metadata.IsUniform[1] = true;
         metadata.IsUniform[2] = true;
 
+        metadata.MemLoc = MemoryLocation::VRAM;
 
         // set volume call data
         volume_call->SetFrameID(time);
