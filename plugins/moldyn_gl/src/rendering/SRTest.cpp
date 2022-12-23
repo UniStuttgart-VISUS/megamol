@@ -482,7 +482,15 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
             in_call->AccessBoundingBoxes().ObjectSpaceBBox().GetRightTopFront().GetZ());
         sr.pm = &pm;
         sr.timing_handles_ = &timing_handles_;
-        auto img_data = sr.Compute(sr_cfg, data_);
+
+        std::vector<float> radii;
+        auto const pl_count = in_call->GetParticleListCount();
+        for (int i = 0; i < pl_count; ++i) {
+            auto const rad = in_call->AccessParticles(i).GetGlobalRadius();
+            radii.push_back(rad);
+        }
+
+        auto img_data = sr.Compute(sr_cfg, data_, radii);
         stbi_write_png("sr_img.png", cr_fbo->getWidth(), cr_fbo->getHeight(), 4, img_data.data(),
             cr_fbo->getWidth() * sizeof(glm::u8vec4));
         //std::exit(0);

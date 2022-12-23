@@ -30,7 +30,7 @@ public:
 
     using config_t = config;
 
-    std::vector<glm::u8vec4> Compute(config_t const& config, data_package_t const& data);
+    std::vector<glm::u8vec4> Compute(config_t& config, data_package_t const& data, std::vector<float> const& radius);
 
 #ifdef MEGAMOL_USE_PROFILING
     megamol::frontend_resources::PerformanceManager::handle_vector* timing_handles_;

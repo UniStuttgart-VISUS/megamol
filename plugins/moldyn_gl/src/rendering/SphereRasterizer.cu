@@ -1268,88 +1268,17 @@ struct bound_functor {
 
 
 std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Compute(
-    config_t const& config, data_package_t const& data) {
+    config_t& config, data_package_t const& data, std::vector<float> const& radius) {
+    auto const pl_count = radius.size();
+
     auto const num_pixels = config.res.x * config.res.y;
-    auto const num_particles = data.positions[0].size() / 4;
 
-    //auto const max_threads = omp_get_max_threads();
     auto const max_threads = oneapi::tbb::this_task_arena::max_concurrency();
-
     std::vector<std::vector<std::tuple<float, int, glm::vec3 /*oc_pos*/, glm::vec3 /*ray*/>>> depth_buffer(max_threads);
     for (int i = 0; i < max_threads; ++i) {
         depth_buffer[i] = std::vector<std::tuple<float, int, glm::vec3 /*oc_pos*/, glm::vec3 /*ray*/>>(
             num_pixels, std::make_tuple(config.near_far.y, -1, glm::vec3(0.0), glm::vec3(0.0)));
     }
-
-
-    /*float min_z = std::numeric_limits<float>::max();
-    float max_z = std::numeric_limits<float>::lowest();*/
-
-    glm::mat4 win_trans = glm::transpose(glm::mat4(glm::vec4(config.res.x * 0.5f, 0, 0, config.res.x * 0.5f),
-        glm::vec4(0, config.res.y * 0.5f, 0, config.res.y * 0.5f),
-        glm::vec4(0, 0, (config.near_far.y - config.near_far.x) * 0.5f, (config.near_far.y + config.near_far.x) * 0.5f),
-        glm::vec4(0, 0, 0, 1)));
-    glm::mat4 win_trans_inv = glm::inverse(win_trans);
-
-    glm::vec2 f_mins;
-    glm::vec2 f_res;
-    glm::vec2 f_subs;
-
-    auto worklets = create_worklets(config, win_trans, f_mins, f_res, f_subs);
-    std::vector<glm::uvec4> v_worklets(worklets.size());
-    std::transform(worklets.begin(), worklets.end(), v_worklets.begin(), [](worklet const& w) { return w.rectangle; });
-    //std::cout << "[SphereRasterizer] Max TBB threads " << oneapi::tbb::this_task_arena::max_concurrency() << std::endl;
-
-    std::cout << "[SphereRasterizer] Res: " << f_res.x << " " << f_res.y << std::endl;
-    std::cout << "[SphereRasterizer] Mins: " << f_mins.x << " " << f_mins.y << std::endl;
-    std::cout << "[SphereRasterizer] Subs: " << f_subs.x << " " << f_subs.y << std::endl;
-
-    float rad = config.global_radius;
-    float sqRad = config.global_radius * config.global_radius;
-
-    std::vector<std::vector<unsigned int>> counter(max_threads);
-    for (int i = 0; i < max_threads; ++i) {
-        counter[i] = std::vector<unsigned int>(SR_SUBDIVISIONS * SR_SUBDIVISIONS);
-    }
-
-    std::vector<glm::vec3> tmp_data(num_particles);
-
-    for (int i = 0; i < num_particles; ++i) {
-        tmp_data[i] =
-            glm::vec3(data.positions[0][i * 4 + 0], data.positions[0][i * 4 + 1], data.positions[0][i * 4 + 2]);
-    }
-
-    using Pool = thrust::mr::disjoint_unsynchronized_pool_resource<thrust::device_memory_resource,
-        thrust::mr::new_delete_resource>;
-    using IntAlloc = thrust::mr::allocator<int, Pool>;
-    using Vec3Alloc = thrust::mr::allocator<glm::vec3, Pool>;
-    using IVec3Alloc = thrust::mr::allocator<glm::ivec3, Pool>;
-    using UVec4Alloc = thrust::mr::allocator<glm::uvec4, Pool>;
-    using DBAlloc = thrust::mr::allocator<d_db_entry, Pool>;
-
-    thrust::device_memory_resource dev_memres;
-    thrust::mr::new_delete_resource memres;
-    Pool pool(&dev_memres, &memres);
-    IntAlloc int_alloc(&pool);
-    Vec3Alloc vec3_alloc(&pool);
-    IVec3Alloc ivec3_alloc(&pool);
-    UVec4Alloc uvec4_alloc(&pool);
-    DBAlloc db_alloc(&pool);
-
-
-    thrust::VECTOR_T<glm::vec3> d_in_data(tmp_data.begin(), tmp_data.end());
-    thrust::VECTOR_T<int> d_cell_id(num_particles, -1);
-
-    /*auto const sub_x = config.res.x / SR_SUBDIVISIONS;
-    auto const sub_y = config.res.y / SR_SUBDIVISIONS;*/
-
-    auto hash_func = hash_functor(config.MVP, win_trans, f_mins, f_res, f_subs);
-    auto hash_func2 = hash_functor2(config.MVP, win_trans, f_mins, f_res, f_subs);
-
-    thrust::VECTOR_T<int> d_histo(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 2, 0);
-    thrust::VECTOR_T<int> d_h_begin(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1);
-    thrust::VECTOR_T<int> d_h_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1);
-    thrust::VECTOR_T<glm::ivec3> d_h_id_begin_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS);
 
     d_db_entry fill_db_entry;
     fill_db_entry.z = config.near_far.y;
@@ -1358,31 +1287,125 @@ std::vector<glm::u8vec4> megamol::moldyn_gl::rendering::SphereRasterizer::Comput
     fill_db_entry.ray = glm::vec3(0.0);
 
     thrust::VECTOR_T<d_db_entry> d_depth_buffer(num_pixels, fill_db_entry);
-    thrust::VECTOR_T<glm::uvec4> d_worklets(v_worklets.begin(), v_worklets.end());
+
+    std::vector<glm::u8vec4> image(num_pixels, glm::u8vec4(0));
+
     thrust::VECTOR_T<glm::uvec4> d_image(num_pixels, glm::uvec4(0));
 
-    thrust::VECTOR_T<int> test_list(num_particles);
+    for (int pl_idx = 0; pl_idx < radius.size(); ++pl_idx) {
+        if (data.positions[0].size() == 0)
+            continue;
 
-    auto render_func =
-        render_functor(thrust::raw_pointer_cast(&d_in_data[0]), thrust::raw_pointer_cast(&d_depth_buffer[0]),
-            config.MVP, config.MVPinv, win_trans, win_trans_inv, config.camPos, config.camDir, config.camUp,
-            config.camRight, config.res, thrust::raw_pointer_cast(&d_worklets[0]), sqRad, rad);
+        auto const& data_vec = data.positions[pl_idx];
+        auto const global_rad = radius[pl_idx];
+        config.global_radius = global_rad;
 
-    auto blit_func = blit_functor(thrust::raw_pointer_cast(&d_depth_buffer[0]), config.lightDir, sqRad, rad);
+        
+        auto const num_particles = data_vec.size() / 4;
 
-    /*cudaStream_t s1;
-    cudaStreamCreate(&s1);*/
+        //auto const max_threads = omp_get_max_threads();
+        
 
-    thrust::VECTOR_T<int> p_id(num_particles);
-    thrust::VECTOR_T<thrust::tuple<int, int>> t_cell(num_particles);
+        
 
-    auto render_func2 =
-        render_functor2(thrust::raw_pointer_cast(&d_in_data[0]), thrust::raw_pointer_cast(&d_depth_buffer[0]),
-            thrust::raw_pointer_cast(&t_cell[0]), config.MVP, config.MVPinv, win_trans, win_trans_inv, config.camPos,
-            config.camDir, config.camUp, config.res, thrust::raw_pointer_cast(&d_worklets[0]), sqRad, rad);
 
-    thrust::copy(
-        thrust::device, thrust::counting_iterator<int>(0), thrust::counting_iterator<int>(num_particles), p_id.begin());
+        /*float min_z = std::numeric_limits<float>::max();
+        float max_z = std::numeric_limits<float>::lowest();*/
+
+        glm::mat4 win_trans = glm::transpose(glm::mat4(glm::vec4(config.res.x * 0.5f, 0, 0, config.res.x * 0.5f),
+            glm::vec4(0, config.res.y * 0.5f, 0, config.res.y * 0.5f),
+            glm::vec4(
+                0, 0, (config.near_far.y - config.near_far.x) * 0.5f, (config.near_far.y + config.near_far.x) * 0.5f),
+            glm::vec4(0, 0, 0, 1)));
+        glm::mat4 win_trans_inv = glm::inverse(win_trans);
+
+        glm::vec2 f_mins;
+        glm::vec2 f_res;
+        glm::vec2 f_subs;
+
+        auto worklets = create_worklets(config, win_trans, f_mins, f_res, f_subs);
+        std::vector<glm::uvec4> v_worklets(worklets.size());
+        std::transform(
+            worklets.begin(), worklets.end(), v_worklets.begin(), [](worklet const& w) { return w.rectangle; });
+        //std::cout << "[SphereRasterizer] Max TBB threads " << oneapi::tbb::this_task_arena::max_concurrency() << std::endl;
+
+        std::cout << "[SphereRasterizer] Res: " << f_res.x << " " << f_res.y << std::endl;
+        std::cout << "[SphereRasterizer] Mins: " << f_mins.x << " " << f_mins.y << std::endl;
+        std::cout << "[SphereRasterizer] Subs: " << f_subs.x << " " << f_subs.y << std::endl;
+
+        float rad = config.global_radius;
+        float sqRad = config.global_radius * config.global_radius;
+
+        std::vector<std::vector<unsigned int>> counter(max_threads);
+        for (int i = 0; i < max_threads; ++i) {
+            counter[i] = std::vector<unsigned int>(SR_SUBDIVISIONS * SR_SUBDIVISIONS);
+        }
+
+        std::vector<glm::vec3> tmp_data(num_particles);
+
+        for (int i = 0; i < num_particles; ++i) {
+            tmp_data[i] =
+                glm::vec3(data_vec[i * 4 + 0], data_vec[i * 4 + 1], data_vec[i * 4 + 2]);
+        }
+
+        using Pool = thrust::mr::disjoint_unsynchronized_pool_resource<thrust::device_memory_resource,
+            thrust::mr::new_delete_resource>;
+        using IntAlloc = thrust::mr::allocator<int, Pool>;
+        using Vec3Alloc = thrust::mr::allocator<glm::vec3, Pool>;
+        using IVec3Alloc = thrust::mr::allocator<glm::ivec3, Pool>;
+        using UVec4Alloc = thrust::mr::allocator<glm::uvec4, Pool>;
+        using DBAlloc = thrust::mr::allocator<d_db_entry, Pool>;
+
+        thrust::device_memory_resource dev_memres;
+        thrust::mr::new_delete_resource memres;
+        Pool pool(&dev_memres, &memres);
+        IntAlloc int_alloc(&pool);
+        Vec3Alloc vec3_alloc(&pool);
+        IVec3Alloc ivec3_alloc(&pool);
+        UVec4Alloc uvec4_alloc(&pool);
+        DBAlloc db_alloc(&pool);
+
+
+        thrust::VECTOR_T<glm::vec3> d_in_data(tmp_data.begin(), tmp_data.end());
+        thrust::VECTOR_T<int> d_cell_id(num_particles, -1);
+
+        /*auto const sub_x = config.res.x / SR_SUBDIVISIONS;
+        auto const sub_y = config.res.y / SR_SUBDIVISIONS;*/
+
+        auto hash_func = hash_functor(config.MVP, win_trans, f_mins, f_res, f_subs);
+        auto hash_func2 = hash_functor2(config.MVP, win_trans, f_mins, f_res, f_subs);
+
+        thrust::VECTOR_T<int> d_histo(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 2, 0);
+        thrust::VECTOR_T<int> d_h_begin(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1);
+        thrust::VECTOR_T<int> d_h_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS + 1);
+        thrust::VECTOR_T<glm::ivec3> d_h_id_begin_end(SR_SUBDIVISIONS * SR_SUBDIVISIONS);
+
+        
+        thrust::VECTOR_T<glm::uvec4> d_worklets(v_worklets.begin(), v_worklets.end());
+        
+
+        thrust::VECTOR_T<int> test_list(num_particles);
+
+        auto render_func =
+            render_functor(thrust::raw_pointer_cast(&d_in_data[0]), thrust::raw_pointer_cast(&d_depth_buffer[0]),
+                config.MVP, config.MVPinv, win_trans, win_trans_inv, config.camPos, config.camDir, config.camUp,
+                config.camRight, config.res, thrust::raw_pointer_cast(&d_worklets[0]), sqRad, rad);
+
+        auto blit_func = blit_functor(thrust::raw_pointer_cast(&d_depth_buffer[0]), config.lightDir, sqRad, rad);
+
+        /*cudaStream_t s1;
+        cudaStreamCreate(&s1);*/
+
+        thrust::VECTOR_T<int> p_id(num_particles);
+        thrust::VECTOR_T<thrust::tuple<int, int>> t_cell(num_particles);
+
+        auto render_func2 = render_functor2(thrust::raw_pointer_cast(&d_in_data[0]),
+            thrust::raw_pointer_cast(&d_depth_buffer[0]), thrust::raw_pointer_cast(&t_cell[0]), config.MVP,
+            config.MVPinv, win_trans, win_trans_inv, config.camPos, config.camDir, config.camUp, config.res,
+            thrust::raw_pointer_cast(&d_worklets[0]), sqRad, rad);
+
+        thrust::copy(thrust::device, thrust::counting_iterator<int>(0), thrust::counting_iterator<int>(num_particles),
+            p_id.begin());
 //thrust::copy(p_id.begin(), p_id.begin()+10, std::ostream_iterator<int>(std::cout, " "));
 
 
@@ -1411,27 +1434,27 @@ auto s_iter_end = thrust::make_zip_iterator(thrust::make_tuple(p_id.end(), thrus
 #if 1
 
 
-    /*auto temp_ptr = alloc.allocate(1024 * 1024 * 1024);
-    alloc.deallocate(temp_ptr, 1024 * 1024 * 1024);*/
+        /*auto temp_ptr = alloc.allocate(1024 * 1024 * 1024);
+        alloc.deallocate(temp_ptr, 1024 * 1024 * 1024);*/
 
-    auto start_x = std::chrono::high_resolution_clock::now();
+        auto start_x = std::chrono::high_resolution_clock::now();
 #ifdef MEGAMOL_USE_PROFILING
-    pm->set_transient_comment((*timing_handles_)[3], "thrust");
-    pm->start_timer((*timing_handles_)[3]);
+        pm->set_transient_comment((*timing_handles_)[3], "thrust");
+        pm->start_timer((*timing_handles_)[3]);
 #endif
-    thrust::transform(POLICY, d_in_data.begin(), d_in_data.end(), d_cell_id.begin(), hash_func);
-    thrust::sort_by_key(POLICY, d_cell_id.begin(), d_cell_id.end(), d_in_data.begin());
-    //auto first_it = thrust::find_if(d_cell_id.begin(), d_cell_id.end(), [](auto const& val) { return val != -1; });
-    //auto offset = thrust::distance(d_cell_id.begin(), first_it);
-    //auto offset = 0;
-    thrust::copy(POLICY, d_cell_id.begin(), d_cell_id.end(), test_list.begin());
-    test_list.erase(thrust::unique(POLICY, test_list.begin(), test_list.end()), test_list.end());
-    //thrust::counting_iterator<int> search_begin(-1);
-    /*thrust::upper_bound(d_cell_id.begin() + offset, d_cell_id.end(), search_begin,
-        search_begin + (SR_SUBDIVISIONS * SR_SUBDIVISIONS) + 1, d_histo.begin());*/
-    thrust::upper_bound(
-        POLICY, d_cell_id.begin(), d_cell_id.end(), test_list.begin(), test_list.end(), d_histo.begin() + 1);
-    //d_histo.erase(d_histo.begin() + test_list.size(), d_histo.end());
+        thrust::transform(POLICY, d_in_data.begin(), d_in_data.end(), d_cell_id.begin(), hash_func);
+        thrust::sort_by_key(POLICY, d_cell_id.begin(), d_cell_id.end(), d_in_data.begin());
+        //auto first_it = thrust::find_if(d_cell_id.begin(), d_cell_id.end(), [](auto const& val) { return val != -1; });
+        //auto offset = thrust::distance(d_cell_id.begin(), first_it);
+        //auto offset = 0;
+        thrust::copy(POLICY, d_cell_id.begin(), d_cell_id.end(), test_list.begin());
+        test_list.erase(thrust::unique(POLICY, test_list.begin(), test_list.end()), test_list.end());
+        //thrust::counting_iterator<int> search_begin(-1);
+        /*thrust::upper_bound(d_cell_id.begin() + offset, d_cell_id.end(), search_begin,
+            search_begin + (SR_SUBDIVISIONS * SR_SUBDIVISIONS) + 1, d_histo.begin());*/
+        thrust::upper_bound(
+            POLICY, d_cell_id.begin(), d_cell_id.end(), test_list.begin(), test_list.end(), d_histo.begin() + 1);
+        //d_histo.erase(d_histo.begin() + test_list.size(), d_histo.end());
 #if 0
     thrust::adjacent_difference(POLICY, d_histo.begin(), d_histo.begin() + test_list.size(), d_histo.begin());
     //d_h_begin = thrust::VECTOR_T<int>(test_list.size());
@@ -1445,18 +1468,18 @@ auto s_iter_end = thrust::make_zip_iterator(thrust::make_tuple(p_id.end(), thrus
     /*thrust::transform(d_h_id_begin_end.begin(), d_h_id_begin_end.end(), hash_begin,
         d_h_id_begin_end.begin(), hash_id_transform_functor());*/
 #endif
-    thrust::transform(POLICY, d_histo.begin(), d_histo.begin() + test_list.size(), d_histo.begin() + 1,
-        d_h_id_begin_end.begin(), hash_transform_functor());
-    thrust::transform(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(), test_list.begin(),
-        d_h_id_begin_end.begin(), hash_id_transform_functor());
-    //cudaDeviceSynchronize();
-    thrust::for_each(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(), render_func);
-    thrust::transform(POLICY, d_depth_buffer.begin(), d_depth_buffer.end(), d_image.begin(), blit_func);
-    cudaDeviceSynchronize();
+        thrust::transform(POLICY, d_histo.begin(), d_histo.begin() + test_list.size(), d_histo.begin() + 1,
+            d_h_id_begin_end.begin(), hash_transform_functor());
+        thrust::transform(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(),
+            test_list.begin(), d_h_id_begin_end.begin(), hash_id_transform_functor());
+        //cudaDeviceSynchronize();
+        thrust::for_each(POLICY, d_h_id_begin_end.begin(), d_h_id_begin_end.begin() + test_list.size(), render_func);
+        thrust::transform(POLICY, d_depth_buffer.begin(), d_depth_buffer.end(), d_image.begin(), blit_func);
+        cudaDeviceSynchronize();
 #ifdef MEGAMOL_USE_PROFILING
-    pm->stop_timer((*timing_handles_)[3]);
+        pm->stop_timer((*timing_handles_)[3]);
 #endif
-    auto end_x = std::chrono::high_resolution_clock::now();
+        auto end_x = std::chrono::high_resolution_clock::now();
 
 #if 0
     worker_hash w(data.positions[0], counter, config, win_trans, config.res.x / 20, config.res.y / 20);
@@ -1496,95 +1519,96 @@ auto s_iter_end = thrust::make_zip_iterator(thrust::make_tuple(p_id.end(), thrus
 #endif
 
 
-    std::cout << "[SphereRasterizer] hashing processing time "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(end_x - start_x).count() << "ms" << std::endl;
+        std::cout << "[SphereRasterizer] hashing processing time "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(end_x - start_x).count() << "ms"
+                  << std::endl;
 #endif
-    //thrust::copy(d_histo.begin(), d_histo.end(), std::ostream_iterator<int>(std::cout, " "));
-    /*std::cout << std::endl;
-    for (auto const& el : d_h_id_begin_end) {
-        std::cout << el[2] << " ";
-    }
-    std::cout << std::endl;*/
+        //thrust::copy(d_histo.begin(), d_histo.end(), std::ostream_iterator<int>(std::cout, " "));
+        /*std::cout << std::endl;
+        for (auto const& el : d_h_id_begin_end) {
+            std::cout << el[2] << " ";
+        }
+        std::cout << std::endl;*/
 
-    auto start = std::chrono::high_resolution_clock::now();
+        auto start = std::chrono::high_resolution_clock::now();
 
-    auto vertex_shader = [&config, &data, &sqRad, &rad, &depth_buffer, &win_trans, &win_trans_inv](int item_id) {
-        auto const part = glm::vec3(
-            data.positions[0][item_id * 4 + 0], data.positions[0][item_id * 4 + 1], data.positions[0][item_id * 4 + 2]);
-        /*glm::vec4 projPos;*/
-        auto const oc_pos = part - config.camPos;
-        auto const l = touchplane_old(config, part, sqRad, rad, -oc_pos);
-        // check w
-        /*if (projPos.w < -config.near_far.y || projPos.w > -config.near_far.x)
-            continue;*/
-        // check frustum
-        //auto const pw = projPos.w;
-        /*projPos = projPos / projPos.w;
-        if (projPos.x < -1.0f || projPos.x > 1.0f)
-            continue;
-        if (projPos.y < -1.0f || projPos.x > 1.0f)
-            continue;*/
-        // check depth
-        /*if (projPos.z < min_z)
-            min_z = projPos.z;
-        if (projPos.z > max_z)
-            max_z = projPos.z;*/
+        auto vertex_shader = [&config, &data, &sqRad, &rad, &depth_buffer, &win_trans, &win_trans_inv](int item_id) {
+            auto const part = glm::vec3(data.positions[0][item_id * 4 + 0], data.positions[0][item_id * 4 + 1],
+                data.positions[0][item_id * 4 + 2]);
+            /*glm::vec4 projPos;*/
+            auto const oc_pos = part - config.camPos;
+            auto const l = touchplane_old(config, part, sqRad, rad, -oc_pos);
+            // check w
+            /*if (projPos.w < -config.near_far.y || projPos.w > -config.near_far.x)
+                continue;*/
+            // check frustum
+            //auto const pw = projPos.w;
+            /*projPos = projPos / projPos.w;
+            if (projPos.x < -1.0f || projPos.x > 1.0f)
+                continue;
+            if (projPos.y < -1.0f || projPos.x > 1.0f)
+                continue;*/
+            // check depth
+            /*if (projPos.z < min_z)
+                min_z = projPos.z;
+            if (projPos.z > max_z)
+                max_z = projPos.z;*/
 
-        /*{
-            auto pos = config.MVP* glm::vec4(part, 1.0f);
+            /*{
+                auto pos = config.MVP* glm::vec4(part, 1.0f);
+                pos = pos / pos.w;
+                pos = win_trans * pos;
+                pos = pos * 1.0f;
+            }*/
+            auto const tmp_dir = glm::normalize(oc_pos);
+            auto pos = config.MVP * glm::vec4(part + tmp_dir * rad, 1.0f);
+            auto const pw = pos.w;
             pos = pos / pos.w;
+            if (pos.x < -1.0f || pos.x > 1.0f)
+                return;
+            if (pos.y < -1.0f || pos.y > 1.0f)
+                return;
             pos = win_trans * pos;
-            pos = pos * 1.0f;
-        }*/
-        auto const tmp_dir = glm::normalize(oc_pos);
-        auto pos = config.MVP * glm::vec4(part + tmp_dir * rad, 1.0f);
-        auto const pw = pos.w;
-        pos = pos / pos.w;
-        if (pos.x < -1.0f || pos.x > 1.0f)
-            return;
-        if (pos.y < -1.0f || pos.y > 1.0f)
-            return;
-        pos = win_trans * pos;
-        //auto pos = win_trans * projPos;
+            //auto pos = win_trans * projPos;
 
-        /*auto const screen_x = static_cast<int>((projPos.x + 1.0f) * 0.5f * config.res.x);
-        auto const screen_y = static_cast<int>((projPos.y + 1.0f) * 0.5f * config.res.y);*/
-        auto const screen_x = static_cast<int>(pos.x);
-        auto const screen_y = static_cast<int>(pos.y);
-        auto const i_l = static_cast<int>(std::ceilf(l * 0.5f));
-        auto const y_low = glm::clamp<int>(screen_y - i_l, 0, config.res.y - 1);
-        auto const y_high = glm::clamp<int>(screen_y + i_l, 0, config.res.y - 1);
-        auto const x_low = glm::clamp<int>(screen_x - i_l, 0, config.res.x - 1);
-        auto const x_high = glm::clamp<int>(screen_x + i_l, 0, config.res.x - 1);
-        for (int y = y_low; y <= y_high; ++y) {
-            for (int x = x_low; x <= x_high; ++x) {
+            /*auto const screen_x = static_cast<int>((projPos.x + 1.0f) * 0.5f * config.res.x);
+            auto const screen_y = static_cast<int>((projPos.y + 1.0f) * 0.5f * config.res.y);*/
+            auto const screen_x = static_cast<int>(pos.x);
+            auto const screen_y = static_cast<int>(pos.y);
+            auto const i_l = static_cast<int>(std::ceilf(l * 0.5f));
+            auto const y_low = glm::clamp<int>(screen_y - i_l, 0, config.res.y - 1);
+            auto const y_high = glm::clamp<int>(screen_y + i_l, 0, config.res.y - 1);
+            auto const x_low = glm::clamp<int>(screen_x - i_l, 0, config.res.x - 1);
+            auto const x_high = glm::clamp<int>(screen_x + i_l, 0, config.res.x - 1);
+            for (int y = y_low; y <= y_high; ++y) {
+                for (int x = x_low; x <= x_high; ++x) {
 
-                auto ndc = win_trans_inv * glm::vec4(x, y, pos.z, 1.0);
-                ndc = ndc * pw;
-                ndc = config.MVPinv * ndc;
-                auto const ray = glm::normalize(glm::vec3(ndc) - config.camPos);
-                if (pre_intersection(config, ray, oc_pos, sqRad)) {
-                    auto const idx = x + y * config.res.x;
-                    auto& d_val = depth_buffer[oneapi::tbb::this_task_arena::current_thread_index()][idx];
-                    if (pos.z >= std::get<0>(d_val))
-                        continue;
-                    d_val = std::make_tuple(pos.z, item_id, oc_pos, ray);
+                    auto ndc = win_trans_inv * glm::vec4(x, y, pos.z, 1.0);
+                    ndc = ndc * pw;
+                    ndc = config.MVPinv * ndc;
+                    auto const ray = glm::normalize(glm::vec3(ndc) - config.camPos);
+                    if (pre_intersection(config, ray, oc_pos, sqRad)) {
+                        auto const idx = x + y * config.res.x;
+                        auto& d_val = depth_buffer[oneapi::tbb::this_task_arena::current_thread_index()][idx];
+                        if (pos.z >= std::get<0>(d_val))
+                            continue;
+                        d_val = std::make_tuple(pos.z, item_id, oc_pos, ray);
+                    }
                 }
             }
-        }
-    };
+        };
 
-    //oneapi::tbb::parallel_for((int)0, (int)num_particles, vertex_shader);
+        //oneapi::tbb::parallel_for((int)0, (int)num_particles, vertex_shader);
 
-    /*oneapi::tbb::parallel_for((int)0, (int)worklets.size(),
-        [&num_particles, &rad, &worklets, &data, &depth_buffer, &win_trans, &win_trans_inv, &config](int work_id) {
-            auto worklet = worklets[work_id];
-            worker_vertex w(data.positions[0], depth_buffer[0], num_particles, rad, worklet.rectangle, win_trans,
-                win_trans_inv, config);
-            auto width = worklet.rectangle.z - worklet.rectangle.x;
-            auto height = worklet.rectangle.w - worklet.rectangle.y;
-            oneapi::tbb::parallel_for((unsigned int)0, (unsigned int)(num_particles), [&w](unsigned int i) { w(i); });
-        });*/
+        /*oneapi::tbb::parallel_for((int)0, (int)worklets.size(),
+            [&num_particles, &rad, &worklets, &data, &depth_buffer, &win_trans, &win_trans_inv, &config](int work_id) {
+                auto worklet = worklets[work_id];
+                worker_vertex w(data.positions[0], depth_buffer[0], num_particles, rad, worklet.rectangle, win_trans,
+                    win_trans_inv, config);
+                auto width = worklet.rectangle.z - worklet.rectangle.x;
+                auto height = worklet.rectangle.w - worklet.rectangle.y;
+                oneapi::tbb::parallel_for((unsigned int)0, (unsigned int)(num_particles), [&w](unsigned int i) { w(i); });
+            });*/
 
 #if 0
 #pragma omp parallel for
@@ -1654,79 +1678,80 @@ auto s_iter_end = thrust::make_zip_iterator(thrust::make_tuple(p_id.end(), thrus
     }
 #endif
 
-    auto end = std::chrono::high_resolution_clock::now();
+        auto end = std::chrono::high_resolution_clock::now();
 
-    std::cout << "[SphereRasterizer] vertex processing time "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+        std::cout << "[SphereRasterizer] vertex processing time "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
 
-    /*std::cout << "[SphereRasterizer] min_z " << min_z << " max_z " << max_z << " near " << config.near_far.x << " far "
-              << config.near_far.y << std::endl;*/
+        /*std::cout << "[SphereRasterizer] min_z " << min_z << " max_z " << max_z << " near " << config.near_far.x << " far "
+                  << config.near_far.y << std::endl;*/
 
-    // reduce buffer
-    /*for (unsigned int y = 0; y < config.res.y; ++y) {
-        for (unsigned int x = 0; x < config.res.x; ++x) {
-            auto const idx = x + y * config.res.x;
-            auto& d_val_0 = depth_buffer[0][idx];
-            for (int i = 1; i < max_threads; ++i) {
-                auto const& d_val = depth_buffer[i][idx];
-                if (std::get<0>(d_val) < std::get<0>(d_val_0))
-                    d_val_0 = d_val;
+        // reduce buffer
+        /*for (unsigned int y = 0; y < config.res.y; ++y) {
+            for (unsigned int x = 0; x < config.res.x; ++x) {
+                auto const idx = x + y * config.res.x;
+                auto& d_val_0 = depth_buffer[0][idx];
+                for (int i = 1; i < max_threads; ++i) {
+                    auto const& d_val = depth_buffer[i][idx];
+                    if (std::get<0>(d_val) < std::get<0>(d_val_0))
+                        d_val_0 = d_val;
+                }
+            }
+        }*/
+        std::vector<d_db_entry> tmp_depth_buffer(num_pixels);
+        thrust::copy(d_depth_buffer.begin(), d_depth_buffer.end(), tmp_depth_buffer.begin());
+        std::transform(tmp_depth_buffer.begin(), tmp_depth_buffer.end(), depth_buffer[0].begin(),
+            [](d_db_entry const& entry) { return std::make_tuple(entry.z, entry.id, entry.oc_pos, entry.ray); });
+
+        
+        for (unsigned int y = 0; y < config.res.y; ++y) {
+            for (unsigned int x = 0; x < config.res.x; ++x) {
+                auto const idx = x + y * config.res.x;
+                auto const& d_val = depth_buffer[0][idx];
+                if (std::get<1>(d_val) == -1)
+                    continue;
+                auto const i = std::get<1>(d_val);
+                /*auto const pos =
+                    glm::vec3(data.positions[0][i * 4 + 0], data.positions[0][i * 4 + 1], data.positions[0][i * 4 + 2]);*/
+                glm::vec3 normal;
+                float t;
+
+                /*float d = 1.0f / (std::tanf(config.fovy * 0.5f));
+                float p_x = x + 0.5f;
+                float p_y = y + 0.5f;
+
+                glm::vec3 dir = glm::vec3(config.ratio * (2.0f * p_x / static_cast<float>(config.res.x)) - 1.0f,
+                    2.0f * p_y / static_cast<float>(config.res.y) - 1.0f, -d);
+                dir = glm::normalize(dir);*/
+
+                /*auto r = generateRay(config, glm::ivec2(x, y));
+
+                auto ndc = win_trans_inv * glm::vec4(x, y, std::get<0>(d_val), 1.0);
+                ndc = ndc * std::get<3>(d_val);*/
+
+                if (intersection_old(config, std::get<3>(d_val), std::get<2>(d_val), sqRad, rad, normal, t)) {
+                    auto col = LocalLighting(std::get<3>(d_val), normal, config.lightDir, glm::vec3(1));
+                    col = col * 255.f;
+                    image[idx] = glm::u8vec4(
+                        static_cast<uint8_t>(col.x), static_cast<uint8_t>(col.y), static_cast<uint8_t>(col.z), 255);
+                    //image[idx] = glm::u8vec4(255);
+                } /*else {
+                    image[idx] = glm::u8vec4(255, 0, 0, 255);
+                }*/
+                //image[idx] = glm::u8vec4(255);
+                /*r.d = r.d * 255.0f;
+                image[idx] = glm::u8vec4(r.d.x, r.d.y, r.d.z, 255);*/
+                /*ray = ray * 255.0f;
+                image[idx] = glm::u8vec4(ray.x, ray.y, 0, 255);*/
             }
         }
-    }*/
-    std::vector<d_db_entry> tmp_depth_buffer(num_pixels);
-    thrust::copy(d_depth_buffer.begin(), d_depth_buffer.end(), tmp_depth_buffer.begin());
-    std::transform(tmp_depth_buffer.begin(), tmp_depth_buffer.end(), depth_buffer[0].begin(),
-        [](d_db_entry const& entry) { return std::make_tuple(entry.z, entry.id, entry.oc_pos, entry.ray); });
-
-    std::vector<glm::u8vec4> image(num_pixels, glm::u8vec4(0));
-    for (unsigned int y = 0; y < config.res.y; ++y) {
-        for (unsigned int x = 0; x < config.res.x; ++x) {
-            auto const idx = x + y * config.res.x;
-            auto const& d_val = depth_buffer[0][idx];
+        /*for (int idx = 0; idx < num_pixels; ++idx) {
+            auto const& d_val = depth_buffer[idx];
             if (std::get<1>(d_val) == -1)
                 continue;
-            auto const i = std::get<1>(d_val);
-            /*auto const pos =
-                glm::vec3(data.positions[0][i * 4 + 0], data.positions[0][i * 4 + 1], data.positions[0][i * 4 + 2]);*/
-            glm::vec3 normal;
-            float t;
-
-            /*float d = 1.0f / (std::tanf(config.fovy * 0.5f));
-            float p_x = x + 0.5f;
-            float p_y = y + 0.5f;
-
-            glm::vec3 dir = glm::vec3(config.ratio * (2.0f * p_x / static_cast<float>(config.res.x)) - 1.0f,
-                2.0f * p_y / static_cast<float>(config.res.y) - 1.0f, -d);
-            dir = glm::normalize(dir);*/
-
-            /*auto r = generateRay(config, glm::ivec2(x, y));
-
-            auto ndc = win_trans_inv * glm::vec4(x, y, std::get<0>(d_val), 1.0);
-            ndc = ndc * std::get<3>(d_val);*/
-
-            if (intersection_old(config, std::get<3>(d_val), std::get<2>(d_val), sqRad, rad, normal, t)) {
-                auto col = LocalLighting(std::get<3>(d_val), normal, config.lightDir, glm::vec3(1));
-                col = col * 255.f;
-                image[idx] = glm::u8vec4(
-                    static_cast<uint8_t>(col.x), static_cast<uint8_t>(col.y), static_cast<uint8_t>(col.z), 255);
-                //image[idx] = glm::u8vec4(255);
-            } /*else {
-                image[idx] = glm::u8vec4(255, 0, 0, 255);
-            }*/
-            //image[idx] = glm::u8vec4(255);
-            /*r.d = r.d * 255.0f;
-            image[idx] = glm::u8vec4(r.d.x, r.d.y, r.d.z, 255);*/
-            /*ray = ray * 255.0f;
-            image[idx] = glm::u8vec4(ray.x, ray.y, 0, 255);*/
-        }
+            image[idx] = glm::u8vec4(255);
+        }*/
     }
-    /*for (int idx = 0; idx < num_pixels; ++idx) {
-        auto const& d_val = depth_buffer[idx];
-        if (std::get<1>(d_val) == -1)
-            continue;
-        image[idx] = glm::u8vec4(255);
-    }*/
 
     thrust::copy(d_image.begin(), d_image.end(), image.begin());
 
