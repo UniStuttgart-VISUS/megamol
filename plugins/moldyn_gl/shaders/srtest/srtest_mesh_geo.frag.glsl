@@ -1,5 +1,7 @@
 #version 450
 
+#extension GL_ARB_conservative_depth : enable
+
 in Point {
     flat vec4 pointColor;
     flat vec3 objPos;

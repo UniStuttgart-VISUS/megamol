@@ -1,5 +1,7 @@
 #version 450
 
+#extension GL_ARB_conservative_depth: enable
+
 flat in vec3 objPos;
 flat in float rad;
 flat in float sqrRad;
