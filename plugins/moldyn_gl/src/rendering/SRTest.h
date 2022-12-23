@@ -366,6 +366,8 @@ private:
 
     glm::vec3 upper_;
 
+    bool mesh_shader_avail_ = false;
+
 #ifdef MEGAMOL_USE_PROFILING
     frontend_resources::PerformanceManager::handle_vector timing_handles_;
 #endif

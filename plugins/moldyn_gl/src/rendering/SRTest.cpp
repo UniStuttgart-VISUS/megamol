@@ -230,21 +230,23 @@ bool megamol::moldyn_gl::rendering::SRTest::create_shaders() {
         rendering_tasks_.insert(
             std::make_pair(method_e::SSBO_MUZIC, std::make_shared<ssbo_muzic_rt>(mode, shdr_ssbo_muzic_options)));
 
-        rendering_tasks_.insert(std::make_pair(method_e::MESH, std::make_shared<mesh_rt>(mode, shdr_mesh_options)));
+        if (mesh_shader_avail_) {
+            rendering_tasks_.insert(std::make_pair(method_e::MESH, std::make_shared<mesh_rt>(mode, shdr_mesh_options)));
 
-        rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_ALTN, std::make_shared<mesh_altn_rt>(mode, shdr_mesh_altn_options)));
+            rendering_tasks_.insert(
+                std::make_pair(method_e::MESH_ALTN, std::make_shared<mesh_altn_rt>(mode, shdr_mesh_altn_options)));
 
-        rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_GEO, std::make_shared<mesh_geo_rt>(mode, shdr_mesh_geo_options)));
-        rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_GEO_TASK, std::make_shared<mesh_geo_task_rt>(mode, shdr_mesh_geo_options)));
+            rendering_tasks_.insert(
+                std::make_pair(method_e::MESH_GEO, std::make_shared<mesh_geo_rt>(mode, shdr_mesh_geo_options)));
+            rendering_tasks_.insert(std::make_pair(
+                method_e::MESH_GEO_TASK, std::make_shared<mesh_geo_task_rt>(mode, shdr_mesh_geo_options)));
 
-        rendering_tasks_.insert(
-            std::make_pair(method_e::MESH_GEO_CAM, std::make_shared<mesh_geo_rt>(mode, shdr_mesh_geo_cam_options)));
+            rendering_tasks_.insert(
+                std::make_pair(method_e::MESH_GEO_CAM, std::make_shared<mesh_geo_rt>(mode, shdr_mesh_geo_cam_options)));
 
-        rendering_tasks_.insert(std::make_pair(
-            method_e::MESH_GEO_ALTN, std::make_shared<mesh_geo_altn_rt>(mode, shdr_mesh_geo_altn_options)));
+            rendering_tasks_.insert(std::make_pair(
+                method_e::MESH_GEO_ALTN, std::make_shared<mesh_geo_altn_rt>(mode, shdr_mesh_geo_altn_options)));
+        }
     } catch (glowl::GLSLProgramException const& e) {
         core::utility::log::Log::DefaultLog.WriteError("[SRTest] %s", e.what());
         return false;
@@ -282,8 +284,10 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
     if (!ogl_ctx.isExtAvailable("GL_NV_mesh_shader")) {
         core::utility::log::Log::DefaultLog.WriteWarn("[SRTest]: GL_NV_mesh_shader extension not available");
+        mesh_shader_avail_ = false;
     } else {
         core::utility::log::Log::DefaultLog.WriteInfo("[SRTest]: GL_NV_mesh_shader extension is available");
+        mesh_shader_avail_ = true;
     }
 
     if (!create_shaders())
