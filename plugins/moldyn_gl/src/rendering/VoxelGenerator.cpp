@@ -1,5 +1,6 @@
 #include "VoxelGenerator.h"
 
+#include "misc/MDAOVolumeGenerator.h"
 
 using namespace megamol::moldyn_gl::rendering;
 using namespace megamol::geocalls;
@@ -176,6 +177,80 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
 
 
     // inDensityTex
+
+
+    // from SphereRenderer.cpp
+
+    
+    
+    // TODO get real shader options...
+    std::filesystem::path p1 = "D:\\Hiwi\\VISUS\\1_megamol\\sergejs_fork\\megamol\\out\\install\\x64-Debug\\bin\\";
+    std::filesystem::path p2 = "D:\\Hiwi\\VISUS\\1_megamol\\sergejs_fork\\megamol\\out\\install\\x64-Debug\\bin\\../share/shaders";
+    std::vector<std::filesystem::path> include_paths = {p1, p2};
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(include_paths);
+
+    // TODO init only once?
+    // Init volume generator
+    auto vol_gen_ = new misc::MDAOVolumeGenerator();
+    auto so = shader_options;
+    vol_gen_->SetShaderSourceFactory(&so);
+    //auto context = frontend_resources.get<frontend_resources::OpenGL_Context>(); // error
+    //if (!vol_gen_->Init(context)) {
+    //    megamol::core::utility::log::Log::DefaultLog.WriteError(
+    //        "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //    return false;
+    //}
+
+
+    
+    // Check if voxelization is even needed
+
+    //// Recreate the volume if neccessary
+    //bool equal_clip_data = true;
+    //for (size_t i = 0; i < 4; i++) {
+    //    if (this->old_clip_dat_[i] != this->cur_clip_dat_[i]) {
+    //        equal_clip_data = false;
+    //        break;
+    //    }
+    //}
+    //if ((vol_gen_ != nullptr) && (this->state_invalid_ || this->ao_vol_size_slot_.IsDirty() || !equal_clip_data)) {
+    //    this->ao_vol_size_slot_.ResetDirty();
+
+    //    int vol_size = this->ao_vol_size_slot_.Param<param::IntParam>()->Value();
+
+    //    vislib::math::Dimension<float, 3> dims = this->cur_clip_box_.GetSize();
+
+    //    // Calculate the extensions of the volume by using the specified number of voxels for the longest edge
+    //    float longest_edge = this->cur_clip_box_.LongestEdge();
+    //    dims.Scale(static_cast<float>(vol_size) / longest_edge);
+
+    //    // The X size must be a multiple of 4, so we might have to correct that a little
+    //    dims.SetWidth(ceil(dims.GetWidth() / 4.0f) * 4.0f);
+    //    dims.SetHeight(ceil(dims.GetHeight()));
+    //    dims.SetDepth(ceil(dims.GetDepth()));
+    //    this->amb_cone_constants_[0] = std::min(dims.Width(), std::min(dims.Height(), dims.Depth()));
+    //    this->amb_cone_constants_[1] = ceil(std::log2(static_cast<float>(vol_size))) - 1.0f;
+
+    //    // Set resolution accordingly
+    //    vol_gen_->SetResolution(dims.GetWidth(), dims.GetHeight(), dims.GetDepth());
+
+    //    // Insert all particle lists
+    //    vol_gen_->ClearVolume();
+    //    vol_gen_->StartInsertion(this->cur_clip_box_,
+    //        glm::vec4(this->cur_clip_dat_[0], this->cur_clip_dat_[1], this->cur_clip_dat_[2], this->cur_clip_dat_[3]));
+
+    //    for (unsigned int i = 0; i < this->gpu_data_.size(); i++) {
+    //        float global_radius = 0.0f;
+    //        if (mpdc->AccessParticles(i).GetVertexDataType() != MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
+    //            global_radius = mpdc->AccessParticles(i).GetGlobalRadius();
+
+    //        vol_gen_->InsertParticles(static_cast<unsigned int>(mpdc->AccessParticles(i).GetCount()),
+    //            global_radius, this->gpu_data_[i].vertex_array);
+    //    }
+    //    vol_gen_->EndInsertion();
+
+    //    vol_gen_->RecreateMipmap();
+    //}
 
 
 
