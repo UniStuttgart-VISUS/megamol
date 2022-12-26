@@ -102,7 +102,7 @@ private:
 
     core::CallerSlot get_data_slot_; // MultiParticleDataCall (right slot)
 
-    
+    uint32_t texture_handle;
 
     geocalls::VolumetricDataCall::Metadata metadata;
 };

@@ -143,6 +143,7 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
         volume_call->SetMetadata(&metadata);
         //volume_call->SetDataHash(this->datahash); // TODO
 
+        volume_call->SetData(texture_handle);
     }
 
     return true;
@@ -187,7 +188,7 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
     std::filesystem::path p1 = "D:\\Hiwi\\VISUS\\1_megamol\\sergejs_fork\\megamol\\out\\install\\x64-Debug\\bin\\";
     std::filesystem::path p2 = "D:\\Hiwi\\VISUS\\1_megamol\\sergejs_fork\\megamol\\out\\install\\x64-Debug\\bin\\../share/shaders";
     std::vector<std::filesystem::path> include_paths = {p1, p2};
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(include_paths);
+    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(include_paths); // TODO
 
     // TODO init only once?
     // Init volume generator
@@ -195,24 +196,26 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
     auto so = shader_options;
     vol_gen_->SetShaderSourceFactory(&so);
     //auto context = frontend_resources.get<frontend_resources::OpenGL_Context>(); // error
-    //if (!vol_gen_->Init(context)) {
-    //    megamol::core::utility::log::Log::DefaultLog.WriteError(
-    //        "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    //    return false;
-    //}
+    auto context = frontend_resources::OpenGL_Context(); // TODO
+    if (!vol_gen_->Init(context)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
 
 
     
     // Check if voxelization is even needed
 
-    //// Recreate the volume if neccessary
-    //bool equal_clip_data = true;
+    // Recreate the volume if neccessary
+    bool equal_clip_data = true;
     //for (size_t i = 0; i < 4; i++) {
     //    if (this->old_clip_dat_[i] != this->cur_clip_dat_[i]) {
     //        equal_clip_data = false;
     //        break;
     //    }
     //}
+ 
     //if ((vol_gen_ != nullptr) && (this->state_invalid_ || this->ao_vol_size_slot_.IsDirty() || !equal_clip_data)) {
     //    this->ao_vol_size_slot_.ResetDirty();
 
@@ -253,6 +256,33 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
     //}
 
 
+    // tests:
+    glm::vec4 cur_clip_dat_; //TODO
+    vislib::math::Cuboid<float> cur_clip_box_(-1.0,-1.0,-1.0, 1.0, 1.0, 1.0); // TODO
+
+    if (vol_gen_ != nullptr) {
+        vislib::math::Dimension<float, 3> dims = cur_clip_box_.GetSize();
+        vol_gen_->SetResolution(dims.GetWidth(), dims.GetHeight(), dims.GetDepth()); // clipbox dimensions
+        vol_gen_->ClearVolume();
+        vol_gen_->StartInsertion(
+            cur_clip_box_, glm::vec4(cur_clip_dat_[0], cur_clip_dat_[1], cur_clip_dat_[2], cur_clip_dat_[3]));
+
+
+        for (unsigned int i = 0; i < 1; i++) { // TODO
+            float global_radius = 0.0f;
+            if (particle_call->AccessParticles(i).GetVertexDataType() !=
+                MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
+                global_radius = particle_call->AccessParticles(i).GetGlobalRadius();
+            vol_gen_->InsertParticles(
+                static_cast<unsigned int>(particle_call->AccessParticles(i).GetCount()), global_radius, 3); // TODO
+        }
+        
+        vol_gen_->EndInsertion();
+        vol_gen_->RecreateMipmap();
+    }
+
+    // texture handle
+    texture_handle = vol_gen_->GetVolumeTextureHandle();
 
     return true;
 }

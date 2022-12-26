@@ -2498,6 +2498,11 @@ void SphereRenderer::renderDeferredPass(mmstd_gl::CallRender3DGL& call) {
     if (vol_gen_ != nullptr) {
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_3D, this->vol_gen_->GetVolumeTextureHandle());
+        // TEST
+        VolumetricDataCall* c_voxel = this->get_voxels_.CallAs<VolumetricDataCall>();
+        if (c_voxel != nullptr) {
+            glBindTexture(GL_TEXTURE_3D, c_voxel->GetVRAMData());
+        }
         glActiveTexture(GL_TEXTURE0);
     }
 
