@@ -197,6 +197,7 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
     vol_gen_->SetShaderSourceFactory(&so);
     //auto context = frontend_resources.get<frontend_resources::OpenGL_Context>(); // error
     auto context = frontend_resources::OpenGL_Context(); // TODO
+
     if (!vol_gen_->Init(context)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -257,11 +258,20 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
 
 
     // tests:
-    glm::vec4 cur_clip_dat_; //TODO
+    glm::vec4 cur_clip_dat_ = glm::vec4(0.0); //TODO
     vislib::math::Cuboid<float> cur_clip_box_(-1.0,-1.0,-1.0, 1.0, 1.0, 1.0); // TODO
+    int vol_size = 256; // TODO
 
     if (vol_gen_ != nullptr) {
-        vislib::math::Dimension<float, 3> dims = cur_clip_box_.GetSize();
+        vislib::math::Dimension<float, 3> dims = cur_clip_box_.GetSize(); // TODO  = {256, 256, 256}
+
+        float longest_edge = cur_clip_box_.LongestEdge();
+        dims.Scale(static_cast<float>(vol_size)/longest_edge);
+        dims.SetWidth(ceil(dims.GetWidth() / 4.0f) * 4.0f);
+        dims.SetHeight(ceil(dims.GetHeight()));
+        dims.SetDepth(ceil(dims.GetDepth()));
+
+
         vol_gen_->SetResolution(dims.GetWidth(), dims.GetHeight(), dims.GetDepth()); // clipbox dimensions
         vol_gen_->ClearVolume();
         vol_gen_->StartInsertion(

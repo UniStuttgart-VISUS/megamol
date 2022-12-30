@@ -657,14 +657,14 @@ bool SphereRenderer::createResources() {
             auto ubo_idx = glGetUniformBlockIndex(lighting_prgm_->getHandle(), "cone_buffer");
             glUniformBlockBinding(lighting_prgm_->getHandle(), ubo_idx, (GLuint)AO_DIR_UBO_BINDING_POINT);
 
-            // Init volume generator
-            this->vol_gen_ = new misc::MDAOVolumeGenerator();
-            this->vol_gen_->SetShaderSourceFactory(&lighting_so);
-            if (!this->vol_gen_->Init(frontend_resources.get<frontend_resources::OpenGL_Context>())) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                return false;
-            }
+            //// Init volume generator
+            //this->vol_gen_ = new misc::MDAOVolumeGenerator();
+            //this->vol_gen_->SetShaderSourceFactory(&lighting_so);
+            //if (!this->vol_gen_->Init(frontend_resources.get<frontend_resources::OpenGL_Context>())) {
+            //    megamol::core::utility::log::Log::DefaultLog.WriteError(
+            //        "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            //    return false;
+            //}
 
             this->trigger_rebuild_g_buffer_ = true;
         } break;
@@ -2423,64 +2423,67 @@ void SphereRenderer::rebuildWorkingData(
         }
     }
 
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
-    // Check if voxelization is even needed
-    if (this->vol_gen_ == nullptr) {
-        this->vol_gen_ = new misc::MDAOVolumeGenerator();
-        auto so = shader_options;
-        this->vol_gen_->SetShaderSourceFactory(&so);
-        this->vol_gen_->Init(frontend_resources.get<frontend_resources::OpenGL_Context>());
-    }
 
+    
     // TODO
     bool test = updateVolumeData(call.Time());
 
-    // Recreate the volume if neccessary
-    bool equal_clip_data = true;
-    for (size_t i = 0; i < 4; i++) {
-        if (this->old_clip_dat_[i] != this->cur_clip_dat_[i]) {
-            equal_clip_data = false;
-            break;
-        }
-    }
-    if ((vol_gen_ != nullptr) && (this->state_invalid_ || this->ao_vol_size_slot_.IsDirty() || !equal_clip_data)) {
-        this->ao_vol_size_slot_.ResetDirty();
 
-        int vol_size = this->ao_vol_size_slot_.Param<param::IntParam>()->Value();
+    //auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    //// Check if voxelization is even needed
+    //if (this->vol_gen_ == nullptr) {
+    //    this->vol_gen_ = new misc::MDAOVolumeGenerator();
+    //    auto so = shader_options;
+    //    this->vol_gen_->SetShaderSourceFactory(&so);
+    //    this->vol_gen_->Init(frontend_resources.get<frontend_resources::OpenGL_Context>());
+    //}
 
-        vislib::math::Dimension<float, 3> dims = this->cur_clip_box_.GetSize();
+    //// Recreate the volume if neccessary
+    //bool equal_clip_data = true;
+    //for (size_t i = 0; i < 4; i++) {
+    //    if (this->old_clip_dat_[i] != this->cur_clip_dat_[i]) {
+    //        equal_clip_data = false;
+    //        break;
+    //    }
+    //}
+    //if ((vol_gen_ != nullptr) && (this->state_invalid_ || this->ao_vol_size_slot_.IsDirty() || !equal_clip_data)) {
+    //    this->ao_vol_size_slot_.ResetDirty();
 
-        // Calculate the extensions of the volume by using the specified number of voxels for the longest edge
-        float longest_edge = this->cur_clip_box_.LongestEdge();
-        dims.Scale(static_cast<float>(vol_size) / longest_edge);
+    //    int vol_size = this->ao_vol_size_slot_.Param<param::IntParam>()->Value();
 
-        // The X size must be a multiple of 4, so we might have to correct that a little
-        dims.SetWidth(ceil(dims.GetWidth() / 4.0f) * 4.0f);
-        dims.SetHeight(ceil(dims.GetHeight()));
-        dims.SetDepth(ceil(dims.GetDepth()));
-        this->amb_cone_constants_[0] = std::min(dims.Width(), std::min(dims.Height(), dims.Depth()));
-        this->amb_cone_constants_[1] = ceil(std::log2(static_cast<float>(vol_size))) - 1.0f;
+    //    vislib::math::Dimension<float, 3> dims = this->cur_clip_box_.GetSize();
 
-        // Set resolution accordingly
-        this->vol_gen_->SetResolution(dims.GetWidth(), dims.GetHeight(), dims.GetDepth());
+    //    // Calculate the extensions of the volume by using the specified number of voxels for the longest edge
+    //    float longest_edge = this->cur_clip_box_.LongestEdge();
+    //    dims.Scale(static_cast<float>(vol_size) / longest_edge);
 
-        // Insert all particle lists
-        this->vol_gen_->ClearVolume();
-        this->vol_gen_->StartInsertion(this->cur_clip_box_,
-            glm::vec4(this->cur_clip_dat_[0], this->cur_clip_dat_[1], this->cur_clip_dat_[2], this->cur_clip_dat_[3]));
+    //    // The X size must be a multiple of 4, so we might have to correct that a little
+    //    dims.SetWidth(ceil(dims.GetWidth() / 4.0f) * 4.0f);
+    //    dims.SetHeight(ceil(dims.GetHeight()));
+    //    dims.SetDepth(ceil(dims.GetDepth()));
+    //    this->amb_cone_constants_[0] = std::min(dims.Width(), std::min(dims.Height(), dims.Depth()));
+    //    this->amb_cone_constants_[1] = ceil(std::log2(static_cast<float>(vol_size))) - 1.0f;
 
-        for (unsigned int i = 0; i < this->gpu_data_.size(); i++) {
-            float global_radius = 0.0f;
-            if (mpdc->AccessParticles(i).GetVertexDataType() != MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
-                global_radius = mpdc->AccessParticles(i).GetGlobalRadius();
+    //    // Set resolution accordingly
+    //    this->vol_gen_->SetResolution(dims.GetWidth(), dims.GetHeight(), dims.GetDepth());
 
-            this->vol_gen_->InsertParticles(static_cast<unsigned int>(mpdc->AccessParticles(i).GetCount()),
-                global_radius, this->gpu_data_[i].vertex_array);
-        }
-        this->vol_gen_->EndInsertion();
+    //    // Insert all particle lists
+    //    this->vol_gen_->ClearVolume();
+    //    this->vol_gen_->StartInsertion(this->cur_clip_box_,
+    //        glm::vec4(this->cur_clip_dat_[0], this->cur_clip_dat_[1], this->cur_clip_dat_[2], this->cur_clip_dat_[3]));
 
-        this->vol_gen_->RecreateMipmap();
-    }
+    //    for (unsigned int i = 0; i < this->gpu_data_.size(); i++) {
+    //        float global_radius = 0.0f;
+    //        if (mpdc->AccessParticles(i).GetVertexDataType() != MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
+    //            global_radius = mpdc->AccessParticles(i).GetGlobalRadius();
+
+    //        this->vol_gen_->InsertParticles(static_cast<unsigned int>(mpdc->AccessParticles(i).GetCount()),
+    //            global_radius, this->gpu_data_[i].vertex_array);
+    //    }
+    //    this->vol_gen_->EndInsertion();
+
+    //    this->vol_gen_->RecreateMipmap();
+    //}
 }
 
 
@@ -2495,14 +2498,21 @@ void SphereRenderer::renderDeferredPass(mmstd_gl::CallRender3DGL& call) {
     glBindTexture(GL_TEXTURE_2D, this->g_buffer_.normals);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->g_buffer_.color);
-    if (vol_gen_ != nullptr) {
+    //if (vol_gen_ != nullptr) {
+    //    glActiveTexture(GL_TEXTURE3);
+    //    glBindTexture(GL_TEXTURE_3D, this->vol_gen_->GetVolumeTextureHandle());
+    //    // TEST
+    //    VolumetricDataCall* c_voxel = this->get_voxels_.CallAs<VolumetricDataCall>();
+    //    if (c_voxel != nullptr) {
+    //        glBindTexture(GL_TEXTURE_3D, c_voxel->GetVRAMData());
+    //    }
+    //    glActiveTexture(GL_TEXTURE0);
+    //}
+
+    VolumetricDataCall* c_voxel = this->get_voxels_.CallAs<VolumetricDataCall>();
+    if (c_voxel != nullptr) {
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_3D, this->vol_gen_->GetVolumeTextureHandle());
-        // TEST
-        VolumetricDataCall* c_voxel = this->get_voxels_.CallAs<VolumetricDataCall>();
-        if (c_voxel != nullptr) {
-            glBindTexture(GL_TEXTURE_3D, c_voxel->GetVRAMData());
-        }
+        glBindTexture(GL_TEXTURE_3D, c_voxel->GetVRAMData());
         glActiveTexture(GL_TEXTURE0);
     }
 
