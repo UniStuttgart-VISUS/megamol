@@ -1,6 +1,7 @@
 #include "VoxelGenerator.h"
 
 #include "misc/MDAOVolumeGenerator.h"
+#include "mmcore/param/IntParam.h"
 
 using namespace megamol::moldyn_gl::rendering;
 using namespace megamol::geocalls;
@@ -8,7 +9,8 @@ using namespace megamol::geocalls;
 VoxelGenerator::VoxelGenerator(void)
         : core::Module()
         , generate_voxels_slot_("GenerateVoxels", "Slot for requesting voxel generation.")
-        , get_data_slot_("GetParticleData", "Connects to the data source") {
+        , get_data_slot_("GetParticleData", "Connects to the data source")
+        , vol_size_slot_("volumeSize", "Longest volume edge") {
 
     // VolumetricDataCall slot
     this->generate_voxels_slot_.SetCallback(VolumetricDataCall::ClassName(),
@@ -30,6 +32,9 @@ VoxelGenerator::VoxelGenerator(void)
     this->get_data_slot_.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->get_data_slot_.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->get_data_slot_);
+
+    this->vol_size_slot_ << (new core::param::IntParam(256, 1, 1024));
+    this->MakeSlotAvailable(&this->vol_size_slot_);
 }
 
 VoxelGenerator::~VoxelGenerator(void) {
@@ -37,11 +42,13 @@ VoxelGenerator::~VoxelGenerator(void) {
 }
 
 bool VoxelGenerator::create(void) {
+    this->vol_size_slot_.Param<core::param::IntParam>()->SetGUIVisible(true);       
     return true; //TODO
 }
 
 void VoxelGenerator::release(void) {
     //TODO reset resources
+    this->vol_size_slot_.Param<core::param::IntParam>()->SetGUIVisible(false);
 }
 
 bool VoxelGenerator::getExtentCallback(core::Call& call) {
@@ -152,10 +159,7 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
 
 bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
 
-    // TODO
-
     // see SphereRenderer.cpp
-
 
     //----------------------------------------
     // use MDAOVolumeGenerator? (vol_gen_)
@@ -175,48 +179,80 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
 
     //----------------------------------------
 
-
-
-    // inDensityTex
-
-
-    // from SphereRenderer.cpp
-
     
     
-    // TODO get real shader options...
+    // TODO get real parameters
     std::filesystem::path p1 = "D:\\Hiwi\\VISUS\\1_megamol\\sergejs_fork\\megamol\\out\\install\\x64-Debug\\bin\\";
     std::filesystem::path p2 = "D:\\Hiwi\\VISUS\\1_megamol\\sergejs_fork\\megamol\\out\\install\\x64-Debug\\bin\\../share/shaders";
     std::vector<std::filesystem::path> include_paths = {p1, p2};
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(include_paths); // TODO
-
+    auto context = frontend_resources::OpenGL_Context(); // TODO
+    glm::vec4 cur_clip_dat_ = glm::vec4(0.0);                                   //TODO
+    vislib::math::Cuboid<float> cur_clip_box_(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0); // TODO
+    
     // TODO init only once?
-    // Init volume generator
     auto vol_gen_ = new misc::MDAOVolumeGenerator();
     auto so = shader_options;
     vol_gen_->SetShaderSourceFactory(&so);
-    //auto context = frontend_resources.get<frontend_resources::OpenGL_Context>(); // error
-    auto context = frontend_resources::OpenGL_Context(); // TODO
 
+    
+    // Init volume generator
     if (!vol_gen_->Init(context)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
+    // Fill volume texture
+    if (vol_gen_ != nullptr) {
+        vislib::math::Dimension<float, 3> dims = cur_clip_box_.GetSize();
+        int vol_size = this->vol_size_slot_.Param<core::param::IntParam>()->Value();
+
+        float longest_edge = cur_clip_box_.LongestEdge();
+        dims.Scale(static_cast<float>(vol_size)/longest_edge);
+        dims.SetWidth(ceil(dims.GetWidth() / 4.0f) * 4.0f);
+        dims.SetHeight(ceil(dims.GetHeight()));
+        dims.SetDepth(ceil(dims.GetDepth()));
+
+
+        vol_gen_->SetResolution(dims.GetWidth(), dims.GetHeight(), dims.GetDepth());
+        vol_gen_->ClearVolume();
+        vol_gen_->StartInsertion(
+            cur_clip_box_, glm::vec4(cur_clip_dat_[0], cur_clip_dat_[1], cur_clip_dat_[2], cur_clip_dat_[3]));
+
+        // Insert particle data
+        for (unsigned int i = 0; i < 1; i++) { // TODO
+            float global_radius = 0.0f;
+            if (particle_call->AccessParticles(i).GetVertexDataType() !=
+                MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
+                global_radius = particle_call->AccessParticles(i).GetGlobalRadius();
+            vol_gen_->InsertParticles(
+                static_cast<unsigned int>(particle_call->AccessParticles(i).GetCount()), global_radius, 3); // TODO
+        }
+        
+        vol_gen_->EndInsertion();
+        vol_gen_->RecreateMipmap();
+    }
+
+    // texture handle
+    texture_handle = vol_gen_->GetVolumeTextureHandle();
+
+    return true;
 
     
+    // from SphereRenderer.cpp
+
     // Check if voxelization is even needed
 
     // Recreate the volume if neccessary
-    bool equal_clip_data = true;
+    //bool equal_clip_data = true;
     //for (size_t i = 0; i < 4; i++) {
     //    if (this->old_clip_dat_[i] != this->cur_clip_dat_[i]) {
     //        equal_clip_data = false;
     //        break;
     //    }
     //}
- 
+
     //if ((vol_gen_ != nullptr) && (this->state_invalid_ || this->ao_vol_size_slot_.IsDirty() || !equal_clip_data)) {
     //    this->ao_vol_size_slot_.ResetDirty();
 
@@ -255,46 +291,6 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
 
     //    vol_gen_->RecreateMipmap();
     //}
-
-
-    // tests:
-    glm::vec4 cur_clip_dat_ = glm::vec4(0.0); //TODO
-    vislib::math::Cuboid<float> cur_clip_box_(-1.0,-1.0,-1.0, 1.0, 1.0, 1.0); // TODO
-    int vol_size = 256; // TODO
-
-    if (vol_gen_ != nullptr) {
-        vislib::math::Dimension<float, 3> dims = cur_clip_box_.GetSize(); // TODO  = {256, 256, 256}
-
-        float longest_edge = cur_clip_box_.LongestEdge();
-        dims.Scale(static_cast<float>(vol_size)/longest_edge);
-        dims.SetWidth(ceil(dims.GetWidth() / 4.0f) * 4.0f);
-        dims.SetHeight(ceil(dims.GetHeight()));
-        dims.SetDepth(ceil(dims.GetDepth()));
-
-
-        vol_gen_->SetResolution(dims.GetWidth(), dims.GetHeight(), dims.GetDepth()); // clipbox dimensions
-        vol_gen_->ClearVolume();
-        vol_gen_->StartInsertion(
-            cur_clip_box_, glm::vec4(cur_clip_dat_[0], cur_clip_dat_[1], cur_clip_dat_[2], cur_clip_dat_[3]));
-
-
-        for (unsigned int i = 0; i < 1; i++) { // TODO
-            float global_radius = 0.0f;
-            if (particle_call->AccessParticles(i).GetVertexDataType() !=
-                MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
-                global_radius = particle_call->AccessParticles(i).GetGlobalRadius();
-            vol_gen_->InsertParticles(
-                static_cast<unsigned int>(particle_call->AccessParticles(i).GetCount()), global_radius, 3); // TODO
-        }
-        
-        vol_gen_->EndInsertion();
-        vol_gen_->RecreateMipmap();
-    }
-
-    // texture handle
-    texture_handle = vol_gen_->GetVolumeTextureHandle();
-
-    return true;
 }
 
 bool VoxelGenerator::dummyCallback(core::Call& call) {

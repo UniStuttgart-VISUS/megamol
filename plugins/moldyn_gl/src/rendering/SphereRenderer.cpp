@@ -118,7 +118,7 @@ SphereRenderer::SphereRenderer(void)
         , enable_lighting_slot_("ambient occlusion::enableLighting", "Ambient Occlusion: Enable Lighting")
         , enable_geometry_shader_("ambient occlusion::useGsProxies",
               "Ambient Occlusion: Enables rendering using triangle strips from the geometry shader")
-        , ao_vol_size_slot_("ambient occlusion::volumeSize", "Ambient Occlusion: Longest volume edge")
+        //, ao_vol_size_slot_("ambient occlusion::volumeSize", "Ambient Occlusion: Longest volume edge")
         , ao_cone_apex_slot_("ambient occlusion::apex", "Ambient Occlusion: Cone Apex Angle")
         , ao_offset_slot_("ambient occlusion::offset", "Ambient Occlusion: Offset from Surface")
         , ao_strength_slot_("ambient occlusion::strength", "Ambient Occlusion: Strength")
@@ -193,8 +193,8 @@ SphereRenderer::SphereRenderer(void)
     this->enable_geometry_shader_ << (new param::BoolParam(false));
     this->MakeSlotAvailable(&this->enable_geometry_shader_);
 
-    this->ao_vol_size_slot_ << (new param::IntParam(128, 1, 1024));
-    this->MakeSlotAvailable(&this->ao_vol_size_slot_);
+    /*this->ao_vol_size_slot_ << (new param::IntParam(128, 1, 1024));
+    this->MakeSlotAvailable(&this->ao_vol_size_slot_);*/
 
     this->ao_cone_apex_slot_ << (new param::FloatParam(50.0f, 1.0f, 90.0f));
     this->MakeSlotAvailable(&this->ao_cone_apex_slot_);
@@ -399,7 +399,7 @@ bool SphereRenderer::resetResources(void) {
     // Ambient Occlusion
     this->enable_lighting_slot_.Param<param::BoolParam>()->SetGUIVisible(false);
     this->enable_geometry_shader_.Param<param::BoolParam>()->SetGUIVisible(false);
-    this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(false);
+    //this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(false);
     this->ao_cone_apex_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
     this->ao_offset_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
     this->ao_strength_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
@@ -599,7 +599,7 @@ bool SphereRenderer::createResources() {
         case (RenderMode::AMBIENT_OCCLUSION): {
             this->enable_lighting_slot_.Param<param::BoolParam>()->SetGUIVisible(true);
             this->enable_geometry_shader_.Param<param::BoolParam>()->SetGUIVisible(true);
-            this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(true);
+            //this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(true);
             this->ao_cone_apex_slot_.Param<param::FloatParam>()->SetGUIVisible(true);
             this->ao_offset_slot_.Param<param::FloatParam>()->SetGUIVisible(true);
             this->ao_strength_slot_.Param<param::FloatParam>()->SetGUIVisible(true);

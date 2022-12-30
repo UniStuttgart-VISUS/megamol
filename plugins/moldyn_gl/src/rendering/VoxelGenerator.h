@@ -11,6 +11,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
 
 
 namespace megamol {
@@ -105,6 +106,8 @@ private:
     uint32_t texture_handle;
 
     geocalls::VolumetricDataCall::Metadata metadata;
+
+    core::param::ParamSlot vol_size_slot_;
 };
 
 } // namespace rendering
