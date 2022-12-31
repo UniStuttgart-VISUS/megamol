@@ -12,6 +12,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include "misc/MDAOVolumeGenerator.h"
 
 
 namespace megamol {
@@ -87,6 +88,8 @@ protected:
 
     bool generateVoxels(geocalls::MultiParticleDataCall* particle_call);
 
+    bool initVolumeGenerator();
+
 private:
     ///**
     // * TODO: Document
@@ -103,11 +106,13 @@ private:
 
     core::CallerSlot get_data_slot_; // MultiParticleDataCall (right slot)
 
-    uint32_t texture_handle;
+    GLuint texture_handle;
 
     geocalls::VolumetricDataCall::Metadata metadata;
 
     core::param::ParamSlot vol_size_slot_;
+
+    misc::MDAOVolumeGenerator* vol_gen_;
 };
 
 } // namespace rendering
