@@ -45,7 +45,7 @@ void main() {
     // The trick here is that we change the order of coordinates according to the alignment,
     // so that the intersection calculation below can stay the same without having to cover
     // all cases. So, the case distinction is implicitly done here
-    // CAUTION: If you change anything here, you to adjust the re-alignment further down below accordingly!
+    // CAUTION: If you change anything here, you have to adjust the re-alignment further down below accordingly!
     // (can most probably be done better)
     int alignment = 0;
     vec3 aligned_absradii = absradii;
@@ -79,19 +79,30 @@ void main() {
     float height_cone = aligned_absradii.z * radius_scaling;
 
     // calc the viewing ray
-    vec3 ray = normalize(os_coord - cam_pos);
+    vec3 shift = vec3((length_cylinder - radius_cylinder) * 0.7, 0.0, 0.0);
 
-    vec3 aligned_cam = cam_pos;
+    if(alignment == 1) {
+        shift = shift.yxz; // only matters that x is in middle
+    }
+    else if(alignment == 2) {
+        shift = shift.yzx; // only matters that x is last
+    }
+
+    vec3 shifted_cam = cam_pos - shift;
+    vec3 ray = normalize( (os_coord - shift) - shifted_cam );
+    vec3 aligned_cam = shifted_cam;
 
     // re-assign coordinates to account for the alignment change
     // this way the code below doesn't need to be changed
     if(alignment == 1) {
         ray = ray.yxz;
         aligned_cam = aligned_cam.yxz;
+        shift = shift.yxz;
     }
     else if(alignment == 2) {
         ray = ray.zxy;
         aligned_cam = aligned_cam.zxy;
+        shift = shift.zxy;
     }
 
     // helpers needed later
@@ -212,6 +223,9 @@ void main() {
             discard;
         }
     }
+
+    // re-shift
+    intersection += shift;
 
     // re-re-align coordinates
     if(alignment == 1) {
