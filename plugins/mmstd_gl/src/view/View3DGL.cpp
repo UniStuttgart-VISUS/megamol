@@ -7,7 +7,6 @@
 #include "mmstd_gl/view/View3DGL.h"
 
 #include "GlobalValueStore.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"

@@ -102,7 +102,7 @@ bool datatools::MPIVolumeAggregator::manipulateData(
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "MPIVolumeAggregator: multi-component volume detected! Computing min/max density on the first component "
             "only. Op %s is applied on all components.",
-            this->operatorSlot.Param<core::param::EnumParam>()->getMap()[opVal].PeekBuffer());
+            this->operatorSlot.Param<core::param::EnumParam>()->getMap()[opVal].c_str());
     }
     switch (opVal) {
     case 0:

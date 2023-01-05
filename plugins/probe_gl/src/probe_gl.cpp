@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "ComputeDistance.h"
 #include "FilterByProbe.h"
@@ -20,11 +20,10 @@
 #include "ProbeShellElementsRenderTasks.h"
 
 namespace megamol::probe_gl {
-class ProbeGlPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class ProbeGlPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(ProbeGlPluginInstance)
 public:
-    ProbeGlPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("probe_gl", "The probe_gl plugin."){};
+    ProbeGlPluginInstance() : megamol::core::factories::AbstractPluginInstance("probe_gl", "The probe_gl plugin."){};
 
     ~ProbeGlPluginInstance() override = default;
 

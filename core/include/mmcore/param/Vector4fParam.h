@@ -1,8 +1,7 @@
-/*
- * Vector4fParam.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -13,7 +12,6 @@
 #include "vislib/Array.h"
 #include "vislib/StringTokeniser.h"
 #include "vislib/math/Vector.h"
-
 
 namespace megamol::core::param {
 
@@ -29,25 +27,7 @@ public:
         vislib::math::Vector<float, 4> const& maxVal)
             : Super(initVal, minVal, maxVal) {}
 
-    virtual ~Vector4fParam() = default;
-
-    std::string Definition() const override {
-        std::string name = "MMVC4F";
-        std::string return_str;
-        return_str.resize(6 + 8 * sizeof(float));
-        std::copy(name.begin(), name.end(), return_str.begin());
-        for (int i = 0; i < 4; ++i) {
-            std::copy(reinterpret_cast<char const*>(&MinValue()[i]),
-                reinterpret_cast<char const*>(&MinValue()[i]) + sizeof(float),
-                return_str.begin() + name.size() + i * sizeof(float));
-        }
-        for (int i = 0; i < 4; ++i) {
-            std::copy(reinterpret_cast<char const*>(&MaxValue()[i]),
-                reinterpret_cast<char const*>(&MaxValue()[i]) + sizeof(float),
-                return_str.begin() + name.size() + 4 * sizeof(float) + i * sizeof(float));
-        }
-        return return_str;
-    }
+    ~Vector4fParam() override = default;
 
     bool ParseValue(std::string const& v) override {
         vislib::Array<vislib::TString> comps = vislib::TStringTokeniser::Split(v.c_str(), _T(";"), true);

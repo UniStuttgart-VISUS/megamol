@@ -1,11 +1,9 @@
 /**
  * MegaMol
- * Copyright (c) 2008-2021, MegaMol Dev Team
+ * Copyright (c) 2008, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_FACTORIES_CALLDESCRIPTIONMANAGER_H_INCLUDED
-#define MEGAMOLCORE_FACTORIES_CALLDESCRIPTIONMANAGER_H_INCLUDED
 #pragma once
 
 #include "CallAutoDescription.h"
@@ -67,5 +65,3 @@ public:
 };
 
 } // namespace megamol::core::factories
-
-#endif // MEGAMOLCORE_FACTORIES_CALLDESCRIPTIONMANAGER_H_INCLUDED

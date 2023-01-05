@@ -9,7 +9,6 @@
 #include <glowl/FramebufferObject.hpp>
 
 #include "mmcore/Module.h"
-#include "mmcore/ViewInstance.h"
 #include "mmcore/job/AbstractJob.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd/view/AbstractView.h"

@@ -4,7 +4,7 @@
 #
 
 megamol_plugin(astro
-  BUILD_DEFAULT OFF
+  BUILD_DEFAULT ON
   DEPENDS_PLUGINS
     mmstd
     datatools

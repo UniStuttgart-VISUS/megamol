@@ -1,8 +1,16 @@
-#ifndef CAMERA_CONTROLLER_H_INCLUDED
-#define CAMERA_CONTROLLER_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+
+#include <glm/gtx/quaternion.hpp>    // glm::rotate(quat, vector)
+#include <glm/gtx/rotate_vector.hpp> // glm::rotate(quaternion, vector)
 
 #include "KeyboardMouseInput.h"
 #include "mmcore/BoundingBoxes_2.h"
@@ -15,12 +23,7 @@
 #include "mmcore/view/Camera.h"
 #include "mmcore/view/cam_typedefs.h"
 
-#include "glm/gtx/quaternion.hpp"    // glm::rotate(quat, vector)
-#include "glm/gtx/rotate_vector.hpp" // glm::rotate(quaternion, vector)
-
-namespace megamol {
-namespace core {
-namespace view {
+namespace megamol::core::view {
 
 using megamol::frontend_resources::Key;
 using megamol::frontend_resources::KeyAction;
@@ -1591,8 +1594,4 @@ private:
     float _mouseY;
 };
 
-} // namespace view
-} // namespace core
-} // namespace megamol
-
-#endif // !CAMERA_CONTROLLER_H_INCLUDED
+} // namespace megamol::core::view

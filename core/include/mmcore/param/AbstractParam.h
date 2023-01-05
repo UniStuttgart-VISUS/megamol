@@ -1,38 +1,24 @@
-/*
- * AbstractParam.h
- *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2008, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTPARAM_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTPARAM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-
-#include "mmcore/param/AbstractParamPresentation.h"
-
-#include "vislib/RawStorage.h"
-#include "vislib/String.h"
-#include "vislib/tchar.h"
 
 #include <functional>
 
+#include "mmcore/param/AbstractParamPresentation.h"
 
-namespace megamol {
-namespace core {
-namespace param {
-
+namespace megamol::core::param {
 
 /** forward declaration of owning class */
 class AbstractParamSlot;
 
-
 /**
  * Abstract base class for all parameter objects
  */
-class AbstractParam : public AbstractParamPresentation {
+class AbstractParam {
 public:
     friend class AbstractParamSlot;
 
@@ -41,15 +27,7 @@ public:
     /**
      * Dtor.
      */
-    virtual ~AbstractParam(void);
-
-    /**
-     * Returns a machine-readable definition of the parameter.
-     *
-     * @param outDef A memory block to receive a machine-readable
-     *               definition of the parameter.
-     */
-    virtual std::string Definition() const = 0;
+    virtual ~AbstractParam();
 
     /**
      * Tries to parse the given string as value for this parameter and
@@ -67,21 +45,21 @@ public:
      *
      * @return The value of the parameter as string.
      */
-    virtual std::string ValueString(void) const = 0;
+    virtual std::string ValueString() const = 0;
 
     /**
      * Must be public for Button Press - Manuel Graeber
      * Sets the dirty flag of the owning parameter slot and might call the
      * update callback.
      */
-    void setDirty(void);
+    void setDirty();
 
     /**
      * Returns the value of the hash.
      *
      * @return The value of the hash.
      */
-    inline uint64_t GetHash(void) const {
+    inline uint64_t GetHash() const {
         return this->hash;
     }
 
@@ -109,11 +87,58 @@ public:
         this->change_callback = callback;
     }
 
+    // TODO Temporary add wrappers around GuiPresentation() to avoid breaking changes for modules and merge hotfix
+    //  until we know how this should be solved cleanly.
+    inline bool InitPresentation(AbstractParamPresentation::ParamType param_type) {
+        return GuiPresentation().InitPresentation(param_type);
+    }
+
+    inline bool IsGUIVisible() const {
+        AbstractParamPresentation const& tmp = GuiPresentation();
+        return tmp.IsGUIVisible();
+    }
+
+    inline void SetGUIVisible(bool visible) {
+        GuiPresentation().SetGUIVisible(visible);
+    }
+
+    inline bool IsGUIReadOnly() const {
+        AbstractParamPresentation const& tmp = GuiPresentation();
+        return tmp.IsGUIReadOnly();
+    }
+
+    inline void SetGUIReadOnly(bool read_only) {
+        GuiPresentation().SetGUIReadOnly(read_only);
+    }
+
+    inline AbstractParamPresentation::Presentation GetGUIPresentation() const {
+        AbstractParamPresentation const& tmp = GuiPresentation();
+        return tmp.GetGUIPresentation();
+    }
+
+    void SetGUIPresentation(AbstractParamPresentation::Presentation presentS) {
+        GuiPresentation().SetGUIPresentation(presentS);
+    }
+
+protected:
+    // we need to route all changes to the GUI presentation via this function in the parameter
+    // because the parameter needs to indicate internal state changes
+    // to the frontend, in order for the frontend GUI
+    // to get notified of presentation changes
+    AbstractParamPresentation& GuiPresentation() {
+        indicateChange();
+        return gui_presentation;
+    };
+
+    AbstractParamPresentation const& GuiPresentation() const {
+        return gui_presentation;
+    };
+
 protected:
     /**
      * Ctor.
      */
-    AbstractParam(void);
+    AbstractParam();
 
     /**
      * Answers whether this parameter object is assigned to a public slot.
@@ -121,7 +146,7 @@ protected:
      * @return 'true' if this parameter object is assigned to a public
      *         slot, 'false' otherwise.
      */
-    bool isSlotPublic(void) const;
+    bool isSlotPublic() const;
 
     /**
      * Set has_changed flag to true.
@@ -133,7 +158,7 @@ protected:
 
 private:
     /** The holding slot */
-    class AbstractParamSlot* slot;
+    class AbstractParamSlot* slot = nullptr;
 
     /**
      * Hash indicating fundamental changes in parameter definition
@@ -153,11 +178,9 @@ private:
     ParamChangeCallback change_callback = [](auto*) {
         // needs default init for randomly created modules/params not to crash for default SetValue() calls
     };
+
+    AbstractParamPresentation gui_presentation;
 };
 
 
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTPARAM_H_INCLUDED */
+} // namespace megamol::core::param

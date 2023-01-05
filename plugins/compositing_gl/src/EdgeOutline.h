@@ -13,12 +13,12 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
+#include "mmstd_gl/ModuleGL.h"
 
 namespace megamol::compositing_gl {
 
-class EdgeOutline : public core::Module {
+class EdgeOutline : public mmstd_gl::ModuleGL {
 public:
     /**
      * Answer the name of this module.

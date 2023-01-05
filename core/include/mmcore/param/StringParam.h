@@ -1,8 +1,7 @@
-/*
- * StringParam.h
- *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
@@ -11,18 +10,13 @@
 
 #include "GenericParam.h"
 
-
 namespace megamol::core::param {
 
 class StringParam : public GenericParam<std::string, AbstractParamPresentation::ParamType::STRING> {
 public:
     StringParam(std::string const& initVal) : Super(initVal) {}
 
-    virtual ~StringParam() = default;
-
-    std::string Definition() const override {
-        return "MMSTRA";
-    }
+    ~StringParam() override = default;
 
     bool ParseValue(std::string const& v) override {
         try {

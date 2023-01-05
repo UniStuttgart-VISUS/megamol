@@ -18,7 +18,15 @@
   ],
   "features": {
     "opengl3-binding": {
-      "description": "Make available OpenGL3/ES/ES2 (modern) binding"
+      "description": "Make available OpenGL3/ES/ES2 (modern) binding",
+      "dependencies": [
+        {
+          "name": "imgui",
+          "features": [
+            "opengl3-binding"
+          ]
+        }
+      ]
     }
   }
 }

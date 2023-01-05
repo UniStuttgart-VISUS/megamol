@@ -32,11 +32,11 @@ job::AbstractJob::~AbstractJob(void) {
 /*
  * job::AbstractJob::IsParamRelevant
  */
-bool job::AbstractJob::IsParamRelevant(const vislib::SmartPtr<param::AbstractParam>& param) const {
+bool job::AbstractJob::IsParamRelevant(const std::shared_ptr<param::AbstractParam>& param) const {
     const AbstractNamedObject* ano = dynamic_cast<const AbstractNamedObject*>(this);
     if (ano == NULL)
         return false;
-    if (param.IsNull())
+    if (param == nullptr)
         return false;
 
     vislib::SingleLinkedList<const AbstractNamedObject*> searched;

@@ -26,12 +26,7 @@ CinematicUtils::CinematicUtils(void)
 CinematicUtils::~CinematicUtils(void) {}
 
 
-bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
-
-    if (core_instance == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Pointer to core isntance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
+bool CinematicUtils::Initialise(frontend_resources::RuntimeConfig const& runtimeConf) {
 
     if (this->init_once) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -39,7 +34,7 @@ bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
     }
 
     // Initialise font
-    if (!this->font.Initialise(core_instance)) {
+    if (!this->font.Initialise(runtimeConf)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize the font. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -47,7 +42,7 @@ bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
     this->font.SetBatchDrawMode(true);
 
     // Initialise rendering
-    if (!this->InitPrimitiveRendering(core_instance->GetShaderPaths())) {
+    if (!this->InitPrimitiveRendering(runtimeConf)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;

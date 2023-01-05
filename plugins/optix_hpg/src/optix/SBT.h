@@ -89,7 +89,7 @@ public:
         }
     }
 
-    operator OptixShaderBindingTable const *() const {
+    operator OptixShaderBindingTable const*() const {
         return &sbt_;
     }
 

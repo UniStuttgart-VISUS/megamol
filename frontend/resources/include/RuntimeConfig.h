@@ -81,6 +81,7 @@ struct RuntimeConfig {
     bool screenshot_show_privacy_note = true;
     bool show_version_note = true;
     std::string profiling_output_file;
+    bool autostart_profiling = true;
 
     struct Tile {
         UintPair global_framebuffer_resolution; // e.g. whole powerwall resolution, needed for tiling

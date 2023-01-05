@@ -15,7 +15,6 @@
 //#define _USE_MATH_DEFINES
 #include "cluster/mpi/MpiCall.h"
 #include "image_calls/Image2DCall.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -27,11 +26,13 @@
 #include "vislib/sys/SystemInformation.h"
 //#include <cmath>
 
+#include "vislib/sys/FastFile.h"
 #include "vislib/sys/SystemInformation.h"
 
 using namespace megamol::image_gl;
 using namespace megamol::core;
 using namespace megamol;
+using megamol::core::utility::log::Log;
 
 const unsigned int TILE_SIZE = 2 * 1024;
 
@@ -133,7 +134,8 @@ bool ImageRenderer::create(void) {
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::PngBitmapCodec());
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::JpegBitmapCodec());
 
-    auto const shader_options = ::msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shader_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     try {
         theShader_ = core::utility::make_glowl_shader(

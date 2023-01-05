@@ -9,6 +9,7 @@
 
 #include "AbstractSimpleParticleDataSource.h"
 #include "geometry_calls/MultiParticleDataCall.h"
+#include "vislib/RawStorage.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/math/Cuboid.h"
 

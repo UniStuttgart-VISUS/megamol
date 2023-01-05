@@ -1,28 +1,17 @@
-/*
- * FlexEnumParam.h
- *
- * Copyright (C) 20017 by Universitaet Stuttgart (VIS).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2017, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_FLEXENUMPARAM_H_INCLUDED
-#define MEGAMOLCORE_FLEXENUMPARAM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "AbstractParam.h"
-//#include "vislib/Map.h"
-#include "vislib/String.h"
-#include "vislib/tchar.h"
 #include <set>
 #include <string>
 
+#include "AbstractParam.h"
 
-namespace megamol {
-namespace core {
-namespace param {
-
+namespace megamol::core::param {
 
 /**
  * class for enumeration parameter objects that can change
@@ -45,20 +34,12 @@ public:
     /**
      * Dtor.
      */
-    virtual ~FlexEnumParam(void);
+    ~FlexEnumParam() override;
 
     /**
      * Clears TypePairs storage.
      */
-    virtual void ClearValues(void);
-
-    /**
-     * Returns a machine-readable definition of the parameter.
-     *
-     * @param outDef A memory block to receive a machine-readable
-     *               definition of the parameter.
-     */
-    std::string Definition() const override;
+    virtual void ClearValues();
 
     /**
      * Tries to parse the given string as value for this parameter and
@@ -105,7 +86,7 @@ public:
      *
      * @return The value of the parameter
      */
-    inline const std::string& Value(void) const {
+    inline const std::string& Value() const {
         return this->val;
     }
 
@@ -123,16 +104,7 @@ public:
      *
      * @return The value of the parameter as string.
      */
-    std::string ValueString(void) const override;
-
-    /**
-     * Gets the value of the parameter
-     *
-     * @return The value of the parameter
-     */
-    inline operator const vislib::TString(void) const {
-        return vislib::TString(this->val.c_str());
-    }
+    std::string ValueString() const override;
 
     /**
      * Answers the number of currently owned typepairs
@@ -147,19 +119,9 @@ private:
     /** The value of the parameter */
     std::string val;
 
-#ifdef _WIN32
-#pragma warning(disable : 4251)
-#endif /* _WIN32 */
     /** The type pairs for values and names */
     Storage_t values;
-#ifdef _WIN32
-#pragma warning(default : 4251)
-#endif /* _WIN32 */
 };
 
 
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_FLEXENUMPARAM_H_INCLUDED */
+} // namespace megamol::core::param

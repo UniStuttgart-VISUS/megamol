@@ -11,9 +11,10 @@
 
 
 #include "CommandRegistry.h"
+#include "FrontendResource.h"
+#include "PluginsResource.h"
 #include "gui_render_backend.h"
 #include "implot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/Picking.h"
 #include "widgets/FileBrowserWidget.h"
@@ -239,11 +240,11 @@ public:
 
     void RegisterNotification(const std::string& name, std::weak_ptr<bool> open, const std::string& message);
 
-    bool InitializeGraphSynchronisation(const megamol::core::CoreInstance& core_instance) {
-        return this->win_configurator_ptr->GetGraphCollection().InitializeGraphSynchronisation(core_instance);
+    bool InitializeGraphSynchronisation(const megamol::frontend_resources::PluginsResource& pluginsRes) {
+        return this->win_configurator_ptr->GetGraphCollection().InitializeGraphSynchronisation(pluginsRes);
     }
 
-    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph, megamol::core::CoreInstance& core_instance);
+    bool SynchronizeGraphs(megamol::core::MegaMolGraph& megamol_graph);
 
     /**
      * Register GUI hotkeys.
@@ -261,6 +262,12 @@ public:
 #ifdef MEGAMOL_USE_PROFILING
     void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
         this->win_configurator_ptr->GetGraphCollection().SetPerformanceManager(perf_manager);
+    }
+
+    frontend_resources::ProfilingLoggingStatus* perf_logging;
+
+    void SetProfilingLoggingStatus(frontend_resources::ProfilingLoggingStatus* perf_logging_status) {
+        this->perf_logging = perf_logging_status;
     }
     void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi) {
         this->win_configurator_ptr->GetGraphCollection().AppendPerformanceData(fi);
@@ -304,6 +311,12 @@ public:
     bool NotifyRunningGraph_DisableEntryPoint(core::ModuleInstance_t const& module_inst) {
         return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_DisableEntryPoint(module_inst);
     }
+
+    std::vector<std::string> requested_lifetime_resources() const {
+        return requested_resources;
+    }
+
+    void setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources);
 
     ///////////////////////////////////////////////////////////////////////
 
@@ -376,6 +389,9 @@ private:
 
     /** GUI element collections. */
     WindowCollection win_collection;
+
+    /** Resource requests from the GUI windows. */
+    std::vector<std::string> requested_resources;
 
     struct PopUpData {
         std::weak_ptr<bool> open_flag;

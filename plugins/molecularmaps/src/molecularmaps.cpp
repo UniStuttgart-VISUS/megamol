@@ -4,19 +4,19 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "MapGenerator.h"
 
 namespace megamol::molecularmaps {
 
-class MolecularmapsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class MolecularmapsPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(MolecularmapsPluginInstance)
 
 public:
     MolecularmapsPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance(
+            : megamol::core::factories::AbstractPluginInstance(
                   "molecularmaps", "New version of the molecular maps creator"){};
 
     ~MolecularmapsPluginInstance() override = default;

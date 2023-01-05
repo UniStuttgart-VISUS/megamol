@@ -1,8 +1,8 @@
 #include "ParticleInspector.h"
 
+#include "FrameStatistics.h"
 #include "imgui.h"
 #include "imgui_internal.h"
-#include "mmcore/CoreInstance.h"
 
 using namespace megamol::datatools_gl::misc;
 using namespace megamol;
@@ -111,9 +111,10 @@ void ParticleInspector::drawTable(geocalls::MultiParticleDataCall* p_in) {
     if (!valid_imgui_scope)
         return;
 
-    if (this->GetCoreInstance()->GetFrameID() == lastDrawnFrame)
+    auto current_frame = frontend_resources.get<frontend_resources::FrameStatistics>().rendered_frames_count;
+    if (current_frame == lastDrawnFrame)
         return;
-    lastDrawnFrame = this->GetCoreInstance()->GetFrameID();
+    lastDrawnFrame = current_frame;
 
     std::string table_name = "##table";
     table_name += this->Name();

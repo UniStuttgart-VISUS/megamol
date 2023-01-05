@@ -1,3 +1,9 @@
+/**
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 #pragma once
 
 #include <algorithm>
@@ -8,8 +14,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Class encapsulating the results captured from a single performance region. It contains a ring buffer of length
@@ -221,5 +226,4 @@ private:
     std::array<windowed_frame_statistics, metric_count> window_metrics;
 };
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core

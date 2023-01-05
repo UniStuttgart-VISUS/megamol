@@ -17,7 +17,6 @@
     "cxxopts",
     "delaunator-cpp",
     "eigen3",
-    "expat",
     "glfw3",
     "glm",
     {
@@ -123,6 +122,9 @@
           ]
         }
       ]
+    },
+    "use-opengl-debuggroups": {
+      "description": "Automatically inject OpenGL debug groups into MegaMol Call callback invocations"
     },
     "use-profiling": {
       "description": "Use Profiling"

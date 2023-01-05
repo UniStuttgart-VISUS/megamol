@@ -15,6 +15,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
+#include "vislib/sys/Path.h"
 
 
 using namespace megamol;
@@ -145,7 +146,7 @@ ImageWrapper CinematicView::Render(double time, double instanceTime) {
         // Initialise render utils once
         bool utils_success = this->utils.Initialized();
         if (!utils_success) {
-            if (this->utils.Initialise(this->GetCoreInstance())) {
+            if (this->utils.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>())) {
                 utils_success = true;
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(

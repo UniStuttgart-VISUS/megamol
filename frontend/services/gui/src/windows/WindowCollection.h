@@ -11,6 +11,7 @@
 
 
 #include "AbstractWindow.h"
+#include "FrontendResource.h"
 #include "imgui.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
@@ -66,10 +67,18 @@ public:
 
     bool DeleteWindow(size_t hash_id);
 
+    std::vector<std::string> requested_lifetime_resources() const {
+        return requested_resources;
+    }
+
+    void setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources);
+
 private:
     // VARIABLES ------------------------------------------------------
 
     std::vector<std::shared_ptr<AbstractWindow>> windows;
+
+    std::vector<std::string> requested_resources;
 
     // FUNCTIONS ------------------------------------------------------
 

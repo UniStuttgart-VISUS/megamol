@@ -1,5 +1,10 @@
-#ifndef MEGAMOLCORE_LUAINTERPRETER_H_INCLUDED
-#define MEGAMOLCORE_LUAINTERPRETER_H_INCLUDED
+/**
+ * MegaMol
+ * Copyright (c) 2019, MegaMol Dev Team
+ * All rights reserved.
+ */
+
+#pragma once
 
 #include <fstream>
 #include <functional>
@@ -9,9 +14,9 @@
 #include <string>
 #include <vector>
 
-#include "mmcore/utility/log/Log.h"
+#include <lua.hpp>
 
-#include "lua.hpp"
+#include "mmcore/utility/log/Log.h"
 
 //#define ATTACH_LUA_DEBUGGER
 //#ifdef ATTACH_LUA_DEBUGGER
@@ -38,8 +43,7 @@
 //    }
 //}
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 template<class C>
 using luaCallbackFunc = int (C::*)(lua_State* L);
@@ -87,13 +91,13 @@ public:
 
     LuaInterpreter& operator=(LuaInterpreter&& rhs) = delete;
 
-    ~LuaInterpreter(void);
+    ~LuaInterpreter();
 
     /**
      * Load an environment from a file. The environment is a table
      * of the form "env = { alias = function, libraryname = { ... }, ...}"
      * that should be used to sandbox scripts that are run afterwards.
-     * 
+     *
      * @return the environment name
      */
     bool LoadEnviromentFile(const std::string& fileName, std::string& envName);
@@ -321,7 +325,7 @@ template <class T> megamol::core::LuaInterpreter<T>::LuaInterpreter(T* t, std::s
 }
 
 
-template <class T> megamol::core::LuaInterpreter<T>::~LuaInterpreter(void) {
+template <class T> megamol::core::LuaInterpreter<T>::~LuaInterpreter() {
     if (L != nullptr) {
         lua_close(L);
     }
@@ -582,7 +586,4 @@ template <class T> int megamol::core::LuaInterpreter<T>::help(lua_State *L) {
     return 1;
 }
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* end ifndef MEGAMOLCORE_LUAINTERPRETER_H_INCLUDED */
+} // namespace megamol::core

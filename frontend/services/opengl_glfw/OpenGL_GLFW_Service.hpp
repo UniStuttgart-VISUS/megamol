@@ -14,6 +14,7 @@
 #include "Framebuffer_Events.h"
 #include "KeyboardMouse_Events.h"
 #include "OpenGL_Context.h"
+#include "OpenGL_Helper.h"
 #include "WindowManipulation.h"
 #include "Window_Events.h"
 
@@ -122,6 +123,7 @@ private:
     WindowEvents m_windowEvents;
     FramebufferEvents m_framebufferEvents;
     frontend_resources::OpenGL_Context m_opengl_context;
+    frontend_resources::OpenGL_Helper m_opengl_helper;
     WindowManipulation m_windowManipulation;
 
     // this holds references to the event structs we fill. the events are passed to the renderers/views using

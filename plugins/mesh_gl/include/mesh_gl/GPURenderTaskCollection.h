@@ -8,12 +8,13 @@
 #ifndef GPU_RENDER_TASK_DATA_STORAGE_H_INCLUDED
 #define GPU_RENDER_TASK_DATA_STORAGE_H_INCLUDED
 
+#include <functional>
 #include <memory>
 #include <set>
 #include <vector>
 
-#include "glowl/BufferObject.hpp"
-#include "glowl/Mesh.hpp"
+#include <glowl/BufferObject.hpp>
+#include <glowl/Mesh.hpp>
 
 #include "GPUMaterialCollection.h"
 

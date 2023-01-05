@@ -20,6 +20,12 @@ namespace megamol::compositing_gl {
  */
 class DrawToScreen : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
+    std::vector<std::string> requested_lifetime_resources() override {
+        std::vector<std::string> resources = Renderer3DModuleGL::requested_lifetime_resources();
+        resources.emplace_back("FrameStatistics");
+        return resources;
+    }
+
     /**
      * Answer the name of this module.
      *
