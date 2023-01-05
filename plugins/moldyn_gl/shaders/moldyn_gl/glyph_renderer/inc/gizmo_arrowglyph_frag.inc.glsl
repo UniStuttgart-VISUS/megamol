@@ -36,20 +36,8 @@ void main() {
     // we need to take out the rotation to get the object coordinates
     vec3 os_coord = rotate_tensor_into_world * coord.xyz;
 
-    bvec3 discard_frag = bvec3(false); // TODO: usage of inst makes this obsolet
     vec3 normal;
-    vec3 normals[3] = {
-        vec3(0.0),
-        vec3(0.0),
-        vec3(0.0)
-    };
     vec3 intersection;
-    vec3 intersections[3] = {
-        vec3(10000.0),
-        vec3(10000.0),
-        vec3(10000.0)
-    };
-    vec3 arrow_dir;
     vec3 arrow_dirs[3] = {
         vec3(1.0, 0.0, 0.0),
         vec3(0.0, 1.0, 0.0),
@@ -60,10 +48,6 @@ void main() {
     int inst = -1;
 
     for(int i = 0; i < 3; ++i) {
-        // TODO: is something not reset here?
-        normal = vec3(0.0);
-        intersection = vec3(10000.0);
-
         int orientation = i;
         vec3 aligned_absradii = absradii;
         int alignment = 0;
@@ -108,12 +92,10 @@ void main() {
         if(alignment == 1) {
             ray = ray_base.yxz;
             aligned_cam = aligned_cam.yxz;
-            shift = shift.yxz;
         }
         else if(alignment == 2) {
             ray = ray_base.zxy;
             aligned_cam = aligned_cam.zxy;
-            shift = shift.zxy;
         }
 
         // helpers needed later
@@ -126,7 +108,6 @@ void main() {
         if(cpos_dot <= 1.5 * radius_cylinder * radius_cylinder &&
         aligned_cam.x >= -length_cylinder &&
         aligned_cam.x <= height_cone) {
-            discard_frag[i] = true;
             continue;
             //discard;
         }
@@ -194,14 +175,14 @@ void main() {
         invalid.w = invalid.w || (ix.w < 0.0) || (ix.w > height_cone);
 
         if (invalid.x && invalid.y && invalid.z && invalid.w) {
-            discard_frag[i] = true;
             continue;
             //discard;
         }
 
         // default disk normal
         // arrow looks in positive axis-direction, therefore normal has to look the opposite way
-        normal = vec3(-1.0, 0.0, 0.0);
+        vec3 tmp_normal = vec3(-1.0, 0.0, 0.0);
+        vec3 tmp_int = vec3(10000.0);
 
         // be aware of coordinate order for alignments
         // alignment 0 --> xyz
@@ -211,14 +192,14 @@ void main() {
         // cone
         if (!invalid.w) {
             invalid.xyz = bvec3(true, true, true);
-            intersection = aligned_cam + (ray * lambda.w);
-            normal = normalize(vec3(radius_cone / height_cone, normalize(intersection.yz)));
+            tmp_int = aligned_cam + (ray * lambda.w);
+            tmp_normal = normalize(vec3(radius_cone / height_cone, normalize(tmp_int.yz)));
         }
         // cylinder
         if (!invalid.x) {
             invalid.zy = bvec2(true, true);
-            intersection = aligned_cam + (ray * lambda.x);
-            normal = normalize(vec3(0.0, normalize(intersection.yz)));
+            tmp_int = aligned_cam + (ray * lambda.x);
+            tmp_normal = normalize(vec3(0.0, normalize(tmp_int.yz)));
         }
         // no need for alignment adjustment for disks, since it is already done
         // when normal is initialized
@@ -226,57 +207,57 @@ void main() {
         if (!invalid.z) {
             invalid.y = true;
             lambda.z = (-length_cylinder - aligned_cam.x) / ray.x;
-            intersection = aligned_cam + (ray * lambda.z);
+            tmp_int = aligned_cam + (ray * lambda.z);
         }
         // cone disk
         if (!invalid.y) {
             lambda.w = (0.0 - aligned_cam.x) / ray.x;
-            intersection = aligned_cam + (ray * lambda.w);
-            float pyth = dot(intersection.yz, intersection.yz);
+            tmp_int = aligned_cam + (ray * lambda.w);
+            float pyth = dot(tmp_int.yz, tmp_int.yz);
             if(pyth > radius_cone * radius_cone) {
-                discard_frag[i] = true;
                 continue;
                 //discard;
             }
         }
 
-        // re-shift
-        intersection += shift;
-
         // re-re-align coordinates
         if(alignment == 1) {
-            intersection = intersection.yxz;
-            normal = normal.yxz;
+            tmp_int = tmp_int.yxz;
+            tmp_normal = tmp_normal.yxz;
         }
         else if(alignment == 2) {
-            intersection = intersection.yzx;
-            normal = normal.yzx;
+            tmp_int = tmp_int.yzx;
+            tmp_normal = tmp_normal.yzx;
         }
 
-        vec3 len = intersection;
+        // re-shift
+        tmp_int += shift;
 
-        // translate point back to original position
-        intersection = transpose(rotate_tensor_into_world) * intersection;
-        intersection += obj_pos.xyz;
-
-        normals[i] = normal;
-        intersections[i] = intersection;
-        float current_length = length(len - cam_pos);
+        float current_length = length(tmp_int - cam_pos);
 
         if(current_length < shortest_length) {
+            intersection = tmp_int;
+            normal = tmp_normal;
+
             shortest_length = current_length;
             inst = i;
         }
     }
 
+
     // 'early' exit
-    if( /*all(discard_frag) ||*/ inst == -1) {
+    if(inst == -1) {
         discard;
     }
 
+
     // transform normal and intersection point into tensor
-    normal = transpose(rotate_tensor_into_world) * normals[inst];
+    normal = transpose(rotate_tensor_into_world) * normal;
     normal = normalize(normal);
+
+    // translate point back to original position
+    intersection = transpose(rotate_tensor_into_world) * intersection;
+    intersection += obj_pos.xyz;
 
 
     // color stuff
@@ -288,7 +269,7 @@ void main() {
     // calc depth
     float far = gl_DepthRange.far;
     float near = gl_DepthRange.near;
-    vec4 ding = vec4(intersections[inst], 1.0);
+    vec4 ding = vec4(intersection, 1.0);
     // calc non-linear depth
     float depth = dot(mvp_t[2], ding);
     float depth_w = dot(mvp_t[3], ding);

@@ -97,12 +97,10 @@ void main() {
     if(alignment == 1) {
         ray = ray.yxz;
         aligned_cam = aligned_cam.yxz;
-        shift = shift.yxz;
     }
     else if(alignment == 2) {
         ray = ray.zxy;
         aligned_cam = aligned_cam.zxy;
-        shift = shift.zxy;
     }
 
     // helpers needed later
@@ -224,9 +222,6 @@ void main() {
         }
     }
 
-    // re-shift
-    intersection += shift;
-
     // re-re-align coordinates
     if(alignment == 1) {
         intersection = intersection.yxz;
@@ -236,6 +231,9 @@ void main() {
         intersection = intersection.yzx;
         normal = normal.yzx;
     }
+
+    // re-shift
+    intersection += shift;
 
     // transform normal and intersection point into tensor
     normal = transpose(rotate_tensor_into_world) * normal;
