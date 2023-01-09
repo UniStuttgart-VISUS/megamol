@@ -93,7 +93,10 @@ protected:
     /**
      * Request resources to ask for OpenGL state
      */
-    virtual std::vector<std::string> requested_lifetime_resources() override;
+    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::OpenGL_Context>();
+    }
 
 private:
     /** Get input data and extent from called modules */

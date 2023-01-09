@@ -9,6 +9,7 @@
 
 #include <glowl/glowl.h>
 
+#include "FrameStatistics.h"
 #include "mmcore/CallerSlot.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
@@ -20,10 +21,9 @@ namespace megamol::compositing_gl {
  */
 class DrawToScreen : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
-    std::vector<std::string> requested_lifetime_resources() override {
-        std::vector<std::string> resources = Renderer3DModuleGL::requested_lifetime_resources();
-        resources.emplace_back("FrameStatistics");
-        return resources;
+    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+        Renderer3DModuleGL::requested_lifetime_resources(req);
+        req.require<frontend_resources::FrameStatistics>();
     }
 
     /**

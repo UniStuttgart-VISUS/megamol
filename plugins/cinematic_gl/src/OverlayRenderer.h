@@ -10,6 +10,7 @@
 #pragma once
 
 
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore_gl/utility/RenderUtils.h"
 #include "mmstd/renderer/RendererModule.h"
 #include "mmstd/view/AbstractView.h"
@@ -31,8 +32,9 @@ namespace cinematic_gl {
 class OverlayRenderer : public megamol::core::view::RendererModule<mmstd_gl::CallRender3DGL, mmstd_gl::ModuleGL>,
                         megamol::core_gl::utility::RenderUtils {
 public:
-    virtual std::vector<std::string> requested_lifetime_resources() {
-        return {"MegaMolGraph"};
+    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+        ModuleGL::requested_lifetime_resources(req);
+        req.require<core::MegaMolGraph>();
     }
 
     /**

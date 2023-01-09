@@ -66,11 +66,9 @@ public:
     }
 
 #ifdef MEGAMOL_USE_PROFILING
-    std::vector<std::string> requested_lifetime_resources() override {
-        std::vector<std::string> resources = Module::requested_lifetime_resources();
-        resources.emplace_back(frontend_resources::OpenGL_Context_Req_Name);
-        resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
-        return resources;
+    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+        ModuleGL::requested_lifetime_resources(req);
+        req.require<frontend_resources::PerformanceManager>();
     }
 #endif
 
