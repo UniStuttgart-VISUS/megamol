@@ -551,18 +551,21 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         return false;
     }
 
-    frontend_resources::ResourceRequest req;
-    module_ptr->requested_lifetime_resources(req);
+    frontend_resources::ResourceRequest module_resource_request;
+    module_ptr->requested_lifetime_resources(module_resource_request);
 
-    auto [success, module_lifetime_dependencies] = provided_resources_lookup.get_requested_resources(req);
+    auto [success, module_lifetime_dependencies] =
+        provided_resources_lookup.get_requested_resources(module_resource_request);
 
     if (!success) {
         std::string requested_deps = "";
         std::string found_deps = "";
-        for (auto& res : req.getResources())
+        for (auto& res : module_resource_request.getResources()) {
             requested_deps += " " + std::string(res.type.name()); // TODO this is not a printable name!
-        for (auto& dep : module_lifetime_dependencies)
+        }
+        for (auto& dep : module_lifetime_dependencies) {
             found_deps += " " + dep.getIdentifier();
+        }
         log_error("error. could not create module " + request.className + "(" + request.id +
                   "), not all requested resources available: ");
         log_error("requested: " + requested_deps);
@@ -571,7 +574,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         return false;
     }
 
-    this->module_list_.push_front({module_ptr, request, false, req, module_lifetime_dependencies});
+    this->module_list_.push_front({module_ptr, request, false, module_resource_request, module_lifetime_dependencies});
 
     module_ptr->setParent(this->dummy_namespace);
 
