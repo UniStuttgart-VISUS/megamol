@@ -10,10 +10,16 @@
 #include <typeinfo>
 #include <vector>
 
+#include "mmcore/utility/platform/TypeInfo.h"
+
 namespace megamol::frontend_resources {
 struct ResourceDescriptor {
     std::type_index type;
     bool optional;
+
+    std::string TypeName() const {
+        return core::utility::platform::DemangleTypeName(type.name());
+    }
 };
 
 class ResourceRequest {

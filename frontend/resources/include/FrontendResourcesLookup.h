@@ -50,8 +50,7 @@ struct FrontendResourcesLookup {
                     result_resources.push_back(megamol::frontend::FrontendResource{}.toOptional());
                 } else {
                     auto msg = std::string("FrontendResourcesLookup: Fatal Error: ") +
-                               "\n\tcould not find requested resource " +
-                               request.type.name(); // TODO this is not a printable name!
+                               "\n\tcould not find requested resource " + request.TypeName();
                     megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
                 }
             }

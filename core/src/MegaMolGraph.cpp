@@ -561,7 +561,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         std::string requested_deps = "";
         std::string found_deps = "";
         for (auto& res : module_resource_request.getResources()) {
-            requested_deps += " " + std::string(res.type.name()); // TODO this is not a printable name!
+            requested_deps += " " + res.TypeName();
         }
         for (auto& dep : module_lifetime_dependencies) {
             found_deps += " " + dep.getIdentifier();
