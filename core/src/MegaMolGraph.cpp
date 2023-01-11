@@ -1,8 +1,4 @@
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore/AbstractSlot.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/view/AbstractView_EventConsumption.h"
 
 #include <algorithm>
 #include <cctype>
@@ -11,6 +7,11 @@
 #include <string>
 #include <type_traits>
 
+#include "ResourceRequest.h"
+#include "mmcore/AbstractSlot.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/view/AbstractView_EventConsumption.h"
 
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
 static std::vector<std::string> splitPathName(std::string const& path) {
@@ -550,18 +551,21 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         return false;
     }
 
-    auto module_lifetime_resource_request = module_ptr->requested_lifetime_resources();
+    frontend_resources::ResourceRequest module_resource_request;
+    module_ptr->requested_lifetime_resources(module_resource_request);
 
     auto [success, module_lifetime_dependencies] =
-        provided_resources_lookup.get_requested_resources(module_lifetime_resource_request);
+        provided_resources_lookup.get_requested_resources(module_resource_request);
 
     if (!success) {
         std::string requested_deps = "";
         std::string found_deps = "";
-        for (auto& req : module_lifetime_resource_request)
-            requested_deps += " " + req;
-        for (auto& dep : module_lifetime_dependencies)
+        for (auto& res : module_resource_request.getResources()) {
+            requested_deps += " " + res.TypeName();
+        }
+        for (auto& dep : module_lifetime_dependencies) {
             found_deps += " " + dep.getIdentifier();
+        }
         log_error("error. could not create module " + request.className + "(" + request.id +
                   "), not all requested resources available: ");
         log_error("requested: " + requested_deps);
@@ -570,8 +574,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         return false;
     }
 
-    this->module_list_.push_front(
-        {module_ptr, request, false, module_lifetime_resource_request, module_lifetime_dependencies});
+    this->module_list_.push_front({module_ptr, request, false, module_resource_request, module_lifetime_dependencies});
 
     module_ptr->setParent(this->dummy_namespace);
 

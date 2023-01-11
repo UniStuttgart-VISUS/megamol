@@ -208,10 +208,9 @@ public:
     bool OnResetView(param::ParamSlot& p);
 
 protected:
-    std::vector<std::string> requested_lifetime_resources() override {
-        auto req = Module::requested_lifetime_resources();
-        req.push_back("LuaScriptPaths");
-        return req;
+    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::ScriptPaths>();
     }
 
     /** Typedef alias */

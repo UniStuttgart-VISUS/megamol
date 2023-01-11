@@ -1,5 +1,6 @@
 #pragma once
 
+#include "FrameStatistics.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -16,10 +17,9 @@ namespace misc {
 class ParticleInspector : public megamol::core::Module {
 
 public:
-    std::vector<std::string> requested_lifetime_resources() override {
-        std::vector<std::string> resources = Module::requested_lifetime_resources();
-        resources.emplace_back("FrameStatistics");
-        return resources;
+    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::FrameStatistics>();
     }
 
     /**

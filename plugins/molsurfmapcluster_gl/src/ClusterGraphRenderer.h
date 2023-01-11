@@ -83,7 +83,10 @@ protected:
     virtual bool Render(core_gl::view::CallRender2DGL& call) override;
 
     /** Method to request resources from the frontend */
-    std::vector<std::string> requested_lifetime_resources() override;
+    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+        ModuleGL::requested_lifetime_resources(req);
+        req.require<core::MegaMolGraph>();
+    }
 
 private:
     void calculateNodePositions(ClusteringData const& cluster_data);
