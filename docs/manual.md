@@ -77,18 +77,17 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 <!-- ---------------------------------------------------------------------- -->
 #### Microsoft Windows
 
-1. Download and unzip the source code of the latest [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) into a new directory (e.g. `megamol`).
-2. You have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository.
-3. Create a new `build` directory.
-4. As generator, it is recommended to use the latest version of [Visual Studio](https://visualstudio.microsoft.com/downloads/) (Community Edition is free to use) with default native compilers and for the platform x64.
-5. Next, click `Configure` a few times (until all red entries disappear).
-6. Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files and configure once more.
-7. Then click `Generate` to generate the build files.
-8. The configuration creates a `megamol.sln` file inside the build directory.
-9. Open the `megamol.sln` file with *Visual Studio*. 
-10. Use the `ALL_BUILD` target to build MegaMol.
-11. Afterwards, use the `INSTALL` target to create your MegaMol installation.
-12. The binary `megamol.exe` is located in the default installation path `../megamol/build/install/bin`.
+1. You have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository.
+2. Create a new `build` directory.
+3. As generator, it is recommended to use the latest version of [Visual Studio](https://visualstudio.microsoft.com/downloads/) (Community Edition is free to use) with default native compilers and for the platform x64.
+4. Next, click `Configure` a few times (until all red entries disappear).
+5. Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files and configure once more.
+6. Then click `Generate` to generate the build files.
+7. The configuration creates a `megamol.sln` file inside the build directory.
+8. Open the `megamol.sln` file with *Visual Studio*. 
+9. Use the `ALL_BUILD` target to build MegaMol.
+10. Afterwards, use the `INSTALL` target to create your MegaMol installation.
+11. The binary `megamol.exe` is located in the default installation path `../megamol/build/install/bin`.
 
 ![CMake Windows](images/cmake_windows.png)
 *Screenshot of `cmake-gui` after generating build files.*
