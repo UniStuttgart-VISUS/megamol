@@ -105,17 +105,6 @@ public:
     }
 
     /**
-     * Answers whether the given parameter is relevant for this view.
-     *
-     * @param searched The already searched objects for cycle detection.
-     * @param param The parameter to test.
-     *
-     * @return 'true' if 'param' is relevant, 'false' otherwise.
-     */
-    bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const std::shared_ptr<param::AbstractParam>& param) const override;
-
-    /**
      * Queue a notification that the parameter value has changed, to notify
      * those that have a registered listener. This method is public to allow
      * pushing parameter changes that cannot use the dirty flag to avoid feedback

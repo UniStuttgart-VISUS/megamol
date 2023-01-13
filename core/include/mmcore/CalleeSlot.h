@@ -153,17 +153,6 @@ public:
     }
 
     /**
-     * Answers whether the given parameter is relevant for this view.
-     *
-     * @param searched The already searched objects for cycle detection.
-     * @param param The parameter to test.
-     *
-     * @return 'true' if 'param' is relevant, 'false' otherwise.
-     */
-    bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const std::shared_ptr<param::AbstractParam>& param) const override;
-
-    /**
      * Answer the number of registered callback with names
      *
      * @return The number of registered callback with names

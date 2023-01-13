@@ -93,17 +93,6 @@ public:
     virtual void MakeUnavailable();
 
     /**
-     * Answers whether the given parameter is relevant for this view.
-     *
-     * @param searched The already searched objects for cycle detection.
-     * @param param The parameter to test.
-     *
-     * @return 'true' if 'param' is relevant, 'false' otherwise.
-     */
-    bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const std::shared_ptr<param::AbstractParam>& param) const override;
-
-    /**
      * Adds a listener to the list of registered listeners. The caller
      * remains owner of the listener object and must ensure that the
      * object remains valid as long as it is registered at this slot.

@@ -93,15 +93,6 @@ public:
     }
 
     /**
-     * Answers whether the given parameter is relevant for this view.
-     *
-     * @param param The parameter to test.
-     *
-     * @return 'true' if 'param' is relevant, 'false' otherwise.
-     */
-    virtual bool IsParamRelevant(const std::shared_ptr<param::AbstractParam>& param) const;
-
-    /**
      * Set the camera for this view externally
      *
      * @param camera A fully intialized camera to use for rendering the view

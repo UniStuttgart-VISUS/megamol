@@ -161,17 +161,6 @@ public:
     virtual void DisconnectCalls();
 
     /**
-     * Answers whether the given parameter is relevant for this view.
-     *
-     * @param searched The already searched objects for cycle detection.
-     * @param param The parameter to test.
-     *
-     * @return 'true' if 'param' is relevant, 'false' otherwise.
-     */
-    virtual bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const std::shared_ptr<param::AbstractParam>& param) const;
-
-    /**
      * Answer the reader-writer lock to lock the module graph
      *
      * @return The reader-writer lock to lock the module graph

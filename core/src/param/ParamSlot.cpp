@@ -46,15 +46,6 @@ void param::ParamSlot::MakeAvailable(void) {
 
 
 /*
- * param::ParamSlot::IsParamRelevant
- */
-bool param::ParamSlot::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const std::shared_ptr<param::AbstractParam>& param) const {
-    return (this->Parameter() == param);
-}
-
-
-/*
  * param::ParamSlot::isSlotAvailable
  */
 bool param::ParamSlot::isSlotAvailable(void) const {

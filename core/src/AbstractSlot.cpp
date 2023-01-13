@@ -42,15 +42,6 @@ void AbstractSlot::MakeUnavailable(void) {
 
 
 /*
- * AbstractSlot::IsParamRelevant
- */
-bool AbstractSlot::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const std::shared_ptr<param::AbstractParam>& param) const {
-    return false;
-}
-
-
-/*
  * AbstractSlot::AbstractSlot
  */
 AbstractSlot::AbstractSlot(const vislib::StringA& name, const vislib::StringA& desc)

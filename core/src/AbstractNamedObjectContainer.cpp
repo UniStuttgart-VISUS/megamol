@@ -201,31 +201,6 @@ void AbstractNamedObjectContainer::DisconnectCalls(void) {
 
 
 /*
- * AbstractNamedObjectContainer::IsParamRelevant
- */
-bool AbstractNamedObjectContainer::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const std::shared_ptr<param::AbstractParam>& param) const {
-    // ensure each container is only asked ones
-    // We need this, because this call might propagate through the graph and not only through the tree
-    if (searched.Contains(this)) {
-        return false;
-    } else {
-        searched.Add(this);
-    }
-
-    // ask all children if the given parameter is relevant for them
-    for (AbstractNamedObject::ptr_type i : this->children) {
-        if (i->IsParamRelevant(searched, param)) {
-            return true;
-        }
-    }
-
-    // none is interested
-    return false;
-}
-
-
-/*
  * AbstractNamedObjectContainer::fixParentBackreferences
  */
 void AbstractNamedObjectContainer::fixParentBackreferences(void) {

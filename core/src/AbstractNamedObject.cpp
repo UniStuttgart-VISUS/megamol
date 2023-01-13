@@ -85,15 +85,6 @@ void AbstractNamedObject::DisconnectCalls(void) {
 
 
 /*
- * AbstractNamedObject::IsParamRelevant
- */
-bool AbstractNamedObject::IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-    const std::shared_ptr<param::AbstractParam>& param) const {
-    throw vislib::UnsupportedOperationException("AbstractNamedObject::IsParamRelevant", __FILE__, __LINE__);
-}
-
-
-/*
  * AbstractNamedObject::ModuleGraphLock
  */
 vislib::sys::AbstractReaderWriterLock& AbstractNamedObject::ModuleGraphLock(void) {

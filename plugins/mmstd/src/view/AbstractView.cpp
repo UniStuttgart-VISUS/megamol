@@ -140,21 +140,6 @@ view::AbstractView::~AbstractView(void) {
     this->_hooks.Clear(); // DO NOT DELETE OBJECTS
 }
 
-
-/*
- * view::AbstractView::IsParamRelevant
- */
-bool view::AbstractView::IsParamRelevant(const std::shared_ptr<param::AbstractParam>& param) const {
-    const AbstractNamedObject* ano = dynamic_cast<const AbstractNamedObject*>(this);
-    if (ano == NULL)
-        return false;
-    if (param == nullptr)
-        return false;
-
-    vislib::SingleLinkedList<const AbstractNamedObject*> searched;
-    return ano->IsParamRelevant(searched, param);
-}
-
 void megamol::core::view::AbstractView::SetCamera(Camera camera, bool isMutable) {
     _camera = camera;
     _cameraIsMutable = isMutable;
