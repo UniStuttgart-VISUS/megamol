@@ -7,7 +7,6 @@
 #include "mmcore/param/EnumParam.h"
 
 #include "vislib/IllegalStateException.h"
-#include "vislib/StringConverter.h"
 
 using namespace megamol::core::param;
 
@@ -52,7 +51,7 @@ bool EnumParam::ParseValue(std::string const& v) {
         }
     }
     try {
-        this->SetValue(vislib::TCharTraits::ParseInt(v.c_str()));
+        this->SetValue(std::stoi(v));
         return true;
     } catch (...) {}
     return false;
@@ -67,7 +66,7 @@ EnumParam* EnumParam::SetTypePair(int value, const char* name) {
         throw vislib::IllegalStateException(
             "You must not modify an enum parameter which is already public", __FILE__, __LINE__);
     }
-    this->typepairs[value] = A2T(name);
+    this->typepairs[value] = name;
     return this;
 }
 

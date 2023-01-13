@@ -10,8 +10,7 @@
 #include <sstream>
 
 #include "GenericParam.h"
-#include "vislib/Array.h"
-#include "vislib/StringTokeniser.h"
+#include "mmcore/utility/String.h"
 #include "vislib/math/Vector.h"
 
 namespace megamol::core::param {
@@ -35,16 +34,12 @@ public:
     }
 
     bool ParseValue(std::string const& v) override {
-        vislib::Array<vislib::TString> comps = vislib::TStringTokeniser::Split(v.c_str(), _T(";"), true);
-        if (comps.Count() == 3) {
+        const auto& segments = utility::string::Split(v, ';');
+        if (segments.size() == 3) {
             try {
-                comps[0].TrimSpaces();
-                comps[1].TrimSpaces();
-                comps[2].TrimSpaces();
-                float x = static_cast<float>(vislib::TCharTraits::ParseDouble(comps[0]));
-                float y = static_cast<float>(vislib::TCharTraits::ParseDouble(comps[1]));
-                float z = static_cast<float>(vislib::TCharTraits::ParseDouble(comps[2]));
-
+                float x = std::stof(utility::string::Trim(segments[0]));
+                float y = std::stof(utility::string::Trim(segments[1]));
+                float z = std::stof(utility::string::Trim(segments[2]));
                 this->SetValue(vislib::math::Vector<float, 3>(x, y, z));
                 return true;
             } catch (...) {}

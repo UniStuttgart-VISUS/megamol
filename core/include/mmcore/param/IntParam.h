@@ -26,7 +26,7 @@ public:
 
     bool ParseValue(std::string const& v) override {
         try {
-            this->SetValue(vislib::TCharTraits::ParseInt(v.c_str()));
+            this->SetValue(std::stoi(v));
             return true;
         } catch (...) {}
         return false;
