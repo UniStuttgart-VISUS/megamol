@@ -37,46 +37,6 @@ public:
     typedef ::std::weak_ptr<AbstractNamedObject> weak_ptr_type;
 
     /**
-     * Utility class
-     */
-    class GraphLocker : public vislib::sys::SyncObject {
-    public:
-        /**
-         * Ctor.
-         *
-         * @param obj Any object from the module graph
-         * @param writelock Flag if a write lock is required
-         */
-        GraphLocker(AbstractNamedObject::const_ptr_type obj, bool writelock);
-
-        /**
-         * Dtor.
-         */
-        virtual ~GraphLocker();
-
-        /**
-         * Acquire the lock.
-         *
-         * @throws SystemException If the lock could not be acquired.
-         */
-        virtual void Lock();
-
-        /**
-         * Release the lock.
-         *
-         * @throw SystemException If the lock could not be released.
-         */
-        virtual void Unlock();
-
-    private:
-        /** Flag if a write lock is required */
-        bool writelock;
-
-        /** The root object of the graph */
-        AbstractNamedObject::const_ptr_type root;
-    };
-
-    /**
      * Dtor.
      */
     virtual ~AbstractNamedObject();

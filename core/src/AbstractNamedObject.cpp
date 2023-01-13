@@ -16,53 +16,6 @@ using namespace megamol::core;
 
 
 /*
- * AbstractNamedObject::GraphLocker::GraphLocker
- */
-AbstractNamedObject::GraphLocker::GraphLocker(AbstractNamedObject::const_ptr_type obj, bool writelock)
-        : vislib::sys::SyncObject()
-        , writelock(writelock)
-        , root(NULL) {
-    ASSERT(obj != NULL);
-
-    this->root = obj->RootModule();
-}
-
-
-/*
- * AbstractNamedObject::GraphLocker::~GraphLocker
- */
-AbstractNamedObject::GraphLocker::~GraphLocker(void) {
-    this->root = NULL; // DO NOT DELETE
-}
-
-
-/*
- * AbstractNamedObject::GraphLocker::Lock
- */
-void AbstractNamedObject::GraphLocker::Lock(void) {
-    //if (this->writelock) {
-    //        this->root->ModuleGraphLock().LockExclusive();
-    //} else {
-    //    this->root->ModuleGraphLock().LockExclusive();
-    //}
-}
-
-
-/*
- * AbstractNamedObject::GraphLocker::Unlock
- */
-void AbstractNamedObject::GraphLocker::Unlock(void) {
-    //if (this->writelock) {
-    //        this->root->ModuleGraphLock().UnlockExclusive();
-    //} else {
-    //    this->root->ModuleGraphLock().UnlockExclusive();
-    //}
-}
-
-/****************************************************************************/
-
-
-/*
  * AbstractNamedObject::~AbstractNamedObject
  */
 AbstractNamedObject::~AbstractNamedObject(void) {
@@ -76,8 +29,6 @@ AbstractNamedObject::~AbstractNamedObject(void) {
  */
 vislib::StringA AbstractNamedObject::FullName(void) const {
     try {
-        AbstractNamedObject::GraphLocker locker(this->shared_from_this(), false);
-        vislib::sys::AutoLock lock(locker);
         vislib::StringA name;
         const_ptr_type ano = this->shared_from_this();
         while (ano) {
