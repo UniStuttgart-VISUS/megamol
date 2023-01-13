@@ -160,6 +160,7 @@ int main(const int argc, const char** argv) {
     megamol::frontend::Profiling_Service profiling_service;
     megamol::frontend::Profiling_Service::Config profiling_config;
     profiling_config.log_file = config.profiling_output_file;
+    profiling_config.autostart_profiling = config.autostart_profiling;
 
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;

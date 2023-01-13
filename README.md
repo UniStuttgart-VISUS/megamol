@@ -1,20 +1,17 @@
 
 ![](docs/images/logo.png)
 
-MegaMol is a visualization middleware used to visualize point-based molecular data sets. This software is developed within the Collaborative Research Center 716, subproject D.3 at the [Visualization Research Center (VISUS)](https://www.visus.uni-stuttgart.de/en) of the University of Stuttgart and at the Computer Graphics and Visualization Group of the TU Dresden.  
+MegaMol is a visualization middleware used to visualize point-based molecular data sets. This software is developed within the Collaborative Research Center 716, subproject D.3 at the [Visualization Research Center (VISUS)](https://www.visus.uni-stuttgart.de/en) of the University of Stuttgart and at the Computer Graphics and Visualization Group of the TU Dresden.
 
-MegaMol succeeds MolCloud, which has been developed at the University of Stuttgart in order to visualize point-based data sets. MegaMol is written in C++, and uses an OpenGL as Rendering-API and GLSL-Shader. It supports the operating systems Microsoft Windows and Linux, each in 64-bit version. In large parts, MegaMol is based on VISlib, a C++-class library for scientific visualization, which has also been developed at the University of Stuttgart. 
+MegaMol succeeds MolCloud, which has been developed at the University of Stuttgart in order to visualize point-based data sets. MegaMol is written in C++, and uses an OpenGL as Rendering-API and GLSL-Shader. It supports the operating systems Microsoft Windows and Linux, each in 64-bit version. In large parts, MegaMol is based on VISlib, a C++-class library for scientific visualization, which has also been developed at the University of Stuttgart.
 
 [![Build Status - Azure DevOps Server at VIS[US]][build-button]][build-link]
-[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.][project-button]][project-link] 
+[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.][project-button]][project-link]
 [![License: BSD-3-Clause][license-button]][license-link]
 [![Recent Commit Activity][commit-button]][commit-link]
-<!-- [![Current release][release-button]][release-link] -->
 
 [build-button]: https://img.shields.io/github/checks-status/UniStuttgart-VISUS/megamol/master?label=Azure%20Pipelines&logo=Azure%20Pipelines
 [build-link]: https://tfs.visus.uni-stuttgart.de/tfs/VIS(US)/MegaMol/_build/latest?definitionId=32&branchName=master
-[release-button]: https://img.shields.io/github/v/release/UniStuttgart-VISUS/megamol
-[release-link]: https://github.com/UniStuttgart-VISUS/megamol/tags
 [project-button]: https://www.repostatus.org/badges/latest/active.svg
 [project-link]: https://www.repostatus.org/#active
 [license-button]: https://img.shields.io/github/license/UniStuttgart-VISUS/megamol
@@ -26,10 +23,6 @@ MegaMol succeeds MolCloud, which has been developed at the University of Stuttga
 
 See the [manual](docs/manual.md) for detailed instructions on how to build and use MegaMol.
 
-
-## Changelog
-
-See the [changelog](https://github.com/UniStuttgart-VISUS/megamol/wiki/Changelog) for newly available features in the current version of MegaMol. 
 
 ## License
 

@@ -16,10 +16,9 @@
 namespace megamol::optix_hpg {
 class AbstractRenderer : public core::view::RendererModule<CallRender3DCUDA, core::Module> {
 public:
-    std::vector<std::string> requested_lifetime_resources() override {
-        auto res = core::view::RendererModule<CallRender3DCUDA, Module>::requested_lifetime_resources();
-        res.push_back(frontend_resources::CUDA_Context_Req_Name);
-        return res;
+    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+        core::view::RendererModule<CallRender3DCUDA, Module>::requested_lifetime_resources(req);
+        req.require<frontend_resources::CUDA_Context>();
     }
 
     AbstractRenderer();

@@ -420,6 +420,9 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
     // PerformanceManager
     perf_manager = const_cast<frontend_resources::PerformanceManager*>(
         &frontend_resources->get<frontend_resources::PerformanceManager>());
+    perf_logging = const_cast<frontend_resources::ProfilingLoggingStatus*>(
+        &frontend_resources->get<frontend_resources::ProfilingLoggingStatus>());
+    m_gui->SetProfilingLoggingStatus(perf_logging);
     // this needs to happen before the first (gui) module is spawned to help it look up the timers
     m_gui->SetPerformanceManager(perf_manager);
     perf_manager->subscribe_to_updates(
