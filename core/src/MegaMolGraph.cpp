@@ -10,6 +10,7 @@
 #include "ResourceRequest.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/utility/String.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
@@ -26,13 +27,6 @@ static std::vector<std::string> splitPathName(std::string const& path) {
     }
 
     return result;
-}
-
-// modules search and compare slot names case insensitive (legacy behaviour)
-// std::string operator== is case sensitive. so when looking for slots, we lower them first.
-static std::string tolower(std::string s) {
-    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
-    return s;
 }
 
 // AbstractNamedObject::FullName() prepends extra :: to module names which leads to
@@ -518,8 +512,9 @@ megamol::core::CallList_t::iterator megamol::core::MegaMolGraph::find_call(
     std::string const& from, std::string const& to) {
     auto it =
         std::find_if(this->call_list_.begin(), this->call_list_.end(), [&](megamol::core::CallInstance_t const& el) {
-            // tolower emulates case insensitive comparison in Module::FindSlot() during add_call
-            return tolower(el.request.from) == tolower(from) && tolower(el.request.to) == tolower(to);
+            // Case-insensitive comparison in Module::FindSlot() during add_call
+            return utility::string::EqualAsciiCaseInsensitive(el.request.from, from) &&
+                   utility::string::EqualAsciiCaseInsensitive(el.request.to, to);
         });
 
     return it;
@@ -530,8 +525,9 @@ megamol::core::CallList_t::const_iterator megamol::core::MegaMolGraph::find_call
 
     auto it =
         std::find_if(this->call_list_.cbegin(), this->call_list_.cend(), [&](megamol::core::CallInstance_t const& el) {
-            // tolower emulates case insensitive comparison in Module::FindSlot() during add_call
-            return tolower(el.request.from) == tolower(from) && tolower(el.request.to) == tolower(to);
+            // Case-insensitive comparison in Module::FindSlot() during add_call
+            return utility::string::EqualAsciiCaseInsensitive(el.request.from, from) &&
+                   utility::string::EqualAsciiCaseInsensitive(el.request.to, to);
         });
 
     return it;

@@ -11,6 +11,7 @@
 #include <sstream>
 
 #include "Window_Events.h"
+#include "mmcore/utility/String.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -86,8 +87,7 @@ bool ProjectLoader_Service::load_file(std::filesystem::path const& filename) con
 
     auto found_it = std::find_if(supported_filetypes.begin(), supported_filetypes.end(), [&](auto& item) {
         const std::string suffix = std::get<0>(item);
-        return megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(
-            filename.generic_u8string(), suffix);
+        return megamol::core::utility::string::EndsWithAsciiCaseInsensitive(filename.generic_u8string(), suffix);
     });
 
     if (found_it == supported_filetypes.end()) {

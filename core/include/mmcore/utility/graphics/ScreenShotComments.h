@@ -36,10 +36,6 @@ public:
      */
     static std::string GetProjectFromPNG(std::filesystem::path filename);
 
-    static bool EndsWith(const std::string& filename, const std::string& suffix);
-
-    static bool EndsWithCaseInsensitive(const std::string& filename, const std::string& suffix);
-
 private:
     comments_storage_map the_comments;
     png_comments the_vector;

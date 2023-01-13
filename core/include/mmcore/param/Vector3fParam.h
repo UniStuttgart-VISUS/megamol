@@ -37,9 +37,9 @@ public:
         const auto& segments = utility::string::Split(v, ';');
         if (segments.size() == 3) {
             try {
-                float x = std::stof(utility::string::Trim(segments[0]));
-                float y = std::stof(utility::string::Trim(segments[1]));
-                float z = std::stof(utility::string::Trim(segments[2]));
+                float x = std::stof(utility::string::TrimCopy(segments[0]));
+                float y = std::stof(utility::string::TrimCopy(segments[1]));
+                float z = std::stof(utility::string::TrimCopy(segments[2]));
                 this->SetValue(vislib::math::Vector<float, 3>(x, y, z));
                 return true;
             } catch (...) {}

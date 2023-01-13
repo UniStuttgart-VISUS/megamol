@@ -86,23 +86,6 @@ private:
      */
     std::string ExtractBindingSiteDescripton(std::string bsName, std::vector<std::string> remarkArray);
 
-    static inline bool strStartsWith(const std::string& str, const std::string& prefix) {
-        return str.rfind(prefix, 0) == 0;
-    }
-
-    static inline bool strEndsWith(const std::string& str, const std::string& suffix) {
-        return str.rfind(suffix) == std::llabs(str.size() - suffix.size());
-    }
-
-    static inline void strTrimSpaces(std::string& str) {
-        // ltrim
-        str.erase(
-            str.begin(), std::find_if(str.begin(), str.end(), [](unsigned char ch) { return !std::isspace(ch); }));
-        // rtrim
-        str.erase(std::find_if(str.rbegin(), str.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(),
-            str.end());
-    }
-
     /** The data callee slot */
     core::CalleeSlot dataOutSlot_;
 

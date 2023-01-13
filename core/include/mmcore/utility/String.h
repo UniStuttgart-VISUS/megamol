@@ -23,25 +23,85 @@ static inline std::vector<std::string> Split(std::string const& s, char delim) {
     return segments;
 }
 
-static inline std::string LeftTrim(std::string s) {
+static inline void LeftTrim(std::string& s) {
     s.erase(s.begin(), std::find_if_not(s.begin(), s.end(), [](unsigned char ch) { return std::isspace(ch); }));
-    return s;
 }
 
-static inline std::string RightTrim(std::string s) {
+static inline void RightTrim(std::string& s) {
     s.erase(std::find_if_not(s.rbegin(), s.rend(), [](unsigned char ch) { return std::isspace(ch); }).base(), s.end());
+}
+
+static inline void Trim(std::string& s) {
+    LeftTrim(s);
+    RightTrim(s);
+}
+
+static inline std::string LeftTrimCopy(std::string s) {
+    LeftTrim(s);
     return s;
 }
 
-static inline std::string Trim(std::string s) {
-    return LeftTrim(RightTrim(std::move(s)));
+static inline std::string RightTrimCopy(std::string s) {
+    RightTrim(s);
+    return s;
+}
+
+static inline std::string TrimCopy(std::string s) {
+    Trim(s);
+    return s;
+}
+
+static inline void ToLowerAscii(std::string& s) {
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+}
+
+static inline std::string ToLowerAsciiCopy(std::string s) {
+    ToLowerAscii(s);
+    return s;
+}
+
+static inline void ToUpperAscii(std::string& s) {
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::toupper(c); });
+}
+
+static inline std::string ToUpperAsciiCopy(std::string s) {
+    ToUpperAscii(s);
+    return s;
 }
 
 static inline bool EqualAsciiCaseInsensitive(std::string const& a, std::string const& b) {
     if (a.length() != b.length()) {
         return false;
     }
-    return std::equal(a.begin(), a.end(), b.begin(), b.end(), [](char a, char b) { return tolower(a) == tolower(b); });
+    return std::equal(
+        a.begin(), a.end(), b.begin(), b.end(), [](char a, char b) { return std::tolower(a) == std::tolower(b); });
+}
+
+static inline bool StartsWith(std::string const& str, std::string const& prefix) {
+    return str.rfind(prefix, 0) == 0;
+}
+
+static inline bool StartsWithAsciiCaseInsensitive(std::string const& str, std::string const& prefix) {
+    if (prefix.size() > str.size()) {
+        return false;
+    }
+    return std::equal(
+        prefix.begin(), prefix.end(), str.begin(), [](char a, char b) { return std::tolower(a) == std::tolower(b); });
+}
+
+static inline bool EndsWith(std::string const& str, std::string const& suffix) {
+    if (suffix.size() > str.size()) {
+        return false;
+    }
+    return std::equal(suffix.rbegin(), suffix.rend(), str.rbegin());
+}
+
+static inline bool EndsWithAsciiCaseInsensitive(std::string const& str, std::string const& suffix) {
+    if (suffix.size() > str.size()) {
+        return false;
+    }
+    return std::equal(suffix.rbegin(), suffix.rend(), str.rbegin(),
+        [](char a, char b) { return std::tolower(a) == std::tolower(b); });
 }
 
 static inline bool IsBooleanTrueString(std::string const& v) {

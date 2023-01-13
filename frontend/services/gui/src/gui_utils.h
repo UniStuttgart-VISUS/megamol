@@ -461,27 +461,6 @@ public:
         return header_open;
     }
 
-    /*
-     * Convert given string to lower case.
-     */
-    static void StringToLowerCase(std::string& str) {
-
-        for (auto& c : str) {
-            c = static_cast<char>(std::tolower(c));
-        }
-    }
-
-    /*
-     * Convert given string to upper case.
-     */
-    static void StringToUpperCase(std::string& str) {
-
-        for (auto& c : str) {
-            c = static_cast<char>(std::toupper(c));
-        }
-    }
-
-
     static ImGuiKey GlfwKeyToImGuiKey(megamol::frontend_resources::Key key) {
         switch (key) {
         case megamol::frontend_resources::Key::KEY_TAB:

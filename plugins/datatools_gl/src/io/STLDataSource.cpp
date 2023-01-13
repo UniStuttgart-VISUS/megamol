@@ -12,6 +12,7 @@
 
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/utility/DataHash.h"
+#include "mmcore/utility/String.h"
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 
@@ -155,7 +156,7 @@ void STLDataSource::read(const std::string& filename) {
         while (line.empty() && !ifs.eof()) {
             // Read and convert line to lower case
             std::getline(ifs, line);
-            std::transform(line.begin(), line.end(), line.begin(), ::tolower);
+            core::utility::string::ToLowerAscii(line);
 
             line.erase(0, line.find_first_not_of("\f\n\r\t\v "));
         }
@@ -250,7 +251,7 @@ void STLDataSource::read_ascii(const std::string& filename) {
         while (!ifs.eof()) {
             // Read and convert line to lower case
             std::getline(ifs, line);
-            std::transform(line.begin(), line.end(), line.begin(), ::tolower);
+            core::utility::string::ToLowerAscii(line);
 
             line.erase(0, line.find_first_not_of("\f\n\r\t\v "));
 

@@ -32,8 +32,8 @@ public:
         const auto& segments = utility::string::Split(v, ';');
         if (segments.size() == 2) {
             try {
-                float x = std::stof(utility::string::Trim(segments[0]));
-                float y = std::stof(utility::string::Trim(segments[1]));
+                float x = std::stof(utility::string::TrimCopy(segments[0]));
+                float y = std::stof(utility::string::TrimCopy(segments[1]));
                 this->SetValue(vislib::math::Vector<float, 2>(x, y));
                 return true;
             } catch (...) {}

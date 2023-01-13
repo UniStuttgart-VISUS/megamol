@@ -32,10 +32,10 @@ public:
         const auto& segments = utility::string::Split(v, ';');
         if (segments.size() == 4) {
             try {
-                float x = std::stof(utility::string::Trim(segments[0]));
-                float y = std::stof(utility::string::Trim(segments[1]));
-                float z = std::stof(utility::string::Trim(segments[2]));
-                float w = std::stof(utility::string::Trim(segments[3]));
+                float x = std::stof(utility::string::TrimCopy(segments[0]));
+                float y = std::stof(utility::string::TrimCopy(segments[1]));
+                float z = std::stof(utility::string::TrimCopy(segments[2]));
+                float w = std::stof(utility::string::TrimCopy(segments[3]));
                 this->SetValue(vislib::math::Vector<float, 4>(x, y, z, w));
                 return true;
             } catch (...) {}
