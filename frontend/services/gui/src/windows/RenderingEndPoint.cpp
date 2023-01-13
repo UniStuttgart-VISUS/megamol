@@ -42,9 +42,9 @@ bool megamol::gui::RenderingEndPoint::Draw() {
         if (ep.has_value()) {
             frontend_resources::EntryPoint& ep_v = ep.value();
 
-            ep_v.entry_point_data->update();
+            /*ep_v.entry_point_data->update();
 
-            ep_v.execute(ep_v.modulePtr, ep_v.entry_point_resources, ep_v.execution_result_image);
+            ep_v.execute(ep_v.modulePtr, ep_v.entry_point_resources, ep_v.execution_result_image);*/
 
             ImGui::Image(ep_v.execution_result_image.referenced_image_handle,
                 ImVec2{(float)ep_v.execution_result_image.size.width, (float)ep_v.execution_result_image.size.height},
