@@ -60,6 +60,10 @@ public:
         return C::IsAvailable();
     }
 
+    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) const override {
+        return C::requested_lifetime_resources(req);
+    }
+
     /**
      * Answers whether this description is describing the class of
      * 'module'.

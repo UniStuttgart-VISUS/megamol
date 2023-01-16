@@ -59,7 +59,7 @@ public:
     }
 
 #ifdef MEGAMOL_USE_PROFILING
-    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         ModuleGL::requested_lifetime_resources(req);
         req.require<frontend_resources::PerformanceManager>();
     }

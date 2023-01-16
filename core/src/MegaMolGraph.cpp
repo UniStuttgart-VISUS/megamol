@@ -545,14 +545,8 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         return false;
     }
 
-    Module::ptr_type module_ptr = module_description->CreateModule(request.id);
-    if (!module_ptr) {
-        log_error("error. could not instantiate module from module description: " + request.className);
-        return false;
-    }
-
     frontend_resources::ResourceRequest module_resource_request;
-    module_ptr->requested_lifetime_resources(module_resource_request);
+    module_description->requested_lifetime_resources(module_resource_request);
 
     auto [success, module_lifetime_dependencies] =
         provided_resources_lookup.get_requested_resources(module_resource_request);
@@ -571,6 +565,12 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         log_error("requested: " + requested_deps);
         log_error("found: " + found_deps);
 
+        return false;
+    }
+
+    Module::ptr_type module_ptr = module_description->CreateModule(request.id);
+    if (!module_ptr) {
+        log_error("error. could not instantiate module from module description: " + request.className);
         return false;
     }
 
