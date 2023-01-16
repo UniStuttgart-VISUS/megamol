@@ -25,6 +25,7 @@
         "docking-experimental"
       ]
     },
+    "imgui-software-renderer",
     "imguizmoquat",
     "implot",
     "libigl",

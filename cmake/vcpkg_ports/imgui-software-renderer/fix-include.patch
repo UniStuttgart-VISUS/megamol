@@ -1,0 +1,13 @@
+diff --git a/src/imgui_sw.cpp b/src/imgui_sw.cpp
+index d98a6de..3a30e2a 100644
+--- a/src/imgui_sw.cpp
++++ b/src/imgui_sw.cpp
+@@ -9,7 +9,7 @@
+ #include <cmath>
+ #include <vector>
+ 
+-#include <imgui/imgui.h>
++#include <imgui.h>
+ 
+ namespace imgui_sw {
+ namespace {

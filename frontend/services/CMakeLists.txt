@@ -11,6 +11,7 @@ if(BUILD_FRONTEND_SERVICES)
 
   find_package(glm CONFIG REQUIRED)
   find_package(imgui CONFIG REQUIRED)
+  find_package(imgui_software_renderer CONFIG REQUIRED)
   find_package(imguizmoquat CONFIG REQUIRED)
   find_package(implot CONFIG REQUIRED)
 
@@ -178,6 +179,7 @@ if(BUILD_FRONTEND_SERVICES)
       core
       glm::glm
       imgui::imgui
+      imgui_software_renderer::imgui_software_renderer
       imguizmoquat::imguizmoquat
       implot::implot)
 
