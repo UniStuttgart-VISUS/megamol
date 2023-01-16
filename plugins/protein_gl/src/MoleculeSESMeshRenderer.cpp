@@ -352,7 +352,7 @@ bool MoleculeSESMeshRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     // ==================== Start actual rendering ====================
 
     this->RenderAtoms(mol);
-    if(!this->reducedSurface.empty())
+    if (!this->reducedSurface.empty())
         this->RenderReducedSurface(this->reducedSurface[0]);
 
     if (externalfbo) {
@@ -541,11 +541,54 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
     // fill the triangle mesh with data
     if (this->reducedSurface.empty())
         return false;
-    float* vertex = new float[mol->AtomCount() * 3];
-    float* normal = new float[mol->AtomCount() * 3];
-    float* color = new float[mol->AtomCount() * 3];
-    for (auto i = 0; i < mol->AtomCount(); i++) {
-        vertex[3 * i + 0] = mol->AtomPositions()[3 * i];
+    auto* vertex = new float[12];
+    auto* normal = new float[12];
+    auto* color = new float[12];
+
+
+    vertex[0 + 0] = -0.944;   //Punkt 1
+    vertex[0 + 1] = 20.730;   //Punkt 1
+    vertex[0 + 2] = -12.605;  //Punkt 1
+    vertex[3 + 0] = -1.143;   //Punkt 2
+    vertex[3 + 1] = 19.976;   //Punkt 2
+    vertex[3 + 2] = -11.390;  //Punkt 2
+    vertex[6 + 0] = -0.115;   //Punkt 3
+    vertex[6 + 1] = 18.874;   //Punkt 3
+    vertex[6 + 2] = -11.198;  //Punkt 3
+    vertex[9 + 0] = -1.043;   //Punkt 4
+    vertex[9 + 1] = 20.353;   //Punkt 4
+    vertex[9 + 2] = -11.9975; //Punkt 4
+
+
+    normal[0 + 0] = -0.944;   //Punkt 1
+    normal[0 + 1] = 20.730;   //Punkt 1
+    normal[0 + 2] = -12.605;  //Punkt 1
+    normal[3 + 0] = -1.143;   //Punkt 2
+    normal[3 + 1] = 19.976;   //Punkt 2
+    normal[3 + 2] = -11.390;  //Punkt 2
+    normal[6 + 0] = -0.115;   //Punkt 3
+    normal[6 + 1] = 18.874;   //Punkt 3
+    normal[6 + 2] = -11.198;  //Punkt 3
+    normal[9 + 0] = -1.043;   //Punkt 4
+    normal[9 + 1] = 20.353;   //Punkt 4
+    normal[9 + 2] = -11.9975; //Punkt 4
+
+
+    color[0 + 0] = 1.0f;    //Punkt 1
+    color[0 + 1] = 0.0f;    //Punkt 1
+    color[0 + 2] = 1.0f;    //Punkt 1
+    color[3 + 0] = 2.0f;    //Punkt 2
+    color[3 + 1] = 1.0f;    //Punkt 2
+    color[3 + 2] = 2.0f;    //Punkt 2
+    color[6 + 0] = 3.0f;    //Punkt 3
+    color[6 + 1] = 1.0f;    //Punkt 3
+    color[6 + 2] = 3.0f;    //Punkt 3
+    color[9 + 0] = 4.0f;    //Punkt 4
+    color[9 + 1] = 0.7544f; //Punkt 4
+    color[9 + 2] = 4.0f;    //Punkt 4
+
+    for (auto i = 0; i < mol->AtomCount() + 1; i++) {
+        /* vertex[3 * i + 0] = mol->AtomPositions()[3 * i];
         vertex[3 * i + 1] = mol->AtomPositions()[3 * i + 1];
         vertex[3 * i + 2] = mol->AtomPositions()[3 * i + 2];
         normal[3 * i + 0] = mol->AtomPositions()[3 * i];
@@ -553,9 +596,43 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
         normal[3 * i + 2] = mol->AtomPositions()[3 * i + 2];
         color[3 * i + 0] = 1.0f;
         color[3 * i + 1] = 0.5f;
-        color[3 * i + 2] = 0.0f;
+        color[3 * i + 2] = 0.0f; */
     }
-    unsigned int* face = new unsigned int[this->reducedSurface[0]->GetRSFaceCount() * 3];
+    auto* face = new unsigned int[4 * 3];
+    // Es hat 2 faces
+    // Vorder und Rückseite jeweils
+
+
+    /*
+     *
+     Punkte aus orginalem pdb
+     Nur diese Atome ausgeführt: Bild 1
+ ATOM      1  N   GLY A   1      -0.944  20.730 -12.605  1.00 19.62           N
+ ATOM      2  CA  GLY A   1      -1.143  19.976 -11.390  1.00 18.58           C
+ ATOM      3  C   GLY A   1      -0.115  18.874 -11.198  1.00 16.99           C
+
+     Selbst definierter Punkt:
+     Mit dem Punkt hier: Bild 2
+ ATOM      4  C   GLY A   1      -0.734  19.860 -11.731  1.00 16.99           C
+     *
+     */
+
+    face[0] = 1;
+    face[1] = 2;
+    face[2] = 3;
+
+    face[3] = 0;
+    face[4] = 1;
+    face[5] = 2;
+
+    face[6] = 3;
+    face[7] = 2;
+    face[8] = 1;
+
+    face[9] = 2;
+    face[10] = 1;
+    face[11] = 0;
+/*
     for (auto i = 0; i < this->reducedSurface[0]->GetRSFaceCount(); i++) {
         face[3 * i + 0] = this->reducedSurface[0]->GetRSFace(i)->GetVertex1()->GetIndex();
         face[3 * i + 1] = this->reducedSurface[0]->GetRSFace(i)->GetVertex2()->GetIndex();
@@ -572,7 +649,9 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
         }
     }
     this->triaMesh[0]->SetVertexData(mol->AtomCount(), vertex, normal, color, NULL, true);
-    this->triaMesh[0]->SetTriangleData(this->reducedSurface[0]->GetRSFaceCount(), face, true);
+    this->triaMesh[0]->SetTriangleData(this->reducedSurface[0]->GetRSFaceCount(), face, true); */
+    this->triaMesh[0]->SetVertexData(sizeof(vertex), vertex, normal, color, NULL, true);
+    this->triaMesh[0]->SetTriangleData(sizeof(face), face, true);
     this->triaMesh[0]->SetMaterial(NULL);
 
     // set triangle mesh to caller
