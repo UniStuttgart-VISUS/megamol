@@ -30,9 +30,6 @@ public:
     static bool IsAvailable(void) {
         return true;
     }
-    static bool SupportQuickstart(void) {
-        return false;
-    }
 
     RemapIColValues(void);
     virtual ~RemapIColValues(void);

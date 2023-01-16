@@ -64,15 +64,6 @@ public:
     static bool IsAvailable(void);
 
     /**
-     * Disallow usage in quickstarts.
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
-    }
-
-    /**
      * Initialises a new instance.
      */
     MpiProvider(void);

@@ -61,13 +61,6 @@ public:
     virtual bool IsDescribing(const Module* module) const = 0;
 
     /**
-     * Answer whether or not this module can be used in a quickstart
-     *
-     * @return 'true' if the module can be used in a quickstart
-     */
-    virtual bool IsVisibleForQuickstart() const = 0;
-
-    /**
      * Creates a new module object from this description.
      *
      * @param name The name for the module to be created.

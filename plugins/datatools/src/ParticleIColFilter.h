@@ -37,9 +37,6 @@ public:
     static bool IsAvailable(void) {
         return true;
     }
-    static bool SupportQuickstart(void) {
-        return false;
-    }
 
     ParticleIColFilter(void);
     virtual ~ParticleIColFilter(void);

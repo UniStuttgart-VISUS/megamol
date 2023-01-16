@@ -35,9 +35,6 @@ public:
     static bool IsAvailable(void) {
         return true;
     }
-    static bool SupportQuickstart(void) {
-        return false;
-    }
 
     MMGDDWriter(void);
     virtual ~MMGDDWriter(void);

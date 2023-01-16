@@ -80,15 +80,6 @@ public:
         return (typeid(C) == typeid(*module));
     }
 
-    /**
-     * Answer whether or not this module can be used in a quickstart
-     *
-     * @return 'true' if the module can be used in a quickstart
-     */
-    bool IsVisibleForQuickstart() const override {
-        return C::SupportQuickstart();
-    }
-
 protected:
     /**
      * Creates a new module object from this description.
