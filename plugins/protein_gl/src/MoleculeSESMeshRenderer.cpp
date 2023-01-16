@@ -598,7 +598,7 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
         color[3 * i + 1] = 0.5f;
         color[3 * i + 2] = 0.0f; */
     }
-    auto* face = new unsigned int[2 * 3];
+    auto* face = new unsigned int[4 * 3];
     // Es hat 2 faces
     // Vorder und Rückseite jeweils
 
@@ -625,15 +625,14 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
     face[4] = 1;
     face[5] = 2;
 
-    /*
-        face[6] = 3;
-        face[7] = 0;
-        face[8] = 1;
+    face[6] = 3;
+    face[7] = 2;
+    face[8] = 1;
 
-        face[9] = 3;
-        face[10] = 1;
-        face[11] = 0;
-
+    face[9] = 2;
+    face[10] = 1;
+    face[11] = 0;
+/*
     for (auto i = 0; i < this->reducedSurface[0]->GetRSFaceCount(); i++) {
         face[3 * i + 0] = this->reducedSurface[0]->GetRSFace(i)->GetVertex1()->GetIndex();
         face[3 * i + 1] = this->reducedSurface[0]->GetRSFace(i)->GetVertex2()->GetIndex();
@@ -648,9 +647,11 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
         if (tmpVecN.Dot(tmpVecProbe - tmpVec1) < 0.0f) {
             std::swap(face[3 * i + 0], face[3 * i + 1]);
         }
-    } */
+    }
     this->triaMesh[0]->SetVertexData(mol->AtomCount(), vertex, normal, color, NULL, true);
-    this->triaMesh[0]->SetTriangleData(this->reducedSurface[0]->GetRSFaceCount(), face, true);
+    this->triaMesh[0]->SetTriangleData(this->reducedSurface[0]->GetRSFaceCount(), face, true); */
+    this->triaMesh[0]->SetVertexData(sizeof(vertex), vertex, normal, color, NULL, true);
+    this->triaMesh[0]->SetTriangleData(sizeof(face), face, true);
     this->triaMesh[0]->SetMaterial(NULL);
 
     // set triangle mesh to caller
