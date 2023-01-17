@@ -21,7 +21,7 @@ namespace megamol::compositing_gl {
  */
 class DrawToScreen : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
-    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         Renderer3DModuleGL::requested_lifetime_resources(req);
         req.require<frontend_resources::FrameStatistics>();
     }

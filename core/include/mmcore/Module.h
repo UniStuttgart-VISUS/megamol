@@ -29,7 +29,7 @@ class ModuleDescription;
  */
 class Module : public AbstractNamedObjectContainer {
 public:
-    virtual void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         req.require<frontend_resources::GlobalValueStore>();
     }
 

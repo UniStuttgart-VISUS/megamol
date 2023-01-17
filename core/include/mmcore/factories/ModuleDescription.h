@@ -49,6 +49,8 @@ public:
      */
     virtual bool IsAvailable() const;
 
+    virtual void requested_lifetime_resources(frontend_resources::ResourceRequest& req) const = 0;
+
     /**
      * Answers whether this description is describing the class of
      * 'module'.

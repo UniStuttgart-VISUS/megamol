@@ -21,7 +21,7 @@ namespace megamol::mmstd_gl::special {
  */
 class ScreenShooter : public core::job::AbstractJob, public core::Module, public core::view::AbstractView::Hooks {
 public:
-    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         Module::requested_lifetime_resources(req);
         req.require<core::MegaMolGraph>();
     }

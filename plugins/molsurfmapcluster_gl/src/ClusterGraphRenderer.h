@@ -44,6 +44,12 @@ public:
         return true;
     }
 
+    /** Method to request resources from the frontend */
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        ModuleGL::requested_lifetime_resources(req);
+        req.require<core::MegaMolGraph>();
+    }
+
     /** Ctor. */
     ClusterGraphRenderer(void);
 
@@ -81,12 +87,6 @@ protected:
      * The render callback.
      */
     virtual bool Render(core_gl::view::CallRender2DGL& call) override;
-
-    /** Method to request resources from the frontend */
-    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
-        ModuleGL::requested_lifetime_resources(req);
-        req.require<core::MegaMolGraph>();
-    }
 
 private:
     void calculateNodePositions(ClusteringData const& cluster_data);

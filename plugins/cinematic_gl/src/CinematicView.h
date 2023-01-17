@@ -37,7 +37,7 @@ class CinematicView : public mmstd_gl::view::View3DGL {
 public:
     typedef mmstd_gl::view::View3DGL Base;
 
-    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         Base::requested_lifetime_resources(req);
         req.require<core::MegaMolGraph>();
     }
