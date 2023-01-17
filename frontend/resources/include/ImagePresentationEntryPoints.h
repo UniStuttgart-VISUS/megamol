@@ -35,11 +35,14 @@ struct ImagePresentationEntryPoints {
     std::function<bool(std::string const&, std::string const&)> rename_entry_point;
     std::function<void()> clear_entry_points;
 
+    std::function<bool(ImagePresentationSink const&)> add_sink;
+    std::function<bool(std::string const&)> remove_sink;
+
     std::function<bool(std::string const&, std::string const&)> bind_sink_entry_point;
     std::function<bool(std::string const&, std::string const&)> unbind_sink_entry_point;
 
     // services may also subscribe to entry point changes to get notified when entry points get added/removed
-    enum class SubscriptionEvent { Add, Remove, Rename, Clear, BindSink, UnbindSink };
+    enum class SubscriptionEvent { Add, Remove, Rename, Clear, AddSink, RemoveSink, BindSink, UnbindSink };
 
     using SubscriberFunction =
         std::function<void(frontend_resources::ImagePresentationEntryPoints::SubscriptionEvent const&,

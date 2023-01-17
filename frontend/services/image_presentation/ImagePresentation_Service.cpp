@@ -86,6 +86,14 @@ bool ImagePresentation_Service::init(const Config& config) {
         };
     m_entry_points_registry_resource.get_entry_point = [&](auto const& name) { return get_entry_point(name); };
 
+    m_entry_points_registry_resource.add_sink = [&](auto const& sink) {
+        return add_sink(sink) && tell_subscribers(ev::AddSink, {sink});
+    };
+
+    m_entry_points_registry_resource.remove_sink = [&](auto const& name) {
+        return remove_sink(name) && tell_subscribers(ev::RemoveSink, {name});
+    };
+
     m_entry_points_registry_resource.bind_sink_entry_point = [&](std::string const& sink_name,
                                                                  std::string const& ep_name) {
         return bind_sink_to_ep(sink_name, ep_name) && tell_subscribers(ev::BindSink, {sink_name, ep_name});
@@ -395,6 +403,19 @@ bool ImagePresentation_Service::clear_entry_points() {
 
     ep_sink_map.clear();
 
+    return true;
+}
+
+bool ImagePresentation_Service::add_sink(ImagePresentationSink const& sink) {
+    m_presentation_sinks.push_back(sink);
+    return true;
+}
+
+bool ImagePresentation_Service::remove_sink(std::string const& name) {
+    m_presentation_sinks.remove_if([&name](auto const& entry) { return entry.name == name; });
+    for (auto& [key, list] : ep_sink_map) {
+        list.remove(name);
+    }
     return true;
 }
 
