@@ -212,18 +212,20 @@ void ImagePresentation_Service::PresentRenderedImages() {
     // this way sinks can access the current fbo size as previous_state
     m_global_framebuffer_events.clear();
 
-    // pull result images into separate list
-    static std::vector<ImageWrapper> wrapped_images;
-    wrapped_images.clear();
-    wrapped_images.reserve(m_entry_points.size());
+    // pull result images into separate lists
+    std::unordered_map<std::string, std::vector<ImageWrapper>> sink_img_map;
+    sink_img_map.reserve(m_presentation_sinks.size());
 
     // rendering results are presented in order of execution of entry points
     for (auto& entry : m_entry_points) {
-        wrapped_images.push_back(entry.execution_result_image);
+        auto const& sink_list = ep_sink_map[entry.moduleName];
+        for (auto const& sink : sink_list) {
+            sink_img_map[sink].push_back(entry.execution_result_image);
+        }
     }
 
     for (auto& sink : m_presentation_sinks) {
-        sink.present_images(wrapped_images);
+        sink.present_images(sink_img_map[sink.name]);
     }
 }
 
@@ -340,6 +342,8 @@ bool ImagePresentation_Service::add_entry_point(std::string const& name, EntryPo
     // ensure sorting of entry points according to priorities
     set_entry_point_priority(name, 0);
 
+    bind_sink_to_ep("GLFW Window Presentation Sink", name);
+
     return true;
 }
 
@@ -361,6 +365,8 @@ bool ImagePresentation_Service::set_entry_point_priority(std::string const& name
 
 bool ImagePresentation_Service::remove_entry_point(std::string const& name) {
 
+    ep_sink_map.erase(name);
+
     m_entry_points.remove_if([&](auto& entry) { return entry.moduleName == name; });
 
     return true;
@@ -377,11 +383,17 @@ bool ImagePresentation_Service::rename_entry_point(std::string const& oldName, s
 
     entry_it->moduleName = newName;
 
+    auto l = ep_sink_map[oldName];
+    ep_sink_map.erase(oldName);
+    ep_sink_map[newName] = l;
+
     return true;
 }
 
 bool ImagePresentation_Service::clear_entry_points() {
     m_entry_points.clear();
+
+    ep_sink_map.clear();
 
     return true;
 }
