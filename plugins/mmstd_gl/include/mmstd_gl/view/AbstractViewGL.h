@@ -14,7 +14,7 @@ class AbstractViewGL : public core::view::AbstractView {
 public:
     using core::view::AbstractView::AbstractView;
 
-    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         AbstractView::requested_lifetime_resources(req);
         req.require<frontend_resources::OpenGL_Context>(); // GL modules should request the GL context resource
     }
