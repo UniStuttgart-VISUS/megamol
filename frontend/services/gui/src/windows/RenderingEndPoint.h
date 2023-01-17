@@ -45,17 +45,29 @@ public:
         };
 
         img_pres_ep_resource_ptr.subscribe_to_entry_point_changes(sub_func);
+        img_pres_ep_resource_ptr.add_sink(sink_);
     }
 
     explicit RenderingEndPoint(const std::string& window_name);
 
-    void SetTexture(GLuint texture, uint32_t x, uint32_t y);
+    //virtual ~RenderingEndPoint() {
+    //    auto& img_pres_ep_resource_ptr = frontend_resources->get<frontend_resources::ImagePresentationEntryPoints>();
+    //    img_pres_ep_resource_ptr.remove_sink(sink_.name);
+    //}
+
+    //void SetTexture(GLuint texture, uint32_t x, uint32_t y);
 
     bool Draw() override;
 
+    void PresentImageCB(std::vector<frontend_resources::ImageWrapper> const& images) {
+        images_ = images;
+    }
+
 private:
-    ImTextureID tex_;
-    ImVec2 size_;
+    /*ImTextureID tex_;
+    ImVec2 size_;*/
     std::map<std::string, frontend::ImagePresentation_Service::EntryPointRenderFunctions> entry_points_;
+    std::vector<frontend_resources::ImageWrapper> images_;
+    frontend_resources::ImagePresentationSink sink_;
 };
 } // namespace megamol::gui
