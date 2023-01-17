@@ -86,6 +86,15 @@ bool ImagePresentation_Service::init(const Config& config) {
         };
     m_entry_points_registry_resource.get_entry_point = [&](auto const& name) { return get_entry_point(name); };
 
+    m_entry_points_registry_resource.bind_sink_entry_point = [&](std::string const& sink_name,
+                                                                 std::string const& ep_name) {
+        return bind_sink_to_ep(sink_name, ep_name) && tell_subscribers(ev::BindSink, {sink_name, ep_name});
+    };
+    m_entry_points_registry_resource.unbind_sink_entry_point = [&](std::string const& sink_name,
+                                                                   std::string const& ep_name) {
+        return unbind_sink_to_ep(sink_name, ep_name) && tell_subscribers(ev::UnbindSink, {sink_name, ep_name});
+    };
+
     this->m_providedResourceReferences = {
         {"ImagePresentationEntryPoints", m_entry_points_registry_resource}, // used by MegaMolGraph to set entry points
         {"EntryPointToPNG_ScreenshotTrigger", m_entrypointToPNG_trigger},
@@ -373,6 +382,22 @@ bool ImagePresentation_Service::rename_entry_point(std::string const& oldName, s
 
 bool ImagePresentation_Service::clear_entry_points() {
     m_entry_points.clear();
+
+    return true;
+}
+
+bool ImagePresentation_Service::bind_sink_to_ep(std::string const& sink_name, std::string const& ep_name) {
+    auto& sink_list = ep_sink_map[ep_name];
+    if (std::find(sink_list.begin(), sink_list.end(), sink_name) == sink_list.end()) {
+        sink_list.push_back(sink_name);
+    }
+
+    return true;
+}
+
+bool ImagePresentation_Service::unbind_sink_to_ep(std::string const& sink_name, std::string const& ep_name) {
+    auto& sink_list = ep_sink_map[ep_name];
+    sink_list.remove(sink_name);
 
     return true;
 }

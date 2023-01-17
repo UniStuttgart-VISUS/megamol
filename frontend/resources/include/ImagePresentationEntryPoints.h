@@ -9,6 +9,7 @@
 
 #include "EntryPoint.h"
 #include "FrontendResource.h"
+#include "ImagePresentationSink.h"
 
 #include <any>
 #include <functional>
@@ -34,8 +35,11 @@ struct ImagePresentationEntryPoints {
     std::function<bool(std::string const&, std::string const&)> rename_entry_point;
     std::function<void()> clear_entry_points;
 
+    std::function<bool(std::string const&, std::string const&)> bind_sink_entry_point;
+    std::function<bool(std::string const&, std::string const&)> unbind_sink_entry_point;
+
     // services may also subscribe to entry point changes to get notified when entry points get added/removed
-    enum class SubscriptionEvent { Add, Remove, Rename, Clear };
+    enum class SubscriptionEvent { Add, Remove, Rename, Clear, BindSink, UnbindSink };
 
     using SubscriberFunction =
         std::function<void(frontend_resources::ImagePresentationEntryPoints::SubscriptionEvent const&,
