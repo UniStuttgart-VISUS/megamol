@@ -11,6 +11,8 @@
 
 #include "FrontendResource.h"
 #include "FrontendResourcesMap.h"
+#include "GlobalValueStore.h"
+#include "ResourceRequest.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 
 
@@ -27,8 +29,8 @@ class ModuleDescription;
  */
 class Module : public AbstractNamedObjectContainer {
 public:
-    virtual std::vector<std::string> requested_lifetime_resources() {
-        return {"GlobalValueStore"};
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        req.require<frontend_resources::GlobalValueStore>();
     }
 
     friend class ::megamol::core::factories::ModuleDescription;

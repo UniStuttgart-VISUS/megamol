@@ -7,8 +7,10 @@
 
 #pragma once
 
+#include "PluginsResource.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
 #include "mmcore/factories/CallDescription.h"
 #include "mmcore/param/ParamSlot.h"
@@ -28,11 +30,10 @@ class CSVFileSequence : public core::Module {
 public:
     typedef core::Module Base;
 
-    std::vector<std::string> requested_lifetime_resources() override {
-        auto lifetime_resources = Base::requested_lifetime_resources();
-        lifetime_resources.push_back("MegaMolGraph");
-        lifetime_resources.emplace_back("PluginsResource");
-        return lifetime_resources;
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Base::requested_lifetime_resources(req);
+        req.require<core::MegaMolGraph>();
+        req.require<frontend_resources::PluginsResource>();
     }
 
     /**

@@ -11,6 +11,7 @@
 
 
 #include "mmcore/CallerSlot.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/CallRenderViewGL.h"
 #include "mmstd_gl/view/View3DGL.h"
@@ -36,10 +37,9 @@ class CinematicView : public mmstd_gl::view::View3DGL {
 public:
     typedef mmstd_gl::view::View3DGL Base;
 
-    std::vector<std::string> requested_lifetime_resources() override {
-        auto lifetime_resources = Base::requested_lifetime_resources();
-        lifetime_resources.push_back("MegaMolGraph");
-        return lifetime_resources;
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Base::requested_lifetime_resources(req);
+        req.require<core::MegaMolGraph>();
     }
 
     /**

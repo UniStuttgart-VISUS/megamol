@@ -7,6 +7,7 @@
 #ifndef MMCORE_SPECIAL_STUBMODULE_H_INCLUDED
 #define MMCORE_SPECIAL_STUBMODULE_H_INCLUDED
 
+#include "PluginsResource.h"
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -23,10 +24,9 @@ namespace special {
  */
 class StubModule : public Module {
 public:
-    std::vector<std::string> requested_lifetime_resources() override {
-        std::vector<std::string> resources = Module::requested_lifetime_resources();
-        resources.emplace_back("PluginsResource");
-        return resources;
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::PluginsResource>();
     }
 
     /**

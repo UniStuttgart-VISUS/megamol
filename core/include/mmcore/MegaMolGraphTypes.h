@@ -41,7 +41,7 @@ struct ModuleInstance_t {
     Module::ptr_type modulePtr = nullptr;
     ModuleInstantiationRequest request;
     bool isGraphEntryPoint = false;
-    std::vector<std::string> lifetime_resource_requests;
+    megamol::frontend_resources::ResourceRequest lifetime_resource_requests;
     std::vector<megamol::frontend::FrontendResource> lifetime_resources;
 };
 

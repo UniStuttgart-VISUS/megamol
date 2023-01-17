@@ -1,81 +1,85 @@
+/**
+ * MegaMol
+ * Copyright (c) 2022, MegaMol Dev Team
+ * All rights reserved.
+ */
+
 in vec4 obj_pos;
 in vec3 cam_pos;
+in vec3 absradii;
+in vec3 radii;
+in mat3 rotate_tensor_into_world;
+
 in vec4 vert_color;
-
-in vec3 inv_rad;
-
-in flat vec3 dir_color;
-in flat vec3 transformed_normal;
-
-in mat3 rotate_world_into_tensor;
-in mat3 rotate_points;
 
 out layout(location = 0) vec4 albedo_out;
 out layout(location = 1) vec3 normal_out;
 out layout(location = 2) float depth_out;
 
 void main() {
-    vec4 coord;
-    vec3 ray, tmp;
-    float lambda;
-
-    // transform fragment coordinates from window coordinates to view coordinates.
-    coord = gl_FragCoord
+    // transform fragment coordinates from screen coordinates to ndc coordinates.
+    vec4 coord = gl_FragCoord
         * vec4(view_attr.z, view_attr.w, 2.0, 0.0)
         + vec4(-1.0, -1.0, -1.0, 1.0);
 
-
-    // transform fragment coordinates from view coordinates to object coordinates.
+    // transform ndc coordinates to tensor coordinates.
     coord = mvp_i * coord;
-    // TODO: correct order? doesnt /w need to be after inverse(projection)?
     coord /= coord.w;
     coord -= obj_pos; // ... and move
 
-    // ... and rotate with rot_mat transposed
-    ray = rotate_world_into_tensor * coord.xyz;
-    ray *= inv_rad;
+    // since fragment coordinate is from rotated box
+    // we need to take out the rotation to get the object coordinates
+    vec3 os_coord = rotate_tensor_into_world * coord.xyz;
+    vec3 normalized_os_coord = os_coord / absradii;
 
     // calc the viewing ray
-    ray = normalize(ray - cam_pos.xyz);
+    vec3 ray = normalize(normalized_os_coord - cam_pos.xyz);
 
     // calculate the geometry-ray-intersection (sphere with radius = 1)
     float d1 = -dot(cam_pos.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray
-    float d2s = dot(cam_pos.xyz, cam_pos.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
-    float radicand = 1.0 - d2s;                             // square of difference of projected length and lambda
+    float d2s = dot(cam_pos.xyz, cam_pos.xyz) - d1 * d1;     // off axis of cam-sphere-vector and ray
+    float radicand = 1.0 - d2s;                              // square of difference of projected length and lambda
     if (radicand < 0.0) { discard; }
-    lambda = d1 - sqrt(radicand);                           // lambda
-    vec3 sphereintersection = lambda * ray + cam_pos.xyz;    // intersection point
+    float lambda = d1 - sqrt(radicand);
+    vec3 sphere_intersection = lambda * ray + cam_pos.xyz;
+
+    // re-scale intersection point
+    sphere_intersection *= absradii;
+
+    // calc normal at (re-scaled) intersection point
+    vec3 normal = normalize( ( sphere_intersection / absradii ) / absradii );
+    normal = normalize( transpose( rotate_tensor_into_world ) * normal );
+
+    // re-transform intersection into world space
+    sphere_intersection = transpose(rotate_tensor_into_world) * sphere_intersection.xyz;
+    sphere_intersection += obj_pos.xyz;
 
 
-    // "calc" normal at intersection point
-    vec3 normal = sphereintersection;
-    vec3 color = step(normal, vec3(0));
+    // color stuff
+    vec3 dir_color1 = max( vec3(0), normal * sign(radii) );
+    vec3 dir_color2 = vec3(1) + normal * sign(radii);
+    vec3 dir_color = any( lessThan( dir_color2, vec3( 0.5 ) ) ) ? dir_color2 * vec3(0.5) : dir_color1;
 
-    normal = rotate_points * normal;
-    ray = rotate_points * ray;
 
-    tmp = sphereintersection / inv_rad;
-
-    //sphereintersection.x = dot(rot_mat_t0, tmp.xyz);
-    //sphereintersection.y = dot(rot_mat_t1, tmp.xyz);
-    //sphereintersection.z = dot(rot_mat_t2, tmp.xyz);
-    sphereintersection = rotate_world_into_tensor * tmp.xyz;
-
-    // phong lighting with directional light, colors are hardcoded as they're inaccessible for some reason
-    //out_frag_color = vec4(LocalLighting(ray, normal, lightPos.xyz, color), 1.0);
-    //out_frag_color = vec4(LocalLighting(ray, normalize(sphereintersection), lightPos.xyz, color), 1.0);
-
-    albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation), 1.0);
-    normal_out = normal;
-
-    sphereintersection += obj_pos.xyz;
-
-    vec4 ding = vec4(sphereintersection, 1.0);
+    // calc depth
+    float far = gl_DepthRange.far;
+    float near = gl_DepthRange.near;
+    vec4 ding = vec4(sphere_intersection, 1.0);
     float depth = dot(mvp_t[2], ding);
     float depth_w = dot(mvp_t[3], ding);
-    depth_out = ((depth / depth_w) + 1.0) * 0.5;
+    float depth_ndc = depth / depth_w;
+    float depth_ss = ((far - near) * depth_ndc + (far + near)) / 2.0;
 
-    //depth_out = gl_FragCoord.z;
-    //albedo_out = mix(dir_color, vert_color.rgb, color_interpolation);
-    //normal_out = transformed_normal;
+    // linear depth
+    // near_ - and far_plane from camera view frustum
+    // uniforms probably missing, add them in code if you need it
+    //depth_ss = (2.0 * near_plane * far_plane) / (far_plane + near_plane - depth_ndc * (far_plane - near_plane));
+    //depth_ss /= far_plane; // normalize for visualization
+
+
+    // outputs
+    albedo_out = vec4(mix(dir_color, vert_color.rgb, color_interpolation), 1.0);
+    normal_out = normal;
+    depth_out = depth_ss; // can probably removed at some point (SimpleRrenderTarget doesn't use it anymore)
+    gl_FragDepth = depth_ss;
 }
