@@ -23,7 +23,6 @@
 #include "windows/Configurator.h"
 #include "windows/LogConsole.h"
 #include "windows/WindowCollection.h"
-#include "FrontendResource.h"
 
 
 namespace megamol {
@@ -179,7 +178,7 @@ public:
     }
 
 
-    std::vector<megamol::frontend_resources::ImagePresentationEntryPoints::SubscriberFunction> GetSubscribers(){
+    std::vector<megamol::frontend_resources::ImagePresentationEntryPoints::SubscriberFunction> GetSubscribers() {
         return std::vector<megamol::frontend_resources::ImagePresentationEntryPoints::SubscriberFunction>();
     }
 

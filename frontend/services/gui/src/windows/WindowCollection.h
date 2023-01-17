@@ -18,9 +18,8 @@
 #include <functional>
 #include <map>
 #include <string>
-#include <vector>
-#include "FrontendResource.h"
 #include <unordered_map>
+#include <vector>
 
 
 namespace megamol {

@@ -12,8 +12,8 @@
 #include "LogConsole.h"
 #include "ParameterList.h"
 #include "PerformanceMonitor.h"
-#include "TransferFunctionEditor.h"
 #include "RenderingEndPoint.h"
+#include "TransferFunctionEditor.h"
 
 
 using namespace megamol;
