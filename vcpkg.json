@@ -47,11 +47,6 @@
     "tinygltf",
     "tinyobjloader",
     "tinyply",
-    {"name": "tracy",
-      "features" : [
-        "gui-tools"
-      ]
-    },
     "zeromq",
     "zfp",
     "zlib"
@@ -135,7 +130,12 @@
     "use-tracy": {
       "description": "Use Tracy",
       "dependencies": [
-        "tracy"
+        {
+          "name": "tracy",
+          "features" : [
+            "gui-tools"
+          ]
+        }
       ]
     }
   }

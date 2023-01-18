@@ -129,13 +129,6 @@ endif ()
 # Utils
 add_subdirectory(utils)
 
-# Tracy
-if (MEGAMOL_USE_TRACY)
-  target_compile_definitions(megamol PUBLIC TRACY_ENABLE)
-  find_package(Tracy CONFIG REQUIRED)
-  target_link_libraries(megamol PUBLIC Tracy::TracyClient)
-endif()
-
 # Add directory structure for visual studio
 if (WIN32)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
