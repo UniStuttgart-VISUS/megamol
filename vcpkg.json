@@ -140,6 +140,17 @@
       "dependencies": [
         "vtk-m"
       ]
+    },
+    "use-tracy": {
+      "description": "Use Tracy",
+      "dependencies": [
+        {
+          "name": "tracy",
+          "features" : [
+            "gui-tools"
+          ]
+        }
+      ]
     }
   }
 }
