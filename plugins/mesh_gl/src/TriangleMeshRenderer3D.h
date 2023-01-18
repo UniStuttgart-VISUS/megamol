@@ -74,6 +74,14 @@ public:
         return "Upload 3D data to the GPU for use with the mesh plugin";
     }
 
+    /**
+     * Request resources to ask for OpenGL state
+     */
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::OpenGL_Context>();
+    }
+
 protected:
     /**
      * The get extents callback. The module should set the members of
@@ -89,11 +97,6 @@ protected:
     void createMaterialCollection() override;
 
     void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;
-
-    /**
-     * Request resources to ask for OpenGL state
-     */
-    virtual std::vector<std::string> requested_lifetime_resources() override;
 
 private:
     /** Get input data and extent from called modules */

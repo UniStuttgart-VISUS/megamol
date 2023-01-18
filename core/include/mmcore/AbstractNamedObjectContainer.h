@@ -1,24 +1,18 @@
-/*
- * AbstractNamedObjectContainer.h
- *
- * Copyright (C) 2009-2015 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2009, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTNAMEDOBJECTCONTAINER_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTNAMEDOBJECTCONTAINER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/AbstractNamedObject.h"
-#include "vislib/macro_utils.h"
 #include <list>
 #include <memory>
 
+#include "mmcore/AbstractNamedObject.h"
+#include "vislib/macro_utils.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Abstract base class for object placed in the module network namespaces
@@ -61,7 +55,7 @@ public:
     /**
      * Dtor.
      */
-    virtual ~AbstractNamedObjectContainer(void);
+    virtual ~AbstractNamedObjectContainer();
 
     /**
      * Adds a child to the list of children. The child object must not
@@ -143,18 +137,18 @@ public:
     /**
      * Sets the cleanup mark and all marks of all children
      */
-    virtual void SetAllCleanupMarks(void);
+    virtual void SetAllCleanupMarks();
 
     /**
      * Performs the cleanup operation by removing and deleteing of all
      * marked objects.
      */
-    virtual void PerformCleanup(void);
+    virtual void PerformCleanup();
 
     /**
      * Disconnects calls from all slots which are marked for cleanup.
      */
-    virtual void DisconnectCalls(void);
+    virtual void DisconnectCalls();
 
     /**
      * Answers whether the given parameter is relevant for this view.
@@ -164,14 +158,14 @@ public:
      *
      * @return 'true' if 'param' is relevant, 'false' otherwise.
      */
-    virtual bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const vislib::SmartPtr<param::AbstractParam>& param) const;
+    bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
+        const std::shared_ptr<param::AbstractParam>& param) const override;
 
 protected:
     /**
      * Ctor.
      */
-    AbstractNamedObjectContainer(void);
+    AbstractNamedObjectContainer();
 
     /**
      * Adds a child to the list of children. The child object must not
@@ -201,7 +195,7 @@ protected:
     /**
      * Ensures that all children correctly reference their parent
      */
-    void fixParentBackreferences(void);
+    void fixParentBackreferences();
 
 private:
     /** The children of the container */
@@ -209,7 +203,4 @@ private:
     child_list_type children;
 };
 
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ABSTRACTNAMEDOBJECTCONTAINER_H_INCLUDED */
+} // namespace megamol::core

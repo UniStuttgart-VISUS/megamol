@@ -10,22 +10,19 @@
  */
 
 
-#ifndef MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYSEQUENCERENDERER_H_INCLUDED
-#define MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYSEQUENCERENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 //#define USE_SIMPLE_FONT
 
+#include <memory>
+
+#include <glowl/glowl.h>
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 
 #ifdef USE_SIMPLE_FONT
 #include "vislib_gl/graphics/gl/SimpleFont.h"
@@ -515,12 +512,8 @@ private:
     clock_t animTimer;
 
     // shader for per fragment color interpolation
-    vislib_gl::graphics::gl::GLSLShader shader;
-    vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource> vertex;
-    vislib::SmartPtr<vislib_gl::graphics::gl::ShaderSource> fragment;
+    std::unique_ptr<glowl::GLSLProgram> shader;
 };
 
 } // namespace protein_gl
 } /* end namespace megamol */
-
-#endif // MM_PROTEIN_UNCERTAINTY_PLUGIN_UNCERTAINTYSEQUENCERENDERER_H_INCLUDED

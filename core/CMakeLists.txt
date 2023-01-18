@@ -16,7 +16,6 @@ if (BUILD_CORE)
   find_package(cppzmq REQUIRED)
   find_package(glm REQUIRED)
   find_package(TBB CONFIG REQUIRED)
-  find_package(EXPAT CONFIG REQUIRED)
   find_package(Lua REQUIRED)
   
   if (MEGAMOL_USE_CUESDK)
@@ -42,7 +41,6 @@ if (BUILD_CORE)
       PNG::PNG
       nlohmann_json::nlohmann_json
       ${LUA_LIBRARIES}
-      expat::expat
       frontend_resources
       libzmq
       cppzmq

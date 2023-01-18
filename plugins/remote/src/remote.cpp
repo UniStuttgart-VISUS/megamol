@@ -4,8 +4,8 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 // Modules
 #include "FBOCompositor2.h"
@@ -16,12 +16,12 @@
 // Calls
 
 namespace megamol::remote {
-class RemotePluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class RemotePluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(RemotePluginInstance)
 
 public:
     RemotePluginInstance(void)
-            : megamol::core::utility::plugins::AbstractPluginInstance(
+            : megamol::core::factories::AbstractPluginInstance(
                   "remote", "Plugin containing remote utilities for MegaMol"){};
 
     ~RemotePluginInstance() override = default;

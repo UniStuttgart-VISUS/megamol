@@ -106,7 +106,7 @@ def findDebugGroups(startnum, endnum, mmtracefile):
 
 # run megamol using the parameters from cmdline
 # megamol must be compiled with the rigged Call that generates
-# DebugGroups for CallRenderXDs (RIG_RENDERCALLS_WITH_DEBUGGROUPS)
+# DebugGroups for CallRenderXDs (MEGAMOL_USE_OPENGL_DEBUGGROUPS)
 
 mmtracefile = next(tempfile._get_candidate_names()) + ".trace"
 args = sys.argv

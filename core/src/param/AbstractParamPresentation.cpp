@@ -1,12 +1,12 @@
-/*
- * AbstractParamPresentation.cpp
- *
- * Copyright (C) 2020 by VISUS (Universitaet Stuttgart).
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "mmcore/param/AbstractParamPresentation.h"
 
+#include "mmcore/utility/JSONHelper.h"
 
 using namespace megamol::core::param;
 
@@ -51,7 +51,7 @@ std::string AbstractParamPresentation::GetTypeName(ParamType type) {
 }
 
 
-AbstractParamPresentation::AbstractParamPresentation(void)
+AbstractParamPresentation::AbstractParamPresentation()
         : visible(true)
         , read_only(false)
         , presentation(AbstractParamPresentation::Presentation::Basic)
@@ -189,9 +189,9 @@ bool AbstractParamPresentation::StateFromJSON(const nlohmann::json& in_json, con
             if (header_item.key() == GUI_JSON_TAG_GUISTATE_PARAMETERS) {
                 found_parameters = true;
                 for (auto& config_item : header_item.value().items()) {
-                    std::string json_param_name = config_item.key();
+                    const std::string& json_param_name = config_item.key();
                     if (json_param_name == param_fullname) {
-                        auto gui_state = config_item.value();
+                        const auto& gui_state = config_item.value();
 
                         valid = true;
                         bool gui_visibility = true;

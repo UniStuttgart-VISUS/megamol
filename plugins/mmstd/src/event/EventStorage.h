@@ -8,6 +8,7 @@
 #ifndef MEGAMOL_EVENT_STORAGE_H_INCLUDED
 #define MEGAMOL_EVENT_STORAGE_H_INCLUDED
 
+#include "FrameStatistics.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmstd/event/DoubleBufferedEventCollection.h"
@@ -17,6 +18,11 @@ namespace core {
 
 class EventStorage : public core::Module {
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::FrameStatistics>();
+    }
+
     /**
      * Answer the name of this module.
      *

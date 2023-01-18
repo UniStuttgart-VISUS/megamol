@@ -1,5 +1,6 @@
 #pragma once
 
+#include "FrameStatistics.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -15,6 +16,11 @@ namespace datatools {
 class TableInspector : public megamol::core::Module {
 
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::FrameStatistics>();
+    }
+
     /**
      * Answer the name of this module.
      *

@@ -5,6 +5,7 @@
 #include "mmcore/view/AbstractViewInterface.h"
 #include "mmcore/view/CameraSerializer.h"
 
+#include "FrameStatistics.h"
 #include "LuaCallbacksCollection.h"
 #include "ModuleGraphSubscription.h"
 
@@ -12,18 +13,28 @@ namespace megamol {
 namespace frontend {
 
 bool Profiling_Service::init(void* configPtr) {
-    _providedResourceReferences = {
-        {"PerformanceManager", _perf_man},
-    };
-
 #ifdef MEGAMOL_USE_PROFILING
+    _providedResourceReferences = {{frontend_resources::PerformanceManager_Req_Name, _perf_man},
+        {frontend_resources::Performance_Logging_Status_Req_Name, profiling_logging}};
+
     const auto conf = static_cast<Config*>(configPtr);
+    profiling_logging.active = conf->autostart_profiling;
+
     if (conf != nullptr && !conf->log_file.empty()) {
         log_file = std::ofstream(conf->log_file, std::ofstream::trunc);
         // header
         log_file << "frame;parent;name;comment;frame_index;api;type;time (ms)" << std::endl;
         _perf_man.subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
+            if (!profiling_logging.active) {
+                return;
+            }
             auto frame = fi.frame;
+            if (frame > 0) {
+                auto& _frame_stats =
+                    _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>();
+                log_file << (frame - 1) << ";MegaMol;FrameTime;;0;CPU;Duration;"
+                         << _frame_stats.last_rendered_frame_time_milliseconds << std::endl;
+            }
             for (auto& e : fi.entries) {
                 auto conf = _perf_man.lookup_config(e.handle);
                 auto name = conf.name;
@@ -43,7 +54,7 @@ bool Profiling_Service::init(void* configPtr) {
 #endif
 
     _requestedResourcesNames = {"RegisterLuaCallbacks", "MegaMolGraph", "RenderNextFrame",
-        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name};
+        frontend_resources::MegaMolGraph_SubscriptionRegistry_Req_Name, frontend_resources::FrameStatistics_Req_Name};
 
     return true;
 }
@@ -93,7 +104,8 @@ void Profiling_Service::close() {
 }
 
 void Profiling_Service::updateProvidedResources() {
-    _perf_man.startFrame();
+    _perf_man.startFrame(
+        _requestedResourcesReferences[4].getResource<frontend_resources::FrameStatistics>().rendered_frames_count);
 }
 
 void Profiling_Service::resetProvidedResources() {
@@ -106,6 +118,11 @@ void Profiling_Service::fill_lua_callbacks() {
     auto& graph = const_cast<core::MegaMolGraph&>(_requestedResourcesReferences[1].getResource<core::MegaMolGraph>());
     auto& render_next_frame = _requestedResourcesReferences[2].getResource<std::function<bool()>>();
 
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, bool>(
+        "mmSetProfilingLogging", "(bool on)", {[&](bool on) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            this->profiling_logging.active = on;
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, int>(
         "mmGenerateCameraScenes", "(string entrypoint, string camera_path_pattern, uint num_samples)",

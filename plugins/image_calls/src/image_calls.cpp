@@ -4,18 +4,18 @@
  * All rights reserved.
  */
 
-#include "mmcore/utility/plugins/AbstractPluginInstance.h"
-#include "mmcore/utility/plugins/PluginRegister.h"
+#include "mmcore/factories/AbstractPluginInstance.h"
+#include "mmcore/factories/PluginRegister.h"
 
 #include "image_calls/Image2DCall.h"
 
 namespace megamol::image_calls {
-class ImageCallsPluginInstance : public megamol::core::utility::plugins::AbstractPluginInstance {
+class ImageCallsPluginInstance : public megamol::core::factories::AbstractPluginInstance {
     REGISTERPLUGIN(ImageCallsPluginInstance)
 
 public:
     ImageCallsPluginInstance()
-            : megamol::core::utility::plugins::AbstractPluginInstance("image_calls", "The image_calls plugin."){};
+            : megamol::core::factories::AbstractPluginInstance("image_calls", "The image_calls plugin."){};
 
     ~ImageCallsPluginInstance() override = default;
 

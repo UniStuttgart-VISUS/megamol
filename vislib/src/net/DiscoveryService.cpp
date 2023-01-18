@@ -542,7 +542,9 @@ void vislib::net::cluster::DiscoveryService::Start(const char* name, const Disco
 vislib::StringA vislib::net::cluster::DiscoveryService::ToStringA(const PeerHandle& hPeer) const {
     try {
         return this->GetResponseAddress(hPeer).ToStringA();
-    } catch (...) { return "Invalid Handle"; }
+    } catch (...) {
+        return "Invalid Handle";
+    }
 }
 
 
@@ -552,7 +554,9 @@ vislib::StringA vislib::net::cluster::DiscoveryService::ToStringA(const PeerHand
 vislib::StringW vislib::net::cluster::DiscoveryService::ToStringW(const PeerHandle& hPeer) const {
     try {
         return this->GetResponseAddress(hPeer).ToStringW();
-    } catch (...) { return L"Invalid Handle"; }
+    } catch (...) {
+        return L"Invalid Handle";
+    }
 }
 
 

@@ -19,7 +19,6 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore_gl/utility/RenderUtils.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 
 using namespace megamol;
 using namespace megamol::molsurfmapcluster_gl;
@@ -136,7 +135,8 @@ ProteinViewRenderer::~ProteinViewRenderer(void) {
 
 bool ProteinViewRenderer::create(void) {
 
-    auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+    auto const shdr_options =
+        core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
     try {
         meshShader_ = core::utility::make_shared_glowl_shader("mesh", shdr_options,
             std::filesystem::path("trisoup_gl/trisoup.vert.glsl"),
@@ -212,7 +212,7 @@ bool ProteinViewRenderer::create(void) {
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
 
-    font_.Initialise(instance());
+    font_.Initialise(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     return true;
 }

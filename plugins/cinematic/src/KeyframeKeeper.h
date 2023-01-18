@@ -10,6 +10,7 @@
 #pragma once
 
 
+#include "FrameStatistics.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
@@ -36,6 +37,11 @@ static inline glm::vec3 vislib_vector_to_glm(vislib::math::Vector<float, 3> v) {
  */
 class KeyframeKeeper : public megamol::core::Module {
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::FrameStatistics>();
+    }
+
     /**
      * Answer the name of the objects of this description.
      *

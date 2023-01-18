@@ -17,7 +17,6 @@
     "cxxopts",
     "delaunator-cpp",
     "eigen3",
-    "expat",
     "glfw3",
     "glm",
     {
@@ -90,13 +89,25 @@
       "description": "Use OpenGL",
       "dependencies": [
         {
+          "name": "glowl",
+          "features": [
+            "glm",
+            "gl-extensions"
+          ]
+        },
+        {
           "name": "imgui",
           "features": [
             "opengl3-binding"
           ]
         },
-        "megamol-shader-factory",
-        "glowl"
+        {
+          "name": "imgui-tex-inspect",
+          "features": [
+            "opengl3-binding"
+          ]
+        },
+        "megamol-shader-factory"
       ]
     },
     "use-ospray": {
@@ -111,6 +122,9 @@
           ]
         }
       ]
+    },
+    "use-opengl-debuggroups": {
+      "description": "Automatically inject OpenGL debug groups into MegaMol Call callback invocations"
     },
     "use-profiling": {
       "description": "Use Profiling"

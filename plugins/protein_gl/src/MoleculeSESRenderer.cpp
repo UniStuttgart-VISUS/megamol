@@ -9,7 +9,6 @@
 
 #include "MoleculeSESRenderer.h"
 #include "glm/gtx/string_cast.hpp"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -19,7 +18,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmstd/light/DistantLight.h"
 #include "mmstd/light/PointLight.h"
 #include "protein_calls/ProteinColor.h"
@@ -30,9 +28,7 @@
 #include "vislib/assert.h"
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/File.h"
-#include "vislib_gl/graphics/gl/AbstractOpenGLShader.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
-#include "vislib_gl/graphics/gl/ShaderSource.h"
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -40,7 +36,6 @@
 
 using namespace megamol;
 using namespace megamol::core;
-using namespace megamol::core_gl;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_gl;
@@ -219,12 +214,9 @@ bool MoleculeSESRenderer::create(void) {
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
 
-    CoreInstance* ci = this->GetCoreInstance();
-    if (!ci)
-        return false;
-
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(ci->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         sphereShader_ = core::utility::make_shared_glowl_shader("sphere", shdr_options,
             std::filesystem::path("protein_gl/moleculeses/mses_sphere.vert.glsl"),
@@ -361,7 +353,7 @@ bool MoleculeSESRenderer::create(void) {
         glDisableVertexAttribArray(i);
     }
 
-    deferredProvider_.setup(this->GetCoreInstance());
+    deferredProvider_.setup(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     return true;
 }

@@ -7,10 +7,9 @@
 namespace megamol::core {
 class ResourceTestModule : public Module {
 public:
-    std::vector<std::string> requested_lifetime_resources() override {
-        auto req = Module::requested_lifetime_resources();
-        req.push_back(frontend_resources::CUDA_Context_Req_Name);
-        return req;
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::CUDA_Context>();
     }
 
     static const char* ClassName(void) {

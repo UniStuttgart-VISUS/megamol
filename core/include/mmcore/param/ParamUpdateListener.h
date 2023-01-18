@@ -1,26 +1,17 @@
-/*
- * ParamUpdateListener.h
- *
- * Copyright (C) 2010, 2020 by VISUS (Universitaet Stuttgart)
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2010, MegaMol Dev Team
+ * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_PARAMUPDATELISTENER_H_INCLUDED
-#define MEGAMOLCORE_PARAMUPDATELISTENER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <string>
 #include <vector>
 
 #include "mmcore/param/ParamSlot.h"
 
-
-namespace megamol {
-namespace core {
-namespace param {
-
+namespace megamol::core::param {
 
 /**
  * Abstract base class for all parameter objects
@@ -30,10 +21,10 @@ public:
     using param_updates_vec_t = std::vector<std::pair<std::string, std::string>>;
 
     /** Ctor */
-    ParamUpdateListener(void);
+    ParamUpdateListener();
 
     /** Dtor. */
-    virtual ~ParamUpdateListener(void);
+    virtual ~ParamUpdateListener();
 
     /**
      * Callback called when a parameter is updated
@@ -51,8 +42,4 @@ public:
 };
 
 
-} /* end namespace param */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_PARAMUPDATELISTENER_H_INCLUDED */
+} // namespace megamol::core::param

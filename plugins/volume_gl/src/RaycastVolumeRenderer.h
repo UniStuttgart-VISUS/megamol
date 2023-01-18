@@ -146,6 +146,7 @@ private:
 
     std::array<float, 2> valRange;
     bool valRangeNeedsUpdate = false;
+    GLuint empty_vao;
 };
 
 } // namespace megamol::volume_gl

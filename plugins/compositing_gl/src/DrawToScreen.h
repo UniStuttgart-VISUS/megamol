@@ -9,17 +9,23 @@
 
 #include <glowl/glowl.h>
 
+#include "FrameStatistics.h"
 #include "mmcore/CallerSlot.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-namespace megamol::compositing {
+namespace megamol::compositing_gl {
 
 /**
  * TODO
  */
 class DrawToScreen : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Renderer3DModuleGL::requested_lifetime_resources(req);
+        req.require<frontend_resources::FrameStatistics>();
+    }
+
     /**
      * Answer the name of this module.
      *
@@ -114,4 +120,4 @@ private:
     glm::ivec2 m_last_tex_size = glm::ivec2(0, 0);
 };
 
-} // namespace megamol::compositing
+} // namespace megamol::compositing_gl

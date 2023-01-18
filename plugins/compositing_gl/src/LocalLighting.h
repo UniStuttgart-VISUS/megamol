@@ -15,7 +15,7 @@
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
-namespace megamol::compositing {
+namespace megamol::compositing_gl {
 
 class LocalLighting : public core::Module {
 public:
@@ -85,6 +85,9 @@ private:
     /** Shader program for texture add (Blinn-Phong Illumination) */
     std::unique_ptr<glowl::GLSLProgram> m_phong_prgm;
 
+    /** Shader program for texture add (Blinn-Phong Illumination) */
+    std::unique_ptr<glowl::GLSLProgram> m_toon_prgm;
+
     /** Texture that the lighting result will be written to */
     std::shared_ptr<glowl::Texture2D> m_output_texture;
 
@@ -113,6 +116,9 @@ private:
     megamol::core::param::ParamSlot m_phong_k_specular;
     megamol::core::param::ParamSlot m_phong_k_exp;
 
+    megamol::core::param::ParamSlot m_toon_exposure_avg_intensity;
+    megamol::core::param::ParamSlot m_toon_roughness;
+
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;
 
@@ -135,4 +141,4 @@ private:
     megamol::core::CallerSlot m_camera_slot;
 };
 
-} // namespace megamol::compositing
+} // namespace megamol::compositing_gl

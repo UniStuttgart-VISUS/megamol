@@ -503,7 +503,9 @@ void megamol::remote::FBOCompositor2::receiverJob(
                 try {
                     fbo_msg_future->SetPromise(msg);
                     break;
-                } catch (std::future_error const& e) { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
+                } catch (std::future_error const& e) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                }
             }
 
 #if 0
@@ -525,7 +527,9 @@ void megamol::remote::FBOCompositor2::receiverJob(
         megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died: %s\n", e.what());
     } catch (vislib::Exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died: %s\n", e.GetMsgA());
-    } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died\n"); }
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: ReceiverJob died\n");
+    }
 }
 
 
@@ -660,7 +664,9 @@ void megamol::remote::FBOCompositor2::collectorJob(std::vector<FBOCommFabric>&& 
             job.join();
         }
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("FBOCompositor2: Closing collectorJob\n");
-    } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: CollectorJob\n"); }
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: CollectorJob\n");
+    }
 }
 
 
@@ -724,7 +730,9 @@ void megamol::remote::FBOCompositor2::registerJob(std::vector<std::string>& addr
         if (!this->shutdown_) {
             this->isRegistered_.store(true);
         }
-    } catch (...) { megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: RegisterJob died\n"); }
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("FBOCompositor2: RegisterJob died\n");
+    }
 }
 
 

@@ -98,7 +98,9 @@ bool megamol::core::cluster::mpi::MpiProvider::OnCallProvideMpi(Call& call) {
             return false;
         }
 
-    } catch (...) { return false; }
+    } catch (...) {
+        return false;
+    }
 
 #else  /* MEGAMOL_USE_MPI */
     return false;

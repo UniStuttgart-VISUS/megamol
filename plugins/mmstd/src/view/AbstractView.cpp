@@ -7,8 +7,10 @@
 
 #include "mmstd/view/AbstractView.h"
 
+#include <climits>
+#include <fstream>
+
 #include "mmcore/AbstractNamedObject.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -20,7 +22,6 @@
 #include "mmstd/renderer/CallRenderView.h"
 #include "vislib/UnsupportedOperationException.h"
 #include "vislib/assert.h"
-#include <climits>
 
 using namespace megamol::core;
 using megamol::core::utility::log::Log;
@@ -143,11 +144,11 @@ view::AbstractView::~AbstractView(void) {
 /*
  * view::AbstractView::IsParamRelevant
  */
-bool view::AbstractView::IsParamRelevant(const vislib::SmartPtr<param::AbstractParam>& param) const {
+bool view::AbstractView::IsParamRelevant(const std::shared_ptr<param::AbstractParam>& param) const {
     const AbstractNamedObject* ano = dynamic_cast<const AbstractNamedObject*>(this);
     if (ano == NULL)
         return false;
-    if (param.IsNull())
+    if (param == nullptr)
         return false;
 
     vislib::SingleLinkedList<const AbstractNamedObject*> searched;
@@ -346,7 +347,9 @@ bool view::AbstractView::OnKeyCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Key && "Callback invocation mismatched input event");
         return this->OnKey(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
-    } catch (...) { ASSERT("OnKeyCallback call cast failed\n"); }
+    } catch (...) {
+        ASSERT("OnKeyCallback call cast failed\n");
+    }
     return false;
 }
 
@@ -356,7 +359,9 @@ bool view::AbstractView::OnCharCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Char && "Callback invocation mismatched input event");
         return this->OnChar(evt.charData.codePoint);
-    } catch (...) { ASSERT("OnCharCallback call cast failed\n"); }
+    } catch (...) {
+        ASSERT("OnCharCallback call cast failed\n");
+    }
     return false;
 }
 
@@ -366,7 +371,9 @@ bool view::AbstractView::OnMouseButtonCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseButton && "Callback invocation mismatched input event");
         return this->OnMouseButton(evt.mouseButtonData.button, evt.mouseButtonData.action, evt.mouseButtonData.mods);
-    } catch (...) { ASSERT("OnMouseButtonCallback call cast failed\n"); }
+    } catch (...) {
+        ASSERT("OnMouseButtonCallback call cast failed\n");
+    }
     return false;
 }
 
@@ -376,7 +383,9 @@ bool view::AbstractView::OnMouseMoveCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
         return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
-    } catch (...) { ASSERT("OnMouseMoveCallback call cast failed\n"); }
+    } catch (...) {
+        ASSERT("OnMouseMoveCallback call cast failed\n");
+    }
     return false;
 }
 
@@ -386,7 +395,9 @@ bool view::AbstractView::OnMouseScrollCallback(Call& call) {
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
         return this->OnMouseScroll(evt.mouseScrollData.dx, evt.mouseScrollData.dy);
-    } catch (...) { ASSERT("OnMouseScrollCallback call cast failed\n"); }
+    } catch (...) {
+        ASSERT("OnMouseScrollCallback call cast failed\n");
+    }
     return false;
 }
 

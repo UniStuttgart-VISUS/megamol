@@ -11,13 +11,14 @@
 
 #include "FrontendResource.h"
 #include "FrontendResourcesMap.h"
+#include "GlobalValueStore.h"
+#include "ResourceRequest.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 
 
 namespace megamol::core {
 
 /** forward declaration */
-class CoreInstance;
 class AbstractSlot;
 namespace factories {
 class ModuleDescription;
@@ -28,8 +29,8 @@ class ModuleDescription;
  */
 class Module : public AbstractNamedObjectContainer {
 public:
-    virtual std::vector<std::string> requested_lifetime_resources() {
-        return {"GlobalValueStore"};
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        req.require<frontend_resources::GlobalValueStore>();
     }
 
     friend class ::megamol::core::factories::ModuleDescription;
@@ -151,6 +152,10 @@ public:
         return this->created;
     }
 
+    bool AnyParameterDirty() const;
+
+    void ResetAllDirtyFlags();
+
 protected:
     /**
      * Implementation of 'Create'.
@@ -158,31 +163,6 @@ protected:
      * @return 'true' on success, 'false' otherwise.
      */
     virtual bool create() = 0;
-
-    /**
-     * Check the configuration for a value for the parameter 'val'.
-     * It checks, in descending order of priority, for occurences
-     * of: [this.GetDemiRootName]-[name], *-[name], [name] and
-     * returns the respective value. If nothing is found,
-     * vislib::StringA::EMPTY is returned.
-     * Caution: This can only work after the module is properly
-     * inserted into the module graph, since otherwise the
-     * DemiRootName cannot be determined reliably
-     *
-     * @param name the name of the sought value
-     *
-     * @return the value or vislib::StringA::EMPTY
-     */
-    vislib::StringA getRelevantConfigValue(vislib::StringA name);
-
-    /**
-     * Gets the instance of the core owning this module.
-     *
-     * @return The instance of the core owning this module.
-     */
-    inline class ::megamol::core::CoreInstance* instance() const {
-        return this->GetCoreInstance();
-    }
 
     /**
      * Implementation of 'Release'.

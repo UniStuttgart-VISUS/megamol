@@ -24,7 +24,7 @@ AbstractBezierRenderer::AbstractBezierRenderer(void)
         : mmstd_gl::Renderer3DModuleGL()
         , getDataSlot("getdata", "Connects to the data source")
         , objsHash(0)
-        , shader(NULL) {
+        , shader(nullptr) {
     // intentionally empty
 }
 
@@ -42,8 +42,6 @@ AbstractBezierRenderer::~AbstractBezierRenderer(void) {
  */
 bool AbstractBezierRenderer::create(void) {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
-    if (!ogl_ctx.areExtAvailable(vislib_gl::graphics::gl::GLSLShader::RequiredExtensions()))
-        return false;
 
     return true;
 }

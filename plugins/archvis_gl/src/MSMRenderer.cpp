@@ -32,8 +32,8 @@ bool megamol::archvis_gl::MSMRenderer::GetExtents(mmstd_gl::CallRender3DGL& call
 
 void megamol::archvis_gl::MSMRenderer::createMaterialCollection() {
     material_collection_ = std::make_shared<mesh_gl::GPUMaterialCollection>();
-    material_collection_->addMaterial(
-        this->instance(), "scalemodel", {"archvis_gl/scale_model.vert.glsl", "archvis_gl/scale_model.frag.glsl"});
+    material_collection_->addMaterial(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>(),
+        "scalemodel", {"archvis_gl/scale_model.vert.glsl", "archvis_gl/scale_model.frag.glsl"});
 }
 
 void megamol::archvis_gl::MSMRenderer::updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) {

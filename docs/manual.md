@@ -9,33 +9,33 @@
     - [Building from Source](#building-from-source)
         - [Microsoft Windows](#microsoft-windows)
         - [Linux (Ubuntu)](#linux-ubuntu)
-    - [Command Line Arguments](#command-line-arguments)        
+    - [Command Line Arguments](#command-line-arguments)
     - [Configuration File](#configuration-file)
         - [General Settings](#general-settings)
         - [Logging](#logging)
-        - [Application, Shaders and Resources](#application-shaders-and-resources) 
-        - [Plugins](#plugins) 
-        - [Global Settings](#global-settings) 
-    - [Test Installation](#test-installation) 
-        - [Examples](#examples) 
+        - [Application, Shaders and Resources](#application-shaders-and-resources)
+        - [Plugins](#plugins)
+        - [Global Settings](#global-settings)
+    - [Test Installation](#test-installation)
+        - [Examples](#examples)
 - [Viewing Data Sets](#viewing-data-sets)
-    - [Modules, Views and Calls](#modules-views-and-calls) 
-        - [Modules and Calls](#modules-and-calls) 
-        - [Views](#views) 
-    - [View Interaction](#view-interaction) 
-- [Project Files](#project-files)     
-- [Making High-Resolution Screenshots](#making-high-resolution-screenshots) 
+    - [Modules, Views and Calls](#modules-views-and-calls)
+        - [Modules and Calls](#modules-and-calls)
+        - [Views](#views)
+    - [View Interaction](#view-interaction)
+- [Project Files](#project-files)
+- [Making High-Resolution Screenshots](#making-high-resolution-screenshots)
     - [GUI](#gui)
     - [Project File](#project-file)
         - [Framebuffer Size](#framebuffer-size)
     - [ScreenShooter Module](#screenshooter-module)
-- [Making Simple Videos](#making-simple-videos) 
-- [Reproducibility](#reproducibility) 
+- [Making Simple Videos](#making-simple-videos)
+- [Reproducibility](#reproducibility)
 
 <!-- TODO
 - [Jobs](#jobs)
-    - [Job Instance](#job-instance) 
-    - [Converting to MMPLD](#converting-to-mmpld) 
+    - [Job Instance](#job-instance)
+    - [Converting to MMPLD](#converting-to-mmpld)
 -->
 
 <!-- /TOC -->
@@ -62,14 +62,13 @@ Visit the project [website](https://megamol.org/ "MegaMol Homepage") for downloa
 This chapter discusses installation and setup of MegaMol from source code.
 MegaMol targets Microsoft Windows (Windows 7 or newer, x64) and Linux (x64) as supported environments.
 Currently, Ubuntu is used as Linux distribution for development.
-Further platforms are not considered during the development. 
+Further platforms are not considered during the development.
 While MegaMol might work on further platforms, the development team will currently not grant any support for problems with these environments.
 
 <!-- ---------------------------------------------------------------------- -->
 ### Building from Source
 
-It is recommended to use the latest [release 1.3](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) version of the source code.
-All bleeding edge features are available in the current [main branch](https://github.com/UniStuttgart-VISUS/megamol/tree/master).
+It is recommended to use the current [main branch](https://github.com/UniStuttgart-VISUS/megamol/tree/master).
 
 **Note**: 
 The *OSPRay plugin* is currently disabled by default. 
@@ -78,15 +77,15 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 <!-- ---------------------------------------------------------------------- -->
 #### Microsoft Windows
 
-1. Download and unzip the source code of the latest [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) into a new directory (e.g. `megamol`).
-2. You have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository.
-3. Create a new `build` directory.
-4. As generator, it is recommended to use the latest version of [Visual Studio](https://visualstudio.microsoft.com/downloads/) (Community Edition is free to use) with default native compilers and for the platform x64.
+1. You have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository.
+2. Create a new `build` directory.
+3. As generator, it is recommended to use the latest version of [Visual Studio](https://visualstudio.microsoft.com/downloads/) (Community Edition is free to use) with default native compilers and for the platform x64.
+4. If you want to download prebuild binaries for required third party libraries enable the option `MEGAMOL_DOWNLOAD_VCPKG_CACHE` before configure. Otherwise, libraries will be built during configure.
 5. Next, click `Configure` a few times (until all red entries disappear).
 6. Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files and configure once more.
 7. Then click `Generate` to generate the build files.
 8. The configuration creates a `megamol.sln` file inside the build directory.
-9. Open the `megamol.sln` file with *Visual Studio*. 
+9. Open the `megamol.sln` file with *Visual Studio*.
 10. Use the `ALL_BUILD` target to build MegaMol.
 11. Afterwards, use the `INSTALL` target to create your MegaMol installation.
 12. The binary `megamol.exe` is located in the default installation path `../megamol/build/install/bin`.
@@ -98,26 +97,26 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 #### Linux (Ubuntu, Debian)
 
 Megamol requires a C++17 compiler.
-Our CI pipeline tests the build with gcc-9 and clang-10 on Ubuntu 20.04.
+Our CI pipeline tests the build with gcc-11 and clang-14 on Ubuntu 22.04.
 
-1. As prerequisites, following packages from the repository are required:
+1. Install the necessary build tools and compilers, as well as CMake and git:
 
-    `$ sudo apt install cmake-curses-gui git xorg-dev libgl1-mesa-dev libglu1-mesa-dev libncurses-dev uuid-dev`
+    `sudo apt install build-essential cmake cmake-curses-gui git`
+
+2. As prerequisites, following packages from the repository are required:
+
+    `$ sudo apt install curl zip unzip tar xorg-dev libgl1-mesa-dev libglu1-mesa-dev libncurses-dev`
 
     - Hint: You can optionally install `libboost-stacktrace-dev` to enable stacktrace printout for KHR debug messages.
 
-2. First, download the source code from GitHub:
+3. First, download the source code from GitHub (use current master branch):
 
     `$ git clone https://github.com/UniStuttgart-VISUS/megamol.git`  
     `$ cd megamol`
 
-3. Checkout the latest release:
-
-    `$ git checkout tags/v1.3 -b latest_release`
-
 4. Create a build directory and switch to it:
 
-    `$ mkdir build; cd build`
+    `$ mkdir build && cd build`
 
 5. Start the ncurses gui for cmake:
 
@@ -176,7 +175,7 @@ In the `bin` directory, you can find the default configuration file `megamolconf
 
     mmSetLogLevel("*") -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=*
     mmSetEchoLevel("*")
-    -- mmSetLogFile("") 
+    -- mmSetLogFile("")
     mmSetAppDir(basePath .. "bin")
     mmAddShaderDir(basePath .. "share/shaders")
     mmAddResourceDir(basePath .. "share/shaders")
@@ -199,26 +198,26 @@ The following paragraphs explain the essential steps of configuring MegaMol in m
 <!-- ---------------------------------------------------------------------- -->
 #### General Settings
 
-Locate line 3 containing the variable `basePath`. 
-Both relative and absolute path should work here fine. 
+Locate line 3 containing the variable `basePath`.
+Both relative and absolute path should work here fine.
 This path is set automatically and always has to fit the currently used execution path!
 ```lua
-    basePath = "C:/megamol/build/install/"  
+    basePath = "C:/megamol/build/install/"
 ```
 
 <!-- ---------------------------------------------------------------------- -->
 #### Logging
 
-Line 4-6 configures the logging mechanism of MegaMol. 
+Line 4-6 configures the logging mechanism of MegaMol.
 Adjusting the value of *EchoLevel* changes the amount of log information printed on the console. 
 Specifying a log file and the level informs MegaMol to write a log file and print the messages of the requested level into that file. 
-The *LogLevel* is a numeric value. 
-All messages with lower numeric values will be printed (or saved). 
+The *LogLevel* is a numeric value.
+All messages with lower numeric values will be printed (or saved).
 The asterisk `*` stands for the highest numeric value, thus printing all messages.
 ```lua
     mmSetLogLevel('*') -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=*
     mmSetEchoLevel('*')
-    -- mmSetLogFile("") 
+    -- mmSetLogFile("")
 ```
 
 <!-- ---------------------------------------------------------------------- -->
@@ -226,7 +225,7 @@ The asterisk `*` stands for the highest numeric value, thus printing all message
 
 Line 7-10 define the application, shader and resource directories:
 ```lua
-    mmSetAppDir(basePath .. "bin")  
+    mmSetAppDir(basePath .. "bin")
     mmAddShaderDir(basePath .. "share/shaders")
     mmAddResourceDir(basePath .. "share/shaders")
     mmAddResourceDir(basePath .. "share/resources")
@@ -240,18 +239,18 @@ Since we switched to static linking of plugin libraries into the MegaMol binary,
 
 <!-- DEPRECATED
 
-Extend the configuration if you introduce new plugins into your installation. 
+Extend the configuration if you introduce new plugins into your installation.
 Although there are different ways to specify the plugins to be loaded, the tags in the example configuration file are the most secure way. 
 Each `mmPluginLoaderInfo` tag requires three attributes:
 
 - `path` should be the path to find the plugin. The example configuration file assumes to find the plugins in the same directory as the MegaMol executable (which is the
-case for Windows installations. 
+case for Windows installations.
   On Linux systems, you need to change this path, e.g. to `../../lib/megamol`.
 - `name` is the file name of the plugin.
 - `action` refers to an internal parameter of MegaMol and should always be `include`.
 
-Rendering modules from plugins require shader codes to function. 
-MegaMol searches these codes in all registered shader directories. 
+Rendering modules from plugins require shader codes to function.
+MegaMol searches these codes in all registered shader directories.
 To register a shader directory, add a corresponding tag to the configuration file.
 ```lua
     mmPluginLoaderInfo(basePath .. "bin", "*.mmplg", "include")
@@ -272,9 +271,9 @@ All other configuration options are ***DEPRECATED*** and have currently no effec
 
 <!-- DEPRECATED
 
-- In line 14 the variable `*-window` is set. 
+- In line 14 the variable `*-window` is set.
     This variable specifies the default position and size for all rendering windows MegaMol will create. 
-    The asterisk represents any window name. 
+    The asterisk represents any window name.
     If you set a variable with a specific name, windows with exactly this name will respect the settings variable. 
     For example, `test-window` will specify the value for the window created by the view instance test.
     The value itself contains five variables:
@@ -347,7 +346,7 @@ Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your wo
 MegaMol should start and print several messages to the console and an empty rendering window should appear.
 You can either check the console log messages or the messages printed in the *Log Console* window.
 The leading number of each line is the log level.
-There should be no error messages (log level **1**). 
+There should be no error messages (log level **1**).
 Some warnings (log level **100**) might occur but are *normal* and indicate no failed installation or execution.  
 
 <!-- ---------------------------------------------------------------------- -->
@@ -357,13 +356,13 @@ The [example project script files](https://github.com/UniStuttgart-VISUS/megamol
 
 For a better test, you should invoke MegaMol loading an example project script requesting a simple rendering. 
 Then you can be sure that the graphics drivers, graphics libraries, and shader codes are correctly found and are working. 
-To do this, try: 
+To do this, try:
 
 **Linux:**
 
     $ ./megamol ../examples/testspheres.lua
 
-**Windows:** 
+**Windows:**
 
     > megamol.exe ..\examples\testspheres.lua
 

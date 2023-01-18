@@ -63,8 +63,6 @@ public:
         return true;
     }
 
-    std::vector<std::string> requested_lifetime_resources() override;
-
     /** ctor */
     SequenceRenderer(void);
 

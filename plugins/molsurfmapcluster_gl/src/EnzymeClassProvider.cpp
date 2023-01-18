@@ -30,9 +30,9 @@ EnzymeClassProvider::~EnzymeClassProvider(void) {
  * EnzymeClassProvider::RetrieveEnzymeClassMap
  */
 const std::multimap<std::string, std::array<int, 4>>& EnzymeClassProvider::RetrieveEnzymeClassMap(
-    const core::CoreInstance& coreInstance) {
+    frontend_resources::RuntimeConfig const& runtimeConf) {
     if (classMap.size() == 0) {
-        loadMapFromFile(coreInstance);
+        loadMapFromFile(runtimeConf);
     }
     return classMap;
 }
@@ -41,10 +41,10 @@ const std::multimap<std::string, std::array<int, 4>>& EnzymeClassProvider::Retri
  * EnzymeClassProvider::RetrieveClassForPdbId
  */
 std::array<int, 4> EnzymeClassProvider::RetrieveClassForPdbId(
-    std::string pdbId, const core::CoreInstance& coreInstance) {
+    std::string pdbId, frontend_resources::RuntimeConfig const& runtimeConf) {
     std::array<int, 4> result = {-1, -1, -1, -1};
     if (classMap.size() == 0) {
-        loadMapFromFile(coreInstance);
+        loadMapFromFile(runtimeConf);
     }
     auto it = classMap.lower_bound(pdbId);
     if (it != classMap.end()) {
@@ -57,10 +57,10 @@ std::array<int, 4> EnzymeClassProvider::RetrieveClassForPdbId(
  * EnzymeClassProvider::RetrieveClassesForPdbId
  */
 std::vector<std::array<int, 4>> EnzymeClassProvider::RetrieveClassesForPdbId(
-    std::string pdbId, const core::CoreInstance& coreInstance) {
+    std::string pdbId, frontend_resources::RuntimeConfig const& runtimeConf) {
     std::vector<std::array<int, 4>> result;
     if (classMap.size() == 0) {
-        loadMapFromFile(coreInstance);
+        loadMapFromFile(runtimeConf);
     }
     auto lower = classMap.lower_bound(pdbId);
     auto upper = classMap.upper_bound(pdbId);
@@ -107,9 +107,9 @@ float EnzymeClassProvider::EnzymeClassDistance(const std::array<int, 4>& class1,
  * EnzymeClassProvider::EnzymeClassDistance
  */
 float EnzymeClassProvider::EnzymeClassDistance(
-    const std::string pdbid1, const std::string pdbid2, const core::CoreInstance& coreInstance) {
-    auto const first_classes = RetrieveClassesForPdbId(pdbid1, coreInstance);
-    auto const second_classes = RetrieveClassesForPdbId(pdbid2, coreInstance);
+    const std::string pdbid1, const std::string pdbid2, frontend_resources::RuntimeConfig const& runtimeConf) {
+    auto const first_classes = RetrieveClassesForPdbId(pdbid1, runtimeConf);
+    auto const second_classes = RetrieveClassesForPdbId(pdbid2, runtimeConf);
     float min_dist = 4.0f; // 4 is the maximum value
     for (auto const& first : first_classes) {
         for (auto const& second : second_classes) {
@@ -126,8 +126,8 @@ float EnzymeClassProvider::EnzymeClassDistance(
 /*
  * EnzymeClassProvider::loadMapFromFile
  */
-void EnzymeClassProvider::loadMapFromFile(const core::CoreInstance& coreInstance) {
-    const auto filepath = determineFilePath(coreInstance);
+void EnzymeClassProvider::loadMapFromFile(frontend_resources::RuntimeConfig const& runtimeConf) {
+    const auto filepath = determineFilePath(runtimeConf);
     classMap.clear();
     std::ifstream file(filepath);
     if (file.is_open()) {
@@ -150,7 +150,9 @@ void EnzymeClassProvider::loadMapFromFile(const core::CoreInstance& coreInstance
                         int val;
                         try {
                             val = std::stoi(idsubstr);
-                        } catch (...) { val = -1; }
+                        } catch (...) {
+                            val = -1;
+                        }
                         res.second[j] = val;
                         ++j;
                     }
@@ -170,10 +172,7 @@ void EnzymeClassProvider::loadMapFromFile(const core::CoreInstance& coreInstance
 /*
  * EnzymeClassProvider::determineFilePath
  */
-std::filesystem::path EnzymeClassProvider::determineFilePath(const core::CoreInstance& coreInstance) {
-    std::filesystem::path result;
-    vislib::StringA shortfile = "brenda_enzyme_map.csv";
-    auto fname = core::utility::ResourceWrapper::getFileName(coreInstance.Configuration(), shortfile);
-    result = std::filesystem::path(W2A(fname));
-    return result.make_preferred();
+std::filesystem::path EnzymeClassProvider::determineFilePath(frontend_resources::RuntimeConfig const& runtimeConf) {
+    std::string shortfile = "brenda_enzyme_map.csv";
+    return core::utility::ResourceWrapper::GetResourcePath(runtimeConf, shortfile).make_preferred();
 }

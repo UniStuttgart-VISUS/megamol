@@ -7,13 +7,11 @@
 
 #include "CartoonTessellationRenderer.h"
 #include "compositing_gl/CompositingCalls.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
-#include "mmcore_gl/utility/ShaderSourceFactory.h"
 #include "mmstd/light/PointLight.h"
 #include "mmstd/renderer/CallClipPlane.h"
 #include "mmstd_gl/renderer/CallGetTransferFunctionGL.h"
@@ -69,7 +67,7 @@ CartoonTessellationRenderer::CartoonTessellationRenderer(void)
     this->getLightsSlot.SetNecessity(core::AbstractCallSlotPresentation::Necessity::SLOT_REQUIRED);
     this->MakeSlotAvailable(&this->getLightsSlot);
 
-    this->getFramebufferSlot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
+    this->getFramebufferSlot.SetCompatibleCall<compositing_gl::CallFramebufferGLDescription>();
     this->MakeSlotAvailable(&this->getFramebufferSlot);
 
     this->lineParam << new core::param::BoolParam(true);
@@ -145,7 +143,8 @@ void CartoonTessellationRenderer::waitSignal(GLsync& syncObj) {
  */
 bool CartoonTessellationRenderer::create(void) {
     try {
-        auto const shdr_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
+        auto const shdr_options = core::utility::make_path_shader_options(
+            frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
         cartoonShader_ = core::utility::make_shared_glowl_shader("cartoon", shdr_options,
             std::filesystem::path("protein_gl/cartoontessellation/ctess_common.vert.glsl"),
@@ -181,7 +180,7 @@ bool CartoonTessellationRenderer::create(void) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindVertexArray(0);
 
-    deferredProvider_.setup(this->GetCoreInstance());
+    deferredProvider_.setup(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 
     return true;
 }
@@ -327,10 +326,10 @@ bool CartoonTessellationRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 
     std::shared_ptr<glowl::FramebufferObject> extfbo = nullptr;
 
-    auto cfbo = getFramebufferSlot.CallAs<compositing::CallFramebufferGL>();
+    auto cfbo = getFramebufferSlot.CallAs<compositing_gl::CallFramebufferGL>();
     if (cfbo != nullptr) {
-        cfbo->operator()(compositing::CallFramebufferGL::CallGetMetaData);
-        cfbo->operator()(compositing::CallFramebufferGL::CallGetData);
+        cfbo->operator()(compositing_gl::CallFramebufferGL::CallGetMetaData);
+        cfbo->operator()(compositing_gl::CallFramebufferGL::CallGetData);
         if (cfbo->getData() != nullptr) {
             extfbo = cfbo->getData();
         }

@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include "PluginsResource.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -23,6 +24,11 @@ namespace datatools {
  */
 class DataSetTimeRewriteModule : public core::Module {
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::PluginsResource>();
+    }
+
     /**
      * Answer the name of this module.
      *

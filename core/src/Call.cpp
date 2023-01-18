@@ -8,15 +8,12 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#ifdef MEGAMOL_USE_PROFILING
-#include "mmcore/CoreInstance.h"
-#endif
 #include "mmcore/utility/log/Log.h"
 
 #ifdef MEGAMOL_USE_TRACY
 #include "Tracy.hpp"
 #endif
-#if defined(MEGAMOL_USE_TRACY) || defined(RIG_RENDERCALLS_WITH_DEBUGGROUPS)
+#if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS)
 #include "mmcore/Module.h"
 #endif
 
@@ -52,7 +49,7 @@ Call::~Call(void) {
 bool Call::operator()(unsigned int func) {
     bool res = false;
     if (this->callee != nullptr) {
-#if defined(MEGAMOL_USE_TRACY) || defined(RIG_RENDERCALLS_WITH_DEBUGGROUPS)
+#if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS)
         auto f = this->callee->GetCallbackFuncName(func);
         auto parent = callee->Parent().get();
         std::string output = dynamic_cast<core::Module*>(parent)->ClassName();
@@ -63,27 +60,29 @@ bool Call::operator()(unsigned int func) {
         ZoneScoped;
         ZoneName(output.c_str(), output.size());
 #endif
-#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
+#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
         if (caps.OpenGLRequired()) {
-            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
-            // megamol::core::utility::log::Log::DefaultLog.WriteInfo("called %s::%s", p3->ClassName(), f);
+            // let some service do it!
+            gl_helper->PushDebugGroup(1234, -1, output.c_str());
         }
 #endif
 #ifdef MEGAMOL_USE_PROFILING
-        const auto frameID = this->callee->GetCoreInstance()->GetFrameID();
-        perf_man->start_timer(cpu_queries[func], frameID);
-        if (caps.OpenGLRequired())
-            perf_man->start_timer(gl_queries[func], frameID);
+        perf_man->start_timer(cpu_queries[func]);
+        if (caps.OpenGLRequired()) {
+            perf_man->start_timer(gl_queries[func]);
+        }
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);
 #ifdef MEGAMOL_USE_PROFILING
-        if (caps.OpenGLRequired())
+        if (caps.OpenGLRequired()) {
             perf_man->stop_timer(gl_queries[func]);
+        }
         perf_man->stop_timer(cpu_queries[func]);
 #endif
-#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
-        if (caps.OpenGLRequired())
-            glPopDebugGroup();
+#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
+        if (caps.OpenGLRequired()) {
+            gl_helper->PopDebugGroup();
+        }
 #endif
     }
     // megamol::core::utility::log::Log::DefaultLog.WriteInfo("calling %s, idx %i, result %s (%s)", this->ClassName(), func,

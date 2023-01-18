@@ -16,7 +16,6 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -177,10 +176,9 @@ public:
     }
 
 #ifdef MEGAMOL_USE_PROFILING
-    std::vector<std::string> requested_lifetime_resources() override {
-        std::vector<std::string> resources = ModuleGL::requested_lifetime_resources();
-        resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
-        return resources;
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        ModuleGL::requested_lifetime_resources(req);
+        req.require<frontend_resources::PerformanceManager>();
     }
 #endif
 
@@ -239,6 +237,8 @@ private:
         OUTLINE = 7
     };
 
+    enum ShadingMode { FORWARD = 0, DEFERRED = 1 };
+
     typedef std::map<std::tuple<int, int, bool>, std::shared_ptr<glowl::GLSLProgram>> shader_map;
 
     struct gpuParticleDataType {
@@ -277,6 +277,7 @@ private:
 
     bool init_resources_;
     RenderMode render_mode_;
+    ShadingMode shading_mode_;
     GLuint grey_tf_;
     std::array<float, 2> range_;
 
@@ -343,6 +344,7 @@ private:
     /*********************************************************************/
 
     megamol::core::param::ParamSlot render_mode_param_;
+    megamol::core::param::ParamSlot shading_mode_param_;
     megamol::core::param::ParamSlot radius_scaling_param_;
     megamol::core::param::ParamSlot force_time_slot_;
     megamol::core::param::ParamSlot use_local_bbox_param_;
@@ -378,6 +380,11 @@ private:
      * Return specified render mode as human readable string.
      */
     static std::string getRenderModeString(RenderMode rm);
+
+    /**
+     * Return specified shading mode as human readable string.
+     */
+    static std::string getShadingModeString(ShadingMode sm);
 
     /**
      * TODO: Document

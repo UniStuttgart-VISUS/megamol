@@ -1,11 +1,9 @@
 /**
  * MegaMol
- * Copyright (c) 2006-2021, MegaMol Dev Team
+ * Copyright (c) 2006, MegaMol Dev Team
  * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_FACTORIES_OBJECTDESCRIPTIONMANAGER_H_INCLUDED
-#define MEGAMOLCORE_FACTORIES_OBJECTDESCRIPTIONMANAGER_H_INCLUDED
 #pragma once
 
 #include <algorithm>
@@ -226,5 +224,3 @@ typename ObjectDescriptionManager<T>::description_const_iterator_type ObjectDesc
     return descriptions_.end();
 }
 } // namespace megamol::core::factories
-
-#endif // MEGAMOLCORE_FACTORIES_OBJECTDESCRIPTIONMANAGER_H_INCLUDED

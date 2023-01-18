@@ -15,7 +15,6 @@
 #include "vislib/Pair.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/math/Rectangle.h"
-#include "vislib_gl/graphics/gl/GLSLShader.h"
 #include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
 
 #ifdef MEGAMOL_USE_MPI
