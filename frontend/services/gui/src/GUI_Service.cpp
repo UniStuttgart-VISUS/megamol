@@ -133,6 +133,7 @@ void GUI_Service::digestChangedRequestedResources() {
     this->setShutdown(this->m_gui->GetTriggeredShutdown());
 
     // Check for updates in requested resources --------------------------------
+    m_gui->digestChangedRequestedResources();
 
     /// KeyboardEvents = resource index 2
     auto maybe_keyboard_events = frontend_resources->getOptional<megamol::frontend_resources::KeyboardEvents>();

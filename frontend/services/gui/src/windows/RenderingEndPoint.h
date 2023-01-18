@@ -10,12 +10,15 @@
 #include "ImagePresentationEntryPoints.h"
 #include "ImagePresentation_Service.hpp"
 
+#include "KeyboardMouse_Events.h"
+
 namespace megamol::gui {
 class RenderingEndPoint : public AbstractWindow {
 public:
     std::vector<std::string> requested_lifetime_resources() const override {
         auto res = AbstractWindow::requested_lifetime_resources();
         res.push_back("ImagePresentationEntryPoints");
+        res.push_back("optional<MouseEvents>");
         return res;
     }
 
@@ -48,6 +51,8 @@ public:
         img_pres_ep_resource_ptr.add_sink(sink_);
     }
 
+    void digestChangedRequestedResources() override;
+
     explicit RenderingEndPoint(const std::string& window_name);
 
     //virtual ~RenderingEndPoint() {
@@ -69,5 +74,10 @@ private:
     std::map<std::string, frontend::ImagePresentation_Service::EntryPointRenderFunctions> entry_points_;
     std::vector<frontend_resources::ImageWrapper> images_;
     frontend_resources::ImagePresentationSink sink_;
+
+    std::vector<std::tuple<frontend_resources::MouseButton, frontend_resources::MouseButtonAction,
+        frontend_resources::Modifiers>>
+        buttons_events_;
+    std::vector<std::tuple<double, double>> position_events_;
 };
 } // namespace megamol::gui

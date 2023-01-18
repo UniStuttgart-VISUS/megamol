@@ -68,6 +68,10 @@ public:
         frontend_resources = resources;
     };
 
+    virtual void digestChangedRequestedResources() {
+
+    }
+
     AbstractWindow(const std::string& name, WindowConfigID window_id)
             : win_config()
             , win_hotkeys()

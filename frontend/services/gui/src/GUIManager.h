@@ -323,6 +323,8 @@ public:
 
     void setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources);
 
+    void digestChangedRequestedResources();
+
     ///////////////////////////////////////////////////////////////////////
 
 private:

@@ -1,5 +1,7 @@
 #include "RenderingEndPoint.h"
 
+#include "mmcore/utility/log/Log.h"
+
 
 megamol::gui::RenderingEndPoint::RenderingEndPoint(std::string const& window_name)
         : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_RENDERING_ENDPOINT) {
@@ -14,6 +16,22 @@ megamol::gui::RenderingEndPoint::RenderingEndPoint(std::string const& window_nam
 //}
 
 
+void megamol::gui::RenderingEndPoint::digestChangedRequestedResources() {
+    auto mouse_events_resource_ptr = frontend_resources->getOptional<frontend_resources::MouseEvents>();
+    if (mouse_events_resource_ptr.has_value()) {
+        frontend_resources::MouseEvents const& me = mouse_events_resource_ptr.value();
+        const_cast<frontend_resources::MouseEvents&>(me).position_events.insert(
+            const_cast<frontend_resources::MouseEvents&>(me).position_events.end(), position_events_.begin(),
+            position_events_.end());
+        const_cast<frontend_resources::MouseEvents&>(me).buttons_events.insert(
+            const_cast<frontend_resources::MouseEvents&>(me).buttons_events.end(), buttons_events_.begin(),
+            buttons_events_.end());
+    }
+    position_events_.clear();
+    buttons_events_.clear();
+}
+
+
 bool megamol::gui::RenderingEndPoint::Draw() {
     static const char* current_item = nullptr;
     megamol::frontend::ImagePresentation_Service::EntryPointRenderFunctions entry_point;
@@ -24,6 +42,7 @@ bool megamol::gui::RenderingEndPoint::Draw() {
     }*/
 
     auto& img_pres_ep_resource_ptr = frontend_resources->get<frontend_resources::ImagePresentationEntryPoints>();
+    auto mouse_events_resource_ptr = frontend_resources->getOptional<frontend_resources::MouseEvents>();
 
     bool isSelected = false;
     if (ImGui::BeginCombo("Views", current_item)) {
@@ -45,6 +64,34 @@ bool megamol::gui::RenderingEndPoint::Draw() {
 
     //entry_point
     if (current_item != nullptr) {
+        if (mouse_events_resource_ptr.has_value() && ImGui::IsWindowHovered()) {
+            ImVec2 mousePositionAbsolute = ImGui::GetMousePos();
+            ImVec2 screenPositionAbsolute = ImGui::GetItemRectMin();
+            ImVec2 mousePositionRelative = ImVec2(
+                mousePositionAbsolute.x - screenPositionAbsolute.x, mousePositionAbsolute.y - screenPositionAbsolute.y);
+            /*frontend_resources::MouseEvents const& me = mouse_events_resource_ptr.value();
+            const_cast<frontend_resources::MouseEvents&>(me).position_events.emplace_back(
+                std::make_tuple(mousePositionRelative.x, mousePositionRelative.y));*/
+            position_events_.emplace_back(std::make_tuple(mousePositionRelative.x, mousePositionRelative.y));
+
+            if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+                if (ImGui::IsKeyDown(ImGuiKey_ModAlt)) {
+                    frontend_resources::MouseButton btn = frontend_resources::MouseButton::BUTTON_LEFT;
+                    frontend_resources::MouseButtonAction btnaction = frontend_resources::MouseButtonAction::PRESS;
+
+
+                    frontend_resources::Modifiers btnmods;
+                    btnmods |= frontend_resources::Modifier::ALT;
+
+                    /*const_cast<frontend_resources::MouseEvents&>(me).buttons_events.emplace_back(
+                        std::make_tuple(btn, btnaction, btnmods));*/
+                    buttons_events_.emplace_back(std::make_tuple(btn, btnaction, btnmods));
+                }
+            }
+
+            /*core::utility::log::Log::DefaultLog.WriteInfo(
+                "Window coord %f %f", mousePositionRelative.x, mousePositionRelative.y);*/
+        }
         for (auto& image : images_) {
             ImGui::Image(image.referenced_image_handle, ImVec2{(float)image.size.width, (float)image.size.height},
                 ImVec2(0, 1), ImVec2(1, 0));

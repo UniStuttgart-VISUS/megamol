@@ -239,6 +239,13 @@ void megamol::gui::WindowCollection::setRequestedResources(
 }
 
 
+void megamol::gui::WindowCollection::digestChangedRequestedResources() {
+    for (auto& win : windows) {
+        win->digestChangedRequestedResources();
+    }
+}
+
+
 void WindowCollection::add_parameter_window(
     const std::string& window_name, AbstractWindow::WindowConfigID win_id, ImGuiID initial_module_uid) {
 
