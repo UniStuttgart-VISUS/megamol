@@ -44,7 +44,9 @@ static void log_error(std::string const& text) {
 }
 
 int main(const int argc, const char** argv) {
-
+#ifdef MEGAMOL_USE_TRACY
+    ZoneScoped;
+#endif
     megamol::core::LuaAPI lua_api;
 
     auto [config, global_value_store] = megamol::frontend::handle_cli_and_config(argc, argv, lua_api);

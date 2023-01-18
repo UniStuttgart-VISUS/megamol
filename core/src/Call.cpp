@@ -13,6 +13,13 @@
 #endif
 #include "mmcore/utility/log/Log.h"
 
+#ifdef MEGAMOL_USE_TRACY
+#include "Tracy.hpp"
+#endif
+#if defined(MEGAMOL_USE_TRACY) || defined(RIG_RENDERCALLS_WITH_DEBUGGROUPS)
+#include "mmcore/Module.h"
+#endif
+
 using namespace megamol::core;
 
 /*
@@ -45,13 +52,19 @@ Call::~Call(void) {
 bool Call::operator()(unsigned int func) {
     bool res = false;
     if (this->callee != nullptr) {
-#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
+#if defined(MEGAMOL_USE_TRACY) || defined(RIG_RENDERCALLS_WITH_DEBUGGROUPS)
         auto f = this->callee->GetCallbackFuncName(func);
         auto parent = callee->Parent().get();
+        std::string output = dynamic_cast<core::Module*>(parent)->ClassName();
+        output += "::";
+        output += f;
+#endif
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScoped;
+        ZoneName(output.c_str(), output.size());
+#endif
+#ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         if (caps.OpenGLRequired()) {
-            std::string output = dynamic_cast<core::Module*>(parent)->ClassName();
-            output += "::";
-            output += f;
             glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
             // megamol::core::utility::log::Log::DefaultLog.WriteInfo("called %s::%s", p3->ClassName(), f);
         }
