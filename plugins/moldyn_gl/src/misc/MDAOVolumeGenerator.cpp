@@ -72,8 +72,8 @@ bool MDAOVolumeGenerator::Init(frontend_resources::OpenGL_Context const& ogl_ctx
     glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);
 
     // Check if we can use modern features
-    compute_available_ = true; //ogl_ctx.isExtAvailable("GL_ARB_compute_shader"); //TODO
-    clear_available_ = true; //ogl_ctx.isExtAvailable("GL_ARB_clear_texture"); //TODO
+    compute_available_ = ogl_ctx.isExtAvailable("GL_ARB_compute_shader");
+    clear_available_ = ogl_ctx.isExtAvailable("GL_ARB_clear_texture");
 
     std::stringstream outmsg;
     outmsg << "[MDAOVolumeGenerator] Voxelization Features enabled: Compute Shader " << compute_available_

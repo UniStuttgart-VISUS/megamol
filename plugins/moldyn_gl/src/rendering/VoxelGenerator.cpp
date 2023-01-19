@@ -1,12 +1,13 @@
 #include "VoxelGenerator.h"
 
+#include "OpenGL_Context.h"
 #include "mmcore/param/IntParam.h"
 
 using namespace megamol::moldyn_gl::rendering;
 using namespace megamol::geocalls;
 
 VoxelGenerator::VoxelGenerator(void)
-        : core::Module()
+        : mmstd_gl::ModuleGL()
         , generate_voxels_slot_("GenerateVoxels", "Slot for requesting voxel generation.")
         , get_data_slot_("GetParticleData", "Connects to the data source")
         , vol_size_slot_("volumeSize", "Longest volume edge")
@@ -53,6 +54,11 @@ bool VoxelGenerator::create(void) {
 void VoxelGenerator::release(void) {
     //TODO reset resources
     this->vol_size_slot_.Param<core::param::IntParam>()->SetGUIVisible(false);
+
+    if (this->vol_gen_ != nullptr) {
+        delete this->vol_gen_;
+        this->vol_gen_ = nullptr;
+    }
 }
 
 bool VoxelGenerator::getExtentCallback(core::Call& call) {
@@ -161,22 +167,18 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
 }
 
 bool VoxelGenerator::initVolumeGenerator() {
-    // TODO get real parameters
+    // TODO get real parameters (shader options)
     std::filesystem::path p1 = "D:\\Hiwi\\VISUS\\1_megamol\\sergejs_fork\\megamol\\out\\install\\x64-Debug\\bin\\";
     std::filesystem::path p2 =
         "D:\\Hiwi\\VISUS\\1_megamol\\sergejs_fork\\megamol\\out\\install\\x64-Debug\\bin\\../share/shaders";
     std::vector<std::filesystem::path> include_paths = {p1, p2};
-    auto const shader_options = msf::ShaderFactoryOptionsOpenGL(include_paths); // TODO
-    auto context = frontend_resources::OpenGL_Context();                        // TODO
-    
-    // TODO init only once?
-    vol_gen_ = new misc::MDAOVolumeGenerator();
-    auto so = shader_options;
-    vol_gen_->SetShaderSourceFactory(&so);
+    auto shader_options = msf::ShaderFactoryOptionsOpenGL(include_paths); // TODO
 
+    vol_gen_ = new misc::MDAOVolumeGenerator();
+    vol_gen_->SetShaderSourceFactory(&shader_options);
 
     // Init volume generator
-    if (!vol_gen_->Init(context)) {
+    if (!vol_gen_->Init(frontend_resources.get<frontend_resources::OpenGL_Context>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -187,26 +189,7 @@ bool VoxelGenerator::initVolumeGenerator() {
 
 bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
 
-    // see SphereRenderer.cpp
-
-    //----------------------------------------
-    // use MDAOVolumeGenerator? (vol_gen_)
- 
-    //  SetShaderSourceFactory(..)
-    //  Init(..)
- 
-    //  SetResolution(width, height, depth)
-    //  ClearVolume()
-    //  StartInsertion(..)
-    //  for
-    //      InsertParticles(..)
-    //  EndInsertion()
-    //  RecreateMipMap()
-
-    // GetVolumeTextureHandle()
-
-    //----------------------------------------
-
+    // make sure volume generator is initialized
     if (this->vol_gen_ == nullptr) {
         initVolumeGenerator();
     }

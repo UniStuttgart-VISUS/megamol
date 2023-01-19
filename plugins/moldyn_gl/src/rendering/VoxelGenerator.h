@@ -10,7 +10,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/Module.h"
+#include "mmstd_gl/ModuleGL.h"
 #include "mmcore/param/ParamSlot.h"
 #include "misc/MDAOVolumeGenerator.h"
 
@@ -19,7 +19,7 @@ namespace megamol {
 namespace moldyn_gl {
 namespace rendering {
 
-class VoxelGenerator : public core::Module { // TODO is code::Module correct? // or ModuleGL?
+class VoxelGenerator : public mmstd_gl::ModuleGL {
 
 public:
     /**
