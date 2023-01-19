@@ -29,6 +29,7 @@ using EntryPointRenderFunctions = std::tuple<
 // the ImagePresentation Service manages the entry points - things that are held and "get rendered" by the frontend
 // using the ImagePresentationEntryPoints resource participants (services) may add/remove entry points to the image presentation
 struct ImagePresentationEntryPoints {
+    static std::string const GLFW_Sink_Name;
     std::function<bool(std::string const&, EntryPointRenderFunctions const&)> add_entry_point;
     std::function<bool(std::string const&, const int)> set_entry_point_priority;
     std::function<bool(std::string const&)> remove_entry_point;

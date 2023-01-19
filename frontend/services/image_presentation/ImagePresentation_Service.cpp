@@ -350,7 +350,7 @@ bool ImagePresentation_Service::add_entry_point(std::string const& name, EntryPo
     // ensure sorting of entry points according to priorities
     set_entry_point_priority(name, 0);
 
-    bind_sink_to_ep("GLFW Window Presentation Sink", name);
+    bind_sink_to_ep(frontend_resources::ImagePresentationEntryPoints::GLFW_Sink_Name, name);
 
     return true;
 }
@@ -444,8 +444,8 @@ void ImagePresentation_Service::add_glfw_sink() {
         return;
     }
 
-    m_presentation_sinks.push_back(
-        {"GLFW Window Presentation Sink", [&](auto const& images) { this->present_images_to_glfw_window(images); }});
+    m_presentation_sinks.push_back({frontend_resources::ImagePresentationEntryPoints::GLFW_Sink_Name,
+        [&](auto const& images) { this->present_images_to_glfw_window(images); }});
 }
 
 void ImagePresentation_Service::subscribe_to_entry_point_changes(

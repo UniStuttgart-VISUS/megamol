@@ -699,6 +699,24 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
             }
             return VoidResult{};
         }});
+    callbacks.add<VoidResult, std::string>("mmBindGLFWSink",
+        "(string moduleName)\n\tBind specified entry point to the GLFW sink.",
+        {[&](std::string moduleName) -> VoidResult {
+            /*auto res = graph.AddGraphEntryPoint(moduleName);
+            if (!res) {
+                return Error{"Could not bind entry point to GLFW sink" + moduleName};
+            }*/
+            return VoidResult{};
+        }});
+    callbacks.add<VoidResult, std::string>("mmAddGraphEntryPoint",
+        "(string moduleName)\n\tAdd active graph entry point from one specific module.",
+        {[&](std::string moduleName) -> VoidResult {
+            auto res = graph.AddGraphEntryPoint(moduleName);
+            if (!res) {
+                return Error{"Could not add graph entry point " + moduleName};
+            }
+            return VoidResult{};
+        }});
     callbacks.add<VoidResult, std::string>("mmRemoveGraphEntryPoint",
         "(string moduleName)\n\tRemove active graph entry point from one specific module.",
         {[&](std::string moduleName) -> VoidResult {

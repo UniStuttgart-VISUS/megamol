@@ -83,6 +83,8 @@ public:
 
     bool SetGraphEntryPoint(std::string moduleName);
 
+    bool AddGraphEntryPoint(std::string moduleName);
+
     bool RemoveGraphEntryPoint(std::string moduleName);
 
     bool AddFrontendResources(std::vector<megamol::frontend::FrontendResource> const& resources);
