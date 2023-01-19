@@ -116,6 +116,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "RenderNextFrame",                      // LuaAPI can render one frame
         "GlobalValueStore",                     // LuaAPI can read and set global values
         frontend_resources::CommandRegistry_Req_Name, "optional<GUIRegisterWindow>", "RuntimeConfig",
+        "ImagePresentationEntryPoints"
 #ifdef MEGAMOL_USE_PROFILING
         frontend_resources::PerformanceManager_Req_Name
 #endif
@@ -702,10 +703,14 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string>("mmBindGLFWSink",
         "(string moduleName)\n\tBind specified entry point to the GLFW sink.",
         {[&](std::string moduleName) -> VoidResult {
-            /*auto res = graph.AddGraphEntryPoint(moduleName);
+            auto& ep_ref =
+                m_requestedResourceReferences[11].getResource<frontend_resources::ImagePresentationEntryPoints>();
+            ep_ref.unbind_sink_entry_point(frontend_resources::ImagePresentationEntryPoints::GLFW_Sink_Name, "");
+            auto res = ep_ref.bind_sink_entry_point(
+                frontend_resources::ImagePresentationEntryPoints::GLFW_Sink_Name, moduleName);
             if (!res) {
                 return Error{"Could not bind entry point to GLFW sink" + moduleName};
-            }*/
+            }
             return VoidResult{};
         }});
     callbacks.add<VoidResult, std::string>("mmAddGraphEntryPoint",
@@ -741,7 +746,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<StringResult, std::string>("mmListModuleTimers",
         "(string name)\n\tList the registered timers of a module.", {[&](std::string name) -> StringResult {
             auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
-                &this->m_requestedResourceReferences[11]
+                &this->m_requestedResourceReferences[12]
                      .getResource<megamol::frontend_resources::PerformanceManager>());
             std::stringstream output;
             auto m = graph.FindModule(name);
@@ -760,7 +765,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
         "(int handle, string comment)\n\tSet a transient comment for a timer; will show up in profiling log.",
         {[&](int handle, std::string comment) -> VoidResult {
             auto perf_manager = const_cast<megamol::frontend_resources::PerformanceManager*>(
-                &this->m_requestedResourceReferences[11]
+                &this->m_requestedResourceReferences[12]
                      .getResource<megamol::frontend_resources::PerformanceManager>());
             perf_manager->set_transient_comment(handle, comment);
             return VoidResult{};

@@ -429,8 +429,14 @@ bool ImagePresentation_Service::bind_sink_to_ep(std::string const& sink_name, st
 }
 
 bool ImagePresentation_Service::unbind_sink_to_ep(std::string const& sink_name, std::string const& ep_name) {
-    auto& sink_list = ep_sink_map[ep_name];
-    sink_list.remove(sink_name);
+    if (ep_name.empty()) {
+        for (auto& [key, list] : ep_sink_map) {
+            list.remove(sink_name);
+        }
+    } else {
+        auto& sink_list = ep_sink_map[ep_name];
+        sink_list.remove(sink_name);
+    }
 
     return true;
 }
