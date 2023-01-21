@@ -113,6 +113,10 @@ private:
     core::param::ParamSlot vol_size_slot_;
 
     misc::MDAOVolumeGenerator* vol_gen_;
+
+    void getClipData(glm::vec4& out_clip_dat, glm::vec4& out_clip_col);
+
+    GLuint vertex_array_;
 };
 
 } // namespace rendering

@@ -12,7 +12,8 @@ VoxelGenerator::VoxelGenerator(void)
         , get_data_slot_("GetParticleData", "Connects to the data source")
         , vol_size_slot_("volumeSize", "Longest volume edge")
         , texture_handle()
-        , vol_gen_(nullptr) {
+        , vol_gen_(nullptr)
+        , vertex_array_() {
 
     // VolumetricDataCall slot
     this->generate_voxels_slot_.SetCallback(VolumetricDataCall::ClassName(),
@@ -45,6 +46,7 @@ VoxelGenerator::~VoxelGenerator(void) {
 
 bool VoxelGenerator::create(void) {
     this->vol_size_slot_.Param<core::param::IntParam>()->SetGUIVisible(true);
+    glGenVertexArrays(1, &vertex_array_);
 
     return initVolumeGenerator();
 
@@ -52,6 +54,9 @@ bool VoxelGenerator::create(void) {
 }
 
 void VoxelGenerator::release(void) {
+
+    glDeleteVertexArrays(1, &vertex_array_);
+
     //TODO reset resources
     this->vol_size_slot_.Param<core::param::IntParam>()->SetGUIVisible(false);
 
@@ -167,7 +172,7 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
 }
 
 bool VoxelGenerator::initVolumeGenerator() {
-    // TODO get real parameters (shader options)
+    // TODO get real parameters (shader options) (sphereRenderer: read from config in CoreInstance)
     std::filesystem::path p1 = "D:\\Hiwi\\VISUS\\1_megamol\\sergejs_fork\\megamol\\out\\install\\x64-Debug\\bin\\";
     std::filesystem::path p2 =
         "D:\\Hiwi\\VISUS\\1_megamol\\sergejs_fork\\megamol\\out\\install\\x64-Debug\\bin\\../share/shaders";
@@ -195,7 +200,7 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
     }
     
     glm::vec4 cur_clip_dat_ = glm::vec4(0.0);                                   //TODO
-    vislib::math::Cuboid<float> cur_clip_box_(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0); // TODO
+    vislib::math::Cuboid<float> cur_clip_box_(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0); // TODO sphererenderer: AccessBoundingBoxes().ClipBox(); (CallRender3DGL)
 
     // Fill volume texture
     if (vol_gen_ != nullptr) {
@@ -215,15 +220,29 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
             cur_clip_box_, glm::vec4(cur_clip_dat_[0], cur_clip_dat_[1], cur_clip_dat_[2], cur_clip_dat_[3]));
 
         // Insert particle data
-        for (unsigned int i = 0; i < 1; i++) { // TODO
+        unsigned int particleListCount = particle_call->GetParticleListCount(); 
+        for (unsigned int i = 0; i < particleListCount; i++) {
             float global_radius = 0.0f;
-            if (particle_call->AccessParticles(i).GetVertexDataType() !=
+
+            auto particles = particle_call->AccessParticles(i);
+
+            if (particles.GetVertexDataType() !=
                 MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
-                global_radius = particle_call->AccessParticles(i).GetGlobalRadius();
+                global_radius = particles.GetGlobalRadius();
+
+
+            //// TODO one vertex array for each i?
+            //glBindVertexArray(vertex_array_);
+            ////enableBufferData(prgm, parts, this->gpu_data_[i].vertex_vbo, parts.GetVertexData(),this->gpu_data_[i].color_vbo, parts.GetColourData(), true)
+            //glBindVertexArray(0);
+            ////disableBufferData
+
+            //TODO vertex array!!
+
             vol_gen_->InsertParticles(
-                static_cast<unsigned int>(particle_call->AccessParticles(i).GetCount()), global_radius, 3); // TODO
+                static_cast<unsigned int>(particles.GetCount()), global_radius, 3); // TODO, 3: handle for vertex array, SphereRenderer: this->gpu_data_[i].vertex_array
         }
-        
+
         vol_gen_->EndInsertion();
         vol_gen_->RecreateMipmap();
     }
@@ -236,4 +255,13 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
 
 bool VoxelGenerator::dummyCallback(core::Call& call) {
     return true;
+}
+
+//TODO use?
+void VoxelGenerator::getClipData(glm::vec4& out_clip_dat, glm::vec4& out_clip_col) {
+    // TODO if call get_clip_plane_slot_
+    // else:
+    out_clip_dat[0] = out_clip_dat[1] = out_clip_dat[2] = out_clip_dat[3] = 0.0f;
+    out_clip_col[0] = out_clip_col[1] = out_clip_col[2] = 0.75f;
+    out_clip_col[3] = 1.0f;
 }
