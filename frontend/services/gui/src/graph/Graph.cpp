@@ -1710,22 +1710,14 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                 if (selected_mod_ptr != nullptr) {
                     Graph::QueueData queue_data;
                     if (this->gui_graph_state.interact.module_graphentry_changed == vislib::math::Ternary::TRI_TRUE) {
-                        // Remove all graph entries
-                        for (auto& module_ptr : this->Modules()) {
-                            if (module_ptr->IsView() && module_ptr->HasGLFWSink()) {
-                                module_ptr->SetGraphEntryName("");
-                                queue_data.name_id = module_ptr->FullName();
-                                this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
-                            }
-                        }
                         // Add new graph entry
                         queue_data.name_id = selected_mod_ptr->FullName();
                         selected_mod_ptr->SetGraphEntryName(this->GenerateUniqueGraphEntryName());
-                        this->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                        this->PushSyncQueue(Graph::BIND_GLFW_SINK, queue_data);
                     } else {
                         queue_data.name_id = selected_mod_ptr->FullName();
                         selected_mod_ptr->SetGraphEntryName("");
-                        this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
+                        this->PushSyncQueue(Graph::UNBIND_GLFW_SINK, queue_data);
                     }
                 }
                 this->gui_graph_state.interact.module_graphentry_changed = vislib::math::Ternary::TRI_UNKNOWN;
@@ -2157,22 +2149,14 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
         if (megamol::gui::ButtonWidgets::ToggleButton("Entry", has_GLFW_sink)) {
             Graph::QueueData queue_data;
             if (has_GLFW_sink) {
-                // Remove all graph entries
-                for (auto& module_ptr : this->Modules()) {
-                    if (module_ptr->IsView() && module_ptr->HasGLFWSink()) {
-                        module_ptr->SetGraphEntryName("");
-                        queue_data.name_id = module_ptr->FullName();
-                        this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
-                    }
-                }
                 // Add new graph entry
                 selected_mod_ptr->SetGraphEntryName(this->GenerateUniqueGraphEntryName());
                 queue_data.name_id = selected_mod_ptr->FullName();
-                this->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                this->PushSyncQueue(Graph::BIND_GLFW_SINK, queue_data);
             } else {
                 selected_mod_ptr->SetGraphEntryName("");
                 queue_data.name_id = selected_mod_ptr->FullName();
-                this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
+                this->PushSyncQueue(Graph::UNBIND_GLFW_SINK, queue_data);
             }
         }
     }

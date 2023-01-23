@@ -368,12 +368,12 @@ bool megamol::gui::GraphCollection::SynchronizeGraphs(megamol::core::MegaMolGrap
             } break;
             case (Graph::QueueAction::BIND_GLFW_SINK): {
                 (*input_lua_func)("mmBindSink([=[" + frontend_resources::ImagePresentationEntryPoints::GLFW_Sink_Name +
-                                  "]=]," + data.name_id + ")");
+                                  "]=],[=[" + data.name_id + "]=])");
             } break;
             case (Graph::QueueAction::UNBIND_GLFW_SINK): {
                 (*input_lua_func)("mmUnbindSink([=[" +
-                                  frontend_resources::ImagePresentationEntryPoints::GLFW_Sink_Name + "]=]," +
-                                  data.name_id + ")");
+                                  frontend_resources::ImagePresentationEntryPoints::GLFW_Sink_Name + "]=],[=[" +
+                                  data.name_id + "]=])");
             } break;
             default:
                 break;
