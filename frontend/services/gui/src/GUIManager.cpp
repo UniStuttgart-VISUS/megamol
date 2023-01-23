@@ -923,8 +923,8 @@ void GUIManager::draw_menu() {
                 ImGui::TextDisabled("Graph Entries:");
                 for (auto& module_ptr : graph_ptr->Modules()) {
                     if (module_ptr->IsView()) {
-                        if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsGraphEntry())) {
-                            if (!module_ptr->IsGraphEntry()) {
+                        if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->HasGLFWSink())) {
+                            if (!module_ptr->HasGLFWSink()) {
                                 graph_ptr->AddGraphEntry(module_ptr, graph_ptr->GenerateUniqueGraphEntryName());
                             } else {
                                 graph_ptr->RemoveGraphEntry(module_ptr);

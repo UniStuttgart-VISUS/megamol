@@ -211,7 +211,7 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
                 if (mod_ptr->IsView()) {
                     bool create_new_graph_entry = true;
                     for (auto& module_ptr : this->Modules()) {
-                        if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
+                        if (module_ptr->IsView() && module_ptr->HasGLFWSink()) {
                             create_new_graph_entry = false;
                         }
                     }
@@ -993,7 +993,7 @@ bool Graph::ToggleGraphEntry(bool use_queue) {
     auto module_graph_entry_iter = this->modules.begin();
     // Search for first graph entry and set next view to graph entry (= graph entry point)
     for (auto module_iter = this->modules.begin(); module_iter != this->modules.end(); module_iter++) {
-        if ((*module_iter)->IsView() && (*module_iter)->IsGraphEntry()) {
+        if ((*module_iter)->IsView() && (*module_iter)->HasGLFWSink()) {
             // Remove all graph entries
             (*module_iter)->SetGraphEntryName("");
             if (this->IsRunning() && use_queue) {
@@ -1190,6 +1190,22 @@ bool megamol::gui::Graph::PushSyncQueue(QueueAction action, const QueueData& in_
         if (queue_data.name_id.empty()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Graph sync queue action REMOVE_GRAPH_ENTRY is missing data for 'name_id'. [%s, %s, line %d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+    } break;
+    case (QueueAction::BIND_GLFW_SINK): {
+        if (queue_data.name_id.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action BIND_GLFW_SINK is missing data for 'name_id'. [%s, %s, line %d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+    } break;
+    case (QueueAction::UNBIND_GLFW_SINK): {
+        if (queue_data.name_id.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action UNBIND_GLFW_SINK is missing data for 'name_id'. [%s, %s, line %d]\n",
                 __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
@@ -1696,7 +1712,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                     if (this->gui_graph_state.interact.module_graphentry_changed == vislib::math::Ternary::TRI_TRUE) {
                         // Remove all graph entries
                         for (auto& module_ptr : this->Modules()) {
-                            if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
+                            if (module_ptr->IsView() && module_ptr->HasGLFWSink()) {
                                 module_ptr->SetGraphEntryName("");
                                 queue_data.name_id = module_ptr->FullName();
                                 this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
@@ -2128,22 +2144,22 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
             }
         }
     }
-    // Graph Entry Checkbox
+    // GLFW Sink Checkbox
     const float min_text_width = 3.0f * ImGui::GetFrameHeightWithSpacing();
     if (selected_mod_ptr == nullptr) {
         gui_utils::PushReadOnly();
-        bool is_graph_entry = false;
+        bool has_GLFW_sink = false;
         this->gui_current_graph_entry_name.clear();
-        megamol::gui::ButtonWidgets::ToggleButton("Entry", is_graph_entry);
+        megamol::gui::ButtonWidgets::ToggleButton("Entry", has_GLFW_sink);
         gui_utils::PopReadOnly();
     } else {
-        bool is_graph_entry = selected_mod_ptr->IsGraphEntry();
-        if (megamol::gui::ButtonWidgets::ToggleButton("Entry", is_graph_entry)) {
+        bool has_GLFW_sink = selected_mod_ptr->HasGLFWSink();
+        if (megamol::gui::ButtonWidgets::ToggleButton("Entry", has_GLFW_sink)) {
             Graph::QueueData queue_data;
-            if (is_graph_entry) {
+            if (has_GLFW_sink) {
                 // Remove all graph entries
                 for (auto& module_ptr : this->Modules()) {
-                    if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
+                    if (module_ptr->IsView() && module_ptr->HasGLFWSink()) {
                         module_ptr->SetGraphEntryName("");
                         queue_data.name_id = module_ptr->FullName();
                         this->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);

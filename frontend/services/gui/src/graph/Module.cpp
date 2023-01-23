@@ -472,7 +472,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
 
                     if (graph_entry_button) {
-                        bool is_graph_entry = this->IsGraphEntry();
+                        bool is_graph_entry = this->HasGLFWSink();
                         if (ImGui::RadioButton("###graph_entry_switch", is_graph_entry)) {
                             if (!is_graph_entry) {
                                 state.interact.module_graphentry_changed = vislib::math::Ternary::TRI_TRUE;

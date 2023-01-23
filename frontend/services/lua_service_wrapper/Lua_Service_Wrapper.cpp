@@ -700,16 +700,25 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
             }
             return VoidResult{};
         }});
-    callbacks.add<VoidResult, std::string>("mmBindGLFWSink",
-        "(string moduleName)\n\tBind specified entry point to the GLFW sink.",
-        {[&](std::string moduleName) -> VoidResult {
+    callbacks.add<VoidResult, std::string, std::string>("mmBindSink",
+        "(string sinkName, string moduleName)\n\tBind specified entry point to the sink.",
+        {[&](std::string sinkName, std::string moduleName) -> VoidResult {
             auto& ep_ref =
                 m_requestedResourceReferences[11].getResource<frontend_resources::ImagePresentationEntryPoints>();
-            ep_ref.unbind_sink_entry_point(frontend_resources::ImagePresentationEntryPoints::GLFW_Sink_Name, "");
-            auto res = ep_ref.bind_sink_entry_point(
-                frontend_resources::ImagePresentationEntryPoints::GLFW_Sink_Name, moduleName);
+            auto res = ep_ref.bind_sink_entry_point(sinkName, moduleName);
             if (!res) {
-                return Error{"Could not bind entry point to GLFW sink" + moduleName};
+                return Error{"Could not bind entry point " + moduleName + " to sink " + sinkName};
+            }
+            return VoidResult{};
+        }});
+    callbacks.add<VoidResult, std::string, std::string>("mmUnbindSink",
+        "(string sinkName, string moduleName)\n\tUnbind specified entry point from the sink.",
+        {[&](std::string sinkName, std::string moduleName) -> VoidResult {
+            auto& ep_ref =
+                m_requestedResourceReferences[11].getResource<frontend_resources::ImagePresentationEntryPoints>();
+            auto res = ep_ref.unbind_sink_entry_point(sinkName, moduleName);
+            if (!res) {
+                return Error{"Could not unbind entry point " + moduleName + " from sink " + sinkName};
             }
             return VoidResult{};
         }});

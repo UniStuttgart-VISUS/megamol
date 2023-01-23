@@ -94,7 +94,7 @@ public:
     inline std::string ClassName() const {
         return this->class_name;
     }
-    bool IsGraphEntry() const {
+    bool HasGLFWSink() const {
         return (!this->graph_entry_name.empty());
     }
     inline std::string Name() const {

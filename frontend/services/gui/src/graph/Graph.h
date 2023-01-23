@@ -44,7 +44,9 @@ public:
         ADD_CALL,
         DELETE_CALL,
         CREATE_GRAPH_ENTRY,
-        REMOVE_GRAPH_ENTRY
+        REMOVE_GRAPH_ENTRY,
+        BIND_GLFW_SINK,
+        UNBIND_GLFW_SINK
     };
 
     struct QueueData {
