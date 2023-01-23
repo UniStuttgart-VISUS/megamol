@@ -118,19 +118,19 @@ if (MEGAMOL_USE_OPENGL)
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/core_gl)
 endif ()
 
-# MegaMol.exe
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/frontend/main)
-
-# Remoteconsole
-add_subdirectory(remoteconsole)
-
 # Plugins
 add_subdirectory(plugins)
 if (MEGAMOL_USE_OPENGL)
   target_link_libraries(plugins INTERFACE core_gl)
   target_sources(plugins INTERFACE $<TARGET_OBJECTS:core_gl>)
 endif ()
+
+# MegaMol.exe
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/frontend/main)
 target_link_libraries(megamol PRIVATE plugins)
+
+# Remoteconsole
+add_subdirectory(remoteconsole)
 
 # Utils
 add_subdirectory(utils)
