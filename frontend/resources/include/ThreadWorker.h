@@ -58,7 +58,7 @@ public:
         return std::move(q);
     }
 
-    bool empty() {
+    bool empty() const {
         guard;
         return m_queue.empty();
     }

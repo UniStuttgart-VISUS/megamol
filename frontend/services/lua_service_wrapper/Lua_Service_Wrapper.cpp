@@ -1,8 +1,7 @@
-/*
- * Lua_Service_Wrapper.cpp
- *
- * Copyright (C) 2020 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #include "Lua_Service_Wrapper.hpp"
@@ -72,8 +71,6 @@ bool Lua_Service_Wrapper::init(void* configPtr) {
 }
 
 #define luaAPI (*m_config.lua_api_ptr)
-#define m_network_host \
-    reinterpret_cast<megamol::frontend_resources::LuaRemoteConnectionsBroker*>(m_network_host_pimpl.get())
 
 bool Lua_Service_Wrapper::init(const Config& config) {
     if (!config.lua_api_ptr) {
@@ -118,11 +115,9 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     *open_version_notification = false;
 
-    m_network_host_pimpl =
-        std::unique_ptr<void, std::function<void(void*)>>(new megamol::frontend_resources::LuaRemoteConnectionsBroker{},
-            [](void* ptr) { delete reinterpret_cast<megamol::frontend_resources::LuaRemoteConnectionsBroker*>(ptr); });
+    m_network_host = std::make_unique<megamol::frontend::LuaRemoteConnectionsBroker>();
 
-    bool host_ok = m_network_host->spawn_connection_broker(m_config.host_address, m_config.retry_socket_port);
+    bool host_ok = m_network_host->Init(m_config.host_address, m_config.retry_socket_port);
 
     if (host_ok) {
         log("initialized successfully");
@@ -136,7 +131,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 void Lua_Service_Wrapper::close() {
     m_config = {}; // default to nullptr
 
-    m_network_host->close();
+    m_network_host->Close();
 }
 
 std::vector<FrontendResource>& Lua_Service_Wrapper::getProvidedResources() {
@@ -192,14 +187,14 @@ void Lua_Service_Wrapper::updateProvidedResources() {
     bool need_to_shutdown = false; // e.g. mmQuit should set this to true
 
     // fetch Lua requests from ZMQ queue, execute, and give back result
-    if (!m_network_host->request_queue.empty()) {
-        auto lua_requests = std::move(m_network_host->get_request_queue());
+    if (!m_network_host->RequestQueueEmpty()) {
+        auto lua_requests = std::move(m_network_host->GetRequestQueue());
         std::string result;
         while (!lua_requests.empty()) {
             auto& request = lua_requests.front();
 
             luaAPI.RunString(request.request, result);
-            request.answer_promise.get().set_value(result);
+            request.answer_promise.set_value(result);
 
             lua_requests.pop();
             result.clear();

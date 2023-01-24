@@ -1,22 +1,18 @@
-/*
- * Lua_Service_Wrapper.hpp
- *
- * Copyright (C) 2020 by MegaMol Team
- * Alle Rechte vorbehalten.
+/**
+ * MegaMol
+ * Copyright (c) 2020, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #pragma once
 
 #include "AbstractFrontendService.hpp"
-
+#include "LuaCallbacksCollection.h"
+#include "LuaRemoteConnectionsBroker.h"
 #include "ScriptPaths.h"
-
 #include "mmcore/LuaAPI.h"
 
-#include "LuaCallbacksCollection.h"
-
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 // the Lua Service Wrapper wraps the LuaAPI for use as a frontend service
 // the main problem this wrapper addresses is the requirement that Lua scripts
@@ -84,8 +80,7 @@ private:
 
     int m_service_recursion_depth = 0;
 
-    // auto-deleted opaque ZMQ networking object from LuaHostService.h
-    std::unique_ptr<void, std::function<void(void*)>> m_network_host_pimpl;
+    std::unique_ptr<megamol::frontend::LuaRemoteConnectionsBroker> m_network_host;
 
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
@@ -102,5 +97,4 @@ private:
     void fill_graph_manipulation_callbacks(void* callbacks_collection_ptr);
 };
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend
