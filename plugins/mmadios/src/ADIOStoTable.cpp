@@ -75,8 +75,8 @@ bool ADIOStoTable::getData(core::Call& call) {
             return false;
         }
 
-        for (int i = 0; i < availVars.size(); ++i) {
-            _rows = std::max(_rows, cad->getData(availVars[i])->size());
+        for (auto& availVar : availVars) {
+            _rows = std::max(_rows, cad->getData(availVar)->size());
         }
         availVars.erase(std::remove_if(availVars.begin(), availVars.end(),
                             [&](const std::string& var) { return cad->getData(var)->size() != _rows; }),
@@ -88,11 +88,17 @@ bool ADIOStoTable::getData(core::Call& call) {
         for (int i = 0; i < availVars.size(); ++i) {
             _rows = std::max(_rows, cad->getData(availVars[i])->size());
             raw_data[i] = cad->getData(availVars[i])->GetAsFloat();
+            auto prop = cad->getVarProperties(availVars[i]);
             float min = std::numeric_limits<float>::max();
             float max = std::numeric_limits<float>::lowest();
-            for (int j = 0; j < raw_data[i].size(); ++j) {
-                min = std::min(min, raw_data[i][j]);
-                max = std::max(max, raw_data[i][j]);
+            if (prop.find("Min") != prop.end() && prop.find("Max") != prop.end()) {
+                min = std::stof(prop["Min"]);
+                max = std::stof(prop["Max"]);
+            } else {
+                for (float& j : raw_data[i]) {
+                    min = std::min(min, j);
+                    max = std::max(max, j);
+                }
             }
             _colinfo[i].SetName(availVars[i]);
             _colinfo[i].SetMaximumValue(max);
