@@ -13,6 +13,8 @@ if(BUILD_FRONTEND_SERVICES)
   find_package(imgui CONFIG REQUIRED)
   find_package(imguizmoquat CONFIG REQUIRED)
   find_package(implot CONFIG REQUIRED)
+  find_package(ZeroMQ REQUIRED)
+  find_package(cppzmq REQUIRED)
 
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "include/*.h"
@@ -179,7 +181,9 @@ if(BUILD_FRONTEND_SERVICES)
       glm::glm
       imgui::imgui
       imguizmoquat::imguizmoquat
-      implot::implot)
+      implot::implot
+      libzmq
+      cppzmq)
 
   # Install gui resources
   if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gui/resources")

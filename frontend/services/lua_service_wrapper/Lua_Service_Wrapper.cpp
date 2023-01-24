@@ -5,22 +5,17 @@
  * Alle Rechte vorbehalten.
  */
 
-// TODO: we need this #define because inclusion of LuaHostService.h leads to windows header inclusion errors.
-// this stems from linking ZMQ via CMake now being PUBLIC in the core lib. i dont know how to solve this "the right way".
-#define _WINSOCKAPI_
 #include "Lua_Service_Wrapper.hpp"
-
-#include "LuaRemoteConnectionsBroker.h"
 
 #include "CommandRegistry.h"
 #include "FrameStatistics.h"
 #include "GUIState.h"
 #include "GlobalValueStore.h"
+#include "LuaRemoteConnectionsBroker.h"
 #include "RuntimeConfig.h"
 #include "Screenshots.h"
 #include "WindowManipulation.h"
 #include "vislib/UTF8Encoder.h"
-
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "GUIRegisterWindow.h"

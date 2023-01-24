@@ -7,10 +7,11 @@
 
 #pragma once
 
-#include "ThreadWorker.h"
 #include <future>
 
-#include "mmcore/utility/ZMQContextUser.h"
+#include <zmq.hpp>
+
+#include "ThreadWorker.h"
 
 //#define LRH_ANNOYING_DETAILS
 
