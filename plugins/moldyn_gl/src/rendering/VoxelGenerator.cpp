@@ -172,13 +172,8 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
 }
 
 bool VoxelGenerator::initVolumeGenerator() {
-    // TODO get real parameters (shader options) (sphereRenderer: read from config in CoreInstance)
-    std::filesystem::path p1 = "D:\\Hiwi\\VISUS\\1_megamol\\sergejs_fork\\megamol\\out\\install\\x64-Debug\\bin\\";
-    std::filesystem::path p2 =
-        "D:\\Hiwi\\VISUS\\1_megamol\\sergejs_fork\\megamol\\out\\install\\x64-Debug\\bin\\../share/shaders";
-    std::vector<std::filesystem::path> include_paths = {p1, p2};
-    auto shader_options = msf::ShaderFactoryOptionsOpenGL(include_paths); // TODO
 
+    auto shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
     vol_gen_ = new misc::MDAOVolumeGenerator();
     vol_gen_->SetShaderSourceFactory(&shader_options);
 

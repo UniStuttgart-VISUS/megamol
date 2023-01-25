@@ -14,6 +14,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "misc/MDAOVolumeGenerator.h"
 
+#include "mmcore/CoreInstance.h"
 
 namespace megamol {
 namespace moldyn_gl {

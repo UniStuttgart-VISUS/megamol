@@ -2464,25 +2464,25 @@ void SphereRenderer::rebuildWorkingData(
         this->amb_cone_constants_[0] = std::min(dims.Width(), std::min(dims.Height(), dims.Depth()));
         this->amb_cone_constants_[1] = ceil(std::log2(static_cast<float>(vol_size))) - 1.0f;
 
-        // Set resolution accordingly
-        this->vol_gen_->SetResolution(dims.GetWidth(), dims.GetHeight(), dims.GetDepth());
+    //    // Set resolution accordingly
+    //    this->vol_gen_->SetResolution(dims.GetWidth(), dims.GetHeight(), dims.GetDepth());
 
-        // Insert all particle lists
-        this->vol_gen_->ClearVolume();
-        this->vol_gen_->StartInsertion(this->cur_clip_box_,
-            glm::vec4(this->cur_clip_dat_[0], this->cur_clip_dat_[1], this->cur_clip_dat_[2], this->cur_clip_dat_[3]));
+    //    // Insert all particle lists
+    //    this->vol_gen_->ClearVolume();
+    //    this->vol_gen_->StartInsertion(this->cur_clip_box_,
+    //        glm::vec4(this->cur_clip_dat_[0], this->cur_clip_dat_[1], this->cur_clip_dat_[2], this->cur_clip_dat_[3]));
 
-        for (unsigned int i = 0; i < this->gpu_data_.size(); i++) {
-            float global_radius = 0.0f;
-            if (mpdc->AccessParticles(i).GetVertexDataType() != MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
-                global_radius = mpdc->AccessParticles(i).GetGlobalRadius();
+    //    for (unsigned int i = 0; i < this->gpu_data_.size(); i++) {
+    //        float global_radius = 0.0f;
+    //        if (mpdc->AccessParticles(i).GetVertexDataType() != MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR)
+    //            global_radius = mpdc->AccessParticles(i).GetGlobalRadius();
 
-            this->vol_gen_->InsertParticles(static_cast<unsigned int>(mpdc->AccessParticles(i).GetCount()),
-                global_radius, this->gpu_data_[i].vertex_array);
-        }
-        this->vol_gen_->EndInsertion();
+    //        this->vol_gen_->InsertParticles(static_cast<unsigned int>(mpdc->AccessParticles(i).GetCount()),
+    //            global_radius, this->gpu_data_[i].vertex_array);
+    //    }
+    //    this->vol_gen_->EndInsertion();
 
-        this->vol_gen_->RecreateMipmap();
+    //    this->vol_gen_->RecreateMipmap();
     }
 }
 
