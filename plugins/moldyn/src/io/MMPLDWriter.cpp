@@ -399,7 +399,12 @@ bool MMPLDWriter::writeFrame(vislib::sys::File& file, geocalls::MultiParticleDat
             switch (points.GetColourDataType()) {
             case geocalls::MultiParticleDataCall::Particles::COLDATA_NONE: {
                 auto col = points.GetGlobalColour();
-                uint16_t colNew[4] = {col[0] * 257, col[1] * 257, col[2] * 257, col[3] * 257};
+                uint16_t colNew[4] = {
+                    static_cast<uint16_t>(col[0] * 257),
+                    static_cast<uint16_t>(col[1] * 257),
+                    static_cast<uint16_t>(col[2] * 257),
+                    static_cast<uint16_t>(col[3] * 257),
+                };
                 for (UINT64 i = 0; i < cnt; ++i) {
                     ASSERT_WRITEOUT(vp, vs);
                     vp += vo;

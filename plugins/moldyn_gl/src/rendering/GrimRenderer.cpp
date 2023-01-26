@@ -645,7 +645,7 @@ bool GrimRenderer::Render(megamol::mmstd_gl::CallRender3DGL& call) {
     // init depth disks ///////////////////////////////////////////////////////
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "grim-init-depth-disks");
 
-    float viewport_stuff[4] = {0.0f, 0.0f, fbo_->getWidth(), fbo_->getHeight()};
+    float viewport_stuff[4] = {0.0f, 0.0f, static_cast<float>(fbo_->getWidth()), static_cast<float>(fbo_->getHeight())};
     float default_point_size = glm::max(viewport_stuff[2], viewport_stuff[3]);
     if (viewport_stuff[2] < 1.0f)
         viewport_stuff[2] = 1.0f;
