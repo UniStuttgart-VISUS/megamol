@@ -31,15 +31,21 @@ vec3 hsv(vec3 color)
     return color.z * mix(vec3(1.0), p, color.y);
 }
 
-vec4 labelColor(vec4 color) {
-	float label = floor(color.r * 255.0) + 1.0;
-    float ring = floor(log2(max(label, 1.0))) - 1.0;
-    float subValue = label / (exp2(ring + 1.1));
+vec4 labelColor(const float value, const bool label) {
+    if ((label && value < (2.0 / 255.0)) || (!label && (value < (1.0 / 65535.0) || value > (65533.0 / 65535.0)))) return vec4(0.0, 0.0, 0.0, 1.0);
 
-	vec3 rainbow = hsv(vec3(subValue, 1.0 / max(1.0, ring), 1.0 - ring * 0.05));
-	vec3 gray = hsv(vec3(0.1, 0.1, (label - 1.0) / 3.0));
+    const vec4 table[] = vec4[6](
+        vec4(0.9, 0.1, 0.1, 1.0),
+        vec4(0.1, 0.9, 0.1, 1.0),
+        vec4(0.9, 0.9, 0.1, 1.0),
+        vec4(0.1, 0.1, 0.9, 1.0),
+        vec4(0.9, 0.1, 0.9, 1.0),
+        vec4(0.1, 0.9, 0.9, 1.0));
 
-	return vec4(mix(rainbow, gray, step(label, 3.0)), color.a);
+    const int factor = label ? 255 : 65535;
+	const int index = int(floor(value * factor)) % 6;
+    
+	return table[index];
 }
 
 vec4 getColor(vec4 color) {
@@ -49,9 +55,9 @@ vec4 getColor(vec4 color) {
 	case 2: // Grayscale
 		return color.rrra;
 	case 3: // Labels
-		return labelColor(color);
-	case 4: // Time diff
-		return vec4(vec2(mod(color.r * 255.0, 1.0)), mod(floor(color.r * 255.0), 2.0), 1.0);
+		return labelColor(color.r, true);
+	case 4: // Time index
+		return labelColor(color.r, false);
 	}
 }
 
