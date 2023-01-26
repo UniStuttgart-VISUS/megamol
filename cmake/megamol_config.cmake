@@ -57,6 +57,16 @@ if (UNIX)
   set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 endif ()
 
+# Clang-tidy
+# Configure with:
+# > cmake -DMEGAMOL_RUN_CLANG_TIDY=ON -DMEGAMOL_WARNING_LEVEL=Off ../megamol
+# Build NOT in parallel, otherwise clang-tidy will mess up files!
+option(MEGAMOL_RUN_CLANG_TIDY "Run clang-tidy." OFF)
+mark_as_advanced(FORCE MEGAMOL_RUN_CLANG_TIDY)
+if (MEGAMOL_RUN_CLANG_TIDY)
+  SET(CMAKE_CXX_CLANG_TIDY "clang-tidy-14;--checks=-*,modernize-use-override,modernize-redundant-void-arg;--header-filter=.;--fix")
+endif ()
+
 # Dependencies
 
 # OpenMP
