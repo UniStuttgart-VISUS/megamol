@@ -44,11 +44,23 @@ endif ()
 
 # Copy default configuration file
 if (MEGAMOL_USE_OPENGL)
-  set(CONFIG_GL_COMMENT "")
+  if (MEGAMOL_SKIP_SHADER_INSTALL)
+    set(CONFIG_SHADER_PATHS "mmAddShaderDir(\"${CMAKE_SOURCE_DIR}/core_gl/shaders\")") # TODO how to handle core_gl shaders?
+    foreach (shader_path ${plugins_src_shader_paths})
+      list(APPEND CONFIG_SHADER_PATHS "mmAddShaderDir(\"${shader_path}\")")
+    endforeach ()
+    list(JOIN CONFIG_SHADER_PATHS "\n" CONFIG_SHADER_PATHS)
+  else ()
+    set(CONFIG_SHADER_PATHS "mmAddShaderDir(basePath .. \"share/shaders\")")
+  endif ()
 else ()
-  set(CONFIG_GL_COMMENT "--")
+  set(CONFIG_SHADER_PATHS "--mmAddShaderDir(basePath .. \"share/shaders\")")
 endif ()
-configure_file(extra/megamol_config.lua.in ${CMAKE_BINARY_DIR}/megamol_config.lua)
+if (MEGAMOL_SKIP_RESOURCE_INSTALL)
+  # TODO do resources already support file lookup in multiple directories like the shader factory?
+  message(FATAL_ERROR "MEGAMOL_SKIP_RESOURCE_INSTALL not implemented!")
+endif ()
+configure_file(extra/megamol_config.lua.in ${CMAKE_BINARY_DIR}/megamol_config.lua @ONLY)
 configure_file(extra/install_megamol_config_lua.cmake.in ${CMAKE_BINARY_DIR}/install_megamol_config_lua.cmake @ONLY)
 
 install(SCRIPT ${CMAKE_BINARY_DIR}/install_megamol_config_lua.cmake)
