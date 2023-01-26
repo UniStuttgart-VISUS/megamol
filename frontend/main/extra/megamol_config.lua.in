@@ -63,14 +63,15 @@ mmSetGlobalValue("MachineName", computer) -- CLI: -g MachineName:WhateverYourMac
 -- By default, boolean options are false. Providing an option sets it to true,
 -- e.g.   ./megamol.exe --fullscreen 
 -- equals ./megamol.exe --fullscreen=true
-mmSetCliOption("fullscreen",  "off")       -- CLI: --fullscreen=false
-mmSetCliOption("vsync",       "off")       -- CLI: --vsync=false
-mmSetCliOption("interactive", "off")       -- CLI: --interactive=false
-mmSetCliOption("window",      "1920x1080") -- CLI: --window 1920x1080
-mmSetCliOption("khrdebug",    "off")       -- CLI: --khrdebug=false
-mmSetCliOption("privacynote", "on")        -- CLI: --privacynote=true
-mmSetCliOption("versionnote", "off")       -- CLI: --versionnote=false
-mmSetGlobalValue("arcball",   "off")       -- CLI: -g arcball:off
+mmSetCliOption("fullscreen",  "off")                   -- CLI: --fullscreen=false
+mmSetCliOption("vsync",       "off")                   -- CLI: --vsync=false
+mmSetCliOption("interactive", "off")                   -- CLI: --interactive=false
+mmSetCliOption("window",      "1920x1080")             -- CLI: --window 1920x1080
+mmSetCliOption("khrdebug",    "off")                   -- CLI: --khrdebug=false
+mmSetCliOption("privacynote", "on")                    -- CLI: --privacynote=true
+mmSetCliOption("versionnote", "off")                   -- CLI: --versionnote=false
+mmSetCliOption("host",        "tcp://127.0.0.1:33333") -- CLI: --host="tcp://127.0.0.1:33333"
+mmSetGlobalValue("arcball",   "off")                   -- CLI: -g arcball:off
 
 
 -- You can queue Lua files (project files) for execution after MegaMol started
