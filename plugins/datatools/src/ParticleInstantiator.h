@@ -20,21 +20,21 @@ namespace datatools {
  */
 class ParticleInstantiator : public AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleInstantiator";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "makes instances of particles by xyz repetition";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    ParticleInstantiator(void);
-    ~ParticleInstantiator(void) override;
+    ParticleInstantiator();
+    ~ParticleInstantiator() override;
 
 protected:
-    bool InterfaceIsDirty(void);
+    bool InterfaceIsDirty();
     void InterfaceResetDirty();
 
     /**

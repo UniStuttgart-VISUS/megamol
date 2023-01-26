@@ -45,8 +45,8 @@ namespace protein_gl {
 // class for view-aligned slicing of a volume
 class ViewSlicing {
 public:
-    ViewSlicing(void){};
-    ~ViewSlicing(void){};
+    ViewSlicing(){};
+    ~ViewSlicing(){};
 
     // setup slicing
     // needs the model view matrix (column oriented),
@@ -56,7 +56,7 @@ public:
     void drawSlice(int slice);
     void drawSlices(GLenum mode, int frontToBack, int maxSlices);
 
-    int getNumSlices(void) {
+    int getNumSlices() {
         return _numSlices;
     }
 

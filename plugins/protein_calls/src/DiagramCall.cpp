@@ -11,7 +11,7 @@ const unsigned int DiagramCall::CallForGetData = 0;
 /*
  * Diagram2DCall::Diagram2DCall
  */
-DiagramCall::DiagramCall(void) {
+DiagramCall::DiagramCall() {
     this->theData = new vislib::Array<DiagramSeries*>();
     this->guides = new vislib::PtrArray<DiagramGuide>();
 }
@@ -20,7 +20,7 @@ DiagramCall::DiagramCall(void) {
 /*
  * Diagram2DCall::~Diagram2DCall
  */
-DiagramCall::~DiagramCall(void) {
+DiagramCall::~DiagramCall() {
     delete this->theData;
     delete this->guides;
 }

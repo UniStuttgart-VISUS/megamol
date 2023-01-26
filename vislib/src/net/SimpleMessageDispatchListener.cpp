@@ -16,13 +16,13 @@
 /*
  * vislib::net::SimpleMessageDispatchListener::SimpleMessageDispatchListener
  */
-vislib::net::SimpleMessageDispatchListener::SimpleMessageDispatchListener(void) {}
+vislib::net::SimpleMessageDispatchListener::SimpleMessageDispatchListener() {}
 
 
 /*
  * vislib::net::SimpleMessageDispatchListener::~SimpleMessageDispatchListener
  */
-vislib::net::SimpleMessageDispatchListener::~SimpleMessageDispatchListener(void) {}
+vislib::net::SimpleMessageDispatchListener::~SimpleMessageDispatchListener() {}
 
 
 /*

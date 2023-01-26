@@ -27,7 +27,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "WavefrontObjLoader";
     }
 
@@ -36,7 +36,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source for simply loading a wavefront obj file from disk";
     }
 
@@ -45,7 +45,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -58,7 +58,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Gets the data from the source.

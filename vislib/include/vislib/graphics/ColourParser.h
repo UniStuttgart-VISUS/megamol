@@ -277,10 +277,10 @@ private:
     static ColourRGBAu8 parseHTML(const vislib::StringA& inStr);
 
     /** Forbidden ctor. */
-    ColourParser(void);
+    ColourParser();
 
     /** Forbidden dtor. */
-    ~ColourParser(void);
+    ~ColourParser();
 };
 
 } /* end namespace graphics */

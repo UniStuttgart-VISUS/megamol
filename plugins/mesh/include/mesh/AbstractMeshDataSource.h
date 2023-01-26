@@ -29,7 +29,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Gets the data from the source.

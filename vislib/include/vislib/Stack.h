@@ -32,7 +32,7 @@ public:
     /**
      * Create an empty stack.
      */
-    Stack(void);
+    Stack();
 
     /**
      * Copy ctor.
@@ -52,12 +52,12 @@ public:
     explicit Stack(const T& element);
 
     /** Dtor. */
-    ~Stack(void);
+    ~Stack();
 
     /**
      * Erase all elements from the stack.
      */
-    void Clear(void);
+    void Clear();
 
     /**
      * Answer the elements in the stack.
@@ -66,14 +66,14 @@ public:
      *
      * @return The number of elements in the stack.
      */
-    SIZE_T Count(void) const;
+    SIZE_T Count() const;
 
     /**
      * Answer whether the stack is empty.
      *
      * @return true, if the stack is empty, false otherwise.
      */
-    inline bool IsEmpty(void) const {
+    inline bool IsEmpty() const {
         return (this->top == NULL);
     }
 
@@ -84,7 +84,7 @@ public:
      *
      * @throws NoSuchElementException If the stack is empty.
      */
-    T* Peek(void) const;
+    T* Peek() const;
 
     /**
      * Remove the topmost element from the stack and return it.
@@ -93,7 +93,7 @@ public:
      *
      * @throws NoSuchElementException If the stack is empty.
      */
-    T Pop(void);
+    T Pop();
 
     /**
      * Push 'element' to top of the stack.
@@ -105,7 +105,7 @@ public:
     /**
      * Remove the topmost element from the stack, if there is any.
      */
-    void RemoveTop(void);
+    void RemoveTop();
 
     /**
      * Answer the topmost element on the stack without removing it.
@@ -114,7 +114,7 @@ public:
      *
      * @throws NoSuchElementException If the stack is empty.
      */
-    const T& Top(void) const;
+    const T& Top() const;
 
     /**
      * Assignment operator.
@@ -142,7 +142,7 @@ private:
  * vislib::Stack<T>::Stack
  */
 template<class T>
-Stack<T>::Stack(void) : top(NULL) {}
+Stack<T>::Stack() : top(NULL) {}
 
 
 /*
@@ -169,7 +169,7 @@ Stack<T>::Stack(const T& element) {
  * vislib::Stack<T>::~Stack
  */
 template<class T>
-Stack<T>::~Stack(void) {
+Stack<T>::~Stack() {
     this->Clear();
 }
 
@@ -178,7 +178,7 @@ Stack<T>::~Stack(void) {
  * vislib::Stack<T>::Clear
  */
 template<class T>
-void Stack<T>::Clear(void) {
+void Stack<T>::Clear() {
     Element* cursor = this->top;
     Element* tmp = NULL;
 
@@ -196,7 +196,7 @@ void Stack<T>::Clear(void) {
  * vislib::Stack<T>::Count
  */
 template<class T>
-SIZE_T Stack<T>::Count(void) const {
+SIZE_T Stack<T>::Count() const {
     Element* cursor = this->top;
     SIZE_T retval = 0;
 
@@ -226,7 +226,7 @@ void Stack<T>::Push(const T& element) {
  * vislib::Stack<T>::Peek
  */
 template<class T>
-T* Stack<T>::Peek(void) const {
+T* Stack<T>::Peek() const {
     if (this->top != NULL) {
         return &(this->top->element);
     } else {
@@ -239,7 +239,7 @@ T* Stack<T>::Peek(void) const {
  * vislib::Stack<T>::Pop
  */
 template<class T>
-T Stack<T>::Pop(void) {
+T Stack<T>::Pop() {
     if (this->top != NULL) {
         T retval = this->top->element;
         this->RemoveTop();
@@ -254,7 +254,7 @@ T Stack<T>::Pop(void) {
  * vislib::Stack<T>::RemoveTop
  */
 template<class T>
-void Stack<T>::RemoveTop(void) {
+void Stack<T>::RemoveTop() {
     Element* tmp = this->top;
 
     if (tmp != NULL) {
@@ -268,7 +268,7 @@ void Stack<T>::RemoveTop(void) {
  * vislib::Stack<T>::Top
  */
 template<class T>
-const T& Stack<T>::Top(void) const {
+const T& Stack<T>::Top() const {
     if (this->top != NULL) {
         return this->top->element;
     } else {

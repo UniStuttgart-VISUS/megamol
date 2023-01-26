@@ -17,7 +17,7 @@ namespace demos_gl {
 /*
  * AbstractQuartzRenderer::AbstractQuartzRenderer
  */
-AbstractQuartzRenderer::AbstractQuartzRenderer(void)
+AbstractQuartzRenderer::AbstractQuartzRenderer()
         : AbstractQuartzModule()
         , clipPlaneSlot("clipplane", "Slot connecting to the clipping plane provider")
         , lightsSlot("lights", "Lights are retrieved over this slot.")
@@ -42,13 +42,13 @@ AbstractQuartzRenderer::AbstractQuartzRenderer(void)
 /*
  * AbstractQuartzRenderer::~AbstractQuartzRenderer
  */
-AbstractQuartzRenderer::~AbstractQuartzRenderer(void) {}
+AbstractQuartzRenderer::~AbstractQuartzRenderer() {}
 
 
 /*
  * AbstractQuartzRenderer::assertGrainColour
  */
-void AbstractQuartzRenderer::assertGrainColour(void) {
+void AbstractQuartzRenderer::assertGrainColour() {
     if (this->grainColSlot.IsDirty()) {
         this->grainColSlot.ResetDirty();
         try {
@@ -63,7 +63,7 @@ void AbstractQuartzRenderer::assertGrainColour(void) {
 /*
  * AbstractQuartzRenderer::getClipPlaneData
  */
-core::view::CallClipPlane* AbstractQuartzRenderer::getClipPlaneData(void) {
+core::view::CallClipPlane* AbstractQuartzRenderer::getClipPlaneData() {
     core::view::CallClipPlane* ccp = this->clipPlaneSlot.CallAs<core::view::CallClipPlane>();
     if (ccp != NULL) {
         if (!(*ccp)()) {

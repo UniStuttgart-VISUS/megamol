@@ -15,7 +15,7 @@ using namespace megamol;
 using namespace megamol::datatools;
 
 
-io::MMGDDWriter::MMGDDWriter(void)
+io::MMGDDWriter::MMGDDWriter()
         : AbstractDataWriter()
         , filenameSlot("filename", "The path to the MMGDD file to be written")
         , dataSlot("data", "The slot requesting the data to be written") {
@@ -28,20 +28,20 @@ io::MMGDDWriter::MMGDDWriter(void)
     this->MakeSlotAvailable(&this->dataSlot);
 }
 
-io::MMGDDWriter::~MMGDDWriter(void) {
+io::MMGDDWriter::~MMGDDWriter() {
     Release();
 }
 
-bool io::MMGDDWriter::create(void) {
+bool io::MMGDDWriter::create() {
     // intentionally empty
     return true;
 }
 
-void io::MMGDDWriter::release(void) {
+void io::MMGDDWriter::release() {
     // intentionally empty
 }
 
-bool io::MMGDDWriter::run(void) {
+bool io::MMGDDWriter::run() {
     using megamol::core::utility::log::Log;
     vislib::TString filename(
         this->filenameSlot.Param<core::param::FilePathParam>()->Value().generic_u8string().c_str());

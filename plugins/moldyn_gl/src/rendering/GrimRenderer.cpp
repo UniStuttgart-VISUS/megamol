@@ -36,13 +36,13 @@ using namespace megamol::moldyn_gl::rendering;
 /****************************************************************************/
 // CellInfo
 
-GrimRenderer::CellInfo::CellInfo(void) {
+GrimRenderer::CellInfo::CellInfo() {
 
     glGenOcclusionQueriesNV(1, &this->oQuery);
 }
 
 
-GrimRenderer::CellInfo::~CellInfo(void) {
+GrimRenderer::CellInfo::~CellInfo() {
 
     glDeleteOcclusionQueriesNV(1, &this->oQuery);
     this->cache.clear();
@@ -51,7 +51,7 @@ GrimRenderer::CellInfo::~CellInfo(void) {
 /****************************************************************************/
 // GrimRenderer
 
-GrimRenderer::GrimRenderer(void)
+GrimRenderer::GrimRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , sphere_shader_()
         , vanilla_sphere_shader_()
@@ -114,13 +114,13 @@ GrimRenderer::GrimRenderer(void)
 }
 
 
-GrimRenderer::~GrimRenderer(void) {
+GrimRenderer::~GrimRenderer() {
 
     this->Release();
 }
 
 
-bool GrimRenderer::create(void) {
+bool GrimRenderer::create() {
 
     ASSERT(IsAvailable());
 
@@ -220,7 +220,7 @@ bool GrimRenderer::GetExtents(megamol::mmstd_gl::CallRender3DGL& call) {
 }
 
 
-void GrimRenderer::release(void) {
+void GrimRenderer::release() {
     fbo_.Release();
     depthmap_[0].Release();
     depthmap_[1].Release();

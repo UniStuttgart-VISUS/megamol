@@ -21,7 +21,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "adiosWriter";
     }
 
@@ -30,7 +30,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data writer module for ADIOS-based IO.";
     }
 
@@ -39,27 +39,27 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    adiosWriter(void);
+    adiosWriter();
 
     /** Dtor. */
-    ~adiosWriter(void) override;
+    ~adiosWriter() override;
 
-    bool create(void) override;
+    bool create() override;
 
 protected:
-    void release(void) override;
+    void release() override;
 
     /**
      * The main function
      *
      * @return True on success
      */
-    bool run(void) override;
+    bool run() override;
 
     /**
      * Function querying the writers capabilities
@@ -74,7 +74,7 @@ private:
     /** slot for MPIprovider */
     core::CallerSlot callRequestMpi;
     bool initMPI();
-    vislib::StringA getCommandLine(void);
+    vislib::StringA getCommandLine();
 
 #ifdef MEGAMOL_USE_MPI
     MPI_Comm mpi_comm_ = MPI_COMM_NULL;

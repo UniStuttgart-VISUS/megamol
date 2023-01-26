@@ -86,10 +86,10 @@ public:
 
 private:
     /** Disallow instances. */
-    ArrayAllocator(void);
+    ArrayAllocator();
 
     /** Dtor. */
-    ~ArrayAllocator(void);
+    ~ArrayAllocator();
 };
 
 } /* end namespace vislib */

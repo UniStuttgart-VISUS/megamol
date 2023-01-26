@@ -14,7 +14,7 @@ using namespace megamol::core;
 /*
  * BoundingBoxes::BoundingBoxes
  */
-BoundingBoxes::BoundingBoxes(void)
+BoundingBoxes::BoundingBoxes()
         : clipBox()
         , clipBoxValid(false)
         , osBBox()
@@ -52,7 +52,7 @@ BoundingBoxes::BoundingBoxes(const BoundingBoxes& src)
 /*
  * BoundingBoxes::~BoundingBoxes
  */
-BoundingBoxes::~BoundingBoxes(void) {
+BoundingBoxes::~BoundingBoxes() {
     // intentionally empty
 }
 
@@ -107,7 +107,7 @@ BoundingBoxes& BoundingBoxes::operator=(const BoundingBoxes& rhs) {
 /*
  * BoundingBoxes::calcClipBox
  */
-void BoundingBoxes::calcClipBox(void) const {
+void BoundingBoxes::calcClipBox() const {
     if (this->wsClipBoxValid) {
         this->clipBox = this->wsClipBox;
         if (this->wsBBoxValid) {

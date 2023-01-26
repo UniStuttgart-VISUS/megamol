@@ -13,13 +13,13 @@
 /*
  * vislib::HashAlgorithm::HashAlgorithm
  */
-vislib::HashAlgorithm::HashAlgorithm(void) {}
+vislib::HashAlgorithm::HashAlgorithm() {}
 
 
 /*
  * vislib::HashAlgorithm::~HashAlgorithm
  */
-vislib::HashAlgorithm::~HashAlgorithm(void) {}
+vislib::HashAlgorithm::~HashAlgorithm() {}
 
 
 /*
@@ -53,7 +53,7 @@ bool vislib::HashAlgorithm::ComputeHash(BYTE* outHash, SIZE_T& inOutSize, const 
 /*
  * vislib::HashAlgorithm::GetHashSize
  */
-SIZE_T vislib::HashAlgorithm::GetHashSize(void) const {
+SIZE_T vislib::HashAlgorithm::GetHashSize() const {
     SIZE_T retval;
     const_cast<HashAlgorithm*>(this)->TransformFinalBlock(NULL, retval, NULL, 0);
     return retval;
@@ -71,7 +71,7 @@ bool vislib::HashAlgorithm::GetHashValue(BYTE* outHash, SIZE_T& inOutSize) const
 /*
  * vislib::HashAlgorithm::ToStringA
  */
-vislib::StringA vislib::HashAlgorithm::ToStringA(void) const {
+vislib::StringA vislib::HashAlgorithm::ToStringA() const {
     BYTE* hash = NULL;
     StringA::Char* out = NULL;
     SIZE_T hashSize = 0;
@@ -101,7 +101,7 @@ vislib::StringA vislib::HashAlgorithm::ToStringA(void) const {
 /*
  * vislib::HashAlgorithm::ToStringW
  */
-vislib::StringW vislib::HashAlgorithm::ToStringW(void) const {
+vislib::StringW vislib::HashAlgorithm::ToStringW() const {
     BYTE* hash = NULL;
     StringW::Char* out = NULL;
     SIZE_T hashSize = 0;

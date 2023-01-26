@@ -27,7 +27,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DataFileSequenceStepper";
     }
 
@@ -36,7 +36,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Small utility module adding user controls to step though a sequence of data files.";
     }
 
@@ -45,19 +45,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /*
      * DataFileSequenceStepper
      */
-    DataFileSequenceStepper(void);
+    DataFileSequenceStepper();
 
     /*
      * ~DataFileSequenceStepper
      */
-    ~DataFileSequenceStepper(void) override;
+    ~DataFileSequenceStepper() override;
 
 private:
     /**
@@ -65,14 +65,14 @@ private:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Searches for the filename slot in the module graph
      *
      * @return The found filename slot or NULL if the slot was not found.
      */
-    core::param::ParamSlot* findFilenameSlot(void);
+    core::param::ParamSlot* findFilenameSlot();
 
     /**
      * Gets the filename value
@@ -115,7 +115,7 @@ private:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * Sets the filename value

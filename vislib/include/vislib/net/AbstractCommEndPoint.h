@@ -82,7 +82,7 @@ public:
      *
      * @return A string representation of the address.
      */
-    virtual StringA ToStringA(void) const = 0;
+    virtual StringA ToStringA() const = 0;
 
     /**
      * Answer a string representation of the address.
@@ -94,7 +94,7 @@ public:
      *
      * @return A string representation of the address.
      */
-    virtual StringW ToStringW(void) const = 0;
+    virtual StringW ToStringW() const = 0;
 
     /**
      * Test for equality.
@@ -148,7 +148,7 @@ protected:
     typedef ReferenceCounted Super;
 
     /** Ctor. */
-    AbstractCommEndPoint(void);
+    AbstractCommEndPoint();
 
     /**
      * Clone 'rhs'.
@@ -158,7 +158,7 @@ protected:
     AbstractCommEndPoint(const AbstractCommEndPoint& rhs);
 
     /** Dtor. */
-    ~AbstractCommEndPoint(void) override;
+    ~AbstractCommEndPoint() override;
 };
 
 } /* end namespace net */

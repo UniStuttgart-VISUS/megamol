@@ -44,10 +44,10 @@ public:
      *
      * @return The extensions that are requiered for framebuffer objects.
      */
-    static const char* RequiredExtensions(void);
+    static const char* RequiredExtensions();
 
     /** Dtor. */
-    virtual ~AbstractOpenGLTexture(void);
+    virtual ~AbstractOpenGLTexture();
 
     /**
      * Bind the texture on the active texture unit.
@@ -55,7 +55,7 @@ public:
      * @return GL_NO_ERROR in case of success, an OpenGL error code
      *         otherwise.
      */
-    virtual GLenum Bind(void) = 0;
+    virtual GLenum Bind() = 0;
 
     /**
      * Bind the texture on the specified texture unit. If 'isReset' is true,
@@ -80,7 +80,7 @@ public:
      *
      * @return The ID of the texture.
      */
-    inline GLuint GetId(void) const {
+    inline GLuint GetId() const {
         return this->id;
     }
 
@@ -90,7 +90,7 @@ public:
      *
      * @return true if the texture is valid, false otherwise.
      */
-    virtual bool IsValid(void) const throw();
+    virtual bool IsValid() const throw();
 
     /**
      * Release the OpenGL resources of the texture object. The texture
@@ -101,7 +101,7 @@ public:
      * @throws OpenGLException If the operation failed (This should never
      *                         happen.).
      */
-    virtual void Release(void);
+    virtual void Release();
 
 protected:
     /**
@@ -118,7 +118,7 @@ protected:
     static GLenum setFilter(const GLenum target, const GLint minFilter, const GLint magFilter);
 
     /** Ctor. */
-    AbstractOpenGLTexture(void);
+    AbstractOpenGLTexture();
 
     /**
      * Create a texture wrapper object for an exisiting texture ID. This
@@ -146,7 +146,7 @@ protected:
      *
      * @throws OpenGLException If the operation fails.
      */
-    GLuint createId(void);
+    GLuint createId();
 
     /**
      * Forbidden assignment. We cannot allow aliases of the texture ID as

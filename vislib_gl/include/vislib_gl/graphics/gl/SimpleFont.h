@@ -30,10 +30,10 @@ namespace gl {
 class SimpleFont : public vislib::graphics::AbstractFont {
 public:
     /** Ctor. */
-    SimpleFont(void);
+    SimpleFont();
 
     /** Dtor. */
-    ~SimpleFont(void) override;
+    ~SimpleFont() override;
 
     /**
      * Calculates the height of a text block in number of lines, when
@@ -161,14 +161,14 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool initialise(void) override;
+    bool initialise() override;
 
     /**
      * Deinitialises the object. You must not call this method directly.
      * Instead call 'Deinitialise'. Derived classes must call
      * 'Deinitialise' in EACH dtor.
      */
-    void deinitialise(void) override;
+    void deinitialise() override;
 
 private:
     /**
@@ -205,7 +205,7 @@ private:
     /**
      * Enters text mode
      */
-    void enterTextMode(void) const;
+    void enterTextMode() const;
 
     /**
      * Layouts the text in separated lines.
@@ -222,7 +222,7 @@ private:
     /**
      * Leaves text mode
      */
-    void leaveTextMode(void) const;
+    void leaveTextMode() const;
 
     /** The open gl texture object id */
     unsigned int texId;

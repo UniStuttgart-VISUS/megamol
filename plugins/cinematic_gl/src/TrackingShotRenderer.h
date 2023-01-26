@@ -32,7 +32,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TrackingShotRenderer";
     }
 
@@ -41,7 +41,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renders the tracking shot and passes the render call to another renderer.";
     }
 
@@ -50,15 +50,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    TrackingShotRenderer(void);
+    TrackingShotRenderer();
 
     /** Dtor. */
-    ~TrackingShotRenderer(void) override;
+    ~TrackingShotRenderer() override;
 
 protected:
     /**
@@ -66,12 +66,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of

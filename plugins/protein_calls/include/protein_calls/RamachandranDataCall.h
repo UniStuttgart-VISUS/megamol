@@ -36,7 +36,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "RamachandranDataCall";
     }
 
@@ -45,7 +45,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get ramachandran plot data.";
     }
 
@@ -57,7 +57,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -77,17 +77,17 @@ public:
     }
 
     /** Ctor. */
-    RamachandranDataCall(void);
+    RamachandranDataCall();
 
     /** Dtor. */
-    ~RamachandranDataCall(void) override;
+    ~RamachandranDataCall() override;
 
     /**
      * Returns the currently requested time of this call
      *
      * @return The current time.
      */
-    inline virtual float Time(void) const {
+    inline virtual float Time() const {
         return this->time;
     }
 
@@ -109,7 +109,7 @@ public:
      *
      * @return The dihedral angle vector.
      */
-    inline virtual const std::vector<float>* GetAngleVector(void) const {
+    inline virtual const std::vector<float>* GetAngleVector() const {
         return this->angleVector;
     }
 
@@ -127,7 +127,7 @@ public:
      *
      * @return The point state vector.
      */
-    inline virtual const std::vector<RamachandranDataCall::PointState>* GetPointStateVector(void) const {
+    inline virtual const std::vector<RamachandranDataCall::PointState>* GetPointStateVector() const {
         return this->pointStateVector;
     }
 
@@ -145,7 +145,7 @@ public:
      *
      * @return The probability vector.
      */
-    inline virtual const std::vector<float>* GetProbabilityVector(void) const {
+    inline virtual const std::vector<float>* GetProbabilityVector() const {
         return this->probabilityVector;
     }
 
@@ -163,7 +163,7 @@ public:
      *
      * @return The index of the currently selected amino acid.
      */
-    inline virtual int GetSelectedAminoAcid(void) const {
+    inline virtual int GetSelectedAminoAcid() const {
         return this->selectedAminoAcid;
     }
 

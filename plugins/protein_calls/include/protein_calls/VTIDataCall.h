@@ -35,17 +35,17 @@ public:
     static const unsigned int CallForGetExtent;
 
     /** Ctor. */
-    VTIDataCall(void);
+    VTIDataCall();
 
     /** Dtor. */
-    ~VTIDataCall(void) override;
+    ~VTIDataCall() override;
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "VTIDataCall";
     }
 
@@ -54,7 +54,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for VTK image data.";
     }
 
@@ -63,7 +63,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return core::AbstractGetData3DCall::FunctionCount();
     }
 
@@ -82,7 +82,7 @@ public:
      *
      * @return the call time
      */
-    float GetCalltime(void) const {
+    float GetCalltime() const {
         return this->calltime;
     }
 

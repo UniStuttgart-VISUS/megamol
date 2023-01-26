@@ -39,7 +39,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "VolumetricDataSource";
     }
 
@@ -48,7 +48,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Data source for dat/raw-encoded volumetric data.";
     }
 
@@ -57,19 +57,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    VolumetricDataSource(void);
+    VolumetricDataSource();
 
     /**
      * Finalises an instance.
      */
-    ~VolumetricDataSource(void) override;
+    ~VolumetricDataSource() override;
 
 protected:
     /** Superclass typedef. */
@@ -83,20 +83,20 @@ protected:
      *
      * @return The size of a single frame stored in the raw file in bytes.
      */
-    size_t calcFrameSize(void) const;
+    size_t calcFrameSize() const;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Gets the requested output data format if any. Otherwise, the
      * format of the input data is returned.
      */
-    DatRawDataFormat getOutputDataFormat(void) const;
+    DatRawDataFormat getOutputDataFormat() const;
 
     /**
      * Handles a change of 'paramFileName'.
@@ -184,15 +184,15 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /** Resume the asynchronous loading thread if it was suspended. */
-    bool resumeAsyncLoad(void);
+    bool resumeAsyncLoad();
 
     /**
      * Start the asynchronous loading thread.
      */
-    bool startAsyncLoad(void);
+    bool startAsyncLoad();
 
     /**
      * Stop the asynchronous loading thread and optionally wait for it to
@@ -237,7 +237,7 @@ private:
         }
 
         /** Dtor. */
-        ~BufferSlotUnlocker(void) override;
+        ~BufferSlotUnlocker() override;
 
         inline void AddBuffer(BufferSlot* buffer) {
             ASSERT(buffer != nullptr);
@@ -245,7 +245,7 @@ private:
         }
 
         /** Unlocks the data */
-        void Unlock(void) override;
+        void Unlock() override;
 
     private:
         /** Base class. */

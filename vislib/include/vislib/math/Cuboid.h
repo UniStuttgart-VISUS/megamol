@@ -33,7 +33,7 @@ public:
     /**
      * Create a zero sized cuboid beginning at (0, 0, 0).
      */
-    inline Cuboid(void) : Super() {
+    inline Cuboid() : Super() {
         this->bounds[0] = this->bounds[1] = this->bounds[2] = this->bounds[3] = this->bounds[4] = this->bounds[5] =
             static_cast<T>(0);
     }
@@ -100,7 +100,7 @@ public:
     }
 
     /** Dtor. */
-    ~Cuboid(void);
+    ~Cuboid();
 
 protected:
     /** Super class typedef. */
@@ -112,7 +112,7 @@ protected:
  * vislib::math::Cuboid<T>::~Cuboid
  */
 template<class T>
-Cuboid<T>::~Cuboid(void) {}
+Cuboid<T>::~Cuboid() {}
 
 
 } /* end namespace math */

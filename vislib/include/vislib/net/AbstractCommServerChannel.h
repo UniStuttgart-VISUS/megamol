@@ -55,7 +55,7 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    virtual SmartRef<AbstractCommClientChannel> Accept(void) = 0;
+    virtual SmartRef<AbstractCommClientChannel> Accept() = 0;
 
     /**
      * Binds the server to a specified end point address.
@@ -72,7 +72,7 @@ public:
      *
      * @throws Exception Or derived class in case of an error.
      */
-    virtual void Close(void) = 0;
+    virtual void Close() = 0;
 
     /**
      * Answer the address the channel is using locally.
@@ -86,7 +86,7 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    virtual SmartRef<AbstractCommEndPoint> GetLocalEndPoint(void) const = 0;
+    virtual SmartRef<AbstractCommEndPoint> GetLocalEndPoint() const = 0;
 
     /**
      * Bring the communication channel in a state in which it is listening
@@ -104,10 +104,10 @@ protected:
     typedef ReferenceCounted Super;
 
     /** Ctor. */
-    AbstractCommServerChannel(void);
+    AbstractCommServerChannel();
 
     /** Dtor. */
-    ~AbstractCommServerChannel(void) override;
+    ~AbstractCommServerChannel() override;
 };
 
 } /* end namespace net */

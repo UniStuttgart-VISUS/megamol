@@ -36,7 +36,7 @@ public:
     /**
      * Create a point in the coordinate origin.
      */
-    Point(void);
+    Point();
 
     /**
      * Create a new point initialised with 'coordinates'. 'coordinates' must
@@ -68,7 +68,7 @@ public:
     Point(const AbstractPoint<Tp, Dp, Sp>& rhs);
 
     /** Dtor. */
-    ~Point(void);
+    ~Point();
 
     /**
      * Assignment.
@@ -117,7 +117,7 @@ private:
  * vislib::math::Point<T, D>::Point
  */
 template<class T, unsigned int D>
-Point<T, D>::Point(void) : Super() {
+Point<T, D>::Point() : Super() {
     for (unsigned int d = 0; d < D; d++) {
         this->coordinates[d] = static_cast<T>(0);
     }
@@ -143,7 +143,7 @@ Point<T, D>::Point(const AbstractPoint<Tp, Dp, Sp>& rhs) : Super() {
  * vislib::math::Point<T, D>::~Point
  */
 template<class T, unsigned int D>
-Point<T, D>::~Point(void) {}
+Point<T, D>::~Point() {}
 
 
 /**
@@ -155,7 +155,7 @@ class Point<T, 2> : public AbstractPoint<T, 2, T[2]> {
 
 public:
     /** Behaves like primary class template. */
-    Point(void);
+    Point();
 
     /** Behaves like primary class template. */
     explicit inline Point(const T* coordinates) : Super() {
@@ -184,7 +184,7 @@ public:
     Point(const AbstractPoint<Tp, Dp, Sp>& rhs);
 
     /** Behaves like primary class template. */
-    ~Point(void);
+    ~Point();
 
     /** Behaves like primary class template. */
     inline Point& operator=(const Point& rhs) {
@@ -212,7 +212,7 @@ private:
  * vislib::math::Point<T, 2>::Point
  */
 template<class T>
-Point<T, 2>::Point(void) : Super() {
+Point<T, 2>::Point() : Super() {
     for (unsigned int d = 0; d < D; d++) {
         this->coordinates[d] = static_cast<T>(0);
     }
@@ -238,7 +238,7 @@ Point<T, 2>::Point(const AbstractPoint<Tp, Dp, Sp>& rhs) : Super() {
  * vislib::math::Point<T, 2>::~Point
  */
 template<class T>
-Point<T, 2>::~Point(void) {}
+Point<T, 2>::~Point() {}
 
 
 /*
@@ -257,7 +257,7 @@ class Point<T, 3> : public AbstractPoint<T, 3, T[3]> {
 
 public:
     /** Behaves like primary class template. */
-    Point(void);
+    Point();
 
     /** Behaves like primary class template. */
     explicit inline Point(const T* coordinates) : Super() {
@@ -288,7 +288,7 @@ public:
     Point(const AbstractPoint<Tp, Dp, Sp>& rhs);
 
     /** Behaves like primary class template. */
-    ~Point(void);
+    ~Point();
 
     /** Behaves like primary class template. */
     inline Point& operator=(const Point& rhs) {
@@ -316,7 +316,7 @@ private:
  * vislib::math::Point<T, 3>::Point
  */
 template<class T>
-Point<T, 3>::Point(void) : Super() {
+Point<T, 3>::Point() : Super() {
     for (unsigned int d = 0; d < D; d++) {
         this->coordinates[d] = static_cast<T>(0);
     }
@@ -342,7 +342,7 @@ Point<T, 3>::Point(const AbstractPoint<Tp, Dp, Sp>& rhs) : Super() {
  * vislib::math::Point<T, 3>::~Point
  */
 template<class T>
-Point<T, 3>::~Point(void) {}
+Point<T, 3>::~Point() {}
 
 
 /*
@@ -361,7 +361,7 @@ class Point<T, 4> : public AbstractPoint<T, 4, T[4]> {
 
 public:
     /** Behaves like primary class template. */
-    Point(void);
+    Point();
 
     /** Behaves like primary class template. */
     explicit inline Point(const T* coordinates) : Super() {
@@ -394,7 +394,7 @@ public:
     Point(const AbstractPoint<Tp, Dp, Sp>& rhs);
 
     /** Behaves like primary class template. */
-    ~Point(void);
+    ~Point();
 
     /** Behaves like primary class template. */
     inline Point& operator=(const Point& rhs) {
@@ -422,7 +422,7 @@ private:
  * vislib::math::Point<T, 4>::Point
  */
 template<class T>
-Point<T, 4>::Point(void) : Super() {
+Point<T, 4>::Point() : Super() {
     for (unsigned int d = 0; d < D; d++) {
         this->coordinates[d] = static_cast<T>(0);
     }
@@ -448,7 +448,7 @@ Point<T, 4>::Point(const AbstractPoint<Tp, Dp, Sp>& rhs) : Super() {
  * vislib::math::Point<T, 4>::~Point
  */
 template<class T>
-Point<T, 4>::~Point(void) {
+Point<T, 4>::~Point() {
     // intentionally empty
 }
 

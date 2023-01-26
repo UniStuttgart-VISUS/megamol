@@ -46,14 +46,14 @@ class AbstractDimensionImpl {
 
 public:
     /** Dtor. */
-    ~AbstractDimensionImpl(void);
+    ~AbstractDimensionImpl();
 
     /**
      * Access the internal dimension data directly.
      *
      * @return A pointer to the dimension data.
      */
-    inline const T* PeekDimension(void) const {
+    inline const T* PeekDimension() const {
         return this->dimension;
     }
 
@@ -62,7 +62,7 @@ public:
      *
      * @return A pointer to the dimension data.
      */
-    inline T* PeekDimension(void) {
+    inline T* PeekDimension() {
         return this->dimension;
     }
 
@@ -167,7 +167,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractDimensionImpl(void) {}
+    inline AbstractDimensionImpl() {}
 
     /** The extents wrapped by this class. */
     S dimension;
@@ -178,7 +178,7 @@ protected:
  * vislib::math::AbstractDimensionImpl<T, D, S, C>::~AbstractDimensionImpl
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-AbstractDimensionImpl<T, D, S, C>::~AbstractDimensionImpl(void) {}
+AbstractDimensionImpl<T, D, S, C>::~AbstractDimensionImpl() {}
 
 
 /*

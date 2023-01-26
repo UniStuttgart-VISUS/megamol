@@ -29,7 +29,7 @@
  *
  * @return The last error.
  */
-static inline DWORD GetLastError(void) {
+static inline DWORD GetLastError() {
     return static_cast<DWORD>(errno);
 }
 

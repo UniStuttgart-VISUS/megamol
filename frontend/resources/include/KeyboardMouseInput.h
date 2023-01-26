@@ -326,7 +326,7 @@ public:
     Key key;
 
     /** Ctor. */
-    KeyCode(void) {
+    KeyCode() {
         this->key = frontend_resources::Key::KEY_UNKNOWN;
         this->mods = frontend_resources::Modifiers(frontend_resources::Modifier::NONE);
     }
@@ -352,7 +352,7 @@ public:
      *
      * @return A human-readable ASCII String
      */
-    std::string ToString(void) const {
+    std::string ToString() const {
 
         std::string msg;
 

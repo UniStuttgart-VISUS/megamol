@@ -16,33 +16,33 @@ using namespace megamol::core;
 class TSNEProjection : public core::Module {
 public:
     /** Return module class name */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "TSNEProjection";
     }
 
     /** Return module class description */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "t-Distributed Stochastic Neighbor Embedding (t-SNE), i.e., a nonlinear dimensionality reduction "
                "technique";
     }
 
     /** Module is always available */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /** Constructor */
-    TSNEProjection(void);
+    TSNEProjection();
 
     /** Destructor */
-    ~TSNEProjection(void) override;
+    ~TSNEProjection() override;
 
 protected:
     /** Lazy initialization of the module */
-    bool create(void) override;
+    bool create() override;
 
     /** Resource release */
-    void release(void) override;
+    void release() override;
 
 private:
     /** Data callback */

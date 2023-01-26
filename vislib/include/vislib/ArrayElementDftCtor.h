@@ -49,13 +49,13 @@ public:
     }
 
     /** Dtor. */
-    ~ArrayElementDftCtor(void);
+    ~ArrayElementDftCtor();
 
 private:
     /**
      * Disallow instances.
      */
-    ArrayElementDftCtor(void);
+    ArrayElementDftCtor();
 };
 
 
@@ -63,7 +63,7 @@ private:
  * ArrayElementDftCtor<T>::~ArrayElementDftCtor
  */
 template<class T>
-ArrayElementDftCtor<T>::~ArrayElementDftCtor(void) {
+ArrayElementDftCtor<T>::~ArrayElementDftCtor() {
     // Nothing to do.
 }
 
@@ -72,7 +72,7 @@ ArrayElementDftCtor<T>::~ArrayElementDftCtor(void) {
  * ArrayElementDftCtor<T>::ArrayElementDftCtor
  */
 template<class T>
-ArrayElementDftCtor<T>::ArrayElementDftCtor(void) {
+ArrayElementDftCtor<T>::ArrayElementDftCtor() {
     // Nothing to do.
 }
 

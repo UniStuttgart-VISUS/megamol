@@ -36,17 +36,17 @@ public:
         enum TypeID { TYPE_BYTE, TYPE_FLOAT, TYPE_DOUBLE };
 
         /** Ctor */
-        Field(void);
+        Field();
 
         /** Dtor */
-        ~Field(void);
+        ~Field();
 
         /**
          * Gets the name of the field
          *
          * @return The name of the field
          */
-        inline const vislib::StringA& GetName(void) const {
+        inline const vislib::StringA& GetName() const {
             return this->name;
         }
 
@@ -55,7 +55,7 @@ public:
          *
          * @return The type of the field
          */
-        inline TypeID GetType(void) const {
+        inline TypeID GetType() const {
             return this->type;
         }
 
@@ -106,17 +106,17 @@ public:
     class ConstField : public Field {
     public:
         /** Ctor */
-        ConstField(void);
+        ConstField();
 
         /** Dtor */
-        ~ConstField(void);
+        ~ConstField();
 
         /**
          * Gets the value of the field casted as float
          *
          * @return the value of the field casted as float
          */
-        inline float GetAsFloat(void) const {
+        inline float GetAsFloat() const {
             switch (this->GetType()) {
             case TYPE_BYTE:
                 return static_cast<float>(this->data.valByte) / 255.0f;
@@ -134,7 +134,7 @@ public:
          *
          * @return The value of the field as byte
          */
-        inline BYTE GetByte(void) const {
+        inline BYTE GetByte() const {
             return this->data.valByte;
         }
 
@@ -144,7 +144,7 @@ public:
          *
          * @return The value of the field as float
          */
-        inline float GetFloat(void) const {
+        inline float GetFloat() const {
             return this->data.valFloat;
         }
 
@@ -154,7 +154,7 @@ public:
          *
          * @return The value of the field as double
          */
-        inline double GetDouble(void) const {
+        inline double GetDouble() const {
             return this->data.valDouble;
         }
 
@@ -212,17 +212,17 @@ public:
     class TypeDefinition {
     public:
         /** Ctor */
-        TypeDefinition(void);
+        TypeDefinition();
 
         /** Dtor */
-        ~TypeDefinition(void);
+        ~TypeDefinition();
 
         /**
          * Accesses the array of constant fields
          *
          * @return The array of constant fields
          */
-        inline vislib::Array<ConstField>& ConstFields(void) {
+        inline vislib::Array<ConstField>& ConstFields() {
             return this->constFields;
         }
 
@@ -231,7 +231,7 @@ public:
          *
          * @return The array of fields
          */
-        inline vislib::Array<Field>& Fields(void) {
+        inline vislib::Array<Field>& Fields() {
             return this->fields;
         }
 
@@ -240,7 +240,7 @@ public:
          *
          * @return The base type
          */
-        inline const vislib::StringA& GetBaseType(void) const {
+        inline const vislib::StringA& GetBaseType() const {
             return this->baseType;
         }
 
@@ -249,7 +249,7 @@ public:
          *
          * @return The array of constant fields
          */
-        inline const vislib::Array<ConstField>& GetConstFields(void) const {
+        inline const vislib::Array<ConstField>& GetConstFields() const {
             return this->constFields;
         }
 
@@ -260,7 +260,7 @@ public:
          *
          * @return The size of the variable data fields
          */
-        inline unsigned int GetDataSize(void) const {
+        inline unsigned int GetDataSize() const {
             unsigned int s = 0;
             for (SIZE_T i = 0; i < this->fields.Count(); i++) {
                 switch (this->fields[i].GetType()) {
@@ -283,7 +283,7 @@ public:
          *
          * @return The array of fields
          */
-        inline const vislib::Array<Field>& GetFields(void) const {
+        inline const vislib::Array<Field>& GetFields() const {
             return this->fields;
         }
 
@@ -335,17 +335,17 @@ public:
     };
 
     /** Ctor */
-    MMSPDHeader(void);
+    MMSPDHeader();
 
     /** Dtor */
-    virtual ~MMSPDHeader(void);
+    virtual ~MMSPDHeader();
 
     /**
      * Accesses the bounding box
      *
      * @return The bounding box
      */
-    inline vislib::math::Cuboid<double>& BoundingBox(void) {
+    inline vislib::math::Cuboid<double>& BoundingBox() {
         return this->bbox;
     }
 
@@ -354,7 +354,7 @@ public:
      *
      * @return The bounding box
      */
-    inline const vislib::math::Cuboid<double>& GetBoundingBox(void) const {
+    inline const vislib::math::Cuboid<double>& GetBoundingBox() const {
         return this->bbox;
     }
 
@@ -363,7 +363,7 @@ public:
      *
      * @return The number of particles
      */
-    inline UINT64 GetParticleCount(void) const {
+    inline UINT64 GetParticleCount() const {
         return this->particleCount;
     }
 
@@ -372,7 +372,7 @@ public:
      *
      * @return The number of time frames
      */
-    inline UINT32 GetTimeCount(void) const {
+    inline UINT32 GetTimeCount() const {
         return this->timeCount;
     }
 
@@ -381,7 +381,7 @@ public:
      *
      * @return The particle type definitions
      */
-    inline const vislib::Array<TypeDefinition>& GetTypes(void) const {
+    inline const vislib::Array<TypeDefinition>& GetTypes() const {
         return this->types;
     }
 
@@ -390,7 +390,7 @@ public:
      *
      * @return True if particle IDs are explicitly stored
      */
-    inline bool HasIDs(void) const {
+    inline bool HasIDs() const {
         return this->hasIDs;
     }
 
@@ -435,7 +435,7 @@ public:
      *
      * @return The particle type definitions
      */
-    inline vislib::Array<TypeDefinition>& Types(void) {
+    inline vislib::Array<TypeDefinition>& Types() {
         return this->types;
     }
 

@@ -22,25 +22,25 @@ namespace table {
 
 class CSVDataSource : public core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CSVDataSource";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source for parsing tabular comma-separated values";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    CSVDataSource(void);
-    ~CSVDataSource(void) override;
+    CSVDataSource();
+    ~CSVDataSource() override;
 
 protected:
-    bool create(void) override;
-    void release(void) override;
+    bool create() override;
+    void release() override;
 
 private:
-    inline void assertData(void);
+    inline void assertData();
     bool getDataCallback(core::Call& caller);
     bool getHashCallback(core::Call& caller);
 

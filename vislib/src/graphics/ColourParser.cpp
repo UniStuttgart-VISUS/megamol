@@ -603,7 +603,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::ColourParser::parseHTML(const v
 /*
  * vislib::graphics::ColourParser::ColourParser
  */
-vislib::graphics::ColourParser::ColourParser(void) {
+vislib::graphics::ColourParser::ColourParser() {
     throw vislib::UnsupportedOperationException("ColourParser::ctor", __FILE__, __LINE__);
 }
 
@@ -611,6 +611,6 @@ vislib::graphics::ColourParser::ColourParser(void) {
 /*
  * vislib::graphics::ColourParser::~ColourParser
  */
-vislib::graphics::ColourParser::~ColourParser(void) {
+vislib::graphics::ColourParser::~ColourParser() {
     throw vislib::UnsupportedOperationException("ColourParser::dtor", __FILE__, __LINE__);
 }

@@ -27,7 +27,7 @@ CallerSlot::CallerSlot(const vislib::StringA& name, const vislib::StringA& desc)
 /*
  * CallerSlot::~CallerSlot
  */
-CallerSlot::~CallerSlot(void) {
+CallerSlot::~CallerSlot() {
     SAFE_DELETE(this->call);
     this->compDesc.clear();
 }
@@ -71,7 +71,7 @@ const Call* CallerSlot::IsConnectedTo(const CalleeSlot* target) const {
 /*
  * CallerSlot::ClearCleanupMark
  */
-void CallerSlot::ClearCleanupMark(void) {
+void CallerSlot::ClearCleanupMark() {
     if (!this->CleanupMark())
         return;
 
@@ -85,7 +85,7 @@ void CallerSlot::ClearCleanupMark(void) {
 /*
  * CallerSlot::DisconnectCalls
  */
-void CallerSlot::DisconnectCalls(void) {
+void CallerSlot::DisconnectCalls() {
     if (this->CleanupMark() && (this->call != NULL)) {
         this->SetStatusDisconnected();
         //::megamol::core::Call *c = this->call;

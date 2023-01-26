@@ -33,20 +33,20 @@ class AbstractReaderWriterLock : public SyncObject {
 
 public:
     /** Ctor. */
-    AbstractReaderWriterLock(void);
+    AbstractReaderWriterLock();
 
     /** Dtor. */
-    ~AbstractReaderWriterLock(void) override;
+    ~AbstractReaderWriterLock() override;
 
     /**
      * Acquire an exclusive lock.
      */
-    void Lock(void) override;
+    void Lock() override;
 
     /**
      * Acquires an exclusive lock
      */
-    virtual void LockExclusive(void) = 0;
+    virtual void LockExclusive() = 0;
 
     /**
      * Tries to acquire the lock
@@ -58,22 +58,22 @@ public:
     /**
      * Acquires a shared lock
      */
-    virtual void LockShared(void) = 0;
+    virtual void LockShared() = 0;
 
     /**
      * Release an exclusive lock
      */
-    void Unlock(void) override;
+    void Unlock() override;
 
     /**
      * Release an exclusive lock
      */
-    virtual void UnlockExclusive(void) = 0;
+    virtual void UnlockExclusive() = 0;
 
     /**
      * Release a shared lock
      */
-    virtual void UnlockShared(void) = 0;
+    virtual void UnlockShared() = 0;
 
 private:
     /** Forbidden copy ctor. */

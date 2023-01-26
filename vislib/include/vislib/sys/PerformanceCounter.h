@@ -71,7 +71,7 @@ public:
      * @throws SystemException If the performance counter could not be
      *                         queried.
      */
-    inline static double QueryMillis(void) {
+    inline static double QueryMillis() {
         return ToMillis(Query(true));
     }
 
@@ -82,7 +82,7 @@ public:
      *
      * @throws SystemException If the frequency could not be queried.
      */
-    static UINT64 QueryFrequency(void);
+    static UINT64 QueryFrequency();
 
     /**
      * Convert a full resolution performance counter value to milliseconds.
@@ -123,7 +123,7 @@ public:
             , mark(rhs.mark) {}
 
     /** Dtor. */
-    inline ~PerformanceCounter(void) {}
+    inline ~PerformanceCounter() {}
 
     /**
      * Answer the difference between the current performance counter value
@@ -137,7 +137,7 @@ public:
      *
      * @return The difference between now and the mark.
      */
-    inline INT64 Difference(void) const {
+    inline INT64 Difference() const {
         return (static_cast<INT64>(PerformanceCounter::Query(this->isUsingFullPrecisionMark)) -
                 static_cast<INT64>(this->mark));
     }
@@ -153,7 +153,7 @@ public:
      *
      * @return The last mark.
      */
-    inline UINT64 GetMark(void) const {
+    inline UINT64 GetMark() const {
         return this->mark;
     }
 
@@ -163,7 +163,7 @@ public:
      * @return True if the mark has full counter precision, false if the
      *         mark represents milliseconds.
      */
-    inline bool IsUsingFullPrecisionMark(void) const {
+    inline bool IsUsingFullPrecisionMark() const {
         return this->isUsingFullPrecisionMark;
     }
 
@@ -173,7 +173,7 @@ public:
      * @return The new value of the mark, i. e. the current performance
      *         counter value.
      */
-    inline UINT64 SetMark(void) {
+    inline UINT64 SetMark() {
         return (this->mark = PerformanceCounter::Query(this->isUsingFullPrecisionMark));
     }
 

@@ -29,28 +29,28 @@ namespace astro {
 class VolumetricGlobalMinMax : public core::Module {
 
 public:
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "VolumetricGlobalMinMax";
     }
 
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Gets min/max values over all frames of a VolumetricDataCall";
     }
 
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    VolumetricGlobalMinMax(void);
+    VolumetricGlobalMinMax();
 
     /** Dtor. */
-    ~VolumetricGlobalMinMax(void) override;
+    ~VolumetricGlobalMinMax() override;
 
 protected:
-    bool create(void) override;
+    bool create() override;
 
-    void release(void) override;
+    void release() override;
 
     bool onGetData(core::Call& call);
 

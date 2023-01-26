@@ -28,7 +28,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ProteinAligner";
     }
 
@@ -37,7 +37,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Aligns two given proteins by performing a RMSD calculation. The input protein is aligned against a "
                "second reference protein";
     }
@@ -47,15 +47,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    ProteinAligner(void);
+    ProteinAligner();
 
     /** Dtor. */
-    ~ProteinAligner(void) override;
+    ~ProteinAligner() override;
 
 protected:
     /**
@@ -63,12 +63,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * Call for get data.

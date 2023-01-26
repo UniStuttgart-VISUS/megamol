@@ -31,7 +31,7 @@ class RectangularPyramidalFrustum : public AbstractRectangularPyramidalFrustum<T
 
 public:
     /** Ctor. */
-    inline RectangularPyramidalFrustum(void) : Super() {
+    inline RectangularPyramidalFrustum() : Super() {
         this->values[Super::IDX_BOTTOM] = static_cast<T>(0);
         this->values[Super::IDX_TOP] = static_cast<T>(0);
         this->values[Super::IDX_LEFT] = static_cast<T>(0);
@@ -56,7 +56,7 @@ public:
         const AbstractVector<T, 3, Sp3>& baseNormal, const AbstractVector<T, 3, Sp4>& baseUp);
 
     /** Dtor. */
-    virtual ~RectangularPyramidalFrustum(void);
+    virtual ~RectangularPyramidalFrustum();
 
 protected:
     /** Superclass typedef. */
@@ -81,7 +81,7 @@ RectangularPyramidalFrustum<T>::RectangularPyramidalFrustum(const AbstractViewFr
  * ...RectangularPyramidalFrustum<T>::~RectangularPyramidalFrustum
  */
 template<class T>
-RectangularPyramidalFrustum<T>::~RectangularPyramidalFrustum(void) {}
+RectangularPyramidalFrustum<T>::~RectangularPyramidalFrustum() {}
 
 } /* end namespace math */
 } /* end namespace vislib */

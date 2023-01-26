@@ -69,13 +69,13 @@ public:
     SimpleMessage(const AbstractSimpleMessage& rhs);
 
     /** Dtor. */
-    ~SimpleMessage(void) override;
+    ~SimpleMessage() override;
 
     /**
      * Trim the storage of the message to hold the actual size of the
      * header and the current content.
      */
-    void Trim(void);
+    void Trim();
 
     /**
      * Assignment operator.

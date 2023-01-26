@@ -352,7 +352,7 @@ bool ReadTextFile(StringW& outStr, File& file, TextFileFormat format = TEXTFF_UN
  *
  * @return milliseconds since midnight.
  */
-unsigned int GetTicksOfDay(void);
+unsigned int GetTicksOfDay();
 
 #ifdef _WIN32
 /**

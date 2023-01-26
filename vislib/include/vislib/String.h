@@ -52,7 +52,7 @@ public:
     static const Size NO_LIMIT;
 
     /** Create a new and empty string. */
-    String(void);
+    String();
 
     /**
      * Create a string with the initial data 'data'.
@@ -112,7 +112,7 @@ public:
     String(const String& rhs);
 
     /** Dtor. */
-    ~String(void);
+    ~String();
 
     /**
      * Deletes the current content of the string, allocates memory for a
@@ -166,7 +166,7 @@ public:
     /**
      * Remove all characters from the string.
      */
-    void Clear(void);
+    void Clear();
 
     /**
      * Compare this string and 'rhs'.
@@ -532,7 +532,7 @@ public:
      *
      * @return A hash code of the string.
      */
-    UINT32 HashCode(void) const;
+    UINT32 HashCode() const;
 
     /**
      * Insert 'c' at position 'pos' in the string. 'pos' must be a valid
@@ -580,7 +580,7 @@ public:
      *
      * @return true, if this string is empty, false otherwise.
      */
-    inline bool IsEmpty(void) const {
+    inline bool IsEmpty() const {
         return (this->data[0] == static_cast<Char>(0));
     }
 
@@ -662,7 +662,7 @@ public:
      * @return The number of characters in the string, excluding the
      *         terminating zero.
      */
-    inline Size Length(void) const {
+    inline Size Length() const {
         //return T::SafeStringLength(this->data);
         return T::StringLength(this->data);
     }
@@ -672,7 +672,7 @@ public:
      *
      * @return A pointer to the characters of the string.
      */
-    inline const Char* PeekBuffer(void) const {
+    inline const Char* PeekBuffer() const {
         return this->data;
     }
 
@@ -835,7 +835,7 @@ public:
      * Obfuscate the string by applying Rot48. This works only on
      * characters between 32 and 127.
      */
-    void Rot48(void);
+    void Rot48();
 
     /**
      * Answer whether this string starts with the character 'c'.
@@ -970,18 +970,18 @@ public:
     /**
      * Remove all whitespace characters from the start of this string.
      */
-    void TrimSpacesBegin(void);
+    void TrimSpacesBegin();
 
     /**
      * Remove all whitespace characters from the end of this string.
      */
-    void TrimSpacesEnd(void);
+    void TrimSpacesEnd();
 
     /**
      * Remove all whitespace characters from the start and the end of this
      * string.
      */
-    inline void TrimSpaces(void) {
+    inline void TrimSpaces() {
         this->TrimSpacesBegin();
         this->TrimSpacesEnd();
     }
@@ -998,7 +998,7 @@ public:
     /**
      * Convert all characters to lower case.
      */
-    inline void ToLowerCase(void) {
+    inline void ToLowerCase() {
         // TODO: This is still a hack.
         T::ToLower(this->data, this->Length() + 1, this->data);
     }
@@ -1006,7 +1006,7 @@ public:
     /**
      * Convert all characters to upper case.
      */
-    inline void ToUpperCase(void) {
+    inline void ToUpperCase() {
         // TODO: This is still a hack.
         T::ToUpper(this->data, this->Length() + 1, this->data);
     }
@@ -1216,7 +1216,7 @@ public:
      *
      * @return A pointer to the characters of the string.
      */
-    inline operator const Char*(void) const {
+    inline operator const Char*() const {
         return this->data;
     }
 
@@ -1252,7 +1252,7 @@ const typename String<T>::Size String<T>::NO_LIMIT = -1;
  * vislib::String<T>::String
  */
 template<class T>
-String<T>::String(void) : data(NULL) {
+String<T>::String() : data(NULL) {
     this->data = new Char[1];
     this->data[0] = 0;
 }
@@ -1359,7 +1359,7 @@ String<T>::String(const String& rhs) : data(NULL) {
  * vislib::String<T>::~String
  */
 template<class T>
-String<T>::~String(void) {
+String<T>::~String() {
     ARY_SAFE_DELETE(this->data);
 }
 
@@ -1397,7 +1397,7 @@ void String<T>::Append(const Char* rhs, const Size cnt) {
  * vislib::String<T>::Clear
  */
 template<class T>
-void String<T>::Clear(void) {
+void String<T>::Clear() {
     delete[] this->data;
     this->data = new Char[1];
     *this->data = 0;
@@ -1778,7 +1778,7 @@ void String<T>::FormatVa(const Char* fmt, va_list argptr) {
  * vislib::String<T>::HashCode
  */
 template<class T>
-UINT32 String<T>::HashCode(void) const {
+UINT32 String<T>::HashCode() const {
     // DJB2 hash function
     UINT32 hash = 0;
     Char c;
@@ -2053,7 +2053,7 @@ typename String<T>::Size String<T>::Replace(const Char* oldStr, const Char* newS
  * vislib::String<T>::Rot48
  */
 template<class T>
-void String<T>::Rot48(void) {
+void String<T>::Rot48() {
     for (Char* c = this->data; *c != 0; c++) {
         if ((*c > 31) && (*c < 128)) {
             *c = static_cast<Char>(((*c - 32 + 48) % 96) + 32);
@@ -2208,7 +2208,7 @@ void String<T>::TrimEnd(const Char* chars) {
  * vislib::String<T>::TrimSpacesBegin
  */
 template<class T>
-void String<T>::TrimSpacesBegin(void) {
+void String<T>::TrimSpacesBegin() {
     if ((this->data != NULL) && T::IsSpace(this->data[0])) {
         Char* begin = NULL;
         unsigned int len = 0;
@@ -2241,7 +2241,7 @@ void String<T>::TrimSpacesBegin(void) {
  * vislib::String<T>::TrimSpacesEnd
  */
 template<class T>
-void String<T>::TrimSpacesEnd(void) {
+void String<T>::TrimSpacesEnd() {
     unsigned int len = this->Length();
     while (len > 0) {
         len--;

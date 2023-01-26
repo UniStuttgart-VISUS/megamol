@@ -34,7 +34,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return ModuleName.c_str();
     }
 
@@ -43,7 +43,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Scales specified table columns";
     }
 
@@ -52,15 +52,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    TableColumnScaler(void);
+    TableColumnScaler();
 
     /** dtor */
-    ~TableColumnScaler(void) override;
+    ~TableColumnScaler() override;
 
 protected:
     /**
@@ -68,12 +68,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     bool processData(core::Call& c);

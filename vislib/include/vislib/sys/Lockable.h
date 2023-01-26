@@ -28,22 +28,22 @@ template<class T>
 class Lockable {
 public:
     /** Ctor. */
-    Lockable(void);
+    Lockable();
 
     /** Dtor. */
-    virtual ~Lockable(void);
+    virtual ~Lockable();
 
     /**
      * Aquires the lock of this lockable.
      * Details on the behaviour depend on the 'SyncObject' used.
      */
-    inline void Lock(void) const;
+    inline void Lock() const;
 
     /**
      * Releases the lock of this lockable.
      * Details on the behaviour depend on the 'SyncObject' used.
      */
-    inline void Unlock(void) const;
+    inline void Unlock() const;
 
 private:
     /** The syncObj used for locking */
@@ -55,7 +55,7 @@ private:
  * Lockable::Lockable
  */
 template<class T>
-Lockable<T>::Lockable(void) : syncObj() {
+Lockable<T>::Lockable() : syncObj() {
     // intentionally empty
 }
 
@@ -64,7 +64,7 @@ Lockable<T>::Lockable(void) : syncObj() {
  * Lockable::~Lockable
  */
 template<class T>
-Lockable<T>::~Lockable(void) {
+Lockable<T>::~Lockable() {
     // intentionally empty
 }
 
@@ -73,7 +73,7 @@ Lockable<T>::~Lockable(void) {
  * Lockable::Lock
  */
 template<class T>
-void Lockable<T>::Lock(void) const {
+void Lockable<T>::Lock() const {
     this->syncObj.Lock();
 }
 
@@ -82,7 +82,7 @@ void Lockable<T>::Lock(void) const {
  * Lockable::Unlock
  */
 template<class T>
-void Lockable<T>::Unlock(void) const {
+void Lockable<T>::Unlock() const {
     this->syncObj.Unlock();
 }
 

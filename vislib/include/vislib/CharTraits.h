@@ -78,7 +78,7 @@ public:
      *
      * @return The size of a single character in bytes.
      */
-    inline static Size CharSize(void) {
+    inline static Size CharSize() {
         return sizeof(T);
     }
 
@@ -99,7 +99,7 @@ public:
 
 protected:
     /** Forbidden Ctor. */
-    inline CharTraitsBase(void) {
+    inline CharTraitsBase() {
         throw UnsupportedOperationException("CharTraitsBase", __FILE__, __LINE__);
     }
 
@@ -246,7 +246,7 @@ class CharTraits : public CharTraitsBase<T> {
 
 protected:
     /** Forbidden Ctor. */
-    inline CharTraits(void) {
+    inline CharTraits() {
         throw UnsupportedOperationException("CharTraits", __FILE__, __LINE__);
     }
 }; /* end class CharTraits */
@@ -266,7 +266,7 @@ public:
      *
      * @return The type identifier.
      */
-    inline static vislib::CharType CharType(void) {
+    inline static vislib::CharType CharType() {
         return ANSI_CHAR;
     }
 
@@ -474,7 +474,7 @@ public:
 
 protected:
     /** Forbidden Ctor. */
-    inline CharTraits(void) {
+    inline CharTraits() {
         throw UnsupportedOperationException("CharTraits<char>", __FILE__, __LINE__);
     }
 
@@ -648,7 +648,7 @@ public:
      *
      * @return The type identifier.
      */
-    inline static vislib::CharType CharType(void) {
+    inline static vislib::CharType CharType() {
         return UNICODE_CHAR;
     }
 
@@ -851,7 +851,7 @@ public:
 
 protected:
     /** Forbidden Ctor. */
-    inline CharTraits(void) {
+    inline CharTraits() {
         throw UnsupportedOperationException("CharTraits<WCHAR>", __FILE__, __LINE__);
     }
 

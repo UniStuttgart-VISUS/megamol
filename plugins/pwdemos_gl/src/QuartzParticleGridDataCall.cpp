@@ -26,7 +26,7 @@ const unsigned int ParticleGridDataCall::CallForGetExtent = 1;
 /*
  * ParticleGridDataCall::ParticleGridDataCall
  */
-ParticleGridDataCall::ParticleGridDataCall(void) : core::AbstractGetData3DCall(), cells(NULL), sx(0), sy(0), sz(0) {
+ParticleGridDataCall::ParticleGridDataCall() : core::AbstractGetData3DCall(), cells(NULL), sx(0), sy(0), sz(0) {
     // intentionally empty
 }
 
@@ -34,7 +34,7 @@ ParticleGridDataCall::ParticleGridDataCall(void) : core::AbstractGetData3DCall()
 /*
  * ParticleGridDataCall::~ParticleGridDataCall
  */
-ParticleGridDataCall::~ParticleGridDataCall(void) {
+ParticleGridDataCall::~ParticleGridDataCall() {
     this->sx = this->sy = this->sz = 0;
     this->cells = NULL; // DO NOT DELETE
 }

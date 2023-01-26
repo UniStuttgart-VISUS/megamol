@@ -35,7 +35,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallBinaryVolumeData";
     }
 
@@ -44,7 +44,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call transporting binary volume data";
     }
 
@@ -53,7 +53,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return AbstractGetData3DCall::FunctionCount();
     }
 
@@ -69,10 +69,10 @@ public:
     }
 
     /** Ctor */
-    CallBinaryVolumeData(void);
+    CallBinaryVolumeData();
 
     /** Dtor */
-    ~CallBinaryVolumeData(void) override;
+    ~CallBinaryVolumeData() override;
 
     /**
      * Gets the value of a single voxel
@@ -105,7 +105,7 @@ public:
      *
      * @return The number of voxels in x direction
      */
-    inline unsigned int GetSizeX(void) const {
+    inline unsigned int GetSizeX() const {
         return this->sizeX;
     }
 
@@ -114,7 +114,7 @@ public:
      *
      * @return The number of voxels in y direction
      */
-    inline unsigned int GetSizeY(void) const {
+    inline unsigned int GetSizeY() const {
         return this->sizeY;
     }
 
@@ -123,7 +123,7 @@ public:
      *
      * @return The number of voxels in z direction
      */
-    inline unsigned int GetSizeZ(void) const {
+    inline unsigned int GetSizeZ() const {
         return this->sizeZ;
     }
 
@@ -132,7 +132,7 @@ public:
      *
      * @return The size of a single voxel in x direction
      */
-    inline float GetVoxelSizeX(void) const {
+    inline float GetVoxelSizeX() const {
         return this->voxSizeX;
     }
 
@@ -141,7 +141,7 @@ public:
      *
      * @return The size of a single voxel in y direction
      */
-    inline float GetVoxelSizeY(void) const {
+    inline float GetVoxelSizeY() const {
         return this->voxSizeY;
     }
 
@@ -150,7 +150,7 @@ public:
      *
      * @return The size of a single voxel in z direction
      */
-    inline float GetVoxelSizeZ(void) const {
+    inline float GetVoxelSizeZ() const {
         return this->voxSizeZ;
     }
 
@@ -159,7 +159,7 @@ public:
      *
      * @return The volume pointer
      */
-    inline const bool* GetVolume(void) const {
+    inline const bool* GetVolume() const {
         return this->volume;
     }
 

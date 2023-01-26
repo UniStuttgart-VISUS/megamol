@@ -24,10 +24,10 @@ public:
     inline CallTexture2D() : GenericVersionedCall<std::shared_ptr<glowl::Texture2D>, core::EmptyMetaData>() {}
     ~CallTexture2D() override = default;
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallTexture2D";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Transports a shared pointer to an OpenGL texture object";
     }
 };
@@ -37,10 +37,10 @@ public:
     inline CallCamera() : GenericVersionedCall<core::view::Camera, core::EmptyMetaData>() {}
     ~CallCamera() override = default;
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallCamera";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Transports a camera (copy)";
     }
 };
@@ -52,10 +52,10 @@ public:
             : GenericVersionedCall<std::shared_ptr<glowl::FramebufferObject>, core::EmptyMetaData>() {}
     ~CallFramebufferGL() override = default;
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallFramebufferGL";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Transports a framebuffer object";
     }
 };

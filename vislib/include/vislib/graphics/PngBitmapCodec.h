@@ -36,10 +36,10 @@ class PngBitmapCodec
 #endif /* _WIN32 */
 public:
     /** Ctor */
-    PngBitmapCodec(void);
+    PngBitmapCodec();
 
     /** Dtor */
-    ~PngBitmapCodec(void) override;
+    ~PngBitmapCodec() override;
 
     /**
      * Autodetects if an image can be loaded by this codec by checking
@@ -62,7 +62,7 @@ public:
      *
      * @return 'true' if the codec can autodetect image compatibility.
      */
-    bool CanAutoDetect(void) const override;
+    bool CanAutoDetect() const override;
 
     /**
      * Answer the file name extensions usually used for image files of
@@ -73,7 +73,7 @@ public:
      * @return The file name extensions usually used for image files of
      *         the type of this codec.
      */
-    const char* FileNameExtsA(void) const override;
+    const char* FileNameExtsA() const override;
 
     /**
      * Answer the file name extensions usually used for image files of
@@ -84,21 +84,21 @@ public:
      * @return The file name extensions usually used for image files of
      *         the type of this codec.
      */
-    const wchar_t* FileNameExtsW(void) const override;
+    const wchar_t* FileNameExtsW() const override;
 
     /**
      * Answer the human-readable name of the codec.
      *
      * @return The human-readable name of the codec.
      */
-    const char* NameA(void) const override;
+    const char* NameA() const override;
 
     /**
      * Answer the human-readable name of the codec.
      *
      * @return The human-readable name of the codec.
      */
-    const wchar_t* NameW(void) const override;
+    const wchar_t* NameW() const override;
 
 protected:
     /**
@@ -116,7 +116,7 @@ protected:
      *
      * @return true
      */
-    bool loadFromMemoryImplemented(void) const override;
+    bool loadFromMemoryImplemented() const override;
 
     /**
      * Saves the image to a file stream
@@ -135,7 +135,7 @@ protected:
      *
      * @return true if 'saveToStream' has been implemented
      */
-    bool saveToStreamImplemented(void) const override;
+    bool saveToStreamImplemented() const override;
 };
 
 

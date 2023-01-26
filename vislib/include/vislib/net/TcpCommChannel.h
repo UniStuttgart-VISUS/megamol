@@ -70,7 +70,7 @@ public:
      *
      * @throws SocketException In case the operation fails.
      */
-    SmartRef<AbstractCommClientChannel> Accept(void) override;
+    SmartRef<AbstractCommClientChannel> Accept() override;
 
     /**
      * Binds the server to a specified end point address.
@@ -90,7 +90,7 @@ public:
      *
      * @throws SocketException In case the operation fails.
      */
-    void Close(void) override;
+    void Close() override;
 
     /**
      * Connects the channel to the peer node at the specified end
@@ -107,7 +107,7 @@ public:
      *
      * @return The underlying socket.
      */
-    inline Socket& GetSocket(void) {
+    inline Socket& GetSocket() {
         return this->socket;
     }
 
@@ -123,7 +123,7 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    SmartRef<AbstractCommEndPoint> GetLocalEndPoint(void) const override;
+    SmartRef<AbstractCommEndPoint> GetLocalEndPoint() const override;
 
     /**
      * Answer the address the remote peer of this channel is using.
@@ -137,14 +137,14 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    SmartRef<AbstractCommEndPoint> GetRemoteEndPoint(void) const override;
+    SmartRef<AbstractCommEndPoint> GetRemoteEndPoint() const override;
 
     /**
      * Answer whether the Nagle algorihm is disabled on the socket.
      *
      * @return true if the Nagle algorithm is disabled, false otherwise.
      */
-    inline bool IsSetNoDelay(void) const {
+    inline bool IsSetNoDelay() const {
         return ((this->flags & FLAG_NODELAY) != 0);
     }
 
@@ -153,7 +153,7 @@ public:
      *
      * @return true if the send buffer is zero, false otherwise.
      */
-    inline bool IsSetNoSendBuffer(void) const {
+    inline bool IsSetNoSendBuffer() const {
         return ((this->flags & FLAG_NOSENDBUFFER) != 0);
     }
 
@@ -163,7 +163,7 @@ public:
      *
      * @return true if address reuse is enabled, false otherwise.
      */
-    inline bool IsSetReuseAddress(void) const {
+    inline bool IsSetReuseAddress() const {
         return ((this->flags & FLAG_REUSE_ADDRESS) != 0);
     }
 
@@ -253,7 +253,7 @@ private:
     TcpCommChannel(const TcpCommChannel& rhs);
 
     /** Dtor. */
-    ~TcpCommChannel(void) override;
+    ~TcpCommChannel() override;
 
     /**
      * Creates or re-creates the underlying socket.

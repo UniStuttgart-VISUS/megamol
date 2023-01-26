@@ -30,14 +30,14 @@ public:
     AbstractManipulator(const char* outSlotName, const char* inSlotName);
 
     /** Dtor */
-    ~AbstractManipulator(void) override;
+    ~AbstractManipulator() override;
 
 protected:
     /** Lazy initialization of the module */
-    bool create(void) override;
+    bool create() override;
 
     /** Resource release */
-    void release(void) override;
+    void release() override;
 
     /**
      * Manipulates the particle data

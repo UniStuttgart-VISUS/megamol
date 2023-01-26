@@ -33,7 +33,7 @@ public:
      * Create the identity matrix.
      */
     VLDEPRECATED
-    inline Matrix4(void) : Super() {}
+    inline Matrix4() : Super() {}
 
     /**
      * Create a matrix using the specified components.
@@ -109,7 +109,7 @@ public:
     }
 
     /** Dtor. */
-    ~Matrix4(void);
+    ~Matrix4();
 
     /**
      * Assignment operator.
@@ -190,7 +190,7 @@ Matrix4<T, L>::Matrix4(const T& m11, const T& m12, const T& m13, const T& m14, c
  * vislib::math::Matrix4<T, L>::~Matrix4
  */
 template<class T, MatrixLayout L>
-Matrix4<T, L>::~Matrix4(void) {}
+Matrix4<T, L>::~Matrix4() {}
 
 } /* end namespace math */
 } /* end namespace vislib */

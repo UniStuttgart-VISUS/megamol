@@ -45,21 +45,21 @@ public:
     TextFileReader(File* file = NULL, unsigned int bufferSize = 10240);
 
     /** Dtor. */
-    ~TextFileReader(void);
+    ~TextFileReader();
 
     /**
      * Synchronises the reader position based on the position of the file
      * pointer. You must not call this method if no file object has been
      * set.
      */
-    void FilePositionToReaderPosition(void);
+    void FilePositionToReaderPosition();
 
     /**
      * Gets the size of the read buffer in bytes.
      *
      * @return The size of the read buffer in bytes.
      */
-    inline unsigned int GetBufferSize(void) const {
+    inline unsigned int GetBufferSize() const {
         return this->bufSize;
     }
 
@@ -68,7 +68,7 @@ public:
      *
      * @return The file object from which the reader reads.
      */
-    inline const File* GetFile(void) const {
+    inline const File* GetFile() const {
         return this->file;
     }
 
@@ -77,7 +77,7 @@ public:
      * position. You must not call this method if no file object has been
      * set.
      */
-    void ReaderPositionToFilePosition(void);
+    void ReaderPositionToFilePosition();
 
     /**
      * Reads the next line from the text file. You must not call this

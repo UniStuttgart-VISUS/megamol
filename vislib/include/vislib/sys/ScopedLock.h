@@ -47,7 +47,7 @@ public:
     /**
      * The dtor releases 'lock'.
      */
-    inline ~ScopedLock(void) {
+    inline ~ScopedLock() {
         this->lock.Unlock();
     }
 

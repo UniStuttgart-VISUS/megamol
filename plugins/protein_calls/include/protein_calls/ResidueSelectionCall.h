@@ -46,7 +46,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ResidueSelectionCall";
     }
 
@@ -55,7 +55,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get selection Residues";
     }
 
@@ -69,7 +69,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 2;
     }
 
@@ -90,7 +90,7 @@ public:
         return "";
     }
 
-    inline vislib::Array<Residue>* GetSelectionPointer(void) const {
+    inline vislib::Array<Residue>* GetSelectionPointer() const {
         return this->selection;
     }
 
@@ -98,8 +98,8 @@ public:
         this->selection = selection;
     }
 
-    ResidueSelectionCall(void);
-    ~ResidueSelectionCall(void) override;
+    ResidueSelectionCall();
+    ~ResidueSelectionCall() override;
 
 private:
     vislib::Array<Residue>* selection;

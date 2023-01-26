@@ -23,14 +23,14 @@ public:
         GET_HASH = 2
     };
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleFilterMapDataCall";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Map data, i.e. an array of length of the filtered particles with the indices into the original "
                "unfiltered particles data";
     }
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 3;
     }
     static const char* FunctionName(unsigned int idx) {
@@ -45,8 +45,8 @@ public:
         return nullptr;
     }
 
-    ParticleFilterMapDataCall(void);
-    ~ParticleFilterMapDataCall(void) override;
+    ParticleFilterMapDataCall();
+    ~ParticleFilterMapDataCall() override;
 
     inline index_t* Data() const {
         return idx;

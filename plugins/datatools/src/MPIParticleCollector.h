@@ -25,17 +25,17 @@ namespace datatools {
 class MPIParticleCollector : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MPIParticleCollector";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "merges object-space distributed MultiparticleDataCalls over MPI";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
 #ifdef MEGAMOL_USE_MPI
         return true;
 #else
@@ -44,10 +44,10 @@ public:
     }
 
     /** Ctor */
-    MPIParticleCollector(void);
+    MPIParticleCollector();
 
     /** Dtor */
-    ~MPIParticleCollector(void) override;
+    ~MPIParticleCollector() override;
 
 protected:
     /**

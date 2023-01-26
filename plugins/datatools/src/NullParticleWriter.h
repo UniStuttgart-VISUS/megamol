@@ -18,23 +18,23 @@ namespace datatools {
  */
 class NullParticleWriter : public core::AbstractDataWriter {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "NullParticleWriter";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "NullWrite behavies like a file writer, i.e. pokes each frame and terminates afterwards";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    NullParticleWriter(void);
-    ~NullParticleWriter(void) override;
+    NullParticleWriter();
+    ~NullParticleWriter() override;
 
 protected:
-    bool create(void) override;
-    void release(void) override;
-    bool run(void) override;
+    bool create() override;
+    void release() override;
+    bool run() override;
     bool getCapabilities(core::DataWriterCtrlCall& call) override;
 
 private:

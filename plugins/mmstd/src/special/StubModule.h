@@ -34,7 +34,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "StubModule";
     }
 
@@ -43,7 +43,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Stub module which accepts all ingoing (inSlot) and outgoing (outSlot) calls "
                "for debugging and test purposes.";
     }
@@ -53,15 +53,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    StubModule(void);
+    StubModule();
 
     /** dtor */
-    ~StubModule(void) override;
+    ~StubModule() override;
 
 protected:
     /**
@@ -69,12 +69,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /** Outbound connection */

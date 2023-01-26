@@ -382,7 +382,7 @@ public:
     ReducedSurfaceSimplified(megamol::protein_calls::MolecularDataCall* prot, float probeRad = 1.4f);
 
     /** dtor */
-    virtual ~ReducedSurfaceSimplified(void);
+    virtual ~ReducedSurfaceSimplified();
 
     /** Get probe radius */
     const float GetProbeRadius() const {

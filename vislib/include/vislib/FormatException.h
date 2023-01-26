@@ -53,7 +53,7 @@ public:
     FormatException(const FormatException& rhs);
 
     /** Dtor. */
-    ~FormatException(void) override;
+    ~FormatException() override;
 
     /**
      * Assignment operator.

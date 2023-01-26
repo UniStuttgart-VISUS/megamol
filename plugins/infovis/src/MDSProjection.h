@@ -18,26 +18,26 @@ using namespace megamol::core;
 class MDSProjection : public core::Module {
 public:
     /** Return module class name */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "MDSProjection";
     }
 
     /** Return module class description */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Multidimensional scaling, i.e., a non-linear dimensionality reduction technique, by preserving "
                "distances/dissimilarities approximately";
     }
 
     /** Module is always available */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /** Constructor */
-    MDSProjection(void);
+    MDSProjection();
 
     /** Destructor */
-    ~MDSProjection(void) override;
+    ~MDSProjection() override;
 
     static Eigen::MatrixXd euclideanDissimilarityMatrix(Eigen::MatrixXd dataMatrix);
 
@@ -54,10 +54,10 @@ public:
 
 protected:
     /** Lazy initialization of the module */
-    bool create(void) override;
+    bool create() override;
 
     /** Resource release */
-    void release(void) override;
+    void release() override;
 
 private:
     static Eigen::MatrixXd bMatrix(Eigen::MatrixXd X, Eigen::MatrixXd W, Eigen::MatrixXd dissimilarityMatrix);

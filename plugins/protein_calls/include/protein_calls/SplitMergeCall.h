@@ -424,7 +424,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SplitMergeCall";
     }
 
@@ -433,7 +433,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get splitmerge data";
     }
 
@@ -445,7 +445,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -461,10 +461,10 @@ public:
     }
 
     /** Ctor. */
-    SplitMergeCall(void);
+    SplitMergeCall();
 
     /** Dtor. */
-    ~SplitMergeCall(void) override;
+    ~SplitMergeCall() override;
 
     /**
      * Add a diagram series to theData.

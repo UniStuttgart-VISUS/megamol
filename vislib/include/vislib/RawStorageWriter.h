@@ -46,14 +46,14 @@ public:
     RawStorageWriter(vislib::RawStorage& store, SIZE_T pos = 0, SIZE_T end = SIZE_MAX, SIZE_T inc = DEFAULT_INCREMENT);
 
     /** Dtor. */
-    ~RawStorageWriter(void);
+    ~RawStorageWriter();
 
     /**
      * Answer the reference to the raw data store
      *
      * @return The reference to the raw data store
      */
-    inline vislib::RawStorage& Data(void) const {
+    inline vislib::RawStorage& Data() const {
         return this->data;
     }
 
@@ -62,7 +62,7 @@ public:
      *
      * @return The end-of-data pointer
      */
-    inline SIZE_T End(void) const {
+    inline SIZE_T End() const {
         return this->end;
     }
 
@@ -71,7 +71,7 @@ public:
      *
      * @return The memory increment step size
      */
-    inline SIZE_T Increment(void) const {
+    inline SIZE_T Increment() const {
         return this->inc;
     }
 
@@ -80,7 +80,7 @@ public:
      *
      * @return The position pointer
      */
-    inline SIZE_T Position(void) const {
+    inline SIZE_T Position() const {
         return this->pos;
     }
 

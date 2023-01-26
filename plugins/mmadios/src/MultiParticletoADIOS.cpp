@@ -15,7 +15,7 @@
 namespace megamol {
 namespace adios {
 
-MultiParticletoADIOS::MultiParticletoADIOS(void)
+MultiParticletoADIOS::MultiParticletoADIOS()
         : core::Module()
         , mpSlot("mpSlot", "Slot to request multi particle data.")
         , adiosSlot("adiosSlot", "Slot to send ADIOS IO")
@@ -38,15 +38,15 @@ MultiParticletoADIOS::MultiParticletoADIOS(void)
     this->MakeSlotAvailable(&this->mpSlot);
 }
 
-MultiParticletoADIOS::~MultiParticletoADIOS(void) {
+MultiParticletoADIOS::~MultiParticletoADIOS() {
     this->Release();
 }
 
-bool MultiParticletoADIOS::create(void) {
+bool MultiParticletoADIOS::create() {
     return true;
 }
 
-void MultiParticletoADIOS::release(void) {}
+void MultiParticletoADIOS::release() {}
 
 bool MultiParticletoADIOS::getDataCallback(core::Call& call) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&call);

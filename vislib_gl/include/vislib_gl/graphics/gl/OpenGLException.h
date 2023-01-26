@@ -55,14 +55,14 @@ public:
     OpenGLException(const OpenGLException& rhs);
 
     /** Dtor. */
-    ~OpenGLException(void) override;
+    ~OpenGLException() override;
 
     /**
      * Answer the OpenGL error code.
      *
      * @return The error code.
      */
-    inline GLenum GetErrorCode(void) const {
+    inline GLenum GetErrorCode() const {
         return this->errorCode;
     }
 

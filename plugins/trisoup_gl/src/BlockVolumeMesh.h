@@ -30,7 +30,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BlockVolumeMesh";
     }
 
@@ -39,7 +39,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Converts a binary volume into a tri mesh showing opaque blocks.";
     }
 
@@ -48,19 +48,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    BlockVolumeMesh(void);
+    BlockVolumeMesh();
 
     /** Dtor */
-    ~BlockVolumeMesh(void) override;
+    ~BlockVolumeMesh() override;
 
 protected:
     /** Ensures that the data is loaded */
-    void assertData(void) override;
+    void assertData() override;
 
 private:
     /** The in data slot */

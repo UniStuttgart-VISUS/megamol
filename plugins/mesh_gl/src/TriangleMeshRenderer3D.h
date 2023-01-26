@@ -62,7 +62,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TriangleMeshRenderer3D";
     }
     /**
@@ -70,7 +70,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Upload 3D data to the GPU for use with the mesh plugin";
     }
 

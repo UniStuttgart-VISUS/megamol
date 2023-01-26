@@ -47,10 +47,10 @@ public:
     class Listener : public vislib::Listenable<ClusterControllerClient>::Listener {
     public:
         /** Ctor */
-        Listener(void) {}
+        Listener() {}
 
         /** Dtor */
-        ~Listener(void) override {}
+        ~Listener() override {}
 
         /**
          * Informs the client that the cluster is now available.
@@ -98,12 +98,12 @@ public:
     /**
      * Ctor
      */
-    ClusterControllerClient(void);
+    ClusterControllerClient();
 
     /**
      * Dtor.
      */
-    ~ClusterControllerClient(void) override;
+    ~ClusterControllerClient() override;
 
     /**
      * Sends a message to all nodes in the cluster.
@@ -130,7 +130,7 @@ public:
      *
      * @return The caller to register the client at the controller
      */
-    inline CallerSlot& RegisterSlot(void) {
+    inline CallerSlot& RegisterSlot() {
         return this->registerSlot;
     }
 
@@ -152,12 +152,12 @@ protected:
     /**
      * Informs the client that the cluster is now available.
      */
-    void onClusterAvailable(void);
+    void onClusterAvailable();
 
     /**
      * Informs the client that the cluster is no longer available.
      */
-    void onClusterUnavailable(void);
+    void onClusterUnavailable();
 
     /**
      * Informs the client that a new node has been found in the

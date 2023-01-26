@@ -86,7 +86,7 @@ public:
     PeerDisconnectedException(const PeerDisconnectedException& rhs);
 
     /** Dtor. */
-    ~PeerDisconnectedException(void) override;
+    ~PeerDisconnectedException() override;
 
 private:
     /** Superclass typedef. */

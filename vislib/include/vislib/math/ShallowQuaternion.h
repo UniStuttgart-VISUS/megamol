@@ -50,7 +50,7 @@ public:
     }
 
     /** Dtor. */
-    ~ShallowQuaternion(void);
+    ~ShallowQuaternion();
 
     /**
      * Assignment.
@@ -84,7 +84,7 @@ public:
  * vislib::math::ShallowQuaternion<T>::~ShallowQuaternion
  */
 template<class T>
-ShallowQuaternion<T>::~ShallowQuaternion(void) {}
+ShallowQuaternion<T>::~ShallowQuaternion() {}
 
 
 } /* end namespace math */

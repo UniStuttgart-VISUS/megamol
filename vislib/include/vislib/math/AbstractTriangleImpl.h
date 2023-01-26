@@ -30,7 +30,7 @@ class AbstractTriangleImpl {
 
 public:
     /** Dtor. */
-    ~AbstractTriangleImpl(void);
+    ~AbstractTriangleImpl();
 
     /**
      * Answer the area covered by the triangle.
@@ -38,7 +38,7 @@ public:
      * @return The area covered by the triangle.
      */
     template<class Tp>
-    inline Tp Area(void) const {
+    inline Tp Area() const {
         return (this->vertices[0] - this->vertices[1]).Cross(this->vertices[0] - this->vertices[2]).Length() /
                static_cast<Tp>(2.0);
     }
@@ -49,7 +49,7 @@ public:
      * @return the circumference
      */
     template<class Tp>
-    inline Tp Circumference(void) const {
+    inline Tp Circumference() const {
         return (this->vertices[0] - this->vertices[2]).Length() + (this->vertices[1] - this->vertices[2]).Length() +
                (this->vertices[0] - this->vertices[1]).Length();
     }
@@ -109,7 +109,7 @@ public:
      *
      * @return The coordinates in an array.
      */
-    inline T* PeekCoordinates(void) {
+    inline T* PeekCoordinates() {
         return this->vertices;
     }
 
@@ -119,7 +119,7 @@ public:
      *
      * @return The coordinates in an array.
      */
-    inline const T* PeekCoordinates(void) const {
+    inline const T* PeekCoordinates() const {
         return this->vertices;
     }
 
@@ -187,7 +187,7 @@ protected:
     /**
      * Disallow instances of this class. This ctor does nothing!
      */
-    inline AbstractTriangleImpl(void){};
+    inline AbstractTriangleImpl(){};
 
     // TODO copy const!, assign
 
@@ -202,7 +202,7 @@ private:
  * vislib::math::AbstractTriangleImpl<T, S, C>::~AbstractTriangleImpl
  */
 template<class T, class S, template<class Tc, class Sc> class C>
-AbstractTriangleImpl<T, S, C>::~AbstractTriangleImpl(void) {}
+AbstractTriangleImpl<T, S, C>::~AbstractTriangleImpl() {}
 
 
 /*

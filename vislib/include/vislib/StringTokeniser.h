@@ -162,21 +162,21 @@ public:
     StringTokeniser(const typename C::Char* input, const typename C::Char separator);
 
     /** Dtor. */
-    ~StringTokeniser(void) override;
+    ~StringTokeniser() override;
 
     /**
      * Answer whether there is a next element to iterator to.
      *
      * @return true if there is a next element, false otherwise.
      */
-    bool HasNext(void) const override;
+    bool HasNext() const override;
 
     /**
      * Answer the input string.
      *
      * @return The input string.
      */
-    inline const String<C>& InputString(void) const {
+    inline const String<C>& InputString() const {
         return this->input;
     }
 
@@ -187,7 +187,7 @@ public:
      * @return The next element, which becomes the current element after
      *         calling this methode.
      */
-    const String<C>& Next(void) override;
+    const String<C>& Next() override;
 
     /**
      * Iterates to the next nonempty element and returns this element. If
@@ -198,7 +198,7 @@ public:
      *
      * @throws NoSuchElementException If all remaining elements are empty.
      */
-    inline const String<C>& NextNonEmpty(void) {
+    inline const String<C>& NextNonEmpty() {
         while (this->HasNext()) {
             const String<C>& str = this->Next();
             if (!str.IsEmpty()) {
@@ -238,14 +238,14 @@ public:
      * "Next" will behave exactly like directly after the construction of
      * the object.
      */
-    void Reset(void);
+    void Reset();
 
     /**
      * Answers the separator string.
      *
      * @return The separator string.
      */
-    inline const String<C>& Separator(void) const {
+    inline const String<C>& Separator() const {
         return this->separator;
     }
 
@@ -332,7 +332,7 @@ private:
         const typename C::Char* input, const typename C::Char* separator, bool removeEmpty, Array<String<C>>& outArray);
 
     /** Prepares the next token */
-    void prepareNextToken(void);
+    void prepareNextToken();
 
     /** the input string */
     String<C> input;
@@ -496,14 +496,14 @@ StringTokeniser<C>::StringTokeniser(const typename C::Char* input, const typenam
  * StringTokeniser<C>::~StringTokeniser
  */
 template<class C>
-StringTokeniser<C>::~StringTokeniser(void) {}
+StringTokeniser<C>::~StringTokeniser() {}
 
 
 /*
  * StringTokeniser<C>::HasNext
  */
 template<class C>
-bool StringTokeniser<C>::HasNext(void) const {
+bool StringTokeniser<C>::HasNext() const {
     return this->inputPos != String<C>::INVALID_POS;
 }
 
@@ -512,7 +512,7 @@ bool StringTokeniser<C>::HasNext(void) const {
  * StringTokeniser<C>::Next
  */
 template<class C>
-const String<C>& StringTokeniser<C>::Next(void) {
+const String<C>& StringTokeniser<C>::Next() {
     this->prepareNextToken();
     return this->next;
 }
@@ -522,7 +522,7 @@ const String<C>& StringTokeniser<C>::Next(void) {
  * StringTokeniser<C>::Reset
  */
 template<class C>
-void StringTokeniser<C>::Reset(void) {
+void StringTokeniser<C>::Reset() {
     ASSERT(separator.Length() > 0);
     this->inputPos = 0;
     this->prepareNextToken();
@@ -637,7 +637,7 @@ void StringTokeniser<C>::split(
  * StringTokeniser<C>::prepareNextToken
  */
 template<class C>
-void StringTokeniser<C>::prepareNextToken(void) {
+void StringTokeniser<C>::prepareNextToken() {
     typename String<C>::Size pos = this->input.Find(this->separator, this->inputPos);
     if (pos != String<C>::INVALID_POS) {
         this->next = this->input.Substring(this->inputPos, pos - this->inputPos);

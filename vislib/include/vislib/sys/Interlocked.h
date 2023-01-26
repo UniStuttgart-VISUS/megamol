@@ -56,7 +56,7 @@ class Interlocked {
 
 public:
     /** Dtor. */
-    ~Interlocked(void);
+    ~Interlocked();
 
     /**
      * Perform an atomic comparison of the specified 32-bit values and
@@ -378,7 +378,7 @@ private:
      *
      * @throws UnsupportedOperationException Unconditionally.
      */
-    Interlocked(void);
+    Interlocked();
 };
 
 } /* end namespace sys */

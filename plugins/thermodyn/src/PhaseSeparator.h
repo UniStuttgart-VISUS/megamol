@@ -17,17 +17,17 @@ namespace thermodyn {
 class PhaseSeparator : public core::Module {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "PhaseSeparator";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Determines the phases in an evap simulation";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 

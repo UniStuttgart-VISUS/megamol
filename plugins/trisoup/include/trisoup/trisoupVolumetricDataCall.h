@@ -29,7 +29,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "trisoupVolumetricDataCall";
     }
 
@@ -38,7 +38,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call transporting volumetric data";
     }
 
@@ -47,7 +47,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return AbstractGetData3DCall::FunctionCount();
     }
 
@@ -63,10 +63,10 @@ public:
     }
 
     /** Ctor */
-    trisoupVolumetricDataCall(void) {}
+    trisoupVolumetricDataCall() {}
 
     /** Dtor */
-    ~trisoupVolumetricDataCall(void) override {}
+    ~trisoupVolumetricDataCall() override {}
 
 public:
     typedef char VoxelType;

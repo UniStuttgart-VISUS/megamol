@@ -61,7 +61,7 @@ public:
      * @return The camera the manipulator is working on. It is valid for
      *         the method to return nullptr.
      */
-    inline camera_type* camera(void) {
+    inline camera_type* camera() {
         return this->cam;
     }
 
@@ -71,7 +71,7 @@ public:
      * @return The camera the manipulator is working on. It is valid for
      *         the method to return nullptr.
      */
-    inline const camera_type* camera(void) const {
+    inline const camera_type* camera() const {
         return this->cam;
     }
 
@@ -97,7 +97,7 @@ public:
      *
      * @return true if the manipulator is enabled; false otherwise.
      */
-    inline bool enabled(void) const {
+    inline bool enabled() const {
         return (this->isEnabled && (this->cam != nullptr));
     }
 
@@ -112,7 +112,7 @@ public:
      * @return true if the manipulator is modifying the camera,
      *         false otherwie.
      */
-    inline bool manipulating(void) const {
+    inline bool manipulating() const {
         return this->isManipulating;
     }
 
@@ -120,7 +120,7 @@ public:
      * Resets the target of the manipulation, effectively disabling the
      * manipulator.
      */
-    inline void reset_target(void) {
+    inline void reset_target() {
         this->cam = nullptr;
     }
 
@@ -143,14 +143,14 @@ protected:
     /**
      * Sets the manipulation flag to true.
      */
-    inline void begin_manipulation(void) {
+    inline void begin_manipulation() {
         this->isManipulating = true;
     }
 
     /**
      * Sets the manipulation flag to false.
      */
-    inline void end_manipulation(void) {
+    inline void end_manipulation() {
         this->isManipulating = false;
     }
 

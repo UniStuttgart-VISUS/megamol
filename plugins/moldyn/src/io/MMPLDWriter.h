@@ -27,7 +27,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MMPLDWriter";
     }
 
@@ -36,7 +36,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "MMPLD file writer";
     }
 
@@ -45,15 +45,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    MMPLDWriter(void);
+    MMPLDWriter();
 
     /** Dtor. */
-    ~MMPLDWriter(void) override;
+    ~MMPLDWriter() override;
 
 protected:
     /**
@@ -61,19 +61,19 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * The main function
      *
      * @return True on success
      */
-    bool run(void) override;
+    bool run() override;
 
     /**
      * Function querying the writers capabilities

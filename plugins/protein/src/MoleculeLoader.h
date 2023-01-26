@@ -21,17 +21,17 @@ namespace megamol::protein {
 class MoleculeLoader : public core::Module {
 public:
     /** Ctor. */
-    MoleculeLoader(void);
+    MoleculeLoader();
 
     /** Dtor. */
-    ~MoleculeLoader(void) override;
+    ~MoleculeLoader() override;
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MoleculeLoader";
     }
 
@@ -40,7 +40,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers molecular data.";
     }
 
@@ -49,7 +49,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -59,7 +59,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Call callback to get the molecular data call data
@@ -100,7 +100,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * Loads the structure file into memory

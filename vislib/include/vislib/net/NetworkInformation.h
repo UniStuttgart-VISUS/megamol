@@ -84,7 +84,7 @@ public:
         NoConfidenceException(const NoConfidenceException& rhs);
 
         /** Dtor. */
-        ~NoConfidenceException(void) override;
+        ~NoConfidenceException() override;
 
         /**
          * Assignment operator.
@@ -110,7 +110,7 @@ private:
          * Create a new instance, which is initialised using the default
          * ctor of T and has a confidence value of INVALID.
          */
-        AssessedMember(void);
+        AssessedMember();
 
         /**
          * Create a new instance using the specified initial values.
@@ -132,14 +132,14 @@ private:
         /**
          * Dtor.
          */
-        ~AssessedMember(void);
+        ~AssessedMember();
 
         /**
          * Answer the confidence.
          *
          * @return The confidence.
          */
-        inline Confidence GetConfidence(void) const {
+        inline Confidence GetConfidence() const {
             return this->confidence;
         }
 
@@ -162,7 +162,7 @@ private:
          *
          * @return The value.
          */
-        inline const T& GetValue(void) const {
+        inline const T& GetValue() const {
             return this->value;
         }
 
@@ -209,7 +209,7 @@ private:
          *
          * @return The value.
          */
-        inline operator T&(void) {
+        inline operator T&() {
             return this->value;
         }
 
@@ -218,7 +218,7 @@ private:
          *
          * @return The value.
          */
-        inline operator const T&(void) const {
+        inline operator const T&() const {
             return this->value;
         }
 
@@ -294,7 +294,7 @@ public:
          * Create a UnicastAddressInformation with all-invalid properties.
          * All members are default initialised.
          */
-        UnicastAddressInformation(void);
+        UnicastAddressInformation();
 
         /**
          * Clone 'rhs'.
@@ -306,14 +306,14 @@ public:
         /**
          * Dtor.
          */
-        virtual ~UnicastAddressInformation(void);
+        virtual ~UnicastAddressInformation();
 
         /**
          * Get the address itself.
          *
          * @return The address itself.
          */
-        inline const IPAgnosticAddress& GetAddress(void) const {
+        inline const IPAgnosticAddress& GetAddress() const {
             return this->address;
         }
 
@@ -324,7 +324,7 @@ public:
          *
          * @return The address family.
          */
-        inline IPAgnosticAddress::AddressFamily GetAddressFamily(void) const {
+        inline IPAgnosticAddress::AddressFamily GetAddressFamily() const {
             return this->address.GetAddressFamily();
         }
 
@@ -561,7 +561,7 @@ public:
         /**
          * Ctor.
          */
-        Adapter(void);
+        Adapter();
 
         /**
          * Clone 'rhs'.
@@ -571,7 +571,7 @@ public:
         Adapter(const Adapter& rhs);
 
         /** Dtor. */
-        ~Adapter(void);
+        ~Adapter();
 
         /**
          * Create a string from the physical (MAC) address.
@@ -581,7 +581,7 @@ public:
          *
          * @return A string representation of the physical address.
          */
-        StringA FormatPhysicalAddressA(void) const;
+        StringA FormatPhysicalAddressA() const;
 
         /**
          * Create a string from the physical (MAC) address.
@@ -591,7 +591,7 @@ public:
          *
          * @return A string representation of the physical address.
          */
-        StringW FormatPhysicalAddressW(void) const;
+        StringW FormatPhysicalAddressW() const;
 
         /**
          * Answer the list of anycast addresses associated with the adapter.
@@ -915,7 +915,7 @@ public:
      * @throws std::bad_alloc  If the memory required to retrieve the
      *                         adapters could not be allocated.
      */
-    static SIZE_T CountAdapters(void);
+    static SIZE_T CountAdapters();
 
     /**
      * Discard all cached adapter information.
@@ -1414,7 +1414,7 @@ public:
      * @throws SocketException
      * @throws std::bad_alloc
      */
-    inline static void Update(void) {
+    inline static void Update() {
         NetworkInformation::DiscardCache(true);
     }
 
@@ -1550,7 +1550,7 @@ private:
      * @throws std::bad_alloc  If there was insufficient memory for
      *                         retrieving the data.
      */
-    static void initAdapters(void);
+    static void initAdapters();
 
     /**
      * Maps a system defined interface type constant to the VISlib
@@ -1818,7 +1818,7 @@ private:
      *
      * @throws UnsupportedOperationException Unconditionally.
      */
-    NetworkInformation(void);
+    NetworkInformation();
 
     /**
      * Forbidden Ctor.
@@ -1830,7 +1830,7 @@ private:
     /**
      * Dtor.
      */
-    ~NetworkInformation(void);
+    ~NetworkInformation();
 };
 
 
@@ -1841,14 +1841,14 @@ private:
  * vislib::net::NetworkInformation::AssessedMember<T>::AssessedMember
  */
 template<class T>
-NetworkInformation::AssessedMember<T>::AssessedMember(void) : confidence(INVALID) {}
+NetworkInformation::AssessedMember<T>::AssessedMember() : confidence(INVALID) {}
 
 
 /*
  * vislib::net::NetworkInformation::AssessedMember<T>::~AssessedMember
  */
 template<class T>
-NetworkInformation::AssessedMember<T>::~AssessedMember(void) {}
+NetworkInformation::AssessedMember<T>::~AssessedMember() {}
 
 
 /*

@@ -18,7 +18,7 @@ using namespace megamol::core;
 /*
  * AbstractNamedObject::~AbstractNamedObject
  */
-AbstractNamedObject::~AbstractNamedObject(void) {
+AbstractNamedObject::~AbstractNamedObject() {
     this->parent.reset();
     this->owner = nullptr; // DO NOT DELETE
 }
@@ -27,7 +27,7 @@ AbstractNamedObject::~AbstractNamedObject(void) {
 /*
  * AbstractNamedObject::FullName
  */
-vislib::StringA AbstractNamedObject::FullName(void) const {
+vislib::StringA AbstractNamedObject::FullName() const {
     try {
         vislib::StringA name;
         const_ptr_type ano = this->shared_from_this();
@@ -49,7 +49,7 @@ vislib::StringA AbstractNamedObject::FullName(void) const {
 /*
  * AbstractNamedObject::SetAllCleanupMarks
  */
-void AbstractNamedObject::SetAllCleanupMarks(void) {
+void AbstractNamedObject::SetAllCleanupMarks() {
     this->cleanupMark = true;
 }
 
@@ -57,7 +57,7 @@ void AbstractNamedObject::SetAllCleanupMarks(void) {
 /*
  * AbstractNamedObject::ClearCleanupMark
  */
-void AbstractNamedObject::ClearCleanupMark(void) {
+void AbstractNamedObject::ClearCleanupMark() {
     this->cleanupMark = false;
 }
 
@@ -65,7 +65,7 @@ void AbstractNamedObject::ClearCleanupMark(void) {
 /*
  * AbstractNamedObject::PerformCleanup
  */
-void AbstractNamedObject::PerformCleanup(void) {
+void AbstractNamedObject::PerformCleanup() {
     if (this->cleanupMark) {
         // message removed because of quickstart module peeking
         //megamol::core::utility::log::Log::DefaultLog.WriteInfo(
@@ -79,7 +79,7 @@ void AbstractNamedObject::PerformCleanup(void) {
 /*
  * AbstractNamedObject::DisconnectCalls
  */
-void AbstractNamedObject::DisconnectCalls(void) {
+void AbstractNamedObject::DisconnectCalls() {
     // intentionally empty
 }
 
@@ -87,7 +87,7 @@ void AbstractNamedObject::DisconnectCalls(void) {
 /*
  * AbstractNamedObject::ModuleGraphLock
  */
-vislib::sys::AbstractReaderWriterLock& AbstractNamedObject::ModuleGraphLock(void) {
+vislib::sys::AbstractReaderWriterLock& AbstractNamedObject::ModuleGraphLock() {
     ASSERT(!this->parent.expired()); // HAZARD: better return a dummy object
     return this->RootModule()->ModuleGraphLock();
 }
@@ -96,7 +96,7 @@ vislib::sys::AbstractReaderWriterLock& AbstractNamedObject::ModuleGraphLock(void
 /*
  * AbstractNamedObject::ModuleGraphLock
  */
-vislib::sys::AbstractReaderWriterLock& AbstractNamedObject::ModuleGraphLock(void) const {
+vislib::sys::AbstractReaderWriterLock& AbstractNamedObject::ModuleGraphLock() const {
     ASSERT(!this->parent.expired()); // HAZARD: better return a dummy object
     return this->RootModule()->ModuleGraphLock();
 }
@@ -113,7 +113,7 @@ bool AbstractNamedObject::isNameValid(const vislib::StringA& name) {
 /*
  * AbstractNamedObject::AbstractNamedObject
  */
-AbstractNamedObject::AbstractNamedObject(void)
+AbstractNamedObject::AbstractNamedObject()
         : enable_shared_from_this()
         , name()
         , parent()

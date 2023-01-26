@@ -47,7 +47,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CinematicView";
     }
 
@@ -56,15 +56,15 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Screenshot View Module";
     }
 
     /** Ctor. */
-    CinematicView(void);
+    CinematicView();
 
     /** Dtor. */
-    ~CinematicView(void) override;
+    ~CinematicView() override;
 
 protected:
     /**

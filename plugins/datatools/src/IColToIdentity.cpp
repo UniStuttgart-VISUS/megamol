@@ -1,10 +1,10 @@
 #include "IColToIdentity.h"
 
 
-megamol::datatools::IColToIdentity::IColToIdentity(void) : AbstractParticleManipulator("outData", "indata") {}
+megamol::datatools::IColToIdentity::IColToIdentity() : AbstractParticleManipulator("outData", "indata") {}
 
 
-megamol::datatools::IColToIdentity::~IColToIdentity(void) {
+megamol::datatools::IColToIdentity::~IColToIdentity() {
     this->Release();
 };
 

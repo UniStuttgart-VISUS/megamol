@@ -58,31 +58,31 @@ struct PointCloud {
 
 class FilamentFilter : public core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "FilamentFilter";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Filters the filament particles of a AstroParticleDataCall";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    FilamentFilter(void);
+    FilamentFilter();
 
     /** Dtor. */
-    ~FilamentFilter(void) override;
+    ~FilamentFilter() override;
 
 protected:
-    bool create(void) override;
-    void release(void) override;
+    bool create() override;
+    void release() override;
 
 private:
     bool getData(core::Call& call);
     bool getExtent(core::Call& call);
 
-    void initFields(void);
+    void initFields();
     std::pair<float, float> getMinMaxDensity(const AstroDataCall& call) const;
     void retrieveDensityCandidateList(const AstroDataCall& call, std::vector<std::pair<float, uint64_t>>& result);
     bool filterFilaments(const AstroDataCall& call);

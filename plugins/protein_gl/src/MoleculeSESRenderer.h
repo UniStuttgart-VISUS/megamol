@@ -51,7 +51,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MoleculeSESRenderer";
     }
 
@@ -60,7 +60,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers protein surface renderings.";
     }
 
@@ -69,16 +69,16 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         // return true;
         return true;
     }
 
     /** ctor */
-    MoleculeSESRenderer(void);
+    MoleculeSESRenderer();
 
     /** dtor */
-    ~MoleculeSESRenderer(void) override;
+    ~MoleculeSESRenderer() override;
 
     /**********************************************************************
      * 'get'-functions
@@ -104,12 +104,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * Compute all vertex, attribute and color arrays used for ray casting
@@ -197,7 +197,7 @@ private:
      * Deinitialises this renderer. This is only called if there was a
      * successful call to "initialise" before.
      */
-    virtual void deinitialise(void);
+    virtual void deinitialise();
 
     /**********************************************************************
      * variables

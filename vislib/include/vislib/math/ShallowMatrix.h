@@ -58,7 +58,7 @@ public:
     }
 
     /** Dtor. */
-    ~ShallowMatrix(void);
+    ~ShallowMatrix();
 
     /**
      * Assignment operator.
@@ -107,14 +107,14 @@ protected:
     /**
      * Forbidden default ctor.
      */
-    inline ShallowMatrix(void) {}
+    inline ShallowMatrix() {}
 };
 
 /*
  * vislib::math::ShallowMatrix<T, D, L>::~ShallowMatrix
  */
 template<class T, unsigned int D, MatrixLayout L>
-ShallowMatrix<T, D, L>::~ShallowMatrix(void) {}
+ShallowMatrix<T, D, L>::~ShallowMatrix() {}
 
 } /* end namespace math */
 } /* end namespace vislib */

@@ -90,7 +90,7 @@ const char theUndef[] = "undef";
 /*
  * io::PLYDataSource::PLYDataSource
  */
-io::PLYDataSource::PLYDataSource(void)
+io::PLYDataSource::PLYDataSource()
         : core::Module()
         , filename("filename", "The path to the PLY file to load.")
         , vertElemSlot("vertex element", "which element to get the vertex info from")
@@ -170,14 +170,14 @@ io::PLYDataSource::PLYDataSource(void)
 /*
  * io::PLYDataSource::~PLYDataSource
  */
-io::PLYDataSource::~PLYDataSource(void) {
+io::PLYDataSource::~PLYDataSource() {
     this->Release();
 }
 
 /*
  * io::PLYDataSource::create
  */
-bool io::PLYDataSource::create(void) {
+bool io::PLYDataSource::create() {
     // intentionally empty
     return true;
 }
@@ -185,7 +185,7 @@ bool io::PLYDataSource::create(void) {
 /*
  * io::PLYDataSource::release
  */
-void io::PLYDataSource::release(void) {
+void io::PLYDataSource::release() {
     // intentionally empty
 }
 
@@ -1133,7 +1133,7 @@ bool io::PLYDataSource::getMeshExtentCallback(core::Call& caller) {
 /*
  * io::PLYDataSource::clearAllFields
  */
-void io::PLYDataSource::clearAllFields(void) {
+void io::PLYDataSource::clearAllFields() {
     if (posPointers.pos_float != nullptr) {
         delete[] posPointers.pos_float;
         posPointers.pos_float = nullptr;
@@ -1181,7 +1181,7 @@ void io::PLYDataSource::clearAllFields(void) {
 /*
  * io::PLYDataSource::checkParameterDirtyness
  */
-bool io::PLYDataSource::checkParameterDirtyness(void) {
+bool io::PLYDataSource::checkParameterDirtyness() {
     bool isDirty = false;
 
     isDirty = isDirty || this->vertElemSlot.IsDirty();
@@ -1206,7 +1206,7 @@ bool io::PLYDataSource::checkParameterDirtyness(void) {
 /*
  * io::PLYDataSource::resetParameterDirtyness
  */
-void io::PLYDataSource::resetParameterDirtyness(void) {
+void io::PLYDataSource::resetParameterDirtyness() {
     this->vertElemSlot.ResetDirty();
     this->faceElemSlot.ResetDirty();
     this->xPropSlot.ResetDirty();

@@ -13,18 +13,15 @@ using namespace megamol;
 using namespace megamol::core;
 
 
-special::StubModule::StubModule(void)
-        : Module()
-        , inSlot("inSlot", "Inbound call")
-        , outSlot("outSlot", "Outbound call") {}
+special::StubModule::StubModule() : Module(), inSlot("inSlot", "Inbound call"), outSlot("outSlot", "Outbound call") {}
 
 
-special::StubModule::~StubModule(void) {
+special::StubModule::~StubModule() {
     this->Release();
 }
 
 
-bool special::StubModule::create(void) {
+bool special::StubModule::create() {
     auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
     for (auto cd : pluginsRes.all_call_descriptions) {
         this->inSlot.SetCompatibleCall(cd);
@@ -40,7 +37,7 @@ bool special::StubModule::create(void) {
 }
 
 
-void special::StubModule::release(void) {}
+void special::StubModule::release() {}
 
 
 bool megamol::core::special::StubModule::stub(Call& c) {

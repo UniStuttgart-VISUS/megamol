@@ -57,7 +57,7 @@ public:
     SystemException(const SystemException& rhs);
 
     /** Dtor. */
-    ~SystemException(void) override;
+    ~SystemException() override;
 
     /**
      * Answer the system dependent error code associated with this
@@ -65,7 +65,7 @@ public:
      *
      * @return The system error code.
      */
-    inline DWORD GetErrorCode(void) const {
+    inline DWORD GetErrorCode() const {
         return this->sysMsg.GetErrorCode();
     }
 
@@ -75,7 +75,7 @@ public:
      *
      * @return The exception message.
      */
-    const char* GetMsgA(void) const override;
+    const char* GetMsgA() const override;
 
     /**
      * Answer the file the exception description text. Behaves like
@@ -83,7 +83,7 @@ public:
      *
      * @return The exception message.
      */
-    const wchar_t* GetMsgW(void) const override;
+    const wchar_t* GetMsgW() const override;
 
     /**
      * Assignment operator.

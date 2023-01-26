@@ -16,32 +16,32 @@ namespace datatools {
 class LocalBoundingBoxExtractor : public core::Module {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "LocalBoundingBoxExtractor";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module extracting the local bounding box of MultiParticleDataCalls";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    LocalBoundingBoxExtractor(void);
+    LocalBoundingBoxExtractor();
 
     /** Dtor */
-    ~LocalBoundingBoxExtractor(void) override;
+    ~LocalBoundingBoxExtractor() override;
 
 protected:
     /** Lazy initialization of the module */
-    bool create(void) override;
+    bool create() override;
 
     /** Resource release */
-    void release(void) override;
+    void release() override;
 
 private:
     /**

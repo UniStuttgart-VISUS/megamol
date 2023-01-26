@@ -67,7 +67,7 @@ public:
         Extension(BitmapImage& owner);
 
         /** Dtor */
-        virtual ~Extension(void);
+        virtual ~Extension();
 
         /**
          * Clones this extension object when the hosting image is copied
@@ -83,7 +83,7 @@ public:
          *
          * @return The owning image of the extension
          */
-        inline BitmapImage& Owner(void) {
+        inline BitmapImage& Owner() {
             return this->owner;
         }
 
@@ -92,7 +92,7 @@ public:
          *
          * @return The owning image of the extension
          */
-        inline const BitmapImage& Owner(void) const {
+        inline const BitmapImage& Owner() const {
             return this->owner;
         }
 
@@ -132,7 +132,7 @@ public:
      * Ctor. Creates an empty bitmap (channel count, width, and height
      * zero).
      */
-    BitmapImage(void);
+    BitmapImage();
 
     /**
      * Ctor. Generates a new bitmap.
@@ -225,7 +225,7 @@ public:
     BitmapImage(ChannelType type, ChannelLabel label1, ChannelLabel label2, ChannelLabel label3, ChannelLabel label4);
 
     /** Dtor. */
-    ~BitmapImage(void);
+    ~BitmapImage();
 
     /**
      * Adds an image extension object
@@ -241,7 +241,7 @@ public:
      *
      * @return The bytes per pixel of this image.
      */
-    inline unsigned int BytesPerPixel(void) const {
+    inline unsigned int BytesPerPixel() const {
         unsigned int base = 1;
         switch (this->chanType) {
         case CHANNELTYPE_WORD:
@@ -261,7 +261,7 @@ public:
     /**
      * Removes all image extension objects
      */
-    inline void ClearExtensions(void) {
+    inline void ClearExtensions() {
         this->exts.Clear();
     }
 
@@ -374,7 +374,7 @@ public:
     /**
      * Flipps the image vertically
      */
-    void FlipVertical(void);
+    void FlipVertical();
 
     /**
      * Finds the extension of the specified type
@@ -383,7 +383,7 @@ public:
      *         if no extension object of this type is present
      */
     template<class Tp>
-    inline Tp* FindExtension(void) {
+    inline Tp* FindExtension() {
         SIZE_T extCnt = this->exts.Count();
         for (SIZE_T i = 0; i < extCnt; i++) {
             Tp* ptr = dynamic_cast<Tp*>(this->exts[i]);
@@ -400,7 +400,7 @@ public:
      *         if no extension object of this type is present
      */
     template<class Tp>
-    inline const Tp* FindExtension(void) const {
+    inline const Tp* FindExtension() const {
         SIZE_T extCnt = this->exts.Count();
         for (SIZE_T i = 0; i < extCnt; i++) {
             const Tp* ptr = dynamic_cast<Tp*>(this->exts[i]);
@@ -415,7 +415,7 @@ public:
      *
      * @return The number of channels
      */
-    inline unsigned int GetChannelCount(void) const {
+    inline unsigned int GetChannelCount() const {
         return this->numChans;
     }
 
@@ -437,7 +437,7 @@ public:
      *
      * @return The channel type of the image.
      */
-    inline ChannelType GetChannelType(void) const {
+    inline ChannelType GetChannelType() const {
         return this->chanType;
     }
 
@@ -446,7 +446,7 @@ public:
      *
      * @return The image extension object
      */
-    inline ExtensionList& GetExtensions(void) {
+    inline ExtensionList& GetExtensions() {
         return this->exts;
     }
 
@@ -455,7 +455,7 @@ public:
      *
      * @return The image extension object
      */
-    inline const ExtensionList& GetExtensions(void) const {
+    inline const ExtensionList& GetExtensions() const {
         return this->exts;
     }
 
@@ -464,7 +464,7 @@ public:
      *
      * @return The height of the image.
      */
-    inline unsigned int Height(void) const {
+    inline unsigned int Height() const {
         return this->height;
     }
 
@@ -473,7 +473,7 @@ public:
      *
      * @return true if an alpha channel is present
      */
-    inline bool HasAlpha(void) const {
+    inline bool HasAlpha() const {
         return this->HasChannel(CHANNEL_ALPHA);
     }
 
@@ -490,7 +490,7 @@ public:
      *
      * @return true if a gray channel is present
      */
-    inline bool HasGray(void) const {
+    inline bool HasGray() const {
         return this->HasChannel(CHANNEL_GRAY);
     }
 
@@ -499,7 +499,7 @@ public:
      *
      * @return true if all three RGB channels are present
      */
-    inline bool HasRGB(void) const {
+    inline bool HasRGB() const {
         return this->HasChannel(CHANNEL_RED);
         return this->HasChannel(CHANNEL_GREEN);
         return this->HasChannel(CHANNEL_BLUE);
@@ -508,7 +508,7 @@ public:
     /**
      * Inverts the values of all colour channels
      */
-    void Invert(void);
+    void Invert();
 
     /**
      * Inverts the values of all colour channels
@@ -559,7 +559,7 @@ public:
      *
      * @return A pointer to the raw image data stored.
      */
-    inline void* PeekData(void) {
+    inline void* PeekData() {
         return static_cast<void*>(this->data);
     }
 
@@ -568,7 +568,7 @@ public:
      *
      * @return A pointer to the raw image data stored.
      */
-    inline const void* PeekData(void) const {
+    inline const void* PeekData() const {
         return static_cast<const void*>(this->data);
     }
 
@@ -579,7 +579,7 @@ public:
      * @return A pointer to the raw image data stored.
      */
     template<class T>
-    inline T* PeekDataAs(void) {
+    inline T* PeekDataAs() {
         return reinterpret_cast<T*>(this->data);
     }
 
@@ -590,7 +590,7 @@ public:
      * @return A pointer to the raw image data stored.
      */
     template<class T>
-    inline const T* PeekDataAs(void) const {
+    inline const T* PeekDataAs() const {
         return reinterpret_cast<const T*>(this->data);
     }
 
@@ -637,7 +637,7 @@ public:
      *
      * @return The width of the image.
      */
-    inline unsigned int Width(void) const {
+    inline unsigned int Width() const {
         return this->width;
     }
 
@@ -757,7 +757,7 @@ private:
         Conversion(ST* source, unsigned int chanCnt);
 
         /** Dtor */
-        ~Conversion(void);
+        ~Conversion();
 
         /**
          * Add a source channel definition to the input data
@@ -770,7 +770,7 @@ private:
         /**
          * Completes the initialization after adding all source channels
          */
-        void FinalizeInitialization(void);
+        void FinalizeInitialization();
 
         /**
          * Calculates the destination<->source channel mapping
@@ -798,7 +798,7 @@ private:
          *
          * @return A reference to this
          */
-        Conversion& operator++(void) {
+        Conversion& operator++() {
             this->source += this->sourceChanCnt;
             return *this;
         }

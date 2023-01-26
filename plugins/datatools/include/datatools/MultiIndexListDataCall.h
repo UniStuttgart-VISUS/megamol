@@ -46,14 +46,14 @@ public:
     };
 
     /** Factory metadata */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MultiIndexListDataCall";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call transports multiple index lists, e.g. to subselect groups/clusters within data transported by a "
                "parallel MultiParticleListDataCall.";
     }
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 3;
     }
     static const char* FunctionName(unsigned int idx) {

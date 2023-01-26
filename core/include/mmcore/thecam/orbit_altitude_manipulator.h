@@ -85,7 +85,7 @@ public:
     /**
      * Set manipulator to inactive (usually on mouse button release).
      */
-    inline void setInactive(void) {
+    inline void setInactive() {
         this->end_manipulation();
     }
 

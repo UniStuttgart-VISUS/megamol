@@ -20,7 +20,7 @@ using namespace megamol::protein_calls;
 /*
  * BindingSiteDataSource::BindingSiteDataSource (CTOR)
  */
-BindingSiteDataSource::BindingSiteDataSource(void)
+BindingSiteDataSource::BindingSiteDataSource()
         : megamol::core::Module()
         , dataOutSlot_("dataout", "The slot providing the binding site data")
         , pdbFilenameSlot_("pdbFilename", "The PDB file containing the binding site information")
@@ -52,7 +52,7 @@ BindingSiteDataSource::BindingSiteDataSource(void)
 /*
  * BindingSiteDataSource::~BindingSiteDataSource (DTOR)
  */
-BindingSiteDataSource::~BindingSiteDataSource(void) {
+BindingSiteDataSource::~BindingSiteDataSource() {
     this->Release();
 }
 

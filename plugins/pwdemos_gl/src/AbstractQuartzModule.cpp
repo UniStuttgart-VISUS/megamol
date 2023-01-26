@@ -15,7 +15,7 @@ namespace demos_gl {
 /*
  * AbstractQuartzModule::AbstractQuartzModule
  */
-AbstractQuartzModule::AbstractQuartzModule(void)
+AbstractQuartzModule::AbstractQuartzModule()
         : dataInSlot("datain", "slot to get the data")
         , typesInSlot("typesin", "solt to get the types data")
         , typesDataHash(0) {
@@ -29,13 +29,13 @@ AbstractQuartzModule::AbstractQuartzModule(void)
 /*
  * AbstractQuartzModule::~AbstractQuartzModule
  */
-AbstractQuartzModule::~AbstractQuartzModule(void) {}
+AbstractQuartzModule::~AbstractQuartzModule() {}
 
 
 /*
  * AbstractQuartzModule::getParticleData
  */
-ParticleGridDataCall* AbstractQuartzModule::getParticleData(void) {
+ParticleGridDataCall* AbstractQuartzModule::getParticleData() {
     ParticleGridDataCall* pgdc = this->dataInSlot.CallAs<ParticleGridDataCall>();
     if (pgdc != NULL) {
         if (!(*pgdc)(ParticleGridDataCall::CallForGetData)) {
@@ -49,7 +49,7 @@ ParticleGridDataCall* AbstractQuartzModule::getParticleData(void) {
 /*
  * AbstractQuartzModule::getCrystaliteData
  */
-CrystalDataCall* AbstractQuartzModule::getCrystaliteData(void) {
+CrystalDataCall* AbstractQuartzModule::getCrystaliteData() {
     CrystalDataCall* tdc = this->typesInSlot.CallAs<CrystalDataCall>();
     if (tdc != NULL) {
         if (!(*tdc)(CrystalDataCall::CallForGetData)) {

@@ -30,7 +30,7 @@ public:
      * Ctor.
      * Sets all colour components to zero, resulting in black.
      */
-    ColourHSVf(void);
+    ColourHSVf();
 
     /**
      * Ctor
@@ -56,14 +56,14 @@ public:
     ColourHSVf(const ColourRGBAu8& src);
 
     /** Dtor. */
-    ~ColourHSVf(void);
+    ~ColourHSVf();
 
     /**
      * Answer the Hue component
      *
      * @return The Hue component
      */
-    inline float H(void) const {
+    inline float H() const {
         return this->comp[0];
     }
 
@@ -72,7 +72,7 @@ public:
      *
      * @return The Saturation component
      */
-    inline float S(void) const {
+    inline float S() const {
         return this->comp[1];
     }
 
@@ -81,7 +81,7 @@ public:
      *
      * @return The Value component
      */
-    inline float V(void) const {
+    inline float V() const {
         return this->comp[2];
     }
 
@@ -164,7 +164,7 @@ public:
     }
 
     /** Cast operator to rgb color */
-    operator ColourRGBAu8(void) const;
+    operator ColourRGBAu8() const;
 
 private:
     /** The colour components in HSV layout */

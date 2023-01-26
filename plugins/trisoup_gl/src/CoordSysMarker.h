@@ -29,7 +29,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CoordSysMarker";
     }
 
@@ -38,7 +38,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source class for a simple coordinate system marker object";
     }
 
@@ -47,19 +47,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    CoordSysMarker(void);
+    CoordSysMarker();
 
     /** Dtor */
-    ~CoordSysMarker(void) override;
+    ~CoordSysMarker() override;
 
 protected:
     /** Ensures that the data is loaded */
-    void assertData(void) override;
+    void assertData() override;
 
 private:
 };

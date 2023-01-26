@@ -33,7 +33,7 @@ public:
     /**
      * Create the identity matrix.
      */
-    inline Matrix(void) : Super() {
+    inline Matrix() : Super() {
         this->SetIdentity();
     }
 
@@ -75,7 +75,7 @@ public:
     }
 
     /** Dtor. */
-    ~Matrix(void);
+    ~Matrix();
 
     /**
      * Assignment operator.
@@ -137,7 +137,7 @@ Matrix<T, D, L>::Matrix(const T& value) : Super() {
  * vislib::math::Matrix<T, D, L>::~Matrix
  */
 template<class T, unsigned int D, MatrixLayout L>
-Matrix<T, D, L>::~Matrix(void) {
+Matrix<T, D, L>::~Matrix() {
     // intentionally empty
 }
 
@@ -154,7 +154,7 @@ public:
     /**
      * Create the identity matrix.
      */
-    inline Matrix(void) : Super() {
+    inline Matrix() : Super() {
         this->SetIdentity();
     }
 
@@ -236,7 +236,7 @@ public:
     }
 
     /** Dtor. */
-    ~Matrix(void);
+    ~Matrix();
 
     /**
      * Assignment operator.
@@ -311,7 +311,7 @@ Matrix<T, 3, L>::Matrix(const T& value) : Super() {
  * vislib::math::Matrix<T, 3, L>::~Matrix
  */
 template<class T, MatrixLayout L>
-Matrix<T, 3, L>::~Matrix(void) {
+Matrix<T, 3, L>::~Matrix() {
     // intentionally empty
 }
 
@@ -328,7 +328,7 @@ public:
     /**
      * Create the identity matrix.
      */
-    inline Matrix(void) : Super() {
+    inline Matrix() : Super() {
         this->SetIdentity();
     }
 
@@ -425,7 +425,7 @@ public:
     }
 
     /** Dtor. */
-    ~Matrix(void);
+    ~Matrix();
 
     /**
      * Assignment operator.
@@ -500,7 +500,7 @@ Matrix<T, 4, L>::Matrix(const T& value) : Super() {
  * vislib::math::Matrix<T, 4, L>::~Matrix
  */
 template<class T, MatrixLayout L>
-Matrix<T, 4, L>::~Matrix(void) {
+Matrix<T, 4, L>::~Matrix() {
     // intentionally empty
 }
 

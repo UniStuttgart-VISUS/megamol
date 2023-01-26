@@ -33,7 +33,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return ModuleName.c_str();
     }
 
@@ -42,7 +42,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Joins two tables (union of columns)";
     }
 
@@ -51,19 +51,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    TableJoin(void);
+    TableJoin();
 
     /**
      * Finalises an instance.
      */
-    ~TableJoin(void) override;
+    ~TableJoin() override;
 
 protected:
     /**
@@ -71,12 +71,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /** data callback */

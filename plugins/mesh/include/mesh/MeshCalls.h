@@ -28,10 +28,10 @@ public:
             : GenericVersionedCall<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::EmptyMetaData>() {}
     ~Call3DInteraction() override = default;
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "Call3DInteraction";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call that transports...";
     }
 };
@@ -43,10 +43,10 @@ public:
             : GenericVersionedCall<std::pair<std::string, std::shared_ptr<tinygltf::Model>>, core::EmptyMetaData>() {}
     ~CallGlTFData() override = default;
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallGlTFData";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call that gives access to a loaded gltf model.";
     }
 };
@@ -56,10 +56,10 @@ public:
     CallMesh() : GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData>() {}
     ~CallMesh() override{};
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallMesh";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call that gives access to CPU-side mesh data.";
     }
 };
@@ -69,10 +69,10 @@ public:
     CallImage() : GenericVersionedCall<std::shared_ptr<ImageDataAccessCollection>, core::EmptyMetaData>() {}
     ~CallImage() override{};
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallImage";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call that gives access to CPU-side image data.";
     }
 };

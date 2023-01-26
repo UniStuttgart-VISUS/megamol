@@ -57,7 +57,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "GrimRenderer";
     }
 
@@ -66,7 +66,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer of gridded imposters.";
     }
 
@@ -75,15 +75,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    GrimRenderer(void);
+    GrimRenderer();
 
     /** Dtor. */
-    ~GrimRenderer(void) override;
+    ~GrimRenderer() override;
 
 protected:
     /**
@@ -91,7 +91,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -107,7 +107,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * The render callback.
@@ -168,12 +168,12 @@ private:
         /**
          * Ctor
          */
-        CellInfo(void);
+        CellInfo();
 
         /**
          * Dtor
          */
-        ~CellInfo(void);
+        ~CellInfo();
 
         /**
          * Test for equality

@@ -19,7 +19,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "StaticMMPLDProvider";
     }
 
@@ -28,7 +28,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Reads a set of static MMPLDs";
     }
 
@@ -37,15 +37,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    StaticMMPLDProvider(void);
+    StaticMMPLDProvider();
 
     /** Dtor. */
-    ~StaticMMPLDProvider(void) override;
+    ~StaticMMPLDProvider() override;
 
 protected:
     bool create() override;

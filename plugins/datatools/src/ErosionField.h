@@ -15,17 +15,17 @@ namespace datatools {
 
 class ErosionField : public datatools::AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ErosionField";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes an erosion "
                "field at the particles based on the neighborhood graph. Points "
                "with ICol < 0.5 are set to zero. The structure of points with "
                "ICol >= 0.5 are eroded and set to the number of iteration the "
                "point was removed.";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 

@@ -48,14 +48,14 @@ class DynamicLinkLibrary {
 
 public:
     /** Ctor. */
-    DynamicLinkLibrary(void);
+    DynamicLinkLibrary();
 
     /**
      * Dtor.
      *
      * If the library is still open, it is freed.
      */
-    ~DynamicLinkLibrary(void);
+    ~DynamicLinkLibrary();
 
     /**
      * Frees the current library, if there is one. It is safe to call
@@ -63,7 +63,7 @@ public:
      *
      * @throws DLLException If a library was loaded and cannot be released.
      */
-    void Free(void);
+    void Free();
 
     /**
      * Answer a function pointer to the function named 'procName'.
@@ -84,7 +84,7 @@ public:
      *
      * @return true, if a library is loaded, false otherwise.
      */
-    bool IsLoaded(void) const {
+    bool IsLoaded() const {
         return (this->hModule != NULL);
     }
 
@@ -94,7 +94,7 @@ public:
      *
      * @return A human-readable error message from the last call of 'Load'
      */
-    inline const vislib::StringA& LastLoadErrorMessage(void) const {
+    inline const vislib::StringA& LastLoadErrorMessage() const {
         return this->loadErrorMsg;
     }
 

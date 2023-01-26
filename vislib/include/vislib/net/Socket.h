@@ -144,7 +144,7 @@ public:
      *
      * @throws SocketException In case of an error.
      */
-    static void Cleanup(void);
+    static void Cleanup();
 
     /**
      * Initialise the use of sockets. This method does nothing on Linux. On
@@ -157,7 +157,7 @@ public:
      *
      * @throws SocketException In case of an error.
      */
-    static void Startup(void);
+    static void Startup();
 
     /** Constant for specifying an infinite timeout. */
     static const UINT TIMEOUT_INFINITE;
@@ -166,7 +166,7 @@ public:
      * Create an invalid socket. Call Create() on the new object to create
      * a new socket.
      */
-    inline Socket(void) : handle(INVALID_SOCKET) {}
+    inline Socket() : handle(INVALID_SOCKET) {}
 
     /**
      * Create socket wrapper from an existing handle.
@@ -183,7 +183,7 @@ public:
     inline Socket(const Socket& rhs) : handle(rhs.handle) {}
 
     /** Dtor. */
-    virtual ~Socket(void);
+    virtual ~Socket();
 
     /**
      * Permit incoming connection attempt on the socket.
@@ -265,7 +265,7 @@ public:
      * Close the socket. If the socket is not open, i. e. not valid, this
      * method succeeds, too.
      */
-    virtual void Close(void);
+    virtual void Close();
 
     /**
      * Connect to the specified socket address using this socket.
@@ -332,7 +332,7 @@ public:
      *
      * @throws SocketException If the operation fails.
      */
-    inline bool GetBroadcast(void) const {
+    inline bool GetBroadcast() const {
         return this->getOption(SOL_SOCKET, SO_BROADCAST);
     }
 
@@ -345,7 +345,7 @@ public:
      *
      * @throws SocketException If the operation fails.
      */
-    inline bool GetConditionalAccept(void) const {
+    inline bool GetConditionalAccept() const {
 #ifdef _WIN32
         return this->getOption(SOL_SOCKET, SO_CONDITIONAL_ACCEPT);
 #else  /* _WIN32 */
@@ -360,7 +360,7 @@ public:
      *
      * @throws SocketException If the operation fails.
      */
-    inline bool GetDebug(void) const {
+    inline bool GetDebug() const {
         return this->getOption(SOL_SOCKET, SO_DEBUG);
     }
 
@@ -371,7 +371,7 @@ public:
      *
      * @throws SocketException If the operation fails.
      */
-    inline bool GetDontRoute(void) const {
+    inline bool GetDontRoute() const {
         return this->getOption(SOL_SOCKET, SO_DONTROUTE);
     }
 
@@ -382,7 +382,7 @@ public:
      *
      * @throws SocketException If the operation fails.
      */
-    inline bool GetKeepAlive(void) const {
+    inline bool GetKeepAlive() const {
         return this->getOption(SOL_SOCKET, SO_DONTROUTE);
     }
 
@@ -406,7 +406,7 @@ public:
      *
      * @throw SocketException If the operation fails.
      */
-    IPEndPoint GetLocalEndPoint(void) const;
+    IPEndPoint GetLocalEndPoint() const;
 
     /**
      * Gets the adapter that multicast packets shall be received from.
@@ -453,7 +453,7 @@ public:
      *
      * @throws SocketException If the operation fails.
      */
-    inline bool GetNoDelay(void) const {
+    inline bool GetNoDelay() const {
         return this->getOption(IPPROTO_TCP, TCP_NODELAY);
     }
 
@@ -464,7 +464,7 @@ public:
      *
      * @throws SocketException If the operation fails.
      */
-    inline bool GetOOBInline(void) const {
+    inline bool GetOOBInline() const {
         return this->getOption(SOL_SOCKET, SO_OOBINLINE);
     }
 
@@ -489,7 +489,7 @@ public:
      *
      * @throw SocketException If the operation fails.
      */
-    IPEndPoint GetPeerEndPoint(void) const;
+    IPEndPoint GetPeerEndPoint() const;
 
     /**
      * Answer the total per-socket buffer space reserved for receives.
@@ -498,7 +498,7 @@ public:
      *
      * @throws SocketException If the operation fails.
      */
-    inline INT GetRcvBuf(void) const {
+    inline INT GetRcvBuf() const {
         INT retval;
         SIZE_T size = sizeof(INT);
         this->GetOption(SOL_SOCKET, SO_RCVBUF, &retval, size);
@@ -512,7 +512,7 @@ public:
      *
      * @throws SocketException If the operation fails.
      */
-    inline INT GetRcvTimeo(void) const {
+    inline INT GetRcvTimeo() const {
         INT retval;
         SIZE_T size = sizeof(INT);
         this->GetOption(SOL_SOCKET, SO_RCVTIMEO, &retval, size);
@@ -527,7 +527,7 @@ public:
      *
      * @throws SocketException If the operation fails.
      */
-    inline bool GetReuseAddr(void) const {
+    inline bool GetReuseAddr() const {
         return this->getOption(SOL_SOCKET, SO_REUSEADDR);
     }
 
@@ -539,7 +539,7 @@ public:
      *
      * @throws SocketException If the operation fails.
      */
-    inline bool GetExclusiveAddrUse(void) const {
+    inline bool GetExclusiveAddrUse() const {
 #ifdef _WIN32
         return this->getOption(SOL_SOCKET, SO_EXCLUSIVEADDRUSE);
 #else  /* _WIN32 */
@@ -554,7 +554,7 @@ public:
      *
      * @throws SocketException If the operation fails.
      */
-    inline INT GetSndBuf(void) const {
+    inline INT GetSndBuf() const {
         INT retval;
         SIZE_T size = sizeof(INT);
         this->GetOption(SOL_SOCKET, SO_SNDBUF, &retval, size);
@@ -568,7 +568,7 @@ public:
      *
      * @throws SocketException If the operation fails.
      */
-    inline INT GetSndTimeo(void) const {
+    inline INT GetSndTimeo() const {
         INT retval;
         SIZE_T size = sizeof(INT);
         this->GetOption(SOL_SOCKET, SO_SNDTIMEO, &retval, size);
@@ -623,7 +623,7 @@ public:
      *
      * @return true, if the socket is valid, false otherwise.
      */
-    inline bool IsValid(void) const {
+    inline bool IsValid() const {
         return (this->handle != INVALID_SOCKET);
     }
 

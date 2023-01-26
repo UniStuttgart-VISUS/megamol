@@ -41,10 +41,10 @@ public:
     /**
      * Create a new mutex, which is initially not locked.
      */
-    Mutex(void) = default;
+    Mutex() = default;
 
     /** Dtor. */
-    ~Mutex(void) override = default;
+    ~Mutex() override = default;
 
     /**
      * Acquire a lock on the mutex for the calling thread. The method blocks
@@ -52,7 +52,7 @@ public:
      *
      * @throws std::system_error when errors occur including OS errors
      */
-    void Lock(void) override;
+    void Lock() override;
 
     /**
      * Try to acquire a lock on the mutex for the calling thread. If the
@@ -69,7 +69,7 @@ public:
     /**
      * Release the mutex.
      */
-    void Unlock(void) override;
+    void Unlock() override;
 
 private:
     /**

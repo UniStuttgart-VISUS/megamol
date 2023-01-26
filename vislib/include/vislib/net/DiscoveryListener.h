@@ -42,10 +42,10 @@ public:
     enum NodeLostReason { LOST_EXPLICITLY = 1, LOST_IMLICITLY };
 
     /** Ctor. */
-    DiscoveryListener(void);
+    DiscoveryListener();
 
     /** Dtor. */
-    virtual ~DiscoveryListener(void);
+    virtual ~DiscoveryListener();
 
     /**
      * This method will be called, if a new computer was found

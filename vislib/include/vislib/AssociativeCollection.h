@@ -29,7 +29,7 @@ template<class K, class V>
 class AssociativeCollection {
 public:
     /** Dtor. */
-    virtual ~AssociativeCollection(void) {}
+    virtual ~AssociativeCollection() {}
 
     /**
      * Sets the value for the key 'key' to 'value'. If there was no entry
@@ -43,7 +43,7 @@ public:
     /**
      * Clears the whole map by removing all entries.
      */
-    virtual void Clear(void) = 0;
+    virtual void Clear() = 0;
 
     /**
      * Checks whether a given key is present in the map.
@@ -60,7 +60,7 @@ public:
      *
      * @return The number of entries in the map.
      */
-    virtual SIZE_T Count(void) const = 0;
+    virtual SIZE_T Count() const = 0;
 
     /**
      * Finds all keys which are associated to a given value. The order of
@@ -99,7 +99,7 @@ public:
      *
      * @return 'true' if the map is empty, 'false' otherwise.
      */
-    virtual bool IsEmpty(void) const = 0;
+    virtual bool IsEmpty() const = 0;
 
     /**
      * Removes the given key from the map.
@@ -128,7 +128,7 @@ public:
 
 protected:
     /** Ctor. */
-    AssociativeCollection(void) {}
+    AssociativeCollection() {}
 };
 
 } /* end namespace vislib */

@@ -43,33 +43,33 @@ public:
         HuesLightness,
     };
 
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "DirectionToColour";
     }
 
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Generates particle colours based on directional vectors "
                "and the HSL colour model.";
     }
 
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /// <summary>
     /// Initialises a new instance.
     /// </summary>
-    DirectionToColour(void);
+    DirectionToColour();
 
     /// <summary>
     /// Finalises the instance.
     /// </summary>
-    ~DirectionToColour(void) override;
+    ~DirectionToColour() override;
 
 protected:
-    bool create(void) override;
+    bool create() override;
 
-    void release(void) override;
+    void release() override;
 
 private:
     static float angle(const glm::vec2& v1, const glm::vec2& v2);
@@ -100,7 +100,7 @@ private:
 
     bool getExtent(core::Call& call);
 
-    inline std::size_t getHash(void) {
+    inline std::size_t getHash() {
         auto retval = this->hashData;
         retval ^= this->hashState + 0x9e3779b9 + (retval << 6) + (retval >> 2);
         return retval;

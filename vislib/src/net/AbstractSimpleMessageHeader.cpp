@@ -16,7 +16,7 @@
 /*
  * vislib::net::AbstractSimpleMessageHeader::~AbstractSimpleMessageHeader
  */
-vislib::net::AbstractSimpleMessageHeader::~AbstractSimpleMessageHeader(void) {}
+vislib::net::AbstractSimpleMessageHeader::~AbstractSimpleMessageHeader() {}
 
 
 /*
@@ -89,4 +89,4 @@ bool vislib::net::AbstractSimpleMessageHeader::operator==(const AbstractSimpleMe
 /*
  * vislib::net::AbstractSimpleMessageHeader::AbstractSimpleMessageHeader
  */
-vislib::net::AbstractSimpleMessageHeader::AbstractSimpleMessageHeader(void) {}
+vislib::net::AbstractSimpleMessageHeader::AbstractSimpleMessageHeader() {}

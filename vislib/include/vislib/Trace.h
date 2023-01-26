@@ -36,7 +36,7 @@ public:
      *
      * @return A reference to the only instance of this class.
      */
-    static Trace& GetInstance(void);
+    static Trace& GetInstance();
 
     /**
      * Overrides the currently used 'main-and-most-of-the-time-only'
@@ -106,7 +106,7 @@ public:
     static const UINT LEVEL_WARN;
 
     /** Dtor. */
-    ~Trace(void);
+    ~Trace();
 
     /**
      * Enables the output of the tracer messages to the application or
@@ -140,7 +140,7 @@ public:
      *
      * @return The current tracing level.
      */
-    inline UINT GetLevel(void) const {
+    inline UINT GetLevel() const {
         return this->level;
     }
 
@@ -187,7 +187,7 @@ public: // TODO: Not good! Think of better solution!
     /**
      * Ctor.
      */
-    Trace(void);
+    Trace();
 
 private: // TODO: Not good! Think of better solution!
     /**

@@ -60,7 +60,7 @@ public:
     }
 
     /** Dtor. */
-    ~ShallowVector(void);
+    ~ShallowVector();
 
     /**
      * Set a new component pointer. The vector uses from this point the
@@ -120,7 +120,7 @@ private:
      * Forbidden ctor. A default ctor would be inherently unsafe for
      * shallow vectors.
      */
-    inline ShallowVector(void) {}
+    inline ShallowVector() {}
 };
 
 
@@ -128,7 +128,7 @@ private:
  * ShallowVector<T, D>::~ShallowVector
  */
 template<class T, unsigned int D>
-ShallowVector<T, D>::~ShallowVector(void) {}
+ShallowVector<T, D>::~ShallowVector() {}
 
 } /* end namespace math */
 } /* end namespace vislib */

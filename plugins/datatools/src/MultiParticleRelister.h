@@ -22,13 +22,13 @@ namespace datatools {
 
 class MultiParticleRelister : public AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MultiParticleRelister";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Reorganizes MultiParticle Lists";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 

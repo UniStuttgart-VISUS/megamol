@@ -10,8 +10,8 @@ namespace volumetrics {
 
 class MarchingSquareTables {
 public:
-    MarchingSquareTables(void);
-    ~MarchingSquareTables(void);
+    MarchingSquareTables();
+    ~MarchingSquareTables();
 
     static const unsigned int a2fVertexOffset[4][2];
     static const unsigned int a2iEdgeConnection[4][2];

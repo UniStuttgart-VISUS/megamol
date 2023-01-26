@@ -33,7 +33,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "AstroDataCall";
     }
 
@@ -43,7 +43,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get astronomical particle data.";
     }
 
@@ -54,17 +54,17 @@ public:
     static const unsigned int CallForGetExtent;
 
     /** Ctor. */
-    AstroDataCall(void);
+    AstroDataCall();
 
     /** Dtor. */
-    ~AstroDataCall(void) override;
+    ~AstroDataCall() override;
 
     /**
      * Answer the number of functions used for this call.
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 2;
     }
 
@@ -99,7 +99,7 @@ public:
      *
      * @return Pointer to the position array
      */
-    inline const vec3ArrayPtr GetPositions(void) const {
+    inline const vec3ArrayPtr GetPositions() const {
         return this->positions;
     }
 
@@ -117,7 +117,7 @@ public:
      *
      * @return Pointer to the velocity array
      */
-    inline const vec3ArrayPtr GetVelocities(void) const {
+    inline const vec3ArrayPtr GetVelocities() const {
         return this->velocities;
     }
 
@@ -135,7 +135,7 @@ public:
      *
      * @return Pointer to the velocity derivative array
      */
-    inline const vec3ArrayPtr GetVelocityDerivatives(void) const {
+    inline const vec3ArrayPtr GetVelocityDerivatives() const {
         return this->velocityDerivatives;
     }
 
@@ -153,7 +153,7 @@ public:
      *
      * @return Pointer to the temperature array
      */
-    inline const floatArrayPtr GetTemperature(void) const {
+    inline const floatArrayPtr GetTemperature() const {
         return this->temperatures;
     }
 
@@ -171,7 +171,7 @@ public:
      *
      * @return Pointer to the temperature derivative array
      */
-    inline const floatArrayPtr GetTemperatureDerivatives(void) const {
+    inline const floatArrayPtr GetTemperatureDerivatives() const {
         return this->temperatureDerivatives;
     }
 
@@ -189,7 +189,7 @@ public:
      *
      * @return Pointer to the mass array
      */
-    inline const floatArrayPtr GetMass(void) const {
+    inline const floatArrayPtr GetMass() const {
         return this->masses;
     }
 
@@ -207,7 +207,7 @@ public:
      *
      * @return Pointer to the internal energy array
      */
-    inline const floatArrayPtr GetInternalEnergy(void) const {
+    inline const floatArrayPtr GetInternalEnergy() const {
         return this->internalEnergies;
     }
 
@@ -225,7 +225,7 @@ public:
      *
      * @return Pointer to the internal energy derivative array
      */
-    inline const floatArrayPtr GetInternalEnergyDerivatives(void) const {
+    inline const floatArrayPtr GetInternalEnergyDerivatives() const {
         return this->internalEnergyDerivatives;
     }
 
@@ -243,7 +243,7 @@ public:
      *
      * @return Pointer to the smoothing length array
      */
-    inline const floatArrayPtr GetSmoothingLength(void) const {
+    inline const floatArrayPtr GetSmoothingLength() const {
         return this->smoothingLengths;
     }
 
@@ -261,7 +261,7 @@ public:
      *
      * @return Pointer to the smoothing length array
      */
-    inline const floatArrayPtr GetSmoothingLengthDerivatives(void) const {
+    inline const floatArrayPtr GetSmoothingLengthDerivatives() const {
         return this->smoothingLengthDerivatives;
     }
 
@@ -279,7 +279,7 @@ public:
      *
      * @return Pointer to the molecular weight array
      */
-    inline const floatArrayPtr GetMolecularWeights(void) const {
+    inline const floatArrayPtr GetMolecularWeights() const {
         return this->molecularWeights;
     }
 
@@ -297,7 +297,7 @@ public:
      *
      * @return Pointer to the molecular weight derivative array
      */
-    inline const floatArrayPtr GetMolecularWeightDerivatives(void) const {
+    inline const floatArrayPtr GetMolecularWeightDerivatives() const {
         return this->molecularWeightDerivatives;
     }
 
@@ -315,7 +315,7 @@ public:
      *
      * @return Pointer to the density array
      */
-    inline const floatArrayPtr GetDensity(void) const {
+    inline const floatArrayPtr GetDensity() const {
         return this->densities;
     }
 
@@ -333,7 +333,7 @@ public:
      *
      * @return Pointer to the density derivative array
      */
-    inline const floatArrayPtr GetDensityDerivative(void) const {
+    inline const floatArrayPtr GetDensityDerivative() const {
         return this->densityDerivatives;
     }
 
@@ -351,7 +351,7 @@ public:
      *
      * @return Pointer to the gravitational potential array
      */
-    inline const floatArrayPtr GetGravitationalPotential(void) const {
+    inline const floatArrayPtr GetGravitationalPotential() const {
         return this->gravitationalPotentials;
     }
 
@@ -369,7 +369,7 @@ public:
      *
      * @return Pointer to the gravitational potential derivative array
      */
-    inline const floatArrayPtr GetGravitationalPotentialDerivatives(void) const {
+    inline const floatArrayPtr GetGravitationalPotentialDerivatives() const {
         return this->gravitationalPotentialDerivatives;
     }
 
@@ -387,7 +387,7 @@ public:
      *
      * @return Pointer to the entropy array
      */
-    inline const floatArrayPtr GetEntropy(void) const {
+    inline const floatArrayPtr GetEntropy() const {
         return this->entropies;
     }
 
@@ -405,7 +405,7 @@ public:
      *
      * @return Pointer to the entropy derivative array
      */
-    inline const floatArrayPtr GetEntropyDerivatives(void) const {
+    inline const floatArrayPtr GetEntropyDerivatives() const {
         return this->entropyDerivatives;
     }
 
@@ -425,7 +425,7 @@ public:
      *
      * @return Pointer to the baryon flag array
      */
-    inline const boolArrayPtr GetIsBaryonFlags(void) const {
+    inline const boolArrayPtr GetIsBaryonFlags() const {
         return this->isBaryonFlags;
     }
 
@@ -443,7 +443,7 @@ public:
      *
      * @return Pointer to the star flag array
      */
-    inline const boolArrayPtr GetIsStarFlags(void) const {
+    inline const boolArrayPtr GetIsStarFlags() const {
         return this->isStarFlags;
     }
 
@@ -461,7 +461,7 @@ public:
      *
      * @return Pointer to the wind flag array
      */
-    inline const boolArrayPtr GetIsWindFlags(void) const {
+    inline const boolArrayPtr GetIsWindFlags() const {
         return this->isWindFlags;
     }
 
@@ -479,7 +479,7 @@ public:
      *
      * @return Pointer to the star forming gas flag array
      */
-    inline const boolArrayPtr GetIsStarFormingGasFlags(void) const {
+    inline const boolArrayPtr GetIsStarFormingGasFlags() const {
         return this->isStarFormingGasFlags;
     }
 
@@ -497,7 +497,7 @@ public:
      *
      * @return Pointer to the AGN flag array
      */
-    inline const boolArrayPtr GetIsAGNFlags(void) const {
+    inline const boolArrayPtr GetIsAGNFlags() const {
         return this->isAGNFlags;
     }
 
@@ -515,7 +515,7 @@ public:
      *
      * @return Pointer to the particle ID array
      */
-    inline const idArrayPtr GetParticleIDs(void) const {
+    inline const idArrayPtr GetParticleIDs() const {
         return this->particleIDs;
     }
 
@@ -533,7 +533,7 @@ public:
      *
      * @return Pointer to the agn distance array
      */
-    inline const floatArrayPtr GetAgnDistances(void) const {
+    inline const floatArrayPtr GetAgnDistances() const {
         return this->agnDistances;
     }
 
@@ -544,7 +544,7 @@ public:
      *
      * @return The numbers of particles stored
      */
-    inline size_t GetParticleCount(void) const {
+    inline size_t GetParticleCount() const {
         if (positions == nullptr)
             return 0;
         return positions->size();
@@ -553,7 +553,7 @@ public:
     /**
      * Clears all of the stored values for a clean start.
      */
-    inline void ClearValues(void) {
+    inline void ClearValues() {
         this->positions.reset();
         this->velocities.reset();
         this->temperatures.reset();

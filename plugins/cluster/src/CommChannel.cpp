@@ -16,7 +16,7 @@ using namespace megamol::core;
 /*
  * cluster::CommChannel::CommChannel
  */
-cluster::CommChannel::CommChannel(void)
+cluster::CommChannel::CommChannel()
         : vislib::Listenable<CommChannel>()
         , vislib::net::SimpleMessageDispatchListener()
         , channel()
@@ -43,7 +43,7 @@ cluster::CommChannel::CommChannel(const cluster::CommChannel& src)
 /*
  * cluster::CommChannel::~CommChannel
  */
-cluster::CommChannel::~CommChannel(void) {
+cluster::CommChannel::~CommChannel() {
     this->Close();
 }
 
@@ -51,7 +51,7 @@ cluster::CommChannel::~CommChannel(void) {
 /*
  * cluster::CommChannel::Close
  */
-void cluster::CommChannel::Close(void) {
+void cluster::CommChannel::Close() {
     if (this->receiver.IsRunning()) {
         this->receiver.Terminate(false);
     }
@@ -67,7 +67,7 @@ void cluster::CommChannel::Close(void) {
 /*
  * cluster::CommChannel::IsOpen
  */
-bool cluster::CommChannel::IsOpen(void) const {
+bool cluster::CommChannel::IsOpen() const {
     return !this->channel.IsNull() && this->receiver.IsRunning();
 }
 

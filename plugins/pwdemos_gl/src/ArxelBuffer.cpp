@@ -29,13 +29,13 @@ void ArxelBuffer::Initialize(ArxelBuffer& buffer, int& state, const InitValues& 
 /*
  * ArxelBuffer::ArxelBuffer
  */
-ArxelBuffer::ArxelBuffer(void) : width(0), height(0), data(NULL), borderXVal(2), borderYVal(3) {}
+ArxelBuffer::ArxelBuffer() : width(0), height(0), data(NULL), borderXVal(2), borderYVal(3) {}
 
 
 /*
  * ArxelBuffer::~ArxelBuffer
  */
-ArxelBuffer::~ArxelBuffer(void) {
+ArxelBuffer::~ArxelBuffer() {
     this->width = 0;
     this->height = 0;
     ARY_SAFE_DELETE(this->data);

@@ -37,15 +37,15 @@ namespace sys {
 class MemmappedFile : public File {
 public:
     /** Ctor. */
-    MemmappedFile(void);
+    MemmappedFile();
 
     /**
      * Dtor. If the file is still open, it is closed.
      */
-    ~MemmappedFile(void) override;
+    ~MemmappedFile() override;
 
     /** Close the file, if open. Flush, if necessary. */
-    void Close(void) override;
+    void Close() override;
 
     /**
      * behaves like File::Flush, except that it flushes only dirty buffers.
@@ -54,7 +54,7 @@ public:
      *                    could not be flushed to disk. GetLastError() will provide details (Windows).
      * @throws IOException with details (linux).
      */
-    void Flush(void) override;
+    void Flush() override;
 
     /**
      * Returns the size of the current view in bytes.
@@ -62,7 +62,7 @@ public:
      *
      * @return number of bytes in view
      */
-    virtual inline File::FileSize GetViewSize(void) const {
+    virtual inline File::FileSize GetViewSize() const {
         return this->viewSize;
     }
 
@@ -71,7 +71,7 @@ public:
      *
      * @throws IllegalStateException if the file is not open
      */
-    File::FileSize GetSize(void) const override;
+    File::FileSize GetSize() const override;
 
     /**
      * behaves like File::Open except for WRITE_ONLY files. These are silently upgraded to READ_WRITE
@@ -129,7 +129,7 @@ public:
      *
      * @throws IllegalStateException if the file is not open
      */
-    File::FileSize Tell(void) const override;
+    File::FileSize Tell() const override;
 
     /**
      * behaves like File::Write

@@ -28,7 +28,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TunnelToBFactor";
     }
 
@@ -37,7 +37,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module for writing tunnel-information to the B-factor of a MolecularDataCall";
     }
 
@@ -46,15 +46,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    TunnelToBFactor(void);
+    TunnelToBFactor();
 
     /** Dtor. */
-    ~TunnelToBFactor(void) override;
+    ~TunnelToBFactor() override;
 
 protected:
     /**
@@ -62,12 +62,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * Call for get data.

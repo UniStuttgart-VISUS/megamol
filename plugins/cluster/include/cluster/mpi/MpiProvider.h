@@ -43,7 +43,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "MpiProvider";
     }
 
@@ -52,7 +52,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Initialises MPI on behalf of another module.";
     }
 
@@ -61,17 +61,17 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void);
+    static bool IsAvailable();
 
     /**
      * Initialises a new instance.
      */
-    MpiProvider(void);
+    MpiProvider();
 
     /**
      * Finalises the instance.
      */
-    ~MpiProvider(void) override;
+    ~MpiProvider() override;
 
 protected:
     /**
@@ -79,7 +79,7 @@ protected:
      *
      * @return true unconditionally.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Lazily initialises MPI and returns the communicator.
@@ -93,7 +93,7 @@ protected:
     /**
      * Finalises the module and releases MPI.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /** Super class. */
@@ -104,7 +104,7 @@ private:
      *
      * @return The command line string.
      */
-    static vislib::StringA getCommandLine(void);
+    static vislib::StringA getCommandLine();
 
     /**
      * Initialises MPI and performs node colouring.

@@ -42,7 +42,7 @@ class IPHostEntry {
 
 public:
     /** Ctor. */
-    IPHostEntry(void);
+    IPHostEntry();
 
     /**
      * Clone 'rhs'.
@@ -52,7 +52,7 @@ public:
     IPHostEntry(const IPHostEntry& rhs);
 
     /** Dtor. */
-    ~IPHostEntry(void);
+    ~IPHostEntry();
 
     /**
      * Get the IP end points assigned to the host.
@@ -60,7 +60,7 @@ public:
      * @return An array of IP end points, which of the object remains
      *         owner.
      */
-    inline const Array<IPAgnosticAddress>& GetAddresses(void) const {
+    inline const Array<IPAgnosticAddress>& GetAddresses() const {
         return this->addresses;
     }
 
@@ -69,7 +69,7 @@ public:
      *
      * @return The canonical name of the host.
      */
-    inline const String<T>& GetCanonicalName(void) const {
+    inline const String<T>& GetCanonicalName() const {
         return this->canonicalName;
     }
 
@@ -86,7 +86,7 @@ private:
     /**
      * Tries to find the host name if it is empty.
      */
-    void fixHostName(void);
+    void fixHostName();
 
     /**
      * Fill the IPHostEntry with the specified address info.
@@ -125,7 +125,7 @@ private:
  * vislib::net::IPHostEntry<T>::IPHostEntry
  */
 template<class T>
-IPHostEntry<T>::IPHostEntry(void) {
+IPHostEntry<T>::IPHostEntry() {
     // Nothing to do.
 }
 
@@ -143,7 +143,7 @@ IPHostEntry<T>::IPHostEntry(const IPHostEntry& rhs) {
  * vislib::net::IPHostEntry<T>::~IPHostEntry
  */
 template<class T>
-IPHostEntry<T>::~IPHostEntry(void) {
+IPHostEntry<T>::~IPHostEntry() {
     // Nothing to do.
 }
 
@@ -166,7 +166,7 @@ IPHostEntry<T>& IPHostEntry<T>::operator=(const IPHostEntry& rhs) {
  * IPHostEntry<T>::fixHostName
  */
 template<class T>
-void IPHostEntry<T>::fixHostName(void) {
+void IPHostEntry<T>::fixHostName() {
     char buffer[NI_MAXHOST]; // Receives the host name
     int err = 0;             // OS operation return value.
 

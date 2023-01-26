@@ -16,7 +16,7 @@ using namespace megamol::core;
 /*
  * job::AbstractJob::AbstractJob
  */
-job::AbstractJob::AbstractJob(void) {
+job::AbstractJob::AbstractJob() {
     // intentionally empty
 }
 
@@ -24,7 +24,7 @@ job::AbstractJob::AbstractJob(void) {
 /*
  * job::AbstractJob::~AbstractJob
  */
-job::AbstractJob::~AbstractJob(void) {
+job::AbstractJob::~AbstractJob() {
     // intentionally empty
 }
 
@@ -32,7 +32,7 @@ job::AbstractJob::~AbstractJob(void) {
 /*
  * job::AbstractJob::signalStart
  */
-void job::AbstractJob::signalStart(void) {
+void job::AbstractJob::signalStart() {
     vislib::StringA name("unknown");
     AbstractNamedObject* ano = dynamic_cast<AbstractNamedObject*>(this);
     if (ano != NULL) {

@@ -19,7 +19,7 @@
 namespace megamol {
 namespace adios {
 
-ls1ParticleFormat::ls1ParticleFormat(void)
+ls1ParticleFormat::ls1ParticleFormat()
         : core::Module()
         , mpSlot("mpSlot", "Slot to send multi particle data.")
         , adiosSlot("adiosSlot", "Slot to request ADIOS IO")
@@ -53,15 +53,15 @@ ls1ParticleFormat::ls1ParticleFormat(void)
     this->transferfunctionSlot.SetNecessity(megamol::core::AbstractCallSlotPresentation::SLOT_REQUIRED);
 }
 
-ls1ParticleFormat::~ls1ParticleFormat(void) {
+ls1ParticleFormat::~ls1ParticleFormat() {
     this->Release();
 }
 
-bool ls1ParticleFormat::create(void) {
+bool ls1ParticleFormat::create() {
     return true;
 }
 
-void ls1ParticleFormat::release(void) {}
+void ls1ParticleFormat::release() {}
 
 bool ls1ParticleFormat::getDataCallback(core::Call& call) {
     geocalls::MultiParticleDataCall* mpdc = dynamic_cast<geocalls::MultiParticleDataCall*>(&call);

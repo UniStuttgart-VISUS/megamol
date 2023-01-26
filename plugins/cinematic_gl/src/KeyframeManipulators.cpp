@@ -16,7 +16,7 @@ using namespace megamol::core;
 using namespace megamol::cinematic_gl;
 
 
-KeyframeManipulators::KeyframeManipulators(void)
+KeyframeManipulators::KeyframeManipulators()
         : toggleVisibleGroupParam(
               "manipulators::toggleVisibleGroup", "Toggle visibility of different manipulator groups.")
         , visibleGroupParam("manipulators::visibleGroup", "Select visible manipulator group.")
@@ -120,7 +120,7 @@ KeyframeManipulators::KeyframeManipulators(void)
 }
 
 
-KeyframeManipulators::~KeyframeManipulators(void) {}
+KeyframeManipulators::~KeyframeManipulators() {}
 
 
 void KeyframeManipulators::UpdateExtents(vislib::math::Cuboid<float>& inout_bbox) {

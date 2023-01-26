@@ -27,7 +27,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BuckyBall";
     }
 
@@ -36,7 +36,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Generates a dataset of an icosahedron inside a sphere.";
     }
 
@@ -45,15 +45,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    BuckyBall(void);
+    BuckyBall();
 
     /** Dtor */
-    ~BuckyBall(void) override;
+    ~BuckyBall() override;
 
 protected:
     /**
@@ -61,12 +61,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /**

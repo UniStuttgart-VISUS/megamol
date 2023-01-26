@@ -28,7 +28,7 @@ class AbstractDimension : public AbstractDimensionImpl<T, D, S, AbstractDimensio
 
 public:
     /** Dtor. */
-    ~AbstractDimension(void);
+    ~AbstractDimension();
 
     /**
      * Assignment operator. This operator never creates an alias.
@@ -65,7 +65,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractDimension(void) : Super() {}
+    inline AbstractDimension() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -77,7 +77,7 @@ protected:
  * vislib::math::AbstractDimension<T, D, S>::~AbstractDimension
  */
 template<class T, unsigned int D, class S>
-AbstractDimension<T, D, S>::~AbstractDimension(void) {}
+AbstractDimension<T, D, S>::~AbstractDimension() {}
 
 
 /**
@@ -90,14 +90,14 @@ class AbstractDimension<T, 2, S> : public AbstractDimensionImpl<T, 2, S, Abstrac
 
 public:
     /** Behaves like primary class template. */
-    ~AbstractDimension(void);
+    ~AbstractDimension();
 
     /**
      * Answer the height of the dimension.
      *
      * @return The height.
      */
-    inline const T& GetHeight(void) const {
+    inline const T& GetHeight() const {
         return this->dimension[1];
     }
 
@@ -106,7 +106,7 @@ public:
      *
      * @return The width.
      */
-    inline const T& GetWidth(void) const {
+    inline const T& GetWidth() const {
         return this->dimension[0];
     }
 
@@ -115,7 +115,7 @@ public:
      *
      * @return The height.
      */
-    inline const T& Height(void) const {
+    inline const T& Height() const {
         return this->dimension[1];
     }
 
@@ -153,7 +153,7 @@ public:
      *
      * @return The width.
      */
-    inline const T& Width(void) const {
+    inline const T& Width() const {
         return this->dimension[0];
     }
 
@@ -177,7 +177,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractDimension(void) : Super() {}
+    inline AbstractDimension() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -189,7 +189,7 @@ protected:
  * vislib::math::AbstractDimension<T, 2, S>::~AbstractDimension
  */
 template<class T, class S>
-AbstractDimension<T, 2, S>::~AbstractDimension(void) {}
+AbstractDimension<T, 2, S>::~AbstractDimension() {}
 
 
 /**
@@ -202,14 +202,14 @@ class AbstractDimension<T, 3, S> : public AbstractDimensionImpl<T, 3, S, Abstrac
 
 public:
     /** Behaves like primary class template. */
-    ~AbstractDimension(void);
+    ~AbstractDimension();
 
     /**
      * Answer the depth of the dimension.
      *
      * @return The depth.
      */
-    inline const T& Depth(void) const {
+    inline const T& Depth() const {
         return this->dimension[2];
     }
 
@@ -218,7 +218,7 @@ public:
      *
      * @return The depth.
      */
-    inline const T& GetDepth(void) const {
+    inline const T& GetDepth() const {
         return this->dimension[2];
     }
 
@@ -227,7 +227,7 @@ public:
      *
      * @return The height.
      */
-    inline const T& GetHeight(void) const {
+    inline const T& GetHeight() const {
         return this->dimension[1];
     }
 
@@ -236,7 +236,7 @@ public:
      *
      * @return The width.
      */
-    inline const T& GetWidth(void) const {
+    inline const T& GetWidth() const {
         return this->dimension[0];
     }
 
@@ -245,7 +245,7 @@ public:
      *
      * @return The height.
      */
-    inline const T& Height(void) const {
+    inline const T& Height() const {
         return this->dimension[1];
     }
 
@@ -294,7 +294,7 @@ public:
      *
      * @return The width.
      */
-    inline const T& Width(void) const {
+    inline const T& Width() const {
         return this->dimension[0];
     }
 
@@ -318,7 +318,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractDimension(void) : Super() {}
+    inline AbstractDimension() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -330,7 +330,7 @@ protected:
  * vislib::math::AbstractDimension<T, 3, S>::~AbstractDimension
  */
 template<class T, class S>
-AbstractDimension<T, 3, S>::~AbstractDimension(void) {}
+AbstractDimension<T, 3, S>::~AbstractDimension() {}
 
 } /* end namespace math */
 } /* end namespace vislib */

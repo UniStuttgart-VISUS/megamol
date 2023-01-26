@@ -30,7 +30,7 @@ public:
     /**
      * Create a zero sized dimension.
      */
-    Dimension(void);
+    Dimension();
 
     /**
      * Create a dimension using the data from the 'dimension' array.
@@ -63,7 +63,7 @@ public:
     Dimension(const AbstractDimension<Tp, Dp, Sp>& rhs);
 
     /** Dtor. */
-    ~Dimension(void);
+    ~Dimension();
 
     /**
      * Assignment operator. This operator never creates an alias.
@@ -103,7 +103,7 @@ protected:
  * vislib::math::Dimension<T, D>::Dimension
  */
 template<class T, unsigned int D>
-Dimension<T, D>::Dimension(void) {
+Dimension<T, D>::Dimension() {
     for (unsigned int d = 0; d < D; d++) {
         this->dimension[d] = static_cast<T>(0);
     }
@@ -129,7 +129,7 @@ Dimension<T, D>::Dimension(const AbstractDimension<Tp, Dp, Sp>& rhs) {
  * vislib::math::Dimension<T, D>::~Dimension
  */
 template<class T, unsigned int D>
-Dimension<T, D>::~Dimension(void) {}
+Dimension<T, D>::~Dimension() {}
 
 
 /**
@@ -142,7 +142,7 @@ class Dimension<T, 2> : public AbstractDimension<T, 2, T[2]> {
 
 public:
     /** Behaves like primary class template. */
-    Dimension(void);
+    Dimension();
 
     /** Behaves like primary class template. */
     inline Dimension(const T* dimension) {
@@ -171,7 +171,7 @@ public:
     Dimension(const AbstractDimension<Tp, Dp, Sp>& rhs);
 
     /** Behaves like primary class template. */
-    ~Dimension(void);
+    ~Dimension();
 
     /** Behaves like primary class template. */
     inline Dimension& operator=(const Dimension& rhs) {
@@ -199,7 +199,7 @@ protected:
  * vislib::math::Dimension<T, 2>::Dimension
  */
 template<class T>
-Dimension<T, 2>::Dimension(void) {
+Dimension<T, 2>::Dimension() {
     for (unsigned int d = 0; d < D; d++) {
         this->dimension[d] = static_cast<T>(0);
     }
@@ -225,7 +225,7 @@ Dimension<T, 2>::Dimension(const AbstractDimension<Tp, Dp, Sp>& rhs) {
  * vislib::math::Dimension<T, 2>::~Dimension
  */
 template<class T>
-Dimension<T, 2>::~Dimension(void) {}
+Dimension<T, 2>::~Dimension() {}
 
 
 /*
@@ -245,7 +245,7 @@ class Dimension<T, 3> : public AbstractDimension<T, 3, T[3]> {
 
 public:
     /** Behaves like primary class template. */
-    Dimension(void);
+    Dimension();
 
     /** Behaves like primary class template. */
     inline Dimension(const T* dimension) {
@@ -276,7 +276,7 @@ public:
     Dimension(const AbstractDimension<Tp, Dp, Sp>& rhs);
 
     /** Behaves like primary class template. */
-    ~Dimension(void);
+    ~Dimension();
 
     /** Behaves like primary class template. */
     inline Dimension& operator=(const Dimension& rhs) {
@@ -304,7 +304,7 @@ protected:
  * vislib::math::Dimension<T, 3>::Dimension
  */
 template<class T>
-Dimension<T, 3>::Dimension(void) {
+Dimension<T, 3>::Dimension() {
     for (unsigned int d = 0; d < D; d++) {
         this->dimension[d] = static_cast<T>(0);
     }
@@ -330,7 +330,7 @@ Dimension<T, 3>::Dimension(const AbstractDimension<Tp, Dp, Sp>& rhs) {
  * vislib::math::Dimension<T, 3>::~Dimension
  */
 template<class T>
-Dimension<T, 3>::~Dimension(void) {}
+Dimension<T, 3>::~Dimension() {}
 
 
 /*

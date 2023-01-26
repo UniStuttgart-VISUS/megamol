@@ -23,26 +23,26 @@ namespace datatools {
 class ParticleIColGradientField : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleIColGradientField";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes the gradient field on particles with IColor, and stores the corresponding vector fiels as "
                "RGBf color data";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleIColGradientField(void);
+    ParticleIColGradientField();
 
     /** Dtor */
-    ~ParticleIColGradientField(void) override;
+    ~ParticleIColGradientField() override;
 
 protected:
     /**

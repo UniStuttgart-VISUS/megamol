@@ -19,7 +19,7 @@ namespace volumetrics {
 class TagVolume {
 public:
     TagVolume(unsigned int xRes, unsigned int yRes, unsigned int zRes);
-    ~TagVolume(void);
+    ~TagVolume();
     void Tag(unsigned int x, unsigned int y, unsigned int z);
     bool IsTagged(unsigned int x, unsigned int y, unsigned int z);
     void UnTag(unsigned int x, unsigned int y, unsigned int z);

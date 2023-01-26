@@ -30,7 +30,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QuartzPlaneRenderer";
     }
 
@@ -39,7 +39,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module rendering gridded quartz particles onto a clipping plane";
     }
 
@@ -48,19 +48,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return AbstractMultiShaderQuartzRenderer::IsAvailable();
     }
 
     /**
      * Ctor
      */
-    QuartzPlaneRenderer(void);
+    QuartzPlaneRenderer();
 
     /**
      * Dtor
      */
-    ~QuartzPlaneRenderer(void) override;
+    ~QuartzPlaneRenderer() override;
 
 protected:
     /**
@@ -68,7 +68,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -84,7 +84,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * The render callback.

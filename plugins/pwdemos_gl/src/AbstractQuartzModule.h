@@ -23,12 +23,12 @@ public:
     /**
      * Ctor
      */
-    AbstractQuartzModule(void);
+    AbstractQuartzModule();
 
     /**
      * Dtor
      */
-    virtual ~AbstractQuartzModule(void);
+    virtual ~AbstractQuartzModule();
 
 protected:
     /**
@@ -37,7 +37,7 @@ protected:
      * @return The particle data from the connected module or NULL if no
      *        data could be received
      */
-    ParticleGridDataCall* getParticleData(void);
+    ParticleGridDataCall* getParticleData();
 
     /**
      * Answer the crystalite data from the connected module
@@ -45,7 +45,7 @@ protected:
      * @return The crystalite data from the connected module or NULL if no
      *         data could be received
      */
-    virtual CrystalDataCall* getCrystaliteData(void);
+    virtual CrystalDataCall* getCrystaliteData();
 
     /** The slot to get the data */
     core::CallerSlot dataInSlot;

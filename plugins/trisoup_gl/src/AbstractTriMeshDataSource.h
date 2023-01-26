@@ -32,10 +32,10 @@ namespace trisoup_gl {
 class AbstractTriMeshDataSource : public core::Module {
 public:
     /** Ctor */
-    AbstractTriMeshDataSource(void);
+    AbstractTriMeshDataSource();
 
     /** Dtor */
-    ~AbstractTriMeshDataSource(void) override;
+    ~AbstractTriMeshDataSource() override;
 
 protected:
     /** Alias for mesh class */
@@ -52,7 +52,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Gets the data from the source.
@@ -75,10 +75,10 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /** Ensures that the data is loaded */
-    virtual void assertData(void) = 0;
+    virtual void assertData() = 0;
 
     /** The objects */
     vislib::Array<Mesh> objs;

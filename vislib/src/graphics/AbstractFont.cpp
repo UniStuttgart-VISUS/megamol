@@ -13,7 +13,7 @@
 /*
  * vislib::graphics::AbstractFont::~AbstractFont
  */
-vislib::graphics::AbstractFont::~AbstractFont(void) {
+vislib::graphics::AbstractFont::~AbstractFont() {
     // Deinitialise must be called from the dtor of the implementing class.
     ASSERT(this->initialised == false);
 }
@@ -22,7 +22,7 @@ vislib::graphics::AbstractFont::~AbstractFont(void) {
 /*
  * vislib::graphics::AbstractFont::Deinitialise
  */
-void vislib::graphics::AbstractFont::Deinitialise(void) {
+void vislib::graphics::AbstractFont::Deinitialise() {
     if (this->initialised) {
         this->deinitialise();
         this->initialised = false;
@@ -33,7 +33,7 @@ void vislib::graphics::AbstractFont::Deinitialise(void) {
 /*
  * vislib::graphics::AbstractFont::Initialise
  */
-bool vislib::graphics::AbstractFont::Initialise(void) {
+bool vislib::graphics::AbstractFont::Initialise() {
     if (!this->initialised) {
         if (!this->initialise()) {
             return false;
@@ -74,6 +74,6 @@ void vislib::graphics::AbstractFont::SetSize(float size) {
 /*
  * vislib::graphics::AbstractFont::AbstractFont
  */
-vislib::graphics::AbstractFont::AbstractFont(void) : initialised(false), size(1.0f), flipY(false) {
+vislib::graphics::AbstractFont::AbstractFont() : initialised(false), size(1.0f), flipY(false) {
     // intentionally empty
 }

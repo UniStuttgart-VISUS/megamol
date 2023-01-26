@@ -26,17 +26,17 @@ class AbstractBezierRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
 protected:
     /** Ctor. */
-    AbstractBezierRenderer(void);
+    AbstractBezierRenderer();
 
     /** Dtor. */
-    ~AbstractBezierRenderer(void) override;
+    ~AbstractBezierRenderer() override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -52,7 +52,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * The render callback.
@@ -77,7 +77,7 @@ protected:
      *
      * @return True if the shader is required
      */
-    virtual bool shader_required(void) const {
+    virtual bool shader_required() const {
         // TODO: This is not cool at all
         return true;
     }

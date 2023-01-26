@@ -24,7 +24,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BezierCPUMeshRenderer";
     }
 
@@ -33,7 +33,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for bézier curve";
     }
 
@@ -42,15 +42,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    BezierCPUMeshRenderer(void);
+    BezierCPUMeshRenderer();
 
     /** Dtor. */
-    ~BezierCPUMeshRenderer(void) override;
+    ~BezierCPUMeshRenderer() override;
 
 protected:
     /**
@@ -67,7 +67,7 @@ protected:
      *
      * @return True if the shader is required
      */
-    bool shader_required(void) const override {
+    bool shader_required() const override {
         return false;
     }
 
@@ -76,12 +76,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /** Powerfull brute force tube rendering with many parameters */

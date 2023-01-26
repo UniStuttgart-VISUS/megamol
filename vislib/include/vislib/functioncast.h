@@ -59,7 +59,7 @@ public:
      *
      * @return The void pointer of this cast.
      */
-    void* VoidPtr(void) {
+    void* VoidPtr() {
         return value.voidPtr;
     }
 
@@ -68,7 +68,7 @@ public:
      *
      * @return The function pointer of this cast.
      */
-    operator T(void) {
+    operator T() {
         return value.typePtr;
     }
 
@@ -107,7 +107,7 @@ public:
      *
      * @return The void pointer of this cast.
      */
-    operator void*(void) {
+    operator void*() {
         return this->ptr;
     }
 

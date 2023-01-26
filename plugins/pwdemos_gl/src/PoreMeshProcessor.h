@@ -34,12 +34,12 @@ public:
     /**
      * Ctor
      */
-    PoreMeshProcessor(void);
+    PoreMeshProcessor();
 
     /**
      * Dtor
      */
-    ~PoreMeshProcessor(void) override;
+    ~PoreMeshProcessor() override;
 
     /**
      * Perform the work of a thread.
@@ -63,7 +63,7 @@ public:
      * @return true to acknowledge that the Runnable will finish as soon
      *         as possible, false if termination is not possible.
      */
-    bool Terminate(void) override;
+    bool Terminate() override;
 
     /**
      * Sets the input buffer pool

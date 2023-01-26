@@ -51,7 +51,7 @@ class ProteinPluginInstance : public megamol::core::factories::AbstractPluginIns
     REGISTERPLUGIN(ProteinPluginInstance)
 
 public:
-    ProteinPluginInstance(void)
+    ProteinPluginInstance()
             : megamol::core::factories::AbstractPluginInstance("protein", "Plugin for protein rendering (SFB716 D4)"){};
 
     ~ProteinPluginInstance() override = default;

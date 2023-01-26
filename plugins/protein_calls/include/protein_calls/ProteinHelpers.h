@@ -416,7 +416,7 @@ inline AminoAcidCategory GetAminoAcidPropertiesByResName(std::string resName) {
  *
  * @return vec2 where x stores the min value and y the max value
  */
-inline glm::vec2 GetHydrophobicityBoundsMonera(void) {
+inline glm::vec2 GetHydrophobicityBoundsMonera() {
     return glm::vec2(-100.0, 100.0);
 }
 
@@ -425,7 +425,7 @@ inline glm::vec2 GetHydrophobicityBoundsMonera(void) {
  *
  * @return vec2 where x stores the min value and y the max value
  */
-inline glm::vec2 GetHydrophobicityBoundsKyte(void) {
+inline glm::vec2 GetHydrophobicityBoundsKyte() {
     return glm::vec2(-4.5, 4.5);
 }
 
@@ -434,7 +434,7 @@ inline glm::vec2 GetHydrophobicityBoundsKyte(void) {
  *
  * @return vec2 where x stores the min value and y the max value
  */
-inline glm::vec2 GetHydrophobicityBounds(void) {
+inline glm::vec2 GetHydrophobicityBounds() {
     return GetHydrophobicityBoundsKyte();
 }
 

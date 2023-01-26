@@ -68,7 +68,7 @@ public:
     /**
      * Finalises the instance.
      */
-    virtual ~arcball_manipulator(void);
+    virtual ~arcball_manipulator();
 
     /**
      * Report that the mouse pointer has been dragged (moved while the
@@ -91,7 +91,7 @@ public:
     /**
      * Report that dragging ended (mouse button was released).
      */
-    inline void setInactive(void) {
+    inline void setInactive() {
         this->end_manipulation();
     }
 

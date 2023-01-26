@@ -14,7 +14,7 @@
 /*
  * megamol::core::cluster::mpi::MpiCall::FunctionCount
  */
-unsigned int megamol::core::cluster::mpi::MpiCall::FunctionCount(void) {
+unsigned int megamol::core::cluster::mpi::MpiCall::FunctionCount() {
     return (sizeof(MpiCall::INTENTS) / sizeof(*MpiCall::INTENTS));
 }
 
@@ -34,7 +34,7 @@ const char* megamol::core::cluster::mpi::MpiCall::FunctionName(unsigned int idx)
 /*
  * megamol::core::cluster::mpi::MpiCall::IsAvailable
  */
-bool megamol::core::cluster::mpi::MpiCall::IsAvailable(void) {
+bool megamol::core::cluster::mpi::MpiCall::IsAvailable() {
 #ifdef MEGAMOL_USE_MPI
     return true;
 #else  /* MEGAMOL_USE_MPI */
@@ -52,7 +52,7 @@ const unsigned int megamol::core::cluster::mpi::MpiCall::IDX_PROVIDE_MPI = 0;
 /*
  * megamol::core::cluster::mpi::MpiCall::MpiCall
  */
-megamol::core::cluster::mpi::MpiCall::MpiCall(void) : Base() {
+megamol::core::cluster::mpi::MpiCall::MpiCall() : Base() {
 #ifdef MEGAMOL_USE_MPI
     this->comm = MPI_COMM_NULL;
 #endif /* MEGAMOL_USE_MPI */
@@ -62,13 +62,13 @@ megamol::core::cluster::mpi::MpiCall::MpiCall(void) : Base() {
 /*
  * megamol::core::cluster::mpi::MpiCall::~MpiCall
  */
-megamol::core::cluster::mpi::MpiCall::~MpiCall(void) {}
+megamol::core::cluster::mpi::MpiCall::~MpiCall() {}
 
 
 /*
  * megamol::core::cluster::mpi::MpiCall::GetCommSize
  */
-int megamol::core::cluster::mpi::MpiCall::GetCommSize(void) const {
+int megamol::core::cluster::mpi::MpiCall::GetCommSize() const {
     int retval = -1;
 #ifdef MEGAMOL_USE_MPI
     ::MPI_Comm_size(this->comm, &retval);
@@ -80,7 +80,7 @@ int megamol::core::cluster::mpi::MpiCall::GetCommSize(void) const {
 /*
  * megamol::core::cluster::mpi::MpiCall::GetRank
  */
-int megamol::core::cluster::mpi::MpiCall::GetRank(void) const {
+int megamol::core::cluster::mpi::MpiCall::GetRank() const {
     int retval = -1;
 #ifdef MEGAMOL_USE_MPI
     ::MPI_Comm_rank(this->comm, &retval);

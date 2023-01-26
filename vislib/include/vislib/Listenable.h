@@ -37,10 +37,10 @@ public:
     class Listener {
     public:
         /** Ctor */
-        Listener(void);
+        Listener();
 
         /** Dtor */
-        virtual ~Listener(void);
+        virtual ~Listener();
     };
 
     /** Iterator type */
@@ -50,10 +50,10 @@ public:
     typedef ConstIterator<ListenerIterator> ListenerConstIterator;
 
     /** Ctor. */
-    Listenable(void);
+    Listenable();
 
     /** Dtor. */
-    ~Listenable(void);
+    ~Listenable();
 
     /**
      * Adds a listener to this object. The ownership of the memory of the
@@ -69,7 +69,7 @@ public:
      * Removes all listeners. Does not delete the listener objects since
      * their memory is not owned by this object.
      */
-    void ClearListeners(void);
+    void ClearListeners();
 
     /**
      * answer wether 'listener' is a listener of this object
@@ -92,14 +92,14 @@ protected:
      *
      * @return A const iterator of all listeners of this object
      */
-    ListenerConstIterator GetConstListeners(void) const;
+    ListenerConstIterator GetConstListeners() const;
 
     /**
      * Answer an iterator of all listeners of this object
      *
      * @return An iterator of all listeners of this object
      */
-    ListenerIterator GetListeners(void);
+    ListenerIterator GetListeners();
 
 private:
     /** The list of listeners of this object */
@@ -111,7 +111,7 @@ private:
  * Listenable<C>::Listener::Listener
  */
 template<class C>
-Listenable<C>::Listener::Listener(void) {
+Listenable<C>::Listener::Listener() {
     // intentionally empty
 }
 
@@ -120,7 +120,7 @@ Listenable<C>::Listener::Listener(void) {
  * Listenable<C>::Listener::~Listener
  */
 template<class C>
-Listenable<C>::Listener::~Listener(void) {
+Listenable<C>::Listener::~Listener() {
     // intentionally empty
 }
 
@@ -129,7 +129,7 @@ Listenable<C>::Listener::~Listener(void) {
  * Listenable<C>::Listenable
  */
 template<class C>
-Listenable<C>::Listenable(void) : listeners() {
+Listenable<C>::Listenable() : listeners() {
     // intentionally empty
 }
 
@@ -138,7 +138,7 @@ Listenable<C>::Listenable(void) : listeners() {
  * Listenable<C>::~Listenable
  */
 template<class C>
-Listenable<C>::~Listenable(void) {
+Listenable<C>::~Listenable() {
     this->listeners.Clear(); // DO NOT DELETE Items
 }
 
@@ -158,7 +158,7 @@ void Listenable<C>::AddListener(Listener* listener) {
  * Listenable<C>::ClearListeners
  */
 template<class C>
-void Listenable<C>::ClearListeners(void) {
+void Listenable<C>::ClearListeners() {
     this->listeners.Clear(); // DO NOT DELETE Items
 }
 
@@ -185,7 +185,7 @@ void Listenable<C>::RemoveListener(Listener* listener) {
  * Listenable<C>::GetConstListeners
  */
 template<class C>
-typename Listenable<C>::ListenerConstIterator Listenable<C>::GetConstListeners(void) const {
+typename Listenable<C>::ListenerConstIterator Listenable<C>::GetConstListeners() const {
     return this->listeners.GetConstIterator();
 }
 
@@ -194,7 +194,7 @@ typename Listenable<C>::ListenerConstIterator Listenable<C>::GetConstListeners(v
  * Listenable<C>::GetListeners
  */
 template<class C>
-typename Listenable<C>::ListenerIterator Listenable<C>::GetListeners(void) {
+typename Listenable<C>::ListenerIterator Listenable<C>::GetListeners() {
     return this->listeners.GetIterator();
 }
 

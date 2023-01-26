@@ -72,7 +72,7 @@ vislib::Exception::Exception(const Exception& rhs) : file(NULL), line(rhs.line),
 /*
  * vislib::Exception::~Exception
  */
-vislib::Exception::~Exception(void) {
+vislib::Exception::~Exception() {
     ARY_SAFE_DELETE(this->file);
     SAFE_OPERATOR_DELETE(this->msg);
     ARY_SAFE_DELETE(this->stack);
@@ -82,7 +82,7 @@ vislib::Exception::~Exception(void) {
 /*
  * vislib::Exception::GetMsgA
  */
-const char* vislib::Exception::GetMsgA(void) const {
+const char* vislib::Exception::GetMsgA() const {
     if (this->msg == NULL) {
         return "Exception";
     }
@@ -98,7 +98,7 @@ const char* vislib::Exception::GetMsgA(void) const {
 /*
  * vislib::Exception::GetMsgW
  */
-const wchar_t* vislib::Exception::GetMsgW(void) const {
+const wchar_t* vislib::Exception::GetMsgW() const {
     if (this->msg == NULL) {
         return L"Exception";
     }

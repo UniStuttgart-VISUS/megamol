@@ -21,7 +21,7 @@ public:
     struct Tunnel {
     public:
         /** Ctor. */
-        Tunnel(void) : tunnelLength(0.0f) {
+        Tunnel() : tunnelLength(0.0f) {
             // intentionally empty
         }
         /** array storing the voronoi vertex locations of the tunnel represented */
@@ -48,7 +48,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TunnelResidueDataCall";
     }
 
@@ -57,7 +57,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call transporting tunnel data alongside with redidue indices beside it";
     }
 
@@ -66,7 +66,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return AbstractGetData3DCall::FunctionCount();
     }
 
@@ -82,17 +82,17 @@ public:
     }
 
     /** Ctor. */
-    TunnelResidueDataCall(void);
+    TunnelResidueDataCall();
 
     /** Dtor. */
-    ~TunnelResidueDataCall(void) override;
+    ~TunnelResidueDataCall() override;
 
     /**
      * Returns the number of tunnels stored in this call
      *
      * @return The number of tunnels.
      */
-    int getTunnelNumber(void) const {
+    int getTunnelNumber() const {
         return this->numTunnels;
     }
 
@@ -110,7 +110,7 @@ public:
      *
      * @param return The tunnel descriptions
      */
-    const Tunnel* getTunnelDescriptions(void) const {
+    const Tunnel* getTunnelDescriptions() const {
         return this->tunnels;
     }
 

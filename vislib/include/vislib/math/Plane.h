@@ -32,7 +32,7 @@ public:
     /**
      * Ctor.
      */
-    inline Plane(void) {
+    inline Plane() {
         this->parameters[Super::IDX_A] = static_cast<T>(0);
         this->parameters[Super::IDX_B] = static_cast<T>(0);
         this->parameters[Super::IDX_C] = static_cast<T>(0);
@@ -107,7 +107,7 @@ public:
     }
 
     /** Dtor. */
-    ~Plane(void);
+    ~Plane();
 
     /**
      * Assignment.
@@ -158,7 +158,7 @@ Plane<T>::Plane(const AbstractPlane<Tp, Sp>& rhs) {
  * Plane<T>::~Plane
  */
 template<class T>
-Plane<T>::~Plane(void) {}
+Plane<T>::~Plane() {}
 
 } /* end namespace math */
 } /* end namespace vislib */

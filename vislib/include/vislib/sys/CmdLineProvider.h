@@ -82,7 +82,7 @@ public:
 #endif // _WIN32
 
     /** Ctor. */
-    CmdLineProvider(void);
+    CmdLineProvider();
 
     /**
      * copy Ctor.
@@ -160,7 +160,7 @@ public:
     CmdLineProvider(const String<T>& appName, const String<T>& cmdLine);
 
     /** Dtor. */
-    ~CmdLineProvider(void);
+    ~CmdLineProvider();
 
     /**
      * assignment operator
@@ -290,7 +290,7 @@ public:
      *
      * @return Reference to the number of arguments
      */
-    inline int& ArgC(void) {
+    inline int& ArgC() {
         return this->argCount;
     }
 
@@ -306,7 +306,7 @@ public:
      *
      * @return The argument list. Might be NULL, if ArgC returned Zero.
      */
-    inline Char** ArgV(void) {
+    inline Char** ArgV() {
         return this->arguments;
     }
 
@@ -363,7 +363,7 @@ public:
 
 private:
     /** clears the argument list */
-    void clearArgumentList(void);
+    void clearArgumentList();
 
     /**
      * Creates an argument from two given pointers.
@@ -379,7 +379,7 @@ private:
      * Reflects all changes done to the pointers returned by 'ArgC' and
      * 'ArgV' by updating 'storeCount' and 'memoryAnchor'.
      */
-    void reflectCallerChanges(void);
+    void reflectCallerChanges();
 
     /**
      * Number of created arguments. This is not unsigned to be more
@@ -777,7 +777,7 @@ void CmdLineProvider<T>::CreateCmdLine(const Char* appName, const Char* cmdLine)
  * CmdLineProvider<T>::clearArgumentList
  */
 template<class T>
-void CmdLineProvider<T>::clearArgumentList(void) {
+void CmdLineProvider<T>::clearArgumentList() {
     if (this->memoryAnchor[0] != NULL) {
         for (int i = 0; i < this->storeCount; i++) {
             ARY_SAFE_DELETE(this->memoryAnchor[0][i]);
@@ -963,7 +963,7 @@ String<T> CmdLineProvider<T>::SingleStringCommandLine(bool includeFirst) {
  * CmdLineProvider<T>::reflectCallerChanges
  */
 template<class T>
-void CmdLineProvider<T>::reflectCallerChanges(void) {
+void CmdLineProvider<T>::reflectCallerChanges() {
 
     // delete all entries in mV which are missing in aV
     for (int i = 0; i < this->storeCount; i++) {

@@ -66,7 +66,7 @@ public:
     RawStorageSerialiser(const RawStorageSerialiser& src);
 
     /** Dtor. */
-    ~RawStorageSerialiser(void) override;
+    ~RawStorageSerialiser() override;
 
     void Deserialise(bool& outValue, const char* name = NULL) override;
 
@@ -129,7 +129,7 @@ public:
      *
      * @return The offset inside the rawstorage.
      */
-    inline unsigned int Offset(void) const {
+    inline unsigned int Offset() const {
         return this->offset;
     }
 
@@ -138,7 +138,7 @@ public:
      *
      * @return The RawStorage object pointer to be used.
      */
-    RawStorage* Storage(void) const {
+    RawStorage* Storage() const {
         return this->storage;
     }
 

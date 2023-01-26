@@ -39,10 +39,10 @@ class RunnableThread : public Thread, public T {
 
 public:
     /** Ctor. */
-    RunnableThread(void);
+    RunnableThread();
 
     /** Dtor. */
-    ~RunnableThread(void) override;
+    ~RunnableThread() override;
 
     /**
      * Ask the runnable to abort as soon as possible.
@@ -50,7 +50,7 @@ public:
      * @return true to acknowledge that the Runnable will finish as soon
      *         as possible, false if termination is not possible.
      */
-    bool Terminate(void) override;
+    bool Terminate() override;
 
     /**
      * Terminate the thread. See documentation of Thread::Terminate
@@ -103,7 +103,7 @@ private:
  * vislib::sys::RunnableThread<T>::RunnableThread
  */
 template<class T>
-RunnableThread<T>::RunnableThread(void)
+RunnableThread<T>::RunnableThread()
 #ifdef _WIN32
 #pragma warning(disable : 4355)
 #endif /* _WIN32 */
@@ -118,7 +118,7 @@ RunnableThread<T>::RunnableThread(void)
  * vislib::sys::RunnableThread<T>::~RunnableThread
  */
 template<class T>
-RunnableThread<T>::~RunnableThread(void) {}
+RunnableThread<T>::~RunnableThread() {}
 
 
 /*
@@ -132,7 +132,7 @@ RunnableThread<T>::RunnableThread(const RunnableThread& rhs) : Thread(rhs)
  * RunnableThread<T>::Terminate
  */
 template<class T>
-bool RunnableThread<T>::Terminate(void) {
+bool RunnableThread<T>::Terminate() {
     return T::Terminate();
 }
 

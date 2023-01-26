@@ -62,7 +62,7 @@ public:
      *
      * @throws SocketException In case the operation fails.
      */
-    SmartRef<AbstractCommClientChannel> Accept(void) override;
+    SmartRef<AbstractCommClientChannel> Accept() override;
 
     /**
      * Binds the server to a specified end point address.
@@ -82,7 +82,7 @@ public:
      *
      * @throws SocketException In case the operation fails.
      */
-    void Close(void) override;
+    void Close() override;
 
     /**
      * Sets the default target address which to all datagram packets are
@@ -99,7 +99,7 @@ public:
      *
      * @return The underlying socket.
      */
-    inline Socket& GetSocket(void) {
+    inline Socket& GetSocket() {
         return this->socket;
     }
 
@@ -115,7 +115,7 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    SmartRef<AbstractCommEndPoint> GetLocalEndPoint(void) const override;
+    SmartRef<AbstractCommEndPoint> GetLocalEndPoint() const override;
 
     /**
      * Answer the address the remote peer of this channel is using.
@@ -129,14 +129,14 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    SmartRef<AbstractCommEndPoint> GetRemoteEndPoint(void) const override;
+    SmartRef<AbstractCommEndPoint> GetRemoteEndPoint() const override;
 
     /**
      * Answer whether the channel is enabled for broadcast use.
      *
      * @return true if broadcast is enabled, false otherwise.
      */
-    inline bool IsSetBroadcast(void) const {
+    inline bool IsSetBroadcast() const {
         return ((this->flags & FLAG_BROADCAST) != 0);
     }
 
@@ -145,7 +145,7 @@ public:
      *
      * @return true if address reuse is enabled, false otherwise.
      */
-    inline bool IsSetReuseAddress(void) const {
+    inline bool IsSetReuseAddress() const {
         return ((this->flags & FLAG_REUSE_ADDRESS) != 0);
     }
 
@@ -235,7 +235,7 @@ private:
     UdpCommChannel(Socket& socket, const UINT64 flags);
 
     /** Dtor. */
-    ~UdpCommChannel(void) override;
+    ~UdpCommChannel() override;
 
     /**
      * Creates or re-creates the underlying socket.

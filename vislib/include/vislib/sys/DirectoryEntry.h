@@ -33,7 +33,7 @@ public:
     enum EntryType { DIRECTORY, FILE };
 
     /** Ctor. */
-    DirectoryEntry(void);
+    DirectoryEntry();
 
     /**
      * Ctor.
@@ -51,7 +51,7 @@ public:
     DirectoryEntry(const DirectoryEntry& src);
 
     /** Dtor. */
-    ~DirectoryEntry(void);
+    ~DirectoryEntry();
 
     /**
      * Assignment operator
@@ -83,8 +83,8 @@ public:
  * DirectoryEntry<T>::DirectoryEntry
  */
 template<class T>
-DirectoryEntry<T>::DirectoryEntry(void) : Path()
-                                        , Type(DirectoryEntry::FILE) {
+DirectoryEntry<T>::DirectoryEntry() : Path()
+                                    , Type(DirectoryEntry::FILE) {
     // intentionally empty
 }
 
@@ -113,7 +113,7 @@ DirectoryEntry<T>::DirectoryEntry(const DirectoryEntry& src) : Path(src.Path)
  * DirectoryEntry<T>::~DirectoryEntry
  */
 template<class T>
-DirectoryEntry<T>::~DirectoryEntry(void) {
+DirectoryEntry<T>::~DirectoryEntry() {
     // intentionally empty
 }
 

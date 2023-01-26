@@ -19,7 +19,7 @@ using namespace megamol::core;
 /*
  * SimpleAstroFilter::SimpleAstroFilter
  */
-SimpleAstroFilter::SimpleAstroFilter(void)
+SimpleAstroFilter::SimpleAstroFilter()
         : Module()
         , particlesOutSlot("particlesOut", "Output slot for the filtered astro particle data")
         , particlesInSlot("particlesIn", "Input slot for the astro particle data")
@@ -172,14 +172,14 @@ SimpleAstroFilter::SimpleAstroFilter(void)
 /*
  * SimpleAstroFilter::~SimpleAstroFilter
  */
-SimpleAstroFilter::~SimpleAstroFilter(void) {
+SimpleAstroFilter::~SimpleAstroFilter() {
     this->Release();
 }
 
 /*
  * SimpleAstroFilter::create
  */
-bool SimpleAstroFilter::create(void) {
+bool SimpleAstroFilter::create() {
     // intentionally empty
     return true;
 }
@@ -187,7 +187,7 @@ bool SimpleAstroFilter::create(void) {
 /*
  * SimpleAstroFilter::release
  */
-void SimpleAstroFilter::release(void) {
+void SimpleAstroFilter::release() {
     // intentionally empty
 }
 
@@ -254,7 +254,7 @@ bool SimpleAstroFilter::getExtent(core::Call& call) {
 /*
  * SimpleAstroFilter::initFields
  */
-void SimpleAstroFilter::initFields(void) {
+void SimpleAstroFilter::initFields() {
     if (this->positions == nullptr) {
         this->positions = std::make_shared<std::vector<glm::vec3>>();
     }
@@ -481,7 +481,7 @@ bool SimpleAstroFilter::copyInCallToContent(const AstroDataCall& inCall, const s
 /*
  * SimpleAstroFilter::isParamDirty
  */
-bool SimpleAstroFilter::isParamDirty(void) {
+bool SimpleAstroFilter::isParamDirty() {
     if (this->showOnlyBaryonParam.IsDirty())
         return true;
     if (this->showOnlyDarkMatterParam.IsDirty())
@@ -560,7 +560,7 @@ bool SimpleAstroFilter::isParamDirty(void) {
 /*
  * SimpleAstroFilter::resetDirtyParams
  */
-void SimpleAstroFilter::resetDirtyParams(void) {
+void SimpleAstroFilter::resetDirtyParams() {
     this->showOnlyBaryonParam.ResetDirty();
     this->showOnlyDarkMatterParam.ResetDirty();
     this->showOnlyStarsParam.ResetDirty();

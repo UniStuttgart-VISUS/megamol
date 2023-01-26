@@ -36,36 +36,36 @@ namespace astro {
 class AstroSchulz : public core::Module {
 
 public:
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "AstroSchulz";
     }
 
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Converts data contained in a AstroDataCall to a "
                "TableDataCall";
     }
 
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    AstroSchulz(void);
+    AstroSchulz();
 
     /** Dtor. */
-    ~AstroSchulz(void) override;
+    ~AstroSchulz() override;
 
 protected:
-    bool create(void) override;
+    bool create() override;
 
-    void release(void) override;
+    void release() override;
 
 private:
     typedef megamol::datatools::table::TableDataCall::ColumnInfo ColumnInfo;
 
     static bool getData(AstroDataCall& call, const unsigned int frameID);
 
-    static constexpr inline std::pair<float, float> initialiseRange(void) {
+    static constexpr inline std::pair<float, float> initialiseRange() {
         return std::make_pair((std::numeric_limits<float>::max)(), std::numeric_limits<float>::lowest());
     }
 
@@ -85,7 +85,7 @@ private:
 
     void getData(float* dst, const AstroDataCall& ast);
 
-    inline std::size_t getHash(void) {
+    inline std::size_t getHash() {
         auto retval = this->hashInput;
         retval ^= this->hashState + 0x9e3779b9 + (retval << 6) + (retval >> 2);
         return retval;

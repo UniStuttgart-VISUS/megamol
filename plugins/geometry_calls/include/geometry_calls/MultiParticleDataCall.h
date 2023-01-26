@@ -29,15 +29,15 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MultiParticleDataCall";
     }
 
     /** Ctor. */
-    MultiParticleDataCall(void);
+    MultiParticleDataCall();
 
     /** Dtor. */
-    ~MultiParticleDataCall(void) override;
+    ~MultiParticleDataCall() override;
 
     /**
      * Assignment operator.

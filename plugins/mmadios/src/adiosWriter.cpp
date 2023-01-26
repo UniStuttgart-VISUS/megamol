@@ -12,7 +12,7 @@
 namespace megamol {
 namespace adios {
 
-adiosWriter::adiosWriter(void)
+adiosWriter::adiosWriter()
         : core::AbstractDataWriter()
         , callRequestMpi("requestMpi", "Requests initialisation of MPI and the communicator for the view.")
         , filename("filename", "The path to the ADIOS-based file to load.")
@@ -43,7 +43,7 @@ adiosWriter::adiosWriter(void)
     this->MakeSlotAvailable(&this->callRequestMpi);
 }
 
-adiosWriter::~adiosWriter(void) {
+adiosWriter::~adiosWriter() {
 
     if (writer) {
         writer.Close();
@@ -55,7 +55,7 @@ adiosWriter::~adiosWriter(void) {
 /*
  * adiosWriter::create
  */
-bool adiosWriter::create(void) {
+bool adiosWriter::create() {
 #ifdef MEGAMOL_USE_MPI
     MpiInitialized = this->initMPI();
     try {
@@ -112,7 +112,7 @@ bool adiosWriter::create(void) {
 /*
  * adiosWriter::release
  */
-void adiosWriter::release(void) { /* empty */
+void adiosWriter::release() { /* empty */
 }
 
 /*
@@ -399,7 +399,7 @@ bool adiosWriter::run() {
 }
 
 
-vislib::StringA adiosWriter::getCommandLine(void) {
+vislib::StringA adiosWriter::getCommandLine() {
     vislib::StringA retval;
 
 #ifdef _WIN32

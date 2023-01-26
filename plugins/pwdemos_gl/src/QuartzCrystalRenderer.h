@@ -25,7 +25,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QuartzCrystalRenderer";
     }
 
@@ -34,7 +34,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module rendering quartz crystals";
     }
 
@@ -43,15 +43,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    CrystalRenderer(void);
+    CrystalRenderer();
 
     /** Dtor */
-    ~CrystalRenderer(void) override;
+    ~CrystalRenderer() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -79,12 +79,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /** The slot to get the data */

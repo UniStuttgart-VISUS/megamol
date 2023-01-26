@@ -73,14 +73,14 @@ public:
     VersionNumber(const wchar_t* ver);
 
     /** Dtor. */
-    ~VersionNumber(void);
+    ~VersionNumber();
 
     /**
      * Answer the major version number.
      *
      * @return The major version number.
      */
-    inline VersionInt GetMajorVersionNumber(void) const {
+    inline VersionInt GetMajorVersionNumber() const {
         return this->majorNumber;
     }
 
@@ -89,7 +89,7 @@ public:
      *
      * @return The minor version number.
      */
-    inline VersionInt GetMinorVersionNumber(void) const {
+    inline VersionInt GetMinorVersionNumber() const {
         return this->minorNumber;
     }
 
@@ -99,7 +99,7 @@ public:
      *
      * @return The revision number.
      */
-    inline VersionRev GetRevisionNumber(void) const {
+    inline VersionRev GetRevisionNumber() const {
         return this->revisionNumber;
     }
 

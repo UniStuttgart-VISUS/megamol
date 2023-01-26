@@ -72,17 +72,17 @@ public:
     DirectoryIterator(const Char* path, bool isPattern = false, bool showDirs = true);
 
     /** Dtor */
-    ~DirectoryIterator(void) override;
+    ~DirectoryIterator() override;
 
     /** Behaves like Iterator<T>::HasNext */
-    bool HasNext(void) const override;
+    bool HasNext() const override;
 
     /**
      * Behaves like Iterator<T>::Next
      *
      * @throws NoSuchElementException if there is no next element
      */
-    Entry& Next(void) override;
+    Entry& Next() override;
 
 private:
     /**
@@ -114,7 +114,7 @@ private:
     /**
      * Fetches the next item in the iteration
      */
-    void fetchNextItem(void);
+    void fetchNextItem();
 
     /** The next element */
     Entry nextItem;
@@ -177,7 +177,7 @@ DirectoryIterator<CharTraitsW>::DirectoryIterator(const Char* path, bool isPatte
  * DirectoryIterator<T>::~DirectoryIterator
  */
 template<class T>
-DirectoryIterator<T>::~DirectoryIterator(void) {
+DirectoryIterator<T>::~DirectoryIterator() {
 #ifdef _WIN32
     if (this->findHandle != INVALID_HANDLE_VALUE) {
         FindClose(this->findHandle);
@@ -194,7 +194,7 @@ DirectoryIterator<T>::~DirectoryIterator(void) {
  * DirectoryIterator<T>::HasNext
  */
 template<class T>
-bool DirectoryIterator<T>::HasNext(void) const {
+bool DirectoryIterator<T>::HasNext() const {
     return !this->nextItem.Path.IsEmpty();
 }
 
@@ -203,7 +203,7 @@ bool DirectoryIterator<T>::HasNext(void) const {
  * DirectoryIterator<T>::Next
  */
 template<class T>
-typename DirectoryIterator<T>::Entry& DirectoryIterator<T>::Next(void) {
+typename DirectoryIterator<T>::Entry& DirectoryIterator<T>::Next() {
     this->currentItem = this->nextItem;
     this->fetchNextItem();
     if (this->currentItem.Path.IsEmpty()) {
@@ -217,7 +217,7 @@ typename DirectoryIterator<T>::Entry& DirectoryIterator<T>::Next(void) {
  * DirectoryIterator<T>::fetchNextItem
  */
 template<class T>
-void DirectoryIterator<T>::fetchNextItem(void) {
+void DirectoryIterator<T>::fetchNextItem() {
     // We won't find anything for this type!
     throw UnsupportedOperationException("DirectoryIterator<T>::fetchNextItem", __FILE__, __LINE__);
 }
@@ -227,14 +227,14 @@ void DirectoryIterator<T>::fetchNextItem(void) {
  * DirectoryIterator<CharTraitsA>::fetchNextItem
  */
 template<>
-void DirectoryIterator<CharTraitsA>::fetchNextItem(void);
+void DirectoryIterator<CharTraitsA>::fetchNextItem();
 
 
 /*
  * DirectoryIterator<CharTraitsW>::fetchNextItem
  */
 template<>
-void DirectoryIterator<CharTraitsW>::fetchNextItem(void);
+void DirectoryIterator<CharTraitsW>::fetchNextItem();
 
 
 /** Template instantiation for ANSI char DirectoryIterator. */

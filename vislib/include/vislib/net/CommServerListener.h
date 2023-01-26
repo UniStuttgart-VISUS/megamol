@@ -40,7 +40,7 @@ class CommServerListener {
 
 public:
     /** Dtor. */
-    virtual ~CommServerListener(void);
+    virtual ~CommServerListener();
 
     /**
      * This method is called once a network error occurs.
@@ -115,7 +115,7 @@ public:
 
 protected:
     /** Ctor. */
-    CommServerListener(void);
+    CommServerListener();
 };
 
 } /* end namespace net */

@@ -54,10 +54,10 @@ public:
     static GLenum SetWrap(const GLint s, const GLint t);
 
     /** Ctor. */
-    OpenGLTexture2D(void);
+    OpenGLTexture2D();
 
     /** Dtor. */
-    ~OpenGLTexture2D(void) override;
+    ~OpenGLTexture2D() override;
 
     /**
      * Bind the texture on the active texture unit.
@@ -65,7 +65,7 @@ public:
      * @return GL_NO_ERROR in case of success, an OpenGL error code
      *         otherwise.
      */
-    GLenum Bind(void) override;
+    GLenum Bind() override;
 
     /**
      * Create and initialise the texture object.

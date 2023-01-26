@@ -52,7 +52,7 @@ public:
     }
 
     /** Dtor. */
-    ~ShallowPoint(void);
+    ~ShallowPoint();
 
     /**
      * Replace the coordinate pointer with a new memory location.
@@ -107,7 +107,7 @@ private:
      * Forbidden ctor. A default ctor would be inherently unsafe for
      * shallow Points.
      */
-    inline ShallowPoint(void) {}
+    inline ShallowPoint() {}
 };
 
 
@@ -115,7 +115,7 @@ private:
  * ShallowPoint<T, D>::~ShallowPoint
  */
 template<class T, unsigned int D>
-ShallowPoint<T, D>::~ShallowPoint(void) {}
+ShallowPoint<T, D>::~ShallowPoint() {}
 
 } /* end namespace math */
 } /* end namespace vislib */

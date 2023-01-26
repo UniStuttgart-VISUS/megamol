@@ -40,7 +40,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CrystalStructureDataCall";
     }
 
@@ -49,7 +49,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get dynamic particle data in a crystal structure.";
     }
 
@@ -58,7 +58,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 2;
     }
 
@@ -79,10 +79,10 @@ public:
     }
 
     /** Ctor. */
-    CrystalStructureDataCall(void);
+    CrystalStructureDataCall();
 
     /** Dtor. */
-    ~CrystalStructureDataCall(void) override;
+    ~CrystalStructureDataCall() override;
 
     /**
      * Answers the atom count.
@@ -179,7 +179,7 @@ public:
      *
      * @return the calltime
      */
-    float GetCalltime(void) const {
+    float GetCalltime() const {
         return this->calltime;
     }
 

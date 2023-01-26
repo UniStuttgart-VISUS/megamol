@@ -24,7 +24,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ADIOStoMultiParticle";
     }
 
@@ -33,7 +33,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Converts ADIOS-based IO into MegaMols MultiParticleDataCall.";
     }
 
@@ -42,20 +42,20 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    ADIOStoMultiParticle(void);
+    ADIOStoMultiParticle();
 
     /** Dtor. */
-    ~ADIOStoMultiParticle(void) override;
+    ~ADIOStoMultiParticle() override;
 
-    bool create(void) override;
+    bool create() override;
 
 protected:
-    void release(void) override;
+    void release() override;
 
     /**
      * Gets the data from the source.

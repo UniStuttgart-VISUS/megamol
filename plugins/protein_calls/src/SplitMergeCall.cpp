@@ -11,7 +11,7 @@ const unsigned int SplitMergeCall::CallForGetData = 0;
 /*
  * SplitMergeCall::SplitMergeCall
  */
-SplitMergeCall::SplitMergeCall(void) : theTransitions(), guides() {
+SplitMergeCall::SplitMergeCall() : theTransitions(), guides() {
     // set reasonable resize and initial capacity for data arrays
     this->theData = new vislib::Array<SplitMergeSeries*>();
     this->guides = new vislib::PtrArray<SplitMergeGuide>();
@@ -26,7 +26,7 @@ SplitMergeCall::SplitMergeCall(void) : theTransitions(), guides() {
 /*
  * SplitMergeCall::~SplitMergeCall
  */
-SplitMergeCall::~SplitMergeCall(void) {
+SplitMergeCall::~SplitMergeCall() {
     delete this->theData;
     delete this->guides;
 }

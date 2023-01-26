@@ -42,21 +42,21 @@ public:
     explicit ShallowSimpleMessageHeader(SimpleMessageHeaderData* data);
 
     /** Dtor. */
-    ~ShallowSimpleMessageHeader(void) override;
+    ~ShallowSimpleMessageHeader() override;
 
     /**
      * Provides direct access to the underlying SimpleMessageHeaderData.
      *
      * @return A pointer to the message header data.
      */
-    SimpleMessageHeaderData* PeekData(void) override;
+    SimpleMessageHeaderData* PeekData() override;
 
     /**
      * Provides direct access to the underlying SimpleMessageHeaderData.
      *
      * @return A pointer to the message header data.
      */
-    const SimpleMessageHeaderData* PeekData(void) const override;
+    const SimpleMessageHeaderData* PeekData() const override;
 
     /**
      * Set a new data pointer.
@@ -130,7 +130,7 @@ private:
      * ctor is only intended for vislib-internal use as it leaves illegal
      * instances.
      */
-    ShallowSimpleMessageHeader(void);
+    ShallowSimpleMessageHeader();
 
     /**
      * Pointer to the actual data. The object is not the owner of the memory

@@ -36,7 +36,7 @@ public:
      *
      * @return The name of this call.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "MpiCall";
     }
 
@@ -45,7 +45,7 @@ public:
      *
      * @return A human readable description of this call.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Requests lazy initalisation of MPI.";
     }
 
@@ -54,7 +54,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void);
+    static unsigned int FunctionCount();
 
     /**
      * Answer the name of the function used for this call.
@@ -70,7 +70,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void);
+    static bool IsAvailable();
 
     /** Index of the intent initialising MPI. */
     static const unsigned int IDX_PROVIDE_MPI;
@@ -78,12 +78,12 @@ public:
     /**
      * Initialises a new instance.
      */
-    MpiCall(void);
+    MpiCall();
 
     /**
      * Finalises the instance.
      */
-    ~MpiCall(void) override;
+    ~MpiCall() override;
 
 #ifdef MEGAMOL_USE_MPI
     /**
@@ -102,7 +102,7 @@ public:
      *
      * @return The size of the communicator.
      */
-    int GetCommSize(void) const;
+    int GetCommSize() const;
 
     /**
      * Get the rank of the calling process in the communicator that has been
@@ -110,7 +110,7 @@ public:
      *
      * @return The rank of the calling process.
      */
-    int GetRank(void) const;
+    int GetRank() const;
 
 #ifdef MEGAMOL_USE_MPI
     /**

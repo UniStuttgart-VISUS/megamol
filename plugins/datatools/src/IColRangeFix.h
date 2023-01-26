@@ -13,13 +13,13 @@ namespace datatools {
 
 class IColRangeFix : public datatools::AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "IColRangeFix";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Fixes the ICol min and max values by iterating over all particles";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 

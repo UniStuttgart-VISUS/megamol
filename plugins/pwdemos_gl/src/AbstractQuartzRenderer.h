@@ -23,18 +23,18 @@ public:
     /**
      * Ctor
      */
-    AbstractQuartzRenderer(void);
+    AbstractQuartzRenderer();
 
     /**
      * Dtor
      */
-    ~AbstractQuartzRenderer(void) override;
+    ~AbstractQuartzRenderer() override;
 
 protected:
     /**
      * Updates the grain colour if necessary
      */
-    void assertGrainColour(void);
+    void assertGrainColour();
 
     /**
      * Answer the clipping plane from the connected module
@@ -42,7 +42,7 @@ protected:
      * @return The clipping plane from the connected module or NULL if no
      *         data could be received
      */
-    core::view::CallClipPlane* getClipPlaneData(void);
+    core::view::CallClipPlane* getClipPlaneData();
 
     /** Slot connecting to the clipping plane provider */
     core::CallerSlot clipPlaneSlot;

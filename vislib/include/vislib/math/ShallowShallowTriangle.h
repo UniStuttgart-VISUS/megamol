@@ -33,14 +33,14 @@ public:
     ShallowShallowTriangle(T* memory);
 
     /** Dtor. */
-    ~ShallowShallowTriangle(void);
+    ~ShallowShallowTriangle();
 
     /**
      * Answer the pointer to the internal memory
      *
      * @return The vertex pointer
      */
-    inline T* GetPointer(void);
+    inline T* GetPointer();
 
     /**
      * Replace the vertex pointer with a new memory location.
@@ -102,7 +102,7 @@ ShallowShallowTriangle<T, D>::ShallowShallowTriangle(T* memory) {
  * vislib::math::ShallowShallowTriangle<T>::~ShallowShallowTriangle
  */
 template<class T, unsigned int D>
-ShallowShallowTriangle<T, D>::~ShallowShallowTriangle(void) {
+ShallowShallowTriangle<T, D>::~ShallowShallowTriangle() {
     for (unsigned int d = 0; d < 3; d++) {
         this->vertices[d].~ShallowPoint<T, D>();
     }
@@ -113,7 +113,7 @@ ShallowShallowTriangle<T, D>::~ShallowShallowTriangle(void) {
  * vislib::math::ShallowShallowTriangle<T>::GetPointer
  */
 template<class T, unsigned int D>
-T* ShallowShallowTriangle<T, D>::GetPointer(void) {
+T* ShallowShallowTriangle<T, D>::GetPointer() {
     return this->vertices[0].PeekCoordinates();
 }
 

@@ -128,7 +128,7 @@ public:
     inline IPAddress(const IPAddress& rhs) : address(rhs.address){};
 
     /** Dtor. */
-    ~IPAddress(void);
+    ~IPAddress();
 
     /**
      * Get the prefix of length 'prefixLength' bits of the address. The rest
@@ -160,14 +160,14 @@ public:
      *
      * @return The string representation of the IP address.
      */
-    StringA ToStringA(void) const;
+    StringA ToStringA() const;
 
     /**
      * Convert the IP address into dotted string format.
      *
      * @return The string representation of the IP address.
      */
-    inline StringW ToStringW(void) const {
+    inline StringW ToStringW() const {
         return StringW(this->ToStringA());
     }
 
@@ -218,7 +218,7 @@ public:
      *
      * @return The in_addr that is represented by this object.
      */
-    inline operator struct in_addr(void) const {
+    inline operator struct in_addr() const {
         return this->address;
     }
 
@@ -228,7 +228,7 @@ public:
      *
      * @return The in_addr that is represented by this object.
      */
-    inline operator struct in_addr &(void) {
+    inline operator struct in_addr &() {
         return this->address;
     }
 
@@ -239,7 +239,7 @@ public:
      * @return Pointer to the internal in6_addr that is represented by this
      *         object.
      */
-    inline operator const struct in_addr *(void) const {
+    inline operator const struct in_addr *() const {
         return &this->address;
     }
 
@@ -250,7 +250,7 @@ public:
      * @return Pointer to the internal in_addr that is represented by this
      *         object.
      */
-    inline operator struct in_addr *(void) {
+    inline operator struct in_addr *() {
         return &this->address;
     }
 

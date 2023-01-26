@@ -42,7 +42,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CalloutImageCall";
     }
 
@@ -51,7 +51,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get QR-Code Image";
     }
 
@@ -81,7 +81,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 12;
     }
 
@@ -124,7 +124,7 @@ public:
         return "";
     }
 
-    inline int* GetID(void) const {
+    inline int* GetID() const {
         return this->qr_id;
     }
 
@@ -132,7 +132,7 @@ public:
         this->qr_id = p_qr_id;
     }
 
-    inline std::vector<float>* GetImage(void) const {
+    inline std::vector<float>* GetImage() const {
         return this->qr_image;
     }
 
@@ -140,7 +140,7 @@ public:
         this->qr_image = p_qr_image;
     }
 
-    inline vislib::math::Vector<float, 3>* GetPointAt(void) const {
+    inline vislib::math::Vector<float, 3>* GetPointAt() const {
         return this->qr_pointer;
     }
 
@@ -148,7 +148,7 @@ public:
         this->qr_pointer = p_qr_pointer;
     }
 
-    inline int* GetWidth(void) const {
+    inline int* GetWidth() const {
         return this->width;
     }
 
@@ -156,7 +156,7 @@ public:
         this->width = p_width;
     }
 
-    inline int* GetHeight(void) const {
+    inline int* GetHeight() const {
         return this->height;
     }
 
@@ -164,8 +164,8 @@ public:
         this->height = p_height;
     }
 
-    CalloutImageCall(void);
-    ~CalloutImageCall(void) override;
+    CalloutImageCall();
+    ~CalloutImageCall() override;
 
 private:
     int* qr_id;

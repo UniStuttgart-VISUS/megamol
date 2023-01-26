@@ -278,7 +278,7 @@ public:
     } PATTERN;
 
     Stride(megamol::protein_calls::MolecularDataCall* mol);
-    virtual ~Stride(void);
+    virtual ~Stride();
 
     bool WriteToInterface(megamol::protein_calls::MolecularDataCall* mol);
 

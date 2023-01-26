@@ -138,7 +138,7 @@ public:
     SocketAddress(const struct sockaddr_in& address);
 
     /** Default ctor. */
-    SocketAddress(void);
+    SocketAddress();
 
     /**
      * Copy ctor.
@@ -156,14 +156,14 @@ public:
     SocketAddress(const SocketAddress& address, const unsigned short newPort);
 
     /** Dtor. */
-    ~SocketAddress(void);
+    ~SocketAddress();
 
     /**
      * Answer the address family of the socket address.
      *
      * @return The address family.
      */
-    inline AddressFamily GetAddressFamily(void) const {
+    inline AddressFamily GetAddressFamily() const {
         return static_cast<AddressFamily>(this->genericAddress.sa_family);
     }
 
@@ -173,7 +173,7 @@ public:
      *
      * @return The IP address.
      */
-    inline IPAddress GetIPAddress(void) const {
+    inline IPAddress GetIPAddress() const {
         return this->inetAddress.sin_addr;
     }
 
@@ -184,7 +184,7 @@ public:
      *
      * @return The port number.
      */
-    inline unsigned short GetPort(void) const {
+    inline unsigned short GetPort() const {
         return ntohs(this->inetAddress.sin_port);
     }
 
@@ -218,14 +218,14 @@ public:
      *
      * @return The string representation of the socket address.
      */
-    StringA ToStringA(void) const;
+    StringA ToStringA() const;
 
     /**
      * Convert the socket address into dotted string colon port format.
      *
      * @return The string representation of the socket address.
      */
-    StringW ToStringW(void) const;
+    StringW ToStringW() const;
 
     /**
      * Assignment.
@@ -258,20 +258,20 @@ public:
         return !(*this == rhs);
     }
 
-    inline operator const struct sockaddr_in &(void) const {
+    inline operator const struct sockaddr_in &() const {
         return this->inetAddress;
     }
 
-    inline operator const struct sockaddr_in * const(void) const {
+    inline operator const struct sockaddr_in * const() const {
         return &this->inetAddress;
     }
 
-    inline operator const struct sockaddr &(void) const {
+    inline operator const struct sockaddr &() const {
         // We know, that the data are aligned in the same way.
         return this->genericAddress;
     }
 
-    inline operator const struct sockaddr * const(void) const {
+    inline operator const struct sockaddr * const() const {
         // We know, that the data are aligned in the same way.
         return &this->genericAddress;
     }

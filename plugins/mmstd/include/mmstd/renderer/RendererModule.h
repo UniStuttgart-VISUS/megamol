@@ -54,7 +54,7 @@ public:
     }
 
     /** Dtor. */
-    ~RendererModule(void) override = default;
+    ~RendererModule() override = default;
 
 protected:
     /**

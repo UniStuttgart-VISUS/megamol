@@ -20,7 +20,7 @@ namespace demos_gl {
 /*
  * PoreMeshProcessor::PoreMeshProcessor
  */
-PoreMeshProcessor::PoreMeshProcessor(void) : vislib::sys::Runnable(), inputBuffers(NULL), debugoutschlupp(NULL) {
+PoreMeshProcessor::PoreMeshProcessor() : vislib::sys::Runnable(), inputBuffers(NULL), debugoutschlupp(NULL) {
     // TODO: Implement
 }
 
@@ -28,7 +28,7 @@ PoreMeshProcessor::PoreMeshProcessor(void) : vislib::sys::Runnable(), inputBuffe
 /*
  * PoreMeshProcessor::~PoreMeshProcessor
  */
-PoreMeshProcessor::~PoreMeshProcessor(void) {
+PoreMeshProcessor::~PoreMeshProcessor() {
     // TODO: Implement
 }
 
@@ -76,7 +76,7 @@ DWORD PoreMeshProcessor::Run(void* userData) {
 /*
  * PoreMeshProcessor::Terminate
  */
-bool PoreMeshProcessor::Terminate(void) {
+bool PoreMeshProcessor::Terminate() {
     if (this->inputBuffers != NULL)
         this->inputBuffers->AbortClose();
     //if (this->outputBuffers != NULL) this->outputBuffers->AbortClose();

@@ -30,7 +30,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QuartzDataGridder";
     }
 
@@ -39,7 +39,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module for gridding quartz particle data";
     }
 
@@ -48,15 +48,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    DataGridder(void);
+    DataGridder();
 
     /** Dtor */
-    ~DataGridder(void) override;
+    ~DataGridder() override;
 
 protected:
     /**
@@ -64,7 +64,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Call callback to get the data
@@ -87,20 +87,20 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /** Clears the data members */
-    void clearData(void);
+    void clearData();
 
     /** Fills the data members */
-    void makeData(void);
+    void makeData();
 
     /** Tests if the data needs to be cleared */
-    bool needClearData(void);
+    bool needClearData();
 
     /** Tests if the data needs to be (re-)made */
-    bool needMakeData(void);
+    bool needMakeData();
 
     /** The data callee slot */
     core::CalleeSlot dataOutSlot;

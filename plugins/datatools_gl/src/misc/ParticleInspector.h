@@ -27,7 +27,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "ParticleInspector";
     }
 
@@ -36,7 +36,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Direct inspection of particle values, data is passed through.";
     }
 
@@ -45,19 +45,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    ParticleInspector(void);
+    ParticleInspector();
 
     /**
      * Finalises an instance.
      */
-    ~ParticleInspector(void) override;
+    ~ParticleInspector() override;
 
 protected:
     /**
@@ -65,7 +65,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     bool getParticleData(core::Call& call);
 
@@ -74,7 +74,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     void drawTable(geocalls::MultiParticleDataCall* c);

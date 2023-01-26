@@ -18,7 +18,7 @@ using namespace megamol;
 /*
  * datatools::ParticleColorSignedDistance::ParticleColorSignedDistance
  */
-datatools::ParticleColorSignedDistance::ParticleColorSignedDistance(void)
+datatools::ParticleColorSignedDistance::ParticleColorSignedDistance()
         : AbstractParticleManipulator("outData", "indata")
         , enableSlot("enable", "Enables the color manipulation")
         , cyclXSlot("cyclX", "Considders cyclic boundary conditions in X direction")
@@ -47,7 +47,7 @@ datatools::ParticleColorSignedDistance::ParticleColorSignedDistance(void)
 /*
  * datatools::ParticleColorSignedDistance::~ParticleColorSignedDistance
  */
-datatools::ParticleColorSignedDistance::~ParticleColorSignedDistance(void) {
+datatools::ParticleColorSignedDistance::~ParticleColorSignedDistance() {
     this->Release();
 }
 

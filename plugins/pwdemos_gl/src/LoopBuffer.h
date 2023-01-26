@@ -28,7 +28,7 @@ public:
     class Loop {
     public:
         /** Ctor */
-        Loop(void);
+        Loop();
 
         /**
          * Copy ctor
@@ -38,7 +38,7 @@ public:
         Loop(const Loop& src);
 
         /** Dtor */
-        ~Loop(void);
+        ~Loop();
 
         /**
          * Adds an edge-vertex pair
@@ -54,7 +54,7 @@ public:
          *
          * @return The area of the loop
          */
-        inline UINT64 Area(void) const {
+        inline UINT64 Area() const {
             return this->area;
         }
 
@@ -63,12 +63,12 @@ public:
          *
          * @return The bounding box of the loop
          */
-        inline const vislib::math::Rectangle<int>& BoundingBox(void) const {
+        inline const vislib::math::Rectangle<int>& BoundingBox() const {
             return this->bbox;
         }
 
         /** Deletes all vertex data */
-        void ClearVertices(void);
+        void ClearVertices();
 
         /**
          * Answer whether this loop contains the point p
@@ -82,7 +82,7 @@ public:
          *
          * @return The enclosing loop or NULL
          */
-        inline const Loop* EnclosingLoop(void) const {
+        inline const Loop* EnclosingLoop() const {
             return this->enclosingLoop;
         }
 
@@ -91,7 +91,7 @@ public:
          *
          * @return The length of the loop
          */
-        inline SIZE_T Length(void) const {
+        inline SIZE_T Length() const {
             return this->vertices.Count();
         }
 
@@ -139,7 +139,7 @@ public:
          *
          * @return The vertices of the loop
          */
-        inline const vislib::Array<vislib::math::Point<int, 2>>& Vertices(void) const {
+        inline const vislib::Array<vislib::math::Point<int, 2>>& Vertices() const {
             return this->vertices;
         }
 
@@ -148,7 +148,7 @@ public:
          *
          * @return the number of isolated, non-black Arxels
          */
-        inline const UINT64 WhiteArxels(void) const {
+        inline const UINT64 WhiteArxels() const {
             return this->whiteArxels;
         }
 
@@ -197,10 +197,10 @@ public:
     };
 
     /** Ctor */
-    LoopBuffer(void);
+    LoopBuffer();
 
     /** Dtor */
-    ~LoopBuffer(void);
+    ~LoopBuffer();
 
     /**
      * Answer the number of isolated black Arxels in the loop. This can be negative
@@ -208,7 +208,7 @@ public:
      *
      * @return the number of isolated black Arxels
      */
-    inline INT64 BlackArxels(void) const {
+    inline INT64 BlackArxels() const {
         return this->blackArxels;
     }
 
@@ -217,7 +217,7 @@ public:
      *
      * @return the bounds of the LoopBuffer
      */
-    inline const vislib::math::Dimension<INT64, 2>& Bounds(void) const {
+    inline const vislib::math::Dimension<INT64, 2>& Bounds() const {
         return this->bounds;
     }
 
@@ -226,19 +226,19 @@ public:
      *
      * @return the bounds of the LoopBuffer
      */
-    inline vislib::math::Dimension<INT64, 2>& Bounds(void) {
+    inline vislib::math::Dimension<INT64, 2>& Bounds() {
         return this->bounds;
     }
 
     /** Clears all data */
-    void Clear(void);
+    void Clear();
 
     /**
      * Gets the list of loops
      *
      * @return The list of loops
      */
-    inline vislib::Array<Loop>& Loops(void) {
+    inline vislib::Array<Loop>& Loops() {
         return this->loops;
     }
 
@@ -247,7 +247,7 @@ public:
      *
      * @return The list of loops
      */
-    inline const vislib::Array<Loop>& Loops(void) const {
+    inline const vislib::Array<Loop>& Loops() const {
         return this->loops;
     }
 
@@ -256,12 +256,12 @@ public:
      *
      * @return The new loop object
      */
-    Loop& NewLoop(void);
+    Loop& NewLoop();
 
     /**
      * The loop returned by 'NewLoop' is now complete, whatever that means
      */
-    void NewLoopComplete(void);
+    void NewLoopComplete();
 
     /**
      * Set the number of isolated black Arxels in the loop.

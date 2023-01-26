@@ -32,7 +32,7 @@ enum MemoryLocation { VRAM, RAM };
 struct VolumetricMetadata_t {
 
     /** Initialise a new instance. */
-    VolumetricMetadata_t(void) {
+    VolumetricMetadata_t() {
         ::memset(this->Resolution, 0, sizeof(this->Resolution));
         ::memset(this->SliceDists, 0, sizeof(this->SliceDists));
         ::memset(this->Origin, 0, sizeof(this->Origin));

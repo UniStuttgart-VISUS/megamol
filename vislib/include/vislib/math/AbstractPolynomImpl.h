@@ -46,7 +46,7 @@ template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, c
 class AbstractPolynomImpl {
 public:
     /** Dtor. */
-    ~AbstractPolynomImpl(void);
+    ~AbstractPolynomImpl();
 
     /**
      * Tests if the polynom 'src' can be assigned to this object. This is
@@ -65,14 +65,14 @@ public:
     /**
      * Sets all coefficients to zero.
      */
-    void Clear(void);
+    void Clear();
 
     /**
      * Calculates the derivative of this polynom
      *
      * @return The derivative of this polynom
      */
-    C<T, D - 1, T[D]> Derivative(void) const;
+    C<T, D - 1, T[D]> Derivative() const;
 
     /**
      * Answers the effective degree of the polynom. The effective degree
@@ -80,14 +80,14 @@ public:
      *
      * @return The effective degree of the polynom.
      */
-    unsigned int EffectiveDegree(void) const;
+    unsigned int EffectiveDegree() const;
 
     /**
      * Answer whether all coefficients are zero.
      *
      * @return True if all coefficients are zero.
      */
-    bool IsZero(void) const;
+    bool IsZero() const;
 
     /**
      * Peeks at the internal representation of the coefficients of the
@@ -96,7 +96,7 @@ public:
      * @return The internal representation of the coefficients of the
      *         polynom.
      */
-    inline T* PeekCoefficients(void) {
+    inline T* PeekCoefficients() {
         return this->coefficients;
     }
 
@@ -107,7 +107,7 @@ public:
      * @return The internal representation of the coefficients of the
      *         polynom.
      */
-    inline const T* PeekCoefficients(void) const {
+    inline const T* PeekCoefficients() const {
         return this->coefficients;
     }
 
@@ -303,7 +303,7 @@ protected:
     static unsigned int uniqueRoots(T* outRoots, unsigned int size);
 
     /** Ctor. */
-    inline AbstractPolynomImpl(void){};
+    inline AbstractPolynomImpl(){};
 
     /**
      * The D + 1 polynom coefficients
@@ -320,7 +320,7 @@ protected:
  * AbstractPolynomImpl<T, D, S, C>::~AbstractPolynomImpl
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-AbstractPolynomImpl<T, D, S, C>::~AbstractPolynomImpl(void) {
+AbstractPolynomImpl<T, D, S, C>::~AbstractPolynomImpl() {
     // intentionally empty
 }
 
@@ -329,7 +329,7 @@ AbstractPolynomImpl<T, D, S, C>::~AbstractPolynomImpl(void) {
  * AbstractPolynomImpl<T, D, S, C>::Clear
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-void AbstractPolynomImpl<T, D, S, C>::Clear(void) {
+void AbstractPolynomImpl<T, D, S, C>::Clear() {
     for (unsigned int i = 0; i <= D; i++) {
         this->coefficients[i] = static_cast<T>(0);
     }
@@ -340,7 +340,7 @@ void AbstractPolynomImpl<T, D, S, C>::Clear(void) {
  * AbstractPolynomImpl<T, D, S, C>::Derivative
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-C<T, D - 1, T[D]> AbstractPolynomImpl<T, D, S, C>::Derivative(void) const {
+C<T, D - 1, T[D]> AbstractPolynomImpl<T, D, S, C>::Derivative() const {
     C<T, D - 1, T[D]> rv;
 
     for (unsigned int i = 0; i < D; i++) {
@@ -354,7 +354,7 @@ C<T, D - 1, T[D]> AbstractPolynomImpl<T, D, S, C>::Derivative(void) const {
  * AbstractPolynomImpl<T, D, S, C>::EffectiveDegree
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-unsigned int AbstractPolynomImpl<T, D, S, C>::EffectiveDegree(void) const {
+unsigned int AbstractPolynomImpl<T, D, S, C>::EffectiveDegree() const {
     for (unsigned int i = D; i > 0; i--) {
         if (!vislib::math::IsEqual(this->coefficients[i], static_cast<T>(0))) {
             return i;
@@ -368,7 +368,7 @@ unsigned int AbstractPolynomImpl<T, D, S, C>::EffectiveDegree(void) const {
  * AbstractPolynomImpl<T, D, S, C>::IsZero
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-bool AbstractPolynomImpl<T, D, S, C>::IsZero(void) const {
+bool AbstractPolynomImpl<T, D, S, C>::IsZero() const {
     for (unsigned int i = 0; i <= D; i++) {
         if (!vislib::math::IsEqual(this->coefficients[i], static_cast<T>(0))) {
             return false;

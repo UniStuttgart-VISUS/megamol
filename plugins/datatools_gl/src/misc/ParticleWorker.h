@@ -45,7 +45,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleWorker";
     }
 
@@ -54,7 +54,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Modify incoming particles";
     }
 
@@ -63,15 +63,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    ParticleWorker(void);
+    ParticleWorker();
 
     /** Dtor. */
-    ~ParticleWorker(void) override;
+    ~ParticleWorker() override;
 
 protected:
     /**
@@ -79,12 +79,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /**

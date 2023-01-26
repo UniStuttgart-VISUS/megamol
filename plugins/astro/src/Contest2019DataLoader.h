@@ -43,7 +43,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "Contest2019DataLoader";
     }
 
@@ -52,7 +52,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for the data of the SciVis Contest 2019.";
     }
 
@@ -61,28 +61,28 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    Contest2019DataLoader(void);
+    Contest2019DataLoader();
 
     /** Dtor. */
-    ~Contest2019DataLoader(void) override;
+    ~Contest2019DataLoader() override;
 
 protected:
     /**
      * Constructs a new frame
      */
-    core::view::AnimDataModule::Frame* constructFrame(void) const override;
+    core::view::AnimDataModule::Frame* constructFrame() const override;
 
     /**
      * Function that is called once upon initialization.
      *
      * @return True on success, false otherwise
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Loads the data of a single frame from disk
@@ -95,7 +95,7 @@ protected:
     /**
      * Function that is called once upon destruction
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * Frame description
@@ -106,12 +106,12 @@ protected:
         Frame(core::view::AnimDataModule& owner);
 
         /** Frame Dtor. */
-        ~Frame(void) override;
+        ~Frame() override;
 
         /**
          * Clears the frame data by deleting all contained pointers
          */
-        inline void Clear(void) {
+        inline void Clear() {
             this->positions.reset();
             this->velocities.reset();
             this->temperatures.reset();
@@ -172,11 +172,11 @@ protected:
 
         void CalculateDerivativesForwardDifferences(Frame* frameAfter);
 
-        void ZeroDerivatives(void);
+        void ZeroDerivatives();
 
-        void CalculateAGNDistances(void);
+        void CalculateAGNDistances();
 
-        void ZeroAGNDistances(void);
+        void ZeroAGNDistances();
 
     private:
 #pragma pack(push, 1)
@@ -293,13 +293,13 @@ protected:
         }
 
         /** Dtor. */
-        ~Unlocker(void) override {
+        ~Unlocker() override {
             this->Unlock();
             ASSERT(this->frame == nullptr);
         }
 
         /** Overload of the unlock method */
-        void Unlock(void) override {
+        void Unlock() override {
             if (this->frame != nullptr) {
                 this->frame->Unlock();
                 this->frame = nullptr; // DO NOT DELETE!

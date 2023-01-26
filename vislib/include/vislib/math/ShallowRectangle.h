@@ -51,7 +51,7 @@ public:
     }
 
     /** Dtor. */
-    ~ShallowRectangle(void);
+    ~ShallowRectangle();
 
     /**
      * Assigment operator. This operator never creates an alias, even for
@@ -93,7 +93,7 @@ public:
  * vislib::math::ShallowRectangle<T>::~ShallowRectangle
  */
 template<class T>
-ShallowRectangle<T>::~ShallowRectangle(void) {}
+ShallowRectangle<T>::~ShallowRectangle() {}
 
 
 } /* end namespace math */

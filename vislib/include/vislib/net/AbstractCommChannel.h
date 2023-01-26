@@ -56,10 +56,10 @@ public:
 
 protected:
     /** Ctor. */
-    AbstractCommChannel(void);
+    AbstractCommChannel();
 
     /** Dtor. */
-    ~AbstractCommChannel(void) override;
+    ~AbstractCommChannel() override;
 };
 
 } /* end namespace net */

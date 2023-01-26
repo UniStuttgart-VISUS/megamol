@@ -15,8 +15,8 @@ namespace volumetrics {
 
 class TetraVoxelizer : public vislib::sys::Runnable {
 public:
-    TetraVoxelizer(void);
-    ~TetraVoxelizer(void) override;
+    TetraVoxelizer();
+    ~TetraVoxelizer() override;
 
     trisoup::volumetrics::VoxelizerFloat GetOffset(trisoup::volumetrics::VoxelizerFloat fValue1,
         trisoup::volumetrics::VoxelizerFloat fValue2, trisoup::volumetrics::VoxelizerFloat fValueDesired);
@@ -60,7 +60,7 @@ public:
      *
      * @return Always 'true'
      */
-    bool Terminate(void) override;
+    bool Terminate() override;
 
     /**
      * Test for equality. Actually this checks for equality of the

@@ -51,7 +51,7 @@ public:
      * those it added by itself.
      */
     typedef struct Configuration_t {
-        inline Configuration_t(void) {}
+        inline Configuration_t() {}
         inline Configuration_t(SmartRef<AbstractCommClientChannel> channel) : Channel(channel) {}
         inline Configuration_t(SmartRef<TcpCommChannel> channel)
                 : Channel(channel.DynamicCast<AbstractCommClientChannel>()) {}
@@ -63,10 +63,10 @@ public:
     } Configuration;
 
     /** Ctor. */
-    SimpleMessageDispatcher(void);
+    SimpleMessageDispatcher();
 
     /** Dtor. */
-    ~SimpleMessageDispatcher(void) override;
+    ~SimpleMessageDispatcher() override;
 
     /**
      * Add a new SimpleMessageDispatchListener to be informed about events
@@ -91,7 +91,7 @@ public:
      * @return The channel used for receiving data. DO NOT RECEIVE DATA ON
      *         THIS CHANNEL OR MANIPULATE THE SETTINGS OF THE CHANNEL!
      */
-    inline SmartRef<AbstractCommClientChannel> GetChannel(void) {
+    inline SmartRef<AbstractCommClientChannel> GetChannel() {
         return this->configuration.Channel;
     }
 
@@ -103,7 +103,7 @@ public:
      *
      * @return The configuration of the dispatcher.
      */
-    inline const Configuration& GetConfiguration(void) const {
+    inline const Configuration& GetConfiguration() const {
         return this->configuration;
     }
 
@@ -146,7 +146,7 @@ public:
      *
      * @return true.
      */
-    bool Terminate(void) override;
+    bool Terminate() override;
 
 private:
     /** A thread-safe list for the message listeners. */
@@ -168,14 +168,14 @@ private:
      *
      * This method is thread-safe.
      */
-    void fireDispatcherExited(void);
+    void fireDispatcherExited();
 
     /**
      * Inform all registered listener about that the listener is starting.
      *
      * This method is thread-safe.
      */
-    void fireDispatcherStarted(void);
+    void fireDispatcherStarted();
 
     /**
      * Inform all registered listener about a message that was received.

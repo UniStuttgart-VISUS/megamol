@@ -59,7 +59,7 @@ public:
     // inline const_cast-crowbar for equal const/non-const accessors?
 
     /** Dtor. */
-    ~Collection(void) override;
+    ~Collection() override;
 
     /**
      * Add 'element' to the collection.
@@ -69,7 +69,7 @@ public:
     virtual void Add(const T& element) = 0;
 
     /** Remove all elements from the collection. */
-    virtual void Clear(void) = 0;
+    virtual void Clear() = 0;
 
     /**
      * Answer whether 'element' is in the collection.
@@ -88,7 +88,7 @@ public:
      *
      * @return Number of items in the collection.
      */
-    virtual SIZE_T Count(void) const = 0;
+    virtual SIZE_T Count() const = 0;
 
     /**
      * Answer a pointer to the first copy of 'element' in the collection.
@@ -119,7 +119,7 @@ public:
      *
      * @return true, if the collection is empty, false otherwise.
      */
-    virtual bool IsEmpty(void) const = 0;
+    virtual bool IsEmpty() const = 0;
 
     /**
      * Acquires the lock of the collection.
@@ -128,7 +128,7 @@ public:
      * lock. We do not use a mutable member to avoid additional memory
      * used in non-synchronised collections.
      */
-    VISLIB_FORCEINLINE void Lock(void) const {
+    VISLIB_FORCEINLINE void Lock() const {
         const_cast<L*>(static_cast<const L*>(this))->Lock();
     }
 
@@ -146,13 +146,13 @@ public:
      * lock. We do not use a mutable member to avoid additional memory
      * used in non-synchronised collections.
      */
-    VISLIB_FORCEINLINE void Unlock(void) const {
+    VISLIB_FORCEINLINE void Unlock() const {
         const_cast<L*>(static_cast<const L*>(this))->Unlock();
     }
 
 protected:
     /** Ctor. */
-    inline Collection(void) : L() {}
+    inline Collection() : L() {}
 };
 
 
@@ -160,7 +160,7 @@ protected:
  * vislib::Collection<T, L>::~Collection
  */
 template<class T, class L>
-Collection<T, L>::~Collection(void) {}
+Collection<T, L>::~Collection() {}
 
 } /* end namespace vislib */
 

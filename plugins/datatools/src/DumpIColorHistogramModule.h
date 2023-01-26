@@ -16,19 +16,19 @@ namespace datatools {
 
 class DumpIColorHistogramModule : public megamol::core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DumpIColorHistogramModule";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Dump (DEBUG! DO NOT USE)";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
-    DumpIColorHistogramModule(void);
-    ~DumpIColorHistogramModule(void) override;
-    bool create(void) override;
-    void release(void) override;
+    DumpIColorHistogramModule();
+    ~DumpIColorHistogramModule() override;
+    bool create() override;
+    void release() override;
 
 private:
     bool dump(::megamol::core::param::ParamSlot& param);

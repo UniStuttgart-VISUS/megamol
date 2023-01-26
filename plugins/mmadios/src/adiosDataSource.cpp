@@ -445,7 +445,7 @@ bool adiosDataSource::initMPI() {
 #endif /* MEGAMOL_USE_MPI */
 }
 
-vislib::StringA adiosDataSource::getCommandLine(void) {
+vislib::StringA adiosDataSource::getCommandLine() {
     vislib::StringA retval;
 
 #ifdef _WIN32

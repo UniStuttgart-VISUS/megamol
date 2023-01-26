@@ -34,23 +34,23 @@ namespace io {
  */
 class XYZLoader : public core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "XYZDataSource";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source for the simple xyz file format";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
     static float FileFormatAutoDetect(const unsigned char* data, SIZE_T dataSize);
     static const char* FilenameExtensions() {
         return ".XYZ";
     }
-    static const char* FilenameSlotName(void) {
+    static const char* FilenameSlotName() {
         return "filename";
     }
-    static const char* FileTypeName(void) {
+    static const char* FileTypeName() {
         return "XYZ";
     }
 
@@ -58,15 +58,15 @@ public:
     ~XYZLoader() override;
 
 protected:
-    bool create(void) override;
-    void release(void) override;
+    bool create() override;
+    void release() override;
 
 private:
     bool getDataCallback(core::Call& caller);
     bool getExtentCallback(core::Call& caller);
 
-    void clear(void);
-    void assertData(void);
+    void clear();
+    void assertData();
 
     core::CalleeSlot getDataSlot;
 

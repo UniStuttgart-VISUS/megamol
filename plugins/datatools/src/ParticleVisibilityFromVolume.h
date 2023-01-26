@@ -29,25 +29,25 @@ namespace datatools {
 class ParticleVisibilityFromVolume : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleVisibilityFromVolume";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module filtering particles based on volumetric data (in the same place in world space)";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleVisibilityFromVolume(void);
+    ParticleVisibilityFromVolume();
 
     /** Dtor */
-    ~ParticleVisibilityFromVolume(void) override;
+    ~ParticleVisibilityFromVolume() override;
 
 protected:
     /**

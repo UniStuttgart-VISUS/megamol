@@ -35,7 +35,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BindingSiteCall";
     }
 
@@ -44,7 +44,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get binding sites.";
     }
 
@@ -56,7 +56,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -80,7 +80,7 @@ public:
      *
      * @return The binding site count.
      */
-    inline unsigned int GetBindingSiteCount(void) const {
+    inline unsigned int GetBindingSiteCount() const {
         if (!this->bindingSites)
             return 0;
         else
@@ -223,16 +223,16 @@ public:
         this->isGxType = isGX;
     }
 
-    inline bool isEnzymeMode(void) const {
+    inline bool isEnzymeMode() const {
         return this->enzymeCase;
     }
 
-    inline bool isOfGxType(void) const {
+    inline bool isOfGxType() const {
         return this->isGxType;
     }
 
-    BindingSiteCall(void);
-    ~BindingSiteCall(void) override;
+    BindingSiteCall();
+    ~BindingSiteCall() override;
 
 private:
     /** Pointer to binding site array */

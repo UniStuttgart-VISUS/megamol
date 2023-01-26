@@ -47,7 +47,7 @@ public:
         /**
          * Ctor
          */
-        ParticleType(void);
+        ParticleType();
 
         /**
          * Copy ctor
@@ -59,14 +59,14 @@ public:
         /**
          * Dtor
          */
-        ~ParticleType(void);
+        ~ParticleType();
 
         /**
          * Answer the colour data type
          *
          * @return The colour data type
          */
-        inline ColourDataType GetColourDataType(void) const {
+        inline ColourDataType GetColourDataType() const {
             return this->colDataType;
         }
 
@@ -76,7 +76,7 @@ public:
          * @return The global colour as a pointer to four unsigned bytes
          *         storing the RGBA colour components
          */
-        inline const unsigned char* GetGlobalColour(void) const {
+        inline const unsigned char* GetGlobalColour() const {
             return this->col;
         }
 
@@ -85,7 +85,7 @@ public:
          *
          * @return The global radius
          */
-        inline float GetGlobalRadius(void) const {
+        inline float GetGlobalRadius() const {
             return this->radius;
         }
 
@@ -94,7 +94,7 @@ public:
          *
          * @return The maximum colour index value to be mapped
          */
-        inline float GetMaxColourIndexValue(void) const {
+        inline float GetMaxColourIndexValue() const {
             return this->maxColI;
         }
 
@@ -103,7 +103,7 @@ public:
          *
          * @return The minimum colour index value to be mapped
          */
-        inline float GetMinColourIndexValue(void) const {
+        inline float GetMinColourIndexValue() const {
             return this->minColI;
         }
 
@@ -112,7 +112,7 @@ public:
          *
          * @return The vertex data type
          */
-        inline VertexDataType GetVertexDataType(void) const {
+        inline VertexDataType GetVertexDataType() const {
             return this->vertDataType;
         }
 
@@ -227,7 +227,7 @@ public:
         /**
          * Ctor
          */
-        Particles(void);
+        Particles();
 
         /**
          * Copy ctor
@@ -239,14 +239,14 @@ public:
         /**
          * Dtor
          */
-        ~Particles(void);
+        ~Particles();
 
         /**
          * Answer the colour data pointer
          *
          * @return The colour data pointer
          */
-        inline const void* GetColourData(void) const {
+        inline const void* GetColourData() const {
             return this->colPtr;
         }
 
@@ -255,7 +255,7 @@ public:
          *
          * @return The colour data stride
          */
-        inline unsigned int GetColourDataStride(void) const {
+        inline unsigned int GetColourDataStride() const {
             return this->colStride;
         }
 
@@ -264,7 +264,7 @@ public:
          *
          * @return The number of stored objects
          */
-        inline SIZE_T GetCount(void) const {
+        inline SIZE_T GetCount() const {
             return this->count;
         }
 
@@ -273,7 +273,7 @@ public:
          *
          * @return The maximum radius of the particles inside
          */
-        inline float GetMaxRadius(void) const {
+        inline float GetMaxRadius() const {
             return this->maxRad;
         }
 
@@ -282,7 +282,7 @@ public:
          *
          * @return The vertex data pointer
          */
-        inline const void* GetVertexData(void) const {
+        inline const void* GetVertexData() const {
             return this->vertPtr;
         }
 
@@ -291,7 +291,7 @@ public:
          *
          * @return The vertex data stride
          */
-        inline unsigned int GetVertexDataStride(void) const {
+        inline unsigned int GetVertexDataStride() const {
             return this->vertStride;
         }
 
@@ -386,7 +386,7 @@ public:
         /**
          * Ctor
          */
-        GridCell(void);
+        GridCell();
 
         /**
          * Copy ctor
@@ -398,14 +398,14 @@ public:
         /**
          * Dtor
          */
-        ~GridCell(void);
+        ~GridCell();
 
         /**
          * Accesses the list of particle lists
          *
          * @return A pointer to the list or particle lists
          */
-        inline Particles* AccessParticleLists(void) {
+        inline Particles* AccessParticleLists() {
             return this->particles;
         }
 
@@ -414,7 +414,7 @@ public:
          *
          * @return A pointer to the list or particle lists
          */
-        inline const Particles* AccessParticleLists(void) const {
+        inline const Particles* AccessParticleLists() const {
             return this->particles;
         }
 
@@ -434,7 +434,7 @@ public:
          *
          * @return The bounding box of this cell
          */
-        inline const vislib::math::Cuboid<float>& GetBoundingBox(void) const {
+        inline const vislib::math::Cuboid<float>& GetBoundingBox() const {
             return this->bbox;
         }
 
@@ -482,7 +482,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleGridDataCall";
     }
 
@@ -491,7 +491,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get gridded multi-stream particle sphere data";
     }
 
@@ -500,7 +500,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return AbstractGetData3DCall::FunctionCount();
     }
 
@@ -516,10 +516,10 @@ public:
     }
 
     /** Ctor. */
-    ParticleGridDataCall(void);
+    ParticleGridDataCall();
 
     /** Dtor. */
-    ~ParticleGridDataCall(void) override;
+    ~ParticleGridDataCall() override;
 
     /**
      * Calculates the index of a cell specified by its coordinates
@@ -548,7 +548,7 @@ public:
      *
      * @return A pointer to the cells of the grid
      */
-    inline const GridCell* Cells(void) const {
+    inline const GridCell* Cells() const {
         return this->cells;
     }
 
@@ -557,7 +557,7 @@ public:
      *
      * @return The number of cells in x direction
      */
-    inline unsigned int CellsXCount(void) const {
+    inline unsigned int CellsXCount() const {
         return this->cntCellsX;
     }
 
@@ -566,7 +566,7 @@ public:
      *
      * @return The number of cells in y direction
      */
-    inline unsigned int CellsYCount(void) const {
+    inline unsigned int CellsYCount() const {
         return this->cntCellsY;
     }
 
@@ -575,7 +575,7 @@ public:
      *
      * @return The number of cells in z direction
      */
-    inline unsigned int CellsZCount(void) const {
+    inline unsigned int CellsZCount() const {
         return this->cntCellsZ;
     }
 
@@ -584,7 +584,7 @@ public:
      *
      * @return The overall number of cells
      */
-    inline unsigned int CellsCount(void) const {
+    inline unsigned int CellsCount() const {
         return this->cntCells;
     }
 
@@ -639,7 +639,7 @@ public:
      *
      * @return A pointer to the list of particle types
      */
-    inline const ParticleType* Types(void) const {
+    inline const ParticleType* Types() const {
         return this->types;
     }
 
@@ -648,7 +648,7 @@ public:
      *
      * @return The number of particle types
      */
-    inline unsigned int TypesCount(void) const {
+    inline unsigned int TypesCount() const {
         return this->cntTypes;
     }
 

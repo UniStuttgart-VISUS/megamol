@@ -19,7 +19,7 @@ namespace demos_gl {
 /*
  * CrystalDataSource::CrystalDataSource
  */
-CrystalDataSource::CrystalDataSource(void)
+CrystalDataSource::CrystalDataSource()
         : core::Module()
         , filenameSlot("filename", "The path to the file to be loaded")
         , dataOutSlot("dataout", "The slot providing the loaded data")
@@ -40,7 +40,7 @@ CrystalDataSource::CrystalDataSource(void)
 /*
  * CrystalDataSource::~CrystalDataSource
  */
-CrystalDataSource::~CrystalDataSource(void) {
+CrystalDataSource::~CrystalDataSource() {
     this->Release();
 }
 
@@ -48,7 +48,7 @@ CrystalDataSource::~CrystalDataSource(void) {
 /*
  * CrystalDataSource::create
  */
-bool CrystalDataSource::create(void) {
+bool CrystalDataSource::create() {
     // intentionally empty
     return true;
 }
@@ -78,7 +78,7 @@ bool CrystalDataSource::getData(core::Call& c) {
 /*
  * CrystalDataSource::release
  */
-void CrystalDataSource::release(void) {
+void CrystalDataSource::release() {
     this->crystals.Clear();
 }
 

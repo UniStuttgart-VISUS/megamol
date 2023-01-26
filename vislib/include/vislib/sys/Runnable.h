@@ -39,7 +39,7 @@ public:
     typedef DWORD (*Function)(void* userData);
 
     /** Dtor. */
-    virtual ~Runnable(void);
+    virtual ~Runnable();
 
     /**
      * The thread will call this method immediately after it was started
@@ -81,7 +81,7 @@ public:
      * @return true to acknowledge that the Runnable will finish as soon
      *         as possible, false if termination is not possible.
      */
-    virtual bool Terminate(void);
+    virtual bool Terminate();
 };
 
 } /* end namespace sys */

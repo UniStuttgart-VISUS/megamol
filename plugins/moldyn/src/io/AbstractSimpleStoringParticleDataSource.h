@@ -24,10 +24,10 @@ class AbstractSimpleStoringParticleDataSource : public AbstractSimpleParticleDat
 public:
 protected:
     /** Ctor. */
-    AbstractSimpleStoringParticleDataSource(void);
+    AbstractSimpleStoringParticleDataSource();
 
     /** Dtor. */
-    ~AbstractSimpleStoringParticleDataSource(void) override;
+    ~AbstractSimpleStoringParticleDataSource() override;
 
     /**
      * Loads data if required to

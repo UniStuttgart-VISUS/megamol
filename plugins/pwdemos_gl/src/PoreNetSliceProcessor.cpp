@@ -32,7 +32,7 @@ static const char leftmostEdge[16] = {-1, 1, 2, 1, 4, -1, 2, 1, 8, 8, -1, 8, 4, 
 /*
  * PoreNetSliceProcessor::PoreNetSliceProcessor
  */
-PoreNetSliceProcessor::PoreNetSliceProcessor(void) : vislib::sys::Runnable(), inputBuffers(NULL), outputBuffers(NULL) {
+PoreNetSliceProcessor::PoreNetSliceProcessor() : vislib::sys::Runnable(), inputBuffers(NULL), outputBuffers(NULL) {
     // TODO: Implement
     dirOffset[0].Set(0, -1);
     dirOffset[1].Set(1, 0);
@@ -54,7 +54,7 @@ PoreNetSliceProcessor::PoreNetSliceProcessor(void) : vislib::sys::Runnable(), in
 /*
  * PoreNetSliceProcessor::~PoreNetSliceProcessor
  */
-PoreNetSliceProcessor::~PoreNetSliceProcessor(void) {
+PoreNetSliceProcessor::~PoreNetSliceProcessor() {
     // TODO: Implement
 }
 
@@ -100,7 +100,7 @@ DWORD PoreNetSliceProcessor::Run(void* userData) {
 /*
  * PoreNetSliceProcessor::Terminate
  */
-bool PoreNetSliceProcessor::Terminate(void) {
+bool PoreNetSliceProcessor::Terminate() {
     if (this->inputBuffers != NULL)
         this->inputBuffers->AbortClose();
     if (this->outputBuffers != NULL)

@@ -37,7 +37,7 @@ class ThreadPoolListener {
 
 public:
     /** Dtor. */
-    virtual ~ThreadPoolListener(void);
+    virtual ~ThreadPoolListener();
 
     /**
      * The thread pool calls this method once a work item (Runnable) is
@@ -101,7 +101,7 @@ public:
 
 protected:
     /** Ctor. */
-    ThreadPoolListener(void);
+    ThreadPoolListener();
 
     /**
      * Clone rhs

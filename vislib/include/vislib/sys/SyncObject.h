@@ -28,25 +28,25 @@ class SyncObject {
 
 public:
     /** Dtor. */
-    virtual ~SyncObject(void);
+    virtual ~SyncObject();
 
     /**
      * Acquire the lock.
      *
      * @throws SystemException If the lock could not be acquired.
      */
-    virtual void Lock(void) = 0;
+    virtual void Lock() = 0;
 
     /**
      * Release the lock.
      *
      * @throw SystemException If the lock could not be released.
      */
-    virtual void Unlock(void) = 0;
+    virtual void Unlock() = 0;
 
 protected:
     /** Ctor. */
-    inline SyncObject(void) {}
+    inline SyncObject() {}
 
     /**
      * Create a clone of 'rhs'.

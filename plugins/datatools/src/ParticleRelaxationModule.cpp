@@ -13,7 +13,7 @@ using namespace megamol;
 /*
  * datatools::ParticleRelaxationModule::ParticleRelaxationModule
  */
-datatools::ParticleRelaxationModule::ParticleRelaxationModule(void)
+datatools::ParticleRelaxationModule::ParticleRelaxationModule()
         : AbstractParticleManipulator("outData", "indata")
         , dataHash(0)
         , frameId(0)
@@ -25,7 +25,7 @@ datatools::ParticleRelaxationModule::ParticleRelaxationModule(void)
 /*
  * datatools::ParticleRelaxationModule::~ParticleRelaxationModule
  */
-datatools::ParticleRelaxationModule::~ParticleRelaxationModule(void) {
+datatools::ParticleRelaxationModule::~ParticleRelaxationModule() {
     this->Release();
 }
 

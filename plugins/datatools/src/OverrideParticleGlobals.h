@@ -24,25 +24,25 @@ namespace datatools {
 class OverrideParticleGlobals : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "OverrideParticleGlobals";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module overriding global attributes of particles";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    OverrideParticleGlobals(void);
+    OverrideParticleGlobals();
 
     /** Dtor */
-    ~OverrideParticleGlobals(void) override;
+    ~OverrideParticleGlobals() override;
 
 protected:
     /**

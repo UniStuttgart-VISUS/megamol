@@ -31,17 +31,17 @@ namespace protein {
 class CrystalStructureDataSource : public core::view::AnimDataModule {
 public:
     /** Ctor */
-    CrystalStructureDataSource(void);
+    CrystalStructureDataSource();
 
     /** Dtor */
-    ~CrystalStructureDataSource(void) override;
+    ~CrystalStructureDataSource() override;
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CrystalStructureDataSource";
     }
 
@@ -50,7 +50,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers data read from trajectory files.";
     }
 
@@ -59,7 +59,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -72,7 +72,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Call callback to get the data
@@ -95,7 +95,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * Creates a frame to be used in the frame cache. This method will be
@@ -103,7 +103,7 @@ protected:
      *
      * @return The newly created frame object.
      */
-    Frame* constructFrame(void) const override;
+    Frame* constructFrame() const override;
 
     /**
      * Loads one frame of the data set into the given 'frame' object. This
@@ -126,14 +126,14 @@ private:
         Frame(megamol::core::view::AnimDataModule& owner);
 
         /** Dtor */
-        ~Frame(void) override;
+        ~Frame() override;
 
         /**
          * Answer the name of this class.
          *
          * @return The name of this class.
          */
-        static const char* ClassName(void) {
+        static const char* ClassName() {
             return "CrystalStructureDataSource::Frame";
         }
 
@@ -255,13 +255,13 @@ private:
         }
 
         /** Dtor. */
-        ~Unlocker(void) override {
+        ~Unlocker() override {
             this->Unlock();
             ASSERT(this->frame == NULL);
         }
 
         /** Unlocks the data */
-        void Unlock(void) override {
+        void Unlock() override {
             if (this->frame != NULL) {
                 this->frame->Unlock();
                 this->frame = NULL; // DO NOT DELETE!

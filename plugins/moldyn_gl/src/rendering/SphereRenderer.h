@@ -109,7 +109,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SphereRenderer";
     }
 
@@ -118,7 +118,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for sphere glyphs providing different modes using e.g. a bit of bleeding-edge features or a "
                "geometry shader.";
     }
@@ -128,7 +128,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
 
 #ifdef _WIN32
 #if defined(DEBUG) || defined(_DEBUG)
@@ -183,10 +183,10 @@ public:
 #endif
 
     /** Ctor. */
-    SphereRenderer(void);
+    SphereRenderer();
 
     /** Dtor. */
-    ~SphereRenderer(void) override;
+    ~SphereRenderer() override;
 
 protected:
     /**
@@ -194,12 +194,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * The render callback.
@@ -426,14 +426,14 @@ private:
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool createResources(void);
+    bool createResources();
 
     /**
      * Reset all OpenGL resources.
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool resetResources(void);
+    bool resetResources();
 
     /**
      * Render spheres in different render modes.
@@ -493,7 +493,7 @@ private:
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool disableShaderData(void);
+    bool disableShaderData();
 
     /**
      * Enables the transfer function texture.
@@ -509,7 +509,7 @@ private:
      *
      * @return 'True' on success, 'false' otherwise.
      */
-    bool disableTransferFunctionTexture(void);
+    bool disableTransferFunctionTexture();
 
     /**
      * Enable flag storage.
@@ -623,7 +623,7 @@ private:
      *
      * @return ...
      */
-    bool rebuildGBuffer(void);
+    bool rebuildGBuffer();
 
     /**
      * Rebuild working data.

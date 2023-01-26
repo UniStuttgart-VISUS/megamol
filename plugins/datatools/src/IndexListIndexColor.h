@@ -22,15 +22,15 @@ namespace datatools {
 class IndexListIndexColor : public AbstractParticleManipulator {
 public:
     /** Factory metadata */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "IndexListIndexColor";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Creates an ICol data stream holding the index of the "
                "first index list in the connected MultiIndexListDataCall "
                "referencing the corresponding particle.";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 

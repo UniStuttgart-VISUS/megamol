@@ -50,7 +50,7 @@ GROLoader::Frame::Frame(view::AnimDataModule& owner)
 /*
  * GROLoader::Frame::~Frame
  */
-GROLoader::Frame::~Frame(void) {}
+GROLoader::Frame::~Frame() {}
 
 /*
  * GROLoader::Frame::operator==
@@ -715,7 +715,7 @@ bool GROLoader::Frame::SetAtomOccupancy(unsigned int idx, float val) {
 /*
  * protein::GROLoader::GROLoader
  */
-GROLoader::GROLoader(void)
+GROLoader::GROLoader()
         : AnimDataModule()
         , groFilenameSlot("groFilename", "The path to the GRO data file to be loaded")
         , xtcFilenameSlot("xtcFilename", "The path to the XTC data file to be loaded")
@@ -777,7 +777,7 @@ GROLoader::GROLoader(void)
 /*
  * protein::GROLoader::~GROLoader
  */
-GROLoader::~GROLoader(void) {
+GROLoader::~GROLoader() {
     if (mdd != NULL) {
         if (mdd->IsRunning()) {
             mdd->RequestTerminate();
@@ -793,7 +793,7 @@ GROLoader::~GROLoader(void) {
 /*
  * GROLoader::create
  */
-bool GROLoader::create(void) {
+bool GROLoader::create() {
     // intentionally empty
     return true;
 }
@@ -1061,7 +1061,7 @@ bool GROLoader::getExtent(core::Call& call) {
 /*
  * GROLoader::release
  */
-void GROLoader::release(void) {
+void GROLoader::release() {
     // stop frame-loading thread before clearing data array
     resetFrameCache();
 
@@ -1080,7 +1080,7 @@ void GROLoader::release(void) {
 /*
  * GROLoader::constructFrame
  */
-view::AnimDataModule::Frame* GROLoader::constructFrame(void) const {
+view::AnimDataModule::Frame* GROLoader::constructFrame() const {
     Frame* f = new Frame(*const_cast<GROLoader*>(this));
     f->SetAtomCount(this->data[0]->AtomCount());
     return f;

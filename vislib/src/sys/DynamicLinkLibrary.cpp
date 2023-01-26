@@ -24,7 +24,7 @@
 /*
  * vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary
  */
-vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary(void) : hModule(NULL), loadErrorMsg() {
+vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary() : hModule(NULL), loadErrorMsg() {
     // intentionally empty
 }
 
@@ -32,7 +32,7 @@ vislib::sys::DynamicLinkLibrary::DynamicLinkLibrary(void) : hModule(NULL), loadE
 /*
  * vislib::sys::DynamicLinkLibrary::~DynamicLinkLibrary
  */
-vislib::sys::DynamicLinkLibrary::~DynamicLinkLibrary(void) {
+vislib::sys::DynamicLinkLibrary::~DynamicLinkLibrary() {
     this->Free();
 }
 
@@ -40,7 +40,7 @@ vislib::sys::DynamicLinkLibrary::~DynamicLinkLibrary(void) {
 /*
  * vislib::sys::DynamicLinkLibrary::Free
  */
-void vislib::sys::DynamicLinkLibrary::Free(void) {
+void vislib::sys::DynamicLinkLibrary::Free() {
     if (this->hModule != NULL) {
 #ifdef _WIN32
         if (::FreeLibrary(this->hModule) != TRUE) {

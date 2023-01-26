@@ -41,10 +41,10 @@ class SimpleMessageDispatchListener {
 
 public:
     /** Ctor. */
-    SimpleMessageDispatchListener(void);
+    SimpleMessageDispatchListener();
 
     /** Dtor. */
-    virtual ~SimpleMessageDispatchListener(void);
+    virtual ~SimpleMessageDispatchListener();
 
     /**
      * This method is called once a communication error occurs.

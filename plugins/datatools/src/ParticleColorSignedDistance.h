@@ -23,26 +23,26 @@ namespace datatools {
 class ParticleColorSignedDistance : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleColorSignedDistance";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes signed distances of particles to the closest particle with a color value of zero. The sign is "
                "preserved from the original color.";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleColorSignedDistance(void);
+    ParticleColorSignedDistance();
 
     /** Dtor */
-    ~ParticleColorSignedDistance(void) override;
+    ~ParticleColorSignedDistance() override;
 
 protected:
     /**

@@ -486,7 +486,7 @@ public:
      *
      * @return The number of named colours
      */
-    static SIZE_T CountNamedColours(void);
+    static SIZE_T CountNamedColours();
 
     /**
      * Answer the idx-th named colour
@@ -577,10 +577,10 @@ private:
     static ColourRGBAu8 colFromHex(DWORD hex);
 
     /** Forbidden ctor. */
-    NamedColours(void);
+    NamedColours();
 
     /** Forbidden dtor. */
-    ~NamedColours(void);
+    ~NamedColours();
 };
 
 } /* end namespace graphics */

@@ -38,14 +38,14 @@ public:
     FpsCounter(unsigned int bufLength = 100);
 
     /** Dtor. */
-    ~FpsCounter(void);
+    ~FpsCounter();
 
     /**
      * Answers the averaged fps over the whole measurement buffer.
      *
      * @return The averaged fps.
      */
-    inline float FPS(void) const {
+    inline float FPS() const {
         if (!this->fpsValuesValid) {
             this->evaluate();
         }
@@ -60,7 +60,7 @@ public:
      * @throws IllegalStateException if FrameEnd was not called since the
      *                               last time FrameBegin was called.
      */
-    void FrameBegin(void);
+    void FrameBegin();
 
     /**
      * Marks the end of a frame. Should be called immediately after the
@@ -70,7 +70,7 @@ public:
      *                               last time FrameEnd was called or since
      *                               this object was created.
      */
-    void FrameEnd(void);
+    void FrameEnd();
 
     /**
      * Answer the time in milliseconds the last frame needed to be
@@ -78,7 +78,7 @@ public:
      *
      * @return The time required to renderer the last frame.
      */
-    double LastFrameTime(void) const;
+    double LastFrameTime() const;
 
     /**
      * Answer the maximum time in milliseconds to be used when calculating
@@ -86,7 +86,7 @@ public:
      *
      * @return The maximum time used when calculating the averaged fps.
      */
-    inline double MaxAveragingTime(void) const {
+    inline double MaxAveragingTime() const {
         return this->avrMillis;
     }
 
@@ -95,7 +95,7 @@ public:
      *
      * @return The maximum fps.
      */
-    inline float MaxFPS(void) const {
+    inline float MaxFPS() const {
         if (!this->fpsValuesValid) {
             this->evaluate();
         }
@@ -107,7 +107,7 @@ public:
      *
      * @return The minimum fps.
      */
-    inline float MinFPS(void) const {
+    inline float MinFPS() const {
         if (!this->fpsValuesValid) {
             this->evaluate();
         }
@@ -118,7 +118,7 @@ public:
      * Resets the FpsCounter. If called between "FrameBegin2 and "FrameEnd"
      * the behaviour is the same as if "FrameEnd" were called implicitly.
      */
-    void Reset(void);
+    void Reset();
 
     /**
      * Sets the buffer length to a new value. This also resets the counter
@@ -161,7 +161,7 @@ private:
     /**
      * Performs lazy evaluation of the fps values
      */
-    void evaluate(void) const;
+    void evaluate() const;
 
     /** marks the reset time */
     double now;

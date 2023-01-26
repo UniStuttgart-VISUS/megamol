@@ -33,7 +33,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MSMSCavityFinder";
     }
 
@@ -42,7 +42,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module that finds cavities based on the input of two MSMS meshes (using the 3V method).";
     }
 
@@ -51,15 +51,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    MSMSCavityFinder(void);
+    MSMSCavityFinder();
 
     /** Dtor. */
-    ~MSMSCavityFinder(void) override;
+    ~MSMSCavityFinder() override;
 
 protected:
     /**
@@ -67,12 +67,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * Call for get data.

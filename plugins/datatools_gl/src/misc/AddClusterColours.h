@@ -28,7 +28,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "AddClusterColours";
     }
 
@@ -37,7 +37,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Adds particle colours from a transfer function to the memory stored particles.";
     }
 
@@ -46,15 +46,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    AddClusterColours(void);
+    AddClusterColours();
 
     /** Dtor. */
-    ~AddClusterColours(void) override;
+    ~AddClusterColours() override;
 
 private:
     /**
@@ -70,10 +70,10 @@ private:
         Unlocker(geocalls::MultiParticleDataCall::Unlocker* inner);
 
         /** dtor. */
-        ~Unlocker(void) override;
+        ~Unlocker() override;
 
         /** Unlocks the data */
-        void Unlock(void) override;
+        void Unlock() override;
 
     private:
         /** the inner unlocker */
@@ -85,12 +85,12 @@ private:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * Gets the data from the source.

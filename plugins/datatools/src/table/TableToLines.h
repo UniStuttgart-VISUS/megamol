@@ -21,7 +21,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "TableToLines";
     }
 
@@ -30,7 +30,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Converts generic tables to Lines.";
     }
 
@@ -39,19 +39,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    TableToLines(void);
+    TableToLines();
 
     /**
      * Finalises an instance.
      */
-    ~TableToLines(void) override;
+    ~TableToLines() override;
 
 protected:
     /**
@@ -59,7 +59,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     bool getLineData(core::Call& call);
 
@@ -68,7 +68,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     bool assertData(table::TableDataCall* ft);

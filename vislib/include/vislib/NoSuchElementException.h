@@ -45,7 +45,7 @@ public:
     NoSuchElementException(const NoSuchElementException& rhs);
 
     /** Dtor. */
-    ~NoSuchElementException(void) override;
+    ~NoSuchElementException() override;
 
     /**
      * Assignment operator.

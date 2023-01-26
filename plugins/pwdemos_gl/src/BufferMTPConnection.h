@@ -36,14 +36,14 @@ public:
     BufferMTPConnection(unsigned int bufSize = 4);
 
     /** Dtor */
-    ~BufferMTPConnection(void);
+    ~BufferMTPConnection();
 
     /**
      * Closes the connection aborting the communication. All buffers will
      * be reset to empty state before the method returns. The method waits
      * for buffers in producing or consuming state to be returned.
      */
-    void AbortClose(void);
+    void AbortClose();
 
     /**
      * Marks the buffer 'buf' as now empty after being consumed. The
@@ -68,7 +68,7 @@ public:
      * connection should be closes as soon as the last filled buffer was
      * consumed. The method returns immediately.
      */
-    void EndOfDataClose(void);
+    void EndOfDataClose();
 
     /**
      * Gets an empty buffer and switches it's state from empty to
@@ -107,7 +107,7 @@ public:
      *
      * @return True if there will no buffers be filled anymore
      */
-    inline bool IsEndOfData(void) const {
+    inline bool IsEndOfData() const {
         return this->endOfData;
     }
 
@@ -116,14 +116,14 @@ public:
      *
      * @return True if the connection is open
      */
-    inline bool IsOpen(void) const {
+    inline bool IsOpen() const {
         return this->isOpen;
     }
 
     /**
      * Opens the connection
      */
-    void Open(void);
+    void Open();
 
 private:
     /** type for buffers */
@@ -203,7 +203,7 @@ BufferMTPConnection<T>::BufferMTPConnection(unsigned int bufSize)
  * BufferMTPConnection<T>::~BufferMTPConnection
  */
 template<class T>
-BufferMTPConnection<T>::~BufferMTPConnection(void) {
+BufferMTPConnection<T>::~BufferMTPConnection() {
 
     this->AbortClose();
 
@@ -224,7 +224,7 @@ BufferMTPConnection<T>::~BufferMTPConnection(void) {
  * BufferMTPConnection<T>::AbortClose
  */
 template<class T>
-void BufferMTPConnection<T>::AbortClose(void) {
+void BufferMTPConnection<T>::AbortClose() {
     this->bufferLock.Lock();
     this->isOpen = false; // don't give any buffers to callers
 
@@ -354,7 +354,7 @@ void BufferMTPConnection<T>::BufferFilled(T* buf) {
  * BufferMTPConnection<T>::EndOfDataClose
  */
 template<class T>
-void BufferMTPConnection<T>::EndOfDataClose(void) {
+void BufferMTPConnection<T>::EndOfDataClose() {
     vislib::sys::AutoLock(this->bufferLock);
 
     this->endOfData = true;
@@ -462,7 +462,7 @@ T* BufferMTPConnection<T>::GetFilledBuffer(bool wait) {
  * BufferMTPConnection<T>::Open
  */
 template<class T>
-void BufferMTPConnection<T>::Open(void) {
+void BufferMTPConnection<T>::Open() {
     vislib::sys::AutoLock(this->bufferLock);
 
     ASSERT(this->isOpen == false);

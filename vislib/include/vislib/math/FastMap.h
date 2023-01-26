@@ -131,7 +131,7 @@ private:
      * Executes the mapping from inData into outData. It calls
      * chooseDistant once per destination dimension.
      */
-    void compute(void);
+    void compute();
 
     /** Reference to source data */
     Array<TI>& inData;
@@ -200,7 +200,7 @@ void FastMap<TI, TO, D>::chooseDistant(unsigned int dim) {
  * vislib::math::FastMap<TI, TO, D>::compute
  */
 template<class TI, class TO, unsigned int D>
-void FastMap<TI, TO, D>::compute(void) {
+void FastMap<TI, TO, D>::compute() {
     unsigned int currDim;
     float xi;
 

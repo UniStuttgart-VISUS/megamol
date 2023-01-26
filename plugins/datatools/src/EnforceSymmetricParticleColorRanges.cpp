@@ -14,7 +14,7 @@ using namespace megamol;
 /*
  * datatools::EnforceSymmetricParticleColorRanges::EnforceSymmetricParticleColorRanges
  */
-datatools::EnforceSymmetricParticleColorRanges::EnforceSymmetricParticleColorRanges(void)
+datatools::EnforceSymmetricParticleColorRanges::EnforceSymmetricParticleColorRanges()
         : AbstractParticleManipulator("outData", "indata") {
     // intentionally empty
 }
@@ -23,7 +23,7 @@ datatools::EnforceSymmetricParticleColorRanges::EnforceSymmetricParticleColorRan
 /*
  * datatools::EnforceSymmetricParticleColorRanges::~EnforceSymmetricParticleColorRanges
  */
-datatools::EnforceSymmetricParticleColorRanges::~EnforceSymmetricParticleColorRanges(void) {
+datatools::EnforceSymmetricParticleColorRanges::~EnforceSymmetricParticleColorRanges() {
     this->Release();
 }
 

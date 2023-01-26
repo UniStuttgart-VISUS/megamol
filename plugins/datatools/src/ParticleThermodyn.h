@@ -40,25 +40,25 @@ public:
     enum phaseEnum { FLUID = 0, GAS = 1 };
 
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleThermodyn";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes an intensity from some properties of a particle (compared to its surroundings).";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleThermodyn(void);
+    ParticleThermodyn();
 
     /** Dtor */
-    ~ParticleThermodyn(void) override;
+    ~ParticleThermodyn() override;
 
     /**
      * Called when the data is requested by this module
@@ -80,10 +80,10 @@ public:
 
 protected:
     /** Lazy initialization of the module */
-    bool create(void) override;
+    bool create() override;
 
     /** Resource release */
-    void release(void) override;
+    void release() override;
 
 private:
     bool assertData(geocalls::MultiParticleDataCall* in, geocalls::MultiParticleDataCall* outMPDC);

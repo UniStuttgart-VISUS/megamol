@@ -28,24 +28,24 @@ namespace io {
  */
 class MMGDDDataSource : public core::view::AnimDataModule {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MMGDDDataSource";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for MegaMol GraphData Dump files.";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    MMGDDDataSource(void);
-    ~MMGDDDataSource(void) override;
+    MMGDDDataSource();
+    ~MMGDDDataSource() override;
 
 protected:
-    core::view::AnimDataModule::Frame* constructFrame(void) const override;
-    bool create(void) override;
+    core::view::AnimDataModule::Frame* constructFrame() const override;
+    bool create() override;
     void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) override;
-    void release(void) override;
+    void release() override;
 
     /** Nested class of frame data */
     class Frame : public core::view::AnimDataModule::Frame {
@@ -91,11 +91,11 @@ protected:
         Unlocker(Frame& frame) : GraphDataCall::Unlocker(), frame(&frame) {
             // intentionally empty
         }
-        ~Unlocker(void) override {
+        ~Unlocker() override {
             this->Unlock();
             ASSERT(this->frame == nullptr);
         }
-        void Unlock(void) override {
+        void Unlock() override {
             if (this->frame != nullptr) {
                 this->frame->Unlock();
                 this->frame = nullptr;

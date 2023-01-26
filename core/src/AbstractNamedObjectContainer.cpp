@@ -18,7 +18,7 @@ using namespace megamol::core;
 /*
  * AbstractNamedObjectContainer::~AbstractNamedObjectContainer
  */
-AbstractNamedObjectContainer::~AbstractNamedObjectContainer(void) {
+AbstractNamedObjectContainer::~AbstractNamedObjectContainer() {
     if (this->children.size() > 0) {
         vislib::StringA msg;
         vislib::StringA name = "::";
@@ -41,7 +41,7 @@ AbstractNamedObjectContainer::~AbstractNamedObjectContainer(void) {
 /*
  * AbstractNamedObjectContainer::AbstractNamedObjectContainer
  */
-AbstractNamedObjectContainer::AbstractNamedObjectContainer(void) : AbstractNamedObject(), children() {
+AbstractNamedObjectContainer::AbstractNamedObjectContainer() : AbstractNamedObject(), children() {
     // intentionally empty
 }
 
@@ -149,7 +149,7 @@ AbstractNamedObject::ptr_type AbstractNamedObjectContainer::FindNamedObject(cons
 /*
  * AbstractNamedObjectContainer::SetAllCleanupMarks
  */
-void AbstractNamedObjectContainer::SetAllCleanupMarks(void) {
+void AbstractNamedObjectContainer::SetAllCleanupMarks() {
     AbstractNamedObject::SetAllCleanupMarks();
     for (AbstractNamedObject::ptr_type i : this->children)
         i->SetAllCleanupMarks();
@@ -159,7 +159,7 @@ void AbstractNamedObjectContainer::SetAllCleanupMarks(void) {
 /*
  * AbstractNamedObjectContainer::PerformCleanup
  */
-void AbstractNamedObjectContainer::PerformCleanup(void) {
+void AbstractNamedObjectContainer::PerformCleanup() {
     AbstractNamedObject::PerformCleanup();
     // inform all children that we perform a cleanup
     for (AbstractNamedObject::ptr_type i : this->children) {
@@ -192,7 +192,7 @@ void AbstractNamedObjectContainer::PerformCleanup(void) {
 /*
  * AbstractNamedObjectContainer::DisconnectCalls
  */
-void AbstractNamedObjectContainer::DisconnectCalls(void) {
+void AbstractNamedObjectContainer::DisconnectCalls() {
     // propagate 'DisconnectCalls' to all children
     for (AbstractNamedObject::ptr_type i : this->children) {
         i->DisconnectCalls();
@@ -203,7 +203,7 @@ void AbstractNamedObjectContainer::DisconnectCalls(void) {
 /*
  * AbstractNamedObjectContainer::fixParentBackreferences
  */
-void AbstractNamedObjectContainer::fixParentBackreferences(void) {
+void AbstractNamedObjectContainer::fixParentBackreferences() {
     // required for lazy initialization of module slots made available in module::ctor
     for (auto i : this->children) {
         if (i->parent.expired()) {

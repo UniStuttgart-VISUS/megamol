@@ -29,7 +29,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DiagramSeries";
     }
 
@@ -38,7 +38,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module to select a specific column from a table as diagram series";
     }
 
@@ -47,15 +47,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    DiagramSeries(void);
+    DiagramSeries();
 
     /** dtor */
-    ~DiagramSeries(void) override;
+    ~DiagramSeries() override;
 
 protected:
     /**
@@ -63,12 +63,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /**
@@ -87,12 +87,12 @@ private:
     /**
      * Checks if any parameter is dirty.
      */
-    bool isAnythingDirty(void) const;
+    bool isAnythingDirty() const;
 
     /**
      * Resets dirty flags of parameters.
      */
-    void resetDirtyFlags(void);
+    void resetDirtyFlags();
 
     /**
      * Finds column based on name.

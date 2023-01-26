@@ -43,7 +43,7 @@ public:
      * not release any references except for those it added by itself.
      */
     typedef struct Configuration_t {
-        inline Configuration_t(void) {}
+        inline Configuration_t() {}
         inline Configuration_t(SmartRef<AbstractCommServerChannel> channel, SmartRef<AbstractCommEndPoint> endPoint)
                 : Channel(channel)
                 , EndPoint(endPoint) {}
@@ -59,10 +59,10 @@ public:
     } Configuration;
 
     /** Ctor. */
-    CommServer(void);
+    CommServer();
 
     /** Dtor. */
-    ~CommServer(void) override;
+    ~CommServer() override;
 
     /**
      * Add a new CommServerListener to be informed about events of this
@@ -86,7 +86,7 @@ public:
      *
      * @return The server configuration.
      */
-    inline const Configuration& GetConfiguration(void) const {
+    inline const Configuration& GetConfiguration() const {
         return this->configuration;
     }
 
@@ -129,7 +129,7 @@ public:
      *
      * @return true.
      */
-    bool Terminate(void) override;
+    bool Terminate() override;
 
 private:
     /** A thread-safe list for the message listeners. */
@@ -163,14 +163,14 @@ private:
      *
      * This method is thread-safe.
      */
-    void fireServerExited(void);
+    void fireServerExited();
 
     /**
      * Inform all registered listener about that the server is starting.
      *
      * This method is thread-safe.
      */
-    void fireServerStarted(void);
+    void fireServerStarted();
 
     /** The configuration of the server. */
     Configuration configuration;

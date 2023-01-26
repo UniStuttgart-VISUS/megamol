@@ -17,17 +17,17 @@ using namespace megamol::core;
 class DepthFunction : public core::Module {
 public:
     /** Return module class name */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "DepthFunction";
     }
 
     /** Return module class description */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Non-parametric depth functions (order statistics) for multivariate analysis";
     }
 
     /** Module is always available */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
@@ -39,17 +39,17 @@ public:
     Eigen::VectorXd simplicalDepth(Eigen::MatrixXd dataMatrix, int samplesCount, unsigned int seed);
 
     /** Constructor */
-    DepthFunction(void);
+    DepthFunction();
 
     /** Destructor */
-    ~DepthFunction(void) override;
+    ~DepthFunction() override;
 
 protected:
     /** Lazy initialization of the module */
-    bool create(void) override;
+    bool create() override;
 
     /** Resource release */
-    void release(void) override;
+    void release() override;
 
 private:
     /** Data callback */

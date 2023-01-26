@@ -27,7 +27,7 @@ CalleeSlot::CalleeSlot(const vislib::StringA& name, const vislib::StringA& desc)
 /*
  * CalleeSlot::~CalleeSlot
  */
-CalleeSlot::~CalleeSlot(void) {
+CalleeSlot::~CalleeSlot() {
     for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
         delete this->callbacks[i];
     }
@@ -86,7 +86,7 @@ bool CalleeSlot::InCall(unsigned int func, Call& call) {
 /*
  * CalleeSlot::ClearCleanupMark
  */
-void CalleeSlot::ClearCleanupMark(void) {
+void CalleeSlot::ClearCleanupMark() {
     if (!this->CleanupMark())
         return;
 

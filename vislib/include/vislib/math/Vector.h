@@ -38,7 +38,7 @@ public:
     /**
      * Create a null vector.
      */
-    Vector(void);
+    Vector();
 
     /**
      * Create a new vector initialised with 'components'. 'components' must
@@ -70,7 +70,7 @@ public:
     Vector(const AbstractVector<Tp, Dp, Sp>& rhs);
 
     /** Dtor. */
-    ~Vector(void);
+    ~Vector();
 
     /**
      * Assignment.
@@ -116,7 +116,7 @@ private:
  * vislib::math::Vector<T, D>::Vector
  */
 template<class T, unsigned int D>
-Vector<T, D>::Vector(void) : Super() {
+Vector<T, D>::Vector() : Super() {
     for (unsigned int d = 0; d < D; d++) {
         this->components[d] = static_cast<T>(0);
     }
@@ -142,7 +142,7 @@ Vector<T, D>::Vector(const AbstractVector<Tp, Dp, Sp>& rhs) : Super() {
  * vislib::math::Vector<T, D>::~Vector
  */
 template<class T, unsigned int D>
-Vector<T, D>::~Vector(void) {}
+Vector<T, D>::~Vector() {}
 
 
 /**
@@ -156,7 +156,7 @@ public:
     using ValueT = T;
 
     /** Behaves like primary class template. */
-    Vector(void);
+    Vector();
 
     /** Behaves like primary class template. */
     explicit inline Vector(const T* components) : Super() {
@@ -195,7 +195,7 @@ public:
     Vector(const AbstractVector<Tp, Dp, Sp>& rhs);
 
     /** Behaves like primary class template. */
-    ~Vector(void);
+    ~Vector();
 
     /** Behaves like primary class template. */
     inline Vector& operator=(const Vector& rhs) {
@@ -223,7 +223,7 @@ private:
  * vislib::math::Vector<T, 2>::Vector
  */
 template<class T>
-Vector<T, 2>::Vector(void) : Super() {
+Vector<T, 2>::Vector() : Super() {
     for (unsigned int d = 0; d < D; d++) {
         this->components[d] = static_cast<T>(0);
     }
@@ -249,7 +249,7 @@ Vector<T, 2>::Vector(const AbstractVector<Tp, Dp, Sp>& rhs) : Super() {
  * vislib::math::Vector<T, 2>::~Vector
  */
 template<class T>
-Vector<T, 2>::~Vector(void) {}
+Vector<T, 2>::~Vector() {}
 
 
 /*
@@ -270,7 +270,7 @@ public:
     using ValueT = T;
 
     /** Behaves like primary class template. */
-    Vector(void);
+    Vector();
 
     /** Behaves like primary class template. */
     explicit inline Vector(const T* components) : Super() {
@@ -312,7 +312,7 @@ public:
     Vector(const AbstractVector<Tp, Dp, Sp>& rhs);
 
     /** Behaves like primary class template. */
-    ~Vector(void);
+    ~Vector();
 
     /** Behaves like primary class template. */
     inline Vector& operator=(const Vector& rhs) {
@@ -340,7 +340,7 @@ private:
  * vislib::math::Vector<T, 3>::Vector
  */
 template<class T>
-Vector<T, 3>::Vector(void) : Super() {
+Vector<T, 3>::Vector() : Super() {
     for (unsigned int d = 0; d < D; d++) {
         this->components[d] = static_cast<T>(0);
     }
@@ -366,7 +366,7 @@ Vector<T, 3>::Vector(const AbstractVector<Tp, Dp, Sp>& rhs) : Super() {
  * vislib::math::Vector<T, 3>::~Vector
  */
 template<class T>
-Vector<T, 3>::~Vector(void) {}
+Vector<T, 3>::~Vector() {}
 
 
 /*
@@ -387,7 +387,7 @@ public:
     using ValueT = T;
 
     /** Behaves like primary class template. */
-    Vector(void);
+    Vector();
 
     /** Behaves like primary class template. */
     explicit inline Vector(const T* components) : Super() {
@@ -432,7 +432,7 @@ public:
     Vector(const AbstractVector<Tp, Dp, Sp>& rhs);
 
     /** Behaves like primary class template. */
-    ~Vector(void);
+    ~Vector();
 
     /** Behaves like primary class template. */
     inline Vector& operator=(const Vector& rhs) {
@@ -460,7 +460,7 @@ private:
  * vislib::math::Vector<T, 4>::Vector
  */
 template<class T>
-Vector<T, 4>::Vector(void) : Super() {
+Vector<T, 4>::Vector() : Super() {
     for (unsigned int d = 0; d < D; d++) {
         this->components[d] = static_cast<T>(0);
     }
@@ -486,7 +486,7 @@ Vector<T, 4>::Vector(const AbstractVector<Tp, Dp, Sp>& rhs) : Super() {
  * vislib::math::Vector<T, 4>::~Vector
  */
 template<class T>
-Vector<T, 4>::~Vector(void) {
+Vector<T, 4>::~Vector() {
     // intentionally empty
 }
 

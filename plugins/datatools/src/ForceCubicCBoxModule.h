@@ -19,25 +19,25 @@ namespace datatools {
 class ForceCubicCBoxModule : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ForceCubicCBoxModule";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module forcing the clip box of particles to be cubic";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ForceCubicCBoxModule(void);
+    ForceCubicCBoxModule();
 
     /** Dtor */
-    ~ForceCubicCBoxModule(void) override;
+    ~ForceCubicCBoxModule() override;
 
 protected:
     /**

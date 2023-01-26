@@ -28,7 +28,7 @@ class AbstractPoint : public AbstractPointImpl<T, D, S, AbstractPoint> {
 
 public:
     /** Dtor. */
-    ~AbstractPoint(void);
+    ~AbstractPoint();
 
     /**
      * Assignment.
@@ -71,7 +71,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractPoint(void) : Super() {}
+    inline AbstractPoint() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -83,7 +83,7 @@ protected:
  * vislib::math::AbstractPoint<T, D, S>::~AbstractPoint
  */
 template<class T, unsigned int D, class S>
-AbstractPoint<T, D, S>::~AbstractPoint(void) {}
+AbstractPoint<T, D, S>::~AbstractPoint() {}
 
 
 /**
@@ -96,14 +96,14 @@ class AbstractPoint<T, 2, S> : public AbstractPointImpl<T, 2, S, AbstractPoint> 
 
 public:
     /** Behaves like primary class template. */
-    ~AbstractPoint(void);
+    ~AbstractPoint();
 
     /**
      * Answer the x-coordinate of the point.
      *
      * @return The x-coordinate of the point.
      */
-    inline const T& GetX(void) const {
+    inline const T& GetX() const {
         return this->coordinates[0];
     }
 
@@ -112,7 +112,7 @@ public:
      *
      * @return The y-coordinate of the point.
      */
-    inline const T& GetY(void) const {
+    inline const T& GetY() const {
         return this->coordinates[1];
     }
 
@@ -150,7 +150,7 @@ public:
      *
      * @return The x-coordinate of the point.
      */
-    inline const T& X(void) const {
+    inline const T& X() const {
         return this->coordinates[0];
     }
 
@@ -159,7 +159,7 @@ public:
      *
      * @return The y-component of the point.
      */
-    inline const T& Y(void) const {
+    inline const T& Y() const {
         return this->coordinates[1];
     }
 
@@ -184,7 +184,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractPoint(void) : Super() {}
+    inline AbstractPoint() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -196,7 +196,7 @@ protected:
  * vislib::math::AbstractPoint<T, 2, S>::~AbstractPoint
  */
 template<class T, class S>
-AbstractPoint<T, 2, S>::~AbstractPoint(void) {}
+AbstractPoint<T, 2, S>::~AbstractPoint() {}
 
 
 /**
@@ -209,14 +209,14 @@ class AbstractPoint<T, 3, S> : public AbstractPointImpl<T, 3, S, AbstractPoint> 
 
 public:
     /** Behaves like primary class template. */
-    ~AbstractPoint(void);
+    ~AbstractPoint();
 
     /**
      * Answer the x-coordinate of the point.
      *
      * @return The x-coordinate of the point.
      */
-    inline const T& GetX(void) const {
+    inline const T& GetX() const {
         return this->coordinates[0];
     }
 
@@ -225,7 +225,7 @@ public:
      *
      * @return The y-coordinate of the point.
      */
-    inline const T& GetY(void) const {
+    inline const T& GetY() const {
         return this->coordinates[1];
     }
 
@@ -234,7 +234,7 @@ public:
      *
      * @return The z-coordinate of the point.
      */
-    inline const T& GetZ(void) const {
+    inline const T& GetZ() const {
         return this->coordinates[2];
     }
 
@@ -283,7 +283,7 @@ public:
      *
      * @return The x-coordinate of the point.
      */
-    inline const T& X(void) const {
+    inline const T& X() const {
         return this->coordinates[0];
     }
 
@@ -292,7 +292,7 @@ public:
      *
      * @return The y-coordinate of the point.
      */
-    inline const T& Y(void) const {
+    inline const T& Y() const {
         return this->coordinates[1];
     }
 
@@ -301,7 +301,7 @@ public:
      *
      * @return The z-coordinate of the point.
      */
-    inline const T& Z(void) const {
+    inline const T& Z() const {
         return this->coordinates[2];
     }
 
@@ -325,7 +325,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractPoint(void) : Super() {}
+    inline AbstractPoint() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -337,7 +337,7 @@ protected:
  * vislib::math::AbstractPoint<T, 3, S>::~AbstractPoint
  */
 template<class T, class S>
-AbstractPoint<T, 3, S>::~AbstractPoint(void) {}
+AbstractPoint<T, 3, S>::~AbstractPoint() {}
 
 
 /**
@@ -350,14 +350,14 @@ class AbstractPoint<T, 4, S> : public AbstractPointImpl<T, 4, S, AbstractPoint> 
 
 public:
     /** Behaves like primary class template. */
-    ~AbstractPoint(void);
+    ~AbstractPoint();
 
     /**
      * Answer the x-coordinate of the point.
      *
      * @return The x-coordinate of the point.
      */
-    inline const T& GetX(void) const {
+    inline const T& GetX() const {
         return this->coordinates[0];
     }
 
@@ -366,7 +366,7 @@ public:
      *
      * @return The y-coordinate of the point.
      */
-    inline const T& GetY(void) const {
+    inline const T& GetY() const {
         return this->coordinates[1];
     }
 
@@ -375,7 +375,7 @@ public:
      *
      * @return The z-coordinate of the point.
      */
-    inline const T& GetZ(void) const {
+    inline const T& GetZ() const {
         return this->coordinates[2];
     }
 
@@ -384,7 +384,7 @@ public:
      *
      * @return The w-coordinate of the point.
      */
-    inline const T& GetW(void) const {
+    inline const T& GetW() const {
         return this->coordinates[3];
     }
 
@@ -444,7 +444,7 @@ public:
      *
      * @return The x-coordinate of the point.
      */
-    inline const T& X(void) const {
+    inline const T& X() const {
         return this->coordinates[0];
     }
 
@@ -453,7 +453,7 @@ public:
      *
      * @return The y-coordinate of the point.
      */
-    inline const T& Y(void) const {
+    inline const T& Y() const {
         return this->coordinates[1];
     }
 
@@ -462,7 +462,7 @@ public:
      *
      * @return The z-coordinate of the point.
      */
-    inline const T& Z(void) const {
+    inline const T& Z() const {
         return this->coordinates[2];
     }
 
@@ -471,7 +471,7 @@ public:
      *
      * @return The w-coordinate of the point.
      */
-    inline const T& W(void) const {
+    inline const T& W() const {
         return this->coordinates[3];
     }
 
@@ -495,7 +495,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractPoint(void) : Super() {}
+    inline AbstractPoint() : Super() {}
 
     /* Allow instances created by the implementation class. */
     template<class Tf1, unsigned int Df1, class Sf1, template<class Tf2, unsigned int Df2, class Sf2> class Cf>
@@ -507,7 +507,7 @@ protected:
  * vislib::math::AbstractPoint<T, 4, S>::~AbstractPoint
  */
 template<class T, class S>
-AbstractPoint<T, 4, S>::~AbstractPoint(void) {
+AbstractPoint<T, 4, S>::~AbstractPoint() {
     // intentionally empty
 }
 

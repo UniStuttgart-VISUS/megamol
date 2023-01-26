@@ -24,25 +24,25 @@ namespace datatools {
 class OverrideParticleBBox : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "OverrideParticleBBox";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module overriding the bounding box of particle data";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    OverrideParticleBBox(void);
+    OverrideParticleBBox();
 
     /** Dtor */
-    ~OverrideParticleBBox(void) override;
+    ~OverrideParticleBBox() override;
 
 protected:
     bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;

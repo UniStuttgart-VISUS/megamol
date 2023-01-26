@@ -15,7 +15,7 @@ namespace megamol::datatools::io {
 /*
  * AbstractSimpleStoringParticleDataSource::AbstractSimpleStoringParticleDataSource
  */
-AbstractSimpleStoringParticleDataSource::AbstractSimpleStoringParticleDataSource(void)
+AbstractSimpleStoringParticleDataSource::AbstractSimpleStoringParticleDataSource()
         : AbstractSimpleParticleDataSource()
         , posData()
         , posDataType(geocalls::MultiParticleDataCall::Particles::VERTDATA_NONE)
@@ -35,7 +35,7 @@ AbstractSimpleStoringParticleDataSource::AbstractSimpleStoringParticleDataSource
 /*
  * AbstractSimpleStoringParticleDataSource::~AbstractSimpleStoringParticleDataSource
  */
-AbstractSimpleStoringParticleDataSource::~AbstractSimpleStoringParticleDataSource(void) {
+AbstractSimpleStoringParticleDataSource::~AbstractSimpleStoringParticleDataSource() {
     this->Release();
 }
 

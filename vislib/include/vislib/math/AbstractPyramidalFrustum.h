@@ -63,7 +63,7 @@ public:
     static const UINT_PTR IDX_RIGHT_TOP_POINT;
 
     /** Dtor. */
-    virtual ~AbstractPyramidalFrustum(void);
+    virtual ~AbstractPyramidalFrustum();
 
     /**
      * Answer the points that form the bottom base of the frustum.
@@ -129,7 +129,7 @@ protected:
     /**
      * Disallow instances.
      */
-    inline AbstractPyramidalFrustum(void) {}
+    inline AbstractPyramidalFrustum() {}
 
     /**
      * Performs a sanity check whether the bottom and top base points can
@@ -181,7 +181,7 @@ const UINT_PTR AbstractPyramidalFrustum<T>::IDX_RIGHT_TOP_POINT = 2;
  * vislib::math::AbstractPyramidalFrustum<T>::~AbstractPyramidalFrustum
  */
 template<class T>
-AbstractPyramidalFrustum<T>::~AbstractPyramidalFrustum(void) {}
+AbstractPyramidalFrustum<T>::~AbstractPyramidalFrustum() {}
 
 
 /*

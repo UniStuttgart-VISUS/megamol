@@ -30,7 +30,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SiffCSplineFitter";
     }
 
@@ -39,7 +39,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module to fit cardinal splines into timed siff data";
     }
 
@@ -48,15 +48,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    SiffCSplineFitter(void);
+    SiffCSplineFitter();
 
     /** Dtor. */
-    ~SiffCSplineFitter(void) override;
+    ~SiffCSplineFitter() override;
 
 protected:
     /**
@@ -64,12 +64,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /**
@@ -93,7 +93,7 @@ private:
     /**
      * Ensures that the data file is loaded into memory, if possible
      */
-    void assertData(void);
+    void assertData();
 
     /**
      * Adds a spline from input positions to the stored curves

@@ -75,7 +75,7 @@ public:
      *
      * @return The current date and time.
      */
-    static DateTime Now(void);
+    static DateTime Now();
 
     /**
      * Convert a time span to 100 ns ticks.
@@ -101,7 +101,7 @@ public:
      *
      * @return The current date.
      */
-    static DateTime Today(void);
+    static DateTime Today();
 
     /**
      * A constant empty time (at zero point 01.01.0001).
@@ -111,7 +111,7 @@ public:
     /**
      * Creates a new instance representing the current point int time.
      */
-    DateTime(void);
+    DateTime();
 
     /**
      * Create a new DateTime with the specified initial value.
@@ -194,7 +194,7 @@ public:
     inline DateTime(const DateTime& rhs) : ticks(rhs.ticks) {}
 
     /** Dtor. */
-    ~DateTime(void);
+    ~DateTime();
 
     ///**
     // * Add the specified number of days to the current date.
@@ -319,7 +319,7 @@ public:
      *
      * @return The total ticks that represent the time.
      */
-    inline INT64 GetTotalTicks(void) const {
+    inline INT64 GetTotalTicks() const {
         return this->ticks;
     }
 
@@ -632,7 +632,7 @@ public:
      * @return A struct tm holding the local time represented by this
      *         object.
      */
-    operator struct tm(void) const;
+    operator struct tm() const;
 
     /**
      * Conversion to a time_t. The returned time_t is UTC.
@@ -642,7 +642,7 @@ public:
      * @return The time_t representing the time of this object. Note that
      *         the value returned is UTC.
      */
-    operator time_t(void) const;
+    operator time_t() const;
 
 #ifdef _WIN32
     /**

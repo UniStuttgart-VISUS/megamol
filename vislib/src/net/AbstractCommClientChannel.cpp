@@ -18,13 +18,13 @@ const UINT vislib::net::AbstractCommClientChannel::TIMEOUT_INFINITE = vislib::ne
 /*
  * vislib::net::AbstractCommClientChannel::AbstractCommClientChannel
  */
-vislib::net::AbstractCommClientChannel::AbstractCommClientChannel(void) : Super() {}
+vislib::net::AbstractCommClientChannel::AbstractCommClientChannel() : Super() {}
 
 
 /*
  * vislib::net::AbstractCommClientChannel::~AbstractCommClientChannel
  */
-vislib::net::AbstractCommClientChannel::~AbstractCommClientChannel(void) {
+vislib::net::AbstractCommClientChannel::~AbstractCommClientChannel() {
     // Note: Calling Close() here to ensure correct cleanup of all child classes
     // will not work. The child class that has the actual implementation of
     // Close() must do that.

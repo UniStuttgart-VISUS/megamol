@@ -20,7 +20,7 @@ namespace demos_gl {
 /*
  * AbstractBezierRenderer::AbstractBezierRenderer
  */
-AbstractBezierRenderer::AbstractBezierRenderer(void)
+AbstractBezierRenderer::AbstractBezierRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , getDataSlot("getdata", "Connects to the data source")
         , objsHash(0)
@@ -32,7 +32,7 @@ AbstractBezierRenderer::AbstractBezierRenderer(void)
 /*
  * AbstractBezierRenderer::~AbstractBezierRenderer
  */
-AbstractBezierRenderer::~AbstractBezierRenderer(void) {
+AbstractBezierRenderer::~AbstractBezierRenderer() {
     this->Release();
 }
 
@@ -40,7 +40,7 @@ AbstractBezierRenderer::~AbstractBezierRenderer(void) {
 /*
  * AbstractBezierRenderer::create
  */
-bool AbstractBezierRenderer::create(void) {
+bool AbstractBezierRenderer::create() {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
 
     return true;
@@ -68,7 +68,7 @@ bool AbstractBezierRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 /*
  * AbstractBezierRenderer::release
  */
-void AbstractBezierRenderer::release(void) {
+void AbstractBezierRenderer::release() {
     this->shader = NULL; // Do not release or delete ...
 }
 

@@ -38,11 +38,11 @@ public:
     friend class AbstractTriangleImpl;
 
     /** Dtor. */
-    ~AbstractTriangle(void);
+    ~AbstractTriangle();
 
 protected:
     /** Ctor. */
-    AbstractTriangle(void);
+    AbstractTriangle();
 
     AbstractTriangle& operator=(const AbstractTriangle& rhs) {
         Super::operator=(rhs);
@@ -64,14 +64,14 @@ private:
  * vislib::math::AbstractTriangle<T>::AbstractTriangle
  */
 template<class T, class S>
-AbstractTriangle<T, S>::AbstractTriangle(void) : Super() {}
+AbstractTriangle<T, S>::AbstractTriangle() : Super() {}
 
 
 /*
  * vislib::math::AbstractTriangle<T>::~AbstractTriangle
  */
 template<class T, class S>
-AbstractTriangle<T, S>::~AbstractTriangle(void) {}
+AbstractTriangle<T, S>::~AbstractTriangle() {}
 
 } /* end namespace math */
 } /* end namespace vislib */

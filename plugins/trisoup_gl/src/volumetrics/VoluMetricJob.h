@@ -39,7 +39,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "VoluMetricJob";
     }
 
@@ -48,7 +48,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes volumetric metrics of a multiparticle dataset, i.e. surface and volume"
                ", assuming a spacefilling spheres geometry";
     }
@@ -58,15 +58,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    VoluMetricJob(void);
+    VoluMetricJob();
 
     /** Dtor. */
-    ~VoluMetricJob(void) override;
+    ~VoluMetricJob() override;
 
     bool areSurfacesJoinable(int sjdIdx1, int surfIdx1, int sjdIdx2, int surfIdx2);
 
@@ -91,12 +91,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * Perform the work of a thread.
@@ -195,7 +195,7 @@ private:
     /**
      * Connects the volumes calculated in the subjobs to the volume backbuffer - fpr debug purposes only ...
      */
-    void copyVolumesToBackBuffer(void);
+    void copyVolumesToBackBuffer();
 
     void generateStatistics(vislib::Array<unsigned int>& uniqueIDs, vislib::Array<SIZE_T>& countPerID,
         vislib::Array<trisoup::volumetrics::VoxelizerFloat>& surfPerID,

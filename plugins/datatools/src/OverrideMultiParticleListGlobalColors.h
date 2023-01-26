@@ -21,18 +21,18 @@ namespace datatools {
  */
 class OverrideMultiParticleListGlobalColors : public AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "OverrideMultiParticleListGlobalColors";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module overriding global colors of multi particle lists";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    OverrideMultiParticleListGlobalColors(void);
-    ~OverrideMultiParticleListGlobalColors(void) override;
+    OverrideMultiParticleListGlobalColors();
+    ~OverrideMultiParticleListGlobalColors() override;
 
 protected:
     /**

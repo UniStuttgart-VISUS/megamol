@@ -35,10 +35,10 @@ public:
      * Initialises the hash. It is not necessary to call Initialise before
      * the first use.
      */
-    MD5HashProvider(void);
+    MD5HashProvider();
 
     /** Dtor. */
-    ~MD5HashProvider(void) override;
+    ~MD5HashProvider() override;
 
     /**
      * Initialise the hash. This method must be called before any other
@@ -47,7 +47,7 @@ public:
      * If the hash has already been initialised, this method erases all
      * previous data and reinitialises it.
      */
-    void Initialise(void) override;
+    void Initialise() override;
 
     /**
      * Update the hash with a new block of 'cntInput' bytes.

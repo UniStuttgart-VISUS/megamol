@@ -41,7 +41,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "VisIttDataSource";
     }
 
@@ -50,7 +50,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for VisItt files.";
     }
 
@@ -59,15 +59,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    VisIttDataSource(void);
+    VisIttDataSource();
 
     /** Dtor. */
-    ~VisIttDataSource(void) override;
+    ~VisIttDataSource() override;
 
 protected:
     /**
@@ -76,14 +76,14 @@ protected:
      *
      * @return The newly created frame object.
      */
-    core::view::AnimDataModule::Frame* constructFrame(void) const override;
+    core::view::AnimDataModule::Frame* constructFrame() const override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Loads one frame of the data set into the given 'frame' object. This
@@ -99,7 +99,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /** Nested class of frame data */
@@ -113,12 +113,12 @@ private:
         Frame(core::view::AnimDataModule& owner);
 
         /** Dtor. */
-        ~Frame(void) override;
+        ~Frame() override;
 
         /**
          * Clears the particle data
          */
-        inline void Clear(void) {
+        inline void Clear() {
             this->frame = 0;
             this->dat.clear();
         }
@@ -137,7 +137,7 @@ private:
          *
          * @return frame number
          */
-        inline unsigned int getFrameNumber(void) {
+        inline unsigned int getFrameNumber() {
             return this->frame;
         }
 
@@ -181,7 +181,7 @@ private:
          *
          * @return All stored particle types
          */
-        inline std::vector<unsigned int> ParticleTypes(void) const {
+        inline std::vector<unsigned int> ParticleTypes() const {
             std::vector<unsigned int> keys;
             for (const std::pair<unsigned int, std::vector<float>>& p : dat) {
                 keys.push_back(p.first);
@@ -194,7 +194,7 @@ private:
          *
          * @return The approximate size of the frame data
          */
-        inline uint64_t GetFrameSize(void) const {
+        inline uint64_t GetFrameSize() const {
             uint64_t fs = 0;
             for (const std::pair<unsigned int, std::vector<float>>& p : dat) {
                 fs += p.second.size() * sizeof(float);
@@ -226,13 +226,13 @@ private:
         }
 
         /** Dtor. */
-        ~Unlocker(void) override {
+        ~Unlocker() override {
             this->Unlock();
             ASSERT(this->frame == NULL);
         }
 
         /** Unlocks the data */
-        void Unlock(void) override {
+        void Unlock() override {
             if (this->frame != NULL) {
                 this->frame->Unlock();
                 this->frame = NULL; // DO NOT DELETE!
@@ -245,7 +245,7 @@ private:
     };
 
     /** Builds up the frame index table. */
-    void buildFrameTable(void);
+    void buildFrameTable();
 
     ///** Calculates the bounding box from all frames. */
     //void calcBoundingBox(void);
@@ -296,13 +296,13 @@ private:
     bool getExtentCallback(core::Call& caller);
 
     /** Finds the data column used for filtering */
-    void findFilterColumn(void);
+    void findFilterColumn();
 
     /** Finds the data column used for the particle index */
-    void findIdColumn(void);
+    void findIdColumn();
 
     /** Finds the data column used for the color number */
-    void findTypeColumn(void);
+    void findTypeColumn();
 
     /** The file name */
     core::param::ParamSlot filename;

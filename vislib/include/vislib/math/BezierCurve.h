@@ -44,10 +44,10 @@ public:
      * Creates an empty curve with all control points placed in the
      * origin.
      */
-    BezierCurve(void);
+    BezierCurve();
 
     /** Dtor. */
-    ~BezierCurve(void);
+    ~BezierCurve();
 
     /*
      * Evaluates the position on the bézier curve for the
@@ -173,7 +173,7 @@ private:
  * BezierCurve<T, E>::BezierCurve
  */
 template<class T, unsigned int E>
-BezierCurve<T, E>::BezierCurve(void) {
+BezierCurve<T, E>::BezierCurve() {
     // intentionally empty
 }
 
@@ -182,7 +182,7 @@ BezierCurve<T, E>::BezierCurve(void) {
  * BezierCurve<T, E>::~BezierCurve
  */
 template<class T, unsigned int E>
-BezierCurve<T, E>::~BezierCurve(void) {
+BezierCurve<T, E>::~BezierCurve() {
     // intentionally empty
 }
 

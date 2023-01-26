@@ -31,7 +31,7 @@ public:
     /**
      * Create a new quaternion (<0, 0, 0>, 1).
      */
-    inline Quaternion(void) {
+    inline Quaternion() {
         this->components[Super::IDX_X] = this->components[Super::IDX_Y] = this->components[Super::IDX_Z] =
             static_cast<T>(0);
         this->components[Super::IDX_W] = static_cast<T>(1);
@@ -89,7 +89,7 @@ public:
     explicit Quaternion(const AbstractQuaternion<Tp, Sp>& rhs);
 
     /** Dtor. */
-    ~Quaternion(void);
+    ~Quaternion();
 
     /**
      * Assignment.
@@ -140,7 +140,7 @@ Quaternion<T>::Quaternion(const AbstractQuaternion<Tp, Sp>& rhs) {
  * vislib::math::Quaternion<T>::~Quaternion
  */
 template<class T>
-Quaternion<T>::~Quaternion(void) {}
+Quaternion<T>::~Quaternion() {}
 
 
 } /* end namespace math */

@@ -16,21 +16,21 @@ namespace datatools {
 
 class MPDCListsConcatenate : public core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MPDCListsConcatenate";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Concatenates the particle lists from two MPDCs";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
     MPDCListsConcatenate();
     ~MPDCListsConcatenate() override;
 
 protected:
-    bool create(void) override;
-    void release(void) override;
+    bool create() override;
+    void release() override;
 
 private:
     bool getExtent(megamol::core::Call& c);

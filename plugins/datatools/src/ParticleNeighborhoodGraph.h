@@ -27,13 +27,13 @@ class ParticleNeighborhoodGraph : public core::Module {
 public:
     typedef uint32_t index_t;
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleNeighborhoodGraph";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes the direct neighborhood graph of a particle data set";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -41,8 +41,8 @@ public:
     ~ParticleNeighborhoodGraph() override;
 
 protected:
-    bool create(void) override;
-    void release(void) override;
+    bool create() override;
+    void release() override;
 
     bool getData(core::Call& c);
     bool getExtent(core::Call& c);

@@ -29,10 +29,10 @@ class NullLockable {
 
 public:
     /** Ctor. */
-    NullLockable(void);
+    NullLockable();
 
     /** Dtor. */
-    virtual ~NullLockable(void);
+    virtual ~NullLockable();
 
     /**
      * Aquires the lock of this lockable.
@@ -41,7 +41,7 @@ public:
      * This implementation does nothing and therefore object using this
      * lockable are not threadsafe.
      */
-    VISLIB_FORCEINLINE void Lock(void) {
+    VISLIB_FORCEINLINE void Lock() {
         // intentionally empty
     }
 
@@ -52,7 +52,7 @@ public:
      * This implementation does nothing and therefore object using this
      * lockable are not threadsafe.
      */
-    VISLIB_FORCEINLINE void Unlock(void) {
+    VISLIB_FORCEINLINE void Unlock() {
         // intentionally empty
     }
 };

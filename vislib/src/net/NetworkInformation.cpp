@@ -72,7 +72,7 @@ vislib::net::NetworkInformation::NoConfidenceException::NoConfidenceException(co
 /*
  * ...NetworkInformation::::NoConfidenceException::~NoConfidenceException
  */
-vislib::net::NetworkInformation::NoConfidenceException::~NoConfidenceException(void) {}
+vislib::net::NetworkInformation::NoConfidenceException::~NoConfidenceException() {}
 
 
 /*
@@ -94,7 +94,7 @@ vislib::net::NetworkInformation::NoConfidenceException::operator=(const NoConfid
 /*
  * ...::UnicastAddressInformation::UnicastAddressInformation
  */
-vislib::net::NetworkInformation::UnicastAddressInformation::UnicastAddressInformation(void) {
+vislib::net::NetworkInformation::UnicastAddressInformation::UnicastAddressInformation() {
     this->prefixLength.SetValue(0);
     this->prefixOrigin.SetValue(PREFIX_ORIGIN_OTHER);
     this->suffixOrigin.SetValue(SUFFIX_ORIGIN_OTHER);
@@ -113,7 +113,7 @@ vislib::net::NetworkInformation::UnicastAddressInformation::UnicastAddressInform
 /*
  * .::UnicastAddressInformation::UnicastAddressInformation
  */
-vislib::net::NetworkInformation::UnicastAddressInformation::~UnicastAddressInformation(void) {}
+vislib::net::NetworkInformation::UnicastAddressInformation::~UnicastAddressInformation() {}
 
 
 /*
@@ -164,7 +164,7 @@ vislib::net::NetworkInformation::UnicastAddressInformation::UnicastAddressInform
 /*
  * vislib::net::NetworkInformation::Adapter::Adapter
  */
-vislib::net::NetworkInformation::Adapter::Adapter(void) {}
+vislib::net::NetworkInformation::Adapter::Adapter() {}
 
 /*
  * vislib::net::NetworkInformation::Adapter::Adapter
@@ -177,13 +177,13 @@ vislib::net::NetworkInformation::Adapter::Adapter(const Adapter& rhs) {
 /*
  * vislib::net::NetworkInformation::Adapter::~Adapter
  */
-vislib::net::NetworkInformation::Adapter::~Adapter(void) {}
+vislib::net::NetworkInformation::Adapter::~Adapter() {}
 
 
 /*
  * vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressA
  */
-vislib::StringA vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressA(void) const {
+vislib::StringA vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressA() const {
     StringA retval;
     StringA tmp;
 
@@ -205,7 +205,7 @@ vislib::StringA vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressA
 /*
  * vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressW(
  */
-vislib::StringW vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressW(void) const {
+vislib::StringW vislib::net::NetworkInformation::Adapter::FormatPhysicalAddressW() const {
     StringW retval;
     StringW tmp;
 
@@ -1272,7 +1272,7 @@ float vislib::net::NetworkInformation::guessRemoteEndPoint(IPEndPoint& outEndPoi
 /*
  * vislib::net::NetworkInformation::initAdapters
  */
-void vislib::net::NetworkInformation::initAdapters(void) {
+void vislib::net::NetworkInformation::initAdapters() {
 
     /* Check whether there is work to do or not. */
     if (!NetworkInformation::adapters.IsEmpty()) {
@@ -2399,7 +2399,7 @@ vislib::sys::CriticalSection vislib::net::NetworkInformation::lockAdapters;
 /*
  * vislib::net::NetworkInformation::NetworkInformation
  */
-vislib::net::NetworkInformation::NetworkInformation(void) {
+vislib::net::NetworkInformation::NetworkInformation() {
     throw UnsupportedOperationException("NetworkInformation::NetworkInformation", __FILE__, __LINE__);
 }
 
@@ -2415,4 +2415,4 @@ vislib::net::NetworkInformation::NetworkInformation(const NetworkInformation& rh
 /*
  * vislib::net::NetworkInformation::~NetworkInformation
  */
-vislib::net::NetworkInformation::~NetworkInformation(void) {}
+vislib::net::NetworkInformation::~NetworkInformation() {}

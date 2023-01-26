@@ -43,7 +43,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MoleculeCartoonRenderer";
     }
 
@@ -52,7 +52,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers protein cartoon renderings.";
     }
 
@@ -61,15 +61,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    MoleculeCartoonRenderer(void);
+    MoleculeCartoonRenderer();
 
     /** Dtor. */
-    ~MoleculeCartoonRenderer(void) override;
+    ~MoleculeCartoonRenderer() override;
 
     enum class CartoonRenderMode {
         CARTOON = 0,
@@ -88,17 +88,17 @@ public:
      **********************************************************************/
 
     /** Get radius for cartoon rendering mode */
-    inline float GetRadiusCartoon(void) const {
+    inline float GetRadiusCartoon() const {
         return radiusCartoon;
     };
 
     /** Get number of spline segments per amino acid for cartoon rendering mode */
-    inline unsigned int GetNumberOfSplineSegments(void) const {
+    inline unsigned int GetNumberOfSplineSegments() const {
         return numberOfSplineSeg;
     };
 
     /** Get number of tube segments per 390 degrees in CPU cartoon rendering mode */
-    inline unsigned int GetNumberOfTubeSegments(void) const {
+    inline unsigned int GetNumberOfTubeSegments() const {
         return numberOfTubeSeg;
     };
 
@@ -122,12 +122,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /**********************************************************************
@@ -199,7 +199,7 @@ private:
      * This function has to be called after every change rendering attributes,
      * e.g. coloring or render mode.
      */
-    void RecomputeAll(void);
+    void RecomputeAll();
 
     /**
      *  Update all parameter slots.

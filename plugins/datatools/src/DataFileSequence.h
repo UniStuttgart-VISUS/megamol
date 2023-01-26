@@ -36,7 +36,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DataFileSequence";
     }
 
@@ -45,7 +45,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "This modules is pluged between a data loader and consumer modules. It will change the name of the data "
                "file loaded depending on the requested time. This module only supports time independent data sets.";
     }
@@ -55,15 +55,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    DataFileSequence(void);
+    DataFileSequence();
 
     /** Dtor. */
-    ~DataFileSequence(void) override;
+    ~DataFileSequence() override;
 
 protected:
     /**
@@ -71,12 +71,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /**
@@ -119,7 +119,7 @@ private:
     /**
      * Checks the module parameters for updates
      */
-    void checkParameters(void);
+    void checkParameters();
 
     /**
      * Update when the file name template changes
@@ -144,12 +144,12 @@ private:
      *
      * @return The parameter slot for the file name or NULL if not found
      */
-    core::param::ParamSlot* findFileNameSlot(void);
+    core::param::ParamSlot* findFileNameSlot();
 
     /**
      * Asserts the data is available blablabla
      */
-    void assertData(void);
+    void assertData();
 
     /** The file name template */
     core::param::ParamSlot fileNameTemplateSlot;

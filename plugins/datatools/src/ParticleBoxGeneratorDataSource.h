@@ -33,7 +33,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleBoxGeneratorDataSource";
     }
 
@@ -42,7 +42,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Simple particle data generator filling a box";
     }
 
@@ -51,15 +51,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    ParticleBoxGeneratorDataSource(void);
+    ParticleBoxGeneratorDataSource();
 
     /** Dtor. */
-    ~ParticleBoxGeneratorDataSource(void) override;
+    ~ParticleBoxGeneratorDataSource() override;
 
 protected:
     /**
@@ -67,12 +67,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     typedef geocalls::SimpleSphericalParticles Particles;
@@ -97,12 +97,12 @@ private:
      */
     bool getExtentCallback(core::Call& caller);
 
-    void clear(void);
+    void clear();
 
     /**
      * Ensures that the data file is loaded into memory, if possible
      */
-    void assertData(void);
+    void assertData();
 
     core::CalleeSlot dataSlot;
 

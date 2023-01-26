@@ -573,7 +573,7 @@ public:
      *
      * @return The IP address part of the end point address.
      */
-    inline IPAgnosticAddress GetIPAddress(void) const {
+    inline IPAgnosticAddress GetIPAddress() const {
         return this->endPoint.GetIPAddress();
     }
 
@@ -582,7 +582,7 @@ public:
      *
      * @return The port of the end point address.
      */
-    inline unsigned short GetPort(void) const {
+    inline unsigned short GetPort() const {
         return this->endPoint.GetPort();
     }
 
@@ -591,7 +591,7 @@ public:
      *
      * @return The protocol version of the end point address.
      */
-    inline ProtocolVersion GetProtocolVersion(void) const {
+    inline ProtocolVersion GetProtocolVersion() const {
         return static_cast<ProtocolVersion>(this->endPoint.GetAddressFamily());
     }
 
@@ -715,14 +715,14 @@ public:
      *
      * @return A string representation of the address.
      */
-    StringA ToStringA(void) const override;
+    StringA ToStringA() const override;
 
     /**
      * Answer a string representation of the address.
      *
      * @return A string representation of the address.
      */
-    StringW ToStringW(void) const override;
+    StringW ToStringW() const override;
 
     /**
      * Check for equality.
@@ -738,7 +738,7 @@ public:
      *
      * @return Reference to the underlying IPEndPoint.
      */
-    inline operator const IPEndPoint&(void) const {
+    inline operator const IPEndPoint&() const {
         return this->endPoint;
     }
 
@@ -747,7 +747,7 @@ public:
      *
      * @return Reference to the underlying IPEndPoint.
      */
-    inline operator IPEndPoint&(void) {
+    inline operator IPEndPoint&() {
         return this->endPoint;
     }
 
@@ -776,7 +776,7 @@ private:
     IPCommEndPoint(const IPEndPoint& endPoint);
 
     /** Dtor. */
-    ~IPCommEndPoint(void) override;
+    ~IPCommEndPoint() override;
 
     /** The actual IP end point address wrapped by this object. */
     IPEndPoint endPoint;

@@ -28,7 +28,7 @@ bool vislib::sys::DateTime::IsLeapYear(const INT year) {
 /*
  * vislib::sys::DateTime::Now
  */
-vislib::sys::DateTime vislib::sys::DateTime::Now(void) {
+vislib::sys::DateTime vislib::sys::DateTime::Now() {
     DateTime retval;
     return retval;
 }
@@ -37,7 +37,7 @@ vislib::sys::DateTime vislib::sys::DateTime::Now(void) {
 /*
  * vislib::sys::DateTime::Today
  */
-vislib::sys::DateTime vislib::sys::DateTime::Today(void) {
+vislib::sys::DateTime vislib::sys::DateTime::Today() {
     DateTime retval;
     retval.SetTime(0, 0, 0, 0);
     return retval;
@@ -53,7 +53,7 @@ vislib::sys::DateTime vislib::sys::DateTime::EMPTY(0, 0);
 /*
  * vislib::sys::DateTime::DateTime
  */
-vislib::sys::DateTime::DateTime(void) : ticks(0L) {
+vislib::sys::DateTime::DateTime() : ticks(0L) {
 #ifdef _WIN32
     SYSTEMTIME systemTime;
     ::GetLocalTime(&systemTime);
@@ -83,7 +83,7 @@ vislib::sys::DateTime::DateTime(const INT year, const INT month, const INT day, 
 /*
  * vislib::sys::DateTime::~DateTime
  */
-vislib::sys::DateTime::~DateTime(void) {}
+vislib::sys::DateTime::~DateTime() {}
 
 
 // TODO: This does not work any more with our input interpretation
@@ -460,7 +460,7 @@ vislib::sys::DateTimeSpan vislib::sys::DateTime::operator-(const DateTime& rhs) 
 /*
  * vislib::sys::DateTime::operator struct tm
  */
-vislib::sys::DateTime::operator struct tm(void) const {
+vislib::sys::DateTime::operator struct tm() const {
     struct tm retval;
     INT year, month, day, hour, minute, second;
 
@@ -483,7 +483,7 @@ vislib::sys::DateTime::operator struct tm(void) const {
 /*
  * vislib::sys::DateTime::operator time_t
  */
-vislib::sys::DateTime::operator time_t(void) const {
+vislib::sys::DateTime::operator time_t() const {
     struct tm tmp = static_cast<struct tm>(*this);
     return ::mktime(&tmp);
 }

@@ -14,13 +14,13 @@ namespace datatools {
 
 class IColRangeOverride : public datatools::AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "IColRangeOverride";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Sets the ICol min and max values";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 

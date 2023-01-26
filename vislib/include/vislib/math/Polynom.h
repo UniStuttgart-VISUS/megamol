@@ -35,7 +35,7 @@ template<class T, unsigned int D>
 class Polynom : public AbstractPolynom<T, D, T[D + 1]> {
 public:
     /** Ctor. */
-    Polynom(void) : Super() {
+    Polynom() : Super() {
         for (unsigned int i = 0; i <= D; i++) {
             this->coefficients[i] = static_cast<T>(0);
         }
@@ -65,7 +65,7 @@ public:
     }
 
     /** Dtor. */
-    ~Polynom(void);
+    ~Polynom();
 
     /**
      * Assignment operator
@@ -93,7 +93,7 @@ protected:
  * Polynom<T, D>::~Polynom
  */
 template<class T, unsigned int D>
-Polynom<T, D>::~Polynom(void) {
+Polynom<T, D>::~Polynom() {
     // intentionally empty
 }
 

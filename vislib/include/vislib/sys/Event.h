@@ -119,7 +119,7 @@ public:
         bool* outIsNew = NULL);
 
     /** Dtor. */
-    ~Event(void);
+    ~Event();
 
     /**
      * Resets the event to non-signaled state.
@@ -129,7 +129,7 @@ public:
      *
      * @throws SystemException If the operation failed.
      */
-    void Reset(void);
+    void Reset();
 
     /**
      * Sets the event to signaled state.
@@ -139,7 +139,7 @@ public:
      *
      * @throws SystemException If the operation failed.
      */
-    void Set(void);
+    void Set();
 
     /**
      * Wait for the event to become signaled.

@@ -24,7 +24,7 @@ vislib::AlreadyExistsException::AlreadyExistsException(const AlreadyExistsExcept
 /*
  * vislib::AlreadyExistsException::~AlreadyExistsException
  */
-vislib::AlreadyExistsException::~AlreadyExistsException(void) {}
+vislib::AlreadyExistsException::~AlreadyExistsException() {}
 
 
 /*

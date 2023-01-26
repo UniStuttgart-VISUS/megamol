@@ -277,7 +277,7 @@ bool utility::ColourParser::FromString(const vislib::StringA& str, unsigned int 
 /*
  * utility::ColourParser::ColourParser
  */
-utility::ColourParser::ColourParser(void) {
+utility::ColourParser::ColourParser() {
     throw vislib::UnsupportedOperationException("ColourParser::Ctor", __FILE__, __LINE__);
 }
 
@@ -288,7 +288,7 @@ utility::ColourParser::ColourParser(void) {
 #ifdef _WIN32
 #pragma warning(disable : 4722 4297)
 #endif
-utility::ColourParser::~ColourParser(void) {
+utility::ColourParser::~ColourParser() {
     throw vislib::UnsupportedOperationException("ColourParser::Dtor", __FILE__, __LINE__);
 }
 #ifdef _WIN32

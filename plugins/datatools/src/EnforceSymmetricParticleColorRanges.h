@@ -19,25 +19,25 @@ namespace datatools {
 class EnforceSymmetricParticleColorRanges : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "EnforceSymmetricParticleColorRanges";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Changes all color index ranges to be symmetric around zero.";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    EnforceSymmetricParticleColorRanges(void);
+    EnforceSymmetricParticleColorRanges();
 
     /** Dtor */
-    ~EnforceSymmetricParticleColorRanges(void) override;
+    ~EnforceSymmetricParticleColorRanges() override;
 
 protected:
     /**

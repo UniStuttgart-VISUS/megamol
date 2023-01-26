@@ -10,25 +10,25 @@ namespace megamol::datatools {
 class AddParticleColors : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "AddParticleColors";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Transforms COL_I to RGBA";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    AddParticleColors(void);
+    AddParticleColors();
 
     /** Dtor */
-    ~AddParticleColors(void) override;
+    ~AddParticleColors() override;
 
 protected:
     bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;

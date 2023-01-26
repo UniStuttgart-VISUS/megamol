@@ -111,7 +111,7 @@ public:
     Array(const Array& rhs);
 
     /** Dtor. */
-    ~Array(void) override;
+    ~Array() override;
 
     /**
      * Appends an element to the end of the array. If necessary, the
@@ -147,7 +147,7 @@ public:
     /**
      * Erase all elements from the array.
      */
-    void Clear(void) override;
+    void Clear() override;
 
     /**
      * Erase all elements from the array.
@@ -169,14 +169,14 @@ public:
      *
      * @return The number of elements that are currently allocated.
      */
-    SIZE_T Capacity(void) const;
+    SIZE_T Capacity() const;
 
     /**
      * Answer the capacity increment of the array.
      *
      * @return The capacity increment
      */
-    inline SIZE_T CapacityIncrement(void) const;
+    inline SIZE_T CapacityIncrement() const;
 
     /**
      * Answer whether 'element' is in the array.
@@ -194,7 +194,7 @@ public:
      *
      * @return Number of items in the array.
      */
-    SIZE_T Count(void) const override;
+    SIZE_T Count() const override;
 
     /**
      * Erase the element at position 'idx' from the array. If 'idx' is out
@@ -227,7 +227,7 @@ public:
      *
      * @return The internal data pointer.
      */
-    inline const T* PeekElements(void) const {
+    inline const T* PeekElements() const {
         return this->elements;
     }
 
@@ -260,7 +260,7 @@ public:
      *
      * @throws OutOfRangeException, if the array is empty.
      */
-    inline const T& First(void) const override {
+    inline const T& First() const override {
         return (*this)[0];
     }
 
@@ -271,7 +271,7 @@ public:
      *
      * @throws OutOfRangeException, if the array is empty.
      */
-    inline T& First(void) override {
+    inline T& First() override {
         return (*this)[0];
     }
 
@@ -307,7 +307,7 @@ public:
      *
      * @return true, if there is no element in the array, false otherwise.
      */
-    bool IsEmpty(void) const override;
+    bool IsEmpty() const override;
 
     /**
      * Answer the last element in the array.
@@ -316,7 +316,7 @@ public:
      *
      * @throws OutOfRangeException, if the array is empty.
      */
-    const T& Last(void) const override;
+    const T& Last() const override;
 
     /**
      * Answer the last element in the array.
@@ -325,7 +325,7 @@ public:
      *
      * @throws OutOfRangeException, if the array is empty.
      */
-    T& Last(void) override;
+    T& Last() override;
 
     /**
      * Add 'element' as first element of the array. If necessary, the
@@ -363,12 +363,12 @@ public:
     /**
      * Remove the first element from the collection.
      */
-    void RemoveFirst(void) override;
+    void RemoveFirst() override;
 
     /**
      * Remove the last element from the collection.
      */
-    void RemoveLast(void) override;
+    void RemoveLast() override;
 
     /**
      * Resize the array to have exactly 'capacity' elements. If 'capacity'
@@ -414,7 +414,7 @@ public:
      * Trim the capacity of the array to match the current number of
      * elements. This has the same effect as calling Resize(Count()).
      */
-    inline void Trim(void) {
+    inline void Trim() {
         this->Resize(this->count);
     }
 
@@ -645,7 +645,7 @@ Array<T, L, C>::Array(const Array& rhs)
  * vislib::Array<T, L, C>::~Array
  */
 template<class T, class L, class C>
-Array<T, L, C>::~Array(void) {
+Array<T, L, C>::~Array() {
     this->Resize(0);
     ASSERT(this->elements == NULL);
 }
@@ -685,7 +685,7 @@ void Array<T, L, C>::AssertCapacity(const SIZE_T capacity) {
  * vislib::Array<T, L, C>::Clear
  */
 template<class T, class L, class C>
-void Array<T, L, C>::Clear(void) {
+void Array<T, L, C>::Clear() {
     this->Lock();
     this->count = 0;
     this->Unlock();
@@ -696,7 +696,7 @@ void Array<T, L, C>::Clear(void) {
  * vislib::Array<T, L, C>::Capacity
  */
 template<class T, class L, class C>
-SIZE_T Array<T, L, C>::Capacity(void) const {
+SIZE_T Array<T, L, C>::Capacity() const {
     this->Lock();
     SIZE_T retval = this->capacity;
     this->Unlock();
@@ -708,7 +708,7 @@ SIZE_T Array<T, L, C>::Capacity(void) const {
  * vislib::Array<T, L, C>::CapacityIncrement
  */
 template<class T, class L, class C>
-SIZE_T Array<T, L, C>::CapacityIncrement(void) const {
+SIZE_T Array<T, L, C>::CapacityIncrement() const {
     this->Lock();
     SIZE_T retval = this->capacityIncrement;
     this->Unlock();
@@ -732,7 +732,7 @@ bool Array<T, L, C>::Contains(const T& element) const {
  * vislib::Array<T, L, C>::Count
  */
 template<class T, class L, class C>
-SIZE_T Array<T, L, C>::Count(void) const {
+SIZE_T Array<T, L, C>::Count() const {
     this->Lock();
     SIZE_T retval = this->count;
     this->Unlock();
@@ -876,7 +876,7 @@ void Array<T, L, C>::Insert(const SIZE_T idx, const T& element) {
  * vislib::Array<T, L, C>::IsEmpty
  */
 template<class T, class L, class C>
-bool Array<T, L, C>::IsEmpty(void) const {
+bool Array<T, L, C>::IsEmpty() const {
     this->Lock();
     bool retval = (this->count == 0);
     this->Unlock();
@@ -888,7 +888,7 @@ bool Array<T, L, C>::IsEmpty(void) const {
  * vislib::Array<T, L, C>::Last
  */
 template<class T, class L, class C>
-const T& Array<T, L, C>::Last(void) const {
+const T& Array<T, L, C>::Last() const {
     // This implementation is not nice, but should work as it overflows.
     // TODO: Larger critical section? Would not be safe anyway.
     return (*this)[this->count - 1];
@@ -899,7 +899,7 @@ const T& Array<T, L, C>::Last(void) const {
  * vislib::Array<T, L, C>::Last
  */
 template<class T, class L, class C>
-T& Array<T, L, C>::Last(void) {
+T& Array<T, L, C>::Last() {
     // This implementation is not nice, but should work as it overflows.
     // TODO: Larger critical section? Would not be safe anyway.
     return (*this)[this->count - 1];
@@ -991,7 +991,7 @@ void Array<T, L, C>::RemoveAll(const T& element) {
  * vislib::Array<T, L, C>::RemoveFirst
  */
 template<class T, class L, class C>
-void Array<T, L, C>::RemoveFirst(void) {
+void Array<T, L, C>::RemoveFirst() {
     this->Erase(0);
 }
 
@@ -1000,7 +1000,7 @@ void Array<T, L, C>::RemoveFirst(void) {
  * vislib::Array<T, L, C>::RemoveLast
  */
 template<class T, class L, class C>
-void Array<T, L, C>::RemoveLast(void) {
+void Array<T, L, C>::RemoveLast() {
     this->Lock();
     this->Erase(this->count - 1);
     this->Unlock();

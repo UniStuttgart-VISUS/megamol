@@ -52,13 +52,13 @@ public:
     }
 
     /** Dtor. */
-    ~ArrayElementPtrCtor(void);
+    ~ArrayElementPtrCtor();
 
 private:
     /**
      * Disallow instances.
      */
-    ArrayElementPtrCtor(void);
+    ArrayElementPtrCtor();
 };
 
 
@@ -66,7 +66,7 @@ private:
  * ArrayElementPtrCtor<T, A>::~ArrayElementPtrCtor
  */
 template<class T, class A>
-ArrayElementPtrCtor<T, A>::~ArrayElementPtrCtor(void) {
+ArrayElementPtrCtor<T, A>::~ArrayElementPtrCtor() {
     // Nothing to do.
 }
 
@@ -75,7 +75,7 @@ ArrayElementPtrCtor<T, A>::~ArrayElementPtrCtor(void) {
  * ArrayElementPtrCtor<T, A>::ArrayElementPtrCtor
  */
 template<class T, class A>
-ArrayElementPtrCtor<T, A>::ArrayElementPtrCtor(void) {
+ArrayElementPtrCtor<T, A>::ArrayElementPtrCtor() {
     // Nothing to do.
 }
 

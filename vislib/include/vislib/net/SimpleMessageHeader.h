@@ -30,7 +30,7 @@ class SimpleMessageHeader : public AbstractSimpleMessageHeader {
 
 public:
     /** Ctor. */
-    SimpleMessageHeader(void);
+    SimpleMessageHeader();
 
     /**
      * Clone 'rhs'.
@@ -62,21 +62,21 @@ public:
     explicit SimpleMessageHeader(const SimpleMessageHeaderData* data);
 
     /** Dtor. */
-    ~SimpleMessageHeader(void) override;
+    ~SimpleMessageHeader() override;
 
     /**
      * Provides direct access to the underlying SimpleMessageHeaderData.
      *
      * @return A pointer to the message header data.
      */
-    SimpleMessageHeaderData* PeekData(void) override;
+    SimpleMessageHeaderData* PeekData() override;
 
     /**
      * Provides direct access to the underlying SimpleMessageHeaderData.
      *
      * @return A pointer to the message header data.
      */
-    const SimpleMessageHeaderData* PeekData(void) const override;
+    const SimpleMessageHeaderData* PeekData() const override;
 
     /**
      * Assignment operator.

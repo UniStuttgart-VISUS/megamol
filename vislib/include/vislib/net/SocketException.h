@@ -68,7 +68,7 @@ public:
     SocketException(const SocketException& rhs);
 
     /** Dtor. */
-    ~SocketException(void) override;
+    ~SocketException() override;
 
     /**
      * Assignment operator.
@@ -84,7 +84,7 @@ public:
      *
      * @return true, if the exception represents a timeout, false otherwise.
      */
-    bool IsTimeout(void) const;
+    bool IsTimeout() const;
 };
 
 } /* end namespace net */

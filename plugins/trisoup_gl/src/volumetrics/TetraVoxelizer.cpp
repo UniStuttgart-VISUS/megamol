@@ -82,12 +82,12 @@ void TetraVoxelizer::debugPrintTriangle(vislib::math::ShallowShallowTriangle<dou
         tri.PeekCoordinates()[2][2]);
 }
 
-TetraVoxelizer::TetraVoxelizer(void) : terminate(false), sjd(NULL) {
+TetraVoxelizer::TetraVoxelizer() : terminate(false), sjd(NULL) {
     //triangleSoup.SetCapacityIncrement(90); // AKA 10 triangles?
 }
 
 
-TetraVoxelizer::~TetraVoxelizer(void) {}
+TetraVoxelizer::~TetraVoxelizer() {}
 
 bool TetraVoxelizer::CellHasNoGeometry(trisoup::volumetrics::FatVoxel* theVolume, unsigned x, unsigned y, unsigned z) {
     //   unsigned int i;
@@ -1338,7 +1338,7 @@ DWORD TetraVoxelizer::Run(void* userData) {
     return 0;
 }
 
-bool TetraVoxelizer::Terminate(void) {
+bool TetraVoxelizer::Terminate() {
     terminate = true;
     return true;
 }

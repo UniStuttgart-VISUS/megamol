@@ -26,25 +26,25 @@ namespace datatools {
 class ParticleSortFixHack : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleSortFixHack";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Uses heuristics in an atempt to fixe particle sorting (implicit ids)";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleSortFixHack(void);
+    ParticleSortFixHack();
 
     /** Dtor */
-    ~ParticleSortFixHack(void) override;
+    ~ParticleSortFixHack() override;
 
 protected:
     /**

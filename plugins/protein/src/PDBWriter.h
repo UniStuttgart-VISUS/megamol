@@ -31,7 +31,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "PDBWriter";
     }
 
@@ -40,7 +40,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Job writing arbitrary trajectories to a series of PDB or PQR\
                 files.";
     }
@@ -50,7 +50,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -70,14 +70,14 @@ public:
      * @return 'true' if this job is still running, 'false' if it has
      *         finished.
      */
-    bool IsRunning(void) const override;
+    bool IsRunning() const override;
 
     /**
      * Starts the job thread.
      *
      * @return true if the job has been successfully started.
      */
-    bool Start(void) override;
+    bool Start() override;
 
     /**
      * Terminates the job thread.
@@ -85,7 +85,7 @@ public:
      * @return true to acknowledge that the job will finish as soon
      *         as possible, false if termination is not possible.
      */
-    bool Terminate(void) override;
+    bool Terminate() override;
 
 protected:
     /**
@@ -93,12 +93,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /**

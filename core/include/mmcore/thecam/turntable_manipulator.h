@@ -114,7 +114,7 @@ public:
     /**
      * Report that dragging ended (mouse button was released).
      */
-    inline void setInactive(void) {
+    inline void setInactive() {
         this->end_manipulation();
     }
 

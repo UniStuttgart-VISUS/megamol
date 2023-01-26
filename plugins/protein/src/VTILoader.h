@@ -53,17 +53,17 @@ namespace protein {
 class VTILoader : public megamol::core::view::AnimDataModule {
 public:
     /** Ctor */
-    VTILoader(void);
+    VTILoader();
 
     /** Dtor */
-    ~VTILoader(void) override;
+    ~VTILoader() override;
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "VTILoader";
     }
 
@@ -72,7 +72,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Loader module for *.vti file format used by the Visualization \
                 Toolkit.";
     }
@@ -82,7 +82,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -92,12 +92,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * Call callback to get the data
@@ -148,7 +148,7 @@ protected:
      *
      * @return The newly created frame object.
      */
-    Frame* constructFrame(void) const override;
+    Frame* constructFrame() const override;
 
     /**
      * Loads one frame of the data set into the given 'frame' object. This
@@ -171,7 +171,7 @@ private:
         Frame(megamol::core::view::AnimDataModule& owner);
 
         /** Dtor */
-        ~Frame(void) override;
+        ~Frame() override;
 
         /**
          * Answers a const pointer to the frame's data.
@@ -431,13 +431,13 @@ private:
         }
 
         /** Dtor. */
-        ~Unlocker(void) override {
+        ~Unlocker() override {
             this->Unlock();
             ASSERT(this->frame == NULL);
         }
 
         /** Unlocks the data */
-        void Unlock(void) override {
+        void Unlock() override {
             if (this->frame != NULL) {
                 this->frame->Unlock();
                 this->frame = NULL; // DO NOT DELETE!

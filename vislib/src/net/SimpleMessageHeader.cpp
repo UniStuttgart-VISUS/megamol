@@ -11,7 +11,7 @@
 /*
  * vislib::net::SimpleMessageHeader::SimpleMessageHeader
  */
-vislib::net::SimpleMessageHeader::SimpleMessageHeader(void) {
+vislib::net::SimpleMessageHeader::SimpleMessageHeader() {
     this->PeekData()->MessageID = 0;
     this->PeekData()->BodySize = 0;
 }
@@ -52,13 +52,13 @@ vislib::net::SimpleMessageHeader::SimpleMessageHeader(const SimpleMessageHeaderD
 /*
  * vislib::net::SimpleMessageHeader::~SimpleMessageHeader
  */
-vislib::net::SimpleMessageHeader::~SimpleMessageHeader(void) {}
+vislib::net::SimpleMessageHeader::~SimpleMessageHeader() {}
 
 
 /*
  * vislib::net::SimpleMessageHeader::PeekData
  */
-vislib::net::SimpleMessageHeaderData* vislib::net::SimpleMessageHeader::PeekData(void) {
+vislib::net::SimpleMessageHeaderData* vislib::net::SimpleMessageHeader::PeekData() {
     return &(this->data);
 }
 
@@ -66,6 +66,6 @@ vislib::net::SimpleMessageHeaderData* vislib::net::SimpleMessageHeader::PeekData
 /*
  * vislib::net::SimpleMessageHeader::PeekData
  */
-const vislib::net::SimpleMessageHeaderData* vislib::net::SimpleMessageHeader::PeekData(void) const {
+const vislib::net::SimpleMessageHeaderData* vislib::net::SimpleMessageHeader::PeekData() const {
     return &(this->data);
 }

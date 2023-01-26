@@ -12,7 +12,7 @@
 /*
  * vislib::net::AbstractCommEndPoint::AbstractCommEndPoint
  */
-vislib::net::AbstractCommEndPoint::AbstractCommEndPoint(void) : Super() {}
+vislib::net::AbstractCommEndPoint::AbstractCommEndPoint() : Super() {}
 
 
 /*
@@ -24,4 +24,4 @@ vislib::net::AbstractCommEndPoint::AbstractCommEndPoint(const AbstractCommEndPoi
 /*
  * vislib::net::AbstractCommEndPoint::~AbstractCommEndPoint
  */
-vislib::net::AbstractCommEndPoint::~AbstractCommEndPoint(void) {}
+vislib::net::AbstractCommEndPoint::~AbstractCommEndPoint() {}

@@ -33,32 +33,32 @@ namespace datatools {
 class ParticlesToDensity : public megamol::core::Module {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticlesToDensity";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes a density volume from particles";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticlesToDensity(void);
+    ParticlesToDensity();
 
     /** Dtor */
-    ~ParticlesToDensity(void) override;
+    ~ParticlesToDensity() override;
 
 protected:
     /** Lazy initialization of the module */
-    bool create(void) override;
+    bool create() override;
 
     /** Resource release */
-    void release(void) override;
+    void release() override;
 
 private:
     /**

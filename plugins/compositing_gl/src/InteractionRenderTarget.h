@@ -19,7 +19,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "InteractionRenderTarget";
     }
 
@@ -28,7 +28,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Binds a FBO with color, normal, depth and objectID render targets.";
     }
 

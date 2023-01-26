@@ -43,7 +43,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ArrowRenderer";
     }
 
@@ -52,7 +52,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for arrow glyphs.";
     }
 
@@ -61,7 +61,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -73,10 +73,10 @@ public:
 #endif
 
     /** Ctor. */
-    ArrowRenderer(void);
+    ArrowRenderer();
 
     /** Dtor. */
-    ~ArrowRenderer(void) override;
+    ~ArrowRenderer() override;
 
 protected:
     /**
@@ -84,7 +84,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -100,7 +100,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * The render callback.

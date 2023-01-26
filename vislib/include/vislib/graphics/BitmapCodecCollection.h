@@ -52,7 +52,7 @@ public:
     static BitmapCodecCollection& DefaultCollection();
 
     /** Ctor. */
-    BitmapCodecCollection(void);
+    BitmapCodecCollection();
 
     /**
      * Copy Ctor.
@@ -62,7 +62,7 @@ public:
     BitmapCodecCollection(const BitmapCodecCollection& src);
 
     /** Dtor. */
-    ~BitmapCodecCollection(void);
+    ~BitmapCodecCollection();
 
     /**
      * Adds a codec to the collection. If this codec already is in the
@@ -89,7 +89,7 @@ public:
     /**
      * Removes all codecs from the collection
      */
-    inline void Clear(void) {
+    inline void Clear() {
         this->codecs.Clear();
     }
 
@@ -120,7 +120,7 @@ public:
      *
      * @return The number of codecs in the collection
      */
-    inline SIZE_T Count(void) const {
+    inline SIZE_T Count() const {
         return this->codecs.Count();
     }
 

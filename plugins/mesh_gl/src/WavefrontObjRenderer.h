@@ -22,7 +22,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "WavefrontObjRenderer";
     }
     /**
@@ -30,7 +30,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for wavefront obj files using shaders for forward rendering.";
     }
 

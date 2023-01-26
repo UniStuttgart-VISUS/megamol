@@ -46,12 +46,12 @@ public:
     BitmapPainter(BitmapImage* img = NULL);
 
     /** Dtor. */
-    ~BitmapPainter(void);
+    ~BitmapPainter();
 
     /**
      * Clears the image with the set colour
      */
-    void Clear(void);
+    void Clear();
 
     /**
      * Draws a straight line between two points. Both points will be set!
@@ -142,7 +142,7 @@ public:
      *
      * @return Reference to the image object pointer of the painter.
      */
-    inline BitmapImage*& Image(void) {
+    inline BitmapImage*& Image() {
         return this->img;
     }
 
@@ -151,7 +151,7 @@ public:
      *
      * @return The image object pointer that is used by the painter.
      */
-    inline const BitmapImage* Image(void) const {
+    inline const BitmapImage* Image() const {
         return this->img;
     }
 
@@ -364,7 +364,7 @@ private:
     /**
      * Clears all cached colour information
      */
-    VISLIB_FORCEINLINE void clearColourCache(void) {
+    VISLIB_FORCEINLINE void clearColourCache() {
         this->colSize = 0;
         ARY_SAFE_DELETE(this->colBits);
         ARY_SAFE_DELETE(this->colMask);
@@ -377,7 +377,7 @@ private:
     inline
 #endif /* _WIN32 */
         void
-        preDraw(void);
+        preDraw();
 
     /**
      * Tries to set one value of the colour cache

@@ -14,13 +14,13 @@ namespace datatools {
 
 class IColInverse : public datatools::AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "IColInverse";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Inverts the ICol value range.";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 

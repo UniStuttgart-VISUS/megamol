@@ -264,7 +264,7 @@ public:
     static void GetHostEntry(IPHostEntryW& outEntry, const IPAddress6& address);
 
     /** Dtor. */
-    ~DNS(void);
+    ~DNS();
 
 private:
     /**
@@ -312,7 +312,7 @@ private:
     /**
      * Disallow instances.
      */
-    DNS(void);
+    DNS();
 
     /**
      * Forbidden copy ctor.

@@ -29,7 +29,7 @@ public:
     /**
      * Finalises an instance.
      */
-    ~TableProcessorBase(void) override = default;
+    ~TableProcessorBase() override = default;
 
 protected:
     typedef megamol::datatools::table::TableDataCall::ColumnInfo ColumnInfo;
@@ -37,7 +37,7 @@ protected:
     /**
      * Initialises a new instance.
      */
-    TableProcessorBase(void);
+    TableProcessorBase();
 
     /**
      * Computes the combined hash from the hash of the local state and the
@@ -45,7 +45,7 @@ protected:
      *
      * @return The hash of the data currently stored in the module.
      */
-    inline std::size_t getHash(void) {
+    inline std::size_t getHash() {
         auto retval = this->inputHash;
         retval ^= this->localHash + 0x9e3779b9 + (retval << 6) + (retval >> 2);
         return retval;

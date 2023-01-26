@@ -67,7 +67,7 @@ public:
     /**
      * Finalises the instance.
      */
-    virtual ~translate_manipulator(void);
+    virtual ~translate_manipulator();
 
     /**
      * Move the camera in view direction.
@@ -77,7 +77,7 @@ public:
     /**
      * Move the camera in view direction.
      */
-    inline void move_forward(void) {
+    inline void move_forward() {
         this->move_forward(this->stepSize);
     }
 
@@ -89,7 +89,7 @@ public:
     /**
      * Move the camera along its x-axis.
      */
-    inline void move_horizontally(void) {
+    inline void move_horizontally() {
         this->move_horizontally(this->stepSize);
     }
 
@@ -110,7 +110,7 @@ public:
     /**
      * Move the camera along its up vector.
      */
-    inline void move_vertically(void) {
+    inline void move_vertically() {
         this->move_horizontally(this->stepSize);
     }
 
@@ -137,7 +137,7 @@ public:
      *
      * @return The translation step size.
      */
-    inline world_type step_size(void) const {
+    inline world_type step_size() const {
         return this->stepSize;
     }
 

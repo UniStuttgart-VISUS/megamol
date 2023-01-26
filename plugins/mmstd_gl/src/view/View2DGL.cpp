@@ -61,7 +61,7 @@ view::View2DGL::View2DGL() : BaseView(ViewDimension::VIEW_2D) {
 /*
  * view::View2DGL::~View2DGL
  */
-view::View2DGL::~View2DGL(void) {
+view::View2DGL::~View2DGL() {
     this->Release();
 }
 
@@ -111,7 +111,7 @@ megamol::core::view::ImageWrapper view::View2DGL::GetRenderingResult() const {
 /*
  * view::View2DGL::create
  */
-bool view::View2DGL::create(void) {
+bool view::View2DGL::create() {
 
     this->_firstImg = true;
 

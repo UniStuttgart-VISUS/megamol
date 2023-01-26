@@ -66,7 +66,7 @@ public:
     }
 
     /** Dtor. */
-    ~SmartPtr(void);
+    ~SmartPtr();
 
     /**
      * Returns a (non-smart) pointer to the object this pointer points to
@@ -78,7 +78,7 @@ public:
      * @return A (non-smart) pointer to the object.
      */
     template<class Tp>
-    Tp* DynamicCast(void) {
+    Tp* DynamicCast() {
         return (this->ptr == NULL) ? NULL : dynamic_cast<Tp*>(this->ptr->obj);
     }
 
@@ -92,7 +92,7 @@ public:
      * @return A (non-smart) pointer to the object.
      */
     template<class Tp>
-    const Tp* DynamicCast(void) const {
+    const Tp* DynamicCast() const {
         return (this->ptr == NULL) ? NULL : dynamic_cast<Tp*>(this->ptr->obj);
     }
 
@@ -101,7 +101,7 @@ public:
      *
      * @return true, if the pointer is a NULL pointer, false otherwise.
      */
-    inline bool IsNull(void) const {
+    inline bool IsNull() const {
         ASSERT((this->ptr == NULL) || (this->ptr->obj != NULL));
         return (this->ptr == NULL);
     }
@@ -162,7 +162,7 @@ public:
      *
      * @return A reference to the object designated by the pointer.
      */
-    inline T& operator*(void) {
+    inline T& operator*() {
         return *(this->ptr->obj);
     }
 
@@ -172,7 +172,7 @@ public:
      *
      * @return A reference to the object designated by the pointer.
      */
-    inline const T& operator*(void) const {
+    inline const T& operator*() const {
         return *(this->ptr->obj);
     }
 
@@ -181,7 +181,7 @@ public:
      *
      * @return A pointer to the object designated by the smart pointer.
      */
-    inline T* operator->(void) {
+    inline T* operator->() {
         return (this->ptr != NULL) ? this->ptr->obj : NULL;
     }
 
@@ -190,7 +190,7 @@ public:
      *
      * @return A pointer to the object designated by the smart pointer.
      */
-    inline const T* operator->(void) const {
+    inline const T* operator->() const {
         return (this->ptr != NULL) ? this->ptr->obj : NULL;
     }
 
@@ -241,7 +241,7 @@ SmartPtr<T, A>::SmartPtr(T* ptr) : ptr(NULL) {
  * vislib::SmartPtr<T, A>::~SmartPtr
  */
 template<class T, class A>
-SmartPtr<T, A>::~SmartPtr(void) {
+SmartPtr<T, A>::~SmartPtr() {
     *this = NULL;
 }
 

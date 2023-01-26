@@ -62,10 +62,10 @@ public:
     };
 
     /** Ctor */
-    MDDriverConnector(void);
+    MDDriverConnector();
 
     /** Dtor */
-    ~MDDriverConnector(void) override;
+    ~MDDriverConnector() override;
 
     /**
      * Startup callback of the thread. The Thread class will call that
@@ -93,7 +93,7 @@ public:
      *
      * @return true.
      */
-    bool Terminate(void) override;
+    bool Terminate() override;
 
 
     /**
@@ -101,7 +101,7 @@ public:
      *
      * @return 'true' if valid, 'false' otherwise.
      */
-    bool IsSocketFunctional(void) {
+    bool IsSocketFunctional() {
         return this->socketValidity;
     }
 
@@ -121,7 +121,7 @@ public:
      * is saved. Also, transfer rate, forces, and termination commands can be send
      * while the simulation is paused.
      */
-    inline void RequestPause(void) {
+    inline void RequestPause() {
         this->pauseRequested = true;
     }
 
@@ -129,7 +129,7 @@ public:
      * Requests that the thread start up MDDriver from a paused state.
      * Does nothing if MDDriver is already running.
      */
-    inline void RequestGo(void) {
+    inline void RequestGo() {
         this->goRequested = true;
     }
 
@@ -148,7 +148,7 @@ public:
      * Use IsRunning() to check if the thread has terminated. A new thread may be
      * started after terminating the old thread.
      */
-    inline void RequestTerminate(void) {
+    inline void RequestTerminate() {
         this->terminateRequested = true;
     }
 
@@ -180,7 +180,7 @@ public:
     /**
      * Releases socket resources.
      */
-    void release(void);
+    void release();
 
 private:
     /*
@@ -217,7 +217,7 @@ private:
      *
      * @return True on success.
      */
-    bool getData(void);
+    bool getData();
 
 
     /**
@@ -228,7 +228,7 @@ private:
      *
      * @return True on success.
      */
-    bool sendForces(void);
+    bool sendForces();
 
 
     /**
@@ -236,7 +236,7 @@ private:
      *
      * @return True on success.
      */
-    bool sendPause(void);
+    bool sendPause();
 
 
     /**
@@ -244,7 +244,7 @@ private:
      *
      * @return True on success.
      */
-    bool sendGo(void);
+    bool sendGo();
 
 
     /**
@@ -254,7 +254,7 @@ private:
      *
      * @return True on success.
      */
-    bool sendTransferRate(void);
+    bool sendTransferRate();
 
 
     /**
@@ -262,14 +262,14 @@ private:
      *
      * @return True on success.
      */
-    bool getHeader(void);
+    bool getHeader();
 
     /**
      * Sends header data to MDDriver after byteswapping it.
      *
      * @return True on success.
      */
-    bool sendHeader(void);
+    bool sendHeader();
 
     /**
      * Switches order of bytes in an int so it changes endian

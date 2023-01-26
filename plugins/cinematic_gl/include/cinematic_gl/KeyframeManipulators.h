@@ -31,10 +31,10 @@ class KeyframeManipulators {
 
 public:
     /** CTOR */
-    KeyframeManipulators(void);
+    KeyframeManipulators();
 
     /** DTOR */
-    ~KeyframeManipulators(void);
+    ~KeyframeManipulators();
 
     void UpdateExtents(vislib::math::Cuboid<float>& inout_bbox);
 
@@ -50,23 +50,23 @@ public:
 
     bool ProcessHitManipulator(float mouse_x, float mouse_y);
 
-    inline cinematic::Keyframe GetManipulatedSelectedKeyframe(void) const {
+    inline cinematic::Keyframe GetManipulatedSelectedKeyframe() const {
         return this->state.selected_keyframe;
     }
 
-    inline glm::vec3 GetFirstControlPointPosition(void) const {
+    inline glm::vec3 GetFirstControlPointPosition() const {
         return this->state.first_ctrl_point;
     }
 
-    inline glm::vec3 GetLastControlPointPosition(void) const {
+    inline glm::vec3 GetLastControlPointPosition() const {
         return this->state.last_ctrl_point;
     }
 
-    inline std::vector<megamol::core::param::ParamSlot*>& GetParams(void) {
+    inline std::vector<megamol::core::param::ParamSlot*>& GetParams() {
         return this->paramSlots;
     }
 
-    inline void ResetHitManipulator(void) {
+    inline void ResetHitManipulator() {
         this->state.hit = nullptr;
     }
 

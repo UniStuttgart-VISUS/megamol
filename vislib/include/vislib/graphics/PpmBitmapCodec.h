@@ -41,10 +41,10 @@ namespace graphics {
 class PpmBitmapCodec : public AbstractBitmapCodec {
 public:
     /** Ctor. */
-    PpmBitmapCodec(void);
+    PpmBitmapCodec();
 
     /** Dtor. */
-    ~PpmBitmapCodec(void) override;
+    ~PpmBitmapCodec() override;
 
     /**
      * Autodetects if an image can be loaded by this codec by checking
@@ -67,7 +67,7 @@ public:
      *
      * @return 'true' if the codec can autodetect image compatibility.
      */
-    bool CanAutoDetect(void) const override;
+    bool CanAutoDetect() const override;
 
     /**
      * Answer the file name extensions usually used for image files of
@@ -78,7 +78,7 @@ public:
      * @return The file name extensions usually used for image files of
      *         the type of this codec.
      */
-    const char* FileNameExtsA(void) const override;
+    const char* FileNameExtsA() const override;
 
     /**
      * Answer the file name extensions usually used for image files of
@@ -89,14 +89,14 @@ public:
      * @return The file name extensions usually used for image files of
      *         the type of this codec.
      */
-    const wchar_t* FileNameExtsW(void) const override;
+    const wchar_t* FileNameExtsW() const override;
 
     /**
      * Gets the save option.
      *
      * @return 'true' if image data is saved binary (if possible).
      */
-    inline bool GetSaveOption(void) const {
+    inline bool GetSaveOption() const {
         return this->saveBinary;
     }
 
@@ -105,14 +105,14 @@ public:
      *
      * @return The human-readable name of the codec.
      */
-    const char* NameA(void) const override;
+    const char* NameA() const override;
 
     /**
      * Answer the human-readable name of the codec.
      *
      * @return The human-readable name of the codec.
      */
-    const wchar_t* NameW(void) const override;
+    const wchar_t* NameW() const override;
 
     /**
      * Sets the save option.
@@ -143,7 +143,7 @@ protected:
      *
      * @return true
      */
-    bool loadFromMemoryImplemented(void) const override;
+    bool loadFromMemoryImplemented() const override;
 
     /**
      * Saves the image to a memory block.
@@ -163,7 +163,7 @@ protected:
      *
      * @return true
      */
-    bool saveToMemoryImplemented(void) const override;
+    bool saveToMemoryImplemented() const override;
 
 private:
     /** Flag whether or not to save image data as binary */

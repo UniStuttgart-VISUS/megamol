@@ -188,14 +188,14 @@ public:
     inline DateTimeSpan(const DateTimeSpan& rhs) throw() : ticks(rhs.ticks) {}
 
     /** Dtor. */
-    ~DateTimeSpan(void);
+    ~DateTimeSpan();
 
     /**
      * Answer the complete days of the time span.
      *
      * @return The days part of the time span.
      */
-    inline INT GetDays(void) const {
+    inline INT GetDays() const {
         return static_cast<INT>(this->ticks / TICKS_PER_DAY);
     }
 
@@ -205,7 +205,7 @@ public:
      *
      * @return The hours part of the time span.
      */
-    inline INT GetHours(void) const {
+    inline INT GetHours() const {
         return static_cast<INT>((this->ticks / TICKS_PER_HOUR) % 24);
     }
 
@@ -215,7 +215,7 @@ public:
      *
      * @return The milliseconds part of the time span.
      */
-    inline INT GetMilliseconds(void) const {
+    inline INT GetMilliseconds() const {
         return static_cast<INT>((this->ticks / TICKS_PER_MILLISECOND) % 1000);
     }
 
@@ -225,7 +225,7 @@ public:
      *
      * @return The minutes part of the time span.
      */
-    inline INT GetMinutes(void) const {
+    inline INT GetMinutes() const {
         return static_cast<INT>((this->ticks / TICKS_PER_MINUTE) % 60);
     }
 
@@ -235,7 +235,7 @@ public:
      *
      * @return The seconds part of the time span.
      */
-    inline INT GetSeconds(void) const {
+    inline INT GetSeconds() const {
         return static_cast<INT>((this->ticks / TICKS_PER_SECOND) % 60);
     }
 
@@ -245,7 +245,7 @@ public:
      *
      * @return The ticks part of the time span.
      */
-    inline INT GetTicks(void) const {
+    inline INT GetTicks() const {
         return static_cast<INT>(this->ticks % TICKS_PER_MILLISECOND);
     }
 
@@ -254,7 +254,7 @@ public:
      *
      * @return The total number of ticks.
      */
-    inline INT64 GetTotalTicks(void) const {
+    inline INT64 GetTotalTicks() const {
         return this->ticks;
     }
 
@@ -281,14 +281,14 @@ public:
      *
      * @return A string representation.
      */
-    StringA ToStringA(void) const;
+    StringA ToStringA() const;
 
     /**
      * Answer a string representation of the time span.
      *
      * @return A string representation.
      */
-    StringW ToStringW(void) const;
+    StringW ToStringW() const;
 
     /**
      * Test for equality.
@@ -430,7 +430,7 @@ public:
      *                               possible negative value, because this
      *                               would cause an overflow of the result.
      */
-    DateTimeSpan operator-(void) const;
+    DateTimeSpan operator-() const;
 
     /**
      * Assigment operator.
@@ -446,7 +446,7 @@ public:
      *
      * @return The total number of ticks.
      */
-    inline operator INT64(void) const throw() {
+    inline operator INT64() const throw() {
         return this->ticks;
     }
 

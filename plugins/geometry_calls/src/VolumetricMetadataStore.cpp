@@ -124,7 +124,7 @@ VolumetricMetadataStore& VolumetricMetadataStore::operator=(const VolumetricMeta
 /*
  * VolumetricMetadataStore::rewrire
  */
-void VolumetricMetadataStore::rewrire(void) {
+void VolumetricMetadataStore::rewrire() {
     this->MaxValues = this->maxValues.empty() ? nullptr : this->maxValues.data();
     this->MinValues = this->minValues.empty() ? nullptr : this->minValues.data();
     for (std::size_t i = 0; i < this->sliceDists.size(); ++i) {

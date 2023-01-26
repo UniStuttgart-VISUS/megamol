@@ -29,7 +29,7 @@ namespace demos_gl {
 /*
  * QuartzRenderer::QuartzRenderer
  */
-QuartzRenderer::QuartzRenderer(void)
+QuartzRenderer::QuartzRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , AbstractMultiShaderQuartzRenderer()
         , showClipAxesSlot("showClipAxes", "Shows/Hides the axes (x and y) of the clipping plane") {
@@ -53,7 +53,7 @@ QuartzRenderer::QuartzRenderer(void)
 /*
  * QuartzRenderer::~QuartzRenderer
  */
-QuartzRenderer::~QuartzRenderer(void) {
+QuartzRenderer::~QuartzRenderer() {
     this->Release();
     ASSERT(this->shaders.empty());
 }
@@ -449,7 +449,7 @@ bool QuartzRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 /*
  * QuartzRenderer::create
  */
-bool QuartzRenderer::create(void) {
+bool QuartzRenderer::create() {
     using megamol::core::utility::log::Log;
 
     auto const shader_options =
@@ -494,7 +494,7 @@ bool QuartzRenderer::create(void) {
 /*
  * QuartzRenderer::release
  */
-void QuartzRenderer::release(void) {
+void QuartzRenderer::release() {
     this->releaseShaders();
     this->errShader.reset();
 

@@ -48,7 +48,7 @@ public:
     friend class vislib::sys::File;
 
     /** Close the file, if open. */
-    void Close(void) override {
+    void Close() override {
         if (this->hFile != NULL) {
             ::fclose(this->hFile);
             this->hFile = NULL;
@@ -60,7 +60,7 @@ public:
 
 private:
     /** Ctor. */
-    TmpFile(void) : File(), hFile(NULL) {
+    TmpFile() : File(), hFile(NULL) {
         // intentionally empty
     }
 
@@ -76,7 +76,7 @@ private:
 /*
  * vislib::sys::File::CreateTempFile
  */
-vislib::sys::File* vislib::sys::File::CreateTempFile(void) {
+vislib::sys::File* vislib::sys::File::CreateTempFile() {
 #ifdef _WIN32
     vislib::StringA tempName;
     File* retval = new File();
@@ -362,7 +362,7 @@ bool vislib::sys::File::Rename(const wchar_t* oldName, const wchar_t* newName) {
 /*
  * vislib::sys::File::File
  */
-vislib::sys::File::File(void) {
+vislib::sys::File::File() {
 #ifdef _WIN32
     this->handle = INVALID_HANDLE_VALUE;
 
@@ -376,7 +376,7 @@ vislib::sys::File::File(void) {
 /*
  * vislib::sys::File::~File
  */
-vislib::sys::File::~File(void) {
+vislib::sys::File::~File() {
     this->Close();
 }
 
@@ -384,7 +384,7 @@ vislib::sys::File::~File(void) {
 /*
  * vislib::sys::File::Close
  */
-void vislib::sys::File::Close(void) {
+void vislib::sys::File::Close() {
     if (this->IsOpen()) {
 #ifdef _WIN32
         ::CloseHandle(this->handle);
@@ -402,7 +402,7 @@ void vislib::sys::File::Close(void) {
 /*
  * vislib::sys::File::Flush
  */
-void vislib::sys::File::Flush(void) {
+void vislib::sys::File::Flush() {
 #ifdef _WIN32
     if (!::FlushFileBuffers(this->handle)) {
 #else  /* _WIN32 */
@@ -416,7 +416,7 @@ void vislib::sys::File::Flush(void) {
 /*
  * vislib::sys::File::GetSize
  */
-vislib::sys::File::FileSize vislib::sys::File::GetSize(void) const {
+vislib::sys::File::FileSize vislib::sys::File::GetSize() const {
 #ifdef _WIN32
     LARGE_INTEGER size;
 
@@ -439,7 +439,7 @@ vislib::sys::File::FileSize vislib::sys::File::GetSize(void) const {
 /*
  * vislib::sys::File::IsOpen
  */
-bool vislib::sys::File::IsOpen(void) const {
+bool vislib::sys::File::IsOpen() const {
 #ifdef _WIN32
     return (this->handle != INVALID_HANDLE_VALUE);
 #else  /* _WIN32 */
@@ -680,7 +680,7 @@ vislib::sys::File::FileSize vislib::sys::File::Seek(const FileOffset offset, con
 /*
  * vislib::sys::File::Tell
  */
-vislib::sys::File::FileSize vislib::sys::File::Tell(void) const {
+vislib::sys::File::FileSize vislib::sys::File::Tell() const {
 #ifdef _WIN32
     LARGE_INTEGER o;
     LARGE_INTEGER n;

@@ -110,7 +110,7 @@ megamol::core::utility::SDFFont::SDFFont(const SDFFont& src)
         , glyphKrns(src.glyphKrns) {}
 
 
-SDFFont::~SDFFont(void) {
+SDFFont::~SDFFont() {
 
     if (this->initialised) {
         this->Deinitialise();
@@ -344,7 +344,7 @@ void SDFFont::BatchDrawString(const glm::mat4& mvm, const glm::mat4& pm) const {
 }
 
 
-void SDFFont::Deinitialise(void) {
+void SDFFont::Deinitialise() {
 
     this->ClearBatchDrawCache();
     this->texture.reset();

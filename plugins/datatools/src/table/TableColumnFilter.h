@@ -29,32 +29,32 @@ public:
     static std::string ModuleName;
 
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return ModuleName.c_str();
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Filters columns from a table";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    TableColumnFilter(void);
+    TableColumnFilter();
 
     /** Dtor */
-    ~TableColumnFilter(void) override;
+    ~TableColumnFilter() override;
 
 protected:
     /** Lazy initialization of the module */
-    bool create(void) override;
+    bool create() override;
 
     /** Resource release */
-    void release(void) override;
+    void release() override;
 
 private:
     /** Data callback */

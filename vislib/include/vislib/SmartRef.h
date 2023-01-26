@@ -68,7 +68,7 @@ public:
      * If the object referenced is not NULL, the reference count will be
      * decremented.
      */
-    ~SmartRef(void);
+    ~SmartRef();
 
     /**
      * Dynamic cast the object designated by the reference to 'Tp' and
@@ -108,7 +108,7 @@ public:
      *         fails, this might be NULL even if the object is not NULL.
      */
     template<class Tp>
-    inline Tp* DynamicPeek(void) {
+    inline Tp* DynamicPeek() {
         return dynamic_cast<Tp*>(this->obj);
     }
 
@@ -122,7 +122,7 @@ public:
      *         fails, this might be NULL even if the object is not NULL.
      */
     template<class Tp>
-    inline const Tp* DynamicPeek(void) const {
+    inline const Tp* DynamicPeek() const {
         return dynamic_cast<const Tp*>(this->obj);
     }
 
@@ -131,7 +131,7 @@ public:
      *
      * @return true, if the reference is a NULL pointer, false otherwise.
      */
-    inline bool IsNull(void) const {
+    inline bool IsNull() const {
         return (this->obj == NULL);
     }
 
@@ -140,7 +140,7 @@ public:
      * reference will be set NULL. It is safe to call the method if the
      * reference is already NULL.
      */
-    void Release(void);
+    void Release();
 
     /**
      * Assignment operator.
@@ -198,7 +198,7 @@ public:
      *
      * @return A reference to the object designated by the reference.
      */
-    inline T& operator*(void) {
+    inline T& operator*() {
         return *(this->obj);
     }
 
@@ -208,7 +208,7 @@ public:
      *
      * @return A reference to the object designated by the reference.
      */
-    inline const T& operator*(void) const {
+    inline const T& operator*() const {
         return *(this->obj);
     }
 
@@ -220,7 +220,7 @@ public:
      *
      * @return A pointer to the object designated by the smart reference.
      */
-    inline T* operator->(void) {
+    inline T* operator->() {
         return this->obj;
     }
 
@@ -232,7 +232,7 @@ public:
      *
      * @return A pointer to the object designated by the smart reference.
      */
-    inline const T* operator->(void) const {
+    inline const T* operator->() const {
         return this->obj;
     }
 
@@ -257,7 +257,7 @@ SmartRef<T>::SmartRef(T* obj, const bool addRef) : obj(obj) {
  * vislib::SmartRef<T>::~SmartRef
  */
 template<class T>
-SmartRef<T>::~SmartRef(void) {
+SmartRef<T>::~SmartRef() {
     if (this->obj != NULL) {
         this->obj->Release();
     }
@@ -288,7 +288,7 @@ SmartRef<Tp> const SmartRef<T>::DynamicCast(const bool addRef) const {
  * vislib::SmartRef<T>::Release
  */
 template<class T>
-void SmartRef<T>::Release(void) {
+void SmartRef<T>::Release() {
     if (this->obj != NULL) {
         this->obj->Release();
         this->obj = NULL;

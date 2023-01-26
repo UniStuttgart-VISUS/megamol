@@ -27,7 +27,7 @@ using megamol::core::utility::log::Log;
 /*
  * DiagramRenderer::DiagramRenderer (CTOR)
  */
-DiagramRenderer::DiagramRenderer(void)
+DiagramRenderer::DiagramRenderer()
         : mmstd_gl::Renderer2DModuleGL()
         , dataCallerSlot("getData", "Connects the diagram rendering with data storage.")
         , selectionCallerSlot("getSelection", "Connects the diagram rendering with selection storage.")
@@ -156,7 +156,7 @@ DiagramRenderer::DiagramRenderer(void)
 /*
  * Diagram2DRenderer::~Diagram2DRenderer (DTOR)
  */
-DiagramRenderer::~DiagramRenderer(void) {
+DiagramRenderer::~DiagramRenderer() {
     this->Release();
 }
 

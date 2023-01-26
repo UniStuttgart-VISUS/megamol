@@ -25,12 +25,12 @@ namespace cinematic {
 class Keyframe {
 public:
     /** CTOR */
-    Keyframe(void);
+    Keyframe();
 
     Keyframe(float at, float st, core::view::Camera cam);
 
     /** DTOR */
-    ~Keyframe(void);
+    ~Keyframe();
 
     inline bool operator==(Keyframe const& rhs) {
         return ((this->camera_state == rhs.camera_state) && (this->anim_time == rhs.anim_time) &&

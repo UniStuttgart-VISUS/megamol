@@ -211,7 +211,7 @@ public:
     OutlineFont(const OutlineFont& src, float size, RenderType render, bool flipY);
 
     /** Dtor. */
-    ~OutlineFont(void) override;
+    ~OutlineFont() override;
 
     /**
      * Calculates the height of a text block in number of lines, when
@@ -316,7 +316,7 @@ public:
      *
      * @return The render type of the font
      */
-    inline RenderType GetRenderType(void) const {
+    inline RenderType GetRenderType() const {
         return this->renderType;
     }
 
@@ -357,14 +357,14 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool initialise(void) override;
+    bool initialise() override;
 
     /**
      * Deinitialises the object. You must not call this method directly.
      * Instead call 'Deinitialise'. Derived classes must call
      * 'Deinitialise' in EACH dtor.
      */
-    void deinitialise(void) override;
+    void deinitialise() override;
 
 private:
     /**

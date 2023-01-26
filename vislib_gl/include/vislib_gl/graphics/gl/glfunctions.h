@@ -59,7 +59,7 @@ bool EnableVSync(bool enable = true);
  *
  * @return true if the operation completed successfully, false otherwise.
  */
-inline bool DisableVSync(void) {
+inline bool DisableVSync() {
     // Note: not ordered correctly because we would need a forward
     //       declaration
     return EnableVSync(false);
@@ -72,7 +72,7 @@ inline bool DisableVSync(void) {
  *
  * @return The open gl version number.
  */
-const vislib::VersionNumber& GLVersion(void);
+const vislib::VersionNumber& GLVersion();
 
 /**
  * Answer whether VSync is enabled or not. This method can only be used

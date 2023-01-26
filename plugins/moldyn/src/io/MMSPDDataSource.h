@@ -40,7 +40,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MMSPDDataSource";
     }
 
@@ -49,7 +49,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for \"MegaMol Simple Particle Data\" files.";
     }
 
@@ -58,7 +58,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -86,7 +86,7 @@ public:
      *
      * @return The file name slot name
      */
-    static const char* FilenameSlotName(void) {
+    static const char* FilenameSlotName() {
         return "filename";
     }
 
@@ -95,15 +95,15 @@ public:
      *
      * @return The file type name
      */
-    static const char* FileTypeName(void) {
+    static const char* FileTypeName() {
         return "MegaMol Simple Particle Data";
     }
 
     /** Ctor. */
-    MMSPDDataSource(void);
+    MMSPDDataSource();
 
     /** Dtor. */
-    ~MMSPDDataSource(void) override;
+    ~MMSPDDataSource() override;
 
 protected:
     /**
@@ -112,14 +112,14 @@ protected:
      *
      * @return The newly created frame object.
      */
-    core::view::AnimDataModule::Frame* constructFrame(void) const override;
+    core::view::AnimDataModule::Frame* constructFrame() const override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Loads one frame of the data set into the given 'frame' object. This
@@ -135,7 +135,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /** Nested class of frame data */
@@ -149,12 +149,12 @@ private:
         Frame(core::view::AnimDataModule& owner);
 
         /** Dtor. */
-        ~Frame(void) override;
+        ~Frame() override;
 
         /**
          * Clears the loaded data
          */
-        inline void Clear(void) {
+        inline void Clear() {
             this->Data().Clear();
             this->IndexReconstructionData().EnforceSize(0);
         }
@@ -257,13 +257,13 @@ private:
         }
 
         /** Dtor. */
-        ~Unlocker(void) override {
+        ~Unlocker() override {
             this->Unlock();
             ASSERT(this->frame == NULL);
         }
 
         /** Unlocks the data */
-        void Unlock(void) override {
+        void Unlock() override {
             if (this->frame != NULL) {
                 this->frame->Unlock();
                 this->frame = NULL; // DO NOT DELETE!
@@ -287,7 +287,7 @@ private:
     /**
      * Clears the data
      */
-    void clearData(void);
+    void clearData();
 
     /**
      * Callback receiving the update of the file name parameter.

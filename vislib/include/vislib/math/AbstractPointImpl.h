@@ -34,7 +34,7 @@ class AbstractPointImpl {
 
 public:
     /** Dtor. */
-    ~AbstractPointImpl(void);
+    ~AbstractPointImpl();
 
     /**
      * Answer the distance from this point to 'toPoint'.
@@ -75,7 +75,7 @@ public:
      *
      * @return true, if the point is the origin, false otherwise.
      */
-    bool IsOrigin(void) const;
+    bool IsOrigin() const;
 
     /**
      * Directly access the internal pointer holding the coordinates.
@@ -83,7 +83,7 @@ public:
      *
      * @return The coordinates in an array.
      */
-    inline T* PeekCoordinates(void) {
+    inline T* PeekCoordinates() {
         return this->coordinates;
     }
 
@@ -93,7 +93,7 @@ public:
      *
      * @return The coordinates in an array.
      */
-    inline const T* PeekCoordinates(void) const {
+    inline const T* PeekCoordinates() const {
         return this->coordinates;
     }
 
@@ -264,7 +264,7 @@ public:
      *
      * @return The position vector of the point.
      */
-    inline operator Vector<T, D>(void) const {
+    inline operator Vector<T, D>() const {
         return Vector<T, D>(this->coordinates);
     }
 
@@ -272,7 +272,7 @@ protected:
     /**
      * Disallow instances of this class. This ctor does nothing!
      */
-    inline AbstractPointImpl(void){};
+    inline AbstractPointImpl(){};
 
     /**
      * The coordinates of the point. This can be a T * pointer or a T[D]
@@ -286,7 +286,7 @@ protected:
  * vislib::math::AbstractPointImpl<T, D, S>::~AbstractPointImpl
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-AbstractPointImpl<T, D, S, C>::~AbstractPointImpl(void) {}
+AbstractPointImpl<T, D, S, C>::~AbstractPointImpl() {}
 
 
 /*
@@ -350,7 +350,7 @@ C<T, D, T[D]> AbstractPointImpl<T, D, S, C>::Interpolate(const C<Tp, D, Sp>& rhs
  * vislib::math::AbstractPointImpl<T, D, S, C>::IsOrigin
  */
 template<class T, unsigned int D, class S, template<class Tc, unsigned int Dc, class Sc> class C>
-bool AbstractPointImpl<T, D, S, C>::IsOrigin(void) const {
+bool AbstractPointImpl<T, D, S, C>::IsOrigin() const {
     for (unsigned int i = 0; i < D; i++) {
         if (!IsEqual<T>(this->coordinates[i], 0)) {
             return false;

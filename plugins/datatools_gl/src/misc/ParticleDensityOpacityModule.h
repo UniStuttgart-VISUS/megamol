@@ -26,17 +26,17 @@ namespace megamol::datatools_gl::misc {
 
 class ParticleDensityOpacityModule : public megamol::core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleDensityOpacityModule";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Compute particle opacity based on local density.";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
-    ParticleDensityOpacityModule(void);
-    ~ParticleDensityOpacityModule(void) override;
+    ParticleDensityOpacityModule();
+    ~ParticleDensityOpacityModule() override;
 
 private:
     class Unlocker : public geocalls::MultiParticleDataCall::Unlocker {
@@ -46,10 +46,10 @@ private:
                 , inner(inner) {
             // intentionally empty
         }
-        ~Unlocker(void) override {
+        ~Unlocker() override {
             this->Unlock();
         }
-        void Unlock(void) override {
+        void Unlock() override {
             if (this->inner != nullptr) {
                 this->inner->Unlock();
                 SAFE_DELETE(this->inner);
@@ -70,8 +70,8 @@ private:
         AlphaInvertOverwrite = 4,
     };
 
-    bool create(void) override;
-    void release(void) override;
+    bool create() override;
+    void release() override;
     bool getDataCallback(core::Call& caller);
     bool getExtentCallback(core::Call& caller);
 

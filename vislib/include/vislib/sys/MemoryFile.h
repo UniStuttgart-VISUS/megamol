@@ -28,13 +28,13 @@ namespace sys {
 class MemoryFile : public File {
 public:
     /** Ctor. */
-    MemoryFile(void);
+    MemoryFile();
 
     /** Dtor. */
-    ~MemoryFile(void) override;
+    ~MemoryFile() override;
 
     /** Close the file, if open. */
-    void Close(void) override;
+    void Close() override;
 
     /**
      * Forces all buffered data to be written.
@@ -42,21 +42,21 @@ public:
      *
      * @throws IOException
      */
-    void Flush(void) override;
+    void Flush() override;
 
     /**
      * Answer the size of the file in bytes.
      *
      * @return The size of the file in bytes.
      */
-    FileSize GetSize(void) const override;
+    FileSize GetSize() const override;
 
     /**
      * Answer whether this file is open.
      *
      * @return true, if the file is open, false otherwise.
      */
-    bool IsOpen(void) const override;
+    bool IsOpen() const override;
 
     /**
      * Opens a flat memory pointer as file. This object will not take
@@ -151,7 +151,7 @@ public:
      * @return Position of the file pointer in bytes from the beginning
      *         of the file.
      */
-    FileSize Tell(void) const override;
+    FileSize Tell() const override;
 
     /**
      * Write 'bufSize' bytes from 'buf' to the file.

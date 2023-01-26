@@ -27,9 +27,9 @@ namespace cinematic_gl {
 class CinematicUtils : public core_gl::utility::RenderUtils {
 
 public:
-    CinematicUtils(void);
+    CinematicUtils();
 
-    ~CinematicUtils(void);
+    ~CinematicUtils();
 
     enum Colors {
         BACKGROUND,
@@ -68,7 +68,7 @@ public:
 
     void DrawAll(const glm::mat4& mvp, glm::vec2 dim_vp);
 
-    float GetTextLineHeight(void);
+    float GetTextLineHeight();
 
     float GetTextLineWidth(const std::string& text_line);
 
@@ -76,7 +76,7 @@ public:
 
     void ResetTextRotation();
 
-    bool Initialized(void) {
+    bool Initialized() {
         return this->init_once;
     }
 
@@ -97,7 +97,7 @@ private:
 
     const float lightness(glm::vec4 background) const;
 
-    void gui_update(void);
+    void gui_update();
 
     void gui_table_row(const char* left, const char* right);
 };

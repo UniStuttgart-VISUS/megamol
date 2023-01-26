@@ -32,7 +32,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SolPathDataSource";
     }
 
@@ -41,7 +41,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source for solvent path data.";
     }
 
@@ -50,15 +50,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    SolPathDataSource(void);
+    SolPathDataSource();
 
     /** dtor */
-    ~SolPathDataSource(void) override;
+    ~SolPathDataSource() override;
 
 protected:
     /**
@@ -66,12 +66,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /**
@@ -106,7 +106,7 @@ private:
      *
      * @return 'true' if any parameter slot is dirty.
      */
-    inline bool anyParamslotDirty(void) const {
+    inline bool anyParamslotDirty() const {
         return this->filenameslot.IsDirty() || this->smoothSlot.IsDirty() || this->smoothValueSlot.IsDirty() ||
                this->smoothExpSlot.IsDirty() || this->speedOfSmoothedSlot.IsDirty() ||
                this->clusterOfSmoothedSlot.IsDirty();
@@ -125,12 +125,12 @@ private:
     /**
      * Clears all data
      */
-    void clear(void);
+    void clear();
 
     /**
      * Loads the data file
      */
-    void loadData(void);
+    void loadData();
 
     /** The slot publishing the data */
     megamol::core::CalleeSlot getdataslot;

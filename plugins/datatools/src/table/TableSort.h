@@ -25,7 +25,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "TableSort";
     }
 
@@ -34,7 +34,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Selects rows from a data table";
     }
 
@@ -43,26 +43,26 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    TableSort(void);
+    TableSort();
 
     /**
      * Finalises an instance.
      */
-    ~TableSort(void) override;
+    ~TableSort() override;
 
 protected:
-    bool create(void) override;
+    bool create() override;
 
     bool prepareData(TableDataCall& src, const unsigned int frameID) override;
 
-    void release(void) override;
+    void release() override;
 
 private:
     core::param::ParamSlot paramColumn;

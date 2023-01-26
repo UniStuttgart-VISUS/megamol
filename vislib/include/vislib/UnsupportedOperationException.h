@@ -54,7 +54,7 @@ public:
     UnsupportedOperationException(const UnsupportedOperationException& rhs);
 
     /** Dtor. */
-    ~UnsupportedOperationException(void) override;
+    ~UnsupportedOperationException() override;
 
     /**
      * Assignment operator.

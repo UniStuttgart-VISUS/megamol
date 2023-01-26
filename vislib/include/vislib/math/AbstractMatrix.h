@@ -34,7 +34,7 @@ class AbstractMatrix : public AbstractMatrixImpl<T, D, L, S, AbstractMatrix> {
 
 public:
     /** Dtor. */
-    ~AbstractMatrix(void);
+    ~AbstractMatrix();
 
     /**
      * Calculates the characteristic polynom of the matrix
@@ -43,7 +43,7 @@ public:
      *
      * @throw Exception if the calculation of the polynom fails.
      */
-    inline Polynom<T, D> CharacteristicPolynom(void) const {
+    inline Polynom<T, D> CharacteristicPolynom() const {
         return Super::characteristicPolynom();
     }
 
@@ -55,7 +55,7 @@ public:
      *
      * @return The determinant of the matrix.
      */
-    T Determinant(void) const;
+    T Determinant() const;
 
     /**
      * Calculates eigenvalues and eigenvectors of the matrix. The order of
@@ -122,7 +122,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractMatrix(void) : Super() {}
+    inline AbstractMatrix() : Super() {}
 
 private:
     /**
@@ -153,7 +153,7 @@ private:
  * vislib::math::AbstractMatrix<T, D, L, S>::~AbstractMatrix
  */
 template<class T, unsigned int D, MatrixLayout L, class S>
-AbstractMatrix<T, D, L, S>::~AbstractMatrix(void) {}
+AbstractMatrix<T, D, L, S>::~AbstractMatrix() {}
 
 
 /*
@@ -181,7 +181,7 @@ unsigned int AbstractMatrix<T, D, L, S>::FindEigenvalues(
  * vislib::math::AbstractMatrixImpl<T, D, L, S, C>::Determinant
  */
 template<class T, unsigned int D, MatrixLayout L, class S>
-T AbstractMatrix<T, D, L, S>::Determinant(void) const {
+T AbstractMatrix<T, D, L, S>::Determinant() const {
 #define A(r, c) a[(r)*D + (c)]
     double a[D * D];              // input matrix for algorithm
     double f;                     // Multiplication factor.
@@ -267,7 +267,7 @@ class AbstractMatrix<T, 2, L, S> : public AbstractMatrixImpl<T, 2, L, S, Abstrac
 
 public:
     /** Dtor. */
-    ~AbstractMatrix(void);
+    ~AbstractMatrix();
 
     /**
      * Calculates the characteristic polynom of the matrix
@@ -276,7 +276,7 @@ public:
      *
      * @throw Exception if the calculation of the polynom fails.
      */
-    inline Polynom<T, 2> CharacteristicPolynom(void) const {
+    inline Polynom<T, 2> CharacteristicPolynom() const {
         Polynom<T, 2> rv;
         // x^2 - trace(A)x + det(A)
         rv[0] = Super::determinant2x2(this->components[Super::indexOf(0, 0)], this->components[Super::indexOf(1, 0)],
@@ -291,7 +291,7 @@ public:
      *
      * @return The determinant of the matrix.
      */
-    inline T Determinant(void) const {
+    inline T Determinant() const {
         return Super::determinant2x2(this->components[Super::indexOf(0, 0)], this->components[Super::indexOf(1, 0)],
             this->components[Super::indexOf(0, 1)], this->components[Super::indexOf(1, 1)]);
     }
@@ -361,7 +361,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractMatrix(void) : Super() {}
+    inline AbstractMatrix() : Super() {}
 
     /**
      * Allow AbstractMatrixImpl to assign from itself to the AbstractMatrix
@@ -391,7 +391,7 @@ protected:
  * vislib::math::AbstractMatrix<T, 2, L, S>::~AbstractMatrix
  */
 template<class T, MatrixLayout L, class S>
-AbstractMatrix<T, 2, L, S>::~AbstractMatrix(void) {}
+AbstractMatrix<T, 2, L, S>::~AbstractMatrix() {}
 
 
 /*
@@ -460,7 +460,7 @@ class AbstractMatrix<T, 3, L, S> : public AbstractMatrixImpl<T, 3, L, S, Abstrac
 
 public:
     /** Dtor. */
-    ~AbstractMatrix(void);
+    ~AbstractMatrix();
 
     /**
      * Calculates the characteristic polynom of the matrix
@@ -469,7 +469,7 @@ public:
      *
      * @throw Exception if the calculation of the polynom fails.
      */
-    inline Polynom<T, 3> CharacteristicPolynom(void) const {
+    inline Polynom<T, 3> CharacteristicPolynom() const {
         Polynom<T, 3> p;
         p[0] = this->Determinant();
         p[1] = -(Super::determinant2x2(this->components[Super::indexOf(1, 1)], this->components[Super::indexOf(2, 1)],
@@ -488,7 +488,7 @@ public:
      *
      * @return The determinant of the matrix.
      */
-    inline T Determinant(void) const {
+    inline T Determinant() const {
         return Super::determinant3x3(this->components[Super::indexOf(0, 0)], this->components[Super::indexOf(1, 0)],
             this->components[Super::indexOf(2, 0)], this->components[Super::indexOf(0, 1)],
             this->components[Super::indexOf(1, 1)], this->components[Super::indexOf(2, 1)],
@@ -521,7 +521,7 @@ public:
      *
      * @return true, if this matrix describes a pure rotation.
      */
-    bool IsRotation(void) const;
+    bool IsRotation() const;
 
     /**
      * Assignment operator.
@@ -580,7 +580,7 @@ public:
      * @throw IllegalStateException if the matrix is not a rotation-only
      *                              matrix.
      */
-    operator Quaternion<T>(void) const;
+    operator Quaternion<T>() const;
 
 protected:
     /** A typedef for the super class. */
@@ -589,7 +589,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractMatrix(void) : Super() {}
+    inline AbstractMatrix() : Super() {}
 
     /**
      * Allow AbstractMatrixImpl to assign from itself to the AbstractMatrix
@@ -619,7 +619,7 @@ protected:
  * vislib::math::AbstractMatrix<T, 3, L, S>::~AbstractMatrix
  */
 template<class T, MatrixLayout L, class S>
-AbstractMatrix<T, 3, L, S>::~AbstractMatrix(void) {}
+AbstractMatrix<T, 3, L, S>::~AbstractMatrix() {}
 
 
 /*
@@ -647,7 +647,7 @@ unsigned int AbstractMatrix<T, 3, L, S>::FindEigenvalues(
  * AbstractMatrix<T, 3, L, S>::IsRotation
  */
 template<class T, MatrixLayout L, class S>
-bool AbstractMatrix<T, 3, L, S>::IsRotation(void) const {
+bool AbstractMatrix<T, 3, L, S>::IsRotation() const {
     return IsEqual(Super::determinant3x3(this->components[Super::indexOf(0, 0)], this->components[Super::indexOf(1, 0)],
                        this->components[Super::indexOf(2, 0)], this->components[Super::indexOf(0, 1)],
                        this->components[Super::indexOf(1, 1)], this->components[Super::indexOf(2, 1)],
@@ -722,7 +722,7 @@ AbstractMatrix<T, 3, L, S>& AbstractMatrix<T, 3, L, S>::operator=(const Abstract
  * vislib::math::AbstractMatrix<T, 3, L, S>::operator Quaternion<T>
  */
 template<class T, MatrixLayout L, class S>
-AbstractMatrix<T, 3, L, S>::operator Quaternion<T>(void) const {
+AbstractMatrix<T, 3, L, S>::operator Quaternion<T>() const {
     Quaternion<T> q;
     if (!this->IsRotation()) {
         throw IllegalStateException("Matrix is not rotation-only", __FILE__, __LINE__);
@@ -748,7 +748,7 @@ class AbstractMatrix<T, 4, L, S> : public AbstractMatrixImpl<T, 4, L, S, Abstrac
 
 public:
     /** Dtor. */
-    ~AbstractMatrix(void);
+    ~AbstractMatrix();
 
     /**
      * Calculates the characteristic polynom of the matrix
@@ -757,7 +757,7 @@ public:
      *
      * @throw Exception if the calculation of the polynom fails.
      */
-    inline Polynom<T, 4> CharacteristicPolynom(void) const {
+    inline Polynom<T, 4> CharacteristicPolynom() const {
 
         // TODO: Implement something better
 
@@ -769,7 +769,7 @@ public:
      *
      * @return The determinant of the matrix.
      */
-    inline T Determinant(void) const {
+    inline T Determinant() const {
         return Super::determinant4x4(this->components[Super::indexOf(0, 0)], this->components[Super::indexOf(1, 0)],
             this->components[Super::indexOf(2, 0)], this->components[Super::indexOf(3, 0)],
             this->components[Super::indexOf(0, 1)], this->components[Super::indexOf(1, 1)],
@@ -807,7 +807,7 @@ public:
      *
      * @return true, if this matrix describes a pure rotation.
      */
-    bool IsRotation(void) const;
+    bool IsRotation() const;
 
     /**
      * Assignment operator.
@@ -866,7 +866,7 @@ public:
      * @throw IllegalStateException if the matrix is not a rotation-only
      *                              matrix.
      */
-    operator Quaternion<T>(void) const;
+    operator Quaternion<T>() const;
 
 protected:
     /** A typedef for the super class. */
@@ -875,7 +875,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractMatrix(void) : Super() {}
+    inline AbstractMatrix() : Super() {}
 
     /**
      * Allow AbstractMatrixImpl to assign from itself to the AbstractMatrix
@@ -905,7 +905,7 @@ protected:
  * vislib::math::AbstractMatrix<T, 4, L, S>::~AbstractMatrix
  */
 template<class T, MatrixLayout L, class S>
-AbstractMatrix<T, 4, L, S>::~AbstractMatrix(void) {}
+AbstractMatrix<T, 4, L, S>::~AbstractMatrix() {}
 
 
 /*
@@ -933,7 +933,7 @@ unsigned int AbstractMatrix<T, 4, L, S>::FindEigenvalues(
  * AbstractMatrix<T, 4, L, S>::FindEigenvalues
  */
 template<class T, MatrixLayout L, class S>
-bool AbstractMatrix<T, 4, L, S>::IsRotation(void) const {
+bool AbstractMatrix<T, 4, L, S>::IsRotation() const {
     return IsEqual(Super::determinant3x3(this->components[Super::indexOf(0, 0)], this->components[Super::indexOf(1, 0)],
                        this->components[Super::indexOf(2, 0)], this->components[Super::indexOf(0, 1)],
                        this->components[Super::indexOf(1, 1)], this->components[Super::indexOf(2, 1)],
@@ -1022,7 +1022,7 @@ AbstractMatrix<T, 4, L, S>& AbstractMatrix<T, 4, L, S>::operator=(const Abstract
  * vislib::math::AbstractMatrix<T, 4, L, S>::operator Quaternion<T>
  */
 template<class T, MatrixLayout L, class S>
-AbstractMatrix<T, 4, L, S>::operator Quaternion<T>(void) const {
+AbstractMatrix<T, 4, L, S>::operator Quaternion<T>() const {
     Quaternion<T> q;
     if (!this->IsRotation()) {
         throw IllegalStateException("Matrix is not rotation-only", __FILE__, __LINE__);

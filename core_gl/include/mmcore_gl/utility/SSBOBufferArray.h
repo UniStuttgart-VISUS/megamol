@@ -99,16 +99,16 @@ public:
         }
     }
 
-    GLuint GetNumChunks(void) const {
+    GLuint GetNumChunks() const {
         return numChunks;
     }
 
-    GLuint GetMaxNumItemsPerChunk(void) const {
+    GLuint GetMaxNumItemsPerChunk() const {
         return numItemsPerChunk;
     }
 
     /// @returns how much stuff you need to upload to the GPU (in bytes)
-    GLuint GetUsedBufferSize(void) const {
+    GLuint GetUsedBufferSize() const {
         return numItemsPerChunk * dstStride;
     }
 

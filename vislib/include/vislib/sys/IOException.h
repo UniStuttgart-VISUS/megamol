@@ -65,7 +65,7 @@ public:
     IOException(const IOException& rhs);
 
     /** Dtor. */
-    ~IOException(void) override;
+    ~IOException() override;
 
     /**
      * Assignment operator.

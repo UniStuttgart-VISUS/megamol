@@ -33,7 +33,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SolventCounter";
     }
 
@@ -42,7 +42,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Finds solvent molecules within a given distance for each atom";
     }
 
@@ -51,23 +51,23 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    SolventCounter(void);
+    SolventCounter();
 
     /** Dtor */
-    ~SolventCounter(void) override;
+    ~SolventCounter() override;
 
-    float GetMinValue(void) const {
+    float GetMinValue() const {
         return this->minValue;
     }
-    float GetMidValue(void) const {
+    float GetMidValue() const {
         return this->midValue;
     }
-    float GetMaxValue(void) const {
+    float GetMaxValue() const {
         return this->maxValue;
     }
 
@@ -77,12 +77,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /**

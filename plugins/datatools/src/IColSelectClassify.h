@@ -16,13 +16,13 @@ namespace datatools {
 
 class IColSelectClassify : public datatools::AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "IColSelectClassify";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes new ICol values: 1 for particles with original ICols close to the selected value; 0 else";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 

@@ -33,10 +33,10 @@ class SHA1HashProvider : public HashAlgorithm {
 
 public:
     /** Ctor. */
-    SHA1HashProvider(void);
+    SHA1HashProvider();
 
     /** Dtor. */
-    ~SHA1HashProvider(void) override;
+    ~SHA1HashProvider() override;
 
     /**
      * Initialise the hash. This method must be called before any other
@@ -45,7 +45,7 @@ public:
      * If the hash has already been initialised, this method erases all
      * previous data and reinitialises it.
      */
-    void Initialise(void) override;
+    void Initialise() override;
 
     /**
      * Update the hash with a new block of 'cntInput' bytes.

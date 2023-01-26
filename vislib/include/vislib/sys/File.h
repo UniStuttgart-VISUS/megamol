@@ -90,7 +90,7 @@ public:
      *
      * @throws SystemException in most error cases.
      */
-    static File* CreateTempFile(void);
+    static File* CreateTempFile();
 
     /**
      * Creates a file name for a temporary file
@@ -115,7 +115,7 @@ public:
      *
      * @return the file name created
      */
-    static inline vislib::StringA CreateTempFileNameA(void) {
+    static inline vislib::StringA CreateTempFileNameA() {
         vislib::StringA s;
         return CreateTempFileName(s);
     }
@@ -125,7 +125,7 @@ public:
      *
      * @return the file name created
      */
-    static inline vislib::StringW CreateTempFileNameW(void) {
+    static inline vislib::StringW CreateTempFileNameW() {
         vislib::StringW s;
         return CreateTempFileName(s);
     }
@@ -259,22 +259,22 @@ public:
     static bool Rename(const wchar_t* oldName, const wchar_t* newName);
 
     /** Ctor. */
-    File(void);
+    File();
 
     /**
      * Dtor. If the file is still open, it is closed.
      */
-    virtual ~File(void);
+    virtual ~File();
 
     /** Close the file, if open. */
-    virtual void Close(void);
+    virtual void Close();
 
     /**
      * Forces all buffered data to be written.
      *
      * @throws IOException
      */
-    virtual void Flush(void);
+    virtual void Flush();
 
     /**
      * Answer the size of the file in bytes.
@@ -284,7 +284,7 @@ public:
      * @throws IOException If the file size cannot be retrieve, e. g.
      *                     because the file has not been opened.
      */
-    virtual FileSize GetSize(void) const;
+    virtual FileSize GetSize() const;
 
     /**
      * Answer whether the file pointer is at the end of the file.
@@ -294,7 +294,7 @@ public:
      * @throws IOException If the file is not open or the file pointer is at an
      *                     invalid position at the moment.
      */
-    inline bool IsEOF(void) const {
+    inline bool IsEOF() const {
         return (this->Tell() == this->GetSize());
     }
 
@@ -303,7 +303,7 @@ public:
      *
      * @return true, if the file is open, false otherwise.
      */
-    virtual bool IsOpen(void) const;
+    virtual bool IsOpen() const;
 
     /**
      * Opens a file.
@@ -432,7 +432,7 @@ public:
      *
      * @throws IOException If the file pointer could not be moved.
      */
-    inline FileSize SeekToBegin(void) {
+    inline FileSize SeekToBegin() {
         return this->Seek(0, BEGIN);
     }
 
@@ -444,7 +444,7 @@ public:
      *
      * @throws IOException If the file pointer could not be moved.
      */
-    inline FileSize SeekToEnd(void) {
+    inline FileSize SeekToEnd() {
         return this->Seek(0, END);
     }
 
@@ -456,7 +456,7 @@ public:
      *
      * @throws IOException
      */
-    virtual FileSize Tell(void) const;
+    virtual FileSize Tell() const;
 
     /**
      * Write 'bufSize' bytes from 'buf' to the file.

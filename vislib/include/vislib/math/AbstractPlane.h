@@ -48,14 +48,14 @@ public:
     };
 
     /** Dtor. */
-    ~AbstractPlane(void);
+    ~AbstractPlane();
 
     /**
      * Answer the parameter a in the plane equation ax + by + cz + d = 0.
      *
      * @param The parameter a.
      */
-    inline const T& A(void) const {
+    inline const T& A() const {
         return this->parameters[IDX_A];
     }
 
@@ -64,7 +64,7 @@ public:
      *
      * @param The parameter b.
      */
-    inline const T& B(void) const {
+    inline const T& B() const {
         return this->parameters[IDX_B];
     }
 
@@ -73,7 +73,7 @@ public:
      *
      * @param The parameter c.
      */
-    inline const T& C(void) const {
+    inline const T& C() const {
         return this->parameters[IDX_C];
     }
 
@@ -112,7 +112,7 @@ public:
      *
      * @param The parameter d.
      */
-    inline const T& D(void) const {
+    inline const T& D() const {
         return this->parameters[IDX_D];
     }
 
@@ -131,7 +131,7 @@ public:
      *
      * @param The parameter a.
      */
-    inline const T& GetA(void) const {
+    inline const T& GetA() const {
         return this->parameters[IDX_A];
     }
 
@@ -140,7 +140,7 @@ public:
      *
      * @param The parameter b.
      */
-    inline const T& GetB(void) const {
+    inline const T& GetB() const {
         return this->parameters[IDX_B];
     }
 
@@ -149,7 +149,7 @@ public:
      *
      * @param The parameter c.
      */
-    inline const T& GetC(void) const {
+    inline const T& GetC() const {
         return this->parameters[IDX_C];
     }
 
@@ -158,7 +158,7 @@ public:
      *
      * @param The parameter d.
      */
-    inline const T& GetD(void) const {
+    inline const T& GetD() const {
         return this->parameters[IDX_D];
     }
 
@@ -185,7 +185,7 @@ public:
      *
      * @return The normal of the plane.
      */
-    inline Vector<T, 3> Normal(void) const {
+    inline Vector<T, 3> Normal() const {
         Vector<T, 3> retval(this->parameters);
         retval.Normalise();
         return retval;
@@ -194,14 +194,14 @@ public:
     /**
      * Normalise the plane parameters.
      */
-    void Normalise(void);
+    void Normalise();
 
     /**
      * Answer a point in the plane.
      *
      * @return A point in the plane.
      */
-    math::Point<T, 3> Point(void) const;
+    math::Point<T, 3> Point() const;
 
     /**
      * Answer three points in the plane.
@@ -358,7 +358,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractPlane(void) {}
+    inline AbstractPlane() {}
 
     /**
      * Answer the normalised plane parameters.
@@ -379,7 +379,7 @@ protected:
  * AbstractPlane<T, S>::~AbstractPlane
  */
 template<class T, class S>
-AbstractPlane<T, S>::~AbstractPlane(void) {}
+AbstractPlane<T, S>::~AbstractPlane() {}
 
 
 /*
@@ -532,7 +532,7 @@ typename AbstractPlane<T, S>::IntersectionCount AbstractPlane<T, S>::Intersect(A
  * AbstractPlane<T, S>::Normalise
  */
 template<class T, class S>
-void AbstractPlane<T, S>::Normalise(void) {
+void AbstractPlane<T, S>::Normalise() {
     T a, b, c, d;
     this->normalise(a, b, c, d);
     this->Set(a, b, c, d);
@@ -543,7 +543,7 @@ void AbstractPlane<T, S>::Normalise(void) {
  * AbstractPlane<T, S>::Point
  */
 template<class T, class S>
-math::Point<T, 3> AbstractPlane<T, S>::Point(void) const {
+math::Point<T, 3> AbstractPlane<T, S>::Point() const {
     T a, b, c, d;
     this->normalise(a, b, c, d);
     return vislib::math::Point<T, 3>(-d * a, -d * b, -d * c);

@@ -32,13 +32,13 @@ public:
     enum CallFunctionNames : int { GET_DATA = 0, GET_EXTENT = 1 };
 
     /** factory info */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "GraphDataCall";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get graph edge data";
     }
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 2;
     }
     static const char* FunctionName(unsigned int idx) {
@@ -79,13 +79,13 @@ public:
     /**
      * Number of frames in time-dependent data
      */
-    inline unsigned int FrameCount(void) const {
+    inline unsigned int FrameCount() const {
         return frameCnt;
     }
     /**
      * Current frame id (zero-based) in time-dependent data
      */
-    inline unsigned int FrameID(void) const {
+    inline unsigned int FrameID() const {
         return frameID;
     }
 

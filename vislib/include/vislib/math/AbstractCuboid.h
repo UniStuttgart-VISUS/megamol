@@ -58,7 +58,7 @@ public:
     static const UINT32 FACE_TOP;
 
     /** Dtor. */
-    ~AbstractCuboid(void);
+    ~AbstractCuboid();
 
     /**
      * Provide direct access to the z-coordinate of the left/bottom/back
@@ -67,7 +67,7 @@ public:
      * @return A reference to the z-coordinate of the right/bottom/back
      *         point.
      */
-    inline const T& Back(void) const {
+    inline const T& Back() const {
         return this->bounds[IDX_BACK];
     }
 
@@ -78,7 +78,7 @@ public:
      * @return A reference to the y-coordinate of the right/bottom/back
      *         point.
      */
-    inline const T& Bottom(void) const {
+    inline const T& Bottom() const {
         return this->bounds[IDX_BOTTOM];
     }
 
@@ -87,7 +87,7 @@ public:
      *
      * @return The center point of the cuboid.
      */
-    Point<T, 3> CalcCenter(void) const;
+    Point<T, 3> CalcCenter() const;
 
     /**
      * Answer whether the point 'point' lies within the cuboid.
@@ -110,7 +110,7 @@ public:
      *
      * @return The depth of the cuboid.
      */
-    inline T Depth(void) const {
+    inline T Depth() const {
         return (this->bounds[IDX_FRONT] > this->bounds[IDX_BACK]) ? (this->bounds[IDX_FRONT] - this->bounds[IDX_BACK])
                                                                   : (this->bounds[IDX_BACK] - this->bounds[IDX_FRONT]);
     }
@@ -120,7 +120,7 @@ public:
      * swapping the left/right and/or top/bottom and/or front/back sides,
      * if they are in the wrong order.
      */
-    void EnforcePositiveSize(void);
+    void EnforcePositiveSize();
 
     /**
      * Provide direct access to the z-coordinate of the right/top/front
@@ -129,7 +129,7 @@ public:
      * @return A reference to the z-coordinate of the right/top/front
      *         point.
      */
-    inline const T& Front(void) const {
+    inline const T& Front() const {
         return this->bounds[IDX_FRONT];
     }
 
@@ -138,7 +138,7 @@ public:
      *
      * @return The z-coordinate of the left/bottom/back point.
      */
-    inline const T& GetBack(void) const {
+    inline const T& GetBack() const {
         return this->bounds[IDX_BACK];
     }
 
@@ -160,7 +160,7 @@ public:
      *
      * @return The y-coordinate of the left/bottom/back point.
      */
-    inline const T& GetBottom(void) const {
+    inline const T& GetBottom() const {
         return this->bounds[IDX_BOTTOM];
     }
 
@@ -169,7 +169,7 @@ public:
      *
      * @return The z-coordinate of the right/top/front point.
      */
-    inline const T& GetFront(void) const {
+    inline const T& GetFront() const {
         return this->bounds[IDX_FRONT];
     }
 
@@ -178,7 +178,7 @@ public:
      *
      * @return The x-coordinate of the left/bottom/back point.
      */
-    inline const T& GetLeft(void) const {
+    inline const T& GetLeft() const {
         return this->bounds[IDX_LEFT];
     }
 
@@ -187,7 +187,7 @@ public:
      *
      * @return The left/bottom/back cuboid.
      */
-    inline Point<T, 3> GetLeftBottomBack(void) const {
+    inline Point<T, 3> GetLeftBottomBack() const {
         return Point<T, 3>(this->bounds[IDX_LEFT], this->bounds[IDX_BOTTOM], this->bounds[IDX_BACK]);
     }
 
@@ -196,7 +196,7 @@ public:
      *
      * @return The left/bottom/front cuboid.
      */
-    inline Point<T, 3> GetLeftBottomFront(void) const {
+    inline Point<T, 3> GetLeftBottomFront() const {
         return Point<T, 3>(this->bounds[IDX_LEFT], this->bounds[IDX_BOTTOM], this->bounds[IDX_FRONT]);
     }
 
@@ -205,7 +205,7 @@ public:
      *
      * @return The left/top/back point.
      */
-    inline Point<T, 3> GetLeftTopBack(void) const {
+    inline Point<T, 3> GetLeftTopBack() const {
         return Point<T, 3>(this->bounds[IDX_LEFT], this->bounds[IDX_TOP], this->bounds[IDX_BACK]);
     }
 
@@ -214,7 +214,7 @@ public:
      *
      * @return The left/top/front point.
      */
-    inline Point<T, 3> GetLeftTopFront(void) const {
+    inline Point<T, 3> GetLeftTopFront() const {
         return Point<T, 3>(this->bounds[IDX_LEFT], this->bounds[IDX_TOP], this->bounds[IDX_FRONT]);
     }
 
@@ -278,7 +278,7 @@ public:
      *
      * @return The height of the cuboid.
      */
-    inline T Height(void) const {
+    inline T Height() const {
         return (this->bounds[IDX_TOP] > this->bounds[IDX_BOTTOM]) ? (this->bounds[IDX_TOP] - this->bounds[IDX_BOTTOM])
                                                                   : (this->bounds[IDX_BOTTOM] - this->bounds[IDX_TOP]);
     }
@@ -288,7 +288,7 @@ public:
      *
      * @return The origin point.
      */
-    inline Point<T, 3> GetOrigin(void) const {
+    inline Point<T, 3> GetOrigin() const {
         return Point<T, 3>(this->bounds[IDX_LEFT], this->bounds[IDX_BOTTOM], this->bounds[IDX_BACK]);
     }
 
@@ -297,7 +297,7 @@ public:
      *
      * @return The y-coordinate of the right/top/front point.
      */
-    inline const T& GetRight(void) const {
+    inline const T& GetRight() const {
         return this->bounds[IDX_RIGHT];
     }
 
@@ -306,7 +306,7 @@ public:
      *
      * @return The right/bottom/back point of the cuboid.
      */
-    inline Point<T, 3> GetRightBottomBack(void) const {
+    inline Point<T, 3> GetRightBottomBack() const {
         return Point<T, 3>(this->bounds[IDX_RIGHT], this->bounds[IDX_BOTTOM], this->bounds[IDX_BACK]);
     }
 
@@ -315,7 +315,7 @@ public:
      *
      * @return The right/bottom/front point of the cuboid.
      */
-    inline Point<T, 3> GetRightBottomFront(void) const {
+    inline Point<T, 3> GetRightBottomFront() const {
         return Point<T, 3>(this->bounds[IDX_RIGHT], this->bounds[IDX_BOTTOM], this->bounds[IDX_FRONT]);
     }
 
@@ -324,7 +324,7 @@ public:
      *
      * @return The right/top/back point.
      */
-    inline Point<T, 3> GetRightTopBack(void) const {
+    inline Point<T, 3> GetRightTopBack() const {
         return Point<T, 3>(this->bounds[IDX_RIGHT], this->bounds[IDX_TOP], this->bounds[IDX_BACK]);
     }
 
@@ -333,7 +333,7 @@ public:
      *
      * @return The right/top/front point.
      */
-    inline Point<T, 3> GetRightTopFront(void) const {
+    inline Point<T, 3> GetRightTopFront() const {
         return Point<T, 3>(this->bounds[IDX_RIGHT], this->bounds[IDX_TOP], this->bounds[IDX_FRONT]);
     }
 
@@ -342,7 +342,7 @@ public:
      *
      * @return The dimensions of the cuboid.
      */
-    inline Dimension<T, 3> GetSize(void) const {
+    inline Dimension<T, 3> GetSize() const {
         return Dimension<T, 3>(this->Width(), this->Height(), this->Depth());
     }
 
@@ -351,7 +351,7 @@ public:
      *
      * @return The y-coordinate of the right/top/front point.
      */
-    inline const T& GetTop(void) const {
+    inline const T& GetTop() const {
         return this->bounds[IDX_TOP];
     }
 
@@ -392,7 +392,7 @@ public:
      *
      * @return true, if the cuboid has no area, false otherwise.
      */
-    inline bool IsEmpty(void) const {
+    inline bool IsEmpty() const {
         return (IsEqual<T>(this->bounds[IDX_LEFT], this->bounds[IDX_RIGHT]) &&
                 IsEqual<T>(this->bounds[IDX_BOTTOM], this->bounds[IDX_TOP]) &&
                 IsEqual<T>(this->bounds[IDX_BACK], this->bounds[IDX_FRONT]));
@@ -405,7 +405,7 @@ public:
      * @return A reference to the x-coordinate of the left/bottom/back
      *         point.
      */
-    inline const T& Left(void) const {
+    inline const T& Left() const {
         return this->bounds[IDX_LEFT];
     }
 
@@ -414,7 +414,7 @@ public:
      *
      * @return The length of the longest edge of the cuboid
      */
-    inline T LongestEdge(void) const {
+    inline T LongestEdge() const {
         T w = this->Width();
         T h = this->Height();
         T d = this->Depth();
@@ -458,7 +458,7 @@ public:
      *
      * @return A pointer to the cuboid bounds.
      */
-    inline const T* PeekBounds(void) const {
+    inline const T* PeekBounds() const {
         return this->bounds;
     }
 
@@ -468,7 +468,7 @@ public:
      *
      * @return A reference to the x-coordinate of the right/top/front.
      */
-    inline const T& Right(void) const {
+    inline const T& Right() const {
         return this->bounds[IDX_RIGHT];
     }
 
@@ -548,7 +548,7 @@ public:
     /**
      * Make the cuboid an empty cuboid a (0, 0).
      */
-    inline void SetNull(void) {
+    inline void SetNull() {
         this->Set(static_cast<T>(0), static_cast<T>(0), static_cast<T>(0), static_cast<T>(0), static_cast<T>(0),
             static_cast<T>(0));
     }
@@ -595,21 +595,21 @@ public:
     /**
      * Swap the front and the back z-coordinate.
      */
-    inline void SwapFrontBack(void) {
+    inline void SwapFrontBack() {
         Swap(this->bounds[IDX_FRONT], this->bounds[IDX_BACK]);
     }
 
     /**
      * Swap the left and the right x-coordinate.
      */
-    inline void SwapLeftRight(void) {
+    inline void SwapLeftRight() {
         Swap(this->bounds[IDX_LEFT], this->bounds[IDX_RIGHT]);
     }
 
     /**
      * Swap the top and the bottom y-coordinate.
      */
-    inline void SwapTopBottom(void) {
+    inline void SwapTopBottom() {
         Swap(this->bounds[IDX_TOP], this->bounds[IDX_BOTTOM]);
     }
 
@@ -619,7 +619,7 @@ public:
      *
      * @return A reference to the y-coordinate of the right/top/front point.
      */
-    inline const T& Top(void) const {
+    inline const T& Top() const {
         return this->bounds[IDX_TOP];
     }
 
@@ -636,7 +636,7 @@ public:
      *
      * @return The volume of the cuboid.
      */
-    inline T Volume(void) const {
+    inline T Volume() const {
         return (this->Width() * this->Height() * this->Depth());
     }
 
@@ -645,7 +645,7 @@ public:
      *
      * @return The width of the cuboid.
      */
-    inline T Width(void) const {
+    inline T Width() const {
         return (this->bounds[IDX_RIGHT] > this->bounds[IDX_LEFT]) ? (this->bounds[IDX_RIGHT] - this->bounds[IDX_LEFT])
                                                                   : (this->bounds[IDX_LEFT] - this->bounds[IDX_RIGHT]);
     }
@@ -736,7 +736,7 @@ protected:
     /**
      * Forbidden default ctor. This does nothing.
      */
-    inline AbstractCuboid(void) {}
+    inline AbstractCuboid() {}
 
     /**
      * The bounds of the cuboid, in the following order: left, bottom, back,
@@ -801,14 +801,14 @@ const UINT32 AbstractCuboid<T, S>::FACE_TOP = 1 << AbstractCuboid<T, S>::IDX_TOP
  * vislib::math::AbstractCuboid<T>::~AbstractCuboid
  */
 template<class T, class S>
-vislib::math::AbstractCuboid<T, S>::~AbstractCuboid(void) {}
+vislib::math::AbstractCuboid<T, S>::~AbstractCuboid() {}
 
 
 /*
  * vislib::math::AbstractCuboid<T>::CalcCenter
  */
 template<class T, class S>
-vislib::math::Point<T, 3> vislib::math::AbstractCuboid<T, S>::CalcCenter(void) const {
+vislib::math::Point<T, 3> vislib::math::AbstractCuboid<T, S>::CalcCenter() const {
     return Point<T, 3>(this->bounds[IDX_LEFT] + this->Width() / static_cast<T>(2),
         this->bounds[IDX_BOTTOM] + this->Height() / static_cast<T>(2),
         this->bounds[IDX_BACK] + this->Depth() / static_cast<T>(2));
@@ -866,7 +866,7 @@ bool AbstractCuboid<T, S>::Contains(const AbstractPoint<T, 3, Sp>& point, const 
  * vislib::math::AbstractCuboid<T>::EnforcePositiveSize
  */
 template<class T, class S>
-void vislib::math::AbstractCuboid<T, S>::EnforcePositiveSize(void) {
+void vislib::math::AbstractCuboid<T, S>::EnforcePositiveSize() {
     if (this->bounds[IDX_BOTTOM] > this->bounds[IDX_TOP]) {
         Swap(this->bounds[IDX_TOP], this->bounds[IDX_BOTTOM]);
     }

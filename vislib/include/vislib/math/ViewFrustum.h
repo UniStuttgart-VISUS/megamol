@@ -35,7 +35,7 @@ public:
     /**
      * Create a degenerate frustum that has collapsed to a point.
      */
-    inline ViewFrustum(void) {
+    inline ViewFrustum() {
         this->offsets[Super::IDX_BOTTOM] = static_cast<T>(0);
         this->offsets[Super::IDX_TOP] = static_cast<T>(0);
         this->offsets[Super::IDX_LEFT] = static_cast<T>(0);
@@ -100,7 +100,7 @@ public:
     ViewFrustum(const AbstractViewFrustum<Tp, Sp>& rhs);
 
     /** Dtor. */
-    virtual ~ViewFrustum(void);
+    virtual ~ViewFrustum();
 
     /**
      * Assignment.
@@ -153,7 +153,7 @@ ViewFrustum<T>::ViewFrustum(const AbstractViewFrustum<Tp, Sp>& rhs) {
  * ViewFrustum<T>::~ViewFrustum
  */
 template<class T>
-ViewFrustum<T>::~ViewFrustum(void) {}
+ViewFrustum<T>::~ViewFrustum() {}
 
 } /* end namespace math */
 } /* end namespace vislib */

@@ -43,7 +43,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DiagramSeriesCall";
     }
 
@@ -52,7 +52,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get diagram series selection";
     }
 
@@ -64,7 +64,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -84,15 +84,15 @@ public:
     }
 
     /** ctor */
-    DiagramSeriesCall(void);
+    DiagramSeriesCall();
 
     /** dtor */
-    ~DiagramSeriesCall(void) override;
+    ~DiagramSeriesCall() override;
 
     /** Copy operator of the funtion pointer for cascaded DiagramSeries modules */
     DiagramSeriesCall& operator=(const DiagramSeriesCall& rhs);
 
-    fpSeriesInsertionCB GetSeriesInsertionCB(void) const;
+    fpSeriesInsertionCB GetSeriesInsertionCB() const;
 
     void SetSeriesInsertionCB(const fpSeriesInsertionCB& fpsicb);
 

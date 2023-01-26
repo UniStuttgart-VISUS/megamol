@@ -46,17 +46,17 @@ namespace protein {
 class VMDDXLoader : public megamol::core::Module {
 public:
     /** Ctor */
-    VMDDXLoader(void);
+    VMDDXLoader();
 
     /** Dtor */
-    ~VMDDXLoader(void) override;
+    ~VMDDXLoader() override;
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "VMDDXLoader";
     }
 
@@ -65,7 +65,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Loader module for *.dx file format used by the VMD.";
     }
 
@@ -74,7 +74,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -84,12 +84,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * Call callback to get the data

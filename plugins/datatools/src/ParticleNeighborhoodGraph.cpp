@@ -78,12 +78,12 @@ ParticleNeighborhoodGraph::~ParticleNeighborhoodGraph() {
     Release();
 }
 
-bool ParticleNeighborhoodGraph::create(void) {
+bool ParticleNeighborhoodGraph::create() {
     // intentionally empty
     return true;
 }
 
-void ParticleNeighborhoodGraph::release(void) {
+void ParticleNeighborhoodGraph::release() {
     // intentionally empty
 }
 

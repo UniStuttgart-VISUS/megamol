@@ -227,11 +227,11 @@ public:
     }
 
     /** Dtor. */
-    ~UTF8Encoder(void);
+    ~UTF8Encoder();
 
 private:
     /** Disallow instances of this class. */
-    UTF8Encoder(void);
+    UTF8Encoder();
 };
 
 } /* end namespace vislib */

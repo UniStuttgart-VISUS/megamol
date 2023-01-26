@@ -57,13 +57,13 @@ vislib::net::SimpleMessage::SimpleMessage(const AbstractSimpleMessage& rhs) : Su
 /*
  * vislib::net::SimpleMessage::~SimpleMessage
  */
-vislib::net::SimpleMessage::~SimpleMessage(void) {}
+vislib::net::SimpleMessage::~SimpleMessage() {}
 
 
 /*
  * vislib::net::SimpleMessage::Trim
  */
-void vislib::net::SimpleMessage::Trim(void) {
+void vislib::net::SimpleMessage::Trim() {
     this->storage.EnforceSize(this->GetMessageSize(), true);
 }
 

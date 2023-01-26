@@ -25,24 +25,24 @@ namespace datatools_gl {
 class TransferFunctionQuery {
 public:
     /** Ctor. */
-    TransferFunctionQuery(void);
+    TransferFunctionQuery();
 
     /** Dtor. */
-    ~TransferFunctionQuery(void);
+    ~TransferFunctionQuery();
 
     /**
      * Answer the slot for the transfer function call
      *
      * @return The slot for the transfer function
      */
-    inline core::CallerSlot* GetSlot(void) {
+    inline core::CallerSlot* GetSlot() {
         return &this->getTFSlot;
     }
 
     /**
      * Clears the transfer function data
      */
-    inline void Clear(void) {
+    inline void Clear() {
         this->texDat.EnforceSize(0);
         this->texDatSize = 0;
     }

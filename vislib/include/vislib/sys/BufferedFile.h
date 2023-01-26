@@ -33,7 +33,7 @@ public:
      *
      * @return size in bytes used when creating new buffers
      */
-    inline static File::FileSize GetDefaultBufferSize(void) {
+    inline static File::FileSize GetDefaultBufferSize() {
         return BufferedFile::defaultBufferSize;
     }
 
@@ -47,15 +47,15 @@ public:
     }
 
     /** Ctor. */
-    BufferedFile(void);
+    BufferedFile();
 
     /**
      * Dtor. If the file is still open, it is closed.
      */
-    ~BufferedFile(void) override;
+    ~BufferedFile() override;
 
     /** Close the file, if open. */
-    void Close(void) override;
+    void Close() override;
 
     /**
      * behaves like File::Flush
@@ -63,7 +63,7 @@ public:
      * throws IOException with ERROR_WRITE_FAULT if a buffer in write mode
      *                    could not be flushed to disk.
      */
-    void Flush(void) override;
+    void Flush() override;
 
     /**
      * Answer the size of the current buffer in bytes.
@@ -71,14 +71,14 @@ public:
      *
      * @return number of bytes of current buffer
      */
-    inline File::FileSize GetBufferSize(void) const {
+    inline File::FileSize GetBufferSize() const {
         return this->bufferSize;
     }
 
     /**
      * behaves like File::GetSize
      */
-    File::FileSize GetSize(void) const override;
+    File::FileSize GetSize() const override;
 
     /**
      * behaves like File::Open
@@ -118,7 +118,7 @@ public:
     /**
      * behaves like File::Tell
      */
-    File::FileSize Tell(void) const override;
+    File::FileSize Tell() const override;
 
     /**
      * behaves like File::Write

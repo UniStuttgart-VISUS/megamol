@@ -466,7 +466,7 @@ vislib::StringW vislib::sys::Path::FindExecutablePath(const vislib::StringW& fil
 /*
  * vislib::sys::Path::GetApplicationPathA
  */
-vislib::StringA vislib::sys::Path::GetApplicationPathA(void) {
+vislib::StringA vislib::sys::Path::GetApplicationPathA() {
     vislib::StringA retval;
 #ifdef _WIN32
     const DWORD nSize = 0xFFFF;
@@ -501,7 +501,7 @@ vislib::StringA vislib::sys::Path::GetApplicationPathA(void) {
 /*
  * vislib::sys::Path::GetApplicationPathW
  */
-vislib::StringW vislib::sys::Path::GetApplicationPathW(void) {
+vislib::StringW vislib::sys::Path::GetApplicationPathW() {
 #ifdef _WIN32
     vislib::StringW retval;
     const DWORD nSize = 0xFFFF;
@@ -522,7 +522,7 @@ vislib::StringW vislib::sys::Path::GetApplicationPathW(void) {
 /*
  * vislib::sys::Path::GetCurrentDirectoryA
  */
-vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
+vislib::StringA vislib::sys::Path::GetCurrentDirectoryA() {
 #ifdef _WIN32
     DWORD bufferSize = ::GetCurrentDirectoryA(0, NULL);
     char* buffer = new char[bufferSize];
@@ -567,7 +567,7 @@ vislib::StringA vislib::sys::Path::GetCurrentDirectoryA(void) {
 /*
  * vislib::sys::Path::GetCurrentDirectoryW
  */
-vislib::StringW vislib::sys::Path::GetCurrentDirectoryW(void) {
+vislib::StringW vislib::sys::Path::GetCurrentDirectoryW() {
 #ifdef _WIN32
     DWORD bufferSize = ::GetCurrentDirectoryW(0, NULL);
     wchar_t* buffer = new wchar_t[bufferSize];
@@ -628,7 +628,7 @@ vislib::StringW vislib::sys::Path::GetDirectoryName(const wchar_t* path) {
 /*
  * vislib::sys::Path::GetTempDirectoryA
  */
-vislib::StringA vislib::sys::Path::GetTempDirectoryA(void) {
+vislib::StringA vislib::sys::Path::GetTempDirectoryA() {
 #ifdef _WIN32
     char buffer[MAX_PATH + 1];
     buffer[MAX_PATH] = buffer[0] = 0;
@@ -646,7 +646,7 @@ vislib::StringA vislib::sys::Path::GetTempDirectoryA(void) {
 /*
  * vislib::sys::Path::GetTempDirectoryW
  */
-vislib::StringW vislib::sys::Path::GetTempDirectoryW(void) {
+vislib::StringW vislib::sys::Path::GetTempDirectoryW() {
 #ifdef _WIN32
     wchar_t buffer[MAX_PATH + 1];
     buffer[MAX_PATH] = buffer[0] = 0;
@@ -664,7 +664,7 @@ vislib::StringW vislib::sys::Path::GetTempDirectoryW(void) {
 /*
  * vislib::sys::Path::GetUserHomeDirectoryA
  */
-vislib::StringA vislib::sys::Path::GetUserHomeDirectoryA(void) {
+vislib::StringA vislib::sys::Path::GetUserHomeDirectoryA() {
 #ifdef _WIN32
     StringA retval;
 
@@ -693,7 +693,7 @@ vislib::StringA vislib::sys::Path::GetUserHomeDirectoryA(void) {
 /*
  * vislib::sys::Path::GetUserHomeDirectoryW
  */
-vislib::StringW vislib::sys::Path::GetUserHomeDirectoryW(void) {
+vislib::StringW vislib::sys::Path::GetUserHomeDirectoryW() {
 #ifdef _WIN32
     StringW retval;
 
@@ -1089,10 +1089,10 @@ const wchar_t vislib::sys::Path::SEPARATOR_W = L'/';
 /*
  * vislib::sys::Path::~Path
  */
-vislib::sys::Path::~Path(void) {}
+vislib::sys::Path::~Path() {}
 
 
 /*
  * vislib::sys::Path::Path
  */
-vislib::sys::Path::Path(void) {}
+vislib::sys::Path::Path() {}

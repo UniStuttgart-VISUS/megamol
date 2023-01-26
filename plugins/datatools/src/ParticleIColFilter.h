@@ -28,18 +28,18 @@ namespace datatools {
  */
 class ParticleIColFilter : public AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleIColFilter";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Removes particles outside a specific interval for I color values";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    ParticleIColFilter(void);
-    ~ParticleIColFilter(void) override;
+    ParticleIColFilter();
+    ~ParticleIColFilter() override;
 
 protected:
     bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;

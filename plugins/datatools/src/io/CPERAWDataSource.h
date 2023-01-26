@@ -32,7 +32,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CPERAWDataSource";
     }
 
@@ -41,7 +41,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data reader module for cpelib dumps.";
     }
 
@@ -50,15 +50,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    CPERAWDataSource(void);
+    CPERAWDataSource();
 
     /** dtor */
-    ~CPERAWDataSource(void) override;
+    ~CPERAWDataSource() override;
 
 protected:
     /**
@@ -66,12 +66,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /**
@@ -84,9 +84,9 @@ private:
      */
     bool assertData();
 
-    bool isDirty(void);
+    bool isDirty();
 
-    void resetDirty(void);
+    void resetDirty();
 
     /**
      * Callback receiving the update of the radius parameter.

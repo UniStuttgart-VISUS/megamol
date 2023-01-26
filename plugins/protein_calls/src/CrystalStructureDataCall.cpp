@@ -26,7 +26,7 @@ const unsigned int protein_calls::CrystalStructureDataCall::CallForGetExtent = 1
 /*
  * CrystalStructureDataCall::CrystalStructureDataCall
  */
-protein_calls::CrystalStructureDataCall::CrystalStructureDataCall(void)
+protein_calls::CrystalStructureDataCall::CrystalStructureDataCall()
         : AbstractGetData3DCall()
         , atomCnt(0)
         , dipoleCnt(0)
@@ -45,4 +45,4 @@ protein_calls::CrystalStructureDataCall::CrystalStructureDataCall(void)
 /*
  * CrystalStructureDataCall::~CrystalStructureDataCall::
  */
-protein_calls::CrystalStructureDataCall::~CrystalStructureDataCall(void) {}
+protein_calls::CrystalStructureDataCall::~CrystalStructureDataCall() {}

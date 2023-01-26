@@ -140,7 +140,7 @@ public:
      *
      * @param key The key code to be stored.
      */
-    KeyCode(void);
+    KeyCode();
 
     /**
      * Ctor.
@@ -157,14 +157,14 @@ public:
     KeyCode(const KeyCode& src);
 
     /** Dtor. */
-    ~KeyCode(void);
+    ~KeyCode();
 
     /**
      * Answer whether this key uses the Alt modifier key.
      *
      * @return 'true' if this key uses the Alt modifier key.
      */
-    inline bool IsAltMod(void) const {
+    inline bool IsAltMod() const {
         return (this->key & KEY_MOD_ALT) == KEY_MOD_ALT;
     }
 
@@ -173,7 +173,7 @@ public:
      *
      * @return 'true' if this key uses the Ctrl modifier key.
      */
-    inline bool IsCtrlMod(void) const {
+    inline bool IsCtrlMod() const {
         return (this->key & KEY_MOD_CTRL) == KEY_MOD_CTRL;
     }
 
@@ -182,7 +182,7 @@ public:
      *
      * @return 'true' if this key uses the Shift modifier key.
      */
-    inline bool IsShiftMod(void) const {
+    inline bool IsShiftMod() const {
         return (this->key & KEY_MOD_SHIFT) == KEY_MOD_SHIFT;
     }
 
@@ -191,7 +191,7 @@ public:
      *
      * @return 'true' if this key is a special key.
      */
-    inline bool IsSpecial(void) const {
+    inline bool IsSpecial() const {
         return (this->key & KEY_SPECIAL) == KEY_SPECIAL;
     }
 
@@ -200,7 +200,7 @@ public:
      *
      * @return The key code without modifier keys.
      */
-    inline WORD NoModKeys(void) const {
+    inline WORD NoModKeys() const {
         return this->key & ~KEY_MOD;
     }
 
@@ -209,7 +209,7 @@ public:
      *
      * @return A human-readable ASCII String
      */
-    vislib::StringA ToStringA(void) const;
+    vislib::StringA ToStringA() const;
 
     /**
      * Assignment operator.
@@ -243,11 +243,11 @@ public:
      *
      * @return The numeric value of the key code.
      */
-    operator WORD(void) const;
+    operator WORD() const;
 
 private:
     /** Normalises the stored key code */
-    void normalise(void);
+    void normalise();
 
     /** The key code stored by this object */
     WORD key;

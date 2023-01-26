@@ -26,7 +26,7 @@ namespace demos_gl {
 /*
  * BezierCPUMeshRenderer::BezierCPUMeshRenderer
  */
-BezierCPUMeshRenderer::BezierCPUMeshRenderer(void)
+BezierCPUMeshRenderer::BezierCPUMeshRenderer()
         : AbstractBezierRenderer()
         , lightsSlot("lights", "Lights are retrieved over this slot.")
         , curveSectionsSlot("curveSections", "Linear sections approximating the curve")
@@ -55,7 +55,7 @@ BezierCPUMeshRenderer::BezierCPUMeshRenderer(void)
 /*
  * BezierCPUMeshRenderer::~BezierCPUMeshRenderer
  */
-BezierCPUMeshRenderer::~BezierCPUMeshRenderer(void) {
+BezierCPUMeshRenderer::~BezierCPUMeshRenderer() {
     this->Release();
 }
 
@@ -245,7 +245,7 @@ bool BezierCPUMeshRenderer::render(mmstd_gl::CallRender3DGL& call) {
 /*
  * BezierCPUMeshRenderer::create
  */
-bool BezierCPUMeshRenderer::create(void) {
+bool BezierCPUMeshRenderer::create() {
     if (!AbstractBezierRenderer::create())
         return false;
 
@@ -258,7 +258,7 @@ bool BezierCPUMeshRenderer::create(void) {
 /*
  * BezierCPUMeshRenderer::release
  */
-void BezierCPUMeshRenderer::release(void) {
+void BezierCPUMeshRenderer::release() {
     ::glDeleteLists(this->geo, 1);
     this->geo = 0;
 }

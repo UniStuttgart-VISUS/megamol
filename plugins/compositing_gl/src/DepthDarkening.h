@@ -97,7 +97,7 @@ private:
     /**
      * Recalculates the contents of the kernel buffer based on the input
      */
-    void recalcKernel(void);
+    void recalcKernel();
 
     /** Slot for the output texture */
     core::CalleeSlot outputTexSlot_;

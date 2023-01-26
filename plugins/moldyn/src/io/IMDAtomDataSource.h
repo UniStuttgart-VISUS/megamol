@@ -42,7 +42,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "IMDAtomData";
     }
 
@@ -51,7 +51,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for IMD atom files.";
     }
 
@@ -60,7 +60,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -88,7 +88,7 @@ public:
      *
      * @return The file name slot name
      */
-    static const char* FilenameSlotName(void) {
+    static const char* FilenameSlotName() {
         return "filename";
     }
 
@@ -97,15 +97,15 @@ public:
      *
      * @return The file type name
      */
-    static const char* FileTypeName(void) {
+    static const char* FileTypeName() {
         return "IMD Atom";
     }
 
     /** Ctor. */
-    IMDAtomDataSource(void);
+    IMDAtomDataSource();
 
     /** Dtor. */
-    ~IMDAtomDataSource(void) override;
+    ~IMDAtomDataSource() override;
 
 protected:
     /**
@@ -113,12 +113,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /**
@@ -156,12 +156,12 @@ private:
     /**
      * Removes all data
      */
-    void clear(void);
+    void clear();
 
     /**
      * Ensures that the data file is loaded into memory, if possible
      */
-    void assertData(void);
+    void assertData();
 
     /**
      * Reads the header of the imd file.

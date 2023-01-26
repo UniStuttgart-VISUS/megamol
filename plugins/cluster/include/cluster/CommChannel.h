@@ -38,10 +38,10 @@ public:
     class Listener : public vislib::Listenable<CommChannel>::Listener {
     public:
         /** Ctor */
-        Listener(void) {}
+        Listener() {}
 
         /** Dtor */
-        ~Listener(void) override {}
+        ~Listener() override {}
 
         /**
          * Informs that the control channel is now connected an can send and receive messages
@@ -69,7 +69,7 @@ public:
     /**
      * Ctor
      */
-    CommChannel(void);
+    CommChannel();
 
     /**
      * Copy ctor
@@ -83,19 +83,19 @@ public:
     /**
      * Dtor.
      */
-    ~CommChannel(void) override;
+    ~CommChannel() override;
 
     /**
      * Closes the communication channel
      */
-    void Close(void);
+    void Close();
 
     /**
      * Answer the counterparts name
      *
      * @return The counterparts name
      */
-    inline const vislib::StringA& CounterpartName(void) const {
+    inline const vislib::StringA& CounterpartName() const {
         return this->counterpartName;
     }
 
@@ -104,7 +104,7 @@ public:
      *
      * @return True if the channel is open.
      */
-    bool IsOpen(void) const;
+    bool IsOpen() const;
 
     /**
      * Opens the control channel on the given already opened channel.

@@ -46,7 +46,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ClusterController";
     }
 
@@ -55,7 +55,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "The controller thread for cluster operation";
     }
 
@@ -64,7 +64,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -103,12 +103,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
     /**
      * Perform the work of a thread.
@@ -192,12 +192,12 @@ private:
      *
      * @return The default port
      */
-    UINT16 defaultPort(void);
+    UINT16 defaultPort();
 
     /**
      * Stops the discovery service.
      */
-    void stopDiscoveryService(void);
+    void stopDiscoveryService();
 
     /**
      * A module want's to register at the controller.

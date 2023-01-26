@@ -52,7 +52,7 @@ public:
     }
 
     /** Dtor. */
-    ~ShallowPlane(void);
+    ~ShallowPlane();
 
     /**
      * Assignment.
@@ -90,7 +90,7 @@ protected:
  * ShallowPlane<T>::~ShallowPlane
  */
 template<class T>
-ShallowPlane<T>::~ShallowPlane(void) {}
+ShallowPlane<T>::~ShallowPlane() {}
 
 } /* end namespace math */
 } /* end namespace vislib */

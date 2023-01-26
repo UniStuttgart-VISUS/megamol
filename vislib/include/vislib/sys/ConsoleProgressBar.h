@@ -53,17 +53,17 @@ public:
     typedef unsigned int Size;
 
     /** ctor. */
-    ConsoleProgressBar(void);
+    ConsoleProgressBar();
 
     /** dtor */
-    ~ConsoleProgressBar(void);
+    ~ConsoleProgressBar();
 
     /**
      * Answer whether the progress bar is running.
      *
      * @return 'true' if the progress bar is running.
      */
-    inline bool IsRunning(void) const {
+    inline bool IsRunning() const {
         return this->running;
     }
 
@@ -99,11 +99,11 @@ public:
     /**
      * Stops the progress bar.
      */
-    void Stop(void);
+    void Stop();
 
 private:
     /** updates the view of the progress bar */
-    void update(void);
+    void update();
 
     /**
      * prints a duration.

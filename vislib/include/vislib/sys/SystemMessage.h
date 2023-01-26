@@ -44,7 +44,7 @@ public:
     SystemMessage(const SystemMessage& rhs);
 
     /** Dtor. */
-    ~SystemMessage(void);
+    ~SystemMessage();
 
     /**
      * Assignment operator.
@@ -67,7 +67,7 @@ public:
      *
      * @return The human readable error message.
      */
-    operator const char*(void) const;
+    operator const char*() const;
 
     /**
      * Cast to wchar_t string.
@@ -81,7 +81,7 @@ public:
      *
      * @return The human readable error message.
      */
-    operator const wchar_t*(void) const;
+    operator const wchar_t*() const;
 
     /**
      * Answer the system dependent error code associated with this
@@ -89,7 +89,7 @@ public:
      *
      * @return The system error code.
      */
-    inline DWORD GetErrorCode(void) const {
+    inline DWORD GetErrorCode() const {
         return this->errorCode;
     }
 

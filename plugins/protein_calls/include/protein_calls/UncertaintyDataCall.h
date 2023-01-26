@@ -80,7 +80,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "UncertaintyDataCall";
     }
 
@@ -89,7 +89,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get uncertaintay data.";
     }
 
@@ -101,7 +101,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -121,10 +121,10 @@ public:
     }
 
     /** CTOR */
-    UncertaintyDataCall(void);
+    UncertaintyDataCall();
 
     /** DTOR */
-    ~UncertaintyDataCall(void) override;
+    ~UncertaintyDataCall() override;
 
 
     // ------------------ GET functions -------------------
@@ -134,7 +134,7 @@ public:
      *
      * @return The amino-acid count.
      */
-    inline unsigned int GetAminoAcidCount(void) const {
+    inline unsigned int GetAminoAcidCount() const {
         if (!this->pdbIndex)
             return static_cast<unsigned int>(0);
         else
@@ -267,7 +267,7 @@ public:
      *
      * @return The pdb id.
      */
-    inline vislib::StringA GetPdbID(void) {
+    inline vislib::StringA GetPdbID() {
         return *this->pdbID;
     }
 
@@ -276,7 +276,7 @@ public:
      *
      * @return The unceratinty recalculation flag.
      */
-    inline bool GetRecalcFlag(void) {
+    inline bool GetRecalcFlag() {
         return this->recalcUncertainty;
     }
 
@@ -301,7 +301,7 @@ public:
      *
      * @return The pdb assignment method for helix.
      */
-    inline UncertaintyDataCall::pdbAssMethod GetPdbAssMethodHelix(void) {
+    inline UncertaintyDataCall::pdbAssMethod GetPdbAssMethodHelix() {
         return *this->pdbAssignmentHelix;
     }
 
@@ -310,7 +310,7 @@ public:
      *
      * @return The pdb assignment method for sheet.
      */
-    inline UncertaintyDataCall::pdbAssMethod GetPdbAssMethodSheet(void) {
+    inline UncertaintyDataCall::pdbAssMethod GetPdbAssMethodSheet() {
         return *this->pdbAssignmentSheet;
     }
 

@@ -71,7 +71,7 @@ public:
     PtrArray(const PtrArray& rhs) : Super(rhs) {}
 
     /** Dtor. */
-    ~PtrArray(void) override;
+    ~PtrArray() override;
 };
 
 
@@ -89,7 +89,7 @@ PtrArray<T, L, A>::PtrArray(const SIZE_T capacity) : Super(capacity) {
  * vislib::PtrArray<T, L, A>::~PtrArray
  */
 template<class T, class L, class A>
-PtrArray<T, L, A>::~PtrArray(void) {
+PtrArray<T, L, A>::~PtrArray() {
     // Nothing to do. The constructor/destructor functor also works in
     // ctor and dtor as it is not dependent on the virtual table.
 }

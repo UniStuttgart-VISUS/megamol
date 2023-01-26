@@ -49,7 +49,7 @@ public:
     /**
      * Ctor. (TRI_UNKNOWN)
      */
-    Ternary(void);
+    Ternary();
 
     /**
      * Ctor.
@@ -76,14 +76,14 @@ public:
     explicit Ternary(bool value);
 
     /** Dtor. */
-    ~Ternary(void);
+    ~Ternary();
 
     /**
      * Answer whether the value is 'False'
      *
      * @return 'true' if the value is 'False'
      */
-    inline bool IsFalse(void) const {
+    inline bool IsFalse() const {
         return this->value == -1;
     }
 
@@ -92,7 +92,7 @@ public:
      *
      * @return 'true' if the value is 'True'
      */
-    inline bool IsTrue(void) const {
+    inline bool IsTrue() const {
         return this->value == 1;
     }
 
@@ -101,7 +101,7 @@ public:
      *
      * @return 'true' if the value is 'Unknown'
      */
-    inline bool IsUnknown(void) const {
+    inline bool IsUnknown() const {
         return this->value == 0;
     }
 
@@ -133,7 +133,7 @@ public:
      *
      * @return A string representation of the value.
      */
-    vislib::StringA ToStringA(void) const;
+    vislib::StringA ToStringA() const;
 
     /**
      * Answers a string representation of the value. The returned string
@@ -141,7 +141,7 @@ public:
      *
      * @return A string representation of the value.
      */
-    vislib::StringW ToStringW(void) const;
+    vislib::StringW ToStringW() const;
 
     /**
      * Assignment operator
@@ -284,7 +284,7 @@ public:
      *
      * @return The strong negation of this value.
      */
-    Ternary operator!(void) const;
+    Ternary operator!() const;
 
     /**
      * Answers the strong negation of the ternary value. A strong negation
@@ -292,7 +292,7 @@ public:
      *
      * @return The strong negation of this value.
      */
-    Ternary operator-(void) const;
+    Ternary operator-() const;
 
     /**
      * Answers the weak negation of the ternary value. A weak negation
@@ -300,7 +300,7 @@ public:
      *
      * @return The weak negation of this value.
      */
-    Ternary operator~(void) const;
+    Ternary operator~() const;
 
     /**
      * Performs a logical 'and' of 'this' and 'rhs' and returns the value
@@ -348,7 +348,7 @@ public:
      *
      * @return The integer representation [-1 .. 1] of the value.
      */
-    operator int(void) const;
+    operator int() const;
 
 private:
     /**

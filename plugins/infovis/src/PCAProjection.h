@@ -16,32 +16,32 @@ using namespace megamol::core;
 class PCAProjection : public core::Module {
 public:
     /** Return module class name */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "PCAProjection";
     }
 
     /** Return module class description */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Principal component analysis, i.e., a linear and orthogonal dimensionality reduction technique";
     }
 
     /** Module is always available */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /** Constructor */
-    PCAProjection(void);
+    PCAProjection();
 
     /** Destructor */
-    ~PCAProjection(void) override;
+    ~PCAProjection() override;
 
 protected:
     /** Lazy initialization of the module */
-    bool create(void) override;
+    bool create() override;
 
     /** Resource release */
-    void release(void) override;
+    void release() override;
 
 private:
     /** Data callback */

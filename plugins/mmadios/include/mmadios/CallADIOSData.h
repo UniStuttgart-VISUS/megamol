@@ -459,7 +459,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallADIOSData";
     }
 
@@ -468,7 +468,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for ADIOS data";
     }
 
@@ -477,7 +477,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static uint32_t FunctionCount(void) {
+    static uint32_t FunctionCount() {
         return 2;
     }
 
@@ -503,7 +503,7 @@ public:
     CallADIOSData();
 
     /** Dtor. */
-    ~CallADIOSData(void) override;
+    ~CallADIOSData() override;
 
     /**
      * Assignment operator

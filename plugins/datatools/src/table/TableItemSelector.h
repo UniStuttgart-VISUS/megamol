@@ -20,32 +20,32 @@ public:
     enum class SELECT_ALG { FIRST_OF_ALL, MIN_DIFF };
 
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TableItemSelector";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Extracts most significant item in a selection. Selection defined by a column.";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    TableItemSelector(void);
+    TableItemSelector();
 
     /** Dtor */
-    ~TableItemSelector(void) override;
+    ~TableItemSelector() override;
 
 protected:
     /** Lazy initialization of the module */
-    bool create(void) override;
+    bool create() override;
 
     /** Resource release */
-    void release(void) override;
+    void release() override;
 
 private:
     bool getDataCallback(core::Call& c);

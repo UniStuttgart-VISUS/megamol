@@ -104,7 +104,7 @@ public:
     Semaphore(const wchar_t* name, long initialCount = 1, long maxCount = 1, bool* outIsNew = NULL);
 
     /** Dtor. */
-    ~Semaphore(void) override;
+    ~Semaphore() override;
 
     /**
      * Acquire a lock on the semaphore. This method blocks until the lock is
@@ -117,7 +117,7 @@ public:
      *
      * @throws SystemException If the lock could not be acquired.
      */
-    void Lock(void) override;
+    void Lock() override;
 
     /**
      * Try to acquire a lock on the semaphore for the calling thread. If the
@@ -130,7 +130,7 @@ public:
      * @throws SystemException If an error occurred when trying to acquire
      *                         the lock.
      */
-    virtual bool TryLock(void);
+    virtual bool TryLock();
 
     /**
      * Try to acquire a lock on the semaphore for the calling thread for the
@@ -154,7 +154,7 @@ public:
      *
      * @throw SystemException If the lock could not be released.
      */
-    void Unlock(void) override;
+    void Unlock() override;
 
 protected:
     /**

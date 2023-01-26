@@ -35,17 +35,17 @@ namespace protein {
 class SolventHydroBondGenerator : public megamol::core::/*view::AnimData*/ Module {
 public:
     /** Ctor */
-    SolventHydroBondGenerator(void);
+    SolventHydroBondGenerator();
 
     /** Dtor */
-    ~SolventHydroBondGenerator(void) override;
+    ~SolventHydroBondGenerator() override;
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SolventHydroBondGenerator";
     }
 
@@ -54,7 +54,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Special molecule data preprocessing stepts (from PDB data).";
     }
 
@@ -63,7 +63,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -74,7 +74,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     /**
      * Call callback to get the data
@@ -121,7 +121,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     /**
@@ -142,12 +142,12 @@ private:
         }
 
         /** Dtor. */
-        ~Unlocker(void) override {
+        ~Unlocker() override {
             this->Unlock();
         }
 
         /** Unlocks the data */
-        void Unlock(void) override {
+        void Unlock() override {
             this->mol->Unlock();
         }
 

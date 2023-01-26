@@ -42,7 +42,7 @@ public:
 
     public:
         /** Create an empty environment snapshot. */
-        Snapshot(void);
+        Snapshot();
 
         /**
          * Create an environment with user-specified variables. The
@@ -83,19 +83,19 @@ public:
         Snapshot(const Snapshot& rhs);
 
         /** Dtor. */
-        ~Snapshot(void);
+        ~Snapshot();
 
         /**
          * Clear all variables in the the environment snapshot.
          */
-        void Clear(void);
+        void Clear();
 
         /**
          * Answer the number of environment variables set in the snapshot.
          *
          * @return The number of environment variables set.
          */
-        inline SIZE_T Count(void) const {
+        inline SIZE_T Count() const {
 #ifdef _WIN32
             return this->data.Count();
 #else  /* _WIN32 */
@@ -180,7 +180,7 @@ public:
          *
          * @return true if no variable is set, false otherwise.
          */
-        inline bool IsEmpty(void) const {
+        inline bool IsEmpty() const {
 #ifdef _WIN32
             return this->data.IsEmpty();
 #else  /* _WIN32 */
@@ -256,7 +256,7 @@ public:
          *
          * @return A pointer to the environment block.
          */
-        inline operator const void*(void) const {
+        inline operator const void*() const {
 #ifdef _WIN32
             return static_cast<const void*>(this->data.PeekBuffer());
 #else  /* _WIN32 */
@@ -351,7 +351,7 @@ public:
      * @throws SystemException If the current environment could not be
      *                         retrieved.
      */
-    static Snapshot CreateSnapshot(void);
+    static Snapshot CreateSnapshot();
 
     /**
      * Answer the value of the environment variable with the specified name.
@@ -528,11 +528,11 @@ public:
     }
 
     /** Dtor. */
-    ~Environment(void);
+    ~Environment();
 
 private:
     /** Disallow instances. */
-    Environment(void);
+    Environment();
 };
 
 } /* end namespace sys */

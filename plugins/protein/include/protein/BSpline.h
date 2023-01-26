@@ -21,8 +21,8 @@ namespace protein {
 
 class BSpline {
 public:
-    BSpline(void);
-    virtual ~BSpline(void);
+    BSpline();
+    virtual ~BSpline();
 
     // set the coordinates for the geometry matrix G
     void setG(vislib::math::Vector<float, 3> v1, vislib::math::Vector<float, 3> v2, vislib::math::Vector<float, 3> v3,
@@ -55,7 +55,7 @@ protected:
 
 public:
     // compute the spline from the given backbone coordinates
-    bool computeSpline(void);
+    bool computeSpline();
 };
 
 } // namespace protein

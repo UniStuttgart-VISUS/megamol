@@ -44,7 +44,7 @@ public:
     /**
      * Destructor
      */
-    virtual ~rotate_manipulator(void);
+    virtual ~rotate_manipulator();
 
     /**
      * Rotates the camera around the right vector
@@ -56,7 +56,7 @@ public:
     /**
      * Rotates the camera around the right vector using the internally stored rotation angle.
      */
-    inline void pitch(void) {
+    inline void pitch() {
         this->pitch(this->rotationAngle);
     }
 
@@ -84,7 +84,7 @@ public:
     /**
      * Rotates the camera around the view vector using the internally stored rotation angle.
      */
-    inline void roll(void) {
+    inline void roll() {
         this->roll(this->rotationAngle);
     }
 
@@ -102,7 +102,7 @@ public:
      *
      * @return The default rotation angle in degrees.
      */
-    inline world_type rotation_angle(void) const {
+    inline world_type rotation_angle() const {
         return this->rotationAngle;
     }
 
@@ -115,7 +115,7 @@ public:
     /**
      * Set manipulator to inactive (usually on mouse button release).
      */
-    inline void setInactive(void) {
+    inline void setInactive() {
         this->end_manipulation();
     }
 

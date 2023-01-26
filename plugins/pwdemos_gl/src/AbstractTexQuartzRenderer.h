@@ -20,10 +20,10 @@ namespace demos_gl {
 class AbstractTexQuartzRenderer : public AbstractQuartzRenderer {
 public:
     /** Ctor */
-    AbstractTexQuartzRenderer(void);
+    AbstractTexQuartzRenderer();
 
     /** Dtor */
-    ~AbstractTexQuartzRenderer(void) override;
+    ~AbstractTexQuartzRenderer() override;
 
 protected:
     /**
@@ -34,7 +34,7 @@ protected:
     void assertTypeTexture(CrystalDataCall& types);
 
     /** Releases the type texture */
-    void releaseTypeTexture(void);
+    void releaseTypeTexture();
 
     /** The type texture */
     unsigned int typeTexture;

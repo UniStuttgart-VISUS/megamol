@@ -26,25 +26,25 @@ namespace datatools {
 class ParticleThinner : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleThinner";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Thins number of particles";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleThinner(void);
+    ParticleThinner();
 
     /** Dtor */
-    ~ParticleThinner(void) override;
+    ~ParticleThinner() override;
 
 protected:
     /**

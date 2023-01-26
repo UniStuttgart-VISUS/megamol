@@ -48,7 +48,7 @@ public:
      * @throws std::bad_alloc If there was not enough memory to allocate the
      *                        object.
      */
-    static inline TargetPtrType Allocate(void) {
+    static inline TargetPtrType Allocate() {
         return new T;
     }
 
@@ -65,10 +65,10 @@ public:
 
 private:
     /** Disallow instances. */
-    SingleAllocator(void);
+    SingleAllocator();
 
     /** Dtor. */
-    ~SingleAllocator(void);
+    ~SingleAllocator();
 };
 
 } /* end namespace vislib */

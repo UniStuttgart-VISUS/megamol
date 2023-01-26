@@ -52,7 +52,7 @@ public:
     }
 
     /** Dtor. */
-    ~ShallowDimension(void);
+    ~ShallowDimension();
 
     /**
      * Assigment operator. This operator never creates an alias, even for
@@ -94,7 +94,7 @@ public:
  * vislib::math::ShallowDimension<T, D>::~ShallowDimension
  */
 template<class T, unsigned int D>
-ShallowDimension<T, D>::~ShallowDimension(void) {}
+ShallowDimension<T, D>::~ShallowDimension() {}
 
 
 } /* end namespace math */

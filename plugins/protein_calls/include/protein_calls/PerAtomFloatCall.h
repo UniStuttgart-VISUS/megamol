@@ -29,7 +29,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "PerAtomFloatCall";
     }
 
@@ -38,7 +38,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for sending an array with one float value per atom";
     }
 
@@ -47,7 +47,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -71,16 +71,16 @@ public:
     }
 
     /** Ctor */
-    PerAtomFloatCall(void) : data(0), frameID(0) {}
+    PerAtomFloatCall() : data(0), frameID(0) {}
 
     /** Dtor */
-    ~PerAtomFloatCall(void) override {}
+    ~PerAtomFloatCall() override {}
 
     const float* GetFloat() const {
         return data.PeekElements();
     }
 
-    unsigned int Count(void) const {
+    unsigned int Count() const {
         return static_cast<unsigned int>(data.Count());
     }
 
@@ -88,7 +88,7 @@ public:
         this->data = dat;
     }
 
-    unsigned int FrameID(void) const {
+    unsigned int FrameID() const {
         return this->frameID;
     }
 
@@ -96,7 +96,7 @@ public:
         this->frameID = fID;
     }
 
-    float MinValue(void) const {
+    float MinValue() const {
         return this->minValue;
     }
 
@@ -104,7 +104,7 @@ public:
         this->minValue = val;
     }
 
-    float MidValue(void) const {
+    float MidValue() const {
         return this->midValue;
     }
 
@@ -112,7 +112,7 @@ public:
         this->midValue = val;
     }
 
-    float MaxValue(void) const {
+    float MaxValue() const {
         return this->maxValue;
     }
 

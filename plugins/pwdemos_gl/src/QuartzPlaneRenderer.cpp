@@ -21,7 +21,7 @@ namespace demos_gl {
 /*
  * QuartzPlaneRenderer::QuartzPlaneRenderer
  */
-QuartzPlaneRenderer::QuartzPlaneRenderer(void)
+QuartzPlaneRenderer::QuartzPlaneRenderer()
         : mmstd_gl::Renderer2DModuleGL()
         , AbstractMultiShaderQuartzRenderer()
         , useClipColSlot("useClipCol", "Use clipping plane or grain colour for grains") {
@@ -41,7 +41,7 @@ QuartzPlaneRenderer::QuartzPlaneRenderer(void)
 /*
  * QuartzPlaneRenderer::~QuartzPlaneRenderer
  */
-QuartzPlaneRenderer::~QuartzPlaneRenderer(void) {
+QuartzPlaneRenderer::~QuartzPlaneRenderer() {
     this->Release();
     ASSERT(this->shaders.empty());
 }
@@ -50,7 +50,7 @@ QuartzPlaneRenderer::~QuartzPlaneRenderer(void) {
 /*
  * QuartzPlaneRenderer::create
  */
-bool QuartzPlaneRenderer::create(void) {
+bool QuartzPlaneRenderer::create() {
     using megamol::core::utility::log::Log;
 
     auto const shader_options =
@@ -192,7 +192,7 @@ bool QuartzPlaneRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
 /*
  * QuartzPlaneRenderer::release
  */
-void QuartzPlaneRenderer::release(void) {
+void QuartzPlaneRenderer::release() {
     this->releaseShaders();
     this->errShader.reset();
 }

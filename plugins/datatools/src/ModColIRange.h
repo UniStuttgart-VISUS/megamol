@@ -17,13 +17,13 @@ namespace datatools {
 
 class ModColIRange : public datatools::AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ModIColRange";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Mapps IColRange values periodically into the specified range.";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 

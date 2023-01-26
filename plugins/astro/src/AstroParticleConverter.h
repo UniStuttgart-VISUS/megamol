@@ -28,25 +28,25 @@ namespace astro {
 
 class AstroParticleConverter : public core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "AstroParticleConverter";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Converts data contained in a AstroDataCall to a MultiParticleDataCall";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    AstroParticleConverter(void);
+    AstroParticleConverter();
 
     /** Dtor. */
-    ~AstroParticleConverter(void) override;
+    ~AstroParticleConverter() override;
 
 protected:
-    bool create(void) override;
-    void release(void) override;
+    bool create() override;
+    void release() override;
 
 private:
     enum class ColoringMode : uint8_t {

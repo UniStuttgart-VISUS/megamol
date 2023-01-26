@@ -26,25 +26,25 @@ public:
     enum searchTypeEnum { RADIUS, NUM_NEIGHBORS };
 
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleNeighborhood";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Helps track a single particle and its close neighbors.";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleNeighborhood(void);
+    ParticleNeighborhood();
 
     /** Dtor */
-    ~ParticleNeighborhood(void) override;
+    ~ParticleNeighborhood() override;
 
     /**
      * Called when the data is requested by this module
@@ -66,10 +66,10 @@ public:
 
 protected:
     /** Lazy initialization of the module */
-    bool create(void) override;
+    bool create() override;
 
     /** Resource release */
-    void release(void) override;
+    void release() override;
 
 private:
     bool assertData(megamol::core::AbstractGetData3DCall* in, megamol::core::AbstractGetData3DCall* out);

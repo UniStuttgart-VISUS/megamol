@@ -61,7 +61,7 @@ public:
     static const SHORT DEFAULT_PORT;
 
     /** Dtor. */
-    virtual ~AbstractClusterNode(void);
+    virtual ~AbstractClusterNode();
 
     /**
      * Initialise the node.
@@ -105,7 +105,7 @@ public:
      *                               Calling this interface implementation
      *                               is a severe logic error.
      */
-    virtual DWORD Run(void) = 0;
+    virtual DWORD Run() = 0;
 
 protected:
     /**
@@ -143,7 +143,7 @@ protected:
     typedef enum { RECEIVE_COMMUNICATION_ERROR = 1, SEND_COMMUNICATION_ERROR } ComErrorSource;
 
     /** Ctor. */
-    AbstractClusterNode(void);
+    AbstractClusterNode();
 
     /**
      * Copy ctor.
@@ -157,7 +157,7 @@ protected:
      *
      * @return The number of known peer nodes.
      */
-    virtual SIZE_T countPeers(void) const = 0;
+    virtual SIZE_T countPeers() const = 0;
 
     /**
      * Call 'func' for each known peer node (socket).

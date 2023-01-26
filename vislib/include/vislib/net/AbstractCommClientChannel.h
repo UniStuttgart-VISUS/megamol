@@ -61,7 +61,7 @@ public:
      *
      * @throws Exception Or derived class in case of an error.
      */
-    virtual void Close(void) = 0;
+    virtual void Close() = 0;
 
     /**
      * Connects the channel to the peer node at the specified end
@@ -85,7 +85,7 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    virtual SmartRef<AbstractCommEndPoint> GetLocalEndPoint(void) const = 0;
+    virtual SmartRef<AbstractCommEndPoint> GetLocalEndPoint() const = 0;
 
     /**
      * Answer the address the remote peer of this channel is using.
@@ -99,7 +99,7 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    virtual SmartRef<AbstractCommEndPoint> GetRemoteEndPoint(void) const = 0;
+    virtual SmartRef<AbstractCommEndPoint> GetRemoteEndPoint() const = 0;
 
     /**
      * Receives 'cntBytes' over the communication channel and saves them to
@@ -154,10 +154,10 @@ protected:
     typedef ReferenceCounted Super;
 
     /** Ctor. */
-    AbstractCommClientChannel(void);
+    AbstractCommClientChannel();
 
     /** Dtor. */
-    ~AbstractCommClientChannel(void) override;
+    ~AbstractCommClientChannel() override;
 };
 
 } /* end namespace net */

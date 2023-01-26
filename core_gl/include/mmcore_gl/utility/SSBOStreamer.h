@@ -81,15 +81,15 @@ public:
     /// @returns the alignment-friendly (rounded) number of items per chunk
     GLuint GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up = false) const;
 
-    GLuint GetHandle(void) const {
+    GLuint GetHandle() const {
         return theSSBO;
     }
 
-    GLuint GetNumChunks(void) const {
+    GLuint GetNumChunks() const {
         return numChunks;
     }
 
-    GLuint GetMaxNumItemsPerChunk(void) const {
+    GLuint GetMaxNumItemsPerChunk() const {
         return numItemsPerChunk;
     }
 

@@ -61,7 +61,7 @@ public:
     static const UINT32 SERIALISER_REQUIRES_ORDER;
 
     /** Dtor. */
-    virtual ~Serialiser(void);
+    virtual ~Serialiser();
 
     /**
      * Deserialise the bool element with name 'name' into 'outValue'.
@@ -432,7 +432,7 @@ public:
      *
      * @return The properties bitmask of the serialiser.
      */
-    inline UINT32 GetProperties(void) const {
+    inline UINT32 GetProperties() const {
         return this->properties;
     }
 

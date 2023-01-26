@@ -20,13 +20,13 @@ vislib::net::ShallowSimpleMessageHeader::ShallowSimpleMessageHeader(SimpleMessag
 /*
  * vislib::net::ShallowSimpleMessageHeader::~ShallowSimpleMessageHeader
  */
-vislib::net::ShallowSimpleMessageHeader::~ShallowSimpleMessageHeader(void) {}
+vislib::net::ShallowSimpleMessageHeader::~ShallowSimpleMessageHeader() {}
 
 
 /*
  * vislib::net::ShallowSimpleMessageHeader::PeekData
  */
-vislib::net::SimpleMessageHeaderData* vislib::net::ShallowSimpleMessageHeader::PeekData(void) {
+vislib::net::SimpleMessageHeaderData* vislib::net::ShallowSimpleMessageHeader::PeekData() {
     return this->data;
 }
 
@@ -34,7 +34,7 @@ vislib::net::SimpleMessageHeaderData* vislib::net::ShallowSimpleMessageHeader::P
 /*
  * vislib::net::ShallowSimpleMessageHeader::PeekData
  */
-const vislib::net::SimpleMessageHeaderData* vislib::net::ShallowSimpleMessageHeader::PeekData(void) const {
+const vislib::net::SimpleMessageHeaderData* vislib::net::ShallowSimpleMessageHeader::PeekData() const {
     return this->data;
 }
 
@@ -42,4 +42,4 @@ const vislib::net::SimpleMessageHeaderData* vislib::net::ShallowSimpleMessageHea
 /*
  * vislib::net::ShallowSimpleMessageHeader::ShallowSimpleMessageHeader
  */
-vislib::net::ShallowSimpleMessageHeader::ShallowSimpleMessageHeader(void) : data(NULL) {}
+vislib::net::ShallowSimpleMessageHeader::ShallowSimpleMessageHeader() : data(NULL) {}

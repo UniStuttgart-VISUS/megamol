@@ -19,7 +19,7 @@ using namespace megamol::trisoup_gl;
 /*
  * TriSoupDataSource::TriSoupDataSource
  */
-TriSoupDataSource::TriSoupDataSource(void) : AbstractTriMeshLoader() {
+TriSoupDataSource::TriSoupDataSource() : AbstractTriMeshLoader() {
     // intentionally empty
 }
 
@@ -27,7 +27,7 @@ TriSoupDataSource::TriSoupDataSource(void) : AbstractTriMeshLoader() {
 /*
  * TriSoupDataSource::~TriSoupDataSource
  */
-TriSoupDataSource::~TriSoupDataSource(void) {
+TriSoupDataSource::~TriSoupDataSource() {
     this->Release();
 }
 

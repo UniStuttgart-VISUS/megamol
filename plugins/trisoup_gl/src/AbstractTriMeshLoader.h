@@ -31,10 +31,10 @@ namespace trisoup_gl {
 class AbstractTriMeshLoader : public AbstractTriMeshDataSource {
 public:
     /** Ctor */
-    AbstractTriMeshLoader(void);
+    AbstractTriMeshLoader();
 
     /** Dtor */
-    ~AbstractTriMeshLoader(void) override;
+    ~AbstractTriMeshLoader() override;
 
 protected:
     /**
@@ -47,7 +47,7 @@ protected:
     virtual bool load(const vislib::TString& filename) = 0;
 
     /** Ensures that the data is loaded */
-    void assertData(void) override;
+    void assertData() override;
 
 private:
     /** The file name */

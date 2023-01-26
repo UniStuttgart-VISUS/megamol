@@ -34,7 +34,7 @@ public:
     /**
      * Create an empty rectangle in the origin.
      */
-    inline Rectangle(void) {
+    inline Rectangle() {
         this->bounds[0] = this->bounds[1] = this->bounds[2] = this->bounds[3] = static_cast<T>(0);
     }
 
@@ -102,7 +102,7 @@ public:
     }
 
     /** Dtor. */
-    ~Rectangle(void);
+    ~Rectangle();
 
     /**
      * Assigment operator. This operator never creates an alias, even for
@@ -150,7 +150,7 @@ const Rectangle<T> Rectangle<T>::EMPTY(0, 0, 0, 0);
  * vislib::math::Rectangle<T>::~Rectangle
  */
 template<class T>
-Rectangle<T>::~Rectangle(void) {}
+Rectangle<T>::~Rectangle() {}
 
 } /* end namespace math */
 } /* end namespace vislib */

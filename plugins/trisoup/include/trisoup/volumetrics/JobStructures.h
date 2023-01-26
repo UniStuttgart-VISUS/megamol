@@ -118,11 +118,11 @@ public:
  */
 class BorderVoxel {
 public:
-    inline BorderVoxel(void) {
+    inline BorderVoxel() {
         // intentionally empy
     }
 
-    inline ~BorderVoxel(void) {
+    inline ~BorderVoxel() {
         this->triangles.Clear();
     }
 
@@ -288,7 +288,7 @@ public:
     inline bool operator==(const BoundingBox<T>& o) const {
         return (initialized == o.initialized) && (box == o.box);
     }
-    inline bool IsInitialized(void) const {
+    inline bool IsInitialized() const {
         return this->initialized;
     }
 
@@ -317,9 +317,9 @@ public:
  */
 class Surface {
 public:
-    Surface(void) : border(new BorderVoxelArray()) {}
+    Surface() : border(new BorderVoxelArray()) {}
 
-    ~Surface(void) {
+    ~Surface() {
         this->border = NULL;
     }
 
@@ -383,7 +383,7 @@ struct SubJobResult {
     bool done;
 
     /** ctor (yuck). mostly sets done to false just to be sure */
-    SubJobResult(void) : done(false) {}
+    SubJobResult() : done(false) {}
 };
 
 /**

@@ -28,7 +28,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "TableObserverPlane";
     }
 
@@ -37,7 +37,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "A plane that observes relevant items in local (xy) coordinates over dicrete time steps and stacks them "
                "along the z axis.";
     }
@@ -47,19 +47,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /**
      * Initialises a new instance.
      */
-    TableObserverPlane(void);
+    TableObserverPlane();
 
     /**
      * Finalises an instance.
      */
-    ~TableObserverPlane(void) override;
+    ~TableObserverPlane() override;
 
 protected:
     /**
@@ -67,7 +67,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void) override;
+    bool create() override;
 
     bool getObservedData(core::Call& call);
 
@@ -76,7 +76,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release(void) override;
+    void release() override;
 
 private:
     bool assertData(table::TableDataCall* ft, megamol::core::view::CallClipPlane* cp, table::TableDataCall& out);

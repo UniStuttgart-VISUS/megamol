@@ -27,7 +27,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get multi-stream particle sphere data";
     }
 
@@ -36,7 +36,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return AbstractGetData3DCall::FunctionCount();
     }
 
@@ -78,7 +78,7 @@ public:
      *
      * @return The number of particle lists
      */
-    inline unsigned int GetParticleListCount(void) const {
+    inline unsigned int GetParticleListCount() const {
         return static_cast<unsigned int>(this->lists.Count());
     }
 
@@ -97,7 +97,7 @@ public:
      *
      * @return The data defined time stamp
      */
-    inline float GetTimeStamp(void) const {
+    inline float GetTimeStamp() const {
         return timeStamp;
     }
 
@@ -123,10 +123,10 @@ public:
 
 protected:
     /** Ctor. */
-    AbstractParticleDataCall(void);
+    AbstractParticleDataCall();
 
     /** Dtor. */
-    ~AbstractParticleDataCall(void) override;
+    ~AbstractParticleDataCall() override;
 
 private:
 #ifdef _WIN32
@@ -147,9 +147,9 @@ private:
  * AbstractParticleDataCall<T>::AbstractParticleDataCall
  */
 template<class T>
-AbstractParticleDataCall<T>::AbstractParticleDataCall(void) : AbstractGetData3DCall()
-                                                            , lists()
-                                                            , timeStamp(0.0f) {
+AbstractParticleDataCall<T>::AbstractParticleDataCall() : AbstractGetData3DCall()
+                                                        , lists()
+                                                        , timeStamp(0.0f) {
     // Intentionally empty
 }
 
@@ -158,7 +158,7 @@ AbstractParticleDataCall<T>::AbstractParticleDataCall(void) : AbstractGetData3DC
  * AbstractParticleDataCall<T>::~AbstractParticleDataCall
  */
 template<class T>
-AbstractParticleDataCall<T>::~AbstractParticleDataCall(void) {
+AbstractParticleDataCall<T>::~AbstractParticleDataCall() {
     this->Unlock();
     this->lists.Clear();
 }
