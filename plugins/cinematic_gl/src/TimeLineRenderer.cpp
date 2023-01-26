@@ -14,6 +14,8 @@
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/utility/log/Log.h"
 
+#include <iomanip>
+
 
 using namespace megamol;
 using namespace megamol::core;
