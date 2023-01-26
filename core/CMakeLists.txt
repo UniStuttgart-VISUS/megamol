@@ -66,6 +66,13 @@ if (BUILD_CORE)
     target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif ()
 
+  # Tracy
+  if (MEGAMOL_USE_TRACY)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC TRACY_ENABLE)
+    find_package(Tracy CONFIG REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Tracy::TracyClient)
+  endif()
+
   # Install resources
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION "share/resources")
 

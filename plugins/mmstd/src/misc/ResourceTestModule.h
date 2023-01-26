@@ -7,7 +7,7 @@
 namespace megamol::core {
 class ResourceTestModule : public Module {
 public:
-    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         Module::requested_lifetime_resources(req);
         req.require<frontend_resources::CUDA_Context>();
     }

@@ -21,7 +21,7 @@ namespace megamol::archvis_gl {
 
 class ArchVisMSMDataSource : public megamol::core::Module {
 public:
-    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         Module::requested_lifetime_resources(req);
         req.require<frontend_resources::RuntimeConfig>(); // resource paths
     }

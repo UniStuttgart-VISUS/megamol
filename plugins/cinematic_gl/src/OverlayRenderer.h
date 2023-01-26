@@ -32,7 +32,7 @@ namespace cinematic_gl {
 class OverlayRenderer : public megamol::core::view::RendererModule<mmstd_gl::CallRender3DGL, mmstd_gl::ModuleGL>,
                         megamol::core_gl::utility::RenderUtils {
 public:
-    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
         ModuleGL::requested_lifetime_resources(req);
         req.require<core::MegaMolGraph>();
     }

@@ -24,7 +24,12 @@
 #include "Screenshot_Service.hpp"
 #include "VR_Service.hpp"
 
+#ifdef MEGAMOL_USE_TRACY
+#include "Tracy.hpp"
+#endif
+
 using megamol::core::utility::log::Log;
+
 
 static void log(std::string const& text) {
     const std::string msg = "Main: " + text;
@@ -44,7 +49,9 @@ static void log_error(std::string const& text) {
 void loadPlugins(megamol::frontend_resources::PluginsResource& pluginsRes);
 
 int main(const int argc, const char** argv) {
-
+#ifdef MEGAMOL_USE_TRACY
+    ZoneScoped;
+#endif
     megamol::core::LuaAPI lua_api;
 
     auto [config, global_value_store] = megamol::frontend::handle_cli_and_config(argc, argv, lua_api);
@@ -272,6 +279,10 @@ int main(const int argc, const char** argv) {
             .PresentRenderedImages(); // draws rendering results to GLFW window, writes images to disk, sends images via network...
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
+
+#ifdef MEGAMOL_USE_TRACY
+        FrameMark;
+#endif
 
         return true;
     };

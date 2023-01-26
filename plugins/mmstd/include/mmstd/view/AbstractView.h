@@ -35,8 +35,12 @@ using megamol::frontend_resources::MouseButtonAction;
  */
 class AbstractView : public AbstractViewInterface {
 
-
 public:
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::ScriptPaths>();
+    }
+
     /**
      * Interfaces class for hooking into view processes
      */
@@ -208,11 +212,6 @@ public:
     bool OnResetView(param::ParamSlot& p);
 
 protected:
-    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) override {
-        Module::requested_lifetime_resources(req);
-        req.require<frontend_resources::ScriptPaths>();
-    }
-
     /** Typedef alias */
     typedef vislib::SingleLinkedList<Hooks*>::Iterator HooksIterator;
 
