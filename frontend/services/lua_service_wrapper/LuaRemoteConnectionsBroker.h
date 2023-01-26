@@ -32,9 +32,8 @@ public:
         return request_queue_.pop_queue();
     }
 
-    bool Init(std::string const& broker_address, bool retry_socket_port = false);
-
-    void Close();
+    explicit LuaRemoteConnectionsBroker(std::string const& broker_address, int max_retries = 0);
+    ~LuaRemoteConnectionsBroker();
 
 private:
     void worker(zmq::socket_t&& socket);

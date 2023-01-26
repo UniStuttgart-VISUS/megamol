@@ -73,6 +73,7 @@ bool Lua_Service_Wrapper::init(void* configPtr) {
 #define luaAPI (*m_config.lua_api_ptr)
 
 bool Lua_Service_Wrapper::init(const Config& config) {
+    using megamol::core::utility::log::Log;
     if (!config.lua_api_ptr) {
         log("failed initialization because LuaAPI is nullptr");
         return false;
@@ -115,23 +116,22 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     *open_version_notification = false;
 
-    m_network_host = std::make_unique<megamol::frontend::LuaRemoteConnectionsBroker>();
-
-    bool host_ok = m_network_host->Init(m_config.host_address, m_config.retry_socket_port);
-
-    if (host_ok) {
+    try {
+        m_network_host = std::make_unique<megamol::frontend::LuaRemoteConnectionsBroker>(
+            m_config.host_address, m_config.retry_socket_port);
         log("initialized successfully");
-    } else {
-        log("failed to start lua host");
+    } catch (std::exception const& ex) {
+        Log::DefaultLog.WriteError("Failed to start lua host: %s", ex.what());
+        return false;
     }
 
-    return host_ok;
+    return true;
 }
 
 void Lua_Service_Wrapper::close() {
     m_config = {}; // default to nullptr
 
-    m_network_host->Close();
+    m_network_host.reset();
 }
 
 std::vector<FrontendResource>& Lua_Service_Wrapper::getProvidedResources() {
@@ -187,7 +187,7 @@ void Lua_Service_Wrapper::updateProvidedResources() {
     bool need_to_shutdown = false; // e.g. mmQuit should set this to true
 
     // fetch Lua requests from ZMQ queue, execute, and give back result
-    if (!m_network_host->RequestQueueEmpty()) {
+    if (m_network_host != nullptr && !m_network_host->RequestQueueEmpty()) {
         auto lua_requests = std::move(m_network_host->GetRequestQueue());
         std::string result;
         while (!lua_requests.empty()) {

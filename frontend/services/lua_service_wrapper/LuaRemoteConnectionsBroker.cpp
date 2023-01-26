@@ -10,54 +10,41 @@
 
 #include "mmcore/utility/log/Log.h"
 
-bool megamol::frontend::LuaRemoteConnectionsBroker::Init(const std::string& broker_address, bool retry_socket_port) {
+megamol::frontend::LuaRemoteConnectionsBroker::LuaRemoteConnectionsBroker(
+    const std::string& broker_address, int max_retries) {
     using megamol::core::utility::log::Log;
 
-    int retries = 0;
-    int max_retries = 100 + 1;
+    const auto delimiter_pos = broker_address.find_last_of(':');
+    const std::string base_address = broker_address.substr(0, delimiter_pos + 1);
+    const int base_port = std::stoi(broker_address.substr(delimiter_pos + 1));
 
-    auto delimiter_pos = broker_address.find_last_of(':');
-    std::string base_address = broker_address.substr(0, delimiter_pos + 1); // include delimiter
-    std::string port_string = broker_address.substr(delimiter_pos + 1);     // ignore delimiter
-    int port = std::stoi(port_string);
+    zmq::socket_t socket(zmq_context_, zmq::socket_type::router);
+    socket.set(zmq::sockopt::linger, 0);
+    socket.set(zmq::sockopt::rcvtimeo, 100); // message receive time out 100ms
 
     // retry to start broker socket on next port until max_retries reached
-    std::string address;
+    int retry = 0;
     do {
-        port_string = std::to_string(port + retries);
-        address = base_address + port_string;
-
-        zmq::socket_t socket(zmq_context_, zmq::socket_type::router);
-        socket.set(zmq::sockopt::linger, 0);
-        socket.set(zmq::sockopt::rcvtimeo, 100); // message receive time out 100ms
+        const std::string address = base_address + std::to_string(base_port + retry);
 
         try {
-            Log::DefaultLog.WriteInfo("LRH Server attempt socket on \"%s\"", address.c_str());
             socket.bind(address);
             Log::DefaultLog.WriteInfo("LRH Server socket opened on \"%s\"", address.c_str());
-
             worker_ = std::thread(&LuaRemoteConnectionsBroker::worker, this, std::move(socket));
-
-            return true;
-        } catch (std::exception& error) {
-            Log::DefaultLog.WriteError("Error on LRH Server: %s", error.what());
-        } catch (...) {
-            Log::DefaultLog.WriteError("Error on LRH Server: unknown exception");
+            return;
+        } catch (zmq::error_t& ex) {
+            if (ex.num() != EADDRINUSE) {
+                throw;
+            }
         }
+        retry++;
+    } while (retry <= max_retries);
 
-        retries++;
-    } while (retry_socket_port && retries < max_retries);
-
-    if (retry_socket_port && retries == max_retries) {
-        Log::DefaultLog.WriteInfo("LRH Server max socket port retries reached (%i). Address: %s, tried up to port: %s",
-            max_retries, broker_address.c_str(), port_string.c_str());
-        return false;
-    }
-
-    return true;
+    throw std::runtime_error("LRH Server could not bind address \"y" + broker_address +
+                             "\", tried up to port: " + std::to_string(base_port + retry - 1));
 }
 
-void megamol::frontend::LuaRemoteConnectionsBroker::Close() {
+megamol::frontend::LuaRemoteConnectionsBroker::~LuaRemoteConnectionsBroker() {
     stop_ = true;
     worker_.join();
 }

@@ -51,7 +51,7 @@ struct RuntimeConfig {
     //      "--fullscreen"     => mmSetCliOption("fullscreen", "on")
     bool interactive = false;
     std::string lua_host_address = "tcp://127.0.0.1:33333";
-    bool lua_host_port_retry = true;
+    int lua_host_port_retry = 100;
     // Different default values for a present openGL
     // In the MEGAMOL_USE_OPENGL not defined case, the user cannot overwrite the default
 #ifdef MEGAMOL_USE_OPENGL
@@ -140,7 +140,7 @@ struct RuntimeConfig {
             std::string("\n\tLua host address: "     ) + lua_host_address
             ;
             //"\n\t" 
-            //lua_host_port_retry = true;
+            //lua_host_port_retry = 100;
             //opengl_khr_debug = false;
             //opengl_vsync = false;
 
