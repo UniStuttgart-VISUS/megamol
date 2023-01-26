@@ -37,15 +37,15 @@ public:
     }
 
     MMGDDWriter(void);
-    virtual ~MMGDDWriter(void);
+    ~MMGDDWriter(void) override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    bool create(void) override;
+    void release(void) override;
 
-    virtual bool run(void);
+    bool run(void) override;
 
-    virtual bool getCapabilities(core::DataWriterCtrlCall& call);
+    bool getCapabilities(core::DataWriterCtrlCall& call) override;
 
 private:
     core::param::ParamSlot filenameSlot;

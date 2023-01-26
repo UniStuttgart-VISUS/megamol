@@ -32,11 +32,11 @@ public:
     SimpleAstroFilter(void);
 
     /** Dtor. */
-    virtual ~SimpleAstroFilter(void);
+    ~SimpleAstroFilter(void) override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    bool create(void) override;
+    void release(void) override;
 
 private:
     bool getData(core::Call& call);

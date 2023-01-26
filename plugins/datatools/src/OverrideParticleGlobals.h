@@ -42,7 +42,7 @@ public:
     OverrideParticleGlobals(void);
 
     /** Dtor */
-    virtual ~OverrideParticleGlobals(void);
+    ~OverrideParticleGlobals(void) override;
 
 protected:
     /**
@@ -55,7 +55,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     /** Activates overriding the selected values for all particle lists */

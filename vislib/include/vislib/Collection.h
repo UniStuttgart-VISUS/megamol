@@ -59,7 +59,7 @@ public:
     // inline const_cast-crowbar for equal const/non-const accessors?
 
     /** Dtor. */
-    virtual ~Collection(void);
+    ~Collection(void) override;
 
     /**
      * Add 'element' to the collection.

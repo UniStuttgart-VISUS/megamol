@@ -66,7 +66,7 @@ public:
     /**
      * Destructor
      */
-    ~STLWriter();
+    ~STLWriter() override;
 
 protected:
     /**
@@ -74,12 +74,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() override;
+    void release() override;
 
     /** Callback to register button pressed */
     bool setButtonPressed(core::param::ParamSlot&);

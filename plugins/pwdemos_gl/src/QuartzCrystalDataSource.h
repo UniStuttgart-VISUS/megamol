@@ -53,7 +53,7 @@ public:
     CrystalDataSource(void);
 
     /** Dtor */
-    virtual ~CrystalDataSource(void);
+    ~CrystalDataSource(void) override;
 
 protected:
     /**
@@ -61,7 +61,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Call callback to get the data
@@ -75,7 +75,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /** The file name slot */

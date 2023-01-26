@@ -31,7 +31,7 @@ public:
     }
 
     ParticleInstantiator(void);
-    virtual ~ParticleInstantiator(void);
+    ~ParticleInstantiator(void) override;
 
 protected:
     bool InterfaceIsDirty(void);
@@ -47,11 +47,9 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(
-        geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
-    virtual bool manipulateExtent(
-        geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
+    bool manipulateExtent(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     megamol::core::param::ParamSlot numInstancesParam;

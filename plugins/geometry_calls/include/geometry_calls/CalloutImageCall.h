@@ -165,7 +165,7 @@ public:
     }
 
     CalloutImageCall(void);
-    virtual ~CalloutImageCall(void);
+    ~CalloutImageCall(void) override;
 
 private:
     int* qr_id;

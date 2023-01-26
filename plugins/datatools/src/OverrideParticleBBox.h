@@ -42,11 +42,11 @@ public:
     OverrideParticleBBox(void);
 
     /** Dtor */
-    virtual ~OverrideParticleBBox(void);
+    ~OverrideParticleBBox(void) override;
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
-    virtual bool manipulateExtent(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
+    bool manipulateExtent(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     core::param::ParamSlot overrideBBoxSlot;

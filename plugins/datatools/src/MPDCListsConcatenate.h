@@ -26,7 +26,7 @@ public:
         return true;
     }
     MPDCListsConcatenate();
-    virtual ~MPDCListsConcatenate();
+    ~MPDCListsConcatenate() override;
 
 protected:
     bool create(void) override;

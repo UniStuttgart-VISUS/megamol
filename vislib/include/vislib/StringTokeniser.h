@@ -162,14 +162,14 @@ public:
     StringTokeniser(const typename C::Char* input, const typename C::Char separator);
 
     /** Dtor. */
-    virtual ~StringTokeniser(void);
+    ~StringTokeniser(void) override;
 
     /**
      * Answer whether there is a next element to iterator to.
      *
      * @return true if there is a next element, false otherwise.
      */
-    virtual bool HasNext(void) const;
+    bool HasNext(void) const override;
 
     /**
      * Answer the input string.
@@ -187,7 +187,7 @@ public:
      * @return The next element, which becomes the current element after
      *         calling this methode.
      */
-    virtual const String<C>& Next(void);
+    const String<C>& Next(void) override;
 
     /**
      * Iterates to the next nonempty element and returns this element. If

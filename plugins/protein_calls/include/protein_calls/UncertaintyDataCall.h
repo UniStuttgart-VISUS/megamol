@@ -124,7 +124,7 @@ public:
     UncertaintyDataCall(void);
 
     /** DTOR */
-    ~UncertaintyDataCall(void);
+    ~UncertaintyDataCall(void) override;
 
 
     // ------------------ GET functions -------------------

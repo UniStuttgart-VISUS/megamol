@@ -57,7 +57,7 @@ public:
     SystemException(const SystemException& rhs);
 
     /** Dtor. */
-    virtual ~SystemException(void);
+    ~SystemException(void) override;
 
     /**
      * Answer the system dependent error code associated with this
@@ -75,7 +75,7 @@ public:
      *
      * @return The exception message.
      */
-    virtual const char* GetMsgA(void) const;
+    const char* GetMsgA(void) const override;
 
     /**
      * Answer the file the exception description text. Behaves like
@@ -83,7 +83,7 @@ public:
      *
      * @return The exception message.
      */
-    virtual const wchar_t* GetMsgW(void) const;
+    const wchar_t* GetMsgW(void) const override;
 
     /**
      * Assignment operator.

@@ -75,7 +75,7 @@ public:
     GLSLVolumeRenderer(void);
 
     /** Dtor. */
-    virtual ~GLSLVolumeRenderer(void);
+    ~GLSLVolumeRenderer(void) override;
 
     /**********************************************************************
      * 'set'-functions
@@ -92,12 +92,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /**********************************************************************
@@ -113,7 +113,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The Open GL Render callback.
@@ -121,7 +121,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Volume rendering using molecular data.

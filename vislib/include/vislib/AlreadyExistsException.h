@@ -44,7 +44,7 @@ public:
     AlreadyExistsException(const AlreadyExistsException& rhs);
 
     /** Dtor. */
-    ~AlreadyExistsException(void);
+    ~AlreadyExistsException(void) override;
 
     /**
      * Assignment operator.

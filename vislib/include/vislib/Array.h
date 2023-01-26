@@ -111,7 +111,7 @@ public:
     Array(const Array& rhs);
 
     /** Dtor. */
-    virtual ~Array(void);
+    ~Array(void) override;
 
     /**
      * Appends an element to the end of the array. If necessary, the
@@ -119,7 +119,7 @@ public:
      *
      * @param element The item to be appended.
      */
-    virtual inline void Add(const T& element) {
+    inline void Add(const T& element) override {
         this->Append(element);
     }
 
@@ -129,7 +129,7 @@ public:
      *
      * @param element The item to be appended.
      */
-    virtual void Append(const T& element);
+    void Append(const T& element) override;
 
     /**
      * Reserves memory for at least 'capacity' elements in the array. If
@@ -147,7 +147,7 @@ public:
     /**
      * Erase all elements from the array.
      */
-    virtual void Clear(void);
+    void Clear(void) override;
 
     /**
      * Erase all elements from the array.
@@ -186,7 +186,7 @@ public:
      * @return true, if 'element' is at least once in the array, false
      *         otherwise.
      */
-    virtual bool Contains(const T& element) const;
+    bool Contains(const T& element) const override;
 
     /**
      * Answer the number of items in the array. Note that the result is not
@@ -194,7 +194,7 @@ public:
      *
      * @return Number of items in the array.
      */
-    virtual SIZE_T Count(void) const;
+    SIZE_T Count(void) const override;
 
     /**
      * Erase the element at position 'idx' from the array. If 'idx' is out
@@ -240,7 +240,7 @@ public:
      * @return A pointer to the local copy of 'element' or NULL, if no such
      *         element is found.
      */
-    virtual const T* Find(const T& element) const;
+    const T* Find(const T& element) const override;
 
     /**
      * Answer a pointer to the first copy of 'element' in the array. If no
@@ -251,7 +251,7 @@ public:
      * @return A pointer to the local copy of 'element' or NULL, if no such
      *         element is found.
      */
-    virtual T* Find(const T& element);
+    T* Find(const T& element) override;
 
     /**
      * Answer the first element in the array.
@@ -260,7 +260,7 @@ public:
      *
      * @throws OutOfRangeException, if the array is empty.
      */
-    virtual inline const T& First(void) const {
+    inline const T& First(void) const override {
         return (*this)[0];
     }
 
@@ -271,7 +271,7 @@ public:
      *
      * @throws OutOfRangeException, if the array is empty.
      */
-    virtual inline T& First(void) {
+    inline T& First(void) override {
         return (*this)[0];
     }
 
@@ -307,7 +307,7 @@ public:
      *
      * @return true, if there is no element in the array, false otherwise.
      */
-    virtual bool IsEmpty(void) const;
+    bool IsEmpty(void) const override;
 
     /**
      * Answer the last element in the array.
@@ -316,7 +316,7 @@ public:
      *
      * @throws OutOfRangeException, if the array is empty.
      */
-    virtual const T& Last(void) const;
+    const T& Last(void) const override;
 
     /**
      * Answer the last element in the array.
@@ -325,7 +325,7 @@ public:
      *
      * @throws OutOfRangeException, if the array is empty.
      */
-    virtual T& Last(void);
+    T& Last(void) override;
 
     /**
      * Add 'element' as first element of the array. If necessary, the
@@ -333,7 +333,7 @@ public:
      *
      * @param element The element to be added.
      */
-    virtual void Prepend(const T& element);
+    void Prepend(const T& element) override;
 
     /**
      * Remove the first occurrence of an element that is equal to 'element'
@@ -341,14 +341,14 @@ public:
      *
      * @param element The element to be removed.
      */
-    virtual void Remove(const T& element);
+    void Remove(const T& element) override;
 
     /**
      * Remove all elements that are equal to 'element' from the array.
      *
      * @param element The element to be removed.
      */
-    virtual void RemoveAll(const T& element);
+    void RemoveAll(const T& element) override;
 
     /**
      * Erase the element at position 'idx' from the array. If 'idx' is out
@@ -363,12 +363,12 @@ public:
     /**
      * Remove the first element from the collection.
      */
-    virtual void RemoveFirst(void);
+    void RemoveFirst(void) override;
 
     /**
      * Remove the last element from the collection.
      */
-    virtual void RemoveLast(void);
+    void RemoveLast(void) override;
 
     /**
      * Resize the array to have exactly 'capacity' elements. If 'capacity'
@@ -408,7 +408,7 @@ public:
      *
      * @param comparator The compare function defining the sort order.
      */
-    virtual void Sort(int (*comparator)(const T& lhs, const T& rhs));
+    void Sort(int (*comparator)(const T& lhs, const T& rhs)) override;
 
     /**
      * Trim the capacity of the array to match the current number of

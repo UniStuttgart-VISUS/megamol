@@ -40,7 +40,7 @@ public:
     ParticleTranslateRotateScale(void);
 
     /** Dtor */
-    virtual ~ParticleTranslateRotateScale(void);
+    ~ParticleTranslateRotateScale(void) override;
     bool InterfaceIsDirty() const;
     void InterfaceResetDirty();
 
@@ -55,9 +55,8 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
-    virtual bool manipulateExtent(
-        geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
+    bool manipulateExtent(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     core::param::ParamSlot translateSlot;

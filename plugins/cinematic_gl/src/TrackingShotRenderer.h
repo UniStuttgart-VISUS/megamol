@@ -58,7 +58,7 @@ public:
     TrackingShotRenderer(void);
 
     /** Dtor. */
-    virtual ~TrackingShotRenderer(void);
+    ~TrackingShotRenderer(void) override;
 
 protected:
     /**
@@ -66,12 +66,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -82,7 +82,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -91,18 +91,18 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The mouse button pressed/released callback.
      */
-    virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
-        megamol::core::view::Modifiers mods) final override;
+    bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
+        megamol::core::view::Modifiers mods) final;
 
     /**
      * The mouse movement callback.
      */
-    virtual bool OnMouseMove(double x, double y) final override;
+    bool OnMouseMove(double x, double y) final;
 
 private:
     /**********************************************************************

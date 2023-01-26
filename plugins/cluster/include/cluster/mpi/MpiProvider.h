@@ -71,7 +71,7 @@ public:
     /**
      * Finalises the instance.
      */
-    virtual ~MpiProvider(void);
+    ~MpiProvider(void) override;
 
 protected:
     /**
@@ -79,7 +79,7 @@ protected:
      *
      * @return true unconditionally.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Lazily initialises MPI and returns the communicator.
@@ -93,7 +93,7 @@ protected:
     /**
      * Finalises the module and releases MPI.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /** Super class. */

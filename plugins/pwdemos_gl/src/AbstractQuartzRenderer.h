@@ -28,7 +28,7 @@ public:
     /**
      * Dtor
      */
-    virtual ~AbstractQuartzRenderer(void);
+    ~AbstractQuartzRenderer(void) override;
 
 protected:
     /**

@@ -37,7 +37,7 @@ public:
     ForceCubicCBoxModule(void);
 
     /** Dtor */
-    virtual ~ForceCubicCBoxModule(void);
+    ~ForceCubicCBoxModule(void) override;
 
 protected:
     /**
@@ -50,7 +50,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
     /**
      * Manipulates the particle data extend information
@@ -62,7 +62,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateExtent(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateExtent(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
 };

@@ -54,7 +54,7 @@ public:
     SimpleRenderTarget();
 
     /** Dtor. */
-    ~SimpleRenderTarget();
+    ~SimpleRenderTarget() override;
 
 protected:
     /**
@@ -62,12 +62,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -78,7 +78,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -87,7 +87,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      *

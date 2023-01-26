@@ -48,7 +48,7 @@ public:
     MPIVolumeAggregator(void);
 
     /** Dtor */
-    virtual ~MPIVolumeAggregator(void);
+    ~MPIVolumeAggregator(void) override;
 
 protected:
     /**

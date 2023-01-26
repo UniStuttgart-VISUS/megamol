@@ -72,17 +72,17 @@ public:
     DirectoryIterator(const Char* path, bool isPattern = false, bool showDirs = true);
 
     /** Dtor */
-    virtual ~DirectoryIterator(void);
+    ~DirectoryIterator(void) override;
 
     /** Behaves like Iterator<T>::HasNext */
-    virtual bool HasNext(void) const;
+    bool HasNext(void) const override;
 
     /**
      * Behaves like Iterator<T>::Next
      *
      * @throws NoSuchElementException if there is no next element
      */
-    virtual Entry& Next(void);
+    Entry& Next(void) override;
 
 private:
     /**

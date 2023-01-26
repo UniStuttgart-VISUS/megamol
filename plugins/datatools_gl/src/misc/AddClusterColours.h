@@ -54,7 +54,7 @@ public:
     AddClusterColours(void);
 
     /** Dtor. */
-    virtual ~AddClusterColours(void);
+    ~AddClusterColours(void) override;
 
 private:
     /**
@@ -70,10 +70,10 @@ private:
         Unlocker(geocalls::MultiParticleDataCall::Unlocker* inner);
 
         /** dtor. */
-        virtual ~Unlocker(void);
+        ~Unlocker(void) override;
 
         /** Unlocks the data */
-        virtual void Unlock(void);
+        void Unlock(void) override;
 
     private:
         /** the inner unlocker */
@@ -85,12 +85,12 @@ private:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * Gets the data from the source.

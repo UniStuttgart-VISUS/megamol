@@ -64,13 +64,13 @@ public:
     CinematicView(void);
 
     /** Dtor. */
-    virtual ~CinematicView(void);
+    ~CinematicView(void) override;
 
 protected:
     /**
      * Renders this View3DGL in the currently active OpenGL context.
      */
-    virtual ImageWrapper Render(double time, double instanceTime) override;
+    ImageWrapper Render(double time, double instanceTime) override;
 
 private:
     typedef std::chrono::system_clock::time_point TimePoint_t;

@@ -57,7 +57,7 @@ public:
     AstroDataCall(void);
 
     /** Dtor. */
-    virtual ~AstroDataCall(void);
+    ~AstroDataCall(void) override;
 
     /**
      * Answer the number of functions used for this call.

@@ -93,7 +93,7 @@ public:
     /**
      * ~Dtor.
      */
-    virtual ~CallRegisterAtController(void);
+    ~CallRegisterAtController(void) override;
 
     /**
      * Gets the client to be un-/registered

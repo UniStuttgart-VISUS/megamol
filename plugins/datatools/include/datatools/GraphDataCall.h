@@ -54,7 +54,7 @@ public:
     /** ctor */
     GraphDataCall();
     /** dtor */
-    virtual ~GraphDataCall();
+    ~GraphDataCall() override;
 
     /**
      * Returns number of edges

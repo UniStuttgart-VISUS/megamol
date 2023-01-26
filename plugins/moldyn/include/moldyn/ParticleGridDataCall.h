@@ -519,7 +519,7 @@ public:
     ParticleGridDataCall(void);
 
     /** Dtor. */
-    virtual ~ParticleGridDataCall(void);
+    ~ParticleGridDataCall(void) override;
 
     /**
      * Calculates the index of a cell specified by its coordinates

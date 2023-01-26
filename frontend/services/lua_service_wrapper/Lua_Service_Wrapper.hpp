@@ -50,7 +50,7 @@ public:
 
     // constructor should not take arguments, actual object initialization deferred until init()
     Lua_Service_Wrapper();
-    ~Lua_Service_Wrapper();
+    ~Lua_Service_Wrapper() override;
     // your service will be constructed and destructed, but not copy-constructed or move-constructed
     // so no need to worry about copy or move constructors.
 

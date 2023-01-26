@@ -69,20 +69,20 @@ public:
     Contest2019DataLoader(void);
 
     /** Dtor. */
-    virtual ~Contest2019DataLoader(void);
+    ~Contest2019DataLoader(void) override;
 
 protected:
     /**
      * Constructs a new frame
      */
-    virtual core::view::AnimDataModule::Frame* constructFrame(void) const;
+    core::view::AnimDataModule::Frame* constructFrame(void) const override;
 
     /**
      * Function that is called once upon initialization.
      *
      * @return True on success, false otherwise
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Loads the data of a single frame from disk
@@ -90,12 +90,12 @@ protected:
      * @param frame Pointer to the frame that will contain the data
      * @param idx The index of the frame
      */
-    virtual void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx);
+    void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) override;
 
     /**
      * Function that is called once upon destruction
      */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * Frame description
@@ -106,7 +106,7 @@ protected:
         Frame(core::view::AnimDataModule& owner);
 
         /** Frame Dtor. */
-        virtual ~Frame(void);
+        ~Frame(void) override;
 
         /**
          * Clears the frame data by deleting all contained pointers
@@ -293,13 +293,13 @@ protected:
         }
 
         /** Dtor. */
-        virtual ~Unlocker(void) {
+        ~Unlocker(void) override {
             this->Unlock();
             ASSERT(this->frame == nullptr);
         }
 
         /** Overload of the unlock method */
-        virtual void Unlock(void) {
+        void Unlock(void) override {
             if (this->frame != nullptr) {
                 this->frame->Unlock();
                 this->frame = nullptr; // DO NOT DELETE!

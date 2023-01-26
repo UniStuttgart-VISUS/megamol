@@ -26,7 +26,7 @@ protected:
     AbstractSimpleParticleDataSource(void);
 
     /** Dtor. */
-    virtual ~AbstractSimpleParticleDataSource(void);
+    ~AbstractSimpleParticleDataSource(void) override;
 
     /**
      * Gets the data from the source.

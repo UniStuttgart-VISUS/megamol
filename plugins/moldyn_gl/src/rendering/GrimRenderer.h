@@ -83,7 +83,7 @@ public:
     GrimRenderer(void);
 
     /** Dtor. */
-    virtual ~GrimRenderer(void);
+    ~GrimRenderer(void) override;
 
 protected:
     /**
@@ -91,7 +91,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -102,12 +102,12 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * The render callback.
@@ -116,7 +116,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /**

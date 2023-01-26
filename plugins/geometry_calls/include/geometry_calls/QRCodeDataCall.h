@@ -116,7 +116,7 @@ public:
     }
 
     QRCodeDataCall(void);
-    virtual ~QRCodeDataCall(void);
+    ~QRCodeDataCall(void) override;
 
 private:
     std::string* qr_text;

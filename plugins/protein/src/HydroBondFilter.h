@@ -26,7 +26,7 @@ public:
     HydroBondFilter(void);
 
     /** Dtor */
-    virtual ~HydroBondFilter(void);
+    ~HydroBondFilter(void) override;
 
     /**
      * Answer the name of this module.
@@ -61,12 +61,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * Call callback to get the data

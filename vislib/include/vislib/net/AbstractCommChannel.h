@@ -59,7 +59,7 @@ protected:
     AbstractCommChannel(void);
 
     /** Dtor. */
-    virtual ~AbstractCommChannel(void);
+    ~AbstractCommChannel(void) override;
 };
 
 } /* end namespace net */

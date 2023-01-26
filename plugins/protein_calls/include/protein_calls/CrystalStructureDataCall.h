@@ -82,7 +82,7 @@ public:
     CrystalStructureDataCall(void);
 
     /** Dtor. */
-    virtual ~CrystalStructureDataCall(void);
+    ~CrystalStructureDataCall(void) override;
 
     /**
      * Answers the atom count.

@@ -49,14 +49,14 @@ public:
     TableManipulator(void);
 
     /** Dtor */
-    virtual ~TableManipulator(void);
+    ~TableManipulator(void) override;
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create(void) override;
 
     /** Resource release */
-    virtual void release(void);
+    void release(void) override;
 
 protected:
     /** Lua Interface */

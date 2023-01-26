@@ -64,7 +64,7 @@ public:
     KeyframeKeeper(void);
 
     /** Dtor */
-    virtual ~KeyframeKeeper(void);
+    ~KeyframeKeeper(void) override;
 
     /**
      *
@@ -75,10 +75,10 @@ public:
 
 protected:
     /** create */
-    virtual bool create(void);
+    bool create(void) override;
 
     /** release */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /**********************************************************************

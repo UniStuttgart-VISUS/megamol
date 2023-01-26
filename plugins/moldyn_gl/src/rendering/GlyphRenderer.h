@@ -69,7 +69,7 @@ public:
     GlyphRenderer(void);
 
     /** Dtor. */
-    virtual ~GlyphRenderer(void);
+    ~GlyphRenderer(void) override;
 
 protected:
     /**

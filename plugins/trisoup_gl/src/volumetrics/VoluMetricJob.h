@@ -66,7 +66,7 @@ public:
     VoluMetricJob(void);
 
     /** Dtor. */
-    virtual ~VoluMetricJob(void);
+    ~VoluMetricJob(void) override;
 
     bool areSurfacesJoinable(int sjdIdx1, int surfIdx1, int sjdIdx2, int surfIdx2);
 
@@ -91,12 +91,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * Perform the work of a thread.
@@ -108,7 +108,7 @@ protected:
      * @return The application dependent return code of the thread. This
      *         must not be STILL_ACTIVE (259).
      */
-    virtual DWORD Run(void* userData);
+    DWORD Run(void* userData) override;
 
 private:
     /**

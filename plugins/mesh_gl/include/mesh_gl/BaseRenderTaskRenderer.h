@@ -29,7 +29,7 @@ public:
     }
 
     BaseRenderTaskRenderer() = default;
-    virtual ~BaseRenderTaskRenderer();
+    ~BaseRenderTaskRenderer() override;
 
 protected:
     /**

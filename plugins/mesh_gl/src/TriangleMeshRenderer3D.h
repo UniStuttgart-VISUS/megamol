@@ -55,7 +55,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~TriangleMeshRenderer3D();
+    ~TriangleMeshRenderer3D() override;
 
     /**
      * Answer the name of this module.

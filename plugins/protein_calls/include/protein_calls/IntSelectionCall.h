@@ -89,7 +89,7 @@ public:
     }
 
     IntSelectionCall(void);
-    virtual ~IntSelectionCall(void);
+    ~IntSelectionCall(void) override;
 
 private:
     vislib::Array<int>* selection;

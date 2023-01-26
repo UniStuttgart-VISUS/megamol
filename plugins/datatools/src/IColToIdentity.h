@@ -26,7 +26,7 @@ public:
     IColToIdentity(void);
 
     /** Dtor */
-    virtual ~IColToIdentity(void);
+    ~IColToIdentity(void) override;
 
 protected:
     /**
@@ -39,7 +39,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     std::vector<char> ids;

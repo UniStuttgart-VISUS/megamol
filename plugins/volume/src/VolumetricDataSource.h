@@ -69,7 +69,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~VolumetricDataSource(void);
+    ~VolumetricDataSource(void) override;
 
 protected:
     /** Superclass typedef. */
@@ -90,7 +90,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Gets the requested output data format if any. Otherwise, the
@@ -184,7 +184,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /** Resume the asynchronous loading thread if it was suspended. */
     bool resumeAsyncLoad(void);
@@ -237,7 +237,7 @@ private:
         }
 
         /** Dtor. */
-        virtual ~BufferSlotUnlocker(void);
+        ~BufferSlotUnlocker(void) override;
 
         inline void AddBuffer(BufferSlot* buffer) {
             ASSERT(buffer != nullptr);
@@ -245,7 +245,7 @@ private:
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void);
+        void Unlock(void) override;
 
     private:
         /** Base class. */

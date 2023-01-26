@@ -41,7 +41,7 @@ public:
     }
 
     VR_Service();
-    ~VR_Service();
+    ~VR_Service() override;
 
     bool init(const Config& config);
     bool init(void* configPtr) override;
@@ -108,7 +108,7 @@ private:
     // will be rigged with VR information
     struct KolabBW : public IVR_Device {
         KolabBW();
-        ~KolabBW();
+        ~KolabBW() override;
 
         // network communication
         void receive_camera_data();
@@ -119,7 +119,7 @@ private:
             ImagePresentationEntryPoints& entry_points_registry) override;
         bool remove_entry_point(
             std::string const& entry_point_name, ImagePresentationEntryPoints& entry_points_registry) override;
-        void clear_entry_points();
+        void clear_entry_points() override;
 
         void preGraphRender() override;
         void postGraphRender() override;

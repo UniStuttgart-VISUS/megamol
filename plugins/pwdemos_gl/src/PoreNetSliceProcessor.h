@@ -33,7 +33,7 @@ public:
     /**
      * Dtor
      */
-    ~PoreNetSliceProcessor(void);
+    ~PoreNetSliceProcessor(void) override;
 
     /**
      * Perform the work of a thread.
@@ -44,7 +44,7 @@ public:
      * @return The application dependent return code of the thread. This
      *         must not be STILL_ACTIVE (259).
      */
-    virtual DWORD Run(void* userData);
+    DWORD Run(void* userData) override;
 
     /**
      * The Runnable should abort its work as soon as possible. This method
@@ -57,7 +57,7 @@ public:
      * @return true to acknowledge that the Runnable will finish as soon
      *         as possible, false if termination is not possible.
      */
-    virtual bool Terminate(void);
+    bool Terminate(void) override;
 
     /**
      * Sets the input buffer pool

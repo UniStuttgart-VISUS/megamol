@@ -114,7 +114,7 @@ public:
     //}
 
     BrickStatsCall(void);
-    virtual ~BrickStatsCall(void);
+    ~BrickStatsCall(void) override;
 
 private:
     vislib::Array<BrickInfo>* bricks;

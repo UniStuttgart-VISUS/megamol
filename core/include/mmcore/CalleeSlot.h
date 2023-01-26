@@ -35,7 +35,7 @@ public:
     CalleeSlot(const vislib::StringA& name, const vislib::StringA& desc);
 
     /** Dtor. */
-    virtual ~CalleeSlot();
+    ~CalleeSlot() override;
 
     /**
      * Connects a call to this slot.
@@ -59,7 +59,7 @@ public:
     /**
      * Clears the cleanup mark for this and all dependent objects.
      */
-    virtual void ClearCleanupMark();
+    void ClearCleanupMark() override;
 
     /**
      * Answers whether a given call is compatible with this slot.
@@ -258,7 +258,7 @@ private:
         }
 
         /** Dtor. */
-        virtual ~CallbackImpl() {
+        ~CallbackImpl() override {
             // intentionally empty
         }
 
@@ -270,7 +270,7 @@ private:
          *
          * @return The return value of the function.
          */
-        virtual bool CallMe(Module* owner, Call& call) {
+        bool CallMe(Module* owner, Call& call) override {
             C* c = dynamic_cast<C*>(owner);
             if (c == NULL)
                 return false;
@@ -301,7 +301,7 @@ private:
         }
 
         /** Dtor. */
-        virtual ~CallbackParentImpl() {
+        ~CallbackParentImpl() override {
             // intentionally empty
         }
 
@@ -313,7 +313,7 @@ private:
          *
          * @return The return value of the function.
          */
-        virtual bool CallMe(Module* owner, Call& call) {
+        bool CallMe(Module* owner, Call& call) override {
             return (this->parent->*this->func)(call);
         }
 

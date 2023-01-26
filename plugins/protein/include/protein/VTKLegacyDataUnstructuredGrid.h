@@ -51,7 +51,7 @@ public:
     VTKLegacyDataUnstructuredGrid();
 
     /** DTor */
-    virtual ~VTKLegacyDataUnstructuredGrid();
+    ~VTKLegacyDataUnstructuredGrid() override;
 
     /**
      * Answers the pointer to a point data attribute array specified by a name.

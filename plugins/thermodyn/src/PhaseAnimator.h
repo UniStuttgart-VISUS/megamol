@@ -28,7 +28,7 @@ public:
 
     PhaseAnimator();
 
-    virtual ~PhaseAnimator();
+    ~PhaseAnimator() override;
 
 protected:
     bool create() override;

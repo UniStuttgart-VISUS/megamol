@@ -59,7 +59,7 @@ public:
     QuartzRenderer(void);
 
     /** Dtor */
-    virtual ~QuartzRenderer(void);
+    ~QuartzRenderer(void) override;
 
 protected:
     /**
@@ -71,7 +71,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -80,19 +80,19 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /**
@@ -102,7 +102,7 @@ private:
      *
      * @return The shader
      */
-    virtual std::shared_ptr<glowl::GLSLProgram> makeShader(const CrystalDataCall::Crystal& c);
+    std::shared_ptr<glowl::GLSLProgram> makeShader(const CrystalDataCall::Crystal& c) override;
 
     /** Shows/Hides the axes (x and y) of the clipping plane */
     core::param::ParamSlot showClipAxesSlot;

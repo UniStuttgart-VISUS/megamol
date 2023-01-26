@@ -74,7 +74,7 @@ public:
     VariantMatchDataCall(void);
 
     /** Dtor. */
-    virtual ~VariantMatchDataCall(void);
+    ~VariantMatchDataCall(void) override;
 
     /**
      * TODO

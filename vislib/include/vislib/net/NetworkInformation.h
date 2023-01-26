@@ -84,7 +84,7 @@ public:
         NoConfidenceException(const NoConfidenceException& rhs);
 
         /** Dtor. */
-        virtual ~NoConfidenceException(void);
+        ~NoConfidenceException(void) override;
 
         /**
          * Assignment operator.

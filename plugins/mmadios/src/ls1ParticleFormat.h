@@ -51,12 +51,12 @@ public:
     ls1ParticleFormat(void);
 
     /** Dtor. */
-    virtual ~ls1ParticleFormat(void);
+    ~ls1ParticleFormat(void) override;
 
-    bool create(void);
+    bool create(void) override;
 
 protected:
-    void release(void);
+    void release(void) override;
 
     /**
      * Gets the data from the source.

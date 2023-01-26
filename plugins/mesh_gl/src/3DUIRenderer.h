@@ -27,7 +27,7 @@ namespace mesh_gl {
 class ThreeDimensionalUIRenderer : public BaseMeshRenderer {
 public:
     ThreeDimensionalUIRenderer();
-    ~ThreeDimensionalUIRenderer();
+    ~ThreeDimensionalUIRenderer() override;
 
     /**
      * Answer the name of this module.

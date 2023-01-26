@@ -232,7 +232,7 @@ public:
     }
 
     BindingSiteCall(void);
-    virtual ~BindingSiteCall(void);
+    ~BindingSiteCall(void) override;
 
 private:
     /** Pointer to binding site array */

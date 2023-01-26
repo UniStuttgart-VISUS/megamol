@@ -47,19 +47,19 @@ public:
     adiosWriter(void);
 
     /** Dtor. */
-    virtual ~adiosWriter(void);
+    ~adiosWriter(void) override;
 
-    bool create(void);
+    bool create(void) override;
 
 protected:
-    void release(void);
+    void release(void) override;
 
     /**
      * The main function
      *
      * @return True on success
      */
-    virtual bool run(void);
+    bool run(void) override;
 
     /**
      * Function querying the writers capabilities
@@ -68,7 +68,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool getCapabilities(core::DataWriterCtrlCall& call);
+    bool getCapabilities(core::DataWriterCtrlCall& call) override;
 
 private:
     /** slot for MPIprovider */

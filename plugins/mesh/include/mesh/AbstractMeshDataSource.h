@@ -21,7 +21,7 @@ namespace mesh {
 class AbstractMeshDataSource : public core::Module {
 public:
     AbstractMeshDataSource();
-    virtual ~AbstractMeshDataSource();
+    ~AbstractMeshDataSource() override;
 
 protected:
     /**
@@ -29,7 +29,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Gets the data from the source.
@@ -52,7 +52,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release();
+    void release() override;
 
     /**
      * Clears all mesh access entries made by this module from the used material collection.

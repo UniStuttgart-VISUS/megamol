@@ -73,7 +73,7 @@ public:
     UncertaintySequenceRenderer(void);
 
     /** dtor */
-    ~UncertaintySequenceRenderer(void);
+    ~UncertaintySequenceRenderer(void) override;
 
 protected:
     /**
@@ -81,12 +81,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * Callback for mouse events (move, press, and release)
@@ -95,7 +95,7 @@ protected:
      * @param y The y coordinate of the mouse in world space
      * @param flags The mouse flags
      */
-    virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
+    bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags) override;
 
     /**
      * Prepares the data for rendering.
@@ -124,7 +124,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::mmstd_gl::CallRender2DGL& call);
+    bool GetExtents(megamol::mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * The Open GL Render callback.
@@ -132,7 +132,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::mmstd_gl::CallRender2DGL& call);
+    bool Render(megamol::mmstd_gl::CallRender2DGL& call) override;
 
     /**********************************************************************
      * other functions

@@ -66,7 +66,7 @@ public:
     trisoupVolumetricDataCall(void) {}
 
     /** Dtor */
-    virtual ~trisoupVolumetricDataCall(void) {}
+    ~trisoupVolumetricDataCall(void) override {}
 
 public:
     typedef char VoxelType;

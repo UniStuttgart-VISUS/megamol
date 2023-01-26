@@ -85,7 +85,7 @@ public:
     TunnelResidueDataCall(void);
 
     /** Dtor. */
-    virtual ~TunnelResidueDataCall(void);
+    ~TunnelResidueDataCall(void) override;
 
     /**
      * Returns the number of tunnels stored in this call

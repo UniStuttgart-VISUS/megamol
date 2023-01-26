@@ -54,7 +54,7 @@ public:
     IllegalParamException(const IllegalParamException& rhs);
 
     /** Dtor. */
-    virtual ~IllegalParamException(void);
+    ~IllegalParamException(void) override;
 
     /**
      * Assignment operator.

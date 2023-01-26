@@ -969,7 +969,7 @@ private:
         Receiver(void);
 
         /** Dtor. */
-        virtual ~Receiver(void);
+        ~Receiver(void) override;
 
         /**
          * Answers the discovery requests.
@@ -981,14 +981,14 @@ private:
          * @return 0, if the work was successfully finished, an error code
          *         otherwise.
          */
-        virtual DWORD Run(void* dcfg);
+        DWORD Run(void* dcfg) override;
 
         /**
          * Ask the thread to terminate.
          *
          * @return true.
          */
-        virtual bool Terminate(void);
+        bool Terminate(void) override;
 
     private:
         /** Flag for terminating the thread safely. */
@@ -1015,7 +1015,7 @@ private:
 
         DiscoveryConfigEx(const DiscoveryConfigEx& rhs);
 
-        virtual ~DiscoveryConfigEx(void);
+        ~DiscoveryConfigEx(void) override;
 
         inline DiscoveryService& GetDiscoveryService(void) {
             ASSERT(this->cds != NULL);
@@ -1116,7 +1116,7 @@ private:
         Sender(void);
 
         /** Dtor. */
-        virtual ~Sender(void);
+        ~Sender(void) override;
 
         /**
          * Performs the discovery.
@@ -1128,7 +1128,7 @@ private:
          * @return 0, if the work was successfully finished, an error code
          *         otherwise.
          */
-        virtual DWORD Run(void* cds);
+        DWORD Run(void* cds) override;
 
         /**
          * Ask the thread to terminate.
@@ -1138,7 +1138,7 @@ private:
          *
          * @return true.
          */
-        virtual bool Terminate(void);
+        bool Terminate(void) override;
 
     private:
         /** Flag for terminating the thread safely. */

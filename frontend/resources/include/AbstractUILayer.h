@@ -22,7 +22,7 @@ public:
 
 protected:
     AbstractUILayer() {}
-    virtual ~AbstractUILayer() = default;
+    ~AbstractUILayer() override = default;
 };
 
 } /* end namespace frontend_resources */

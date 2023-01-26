@@ -68,17 +68,17 @@ public:
         Iterator(const typename SingleLinkedList<T, Lp>::Iterator& rhs);
 
         /** Dtor. */
-        virtual ~Iterator(void);
+        ~Iterator(void) override;
 
         /** Behaves like Iterator<T>::HasNext */
-        virtual bool HasNext(void) const;
+        bool HasNext(void) const override;
 
         /**
          * Behaves like Iterator<T>::Next
          *
          * @throw IllegalStateException if there is no next element
          */
-        virtual T& Next(void);
+        T& Next(void) override;
 
         /**
          * assignment operator
@@ -131,14 +131,14 @@ public:
     SingleLinkedList(const SingleLinkedList<T, Lp>& rhs);
 
     /** Dtor. */
-    virtual ~SingleLinkedList(void);
+    ~SingleLinkedList(void) override;
 
     /**
      * Appends an item to the end of the list. Runtime complexity: O(1)
      *
      * @param item The item to be added.
      */
-    virtual inline void Add(const T& element) {
+    inline void Add(const T& element) override {
         this->Append(element);
     }
 
@@ -147,12 +147,12 @@ public:
      *
      * @param item The item to be added.
      */
-    virtual void Append(const T& item);
+    void Append(const T& item) override;
 
     /**
      * Clears the whole list.
      */
-    virtual void Clear(void);
+    void Clear(void) override;
 
     /**
      * Checks whether an item is contained in the list.
@@ -161,14 +161,14 @@ public:
      *
      * @return true if the item is contained in the list, false otherwise.
      */
-    virtual bool Contains(const T& item) const;
+    bool Contains(const T& item) const override;
 
     /**
      * Answer the number of items in the collection.
      *
      * @return Number of items in the collection.
      */
-    virtual SIZE_T Count(void) const;
+    SIZE_T Count(void) const override;
 
     /**
      * Answer a pointer to the first copy of 'element' in the collection.
@@ -180,7 +180,7 @@ public:
      * @return A pointer to the local copy of 'element' or NULL, if no such
      *         element is found.
      */
-    virtual const T* Find(const T& element) const;
+    const T* Find(const T& element) const override;
 
     /**
      * Answer a pointer to the first copy of 'element' in the collection.
@@ -192,7 +192,7 @@ public:
      * @return A pointer to the local copy of 'element' or NULL, if no such
      *         element is found.
      */
-    virtual T* Find(const T& element);
+    T* Find(const T& element) override;
 
     /**
      * Answer the first element in the collection. Runtime complexity: O(1)
@@ -201,7 +201,7 @@ public:
      *
      * @throws NoSuchElementException, if the collection is empty.
      */
-    virtual const T& First(void) const;
+    const T& First(void) const override;
 
     /**
      * Answer the first element in the collection. Runtime complexity: O(1)
@@ -210,7 +210,7 @@ public:
      *
      * @throws NoSuchElementException, if the collection is empty.
      */
-    virtual T& First(void);
+    T& First(void) override;
 
     /**
      * Answer whether there is no element in the collection. Runtime
@@ -218,7 +218,7 @@ public:
      *
      * @return true, if the collection is empty, false otherwise.
      */
-    virtual inline bool IsEmpty(void) const {
+    inline bool IsEmpty(void) const override {
         // no need to sync here (this race condition is acceptable)
         return this->first == NULL;
     }
@@ -230,7 +230,7 @@ public:
      *
      * @throws NoSuchElementException, if the collection is empty.
      */
-    virtual const T& Last(void) const;
+    const T& Last(void) const override;
 
     /**
      * Answer the last element in the collection. Runtime complexity: O(1)
@@ -239,7 +239,7 @@ public:
      *
      * @throws NoSuchElementException, if the collection is empty.
      */
-    virtual T& Last(void);
+    T& Last(void) override;
 
     /**
      * Merges a second single linked list 'from' into 'this' list. All
@@ -255,7 +255,7 @@ public:
      *
      * @param item The item to be added.
      */
-    virtual void Prepend(const T& item);
+    void Prepend(const T& item) override;
 
     /**
      * Remove the first occurrence of an element that is equal to 'element'
@@ -263,7 +263,7 @@ public:
      *
      * @param item The element to be removed.
      */
-    virtual void Remove(const T& item);
+    void Remove(const T& item) override;
     /**
      * Removes an item from the list.
      * This method removes all items from the list that are equal to the
@@ -271,7 +271,7 @@ public:
      *
      * @param item The item to be removed.
      */
-    virtual void RemoveAll(const T& item);
+    void RemoveAll(const T& item) override;
 
     /**
      * Removes an item from the list.
@@ -290,13 +290,13 @@ public:
      * Remove the first element from the collection. If the collection
      * is empty, this method has no effect. Runtime complexity: O(1)
      */
-    virtual void RemoveFirst(void);
+    void RemoveFirst(void) override;
 
     /**
      * Remove the last element from the collection. If the collection is
      * empty, this method has no effect. Runtime complexity: O(n)
      */
-    virtual void RemoveLast(void);
+    void RemoveLast(void) override;
 
     /**
      * Sorts the elements in the collection based on the results of the
@@ -307,7 +307,7 @@ public:
      *
      * @param comparator The compare function defining the sort order.
      */
-    virtual void Sort(int (*comparator)(const T& lhs, const T& rhs));
+    void Sort(int (*comparator)(const T& lhs, const T& rhs)) override;
 
     /**
      * Returns an Iterator to the list, pointing before the first element.

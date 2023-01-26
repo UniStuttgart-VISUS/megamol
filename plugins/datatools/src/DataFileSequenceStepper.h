@@ -57,7 +57,7 @@ public:
     /*
      * ~DataFileSequenceStepper
      */
-    virtual ~DataFileSequenceStepper(void);
+    ~DataFileSequenceStepper(void) override;
 
 private:
     /**
@@ -65,7 +65,7 @@ private:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Searches for the filename slot in the module graph
@@ -115,7 +115,7 @@ private:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * Sets the filename value

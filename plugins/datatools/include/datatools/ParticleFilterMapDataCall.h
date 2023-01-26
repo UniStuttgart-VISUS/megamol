@@ -46,7 +46,7 @@ public:
     }
 
     ParticleFilterMapDataCall(void);
-    virtual ~ParticleFilterMapDataCall(void);
+    ~ParticleFilterMapDataCall(void) override;
 
     inline index_t* Data() const {
         return idx;

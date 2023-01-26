@@ -151,12 +151,12 @@ public:
         }
 
         /** Dtor. */
-        virtual ~Iterator(void) {
+        ~Iterator(void) override {
             this->owner = NULL; // DO NOT DELETE
         }
 
         /** Behaves like Iterator<T>::HasNext */
-        virtual bool HasNext(void) const {
+        bool HasNext(void) const override {
             if (this->owner == NULL)
                 return false;
             return this->owner->keys.Count() > this->idx;
@@ -167,7 +167,7 @@ public:
          *
          * @throw IllegalStateException if there is no next element
          */
-        virtual ElementPair& Next(void) {
+        ElementPair& Next(void) override {
             if (!this->HasNext()) {
                 throw IllegalStateException("There is no next element", __FILE__, __LINE__);
             }
@@ -214,7 +214,7 @@ public:
     Map(void);
 
     /** Dtor. */
-    virtual ~Map(void);
+    ~Map(void) override;
 
     /**
      * Sets the value for the key 'key' to 'value'. If there was no entry
@@ -223,12 +223,12 @@ public:
      * @param key The 'key' of the entry pair to be set.
      * @param value The 'value' to set the entry to.
      */
-    virtual void Set(const K& key, const V& value);
+    void Set(const K& key, const V& value) override;
 
     /**
      * Clears the whole map by removing all entries.
      */
-    virtual void Clear(void);
+    void Clear(void) override;
 
     /**
      * Checks whether a given key is present in the map.
@@ -238,14 +238,14 @@ public:
      * @return 'true' if the key 'key' is present in the map, 'false'
      *         otherwise.
      */
-    virtual bool Contains(const K& key) const;
+    bool Contains(const K& key) const override;
 
     /**
      * Answers the number of entries in the map.
      *
      * @return The number of entries in the map.
      */
-    virtual SIZE_T Count(void) const;
+    SIZE_T Count(void) const override;
 
     /**
      * Finds all keys which are associated to a given value. The order of
@@ -255,7 +255,7 @@ public:
      *
      * @return A single linked list of all keys associated with this value.
      */
-    virtual SingleLinkedList<K> FindKeys(const V& value) const;
+    SingleLinkedList<K> FindKeys(const V& value) const override;
 
     /**
      * Finds a value for the specified key. If the key is not present in
@@ -266,7 +266,7 @@ public:
      * @return The value associated with the key or NULL if the key is not
      *         present in the map.
      */
-    virtual const V* FindValue(const K& key) const;
+    const V* FindValue(const K& key) const override;
 
     /**
      * Finds a value for the specified key. If the key is not present in
@@ -277,7 +277,7 @@ public:
      * @return The value associated with the key or NULL if the key is not
      *         present in the map.
      */
-    virtual V* FindValue(const K& key);
+    V* FindValue(const K& key) override;
 
     /**
      * Gets a const iterator for all entries in the map.
@@ -302,14 +302,14 @@ public:
      *
      * @return 'true' if the map is empty, 'false' otherwise.
      */
-    virtual bool IsEmpty(void) const;
+    bool IsEmpty(void) const override;
 
     /**
      * Removes the given key from the map.
      *
      * @param key The key to be removed from the map.
      */
-    virtual void Remove(const K& key);
+    void Remove(const K& key) override;
 
 private:
     /** array of keys */

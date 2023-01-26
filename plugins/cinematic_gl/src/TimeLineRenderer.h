@@ -59,7 +59,7 @@ public:
     TimeLineRenderer(void);
 
     /** Dtor. */
-    virtual ~TimeLineRenderer(void);
+    ~TimeLineRenderer(void) override;
 
 protected:
     /**
@@ -67,12 +67,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -83,7 +83,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender2DGL& call);
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * The render callback.
@@ -92,18 +92,18 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender2DGL& call);
+    bool Render(mmstd_gl::CallRender2DGL& call) override;
 
     /**
      * The mouse button pressed/released callback.
      */
-    virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
+    bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
         megamol::core::view::Modifiers mods) override;
 
     /**
      * The mouse movement callback.
      */
-    virtual bool OnMouseMove(double x, double y) override;
+    bool OnMouseMove(double x, double y) override;
 
 private:
     /**********************************************************************

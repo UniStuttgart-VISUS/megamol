@@ -51,12 +51,12 @@ public:
     ADIOSFlexVolume();
 
     /** Dtor. */
-    virtual ~ADIOSFlexVolume();
+    ~ADIOSFlexVolume() override;
 
-    bool create();
+    bool create() override;
 
 protected:
-    void release();
+    void release() override;
     bool inquireDataVariables(CallADIOSData* cad);
     bool inquireMetaDataVariables(CallADIOSData* cad);
     bool assertData(geocalls::VolumetricDataCall* vdc, CallADIOSData* cad);

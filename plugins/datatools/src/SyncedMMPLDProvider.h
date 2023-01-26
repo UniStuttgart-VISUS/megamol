@@ -49,7 +49,7 @@ public:
     SyncedMMPLDProvider(void);
 
     /** Dtor. */
-    virtual ~SyncedMMPLDProvider(void) {}
+    ~SyncedMMPLDProvider(void) override {}
 
 protected:
     bool create() override {

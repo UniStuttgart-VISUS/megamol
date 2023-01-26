@@ -26,7 +26,7 @@ public:
     }
 
     Screenshot_Service();
-    ~Screenshot_Service();
+    ~Screenshot_Service() override;
 
     bool init(const Config& config);
     bool init(void* configPtr) override;

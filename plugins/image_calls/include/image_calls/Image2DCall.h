@@ -144,7 +144,7 @@ public:
     Image2DCall();
 
     /** Dtor. */
-    virtual ~Image2DCall() = default;
+    ~Image2DCall() override = default;
 
 private:
     /** Pointer to the stored data */

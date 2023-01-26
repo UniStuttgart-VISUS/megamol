@@ -66,63 +66,63 @@ public:
     RawStorageSerialiser(const RawStorageSerialiser& src);
 
     /** Dtor. */
-    ~RawStorageSerialiser(void);
+    ~RawStorageSerialiser(void) override;
 
-    virtual void Deserialise(bool& outValue, const char* name = NULL);
+    void Deserialise(bool& outValue, const char* name = NULL) override;
 
-    virtual void Deserialise(bool& outValue, const wchar_t* name);
+    void Deserialise(bool& outValue, const wchar_t* name) override;
 
-    virtual void Deserialise(wchar_t& outValue, const char* name = NULL);
+    void Deserialise(wchar_t& outValue, const char* name = NULL) override;
 
-    virtual void Deserialise(wchar_t& outValue, const wchar_t* name);
+    void Deserialise(wchar_t& outValue, const wchar_t* name) override;
 
-    virtual void Deserialise(INT8& outValue, const char* name = NULL);
+    void Deserialise(INT8& outValue, const char* name = NULL) override;
 
-    virtual void Deserialise(INT8& outValue, const wchar_t* name);
+    void Deserialise(INT8& outValue, const wchar_t* name) override;
 
-    virtual void Deserialise(UINT8& outValue, const char* name = NULL);
+    void Deserialise(UINT8& outValue, const char* name = NULL) override;
 
-    virtual void Deserialise(UINT8& outValue, const wchar_t* name);
+    void Deserialise(UINT8& outValue, const wchar_t* name) override;
 
-    virtual void Deserialise(INT16& outValue, const char* name = NULL);
+    void Deserialise(INT16& outValue, const char* name = NULL) override;
 
-    virtual void Deserialise(INT16& outValue, const wchar_t* name);
+    void Deserialise(INT16& outValue, const wchar_t* name) override;
 
-    virtual void Deserialise(UINT16& outValue, const char* name = NULL);
+    void Deserialise(UINT16& outValue, const char* name = NULL) override;
 
-    virtual void Deserialise(UINT16& outValue, const wchar_t* name);
+    void Deserialise(UINT16& outValue, const wchar_t* name) override;
 
-    virtual void Deserialise(VL_INT32& outValue, const char* name = NULL);
+    void Deserialise(VL_INT32& outValue, const char* name = NULL) override;
 
-    virtual void Deserialise(VL_INT32& outValue, const wchar_t* name);
+    void Deserialise(VL_INT32& outValue, const wchar_t* name) override;
 
-    virtual void Deserialise(UINT32& outValue, const char* name = NULL);
+    void Deserialise(UINT32& outValue, const char* name = NULL) override;
 
-    virtual void Deserialise(UINT32& outValue, const wchar_t* name);
+    void Deserialise(UINT32& outValue, const wchar_t* name) override;
 
-    virtual void Deserialise(INT64& outValue, const char* name = NULL);
+    void Deserialise(INT64& outValue, const char* name = NULL) override;
 
-    virtual void Deserialise(INT64& outValue, const wchar_t* name);
+    void Deserialise(INT64& outValue, const wchar_t* name) override;
 
-    virtual void Deserialise(UINT64& outValue, const char* name = NULL);
+    void Deserialise(UINT64& outValue, const char* name = NULL) override;
 
-    virtual void Deserialise(UINT64& outValue, const wchar_t* name);
+    void Deserialise(UINT64& outValue, const wchar_t* name) override;
 
-    virtual void Deserialise(float& outValue, const char* name = NULL);
+    void Deserialise(float& outValue, const char* name = NULL) override;
 
-    virtual void Deserialise(float& outValue, const wchar_t* name);
+    void Deserialise(float& outValue, const wchar_t* name) override;
 
-    virtual void Deserialise(double& outValue, const char* name = NULL);
+    void Deserialise(double& outValue, const char* name = NULL) override;
 
-    virtual void Deserialise(double& outValue, const wchar_t* name);
+    void Deserialise(double& outValue, const wchar_t* name) override;
 
-    virtual void Deserialise(StringA& outValue, const char* name = NULL);
+    void Deserialise(StringA& outValue, const char* name = NULL) override;
 
-    virtual void Deserialise(StringA& outValue, const wchar_t* name);
+    void Deserialise(StringA& outValue, const wchar_t* name) override;
 
-    virtual void Deserialise(StringW& outValue, const char* name = NULL);
+    void Deserialise(StringW& outValue, const char* name = NULL) override;
 
-    virtual void Deserialise(StringW& outValue, const wchar_t* name);
+    void Deserialise(StringW& outValue, const wchar_t* name) override;
 
     /**
      * Answer the offset inside the rawstorage.
@@ -142,61 +142,61 @@ public:
         return this->storage;
     }
 
-    virtual void Serialise(const bool value, const char* name = NULL);
+    void Serialise(const bool value, const char* name = NULL) override;
 
-    virtual void Serialise(const bool value, const wchar_t* name);
+    void Serialise(const bool value, const wchar_t* name) override;
 
-    virtual void Serialise(const wchar_t value, const char* name = NULL);
+    void Serialise(const wchar_t value, const char* name = NULL) override;
 
-    virtual void Serialise(const wchar_t value, const wchar_t* name);
+    void Serialise(const wchar_t value, const wchar_t* name) override;
 
-    virtual void Serialise(const INT8 value, const char* name = NULL);
+    void Serialise(const INT8 value, const char* name = NULL) override;
 
-    virtual void Serialise(const INT8 value, const wchar_t* name);
+    void Serialise(const INT8 value, const wchar_t* name) override;
 
-    virtual void Serialise(const UINT8 value, const char* name = NULL);
+    void Serialise(const UINT8 value, const char* name = NULL) override;
 
-    virtual void Serialise(const UINT8 value, const wchar_t* name);
+    void Serialise(const UINT8 value, const wchar_t* name) override;
 
-    virtual void Serialise(const INT16 value, const char* name = NULL);
+    void Serialise(const INT16 value, const char* name = NULL) override;
 
-    virtual void Serialise(const INT16 value, const wchar_t* name);
+    void Serialise(const INT16 value, const wchar_t* name) override;
 
-    virtual void Serialise(const UINT16 value, const char* name = NULL);
+    void Serialise(const UINT16 value, const char* name = NULL) override;
 
-    virtual void Serialise(const UINT16 value, const wchar_t* name);
+    void Serialise(const UINT16 value, const wchar_t* name) override;
 
-    virtual void Serialise(const VL_INT32 value, const char* name = NULL);
+    void Serialise(const VL_INT32 value, const char* name = NULL) override;
 
-    virtual void Serialise(const VL_INT32 value, const wchar_t* name);
+    void Serialise(const VL_INT32 value, const wchar_t* name) override;
 
-    virtual void Serialise(const UINT32 value, const char* name = NULL);
+    void Serialise(const UINT32 value, const char* name = NULL) override;
 
-    virtual void Serialise(const UINT32 value, const wchar_t* name);
+    void Serialise(const UINT32 value, const wchar_t* name) override;
 
-    virtual void Serialise(const INT64 value, const char* name = NULL);
+    void Serialise(const INT64 value, const char* name = NULL) override;
 
-    virtual void Serialise(const INT64 value, const wchar_t* name);
+    void Serialise(const INT64 value, const wchar_t* name) override;
 
-    virtual void Serialise(const UINT64 value, const char* name = NULL);
+    void Serialise(const UINT64 value, const char* name = NULL) override;
 
-    virtual void Serialise(const UINT64 value, const wchar_t* name);
+    void Serialise(const UINT64 value, const wchar_t* name) override;
 
-    virtual void Serialise(const float value, const char* name = NULL);
+    void Serialise(const float value, const char* name = NULL) override;
 
-    virtual void Serialise(const float value, const wchar_t* name);
+    void Serialise(const float value, const wchar_t* name) override;
 
-    virtual void Serialise(const double value, const char* name = NULL);
+    void Serialise(const double value, const char* name = NULL) override;
 
-    virtual void Serialise(const double value, const wchar_t* name);
+    void Serialise(const double value, const wchar_t* name) override;
 
-    virtual void Serialise(const StringA& value, const char* name = NULL);
+    void Serialise(const StringA& value, const char* name = NULL) override;
 
-    virtual void Serialise(const StringA& value, const wchar_t* name);
+    void Serialise(const StringA& value, const wchar_t* name) override;
 
-    virtual void Serialise(const StringW& value, const char* name = NULL);
+    void Serialise(const StringW& value, const char* name = NULL) override;
 
-    virtual void Serialise(const StringW& value, const wchar_t* name);
+    void Serialise(const StringW& value, const wchar_t* name) override;
 
     /**
      * Sets the offset inside the RawStorage to be used.

@@ -33,10 +33,10 @@ public:
     }
 
     MultiParticleRelister();
-    virtual ~MultiParticleRelister();
+    ~MultiParticleRelister() override;
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     void copyData(const geocalls::SimpleSphericalParticles& inData, const geocalls::ParticleRelistCall& relist);

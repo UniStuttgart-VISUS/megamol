@@ -54,7 +54,7 @@ public:
     }
 
     /** Dtor. */
-    virtual ~RendererModule(void) = default;
+    ~RendererModule(void) override = default;
 
 protected:
     /**
@@ -82,7 +82,7 @@ protected:
         return false;
     }
 
-    virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+    bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override {
         MouseFlags mouseFlags;
         // Ugly mapping to deprecated functions (can be removed some day).
         if (mods.test(core::view::Modifier::SHIFT)) {
@@ -109,7 +109,7 @@ protected:
         return false;
     }
 
-    virtual bool OnMouseMove(double x, double y) {
+    bool OnMouseMove(double x, double y) override {
         // Ugly mapping to deprecated functions (can be removed some day).
         this->lastX = x;
         this->lastY = y;

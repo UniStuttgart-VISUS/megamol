@@ -50,12 +50,12 @@ public:
     MultiParticletoADIOS(void);
 
     /** Dtor. */
-    virtual ~MultiParticletoADIOS(void);
+    ~MultiParticletoADIOS(void) override;
 
-    bool create(void);
+    bool create(void) override;
 
 protected:
-    void release(void);
+    void release(void) override;
 
     /**
      * Gets the data from the source.

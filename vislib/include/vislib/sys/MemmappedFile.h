@@ -42,10 +42,10 @@ public:
     /**
      * Dtor. If the file is still open, it is closed.
      */
-    virtual ~MemmappedFile(void);
+    ~MemmappedFile(void) override;
 
     /** Close the file, if open. Flush, if necessary. */
-    virtual void Close(void);
+    void Close(void) override;
 
     /**
      * behaves like File::Flush, except that it flushes only dirty buffers.
@@ -54,7 +54,7 @@ public:
      *                    could not be flushed to disk. GetLastError() will provide details (Windows).
      * @throws IOException with details (linux).
      */
-    virtual void Flush(void);
+    void Flush(void) override;
 
     /**
      * Returns the size of the current view in bytes.
@@ -71,7 +71,7 @@ public:
      *
      * @throws IllegalStateException if the file is not open
      */
-    virtual File::FileSize GetSize(void) const;
+    File::FileSize GetSize(void) const override;
 
     /**
      * behaves like File::Open except for WRITE_ONLY files. These are silently upgraded to READ_WRITE
@@ -80,8 +80,8 @@ public:
      *
      * @throws IOException
      */
-    virtual bool Open(const char* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
-        const File::CreationMode creationMode);
+    bool Open(const char* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
+        const File::CreationMode creationMode) override;
 
     /**
      * behaves like File::Open except for WRITE_ONLY files. These are silently upgraded to READ_WRITE
@@ -90,8 +90,8 @@ public:
      *
      * @throws IOException
      */
-    virtual bool Open(const wchar_t* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
-        const File::CreationMode creationMode);
+    bool Open(const wchar_t* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
+        const File::CreationMode creationMode) override;
 
     /**
      * behaves like File::Read
@@ -102,14 +102,14 @@ public:
      * @throws IOException on mapping failures. Use GetLastError().
      * @throws IllegalStateException if file is not open, or access mode unsuitable, for example
      */
-    virtual File::FileSize Read(void* outBuf, const File::FileSize bufSize);
+    File::FileSize Read(void* outBuf, const File::FileSize bufSize) override;
 
     /**
      * behaves like File::Seek
      * If the destination is beyond file extents, it is cropped.
      * No flush is performed since changing views already takes care of that.
      */
-    virtual File::FileSize Seek(const File::FileOffset offset, const File::SeekStartPoint from = File::BEGIN);
+    File::FileSize Seek(const File::FileOffset offset, const File::SeekStartPoint from = File::BEGIN) override;
 
     /**
      * Sets the size of the current view.
@@ -129,7 +129,7 @@ public:
      *
      * @throws IllegalStateException if the file is not open
      */
-    virtual File::FileSize Tell(void) const;
+    File::FileSize Tell(void) const override;
 
     /**
      * behaves like File::Write
@@ -140,7 +140,7 @@ public:
      * @throws IOException on mapping failures. Use GetLastError().
      * @throws IllegalStateException if file is not open, or access mode unsuitable, for example
      */
-    virtual File::FileSize Write(const void* buf, const File::FileSize bufSize);
+    File::FileSize Write(const void* buf, const File::FileSize bufSize) override;
 
 private:
     /**

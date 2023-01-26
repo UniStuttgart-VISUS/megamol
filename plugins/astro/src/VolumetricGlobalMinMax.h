@@ -45,12 +45,12 @@ public:
     VolumetricGlobalMinMax(void);
 
     /** Dtor. */
-    virtual ~VolumetricGlobalMinMax(void);
+    ~VolumetricGlobalMinMax(void) override;
 
 protected:
-    virtual bool create(void);
+    bool create(void) override;
 
-    virtual void release(void);
+    void release(void) override;
 
     bool onGetData(core::Call& call);
 

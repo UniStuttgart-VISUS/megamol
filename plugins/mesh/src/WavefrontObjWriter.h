@@ -72,7 +72,7 @@ public:
     }
 
     WavefrontObjWriter();
-    ~WavefrontObjWriter();
+    ~WavefrontObjWriter() override;
 
 protected:
     /**
@@ -80,14 +80,14 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
-    virtual bool run();
+    bool run() override;
 
     /**
      * Function querying the writers capabilities
@@ -96,7 +96,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool getCapabilities(core::DataWriterCtrlCall& call);
+    bool getCapabilities(core::DataWriterCtrlCall& call) override;
 
 private:
     void WriteMesh(const std::string&, const ObjMesh&);

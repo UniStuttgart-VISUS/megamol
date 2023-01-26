@@ -26,7 +26,7 @@ class Call3DInteraction : public core::GenericVersionedCall<std::shared_ptr<Thre
 public:
     inline Call3DInteraction()
             : GenericVersionedCall<std::shared_ptr<ThreeDimensionalInteractionCollection>, core::EmptyMetaData>() {}
-    ~Call3DInteraction() = default;
+    ~Call3DInteraction() override = default;
 
     static const char* ClassName(void) {
         return "Call3DInteraction";
@@ -41,7 +41,7 @@ class CallGlTFData : public core::GenericVersionedCall<std::pair<std::string, st
 public:
     inline CallGlTFData()
             : GenericVersionedCall<std::pair<std::string, std::shared_ptr<tinygltf::Model>>, core::EmptyMetaData>() {}
-    ~CallGlTFData() = default;
+    ~CallGlTFData() override = default;
 
     static const char* ClassName(void) {
         return "CallGlTFData";
@@ -54,7 +54,7 @@ public:
 class CallMesh : public core::GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData> {
 public:
     CallMesh() : GenericVersionedCall<std::shared_ptr<MeshDataAccessCollection>, core::Spatial3DMetaData>() {}
-    ~CallMesh(){};
+    ~CallMesh() override{};
 
     static const char* ClassName(void) {
         return "CallMesh";
@@ -67,7 +67,7 @@ public:
 class CallImage : public core::GenericVersionedCall<std::shared_ptr<ImageDataAccessCollection>, core::EmptyMetaData> {
 public:
     CallImage() : GenericVersionedCall<std::shared_ptr<ImageDataAccessCollection>, core::EmptyMetaData>() {}
-    ~CallImage(){};
+    ~CallImage() override{};
 
     static const char* ClassName(void) {
         return "CallImage";

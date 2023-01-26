@@ -78,7 +78,7 @@ public:
     MoleculeSESRenderer(void);
 
     /** dtor */
-    virtual ~MoleculeSESRenderer(void);
+    ~MoleculeSESRenderer(void) override;
 
     /**********************************************************************
      * 'get'-functions
@@ -104,12 +104,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * Compute all vertex, attribute and color arrays used for ray casting
@@ -183,7 +183,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Open GL Render call.
@@ -191,7 +191,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Deinitialises this renderer. This is only called if there was a

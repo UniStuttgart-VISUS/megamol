@@ -38,7 +38,7 @@ public:
     MD5HashProvider(void);
 
     /** Dtor. */
-    virtual ~MD5HashProvider(void);
+    ~MD5HashProvider(void) override;
 
     /**
      * Initialise the hash. This method must be called before any other
@@ -47,7 +47,7 @@ public:
      * If the hash has already been initialised, this method erases all
      * previous data and reinitialises it.
      */
-    virtual void Initialise(void);
+    void Initialise(void) override;
 
     /**
      * Update the hash with a new block of 'cntInput' bytes.
@@ -60,7 +60,7 @@ public:
      *
      * @throws IllegalStateException If the hash has not been initialised.
      */
-    virtual void TransformBlock(const BYTE* input, const SIZE_T cntInput);
+    void TransformBlock(const BYTE* input, const SIZE_T cntInput) override;
 
     /**
      * Update the hash with a new block of 'cntInput' bytes and compute the
@@ -80,7 +80,7 @@ public:
      *
      * @throws IllegalStateException If the hash has not been initialised.
      */
-    virtual bool TransformFinalBlock(BYTE* outHash, SIZE_T& inOutSize, const BYTE* input, const SIZE_T cntInput);
+    bool TransformFinalBlock(BYTE* outHash, SIZE_T& inOutSize, const BYTE* input, const SIZE_T cntInput) override;
 
 private:
     /** MD5 context. */

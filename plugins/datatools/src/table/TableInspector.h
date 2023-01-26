@@ -56,7 +56,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~TableInspector(void);
+    ~TableInspector(void) override;
 
 protected:
     /**
@@ -64,7 +64,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     bool getTableData(core::Call& call);
 
@@ -73,7 +73,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     void drawTable(table::TableDataCall* c);

@@ -99,7 +99,7 @@ public:
     }
 
     ResidueSelectionCall(void);
-    virtual ~ResidueSelectionCall(void);
+    ~ResidueSelectionCall(void) override;
 
 private:
     vislib::Array<Residue>* selection;

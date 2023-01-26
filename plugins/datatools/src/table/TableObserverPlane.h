@@ -59,7 +59,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~TableObserverPlane(void);
+    ~TableObserverPlane(void) override;
 
 protected:
     /**
@@ -67,7 +67,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     bool getObservedData(core::Call& call);
 
@@ -76,7 +76,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     bool assertData(table::TableDataCall* ft, megamol::core::view::CallClipPlane* cp, table::TableDataCall& out);

@@ -250,7 +250,7 @@ public:
     CrystalDataCall(void);
 
     /** Dtor. */
-    virtual ~CrystalDataCall(void);
+    ~CrystalDataCall(void) override;
 
     /**
      * Gets the number of crystals

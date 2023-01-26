@@ -28,7 +28,7 @@ public:
     AddParticleColors(void);
 
     /** Dtor */
-    virtual ~AddParticleColors(void);
+    ~AddParticleColors(void) override;
 
 protected:
     bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;

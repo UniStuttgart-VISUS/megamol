@@ -19,7 +19,7 @@ namespace mesh_gl {
 class BaseMeshRenderer : public BaseRenderTaskRenderer {
 public:
     BaseMeshRenderer();
-    ~BaseMeshRenderer() = default;
+    ~BaseMeshRenderer() override = default;
 
 protected:
     /**
@@ -31,7 +31,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     bool updateMeshCollection() override;
 

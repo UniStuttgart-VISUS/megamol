@@ -156,7 +156,7 @@ public:
     SolPathDataCall(void);
 
     /** Dtor. */
-    virtual ~SolPathDataCall(void);
+    ~SolPathDataCall(void) override;
 
     /**
      * Answer the number of pathlines

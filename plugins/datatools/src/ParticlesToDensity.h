@@ -51,14 +51,14 @@ public:
     ParticlesToDensity(void);
 
     /** Dtor */
-    virtual ~ParticlesToDensity(void);
+    ~ParticlesToDensity(void) override;
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create(void) override;
 
     /** Resource release */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /**

@@ -69,7 +69,7 @@ public:
     SimpleMessage(const AbstractSimpleMessage& rhs);
 
     /** Dtor. */
-    virtual ~SimpleMessage(void);
+    ~SimpleMessage(void) override;
 
     /**
      * Trim the storage of the message to hold the actual size of the
@@ -116,7 +116,7 @@ protected:
      *
      * @throws Exception or derived in case of an error.
      */
-    virtual bool assertStorage(void*& outStorage, const SIZE_T size);
+    bool assertStorage(void*& outStorage, const SIZE_T size) override;
 
 private:
     /** Superclass typedef. */

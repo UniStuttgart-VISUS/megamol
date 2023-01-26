@@ -37,7 +37,7 @@ public:
 
     CSVWriter();
 
-    virtual ~CSVWriter();
+    ~CSVWriter() override;
 
 protected:
     /**

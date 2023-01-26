@@ -32,14 +32,14 @@ public:
     AbstractVolumeManipulator(const char* outSlotName, const char* inSlotName);
 
     /** Dtor */
-    virtual ~AbstractVolumeManipulator(void);
+    ~AbstractVolumeManipulator(void) override;
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create(void) override;
 
     /** Resource release */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * Manipulates the particle data

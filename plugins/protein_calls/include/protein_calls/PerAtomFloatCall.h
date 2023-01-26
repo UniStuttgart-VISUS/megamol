@@ -74,7 +74,7 @@ public:
     PerAtomFloatCall(void) : data(0), frameID(0) {}
 
     /** Dtor */
-    virtual ~PerAtomFloatCall(void) {}
+    ~PerAtomFloatCall(void) override {}
 
     const float* GetFloat() const {
         return data.PeekElements();

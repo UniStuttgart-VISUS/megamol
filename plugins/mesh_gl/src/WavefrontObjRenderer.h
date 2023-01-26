@@ -15,7 +15,7 @@ namespace mesh_gl {
 class WavefrontObjRenderer : public BaseMeshRenderer {
 public:
     WavefrontObjRenderer();
-    ~WavefrontObjRenderer();
+    ~WavefrontObjRenderer() override;
 
     /**
      * Answer the name of this module.

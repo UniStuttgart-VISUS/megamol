@@ -55,7 +55,7 @@ public:
     DepthDarkening();
 
     /** Dtor. */
-    virtual ~DepthDarkening();
+    ~DepthDarkening() override;
 
 protected:
     /**
@@ -63,12 +63,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * Implementation of 'getData'.

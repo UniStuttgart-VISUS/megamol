@@ -29,7 +29,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~TableProcessorBase(void) = default;
+    ~TableProcessorBase(void) override = default;
 
 protected:
     typedef megamol::datatools::table::TableDataCall::ColumnInfo ColumnInfo;

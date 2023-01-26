@@ -33,7 +33,7 @@ public:
     }
 
     InteractionRenderTarget();
-    ~InteractionRenderTarget() = default;
+    ~InteractionRenderTarget() override = default;
 
 protected:
     /**
@@ -41,7 +41,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * The render callback.
@@ -50,7 +50,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      *

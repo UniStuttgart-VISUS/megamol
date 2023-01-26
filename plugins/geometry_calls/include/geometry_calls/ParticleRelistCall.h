@@ -45,7 +45,7 @@ public:
     }
 
     ParticleRelistCall(void);
-    virtual ~ParticleRelistCall(void);
+    ~ParticleRelistCall(void) override;
 
     inline ListIDType TargetListCount(void) const {
         return tarListCount;

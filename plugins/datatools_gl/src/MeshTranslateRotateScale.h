@@ -41,7 +41,7 @@ public:
     MeshTranslateRotateScale(void);
 
     /** Dtor */
-    virtual ~MeshTranslateRotateScale(void);
+    ~MeshTranslateRotateScale(void) override;
     bool InterfaceIsDirty() const;
     void InterfaceResetDirty();
 
@@ -56,8 +56,8 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(
-        megamol::geocalls_gl::CallTriMeshDataGL& outData, megamol::geocalls_gl::CallTriMeshDataGL& inData);
+    bool manipulateData(
+        megamol::geocalls_gl::CallTriMeshDataGL& outData, megamol::geocalls_gl::CallTriMeshDataGL& inData) override;
 
 private:
     core::param::ParamSlot translateSlot;

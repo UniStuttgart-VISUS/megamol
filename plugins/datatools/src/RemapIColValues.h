@@ -32,10 +32,10 @@ public:
     }
 
     RemapIColValues(void);
-    virtual ~RemapIColValues(void);
+    ~RemapIColValues(void) override;
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     core::CallerSlot inIColValuesSlot;

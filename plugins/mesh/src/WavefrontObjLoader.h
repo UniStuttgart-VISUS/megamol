@@ -50,7 +50,7 @@ public:
     }
 
     WavefrontObjLoader();
-    ~WavefrontObjLoader();
+    ~WavefrontObjLoader() override;
 
 protected:
     /**
@@ -58,7 +58,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void);
+    bool create(void) override;
 
     /**
      * Gets the data from the source.
@@ -67,14 +67,14 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool getMeshDataCallback(core::Call& caller);
+    bool getMeshDataCallback(core::Call& caller) override;
 
-    bool getMeshMetaDataCallback(core::Call& caller);
+    bool getMeshMetaDataCallback(core::Call& caller) override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
 private:
     struct TinyObjModel {

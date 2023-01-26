@@ -71,7 +71,7 @@ public:
     /** ctor */
     MultiIndexListDataCall();
     /** dtor */
-    virtual ~MultiIndexListDataCall();
+    ~MultiIndexListDataCall() override;
 
     /** Array of index lists */
     inline index_list_t const* Lists() const {

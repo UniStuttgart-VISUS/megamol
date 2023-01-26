@@ -45,7 +45,7 @@ public:
     StaticMMPLDProvider(void);
 
     /** Dtor. */
-    virtual ~StaticMMPLDProvider(void);
+    ~StaticMMPLDProvider(void) override;
 
 protected:
     bool create() override;

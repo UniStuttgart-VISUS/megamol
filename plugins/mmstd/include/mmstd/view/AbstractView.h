@@ -92,7 +92,7 @@ public:
      *
      * @return The default time
      */
-    virtual float DefaultTime(double instTime) const {
+    float DefaultTime(double instTime) const override {
         return this->_timeCtrl.Time(instTime);
     }
 
@@ -102,12 +102,12 @@ public:
      * @param camera A fully intialized camera to use for rendering the view
      * @param isMutable Tell the view whether it can modify, i.e. control, the camera or not
      */
-    virtual void SetCamera(Camera camera, bool isMutable = true);
+    void SetCamera(Camera camera, bool isMutable = true) override;
 
     /**
      * Return the current camera
      */
-    virtual Camera GetCamera() const;
+    Camera GetCamera() const override;
 
     /**
      * ...
@@ -126,7 +126,7 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height) = 0;
+    void Resize(unsigned int width, unsigned int height) override = 0;
 
     /**
      * Registers a hook

@@ -72,7 +72,7 @@ public:
     CallBinaryVolumeData(void);
 
     /** Dtor */
-    virtual ~CallBinaryVolumeData(void);
+    ~CallBinaryVolumeData(void) override;
 
     /**
      * Gets the value of a single voxel

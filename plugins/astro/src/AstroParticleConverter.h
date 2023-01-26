@@ -42,11 +42,11 @@ public:
     AstroParticleConverter(void);
 
     /** Dtor. */
-    virtual ~AstroParticleConverter(void);
+    ~AstroParticleConverter(void) override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    bool create(void) override;
+    void release(void) override;
 
 private:
     enum class ColoringMode : uint8_t {

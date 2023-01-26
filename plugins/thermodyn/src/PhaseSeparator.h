@@ -33,7 +33,7 @@ public:
 
     PhaseSeparator();
 
-    virtual ~PhaseSeparator();
+    ~PhaseSeparator() override;
 
 protected:
     bool create() override;

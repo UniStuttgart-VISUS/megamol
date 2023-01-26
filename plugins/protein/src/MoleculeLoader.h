@@ -24,7 +24,7 @@ public:
     MoleculeLoader(void);
 
     /** Dtor. */
-    virtual ~MoleculeLoader(void);
+    ~MoleculeLoader(void) override;
 
     /**
      * Answer the name of this module.
@@ -59,7 +59,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void) override;
+    bool create(void) override;
 
     /**
      * Call callback to get the molecular data call data
@@ -100,7 +100,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void) override;
+    void release(void) override;
 
     /**
      * Loads the structure file into memory

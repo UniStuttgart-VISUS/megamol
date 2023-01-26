@@ -56,7 +56,7 @@ public:
     TriSoupDataSource(void);
 
     /** Dtor */
-    virtual ~TriSoupDataSource(void);
+    ~TriSoupDataSource(void) override;
 
 protected:
     /**
@@ -66,7 +66,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool load(const vislib::TString& filename);
+    bool load(const vislib::TString& filename) override;
 
 private:
 };

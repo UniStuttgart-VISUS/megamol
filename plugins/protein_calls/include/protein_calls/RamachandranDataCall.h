@@ -80,7 +80,7 @@ public:
     RamachandranDataCall(void);
 
     /** Dtor. */
-    virtual ~RamachandranDataCall(void);
+    ~RamachandranDataCall(void) override;
 
     /**
      * Returns the currently requested time of this call

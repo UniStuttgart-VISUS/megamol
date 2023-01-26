@@ -55,7 +55,7 @@ public:
     OpenGLException(const OpenGLException& rhs);
 
     /** Dtor. */
-    virtual ~OpenGLException(void);
+    ~OpenGLException(void) override;
 
     /**
      * Answer the OpenGL error code.

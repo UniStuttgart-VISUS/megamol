@@ -52,10 +52,10 @@ public:
     /**
      * Dtor. If the file is still open, it is closed.
      */
-    virtual ~BufferedFile(void);
+    ~BufferedFile(void) override;
 
     /** Close the file, if open. */
-    virtual void Close(void);
+    void Close(void) override;
 
     /**
      * behaves like File::Flush
@@ -63,7 +63,7 @@ public:
      * throws IOException with ERROR_WRITE_FAULT if a buffer in write mode
      *                    could not be flushed to disk.
      */
-    virtual void Flush(void);
+    void Flush(void) override;
 
     /**
      * Answer the size of the current buffer in bytes.
@@ -78,32 +78,32 @@ public:
     /**
      * behaves like File::GetSize
      */
-    virtual File::FileSize GetSize(void) const;
+    File::FileSize GetSize(void) const override;
 
     /**
      * behaves like File::Open
      */
-    virtual bool Open(const char* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
-        const File::CreationMode creationMode);
+    bool Open(const char* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
+        const File::CreationMode creationMode) override;
 
     /**
      * behaves like File::Open
      */
-    virtual bool Open(const wchar_t* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
-        const File::CreationMode creationMode);
+    bool Open(const wchar_t* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
+        const File::CreationMode creationMode) override;
 
     /**
      * behaves like File::Read
      * Performs an implicite flush if the buffer is not in read mode.
      * Ensures that the buffer is in read mode.
      */
-    virtual File::FileSize Read(void* outBuf, const File::FileSize bufSize);
+    File::FileSize Read(void* outBuf, const File::FileSize bufSize) override;
 
     /**
      * behaves like File::Seek
      * Performs an implicite flush if the buffer is in write mode.
      */
-    virtual File::FileSize Seek(const File::FileOffset offset, const File::SeekStartPoint from = File::BEGIN);
+    File::FileSize Seek(const File::FileOffset offset, const File::SeekStartPoint from = File::BEGIN) override;
 
     /**
      * Sets the size of the current buffer.
@@ -118,7 +118,7 @@ public:
     /**
      * behaves like File::Tell
      */
-    virtual File::FileSize Tell(void) const;
+    File::FileSize Tell(void) const override;
 
     /**
      * behaves like File::Write
@@ -128,7 +128,7 @@ public:
      * throws IOException with ERROR_WRITE_FAULT if a buffer in write mode
      *                    could not be flushed to disk.
      */
-    virtual File::FileSize Write(const void* buf, const File::FileSize bufSize);
+    File::FileSize Write(const void* buf, const File::FileSize bufSize) override;
 
 private:
     /** the default buffer size when creating new buffers */

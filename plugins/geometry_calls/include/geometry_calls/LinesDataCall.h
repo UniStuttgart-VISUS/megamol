@@ -621,7 +621,7 @@ public:
     LinesDataCall(void);
 
     /** Dtor. */
-    virtual ~LinesDataCall(void);
+    ~LinesDataCall(void) override;
 
     /**
      * Answer the size of the lines lists

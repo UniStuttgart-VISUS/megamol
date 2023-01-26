@@ -36,7 +36,7 @@ public:
         return true;
     }
     ParticleDensityOpacityModule(void);
-    virtual ~ParticleDensityOpacityModule(void);
+    ~ParticleDensityOpacityModule(void) override;
 
 private:
     class Unlocker : public geocalls::MultiParticleDataCall::Unlocker {
@@ -46,10 +46,10 @@ private:
                 , inner(inner) {
             // intentionally empty
         }
-        virtual ~Unlocker(void) {
+        ~Unlocker(void) override {
             this->Unlock();
         }
-        virtual void Unlock(void) {
+        void Unlock(void) override {
             if (this->inner != nullptr) {
                 this->inner->Unlock();
                 SAFE_DELETE(this->inner);
@@ -70,8 +70,8 @@ private:
         AlphaInvertOverwrite = 4,
     };
 
-    virtual bool create(void);
-    virtual void release(void);
+    bool create(void) override;
+    void release(void) override;
     bool getDataCallback(core::Call& caller);
     bool getExtentCallback(core::Call& caller);
 

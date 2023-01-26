@@ -33,7 +33,7 @@ public:
             , range_updated(false) {}
 
     /** Dtor. */
-    virtual ~AbstractCallGetTransferFunction() {}
+    ~AbstractCallGetTransferFunction() override {}
 
     /**
      * Answer whether the connected transferfunction is dirty

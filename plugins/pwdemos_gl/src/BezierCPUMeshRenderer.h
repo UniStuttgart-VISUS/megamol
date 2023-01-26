@@ -50,7 +50,7 @@ public:
     BezierCPUMeshRenderer(void);
 
     /** Dtor. */
-    virtual ~BezierCPUMeshRenderer(void);
+    ~BezierCPUMeshRenderer(void) override;
 
 protected:
     /**
@@ -60,14 +60,14 @@ protected:
      *
      * @return The return value of the function
      */
-    virtual bool render(mmstd_gl::CallRender3DGL& call);
+    bool render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Informs the class if the shader is required
      *
      * @return True if the shader is required
      */
-    virtual bool shader_required(void) const {
+    bool shader_required(void) const override {
         return false;
     }
 
@@ -76,12 +76,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /** Powerfull brute force tube rendering with many parameters */

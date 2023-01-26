@@ -38,11 +38,11 @@ public:
     }
 
     ParticleNeighborhoodGraph();
-    virtual ~ParticleNeighborhoodGraph();
+    ~ParticleNeighborhoodGraph() override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    bool create(void) override;
+    void release(void) override;
 
     bool getData(core::Call& c);
     bool getExtent(core::Call& c);

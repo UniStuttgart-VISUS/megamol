@@ -65,7 +65,7 @@ public:
     MDDriverConnector(void);
 
     /** Dtor */
-    virtual ~MDDriverConnector(void);
+    ~MDDriverConnector(void) override;
 
     /**
      * Startup callback of the thread. The Thread class will call that
@@ -74,7 +74,7 @@ public:
      * @param config A pointer to the Configuration, which specifies the
      *               settings of the connector.
      */
-    virtual void OnThreadStarting(void* config);
+    void OnThreadStarting(void* config) override;
 
     /**
      * Perform the work of a thread.
@@ -85,7 +85,7 @@ public:
      * @return The application dependent return code of the thread. This
      *         must not be STILL_ACTIVE (259).
      */
-    virtual DWORD Run(void* config);
+    DWORD Run(void* config) override;
 
     /**
      * Abort the work of the connector by forcefully closing the underlying
@@ -93,7 +93,7 @@ public:
      *
      * @return true.
      */
-    virtual bool Terminate(void);
+    bool Terminate(void) override;
 
 
     /**

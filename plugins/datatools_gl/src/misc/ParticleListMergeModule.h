@@ -56,7 +56,7 @@ public:
     ParticleListMergeModule(void);
 
     /** Dtor. */
-    virtual ~ParticleListMergeModule(void);
+    ~ParticleListMergeModule(void) override;
 
 protected:
     /**
@@ -69,7 +69,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     /**

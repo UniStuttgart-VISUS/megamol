@@ -151,14 +151,14 @@ public:
     /// <summary>
     /// Destructor
     /// </summary>
-    ~AbstractSTLWriter() {}
+    ~AbstractSTLWriter() override {}
 
 protected:
     /// <summary>
     /// Create the module
     /// </summary>
     /// <returns>True on success; false otherwise</returns>
-    virtual bool create() = 0;
+    bool create() override = 0;
 
     /// <summary>
     /// Copy information from the incoming to the outgoing call
@@ -194,7 +194,7 @@ protected:
     /// <summary>
     /// Release the module
     /// </summary>
-    virtual void release() = 0;
+    void release() override = 0;
 
     /// <summary>
     /// Callback function for requesting information

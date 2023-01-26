@@ -55,7 +55,7 @@ public:
     /**
      * Dtor.
      */
-    virtual ~AbstractNamedObjectContainer();
+    ~AbstractNamedObjectContainer() override;
 
     /**
      * Adds a child to the list of children. The child object must not
@@ -137,18 +137,18 @@ public:
     /**
      * Sets the cleanup mark and all marks of all children
      */
-    virtual void SetAllCleanupMarks();
+    void SetAllCleanupMarks() override;
 
     /**
      * Performs the cleanup operation by removing and deleteing of all
      * marked objects.
      */
-    virtual void PerformCleanup();
+    void PerformCleanup() override;
 
     /**
      * Disconnects calls from all slots which are marked for cleanup.
      */
-    virtual void DisconnectCalls();
+    void DisconnectCalls() override;
 
 protected:
     /**

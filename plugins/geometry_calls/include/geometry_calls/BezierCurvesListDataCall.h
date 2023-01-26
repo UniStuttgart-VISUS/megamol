@@ -432,7 +432,7 @@ public:
     BezierCurvesListDataCall(void);
 
     /** Dtor. */
-    virtual ~BezierCurvesListDataCall(void);
+    ~BezierCurvesListDataCall(void) override;
 
     /**
      * Answer the number of bézier curves.

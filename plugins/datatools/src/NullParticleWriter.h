@@ -29,13 +29,13 @@ public:
     }
 
     NullParticleWriter(void);
-    virtual ~NullParticleWriter(void);
+    ~NullParticleWriter(void) override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
-    virtual bool run(void);
-    virtual bool getCapabilities(core::DataWriterCtrlCall& call);
+    bool create(void) override;
+    void release(void) override;
+    bool run(void) override;
+    bool getCapabilities(core::DataWriterCtrlCall& call) override;
 
 private:
     core::CallerSlot dataSlot;

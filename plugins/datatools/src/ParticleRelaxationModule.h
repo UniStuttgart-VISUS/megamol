@@ -43,7 +43,7 @@ public:
     ParticleRelaxationModule(void);
 
     /** Dtor */
-    virtual ~ParticleRelaxationModule(void);
+    ~ParticleRelaxationModule(void) override;
 
 protected:
     /**
@@ -54,7 +54,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateExtent(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateExtent(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
     /**
      * Manipulates the particle data
@@ -64,7 +64,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     /** The hash id of the data stored */

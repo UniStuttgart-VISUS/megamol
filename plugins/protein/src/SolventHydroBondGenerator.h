@@ -38,7 +38,7 @@ public:
     SolventHydroBondGenerator(void);
 
     /** Dtor */
-    virtual ~SolventHydroBondGenerator(void);
+    ~SolventHydroBondGenerator(void) override;
 
     /**
      * Answer the name of this module.
@@ -74,7 +74,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Call callback to get the data
@@ -121,7 +121,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /**
@@ -142,12 +142,12 @@ private:
         }
 
         /** Dtor. */
-        virtual ~Unlocker(void) {
+        ~Unlocker(void) override {
             this->Unlock();
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void) {
+        void Unlock(void) override {
             this->mol->Unlock();
         }
 

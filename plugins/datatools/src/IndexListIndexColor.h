@@ -37,11 +37,11 @@ public:
     /** ctor */
     IndexListIndexColor();
     /** dtor */
-    virtual ~IndexListIndexColor();
+    ~IndexListIndexColor() override;
 
 protected:
     /** Create updated particle data */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     /** In slot for index lists */

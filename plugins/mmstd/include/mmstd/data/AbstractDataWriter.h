@@ -23,7 +23,7 @@ public:
     AbstractDataWriter();
 
     /** Dtor. */
-    virtual ~AbstractDataWriter();
+    ~AbstractDataWriter() override;
 
 protected:
     /**

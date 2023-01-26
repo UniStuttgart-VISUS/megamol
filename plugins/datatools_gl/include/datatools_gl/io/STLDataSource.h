@@ -57,14 +57,14 @@ public:
     /// <summary>
     /// Destructor
     /// </summary>
-    ~STLDataSource();
+    ~STLDataSource() override;
 
 protected:
     /// <summary>
     /// Create the module
     /// </summary>
     /// <returns>True on success; false otherwise</returns>
-    virtual bool create() override;
+    bool create() override;
 
     /// <summary>
     /// Read in file and store data
@@ -89,7 +89,7 @@ protected:
     /// <summary>
     /// Release the module
     /// </summary>
-    virtual void release() override;
+    void release() override;
 
 private:
     /// <summary>

@@ -54,7 +54,7 @@ public:
     IllegalStateException(const IllegalStateException& rhs);
 
     /** Dtor. */
-    virtual ~IllegalStateException(void);
+    ~IllegalStateException(void) override;
 
     /**
      * Assignment operator.

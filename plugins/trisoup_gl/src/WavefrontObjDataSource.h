@@ -58,7 +58,7 @@ public:
     WavefrontObjDataSource(void);
 
     /** Dtor */
-    virtual ~WavefrontObjDataSource(void);
+    ~WavefrontObjDataSource(void) override;
 
 protected:
     /**
@@ -68,7 +68,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool load(const vislib::TString& filename);
+    bool load(const vislib::TString& filename) override;
 
 private:
     /** Internat utility struct to store a single triangle */

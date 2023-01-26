@@ -66,7 +66,7 @@ public:
     SimpleMessageDispatcher(void);
 
     /** Dtor. */
-    ~SimpleMessageDispatcher(void);
+    ~SimpleMessageDispatcher(void) override;
 
     /**
      * Add a new SimpleMessageDispatchListener to be informed about events
@@ -114,7 +114,7 @@ public:
      * @param config A pointer to the Configuration, which specifies the
      *               settings of the dispatcher.
      */
-    virtual void OnThreadStarting(void* config);
+    void OnThreadStarting(void* config) override;
 
     /**
      * Removes, if registered, 'listener' from the list of objects informed
@@ -138,7 +138,7 @@ public:
      * @return The application dependent return code of the thread. This
      *         must not be STILL_ACTIVE (259).
      */
-    virtual DWORD Run(void* config);
+    DWORD Run(void* config) override;
 
     /**
      * Abort the work of the dispatcher by forcefully closing the underlying
@@ -146,7 +146,7 @@ public:
      *
      * @return true.
      */
-    virtual bool Terminate(void);
+    bool Terminate(void) override;
 
 private:
     /** A thread-safe list for the message listeners. */

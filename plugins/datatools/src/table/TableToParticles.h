@@ -57,7 +57,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~TableToParticles(void);
+    ~TableToParticles(void) override;
 
 protected:
     /**
@@ -65,7 +65,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     bool getMultiParticleData(core::Call& call);
 
@@ -74,7 +74,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     bool assertData(table::TableDataCall* ft, unsigned int frameID = 0);

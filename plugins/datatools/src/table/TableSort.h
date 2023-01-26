@@ -55,14 +55,14 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~TableSort(void);
+    ~TableSort(void) override;
 
 protected:
-    virtual bool create(void);
+    bool create(void) override;
 
-    virtual bool prepareData(TableDataCall& src, const unsigned int frameID) override;
+    bool prepareData(TableDataCall& src, const unsigned int frameID) override;
 
-    virtual void release(void);
+    void release(void) override;
 
 private:
     core::param::ParamSlot paramColumn;

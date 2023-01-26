@@ -57,7 +57,7 @@ public:
     OpenGLTexture2D(void);
 
     /** Dtor. */
-    virtual ~OpenGLTexture2D(void);
+    ~OpenGLTexture2D(void) override;
 
     /**
      * Bind the texture on the active texture unit.
@@ -65,7 +65,7 @@ public:
      * @return GL_NO_ERROR in case of success, an OpenGL error code
      *         otherwise.
      */
-    virtual GLenum Bind(void);
+    GLenum Bind(void) override;
 
     /**
      * Create and initialise the texture object.

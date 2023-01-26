@@ -62,21 +62,21 @@ public:
     explicit SimpleMessageHeader(const SimpleMessageHeaderData* data);
 
     /** Dtor. */
-    virtual ~SimpleMessageHeader(void);
+    ~SimpleMessageHeader(void) override;
 
     /**
      * Provides direct access to the underlying SimpleMessageHeaderData.
      *
      * @return A pointer to the message header data.
      */
-    virtual SimpleMessageHeaderData* PeekData(void);
+    SimpleMessageHeaderData* PeekData(void) override;
 
     /**
      * Provides direct access to the underlying SimpleMessageHeaderData.
      *
      * @return A pointer to the message header data.
      */
-    virtual const SimpleMessageHeaderData* PeekData(void) const;
+    const SimpleMessageHeaderData* PeekData(void) const override;
 
     /**
      * Assignment operator.

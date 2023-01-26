@@ -97,7 +97,7 @@ public:
     };
 
     TableDataCall(void);
-    virtual ~TableDataCall(void);
+    ~TableDataCall(void) override;
 
     inline size_t GetColumnsCount(void) const {
         return columns_count;

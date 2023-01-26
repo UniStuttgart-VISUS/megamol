@@ -38,7 +38,7 @@ public:
     TableItemSelector(void);
 
     /** Dtor */
-    virtual ~TableItemSelector(void);
+    ~TableItemSelector(void) override;
 
 protected:
     /** Lazy initialization of the module */

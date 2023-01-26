@@ -31,10 +31,10 @@ public:
     MemoryFile(void);
 
     /** Dtor. */
-    virtual ~MemoryFile(void);
+    ~MemoryFile(void) override;
 
     /** Close the file, if open. */
-    virtual void Close(void);
+    void Close(void) override;
 
     /**
      * Forces all buffered data to be written.
@@ -42,21 +42,21 @@ public:
      *
      * @throws IOException
      */
-    virtual void Flush(void);
+    void Flush(void) override;
 
     /**
      * Answer the size of the file in bytes.
      *
      * @return The size of the file in bytes.
      */
-    virtual FileSize GetSize(void) const;
+    FileSize GetSize(void) const override;
 
     /**
      * Answer whether this file is open.
      *
      * @return true, if the file is open, false otherwise.
      */
-    virtual bool IsOpen(void) const;
+    bool IsOpen(void) const override;
 
     /**
      * Opens a flat memory pointer as file. This object will not take
@@ -99,8 +99,8 @@ public:
      *
      * @return false
      */
-    virtual bool Open(
-        const char* filename, const AccessMode accessMode, const ShareMode shareMode, const CreationMode creationMode);
+    bool Open(const char* filename, const AccessMode accessMode, const ShareMode shareMode,
+        const CreationMode creationMode) override;
 
     /**
      * Opens a file.
@@ -114,8 +114,8 @@ public:
      *
      * @return false
      */
-    virtual bool Open(const wchar_t* filename, const AccessMode accessMode, const ShareMode shareMode,
-        const CreationMode creationMode);
+    bool Open(const wchar_t* filename, const AccessMode accessMode, const ShareMode shareMode,
+        const CreationMode creationMode) override;
 
     /** redeclare remaining Open overloads from file */
     using File::Open;
@@ -128,7 +128,7 @@ public:
      *
      * @return The number of bytes actually read.
      */
-    virtual FileSize Read(void* outBuf, const FileSize bufSize);
+    FileSize Read(void* outBuf, const FileSize bufSize) override;
 
     /**
      * Move the file pointer.
@@ -143,7 +143,7 @@ public:
      * @return The new offset in bytes of the file pointer from the begin of
      *         the file.
      */
-    virtual FileSize Seek(const FileOffset offset, const SeekStartPoint from = BEGIN);
+    FileSize Seek(const FileOffset offset, const SeekStartPoint from = BEGIN) override;
 
     /**
      * Returns the position of the current file pointer
@@ -151,7 +151,7 @@ public:
      * @return Position of the file pointer in bytes from the beginning
      *         of the file.
      */
-    virtual FileSize Tell(void) const;
+    FileSize Tell(void) const override;
 
     /**
      * Write 'bufSize' bytes from 'buf' to the file.
@@ -166,7 +166,7 @@ public:
      *
      * @return The number of bytes acutally written.
      */
-    virtual FileSize Write(const void* buf, const FileSize bufSize);
+    FileSize Write(const void* buf, const FileSize bufSize) override;
 
 private:
     /**

@@ -38,11 +38,11 @@ public:
     }
 
     TclMolSelectionLoader();
-    virtual ~TclMolSelectionLoader();
+    ~TclMolSelectionLoader() override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    bool create(void) override;
+    void release(void) override;
 
 private:
     bool getDataCallback(core::Call& caller);

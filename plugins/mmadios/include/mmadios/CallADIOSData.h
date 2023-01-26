@@ -503,7 +503,7 @@ public:
     CallADIOSData();
 
     /** Dtor. */
-    virtual ~CallADIOSData(void);
+    ~CallADIOSData(void) override;
 
     /**
      * Assignment operator

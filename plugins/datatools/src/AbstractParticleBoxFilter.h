@@ -34,7 +34,7 @@ public:
     AbstractParticleBoxFilter(void);
 
     /** Dtor */
-    virtual ~AbstractParticleBoxFilter(void);
+    ~AbstractParticleBoxFilter(void) override;
 
 protected:
     /**

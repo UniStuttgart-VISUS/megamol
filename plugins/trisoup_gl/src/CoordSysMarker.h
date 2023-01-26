@@ -55,11 +55,11 @@ public:
     CoordSysMarker(void);
 
     /** Dtor */
-    virtual ~CoordSysMarker(void);
+    ~CoordSysMarker(void) override;
 
 protected:
     /** Ensures that the data is loaded */
-    virtual void assertData(void);
+    void assertData(void) override;
 
 private:
 };

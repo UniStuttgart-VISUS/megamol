@@ -23,7 +23,7 @@ public:
     AbstractTexQuartzRenderer(void);
 
     /** Dtor */
-    virtual ~AbstractTexQuartzRenderer(void);
+    ~AbstractTexQuartzRenderer(void) override;
 
 protected:
     /**

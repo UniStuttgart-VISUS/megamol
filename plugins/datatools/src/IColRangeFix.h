@@ -24,10 +24,10 @@ public:
     }
 
     IColRangeFix();
-    virtual ~IColRangeFix();
+    ~IColRangeFix() override;
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     size_t hash;

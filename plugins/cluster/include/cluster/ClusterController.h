@@ -76,7 +76,7 @@ public:
     /**
      * Dtor
      */
-    virtual ~ClusterController();
+    ~ClusterController() override;
 
     /**
      * Sends a message to all nodes in the cluster.
@@ -103,12 +103,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * Perform the work of a thread.
@@ -119,7 +119,7 @@ protected:
      * @return The application dependent return code of the thread. This
      *         must not be STILL_ACTIVE (259).
      */
-    virtual DWORD Run(void* userData);
+    DWORD Run(void* userData) override;
 
     /**
      * This method will be called, if a new computer was found
@@ -133,8 +133,8 @@ protected:
      *              address associated with this handle can be retrieved
      *              via src[hPeer].
      */
-    virtual void OnNodeFound(vislib::net::cluster::DiscoveryService& src,
-        const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer) throw();
+    void OnNodeFound(vislib::net::cluster::DiscoveryService& src,
+        const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer) throw() override;
 
     /**
      * This method will be called, if a new computer disconnected from
@@ -150,9 +150,9 @@ protected:
      * @param hPeer  The handle of the peer that was removed.
      * @param reason The reason why the node was removed from the cluster.
      */
-    virtual void OnNodeLost(vislib::net::cluster::DiscoveryService& src,
+    void OnNodeLost(vislib::net::cluster::DiscoveryService& src,
         const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer,
-        const vislib::net::cluster::DiscoveryListener::NodeLostReason reason) throw();
+        const vislib::net::cluster::DiscoveryListener::NodeLostReason reason) throw() override;
     /**
      * This method is called once the discovery service receives a user
      * message (user defined payload).
@@ -182,9 +182,9 @@ protected:
      *                        by 'msgBody'. It is valid until the callback
      *                        is left.
      */
-    virtual void OnUserMessage(vislib::net::cluster::DiscoveryService& src,
+    void OnUserMessage(vislib::net::cluster::DiscoveryService& src,
         const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer, const bool isClusterMember,
-        const UINT32 msgType, const BYTE* msgBody) throw();
+        const UINT32 msgType, const BYTE* msgBody) throw() override;
 
 private:
     /**

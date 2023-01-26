@@ -35,7 +35,7 @@ public:
     AbstractTriMeshDataSource(void);
 
     /** Dtor */
-    virtual ~AbstractTriMeshDataSource(void);
+    ~AbstractTriMeshDataSource(void) override;
 
 protected:
     /** Alias for mesh class */
@@ -52,7 +52,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Gets the data from the source.
@@ -75,7 +75,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /** Ensures that the data is loaded */
     virtual void assertData(void) = 0;

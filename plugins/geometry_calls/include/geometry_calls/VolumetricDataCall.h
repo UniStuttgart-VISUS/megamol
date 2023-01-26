@@ -110,7 +110,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~VolumetricDataCall(void);
+    ~VolumetricDataCall(void) override;
 
     /**
      * Gets the number of frames starting at GetData().

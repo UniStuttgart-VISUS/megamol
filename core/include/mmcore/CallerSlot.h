@@ -37,7 +37,7 @@ public:
     CallerSlot(const vislib::StringA& name, const vislib::StringA& desc);
 
     /** Dtor. */
-    virtual ~CallerSlot();
+    ~CallerSlot() override;
 
     /**
      * Calls the call function 'func'.
@@ -185,12 +185,12 @@ public:
     /**
      * Clears the cleanup mark for this and all dependent objects.
      */
-    virtual void ClearCleanupMark();
+    void ClearCleanupMark() override;
 
     /**
      * Disconnects calls from all slots which are marked for cleanup.
      */
-    virtual void DisconnectCalls();
+    void DisconnectCalls() override;
 
     /**
      * TODO: Document me

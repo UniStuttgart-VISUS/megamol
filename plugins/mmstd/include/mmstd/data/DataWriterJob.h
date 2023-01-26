@@ -52,7 +52,7 @@ public:
     /**
      * Dtor
      */
-    virtual ~DataWriterJob();
+    ~DataWriterJob() override;
 
     /**
      * Terminates the job thread.
@@ -60,7 +60,7 @@ public:
      * @return true to acknowledge that the job will finish as soon
      *         as possible, false if termination is not possible.
      */
-    virtual bool Terminate();
+    bool Terminate() override;
 
 protected:
     /**
@@ -68,12 +68,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release();
+    void release() override;
 
 private:
     /**
@@ -85,7 +85,7 @@ private:
      * @return The application dependent return code of the thread. This
      *         must not be STILL_ACTIVE (259).
      */
-    virtual DWORD Run(void* userData);
+    DWORD Run(void* userData) override;
 
     /** Slot connecting to the controlled writer */
     CallerSlot writerSlot;

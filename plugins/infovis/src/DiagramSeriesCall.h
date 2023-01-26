@@ -87,7 +87,7 @@ public:
     DiagramSeriesCall(void);
 
     /** dtor */
-    virtual ~DiagramSeriesCall(void);
+    ~DiagramSeriesCall(void) override;
 
     /** Copy operator of the funtion pointer for cascaded DiagramSeries modules */
     DiagramSeriesCall& operator=(const DiagramSeriesCall& rhs);

@@ -65,7 +65,7 @@ public:
     SyncDataSourcesCall();
 
     /** Dtor. */
-    virtual ~SyncDataSourcesCall(void);
+    ~SyncDataSourcesCall(void) override;
 
     bool getFilenameDirty() {
         return fnameDirty;

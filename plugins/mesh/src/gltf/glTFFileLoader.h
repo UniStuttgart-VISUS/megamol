@@ -48,13 +48,13 @@ public:
     }
 
     GlTFFileLoader();
-    ~GlTFFileLoader();
+    ~GlTFFileLoader() override;
 
 protected:
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * Gets the data from the source.
@@ -67,9 +67,9 @@ protected:
 
     bool getGltfMetaDataCallback(core::Call& caller);
 
-    bool getMeshDataCallback(core::Call& caller);
+    bool getMeshDataCallback(core::Call& caller) override;
 
-    bool getMeshMetaDataCallback(core::Call& caller);
+    bool getMeshMetaDataCallback(core::Call& caller) override;
 
     bool disconnectGltfCallback(core::Call& caller);
 

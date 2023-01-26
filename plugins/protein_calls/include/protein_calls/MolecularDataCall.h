@@ -295,7 +295,7 @@ public:
         /**
          * Get the type of the residue
          */
-        virtual ResidueType Identifier() const {
+        ResidueType Identifier() const override {
             return AMINOACID;
         }
 
@@ -1080,7 +1080,7 @@ public:
     MolecularDataCall(void);
 
     /** Dtor. */
-    virtual ~MolecularDataCall(void);
+    ~MolecularDataCall(void) override;
 
     // -------------------- get and set routines --------------------
 

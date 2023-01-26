@@ -58,7 +58,7 @@ public:
     ParticleThermodyn(void);
 
     /** Dtor */
-    virtual ~ParticleThermodyn(void);
+    ~ParticleThermodyn(void) override;
 
     /**
      * Called when the data is requested by this module
@@ -80,10 +80,10 @@ public:
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create(void) override;
 
     /** Resource release */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     bool assertData(geocalls::MultiParticleDataCall* in, geocalls::MultiParticleDataCall* outMPDC);

@@ -25,7 +25,7 @@ public:
 
     ColorToDir();
 
-    virtual ~ColorToDir();
+    ~ColorToDir() override;
 
 private:
     bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;

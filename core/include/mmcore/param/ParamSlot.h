@@ -36,13 +36,13 @@ public:
     ParamSlot(const vislib::StringA& name, const vislib::StringA& desc);
 
     /** Dtor. */
-    virtual ~ParamSlot();
+    ~ParamSlot() override;
 
     /**
      * Makes this slot available. After this method was called the
      * settings of the slot can no longer be changed.
      */
-    virtual void MakeAvailable();
+    void MakeAvailable() override;
 
     /**
      * Sets an update callback method, which is called whenever the dirty
@@ -123,7 +123,7 @@ protected:
      *
      * @return 'true' if the slot has already been made available.
      */
-    virtual bool isSlotAvailable() const;
+    bool isSlotAvailable() const override;
 
 private:
     /**
@@ -170,7 +170,7 @@ private:
         }
 
         /** Dtor. */
-        virtual ~CallbackImpl() {
+        ~CallbackImpl() override {
             this->func = NULL; // DO NOT DELETE
         }
 
@@ -183,7 +183,7 @@ private:
          * @return 'true' if the dirty flag should be resetted, 'false' if
          *         the dirty flag should remain set.
          */
-        virtual bool Update(Module* owner, ParamSlot& slot) {
+        bool Update(Module* owner, ParamSlot& slot) override {
             return update(owner, slot);
         }
 
@@ -211,7 +211,7 @@ private:
      * Sets the dirty flag and triggers the update callback if the dirty
      * flag was not set before.
      */
-    virtual void update();
+    void update() override;
 
     /** The update callback object */
     Callback* callback;

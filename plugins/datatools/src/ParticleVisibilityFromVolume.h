@@ -47,7 +47,7 @@ public:
     ParticleVisibilityFromVolume(void);
 
     /** Dtor */
-    virtual ~ParticleVisibilityFromVolume(void);
+    ~ParticleVisibilityFromVolume(void) override;
 
 protected:
     /**
@@ -60,7 +60,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     /** What to do with the reference value (smaller, larger, epsilon-equal) */

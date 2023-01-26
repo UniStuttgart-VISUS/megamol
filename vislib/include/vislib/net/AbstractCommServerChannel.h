@@ -107,7 +107,7 @@ protected:
     AbstractCommServerChannel(void);
 
     /** Dtor. */
-    virtual ~AbstractCommServerChannel(void);
+    ~AbstractCommServerChannel(void) override;
 };
 
 } /* end namespace net */

@@ -25,10 +25,10 @@ public:
     }
 
     IColInverse();
-    virtual ~IColInverse();
+    ~IColInverse() override;
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     size_t dataHash;

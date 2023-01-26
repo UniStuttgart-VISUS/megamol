@@ -1418,7 +1418,7 @@ public:
     CallTriMeshDataGL(void);
 
     /** Dtor */
-    virtual ~CallTriMeshDataGL(void);
+    ~CallTriMeshDataGL(void) override;
 
     /**
      * Answer the number of objects

@@ -71,7 +71,7 @@ public:
     PtrArray(const PtrArray& rhs) : Super(rhs) {}
 
     /** Dtor. */
-    virtual ~PtrArray(void);
+    ~PtrArray(void) override;
 };
 
 

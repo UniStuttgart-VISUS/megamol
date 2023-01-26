@@ -28,13 +28,13 @@ public:
     }
 
     ModernTrisoupRenderer(void);
-    virtual ~ModernTrisoupRenderer(void);
+    ~ModernTrisoupRenderer(void) override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool create(void) override;
+    void release(void) override;
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     void updateLights(core::view::light::CallLight* lightCall, glm::vec3 camDir);

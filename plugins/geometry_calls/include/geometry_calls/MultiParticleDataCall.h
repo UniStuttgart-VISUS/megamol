@@ -37,7 +37,7 @@ public:
     MultiParticleDataCall(void);
 
     /** Dtor. */
-    virtual ~MultiParticleDataCall(void);
+    ~MultiParticleDataCall(void) override;
 
     /**
      * Assignment operator.

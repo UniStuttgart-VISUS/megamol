@@ -29,7 +29,7 @@ public:
 
     TableSplit();
 
-    virtual ~TableSplit();
+    ~TableSplit() override;
 
 protected:
     bool create() override;

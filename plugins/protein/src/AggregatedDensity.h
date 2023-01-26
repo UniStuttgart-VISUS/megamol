@@ -56,7 +56,7 @@ public:
     AggregatedDensity(void);
 
     /** Dtor */
-    virtual ~AggregatedDensity(void);
+    ~AggregatedDensity(void) override;
 
 protected:
     bool aggregate();
@@ -67,12 +67,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /**

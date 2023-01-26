@@ -50,7 +50,7 @@ public:
         Listener(void) {}
 
         /** Dtor */
-        virtual ~Listener(void) {}
+        ~Listener(void) override {}
 
         /**
          * Informs the client that the cluster is now available.
@@ -103,7 +103,7 @@ public:
     /**
      * Dtor.
      */
-    virtual ~ClusterControllerClient(void);
+    ~ClusterControllerClient(void) override;
 
     /**
      * Sends a message to all nodes in the cluster.
@@ -140,14 +140,14 @@ protected:
      *
      * @param slot The slot that triggered this event.
      */
-    virtual void OnConnect(AbstractSlot& slot);
+    void OnConnect(AbstractSlot& slot) override;
 
     /**
      * This method is called when an object disconnects from the slot.
      *
      * @param slot The slot that triggered this event.
      */
-    virtual void OnDisconnect(AbstractSlot& slot);
+    void OnDisconnect(AbstractSlot& slot) override;
 
     /**
      * Informs the client that the cluster is now available.

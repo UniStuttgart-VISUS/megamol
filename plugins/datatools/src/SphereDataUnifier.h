@@ -59,7 +59,7 @@ public:
     SphereDataUnifier(void);
 
     /** Dtor. */
-    virtual ~SphereDataUnifier(void);
+    ~SphereDataUnifier(void) override;
 
 private:
     /**
@@ -67,12 +67,12 @@ private:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * Gets the data from the source.

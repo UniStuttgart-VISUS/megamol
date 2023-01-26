@@ -51,12 +51,12 @@ public:
     ADIOSFlexConvert();
 
     /** Dtor. */
-    virtual ~ADIOSFlexConvert();
+    ~ADIOSFlexConvert() override;
 
-    bool create();
+    bool create() override;
 
 protected:
-    void release();
+    void release() override;
 
     /**
      * Gets the data from the source.

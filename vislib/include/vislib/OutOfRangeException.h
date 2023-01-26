@@ -59,7 +59,7 @@ public:
     OutOfRangeException(const OutOfRangeException& rhs);
 
     /** Dtor. */
-    virtual ~OutOfRangeException(void);
+    ~OutOfRangeException(void) override;
 
     /**
      * Assignment operator.

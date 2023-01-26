@@ -68,7 +68,7 @@ public:
     SocketException(const SocketException& rhs);
 
     /** Dtor. */
-    virtual ~SocketException(void);
+    ~SocketException(void) override;
 
     /**
      * Assignment operator.

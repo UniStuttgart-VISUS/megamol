@@ -68,7 +68,7 @@ public:
 
     MPDCGrid();
 
-    virtual ~MPDCGrid();
+    ~MPDCGrid() override;
 
 protected:
     bool create() override;

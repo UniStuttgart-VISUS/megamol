@@ -65,7 +65,7 @@ public:
     enum SlotStatus { STATUS_UNAVAILABLE, STATUS_ENABLED, STATUS_CONNECTED };
 
     /** Dtor. */
-    virtual ~AbstractSlot();
+    ~AbstractSlot() override;
 
     /**
      * Gets a human readable description of this slot.

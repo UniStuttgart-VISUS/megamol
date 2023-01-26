@@ -34,14 +34,14 @@ public:
     LocalBoundingBoxExtractor(void);
 
     /** Dtor */
-    ~LocalBoundingBoxExtractor(void);
+    ~LocalBoundingBoxExtractor(void) override;
 
 protected:
     /** Lazy initialization of the module */
-    bool create(void);
+    bool create(void) override;
 
     /** Resource release */
-    void release(void);
+    void release(void) override;
 
 private:
     /**

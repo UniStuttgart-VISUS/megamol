@@ -464,7 +464,7 @@ public:
     SplitMergeCall(void);
 
     /** Dtor. */
-    virtual ~SplitMergeCall(void);
+    ~SplitMergeCall(void) override;
 
     /**
      * Add a diagram series to theData.

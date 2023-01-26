@@ -26,9 +26,9 @@ public:
         return true;
     }
     DumpIColorHistogramModule(void);
-    virtual ~DumpIColorHistogramModule(void);
-    virtual bool create(void);
-    virtual void release(void);
+    ~DumpIColorHistogramModule(void) override;
+    bool create(void) override;
+    void release(void) override;
 
 private:
     bool dump(::megamol::core::param::ParamSlot& param);

@@ -59,7 +59,7 @@ public:
     ParticleBoxGeneratorDataSource(void);
 
     /** Dtor. */
-    virtual ~ParticleBoxGeneratorDataSource(void);
+    ~ParticleBoxGeneratorDataSource(void) override;
 
 protected:
     /**
@@ -67,12 +67,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     typedef geocalls::SimpleSphericalParticles Particles;

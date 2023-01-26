@@ -37,7 +37,7 @@ public:
     VTKLegacyDataCallUnstructuredGrid(void);
 
     /** Dtor. */
-    virtual ~VTKLegacyDataCallUnstructuredGrid(void);
+    ~VTKLegacyDataCallUnstructuredGrid(void) override;
 
     /**
      * Answer the name of this module.

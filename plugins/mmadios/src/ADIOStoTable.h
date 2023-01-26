@@ -48,11 +48,11 @@ public:
     ADIOStoTable(void);
 
     /** Dtor. */
-    virtual ~ADIOStoTable(void);
+    ~ADIOStoTable(void) override;
 
 protected:
-    virtual bool create();
-    virtual void release();
+    bool create() override;
+    void release() override;
 
     core::CallerSlot _getDataSlot;
     core::CalleeSlot _deployTableSlot;

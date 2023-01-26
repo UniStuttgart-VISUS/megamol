@@ -39,13 +39,13 @@ public:
     }
 
     MMGDDDataSource(void);
-    virtual ~MMGDDDataSource(void);
+    ~MMGDDDataSource(void) override;
 
 protected:
-    virtual core::view::AnimDataModule::Frame* constructFrame(void) const;
-    virtual bool create(void);
-    virtual void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx);
-    virtual void release(void);
+    core::view::AnimDataModule::Frame* constructFrame(void) const override;
+    bool create(void) override;
+    void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) override;
+    void release(void) override;
 
     /** Nested class of frame data */
     class Frame : public core::view::AnimDataModule::Frame {
@@ -56,7 +56,7 @@ protected:
                 , edges() {
             // intentionally empty
         }
-        virtual ~Frame() {
+        ~Frame() override {
             // intentionally empty
         }
 
@@ -91,11 +91,11 @@ protected:
         Unlocker(Frame& frame) : GraphDataCall::Unlocker(), frame(&frame) {
             // intentionally empty
         }
-        virtual ~Unlocker(void) {
+        ~Unlocker(void) override {
             this->Unlock();
             ASSERT(this->frame == nullptr);
         }
-        virtual void Unlock(void) {
+        void Unlock(void) override {
             if (this->frame != nullptr) {
                 this->frame->Unlock();
                 this->frame = nullptr;

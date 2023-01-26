@@ -44,7 +44,7 @@ public:
     Mutex(void) = default;
 
     /** Dtor. */
-    virtual ~Mutex(void) = default;
+    ~Mutex(void) override = default;
 
     /**
      * Acquire a lock on the mutex for the calling thread. The method blocks

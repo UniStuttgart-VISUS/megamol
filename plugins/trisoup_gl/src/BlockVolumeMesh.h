@@ -56,11 +56,11 @@ public:
     BlockVolumeMesh(void);
 
     /** Dtor */
-    virtual ~BlockVolumeMesh(void);
+    ~BlockVolumeMesh(void) override;
 
 protected:
     /** Ensures that the data is loaded */
-    virtual void assertData(void);
+    void assertData(void) override;
 
 private:
     /** The in data slot */

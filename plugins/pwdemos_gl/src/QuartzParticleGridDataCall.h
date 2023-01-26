@@ -310,7 +310,7 @@ public:
     ParticleGridDataCall(void);
 
     /** Dtor. */
-    virtual ~ParticleGridDataCall(void);
+    ~ParticleGridDataCall(void) override;
 
     /**
      * Answer the cells

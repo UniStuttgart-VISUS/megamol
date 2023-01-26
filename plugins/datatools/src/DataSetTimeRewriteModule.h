@@ -60,7 +60,7 @@ public:
     DataSetTimeRewriteModule(void);
 
     /** Dtor. */
-    virtual ~DataSetTimeRewriteModule(void);
+    ~DataSetTimeRewriteModule(void) override;
 
 protected:
     /**
@@ -68,12 +68,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /**

@@ -30,7 +30,7 @@ public:
     AbstractManipulator(const char* outSlotName, const char* inSlotName);
 
     /** Dtor */
-    virtual ~AbstractManipulator(void);
+    ~AbstractManipulator(void) override;
 
 protected:
     /** Lazy initialization of the module */

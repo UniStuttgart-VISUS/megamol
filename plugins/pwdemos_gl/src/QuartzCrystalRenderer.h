@@ -51,7 +51,7 @@ public:
     CrystalRenderer(void);
 
     /** Dtor */
-    virtual ~CrystalRenderer(void);
+    ~CrystalRenderer(void) override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -62,7 +62,7 @@ public:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -71,7 +71,7 @@ public:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 protected:
     /**
@@ -79,12 +79,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /** The slot to get the data */

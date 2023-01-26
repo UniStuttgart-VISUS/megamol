@@ -33,7 +33,7 @@ public:
     SimpleFont(void);
 
     /** Dtor. */
-    virtual ~SimpleFont(void);
+    ~SimpleFont(void) override;
 
     /**
      * Calculates the height of a text block in number of lines, when
@@ -46,7 +46,7 @@ public:
      *
      * @return The height of the text block in number of lines.
      */
-    virtual unsigned int BlockLines(float maxWidth, float size, const char* txt) const;
+    unsigned int BlockLines(float maxWidth, float size, const char* txt) const override;
 
     /**
      * Calculates the height of a text block in number of lines, when
@@ -59,7 +59,7 @@ public:
      *
      * @return The height of the text block in number of lines.
      */
-    virtual unsigned int BlockLines(float maxWidth, float size, const wchar_t* txt) const;
+    unsigned int BlockLines(float maxWidth, float size, const wchar_t* txt) const override;
 
     /**
      * Draws a text at the specified position.
@@ -71,8 +71,8 @@ public:
      * @param txt The zero-terminated string to draw.
      * @param align The alignment of the text.
      */
-    virtual void DrawString(
-        float x, float y, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
+    void DrawString(
+        float x, float y, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const override;
 
     /**
      * Draws a text into a specified rectangular area, and performs
@@ -87,8 +87,8 @@ public:
      * @param txt The zero-terminated string to draw.
      * @param align The alignment of the text inside the area.
      */
-    virtual void DrawString(float x, float y, float w, float h, float size, bool flipY, const char* txt,
-        Alignment align = ALIGN_LEFT_TOP) const;
+    void DrawString(float x, float y, float w, float h, float size, bool flipY, const char* txt,
+        Alignment align = ALIGN_LEFT_TOP) const override;
 
     /**
      * Draws a text at the specified position.
@@ -100,8 +100,8 @@ public:
      * @param txt The zero-terminated string to draw.
      * @param align The alignment of the text.
      */
-    virtual void DrawString(
-        float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const;
+    void DrawString(
+        float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const override;
 
     /**
      * Draws a text into a specified rectangular area, and performs
@@ -116,8 +116,8 @@ public:
      * @param txt The zero-terminated string to draw.
      * @param align The alignment of the text inside the area.
      */
-    virtual void DrawString(float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt,
-        Alignment align = ALIGN_LEFT_TOP) const;
+    void DrawString(float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt,
+        Alignment align = ALIGN_LEFT_TOP) const override;
 
     /**
      * Draws a text at the specified position.
@@ -141,7 +141,7 @@ public:
      *
      * @return The width in the text in logical units.
      */
-    virtual float LineWidth(float size, const char* txt) const;
+    float LineWidth(float size, const char* txt) const override;
 
     /**
      * Answers the width of the line 'txt' in logical units.
@@ -151,7 +151,7 @@ public:
      *
      * @return The width in the text in logical units.
      */
-    virtual float LineWidth(float size, const wchar_t* txt) const;
+    float LineWidth(float size, const wchar_t* txt) const override;
 
 protected:
     /**
@@ -161,14 +161,14 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    virtual bool initialise(void);
+    bool initialise(void) override;
 
     /**
      * Deinitialises the object. You must not call this method directly.
      * Instead call 'Deinitialise'. Derived classes must call
      * 'Deinitialise' in EACH dtor.
      */
-    virtual void deinitialise(void);
+    void deinitialise(void) override;
 
 private:
     /**

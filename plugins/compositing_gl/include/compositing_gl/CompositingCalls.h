@@ -22,7 +22,7 @@ namespace compositing_gl {
 class CallTexture2D : public core::GenericVersionedCall<std::shared_ptr<glowl::Texture2D>, core::EmptyMetaData> {
 public:
     inline CallTexture2D() : GenericVersionedCall<std::shared_ptr<glowl::Texture2D>, core::EmptyMetaData>() {}
-    ~CallTexture2D() = default;
+    ~CallTexture2D() override = default;
 
     static const char* ClassName(void) {
         return "CallTexture2D";
@@ -35,7 +35,7 @@ public:
 class CallCamera : public core::GenericVersionedCall<core::view::Camera, core::EmptyMetaData> {
 public:
     inline CallCamera() : GenericVersionedCall<core::view::Camera, core::EmptyMetaData>() {}
-    ~CallCamera() = default;
+    ~CallCamera() override = default;
 
     static const char* ClassName(void) {
         return "CallCamera";
@@ -50,7 +50,7 @@ class CallFramebufferGL
 public:
     inline CallFramebufferGL()
             : GenericVersionedCall<std::shared_ptr<glowl::FramebufferObject>, core::EmptyMetaData>() {}
-    ~CallFramebufferGL() = default;
+    ~CallFramebufferGL() override = default;
 
     static const char* ClassName(void) {
         return "CallFramebufferGL";

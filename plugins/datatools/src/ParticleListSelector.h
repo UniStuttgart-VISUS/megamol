@@ -44,7 +44,7 @@ public:
     ParticleListSelector(void);
 
     /** Dtor */
-    virtual ~ParticleListSelector(void);
+    ~ParticleListSelector(void) override;
 
 protected:
     /**
@@ -57,7 +57,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     /** The list selection index */

@@ -83,7 +83,7 @@ public:
     /**
      * Finalises the instance.
      */
-    virtual ~MpiCall(void);
+    ~MpiCall(void) override;
 
 #ifdef MEGAMOL_USE_MPI
     /**

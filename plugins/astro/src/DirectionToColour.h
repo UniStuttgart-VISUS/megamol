@@ -64,12 +64,12 @@ public:
     /// <summary>
     /// Finalises the instance.
     /// </summary>
-    virtual ~DirectionToColour(void);
+    ~DirectionToColour(void) override;
 
 protected:
-    virtual bool create(void);
+    bool create(void) override;
 
-    virtual void release(void);
+    void release(void) override;
 
 private:
     static float angle(const glm::vec2& v1, const glm::vec2& v2);

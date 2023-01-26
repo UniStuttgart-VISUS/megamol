@@ -39,7 +39,7 @@ class OrderedCollection : public Collection<T, L> {
 
 public:
     /** Dtor. */
-    virtual ~OrderedCollection(void);
+    ~OrderedCollection(void) override;
 
     /**
      * Add 'element' as last element in the collection.

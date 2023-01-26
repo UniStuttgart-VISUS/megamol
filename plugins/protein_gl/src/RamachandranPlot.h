@@ -53,7 +53,7 @@ public:
     RamachandranPlot();
 
     /** Dtor. */
-    virtual ~RamachandranPlot() override;
+    ~RamachandranPlot() override;
 
 protected:
     /**

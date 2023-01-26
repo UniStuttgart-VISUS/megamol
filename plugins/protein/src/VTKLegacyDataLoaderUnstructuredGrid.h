@@ -37,7 +37,7 @@ public:
     VTKLegacyDataLoaderUnstructuredGrid();
 
     /** DTor */
-    virtual ~VTKLegacyDataLoaderUnstructuredGrid();
+    ~VTKLegacyDataLoaderUnstructuredGrid() override;
 
     /**
      * Answer the name of this module.
@@ -73,12 +73,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'release'.
      */
-    void release(void);
+    void release(void) override;
 
     /**
      * Call callback to get the data
@@ -110,7 +110,7 @@ protected:
      *
      * @return The newly created frame object.
      */
-    virtual Frame* constructFrame(void) const;
+    Frame* constructFrame(void) const override;
 
     /**
      * Loads one frame of the data set into the given 'frame' object. This
@@ -121,7 +121,7 @@ protected:
      * @param frame The frame to be loaded.
      * @param idx The index of the frame to be loaded.
      */
-    virtual void loadFrame(Frame* frame, unsigned int idx);
+    void loadFrame(Frame* frame, unsigned int idx) override;
 
 private:
     /**
@@ -133,7 +133,7 @@ private:
         Frame(megamol::core::view::AnimDataModule& owner);
 
         /** Dtor */
-        virtual ~Frame(void);
+        ~Frame(void) override;
 
         void AddPointData(const char* data, size_t nElements, size_t nComponents, AbstractVTKLegacyData::DataType type,
             vislib::StringA name) {
@@ -302,13 +302,13 @@ private:
         }
 
         /** Dtor. */
-        virtual ~VTKUnlocker(void) {
+        ~VTKUnlocker(void) override {
             this->Unlock();
             ASSERT(this->frame == NULL);
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void) {
+        void Unlock(void) override {
             if (this->frame != NULL) {
                 this->frame->Unlock();
                 this->frame = NULL; // DO NOT DELETE!

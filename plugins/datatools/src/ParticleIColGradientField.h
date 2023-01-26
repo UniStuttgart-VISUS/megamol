@@ -42,7 +42,7 @@ public:
     ParticleIColGradientField(void);
 
     /** Dtor */
-    virtual ~ParticleIColGradientField(void);
+    ~ParticleIColGradientField(void) override;
 
 protected:
     /**
@@ -55,7 +55,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     void compute_colors(geocalls::MultiParticleDataCall& dat);

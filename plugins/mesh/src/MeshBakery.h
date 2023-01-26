@@ -49,7 +49,7 @@ public:
     }
 
     MeshBakery();
-    ~MeshBakery();
+    ~MeshBakery() override;
 
 protected:
     /**
@@ -57,16 +57,16 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
-    virtual bool getMeshDataCallback(core::Call& caller);
+    bool getMeshDataCallback(core::Call& caller) override;
 
-    virtual bool getMeshMetaDataCallback(core::Call& caller);
+    bool getMeshMetaDataCallback(core::Call& caller) override;
 
 private:
     void createTriangleGeometry();

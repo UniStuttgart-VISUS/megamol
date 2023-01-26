@@ -54,7 +54,7 @@ public:
     MissingImplementationException(const MissingImplementationException& rhs);
 
     /** Dtor. */
-    virtual ~MissingImplementationException(void);
+    ~MissingImplementationException(void) override;
 
     /**
      * Assignment operator.

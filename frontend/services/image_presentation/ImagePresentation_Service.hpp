@@ -51,7 +51,7 @@ public:
     }
 
     ImagePresentation_Service();
-    ~ImagePresentation_Service();
+    ~ImagePresentation_Service() override;
 
     bool init(const Config& config);
     bool init(void* configPtr) override;

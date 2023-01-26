@@ -54,7 +54,7 @@ public:
     /**
      * Dtor.
      */
-    ~TickSwitch();
+    ~TickSwitch() override;
 
 protected:
     /**
@@ -62,14 +62,14 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() override {
+    bool create() override {
         return true;
     }
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() override {}
+    void release() override {}
 
 private:
     /** Callback for ticks */

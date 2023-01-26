@@ -59,7 +59,7 @@ public:
     SolventCounter(void);
 
     /** Dtor */
-    virtual ~SolventCounter(void);
+    ~SolventCounter(void) override;
 
     float GetMinValue(void) const {
         return this->minValue;
@@ -77,12 +77,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /**

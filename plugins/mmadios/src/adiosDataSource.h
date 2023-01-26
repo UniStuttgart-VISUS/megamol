@@ -49,12 +49,12 @@ public:
     adiosDataSource(void);
 
     /** Dtor. */
-    virtual ~adiosDataSource(void);
+    ~adiosDataSource(void) override;
 
-    bool create(void);
+    bool create(void) override;
 
 protected:
-    void release(void);
+    void release(void) override;
 
     /**
      * Loads inquired data.

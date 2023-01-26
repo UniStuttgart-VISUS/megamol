@@ -30,10 +30,10 @@ public:
     }
 
     ErosionField();
-    virtual ~ErosionField();
+    ~ErosionField() override;
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inPtData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inPtData) override;
 
 private:
     core::CallerSlot inNDataSlot;

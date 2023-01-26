@@ -610,7 +610,7 @@ public:
      * @throws vislib::Exception Or derived in case that 'str' could not
      *                           be parsed as an end point address.
      */
-    virtual void Parse(const StringA& str);
+    void Parse(const StringA& str) override;
 
     /**
      * Parses a string as a end point address and sets the current
@@ -645,7 +645,7 @@ public:
      * @throws vislib::Exception Or derived in case that 'str' could not
      *                           be parsed as an end point address.
      */
-    virtual void Parse(const StringW& str);
+    void Parse(const StringW& str) override;
 
     /**
      * Parses a string as a end point address and sets the current
@@ -715,14 +715,14 @@ public:
      *
      * @return A string representation of the address.
      */
-    virtual StringA ToStringA(void) const;
+    StringA ToStringA(void) const override;
 
     /**
      * Answer a string representation of the address.
      *
      * @return A string representation of the address.
      */
-    virtual StringW ToStringW(void) const;
+    StringW ToStringW(void) const override;
 
     /**
      * Check for equality.
@@ -731,7 +731,7 @@ public:
      *
      * @return true if this object and 'rhs' are equal, false otherwise.
      */
-    virtual bool operator==(const AbstractCommEndPoint& rhs) const;
+    bool operator==(const AbstractCommEndPoint& rhs) const override;
 
     /**
      * Access the underlying IPEndPoint.
@@ -776,7 +776,7 @@ private:
     IPCommEndPoint(const IPEndPoint& endPoint);
 
     /** Dtor. */
-    virtual ~IPCommEndPoint(void);
+    ~IPCommEndPoint(void) override;
 
     /** The actual IP end point address wrapped by this object. */
     IPEndPoint endPoint;

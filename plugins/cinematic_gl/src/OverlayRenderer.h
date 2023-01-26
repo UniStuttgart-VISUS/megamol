@@ -68,7 +68,7 @@ public:
     OverlayRenderer();
 
     /** Dtor. */
-    virtual ~OverlayRenderer();
+    ~OverlayRenderer() override;
 
 protected:
     /**
@@ -76,12 +76,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release();
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -92,7 +92,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -101,7 +101,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     struct Rectangle {

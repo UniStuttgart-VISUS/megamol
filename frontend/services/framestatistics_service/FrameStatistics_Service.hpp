@@ -26,7 +26,7 @@ public:
     }
 
     FrameStatistics_Service();
-    ~FrameStatistics_Service();
+    ~FrameStatistics_Service() override;
 
     bool init(const Config& config);
     bool init(void* configPtr) override;

@@ -49,7 +49,7 @@ public:
     }
 
     Remote_Service();
-    ~Remote_Service();
+    ~Remote_Service() override;
 
     bool init(const Config& config);
     bool init(void* configPtr) override;

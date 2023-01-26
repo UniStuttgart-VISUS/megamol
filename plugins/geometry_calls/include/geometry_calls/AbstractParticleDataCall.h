@@ -126,7 +126,7 @@ protected:
     AbstractParticleDataCall(void);
 
     /** Dtor. */
-    virtual ~AbstractParticleDataCall(void);
+    ~AbstractParticleDataCall(void) override;
 
 private:
 #ifdef _WIN32

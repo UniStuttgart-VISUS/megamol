@@ -23,7 +23,7 @@ public:
 
     ParticleIColClustering(void);
 
-    virtual ~ParticleIColClustering(void);
+    ~ParticleIColClustering(void) override;
 
 protected:
     bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;

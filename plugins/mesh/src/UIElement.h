@@ -46,7 +46,7 @@ public:
     }
 
     UIElement();
-    ~UIElement();
+    ~UIElement() override;
 
 protected:
     /**
@@ -54,7 +54,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void);
+    bool create(void) override;
 
     /**
      * Gets the data from the source.
@@ -70,7 +70,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
 private:
     /** The gltf file name */

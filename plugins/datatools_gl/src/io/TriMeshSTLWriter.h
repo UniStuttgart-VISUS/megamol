@@ -54,14 +54,14 @@ public:
     /// <summary>
     /// Destructor
     /// </summary>
-    ~TriMeshSTLWriter();
+    ~TriMeshSTLWriter() override;
 
 protected:
     /// <summary>
     /// Create the module
     /// </summary>
     /// <returns>True on success; false otherwise</returns>
-    virtual bool create() override;
+    bool create() override;
 
     /// <summary>
     /// Copy information from the incoming to the outgoing call
@@ -69,7 +69,7 @@ protected:
     /// <param name="caller">Incoming call</param>
     /// <param name="callee">Outgoing call</param>
     /// <returns>True on success; false otherwise</returns>
-    virtual bool copy_info_upstream(core::AbstractGetData3DCall& caller, core::AbstractGetData3DCall& callee) override;
+    bool copy_info_upstream(core::AbstractGetData3DCall& caller, core::AbstractGetData3DCall& callee) override;
 
     /// <summary>
     /// Copy information from the outgoing to the incoming call
@@ -77,8 +77,7 @@ protected:
     /// <param name="caller">Incoming call</param>
     /// <param name="callee">Outgoing call</param>
     /// <returns>True on success; false otherwise</returns>
-    virtual bool copy_info_downstream(
-        core::AbstractGetData3DCall& caller, core::AbstractGetData3DCall& callee) override;
+    bool copy_info_downstream(core::AbstractGetData3DCall& caller, core::AbstractGetData3DCall& callee) override;
 
     /// <summary>
     /// Copy data to incoming call
@@ -86,19 +85,19 @@ protected:
     /// <param name="caller">Incoming call</param>
     /// <param name="callee">Outgoing call</param>
     /// <returns>True on success; false otherwise</returns>
-    virtual bool copy_data(core::AbstractGetData3DCall& caller, core::AbstractGetData3DCall& callee) override;
+    bool copy_data(core::AbstractGetData3DCall& caller, core::AbstractGetData3DCall& callee) override;
 
     /// <summary>
     /// Write data from outgoing call to file
     /// </summary>
     /// <param name="callee">Outgoing call</param>
     /// <returns>True on success; false otherwise</returns>
-    virtual bool write_data(core::AbstractGetData3DCall& callee) override;
+    bool write_data(core::AbstractGetData3DCall& callee) override;
 
     /// <summary>
     /// Release the module
     /// </summary>
-    virtual void release() override;
+    void release() override;
 };
 } // namespace io
 } // namespace datatools_gl

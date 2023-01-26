@@ -36,12 +36,12 @@ public:
     AbstractReaderWriterLock(void);
 
     /** Dtor. */
-    virtual ~AbstractReaderWriterLock(void);
+    ~AbstractReaderWriterLock(void) override;
 
     /**
      * Acquire an exclusive lock.
      */
-    virtual void Lock(void);
+    void Lock(void) override;
 
     /**
      * Acquires an exclusive lock
@@ -63,7 +63,7 @@ public:
     /**
      * Release an exclusive lock
      */
-    virtual void Unlock(void);
+    void Unlock(void) override;
 
     /**
      * Release an exclusive lock

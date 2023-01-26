@@ -103,7 +103,7 @@ public:
     CallKeyframeKeeper(void);
 
     /** Dtor */
-    virtual ~CallKeyframeKeeper(void);
+    ~CallKeyframeKeeper(void) override;
 
 
     /**********************************************************************

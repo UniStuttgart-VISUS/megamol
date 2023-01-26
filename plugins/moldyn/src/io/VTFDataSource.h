@@ -60,7 +60,7 @@ public:
     VTFDataSource(void);
 
     /** Dtor. */
-    virtual ~VTFDataSource(void);
+    ~VTFDataSource(void) override;
 
 protected:
     /**
@@ -69,14 +69,14 @@ protected:
      *
      * @return The newly created frame object.
      */
-    virtual core::view::AnimDataModule::Frame* constructFrame(void) const;
+    core::view::AnimDataModule::Frame* constructFrame(void) const override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Loads one frame of the data set into the given 'frame' object. This
@@ -87,12 +87,12 @@ protected:
      * @param frame The frame to be loaded.
      * @param idx The index of the frame to be loaded.
      */
-    virtual void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx);
+    void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /** Nested class of simple vim types */
@@ -281,7 +281,7 @@ private:
         Frame(core::view::AnimDataModule& owner);
 
         /** Dtor. */
-        virtual ~Frame(void);
+        ~Frame(void) override;
 
         /**
          * Clears the internal data buffers
@@ -425,13 +425,13 @@ private:
         }
 
         /** Dtor. */
-        virtual ~Unlocker(void) {
+        ~Unlocker(void) override {
             this->Unlock();
             ASSERT(this->frame == NULL);
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void) {
+        void Unlock(void) override {
             if (this->frame != NULL) {
                 this->frame->Unlock();
                 this->frame = NULL; // DO NOT DELETE!

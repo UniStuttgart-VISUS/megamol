@@ -47,14 +47,14 @@ public:
     TableColumnFilter(void);
 
     /** Dtor */
-    virtual ~TableColumnFilter(void);
+    ~TableColumnFilter(void) override;
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create(void) override;
 
     /** Resource release */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /** Data callback */

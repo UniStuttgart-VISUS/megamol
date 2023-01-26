@@ -37,7 +37,7 @@ public:
     bool Send(std::vector<char> const& buf, send_type const type = ST_UNDEF) override;
     bool Recv(std::vector<char>& buf, recv_type const type = RT_UNDEF) override;
     bool Disconnect() override;
-    virtual ~MPICommFabric(void);
+    ~MPICommFabric(void) override;
 
 private:
     int my_rank_;
@@ -64,7 +64,7 @@ public:
     bool Send(std::vector<char> const& buf, send_type const type = ST_UNDEF) override;
     bool Recv(std::vector<char>& buf, recv_type const type = RT_UNDEF) override;
     bool Disconnect(void) override;
-    virtual ~ZMQCommFabric(void);
+    ~ZMQCommFabric(void) override;
 
 private:
     zmq::context_t ctx_;
@@ -105,7 +105,7 @@ public:
 
     bool Disconnect(void) override;
 
-    virtual ~FBOCommFabric(void) = default;
+    ~FBOCommFabric(void) override = default;
 
 protected:
 private:

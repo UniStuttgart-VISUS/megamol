@@ -179,7 +179,7 @@ public:
     EllipsoidalParticleDataCall(void);
 
     /** Dtor. */
-    virtual ~EllipsoidalParticleDataCall(void);
+    ~EllipsoidalParticleDataCall(void) override;
 
     /**
      * Assignment operator.

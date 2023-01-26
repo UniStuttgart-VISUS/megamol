@@ -49,7 +49,7 @@ public:
     VMDDXLoader(void);
 
     /** Dtor */
-    virtual ~VMDDXLoader(void);
+    ~VMDDXLoader(void) override;
 
     /**
      * Answer the name of this module.
@@ -84,12 +84,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'release'.
      */
-    void release(void);
+    void release(void) override;
 
     /**
      * Call callback to get the data

@@ -68,7 +68,7 @@ public:
     ParticleDataCall(void);
 
     /** Dtor. */
-    virtual ~ParticleDataCall(void);
+    ~ParticleDataCall(void) override;
 
     /**
      * Gets the number of groups

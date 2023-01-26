@@ -37,7 +37,7 @@ public:
     MDSProjection(void);
 
     /** Destructor */
-    virtual ~MDSProjection(void);
+    ~MDSProjection(void) override;
 
     static Eigen::MatrixXd euclideanDissimilarityMatrix(Eigen::MatrixXd dataMatrix);
 
@@ -54,10 +54,10 @@ public:
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create(void) override;
 
     /** Resource release */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     static Eigen::MatrixXd bMatrix(Eigen::MatrixXd X, Eigen::MatrixXd W, Eigen::MatrixXd dissimilarityMatrix);

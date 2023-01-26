@@ -204,7 +204,7 @@ private:
         Worker(void);
 
         /** Dtor. */
-        virtual ~Worker(void);
+        ~Worker(void) override;
 
         /**
          * Perform the work of a thread.
@@ -216,7 +216,7 @@ private:
          *
          * @return 0, always.
          */
-        virtual DWORD Run(void* pool);
+        DWORD Run(void* pool) override;
 
     private:
         /** The pool to get the work items from. */

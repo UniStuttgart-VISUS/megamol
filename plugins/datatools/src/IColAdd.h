@@ -27,10 +27,10 @@ public:
     }
 
     IColAdd();
-    virtual ~IColAdd();
+    ~IColAdd() override;
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     core::CallerSlot inDataBSlot;

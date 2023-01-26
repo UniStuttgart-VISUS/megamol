@@ -66,7 +66,7 @@ public:
     TrajectorySmoothFilter(void);
 
     /** Dtor. */
-    virtual ~TrajectorySmoothFilter(void);
+    ~TrajectorySmoothFilter(void) override;
 
 protected:
     /**
@@ -74,12 +74,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * Call callback to get the data
@@ -118,12 +118,12 @@ private:
         }
 
         /** Dtor. */
-        virtual ~Unlocker(void) {
+        ~Unlocker(void) override {
             this->Unlock();
         }
 
         /** Unlocks the data */
-        virtual void Unlock(void) {
+        void Unlock(void) override {
             this->mol->Unlock();
         }
 

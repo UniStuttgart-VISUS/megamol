@@ -66,7 +66,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~DifferenceVolume(void);
+    ~DifferenceVolume(void) override;
 
 protected:
     /**
@@ -103,7 +103,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Computes the hash of 'data'.
@@ -151,7 +151,7 @@ protected:
     /**
      * Clean up module.
      */
-    virtual void release(void) override;
+    void release(void) override;
 
 private:
     std::array<std::vector<std::uint8_t>, 2> cache;

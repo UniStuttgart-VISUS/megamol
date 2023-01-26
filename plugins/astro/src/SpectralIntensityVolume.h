@@ -34,7 +34,7 @@ public:
 
     SpectralIntensityVolume();
 
-    virtual ~SpectralIntensityVolume();
+    ~SpectralIntensityVolume() override;
 
 protected:
     bool create() override;

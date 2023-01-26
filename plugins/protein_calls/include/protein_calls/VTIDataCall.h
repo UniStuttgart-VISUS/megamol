@@ -38,7 +38,7 @@ public:
     VTIDataCall(void);
 
     /** Dtor. */
-    virtual ~VTIDataCall(void);
+    ~VTIDataCall(void) override;
 
     /**
      * Answer the name of this module.

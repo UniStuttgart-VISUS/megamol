@@ -589,7 +589,7 @@ public:
     DiagramCall(void);
 
     /** Dtor. */
-    virtual ~DiagramCall(void);
+    ~DiagramCall(void) override;
 
     /**
      * Add a guide to guides.

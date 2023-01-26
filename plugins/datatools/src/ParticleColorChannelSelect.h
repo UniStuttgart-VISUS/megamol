@@ -43,7 +43,7 @@ public:
     ParticleColorChannelSelect(void);
 
     /** Dtor */
-    virtual ~ParticleColorChannelSelect(void);
+    ~ParticleColorChannelSelect(void) override;
 
 protected:
     /**
@@ -56,7 +56,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     core::param::ParamSlot channelSlot;

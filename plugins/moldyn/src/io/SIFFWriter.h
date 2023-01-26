@@ -58,7 +58,7 @@ public:
     SIFFWriter(void);
 
     /** Dtor. */
-    virtual ~SIFFWriter(void);
+    ~SIFFWriter(void) override;
 
 protected:
     /**
@@ -66,19 +66,19 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
     /**
      * The main function
      *
      * @return True on success
      */
-    virtual bool run(void);
+    bool run(void) override;
 
     /**
      * Function querying the writers capabilities
@@ -87,7 +87,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool getCapabilities(core::DataWriterCtrlCall& call);
+    bool getCapabilities(core::DataWriterCtrlCall& call) override;
 
 private:
     /** The file name of the file to be written */

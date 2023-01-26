@@ -39,10 +39,10 @@ public:
     }
 
     ParticleIColFilter(void);
-    virtual ~ParticleIColFilter(void);
+    ~ParticleIColFilter(void) override;
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     bool reset(core::param::ParamSlot&);

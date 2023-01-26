@@ -19,7 +19,7 @@ namespace mesh_gl {
 class BaseGltfRenderer : public BaseMeshRenderer {
 public:
     BaseGltfRenderer();
-    ~BaseGltfRenderer() = default;
+    ~BaseGltfRenderer() override = default;
 
 protected:
     void updateRenderTaskCollection(mmstd_gl::CallRender3DGL& call, bool force_update) override;

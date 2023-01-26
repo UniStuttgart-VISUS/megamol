@@ -67,7 +67,7 @@ public:
     SequenceRenderer(void);
 
     /** dtor */
-    virtual ~SequenceRenderer(void) override;
+    ~SequenceRenderer(void) override;
 
 protected:
     /**
@@ -75,12 +75,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void) override;
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void) override;
+    void release(void) override;
 
     /**
      * Callback for mouse events (move, press, and release)
@@ -89,7 +89,7 @@ protected:
      * @param y The y coordinate of the mouse in world space
      * @param flags The mouse flags
      */
-    virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags) override;
+    bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags) override;
 
     /**
      * Prepares the data for rendering.
@@ -114,7 +114,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
 
     bool GetExtentsSequence(mmstd_gl::CallRender2DGL& call);
 
@@ -126,7 +126,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender2DGL& call) override;
+    bool Render(mmstd_gl::CallRender2DGL& call) override;
 
     bool RenderSequence(mmstd_gl::CallRender2DGL& call);
 

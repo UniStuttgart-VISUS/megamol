@@ -47,7 +47,7 @@ public:
     MPIParticleCollector(void);
 
     /** Dtor */
-    virtual ~MPIParticleCollector(void);
+    ~MPIParticleCollector(void) override;
 
 protected:
     /**
@@ -60,7 +60,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
     bool initMPI();
 
 private:

@@ -53,12 +53,12 @@ public:
     AstroSchulz(void);
 
     /** Dtor. */
-    virtual ~AstroSchulz(void);
+    ~AstroSchulz(void) override;
 
 protected:
-    virtual bool create(void);
+    bool create(void) override;
 
-    virtual void release(void);
+    void release(void) override;
 
 private:
     typedef megamol::datatools::table::TableDataCall::ColumnInfo ColumnInfo;

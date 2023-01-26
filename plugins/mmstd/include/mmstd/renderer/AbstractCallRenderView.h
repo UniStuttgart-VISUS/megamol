@@ -110,7 +110,7 @@ public:
     /**
      * Dtor.
      */
-    ~AbstractCallRenderView() = default;
+    ~AbstractCallRenderView() override = default;
 
 private:
     std::shared_ptr<FBO_TYPE> _framebuffer;

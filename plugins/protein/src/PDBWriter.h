@@ -62,7 +62,7 @@ public:
     /**
      * Dtor
      */
-    virtual ~PDBWriter();
+    ~PDBWriter() override;
 
     /**
      * Answers whether or not this job is still running.
@@ -70,14 +70,14 @@ public:
      * @return 'true' if this job is still running, 'false' if it has
      *         finished.
      */
-    virtual bool IsRunning(void) const;
+    bool IsRunning(void) const override;
 
     /**
      * Starts the job thread.
      *
      * @return true if the job has been successfully started.
      */
-    virtual bool Start(void);
+    bool Start(void) override;
 
     /**
      * Terminates the job thread.
@@ -85,7 +85,7 @@ public:
      * @return true to acknowledge that the job will finish as soon
      *         as possible, false if termination is not possible.
      */
-    virtual bool Terminate(void);
+    bool Terminate(void) override;
 
 protected:
     /**
@@ -93,12 +93,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /**

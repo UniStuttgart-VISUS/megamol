@@ -70,7 +70,7 @@ public:
      *
      * @throws SocketException In case the operation fails.
      */
-    virtual SmartRef<AbstractCommClientChannel> Accept(void);
+    SmartRef<AbstractCommClientChannel> Accept(void) override;
 
     /**
      * Binds the server to a specified end point address.
@@ -82,7 +82,7 @@ public:
      * @throws SocketException If the socket could not be bound to the
      *                         specified end point address.
      */
-    virtual void Bind(SmartRef<AbstractCommEndPoint> endPoint);
+    void Bind(SmartRef<AbstractCommEndPoint> endPoint) override;
 
     /**
      * Terminate the open connection if any and reset the communication
@@ -90,7 +90,7 @@ public:
      *
      * @throws SocketException In case the operation fails.
      */
-    virtual void Close(void);
+    void Close(void) override;
 
     /**
      * Connects the channel to the peer node at the specified end
@@ -100,7 +100,7 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    virtual void Connect(SmartRef<AbstractCommEndPoint> endPoint);
+    void Connect(SmartRef<AbstractCommEndPoint> endPoint) override;
 
     /**
      * Get the underlying socket.
@@ -123,7 +123,7 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    virtual SmartRef<AbstractCommEndPoint> GetLocalEndPoint(void) const;
+    SmartRef<AbstractCommEndPoint> GetLocalEndPoint(void) const override;
 
     /**
      * Answer the address the remote peer of this channel is using.
@@ -137,7 +137,7 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    virtual SmartRef<AbstractCommEndPoint> GetRemoteEndPoint(void) const;
+    SmartRef<AbstractCommEndPoint> GetRemoteEndPoint(void) const override;
 
     /**
      * Answer whether the Nagle algorihm is disabled on the socket.
@@ -175,7 +175,7 @@ public:
      *
      * @throws SocketException In case the operation fails.
      */
-    virtual void Listen(const int backlog = SOMAXCONN);
+    void Listen(const int backlog = SOMAXCONN) override;
 
     /**
      * Receives 'cntBytes' over the communication channel and saves them to
@@ -199,8 +199,8 @@ public:
      *                                   disconnect gracefully.
      * @throws SocketException In case the operation fails.
      */
-    virtual SIZE_T Receive(
-        void* outData, const SIZE_T cntBytes, const UINT timeout = TIMEOUT_INFINITE, const bool forceReceive = true);
+    SIZE_T Receive(void* outData, const SIZE_T cntBytes, const UINT timeout = TIMEOUT_INFINITE,
+        const bool forceReceive = true) override;
 
     /**
      * Send 'cntBytes' from the location designated by 'data' over the
@@ -222,8 +222,8 @@ public:
      *
      * @throws SocketException In case the operation fails.
      */
-    virtual SIZE_T Send(
-        const void* data, const SIZE_T cntBytes, const UINT timeout = TIMEOUT_INFINITE, const bool forceSend = true);
+    SIZE_T Send(const void* data, const SIZE_T cntBytes, const UINT timeout = TIMEOUT_INFINITE,
+        const bool forceSend = true) override;
 
 private:
     /** Superclass typedef. */
@@ -253,7 +253,7 @@ private:
     TcpCommChannel(const TcpCommChannel& rhs);
 
     /** Dtor. */
-    virtual ~TcpCommChannel(void);
+    ~TcpCommChannel(void) override;
 
     /**
      * Creates or re-creates the underlying socket.

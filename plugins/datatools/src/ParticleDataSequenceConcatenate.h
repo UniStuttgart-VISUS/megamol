@@ -26,11 +26,11 @@ public:
         return true;
     }
     ParticleDataSequenceConcatenate();
-    virtual ~ParticleDataSequenceConcatenate();
+    ~ParticleDataSequenceConcatenate() override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    bool create(void) override;
+    void release(void) override;
 
 private:
     bool getExtend(megamol::core::Call& c);

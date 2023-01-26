@@ -60,7 +60,7 @@ public:
     QuartzTexRenderer(void);
 
     /** Dtor */
-    virtual ~QuartzTexRenderer(void);
+    ~QuartzTexRenderer(void) override;
 
 protected:
     /**
@@ -72,7 +72,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -81,19 +81,19 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /** The crystalite shader */

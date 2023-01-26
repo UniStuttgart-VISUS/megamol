@@ -157,7 +157,7 @@ protected:
     AbstractCommClientChannel(void);
 
     /** Dtor. */
-    virtual ~AbstractCommClientChannel(void);
+    ~AbstractCommClientChannel(void) override;
 };
 
 } /* end namespace net */

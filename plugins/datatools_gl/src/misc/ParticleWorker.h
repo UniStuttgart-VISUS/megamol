@@ -33,8 +33,8 @@ public:
     class VAOUnlocker : public core::AbstractGetDataCall::Unlocker {
     public:
         VAOUnlocker(){};
-        virtual ~VAOUnlocker(){};
-        void Unlock() {
+        ~VAOUnlocker() override{};
+        void Unlock() override {
             glBindVertexArray(0);
             glBindBufferARB(GL_SHADER_STORAGE_BUFFER, 0);
         };
@@ -71,7 +71,7 @@ public:
     ParticleWorker(void);
 
     /** Dtor. */
-    virtual ~ParticleWorker(void);
+    ~ParticleWorker(void) override;
 
 protected:
     /**
@@ -79,12 +79,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create(void) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release(void) override;
 
 private:
     /**

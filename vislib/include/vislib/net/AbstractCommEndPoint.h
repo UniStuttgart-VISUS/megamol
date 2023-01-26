@@ -158,7 +158,7 @@ protected:
     AbstractCommEndPoint(const AbstractCommEndPoint& rhs);
 
     /** Dtor. */
-    virtual ~AbstractCommEndPoint(void);
+    ~AbstractCommEndPoint(void) override;
 };
 
 } /* end namespace net */

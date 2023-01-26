@@ -60,7 +60,7 @@ protected:
      *
      * @return Stream
      */
-    virtual std::iostream& GetStream() override;
+    std::iostream& GetStream() override;
 
 private:
     /** File path parameter */

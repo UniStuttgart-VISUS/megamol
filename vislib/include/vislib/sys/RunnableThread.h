@@ -42,7 +42,7 @@ public:
     RunnableThread(void);
 
     /** Dtor. */
-    virtual ~RunnableThread(void);
+    ~RunnableThread(void) override;
 
     /**
      * Ask the runnable to abort as soon as possible.
@@ -50,7 +50,7 @@ public:
      * @return true to acknowledge that the Runnable will finish as soon
      *         as possible, false if termination is not possible.
      */
-    virtual bool Terminate(void);
+    bool Terminate(void) override;
 
     /**
      * Terminate the thread. See documentation of Thread::Terminate

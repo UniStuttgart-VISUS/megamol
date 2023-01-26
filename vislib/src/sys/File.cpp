@@ -48,7 +48,7 @@ public:
     friend class vislib::sys::File;
 
     /** Close the file, if open. */
-    virtual void Close(void) {
+    void Close(void) override {
         if (this->hFile != NULL) {
             ::fclose(this->hFile);
             this->hFile = NULL;

@@ -41,7 +41,7 @@ public:
         Listener(void) {}
 
         /** Dtor */
-        virtual ~Listener(void) {}
+        ~Listener(void) override {}
 
         /**
          * Informs that the control channel is now connected an can send and receive messages
@@ -83,7 +83,7 @@ public:
     /**
      * Dtor.
      */
-    virtual ~CommChannel(void);
+    ~CommChannel(void) override;
 
     /**
      * Closes the communication channel
@@ -172,8 +172,8 @@ protected:
      *         receiving messages, false will cause the dispatcher to
      *         exit.
      */
-    virtual bool OnCommunicationError(
-        vislib::net::SimpleMessageDispatcher& src, const vislib::Exception& exception) throw();
+    bool OnCommunicationError(
+        vislib::net::SimpleMessageDispatcher& src, const vislib::Exception& exception) throw() override;
 
     /**
      * This method is called immediately after the message dispatcher loop
@@ -184,7 +184,7 @@ protected:
      *
      * @param src The SimpleMessageDispatcher that exited.
      */
-    virtual void OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw();
+    void OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw() override;
 
     /**
      * This method is called immediately before the message dispatcher loop
@@ -197,7 +197,7 @@ protected:
      *
      * @param src The SimpleMessageDispatcher that exited.
      */
-    virtual void OnDispatcherStarted(vislib::net::SimpleMessageDispatcher& src) throw();
+    void OnDispatcherStarted(vislib::net::SimpleMessageDispatcher& src) throw() override;
 
 
     /**
@@ -219,8 +219,8 @@ protected:
      *         receiving messages, false will cause the dispatcher to
      *         exit.
      */
-    virtual bool OnMessageReceived(
-        vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw();
+    bool OnMessageReceived(
+        vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw() override;
 
 private:
     /** The communication channel */

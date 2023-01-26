@@ -26,7 +26,7 @@ public:
 
     ResourceTestModule();
 
-    virtual ~ResourceTestModule();
+    ~ResourceTestModule() override;
 
 protected:
     bool create() override;

@@ -45,14 +45,14 @@ public:
     View3D();
 
     /** Dtor. */
-    virtual ~View3D();
+    ~View3D() override;
 
     /**
      * Renders this AbstractView3D in the currently active OpenGL context.
      *
      * @param context
      */
-    virtual ImageWrapper Render(double time, double instanceTime) override;
+    ImageWrapper Render(double time, double instanceTime) override;
 
     ImageWrapper GetRenderingResult() const override;
 
@@ -62,14 +62,14 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height) override;
+    void Resize(unsigned int width, unsigned int height) override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create();
+    bool create() override;
 };
 
 } // namespace megamol::core::view

@@ -16,7 +16,7 @@ namespace volumetrics {
 class TetraVoxelizer : public vislib::sys::Runnable {
 public:
     TetraVoxelizer(void);
-    ~TetraVoxelizer(void);
+    ~TetraVoxelizer(void) override;
 
     trisoup::volumetrics::VoxelizerFloat GetOffset(trisoup::volumetrics::VoxelizerFloat fValue1,
         trisoup::volumetrics::VoxelizerFloat fValue2, trisoup::volumetrics::VoxelizerFloat fValueDesired);
@@ -52,7 +52,7 @@ public:
      *
      * @return 0 on success, positive on abort, negative on error.
      */
-    virtual DWORD Run(void* userData);
+    DWORD Run(void* userData) override;
 
     /**
      * Asks the thread to terminate after the calculation of the current
@@ -60,7 +60,7 @@ public:
      *
      * @return Always 'true'
      */
-    virtual bool Terminate(void);
+    bool Terminate(void) override;
 
     /**
      * Test for equality. Actually this checks for equality of the
