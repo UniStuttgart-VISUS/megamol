@@ -6,9 +6,8 @@
 set(TARGET_DIR "@CMAKE_INSTALL_PREFIX@/bin")
 set(TARGET_FILE "${TARGET_DIR}/megamol_config.lua")
 set(SOURCE_FILE "@CMAKE_BINARY_DIR@/megamol_config.lua")
-set(SUPER_SOURCE_FILE "@CMAKE_CURRENT_SOURCE_DIR@/extra/megamol_config.lua.in")
 
-if(NOT EXISTS ${TARGET_FILE} OR ${SUPER_SOURCE_FILE} IS_NEWER_THAN ${TARGET_FILE})
+if(NOT EXISTS ${TARGET_FILE} OR ${SOURCE_FILE} IS_NEWER_THAN ${TARGET_FILE})
     message(STATUS "Install: ${TARGET_FILE}")
     if(EXISTS ${TARGET_FILE})
         file(RENAME "${TARGET_FILE}" "${TARGET_FILE}.safety_backup")
