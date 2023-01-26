@@ -12,8 +12,6 @@ if (BUILD_CORE)
   find_package(nlohmann_json CONFIG REQUIRED)
   find_package(PNG REQUIRED)
   find_package(ZLIB REQUIRED)
-  find_package(ZeroMQ REQUIRED)
-  find_package(cppzmq REQUIRED)
   find_package(glm REQUIRED)
   find_package(TBB CONFIG REQUIRED)
   find_package(Lua REQUIRED)
@@ -42,8 +40,6 @@ if (BUILD_CORE)
       nlohmann_json::nlohmann_json
       ${LUA_LIBRARIES}
       frontend_resources
-      libzmq
-      cppzmq
       OpenMP::OpenMP_CXX
       TBB::tbb
     PRIVATE
