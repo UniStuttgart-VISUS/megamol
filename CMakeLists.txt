@@ -36,12 +36,12 @@ megamol_feature_option(MPI "Enable MPI support" OFF)
 megamol_feature_option(OPENGL "Enable OpenGL support" ON)
 megamol_feature_option(OSPRAY "Enable OSPRay support" OFF)
 megamol_feature_option(PROFILING "Enable profiling support" OFF)
-megamol_feature_option(VTKM "Enable VTK-m support" OFF)
 megamol_feature_option(TRACY "Enable tracy support" OFF)
+megamol_feature_option(VTKM "Enable VTK-m support" OFF)
 # dependent options
 megamol_feature_option(CUESDK "Enable Corsair CUESDK support" OFF "WIN32")
-megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "MEGAMOL_USE_OPENGL")
 megamol_feature_option(OPENGL_DEBUGGROUPS "Automatically inject OpenGL debug groups into MegaMol Call callback invocations" OFF "MEGAMOL_USE_OPENGL")
+megamol_feature_option(VR_INTEROP "Enable MegaMol-Unity VR Interop via Spout2" OFF "MEGAMOL_USE_OPENGL")
 
 include(cmake/megamol_vcpkg_empty_port.cmake)
 

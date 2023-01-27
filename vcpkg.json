@@ -111,6 +111,9 @@
         "megamol-shader-factory"
       ]
     },
+    "use-opengl-debuggroups": {
+      "description": "Automatically inject OpenGL debug groups into MegaMol Call callback invocations"
+    },
     "use-ospray": {
       "description": "Use OSPRay",
       "dependencies": [
@@ -124,11 +127,19 @@
         }
       ]
     },
-    "use-opengl-debuggroups": {
-      "description": "Automatically inject OpenGL debug groups into MegaMol Call callback invocations"
-    },
     "use-profiling": {
       "description": "Use Profiling"
+    },
+    "use-tracy": {
+      "description": "Use Tracy",
+      "dependencies": [
+        {
+          "name": "tracy",
+          "features": [
+            "gui-tools"
+          ]
+        }
+      ]
     },
     "use-vr-interop": {
       "description": "Use VR Interop",
@@ -140,17 +151,6 @@
       "description": "Use VTK-m",
       "dependencies": [
         "vtk-m"
-      ]
-    },
-    "use-tracy": {
-      "description": "Use Tracy",
-      "dependencies": [
-        {
-          "name": "tracy",
-          "features" : [
-            "gui-tools"
-          ]
-        }
       ]
     }
   }
