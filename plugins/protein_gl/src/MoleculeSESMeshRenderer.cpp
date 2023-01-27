@@ -544,8 +544,8 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
     // fill the triangle mesh with data
     if (this->reducedSurface.empty())
         return false;
-    int subdivision_level = 2;
-    int vertex_counter = 5 + (subdivision_level + 4) * 22*55;
+    int subdivision_level = 0;
+    int vertex_counter = (subdivision_level + 1) * 22 * mol->AtomCount();
     auto* vertex = new float[vertex_counter * 3]{};
     auto* normal = new float[vertex_counter * 3]{};
     auto* color = new float[vertex_counter * 3]{};
@@ -592,7 +592,7 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
      *
      *
      *
-     */
+
 
 
     vertex[0 + 0] = -0.944;   //Punkt 1     A
@@ -646,7 +646,7 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
     normal[9 + 2] = -11.9975; //Punkt 4
     normal[12 + 0] = float(1.0f/10* (1 / 3.2653051176227024) * -2.7703830000000016 + normal[9 + 0]); //Punkt 5
     normal[12 + 1] = float(1.0f/10* (1/3.2653051176227024) * 1.399128  + normal[9 + 1]);   //Punkt 5
-    normal[12 + 2] = float(1.0f/10*  (1/3.2653051176227024) * 1.0147100000000016 + normal[9 + 2]); //Punkt 5
+    normal[12 + 2] = float(1.0f/10*  (1/3.2653051176227024) * 1.0147100000000016 + normal[9 + 2]); //Punkt 5 */
 
     // 0.14900000000000002
     // 0.7540000000000013
@@ -659,38 +659,22 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
     // -1.407
     //Von A -> C
 
+    auto ico = new Icosphere(0.25, subdivision_level, true);
+    for (auto i = 0; i < 4; i++) {
+        for (int j = 0; j < ico->getVertexCount(); ++j) {
+            vertex[ico->getVertexCount() * 3 * i + 3 * j + 0] = ico->getVertices()[3 * j + 0] + mol->AtomPositions()[3 * i + 0];  // x
+            vertex[ico->getVertexCount() * 3 * i + 3 * j + 1] = ico->getVertices()[3 * j + 1] + mol->AtomPositions()[3 * i + 1];  // y
+            vertex[ico->getVertexCount() * 3 * i + 3 * j + 2] = ico->getVertices()[3 * j + 2] + mol->AtomPositions()[3 * i + 2];  // z
 
-    color[0 + 0] = 1.0f;    //Punkt 1
-    color[0 + 1] = 0.0f;    //Punkt 1
-    color[0 + 2] = 1.0f;    //Punkt 1
-    color[3 + 0] = 0.3f;    //Punkt 2
-    color[3 + 1] = 1.0f;    //Punkt 2
-    color[3 + 2] = 0.6f;    //Punkt 2
-    color[6 + 0] = 0.07f;    //Punkt 3
-    color[6 + 1] = 1.0f;    //Punkt 3
-    color[6 + 2] = 0.79f;    //Punkt 3
-    color[9 + 0] = 0.0f;    //Punkt 4
-    color[9 + 1] = 0.7544f; //Punkt 4
-    color[9 + 2] = 0.10545f;    //Punkt 4
-    color[12 + 0] = 1.0f;    //Punkt 5
-    color[12 + 1] = 1.0; //Punkt 5
-    color[12 + 2] = 0.0f;    //Punkt 5
+            normal[ico->getVertexCount() * 3 * i + 3 * j + 0] = ico->getNormals()[3 * j + 0];
+            normal[ico->getVertexCount() * 3 * i + 3 * j + 1] = ico->getNormals()[3 * j + 1];
+            normal[ico->getVertexCount() * 3 * i + 3 * j + 2] = ico->getNormals()[3 * j + 2];
 
-    auto ico = new Icosphere(0.15, subdivision_level, true);
-    for (int i = 0; i < ico->getVertexCount() *3; ++i) {
-        if ((i % 3) == 0) {
-            vertex[15 + i] = ico->getVertices()[i] + A1;
-            normal[15 + i] = ico->getNormals()[i];
+            color[ico->getVertexCount() * 3 * i + 3 * j + 0] = 0.6f;
+            color[ico->getVertexCount() * 3 * i + 3 * j + 1] = 0.6f;
+            color[ico->getVertexCount() * 3 * i + 3 * j + 2] = 0.6f;
         }
-        if ((i % 3) == 1) {
-            vertex[15 + i] = ico->getVertices()[i] + A2;
-            normal[15 + i] = ico->getNormals()[i];
-        }
-        if ((i % 3) == 2) {
-            vertex[15 + i] = ico->getVertices()[i] + A3;
-            normal[15 + i] = ico->getNormals()[i];
-        }
-        color[15 + i] = 0.5f;
+
     }
 
 
@@ -706,45 +690,17 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
         color[3 * i + 2] = 0.0f;
     }*/
     //int face_counter = (subdivision_level + 1) * 22;
-    int face_counter = 1088;
-    auto* face = new unsigned int[ico->getIndexCount() * 3]{};
-    // Es hat 2 faces
-    // Vorder und Rückseite jeweils
+    int face_counter = (int)ico->getIndexCount()*4;
+    auto* face = new unsigned int[face_counter];
 
-
-    /*
-     *
-     Punkte aus orginalem pdb
-     Nur diese Atome ausgeführt: Bild 1
- ATOM      1  N   GLY A   1      -0.944  20.730 -12.605  1.00 19.62           N
- ATOM      2  CA  GLY A   1      -1.143  19.976 -11.390  1.00 18.58           C
- ATOM      3  C   GLY A   1      -0.115  18.874 -11.198  1.00 16.99           C
-
-     Selbst definierter Punkt:
-     Mit dem Punkt hier: Bild 2
- ATOM      4  C   GLY A   1      -0.734  19.5853 -11.731  1.00 16.99           C
-     *
-     */
-    /*face[0] = 0;
-    face[1] = 1;
-    face[2] = 5 + 10; //5 nicht 15, da hier die vertices und nicht vertices indexes gelesen werden
-
-    face[3] = 0;
-    face[4] = 1;
-    face[5] = 5 + 14;
-
-    face[6] = 0;
-    face[7] = 1;
-    face[8] = 5 + 0; */
-
-
-
-    for (int i = 0; i <  ico->getIndexCount(); ++i) {
-        face[i] = ico->getIndices()[i] + 5;
+    for (auto i = 0; i < 4; i++) {
+        for (int j = 0; j < ico->getIndexCount(); ++j) {
+            face[ico->getIndexCount() * i + j] = ico->getVertexCount() * i + ico->getIndices()[j];
+        }
     }
 
 
-/*
+    /*
     for (auto i = 0; i < this->reducedSurface[0]->GetRSFaceCount(); i++) {
         face[3 * i + 0] = this->reducedSurface[0]->GetRSFace(i)->GetVertex1()->GetIndex();
         face[3 * i + 1] = this->reducedSurface[0]->GetRSFace(i)->GetVertex2()->GetIndex();
@@ -763,7 +719,7 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
     this->triaMesh[0]->SetVertexData(mol->AtomCount(), vertex, normal, color, NULL, true);
     this->triaMesh[0]->SetTriangleData(this->reducedSurface[0]->GetRSFaceCount(), face, true); */
     this->triaMesh[0]->SetVertexData( vertex_counter * 3, vertex, normal, color, nullptr, true);
-    this->triaMesh[0]->SetTriangleData(face_counter, face, true);
+    this->triaMesh[0]->SetTriangleData((int)face_counter/3, face, true);
     this->triaMesh[0]->SetMaterial(nullptr);
 
     // set triangle mesh to caller
