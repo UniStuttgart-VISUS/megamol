@@ -23,7 +23,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
-#include "Icosphere.h"
+#include "protein/Icosphere.h"
 
 
 
