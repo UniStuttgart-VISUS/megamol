@@ -64,7 +64,7 @@ endif ()
 option(MEGAMOL_RUN_CLANG_TIDY "Run clang-tidy." OFF)
 mark_as_advanced(FORCE MEGAMOL_RUN_CLANG_TIDY)
 if (MEGAMOL_RUN_CLANG_TIDY)
-  SET(CMAKE_CXX_CLANG_TIDY "clang-tidy-14;--checks=-*,modernize-use-override,modernize-redundant-void-arg;--header-filter=.;--fix")
+  SET(CMAKE_CXX_CLANG_TIDY "clang-tidy-14;--fix")
 endif ()
 
 # Dependencies

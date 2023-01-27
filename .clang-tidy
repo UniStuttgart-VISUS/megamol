@@ -1,0 +1,8 @@
+---
+Checks: >
+  -*,
+  modernize-redundant-void-arg,
+  modernize-use-override,
+HeaderFilterRegex: '.'
+FormatStyle: file
+...
