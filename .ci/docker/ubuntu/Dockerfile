@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y \
   libomp-dev \
 # vcpkg:
   curl zip unzip tar \
+# ci checks:
+  clang-format \
+  clang-tidy \
 # glfw:
   xorg-dev \
 # gmp:
