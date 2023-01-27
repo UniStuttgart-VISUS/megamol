@@ -545,121 +545,14 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
     if (this->reducedSurface.empty())
         return false;
     int subdivision_level = 0;
-    int vertex_counter = (subdivision_level + 1) * 22 * mol->AtomCount();
+    auto ico = new Icosphere(0.247, subdivision_level, true);
+    int vertex_counter = (int)(ico->getVertexCount() * mol->AtomCount());
     auto* vertex = new float[vertex_counter * 3]{};
     auto* normal = new float[vertex_counter * 3]{};
     auto* color = new float[vertex_counter * 3]{};
 
 
-    /*
-     *
-     *
-     *
-     *                                A
-     *
-     *                                D
-     *                         B              C
-     *
-     *                         Notmale: AB X AC
-     *                         AB = punkt A - B
-     *                         3   7   4    b-a = von b nach a
-     *                         2   2   0    a-b = von a nach b
-     *                       C=  (A-B)+A  und  D= (A-C)+A ->
-     *                                                  C2*D3 - C3*D2
-     *                                                  C3*D1 - C1*D3
-     *                                                  C1*D2 - C2*D1
-     *
-     *                                                  C1: (A1-B1)+A1
-     *                                                  C2: (A2-B2)+A2
-     *                                                  C3: (A3-B3)+A3
-     *                                                  D1: (A1-C1)+A1
-     *                                                  D2: (A2-C2)+A2
-     *                                                  D3  (A3-C3)+A3
-     *
-     *
-<                                     (((A2-B2)+A2)*((A3-C3)+A3) - (((A3-B3)+A3)*((A2-C2)+A2)))
->                                     (((A3-B3)+A3)*((A1-C1)+A1) - (((A1-B1)+A1)*((A3-C3)+A3)))
-                                      (((A1-B1)+A1)*((A2-C2)+A2) - (((A2-B2)+A2)*((A1-C1)+A1)))
-     *                         ......
-     *                          sqrt((((A2-B2)+A2)*((A3-C3)+A3) - (((A3-B3)+A3)*((A2-C2)+A2)))*(((A2-B2)+A2)*((A3-C3)+A3)
-     *                          - (((A3-B3)+A3)*((A2-C2)+A2)))  (((A3-B3)+A3)*((A1-C1)+A1) - (((A1-B1)+A1)*((A3-C3)+A3)))*(((A3-B3)+A3)*((A1-C1)+A1) -
-     *                          (((A1-B1)+A1)*((A3-C3)+A3)))  (((A1-B1)+A1)*((A2-C2)+A2) - (((A2-B2)+A2)*((A1-C1)+A1)))*(((A1-B1)+A1)*((A2-C2)+A2) - (((A2-B2)+A2)*((A1-C1)+A1))))
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
 
-
-
-    vertex[0 + 0] = -0.944;   //Punkt 1     A
-    float A1 = vertex[0];
-    vertex[0 + 1] = 20.730;   //Punkt 1
-    float A2 = vertex[1];
-    vertex[0 + 2] = -12.605;  //Punkt 1
-    float A3 = vertex[2];
-    vertex[3 + 0] = -1.143;   //Punkt 2     B
-    float B1 = vertex[3];
-    vertex[3 + 1] = 19.976;   //Punkt 2
-    float B2 = vertex[4];
-    vertex[3 + 2] = -11.390;  //Punkt 2
-    float B3 = vertex[5];
-    vertex[6 + 0] = -0.115;   //Punkt 3     C
-    float C1 = vertex[6];
-    vertex[6 + 1] = 18.874;   //Punkt 3
-    float C2 = vertex[7];
-    vertex[6 + 2] = -11.198;  //Punkt 3
-    float C3 = vertex[8];
-    vertex[9 + 0] = -0.734;   //Punkt 4    Mittelpunkt
-    float D1 = vertex[9];
-    vertex[9 + 1] = 19.86;    //Punkt 4
-    float D2 = vertex[10];
-    vertex[9 + 2] = -11.731;  //Punkt 4
-    float D3 = vertex[11];
-
-
-    float normierung = std::sqrt((((A2-B2)+A2)*((A3-C3)+A3) -
-                                     (((A3-B3)+A3)*((A2-C2)+A2)))*(((A2-B2)+A2)*((A3-C3)+A3) -
-                                         (((A3-B3)+A3)*((A2-C2)+A2))) + (((A3-B3)+A3)*((A1-C1)+A1) -
-                                     (((A1-B1)+A1)*((A3-C3)+A3)))*(((A3-B3)+A3)*((A1-C1)+A1) -
-                                         (((A1-B1)+A1)*((A3-C3)+A3))) +  (((A1-B1)+A1)*((A2-C2)+A2) -
-                                     (((A2-B2)+A2)*((A1-C1)+A1)))*(((A1-B1)+A1)*((A2-C2)+A2) - (((A2-B2)+A2)*((A1-C1)+A1))));
-    vertex[12 + 0] = (((A2-B2)+A2)*((A3-C3)+A3) - (((A3-B3)+A3)*((A2-C2)+A2)))/(normierung/2)+vertex[9];
-    vertex[12 + 1] = (((A3-B3)+A3)*((A1-C1)+A1) - (((A1-B1)+A1)*((A3-C3)+A3)))/(normierung/2)+vertex[10];
-    vertex[12 + 2] = (((A1-B1)+A1)*((A2-C2)+A2) - (((A2-B2)+A2)*((A1-C1)+A1)))/(normierung/2)+vertex[11];
-
-
-    normal[0 + 0] = -0.944;   //Punkt 1
-    normal[0 + 1] = 20.730;   //Punkt 1
-    normal[0 + 2] = -12.605;  //Punkt 1
-    normal[3 + 0] = -1.143;   //Punkt 2
-    normal[3 + 1] = 19.976;   //Punkt 2
-    normal[3 + 2] = -11.390;  //Punkt 2
-    normal[6 + 0] = -0.115;   //Punkt 3
-    normal[6 + 1] = 18.874;   //Punkt 3
-    normal[6 + 2] = -11.198;  //Punkt 3
-    normal[9 + 0] = -1.043;   //Punkt 4
-    normal[9 + 1] = 20.353;   //Punkt 4
-    normal[9 + 2] = -11.9975; //Punkt 4
-    normal[12 + 0] = float(1.0f/10* (1 / 3.2653051176227024) * -2.7703830000000016 + normal[9 + 0]); //Punkt 5
-    normal[12 + 1] = float(1.0f/10* (1/3.2653051176227024) * 1.399128  + normal[9 + 1]);   //Punkt 5
-    normal[12 + 2] = float(1.0f/10*  (1/3.2653051176227024) * 1.0147100000000016 + normal[9 + 2]); //Punkt 5 */
-
-    // 0.14900000000000002
-    // 0.7540000000000013
-    // -1.2149999999999999
-    //Von A -> B
-
-
-    // -0.979
-    // 1.8560000000000016
-    // -1.407
-    //Von A -> C
-
-    auto ico = new Icosphere(0.25, subdivision_level, true);
     for (auto i = 0; i < 4; i++) {
         for (int j = 0; j < ico->getVertexCount(); ++j) {
             vertex[ico->getVertexCount() * 3 * i + 3 * j + 0] = ico->getVertices()[3 * j + 0] + mol->AtomPositions()[3 * i + 0];  // x
@@ -677,47 +570,15 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
 
     }
 
-
-    /*for (auto i = 0; i < mol->AtomCount() + 1; i++) {
-        vertex[3 * i + 0] = mol->AtomPositions()[3 * i];
-        vertex[3 * i + 1] = mol->AtomPositions()[3 * i + 1];
-        vertex[3 * i + 2] = mol->AtomPositions()[3 * i + 2];
-        normal[3 * i + 0] = mol->AtomPositions()[3 * i];
-        normal[3 * i + 1] = mol->AtomPositions()[3 * i + 1];
-        normal[3 * i + 2] = mol->AtomPositions()[3 * i + 2];
-        color[3 * i + 0] = 1.0f;
-        color[3 * i + 1] = 0.5f;
-        color[3 * i + 2] = 0.0f;
-    }*/
-    //int face_counter = (subdivision_level + 1) * 22;
-    int face_counter = (int)ico->getIndexCount()*4;
+    int face_counter = (int)(ico->getIndexCount()*mol->AtomCount());
     auto* face = new unsigned int[face_counter];
 
-    for (auto i = 0; i < 4; i++) {
+    for (auto i = 0; i < mol->AtomCount(); i++) {
         for (int j = 0; j < ico->getIndexCount(); ++j) {
             face[ico->getIndexCount() * i + j] = ico->getVertexCount() * i + ico->getIndices()[j];
         }
     }
 
-
-    /*
-    for (auto i = 0; i < this->reducedSurface[0]->GetRSFaceCount(); i++) {
-        face[3 * i + 0] = this->reducedSurface[0]->GetRSFace(i)->GetVertex1()->GetIndex();
-        face[3 * i + 1] = this->reducedSurface[0]->GetRSFace(i)->GetVertex2()->GetIndex();
-        face[3 * i + 2] = this->reducedSurface[0]->GetRSFace(i)->GetVertex3()->GetIndex();
-        // check/correct winding order of triangle vertices
-        vislib::math::Vector<float, 3> tmpVec1(this->reducedSurface[0]->GetRSFace(i)->GetVertex1()->GetPosition());
-        vislib::math::Vector<float, 3> tmpVec2(this->reducedSurface[0]->GetRSFace(i)->GetVertex2()->GetPosition());
-        vislib::math::Vector<float, 3> tmpVec3(this->reducedSurface[0]->GetRSFace(i)->GetVertex3()->GetPosition());
-        vislib::math::Vector<float, 3> tmpVecProbe(this->reducedSurface[0]->GetRSFace(i)->GetProbeCenter());
-        vislib::math::Vector<float, 3> tmpVecN = (tmpVec2 - tmpVec1).Cross(tmpVec3 - tmpVec1);
-        tmpVecN.Normalise();
-        if (tmpVecN.Dot(tmpVecProbe - tmpVec1) < 0.0f) {
-            std::swap(face[3 * i + 0], face[3 * i + 1]);
-        }
-    }
-    this->triaMesh[0]->SetVertexData(mol->AtomCount(), vertex, normal, color, NULL, true);
-    this->triaMesh[0]->SetTriangleData(this->reducedSurface[0]->GetRSFaceCount(), face, true); */
     this->triaMesh[0]->SetVertexData( vertex_counter * 3, vertex, normal, color, nullptr, true);
     this->triaMesh[0]->SetTriangleData((int)face_counter/3, face, true);
     this->triaMesh[0]->SetMaterial(nullptr);
