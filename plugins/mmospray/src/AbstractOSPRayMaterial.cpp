@@ -12,7 +12,7 @@
 using namespace megamol::ospray;
 
 
-AbstractOSPRayMaterial::AbstractOSPRayMaterial(void)
+AbstractOSPRayMaterial::AbstractOSPRayMaterial()
         : core::Module()
         , deployMaterialSlot("deployMaterialSlot", "Connects to an OSPRay geometry") {
     this->materialContainer.isValid = true;
@@ -22,7 +22,7 @@ AbstractOSPRayMaterial::AbstractOSPRayMaterial(void)
     this->MakeSlotAvailable(&this->deployMaterialSlot);
 }
 
-AbstractOSPRayMaterial::~AbstractOSPRayMaterial(void) {
+AbstractOSPRayMaterial::~AbstractOSPRayMaterial() {
     materialContainer.isValid = false;
     this->Release();
 }

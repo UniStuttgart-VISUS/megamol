@@ -11,7 +11,7 @@
 using namespace megamol::ospray;
 
 
-OSPRayVelvetMaterial::OSPRayVelvetMaterial(void)
+OSPRayVelvetMaterial::OSPRayVelvetMaterial()
         : AbstractOSPRayMaterial()
         ,
         // VELVET
@@ -31,7 +31,7 @@ OSPRayVelvetMaterial::OSPRayVelvetMaterial(void)
     this->MakeSlotAvailable(&this->velvetReflectance);
 }
 
-OSPRayVelvetMaterial::~OSPRayVelvetMaterial(void) {
+OSPRayVelvetMaterial::~OSPRayVelvetMaterial() {
     this->Release();
 }
 

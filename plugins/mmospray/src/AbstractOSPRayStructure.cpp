@@ -10,8 +10,7 @@
 #include "mmstd/renderer/CallClipPlane.h"
 
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 
 AbstractOSPRayStructure::AbstractOSPRayStructure()
@@ -157,5 +156,4 @@ void AbstractOSPRayStructure::processClippingPlane() {
     }
 }
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

@@ -13,8 +13,7 @@
 #include <variant>
 
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 //OSPMaterial material;
 enum materialTypeEnum { OBJMATERIAL, LUMINOUS, GLASS, MATTE, METAL, METALLICPAINT, PLASTIC, THINGLASS, VELVET };
@@ -107,7 +106,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallOSPRayMaterial";
     }
 
@@ -116,7 +115,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for an OSPRay material";
     }
 
@@ -125,7 +124,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -146,10 +145,10 @@ public:
     }
 
     /** Ctor. */
-    CallOSPRayMaterial(void);
+    CallOSPRayMaterial();
 
     /** Dtor. */
-    virtual ~CallOSPRayMaterial(void);
+    ~CallOSPRayMaterial() override;
 
     void setMaterialContainer(std::shared_ptr<OSPRayMaterialContainer> mc);
     std::shared_ptr<OSPRayMaterialContainer> getMaterialParameter();
@@ -173,5 +172,4 @@ private:
 typedef core::factories::CallAutoDescription<CallOSPRayMaterial> CallOSPRayMaterialDescription;
 
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

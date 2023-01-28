@@ -12,7 +12,7 @@
 using namespace megamol::ospray;
 
 
-OSPRayOBJMaterial::OSPRayOBJMaterial(void)
+OSPRayOBJMaterial::OSPRayOBJMaterial()
         : AbstractOSPRayMaterial()
         ,
         // Distant light parameters
@@ -36,7 +36,7 @@ OSPRayOBJMaterial::OSPRayOBJMaterial(void)
     this->MakeSlotAvailable(&this->Tf);
 }
 
-OSPRayOBJMaterial::~OSPRayOBJMaterial(void) {
+OSPRayOBJMaterial::~OSPRayOBJMaterial() {
     this->Release();
 }
 

@@ -24,8 +24,7 @@
 // #include "vtkm/rendering/View3D.h"
 
 
-namespace megamol {
-namespace mmvtkm_gl {
+namespace megamol::mmvtkm_gl {
 
 /**
  * Renderer for vtkm data
@@ -37,7 +36,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "vtkmDataRenderer";
     }
 
@@ -46,7 +45,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for vtkm data.";
     }
 
@@ -55,15 +54,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    mmvtkmDataRenderer(void);
+    mmvtkmDataRenderer();
 
     /** Dtor. */
-    virtual ~mmvtkmDataRenderer(void);
+    ~mmvtkmDataRenderer() override;
 
 protected:
     /**
@@ -71,12 +70,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -85,7 +84,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -96,7 +95,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /** Callback function for psColorTables paramslot */
@@ -148,7 +147,6 @@ private:
     bool localUpdate_;
 };
 
-} // namespace mmvtkm_gl
-} /* end namespace megamol */
+} // namespace megamol::mmvtkm_gl
 
 #endif // MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED

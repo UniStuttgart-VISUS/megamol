@@ -27,7 +27,7 @@ CallOSPRayAPIObject::CallOSPRayAPIObject()
 /*
  * megamol::ospray::CallOSPRayAPIObject::~CallOSPRayAPIObject
  */
-CallOSPRayAPIObject::~CallOSPRayAPIObject(void) {
+CallOSPRayAPIObject::~CallOSPRayAPIObject() {
     this->Unlock();
 }
 

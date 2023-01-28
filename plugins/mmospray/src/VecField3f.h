@@ -26,8 +26,7 @@ typedef vislib::math::Vector<float, 3> Vec3f;
 typedef vislib::math::Vector<unsigned int, 3> Vec3u;
 #include "vislib/Array.h"
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 class VecField3f {
 
@@ -338,7 +337,6 @@ private:
     vislib::Array<CritPoint> critPoints;
 };
 
-} // namespace ospray
-} // end namespace megamol
+} // namespace megamol::ospray
 
 #endif // MMPROTEINCUDAPLUGIN_VECFIELD3D_H_INCLUDED

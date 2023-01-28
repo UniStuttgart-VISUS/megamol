@@ -24,8 +24,7 @@
 #include <iostream>
 #include <stdio.h>
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 void ospErrorCallback(OSPError err, const char* details) {
     megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRay Error %u: %s", err, details);
@@ -35,7 +34,7 @@ void ospStatusCallback(const char* msg) {
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("OSPRay Device Status: %s", msg);
 };
 
-AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
+AbstractOSPRayRenderer::AbstractOSPRayRenderer()
         : core::view::Renderer3DModule()
         , _lightSlot("lights", "Lights are retrieved over this slot. If no light is connected")
         , _accumulateSlot("accumulate", "Activates the accumulation buffer")
@@ -449,7 +448,7 @@ void AbstractOSPRayRenderer::setupOSPRayCamera(megamol::core::view::Camera& mmca
     // TODO: ospSet1f(_camera, "focalDistance", cr->GetCameraParameters()->FocalDistance());
 }
 
-void AbstractOSPRayRenderer::clearOSPRayStuff(void) {
+void AbstractOSPRayRenderer::clearOSPRayStuff() {
     _lightArray.clear();
     // OSP objects
     _framebuffer.reset();
@@ -470,7 +469,7 @@ void AbstractOSPRayRenderer::clearOSPRayStuff(void) {
     _materials.clear();
 }
 
-AbstractOSPRayRenderer::~AbstractOSPRayRenderer(void) {}
+AbstractOSPRayRenderer::~AbstractOSPRayRenderer() {}
 
 // helper function to write the rendered image as PPM file
 void AbstractOSPRayRenderer::writePPM(std::string fileName, const std::array<int, 2>& size, const uint32_t* pixel) {
@@ -1352,5 +1351,4 @@ void AbstractOSPRayRenderer::createInstances() {
         _instances[entry.first].commit();
     }
 }
-} // end namespace ospray
-} // end namespace megamol
+} // namespace megamol::ospray

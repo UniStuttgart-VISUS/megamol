@@ -76,7 +76,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~SimplifyMesh();
+    ~SimplifyMesh() override;
 #endif
 
 protected:
