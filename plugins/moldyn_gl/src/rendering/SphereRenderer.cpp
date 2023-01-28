@@ -658,13 +658,13 @@ bool SphereRenderer::createResources() {
             glUniformBlockBinding(lighting_prgm_->getHandle(), ubo_idx, (GLuint)AO_DIR_UBO_BINDING_POINT);
 
             // Init volume generator
-            this->vol_gen_ = new misc::MDAOVolumeGenerator();
+           /* this->vol_gen_ = new misc::MDAOVolumeGenerator();
             this->vol_gen_->SetShaderSourceFactory(&lighting_so);
             if (!this->vol_gen_->Init(frontend_resources.get<frontend_resources::OpenGL_Context>())) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "Error initializing volume generator. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
-            }
+            }*/
 
             this->trigger_rebuild_g_buffer_ = true;
         } break;

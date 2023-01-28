@@ -122,7 +122,7 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
         } while (particle_call->FrameID() != frameID);
 
         // TODO time, datahash, dirty (ParticleToDensity.cpp)
-        if (!this->generateVoxels(particle_call))
+        if (!this->generateVoxels(particle_call, volume_call))
             return false;
         auto time = particle_call->FrameID();
 
@@ -187,15 +187,27 @@ bool VoxelGenerator::initVolumeGenerator() {
     return true;
 }
 
-bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
+bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call, VolumetricDataCall* volume_call) {
+
+    // reset resources?
+    //      glDeleteVertexArrays
+
+    // render Ambient occlusion
+    //      glBindVertexArray()
+    //      glDrawArrays()
+
+    // rebuild working data
+    //
+
+    
 
     // make sure volume generator is initialized
     if (this->vol_gen_ == nullptr) {
         initVolumeGenerator();
     }
     
-    glm::vec4 cur_clip_dat_ = glm::vec4(0.0);                                   //TODO
-    vislib::math::Cuboid<float> cur_clip_box_(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0); // TODO sphererenderer: AccessBoundingBoxes().ClipBox(); (CallRender3DGL)
+    glm::vec4 cur_clip_dat_ = glm::vec4(0.0);     //TODO
+    vislib::math::Cuboid<float> cur_clip_box_ = volume_call->AccessBoundingBoxes().ClipBox();
 
     // Fill volume texture
     if (vol_gen_ != nullptr) {
@@ -226,13 +238,18 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call) {
                 global_radius = particles.GetGlobalRadius();
 
 
-            //// TODO one vertex array for each i?
+            // TODO one vertex array for each i?
+            // 
             //glBindVertexArray(vertex_array_);
-            ////enableBufferData(prgm, parts, this->gpu_data_[i].vertex_vbo, parts.GetVertexData(),this->gpu_data_[i].color_vbo, parts.GetColourData(), true)
+            //// TODO enableBufferData
             //glBindVertexArray(0);
-            ////disableBufferData
+            //// TODO disableBufferData
 
-            //TODO vertex array!!
+            //// TODO enableShaderData
+            //glBindVertexArray(vertex_array_);
+            //glDrawArrays(GL_POINTS, 0, particles.GetCount());
+            //glBindVertexArray(0);
+            //// TODO disableShaderData
 
             vol_gen_->InsertParticles(
                 static_cast<unsigned int>(particles.GetCount()), global_radius, 3); // TODO, 3: handle for vertex array, SphereRenderer: this->gpu_data_[i].vertex_array

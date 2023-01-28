@@ -87,7 +87,7 @@ protected:
 
     bool dummyCallback(core::Call& call);
 
-    bool generateVoxels(geocalls::MultiParticleDataCall* particle_call);
+    bool generateVoxels(geocalls::MultiParticleDataCall* particle_call, geocalls::VolumetricDataCall* volume_call);
 
     bool initVolumeGenerator();
 
