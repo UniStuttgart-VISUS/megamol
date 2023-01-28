@@ -26,9 +26,7 @@
 #include "vislib/assert.h"
 
 
-namespace megamol {
-namespace moldyn_gl {
-namespace rendering {
+namespace megamol::moldyn_gl::rendering {
 
 using namespace megamol::core;
 
@@ -145,8 +143,6 @@ private:
     param::ParamSlot length_filter_slot_;
 };
 
-} /* end namespace rendering */
-} // namespace moldyn_gl
-} /* end namespace megamol */
+} // namespace megamol::moldyn_gl::rendering
 
 #endif /* MEGAMOLCORE_ARROWRENDERER_H_INCLUDED */

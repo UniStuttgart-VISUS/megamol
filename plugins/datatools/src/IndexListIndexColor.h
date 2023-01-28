@@ -11,8 +11,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Creates an ICol data stream holding the index of the first index list
@@ -58,5 +57,4 @@ private:
     float minCol, maxCol;
 };
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

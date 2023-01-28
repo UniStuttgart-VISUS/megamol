@@ -15,8 +15,7 @@
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/math/Vector.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * QuartzPlaneTexRenderer::QuartzPlaneTexRenderer
@@ -456,5 +455,4 @@ bool QuartzPlaneTexRenderer::Render(mmstd_gl::CallRender2DGL& call) {
     return true;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

@@ -11,8 +11,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class IColAdd : public datatools::AbstractParticleManipulator {
 public:
@@ -47,5 +46,4 @@ private:
     float minCol, maxCol;
 };
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

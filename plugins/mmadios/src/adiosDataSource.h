@@ -13,8 +13,7 @@
 #include <mpi.h>
 #endif
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class adiosDataSource : public core::Module {
 public:
@@ -149,5 +148,4 @@ void adiosDataSource::inquireRead(
     }
     dataMap[var.name] = std::move(container);
 }
-} /* end namespace adios */
-} /* end namespace megamol */
+} // namespace megamol::adios

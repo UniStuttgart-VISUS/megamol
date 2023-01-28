@@ -20,8 +20,7 @@
 
 #define MAX_PARAMETER_NUMBER 100
 
-namespace megamol {
-namespace geocalls_gl {
+namespace megamol::geocalls_gl {
 
 /**
  * Call transporting tri soup mesh data
@@ -1463,7 +1462,6 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<CallTriMeshDataGL> CallTriMeshDataGLDescription;
 
-} // namespace geocalls_gl
-} /* end namespace megamol */
+} // namespace megamol::geocalls_gl
 
 #endif /* MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED */

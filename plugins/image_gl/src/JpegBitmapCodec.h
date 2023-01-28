@@ -14,8 +14,7 @@
 #endif
 
 
-namespace sg {
-namespace graphics {
+namespace sg::graphics {
 
 /**
  * Bitmap codec for jpeg images using the IJG libjpeg
@@ -170,5 +169,4 @@ private:
 };
 
 
-} /* end namespace graphics */
-} /* end namespace sg */
+} // namespace sg::graphics

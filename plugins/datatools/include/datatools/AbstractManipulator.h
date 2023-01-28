@@ -12,8 +12,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Abstract class data manipulators for calls with getData/getExtent interface
@@ -187,5 +186,4 @@ bool AbstractManipulator<C>::getExtentCallback(megamol::core::Call& c) {
 }
 
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

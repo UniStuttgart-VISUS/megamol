@@ -20,9 +20,7 @@
 #include "vislib_gl/graphics/gl/AbstractOpenGLTexture.h"
 
 
-namespace vislib_gl {
-namespace graphics {
-namespace gl {
+namespace vislib_gl::graphics::gl {
 
 
 /**
@@ -174,9 +172,7 @@ protected:
     typedef AbstractOpenGLTexture Super;
 };
 
-} /* end namespace gl */
-} /* end namespace graphics */
-} // namespace vislib_gl
+} // namespace vislib_gl::graphics::gl
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

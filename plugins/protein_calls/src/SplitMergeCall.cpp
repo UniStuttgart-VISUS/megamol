@@ -1,7 +1,6 @@
 #include "protein_calls/SplitMergeCall.h"
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /*
  * SplitMergeCall::CallForGetData
@@ -58,5 +57,4 @@ SplitMergeCall::SplitMergeTransition::SplitMergeTransition(unsigned int sourceSe
     }
 }
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
+} // namespace megamol::protein_calls

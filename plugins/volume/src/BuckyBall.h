@@ -14,8 +14,7 @@
 #include <array>
 #include <vector>
 
-namespace megamol {
-namespace volume {
+namespace megamol::volume {
 
 /**
  * Class generation buck ball informations
@@ -95,5 +94,4 @@ private:
     geocalls::VolumetricMetadata_t metaData;
 };
 
-} /* end namespace volume */
-} /* end namespace megamol */
+} // namespace megamol::volume

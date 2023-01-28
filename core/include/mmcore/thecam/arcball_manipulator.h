@@ -40,9 +40,7 @@
 #include "mmcore/thecam/manipulator_base.h"
 #include <glm/glm.hpp>
 
-namespace megamol {
-namespace core {
-namespace thecam {
+namespace megamol::core::thecam {
 
 /**
  * Implements an arcball that rotates a camera.
@@ -103,9 +101,7 @@ private:
     screen_type lastSy;
 };
 
-} /* end namespace thecam */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::thecam
 
 #include "mmcore/thecam/arcball_manipulator.inl"
 

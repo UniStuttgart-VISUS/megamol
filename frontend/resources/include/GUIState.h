@@ -7,8 +7,7 @@
 
 #pragma once
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 struct GUIState {
 
@@ -36,5 +35,4 @@ struct GUIState {
     std::function<void(float)> provide_gui_scale;
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

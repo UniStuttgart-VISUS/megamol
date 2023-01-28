@@ -1,7 +1,6 @@
 #include "protein_calls/DiagramCall.h"
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /*
  * MolecularDataCall::CallForGetData
@@ -25,5 +24,4 @@ DiagramCall::~DiagramCall() {
     delete this->guides;
 }
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
+} // namespace megamol::protein_calls

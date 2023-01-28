@@ -15,8 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /**
@@ -87,8 +86,7 @@ void Lockable<T>::Unlock() const {
 }
 
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

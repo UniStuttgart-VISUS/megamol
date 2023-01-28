@@ -16,8 +16,7 @@
 #include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
 #include "vislib_gl/graphics/gl/OutlineFont.h"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 class DiagramRenderer : public megamol::mmstd_gl::Renderer2DModuleGL {
 public:
@@ -266,5 +265,4 @@ private:
     void dump();
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl

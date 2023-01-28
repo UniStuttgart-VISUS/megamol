@@ -7,10 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace core {
-namespace utility {
-namespace graphics {
+namespace megamol::core::utility::graphics {
 
 class ScreenShotComments {
 public:
@@ -41,7 +38,4 @@ private:
     png_comments the_vector;
 };
 
-} // namespace graphics
-} // namespace utility
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::utility::graphics

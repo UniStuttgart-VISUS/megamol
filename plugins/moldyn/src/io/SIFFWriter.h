@@ -18,9 +18,7 @@
 #include "vislib/sys/File.h"
 
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 /**
  * SIFF writer module
@@ -103,8 +101,6 @@ private:
     core::CallerSlot dataSlot;
 };
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn::io
 
 #endif /* MEGAMOLCORE_SIFFWRITER_H_INCLUDED */

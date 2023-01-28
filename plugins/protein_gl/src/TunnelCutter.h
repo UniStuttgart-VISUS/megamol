@@ -22,8 +22,7 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/TunnelResidueDataCall.h"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 class TunnelCutter : public core::Module {
 public:
@@ -167,8 +166,7 @@ private:
     bool dirt;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl
 
 
 #endif

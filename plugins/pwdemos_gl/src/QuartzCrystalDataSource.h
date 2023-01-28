@@ -14,8 +14,7 @@
 #include "vislib/Array.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Module loading a quartz crystal definition file
@@ -98,5 +97,4 @@ private:
     vislib::Array<CrystalDataCall::Crystal> crystals;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

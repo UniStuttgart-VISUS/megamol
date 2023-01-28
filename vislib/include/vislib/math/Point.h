@@ -18,8 +18,7 @@
 #include "vislib/math/AbstractPoint.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * This is the implementation of an AbstractPoint that uses its own memory
@@ -460,8 +459,7 @@ template<class T>
 const unsigned int Point<T, 4>::D = 4;
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

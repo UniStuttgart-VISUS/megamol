@@ -18,8 +18,7 @@
 #include "vislib/math/AbstractVectorImpl.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -569,8 +568,7 @@ AbstractVector<T, D, T[D]> operator*(const T lhs, const AbstractVector<T, D, S>&
 }
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

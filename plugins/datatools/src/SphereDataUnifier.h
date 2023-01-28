@@ -19,8 +19,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 
 /**
@@ -118,7 +117,6 @@ private:
 };
 
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOLCORE_SPHEREDATAUNIFIER_H_INCLUDED */

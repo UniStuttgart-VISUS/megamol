@@ -11,8 +11,7 @@
 #include "vislib/UnsupportedOperationException.h"
 #endif /* _WIN32 */
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /*
@@ -269,5 +268,4 @@ void DirectoryIterator<CharTraitsW>::fetchNextItem() {
 }
 
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys

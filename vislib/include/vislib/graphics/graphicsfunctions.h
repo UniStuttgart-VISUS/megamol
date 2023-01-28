@@ -20,8 +20,7 @@
 #include "vislib/math/mathfunctions.h"
 
 
-namespace vislib {
-namespace graphics {
+namespace vislib::graphics {
 
 
 /**
@@ -76,8 +75,7 @@ void FlatPolygonSort(Array<math::Point<T, 3>>& polygon) {
 }
 
 
-} /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib::graphics
 
 
 #if defined(_WIN32) && defined(_MANAGED)

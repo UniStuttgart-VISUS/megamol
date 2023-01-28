@@ -10,9 +10,7 @@
 #include "TableProcessorBase.h"
 
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /**
  * This module selects rows from a table based on a filter.
@@ -72,6 +70,4 @@ private:
     core::param::ParamSlot paramUpdateRange;
 };
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools::table

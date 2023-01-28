@@ -26,8 +26,7 @@
 #include "vislib/sys/Event.h"
 #include "vislib/sys/Thread.h"
 
-namespace megamol {
-namespace volume {
+namespace megamol::volume {
 /**
  * Reads volumetric data from a dat/raw data source.
  */
@@ -427,5 +426,4 @@ private:
     }
 };
 
-} /* end namespace volume */
-} // namespace megamol
+} // namespace megamol::volume

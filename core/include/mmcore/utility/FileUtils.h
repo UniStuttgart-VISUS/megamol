@@ -21,9 +21,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 // #### Utility string conversion functions ############################ //
 
@@ -219,8 +217,6 @@ std::string megamol::core::utility::FileUtils::SearchFileRecursive(const T& sear
 }
 
 
-} // namespace utility
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::utility
 
 #endif // MEGAMOL_GUI_FILEUTILS_INCLUDED

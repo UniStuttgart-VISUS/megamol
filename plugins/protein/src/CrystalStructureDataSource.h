@@ -22,8 +22,7 @@
 #include "vislib/math/Vector.h"
 #include <fstream>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * TODO
@@ -365,7 +364,6 @@ private:
 };
 
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_CRYSTALSTRUCTUREDATASOURCE_H_INCLUDED

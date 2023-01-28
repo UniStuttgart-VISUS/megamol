@@ -21,8 +21,7 @@
 #include "vislib_gl/graphics/gl/Verdana.inc"
 
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 
 class VariantMatchRenderer : public megamol::mmstd_gl::Renderer2DModuleGL {
@@ -135,5 +134,4 @@ private:
     float fontSize;
 };
 
-} // namespace protein_gl
-} // end namespace megamol
+} // namespace megamol::protein_gl

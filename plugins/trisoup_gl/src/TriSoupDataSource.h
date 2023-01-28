@@ -16,8 +16,7 @@
 #include "vislib/String.h"
 
 
-namespace megamol {
-namespace trisoup_gl {
+namespace megamol::trisoup_gl {
 
 
 /**
@@ -71,7 +70,6 @@ protected:
 private:
 };
 
-} // namespace trisoup_gl
-} /* end namespace megamol */
+} // namespace megamol::trisoup_gl
 
 #endif /* MMTRISOUPPLG_TRISOUPDATASOURCE_H_INCLUDED */

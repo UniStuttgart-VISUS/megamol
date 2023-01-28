@@ -15,8 +15,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-namespace vislib {
-namespace graphics {
+namespace vislib::graphics {
 
 
 /**
@@ -194,8 +193,7 @@ private:
     unsigned char comp[4];
 };
 
-} /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib::graphics
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

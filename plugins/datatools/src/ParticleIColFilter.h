@@ -17,8 +17,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 
 // TODO: make operators available: larger, smaller, between, epsilon-equal
@@ -77,7 +76,6 @@ private:
     core::param::ParamSlot inValRangeSlot;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOLCORE_PARTICLEICOLFILTER_H_INCLUDED */

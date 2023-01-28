@@ -36,8 +36,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 /**
  * This is a raw socket wrapper class that allows platform-independent use
@@ -1386,8 +1385,7 @@ protected:
     friend class AsyncSocketSender;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

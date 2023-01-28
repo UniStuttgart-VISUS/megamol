@@ -20,8 +20,7 @@
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Module rendering gridded quarts particle data
@@ -114,5 +113,4 @@ private:
     GLuint vbo;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

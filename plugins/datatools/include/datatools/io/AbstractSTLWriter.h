@@ -40,9 +40,7 @@
 
 #include "AbstractSTLWriter.aux"
 
-namespace megamol {
-namespace datatools {
-namespace io {
+namespace megamol::datatools::io {
 /// <summary>
 /// Abstract writer for STL files.
 ///
@@ -550,8 +548,6 @@ private:
     /// Increment for file name suffix
     std::size_t increment;
 };
-} // namespace io
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools::io
 
 #endif // !MEGAMOL_DATATOOLS_IO_ABSTRACTSTLWRITER_H_INCLUDED

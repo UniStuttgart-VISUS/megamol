@@ -13,8 +13,7 @@
 #include "vislib/math/Rectangle.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /**
@@ -283,5 +282,4 @@ private:
     vislib::Array<Loop> loops;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

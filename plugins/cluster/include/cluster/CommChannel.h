@@ -22,9 +22,7 @@
 #include "vislib/sys/RunnableThread.h"
 
 
-namespace megamol {
-namespace core {
-namespace cluster {
+namespace megamol::core::cluster {
 
 /**
  * class for communication channel end points
@@ -237,8 +235,6 @@ private:
 };
 
 
-} /* end namespace cluster */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::cluster
 
 #endif /* MEGAMOLCORE_COMMCHANNEL_H_INCLUDED */

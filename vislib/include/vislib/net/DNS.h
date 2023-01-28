@@ -22,8 +22,7 @@
 #include "vislib/net/IPHostEntry.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -335,8 +334,7 @@ private:
     DNS& operator=(const DNS& rhs);
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

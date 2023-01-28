@@ -20,8 +20,7 @@
 #include "vislib/memutils.h"
 
 
-namespace megamol {
-namespace trisoup_gl {
+namespace megamol::trisoup_gl {
 
 
 /**
@@ -125,7 +124,6 @@ private:
 };
 
 
-} // namespace trisoup_gl
-} /* end namespace megamol */
+} // namespace megamol::trisoup_gl
 
 #endif /* MEGAMOLCORE_TRISOUPRENDERER_H_INCLUDED */

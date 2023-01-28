@@ -17,8 +17,7 @@
 #include "vislib/math/AbstractDimension.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * This class represents extents in D-dimensional space.
@@ -339,8 +338,7 @@ Dimension<T, 3>::~Dimension() {}
 template<class T>
 const unsigned int Dimension<T, 3>::D = 3;
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

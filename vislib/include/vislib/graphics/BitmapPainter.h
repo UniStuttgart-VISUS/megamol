@@ -25,8 +25,7 @@
 #include <climits>
 
 
-namespace vislib {
-namespace graphics {
+namespace vislib::graphics {
 
 
 /**
@@ -600,8 +599,7 @@ void BitmapPainter::FillPolygon(const math::AbstractPoint<int, 2, Sp>* points, S
 }
 
 
-} /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib::graphics
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

@@ -29,8 +29,7 @@
 #include <curl/curl.h>
 #endif
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Data source for PDB files
@@ -763,7 +762,6 @@ private:
 };
 
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_PDBLOADER_H_INCLUDED

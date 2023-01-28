@@ -22,8 +22,7 @@
 #include <limits>
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module computing a density volume from particles.
@@ -145,5 +144,4 @@ private:
     geocalls::VolumetricDataCall::Metadata metadata;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

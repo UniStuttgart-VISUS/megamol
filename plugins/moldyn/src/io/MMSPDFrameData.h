@@ -18,9 +18,7 @@
 #include "vislib/types.h"
 
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 
 /**
@@ -233,8 +231,6 @@ private:
 };
 
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn::io
 
 #endif /* MEGAMOLCORE_MMSPDFRAMEDATA_H_INCLUDED */

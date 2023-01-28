@@ -15,8 +15,7 @@
 
 #include "vislib/StringConverter.h"
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 TableToADIOS::TableToADIOS()
         : core::Module()
@@ -126,5 +125,4 @@ std::string TableToADIOS::cleanUpColumnHeader(const vislib::TString& header) con
     return std::string(T2A(h.PeekBuffer()));
 }
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

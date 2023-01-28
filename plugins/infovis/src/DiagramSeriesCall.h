@@ -10,8 +10,7 @@
 
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol {
-namespace infovis {
+namespace megamol::infovis {
 
 /**
  * Call transporting a function pointer for pushing series info
@@ -103,7 +102,6 @@ private:
 
 typedef core::factories::CallAutoDescription<DiagramSeriesCall> DiagramSeriesCallDescription;
 
-} /* end namespace infovis */
-} /* end namespace megamol */
+} // namespace megamol::infovis
 
 #endif /* end ifndef MEGAMOL_INFOVIS_DIAGRAMSERIESCALL_H_INCLUDED */

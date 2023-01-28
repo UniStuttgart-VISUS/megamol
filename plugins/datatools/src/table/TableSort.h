@@ -10,9 +10,7 @@
 #include "TableProcessorBase.h"
 
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /**
  * This module sorts tabular data according to the specified column.
@@ -70,6 +68,4 @@ private:
     core::param::ParamSlot paramIsStable;
 };
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools::table

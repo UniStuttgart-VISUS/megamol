@@ -14,8 +14,7 @@
 
 #include "DiagramSeriesCall.h"
 
-namespace megamol {
-namespace infovis {
+namespace megamol::infovis {
 
 /**
  * Module to select a specific column from a table as diagram series.
@@ -137,7 +136,6 @@ private:
     size_t myHash;
 }; /* end class DiagramSeries */
 
-} /* end namespace infovis */
-} /* end namespace megamol */
+} // namespace megamol::infovis
 
 #endif /* end ifndef MEGAMOL_INFOVIS_DIAGRAMSERIES_H_INCLUDED */

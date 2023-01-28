@@ -17,8 +17,7 @@
 
 #include "obj_io.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class WavefrontObjWriter : public core::AbstractDataWriter {
 public:
@@ -114,5 +113,4 @@ private:
     core::CallerSlot _rhs_mesh_slot;
 };
 
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh

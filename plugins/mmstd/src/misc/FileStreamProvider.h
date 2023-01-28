@@ -12,8 +12,7 @@
 #include <fstream>
 #include <iostream>
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 /**
  * Provides a stream.
@@ -73,5 +72,4 @@ private:
     std::fstream stream;
 };
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core

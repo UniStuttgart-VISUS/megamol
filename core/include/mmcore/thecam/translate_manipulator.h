@@ -39,9 +39,7 @@
 
 #include "mmcore/thecam/manipulator_base.h"
 
-namespace megamol {
-namespace core {
-namespace thecam {
+namespace megamol::core::thecam {
 
 /**
  * A manipulator for moving the camera around.
@@ -169,9 +167,7 @@ private:
     screen_type m_last_sy;
 };
 
-} /* end namespace thecam */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::thecam
 
 #include "mmcore/thecam/translate_manipulator.inl"
 

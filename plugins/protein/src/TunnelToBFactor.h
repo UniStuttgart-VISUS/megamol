@@ -18,8 +18,7 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "protein_calls/TunnelResidueDataCall.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class TunnelToBFactor : public megamol::core::Module {
 public:
@@ -99,7 +98,6 @@ private:
     std::vector<float> bFactors;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif

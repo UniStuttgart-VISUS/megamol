@@ -17,8 +17,7 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/Array.h"
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Base class for graph calls and data interfaces.
@@ -108,7 +107,6 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<ResidueSelectionCall> ResidueSelectionCallDescription;
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
+} // namespace megamol::protein_calls
 
 #endif /* MEGAMOL_PROTEIN_CALLS_RESIDUE_SELECTIONCALL_H_INCLUDED */

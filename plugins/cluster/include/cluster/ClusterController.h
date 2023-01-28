@@ -20,9 +20,7 @@
 #include "vislib/sys/CriticalSection.h"
 
 
-namespace megamol {
-namespace core {
-namespace cluster {
+namespace megamol::core::cluster {
 
 /** forward declaration */
 class ClusterControllerClient;
@@ -261,8 +259,6 @@ private:
 };
 
 
-} // namespace cluster
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::cluster
 
 #endif /* MEGAMOLCORE_CLUSTERCONTROLLER_H_INCLUDED */

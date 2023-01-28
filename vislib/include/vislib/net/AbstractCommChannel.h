@@ -18,8 +18,7 @@
 #include "vislib/net/AbstractCommClientChannel.h"
 #include "vislib/net/AbstractCommServerChannel.h"
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -62,8 +61,7 @@ protected:
     ~AbstractCommChannel() override;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

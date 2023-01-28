@@ -11,8 +11,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module thinning the number of particles
@@ -70,5 +69,4 @@ private:
     vislib::math::Cuboid<float> _global_box;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

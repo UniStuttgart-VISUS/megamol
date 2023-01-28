@@ -8,8 +8,7 @@
 #include "mmstd/data/AbstractGetDataCall.h"
 #include "vislib/graphics/BitmapCodecCollection.h"
 
-namespace megamol {
-namespace image_calls {
+namespace megamol::image_calls {
 
 class Image2DCall : public megamol::core::AbstractGetDataCall {
 public:
@@ -159,5 +158,4 @@ private:
 
 typedef megamol::core::factories::CallAutoDescription<Image2DCall> Image2DCallDescription;
 
-} // namespace image_calls
-} // namespace megamol
+} // namespace megamol::image_calls

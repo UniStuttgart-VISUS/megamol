@@ -16,8 +16,7 @@
 #include "mmcore/CallerSlot.h"
 
 
-namespace megamol {
-namespace trisoup_gl {
+namespace megamol::trisoup_gl {
 
 
 /**
@@ -70,7 +69,6 @@ private:
     SIZE_T inDataHash;
 };
 
-} // namespace trisoup_gl
-} /* end namespace megamol */
+} // namespace megamol::trisoup_gl
 
 #endif /* MMTRISOUPPLG_BLOCKVOLUMEMESH_H_INCLUDED */

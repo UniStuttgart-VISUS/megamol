@@ -10,9 +10,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol {
-namespace core {
-namespace cluster {
+namespace megamol::core::cluster {
 
 class SyncDataSourcesCall : public core::Call {
 public:
@@ -83,6 +81,4 @@ private:
 
 }; // end class SyncDataSourcesCall
 typedef core::factories::CallAutoDescription<SyncDataSourcesCall> SyncDataSourcesCallDescription;
-} // namespace cluster
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::cluster

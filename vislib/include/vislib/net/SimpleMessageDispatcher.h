@@ -26,8 +26,7 @@
 #include "vislib/sys/Runnable.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 /* Forward declarations. */
 class SimpleMessageDispatchListener;
@@ -200,8 +199,7 @@ private:
     SimpleMessage msg;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

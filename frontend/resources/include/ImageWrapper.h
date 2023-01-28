@@ -15,8 +15,7 @@
 
 using byte = unsigned char;
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 enum class WrappedImageType {
     GLTexureHandle, // void* holds a GL texture handle
@@ -88,5 +87,4 @@ ImageWrapper wrap_image(
 
 size_t channels_count(ImageWrapper::DataChannels channels);
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

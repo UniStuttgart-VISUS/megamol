@@ -30,8 +30,7 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 //#include "mmath.h"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 #define VS_EPS 1.0e-8
 
@@ -87,7 +86,6 @@ private:
     int _maxSlices;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl
 
 #endif // _SLICING_H_

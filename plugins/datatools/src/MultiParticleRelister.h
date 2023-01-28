@@ -17,8 +17,7 @@
 #include <cstdint>
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class MultiParticleRelister : public AbstractParticleManipulator {
 public:
@@ -57,7 +56,6 @@ private:
     std::vector<std::vector<uint8_t>> data;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOL_STD_DATATOOLS_MULTIPARTICLERELISTER_H_INCLUDED */

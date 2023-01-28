@@ -21,9 +21,7 @@
 #include "glowl/glowl.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
 
-namespace megamol {
-namespace moldyn_gl {
-namespace rendering {
+namespace megamol::moldyn_gl::rendering {
 
 
 /**
@@ -163,8 +161,6 @@ private:
     GLuint grey_tf_;
 };
 
-} // namespace rendering
-} // namespace moldyn_gl
-} // namespace megamol
+} // namespace megamol::moldyn_gl::rendering
 
 #endif /* MOLDYN_GLYPHRENDERER_H_INCLUDED */

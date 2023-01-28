@@ -22,9 +22,7 @@
 #include "vislib/sys/File.h"
 
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 
 /**
@@ -297,8 +295,6 @@ private:
     vislib::Array<unsigned int> typeData;
 };
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn::io
 
 #endif /* MEGAMOLCORE_IMDATOMDATASOURCE_H_INCLUDED */

@@ -12,8 +12,7 @@
 #include "mmstd/renderer/CallClipPlane.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * AbstractQuartzRenderer
@@ -63,5 +62,4 @@ protected:
     core::param::ParamSlot correctPBCSlot;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

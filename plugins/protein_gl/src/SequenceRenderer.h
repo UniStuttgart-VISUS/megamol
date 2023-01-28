@@ -31,8 +31,7 @@
 #include "protein_calls/ResidueSelectionCall.h"
 #include <glowl/GLSLProgram.hpp>
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 class SequenceRenderer : public megamol::mmstd_gl::Renderer2DModuleGL {
 public:
@@ -221,7 +220,6 @@ private:
     protein_calls::ResidueSelectionCall* resSelectionCall;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl
 
 #endif // MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED

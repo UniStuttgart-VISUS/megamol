@@ -23,8 +23,7 @@
 #include "protein_calls/TunnelResidueDataCall.h"
 
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 class MSMSCavityFinder : public core::Module {
 public:
@@ -111,7 +110,6 @@ private:
     vislib::Array<megamol::geocalls_gl::CallTriMeshDataGL::Mesh> cavitySubmeshes;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl
 
 #endif

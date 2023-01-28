@@ -21,8 +21,7 @@
 #include "vislib/Array.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Renderer for simple sphere glyphs
@@ -214,5 +213,4 @@ private:
     float clipCol[3];
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

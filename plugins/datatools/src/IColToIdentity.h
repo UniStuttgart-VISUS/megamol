@@ -2,8 +2,7 @@
 
 #include "datatools/AbstractParticleManipulator.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class IColToIdentity : public AbstractParticleManipulator {
 public:
@@ -45,5 +44,4 @@ private:
     std::vector<char> ids;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

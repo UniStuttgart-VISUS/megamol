@@ -19,8 +19,7 @@
 #include "vislib/math/AbstractRectangularPyramidalFrustum.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -83,8 +82,7 @@ RectangularPyramidalFrustum<T>::RectangularPyramidalFrustum(const AbstractViewFr
 template<class T>
 RectangularPyramidalFrustum<T>::~RectangularPyramidalFrustum() {}
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

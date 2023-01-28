@@ -23,8 +23,7 @@
 #include "vislib/math/AbstractPyramidalFrustum.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -487,8 +486,7 @@ const UINT_PTR AbstractViewFrustum<T, S>::IDX_RIGHT = 3;
 template<class T, class S>
 const UINT_PTR AbstractViewFrustum<T, S>::IDX_TOP = 1;
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

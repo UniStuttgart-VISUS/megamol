@@ -13,9 +13,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-namespace megamol {
-namespace core {
-namespace special {
+namespace megamol::core::special {
 
 /**
  * Simple module accepting all inbound and outbound call classes.
@@ -94,8 +92,6 @@ private:
 
 }; /* end class StubModule */
 
-} /* end namespace special */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::special
 
 #endif // end ifndef MMCORE_SPECIAL_STUBMODULE_H_INCLUDED

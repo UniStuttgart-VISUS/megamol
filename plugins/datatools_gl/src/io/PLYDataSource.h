@@ -22,9 +22,7 @@
 #include <map>
 #include <vector>
 
-namespace megamol {
-namespace datatools_gl {
-namespace io {
+namespace megamol::datatools_gl::io {
 
 
 /**
@@ -311,8 +309,6 @@ protected:
     size_t data_hash;
 };
 
-} /* end namespace io */
-} // namespace datatools_gl
-} /* end namespace megamol */
+} // namespace megamol::datatools_gl::io
 
 #endif /* MEGAMOL_DATATOOLS_IO_PLYDATASOURCE_H_INCLUDED */

@@ -18,9 +18,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace net {
-namespace cluster {
+namespace vislib::net::cluster {
 
 /**
  * The block header describes the content of a cluster network message.
@@ -133,9 +131,7 @@ DEFINE_VLC1_CAM_MSG(REQUEST_ALL, 14);
  */
 #define VLC1_USER_MSG_ID(id) ((id) + 0x80000000)
 
-} /* end namespace cluster */
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net::cluster
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

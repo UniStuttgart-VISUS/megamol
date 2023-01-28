@@ -42,9 +42,7 @@
 #include <glm/glm.hpp>
 
 
-namespace megamol {
-namespace moldyn_gl {
-namespace rendering {
+namespace megamol::moldyn_gl::rendering {
 
 
 /**
@@ -293,8 +291,6 @@ private:
     SIZE_T inhash_;
 };
 
-} /* end namespace rendering */
-} // namespace moldyn_gl
-} /* end namespace megamol */
+} // namespace megamol::moldyn_gl::rendering
 
 #endif /* MEGAMOL_MOLDYN_GRIMRENDERER_H_INCLUDED */

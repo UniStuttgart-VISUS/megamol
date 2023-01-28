@@ -22,8 +22,7 @@
 #include "vislib/math/mathtypes.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -548,8 +547,7 @@ T AbstractPointImpl<T, D, S, C>::operator[](const int i) const {
     }
 }
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

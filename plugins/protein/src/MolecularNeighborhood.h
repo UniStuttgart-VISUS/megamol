@@ -15,8 +15,7 @@
 #include "protein_calls/MolecularDataCall.h"
 #include <vector>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class MolecularNeighborhood : public megamol::core::Module {
 public:
@@ -109,7 +108,6 @@ private:
     /** Pointers to the raw neighborhood data (only relevant to be sent to the outgoing call */
     std::vector<const unsigned int*> dataPointers;
 };
-} /* namespace protein */
-} /* namespace megamol */
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_MOLECULARNEIGHBORHOOD_H_INCLUDED

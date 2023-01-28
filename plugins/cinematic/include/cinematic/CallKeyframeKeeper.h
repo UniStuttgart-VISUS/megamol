@@ -15,8 +15,7 @@
 #include "mmstd/data/AbstractGetDataCall.h"
 
 
-namespace megamol {
-namespace cinematic {
+namespace megamol::cinematic {
 
 /**
  * Call transporting keyframe data
@@ -238,7 +237,6 @@ private:
 typedef core::factories::CallAutoDescription<CallKeyframeKeeper> CallKeyframeKeeperDescription;
 
 
-} /* end namespace cinematic */
-} /* end namespace megamol */
+} // namespace megamol::cinematic
 
 #endif // MEGAMOL_CINEMATIC_CALLKEYFRAMEKEEPER_H_INCLUDED

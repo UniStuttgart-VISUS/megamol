@@ -14,8 +14,7 @@
 #include "mesh_gl/GPUMeshCollection.h"
 #include "mesh_gl/GPURenderTaskCollection.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class BaseRenderTaskRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
@@ -183,7 +182,6 @@ inline void BaseRenderTaskRenderer::updateRenderTaskCollection(mmstd_gl::CallRen
     // empty function that is conveniently used when no update is required after creation
 }
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl
 
 #endif // !BASE_RENDER_TASK_RENDERER_H_INCLUDED

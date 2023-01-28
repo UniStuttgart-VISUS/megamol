@@ -20,8 +20,7 @@
 #include "geometry_calls/VolumetricDataCall.h"
 
 
-namespace megamol {
-namespace astro {
+namespace megamol::astro {
 
 /// <summary>
 /// Gets min/max values on a <see cref="VolumetricDataCall" />.
@@ -70,7 +69,6 @@ private:
     std::vector<double> maxValues;
 };
 
-} /* end namespace astro */
-} /* end namespace megamol */
+} // namespace megamol::astro
 
 #endif /* MEGAMOL_ASTRO_VOLUMETRICGLOBALMINMAX_H_INCLUDED */

@@ -9,9 +9,7 @@
 #include "vislib/math/ShallowShallowTriangle.h"
 #include "vislib/sys/ThreadPool.h"
 
-namespace megamol {
-namespace trisoup_gl {
-namespace volumetrics {
+namespace megamol::trisoup_gl::volumetrics {
 
 class TetraVoxelizer : public vislib::sys::Runnable {
 public:
@@ -90,8 +88,6 @@ private:
     vislib::SingleLinkedList<vislib::math::Point<unsigned int, 4>> cellFIFO;
 };
 
-} /* end namespace volumetrics */
-} // namespace trisoup_gl
-} /* end namespace megamol */
+} // namespace megamol::trisoup_gl::volumetrics
 
 #endif /* MEGAMOLCORE_TETRAVOXELIZER_H_INCLUDED */

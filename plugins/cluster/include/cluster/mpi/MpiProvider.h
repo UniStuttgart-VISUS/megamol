@@ -26,10 +26,7 @@
 #include "vislib/String.h"
 
 
-namespace megamol {
-namespace core {
-namespace cluster {
-namespace mpi {
+namespace megamol::core::cluster::mpi {
 
 /**
  * This module lazily initialises MPI and provides the communicator for the
@@ -159,9 +156,6 @@ private:
     // static bool isMpiOwner;
 };
 
-} /* end namespace mpi */
-} /* end namespace cluster */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::cluster::mpi
 
 #endif /* MEGAMOLCORE_CLUSTER_MPI_MPIPROVIDER_H_INCLUDED */

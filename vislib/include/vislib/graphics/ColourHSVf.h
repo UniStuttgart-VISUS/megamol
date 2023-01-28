@@ -17,8 +17,7 @@
 #include "vislib/graphics/ColourRGBAu8.h"
 #include "vislib/math/mathfunctions.h"
 
-namespace vislib {
-namespace graphics {
+namespace vislib::graphics {
 
 
 /**
@@ -171,8 +170,7 @@ private:
     float comp[3];
 };
 
-} /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib::graphics
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

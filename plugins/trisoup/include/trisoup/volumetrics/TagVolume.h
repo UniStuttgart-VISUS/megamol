@@ -12,9 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-namespace megamol {
-namespace trisoup {
-namespace volumetrics {
+namespace megamol::trisoup::volumetrics {
 
 class TagVolume {
 public:
@@ -33,8 +31,6 @@ private:
     unsigned char* volume;
 };
 
-} /* end namespace volumetrics */
-} /* end namespace trisoup */
-} /* end namespace megamol */
+} // namespace megamol::trisoup::volumetrics
 
 #endif /* MEGAMOLCORE_TAGVOLUME_H_INCLUDED */

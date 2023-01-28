@@ -22,8 +22,7 @@
 #include <filesystem>
 #include <vector>
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Base class of rendering graph calls and of data interfaces for
@@ -1852,7 +1851,6 @@ private:
 typedef megamol::core::factories::CallAutoDescription<MolecularDataCall> MolecularDataCallDescription;
 
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
+} // namespace megamol::protein_calls
 
 #endif /* MEGAMOL_PROTEIN_CALL_MOLECULARDATACALL_H_INCLUDED */

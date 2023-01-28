@@ -37,8 +37,7 @@
 
 #include <glm/glm.hpp>
 
-namespace megamol {
-namespace compositing_gl {
+namespace megamol::compositing_gl {
 
 typedef std::tuple<std::shared_ptr<glowl::Texture2D>, std::string, std::shared_ptr<glowl::Sampler>> TextureSamplerTuple;
 typedef std::tuple<std::shared_ptr<glowl::Texture2DView>, std::string, std::shared_ptr<glowl::Sampler>>
@@ -571,7 +570,6 @@ void SSAO::fullscreenPassDraw(const std::unique_ptr<glowl::GLSLProgram>& prgm, c
     }
 }
 
-} // namespace compositing_gl
-} // namespace megamol
+} // namespace megamol::compositing_gl
 
 #endif // !ASSAO_H_INCLUDED

@@ -21,9 +21,7 @@
 
 //#include <atomic>
 
-namespace vislib_gl {
-namespace graphics {
-namespace gl {
+namespace vislib_gl::graphics::gl {
 
 inline void LoadAllGL() {
     //static std::atomic<bool> alreadyLoaded(false);
@@ -42,9 +40,7 @@ inline void LoadAllGL() {
     }
 }
 
-} /* end namespace gl */
-} /* end namespace graphics */
-} // namespace vislib_gl
+} // namespace vislib_gl::graphics::gl
 
 
 #endif /* INCLUDEALLGL_H_INCLUDED */

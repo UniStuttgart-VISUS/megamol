@@ -13,8 +13,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include <set>
 
-namespace megamol {
-namespace astro {
+namespace megamol::astro {
 
 class SimpleAstroFilter : public core::Module {
 public:
@@ -166,5 +165,4 @@ private:
     uint32_t lastTimestep;
 };
 
-} // namespace astro
-} // namespace megamol
+} // namespace megamol::astro

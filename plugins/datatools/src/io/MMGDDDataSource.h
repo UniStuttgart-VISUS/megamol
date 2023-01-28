@@ -18,9 +18,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace datatools {
-namespace io {
+namespace megamol::datatools::io {
 
 
 /**
@@ -120,8 +118,6 @@ protected:
     size_t data_hash;
 };
 
-} /* end namespace io */
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools::io
 
 #endif /* MEGAMOL_DATATOOLS_IO_MMGDDDATASOURCE_H_INCLUDED */

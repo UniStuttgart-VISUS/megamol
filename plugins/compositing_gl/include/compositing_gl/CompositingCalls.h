@@ -16,8 +16,7 @@
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/Texture2D.hpp"
 
-namespace megamol {
-namespace compositing_gl {
+namespace megamol::compositing_gl {
 
 class CallTexture2D : public core::GenericVersionedCall<std::shared_ptr<glowl::Texture2D>, core::EmptyMetaData> {
 public:
@@ -65,8 +64,7 @@ typedef megamol::core::factories::CallAutoDescription<CallTexture2D> CallTexture
 typedef megamol::core::factories::CallAutoDescription<CallCamera> CallCameraDescription;
 typedef megamol::core::factories::CallAutoDescription<CallFramebufferGL> CallFramebufferGLDescription;
 
-} // namespace compositing_gl
-} // namespace megamol
+} // namespace megamol::compositing_gl
 
 
 #endif // !COMPOSITING_CALLS_H_INCLUDED

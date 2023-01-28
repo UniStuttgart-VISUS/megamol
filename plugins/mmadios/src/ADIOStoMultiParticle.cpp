@@ -12,8 +12,7 @@
 #include <numeric>
 
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 ADIOStoMultiParticle::ADIOStoMultiParticle()
         : core::Module()
@@ -370,5 +369,4 @@ bool ADIOStoMultiParticle::getExtentCallback(core::Call& call) {
     return true;
 }
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

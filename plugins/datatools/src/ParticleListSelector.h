@@ -15,8 +15,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module thinning the number of particles
@@ -64,7 +63,6 @@ private:
     core::param::ParamSlot listIndexSlot;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOLCORE_PARTICLELISTSELECTOR_H_INCLUDED */

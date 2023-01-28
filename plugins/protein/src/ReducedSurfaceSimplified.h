@@ -17,8 +17,7 @@
 #include <set>
 #include <vector>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Molecular Surface Renderer class.
@@ -615,7 +614,6 @@ private:
     unsigned int countCutEdges;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif /* MEGAMOL_REDUCEDSURFACESIMPLE_H_INCLUDED */

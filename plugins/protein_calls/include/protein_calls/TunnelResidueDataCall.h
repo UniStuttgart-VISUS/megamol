@@ -12,8 +12,7 @@
 #include "mmstd/data/AbstractGetData3DCall.h"
 #include <vector>
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 class TunnelResidueDataCall : public core::AbstractGetData3DCall {
 public:
@@ -134,7 +133,6 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<TunnelResidueDataCall> TunnelResidueDataCallDescription;
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
+} // namespace megamol::protein_calls
 
 #endif

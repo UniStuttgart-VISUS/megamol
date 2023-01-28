@@ -16,8 +16,7 @@
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Raycasting-based renderer for bézier curve tubes
@@ -94,5 +93,4 @@ protected:
 private:
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

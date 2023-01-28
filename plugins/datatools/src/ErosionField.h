@@ -10,8 +10,7 @@
 #include "mmcore/CallerSlot.h"
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class ErosionField : public datatools::AbstractParticleManipulator {
 public:
@@ -46,5 +45,4 @@ private:
     float maxCol;
 };
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

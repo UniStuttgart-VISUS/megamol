@@ -22,9 +22,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace net {
-namespace cluster {
+namespace vislib::net::cluster {
 
 /** Forward declaration of an opaque, internal context structure. */
 typedef struct ReceiveMessagesCtx_t* PReceiveMessagesCtx;
@@ -363,9 +361,7 @@ private:
     friend DWORD ReceiveMessages(void* receiveMessagesCtx);
 };
 
-} /* end namespace cluster */
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net::cluster
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

@@ -16,8 +16,7 @@
 #include "mmcore_gl/utility/RenderUtils.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 typedef megamol::core::view::Camera3DController::DefaultView DefaultView_t;
 typedef megamol::core::view::Camera3DController::DefaultOrientation DefaultOrientation_t;
@@ -86,7 +85,6 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui
 
 #endif // MEGAMOL_GUI_PARAMETERGROUPVIEWCUBEWIDGET_INCLUDED

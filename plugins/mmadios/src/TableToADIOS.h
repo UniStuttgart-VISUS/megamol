@@ -13,8 +13,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class TableToADIOS : public core::Module {
 
@@ -85,5 +84,4 @@ private:
     std::map<std::string, size_t> columnIndex;
 };
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

@@ -16,8 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 MeshSTLDataSource::MeshSTLDataSource() : ngmesh_output_slot("mesh_output", "Triangle mesh output") {
     // Remove parent output slot
@@ -73,5 +72,4 @@ bool MeshSTLDataSource::get_mesh_data_callback(core::Call& caller) {
     return true;
 }
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl

@@ -17,8 +17,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "protein_calls/MolecularDataCall.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class HydroBondFilter : public core::Module {
 public:
@@ -200,7 +199,6 @@ private:
     std::vector<unsigned int> cAlphaIndicesPerAtom;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif /* MMPROTEINPLUGIN_HYDROBONDGENERATOR_H_INCLUDED */

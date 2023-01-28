@@ -1,6 +1,7 @@
 ---
 Checks: >
   -*,
+  modernize-concat-nested-namespaces,
   modernize-redundant-void-arg,
   modernize-use-override,
 HeaderFilterRegex: '.'

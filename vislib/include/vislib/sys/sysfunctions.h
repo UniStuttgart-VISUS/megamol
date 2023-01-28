@@ -32,8 +32,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * Possible text file formats
@@ -582,8 +581,7 @@ bool WriteTextFile(File& file, const StringA& text, TextFileFormat format = TEXT
 bool WriteTextFile(File& file, const StringW& text, TextFileFormat format = TEXTFF_UNICODE,
     TextFileFormatBOM bom = TEXTFF_BOM_UNSPECIFIC);
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

@@ -15,8 +15,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module overriding global attributes of particles
@@ -61,7 +60,6 @@ private:
     core::param::ParamSlot autocomputeZSlot;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOLCORE_OVERRIDEPARTICLEBBOX_H_INCLUDED */

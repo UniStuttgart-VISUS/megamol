@@ -19,8 +19,7 @@
 
 #include <cmath>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /*
  * A class representing one frame of data given in the VTK legacy file format.
@@ -267,7 +266,6 @@ private:
     DataGeometry dataGeometry;
 };
 
-} // namespace protein
-} // namespace megamol
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_ABSTRACTVTKLEGACYDATA_H_INCLUDED

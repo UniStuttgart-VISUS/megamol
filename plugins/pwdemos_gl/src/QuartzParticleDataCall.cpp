@@ -7,8 +7,7 @@
 #include "QuartzParticleDataCall.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /*
@@ -41,5 +40,4 @@ ParticleDataCall::~ParticleDataCall() {
     this->part = NULL;  // DO NOT DELETE
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

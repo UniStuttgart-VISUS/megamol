@@ -16,9 +16,7 @@
 #include "datatools/table/TableDataCall.h"
 
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /**
  * A base class for modules processing table data.
@@ -88,6 +86,4 @@ private:
     bool getHash(core::Call& call);
 };
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools::table

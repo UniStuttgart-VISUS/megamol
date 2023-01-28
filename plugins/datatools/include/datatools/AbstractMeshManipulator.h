@@ -9,10 +9,8 @@
 #include "AbstractManipulator.h"
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 using AbstractMeshManipulator = AbstractManipulator<geocalls_gl::CallTriMeshDataGL>;
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

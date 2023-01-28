@@ -12,8 +12,7 @@
 #include "vislib/math/Vector.h"
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class ModColIRange : public datatools::AbstractParticleManipulator {
 public:
@@ -43,5 +42,4 @@ private:
     float minCol, maxCol;
 };
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

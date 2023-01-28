@@ -20,8 +20,7 @@
 #include <cmath>
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * CrystalDataCall::Crystal::Crystal
@@ -289,5 +288,4 @@ CrystalDataCall::~CrystalDataCall() {
     this->count = 0;
     this->crystals = NULL; // DO NOT DELETE
 }
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

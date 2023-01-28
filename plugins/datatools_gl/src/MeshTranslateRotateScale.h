@@ -12,8 +12,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools_gl {
+namespace megamol::datatools_gl {
 
 /**
  * Module thinning the number of particles
@@ -68,5 +67,4 @@ private:
     geocalls_gl::CallTriMeshDataGL::Mesh* mesh;
 };
 
-} // namespace datatools_gl
-} /* end namespace megamol */
+} // namespace megamol::datatools_gl

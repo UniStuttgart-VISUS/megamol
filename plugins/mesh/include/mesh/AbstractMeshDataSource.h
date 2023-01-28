@@ -15,8 +15,7 @@
 #include "mmcore/Module.h"
 
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class AbstractMeshDataSource : public core::Module {
 public:
@@ -73,8 +72,7 @@ protected:
     megamol::core::CalleeSlot m_mesh_lhs_slot;
 };
 
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh
 
 
 #endif // !ABSTRACT_MESH_DATA_SOURCE_H_INCLUDED

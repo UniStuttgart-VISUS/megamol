@@ -26,8 +26,7 @@ typedef vislib::math::Vector<float, 3> Vec3f;
 
 typedef unsigned int uint;
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 class VTKImageData {
 
@@ -1289,7 +1288,6 @@ private:
     vislib::Array<Piece> pieces; ///> The array of pieces of this data set
 };
 
-} // namespace protein_calls
-} // namespace megamol
+} // namespace megamol::protein_calls
 
 #endif // MMPROTEINCALLPLUGIN_VTKIMAGEDATA_H_INCLUDED

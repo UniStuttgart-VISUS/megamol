@@ -17,8 +17,7 @@
 #include "vislib/sys/File.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * Instances of this class repsesent a file based on vislib::sys::File but
@@ -192,8 +191,7 @@ private:
     File::FileSize validBufferSize;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

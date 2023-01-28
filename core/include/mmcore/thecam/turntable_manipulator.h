@@ -11,9 +11,7 @@
 #include "mmcore/thecam/manipulator_base.h"
 #include <glm/ext.hpp>
 
-namespace megamol {
-namespace core {
-namespace thecam {
+namespace megamol::core::thecam {
 
 /**
  * Implements an orbtial camera maniupulator.
@@ -126,9 +124,7 @@ private:
     screen_type m_last_sy;
 };
 
-} /* end namespace thecam */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::thecam
 
 
 #endif // !TURNTABLE_MANIPULATOR_H_INCLUDED

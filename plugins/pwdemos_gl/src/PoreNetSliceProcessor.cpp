@@ -19,8 +19,7 @@
 #include "vislib/graphics/BmpBitmapCodec.h"
 #endif /* DEBUG_BMP */
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 static const char rightmostPoint[16] = {-1, 1, 2, 2, 3, -1, 3, 3, 0, 1, -1, 2, 0, 1, 0, -1};
 static const char rightmostEdge[16] = {-1, 1, 2, 2, 4, -1, 4, 4, 8, 1, -1, 2, 8, 1, 8, -1};
@@ -600,5 +599,4 @@ void PoreNetSliceProcessor::workOnBuffer(ArxelBuffer& buffer, LoopBuffer& outBuf
 #endif /* DEBUG_BMP */
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

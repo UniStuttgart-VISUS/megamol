@@ -15,8 +15,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 
 /**
@@ -129,5 +128,4 @@ private:
     core::param::ParamSlot frameStepSlot;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

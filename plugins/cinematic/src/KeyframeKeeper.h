@@ -21,8 +21,7 @@
 #include "cinematic/Keyframe.h"
 
 
-namespace megamol {
-namespace cinematic {
+namespace megamol::cinematic {
 static inline vislib::math::Vector<float, 3> glm_to_vislib_vector(glm::vec3 v) {
     return vislib::math::Vector<float, 3>(v.x, v.y, v.z);
 }
@@ -268,7 +267,6 @@ private:
 typedef core::factories::CallAutoDescription<KeyframeKeeper> KeyframeKeeperDescription;
 
 
-} /* end namespace cinematic */
-} /* end namespace megamol */
+} // namespace megamol::cinematic
 
 #endif // MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED

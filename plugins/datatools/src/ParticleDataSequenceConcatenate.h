@@ -11,8 +11,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class ParticleDataSequenceConcatenate : public core::Module {
 public:
@@ -40,5 +39,4 @@ private:
     core::CallerSlot dataIn2Slot;
 };
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

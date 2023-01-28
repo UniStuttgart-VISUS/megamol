@@ -13,8 +13,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class MultiParticletoADIOS : public core::Module {
 
@@ -84,5 +83,4 @@ private:
     adiosDataMap dataMap;
 };
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

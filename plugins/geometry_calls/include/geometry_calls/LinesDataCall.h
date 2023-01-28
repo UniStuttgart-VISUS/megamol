@@ -16,8 +16,7 @@
 #include "vislib/graphics/ColourRGBAu8.h"
 
 
-namespace megamol {
-namespace geocalls {
+namespace megamol::geocalls {
 
 
 /**
@@ -698,7 +697,6 @@ private:
 typedef megamol::core::factories::CallAutoDescription<LinesDataCall> LinesDataCallDescription;
 
 
-} /* end namespace geocalls */
-} /* end namespace megamol */
+} // namespace megamol::geocalls
 
 #endif /* MEGAMOL_GEOMETRY_CALLS_LINESDATACALL_H_INCLUDED */

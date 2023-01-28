@@ -11,8 +11,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Class for manually stepping through a series of data files
@@ -143,5 +142,4 @@ private:
     core::param::ParamSlot prevFileSlot;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

@@ -11,8 +11,7 @@
 #include "vislib/StringTokeniser.h"
 
 
-namespace megamol {
-namespace thermodyn {
+namespace megamol::thermodyn {
 
 class PhaseSeparator : public core::Module {
 public:
@@ -89,5 +88,4 @@ private:
     std::vector<BoxDataCall::box_entry_t> boxes_;
 }; // end class PhaseSeparator
 
-} // end namespace thermodyn
-} // end namespace megamol
+} // namespace megamol::thermodyn

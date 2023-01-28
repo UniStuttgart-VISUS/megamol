@@ -19,8 +19,7 @@
 #include "vislib/macro_utils.h"
 #include "vislib/math/Cuboid.h"
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 class VariantMatchDataCall : public core::Call {
 
@@ -162,7 +161,6 @@ private:
 typedef core::factories::CallAutoDescription<VariantMatchDataCall> VariantMatchDataCallDescription;
 
 
-} // end namespace protein_calls
-} // end namespace megamol
+} // namespace megamol::protein_calls
 
 #endif // MMPROTEINCALLSPLUGIN_VARIANTMATCHDATACALL_H_INCLUDED

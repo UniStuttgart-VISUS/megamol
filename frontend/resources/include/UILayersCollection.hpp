@@ -11,8 +11,7 @@
 
 #include "AbstractUILayer.h"
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 class UILayersCollection : AbstractUILayer {
 public:
@@ -41,5 +40,4 @@ private:
     std::shared_ptr<AbstractUILayer> m_lastCapture = nullptr;
 };
 
-} // namespace frontend_resources
-} // namespace megamol
+} // namespace megamol::frontend_resources

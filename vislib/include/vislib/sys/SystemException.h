@@ -19,8 +19,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * This exception class represents a system error. It is instantiated with
@@ -102,8 +101,7 @@ private:
     SystemMessage sysMsg;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

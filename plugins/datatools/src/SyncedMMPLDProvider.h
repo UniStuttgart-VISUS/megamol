@@ -12,8 +12,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class SyncedMMPLDProvider : public StaticMMPLDProvider {
 
@@ -67,5 +66,4 @@ private:
 
 }; // end class SyncedMMPLDProvider
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

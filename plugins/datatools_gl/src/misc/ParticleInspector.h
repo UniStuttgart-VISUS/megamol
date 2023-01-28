@@ -7,9 +7,7 @@
 
 #include "geometry_calls/MultiParticleDataCall.h"
 
-namespace megamol {
-namespace datatools_gl {
-namespace misc {
+namespace megamol::datatools_gl::misc {
 
 /**
  * This module shows a table for debugging MultiParticleDataCall.
@@ -88,6 +86,4 @@ private:
     uint32_t lastDrawnFrame = std::numeric_limits<uint32_t>::max();
 };
 
-} /* end namespace misc */
-} // namespace datatools_gl
-} /* end namespace megamol */
+} // namespace megamol::datatools_gl::misc

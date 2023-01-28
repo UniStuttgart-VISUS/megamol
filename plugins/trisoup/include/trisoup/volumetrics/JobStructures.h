@@ -20,9 +20,7 @@ namespace megamol::trisoup_gl::volumetrics {
 class VoluMetricJob;
 }
 
-namespace megamol {
-namespace trisoup {
-namespace volumetrics {
+namespace megamol::trisoup::volumetrics {
 
 /** typdef steering the arithmetic precision of the voxelizer. */
 typedef /*float*/ double VoxelizerFloat;
@@ -465,8 +463,6 @@ struct SubJobData {
 };
 
 
-} /* end namespace volumetrics */
-} /* end namespace trisoup */
-} /* end namespace megamol */
+} // namespace megamol::trisoup::volumetrics
 
 #endif /* MEGAMOLCORE_JOBSTRUCTURES_INCLUDED */

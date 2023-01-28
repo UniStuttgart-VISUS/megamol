@@ -17,8 +17,7 @@
 #include "mmstd_gl/renderer/Renderer2DModuleGL.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * QuartzPlaneRenderer
@@ -109,5 +108,4 @@ private:
     core::param::ParamSlot useClipColSlot;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

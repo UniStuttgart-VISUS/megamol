@@ -14,8 +14,7 @@
 //#include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowPoint.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * PoreMeshProcessor::PoreMeshProcessor
@@ -132,5 +131,4 @@ void PoreMeshProcessor::workOnBuffer(LoopBuffer& buffer /*, LoopBuffer& outBuffe
     this->sliceNum++;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

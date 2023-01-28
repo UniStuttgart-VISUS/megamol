@@ -23,8 +23,7 @@
     original paper suggests 5. */
 #define MAX_PIVOT_ITERATIONS 5
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -224,8 +223,7 @@ void FastMap<TI, TO, D>::compute() {
     }
 }
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 
 #if defined(_WIN32) && defined(_MANAGED)

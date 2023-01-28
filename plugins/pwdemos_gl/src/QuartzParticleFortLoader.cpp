@@ -20,8 +20,7 @@
 #include <cmath>
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /*
@@ -389,5 +388,4 @@ void ParticleFortLoader::assertData() {
     }
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

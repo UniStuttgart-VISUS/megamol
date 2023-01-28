@@ -13,8 +13,7 @@
 #include "mpi.h"
 #endif /* MEGAMOL_USE_MPI */
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module merging object-space distributed MultiparticleDataCalls over MPI.
@@ -79,5 +78,4 @@ private:
     std::vector<uint8_t> allVertexData, allColorData;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

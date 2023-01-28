@@ -12,8 +12,7 @@
 #include "datatools/AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module overriding global colors of multi particle lists
@@ -67,7 +66,6 @@ private:
     std::vector<bool> has_global_radius;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOLCORE_PARTICLEINSTANTIATOR_H_INCLUDED */

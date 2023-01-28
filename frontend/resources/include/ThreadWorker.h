@@ -12,8 +12,7 @@
 #include <queue>
 #include <thread>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 struct ThreadSignaler {
     std::atomic<bool> running = false;
@@ -70,5 +69,4 @@ private:
 };
 
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

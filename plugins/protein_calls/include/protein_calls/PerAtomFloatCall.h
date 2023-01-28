@@ -15,8 +15,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Call that transports one float per atom
@@ -136,7 +135,6 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<PerAtomFloatCall> PerAtomFloatCallDescription;
 
-} // namespace protein_calls
-} // end namespace megamol
+} // namespace megamol::protein_calls
 
 #endif // MMMOLMAPPLG_PERATOMFLOATCALL_H_INCLUDED

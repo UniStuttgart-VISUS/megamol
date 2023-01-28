@@ -13,8 +13,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class BindingSiteDataSource : public megamol::core::Module {
 public:
@@ -115,5 +114,4 @@ private:
     std::vector<glm::vec3> bindingSiteColors_;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein

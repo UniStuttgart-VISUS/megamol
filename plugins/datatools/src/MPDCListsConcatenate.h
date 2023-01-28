@@ -11,8 +11,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class MPDCListsConcatenate : public core::Module {
 public:
@@ -40,5 +39,4 @@ private:
     core::CallerSlot dataIn2Slot;
 }; // end class MPDCListsConcatenate
 
-} // end namespace datatools
-} // end namespace megamol
+} // namespace megamol::datatools

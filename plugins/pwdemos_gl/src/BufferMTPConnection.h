@@ -14,8 +14,7 @@
 #include "vislib/sys/Event.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /**
@@ -479,5 +478,4 @@ void BufferMTPConnection<T>::Open() {
 }
 
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

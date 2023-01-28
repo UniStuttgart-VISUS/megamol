@@ -17,8 +17,7 @@
 //#include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Processor for pore-mesh collection/generation/whatever
@@ -125,5 +124,4 @@ private:
     vislib::math::Vector<float, 3> axes[3];
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

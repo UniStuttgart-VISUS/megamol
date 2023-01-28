@@ -90,9 +90,7 @@
 #endif // GL_VERSION_4_5
 
 
-namespace megamol {
-namespace moldyn_gl {
-namespace rendering {
+namespace megamol::moldyn_gl::rendering {
 
 using namespace megamol::core;
 using namespace megamol::geocalls;
@@ -663,8 +661,6 @@ private:
     void generate3ConeDirections(std::vector<glm::vec4>& out_directions, float apex);
 };
 
-} /* end namespace rendering */
-} // namespace moldyn_gl
-} /* end namespace megamol */
+} // namespace megamol::moldyn_gl::rendering
 
 #endif /* MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED */

@@ -18,8 +18,7 @@
 
 #include "RuntimeConfig.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 typedef glowl::GLSLProgram Shader;
 
@@ -60,7 +59,6 @@ private:
     std::unordered_map<std::string, Material> m_materials;
 };
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl
 
 #endif // !GPU_MATERIAL_COLLECTION_H_INCLUDED

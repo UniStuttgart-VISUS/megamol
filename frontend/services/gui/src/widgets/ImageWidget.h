@@ -15,8 +15,7 @@
 #include "widgets/HoverToolTip.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 template<typename T>
 struct CPUTexture2D {
@@ -131,7 +130,6 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui
 
 #endif // MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED

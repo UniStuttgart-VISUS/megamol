@@ -26,8 +26,7 @@
 #include "datatools/table/TableDataCall.h"
 
 
-namespace megamol {
-namespace astro {
+namespace megamol::astro {
 
 /// <summary>
 /// Converts from <see cref="AstroDataCall" /> to a table for data
@@ -116,7 +115,6 @@ private:
     std::vector<float> values;
 };
 
-} /* end namespace astro */
-} /* end namespace megamol */
+} // namespace megamol::astro
 
 #endif /* MEGAMOL_ASTRO_ASTROSCHULZ_H_INCLUDED */

@@ -22,8 +22,7 @@
 #include <iomanip>
 
 
-namespace megamol {
-namespace cinematic_gl {
+namespace megamol::cinematic_gl {
 
 
 /** ************************************************************************
@@ -202,7 +201,6 @@ private:
 };
 
 
-} // namespace cinematic_gl
-} /* end namespace megamol */
+} // namespace megamol::cinematic_gl
 
 #endif /* MEGAMOL_CINEMATIC_OVERLAYRENDERER_H_INCLUDED */

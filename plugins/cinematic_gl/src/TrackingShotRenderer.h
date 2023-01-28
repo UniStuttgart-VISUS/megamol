@@ -19,8 +19,7 @@
 #include "cinematic_gl/KeyframeManipulators.h"
 
 
-namespace megamol {
-namespace cinematic_gl {
+namespace megamol::cinematic_gl {
 
 /**
  * Tracking shot rendering.
@@ -135,7 +134,6 @@ private:
     core::param::ParamSlot toggleHelpTextParam;
 };
 
-} // namespace cinematic_gl
-} /* end namespace megamol */
+} // namespace megamol::cinematic_gl
 
 #endif // MEGAMOL_CINEMATIC_TRACKINGSHOTRENDERER_H_INCLUDED

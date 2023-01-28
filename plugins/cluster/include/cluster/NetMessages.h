@@ -14,11 +14,7 @@
 #include "vislib/types.h"
 
 
-namespace megamol {
-namespace core {
-namespace cluster {
-
-namespace netmessages {
+namespace megamol::core::cluster::netmessages {
 
 /************************************************************************/
 
@@ -110,10 +106,6 @@ typedef struct _timesyncdata_t {
 
 } TimeSyncData;
 
-} /* end namespace netmessages */
-
-} /* end namespace cluster */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::cluster::netmessages
 
 #endif /* MEGAMOLCORE_NETMESSAGES_H_INCLUDED */

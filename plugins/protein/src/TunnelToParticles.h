@@ -14,8 +14,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class TunnelToParticles : public megamol::core::Module {
 public:
@@ -83,7 +82,6 @@ private:
     core::CallerSlot tunnelInSlot;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif

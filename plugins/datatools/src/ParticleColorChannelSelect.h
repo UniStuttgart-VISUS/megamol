@@ -16,8 +16,7 @@
 #include <map>
 #include <utility>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Selects one of the RGBA color channels as I color channel
@@ -64,7 +63,6 @@ private:
     std::map<const void*, std::pair<float, float>> colRange;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOLCORE_PARTICLECOLORCHANNELSELECT_H_INCLUDED */

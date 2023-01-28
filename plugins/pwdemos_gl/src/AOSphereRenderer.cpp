@@ -41,8 +41,7 @@
 
 using megamol::core::utility::log::Log;
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 /*
  * AOSphereRenderer::AOSphereRenderer
  */
@@ -1508,5 +1507,4 @@ void AOSphereRenderer::createVolumeCPU(protein_calls::MolecularDataCall& mol) {
     delete[] vol;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

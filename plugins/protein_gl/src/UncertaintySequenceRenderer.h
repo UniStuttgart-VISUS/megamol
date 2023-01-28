@@ -36,8 +36,7 @@
 #include "protein_calls/UncertaintyDataCall.h"
 
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 class UncertaintySequenceRenderer : public megamol::mmstd_gl::Renderer2DModuleGL {
 
@@ -515,5 +514,4 @@ private:
     std::unique_ptr<glowl::GLSLProgram> shader;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl

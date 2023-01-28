@@ -25,8 +25,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 /**
  * Module for uploading a 3D triangle mesh to the GPU.
@@ -171,5 +170,4 @@ private:
 
     } render_data;
 };
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl

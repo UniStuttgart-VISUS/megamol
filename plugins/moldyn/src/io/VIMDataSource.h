@@ -22,9 +22,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 /**
  * Renderer for rendering the vis logo into the unit cube.
@@ -507,8 +505,6 @@ private:
     SIZE_T datahash;
 };
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn::io
 
 #endif /* MEGAMOLCORE_VIMDATASOURCE_H_INCLUDED */

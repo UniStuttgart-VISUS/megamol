@@ -20,9 +20,7 @@
 #include "vislib/net/DiscoveryService.h"
 
 
-namespace megamol {
-namespace core {
-namespace cluster {
+namespace megamol::core::cluster {
 
 /**
  * client class for cluster controller
@@ -193,8 +191,6 @@ private:
 };
 
 
-} /* end namespace cluster */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::cluster
 
 #endif /* MEGAMOLCORE_CLUSTERCONTROLLERCLIENT_H_INCLUDED */

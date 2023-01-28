@@ -11,8 +11,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Call transporting gridded quartz crystal particle data
@@ -380,5 +379,4 @@ private:
     unsigned int sx, sy, sz;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

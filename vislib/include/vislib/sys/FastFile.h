@@ -16,8 +16,7 @@
 #include "vislib/sys/BufferedFile.h"
 #endif
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * The FastFile typedef selects the best file implementation for the
@@ -33,8 +32,7 @@ typedef MemmappedFile FastFile;
 typedef BufferedFile FastFile;
 #endif
 
-} // namespace sys
-} // namespace vislib
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

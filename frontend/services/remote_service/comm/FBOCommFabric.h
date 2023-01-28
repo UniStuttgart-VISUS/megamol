@@ -7,8 +7,7 @@
 #endif
 #include "zmq.hpp"
 
-namespace megamol {
-namespace remote {
+namespace megamol::remote {
 
 enum send_type : unsigned int { ST_UNDEF = 0, BCAST, SCATTER, SEND, ISEND };
 
@@ -112,5 +111,4 @@ private:
     std::unique_ptr<AbstractCommFabric> pimpl_;
 };
 
-} // end namespace remote
-} // end namespace megamol
+} // namespace megamol::remote

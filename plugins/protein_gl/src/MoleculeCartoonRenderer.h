@@ -23,8 +23,7 @@
 #include "vislib/Array.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 /*
  * Protein Renderer class
@@ -370,5 +369,4 @@ private:
 };
 
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl

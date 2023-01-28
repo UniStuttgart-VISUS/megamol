@@ -18,8 +18,7 @@
 #include "mmstd/data/AbstractDataWriter.h"
 #include "vislib/sys/FastFile.h"
 
-namespace megamol {
-namespace trisoup {
+namespace megamol::trisoup {
 
 /**
  * Wavefront .obj file writer that discards the color information.
@@ -107,7 +106,6 @@ private:
     core::CallerSlot dataSlot;
 };
 
-} /* end namespace trisoup */
-} /* end namespace megamol */
+} // namespace megamol::trisoup
 
 #endif /* MMTRISOUPPLG_WAVEFRONTOBJWRITER_H_INCLUDED */

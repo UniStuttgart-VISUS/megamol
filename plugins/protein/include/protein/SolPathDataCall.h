@@ -14,8 +14,7 @@
 #include "vislib/math/mathfunctions.h"
 
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Get data call for (unclustered) sol-path data
@@ -255,7 +254,6 @@ private:
     float maxSpeed;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif /*  MEGAMOL_PROTEIN_SOLPATHDATACALL_H_INCLUDED */

@@ -31,8 +31,7 @@
 #endif /* _MSC_VER */
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 /**
  * Utility class for informations about the local network configuration.
@@ -1938,8 +1937,7 @@ int NetworkInformation::findSamePrefix(
     return -1;
 }
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

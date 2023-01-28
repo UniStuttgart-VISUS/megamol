@@ -16,8 +16,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 // TODO: merge this with DirPartFilter!
 
@@ -99,7 +98,6 @@ private:
     SIZE_T lastVolumeHash = 0;
 };
 
-} /* end namespace datatools */
-} // namespace megamol
+} // namespace megamol::datatools
 
 #endif /* MEGAMOLCORE_PARTICLEVISIBILITYFROMVOLUME_H_INCLUDED */

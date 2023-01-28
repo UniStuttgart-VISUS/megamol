@@ -20,8 +20,7 @@
 #include <glm/glm.hpp>
 
 
-namespace megamol {
-namespace cinematic_gl {
+namespace megamol::cinematic_gl {
 
 
 /*
@@ -151,7 +150,6 @@ private:
     glm::vec2 world2ScreenSpace(glm::vec3 vec);
 };
 
-} // namespace cinematic_gl
-} /* end namespace megamol */
+} // namespace megamol::cinematic_gl
 
 #endif // MEGAMOL_CINEMATIC_KEYFRAMEMANIPULATOR_H_INCLUDED

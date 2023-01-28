@@ -18,8 +18,7 @@
 #include "widgets/StringSearchWidget.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /* ************************************************************************
@@ -93,7 +92,6 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui
 
 #endif // MEGAMOL_GUI_CONFIGURATOR_H_INCLUDED

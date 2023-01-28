@@ -20,8 +20,7 @@
 #include "vislib/Array.h"
 
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Class for loading MSMS mesh data
@@ -120,7 +119,6 @@ private:
     SIZE_T datahash;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif /* MMMOLMAPPLG_SolventCounter_H_INCLUDED */

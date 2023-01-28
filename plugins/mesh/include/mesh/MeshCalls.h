@@ -18,8 +18,7 @@
 #include "ImageDataAccessCollection.h"
 #include "MeshDataAccessCollection.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class Call3DInteraction : public core::GenericVersionedCall<std::shared_ptr<ThreeDimensionalInteractionCollection>,
                               core::EmptyMetaData> {
@@ -83,8 +82,7 @@ typedef megamol::core::factories::CallAutoDescription<CallGlTFData> CallGlTFData
 typedef megamol::core::factories::CallAutoDescription<CallMesh> CallMeshDescription;
 typedef megamol::core::factories::CallAutoDescription<CallImage> CallImageDescription;
 
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh
 
 
 #endif // !MESH_CALLS_H_INCLUDED

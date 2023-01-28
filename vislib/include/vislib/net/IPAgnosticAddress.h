@@ -20,8 +20,7 @@
 #include "vislib/net/SocketAddress.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -545,8 +544,7 @@ private:
     IPAddress6* v6;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

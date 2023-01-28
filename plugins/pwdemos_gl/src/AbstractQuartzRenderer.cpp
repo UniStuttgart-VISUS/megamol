@@ -11,8 +11,7 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmstd/light/CallLight.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * AbstractQuartzRenderer::AbstractQuartzRenderer
@@ -73,5 +72,4 @@ core::view::CallClipPlane* AbstractQuartzRenderer::getClipPlaneData() {
     return ccp;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

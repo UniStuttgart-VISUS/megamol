@@ -13,8 +13,7 @@
 #include "HoverToolTip.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** ************************************************************************
@@ -54,7 +53,6 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui
 
 #endif // MEGAMOL_GUI_MINIMALPOPUP_INCLUDED

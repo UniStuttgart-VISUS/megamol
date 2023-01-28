@@ -21,8 +21,7 @@
 #include "mmcore/Module.h"
 
 
-namespace megamol {
-namespace volume {
+namespace megamol::volume {
 
 /**
  * Computes the difference between two time steps of a volumetric data
@@ -166,7 +165,6 @@ private:
     core::CalleeSlot slotOut;
 };
 
-} /* end namespace volume */
-} /* namespace megamol */
+} // namespace megamol::volume
 
 #include "DifferenceVolume.inl"

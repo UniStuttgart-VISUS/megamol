@@ -16,9 +16,7 @@
 #include <string>
 #include <type_traits>
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /**
  * Call for passing around tabular data.
@@ -184,8 +182,6 @@ private:
 
 typedef core::factories::CallAutoDescription<TableDataCall> TableDataCallDescription;
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools::table
 
 #endif

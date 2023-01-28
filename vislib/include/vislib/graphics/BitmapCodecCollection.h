@@ -24,8 +24,7 @@
 #include "vislib/sys/File.h"
 
 
-namespace vislib {
-namespace graphics {
+namespace vislib::graphics {
 
 
 /**
@@ -313,8 +312,7 @@ private:
     CodecArray codecs;
 };
 
-} /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib::graphics
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

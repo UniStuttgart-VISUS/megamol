@@ -17,8 +17,7 @@
 #include "protein/AbstractVTKLegacyData.h"
 #include "vislib/Array.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /*
  * A class representing one frame of data given in the VTK legacy file format.
@@ -248,7 +247,6 @@ private:
     vislib::Array<AbstractVTKLegacyData::AttributeArray> cellData;
 };
 
-} // namespace protein
-} // namespace megamol
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_VTKLEGACYDATAUNSTRUCTUREDGRID_H_INCLUDED

@@ -21,8 +21,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace trisoup_gl {
+namespace megamol::trisoup_gl {
 
 
 /**
@@ -54,7 +53,6 @@ private:
     core::param::ParamSlot filenameSlot;
 };
 
-} // namespace trisoup_gl
-} /* end namespace megamol */
+} // namespace megamol::trisoup_gl
 
 #endif /* MMTRISOUPPLG_ABSTRACTTRIMESHLOADER_H_INCLUDED */

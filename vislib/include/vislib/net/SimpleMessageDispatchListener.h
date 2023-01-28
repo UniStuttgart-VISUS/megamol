@@ -29,8 +29,7 @@ class SimpleMessageDispatcher;
 } /* end namespace net */
 } /* end namespace vislib */
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -216,8 +215,7 @@ public:
     virtual bool OnMessageReceived(SimpleMessageDispatcher& src, const AbstractSimpleMessage& msg) throw() = 0;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

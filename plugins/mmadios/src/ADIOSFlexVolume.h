@@ -14,8 +14,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class ADIOSFlexVolume : public core::Module {
 
@@ -84,5 +83,4 @@ private:
     size_t currentFrame = -1;
 };
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

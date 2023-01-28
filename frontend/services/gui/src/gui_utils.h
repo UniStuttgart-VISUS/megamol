@@ -90,8 +90,7 @@
 #endif // MEGAMOL_USE_OPENGL
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /********** Additional Global ImGui Operators ****************************/
@@ -902,7 +901,6 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui
 
 #endif // MEGAMOL_GUI_GUIUTILS_INCLUDED

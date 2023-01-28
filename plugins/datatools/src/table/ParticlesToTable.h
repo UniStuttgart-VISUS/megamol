@@ -11,8 +11,7 @@
 #include <array>
 #include <map>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * This module converts from a generic table to the MultiParticleDataCall.
@@ -92,5 +91,4 @@ private:
     uint32_t total_particles = 0;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

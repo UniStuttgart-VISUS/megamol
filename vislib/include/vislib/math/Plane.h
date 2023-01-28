@@ -17,8 +17,7 @@
 #include "vislib/math/AbstractPlane.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * Objects of this class represent a plane with cartesian coordinates.
@@ -160,8 +159,7 @@ Plane<T>::Plane(const AbstractPlane<Tp, Sp>& rhs) {
 template<class T>
 Plane<T>::~Plane() {}
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

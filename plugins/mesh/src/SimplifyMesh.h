@@ -19,8 +19,7 @@
 #include <memory>
 #include <vector>
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 /**
  * Module for simplifying a mesh.
  *
@@ -131,5 +130,4 @@ private:
     } output;
 #endif
 };
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh

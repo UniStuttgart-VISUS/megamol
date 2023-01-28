@@ -8,8 +8,7 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <vector>
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * AbstractTexQuartzRenderer::AbstractTexQuartzRenderer
@@ -93,5 +92,4 @@ void AbstractTexQuartzRenderer::releaseTypeTexture() {
     this->typeTexture = 0;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

@@ -14,8 +14,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module overriding global attributes of particles
@@ -71,7 +70,6 @@ private:
     float minCol, maxCol;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOLCORE_PARTICLECOLORSIGNEDDISTANCE_H_INCLUDED */

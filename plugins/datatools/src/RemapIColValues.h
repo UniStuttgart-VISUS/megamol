@@ -12,8 +12,7 @@
 #include "mmcore/CallerSlot.h"
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 
 /**
@@ -50,7 +49,6 @@ private:
     float minCol, maxCol;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOL_DATATOOLS_REMAPICOLVALUES_H_INCLUDED */

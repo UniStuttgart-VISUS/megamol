@@ -27,9 +27,7 @@ namespace vislib {
 class RawStorageWriter;
 }
 
-namespace megamol {
-namespace trisoup_gl {
-namespace volumetrics {
+namespace megamol::trisoup_gl::volumetrics {
 
 
 /**
@@ -195,8 +193,6 @@ private:
 };
 
 
-} /* end namespace volumetrics */
-} // namespace trisoup_gl
-} /* end namespace megamol */
+} // namespace megamol::trisoup_gl::volumetrics
 
 #endif /* MEGAMOLCORE_ISOSURFACE_H_INCLUDED */

@@ -28,8 +28,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/graphics/AbstractBitmapCodec.h"
 
-namespace megamol {
-namespace image_gl {
+namespace megamol::image_gl {
 
 /**
  * Mesh-based renderer for bezier curve tubes
@@ -256,5 +255,4 @@ private:
     bool new_tiles_;
 };
 
-} // namespace image_gl
-} /* end namespace megamol */
+} // namespace megamol::image_gl

@@ -24,8 +24,7 @@
 #include "vislib/math/Cuboid.h"
 typedef vislib::math::Cuboid<float> Cubef;
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /*
  * A class for loading VTK legacy unstructured grid data from *.vtk files
@@ -471,7 +470,6 @@ private:
     Cubef bbox;
 };
 
-} // namespace protein
-} // namespace megamol
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_VTKLEGACYDATALOADERUNSTRUCTUREDGRID_H_INCLUDED

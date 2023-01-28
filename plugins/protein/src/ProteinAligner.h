@@ -18,8 +18,7 @@
 #include "vislib/math/Point.h"
 #include <glm/glm.hpp>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class ProteinAligner : public core::Module {
 public:
@@ -117,7 +116,6 @@ private:
     vislib::math::Cuboid<float> boundingBox;
 };
 
-} // namespace protein
-} // namespace megamol
+} // namespace megamol::protein
 
 #endif /* MMPROTEINPLUGIN_PROTEINALIGNER_H_INCLUDED */

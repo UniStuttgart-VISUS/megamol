@@ -11,9 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 /// <summary>Jenkins one-at-a-time hash function for one or two input values</summary>
 /// <typeparam name="T">Type of first</typeparam>
 /// <typeparam name="U">Type of second</typeparam>
@@ -60,8 +58,6 @@ template<typename T, typename U, typename... Targs>
 uint32_t DataHash(const T& first, const U& second, const Targs&... values) {
     return DataHash(first, DataHash(second, values...));
 }
-} // namespace utility
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::utility
 
 #endif

@@ -18,8 +18,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace cinematic_gl {
+namespace megamol::cinematic_gl {
 
 /*
  * Replacement rendering.
@@ -123,7 +122,6 @@ private:
     core::param::ParamSlot alphaParam;
 };
 
-} // namespace cinematic_gl
-} /* end namespace megamol */
+} // namespace megamol::cinematic_gl
 
 #endif // MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED

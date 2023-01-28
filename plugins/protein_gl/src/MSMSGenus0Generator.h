@@ -22,8 +22,7 @@
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 /**
  * Class for loading MSMS mesh data
  */
@@ -185,7 +184,6 @@ private:
     int prevTime;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl
 
 #endif /* MMMOLMAPPLG_MSMSMESHLOADER_H_INCLUDED */

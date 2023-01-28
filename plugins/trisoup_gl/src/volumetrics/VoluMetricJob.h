@@ -24,9 +24,7 @@
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"
 
-namespace megamol {
-namespace trisoup_gl {
-namespace volumetrics {
+namespace megamol::trisoup_gl::volumetrics {
 /**
  * Megamol job that computes metrics about the volume occupied by a number
  * of (spherical) glyphs. Several threaded jobs are generated for a number of
@@ -277,8 +275,6 @@ private:
     vislib::Array<trisoup::trisoupVolumetricDataCall::Volume> debugVolumes;
 };
 
-} /* end namespace volumetrics */
-} // namespace trisoup_gl
-} /* end namespace megamol */
+} // namespace megamol::trisoup_gl::volumetrics
 
 #endif /* MEGAMOLCORE_VOLUMETRICJOB_H_INCLUDED */

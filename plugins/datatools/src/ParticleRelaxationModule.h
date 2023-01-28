@@ -16,8 +16,7 @@
 #include "vislib/RawStorage.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module overriding global attributes of particles
@@ -86,7 +85,6 @@ private:
     vislib::math::Cuboid<float> cbox;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOLCORE_PARTICLERELAXATIONMODULE_H_INCLUDED */

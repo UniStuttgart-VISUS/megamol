@@ -14,8 +14,7 @@
 #include "mmstd_gl/ModuleGL.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 
-namespace megamol {
-namespace compositing_gl {
+namespace megamol::compositing_gl {
 
 /**
  * TODO
@@ -144,5 +143,4 @@ private:
     core::CalleeSlot m_framebuffer_slot;
 };
 
-} // namespace compositing_gl
-} // namespace megamol
+} // namespace megamol::compositing_gl

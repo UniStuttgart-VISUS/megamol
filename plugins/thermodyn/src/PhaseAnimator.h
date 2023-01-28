@@ -6,8 +6,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace thermodyn {
+namespace megamol::thermodyn {
 
 class PhaseAnimator : public core::Module {
 public:
@@ -72,5 +71,4 @@ private:
 
 }; // end class PhaseAnimator
 
-} // end namespace thermodyn
-} // end namespace megamol
+} // namespace megamol::thermodyn

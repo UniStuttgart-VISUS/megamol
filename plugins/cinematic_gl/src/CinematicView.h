@@ -27,8 +27,7 @@
 #include "vislib/sys/FastFile.h"
 
 
-namespace megamol {
-namespace cinematic_gl {
+namespace megamol::cinematic_gl {
 
 /**
  * Cinemtic View.
@@ -197,7 +196,6 @@ private:
     core::param::ParamSlot addSBSideToNameParam;
 };
 
-} // namespace cinematic_gl
-} /* end namespace megamol */
+} // namespace megamol::cinematic_gl
 
 #endif // MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED

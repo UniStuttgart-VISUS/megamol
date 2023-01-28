@@ -14,9 +14,7 @@
 #include "mmstd/data/AbstractDataWriter.h"
 #include "vislib/sys/FastFile.h"
 
-namespace megamol {
-namespace datatools_gl {
-namespace io {
+namespace megamol::datatools_gl::io {
 
 class PlyWriter : public core::AbstractDataWriter {
 public:
@@ -93,8 +91,6 @@ private:
     core::CallerSlot meshDataSlot;
 };
 
-} /* end namespace io */
-} // namespace datatools_gl
-} /* end namespace megamol */
+} // namespace megamol::datatools_gl::io
 
 #endif // !MEGAMOL_DATATOOLS_IO_PLYWRITER_H_INCLUDED

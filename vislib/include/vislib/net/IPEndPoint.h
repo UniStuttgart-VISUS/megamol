@@ -18,8 +18,7 @@
 #include "vislib/net/IPAgnosticAddress.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 #ifdef _WIN32
 // Crowbar to work around windows naming conflict
@@ -447,8 +446,7 @@ private:
 #endif /* _MSC_VER */
 #endif /* _WIN32 */
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

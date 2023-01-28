@@ -11,8 +11,7 @@
 #include <algorithm>
 #include <string>
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Computes and returns the approximate positions of the binding site of a molecule.
@@ -448,7 +447,6 @@ inline float GetHydrophibicityByResName(std::string resName) {
     return GetHydrophobicityByResNameKyte(resName);
 }
 
-} // namespace protein_calls
-} /* end namespace megamol */
+} // namespace megamol::protein_calls
 
 #endif

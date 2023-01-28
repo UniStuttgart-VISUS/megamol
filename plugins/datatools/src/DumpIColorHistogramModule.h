@@ -11,8 +11,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class DumpIColorHistogramModule : public megamol::core::Module {
 public:
@@ -38,5 +37,4 @@ private:
 };
 
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

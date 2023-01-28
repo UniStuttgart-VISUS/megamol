@@ -14,8 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * This superclass defines the interface for all synchronisation objects.
@@ -67,8 +66,7 @@ protected:
     }
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

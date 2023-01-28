@@ -18,8 +18,7 @@
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * QuartzPlaneTexRenderer
@@ -104,5 +103,4 @@ private:
     core::param::ParamSlot useClipColSlot;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

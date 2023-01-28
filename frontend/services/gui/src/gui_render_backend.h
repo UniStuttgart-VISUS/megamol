@@ -24,8 +24,7 @@
 #endif // MEGAMOL_USE_OPENGL
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 enum class GUIRenderBackend { NONE, CPU, OPEN_GL };
@@ -90,7 +89,6 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui
 
 #endif // MEGAMOL_GUI_GUIRENDERBACKEND_H_INCLUDED

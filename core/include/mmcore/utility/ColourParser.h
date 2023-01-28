@@ -14,9 +14,7 @@
 #include "vislib/String.h"
 
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 /**
  * Utility class for converting colour data to and from strings
@@ -239,8 +237,6 @@ private:
 };
 
 
-} /* end namespace utility */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::utility
 
 #endif /* MEGAMOLCORE_COLOURPARSER_H_INCLUDED */

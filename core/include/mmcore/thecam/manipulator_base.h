@@ -38,9 +38,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-namespace megamol {
-namespace core {
-namespace thecam {
+namespace megamol::core::thecam {
 
 /**
  * Base class for camera manipulators.
@@ -168,9 +166,7 @@ private:
     bool isManipulating;
 };
 
-} /* end namespace thecam */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::thecam
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

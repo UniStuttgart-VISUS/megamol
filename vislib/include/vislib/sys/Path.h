@@ -20,8 +20,7 @@
 #pragma comment(lib, "shlwapi")
 #endif /* _MSC_VER */
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /**
@@ -551,8 +550,7 @@ bool Path::Compare(const String<T>& lhs, const String<T>& rhs) {
 #endif /* _WIN32 */
 }
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

@@ -18,8 +18,7 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 /**
  * Renderer for solvent path raw data
@@ -103,5 +102,4 @@ private:
     std::unique_ptr<glowl::GLSLProgram> dotsShader;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl

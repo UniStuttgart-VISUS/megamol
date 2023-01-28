@@ -25,8 +25,7 @@
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 /*
  * Simple Molecular Renderer class
@@ -306,7 +305,6 @@ private:
 };
 
 
-} // namespace protein_gl
-} // namespace megamol
+} // namespace megamol::protein_gl
 
 #endif // MMPROTEINPLUGIN_SIMPLEMOLECULERENDERER_H_INCLUDED

@@ -28,8 +28,7 @@
 #include "vislib/math/Quaternion.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 /**
  * Molecular Surface Renderer class.
@@ -372,5 +371,4 @@ private:
     DeferredRenderingProvider deferredProvider_;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl

@@ -18,8 +18,7 @@
 #include <memory>
 #include <vector>
 
-namespace megamol {
-namespace astro {
+namespace megamol::astro {
 
 typedef std::shared_ptr<std::vector<glm::vec3>> vec3ArrayPtr;
 typedef std::shared_ptr<std::vector<float>> floatArrayPtr;
@@ -662,7 +661,6 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<AstroDataCall> AstroDataCallDescription;
 
-} // namespace astro
-} // namespace megamol
+} // namespace megamol::astro
 
 #endif

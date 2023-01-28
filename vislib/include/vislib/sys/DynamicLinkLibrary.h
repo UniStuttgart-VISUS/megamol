@@ -22,8 +22,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * DLLException is thrown if a DynamicLinkLibrary load operation fails.
@@ -178,8 +177,7 @@ private:
     vislib::StringA loadErrorMsg;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

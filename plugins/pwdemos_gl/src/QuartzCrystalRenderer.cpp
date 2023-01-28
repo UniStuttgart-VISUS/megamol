@@ -15,8 +15,7 @@
 
 #include <glm/ext.hpp>
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * CrystalRenderer::CrystalRenderer
@@ -215,5 +214,4 @@ void CrystalRenderer::release() {
     // intentionally empty
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

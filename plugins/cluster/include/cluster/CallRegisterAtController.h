@@ -16,9 +16,7 @@
 #include <vislib/String.h>
 
 
-namespace megamol {
-namespace core {
-namespace cluster {
+namespace megamol::core::cluster {
 
 /** forward declaration */
 class ClusterControllerClient;
@@ -182,8 +180,6 @@ private:
 typedef factories::CallAutoDescription<CallRegisterAtController> CallRegisterAtControllerDescription;
 
 
-} /* end namespace cluster */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::cluster
 
 #endif /* MEGAMOLCORE_CALLREGISTERATCONTROLLER_H_INCLUDED */

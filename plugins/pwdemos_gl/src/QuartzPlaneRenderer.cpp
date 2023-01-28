@@ -15,8 +15,7 @@
 #include "vislib/math/Vector.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * QuartzPlaneRenderer::QuartzPlaneRenderer
@@ -501,5 +500,4 @@ std::shared_ptr<glowl::GLSLProgram> QuartzPlaneRenderer::makeShader(const Crysta
     return s;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

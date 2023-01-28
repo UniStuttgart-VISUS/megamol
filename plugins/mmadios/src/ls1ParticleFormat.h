@@ -14,8 +14,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include <variant>
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class ls1ParticleFormat : public core::Module {
 
@@ -145,5 +144,4 @@ private:
     }
 };
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

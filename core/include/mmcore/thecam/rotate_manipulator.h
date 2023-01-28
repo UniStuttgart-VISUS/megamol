@@ -12,9 +12,7 @@
 #include "mmcore/thecam/manipulator_base.h"
 #include "mmcore/view/Camera.h"
 
-namespace megamol {
-namespace core {
-namespace thecam {
+namespace megamol::core::thecam {
 
 /**
  * A manipulator for rotating the camera around its own position
@@ -124,9 +122,7 @@ private:
     world_type rotationAngle;
 };
 
-} // namespace thecam
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::thecam
 
 #include "mmcore/thecam/rotate_manipulator.inl"
 

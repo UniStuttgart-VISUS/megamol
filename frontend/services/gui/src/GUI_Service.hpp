@@ -19,8 +19,7 @@
 #include "mmcore/MegaMolGraph.h"
 
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 
 class GUIManager;
@@ -105,7 +104,6 @@ private:
     void resource_register_notification(const std::string& name, std::weak_ptr<bool> open, const std::string& message);
 };
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend
 
 #endif // MEGAMOL_GUI_SERVICE_HPP_INCLUDED

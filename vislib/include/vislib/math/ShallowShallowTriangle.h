@@ -18,8 +18,7 @@
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/memutils.h"
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -129,8 +128,7 @@ void ShallowShallowTriangle<T, D>::SetPointer(T* memory) {
 }
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

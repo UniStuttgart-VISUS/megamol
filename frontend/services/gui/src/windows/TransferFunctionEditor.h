@@ -18,8 +18,7 @@
 using namespace megamol::core::param;
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 // Forward declarations
@@ -160,7 +159,6 @@ private:
     void sortNodes(TransferFunctionParam::NodeVector_t& n, unsigned int& selected_node_idx) const;
 };
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui
 
 #endif // MEGAMOL_GUI_TRANSFERFUNCTIONEDITOR_INCLUDED

@@ -12,8 +12,7 @@
 #include "mmcore/utility/log/Log.h"
 #include <algorithm>
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 MultiParticletoADIOS::MultiParticletoADIOS()
         : core::Module()
@@ -659,5 +658,4 @@ bool MultiParticletoADIOS::getHeaderCallback(core::Call& call) {
     return true;
 }
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

@@ -13,8 +13,7 @@
 #include "mesh/MeshCalls.h"
 #include "mesh_gl/BaseMeshRenderer.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class BaseGltfRenderer : public BaseMeshRenderer {
 public:
@@ -293,7 +292,6 @@ inline void BaseGltfRenderer::updateRenderTaskCollection(mmstd_gl::CallRender3DG
 }
 
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl
 
 #endif // !BASE_GLTF_RENDERER_H_INCLUDED

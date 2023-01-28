@@ -11,8 +11,7 @@
 #include <mpi.h>
 #endif
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class adiosWriter : public core::AbstractDataWriter {
 public:
@@ -98,5 +97,4 @@ private:
 };
 
 
-} /* end namespace adios */
-} /* end namespace megamol */
+} // namespace megamol::adios

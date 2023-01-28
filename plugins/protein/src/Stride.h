@@ -24,8 +24,7 @@
 #include <string.h>
 #include <vector>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 #define Eps 0.000001
 #define Minimum(x, y) ((x) < (y) ? x : y)
@@ -390,7 +389,6 @@ private:
     bool Successful;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif /* MEGAMOL_STRIDE_H_INCLUDED */

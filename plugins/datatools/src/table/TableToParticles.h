@@ -13,8 +13,7 @@
 #include <array>
 #include <map>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * This module converts from a generic table to the MultiParticleDataCall.
@@ -179,7 +178,6 @@ private:
     uint32_t stride;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOL_DATATOOLS_FLOATTABLETOPARTICLES_H_INCLUDED */

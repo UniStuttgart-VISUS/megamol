@@ -7,8 +7,7 @@
 
 #include "QuartzParticleGridDataCall.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /*
@@ -39,5 +38,4 @@ ParticleGridDataCall::~ParticleGridDataCall() {
     this->cells = NULL; // DO NOT DELETE
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

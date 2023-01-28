@@ -25,8 +25,7 @@
 #include <fstream>
 
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Data source for GRO files
@@ -720,7 +719,6 @@ private:
 };
 
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_GROLOADER_H_INCLUDED

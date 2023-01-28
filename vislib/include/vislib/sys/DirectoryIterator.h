@@ -39,8 +39,7 @@
 #endif /* _WIN32 */
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /**
@@ -247,8 +246,7 @@ typedef DirectoryIterator<CharTraitsW> DirectoryIteratorW;
 typedef DirectoryIterator<TCharTraits> TDirectoryIterator;
 
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 
 //#include "vislib/DirectoryIterator.inl"

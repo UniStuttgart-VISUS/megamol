@@ -19,8 +19,7 @@
 #include "vislib/net/AbstractSimpleMessage.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -126,8 +125,7 @@ private:
     RawStorage storage;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

@@ -25,8 +25,7 @@
 
 typedef unsigned int uint;
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /// Filter module that computes a smoothed version of a given trajectory by
 /// calculating the average.
@@ -154,7 +153,6 @@ private:
 };
 
 
-} // end namespace protein
-} // end namespace megamol
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_TRAJECTORYSMOOTHFILTER_H_INCLUDED

@@ -12,8 +12,7 @@
 #include "vislib/math/Point.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class MPDCGrid : public core::Module {
 public:
@@ -123,5 +122,4 @@ inline int arg_max(vislib::math::Vector<float, 3> const& vec) {
     }
 }
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

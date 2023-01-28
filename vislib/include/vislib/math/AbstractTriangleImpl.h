@@ -18,8 +18,7 @@
 #include "vislib/math/mathfunctions.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -261,8 +260,7 @@ AbstractTriangleImpl<T, S, C>& AbstractTriangleImpl<T, S, C>::operator=(const C<
     return *this;
 }
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

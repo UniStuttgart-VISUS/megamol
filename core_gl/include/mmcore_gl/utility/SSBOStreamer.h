@@ -19,9 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 /// A class that helps you stream some memory to a persistently mapped
 /// buffer that can be used as a SSBO. Abstracts some micro-management
@@ -117,8 +115,6 @@ private:
     int offsetAlignment = 0;
 };
 
-} /* end namespace utility */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::utility
 
 #endif /* MEGAMOLCORE_SSBOSTREAMER_H_INCLUDED */

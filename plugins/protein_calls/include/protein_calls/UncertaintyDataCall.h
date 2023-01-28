@@ -26,8 +26,7 @@
 #define PROSIGN_ALPHA 0.3f
 #define PROSIGN_BETA 0.75f
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 class UncertaintyDataCall : public megamol::core::Call {
 public:
     /**
@@ -586,5 +585,4 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<UncertaintyDataCall> UncertaintyDataCallDescription;
 
-} // namespace protein_calls
-} /* end namespace megamol */
+} // namespace megamol::protein_calls

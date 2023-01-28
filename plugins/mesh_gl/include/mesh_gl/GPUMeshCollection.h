@@ -21,8 +21,7 @@
 
 #include "mesh/MeshDataAccessCollection.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class GPUMeshCollection {
 public:
@@ -395,7 +394,6 @@ inline std::unordered_map<std::string, GPUMeshCollection::SubMeshData> const& GP
     return m_sub_mesh_data;
 }
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl
 
 #endif // !GPU_MESH_DATA_STORAGE_H_INCLUDED

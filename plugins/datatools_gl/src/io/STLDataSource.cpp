@@ -30,9 +30,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace datatools_gl {
-namespace io {
+namespace megamol::datatools_gl::io {
 STLDataSource::STLDataSource()
         : filename_slot("STL file", "The name of to the STL file to load")
         , mesh_output_slot("mesh_data", "Slot to request mesh data") {
@@ -482,6 +480,4 @@ uint32_t STLDataSource::hash() const {
         // Last normal
         *(this->normal_buffer->cend() - 1), *(this->normal_buffer->cend() - 2), *(this->normal_buffer->cend() - 3));
 }
-} // namespace io
-} // namespace datatools_gl
-} // namespace megamol
+} // namespace megamol::datatools_gl::io

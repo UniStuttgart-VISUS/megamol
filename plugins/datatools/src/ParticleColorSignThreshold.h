@@ -16,8 +16,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module overriding global attributes of particles
@@ -70,7 +69,6 @@ private:
     std::vector<float> newColors;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOLCORE_PARTICLECOLORSIGNTHRESHOLD_H_INCLUDED */

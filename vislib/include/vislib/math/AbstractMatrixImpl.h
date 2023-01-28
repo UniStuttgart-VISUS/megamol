@@ -31,8 +31,7 @@
 #include "vislib/memutils.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * Possible matrix memory layouts.
@@ -1551,8 +1550,7 @@ unsigned int AbstractMatrixImpl<T, D, L, S, C>::findEigenvaluesSym(
     return Min(D, size);
 }
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

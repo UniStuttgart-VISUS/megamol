@@ -25,8 +25,7 @@
 #define M_PI 3.14159265358979323846
 #endif /* !M_PI */
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -936,8 +935,7 @@ const UINT_PTR AbstractQuaternion<T, S>::IDX_Y = 1;
 template<class T, class S>
 const UINT_PTR AbstractQuaternion<T, S>::IDX_Z = 2;
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

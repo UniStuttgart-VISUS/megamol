@@ -10,8 +10,7 @@
 #include <numeric>
 
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 adiosDataSource::adiosDataSource()
         : callRequestMpi("requestMpi", "Requests initialization of MPI and the communicator for the view.")
@@ -471,5 +470,4 @@ vislib::StringA adiosDataSource::getCommandLine() {
     return retval;
 }
 
-} // namespace adios
-} // namespace megamol
+} // namespace megamol::adios

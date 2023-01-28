@@ -19,8 +19,7 @@
 #include "vislib/assert.h"
 
 
-namespace megamol {
-namespace trisoup {
+namespace megamol::trisoup {
 
 /**
  * Call transporting binary volume data
@@ -217,7 +216,6 @@ private:
 /** Description class typedef */
 typedef core::factories::CallAutoDescription<CallBinaryVolumeData> CallBinaryVolumeDataDescription;
 
-} /* end namespace trisoup */
-} /* end namespace megamol */
+} // namespace megamol::trisoup
 
 #endif /* MMTRISOUPPLG_CALLBINARYVOLUMEDATAA_H_INCLUDED */

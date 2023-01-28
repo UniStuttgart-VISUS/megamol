@@ -22,8 +22,7 @@
 
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 /**
  * Renderer for tri-mesh data
@@ -224,7 +223,6 @@ private:
 };
 
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl
 
 #endif /* MMPROTEINPLUGIN_SOMBREROMESHRENDERER_H_INCLUDED */

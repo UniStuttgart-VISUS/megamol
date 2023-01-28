@@ -35,8 +35,7 @@ typedef vislib::math::Cuboid<float> Cubef;
 
 typedef unsigned int uint;
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Class to load the *.vti data format used in the Visualization Toolkit.
@@ -513,7 +512,6 @@ private:
 };
 
 
-} // end namespace protein
-} // end namespace megamol
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_VTILOADER_H_INCLUDED

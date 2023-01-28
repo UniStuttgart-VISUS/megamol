@@ -22,8 +22,7 @@
 #include "vislib/forceinline.h"
 #include "vislib/math/Vector.h"
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Base class for graph calls and data interfaces.
@@ -599,7 +598,6 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<SplitMergeCall> SplitMergeCallDescription;
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
+} // namespace megamol::protein_calls
 
 #endif /* MEGAMOL_PROTEIN_CALLS_SPLITMERGECALL_H_INCLUDED */

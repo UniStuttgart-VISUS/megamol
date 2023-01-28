@@ -13,8 +13,7 @@
 #include "mmcore/Module.h"
 #include <variant>
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class ADIOStoMultiParticle : public core::Module {
 
@@ -94,5 +93,4 @@ private:
     std::vector<uint64_t> plist_count;
 };
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

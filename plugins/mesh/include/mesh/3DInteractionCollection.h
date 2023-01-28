@@ -12,8 +12,7 @@
 #include <queue>
 #include <vector>
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 enum InteractionType { MOVE_ALONG_AXIS, MOVE_IN_PLANE, ROTATE_AROUND_AXIS, SELECT, DESELET, HIGHLIGHT };
 
@@ -69,7 +68,6 @@ private:
     std::queue<ThreeDimensionalManipulation> m_pending_manipulations;
 };
 
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh
 
 #endif // !3D_INTERACTION_COLLECTION_H_INCLUDED

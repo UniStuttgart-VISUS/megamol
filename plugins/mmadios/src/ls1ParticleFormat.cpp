@@ -16,8 +16,7 @@
 #include <numeric>
 
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 ls1ParticleFormat::ls1ParticleFormat()
         : core::Module()
@@ -349,5 +348,4 @@ bool ls1ParticleFormat::representationChanged(core::param::ParamSlot& p) {
     return true;
 }
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

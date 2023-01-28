@@ -24,8 +24,7 @@
 #include "vislib/utils.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -898,8 +897,7 @@ const UINT_PTR AbstractRectangle<T, S>::IDX_LEFT = 0;
 template<class T, class S>
 const UINT_PTR AbstractRectangle<T, S>::IDX_TOP = 3;
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

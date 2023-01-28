@@ -21,15 +21,12 @@
 namespace vislib {
 class Exception;
 }
-namespace vislib {
-namespace net {
+namespace vislib::net {
 class CommServer;
-}
-} // namespace vislib
+} // namespace vislib::net
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 /**
  * This is the listener class for CommServers. Classes interested in
@@ -118,8 +115,7 @@ protected:
     CommServerListener();
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

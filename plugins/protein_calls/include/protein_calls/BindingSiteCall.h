@@ -21,8 +21,7 @@
 #include "vislib/math/Vector.h"
 #include <glm/glm.hpp>
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Class for binding site calls and data interfaces.
@@ -254,7 +253,6 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<BindingSiteCall> BindingSiteCallDescription;
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
+} // namespace megamol::protein_calls
 
 #endif /* MEGAMOL_PROTEIN_CALL_BSITECALL_H_INCLUDED */

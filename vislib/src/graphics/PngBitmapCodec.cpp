@@ -14,9 +14,7 @@ using namespace sg::graphics;
 using namespace vislib::graphics;
 
 
-namespace sg {
-namespace graphics {
-namespace pngutil {
+namespace sg::graphics::pngutil {
 
 /**
  * Utility buffer to read a png from memory
@@ -94,9 +92,7 @@ void pngFlushData(png_structp png_ptr) {
 }
 
 
-} /* end namespace pngutil */
-} /* end namespace graphics */
-} /* end namespace sg */
+} // namespace sg::graphics::pngutil
 
 
 /*

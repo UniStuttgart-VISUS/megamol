@@ -21,8 +21,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * Implements a platform independent interface for system threads.
@@ -311,8 +310,7 @@ private:
     ThreadFuncParam threadFuncParam;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

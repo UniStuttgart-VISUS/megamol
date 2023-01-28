@@ -28,9 +28,7 @@ class GLSLProgram;
     { false, -1, FLT_MAX }
 
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 enum InteractionType {
     MOVE_ALONG_AXIS_SCREEN,
@@ -134,8 +132,6 @@ private:
     }
 };
 
-} // namespace utility
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::utility
 
 #endif // MEGAMOL_GUI_PICKING_INCLUDED

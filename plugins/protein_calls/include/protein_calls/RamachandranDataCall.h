@@ -9,8 +9,7 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include <vector>
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 class RamachandranDataCall : public megamol::core::Call {
 public:
@@ -195,5 +194,4 @@ private:
 
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<RamachandranDataCall> RamachandranDataCallDescription;
-} // namespace protein_calls
-} // namespace megamol
+} // namespace megamol::protein_calls

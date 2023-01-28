@@ -13,8 +13,7 @@
 #include "vislib/sys/ASCIIFileBuffer.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * CrystalDataSource::CrystalDataSource
@@ -129,5 +128,4 @@ void CrystalDataSource::loadFile(const vislib::TString& filename) {
     Log::DefaultLog.WriteInfo(
         "Loaded \"%u\" crystalite definitions\n", static_cast<unsigned int>(this->crystals.Count()));
 }
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

@@ -15,8 +15,7 @@
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataAccessCollection.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class GlTFFileLoader : public AbstractMeshDataSource {
 public:
@@ -87,8 +86,7 @@ private:
     megamol::core::CalleeSlot m_gltf_slot;
 };
 
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh
 
 
 #endif // !GLTF_FILE_LOADER_H_INCLUDED

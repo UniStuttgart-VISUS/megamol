@@ -23,8 +23,7 @@
 #include "vislib/types.h"
 
 
-namespace megamol {
-namespace moldyn {
+namespace megamol::moldyn {
 
 
 /**
@@ -145,7 +144,6 @@ private:
     SIZE_T outhash;
 };
 
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn
 
 #endif /* MEGAMOLCORE_DATAGRIDDER_H_INCLUDED */

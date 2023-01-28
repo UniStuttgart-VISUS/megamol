@@ -10,8 +10,7 @@
 
 #include "datatools_gl/io/STLDataSource.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class MeshSTLDataSource : public datatools_gl::io::STLDataSource {
 public:
@@ -68,5 +67,4 @@ protected:
     core::CalleeSlot ngmesh_output_slot;
 };
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl

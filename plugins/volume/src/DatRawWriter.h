@@ -18,8 +18,7 @@
 #include "mmstd/data/DataWriterCtrlCall.h"
 #include <fstream>
 
-namespace megamol {
-namespace volume {
+namespace megamol::volume {
 
 /*
  * Writer for volume data
@@ -110,7 +109,6 @@ private:
     core::CallerSlot dataSlot;
 };
 
-} // namespace volume
-} // namespace megamol
+} // namespace megamol::volume
 
 #endif /* MEGAMOLCORE_DATRAWWRITER_H_INCLUDED */

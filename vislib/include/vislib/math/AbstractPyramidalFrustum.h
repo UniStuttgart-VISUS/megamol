@@ -25,8 +25,7 @@
 
 #include "vislib/MissingImplementationException.h"
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -239,8 +238,7 @@ bool AbstractPyramidalFrustum<T>::checkSanity(
     return true;
 }
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

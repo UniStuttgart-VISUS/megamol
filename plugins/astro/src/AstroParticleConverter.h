@@ -23,8 +23,7 @@
 #include "astro/AstroDataCall.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 
-namespace megamol {
-namespace astro {
+namespace megamol::astro {
 
 class AstroParticleConverter : public core::Module {
 public:
@@ -113,7 +112,6 @@ private:
     std::vector<float> mw_;
 };
 
-} // namespace astro
-} // namespace megamol
+} // namespace megamol::astro
 
 #endif /* MEGAMOLCORE_ASTROPARTICLECONVERTER_H_INCLUDED */

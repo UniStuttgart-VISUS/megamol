@@ -9,8 +9,7 @@
 
 #include <Eigen/Core>
 
-namespace megamol {
-namespace infovis {
+namespace megamol::infovis {
 
 using namespace megamol::core;
 
@@ -107,7 +106,6 @@ private:
     Eigen::MatrixXd inDataMat;
 };
 
-} // namespace infovis
-} // namespace megamol
+} // namespace megamol::infovis
 
 #endif

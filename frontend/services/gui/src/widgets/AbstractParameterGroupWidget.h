@@ -14,8 +14,7 @@
 #include "mmcore/utility/Picking.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 /** ************************************************************************
  * Animation widget for parameter group
@@ -61,7 +60,6 @@ protected:
 };
 
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui
 
 #endif // MEGAMOL_GUI_ABSTARCTPARAMETERGROUPWIDGET_INCLUDED

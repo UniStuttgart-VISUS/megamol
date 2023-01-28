@@ -7,8 +7,7 @@
 
 #include "datatools/table/TableDataCall.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * This module renders a table via ImGui.
@@ -87,5 +86,4 @@ private:
     uint32_t lastDrawnFrame = std::numeric_limits<uint32_t>::max();
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

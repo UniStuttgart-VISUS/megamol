@@ -26,8 +26,7 @@
 #include "vislib/math/Vector.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -770,8 +769,7 @@ ShallowVector<T, 3>& AbstractRectangularPyramidalFrustum<T, S>::safeUpVector(Sha
     return inOutUp;
 }
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

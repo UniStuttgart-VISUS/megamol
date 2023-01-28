@@ -11,8 +11,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class IColSelectClassify : public datatools::AbstractParticleManipulator {
 public:
@@ -42,5 +41,4 @@ private:
     std::vector<float> colors;
 };
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

@@ -16,8 +16,7 @@
 #include "mmcore/Module.h"
 #include "protein_calls/MolecularDataCall.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 
 /**
@@ -128,7 +127,6 @@ private:
 };
 
 
-} // namespace protein
-} // namespace megamol
+} // namespace megamol::protein
 
 #endif

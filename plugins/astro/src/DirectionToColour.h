@@ -20,8 +20,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 
 
-namespace megamol {
-namespace astro {
+namespace megamol::astro {
 
 /// <summary>
 /// Converts from <see cref="AstroDataCall" /> to a table for data
@@ -117,5 +116,4 @@ private:
     core::CalleeSlot slotOutput;
 };
 
-} /* end namespace astro */
-} /* end namespace megamol */
+} // namespace megamol::astro

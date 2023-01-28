@@ -10,8 +10,7 @@
 #include "mmstd/data/AbstractGetDataCall.h"
 #include <cstdint>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class ParticleFilterMapDataCall : public core::AbstractGetDataCall {
 public:
@@ -81,5 +80,4 @@ private:
 
 typedef core::factories::CallAutoDescription<ParticleFilterMapDataCall> ParticleFilterMapDataCallDescription;
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

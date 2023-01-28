@@ -17,8 +17,7 @@
 
 #include "tiny_obj_loader.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class WavefrontObjLoader : public AbstractMeshDataSource {
 public:
@@ -119,8 +118,7 @@ private:
     core::param::ParamSlot m_filename_slot;
 };
 
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh
 
 
 #endif // !#ifndef WAVEFRONT_OBJ_LOADER_H_INCLUDED

@@ -18,8 +18,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 struct adios2Params {
     std::string name;
@@ -581,5 +580,4 @@ private:
 
 typedef core::factories::CallAutoDescription<CallADIOSData> CallADIOSDataDescription;
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

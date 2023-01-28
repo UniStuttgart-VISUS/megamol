@@ -17,8 +17,7 @@
 #include "vislib/types.h"
 
 
-namespace megamol {
-namespace moldyn {
+namespace megamol::moldyn {
 
 using namespace megamol::core;
 
@@ -125,5 +124,4 @@ private:
     vislib::Array<BrickStatsCall::BrickInfo> info;
 };
 
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn

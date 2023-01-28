@@ -22,8 +22,7 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 using namespace megamol::core;
 using namespace megamol::protein_calls;
@@ -316,5 +315,4 @@ private:
     bool firstframe;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl

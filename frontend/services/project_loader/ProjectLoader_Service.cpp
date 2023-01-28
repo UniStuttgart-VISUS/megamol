@@ -28,8 +28,7 @@ static void log_error(std::string const& text) {
     megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
 }
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 ProjectLoader_Service::ProjectLoader_Service() {
     // init members to default states
@@ -197,5 +196,4 @@ void ProjectLoader_Service::postGraphRender() {
 }
 
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

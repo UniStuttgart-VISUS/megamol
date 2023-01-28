@@ -14,9 +14,7 @@
 
 #include "mmcore/utility/log/Log.h"
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 /**
  * Read value from given JSON node
@@ -149,8 +147,6 @@ bool get_json_value(
     }
 }
 
-} /* namespace utility */
-} /* namespace core */
-} /* namespace megamol */
+} // namespace megamol::core::utility
 
 #endif // MEGAMOL_UTILITY_JSONHELPER_INCLUDED

@@ -18,8 +18,7 @@
 
 #include <filesystem>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class UncertaintyDataLoader : public megamol::core::Module {
 
@@ -191,5 +190,4 @@ private:
     protein_calls::UncertaintyDataCall::pdbAssMethod pdbAssignmentSheet;
 };
 
-} // namespace protein
-} /* end namespace megamol */
+} // namespace megamol::protein

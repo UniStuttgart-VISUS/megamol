@@ -37,8 +37,7 @@
 
 
 #ifndef _WIN32
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * Internal helper class for temporary files.
@@ -68,8 +67,7 @@ private:
     FILE* hFile;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 #endif /* !_WIN32 */
 
 

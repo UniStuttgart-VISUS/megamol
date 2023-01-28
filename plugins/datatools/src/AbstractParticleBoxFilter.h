@@ -9,8 +9,7 @@
 #include "vislib/StringTokeniser.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 template<class T>
 class AbstractParticleBoxFilter : public AbstractManipulator<T> {
@@ -223,5 +222,4 @@ bool AbstractParticleBoxFilter<T>::manipulateData(T& outData, T& inData) {
     return true;
 }
 
-} // end namespace datatools
-} // end namespace megamol
+} // namespace megamol::datatools

@@ -2,8 +2,7 @@
 
 #include "datatools/AbstractParticleManipulator.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class ParticleIdentitySort : public AbstractParticleManipulator {
 public:
@@ -45,5 +44,4 @@ private:
     std::vector<std::vector<char>> data_;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

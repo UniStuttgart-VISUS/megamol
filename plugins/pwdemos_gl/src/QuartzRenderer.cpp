@@ -23,8 +23,7 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * QuartzRenderer::QuartzRenderer
@@ -565,5 +564,4 @@ std::shared_ptr<glowl::GLSLProgram> QuartzRenderer::makeShader(const CrystalData
     return s;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

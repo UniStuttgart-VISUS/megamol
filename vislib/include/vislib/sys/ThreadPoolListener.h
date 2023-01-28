@@ -18,8 +18,7 @@
 #include "vislib/sys/Runnable.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /* Forward declarations. */
 class ThreadPool;
@@ -120,8 +119,7 @@ protected:
     ThreadPoolListener& operator=(const ThreadPoolListener& rhs);
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

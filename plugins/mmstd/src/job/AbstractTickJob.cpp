@@ -8,9 +8,7 @@
 #include "mmstd/job/AbstractTickJob.h"
 #include "mmstd/job/TickCall.h"
 
-namespace megamol {
-namespace core {
-namespace job {
+namespace megamol::core::job {
 
 AbstractTickJob::AbstractTickJob() : tickSlot("tickSlot", "Slot for receiving a tick") {
     this->tickSlot.SetCallback(job::TickCall::ClassName(), job::TickCall::FunctionName(0), &AbstractTickJob::Run);
@@ -27,6 +25,4 @@ bool AbstractTickJob::Run(Call&) {
     return true;
 }
 
-} // namespace job
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::job

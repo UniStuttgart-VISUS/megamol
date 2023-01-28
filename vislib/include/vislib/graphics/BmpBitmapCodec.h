@@ -25,8 +25,7 @@
 //#define VISLIB_BMP_LOAD_BY_HAND 1
 
 
-namespace vislib {
-namespace graphics {
+namespace vislib::graphics {
 
 
 /**
@@ -243,8 +242,7 @@ private:
 #endif /* defined(VISLIB_BMP_LOAD_BY_HAND) || !defined(_WIN32) */
 };
 
-} /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib::graphics
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

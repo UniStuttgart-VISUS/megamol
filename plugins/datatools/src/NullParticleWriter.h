@@ -9,8 +9,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmstd/data/AbstractDataWriter.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 
 /**
@@ -41,5 +40,4 @@ private:
     core::CallerSlot dataSlot;
 };
 
-} // namespace datatools
-} /* end namespace megamol */
+} // namespace megamol::datatools

@@ -21,8 +21,7 @@
 
 #include "mesh/3DInteractionCollection.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class ThreeDimensionalUIRenderer : public BaseMeshRenderer {
 public:
@@ -81,7 +80,6 @@ private:
     megamol::core::CallerSlot m_glTF_callerSlot;
 };
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl
 
 #endif // !THREE_DIMENSIONAL_UI_RENDERER_H_INCLUDED

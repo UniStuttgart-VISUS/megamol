@@ -20,8 +20,7 @@
 #include "protein_calls/ProteinColor.h"
 #include "vislib/RawStorage.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class MoleculeBallifier : public megamol::core::Module {
 public:
@@ -69,7 +68,6 @@ private:
     int frameOld;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif /* MMPROTEINPLUGIN_MOLECULEBALLIFIER_H_INCLUDED */

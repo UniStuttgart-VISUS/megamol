@@ -15,9 +15,7 @@
 using namespace megamol::core;
 
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 /**
  * Named colour
@@ -80,9 +78,7 @@ static NamedColour namedColours[] = {
     /* end of list guard */
     {NULL, 0x00000000}};
 
-} /* end namespace utility */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::utility
 
 
 /*

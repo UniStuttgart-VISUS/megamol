@@ -19,8 +19,7 @@
 #include "vislib/graphics/AbstractBitmapCodec.h"
 
 
-namespace sg {
-namespace graphics {
+namespace sg::graphics {
 
 /**
  * Bitmap codec for png images
@@ -139,8 +138,7 @@ protected:
 };
 
 
-} /* end namespace graphics */
-} /* end namespace sg */
+} // namespace sg::graphics
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

@@ -13,8 +13,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module overriding global colors of multi particle lists
@@ -50,7 +49,6 @@ protected:
 private:
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOLCORE_OVERRIDEMULTIPARTICLELISTGLOBALCOLORS_H_INCLUDED */

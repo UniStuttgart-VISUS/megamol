@@ -10,8 +10,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "protein_calls/MolecularDataCall.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class PDBInterpolator : public megamol::core::Module {
 public:
@@ -74,7 +73,6 @@ private:
     megamol::core::CalleeSlot dataOutSlot;
 };
 
-} // namespace protein
-} // namespace megamol
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_PDBINTERPOLATOR_H_INCLUDED

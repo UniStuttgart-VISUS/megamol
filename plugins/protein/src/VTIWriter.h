@@ -21,8 +21,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "protein_calls/VTIDataCall.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class VTIWriter : public core::job::AbstractJob, public core::Module {
 
@@ -185,7 +184,6 @@ private:
     HostArr<char> buffDec; ///> Temp buffer used to hold decoded data
 };
 
-} // end namespace protein
-} // end namespace megamol
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_VTIWRITER_H_INCLUDED

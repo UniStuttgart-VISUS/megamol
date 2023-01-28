@@ -16,8 +16,7 @@
 #include <nanoflann.hpp>
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module overriding global attributes of particles
@@ -135,5 +134,4 @@ private:
     megamol::core::CallerSlot inDataSlot;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

@@ -11,9 +11,7 @@
 
 #include "datatools/table/TableDataCall.h"
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 class TableItemSelector : public core::Module {
 public:
@@ -180,6 +178,4 @@ private:
     size_t data_hash_;
 };
 
-} // namespace table
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools::table

@@ -13,8 +13,7 @@
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 
-namespace megamol {
-namespace moldyn {
+namespace megamol::moldyn {
 
 /**
  * Call transporting information about particle/point
@@ -123,5 +122,4 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<BrickStatsCall> BrickStatsCallDescription;
 
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn

@@ -14,8 +14,7 @@
 #include "widgets/HoverToolTip.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 /* ************************************************************************
  * The performance monitor GUI window
@@ -61,7 +60,6 @@ private:
     HoverToolTip tooltip;
 };
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui
 
 #endif // MEGAMOL_GUI_PERFORMANCEMONITOR_H_INCLUDED

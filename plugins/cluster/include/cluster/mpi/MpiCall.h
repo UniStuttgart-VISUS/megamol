@@ -19,10 +19,7 @@
 #include "mmcore/factories/CallAutoDescription.h"
 
 
-namespace megamol {
-namespace core {
-namespace cluster {
-namespace mpi {
+namespace megamol::core::cluster::mpi {
 
 /**
  * This call requests MpiProvider to initialise MPI and to return a
@@ -138,9 +135,6 @@ private:
 
 typedef factories::CallAutoDescription<MpiCall> MpiCallDescription;
 
-} /* end namespace mpi */
-} /* end namespace cluster */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::cluster::mpi
 
 #endif /* MEGAMOLCORE_CLUSTER_MPI_MPICALL_H_INCLUDED */

@@ -20,8 +20,7 @@
 #include "vislib/math/Rectangle.h"
 #include "vislib_gl/graphics/gl/OpenGLTexture2D.h"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 class SplitMergeRenderer : public megamol::mmstd_gl::Renderer2DModuleGL {
 public:
@@ -183,7 +182,6 @@ private:
     };
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl
 
 #endif // MEGAMOLCORE_SPLITMERGERENDERER_H_INCLUDED

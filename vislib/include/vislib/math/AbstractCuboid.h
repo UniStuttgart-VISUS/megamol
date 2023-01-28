@@ -23,8 +23,7 @@
 #include "vislib/math/mathfunctions.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * This class represents a cubiod. The cuboid has its origin in
@@ -1187,8 +1186,7 @@ const UINT_PTR vislib::math::AbstractCuboid<T, S>::IDX_TOP = 4;
 //    return vislib::math::Point<T, 3>(tmp);
 //}
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

@@ -40,8 +40,7 @@
 
 typedef unsigned int uint;
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class VMDDXLoader : public megamol::core::Module {
 public:
@@ -179,7 +178,6 @@ private:
 };
 
 
-} // end namespace protein
-} // end namespace megamol
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_VMDDXLOADER_H_INCLUDED

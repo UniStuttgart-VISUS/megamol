@@ -9,8 +9,7 @@
 
 #include "windows/WindowCollection.h"
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 struct GUIRegisterWindow {
 
@@ -31,5 +30,4 @@ struct GUIRegisterWindow {
     std::function<void(const std::string&, std::weak_ptr<bool>, const std::string&)> register_notification;
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

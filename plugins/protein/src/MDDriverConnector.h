@@ -20,8 +20,7 @@
 
 #define MDD_VERSION 2 // this value corresponds to MDDriver ver 1.2 2008-06-25
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Data source for atom position arrays from real-time simulations.
@@ -333,7 +332,6 @@ private:
     int reset;
 };
 
-} // end namespace protein
-} // end namespace megamol
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_MDDRIVERCONNECTOR_H_INCLUDED

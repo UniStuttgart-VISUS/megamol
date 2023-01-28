@@ -13,8 +13,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class UIElement : public core::Module {
 public:
@@ -86,8 +85,7 @@ private:
     megamol::core::CallerSlot m_UIElement_callerSlot;
 };
 
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh
 
 
 #endif // !UI_ELEMENT_H_INCLUDED

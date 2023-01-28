@@ -18,8 +18,7 @@
 #include "Lockable.h"
 #include "Mutex.h"
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 using CriticalSection = Mutex;
 
@@ -27,8 +26,7 @@ using CriticalSection = Mutex;
 typedef Lockable<CriticalSection> CriticalSectionLockable;
 
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

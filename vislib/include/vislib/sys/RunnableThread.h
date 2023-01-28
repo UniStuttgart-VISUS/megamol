@@ -20,8 +20,7 @@
 #include "vislib/sys/Thread.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /**
@@ -156,8 +155,7 @@ RunnableThread<T>& RunnableThread<T>::operator=(const RunnableThread& rhs) {
     return *this;
 }
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

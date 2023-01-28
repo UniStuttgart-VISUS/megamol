@@ -16,8 +16,7 @@
 #include "protein_calls/MolecularDataCall.h"
 #include <chrono>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class ProteinExploder : public megamol::core::Module {
 public:
@@ -286,7 +285,6 @@ private:
     /** The middle points of the displaced atom chains */
     std::vector<vislib::math::Vector<float, 3>> displacedMoleculeMiddles;
 };
-} /* namespace protein */
-} /* namespace megamol */
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_PROTEINEXPLODER_H_INCLUDED

@@ -20,8 +20,7 @@
 #include "vislib/math/Cuboid.h"
 #include "vislib/sys/File.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Data source for the tunnel-parallel residue files from the Caver software
@@ -137,7 +136,6 @@ private:
     vislib::math::Cuboid<float> boundingBox;
 };
 
-} // namespace protein
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif

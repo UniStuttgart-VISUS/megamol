@@ -15,11 +15,9 @@
 #include <vector>
 
 namespace megamol {
-namespace core {
-namespace moldyn {
+namespace core::moldyn {
 class MultiParticleDataCall;
-}
-} // namespace core
+} // namespace core::moldyn
 
 namespace datatools {
 

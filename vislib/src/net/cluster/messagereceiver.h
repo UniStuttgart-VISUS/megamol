@@ -17,9 +17,7 @@
 #include "vislib/sys/Event.h"
 
 
-namespace vislib {
-namespace net {
-namespace cluster {
+namespace vislib::net::cluster {
 
 
 /**
@@ -87,8 +85,6 @@ void FreeRecvMsgCtx(ReceiveMessagesCtx*& ctx);
  */
 DWORD ReceiveMessages(void* receiveMessagesCtx);
 
-} /* end namespace cluster */
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net::cluster
 
 #endif /* VISLIB_MESSAGERECEIVER_H_INCLUDED */

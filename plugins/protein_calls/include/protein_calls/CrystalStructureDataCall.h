@@ -17,8 +17,7 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmstd/data/AbstractGetData3DCall.h"
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Class providing data call for CrystalStructureDataSource.
@@ -281,7 +280,6 @@ private:
 /** Description class typedef */
 typedef core::factories::CallAutoDescription<CrystalStructureDataCall> CrystalStructureDataCallDescription;
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
+} // namespace megamol::protein_calls
 
 #endif /* MMPROTEINCALLPLUGIN_CRYSTALSTRCUTUREDATACALL_H_INCLUDED */

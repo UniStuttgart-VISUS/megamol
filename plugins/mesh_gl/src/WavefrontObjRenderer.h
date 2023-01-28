@@ -9,8 +9,7 @@
 
 #include "mesh_gl/BaseMeshRenderer.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class WavefrontObjRenderer : public BaseMeshRenderer {
 public:
@@ -43,7 +42,6 @@ private:
     megamol::core::CallerSlot lights_slot_;
 };
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl
 
 #endif // !WAVEFRONT_OBJ_RENDERER_H_INCLUDED

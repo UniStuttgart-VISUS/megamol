@@ -23,8 +23,7 @@
 #include "vislib/math/Vector.h"
 
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Base class for graph calls and data interfaces.
@@ -690,7 +689,6 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<DiagramCall> DiagramCallDescription;
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
+} // namespace megamol::protein_calls
 
 #endif /* MEGAMOL_PROTEIN_CALL_DIAGRAMCALL_H_INCLUDED */

@@ -16,8 +16,7 @@
 #include "vislib/math/Vector.h"
 #include <vector>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class BSpline {
 public:
@@ -58,7 +57,6 @@ public:
     bool computeSpline();
 };
 
-} // namespace protein
-} // namespace megamol
+} // namespace megamol::protein
 
 #endif /* MEGAMOL_BSPLINE_H_INCLUDED */

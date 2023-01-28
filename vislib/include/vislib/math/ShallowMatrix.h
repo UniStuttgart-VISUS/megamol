@@ -18,8 +18,7 @@
 #include "vislib/math/AbstractMatrix.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -116,8 +115,7 @@ protected:
 template<class T, unsigned int D, MatrixLayout L>
 ShallowMatrix<T, D, L>::~ShallowMatrix() {}
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

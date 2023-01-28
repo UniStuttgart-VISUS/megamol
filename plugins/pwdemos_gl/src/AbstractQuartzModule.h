@@ -12,8 +12,7 @@
 #include "mmcore/CallerSlot.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Abstract base class for quartzs data consuming modules
@@ -57,5 +56,4 @@ protected:
     SIZE_T typesDataHash;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

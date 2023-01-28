@@ -15,11 +15,9 @@
 #include "vislib/memutils.h"
 
 
-namespace megamol {
-namespace moldyn {
+namespace megamol::moldyn {
 class MultiParticleDataCall;
-}
-} // namespace megamol
+} // namespace megamol::moldyn
 
 namespace megamol::datatools_gl::misc {
 

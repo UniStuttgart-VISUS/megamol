@@ -28,8 +28,7 @@
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Module for extracting and rendering PoreNetwork
@@ -261,5 +260,4 @@ private:
     PoreMeshProcessor::SliceLoops debugLoopDataEntryObject;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

@@ -17,8 +17,7 @@
 #include "vislib/math/AbstractRectangle.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -96,8 +95,7 @@ template<class T>
 ShallowRectangle<T>::~ShallowRectangle() {}
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

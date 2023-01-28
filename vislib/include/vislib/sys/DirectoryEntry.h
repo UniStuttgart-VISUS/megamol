@@ -18,8 +18,7 @@
 #include "vislib/String.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /**
@@ -147,8 +146,7 @@ typedef DirectoryEntry<CharTraitsW> DirectoryEntryW;
 /** Template instantiation for TCHAR DirectoryEntrys. */
 typedef DirectoryEntry<TCharTraits> TDirectoryEntry;
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

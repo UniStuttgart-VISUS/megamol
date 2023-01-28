@@ -14,8 +14,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * zeug
@@ -97,7 +96,6 @@ private:
     SIZE_T datahash;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif /* MEGAMOL_PROTEIN_SELECTION_H_INCLUDED */

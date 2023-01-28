@@ -15,8 +15,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 // GLFW keyboard keys
 enum class Key : int {
@@ -738,8 +737,7 @@ public:
 
 namespace input = frontend_resources;
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources
 
 namespace std {
 

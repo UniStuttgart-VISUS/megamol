@@ -10,8 +10,7 @@
 #include "mmstd/data/AbstractGetDataCall.h"
 #include <cstdint>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Call transports multiple index lists, e.g. to subselect groups/clusters within data transported by a parallel MultiParticleListDataCall.
@@ -114,5 +113,4 @@ private:
 
 typedef core::factories::CallAutoDescription<MultiIndexListDataCall> MultiIndexListDataCallDescription;
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

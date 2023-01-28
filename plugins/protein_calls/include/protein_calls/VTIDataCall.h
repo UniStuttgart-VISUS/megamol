@@ -22,8 +22,7 @@
 #include "vislib/math/Vector.h"
 typedef vislib::math::Vector<int, 3> Vec3i;
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 class VTIDataCall : public core::AbstractGetData3DCall {
 
@@ -374,7 +373,6 @@ private:
 /// Description class typedef
 typedef core::factories::CallAutoDescription<VTIDataCall> VTIDataCallDescription;
 
-} // end namespace protein_calls
-} // end namespace megamol
+} // namespace megamol::protein_calls
 
 #endif // MMPROTEINCALLPLUGIN_VTIDATACALL_H_INCLUDED

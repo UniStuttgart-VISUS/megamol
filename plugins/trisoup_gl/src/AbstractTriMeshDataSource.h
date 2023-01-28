@@ -22,8 +22,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace trisoup_gl {
+namespace megamol::trisoup_gl {
 
 
 /**
@@ -103,7 +102,6 @@ private:
     core::CalleeSlot getLinesDataSlot;
 };
 
-} // namespace trisoup_gl
-} /* end namespace megamol */
+} // namespace megamol::trisoup_gl
 
 #endif /* MMTRISOUPPLG_ABSTRACTTRIMESHDATASOURCE_H_INCLUDED */

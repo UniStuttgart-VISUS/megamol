@@ -18,9 +18,7 @@
 
 #include "datatools/table/TableDataCall.h"
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /*
  * Module to manipulate table (copy) via a LUA script.
@@ -132,8 +130,6 @@ private:
 
 }; /* end class TableManipulator */
 
-} /* end namespace table */
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools::table
 
 #endif /* end ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEMANIPULATOR_H_INCLUDED */

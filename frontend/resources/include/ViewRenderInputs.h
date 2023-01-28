@@ -10,8 +10,7 @@
 #include "EntryPoint.h"
 #include "RenderInput.h"
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 using UintPair = std::pair<unsigned int, unsigned int>;
 using DoublePair = std::pair<double, double>;
@@ -56,5 +55,4 @@ struct ViewRenderInputs : public frontend_resources::RenderInputsUpdate {
 };
 #define accessViewRenderInput(unique_ptr) (*static_cast<frontend_resources::ViewRenderInputs*>(unique_ptr.get()))
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

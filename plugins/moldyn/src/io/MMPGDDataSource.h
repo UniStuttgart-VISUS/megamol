@@ -21,9 +21,7 @@
 #include "vislib/types.h"
 
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 using namespace megamol::core;
 
@@ -228,7 +226,5 @@ private:
     vislib::math::Cuboid<float> clipbox;
 };
 
-} // namespace io
-} // namespace moldyn
-} // namespace megamol
+} // namespace megamol::moldyn::io
 #endif /* MEGAMOLCORE_MMPGDDATASOURCE_H_INCLUDED */

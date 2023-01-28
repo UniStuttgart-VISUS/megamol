@@ -8,8 +8,7 @@
 
 #include "geometry_calls/MultiParticleDataCall.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Simple adapter helper class
@@ -73,5 +72,4 @@ private:
     list_data* list;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

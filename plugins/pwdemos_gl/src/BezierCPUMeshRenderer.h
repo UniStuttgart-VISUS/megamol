@@ -11,8 +11,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Mesh-based renderer for bézier curve tubes
@@ -108,5 +107,4 @@ private:
     size_t dataHash;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

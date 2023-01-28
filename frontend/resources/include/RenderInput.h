@@ -10,8 +10,7 @@
 #include <glm/glm.hpp>
 #include <optional>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 struct RenderInput {
     glm::uvec2 global_framebuffer_resolution{
@@ -62,5 +61,4 @@ struct RenderInput {
     double time_sec = 0.0; //< time computed by view::TimeControl(instanceTime)
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

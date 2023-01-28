@@ -8,8 +8,7 @@
 
 #include "AbstractInputScope.h"
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 class AbstractUILayer : public megamol::frontend_resources::AbstractInputScope {
 public:
@@ -25,5 +24,4 @@ protected:
     ~AbstractUILayer() override = default;
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

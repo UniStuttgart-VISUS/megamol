@@ -13,8 +13,7 @@
 #include "mesh/MeshCalls.h"
 #include "mesh_gl/BaseRenderTaskRenderer.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class BaseMeshRenderer : public BaseRenderTaskRenderer {
 public:
@@ -97,7 +96,6 @@ inline bool BaseMeshRenderer::updateMeshCollection() {
     return something_has_changed;
 }
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl
 
 #endif // !BASE_MESH_RENDERER_H_INCLUDED

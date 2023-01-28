@@ -16,8 +16,7 @@
 
 #include <cstddef>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class Base64 {
 
@@ -45,7 +44,6 @@ public:
     static void Decode(const char* input, char* output, size_t s);
 };
 
-} // end namespace protein
-} // end namespace megamol
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_BASE64_H_INCLUDED

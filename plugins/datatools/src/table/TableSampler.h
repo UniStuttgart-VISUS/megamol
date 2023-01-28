@@ -18,9 +18,7 @@
 #undef ABSOLUTE
 #undef RELATIVE
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /*
  * Module to sample a float table.
@@ -89,8 +87,6 @@ private:
     bool doResampling;
 };
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools::table
 
 #endif /* MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLESAMPLER_H_INCLUDED */

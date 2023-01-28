@@ -32,8 +32,7 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /*
@@ -1115,5 +1114,4 @@ void PoreNetExtractor::drawParticles(ParticleGridDataCall* pgdc, CrystalDataCall
     ::glDisableClientState(GL_TEXTURE_COORD_ARRAY); // quart
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

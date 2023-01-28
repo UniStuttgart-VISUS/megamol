@@ -22,8 +22,7 @@
 #endif /* _WIN32 */
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /**
@@ -189,8 +188,7 @@ private:
 #endif /* _WIN32 */
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

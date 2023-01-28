@@ -19,9 +19,7 @@ using namespace sg::graphics;
 using namespace vislib::graphics;
 
 #ifndef _WIN32
-namespace sg {
-namespace graphics {
-namespace jpegutil {
+namespace sg::graphics::jpegutil {
 
 /**
  * Convert "exit" to "throw"
@@ -41,9 +39,7 @@ void jpeg_output_message_no(j_common_ptr cinfo) {
     // be silent!
 }
 
-} /* end namespace jpegutil */
-} /* end namespace graphics */
-} /* end namespace sg */
+} // namespace sg::graphics::jpegutil
 #endif
 
 /*

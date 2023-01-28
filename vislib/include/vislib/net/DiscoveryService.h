@@ -27,9 +27,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace net {
-namespace cluster {
+namespace vislib::net::cluster {
 
 /* Forward declarations. */
 class DiscoveryListener;
@@ -1353,9 +1351,7 @@ private:
 };
 
 
-} /* end namespace cluster */
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net::cluster
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

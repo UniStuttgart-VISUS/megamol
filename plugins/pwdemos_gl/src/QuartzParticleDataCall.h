@@ -12,8 +12,7 @@
 #include "vislib/OutOfRangeException.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Call transporting quartz crystal particle data
@@ -156,5 +155,4 @@ private:
     const float* const* part;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

@@ -15,8 +15,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include <limits>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module overriding global attributes of particles
@@ -90,7 +89,6 @@ private:
     core::param::ParamSlot maxIntSlot;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOLCORE_OVERRIDEPARTICLEGLOBALS_H_INCLUDED */

@@ -14,8 +14,7 @@
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /** Value of constant PI in type double */
 extern const double PI_DOUBLE;
@@ -47,8 +46,7 @@ enum CoordSystemType {
 };
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

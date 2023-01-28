@@ -13,8 +13,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 /**
  * Writer for triangle mesh to STL file.
  *
@@ -96,5 +95,4 @@ protected:
     core::param::ParamSlot filetype;
     core::param::ParamSlot save;
 };
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh

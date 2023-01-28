@@ -18,8 +18,7 @@
 #include "vislib/net/AbstractSimpleMessageHeader.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -135,8 +134,7 @@ private:
 };
 
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

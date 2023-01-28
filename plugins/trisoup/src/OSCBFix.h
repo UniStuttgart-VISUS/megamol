@@ -19,14 +19,12 @@
 
 
 namespace megamol {
-namespace core {
-namespace moldyn {
+namespace core::moldyn {
 
 /** forward declaration of supported call */
 class MultiParticleDataCall;
 
-} /* end namespace moldyn */
-} /* end namespace core */
+} // namespace core::moldyn
 
 namespace quartz {
 

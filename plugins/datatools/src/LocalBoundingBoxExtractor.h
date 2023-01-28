@@ -10,8 +10,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include <map>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class LocalBoundingBoxExtractor : public core::Module {
 public:
@@ -85,5 +84,4 @@ private:
     uint32_t mesh_version = 0;
 };
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

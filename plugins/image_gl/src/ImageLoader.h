@@ -23,8 +23,7 @@
 
 //#define LOADED_MESSAGE
 
-namespace megamol {
-namespace image_gl {
+namespace megamol::image_gl {
 
 class ImageLoader : public core::Module {
 public:
@@ -184,7 +183,6 @@ private:
     std::condition_variable condvar;
 };
 
-} // namespace image_gl
-} // namespace megamol
+} // namespace megamol::image_gl
 
 #endif // !MEGAMOLCORE_IMAGELOADER_H_INCLUDED

@@ -17,9 +17,7 @@
 
 #include "datatools/table/TableDataCall.h"
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /*
  * Module to filter columns from a table.
@@ -84,8 +82,6 @@ private:
     std::vector<float> data;
 }; /* end class TableColumnFilter */
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools::table
 
 #endif /* end ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLECOLUMNFILTER_H_INCLUDED */

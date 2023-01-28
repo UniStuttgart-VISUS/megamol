@@ -22,8 +22,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * A platform independent mutex wrapper.
@@ -100,8 +99,7 @@ private:
 typedef Lockable<Mutex> MutexLockable;
 
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

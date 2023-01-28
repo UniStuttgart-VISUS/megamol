@@ -12,8 +12,7 @@
 #include "vislib/math/Point.h"
 #include "vislib/math/mathfunctions.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Class holding a flat area buffer
@@ -262,5 +261,4 @@ private:
     ArxelType borderYVal;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

@@ -21,8 +21,7 @@
 #include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class VTKLegacyDataCallUnstructuredGrid : public core::AbstractGetData3DCall {
 
@@ -290,7 +289,6 @@ private:
 typedef core::factories::CallAutoDescription<VTKLegacyDataCallUnstructuredGrid>
     VTKLegacyDataCallUnstructuredGridDescription;
 
-} // end namespace protein
-} // end namespace megamol
+} // namespace megamol::protein
 
 #endif // MMPROTEINPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED

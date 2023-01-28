@@ -20,8 +20,7 @@
 #include "cinematic_gl/CinematicUtils.h"
 
 
-namespace megamol {
-namespace cinematic_gl {
+namespace megamol::cinematic_gl {
 
 /**
  * Timeline rendering.
@@ -172,7 +171,6 @@ private:
     megamol::core::param::ParamSlot resetPanScaleParam;
 };
 
-} // namespace cinematic_gl
-} /* end namespace megamol */
+} // namespace megamol::cinematic_gl
 
 #endif // MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED

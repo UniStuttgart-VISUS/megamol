@@ -20,9 +20,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace datatools_gl {
-namespace io {
+namespace megamol::datatools_gl::io {
 class STLDataSource : public core::Module {
 public:
     /// <summary>
@@ -165,8 +163,6 @@ protected:
     std::shared_ptr<std::vector<float>> vertex_buffer, normal_buffer;
     std::shared_ptr<std::vector<unsigned int>> index_buffer;
 };
-} // namespace io
-} // namespace datatools_gl
-} // namespace megamol
+} // namespace megamol::datatools_gl::io
 
 #endif // !MEGAMOL_DATATOOLS_IO_STLDATASOURCE_H_INCLUDED

@@ -13,8 +13,7 @@
 
 #include <memory>
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 // VR Service monitors Image Presentation Entry Points (Views, which output graph rendering results)
 // and injects them with VR/AR data as it sees fit.
@@ -139,5 +138,4 @@ private:
     }
 };
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

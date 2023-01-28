@@ -8,8 +8,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace infovis {
+namespace megamol::infovis {
 
 using namespace megamol::core;
 
@@ -76,8 +75,7 @@ private:
     std::vector<float> data;
 };
 
-} // namespace infovis
-} // namespace megamol
+} // namespace megamol::infovis
 
 
 #endif

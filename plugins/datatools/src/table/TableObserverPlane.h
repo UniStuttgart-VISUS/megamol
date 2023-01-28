@@ -13,9 +13,7 @@
 #include "mmstd/renderer/CallClipPlane.h"
 #include <map>
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /**
  * This module converts from a generic table to the MultiParticleDataCall.
@@ -147,8 +145,6 @@ private:
     int frameID;
 };
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools::table
 
 #endif /* MEGAMOL_DATATOOLS_FLOATTABLEOBSERVERPLANE_H_INCLUDED */

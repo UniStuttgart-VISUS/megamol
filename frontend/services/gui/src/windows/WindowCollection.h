@@ -21,8 +21,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 /** ************************************************************************
  * This class hold the GUI windows and controls the placement and appearance
@@ -86,7 +85,6 @@ private:
         ImGuiID initial_module_uid = GUI_INVALID_ID);
 };
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui
 
 #endif // MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED

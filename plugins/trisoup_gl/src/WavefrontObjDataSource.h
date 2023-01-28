@@ -18,8 +18,7 @@
 #include "vislib/StringTokeniser.h"
 
 
-namespace megamol {
-namespace trisoup_gl {
+namespace megamol::trisoup_gl {
 
 
 /**
@@ -129,7 +128,6 @@ private:
     vislib::Array<vislib::Array<float>> lineVerts;
 };
 
-} // namespace trisoup_gl
-} /* end namespace megamol */
+} // namespace megamol::trisoup_gl
 
 #endif /* MMTRISOUPPLG_WAVEFRONTOBJDATASOURCE_H_INCLUDED */

@@ -20,9 +20,7 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
-namespace vislib_gl {
-namespace graphics {
-namespace gl {
+namespace vislib_gl::graphics::gl {
 
 
 /**
@@ -635,9 +633,7 @@ private:
     GLsizei width;
 };
 
-} /* end namespace gl */
-} /* end namespace graphics */
-} // namespace vislib_gl
+} // namespace vislib_gl::graphics::gl
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

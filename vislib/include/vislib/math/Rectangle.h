@@ -17,8 +17,7 @@
 #include "vislib/math/AbstractRectangle.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -152,8 +151,7 @@ const Rectangle<T> Rectangle<T>::EMPTY(0, 0, 0, 0);
 template<class T>
 Rectangle<T>::~Rectangle() {}
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

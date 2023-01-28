@@ -14,9 +14,7 @@
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
 
-namespace megamol {
-namespace datatools_gl {
-namespace io {
+namespace megamol::datatools_gl::io {
 /// <summary>
 /// Triangle STL writer for CallTriMeshData calls
 /// </summary>
@@ -99,8 +97,6 @@ protected:
     /// </summary>
     void release() override;
 };
-} // namespace io
-} // namespace datatools_gl
-} // namespace megamol
+} // namespace megamol::datatools_gl::io
 
 #endif // !MEGAMOL_DATATOOLS_IO_TRIMESHSTLWRITER_H_INCLUDED

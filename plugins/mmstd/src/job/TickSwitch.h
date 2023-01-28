@@ -12,9 +12,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol {
-namespace core {
-namespace job {
+namespace megamol::core::job {
 
 /**
  * Module for propagating a tick.
@@ -85,6 +83,4 @@ private:
     core::CallerSlot outgoing_slot_4;
 };
 
-} // namespace job
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::job

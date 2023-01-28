@@ -20,9 +20,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools {
-namespace io {
+namespace megamol::datatools::io {
 
 /** Module to read cpe point dumps as introduced with cpelib 4513dfd9fd8efa9282848bbe2ab4f53053d753b8. */
 class CPERAWDataSource : public core::Module {
@@ -140,6 +138,4 @@ private:
     std::array<float, 6> localBBox, globalBBox, globalCBox;
 };
 
-} // namespace io
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools::io

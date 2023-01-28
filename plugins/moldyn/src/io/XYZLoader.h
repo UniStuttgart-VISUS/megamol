@@ -14,9 +14,7 @@
 #include "vislib/math/Cuboid.h"
 #include <vector>
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 /**
  * Data loader of the simple xyz file format:
@@ -82,8 +80,6 @@ private:
     std::vector<std::vector<float>> poss;
 };
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn::io
 
 #endif /* MEGAMOL_STDMOLDYN_XYZLOADER_H_INCLUDED */

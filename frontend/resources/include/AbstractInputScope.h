@@ -15,8 +15,7 @@
 // TODO: do this include correctly via CMake.
 // the structs used here are now located in the frontend_resources CMake module.
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 using megamol::frontend_resources::Key;
 using megamol::frontend_resources::KeyAction;
@@ -76,7 +75,6 @@ protected:
     virtual ~AbstractInputScope() = default;
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources
 
 #endif /* MEGAMOLCORE_ABSTRACTINPUTSCOPE_H_INCLUDED */

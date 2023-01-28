@@ -18,8 +18,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /** ID type for simple messages. */
@@ -48,8 +47,7 @@ typedef struct SimpleMessageHeaderData_t {
  */
 extern const SimpleMessageID VLSNP1_FIRST_RESERVED_MESSAGE_ID;
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

@@ -12,8 +12,7 @@
 #include "vislib/math/Vector.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Call transporting BDMD data frames
@@ -289,5 +288,4 @@ private:
     const Crystal* crystals;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

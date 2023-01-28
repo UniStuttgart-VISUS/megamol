@@ -7,8 +7,7 @@
 
 #include "vislib/math/Cuboid.h"
 
-namespace megamol {
-namespace thermodyn {
+namespace megamol::thermodyn {
 
 class BoxDataCall : public core::AbstractGetData3DCall {
 public:
@@ -74,5 +73,4 @@ private:
 /** Call Descriptor.  */
 typedef core::factories::CallAutoDescription<BoxDataCall> BoxDataCallDescription;
 
-} // end namespace thermodyn
-} // end namespace megamol
+} // namespace megamol::thermodyn

@@ -16,9 +16,7 @@
 #include "vislib/sys/File.h"
 
 
-namespace megamol {
-namespace datatools {
-namespace io {
+namespace megamol::datatools::io {
 
 
 /**
@@ -52,8 +50,6 @@ private:
     core::CallerSlot dataSlot;
 };
 
-} /* end namespace io */
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools::io
 
 #endif /* MEGAMOLCORE_MMPLDWRITER_H_INCLUDED */

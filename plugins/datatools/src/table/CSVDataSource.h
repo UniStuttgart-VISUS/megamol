@@ -16,9 +16,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include <vector>
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 class CSVDataSource : public core::Module {
 public:
@@ -65,8 +63,6 @@ private:
     std::vector<float> values;
 };
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools::table
 
 #endif /* MEGAMOL_LSP_CSVDATASOURCE_H_INCLUDED */

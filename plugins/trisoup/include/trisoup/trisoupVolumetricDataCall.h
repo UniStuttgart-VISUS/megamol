@@ -16,8 +16,7 @@
 #include "vislib/assert.h"
 
 
-namespace megamol {
-namespace trisoup {
+namespace megamol::trisoup {
 
 /**
  * Call transporting data from volumetrics ...
@@ -102,5 +101,4 @@ private:
     vislib::Array<Volume> subVolumes;
 };
 
-} // namespace trisoup
-} // namespace megamol
+} // namespace megamol::trisoup

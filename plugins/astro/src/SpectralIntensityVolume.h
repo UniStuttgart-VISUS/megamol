@@ -15,8 +15,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 
-namespace megamol {
-namespace astro {
+namespace megamol::astro {
 
 class SpectralIntensityVolume : public core::Module {
 public:
@@ -150,5 +149,4 @@ private:
     int sz = 0;
 }; // end class SpectralIntensityVolume
 
-} // end namespace astro
-} // end namespace megamol
+} // namespace megamol::astro

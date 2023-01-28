@@ -19,9 +19,7 @@
 #include "vislib/types.h"
 
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 
 /**
@@ -512,6 +510,4 @@ private:
     vislib::math::Vector<float, 3> extents;
 };
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn::io

@@ -13,8 +13,7 @@
 
 #include "vislib/math/Matrix.h"
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 class Interpol {
 public:
@@ -216,7 +215,6 @@ inline T SampleFieldAtPosTrilin(float pos[3], T* field, float gridOrg[3], float 
 }
 
 
-} // end namespace protein_calls
-} // end namespace megamol
+} // namespace megamol::protein_calls
 
 #endif // MMPROTEINCALLPLUGIN_INTERPOL_H_INCLUDED

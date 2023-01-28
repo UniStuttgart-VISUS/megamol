@@ -8,8 +8,7 @@
 #include "AbstractQuartzModule.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /*
@@ -59,5 +58,4 @@ CrystalDataCall* AbstractQuartzModule::getCrystaliteData() {
     return tdc;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

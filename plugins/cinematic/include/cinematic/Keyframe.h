@@ -15,8 +15,7 @@
 #include <glm/glm.hpp>
 
 
-namespace megamol {
-namespace cinematic {
+namespace megamol::cinematic {
 
 
 /**
@@ -85,7 +84,6 @@ private:
     float anim_time;
 };
 
-} /* end namespace cinematic */
-} /* end namespace megamol */
+} // namespace megamol::cinematic
 
 #endif // MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED

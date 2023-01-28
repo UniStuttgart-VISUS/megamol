@@ -20,8 +20,7 @@
 
 #include <glm/ext.hpp>
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * BezierCPUMeshRenderer::BezierCPUMeshRenderer
@@ -397,5 +396,4 @@ void BezierCPUMeshRenderer::drawTube(float const* p1, float const* r1, unsigned 
     }
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

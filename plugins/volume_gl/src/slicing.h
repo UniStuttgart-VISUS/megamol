@@ -28,8 +28,7 @@
 #include <windows.h>
 #endif
 
-namespace megamol {
-namespace volume_gl {
+namespace megamol::volume_gl {
 
 #define VS_EPS 1.0e-8
 
@@ -85,7 +84,6 @@ private:
     int _maxSlices;
 };
 
-} // namespace volume_gl
-} /* end namespace megamol */
+} // namespace megamol::volume_gl
 
 #endif // _SLICING_H_

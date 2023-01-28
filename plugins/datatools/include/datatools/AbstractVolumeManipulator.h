@@ -12,8 +12,7 @@
 #include "mmcore/Module.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 
 /**
@@ -101,5 +100,4 @@ private:
     megamol::core::CallerSlot inDataSlot;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

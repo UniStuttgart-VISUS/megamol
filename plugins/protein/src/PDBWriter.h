@@ -20,8 +20,7 @@
 #include "mmstd/renderer/TimeControl.h"
 #include "protein_calls/MolecularDataCall.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class PDBWriter : public core::job::AbstractJob, public core::Module {
 
@@ -173,7 +172,6 @@ private:
     bool useModelRecord;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif /* MMPROTEINPLUGIN_PDBWRITER_H_INCLUDED */

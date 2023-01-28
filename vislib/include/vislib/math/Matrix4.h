@@ -18,8 +18,7 @@
 #include "vislib/math/Matrix.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -192,8 +191,7 @@ Matrix4<T, L>::Matrix4(const T& m11, const T& m12, const T& m13, const T& m14, c
 template<class T, MatrixLayout L>
 Matrix4<T, L>::~Matrix4() {}
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

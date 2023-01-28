@@ -23,9 +23,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 /// A class that helps you chunk and upload a huge buffer to multiple
 /// 'static' SSBOs - meaning they will not change very often. You can align multiple streamers
@@ -128,8 +126,6 @@ private:
     GLint64 maxSSBOSize = 0;
 };
 
-} /* end namespace utility */
-} /* end namespace core */
-} /* end namespace megamol */
+} // namespace megamol::core::utility
 
 #endif /* MEGAMOLCORE_SSBOBUFFERARRAY_H_INCLUDED */

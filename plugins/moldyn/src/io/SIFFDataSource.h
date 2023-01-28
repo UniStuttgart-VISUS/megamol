@@ -19,9 +19,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 
 /**
@@ -146,8 +144,6 @@ private:
     bool hasAlpha;
 };
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn::io
 
 #endif /* MEGAMOLCORE_SIFFDATASOURCE_H_INCLUDED */

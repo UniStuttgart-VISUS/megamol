@@ -19,8 +19,7 @@
 #include "vislib/sys/File.h"
 
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Data source for solvent path data
@@ -175,7 +174,6 @@ private:
     vislib::Array<SolPathDataCall::Pathline> pathlines;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
+} // namespace megamol::protein
 
 #endif /*  MEGAMOL_PROTEIN_SOLPATHDATASOURCE_H_INCLUDED */

@@ -9,8 +9,7 @@
 #include "vislib/sys/SystemInformation.h"
 #include <chrono>
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 adiosWriter::adiosWriter()
         : core::AbstractDataWriter()
@@ -425,5 +424,4 @@ vislib::StringA adiosWriter::getCommandLine() {
     return retval;
 }
 
-} // namespace adios
-} // namespace megamol
+} // namespace megamol::adios

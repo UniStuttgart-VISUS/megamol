@@ -7,8 +7,7 @@
 
 #include "LoopBuffer.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 #define DEFAULT_LOOP_VDATA_CAPACITY 10
 #define DEFAULT_LOOP_VDATA_INCREMENT 20
@@ -187,5 +186,4 @@ void LoopBuffer::NewLoopComplete() {
     }
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

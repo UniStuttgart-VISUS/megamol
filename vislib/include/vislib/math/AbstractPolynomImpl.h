@@ -23,8 +23,7 @@
 #endif /* !M_PI */
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -709,8 +708,7 @@ unsigned int AbstractPolynomImpl<T, D, S, C>::uniqueRoots(T* outRoots, unsigned 
 }
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

@@ -4,9 +4,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-namespace megamol {
-namespace trisoup {
-namespace volumetrics {
+namespace megamol::trisoup::volumetrics {
 
 class MarchingCubeTables {
 public:
@@ -23,8 +21,6 @@ public:
     static const int neighbourTable[12][2][3];
 };
 
-} /* end namespace volumetrics */
-} /* end namespace trisoup */
-} /* end namespace megamol */
+} // namespace megamol::trisoup::volumetrics
 
 #endif /* MEGAMOLCORE_MARCHINGCUBETABLES_H_INCLUDED */

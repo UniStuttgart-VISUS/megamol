@@ -15,8 +15,7 @@
 #include "vislib/RawStorage.h"
 
 
-namespace megamol {
-namespace datatools_gl {
+namespace megamol::datatools_gl {
 
 
 /**
@@ -66,7 +65,6 @@ private:
     unsigned int texDatSize;
 };
 
-} // namespace datatools_gl
-} /* end namespace megamol */
+} // namespace megamol::datatools_gl
 
 #endif /* MEGAMOLCORE_TRANSFERFUNCTIONQUERY_H_INCLUDED */

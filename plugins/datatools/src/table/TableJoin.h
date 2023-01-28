@@ -17,9 +17,7 @@
 
 #include "datatools/table/TableDataCall.h"
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /**
  * This module joins two tables by copying the values together into one matrix
@@ -119,8 +117,6 @@ private:
     std::vector<float> data;
 }; /* end class TableJoin */
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools::table
 
 #endif // end ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLEJOIN_H_INCLUDED

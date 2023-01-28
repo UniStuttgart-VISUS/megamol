@@ -13,8 +13,7 @@
 #include "mmcore/Module.h"
 #include "mmstd/event/DoubleBufferedEventCollection.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 class EventStorage : public core::Module {
 public:
@@ -98,7 +97,6 @@ private:
     uint32_t m_version = 0;
 };
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core
 
 #endif // !MEGAMOL_EVENT_STORAGE_H_INCLUDED

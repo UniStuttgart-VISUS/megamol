@@ -22,8 +22,7 @@
 #include <sys/mman.h>
 #endif /* _WIN32 */
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * Instances of this class repsesent a file based on vislib::sys::File but
@@ -284,8 +283,7 @@ private:
     bool viewDirty;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

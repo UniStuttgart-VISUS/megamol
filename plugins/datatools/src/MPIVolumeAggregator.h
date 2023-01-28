@@ -14,8 +14,7 @@
 #include "mpi.h"
 #endif /* MEGAMOL_USE_MPI */
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module aggregating the density of several identically-sized volumes over MPI.
@@ -85,5 +84,4 @@ private:
     std::vector<float> theVolume;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

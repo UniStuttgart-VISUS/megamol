@@ -8,8 +8,7 @@
 
 #include "datatools/AbstractParticleManipulator.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class IColRangeFix : public datatools::AbstractParticleManipulator {
 public:
@@ -35,5 +34,4 @@ private:
     float minCol, maxCol;
 };
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

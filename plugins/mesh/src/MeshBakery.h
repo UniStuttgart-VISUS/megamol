@@ -15,8 +15,7 @@
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataAccessCollection.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 
 class MeshBakery : public AbstractMeshDataSource {
@@ -87,7 +86,6 @@ private:
     megamol::core::param::ParamSlot m_geometry_type;
 };
 
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh
 
 #endif // !MESH_BAKERY_H_INCLUDED

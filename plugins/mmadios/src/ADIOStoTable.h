@@ -12,8 +12,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class ADIOStoTable : public core::Module {
 public:
@@ -69,5 +68,4 @@ private:
     std::vector<datatools::table::TableDataCall::ColumnInfo> _colinfo;
 };
 
-} // namespace adios
-} // namespace megamol
+} // namespace megamol::adios

@@ -20,8 +20,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace moldyn {
+namespace megamol::moldyn {
 
 
 /**
@@ -687,7 +686,6 @@ private:
 /** Description class typedef */
 typedef core::factories::CallAutoDescription<ParticleGridDataCall> ParticleGridDataCallDescription;
 
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn
 
 #endif /* MEGAMOLCORE_PARTICLEGRIDDATACALL_H_INCLUDED */

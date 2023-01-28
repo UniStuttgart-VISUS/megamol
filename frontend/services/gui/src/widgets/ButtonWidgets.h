@@ -13,8 +13,7 @@
 #include <string>
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** Forward declaration */
@@ -59,7 +58,6 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui
 
 #endif // MEGAMOL_GUI_BUTTONWIDGETS_INCLUDED

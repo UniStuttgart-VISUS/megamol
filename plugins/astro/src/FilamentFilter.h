@@ -15,8 +15,7 @@
 #include <set>
 
 
-namespace megamol {
-namespace astro {
+namespace megamol::astro {
 
 /*
  * THIS IS THE APEX OF SHIT and a non-quality copy from nanoflann/examples/utils.h
@@ -167,5 +166,4 @@ private:
     uint32_t lastTimestep;
 };
 
-} // namespace astro
-} // namespace megamol
+} // namespace megamol::astro

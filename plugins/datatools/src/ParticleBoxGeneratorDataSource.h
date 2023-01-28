@@ -19,8 +19,7 @@
 #include <cstdint>
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 
 /**
@@ -128,8 +127,7 @@ private:
     unsigned int cds;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools
 
 #endif /* MEGAMOLCORE_PARTICLEBOXGENERATORDATASOURCE_H_INCLUDED */
 

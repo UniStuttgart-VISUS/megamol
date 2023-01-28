@@ -18,8 +18,7 @@
 #include "vislib/math/AbstractVector.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * This is the implementation of an AbstractVector that uses its a
@@ -130,8 +129,7 @@ private:
 template<class T, unsigned int D>
 ShallowVector<T, D>::~ShallowVector() {}
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

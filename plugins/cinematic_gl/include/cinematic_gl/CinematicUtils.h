@@ -17,8 +17,7 @@
 // ##################################################################### //
 
 
-namespace megamol {
-namespace cinematic_gl {
+namespace megamol::cinematic_gl {
 
 
 /*
@@ -102,7 +101,6 @@ private:
     void gui_table_row(const char* left, const char* right);
 };
 
-} // namespace cinematic_gl
-} /* end namespace megamol */
+} // namespace megamol::cinematic_gl
 
 #endif // MEGAMOL_CINEMATIC_CINEMATICUTILS_H_INCLUDED

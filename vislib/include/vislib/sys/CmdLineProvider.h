@@ -22,8 +22,7 @@
 #endif // _WIN32
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /* forward declaration of CmdLineParser */
 template<class T>
@@ -1010,8 +1009,7 @@ typedef CmdLineProvider<CharTraitsW> CmdLineProviderW;
 /** Template instantiation for TCHARs. */
 typedef CmdLineProvider<TCharTraits> TCmdLineProvider;
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

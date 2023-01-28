@@ -9,8 +9,7 @@
 
 #include "SimpleRenderTarget.h"
 
-namespace megamol {
-namespace compositing_gl {
+namespace megamol::compositing_gl {
 
 class InteractionRenderTarget : public SimpleRenderTarget {
 public:
@@ -66,5 +65,4 @@ private:
     core::CalleeSlot m_objId_render_target;
 };
 
-} // namespace compositing_gl
-} // namespace megamol
+} // namespace megamol::compositing_gl

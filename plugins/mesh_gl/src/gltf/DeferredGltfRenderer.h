@@ -9,8 +9,7 @@
 
 #include "BaseGltfRenderer.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class DeferredGltfRenderer : public BaseGltfRenderer {
 public:
@@ -48,7 +47,6 @@ protected:
     }
 };
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl
 
 #endif // !DEFERRED_GLTF_RENDERER_H_INCLUDED

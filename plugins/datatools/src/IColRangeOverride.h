@@ -9,8 +9,7 @@
 #include "datatools/AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class IColRangeOverride : public datatools::AbstractParticleManipulator {
 public:
@@ -40,5 +39,4 @@ private:
     float minCol, maxCol;
 };
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

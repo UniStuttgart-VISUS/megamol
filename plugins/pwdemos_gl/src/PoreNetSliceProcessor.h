@@ -17,8 +17,7 @@
 #include "vislib/sys/File.h"
 #include "vislib/sys/Runnable.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Processor for pore-net-extraction slices
@@ -164,5 +163,4 @@ private:
     BufferMTPConnection<LoopBuffer>* outputBuffers;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

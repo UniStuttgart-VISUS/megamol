@@ -18,8 +18,7 @@
 #include "vislib/math/AbstractQuaternion.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * A quaternion.
@@ -143,8 +142,7 @@ template<class T>
 Quaternion<T>::~Quaternion() {}
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)

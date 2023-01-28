@@ -18,8 +18,7 @@
 #include "vislib/math/Cuboid.h"
 #include <map>
 
-namespace megamol {
-namespace astro {
+namespace megamol::astro {
 
 template<typename T>
 T centralDifference(T valBefore, T valAfter, float stepSize = 1.0f) {
@@ -366,7 +365,6 @@ protected:
     std::vector<float> redshiftsForFilename;
 };
 
-} // namespace astro
-} // namespace megamol
+} // namespace megamol::astro
 
 #endif /* MEGAMOLCORE_CONTEST2019DATALOADER_H_INCLUDED */

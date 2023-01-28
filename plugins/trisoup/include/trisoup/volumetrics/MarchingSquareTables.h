@@ -4,9 +4,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-namespace megamol {
-namespace trisoup {
-namespace volumetrics {
+namespace megamol::trisoup::volumetrics {
 
 class MarchingSquareTables {
 public:
@@ -20,8 +18,6 @@ public:
     static const unsigned int aiSquareEdgeFlags[16];
 };
 
-} /* end namespace volumetrics */
-} /* end namespace trisoup */
-} /* end namespace megamol */
+} // namespace megamol::trisoup::volumetrics
 
 #endif /* MEGAMOLCORE_MARCHINGSQUARETABLES_H_INCLUDED */

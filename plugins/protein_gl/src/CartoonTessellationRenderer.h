@@ -20,8 +20,7 @@
 #include <map>
 #include <utility>
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 using namespace megamol::core;
 using namespace megamol::protein_calls;
@@ -160,7 +159,6 @@ private:
     DeferredRenderingProvider deferredProvider_;
 };
 
-} // namespace protein_gl
-} // namespace megamol
+} // namespace megamol::protein_gl
 
 #endif /* MMPROTEINPLUGIN_CARTOONTESSELLATIONRENDERER_H_INCLUDED */

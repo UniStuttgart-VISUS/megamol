@@ -14,9 +14,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include <vector>
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 /**
  * Data loader for tcl files containing mol commands for selection serials:
@@ -59,8 +57,6 @@ private:
     std::vector<geocalls::ParticleRelistCall::ListIDType> data;
 };
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn::io
 
 #endif /* MEGAMOL_STDMOLDYN_TCLMOLSELECTIONLOADER_H_INCLUDED */

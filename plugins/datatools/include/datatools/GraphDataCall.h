@@ -11,8 +11,7 @@
 #include <cstdint>
 #include <iterator>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Call to transport graph data as edges between pairs (indices) of particles
@@ -115,8 +114,7 @@ private:
 /** Description typedef */
 typedef core::factories::CallAutoDescription<GraphDataCall> GraphDataCallDescription;
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools
 
 namespace std {
 /** Utility functions allowing ranged-based for iterating over edges */

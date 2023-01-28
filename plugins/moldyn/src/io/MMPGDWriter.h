@@ -18,9 +18,7 @@
 #include "vislib/sys/File.h"
 
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 
 /**
@@ -108,8 +106,6 @@ private:
     core::CallerSlot dataSlot;
 };
 
-} // namespace io
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn::io
 
 #endif /* MEGAMOLCORE_MMPGDWRITER_H_INCLUDED */

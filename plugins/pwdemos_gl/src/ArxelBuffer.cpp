@@ -9,8 +9,7 @@
 
 #include <climits>
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /*
@@ -164,5 +163,4 @@ UINT64 ArxelBuffer::Fill(const vislib::Array<vislib::math::Point<int, 2>>& polyg
     return pixelCount /* * sign*/;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

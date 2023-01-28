@@ -27,8 +27,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * Instances of this class repsesent a file. The class provides unbuffered
@@ -500,8 +499,7 @@ protected:
 #endif /* _WIN32 */
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
