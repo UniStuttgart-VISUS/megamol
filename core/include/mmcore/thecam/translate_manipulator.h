@@ -28,8 +28,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef THE_GRAPHICS_CAMERA_TRANSLATE_MANIPULATOR_H_INCLUDED
-#define THE_GRAPHICS_CAMERA_TRANSLATE_MANIPULATOR_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -172,4 +170,3 @@ private:
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* THE_GRAPHICS_CAMERA_TRANSLATE_MANIPULATOR_H_INCLUDED */

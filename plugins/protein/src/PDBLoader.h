@@ -5,8 +5,6 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_PDBLOADER_H_INCLUDED
-#define MMPROTEINPLUGIN_PDBLOADER_H_INCLUDED
 #pragma once
 
 #include "MDDriverConnector.h"
@@ -761,5 +759,3 @@ private:
 
 
 } // namespace megamol::protein
-
-#endif // MMPROTEINPLUGIN_PDBLOADER_H_INCLUDED

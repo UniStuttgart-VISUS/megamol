@@ -7,8 +7,6 @@
  */
 
 
-#ifndef MEGAMOL_PROTEIN_CALL_SELECTIONCALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALL_SELECTIONCALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -96,5 +94,3 @@ private:
 typedef megamol::core::factories::CallAutoDescription<IntSelectionCall> IntSelectionCallDescription;
 
 } // namespace megamol::protein_calls
-
-#endif /* MEGAMOL_PROTEIN_CALL_SELECTIONCALL_H_INCLUDED */

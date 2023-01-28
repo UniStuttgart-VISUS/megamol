@@ -8,8 +8,6 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCALLPLUGIN_VTKIMAGEDATA_H_INCLUDED
-#define MMPROTEINCALLPLUGIN_VTKIMAGEDATA_H_INCLUDED
 #pragma once
 
 //#include "vislib_vector_typedefs.h"
@@ -1287,5 +1285,3 @@ private:
 };
 
 } // namespace megamol::protein_calls
-
-#endif // MMPROTEINCALLPLUGIN_VTKIMAGEDATA_H_INCLUDED

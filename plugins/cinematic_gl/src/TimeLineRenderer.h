@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
-#define MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED
 #pragma once
 
 
@@ -172,5 +170,3 @@ private:
 };
 
 } // namespace megamol::cinematic_gl
-
-#endif // MEGAMOL_CINEMATIC_TIMELINERENDERER_H_INCLUDED

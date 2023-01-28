@@ -5,8 +5,6 @@
 //      Author: scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_CUDASTREAMLINES_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_CUDASTREAMLINES_H_INCLUDED
 #pragma once
 
 #include "CudaDevArr.h"
@@ -149,5 +147,3 @@ private:
 
 } // end namespace protein_cuda
 } // end namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_CUDASTREAMLINES_H_INCLUDED

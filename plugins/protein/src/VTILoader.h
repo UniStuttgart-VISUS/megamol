@@ -8,8 +8,6 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VTILOADER_H_INCLUDED
-#define MMPROTEINPLUGIN_VTILOADER_H_INCLUDED
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
@@ -511,5 +509,3 @@ private:
 
 
 } // namespace megamol::protein
-
-#endif // MMPROTEINPLUGIN_VTILOADER_H_INCLUDED

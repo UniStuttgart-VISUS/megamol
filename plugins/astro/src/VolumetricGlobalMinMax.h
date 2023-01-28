@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_ASTRO_VOLUMETRICGLOBALMINMAX_H_INCLUDED
-#define MEGAMOL_ASTRO_VOLUMETRICGLOBALMINMAX_H_INCLUDED
 #pragma once
 
 #include <array>
@@ -68,5 +66,3 @@ private:
 };
 
 } // namespace megamol::astro
-
-#endif /* MEGAMOL_ASTRO_VOLUMETRICGLOBALMINMAX_H_INCLUDED */

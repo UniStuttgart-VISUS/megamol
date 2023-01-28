@@ -6,8 +6,6 @@
  * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_RUNNABLETHREAD_H_INCLUDED
-#define VISLIB_RUNNABLETHREAD_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -158,4 +156,3 @@ RunnableThread<T>& RunnableThread<T>::operator=(const RunnableThread& rhs) {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_RUNNABLETHREAD_H_INCLUDED */

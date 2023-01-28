@@ -4,11 +4,7 @@
  * Copyright (C) 2009 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_STRIDE_H_INCLUDED
-#define MEGAMOL_STRIDE_H_INCLUDED
-#if (_MSC_VER > 1000)
 #pragma once
-#endif /* (_MSC_VER > 1000) */
 
 #define _USE_MATH_DEFINES
 
@@ -390,5 +386,3 @@ private:
 };
 
 } // namespace megamol::protein
-
-#endif /* MEGAMOL_STRIDE_H_INCLUDED */

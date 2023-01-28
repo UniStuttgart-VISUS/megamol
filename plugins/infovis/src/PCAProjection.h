@@ -1,5 +1,4 @@
-#ifndef MEGAMOL_PRINCIPAL_COMPONENT_ANALYSIS_H_INCLUDED
-#define MEGAMOL_PRINCIPAL_COMPONENT_ANALYSIS_H_INCLUDED
+#pragma once
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -76,6 +75,3 @@ private:
 };
 
 } // namespace megamol::infovis
-
-
-#endif

@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef GPU_MATERIAL_COLLECTION_H_INCLUDED
-#define GPU_MATERIAL_COLLECTION_H_INCLUDED
+#pragma once
 
 #include <filesystem>
 #include <memory>
@@ -60,5 +59,3 @@ private:
 };
 
 } // namespace megamol::mesh_gl
-
-#endif // !GPU_MATERIAL_COLLECTION_H_INCLUDED

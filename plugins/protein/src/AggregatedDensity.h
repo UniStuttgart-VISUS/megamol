@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef AGGREGATED_DENSITY_H_INCLUDED
-#define AGGREGATED_DENSITY_H_INCLUDED
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
@@ -126,5 +124,3 @@ private:
 
 
 } // namespace megamol::protein
-
-#endif

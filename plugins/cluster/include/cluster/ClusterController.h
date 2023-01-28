@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CLUSTERCONTROLLER_H_INCLUDED
-#define MEGAMOLCORE_CLUSTERCONTROLLER_H_INCLUDED
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
@@ -258,5 +256,3 @@ private:
 
 
 } // namespace megamol::core::cluster
-
-#endif /* MEGAMOLCORE_CLUSTERCONTROLLER_H_INCLUDED */

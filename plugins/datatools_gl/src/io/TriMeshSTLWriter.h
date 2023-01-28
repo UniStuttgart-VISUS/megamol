@@ -4,8 +4,6 @@
  * Copyright (C) 2018 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_DATATOOLS_IO_TRIMESHSTLWRITER_H_INCLUDED
-#define MEGAMOL_DATATOOLS_IO_TRIMESHSTLWRITER_H_INCLUDED
 #pragma once
 
 #include "datatools/io/AbstractSTLWriter.h"
@@ -98,5 +96,3 @@ protected:
     void release() override;
 };
 } // namespace megamol::datatools_gl::io
-
-#endif // !MEGAMOL_DATATOOLS_IO_TRIMESHSTLWRITER_H_INCLUDED

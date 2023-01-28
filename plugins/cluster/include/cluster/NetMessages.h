@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_NETMESSAGES_H_INCLUDED
-#define MEGAMOLCORE_NETMESSAGES_H_INCLUDED
 #pragma once
 
 #include "vislib/types.h"
@@ -105,5 +103,3 @@ typedef struct _timesyncdata_t {
 } TimeSyncData;
 
 } // namespace megamol::core::cluster::netmessages
-
-#endif /* MEGAMOLCORE_NETMESSAGES_H_INCLUDED */

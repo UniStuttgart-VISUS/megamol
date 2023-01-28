@@ -6,8 +6,6 @@
  */
 /// Implementation see mmcore/utility/Picking.cpp and mmcore_gl/utility/Picking_gl.cpp
 
-#ifndef MEGAMOL_GUI_PICKING_INCLUDED
-#define MEGAMOL_GUI_PICKING_INCLUDED
 #pragma once
 
 
@@ -133,5 +131,3 @@ private:
 };
 
 } // namespace megamol::core::utility
-
-#endif // MEGAMOL_GUI_PICKING_INCLUDED

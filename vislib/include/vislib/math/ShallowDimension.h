@@ -5,8 +5,6 @@
  * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SHALLOWDIMENSION_H_INCLUDED
-#define VISLIB_SHALLOWDIMENSION_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -99,4 +97,3 @@ ShallowDimension<T, D>::~ShallowDimension() {}
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SHALLOWDIMENSION_H_INCLUDED */

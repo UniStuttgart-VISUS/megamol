@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SMARTPTR_H_INCLUDED
-#define VISLIB_SMARTPTR_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -293,4 +291,3 @@ SmartPtr<T, A>& SmartPtr<T, A>::operator=(const SmartPtr& rhs) {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SMARTPTR_H_INCLUDED */

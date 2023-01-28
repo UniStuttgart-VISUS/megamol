@@ -4,8 +4,6 @@
  * Copyright (C) 2015 by MegaMol Team (TU Dresden)
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_STD_DATATOOLS_MULTIPARTICLERELISTER_H_INCLUDED
-#define MEGAMOL_STD_DATATOOLS_MULTIPARTICLERELISTER_H_INCLUDED
 #pragma once
 
 #include "datatools/AbstractParticleManipulator.h"
@@ -55,5 +53,3 @@ private:
 };
 
 } // namespace megamol::datatools
-
-#endif /* MEGAMOL_STD_DATATOOLS_MULTIPARTICLERELISTER_H_INCLUDED */

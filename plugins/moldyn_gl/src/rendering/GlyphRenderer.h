@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MOLDYN_GLYPHRENDERER_H_INCLUDED
-#define MOLDYN_GLYPHRENDERER_H_INCLUDED
 #pragma once
 
 #include "geometry_calls/EllipsoidalDataCall.h"
@@ -160,5 +158,3 @@ private:
 };
 
 } // namespace megamol::moldyn_gl::rendering
-
-#endif /* MOLDYN_GLYPHRENDERER_H_INCLUDED */

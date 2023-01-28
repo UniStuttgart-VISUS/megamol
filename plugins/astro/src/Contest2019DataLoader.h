@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CONTEST2019DATALOADER_H_INCLUDED
-#define MEGAMOLCORE_CONTEST2019DATALOADER_H_INCLUDED
 #pragma once
 
 #include "astro/AstroDataCall.h"
@@ -364,5 +362,3 @@ protected:
 };
 
 } // namespace megamol::astro
-
-#endif /* MEGAMOLCORE_CONTEST2019DATALOADER_H_INCLUDED */

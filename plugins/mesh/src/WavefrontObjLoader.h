@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef WAVEFRONT_OBJ_LOADER_H_INCLUDED
-#define WAVEFRONT_OBJ_LOADER_H_INCLUDED
+#pragma once
 
 #include "mesh/AbstractMeshDataSource.h"
 #include "mesh/MeshCalls.h"
@@ -119,6 +118,3 @@ private:
 };
 
 } // namespace megamol::mesh
-
-
-#endif // !#ifndef WAVEFRONT_OBJ_LOADER_H_INCLUDED

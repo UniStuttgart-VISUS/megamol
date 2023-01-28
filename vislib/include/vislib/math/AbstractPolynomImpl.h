@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTPOLYNOMIMPL_H_INCLUDED
-#define VISLIB_ABSTRACTPOLYNOMIMPL_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -711,4 +709,3 @@ unsigned int AbstractPolynomImpl<T, D, S, C>::uniqueRoots(T* outRoots, unsigned 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTPOLYNOMIMPL_H_INCLUDED */

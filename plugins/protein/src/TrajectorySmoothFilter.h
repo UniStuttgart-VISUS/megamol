@@ -8,8 +8,6 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_TRAJECTORYSMOOTHFILTER_H_INCLUDED
-#define MMPROTEINPLUGIN_TRAJECTORYSMOOTHFILTER_H_INCLUDED
 #pragma once
 
 
@@ -152,5 +150,3 @@ private:
 
 
 } // namespace megamol::protein
-
-#endif // MMPROTEINPLUGIN_TRAJECTORYSMOOTHFILTER_H_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef MEGAMOL_TSNE_MODULE_H_INCLUDED
-#define MEGAMOL_TSNE_MODULE_H_INCLUDED
+#pragma once
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -79,6 +78,3 @@ private:
 };
 
 } // namespace megamol::infovis
-
-
-#endif

@@ -4,8 +4,6 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTVECTORIMPL_H_INCLUDED
-#define VISLIB_ABSTRACTVECTORIMPL_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -890,4 +888,3 @@ const T& AbstractVectorImpl<T, D, S, C>::operator[](const int i) const {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTVECTORIMPL_H_INCLUDED */

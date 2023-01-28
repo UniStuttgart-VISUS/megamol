@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_DATAGRIDDER_H_INCLUDED
-#define MEGAMOLCORE_DATAGRIDDER_H_INCLUDED
 #pragma once
 
 #include "geometry_calls/MultiParticleDataCall.h"
@@ -143,5 +141,3 @@ private:
 };
 
 } // namespace megamol::moldyn
-
-#endif /* MEGAMOLCORE_DATAGRIDDER_H_INCLUDED */

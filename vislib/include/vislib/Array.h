@@ -6,8 +6,6 @@
  * Copyright (C) 2006 - 2008 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ARRAY_H_INCLUDED
-#define VISLIB_ARRAY_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -1247,4 +1245,3 @@ int Array<T, L, C>::qsortHelper(void* context, const void* lhs, const void* rhs)
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ARRAY_H_INCLUDED */

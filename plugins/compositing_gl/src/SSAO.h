@@ -20,8 +20,7 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef SSAO_H_INCLUDED
-#define SSAO_H_INCLUDED
+#pragma once
 
 #include <variant>
 
@@ -571,5 +570,3 @@ void SSAO::fullscreenPassDraw(const std::unique_ptr<glowl::GLSLProgram>& prgm, c
 }
 
 } // namespace megamol::compositing_gl
-
-#endif // !ASSAO_H_INCLUDED

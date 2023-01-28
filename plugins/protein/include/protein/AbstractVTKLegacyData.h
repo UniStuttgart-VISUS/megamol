@@ -8,8 +8,6 @@
 // Author     : scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_ABSTRACTVTKLEGACYDATA_H_INCLUDED
-#define MMPROTEINPLUGIN_ABSTRACTVTKLEGACYDATA_H_INCLUDED
 #pragma once
 
 //#include "vislib_vector_typedefs.h"
@@ -265,5 +263,3 @@ private:
 };
 
 } // namespace megamol::protein
-
-#endif // MMPROTEINPLUGIN_ABSTRACTVTKLEGACYDATA_H_INCLUDED

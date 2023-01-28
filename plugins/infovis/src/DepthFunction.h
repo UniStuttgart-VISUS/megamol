@@ -1,5 +1,4 @@
-#ifndef MEGAMOL_DEPTHFUNCTION_INCLUDED
-#define MEGAMOL_DEPTHFUNCTION_INCLUDED
+#pragma once
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -107,5 +106,3 @@ private:
 };
 
 } // namespace megamol::infovis
-
-#endif

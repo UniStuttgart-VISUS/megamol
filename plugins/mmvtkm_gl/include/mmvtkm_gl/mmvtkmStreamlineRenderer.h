@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef MMVTKM_STREAMLINE_RENDERER_H_INCLUDED
-#define MMVTKM_STREAMLINE_RENDERER_H_INCLUDED
+#pragma once
 
 #include "mmstd/generic/CallGeneric.h"
 
@@ -42,5 +41,3 @@ protected:
 };
 
 } // namespace megamol::mmvtkm_gl
-
-#endif // !MMVTKM_STREAMLINE_RENDERER_H_INCLUDED

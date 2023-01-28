@@ -7,8 +7,6 @@
  */
 
 
-#ifndef MEGAMOL_PROTEIN_CALL_BSITECALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALL_BSITECALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -252,5 +250,3 @@ private:
 typedef megamol::core::factories::CallAutoDescription<BindingSiteCall> BindingSiteCallDescription;
 
 } // namespace megamol::protein_calls
-
-#endif /* MEGAMOL_PROTEIN_CALL_BSITECALL_H_INCLUDED */

@@ -4,8 +4,6 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_DYNAMICFUNCTIONPOINTER_H_INCLUDED
-#define VISLIB_DYNAMICFUNCTIONPOINTER_H_INCLUDED
 #pragma once
 #ifdef _WIN32
 
@@ -95,4 +93,3 @@ vislib::sys::DynamicFunctionPointer<T>::DynamicFunctionPointer(void) {
 } /* end namespace vislib */
 
 #endif /* _WIN32 */
-#endif /* VISLIB_DYNAMICFUNCTIONPOINTER_H_INCLUDED */

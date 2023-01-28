@@ -6,8 +6,7 @@
  */
 
 
-#ifndef IMAGE_DATA_ACCESS_COLLECTION_H_INCLUDED
-#define IMAGE_DATA_ACCESS_COLLECTION_H_INCLUDED
+#pragma once
 
 #include <vector>
 
@@ -120,5 +119,3 @@ inline void ImageDataAccessCollection::addImage(
 }
 
 } // namespace megamol::mesh
-
-#endif // !IMAGE_DATA_ACCESS_COLLECTION_H_INCLUDED

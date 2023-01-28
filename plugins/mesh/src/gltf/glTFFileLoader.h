@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef GLTF_FILE_LOADER_H_INCLUDED
-#define GLTF_FILE_LOADER_H_INCLUDED
+#pragma once
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -87,6 +86,3 @@ private:
 };
 
 } // namespace megamol::mesh
-
-
-#endif // !GLTF_FILE_LOADER_H_INCLUDED

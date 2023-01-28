@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTTRIANGLEIMPL_H_INCLUDED
-#define VISLIB_ABSTRACTTRIANGLEIMPL_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -263,4 +261,3 @@ AbstractTriangleImpl<T, S, C>& AbstractTriangleImpl<T, S, C>::operator=(const C<
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTTRIANGLEIMPL_H_INCLUDED */

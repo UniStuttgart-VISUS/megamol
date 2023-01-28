@@ -7,8 +7,7 @@
  * $Id$
  */
 
-#ifndef MMPROTEINCUDAPLUGIN_UNIGRID3D_H
-#define MMPROTEINCUDAPLUGIN_UNIGRID3D_H
+#pragma once
 
 #include "cuda_runtime.h"
 #include "helper_cuda.h"
@@ -268,6 +267,3 @@ T UniGrid3D<T>::SampleNearest(float x, float y, float z) {
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-
-#endif /* MMPROTEINCUDAPLUGIN_UNIGRID3D_H */

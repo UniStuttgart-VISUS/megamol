@@ -6,8 +6,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMTRISOUPPLG_WAVEFRONTOBJWRITER_H_INCLUDED
-#define MMTRISOUPPLG_WAVEFRONTOBJWRITER_H_INCLUDED
 #pragma once
 
 #include "geometry_calls/LinesDataCall.h"
@@ -105,5 +103,3 @@ private:
 };
 
 } // namespace megamol::trisoup
-
-#endif /* MMTRISOUPPLG_WAVEFRONTOBJWRITER_H_INCLUDED */

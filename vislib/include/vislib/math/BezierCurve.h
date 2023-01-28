@@ -6,8 +6,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_BEZIERCURVE_H_INCLUDED
-#define VISLIB_BEZIERCURVE_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -329,4 +327,3 @@ bool BezierCurve<T, E>::operator==(const BezierCurve<T, E>& rhs) const {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_BEZIERCURVE_H_INCLUDED */

@@ -7,8 +7,6 @@
  * $Id: CrystalStructureDataCall.h 1443 2015-07-08 12:18:12Z reina $
  */
 
-#ifndef MMPROTEINCALLPLUGIN_CRYSTALSTRCUTUREDATACALL_H_INCLUDED
-#define MMPROTEINCALLPLUGIN_CRYSTALSTRCUTUREDATACALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -279,5 +277,3 @@ private:
 typedef core::factories::CallAutoDescription<CrystalStructureDataCall> CrystalStructureDataCallDescription;
 
 } // namespace megamol::protein_calls
-
-#endif /* MMPROTEINCALLPLUGIN_CRYSTALSTRCUTUREDATACALL_H_INCLUDED */

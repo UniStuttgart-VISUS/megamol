@@ -3,8 +3,6 @@
  * Copyright (C) 2006-2019 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_PROTEIN_CALLS_TUNNELRESIDUEDATACALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALLS_TUNNELRESIDUEDATACALL_H_INCLUDED
 #pragma once
 
 #include "mmstd/data/AbstractGetData3DCall.h"
@@ -132,5 +130,3 @@ private:
 typedef megamol::core::factories::CallAutoDescription<TunnelResidueDataCall> TunnelResidueDataCallDescription;
 
 } // namespace megamol::protein_calls
-
-#endif

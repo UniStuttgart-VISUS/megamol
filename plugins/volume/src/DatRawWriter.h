@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_DATRAWWRITER_H_INCLUDED
-#define MEGAMOLCORE_DATRAWWRITER_H_INCLUDED
 #pragma once
 
 #include "geometry_calls/VolumetricDataCall.h"
@@ -108,5 +106,3 @@ private:
 };
 
 } // namespace megamol::volume
-
-#endif /* MEGAMOLCORE_DATRAWWRITER_H_INCLUDED */

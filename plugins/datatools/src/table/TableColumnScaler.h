@@ -5,8 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLECOLUMNSCALER_H_INCLUDED
-#define MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLECOLUMNSCALER_H_INCLUDED
+#pragma once
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -96,5 +95,3 @@ private:
 }; /* end class TableColumnScaler */
 
 } // namespace megamol::datatools::table
-
-#endif

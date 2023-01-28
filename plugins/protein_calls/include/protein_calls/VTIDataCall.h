@@ -8,8 +8,6 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCALLPLUGIN_VTIDATACALL_H_INCLUDED
-#define MMPROTEINCALLPLUGIN_VTIDATACALL_H_INCLUDED
 #pragma once
 
 #include "Interpol.h"
@@ -372,5 +370,3 @@ private:
 typedef core::factories::CallAutoDescription<VTIDataCall> VTIDataCallDescription;
 
 } // namespace megamol::protein_calls
-
-#endif // MMPROTEINCALLPLUGIN_VTIDATACALL_H_INCLUDED

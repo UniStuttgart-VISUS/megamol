@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_MESSAGERECEIVER_H_INCLUDED
-#define VISLIB_MESSAGERECEIVER_H_INCLUDED
 #pragma once
 
 
@@ -84,5 +82,3 @@ void FreeRecvMsgCtx(ReceiveMessagesCtx*& ctx);
 DWORD ReceiveMessages(void* receiveMessagesCtx);
 
 } // namespace vislib::net::cluster
-
-#endif /* VISLIB_MESSAGERECEIVER_H_INCLUDED */

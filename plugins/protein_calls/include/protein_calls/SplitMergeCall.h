@@ -7,8 +7,6 @@
  */
 
 
-#ifndef MEGAMOL_PROTEIN_CALLS_SPLITMERGECALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALLS_SPLITMERGECALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -597,5 +595,3 @@ private:
 typedef megamol::core::factories::CallAutoDescription<SplitMergeCall> SplitMergeCallDescription;
 
 } // namespace megamol::protein_calls
-
-#endif /* MEGAMOL_PROTEIN_CALLS_SPLITMERGECALL_H_INCLUDED */

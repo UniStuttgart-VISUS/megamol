@@ -4,8 +4,6 @@
  * Copyright (C) 2015-2021 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOLCORE_PARTICLEICOLFILTER_H_INCLUDED
-#define MEGAMOLCORE_PARTICLEICOLFILTER_H_INCLUDED
 #pragma once
 
 #include "datatools/AbstractParticleManipulator.h"
@@ -77,5 +75,3 @@ private:
 };
 
 } // namespace megamol::datatools
-
-#endif /* MEGAMOLCORE_PARTICLEICOLFILTER_H_INCLUDED */

@@ -8,8 +8,7 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCALLPLUGIN_INTERPOL_H_INCLUDED
-#define MMPROTEINCALLPLUGIN_INTERPOL_H_INCLUDED
+#pragma once
 
 #include "vislib/math/Matrix.h"
 
@@ -216,5 +215,3 @@ inline T SampleFieldAtPosTrilin(float pos[3], T* field, float gridOrg[3], float 
 
 
 } // namespace megamol::protein_calls
-
-#endif // MMPROTEINCALLPLUGIN_INTERPOL_H_INCLUDED

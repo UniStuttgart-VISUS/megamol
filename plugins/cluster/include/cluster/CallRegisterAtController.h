@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CALLREGISTERATCONTROLLER_H_INCLUDED
-#define MEGAMOLCORE_CALLREGISTERATCONTROLLER_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -179,5 +177,3 @@ typedef factories::CallAutoDescription<CallRegisterAtController> CallRegisterAtC
 
 
 } // namespace megamol::core::cluster
-
-#endif /* MEGAMOLCORE_CALLREGISTERATCONTROLLER_H_INCLUDED */

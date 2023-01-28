@@ -5,8 +5,6 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_GROLOADER_H_INCLUDED
-#define MMPROTEINPLUGIN_GROLOADER_H_INCLUDED
 #pragma once
 
 #include "MDDriverConnector.h"
@@ -718,5 +716,3 @@ private:
 
 
 } // namespace megamol::protein
-
-#endif // MMPROTEINPLUGIN_GROLOADER_H_INCLUDED

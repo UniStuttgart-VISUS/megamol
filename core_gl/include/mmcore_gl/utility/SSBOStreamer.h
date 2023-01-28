@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SSBOSTREAMER_H_INCLUDED
-#define MEGAMOLCORE_SSBOSTREAMER_H_INCLUDED
 #pragma once
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
@@ -114,5 +112,3 @@ private:
 };
 
 } // namespace megamol::core::utility
-
-#endif /* MEGAMOLCORE_SSBOSTREAMER_H_INCLUDED */

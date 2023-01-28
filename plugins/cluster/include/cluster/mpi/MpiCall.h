@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CLUSTER_MPI_MPICALL_H_INCLUDED
-#define MEGAMOLCORE_CLUSTER_MPI_MPICALL_H_INCLUDED
 #pragma once
 
 #ifdef MEGAMOL_USE_MPI
@@ -134,5 +132,3 @@ private:
 typedef factories::CallAutoDescription<MpiCall> MpiCallDescription;
 
 } // namespace megamol::core::cluster::mpi
-
-#endif /* MEGAMOLCORE_CLUSTER_MPI_MPICALL_H_INCLUDED */

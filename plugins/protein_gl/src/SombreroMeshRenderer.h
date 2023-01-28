@@ -4,8 +4,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMPROTEINPLUGIN_SOMBREROMESHRENDERER_H_INCLUDED
-#define MMPROTEINPLUGIN_SOMBREROMESHRENDERER_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -222,5 +220,3 @@ private:
 
 
 } // namespace megamol::protein_gl
-
-#endif /* MMPROTEINPLUGIN_SOMBREROMESHRENDERER_H_INCLUDED */

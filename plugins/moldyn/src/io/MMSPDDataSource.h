@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_MMSPDDATASOURCE_H_INCLUDED
-#define MEGAMOLCORE_MMSPDDATASOURCE_H_INCLUDED
 #pragma once
 
 #include "geometry_calls/MultiParticleDataCall.h"
@@ -369,5 +367,3 @@ private:
 };
 
 } // namespace megamol::moldyn::io
-
-#endif /* MEGAMOLCORE_MMSPDDATASOURCE_H_INCLUDED */

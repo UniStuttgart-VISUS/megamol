@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef UI_ELEMENT_H_INCLUDED
-#define UI_ELEMENT_H_INCLUDED
+#pragma once
 
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
@@ -86,6 +85,3 @@ private:
 };
 
 } // namespace megamol::mesh
-
-
-#endif // !UI_ELEMENT_H_INCLUDED

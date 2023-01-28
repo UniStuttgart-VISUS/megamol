@@ -8,8 +8,6 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_VBODATACALL_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_VBODATACALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -362,5 +360,3 @@ typedef core::factories::CallAutoDescription<VBODataCall> VBODataCallDescription
 
 } // end namespace protein_cuda
 } // end namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_VBODATACALL_H_INCLUDED

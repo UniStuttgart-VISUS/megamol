@@ -4,8 +4,6 @@
  * Copyright (C) 2006-2011 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SYSFUNCTIONS_H_INCLUDED
-#define VISLIB_SYSFUNCTIONS_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -584,4 +582,3 @@ bool WriteTextFile(File& file, const StringW& text, TextFileFormat format = TEXT
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SYSFUNCTIONS_H_INCLUDED */

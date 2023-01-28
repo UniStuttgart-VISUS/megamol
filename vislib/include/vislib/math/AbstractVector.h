@@ -5,8 +5,6 @@
  * Copyright (C) 2005 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTVECTOR_H_INCLUDED
-#define VISLIB_ABSTRACTVECTOR_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -571,4 +569,3 @@ AbstractVector<T, D, T[D]> operator*(const T lhs, const AbstractVector<T, D, S>&
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTVECTOR_H_INCLUDED */

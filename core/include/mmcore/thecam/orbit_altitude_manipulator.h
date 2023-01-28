@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef ORBIT_ALTITUDE_MANIPULATOR_H_INCLUDED
-#define ORBIT_ALTITUDE_MANIPULATOR_H_INCLUDED
+#pragma once
 
 #include "mmcore/thecam/manipulator_base.h"
 
@@ -96,6 +95,3 @@ private:
 };
 
 } // namespace megamol::core::thecam
-
-
-#endif // !ORBIT_ALTITUDE_MANIPULATOR_H_INCLUDED

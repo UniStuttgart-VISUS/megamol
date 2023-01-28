@@ -1,5 +1,3 @@
-#ifndef AOWT_PARTICLE_DENSITY_OPACITY_MODULE_H_INCLUDED
-#define AOWT_PARTICLE_DENSITY_OPACITY_MODULE_H_INCLUDED
 #pragma once
 
 #include "datatools_gl/TransferFunctionQuery.h"
@@ -101,5 +99,3 @@ private:
 };
 
 } // namespace megamol::datatools_gl::misc
-
-#endif /* AOWT_PARTICLE_DENSITY_OPACITY_MODULE_H_INCLUDED */

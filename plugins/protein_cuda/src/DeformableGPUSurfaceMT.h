@@ -8,8 +8,6 @@
 // Author     : scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_DEFORMABLEGPUSURFACEMT_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_DEFORMABLEGPUSURFACEMT_H_INCLUDED
 #pragma once
 
 #include "GPUSurfaceMT.h"
@@ -489,5 +487,3 @@ private:
 
 } // namespace protein_cuda
 } // namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_DEFORMABLEGPUSURFACEMT_H_INCLUDED

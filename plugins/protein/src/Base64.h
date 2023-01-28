@@ -8,8 +8,6 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_BASE64_H_INCLUDED
-#define MMPROTEINPLUGIN_BASE64_H_INCLUDED
 #pragma once
 
 #include <cstddef>
@@ -43,5 +41,3 @@ public:
 };
 
 } // namespace megamol::protein
-
-#endif // MMPROTEINPLUGIN_BASE64_H_INCLUDED

@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_PARTICLELISTMERGEMODULE_H_INCLUDED
-#define MEGAMOLCORE_PARTICLELISTMERGEMODULE_H_INCLUDED
 #pragma once
 
 #include "datatools/AbstractParticleManipulator.h"
@@ -93,5 +91,3 @@ private:
     vislib::RawStorage data;
 };
 } // namespace megamol::datatools_gl::misc
-
-#endif /* MEGAMOLCORE_PARTICLELISTMERGEMODULE_H_INCLUDED */

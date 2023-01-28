@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef THREE_DIMENSIONAL_UI_RENDERER_H_INCLUDED
-#define THREE_DIMENSIONAL_UI_RENDERER_H_INCLUDED
+#pragma once
 
 #include <array>
 #include <list>
@@ -81,5 +80,3 @@ private:
 };
 
 } // namespace megamol::mesh_gl
-
-#endif // !THREE_DIMENSIONAL_UI_RENDERER_H_INCLUDED

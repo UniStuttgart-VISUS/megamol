@@ -1,5 +1,3 @@
-#ifndef THE_GRAPHICS_CAMERA_ROTATE_MANIPULATOR_H_INCLUDED
-#define THE_GRAPHICS_CAMERA_ROTATE_MANIPULATOR_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -127,4 +125,3 @@ private:
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif

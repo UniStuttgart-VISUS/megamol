@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_OVERRIDEPARTICLEBBOX_H_INCLUDED
-#define MEGAMOLCORE_OVERRIDEPARTICLEBBOX_H_INCLUDED
 #pragma once
 
 #include "datatools/AbstractParticleManipulator.h"
@@ -59,5 +57,3 @@ private:
 };
 
 } // namespace megamol::datatools
-
-#endif /* MEGAMOLCORE_OVERRIDEPARTICLEBBOX_H_INCLUDED */

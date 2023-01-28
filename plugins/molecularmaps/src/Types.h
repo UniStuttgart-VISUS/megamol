@@ -4,8 +4,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMMOLMAPPLG_TYPES_H_INCLUDED
-#define MMMOLMAPPLG_TYPES_H_INCLUDED
 #pragma once
 
 #include "helper_includes/helper_cuda.h"
@@ -837,5 +835,3 @@ enum MeshMode {
     MESH_SPHERE = MESH_CUT + 1,
     MESH_MAP = MESH_SPHERE + 1
 };
-
-#endif /* MMMOLMAPPLG_TYPES_H_INCLUDED */

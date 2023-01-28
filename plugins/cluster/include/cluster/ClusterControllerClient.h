@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CLUSTERCONTROLLERCLIENT_H_INCLUDED
-#define MEGAMOLCORE_CLUSTERCONTROLLERCLIENT_H_INCLUDED
 #pragma once
 
 #include "cluster/ClusterController.h"
@@ -190,5 +188,3 @@ private:
 
 
 } // namespace megamol::core::cluster
-
-#endif /* MEGAMOLCORE_CLUSTERCONTROLLERCLIENT_H_INCLUDED */

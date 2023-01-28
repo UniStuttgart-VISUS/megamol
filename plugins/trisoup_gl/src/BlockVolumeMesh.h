@@ -6,8 +6,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMTRISOUPPLG_BLOCKVOLUMEMESH_H_INCLUDED
-#define MMTRISOUPPLG_BLOCKVOLUMEMESH_H_INCLUDED
 #pragma once
 
 #include "AbstractTriMeshDataSource.h"
@@ -68,5 +66,3 @@ private:
 };
 
 } // namespace megamol::trisoup_gl
-
-#endif /* MMTRISOUPPLG_BLOCKVOLUMEMESH_H_INCLUDED */

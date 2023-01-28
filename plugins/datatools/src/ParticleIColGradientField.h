@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_PARTICLEICOLGRADIENTFIELD_H_INCLUDED
-#define MEGAMOLCORE_PARTICLEICOLGRADIENTFIELD_H_INCLUDED
 #pragma once
 
 #include "datatools/AbstractParticleManipulator.h"
@@ -68,5 +66,3 @@ private:
 };
 
 } // namespace megamol::datatools
-
-#endif /* MEGAMOLCORE_PARTICLEICOLGRADIENTFIELD_H_INCLUDED */

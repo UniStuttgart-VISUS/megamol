@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_CORPORATEGREYSTYLE_INCLUDED
-#define MEGAMOL_GUI_CORPORATEGREYSTYLE_INCLUDED
 #pragma once
 
 
@@ -100,5 +98,3 @@ inline void CorporateGreyStyle(int is3D = 0) {
     }
 #endif
 }
-
-#endif // MEGAMOL_GUI_CORPORATEGREYSTYLE_INCLUDED

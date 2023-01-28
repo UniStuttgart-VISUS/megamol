@@ -1,5 +1,3 @@
-#ifndef MMPROTEINPLUGIN_PROTEINHELPERS_H_INCLUDED
-#define MMPROTEINPLUGIN_PROTEINHELPERS_H_INCLUDED
 #pragma once
 
 #include "glm/glm.hpp"
@@ -446,5 +444,3 @@ inline float GetHydrophibicityByResName(std::string resName) {
 }
 
 } // namespace megamol::protein_calls
-
-#endif

@@ -6,8 +6,7 @@
  * All rights reserved.
  */
 
-#ifndef ABSTRACT_MESH_DATA_SOURCE_H_INCLUDED
-#define ABSTRACT_MESH_DATA_SOURCE_H_INCLUDED
+#pragma once
 
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
@@ -73,6 +72,3 @@ protected:
 };
 
 } // namespace megamol::mesh
-
-
-#endif // !ABSTRACT_MESH_DATA_SOURCE_H_INCLUDED

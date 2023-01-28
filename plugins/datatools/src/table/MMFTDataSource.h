@@ -4,8 +4,7 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOL_DATATOOLS_MMFTDATASOURCE_H_INCLUDED
-#define MEGAMOL_DATATOOLS_MMFTDATASOURCE_H_INCLUDED
+#pragma once
 
 #include <vector>
 
@@ -56,5 +55,3 @@ private:
 };
 
 } // namespace megamol::datatools::table
-
-#endif // MEGAMOL_DATATOOLS_MMFTDATASOURCE_H_INCLUDED

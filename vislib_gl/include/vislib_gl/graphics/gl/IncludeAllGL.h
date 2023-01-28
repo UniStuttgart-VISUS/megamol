@@ -1,5 +1,3 @@
-#ifndef INCLUDEALLGL_H_INCLUDED
-#define INCLUDEALLGL_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -39,6 +37,3 @@ inline void LoadAllGL() {
 }
 
 } // namespace vislib_gl::graphics::gl
-
-
-#endif /* INCLUDEALLGL_H_INCLUDED */

@@ -1,5 +1,3 @@
-#ifndef MEGAMOL_DATATOOLS_FLOATTABLEOBSERVERPLANE_H_INCLUDED
-#define MEGAMOL_DATATOOLS_FLOATTABLEOBSERVERPLANE_H_INCLUDED
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
@@ -144,5 +142,3 @@ private:
 };
 
 } // namespace megamol::datatools::table
-
-#endif /* MEGAMOL_DATATOOLS_FLOATTABLEOBSERVERPLANE_H_INCLUDED */

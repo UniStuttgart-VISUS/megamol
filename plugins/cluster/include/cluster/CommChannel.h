@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_COMMCHANNEL_H_INCLUDED
-#define MEGAMOLCORE_COMMCHANNEL_H_INCLUDED
 #pragma once
 
 #include "vislib/Listenable.h"
@@ -234,5 +232,3 @@ private:
 
 
 } // namespace megamol::core::cluster
-
-#endif /* MEGAMOLCORE_COMMCHANNEL_H_INCLUDED */

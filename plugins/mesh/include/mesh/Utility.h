@@ -3,8 +3,7 @@
  * Copyright (C) 2020 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MESH_UTILITY_H_INCLUDED
-#define MESH_UTILITY_H_INCLUDED
+#pragma once
 
 #include <array>
 #include <tuple>
@@ -22,5 +21,3 @@ std::tuple<VertexPositions, VertexNormals, QuadIndices> tessellateFace(
     glm::vec3 v00, glm::vec3 v10, glm::vec3 v11, glm::vec3 v01, unsigned int u_subdivs, unsigned int v_subdivs);
 
 } // namespace megamol::mesh::utility
-
-#endif // !MESH_UTILITY_H_INCLUDED

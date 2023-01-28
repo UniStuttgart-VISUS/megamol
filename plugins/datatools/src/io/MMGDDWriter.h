@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_IO_MMGDDWRITER_H_INCLUDED
-#define MEGAMOL_DATATOOLS_IO_MMGDDWRITER_H_INCLUDED
 #pragma once
 
 #include "datatools/GraphDataCall.h"
@@ -51,5 +49,3 @@ private:
 };
 
 } // namespace megamol::datatools::io
-
-#endif /* MEGAMOLCORE_MMPLDWRITER_H_INCLUDED */

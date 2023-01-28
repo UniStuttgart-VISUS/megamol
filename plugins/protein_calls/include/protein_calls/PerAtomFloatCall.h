@@ -5,8 +5,6 @@
 // All rights reserved.
 //
 
-#ifndef MMMOLMAPPLG_PERATOMFLOATCALL_H_INCLUDED
-#define MMMOLMAPPLG_PERATOMFLOATCALL_H_INCLUDED
 #pragma once
 
 #include "MolecularDataCall.h"
@@ -134,5 +132,3 @@ private:
 typedef megamol::core::factories::CallAutoDescription<PerAtomFloatCall> PerAtomFloatCallDescription;
 
 } // namespace megamol::protein_calls
-
-#endif // MMMOLMAPPLG_PERATOMFLOATCALL_H_INCLUDED

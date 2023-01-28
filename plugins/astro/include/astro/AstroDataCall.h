@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_ASTRODATACALL_H_INCLUDED
-#define MEGAMOLCORE_ASTRODATACALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
@@ -660,5 +658,3 @@ private:
 typedef megamol::core::factories::CallAutoDescription<AstroDataCall> AstroDataCallDescription;
 
 } // namespace megamol::astro
-
-#endif

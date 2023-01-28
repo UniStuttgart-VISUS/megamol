@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
-#define MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
 #pragma once
 
 
@@ -85,5 +83,3 @@ private:
 };
 
 } // namespace megamol::cinematic
-
-#endif // MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED

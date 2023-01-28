@@ -5,8 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_EVENT_STORAGE_H_INCLUDED
-#define MEGAMOL_EVENT_STORAGE_H_INCLUDED
+#pragma once
 
 #include "FrameStatistics.h"
 #include "mmcore/CalleeSlot.h"
@@ -98,5 +97,3 @@ private:
 };
 
 } // namespace megamol::core
-
-#endif // !MEGAMOL_EVENT_STORAGE_H_INCLUDED

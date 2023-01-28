@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef COMPOSITING_CALLS_H_INCLUDED
-#define COMPOSITING_CALLS_H_INCLUDED
+#pragma once
 
 #include <memory>
 
@@ -65,6 +64,3 @@ typedef megamol::core::factories::CallAutoDescription<CallCamera> CallCameraDesc
 typedef megamol::core::factories::CallAutoDescription<CallFramebufferGL> CallFramebufferGLDescription;
 
 } // namespace megamol::compositing_gl
-
-
-#endif // !COMPOSITING_CALLS_H_INCLUDED

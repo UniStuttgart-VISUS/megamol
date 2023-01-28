@@ -1,5 +1,3 @@
-#ifndef MEGAMOLCORE_MARCHINGSQUARETABLES_H_INCLUDED
-#define MEGAMOLCORE_MARCHINGSQUARETABLES_H_INCLUDED
 #pragma once
 
 namespace megamol::trisoup::volumetrics {
@@ -17,5 +15,3 @@ public:
 };
 
 } // namespace megamol::trisoup::volumetrics
-
-#endif /* MEGAMOLCORE_MARCHINGSQUARETABLES_H_INCLUDED */

@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLPROTEIN_SPLITMERGEFEATURE_H_INCLUDED
-#define MEGAMOLPROTEIN_SPLITMERGEFEATURE_H_INCLUDED
 #pragma once
 
 #include "protein_calls/SplitMergeCall.h"
@@ -94,5 +92,3 @@ private:
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif // MEGAMOLPROTEIN_SPLITMERGEFEATURE_H_INCLUDED

@@ -7,8 +7,6 @@
  */
 
 
-#ifndef MEGAMOL_PROTEIN_CALL_DIAGRAMCALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALL_DIAGRAMCALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -688,5 +686,3 @@ private:
 typedef megamol::core::factories::CallAutoDescription<DiagramCall> DiagramCallDescription;
 
 } // namespace megamol::protein_calls
-
-#endif /* MEGAMOL_PROTEIN_CALL_DIAGRAMCALL_H_INCLUDED */

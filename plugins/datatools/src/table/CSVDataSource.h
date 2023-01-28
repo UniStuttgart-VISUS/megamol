@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_CSVDATASOURCE_H_INCLUDED
-#define MEGAMOL_DATATOOLS_CSVDATASOURCE_H_INCLUDED
 #pragma once
 
 #include "datatools/table/TableDataCall.h"
@@ -64,5 +62,3 @@ private:
 };
 
 } // namespace megamol::datatools::table
-
-#endif /* MEGAMOL_LSP_CSVDATASOURCE_H_INCLUDED */

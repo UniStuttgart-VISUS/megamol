@@ -4,8 +4,7 @@
  * All rights reserved. Alle Rechte vorbehalten.
  */
 
-#ifndef MMCORE_SPECIAL_STUBMODULE_H_INCLUDED
-#define MMCORE_SPECIAL_STUBMODULE_H_INCLUDED
+#pragma once
 
 #include "PluginsResource.h"
 #include "mmcore/Call.h"
@@ -93,5 +92,3 @@ private:
 }; /* end class StubModule */
 
 } // namespace megamol::core::special
-
-#endif // end ifndef MMCORE_SPECIAL_STUBMODULE_H_INCLUDED

@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_MMPGDDATASOURCE_H_INCLUDED
-#define MEGAMOLCORE_MMPGDDATASOURCE_H_INCLUDED
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
@@ -225,4 +223,3 @@ private:
 };
 
 } // namespace megamol::moldyn::io
-#endif /* MEGAMOLCORE_MMPGDDATASOURCE_H_INCLUDED */

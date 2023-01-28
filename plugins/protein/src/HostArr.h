@@ -8,8 +8,7 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_HOSTARR_H_INCLUDED
-#define MMPROTEINPLUGIN_HOSTARR_H_INCLUDED
+#pragma once
 
 #include <cstdlib>
 
@@ -113,5 +112,3 @@ private:
 };
 
 } // namespace megamol::protein
-
-#endif // MMPROTEINPLUGIN_HOSTARR_H_INCLUDED

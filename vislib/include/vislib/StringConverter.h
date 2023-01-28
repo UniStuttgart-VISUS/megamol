@@ -4,8 +4,6 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_STRINGCONVERTER_H_INCLUDED
-#define VISLIB_STRINGCONVERTER_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -183,4 +181,3 @@ StringConverter<S, T, B>& StringConverter<S, T, B>::operator=(const StringConver
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_STRINGCONVERTER_H_INCLUDED */

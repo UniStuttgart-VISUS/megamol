@@ -8,8 +8,6 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_GRIDPARAMS_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_GRIDPARAMS_H_INCLUDED
 #pragma once
 
 struct gridParams {
@@ -18,5 +16,3 @@ struct gridParams {
     float delta[3];
     unsigned int size[3];
 };
-
-#endif // MMPROTEINCUDAPLUGIN_GRIDPARAMS_H_INCLUDED

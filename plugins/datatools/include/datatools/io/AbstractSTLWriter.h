@@ -4,8 +4,6 @@
  * Copyright (C) 2018 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_DATATOOLS_IO_ABSTRACTSTLWRITER_H_INCLUDED
-#define MEGAMOL_DATATOOLS_IO_ABSTRACTSTLWRITER_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -549,5 +547,3 @@ private:
     std::size_t increment;
 };
 } // namespace megamol::datatools::io
-
-#endif // !MEGAMOL_DATATOOLS_IO_ABSTRACTSTLWRITER_H_INCLUDED

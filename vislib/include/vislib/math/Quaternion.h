@@ -5,8 +5,6 @@
  */
 
 
-#ifndef VISLIB_QUATERNION_H_INCLUDED
-#define VISLIB_QUATERNION_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -145,4 +143,3 @@ Quaternion<T>::~Quaternion() {}
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_QUATERNION_H_INCLUDED */

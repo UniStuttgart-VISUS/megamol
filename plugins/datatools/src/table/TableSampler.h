@@ -5,8 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLESAMPLER_H_INCLUDED
-#define MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLESAMPLER_H_INCLUDED
+#pragma once
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -88,5 +87,3 @@ private:
 };
 
 } // namespace megamol::datatools::table
-
-#endif /* MEGAMOL_DATATOOLS_FLOATTABLE_FLOATTABLESAMPLER_H_INCLUDED */

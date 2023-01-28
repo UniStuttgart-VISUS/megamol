@@ -4,8 +4,6 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_GRAPHICSTYPES_H_INCLUDED
-#define VISLIB_GRAPHICSTYPES_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -90,4 +88,3 @@ typedef math::ViewFrustum<SceneSpaceType> SceneSpaceViewFrustum;
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_CAMERA_H_INCLUDED */

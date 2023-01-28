@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SIMPLEMESSAGEHEADERDATA_H_INCLUDED
-#define VISLIB_SIMPLEMESSAGEHEADERDATA_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -50,4 +48,3 @@ extern const SimpleMessageID VLSNP1_FIRST_RESERVED_MESSAGE_ID;
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SIMPLEMESSAGEHEADERDATA_H_INCLUDED */

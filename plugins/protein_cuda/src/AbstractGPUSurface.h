@@ -8,8 +8,6 @@
 // Author     : scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_ABSTRACTGPUSURFACE_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_ABSTRACTGPUSURFACE_H_INCLUDED
 #pragma once
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
@@ -174,5 +172,3 @@ private:
 
 } // namespace protein_cuda
 } // namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_ABSTRACTGPUSURFACE_H_INCLUDED

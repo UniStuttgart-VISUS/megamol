@@ -6,8 +6,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_IPHOSTENTRY_H_INCLUDED
-#define VISLIB_IPHOSTENTRY_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -281,4 +279,3 @@ typedef IPHostEntry<TCharTraits> TIPHostEntry;
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_IPHOSTENTRY_H_INCLUDED */

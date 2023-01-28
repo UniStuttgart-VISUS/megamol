@@ -3,8 +3,7 @@
  * Copyright (c) 2019, MegaMol Dev Team
  * All rights reserved.
  */
-#ifndef MEGAMOLCORE_IMAGELOADER_H_INCLUDED
-#define MEGAMOLCORE_IMAGELOADER_H_INCLUDED
+#pragma once
 
 #include <atomic>
 #include <condition_variable>
@@ -184,5 +183,3 @@ private:
 };
 
 } // namespace megamol::image_gl
-
-#endif // !MEGAMOLCORE_IMAGELOADER_H_INCLUDED

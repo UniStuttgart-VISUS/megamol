@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_MMSPDHEADER_H_INCLUDED
-#define MEGAMOLCORE_MMSPDHEADER_H_INCLUDED
 #pragma once
 
 #include "vislib/Array.h"
@@ -466,5 +464,3 @@ private:
 
 
 } // namespace megamol::moldyn::io
-
-#endif /* MEGAMOLCORE_MMSPDHEADER_H_INCLUDED */

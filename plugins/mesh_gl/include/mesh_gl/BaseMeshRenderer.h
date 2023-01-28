@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef BASE_MESH_RENDERER_H_INCLUDED
-#define BASE_MESH_RENDERER_H_INCLUDED
+#pragma once
 
 #include "mmcore/CallerSlot.h"
 
@@ -97,5 +96,3 @@ inline bool BaseMeshRenderer::updateMeshCollection() {
 }
 
 } // namespace megamol::mesh_gl
-
-#endif // !BASE_MESH_RENDERER_H_INCLUDED

@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_IO_MMGDDDATASOURCE_H_INCLUDED
-#define MEGAMOL_DATATOOLS_IO_MMGDDDATASOURCE_H_INCLUDED
 #pragma once
 
 #include "datatools/GraphDataCall.h"
@@ -119,5 +117,3 @@ protected:
 };
 
 } // namespace megamol::datatools::io
-
-#endif /* MEGAMOL_DATATOOLS_IO_MMGDDDATASOURCE_H_INCLUDED */

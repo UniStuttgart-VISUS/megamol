@@ -5,8 +5,6 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_MDDRIVERCONNECTOR_H_INCLUDED
-#define MMPROTEINPLUGIN_MDDRIVERCONNECTOR_H_INCLUDED
 #pragma once
 
 #include "mmcore/param/ParamSlot.h"
@@ -331,5 +329,3 @@ private:
 };
 
 } // namespace megamol::protein
-
-#endif // MMPROTEINPLUGIN_MDDRIVERCONNECTOR_H_INCLUDED

@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_ASTROPARTICLECONVERTER_H_INCLUDED
-#define MEGAMOLCORE_ASTROPARTICLECONVERTER_H_INCLUDED
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
@@ -111,5 +109,3 @@ private:
 };
 
 } // namespace megamol::astro
-
-#endif /* MEGAMOLCORE_ASTROPARTICLECONVERTER_H_INCLUDED */

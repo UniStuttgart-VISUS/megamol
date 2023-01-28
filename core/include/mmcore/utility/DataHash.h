@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_DATAHASH_H_INCLUDED
-#define MEGAMOLCORE_DATAHASH_H_INCLUDED
 #pragma once
 
 namespace megamol::core::utility {
@@ -57,5 +55,3 @@ uint32_t DataHash(const T& first, const U& second, const Targs&... values) {
     return DataHash(first, DataHash(second, values...));
 }
 } // namespace megamol::core::utility
-
-#endif

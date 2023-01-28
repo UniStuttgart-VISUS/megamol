@@ -3,8 +3,6 @@
  * Copyright (C) 2006-2019 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMPROTEINPLUGIN_TUNNELTOPARTICLES_H_INCLUDED
-#define MMPROTEINPLUGIN_TUNNELTOPARTICLES_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -81,5 +79,3 @@ private:
 };
 
 } // namespace megamol::protein
-
-#endif

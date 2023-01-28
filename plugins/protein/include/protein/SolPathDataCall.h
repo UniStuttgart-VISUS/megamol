@@ -4,8 +4,6 @@
  * Copyright (C) 2010 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_PROTEIN_SOLPATHDATACALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_SOLPATHDATACALL_H_INCLUDED
 #pragma once
 
 #include "mmstd/data/AbstractGetData3DCall.h"
@@ -253,5 +251,3 @@ private:
 };
 
 } // namespace megamol::protein
-
-#endif /*  MEGAMOL_PROTEIN_SOLPATHDATACALL_H_INCLUDED */

@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_HOTKEYEDITOR_H_INCLUDED
-#define MEGAMOL_GUI_HOTKEYEDITOR_H_INCLUDED
 #pragma once
 
 
@@ -58,5 +56,3 @@ private:
 
 
 } // namespace megamol::gui
-
-#endif // MEGAMOL_GUI_HOTKEYEDITOR_H_INCLUDED

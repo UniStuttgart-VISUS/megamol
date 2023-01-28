@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MMVTKM_VTKMDATASOURCE_H_INCLUDED
-#define MEGAMOL_MMVTKM_VTKMDATASOURCE_H_INCLUDED
 #pragma once
 
 
@@ -132,5 +130,3 @@ private:
 };
 
 } // namespace megamol::mmvtkm
-
-#endif /* MEGAMOL_MMVTKM_VTKMDATASOURCE_H_INCLUDED */

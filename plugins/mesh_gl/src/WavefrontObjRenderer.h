@@ -4,8 +4,7 @@
  * All rights reserved.
  */
 
-#ifndef WAVEFRONT_OBJ_RENDERER_H_INCLUDED
-#define WAVEFRONT_OBJ_RENDERER_H_INCLUDED
+#pragma once
 
 #include "mesh_gl/BaseMeshRenderer.h"
 
@@ -43,5 +42,3 @@ private:
 };
 
 } // namespace megamol::mesh_gl
-
-#endif // !WAVEFRONT_OBJ_RENDERER_H_INCLUDED

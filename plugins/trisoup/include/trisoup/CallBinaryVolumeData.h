@@ -6,8 +6,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMTRISOUPPLG_CALLBINARYVOLUMEDATAA_H_INCLUDED
-#define MMTRISOUPPLG_CALLBINARYVOLUMEDATAA_H_INCLUDED
 #pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
@@ -215,5 +213,3 @@ private:
 typedef core::factories::CallAutoDescription<CallBinaryVolumeData> CallBinaryVolumeDataDescription;
 
 } // namespace megamol::trisoup
-
-#endif /* MMTRISOUPPLG_CALLBINARYVOLUMEDATAA_H_INCLUDED */

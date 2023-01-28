@@ -6,8 +6,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMMOLMAPPLG_SOLVENTCOUNTER_H_INCLUDED
-#define MMMOLMAPPLG_SOLVENTCOUNTER_H_INCLUDED
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
@@ -118,5 +116,3 @@ private:
 };
 
 } // namespace megamol::protein
-
-#endif /* MMMOLMAPPLG_SolventCounter_H_INCLUDED */

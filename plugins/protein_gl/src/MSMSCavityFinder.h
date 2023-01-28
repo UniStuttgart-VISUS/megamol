@@ -3,8 +3,6 @@
  * Copyright (C) 2006-2018 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMPROTEINPLUGIN_MSMSCAVITYFINDER_H_INCLUDED
-#define MMPROTEINPLUGIN_MSMSCAVITYFINDER_H_INCLUDED
 #pragma once
 
 #include "protein_calls/ProteinHelpers.h"
@@ -109,5 +107,3 @@ private:
 };
 
 } // namespace megamol::protein_gl
-
-#endif

@@ -5,8 +5,6 @@
  * Copyright (C) 2005 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_VECTOR_H_INCLUDED
-#define VISLIB_VECTOR_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -519,4 +517,3 @@ bool operator>(Vector<T, D> const& lhs, Vector<T, D> const& rhs) {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_VECTOR_H_INCLUDED */

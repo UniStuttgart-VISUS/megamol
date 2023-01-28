@@ -5,8 +5,6 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOL_PROTEIN_CALL_MOLECULARDATACALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALL_MOLECULARDATACALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -1850,5 +1848,3 @@ typedef megamol::core::factories::CallAutoDescription<MolecularDataCall> Molecul
 
 
 } // namespace megamol::protein_calls
-
-#endif /* MEGAMOL_PROTEIN_CALL_MOLECULARDATACALL_H_INCLUDED */

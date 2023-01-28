@@ -4,8 +4,6 @@
  * Copyright (C) 2008 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_CONSTITERATOR_H_INCLUDED
-#define VISLIB_CONSTITERATOR_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -144,4 +142,3 @@ ConstIterator<I>& ConstIterator<I>::operator=(const ConstIterator<I>& rhs) {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_CONSTITERATOR_H_INCLUDED */

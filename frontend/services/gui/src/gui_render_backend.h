@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GUIRENDERBACKEND_H_INCLUDED
-#define MEGAMOL_GUI_GUIRENDERBACKEND_H_INCLUDED
 #pragma once
 
 #include <memory>
@@ -90,5 +88,3 @@ private:
 
 
 } // namespace megamol::gui
-
-#endif // MEGAMOL_GUI_GUIRENDERBACKEND_H_INCLUDED

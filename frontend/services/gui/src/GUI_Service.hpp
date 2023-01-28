@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_SERVICE_HPP_INCLUDED
-#define MEGAMOL_GUI_SERVICE_HPP_INCLUDED
 #pragma once
 
 
@@ -105,5 +103,3 @@ private:
 };
 
 } // namespace megamol::frontend
-
-#endif // MEGAMOL_GUI_SERVICE_HPP_INCLUDED

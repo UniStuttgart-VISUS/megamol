@@ -4,8 +4,6 @@
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_GLFUNCTIONS_H_INCLUDED
-#define VISLIB_GLFUNCTIONS_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -88,4 +86,3 @@ bool IsVSyncEnabled(bool* error = NULL);
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_GLFUNCTIONS_H_INCLUDED */

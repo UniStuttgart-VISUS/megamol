@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GEOMETRY_CALLS_LINESDATACALL_H_INCLUDED
-#define MEGAMOL_GEOMETRY_CALLS_LINESDATACALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
@@ -698,5 +696,3 @@ typedef megamol::core::factories::CallAutoDescription<LinesDataCall> LinesDataCa
 
 
 } // namespace megamol::geocalls
-
-#endif /* MEGAMOL_GEOMETRY_CALLS_LINESDATACALL_H_INCLUDED */

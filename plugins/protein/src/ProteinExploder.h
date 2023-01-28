@@ -5,8 +5,7 @@
 // All rights reserved.
 //
 
-#ifndef MMPROTEINPLUGIN_PROTEINEXPLODER_H_INCLUDED
-#define MMPROTEINPLUGIN_PROTEINEXPLODER_H_INCLUDED
+#pragma once
 
 #include "geometry_calls/LinesDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -286,5 +285,3 @@ private:
     std::vector<vislib::math::Vector<float, 3>> displacedMoleculeMiddles;
 };
 } // namespace megamol::protein
-
-#endif // MMPROTEINPLUGIN_PROTEINEXPLODER_H_INCLUDED

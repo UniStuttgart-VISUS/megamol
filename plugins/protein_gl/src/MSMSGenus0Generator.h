@@ -6,8 +6,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMMOLMAPPLG_MSMSGENUS0GENERATOR_H_INCLUDED
-#define MMMOLMAPPLG_MSMSGENUS0GENERATOR_H_INCLUDED
 #pragma once
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
@@ -183,5 +181,3 @@ private:
 };
 
 } // namespace megamol::protein_gl
-
-#endif /* MMMOLMAPPLG_MSMSMESHLOADER_H_INCLUDED */

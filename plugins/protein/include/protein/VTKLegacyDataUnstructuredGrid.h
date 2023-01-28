@@ -8,8 +8,6 @@
 // Author     : scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VTKLEGACYDATAUNSTRUCTUREDGRID_H_INCLUDED
-#define MMPROTEINPLUGIN_VTKLEGACYDATAUNSTRUCTUREDGRID_H_INCLUDED
 #pragma once
 
 #include "protein/AbstractVTKLegacyData.h"
@@ -246,5 +244,3 @@ private:
 };
 
 } // namespace megamol::protein
-
-#endif // MMPROTEINPLUGIN_VTKLEGACYDATAUNSTRUCTUREDGRID_H_INCLUDED

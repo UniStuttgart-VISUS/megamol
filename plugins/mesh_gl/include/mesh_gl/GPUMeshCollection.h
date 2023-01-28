@@ -5,8 +5,6 @@
  * All rights reserved.
  */
 
-#ifndef GPU_MESH_DATA_STORAGE_H_INCLUDED
-#define GPU_MESH_DATA_STORAGE_H_INCLUDED
 #pragma once
 
 #include <algorithm>
@@ -393,5 +391,3 @@ inline std::unordered_map<std::string, GPUMeshCollection::SubMeshData> const& GP
 }
 
 } // namespace megamol::mesh_gl
-
-#endif // !GPU_MESH_DATA_STORAGE_H_INCLUDED

@@ -1,5 +1,4 @@
-#ifndef MEGAMOL_INFOVIS_DIAGRAMSERIESCALL_H_INCLUDED
-#define MEGAMOL_INFOVIS_DIAGRAMSERIESCALL_H_INCLUDED
+#pragma once
 
 #include <array>
 #include <functional>
@@ -103,5 +102,3 @@ private:
 typedef core::factories::CallAutoDescription<DiagramSeriesCall> DiagramSeriesCallDescription;
 
 } // namespace megamol::infovis
-
-#endif /* end ifndef MEGAMOL_INFOVIS_DIAGRAMSERIESCALL_H_INCLUDED */

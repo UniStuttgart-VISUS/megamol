@@ -5,8 +5,6 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_SOLVENTHYDROBONDGENERATOR_H_INCLUDED
-#define MMPROTEINPLUGIN_SOLVENTHYDROBONDGENERATOR_H_INCLUDED
 #pragma once
 
 #include "Stride.h"
@@ -210,5 +208,3 @@ private:
 
 
 } // namespace megamol::protein
-
-#endif // MMPROTEINPLUGIN_SOLVENTHYDROBONDGENERATOR_H_INCLUDED

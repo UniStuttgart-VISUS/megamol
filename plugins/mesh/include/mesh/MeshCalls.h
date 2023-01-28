@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef MESH_CALLS_H_INCLUDED
-#define MESH_CALLS_H_INCLUDED
+#pragma once
 
 #include "mmstd/generic/CallGeneric.h"
 
@@ -83,6 +82,3 @@ typedef megamol::core::factories::CallAutoDescription<CallMesh> CallMeshDescript
 typedef megamol::core::factories::CallAutoDescription<CallImage> CallImageDescription;
 
 } // namespace megamol::mesh
-
-
-#endif // !MESH_CALLS_H_INCLUDED

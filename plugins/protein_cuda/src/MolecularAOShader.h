@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMPROTEINCUDAPLUGIN_MOLECULARAOSHADER_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_MOLECULARAOSHADER_H_INCLUDED
 #pragma once
 
 #include "protein_calls/MolecularDataCall.h"
@@ -69,5 +67,3 @@ private:
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif /* MMPROTEINCUDAPLUGIN_MOLECULARAOSHADER_H_INCLUDED */

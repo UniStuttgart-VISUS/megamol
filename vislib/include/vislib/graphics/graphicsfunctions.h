@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_GRAPHICSFUNCTIONS_H_INCLUDED
-#define VISLIB_GRAPHICSFUNCTIONS_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -79,4 +77,3 @@ void FlatPolygonSort(Array<math::Point<T, 3>>& polygon) {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_GRAPHICSFUNCTIONS_H_INCLUDED */

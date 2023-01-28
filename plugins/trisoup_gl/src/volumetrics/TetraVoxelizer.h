@@ -1,5 +1,3 @@
-#ifndef MEGAMOLCORE_TETRAVOXELIZER_H_INCLUDED
-#define MEGAMOLCORE_TETRAVOXELIZER_H_INCLUDED
 #pragma once
 
 #include "trisoup/volumetrics/JobStructures.h"
@@ -87,5 +85,3 @@ private:
 };
 
 } // namespace megamol::trisoup_gl::volumetrics
-
-#endif /* MEGAMOLCORE_TETRAVOXELIZER_H_INCLUDED */

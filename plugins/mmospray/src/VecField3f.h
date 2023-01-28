@@ -5,8 +5,7 @@
 // All rights reserved.
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_VECFIELD3D_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_VECFIELD3D_H_INCLUDED
+#pragma once
 
 #ifdef WITH_CUDA
 #include "CUDAFieldTopology.cuh"
@@ -338,5 +337,3 @@ private:
 };
 
 } // namespace megamol::ospray
-
-#endif // MMPROTEINCUDAPLUGIN_VECFIELD3D_H_INCLUDED

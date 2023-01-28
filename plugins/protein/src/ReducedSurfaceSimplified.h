@@ -4,11 +4,7 @@
  * Copyright (C) 2008 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_REDUCEDSURFACESIMPLE_H_INCLUDED
-#define MEGAMOL_REDUCEDSURFACESIMPLE_H_INCLUDED
-#if (_MSC_VER > 1000)
 #pragma once
-#endif /* (_MSC_VER > 1000) */
 
 #include "protein_calls/MolecularDataCall.h"
 #include "vislib/math/Quaternion.h"
@@ -615,5 +611,3 @@ private:
 };
 
 } // namespace megamol::protein
-
-#endif /* MEGAMOL_REDUCEDSURFACESIMPLE_H_INCLUDED */

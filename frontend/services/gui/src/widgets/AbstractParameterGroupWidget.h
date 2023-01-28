@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_ABSTARCTPARAMETERGROUPWIDGET_INCLUDED
-#define MEGAMOL_GUI_ABSTARCTPARAMETERGROUPWIDGET_INCLUDED
 #pragma once
 
 
@@ -61,5 +59,3 @@ protected:
 
 
 } // namespace megamol::gui
-
-#endif // MEGAMOL_GUI_ABSTARCTPARAMETERGROUPWIDGET_INCLUDED

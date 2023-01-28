@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_BSPLINE_H_INCLUDED
-#define MEGAMOL_BSPLINE_H_INCLUDED
 #pragma once
 
 #include "vislib/Array.h"
@@ -56,5 +54,3 @@ public:
 };
 
 } // namespace megamol::protein
-
-#endif /* MEGAMOL_BSPLINE_H_INCLUDED */

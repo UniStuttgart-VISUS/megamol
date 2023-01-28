@@ -8,8 +8,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_VIEWFRUSTUM_H_INCLUDED
-#define VISLIB_VIEWFRUSTUM_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -157,4 +155,3 @@ ViewFrustum<T>::~ViewFrustum() {}
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_VIEWFRUSTUM_H_INCLUDED */

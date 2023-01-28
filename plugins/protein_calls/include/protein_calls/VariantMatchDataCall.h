@@ -8,8 +8,6 @@
 //     Author: scharnkn
 //
 
-#ifndef MEGAMOL_PROTEIN_CALL_VARIANTMATCHDATACALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALL_VARIANTMATCHDATACALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -160,5 +158,3 @@ typedef core::factories::CallAutoDescription<VariantMatchDataCall> VariantMatchD
 
 
 } // namespace megamol::protein_calls
-
-#endif // MMPROTEINCALLSPLUGIN_VARIANTMATCHDATACALL_H_INCLUDED

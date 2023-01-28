@@ -4,8 +4,6 @@
  * Copyright (C) 2015 by MegaMol Team (TU Dresden)
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_STDMOLDYN_TCLMOLSELECTIONLOADER_H_INCLUDED
-#define MEGAMOL_STDMOLDYN_TCLMOLSELECTIONLOADER_H_INCLUDED
 #pragma once
 
 #include "geometry_calls/ParticleRelistCall.h"
@@ -58,5 +56,3 @@ private:
 };
 
 } // namespace megamol::moldyn::io
-
-#endif /* MEGAMOL_STDMOLDYN_TCLMOLSELECTIONLOADER_H_INCLUDED */

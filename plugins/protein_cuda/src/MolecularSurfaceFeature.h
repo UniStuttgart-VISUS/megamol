@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLPROTEIN_MOLSURFFEATURE_H_INCLUDED
-#define MEGAMOLPROTEIN_MOLSURFFEATURE_H_INCLUDED
 #pragma once
 
 #include "protein_calls/DiagramCall.h"
@@ -112,5 +110,3 @@ private:
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif // MEGAMOLPROTEIN_MOLSURFFEATURE_H_INCLUDED

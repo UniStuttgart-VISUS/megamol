@@ -7,8 +7,7 @@
 // $Id$
 //
 
-#ifndef MMPROTEINPLUGIN_OGL_ERROR_CHECK_H_INCLUDED
-#define MMPROTEINPLUGIN_OGL_ERROR_CHECK_H_INCLUDED
+#pragma once
 
 #include "mmcore/utility/log/Log.h"
 #include <GL/glu.h>
@@ -55,6 +54,3 @@ inline bool glSafeCall(GLenum err, const char* file, const int line) {
 #endif
     return false;
 }
-
-
-#endif // MMPROTEINPLUGIN_OGL_ERROR_CHECK_H_INCLUDED

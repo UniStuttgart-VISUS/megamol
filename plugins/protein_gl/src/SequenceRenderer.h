@@ -6,8 +6,6 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED
-#define MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED
 #pragma once
 
 //#define USE_SIMPLE_FONT
@@ -219,5 +217,3 @@ private:
 };
 
 } // namespace megamol::protein_gl
-
-#endif // MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED

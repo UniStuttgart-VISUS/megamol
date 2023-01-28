@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef MESH_BAKERY_H_INCLUDED
-#define MESH_BAKERY_H_INCLUDED
+#pragma once
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -87,5 +86,3 @@ private:
 };
 
 } // namespace megamol::mesh
-
-#endif // !MESH_BAKERY_H_INCLUDED

@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef BASE_RENDER_TASK_RENDERER_H_INCLUDED
-#define BASE_RENDER_TASK_RENDERER_H_INCLUDED
+#pragma once
 
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
@@ -183,5 +182,3 @@ inline void BaseRenderTaskRenderer::updateRenderTaskCollection(mmstd_gl::CallRen
 }
 
 } // namespace megamol::mesh_gl
-
-#endif // !BASE_RENDER_TASK_RENDERER_H_INCLUDED

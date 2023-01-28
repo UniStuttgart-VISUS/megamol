@@ -8,8 +8,6 @@
 // Author     : scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_DIFFUSIONSOLVER_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_DIFFUSIONSOLVER_H_INCLUDED
 #pragma once
 
 namespace megamol {
@@ -86,5 +84,3 @@ private:
 
 } // namespace protein_cuda
 } // namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_DIFFUSIONSOLVER_H_INCLUDED

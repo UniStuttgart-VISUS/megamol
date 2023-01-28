@@ -3,8 +3,6 @@
  * Copyright (C) 2006-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMMOLMAPPLG_COMPUTATIONS_H_INCLUDED
-#define MMMOLMAPPLG_COMPUTATIONS_H_INCLUDED
 #pragma once
 
 #include "Types.h"
@@ -304,5 +302,3 @@ private:
 
 } /* end namespace molecularmaps */
 } /* end namespace megamol */
-
-#endif /* MMMOLMAPPLG_COMPUTATIONS_H_INCLUDED */

@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_COLOURPARSER_H_INCLUDED
-#define MEGAMOLCORE_COLOURPARSER_H_INCLUDED
 #pragma once
 
 #include "vislib/String.h"
@@ -236,5 +234,3 @@ private:
 
 
 } // namespace megamol::core::utility
-
-#endif /* MEGAMOLCORE_COLOURPARSER_H_INCLUDED */

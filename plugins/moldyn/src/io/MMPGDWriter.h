@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_MMPGDWRITER_H_INCLUDED
-#define MEGAMOLCORE_MMPGDWRITER_H_INCLUDED
 #pragma once
 
 #include "mmcore/CallerSlot.h"
@@ -105,5 +103,3 @@ private:
 };
 
 } // namespace megamol::moldyn::io
-
-#endif /* MEGAMOLCORE_MMPGDWRITER_H_INCLUDED */

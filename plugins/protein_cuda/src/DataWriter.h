@@ -7,8 +7,6 @@
  * $Id$
  */
 
-#ifndef MMPROTEINCUDAPLUGIN_DATAWRITER_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_DATAWRITER_H_INCLUDED
 #pragma once
 
 #include "mmcore/CallerSlot.h"
@@ -270,5 +268,3 @@ private:
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif /* MMPROTEINCUDAPLUGIN_DATAWRITERJOB_H_INCLUDED */

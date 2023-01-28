@@ -5,8 +5,6 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_HYDROBONDFILTER_H_INCLUDED
-#define MMPROTEINPLUGIN_HYDROBONDFILTER_H_INCLUDED
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
@@ -198,5 +196,3 @@ private:
 };
 
 } // namespace megamol::protein
-
-#endif /* MMPROTEINPLUGIN_HYDROBONDGENERATOR_H_INCLUDED */

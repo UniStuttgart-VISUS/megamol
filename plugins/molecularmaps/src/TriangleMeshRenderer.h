@@ -3,8 +3,6 @@
  * Copyright (C) 2006-2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMMOLMAPPLG_TRIANGLEMESHRENDERER_H_INCLUDED
-#define MMMOLMAPPLG_TRIANGLEMESHRENDERER_H_INCLUDED
 #pragma once
 
 #include "AbstractLocalRenderer.h"
@@ -100,5 +98,3 @@ private:
 
 } /* end namespace molecularmaps */
 } /* end namespace megamol */
-
-#endif /* MMMOLMAPPLG_TRIANGLEMESHRENDERER_H_INCLUDED */

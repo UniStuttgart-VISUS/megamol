@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_MAPPABLEFLOATPAIR_H_INCLUDED
-#define MEGAMOLCORE_MAPPABLEFLOATPAIR_H_INCLUDED
 #pragma once
 
 #include "protein_calls/DiagramCall.h"
@@ -54,5 +52,3 @@ private:
 
 } /* namespace protein_cuda */
 } /* namespace megamol */
-
-#endif /* MEGAMOLCORE_MAPPABLEFLOATPAIR_H_INCLUDED */

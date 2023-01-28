@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_CINEMATIC_CALLKEYFRAMEKEEPER_H_INCLUDED
-#define MEGAMOL_CINEMATIC_CALLKEYFRAMEKEEPER_H_INCLUDED
 #pragma once
 
 
@@ -238,5 +236,3 @@ typedef core::factories::CallAutoDescription<CallKeyframeKeeper> CallKeyframeKee
 
 
 } // namespace megamol::cinematic
-
-#endif // MEGAMOL_CINEMATIC_CALLKEYFRAMEKEEPER_H_INCLUDED

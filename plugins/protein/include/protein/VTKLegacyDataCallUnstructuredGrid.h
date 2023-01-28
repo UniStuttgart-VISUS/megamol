@@ -8,8 +8,6 @@
 // Author     : scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED
-#define MMPROTEINPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED
 #pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
@@ -288,5 +286,3 @@ typedef core::factories::CallAutoDescription<VTKLegacyDataCallUnstructuredGrid>
     VTKLegacyDataCallUnstructuredGridDescription;
 
 } // namespace megamol::protein
-
-#endif // MMPROTEINPLUGIN_VTKDATACALLUNSTRUCTUREDGRID_H_INCLUDED

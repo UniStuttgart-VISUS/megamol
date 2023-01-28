@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SPHEREDATAUNIFIER_H_INCLUDED
-#define MEGAMOLCORE_SPHEREDATAUNIFIER_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -116,5 +114,3 @@ private:
 
 
 } // namespace megamol::datatools
-
-#endif /* MEGAMOLCORE_SPHEREDATAUNIFIER_H_INCLUDED */

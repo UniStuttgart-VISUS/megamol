@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_PARTICLEGRIDDATACALL_H_INCLUDED
-#define MEGAMOLCORE_PARTICLEGRIDDATACALL_H_INCLUDED
 #pragma once
 
 #include "geometry_calls/MultiParticleDataCall.h"
@@ -685,5 +683,3 @@ private:
 typedef core::factories::CallAutoDescription<ParticleGridDataCall> ParticleGridDataCallDescription;
 
 } // namespace megamol::moldyn
-
-#endif /* MEGAMOLCORE_PARTICLEGRIDDATACALL_H_INCLUDED */

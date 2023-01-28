@@ -4,8 +4,7 @@
  * All rights reserved.
  */
 
-#ifndef DEFERRED_GLTF_RENDERER_H_INCLUDED
-#define DEFERRED_GLTF_RENDERER_H_INCLUDED
+#pragma once
 
 #include "BaseGltfRenderer.h"
 
@@ -48,5 +47,3 @@ protected:
 };
 
 } // namespace megamol::mesh_gl
-
-#endif // !DEFERRED_GLTF_RENDERER_H_INCLUDED

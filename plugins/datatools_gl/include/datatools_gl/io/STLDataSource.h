@@ -4,8 +4,6 @@
  * Copyright (C) 2018 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_DATATOOLS_IO_STLDATASOURCE_H_INCLUDED
-#define MEGAMOL_DATATOOLS_IO_STLDATASOURCE_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -164,5 +162,3 @@ protected:
     std::shared_ptr<std::vector<unsigned int>> index_buffer;
 };
 } // namespace megamol::datatools_gl::io
-
-#endif // !MEGAMOL_DATATOOLS_IO_STLDATASOURCE_H_INCLUDED

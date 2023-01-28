@@ -1,5 +1,4 @@
-#ifndef MEGAMOL_INFOVIS_DIAGRAMSERIES_H_INCLUDED
-#define MEGAMOL_INFOVIS_DIAGRAMSERIES_H_INCLUDED
+#pragma once
 
 #include <array>
 #include <vector>
@@ -137,5 +136,3 @@ private:
 }; /* end class DiagramSeries */
 
 } // namespace megamol::infovis
-
-#endif /* end ifndef MEGAMOL_INFOVIS_DIAGRAMSERIES_H_INCLUDED */

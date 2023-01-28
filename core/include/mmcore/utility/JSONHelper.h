@@ -5,8 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_UTILITY_JSONHELPER_INCLUDED
-#define MEGAMOL_UTILITY_JSONHELPER_INCLUDED
+#pragma once
 
 #include <string>
 
@@ -148,5 +147,3 @@ bool get_json_value(
 }
 
 } // namespace megamol::core::utility
-
-#endif // MEGAMOL_UTILITY_JSONHELPER_INCLUDED

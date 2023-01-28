@@ -1,7 +1,4 @@
 
-#ifndef MMPROTEIN_RMSF_H_INCLUDED
-#define MMPROTEIN_RMSF_H_INCLUDED
-
 #pragma once
 
 #include "protein_calls/MolecularDataCall.h"
@@ -17,5 +14,3 @@ namespace megamol::protein_calls {
  */
 bool computeRMSF(protein_calls::MolecularDataCall* mol);
 } // namespace megamol::protein_calls
-
-#endif // MMPROTEIN_RMSF_H_INCLUDED

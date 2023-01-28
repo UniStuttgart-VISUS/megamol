@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_VOLUMETRICJOB_H_INCLUDED
-#define MEGAMOLCORE_VOLUMETRICJOB_H_INCLUDED
 #pragma once
 
 #include "geometry_calls/LinesDataCall.h"
@@ -274,5 +272,3 @@ private:
 };
 
 } // namespace megamol::trisoup_gl::volumetrics
-
-#endif /* MEGAMOLCORE_VOLUMETRICJOB_H_INCLUDED */

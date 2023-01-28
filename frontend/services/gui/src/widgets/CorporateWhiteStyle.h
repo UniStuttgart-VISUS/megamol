@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_CORPORATEWHITESTYLE_INCLUDED
-#define MEGAMOL_GUI_CORPORATEWHITESTYLE_INCLUDED
 #pragma once
 
 
@@ -115,5 +113,3 @@ inline void CorporateWhiteStyle(int is3D = 0) {
     }
 #endif
 }
-
-#endif // MEGAMOL_GUI_CORPORATEWHITESTYLE_INCLUDED

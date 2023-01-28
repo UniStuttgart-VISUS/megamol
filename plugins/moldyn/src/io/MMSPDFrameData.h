@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_MMSPDFRAMEDATA_H_INCLUDED
-#define MEGAMOLCORE_MMSPDFRAMEDATA_H_INCLUDED
 #pragma once
 
 #include "vislib/Array.h"
@@ -230,5 +228,3 @@ private:
 
 
 } // namespace megamol::moldyn::io
-
-#endif /* MEGAMOLCORE_MMSPDFRAMEDATA_H_INCLUDED */

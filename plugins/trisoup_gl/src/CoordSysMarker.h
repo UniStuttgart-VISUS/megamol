@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMTRISOUPPLG_COORDSYSMARKER_H_INCLUDED
-#define MMTRISOUPPLG_COORDSYSMARKER_H_INCLUDED
 #pragma once
 
 #include "AbstractTriMeshDataSource.h"
@@ -62,5 +60,3 @@ private:
 };
 
 } // namespace megamol::trisoup_gl
-
-#endif /* MMTRISOUPPLG_COORDSYSMARKER_H_INCLUDED */

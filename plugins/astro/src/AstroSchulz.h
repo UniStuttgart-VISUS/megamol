@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_ASTRO_ASTROSCHULZ_H_INCLUDED
-#define MEGAMOL_ASTRO_ASTROSCHULZ_H_INCLUDED
 #pragma once
 
 #include "astro/AstroDataCall.h"
@@ -114,5 +112,3 @@ private:
 };
 
 } // namespace megamol::astro
-
-#endif /* MEGAMOL_ASTRO_ASTROSCHULZ_H_INCLUDED */

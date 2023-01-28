@@ -6,8 +6,6 @@
  * Copyright 2019 MegaMol Dev Team
  */
 
-#ifndef VISLIB_MUTEX_H_INCLUDED
-#define VISLIB_MUTEX_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -102,4 +100,3 @@ typedef Lockable<Mutex> MutexLockable;
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_MUTEX_H_INCLUDED */

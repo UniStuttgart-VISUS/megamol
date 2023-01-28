@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_PARTICLEBOXGENERATORDATASOURCE_H_INCLUDED
-#define MEGAMOLCORE_PARTICLEBOXGENERATORDATASOURCE_H_INCLUDED
 #pragma once
 
 #include "geometry_calls/MultiParticleDataCall.h"
@@ -126,8 +124,6 @@ private:
 };
 
 } // namespace megamol::datatools
-
-#endif /* MEGAMOLCORE_PARTICLEBOXGENERATORDATASOURCE_H_INCLUDED */
 
 #if 0
 

@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_PARAMETERGROUPANIMATIONWIDGET_INCLUDED
-#define MEGAMOL_GUI_PARAMETERGROUPANIMATIONWIDGET_INCLUDED
 #pragma once
 
 
@@ -43,5 +41,3 @@ private:
 
 
 } // namespace megamol::gui
-
-#endif // MEGAMOL_GUI_PARAMETERGROUPANIMATIONWIDGET_INCLUDED

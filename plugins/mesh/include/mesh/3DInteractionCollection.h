@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef THREE_DIMENSIONAL_INTERACTION_COLLECTION_H_INCLUDED
-#define THREE_DIMENSIONAL_INTERACTION_COLLECTION_H_INCLUDED
+#pragma once
 
 #include <map>
 #include <queue>
@@ -69,5 +68,3 @@ private:
 };
 
 } // namespace megamol::mesh
-
-#endif // !3D_INTERACTION_COLLECTION_H_INCLUDED

@@ -6,8 +6,6 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOLCORE_SPLITMERGERENDERER_H_INCLUDED
-#define MEGAMOLCORE_SPLITMERGERENDERER_H_INCLUDED
 #pragma once
 
 #include "mmcore/CallerSlot.h"
@@ -181,5 +179,3 @@ private:
 };
 
 } // namespace megamol::protein_gl
-
-#endif // MEGAMOLCORE_SPLITMERGERENDERER_H_INCLUDED

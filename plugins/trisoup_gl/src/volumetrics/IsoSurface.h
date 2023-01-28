@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_ISOSURFACE_H_INCLUDED
-#define MEGAMOLCORE_ISOSURFACE_H_INCLUDED
 #pragma once
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
@@ -192,5 +190,3 @@ private:
 
 
 } // namespace megamol::trisoup_gl::volumetrics
-
-#endif /* MEGAMOLCORE_ISOSURFACE_H_INCLUDED */

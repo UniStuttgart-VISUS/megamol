@@ -3,8 +3,6 @@
  * Copyright (c) 2016, MegaMol Dev Team
  * All rights reserved.
  */
-#ifndef MEGAMOL_DATATOOLS_MMFTDATAWRITER_H_INCLUDED
-#define MEGAMOL_DATATOOLS_MMFTDATAWRITER_H_INCLUDED
 #pragma once
 
 #include "datatools/table/TableDataCall.h"
@@ -90,5 +88,3 @@ private:
 };
 
 } // namespace megamol::datatools::table
-
-#endif // MEGAMOL_DATATOOLS_MMFTDATAWRITER_H_INCLUDED

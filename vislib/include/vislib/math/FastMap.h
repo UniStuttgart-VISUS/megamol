@@ -4,8 +4,6 @@
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_FASTMAP_H_INCLUDED
-#define VISLIB_FASTMAP_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -227,4 +225,3 @@ void FastMap<TI, TO, D>::compute() {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_FASTMAP_H_INCLUDED */

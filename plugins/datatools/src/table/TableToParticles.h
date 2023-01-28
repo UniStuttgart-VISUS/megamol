@@ -1,5 +1,3 @@
-#ifndef MEGAMOL_DATATOOLS_FLOATTABLETOPARTICLES_H_INCLUDED
-#define MEGAMOL_DATATOOLS_FLOATTABLETOPARTICLES_H_INCLUDED
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
@@ -177,5 +175,3 @@ private:
 };
 
 } // namespace megamol::datatools
-
-#endif /* MEGAMOL_DATATOOLS_FLOATTABLETOPARTICLES_H_INCLUDED */

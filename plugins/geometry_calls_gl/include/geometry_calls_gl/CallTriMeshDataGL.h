@@ -6,8 +6,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED
-#define MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED
 #pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
@@ -1463,5 +1461,3 @@ private:
 typedef megamol::core::factories::CallAutoDescription<CallTriMeshDataGL> CallTriMeshDataGLDescription;
 
 } // namespace megamol::geocalls_gl
-
-#endif /* MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED */

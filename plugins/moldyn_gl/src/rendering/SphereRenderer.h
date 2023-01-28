@@ -7,8 +7,7 @@
 
 #include "vk_platform.h"
 
-#ifndef MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED
-#define MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED
+#pragma once
 
 #include "misc/MDAOVolumeGenerator.h"
 
@@ -662,5 +661,3 @@ private:
 };
 
 } // namespace megamol::moldyn_gl::rendering
-
-#endif /* MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED */

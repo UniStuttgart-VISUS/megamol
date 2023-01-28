@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_TABLEDATACALL_H_INCLUDED
-#define MEGAMOL_DATATOOLS_TABLEDATACALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
@@ -183,5 +181,3 @@ private:
 typedef core::factories::CallAutoDescription<TableDataCall> TableDataCallDescription;
 
 } // namespace megamol::datatools::table
-
-#endif

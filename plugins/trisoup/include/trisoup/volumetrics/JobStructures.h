@@ -1,5 +1,3 @@
-#ifndef MEGAMOLCORE_JOBSTRUCTURES_INCLUDED
-#define MEGAMOLCORE_JOBSTRUCTURES_INCLUDED
 #pragma once
 
 #include "geometry_calls/MultiParticleDataCall.h"
@@ -462,5 +460,3 @@ struct SubJobData {
 
 
 } // namespace megamol::trisoup::volumetrics
-
-#endif /* MEGAMOLCORE_JOBSTRUCTURES_INCLUDED */

@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef BASE_GLTF_RENDERER_H_INCLUDED
-#define BASE_GLTF_RENDERER_H_INCLUDED
+#pragma once
 
 #include "mmcore/CallerSlot.h"
 
@@ -293,5 +292,3 @@ inline void BaseGltfRenderer::updateRenderTaskCollection(mmstd_gl::CallRender3DG
 
 
 } // namespace megamol::mesh_gl
-
-#endif // !BASE_GLTF_RENDERER_H_INCLUDED

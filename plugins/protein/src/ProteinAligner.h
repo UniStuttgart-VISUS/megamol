@@ -5,8 +5,7 @@
  * Author: Karsten Schatz
  * All rights reserved.
  */
-#ifndef MMPROTEINPLUGIN_PROTEINALIGNER_H_INCLUDED
-#define MMPROTEINPLUGIN_PROTEINALIGNER_H_INCLUDED
+#pragma once
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -117,5 +116,3 @@ private:
 };
 
 } // namespace megamol::protein
-
-#endif /* MMPROTEINPLUGIN_PROTEINALIGNER_H_INCLUDED */

@@ -4,8 +4,6 @@
  * Copyright (C) 2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_DATATOOLS_REMAPICOLVALUES_H_INCLUDED
-#define MEGAMOL_DATATOOLS_REMAPICOLVALUES_H_INCLUDED
 #pragma once
 
 #include "datatools/AbstractParticleManipulator.h"
@@ -50,5 +48,3 @@ private:
 };
 
 } // namespace megamol::datatools
-
-#endif /* MEGAMOL_DATATOOLS_REMAPICOLVALUES_H_INCLUDED */

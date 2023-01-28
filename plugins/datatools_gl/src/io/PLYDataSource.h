@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_IO_PLYDATASOURCE_H_INCLUDED
-#define MEGAMOL_DATATOOLS_IO_PLYDATASOURCE_H_INCLUDED
 #pragma once
 
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
@@ -310,5 +308,3 @@ protected:
 };
 
 } // namespace megamol::datatools_gl::io
-
-#endif /* MEGAMOL_DATATOOLS_IO_PLYDATASOURCE_H_INCLUDED */

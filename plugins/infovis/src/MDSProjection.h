@@ -1,5 +1,4 @@
-#ifndef MEGAMOL_INFOVIS_MDSPROJECTION_H_INCLUDED
-#define MEGAMOL_INFOVIS_MDSPROJECTION_H_INCLUDED
+#pragma once
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -94,6 +93,3 @@ private:
 };
 
 } // namespace megamol::infovis
-
-
-#endif

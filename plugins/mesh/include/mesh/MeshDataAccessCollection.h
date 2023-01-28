@@ -6,8 +6,7 @@
  */
 
 
-#ifndef MESH_DATA_ACCESS_COLLECTION_H_INCLUDED
-#define MESH_DATA_ACCESS_COLLECTION_H_INCLUDED
+#pragma once
 
 #include <string>
 #include <unordered_map>
@@ -280,5 +279,3 @@ inline std::vector<std::vector<unsigned int>> MeshDataAccessCollection::getForma
 }
 
 } // namespace megamol::mesh
-
-#endif // !MESH_DATA_ACCESS_COLLECTION_H_INCLUDED

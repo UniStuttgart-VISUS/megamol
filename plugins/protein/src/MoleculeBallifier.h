@@ -5,8 +5,6 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_MOLECULEBALLIFIER_H_INCLUDED
-#define MMPROTEINPLUGIN_MOLECULEBALLIFIER_H_INCLUDED
 #pragma once
 
 #include "glm/glm.hpp"
@@ -67,5 +65,3 @@ private:
 };
 
 } // namespace megamol::protein
-
-#endif /* MMPROTEINPLUGIN_MOLECULEBALLIFIER_H_INCLUDED */

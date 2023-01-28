@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_ABSTRACTINPUTSCOPE_H_INCLUDED
-#define MEGAMOLCORE_ABSTRACTINPUTSCOPE_H_INCLUDED
 #pragma once
 
 #include "KeyboardMouseInput.h"
@@ -74,5 +72,3 @@ protected:
 };
 
 } // namespace megamol::frontend_resources
-
-#endif /* MEGAMOLCORE_ABSTRACTINPUTSCOPE_H_INCLUDED */

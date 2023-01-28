@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_TRANSFERFUNCTIONQUERY_H_INCLUDED
-#define MEGAMOLCORE_TRANSFERFUNCTIONQUERY_H_INCLUDED
 #pragma once
 
 #include "mmcore/CallerSlot.h"
@@ -64,5 +62,3 @@ private:
 };
 
 } // namespace megamol::datatools_gl
-
-#endif /* MEGAMOLCORE_TRANSFERFUNCTIONQUERY_H_INCLUDED */

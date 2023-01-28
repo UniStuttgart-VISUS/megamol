@@ -4,8 +4,6 @@
  * All rights reserved.
  */
 
-#ifndef MMPROTEINPLUGIN_CARTOONTESSELLATIONRENDERER_H_INCLUDED
-#define MMPROTEINPLUGIN_CARTOONTESSELLATIONRENDERER_H_INCLUDED
 #pragma once
 
 #include "glowl/GLSLProgram.hpp"
@@ -158,5 +156,3 @@ private:
 };
 
 } // namespace megamol::protein_gl
-
-#endif /* MMPROTEINPLUGIN_CARTOONTESSELLATIONRENDERER_H_INCLUDED */

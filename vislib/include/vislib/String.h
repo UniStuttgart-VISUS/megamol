@@ -5,8 +5,6 @@
  * Copyright (C) 2005 - 2009 by Christoph Mueller. All rights reserved.
  */
 
-#ifndef VISLIB_STRING_H_INCLUDED
-#define VISLIB_STRING_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -2542,4 +2540,3 @@ typedef String<TCharTraits> TString;
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_STRING_H_INCLUDED */

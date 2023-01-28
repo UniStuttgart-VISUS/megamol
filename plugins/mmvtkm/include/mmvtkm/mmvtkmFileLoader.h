@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MMVTKM_VTKMFILELOADER_H_INCLUDED
-#define MEGAMOL_MMVTKM_VTKMFILELOADER_H_INCLUDED
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
@@ -119,5 +117,3 @@ private:
 };
 
 } // namespace megamol::mmvtkm
-
-#endif /* MEGAMOL_MMVTKM_VTKMFILELOADER_H_INCLUDED */

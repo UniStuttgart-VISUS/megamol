@@ -18,8 +18,6 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VMDDXLOADER_H_INCLUDED
-#define MMPROTEINPLUGIN_VMDDXLOADER_H_INCLUDED
 #pragma once
 
 #include "HostArr.h"
@@ -177,5 +175,3 @@ private:
 
 
 } // namespace megamol::protein
-
-#endif // MMPROTEINPLUGIN_VMDDXLOADER_H_INCLUDED

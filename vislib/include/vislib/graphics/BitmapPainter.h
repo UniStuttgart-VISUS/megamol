@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_BITMAPPAINTER_H_INCLUDED
-#define VISLIB_BITMAPPAINTER_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -602,4 +600,3 @@ void BitmapPainter::FillPolygon(const math::AbstractPoint<int, 2, Sp>* points, S
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_BITMAPPAINTER_H_INCLUDED */

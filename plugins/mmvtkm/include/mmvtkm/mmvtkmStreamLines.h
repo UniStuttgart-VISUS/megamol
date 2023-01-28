@@ -4,8 +4,7 @@
  * Copyright (C) 2020-2021 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_MMVTKM_STREAMLINES_H_INCLUDED
-#define MEGAMOL_MMVTKM_STREAMLINES_H_INCLUDED
+#pragma once
 
 #include <glm/glm.hpp>
 
@@ -488,5 +487,3 @@ private:
 };
 
 } // namespace megamol::mmvtkm
-
-#endif // MEGAMOL_MMVTKM_STREAMLINES_H_INCLUDED

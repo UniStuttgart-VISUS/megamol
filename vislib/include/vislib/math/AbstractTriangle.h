@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTTRIANGLE_H_INCLUDED
-#define VISLIB_ABSTRACTTRIANGLE_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -75,4 +73,3 @@ AbstractTriangle<T, S>::~AbstractTriangle() {}
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTTRIANGLE_H_INCLUDED */

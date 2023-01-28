@@ -6,8 +6,6 @@
  * Copyright (C) 2008 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SMARTREF_H_INCLUDED
-#define VISLIB_SMARTREF_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -334,4 +332,3 @@ SmartRef<T>& SmartRef<T>::operator=(const SmartRef& rhs) {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SMARTREF_H_INCLUDED */

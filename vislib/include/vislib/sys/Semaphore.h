@@ -6,8 +6,6 @@
  * Copyright (C) 2005 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SEMAPHORE_H_INCLUDED
-#define VISLIB_SEMAPHORE_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -212,4 +210,3 @@ typedef Lockable<Semaphore> SemaphoreLockable;
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SEMAPHORE_H_INCLUDED */

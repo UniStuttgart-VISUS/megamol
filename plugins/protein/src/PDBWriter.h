@@ -8,8 +8,6 @@
 //      Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_PDBWRITER_H_INCLUDED
-#define MMPROTEINPLUGIN_PDBWRITER_H_INCLUDED
 #pragma once
 
 #include "mmcore/CallerSlot.h"
@@ -171,5 +169,3 @@ private:
 };
 
 } // namespace megamol::protein
-
-#endif /* MMPROTEINPLUGIN_PDBWRITER_H_INCLUDED */

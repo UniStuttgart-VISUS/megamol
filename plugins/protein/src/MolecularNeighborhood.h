@@ -5,8 +5,7 @@
 // All rights reserved.
 //
 
-#ifndef MMPROTEINPLUGIN_MOLECULARNEIGHBORHOOD_H_INCLUDED
-#define MMPROTEINPLUGIN_MOLECULARNEIGHBORHOOD_H_INCLUDED
+#pragma once
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -109,5 +108,3 @@ private:
     std::vector<const unsigned int*> dataPointers;
 };
 } // namespace megamol::protein
-
-#endif // MMPROTEINPLUGIN_MOLECULARNEIGHBORHOOD_H_INCLUDED

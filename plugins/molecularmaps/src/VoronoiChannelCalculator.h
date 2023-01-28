@@ -3,8 +3,6 @@
  * Copyright (C) 2006-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMMOLMAPPLG_VORONOICHANNELCALCULATOR_H_INCLUDED
-#define MMMOLMAPPLG_VORONOICHANNELCALCULATOR_H_INCLUDED
 #pragma once
 
 #include "AbstractLocalRenderer.h"
@@ -150,5 +148,3 @@ private:
 
 } /* end namespace molecularmaps */
 } /* end namespace megamol */
-
-#endif /* MMMOLMAPPLG_VORONOICHANNELCALCULATOR_H_INCLUDED */

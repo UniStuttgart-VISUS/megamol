@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SSBOBUFFERARRAY_H_INCLUDED
-#define MEGAMOLCORE_SSBOBUFFERARRAY_H_INCLUDED
 #pragma once
 
 
@@ -125,5 +123,3 @@ private:
 };
 
 } // namespace megamol::core::utility
-
-#endif /* MEGAMOLCORE_SSBOBUFFERARRAY_H_INCLUDED */

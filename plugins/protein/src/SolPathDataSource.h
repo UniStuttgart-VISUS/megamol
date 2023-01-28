@@ -4,8 +4,6 @@
  * Copyright (C) 2010 by VISUS (University of Stuttgart)
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_PROTEIN_SOLPATHDATASOURCE_H_INCLUDED
-#define MEGAMOL_PROTEIN_SOLPATHDATASOURCE_H_INCLUDED
 #pragma once
 
 #include "mmcore/CalleeSlot.h"
@@ -173,5 +171,3 @@ private:
 };
 
 } // namespace megamol::protein
-
-#endif /*  MEGAMOL_PROTEIN_SOLPATHDATASOURCE_H_INCLUDED */

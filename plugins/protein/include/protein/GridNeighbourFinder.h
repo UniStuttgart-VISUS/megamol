@@ -6,8 +6,6 @@
  */
 
 
-#ifndef MEGAMOLPROTEIN_GRIDNEIGHBORFIND_H_INCLUDED
-#define MEGAMOLPROTEIN_GRIDNEIGHBORFIND_H_INCLUDED
 #pragma once
 
 #include "mmcore/utility/log/Log.h"
@@ -176,5 +174,3 @@ private:
     unsigned int gridSize;
 };
 } // namespace megamol::protein
-
-#endif

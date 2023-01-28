@@ -5,8 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MOLDYN_GRIMRENDERER_H_INCLUDED
-#define MEGAMOL_MOLDYN_GRIMRENDERER_H_INCLUDED
+#pragma once
 
 #include "moldyn/ParticleGridDataCall.h"
 
@@ -292,5 +291,3 @@ private:
 };
 
 } // namespace megamol::moldyn_gl::rendering
-
-#endif /* MEGAMOL_MOLDYN_GRIMRENDERER_H_INCLUDED */

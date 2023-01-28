@@ -6,8 +6,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMTRISOUPPLG_ABSTRACTTRIMESHLOADER_H_INCLUDED
-#define MMTRISOUPPLG_ABSTRACTTRIMESHLOADER_H_INCLUDED
 #pragma once
 
 #include "AbstractTriMeshDataSource.h"
@@ -52,5 +50,3 @@ private:
 };
 
 } // namespace megamol::trisoup_gl
-
-#endif /* MMTRISOUPPLG_ABSTRACTTRIMESHLOADER_H_INCLUDED */

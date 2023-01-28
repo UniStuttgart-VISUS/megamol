@@ -7,8 +7,6 @@
  */
 
 
-#ifndef MEGAMOL_PROTEIN_CALLS_RESIDUE_SELECTIONCALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALLS_RESIDUE_SELECTIONCALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -106,5 +104,3 @@ private:
 typedef megamol::core::factories::CallAutoDescription<ResidueSelectionCall> ResidueSelectionCallDescription;
 
 } // namespace megamol::protein_calls
-
-#endif /* MEGAMOL_PROTEIN_CALLS_RESIDUE_SELECTIONCALL_H_INCLUDED */

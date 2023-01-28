@@ -5,8 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_ARROWRENDERER_H_INCLUDED
-#define MEGAMOLCORE_ARROWRENDERER_H_INCLUDED
+#pragma once
 
 
 #include "OpenGL_Context.h"
@@ -144,5 +143,3 @@ private:
 };
 
 } // namespace megamol::moldyn_gl::rendering
-
-#endif /* MEGAMOLCORE_ARROWRENDERER_H_INCLUDED */

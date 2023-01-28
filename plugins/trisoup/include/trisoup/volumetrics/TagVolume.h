@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_TAGVOLUME_H_INCLUDED
-#define MEGAMOLCORE_TAGVOLUME_H_INCLUDED
 #pragma once
 
 
@@ -30,5 +28,3 @@ private:
 };
 
 } // namespace megamol::trisoup::volumetrics
-
-#endif /* MEGAMOLCORE_TAGVOLUME_H_INCLUDED */

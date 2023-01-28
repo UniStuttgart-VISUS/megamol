@@ -5,8 +5,6 @@
  * Copyright (C) 2005 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ASTRACTRECTANGLE_H_INCLUDED
-#define VISLIB_ASTRACTRECTANGLE_H_INCLUDED
 #pragma once
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
@@ -900,4 +898,3 @@ const UINT_PTR AbstractRectangle<T, S>::IDX_TOP = 3;
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ASTRACTRECTANGLE_H_INCLUDED */

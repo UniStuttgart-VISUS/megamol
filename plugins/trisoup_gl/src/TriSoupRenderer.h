@@ -6,8 +6,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_TRISOUPRENDERER_H_INCLUDED
-#define MEGAMOLCORE_TRISOUPRENDERER_H_INCLUDED
 #pragma once
 
 #include "mmcore/Call.h"
@@ -123,5 +121,3 @@ private:
 
 
 } // namespace megamol::trisoup_gl
-
-#endif /* MEGAMOLCORE_TRISOUPRENDERER_H_INCLUDED */

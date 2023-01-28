@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_OSCBFIX_H_INCLUDED
-#define MEGAMOLCORE_OSCBFIX_H_INCLUDED
 #pragma once
 
 #include "geometry_calls/MultiParticleDataCall.h"
@@ -117,5 +115,3 @@ private:
 
 } /* end namespace quartz */
 } /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_OSCBFIX_H_INCLUDED */

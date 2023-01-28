@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED
-#define MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED
 #pragma once
 
 #include "mmcore/CallerSlot.h"
@@ -146,5 +144,3 @@ private:
 };
 
 } // namespace megamol::mmvtkm_gl
-
-#endif // MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED

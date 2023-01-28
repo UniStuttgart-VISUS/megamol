@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef TURNTABLE_MANIPULATOR_H_INCLUDED
-#define TURNTABLE_MANIPULATOR_H_INCLUDED
+#pragma once
 
 #include "mmcore/thecam/manipulator_base.h"
 #include <glm/ext.hpp>
@@ -125,6 +124,3 @@ private:
 };
 
 } // namespace megamol::core::thecam
-
-
-#endif // !TURNTABLE_MANIPULATOR_H_INCLUDED

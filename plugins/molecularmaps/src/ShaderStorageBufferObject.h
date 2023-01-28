@@ -3,8 +3,6 @@
  * Copyright (C) 2009-2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMMOLMAPPLG_SHADERSTORAGEBUFFEROBJECT_H_INCLUDED
-#define MMMOLMAPPLG_SHADERSTORAGEBUFFEROBJECT_H_INCLUDED
 #pragma once
 
 #include <glad/gl.h>
@@ -111,5 +109,3 @@ private:
 
 } /* end namespace molecularmaps */
 } /* end namespace megamol */
-
-#endif /* MMMOLMAPPLG_SHADERSTORAGEBUFFEROBJECT_H_INCLUDED */
