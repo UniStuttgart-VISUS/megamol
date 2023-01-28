@@ -61,6 +61,14 @@ endif ()
 # Configure with:
 # > cmake -DMEGAMOL_RUN_CLANG_TIDY=ON -DMEGAMOL_WARNING_LEVEL=Off ../megamol
 # Build NOT in parallel, otherwise clang-tidy will mess up files!
+#
+# Alternative:
+# > cd build && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ../megamol
+# > cd ../megamol && run-clang-tidy-14 -p ../build -fix -j 32
+# This uses the run-clang-tidy wrapper allowing very fast parallel execution, but also tries to fix not existent source files in the binary dir.
+#
+# Both solutions do not exclude 3rd directories and clang-tidy results seems to sometime trigger edge cases with weird results.
+# Therefore, results should be commited manually and currently do not run clang-tidy within the CI pipeline.
 option(MEGAMOL_RUN_CLANG_TIDY "Run clang-tidy." OFF)
 mark_as_advanced(FORCE MEGAMOL_RUN_CLANG_TIDY)
 if (MEGAMOL_RUN_CLANG_TIDY)
