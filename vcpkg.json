@@ -89,6 +89,7 @@
     "use-opengl": {
       "description": "Use OpenGL",
       "dependencies": [
+        "glad",
         {
           "name": "glowl",
           "features": [

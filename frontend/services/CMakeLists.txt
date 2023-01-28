@@ -131,10 +131,10 @@ if(BUILD_FRONTEND_SERVICES)
     target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()
   
-  # GLFW
   if (MEGAMOL_USE_OPENGL)
     find_package(glfw3 CONFIG REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+    find_package(glad REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw PUBLIC glad::glad core_gl)
   endif()
 
   if (MEGAMOL_USE_VR_INTEROP)
@@ -167,10 +167,6 @@ if(BUILD_FRONTEND_SERVICES)
         BOOST_STACKTRACE_USE_BACKTRACE)
     endif ()
   endif ()
-
-  if (MEGAMOL_USE_OPENGL)
-    target_link_libraries(${PROJECT_NAME} PUBLIC core_gl glad)
-  endif()
 
   target_link_libraries(${PROJECT_NAME}
     PRIVATE
