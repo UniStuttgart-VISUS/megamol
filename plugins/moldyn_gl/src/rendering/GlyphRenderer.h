@@ -7,9 +7,7 @@
 
 #ifndef MOLDYN_GLYPHRENDERER_H_INCLUDED
 #define MOLDYN_GLYPHRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls/EllipsoidalDataCall.h"
 #include "mmcore/Call.h"

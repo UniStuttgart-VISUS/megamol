@@ -7,9 +7,7 @@
 
 #ifndef MMTRISOUPPLG_COORDSYSMARKER_H_INCLUDED
 #define MMTRISOUPPLG_COORDSYSMARKER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractTriMeshDataSource.h"
 #include "vislib/String.h"

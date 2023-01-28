@@ -8,9 +8,7 @@
 
 #ifndef MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED
 #define MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 //#define USE_SIMPLE_FONT
 

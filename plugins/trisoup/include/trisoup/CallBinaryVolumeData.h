@@ -8,9 +8,7 @@
 
 #ifndef MMTRISOUPPLG_CALLBINARYVOLUMEDATAA_H_INCLUDED
 #define MMTRISOUPPLG_CALLBINARYVOLUMEDATAA_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmstd/data/AbstractGetData3DCall.h"

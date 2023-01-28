@@ -7,9 +7,7 @@
 
 #ifndef MEGAMOLPROTEIN_MOLSURFFEATURE_H_INCLUDED
 #define MEGAMOLPROTEIN_MOLSURFFEATURE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "protein_calls/DiagramCall.h"
 #include "vislib/Array.h"

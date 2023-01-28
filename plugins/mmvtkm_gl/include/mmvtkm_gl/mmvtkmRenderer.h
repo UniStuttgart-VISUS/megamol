@@ -7,9 +7,7 @@
 
 #ifndef MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED
 #define MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"

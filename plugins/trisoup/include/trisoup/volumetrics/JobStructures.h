@@ -1,8 +1,6 @@
 #ifndef MEGAMOLCORE_JOBSTRUCTURES_INCLUDED
 #define MEGAMOLCORE_JOBSTRUCTURES_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "trisoup/trisoupVolumetricDataCall.h"

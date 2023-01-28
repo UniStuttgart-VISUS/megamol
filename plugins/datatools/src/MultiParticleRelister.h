@@ -6,9 +6,7 @@
  */
 #ifndef MEGAMOL_STD_DATATOOLS_MULTIPARTICLERELISTER_H_INCLUDED
 #define MEGAMOL_STD_DATATOOLS_MULTIPARTICLERELISTER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "datatools/AbstractParticleManipulator.h"
 #include "geometry_calls/ParticleRelistCall.h"

@@ -7,9 +7,7 @@
 
 #ifndef MEGAMOLPROTEIN_SPLITMERGEFEATURE_H_INCLUDED
 #define MEGAMOLPROTEIN_SPLITMERGEFEATURE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "protein_calls/SplitMergeCall.h"
 #include "vislib/Array.h"

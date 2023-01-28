@@ -6,9 +6,7 @@
  */
 #ifndef MEGAMOL_PROTEIN_SOLPATHDATACALL_H_INCLUDED
 #define MEGAMOL_PROTEIN_SOLPATHDATACALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmstd/data/AbstractGetData3DCall.h"
 #include "vislib/math/mathfunctions.h"

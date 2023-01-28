@@ -7,9 +7,7 @@
 
 #ifndef MEGAMOLCORE_CONTEST2019DATALOADER_H_INCLUDED
 #define MEGAMOLCORE_CONTEST2019DATALOADER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "astro/AstroDataCall.h"
 #include "mmcore/CalleeSlot.h"

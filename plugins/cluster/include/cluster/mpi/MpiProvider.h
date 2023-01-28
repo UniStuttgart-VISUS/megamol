@@ -7,9 +7,7 @@
 
 #ifndef MEGAMOLCORE_CLUSTER_MPI_MPIPROVIDER_H_INCLUDED
 #define MEGAMOLCORE_CLUSTER_MPI_MPIPROVIDER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #ifdef MEGAMOL_USE_MPI
 #include <mpi.h>

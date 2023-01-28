@@ -10,9 +10,7 @@
 
 #ifndef MMPROTEINCALLPLUGIN_VTIDATACALL_H_INCLUDED
 #define MMPROTEINCALLPLUGIN_VTIDATACALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "Interpol.h"
 #include "VTKImageData.h"
