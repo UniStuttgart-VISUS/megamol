@@ -43,15 +43,14 @@ public:
 
     inline void EnumWindows(const std::function<void(AbstractWindow&)>& cb) {
         // Needs fixed size if window is added while looping
-        auto window_count = this->windows.size();
-        for (size_t i = 0; i < window_count; i++) {
-            cb((*this->windows[i]));
+        for (auto& [key, val] : this->windows) {
+            cb((*val));
         }
     }
 
     inline bool WindowExists(size_t hash_id) const {
-        for (auto& wc : this->windows) {
-            if (wc->Hash() == hash_id)
+        for (auto& [key, val] : this->windows) {
+            if (val->Hash() == hash_id)
                 return true;
         }
         return false;
@@ -59,7 +58,7 @@ public:
 
     template<typename T>
     std::shared_ptr<T> GetWindow() const {
-        for (auto& win_ptr : this->windows) {
+        for (auto& [key, win_ptr] : this->windows) {
             if (auto ret_win_ptr = std::dynamic_pointer_cast<T>(win_ptr))
                 return ret_win_ptr;
         }
@@ -79,7 +78,7 @@ public:
 private:
     // VARIABLES ------------------------------------------------------
 
-    std::vector<std::shared_ptr<AbstractWindow>> windows;
+    std::unordered_map<std::string, std::shared_ptr<AbstractWindow>> windows;
 
     std::vector<std::string> requested_resources;
 

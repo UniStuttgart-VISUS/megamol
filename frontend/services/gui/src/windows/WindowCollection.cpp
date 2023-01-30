@@ -22,24 +22,25 @@ using namespace megamol::gui;
 
 WindowCollection::WindowCollection() : windows() {
 
-    this->windows.emplace_back(std::make_shared<HotkeyEditor>("Hotkey Editor"));
-    this->windows.emplace_back(std::make_shared<LogConsole>("Log Console"));
-    this->windows.emplace_back(std::make_shared<TransferFunctionEditor>("Transfer Function Editor", true));
-    this->windows.emplace_back(std::make_shared<PerformanceMonitor>("Performance Metrics"));
-    this->windows.emplace_back(
-        std::make_shared<Configurator>("Configurator", this->GetWindow<TransferFunctionEditor>()));
-    this->windows.emplace_back(std::make_shared<RenderingEndPoint>("Rendering Endpoint"));
+    this->windows["Hotkey Editor"] = std::make_shared<HotkeyEditor>("Hotkey Editor");
+    this->windows["Log Console"] = std::make_shared<LogConsole>("Log Console");
+    this->windows["Transfer Function Editor"] =
+        std::make_shared<TransferFunctionEditor>("Transfer Function Editor", true);
+    this->windows["Performance Metrics"] = std::make_shared<PerformanceMonitor>("Performance Metrics");
+    this->windows["Configurator"] =
+        std::make_shared<Configurator>("Configurator", this->GetWindow<TransferFunctionEditor>());
+    this->windows["Rendering Endpoint"] = std::make_shared<RenderingEndPoint>("Rendering Endpoint");
     // Requires Configurator and TFEditor to be added before
     this->add_parameter_window("Parameters", AbstractWindow::WINDOW_ID_MAIN_PARAMETERS);
 
     // Windows are sorted depending on hotkey
-    std::sort(this->windows.begin(), this->windows.end(),
+    /*std::sort(this->windows.begin(), this->windows.end(),
         [&](std::shared_ptr<AbstractWindow> const& a, std::shared_ptr<AbstractWindow> const& b) {
             return (a->Config().hotkey.key > b->Config().hotkey.key);
-        });
+        });*/
 
     // retrieve resource requests of each window class
-    for (auto const& win : windows) {
+    for (auto const& [key, win] : windows) {
         auto res = win->requested_lifetime_resources();
         requested_resources.insert(requested_resources.end(), res.begin(), res.end());
     }
@@ -59,14 +60,14 @@ bool WindowCollection::AddWindow(
     auto win_hash = std::hash<std::string>()(window_name);
     if (this->WindowExists(win_hash)) {
         // Overwrite volatile callback for existing window
-        for (auto& win : this->windows) {
+        for (auto& [key, win] : this->windows) {
             if (win->Hash() == win_hash) {
                 win->SetVolatileCallback(callback);
                 continue;
             }
         }
     } else {
-        this->windows.push_back(std::make_shared<AbstractWindow>(
+        this->windows[window_name]=(std::make_shared<AbstractWindow>(
             window_name, const_cast<std::function<void(AbstractWindow::BasicConfig&)>&>(callback)));
     }
     return true;
@@ -76,7 +77,7 @@ bool WindowCollection::AddWindow(
 void WindowCollection::Update() {
 
     // Call window update functions
-    for (auto& win : this->windows) {
+    for (auto& [key, win] : this->windows) {
         win->Update();
     }
 }
@@ -168,7 +169,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
         }
 
         // Then read configuration for all existing windows
-        for (auto& window : this->windows) {
+        for (auto& [key, window] : this->windows) {
             window->StateFromJSON(in_json);
             window->SpecificStateFromJSON(in_json);
         }
@@ -190,7 +191,7 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
 
     try {
         // Append to given json
-        for (auto& window : this->windows) {
+        for (auto& [key, window] : this->windows) {
 
             inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window->Name()]["win_callback"] =
                 static_cast<int>(window->WindowID()); /// XXX rename to "win_config_id"
@@ -212,12 +213,20 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
 
 
 bool WindowCollection::DeleteWindow(size_t win_hash_id) {
-
+    /*windows.erase(windows.begin(), std::remove_if(windows.begin(), windows.end(), [&win_hash_id](auto& entry) {
+        if (((entry.second)->Hash() == win_hash_id)) {
+            if (((entry.second)->WindowID() == AbstractWindow::WINDOW_ID_VOLATILE) ||
+                ((entry.second)->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS)) {
+                return true;
+            }
+        }
+        return false;
+    }));*/
     for (auto iter = this->windows.begin(); iter != this->windows.end(); iter++) {
-        if (((*iter)->Hash() == win_hash_id)) {
-            if (((*iter)->WindowID() == AbstractWindow::WINDOW_ID_VOLATILE) ||
-                ((*iter)->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS)) {
-                this->windows.erase(iter);
+        if (((iter->second)->Hash() == win_hash_id)) {
+            if (((iter->second)->WindowID() == AbstractWindow::WINDOW_ID_VOLATILE) ||
+                ((iter->second)->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS)) {
+                this->windows.erase(iter->second->Name());
                 return true;
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -233,14 +242,14 @@ bool WindowCollection::DeleteWindow(size_t win_hash_id) {
 
 void megamol::gui::WindowCollection::setRequestedResources(
     std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources) {
-    for (auto& win : windows) {
+    for (auto& [key,win] : windows) {
         win->setRequestedResources(resources);
     }
 }
 
 
 void megamol::gui::WindowCollection::digestChangedRequestedResources() {
-    for (auto& win : windows) {
+    for (auto& [key,win] : windows) {
         win->digestChangedRequestedResources();
     }
 }
@@ -255,6 +264,6 @@ void WindowCollection::add_parameter_window(
             [&](const std::string& windowname, AbstractWindow::WindowConfigID winid, ImGuiID initialmoduleuid) {
                 this->add_parameter_window(windowname, winid, initialmoduleuid);
             });
-        this->windows.emplace_back(win_paramlist);
+        this->windows[window_name] = win_paramlist;
     }
 }
