@@ -6,6 +6,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 
+#include "../filter/ImageSamplingFilter.h"
 #include "../filter/IndexGenerationFilter.h"
 #include "imageseries/util/ImageUtils.h"
 
@@ -64,7 +65,8 @@ bool ImageSeriesTimestampFilter::getDataCallback(core::Call& caller) {
                     auto indexMap = filterRunner->run<filter::IndexGenerationFilter>(params);
                     params.indexMap = indexMap;
                 }
-                return params.indexMap;
+
+                return filterRunner->run<filter::ImageSamplingFilter>(params.indexMap);
             });
             call->SetOutput(output);
             return true;
