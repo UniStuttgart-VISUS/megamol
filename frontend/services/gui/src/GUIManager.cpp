@@ -555,7 +555,7 @@ void megamol::gui::GUIManager::SetScale(float scale) {
         wc.Config().size *= megamol::gui::gui_scaling.TransitionFactor();
         wc.Config().reset_pos_size = true;
     };
-    this->win_collection.EnumWindows(size_func);
+    this->win_collection.EnumCreatedWindows(size_func);
 }
 
 
@@ -858,7 +858,7 @@ void GUIManager::draw_menu() {
                 }
             }
         };
-        this->win_collection.EnumWindows(func);
+        this->win_collection.EnumCreatedWindows(func);
 
         ImGui::Separator();
 
@@ -1328,7 +1328,7 @@ void megamol::gui::GUIManager::load_preset_window_docking(ImGuiID global_docking
             break;
         }
     };
-    this->win_collection.EnumWindows(func);
+    this->win_collection.EnumCreatedWindows(func);
 
     ImGui::DockBuilderFinish(global_docking_id);
 #endif

@@ -81,7 +81,7 @@ void megamol::gui::HotkeyEditor::RegisterHotkeys(megamol::core::view::CommandReg
                 wc.Config().show = !wc.Config().show;
             }
         };
-        this->window_collection_ptr->EnumWindows(wf);
+        this->window_collection_ptr->EnumAvailWindows(wf);
     };
 
     this->parent_gui_window_hotkey_lambda = [&](const frontend_resources::Command* self) {
@@ -92,7 +92,7 @@ void megamol::gui::HotkeyEditor::RegisterHotkeys(megamol::core::view::CommandReg
                 }
             }
         };
-        this->window_collection_ptr->EnumWindows(wf);
+        this->window_collection_ptr->EnumAvailWindows(wf);
     };
 
 
@@ -129,7 +129,7 @@ void megamol::gui::HotkeyEditor::RegisterHotkeys(megamol::core::view::CommandReg
             cmdregistry->add_command(hkcmd);
         }
     };
-    this->window_collection_ptr->EnumWindows(windows_func);
+    this->window_collection_ptr->EnumAvailWindows(windows_func);
 }
 
 
