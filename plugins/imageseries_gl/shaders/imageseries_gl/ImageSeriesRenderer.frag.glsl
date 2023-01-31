@@ -34,16 +34,30 @@ vec3 hsv(vec3 color)
 vec4 labelColor(const float value, const bool label) {
     if ((label && value < (2.0 / 255.0)) || (!label && (value < (1.0 / 65535.0) || value > (65533.0 / 65535.0)))) return vec4(0.0, 0.0, 0.0, 1.0);
 
-    const vec4 table[] = vec4[6](
+    const vec4 table[] = vec4[18](
         vec4(0.9, 0.1, 0.1, 1.0),
         vec4(0.1, 0.9, 0.1, 1.0),
         vec4(0.9, 0.9, 0.1, 1.0),
         vec4(0.1, 0.1, 0.9, 1.0),
         vec4(0.9, 0.1, 0.9, 1.0),
-        vec4(0.1, 0.9, 0.9, 1.0));
+        vec4(0.1, 0.9, 0.9, 1.0),
+        
+        vec4(0.7, 0.1, 0.1, 1.0),
+        vec4(0.1, 0.7, 0.1, 1.0),
+        vec4(0.7, 0.7, 0.1, 1.0),
+        vec4(0.1, 0.1, 0.7, 1.0),
+        vec4(0.7, 0.1, 0.7, 1.0),
+        vec4(0.1, 0.7, 0.7, 1.0),
+        
+        vec4(0.9, 0.3, 0.3, 1.0),
+        vec4(0.3, 0.9, 0.3, 1.0),
+        vec4(0.9, 0.9, 0.3, 1.0),
+        vec4(0.3, 0.3, 0.9, 1.0),
+        vec4(0.9, 0.3, 0.9, 1.0),
+        vec4(0.3, 0.9, 0.9, 1.0));
 
     const int factor = label ? 255 : 65535;
-	const int index = int(floor(value * factor)) % 6;
+	const int index = int(floor(value * factor)) % 18;
     
 	return table[index];
 }
