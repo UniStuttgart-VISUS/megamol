@@ -11,30 +11,27 @@ public:
     using AsyncImagePtr = std::shared_ptr<const AsyncImageData2D>;
     using ImagePtr = std::shared_ptr<const AsyncImageData2D::BitmapImage>;
 
-    using Label = std::uint8_t;
+    using Label = std::uint16_t;
 
     // Special labels
     enum LabelType : Label {
-        // Background pixel (no blob at this location)
-        LabelBackground = 0,
+        // Pixel belonging to the solid phase / unoccupied space
+        LabelSolid = 0,
 
-        // Foreground mask pixel (wall/obstacle at this location)
-        LabelMask = 1,
+        // Minimal label for flow
+        LabelMinimum = 1,
 
-        // Indicates that this pixel is part of a small blob that fell below the size threshold
-        LabelMinimal = 2,
+        // Maximal label available
+        LabelMaximum = 65533,
 
-        // Interface pixel between temporally adjacent frames
-        LabelFlow = 3,
+        // Label for flow fronts that are "invalid" (e.g., too small)
+        LabelInvalid = 65534,
 
-        // Minimum auto-assigned ID for pixels belonging to a cohesive blob
-        LabelFirst = 4,
-
-        // Maximum auto-assigned ID for pixels belonging to a cohesive blob
-        LabelLast = 255,
+        // Initially unassigned pixel
+        LabelUnassigned = 65535,
     };
 
-    static constexpr int LabelCount = 256;
+    static constexpr int LabelCount = 65536;
 
     struct Input {
         // Timestamp map within which to search for connected blobs.
