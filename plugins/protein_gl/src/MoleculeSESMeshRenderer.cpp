@@ -490,7 +490,7 @@ void MoleculeSESMeshRenderer::RenderAtoms(const MolecularDataCall* mol) {
     sphereShader_->setUniform("mvpinverse", mvpinverse_);
     sphereShader_->setUniform("mvptransposed", mvptranspose_);
 
-    glDrawArrays(GL_POINTS, 0, (unsigned int)mol->AtomCount());
+    //glDrawArrays(GL_POINTS, 0, (unsigned int)mol->AtomCount());
 
     // disable sphere shader
     glUseProgram(0);
@@ -544,8 +544,12 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
     // fill the triangle mesh with data
     if (this->reducedSurface.empty())
         return false;
-    int subdivision_level = 0;
-    auto ico = new Icosphere(0.247, subdivision_level, true);
+    int subdivision_level = 1;
+    /*auto carbon = new Icosphere(1.70000005, subdivision_level, true);
+    auto nitrogen = new Icosphere(1.54999995, subdivision_level, true);
+    auto sulfur = new Icosphere(1, subdivision_level, true);
+    auto oxygen = new Icosphere(0.5, subdivision_level, true); */
+    auto ico = new Icosphere(1, subdivision_level, true);
     int vertex_counter = (int)(ico->getVertexCount() * mol->AtomCount());
     auto* vertex = new float[vertex_counter * 3]{};
     auto* normal = new float[vertex_counter * 3]{};
@@ -553,11 +557,11 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
 
 
 
-    for (auto i = 0; i < 4; i++) {
+    for (auto i = 0; i < mol->AtomCount(); i++) {
         for (int j = 0; j < ico->getVertexCount(); ++j) {
-            vertex[ico->getVertexCount() * 3 * i + 3 * j + 0] = ico->getVertices()[3 * j + 0] + mol->AtomPositions()[3 * i + 0];  // x
-            vertex[ico->getVertexCount() * 3 * i + 3 * j + 1] = ico->getVertices()[3 * j + 1] + mol->AtomPositions()[3 * i + 1];  // y
-            vertex[ico->getVertexCount() * 3 * i + 3 * j + 2] = ico->getVertices()[3 * j + 2] + mol->AtomPositions()[3 * i + 2];  // z
+            vertex[ico->getVertexCount() * 3 * i + 3 * j + 0] = ico->getVertices()[3 * j + 0] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() + mol->AtomPositions()[3 * i + 0];  // x
+            vertex[ico->getVertexCount() * 3 * i + 3 * j + 1] = ico->getVertices()[3 * j + 1] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() + mol->AtomPositions()[3 * i + 1];  // y
+            vertex[ico->getVertexCount() * 3 * i + 3 * j + 2] = ico->getVertices()[3 * j + 2] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() + mol->AtomPositions()[3 * i + 2];  // z
 
             normal[ico->getVertexCount() * 3 * i + 3 * j + 0] = ico->getNormals()[3 * j + 0];
             normal[ico->getVertexCount() * 3 * i + 3 * j + 1] = ico->getNormals()[3 * j + 1];
