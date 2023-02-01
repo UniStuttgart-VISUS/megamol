@@ -75,6 +75,7 @@
 #include "table/MMFTDataSource.h"
 #include "table/MMFTDataWriter.h"
 #include "table/ParticlesToTable.h"
+#include "table/VolumeToTable.h"
 #include "table/TableColumnFilter.h"
 #include "table/TableColumnScaler.h"
 #include "table/TableFlagFilter.h"
@@ -181,6 +182,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::AddParticleColors>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ColorToDir>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticlesToTable>();
+        this->module_descriptions.RegisterAutoDescription<megamol::datatools::VolumeToTable>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::TableInspector>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::ParticleListFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::datatools::SiffCSplineFitter>();
