@@ -21,14 +21,18 @@ bool PerformanceManager::Itimer::start(frame_type frame) {
         started = true;
         start_frame = frame;
     } else {
-        throw std::runtime_error(("timer: region " + conf.name + "needs to be ended before being started").c_str());
+        throw std::runtime_error(
+            ("timer: region " + parent_name(conf) + "::" + conf.name + " needs to be ended before being started")
+                .c_str());
     }
     return new_frame;
 }
 
 void PerformanceManager::Itimer::end() {
     if (!started) {
-        throw std::runtime_error(("cpu_timer: region " + conf.name + "needs to be started before being ended").c_str());
+        throw std::runtime_error(
+            ("cpu_timer: region " + parent_name(conf) + "::" + conf.name + " needs to be started before being ended")
+                .c_str());
     }
     started = false;
 }
@@ -155,21 +159,24 @@ void PerformanceManager::remove_timers(handle_vector handles) {
     handle_holes.insert(handle_holes.end(), handles.begin(), handles.end());
 }
 
-std::string PerformanceManager::lookup_parent(handle_type h) {
-    const auto& conf = timers[h]->get_conf();
-    const auto p = conf.parent_pointer;
+std::string PerformanceManager::parent_name(const timer_config& conf) {
     switch (conf.parent_type) {
     case parent_type::CALL: {
-        const auto c = static_cast<megamol::core::Call*>(p);
+        const auto c = static_cast<megamol::core::Call*>(conf.parent_pointer);
         return c->GetDescriptiveText();
     }
     case parent_type::MODULE: {
-        const auto m = static_cast<megamol::core::Module*>(p);
+        const auto m = static_cast<megamol::core::Module*>(conf.parent_pointer);
         return m->Name().PeekBuffer();
     }
     default:
         return "";
     }
+}
+
+std::string PerformanceManager::lookup_parent(handle_type h) {
+    const auto& conf = timers[h]->get_conf();
+    return parent_name(conf);
 }
 
 void* PerformanceManager::lookup_parent_pointer(handle_type h) {

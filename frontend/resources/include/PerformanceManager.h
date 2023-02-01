@@ -198,6 +198,9 @@ public:
     void remove_timers(handle_vector handles);
 
     // hint: this is not for free, so don't call this all the time
+    static std::string parent_name(const timer_config& conf);
+
+    // hint: this is not for free, so don't call this all the time
     std::string lookup_parent(handle_type h);
 
     // hint: this is not for free, so don't call this all the time
