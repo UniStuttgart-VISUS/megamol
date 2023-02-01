@@ -84,9 +84,18 @@ protected:
      */
     void release() override;
 
-    /** Callbacks for the computed streamlines */
+    /** Callbacks for the rendering output */
     bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
     bool Render(mmstd_gl::CallRender3DGL& call) override;
+
+    /** Callbacks for the observation path */
+    bool GetObservationExtents(core::Call& call);
+    bool RenderObservation(core::Call& call);
+    bool OnObservedMouseButton(core::Call& call);
+    bool OnObservedMouseMove(core::Call& call);
+    bool OnObservedMouseScroll(core::Call& call);
+    bool OnObservedChar(core::Call& call);
+    bool OnObservedKey(core::Call& call);
 
 private:
     std::unique_ptr<glowl::GLSLProgram> render_points_program;
@@ -103,6 +112,15 @@ private:
     core::param::ParamSlot snapshotSlot;
     core::param::ParamSlot numberOfViewsSlot;
     core::BoundingBoxes_2 lastBBox;
+
+    bool CheckObservedSlots(
+        megamol::mmstd_gl::CallRender3DGL*& in, megamol::mmstd_gl::CallRender3DGL*& out, core::Call& call);
+
+    /** Slot for the observed renderer */
+    core::CallerSlot observedRendererSlot;
+
+    /** The render callee slot */
+    core::CalleeSlot observedRenderSlot;
 
     std::vector<std::pair<core::utility::DefaultView, core::utility::DefaultOrientation>> snaps_to_take = {
         {core::utility::DEFAULTVIEW_FACE_FRONT, core::utility::DEFAULTORIENTATION_TOP},

@@ -13,16 +13,43 @@ megamol::mmstd_gl::AnimationRenderer::AnimationRenderer()
         , approximationSourceSlot("approximation source", "renderer output to approximate as scene proxy")
         , snapshotSlot("make snapshot", "grab current representation of the source")
         , numberOfViewsSlot("number of Views", "how many snapshots are taken, using camera reset variants")
+        , observedRendererSlot("observe", "Output that connects to the observed renderer")
+        , observedRenderSlot("renderObservation", "Input from the camera view")
         , tex_inspector_({"Color", "Depth"}) {
 
     approximationSourceSlot.SetParameter(new core::param::StringParam(""));
-    this->MakeSlotAvailable(&approximationSourceSlot);
+    MakeSlotAvailable(&approximationSourceSlot);
 
     snapshotSlot.SetParameter(new core::param::ButtonParam());
-    this->MakeSlotAvailable(&snapshotSlot);
+    MakeSlotAvailable(&snapshotSlot);
 
     numberOfViewsSlot.SetParameter(new core::param::IntParam(snaps_to_take.size()));
-    this->MakeSlotAvailable(&numberOfViewsSlot);
+    MakeSlotAvailable(&numberOfViewsSlot);
+
+
+    // the boring stuff, unfortunately, AKA InputCall
+    observedRenderSlot.SetCallback(CallRender3DGL::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnKey), &AnimationRenderer::OnObservedKey);
+    observedRenderSlot.SetCallback(CallRender3DGL::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnChar), &AnimationRenderer::OnObservedChar);
+    observedRenderSlot.SetCallback(CallRender3DGL::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseButton), &AnimationRenderer::OnObservedMouseButton);
+    observedRenderSlot.SetCallback(CallRender3DGL::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseMove), &AnimationRenderer::OnObservedMouseMove);
+    observedRenderSlot.SetCallback(CallRender3DGL::ClassName(),
+        core::view::InputCall::FunctionName(core::view::InputCall::FnOnMouseScroll), &AnimationRenderer::OnObservedMouseScroll);
+
+    // the interesting stuff we want to hook into
+    observedRenderSlot.SetCallback(CallRender3DGL::ClassName(),
+        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnRender),
+        &AnimationRenderer::RenderObservation);
+    observedRenderSlot.SetCallback(CallRender3DGL::ClassName(),
+        core::view::AbstractCallRender::FunctionName(core::view::AbstractCallRender::FnGetExtents),
+        &AnimationRenderer::GetObservationExtents);
+    MakeSlotAvailable(&observedRenderSlot);
+
+    observedRendererSlot.SetCompatibleCall<CallRender3DGLDescription>();
+    MakeSlotAvailable(&observedRendererSlot);
 
     auto tex_inspector_slots = this->tex_inspector_.GetParameterSlots();
     for (auto& tex_slot : tex_inspector_slots) {
@@ -133,25 +160,8 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
     auto const incoming_fbo = call.GetFramebuffer();
     auto const actual_snaps_to_take =
         std::min<int>(snaps_to_take.size(), numberOfViewsSlot.Param<core::param::IntParam>()->Value());
-    if (AnyParameterDirty()) {
-        const auto mod_name = approximationSourceSlot.Param<core::param::StringParam>()->Value();
-        auto mod = theGraph->FindModule(mod_name);
-        call_to_hijack = nullptr;
-        hijack_callback_idx = 0;
-        if (mod) {
-            for (auto& c : theGraph->ListCalls()) {
-                if (c.callPtr->PeekCalleeSlot()->Parent()->FullName() == mod->FullName()) {
-                    for (uint32_t x = 0; x < c.callPtr->GetCallbackCount(); ++x) {
-                        if (c.callPtr->GetCallbackName(x) == "Render") {
-                            call_to_hijack = dynamic_cast<CallRender3DGL*>(c.callPtr.get());
-                            hijack_callback_idx = x;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
+
+    call_to_hijack = observedRendererSlot.CallAs<CallRender3DGL>();
     if (make_snapshot && call_to_hijack) {
         lastBBox = call_to_hijack->GetBoundingBoxes();
         for (int i = 0; i < actual_snaps_to_take; ++i) {
@@ -185,7 +195,7 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
             call_to_hijack->SetCamera(cam);
 
             // render and convert the result to "point geometry"
-            call_to_hijack->operator()(hijack_callback_idx);
+            call_to_hijack->operator()(core::view::AbstractCallRender::FnRender);
             // TODO: is that needed?
             glFlush();
             incoming_fbo->bind();
@@ -206,6 +216,7 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
 
         // TODO: grab bbox of points from gpu
         // do we really need that? we have the original one anyway.
+        this->ResetAllDirtyFlags();
     }
 
     core::view::Camera cam = call.GetCamera();
@@ -280,4 +291,78 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
     }
 
     return true;
+}
+
+bool megamol::mmstd_gl::AnimationRenderer::CheckObservedSlots(
+    CallRender3DGL*& in, CallRender3DGL*& out, core::Call& call) {
+    out = observedRendererSlot.CallAs<CallRender3DGL>();
+    in = dynamic_cast<CallRender3DGL*>(&call);
+    return out != nullptr && in != nullptr;
+}
+
+bool megamol::mmstd_gl::AnimationRenderer::GetObservationExtents(core::Call& call) {
+    CallRender3DGL *in = nullptr, *out = nullptr;
+    if (CheckObservedSlots(in, out, call)) {
+        *out = *in;
+        const auto res = (*out)(core::view::AbstractCallRender::FnGetExtents);
+        *in = *out;
+        return res;
+    }
+    return false;
+}
+
+bool megamol::mmstd_gl::AnimationRenderer::RenderObservation(core::Call& call) {
+    CallRender3DGL *in = nullptr, *out = nullptr;
+    if (CheckObservedSlots(in, out, call)) {
+        *out = *in;
+        const auto res = (*out)(core::view::AbstractCallRender::FnRender);
+        *in = *out;
+        return res;
+    }
+    return false;
+}
+
+bool megamol::mmstd_gl::AnimationRenderer::OnObservedMouseButton(core::Call& call) {
+    CallRender3DGL *in = nullptr, *out = nullptr;
+    if (CheckObservedSlots(in, out, call)) {
+        out->SetInputEvent(in->GetInputEvent());
+        return (*out)(core::view::AbstractCallRender::FnOnMouseButton);
+    }
+    return false;
+}
+
+bool megamol::mmstd_gl::AnimationRenderer::OnObservedMouseMove(core::Call& call) {
+    CallRender3DGL *in = nullptr, *out = nullptr;
+    if (CheckObservedSlots(in, out, call)) {
+        out->SetInputEvent(in->GetInputEvent());
+        return (*out)(core::view::AbstractCallRender::FnOnMouseMove);
+    }
+    return false;
+}
+
+bool megamol::mmstd_gl::AnimationRenderer::OnObservedMouseScroll(core::Call& call) {
+    CallRender3DGL *in = nullptr, *out = nullptr;
+    if (CheckObservedSlots(in, out, call)) {
+        out->SetInputEvent(in->GetInputEvent());
+        return (*out)(core::view::AbstractCallRender::FnOnMouseScroll);
+    }
+    return false;
+}
+
+bool megamol::mmstd_gl::AnimationRenderer::OnObservedChar(core::Call& call) {
+    CallRender3DGL *in = nullptr, *out = nullptr;
+    if (CheckObservedSlots(in, out, call)) {
+        out->SetInputEvent(in->GetInputEvent());
+        return (*out)(core::view::AbstractCallRender::FnOnChar);
+    }
+    return false;
+}
+
+bool megamol::mmstd_gl::AnimationRenderer::OnObservedKey(core::Call& call) {
+    CallRender3DGL *in = nullptr, *out = nullptr;
+    if (CheckObservedSlots(in, out, call)) {
+        out->SetInputEvent(in->GetInputEvent());
+        return (*out)(core::view::AbstractCallRender::FnOnKey);
+    }
+    return false;
 }
