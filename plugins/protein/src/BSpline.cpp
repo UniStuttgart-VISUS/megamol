@@ -12,7 +12,7 @@ using namespace megamol;
 /*
  * protein::BSpline::BSpline
  */
-protein::BSpline::BSpline(void) {
+protein::BSpline::BSpline() {
     this->N = 0;
 
     this->B.SetAt(0, 0, -1.0f / 6.0f);
@@ -36,7 +36,7 @@ protein::BSpline::BSpline(void) {
 /*
  * protein::BSpline::~BSpline
  */
-protein::BSpline::~BSpline(void) {}
+protein::BSpline::~BSpline() {}
 
 /*
  * protein::BSpline::setG
@@ -91,7 +91,7 @@ void protein::BSpline::setN(unsigned int n) {
  * protein::BSpline::computeSpline
  * compute the spline from the given backbone coordinates
  */
-bool protein::BSpline::computeSpline(void) {
+bool protein::BSpline::computeSpline() {
     vislib::math::Vector<float, 3> tmpVec;
 
     if (this->N > 0 && this->backbone.size() > 4) {

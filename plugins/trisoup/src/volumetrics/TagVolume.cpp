@@ -46,6 +46,6 @@ void TagVolume::Reset() {
     memset(this->volume, 0, volSize);
 }
 
-TagVolume::~TagVolume(void) {
+TagVolume::~TagVolume() {
     delete[] volume;
 }

@@ -18,8 +18,7 @@
 
 #include <filesystem>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class UncertaintyDataLoader : public megamol::core::Module {
 
@@ -29,7 +28,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "UncertaintyDataLoader";
     }
 
@@ -38,7 +37,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers protein secondary structure uncertainty data.";
     }
 
@@ -47,15 +46,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    UncertaintyDataLoader(void);
+    UncertaintyDataLoader();
 
     /** dtor */
-    ~UncertaintyDataLoader(void);
+    ~UncertaintyDataLoader() override;
 
 protected:
     /**
@@ -63,12 +62,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Call callback to get the data
@@ -114,14 +113,14 @@ private:
      *
      *@return True on success
      */
-    bool CalculateUncertaintyAverage(void);
+    bool CalculateUncertaintyAverage();
 
     /**
      * Compute uncertainty on current secondary structure data with method EXTENDED.
      *
      *@return True on success
      */
-    bool CalculateUncertaintyExtended(void);
+    bool CalculateUncertaintyExtended();
 
 
     /**
@@ -129,7 +128,7 @@ private:
      *
      *@return True on success
      */
-    bool CalculateStructureLength(void);
+    bool CalculateStructureLength();
 
 
     // ------------------ variables -------------------
@@ -191,5 +190,4 @@ private:
     protein_calls::UncertaintyDataCall::pdbAssMethod pdbAssignmentSheet;
 };
 
-} // namespace protein
-} /* end namespace megamol */
+} // namespace megamol::protein

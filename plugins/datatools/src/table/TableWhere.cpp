@@ -42,7 +42,7 @@ enum Operator : int {
 /*
  * megamol::datatools::table::TableWhere::TableWhere
  */
-megamol::datatools::table::TableWhere::TableWhere(void)
+megamol::datatools::table::TableWhere::TableWhere()
         : paramColumn("column", "The column to be filtered.")
         , paramEpsilon("epsilon", "The epsilon value for testing (in-) equality.")
         , paramOperator("operator", "The comparison operator.")
@@ -84,7 +84,7 @@ megamol::datatools::table::TableWhere::TableWhere(void)
 /*
  * megamol::datatools::table::TableWhere::~TableWhere
  */
-megamol::datatools::table::TableWhere::~TableWhere(void) {
+megamol::datatools::table::TableWhere::~TableWhere() {
     // TODO: this is toxic
     this->Release();
 }
@@ -93,7 +93,7 @@ megamol::datatools::table::TableWhere::~TableWhere(void) {
 /*
  * megamol::datatools::table::TableWhere::create
  */
-bool megamol::datatools::table::TableWhere::create(void) {
+bool megamol::datatools::table::TableWhere::create() {
     return true;
 }
 
@@ -101,7 +101,7 @@ bool megamol::datatools::table::TableWhere::create(void) {
 /*
  * megamol::datatools::table::TableWhere::release
  */
-void megamol::datatools::table::TableWhere::release(void) {}
+void megamol::datatools::table::TableWhere::release() {}
 
 
 /*

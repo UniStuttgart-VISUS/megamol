@@ -5,20 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CALLREGISTERATCONTROLLER_H_INCLUDED
-#define MEGAMOLCORE_CALLREGISTERATCONTROLLER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include <vislib/String.h>
 
 
-namespace megamol {
-namespace core {
-namespace cluster {
+namespace megamol::core::cluster {
 
 /** forward declaration */
 class ClusterControllerClient;
@@ -43,7 +37,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallRegisterAtController";
     }
 
@@ -52,7 +46,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for registering a module at the cluster controller";
     }
 
@@ -61,7 +55,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 3;
     }
 
@@ -88,19 +82,19 @@ public:
     /**
      * Ctor.
      */
-    CallRegisterAtController(void);
+    CallRegisterAtController();
 
     /**
      * ~Dtor.
      */
-    virtual ~CallRegisterAtController(void);
+    ~CallRegisterAtController() override;
 
     /**
      * Gets the client to be un-/registered
      *
      * @return The client to be un-/registered
      */
-    inline ClusterControllerClient* Client(void) {
+    inline ClusterControllerClient* Client() {
         return this->client;
     }
 
@@ -109,7 +103,7 @@ public:
      *
      * @return The client to be un-/registered
      */
-    inline const ClusterControllerClient* Client(void) const {
+    inline const ClusterControllerClient* Client() const {
         return this->client;
     }
 
@@ -118,7 +112,7 @@ public:
      *
      * @return The name of the cluster
      */
-    inline const vislib::StringA& GetStatusClusterName(void) const {
+    inline const vislib::StringA& GetStatusClusterName() const {
         return this->statClstrName;
     }
 
@@ -127,7 +121,7 @@ public:
      *
      * @return The number of connected peers
      */
-    inline unsigned int GetStatusPeerCount(void) const {
+    inline unsigned int GetStatusPeerCount() const {
         return this->statPeerCnt;
     }
 
@@ -136,7 +130,7 @@ public:
      *
      * @return The flag whether or not the discovery service is running
      */
-    inline bool GetStatusRunning(void) const {
+    inline bool GetStatusRunning() const {
         return this->statRun;
     }
 
@@ -182,8 +176,4 @@ private:
 typedef factories::CallAutoDescription<CallRegisterAtController> CallRegisterAtControllerDescription;
 
 
-} /* end namespace cluster */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_CALLREGISTERATCONTROLLER_H_INCLUDED */
+} // namespace megamol::core::cluster

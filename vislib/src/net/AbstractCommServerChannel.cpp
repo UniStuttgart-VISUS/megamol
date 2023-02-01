@@ -12,13 +12,13 @@
 /*
  * vislib::net::AbstractCommServerChannel::AbstractCommServerChannel
  */
-vislib::net::AbstractCommServerChannel::AbstractCommServerChannel(void) : Super() {}
+vislib::net::AbstractCommServerChannel::AbstractCommServerChannel() : Super() {}
 
 
 /*
  * vislib::net::AbstractCommServerChannel::~AbstractCommServerChannel
  */
-vislib::net::AbstractCommServerChannel::~AbstractCommServerChannel(void) {
+vislib::net::AbstractCommServerChannel::~AbstractCommServerChannel() {
     // Note: Calling Close() here to ensure correct cleanup of all child classes
     // will not work. The child class that has the actual implementation of
     // Close() must do that.

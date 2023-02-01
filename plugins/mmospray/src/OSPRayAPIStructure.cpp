@@ -13,7 +13,7 @@
 using namespace megamol::ospray;
 
 
-OSPRayAPIStructure::OSPRayAPIStructure(void)
+OSPRayAPIStructure::OSPRayAPIStructure()
         : AbstractOSPRayStructure()
         , getDataSlot("getdata", "Connects to the data source") {
     this->getDataSlot.SetCompatibleCall<CallOSPRayAPIObjectDescription>();

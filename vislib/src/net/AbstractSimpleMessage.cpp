@@ -15,19 +15,19 @@
 /*
  * vislib::net::AbstractSimpleMessage::~AbstractSimpleMessage
  */
-vislib::net::AbstractSimpleMessage::~AbstractSimpleMessage(void) {}
+vislib::net::AbstractSimpleMessage::~AbstractSimpleMessage() {}
 
 
 /*
  * vislib::net::AbstractSimpleMessage::AbstractSimpleMessage
  */
-vislib::net::AbstractSimpleMessage::AbstractSimpleMessage(void) {}
+vislib::net::AbstractSimpleMessage::AbstractSimpleMessage() {}
 
 
 /*
  * vislib::net::AbstractSimpleMessage::GetBody
  */
-const void* vislib::net::AbstractSimpleMessage::GetBody(void) const {
+const void* vislib::net::AbstractSimpleMessage::GetBody() const {
     // If that asserts, the child class probably does not initialise correctly.
     ASSERT(this->header.PeekData() != NULL);
     return (this->header.PeekData() + 1);
@@ -37,7 +37,7 @@ const void* vislib::net::AbstractSimpleMessage::GetBody(void) const {
 /*
  * vislib::net::AbstractSimpleMessage::GetBody
  */
-void* vislib::net::AbstractSimpleMessage::GetBody(void) {
+void* vislib::net::AbstractSimpleMessage::GetBody() {
     // If that asserts, the child class probably does not initialise correctly.
     ASSERT(this->header.PeekData() != NULL);
     return const_cast<SimpleMessageHeaderData*>(this->header.PeekData() + 1);
@@ -119,7 +119,7 @@ bool vislib::net::AbstractSimpleMessage::operator==(const AbstractSimpleMessage&
 /*
  * vislib::net::AbstractSimpleMessage::operator const void *
  */
-vislib::net::AbstractSimpleMessage::operator const void*(void) const {
+vislib::net::AbstractSimpleMessage::operator const void*() const {
     return static_cast<const void*>(this->header.PeekData());
 }
 
@@ -127,7 +127,7 @@ vislib::net::AbstractSimpleMessage::operator const void*(void) const {
 /*
  * vislib::net::AbstractSimpleMessage::operator void *
  */
-vislib::net::AbstractSimpleMessage::operator void*(void) {
+vislib::net::AbstractSimpleMessage::operator void*() {
     return const_cast<void*>(static_cast<const void*>(this->header.PeekData()));
 }
 

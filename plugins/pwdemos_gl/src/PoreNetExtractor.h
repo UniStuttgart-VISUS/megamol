@@ -28,8 +28,7 @@
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Module for extracting and rendering PoreNetwork
@@ -41,7 +40,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "PoreNetExtractor";
     }
 
@@ -50,7 +49,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module managing and extracting a pore net";
     }
 
@@ -59,19 +58,19 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /**
      * Ctor
      */
-    PoreNetExtractor(void);
+    PoreNetExtractor();
 
     /**
      * Dtor
      */
-    virtual ~PoreNetExtractor(void);
+    ~PoreNetExtractor() override;
 
 protected:
     /**
@@ -83,7 +82,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -92,19 +91,19 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** Possible extraction directions */
@@ -142,17 +141,17 @@ private:
      *
      * @return True if the extraction process is running
      */
-    bool isExtractionRunning(void);
+    bool isExtractionRunning();
 
     /**
      * Cancels the current extraction process
      */
-    void abortExtraction(void);
+    void abortExtraction();
 
     /**
      * Performs one synchrone step of the extraction process
      */
-    void performExtraction(void);
+    void performExtraction();
 
     /**
      * Writes the file header
@@ -169,7 +168,7 @@ private:
     void closeFile(vislib::sys::File& file);
 
     /** Removes all data */
-    void clear(void);
+    void clear();
 
     /**
      * Ensures the actuality of the type texture
@@ -179,7 +178,7 @@ private:
     void assertTypeTexture(CrystalDataCall& types);
 
     /** Releases the type texture */
-    void releaseTypeTexture(void);
+    void releaseTypeTexture();
 
     /**
      * Draws the particles on the clipping plane into the current output
@@ -261,5 +260,4 @@ private:
     PoreMeshProcessor::SliceLoops debugLoopDataEntryObject;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

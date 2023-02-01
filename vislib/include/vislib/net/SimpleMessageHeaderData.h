@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SIMPLEMESSAGEHEADERDATA_H_INCLUDED
-#define VISLIB_SIMPLEMESSAGEHEADERDATA_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /** ID type for simple messages. */
@@ -48,10 +43,8 @@ typedef struct SimpleMessageHeaderData_t {
  */
 extern const SimpleMessageID VLSNP1_FIRST_RESERVED_MESSAGE_ID;
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SIMPLEMESSAGEHEADERDATA_H_INCLUDED */

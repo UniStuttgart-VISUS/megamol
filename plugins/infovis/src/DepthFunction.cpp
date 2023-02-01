@@ -242,7 +242,7 @@ std::vector<std::vector<int>> parseColumnGroups(std::string& columnGroupString) 
 
 // ---------------------------------------------------------------------------
 
-DepthFunction::DepthFunction(void)
+DepthFunction::DepthFunction()
         : megamol::core::Module()
         , dataOutSlot("dataOut", "Ouput")
         , dataInSlot("dataIn", "Input")
@@ -296,15 +296,15 @@ DepthFunction::DepthFunction(void)
     params.push_back(&randomSeed);
 }
 
-DepthFunction::~DepthFunction(void) {
+DepthFunction::~DepthFunction() {
     this->Release();
 }
 
-bool DepthFunction::create(void) {
+bool DepthFunction::create() {
     return true;
 }
 
-void DepthFunction::release(void) {}
+void DepthFunction::release() {}
 
 bool DepthFunction::getDataCallback(core::Call& c) {
     try {

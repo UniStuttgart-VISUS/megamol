@@ -10,8 +10,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 class OSPRayAOVSphereGeometry : public core::Module {
 
@@ -21,7 +20,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "OSPRayAOVSphereGeometry";
     }
 
@@ -30,7 +29,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Creator for OSPRay no overhead sphere geometries with volume-based ao approximation.";
     }
 
@@ -39,15 +38,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Dtor. */
-    virtual ~OSPRayAOVSphereGeometry(void);
+    ~OSPRayAOVSphereGeometry() override;
 
     /** Ctor. */
-    OSPRayAOVSphereGeometry(void);
+    OSPRayAOVSphereGeometry();
 
 protected:
     /**
@@ -60,8 +59,8 @@ protected:
     // void colorTransferGray(std::vector<float> &grayArray, float const* transferTable, unsigned int tableSize,
     // std::vector<float> &rgbaArray);
 
-    virtual bool create();
-    virtual void release();
+    bool create() override;
+    void release() override;
 
     bool getDataCallback(core::Call& call);
     bool getExtendsCallback(core::Call& call);
@@ -107,5 +106,4 @@ private:
     long long int ispcLimit = 1ULL << 30;
 };
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

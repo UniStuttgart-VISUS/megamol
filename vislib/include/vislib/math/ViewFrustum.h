@@ -8,11 +8,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_VIEWFRUSTUM_H_INCLUDED
-#define VISLIB_VIEWFRUSTUM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -21,8 +17,7 @@
 #include "vislib/math/AbstractViewFrustum.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -35,7 +30,7 @@ public:
     /**
      * Create a degenerate frustum that has collapsed to a point.
      */
-    inline ViewFrustum(void) {
+    inline ViewFrustum() {
         this->offsets[Super::IDX_BOTTOM] = static_cast<T>(0);
         this->offsets[Super::IDX_TOP] = static_cast<T>(0);
         this->offsets[Super::IDX_LEFT] = static_cast<T>(0);
@@ -100,7 +95,7 @@ public:
     ViewFrustum(const AbstractViewFrustum<Tp, Sp>& rhs);
 
     /** Dtor. */
-    virtual ~ViewFrustum(void);
+    virtual ~ViewFrustum();
 
     /**
      * Assignment.
@@ -153,12 +148,10 @@ ViewFrustum<T>::ViewFrustum(const AbstractViewFrustum<Tp, Sp>& rhs) {
  * ViewFrustum<T>::~ViewFrustum
  */
 template<class T>
-ViewFrustum<T>::~ViewFrustum(void) {}
+ViewFrustum<T>::~ViewFrustum() {}
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_VIEWFRUSTUM_H_INCLUDED */

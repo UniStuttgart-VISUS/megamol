@@ -4,11 +4,7 @@
  * Copyright (C) 2008 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_CONSTITERATOR_H_INCLUDED
-#define VISLIB_CONSTITERATOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -28,7 +24,7 @@ public:
     /**
      * Default ctor.
      */
-    ConstIterator(void);
+    ConstIterator();
 
     /**
      * Ctor from non-const iterator.
@@ -45,14 +41,14 @@ public:
     ConstIterator(const ConstIterator<I>& src);
 
     /** Dtor. */
-    virtual ~ConstIterator(void);
+    virtual ~ConstIterator();
 
     /**
      * Answer whether there is a next element to iterator to.
      *
      * @return true if there is a next element, false otherwise.
      */
-    virtual bool HasNext(void) const;
+    virtual bool HasNext() const;
 
     /**
      * Iterates to the next element and returns this element.
@@ -60,7 +56,7 @@ public:
      * @return The next element, which becomes the current element after
      *         calling this methode.
      */
-    virtual const typename I::Type& Next(void) const;
+    virtual const typename I::Type& Next() const;
 
     /**
      * Assignmnet operator.
@@ -81,7 +77,7 @@ private:
  * ConstIterator<I>::ConstIterator
  */
 template<class I>
-ConstIterator<I>::ConstIterator(void) : iter() {
+ConstIterator<I>::ConstIterator() : iter() {
     // intentionally empty
 }
 
@@ -108,7 +104,7 @@ ConstIterator<I>::ConstIterator(const ConstIterator<I>& src) : iter(src.iter) {
  * ConstIterator<I>::~ConstIterator
  */
 template<class I>
-ConstIterator<I>::~ConstIterator(void) {
+ConstIterator<I>::~ConstIterator() {
     // intentionally empty
 }
 
@@ -117,7 +113,7 @@ ConstIterator<I>::~ConstIterator(void) {
  * ConstIterator<I>::HasNext
  */
 template<class I>
-bool ConstIterator<I>::HasNext(void) const {
+bool ConstIterator<I>::HasNext() const {
     return this->iter.HasNext();
 }
 
@@ -126,7 +122,7 @@ bool ConstIterator<I>::HasNext(void) const {
  * ConstIterator<I>::Next
  */
 template<class I>
-const typename I::Type& ConstIterator<I>::Next(void) const {
+const typename I::Type& ConstIterator<I>::Next() const {
     return const_cast<I&>(this->iter).Next();
 }
 
@@ -146,4 +142,3 @@ ConstIterator<I>& ConstIterator<I>::operator=(const ConstIterator<I>& rhs) {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_CONSTITERATOR_H_INCLUDED */

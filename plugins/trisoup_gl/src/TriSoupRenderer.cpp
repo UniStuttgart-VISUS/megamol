@@ -37,7 +37,7 @@ using namespace megamol::core;
 /*
  * TriSoupRenderer::TriSoupRenderer
  */
-TriSoupRenderer::TriSoupRenderer(void)
+TriSoupRenderer::TriSoupRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , getDataSlot("getData", "The slot to fetch the tri-mesh data")
         , getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)")
@@ -94,7 +94,7 @@ TriSoupRenderer::TriSoupRenderer(void)
 /*
  * TriSoupRenderer::~TriSoupRenderer
  */
-TriSoupRenderer::~TriSoupRenderer(void) {
+TriSoupRenderer::~TriSoupRenderer() {
     this->Release();
 }
 
@@ -102,7 +102,7 @@ TriSoupRenderer::~TriSoupRenderer(void) {
 /*
  * TriSoupRenderer::create
  */
-bool TriSoupRenderer::create(void) {
+bool TriSoupRenderer::create() {
     // intentionally empty
     return true;
 }
@@ -131,7 +131,7 @@ bool TriSoupRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 /*
  * TriSoupRenderer::release
  */
-void TriSoupRenderer::release(void) {
+void TriSoupRenderer::release() {
     // intentionally empty
 }
 

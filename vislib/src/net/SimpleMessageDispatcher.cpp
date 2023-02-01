@@ -17,13 +17,13 @@
 /*
  * vislib::net::SimpleMessageDispatcher::SimpleMessageDispatcher
  */
-vislib::net::SimpleMessageDispatcher::SimpleMessageDispatcher(void) {}
+vislib::net::SimpleMessageDispatcher::SimpleMessageDispatcher() {}
 
 
 /*
  * vislib::net::SimpleMessageDispatcher::~SimpleMessageDispatcher
  */
-vislib::net::SimpleMessageDispatcher::~SimpleMessageDispatcher(void) {}
+vislib::net::SimpleMessageDispatcher::~SimpleMessageDispatcher() {}
 
 
 /*
@@ -156,7 +156,7 @@ DWORD vislib::net::SimpleMessageDispatcher::Run(void* config) {
 /*
  * vislib::net::SimpleMessageDispatcher::Terminate
  */
-bool vislib::net::SimpleMessageDispatcher::Terminate(void) {
+bool vislib::net::SimpleMessageDispatcher::Terminate() {
 
     if (!this->configuration.Channel.IsNull()) {
         try {
@@ -197,7 +197,7 @@ bool vislib::net::SimpleMessageDispatcher::fireCommunicationError(const vislib::
 /*
  * vislib::net::SimpleMessageDispatcher::fireDispatcherExited
  */
-void vislib::net::SimpleMessageDispatcher::fireDispatcherExited(void) {
+void vislib::net::SimpleMessageDispatcher::fireDispatcherExited() {
 
     this->listeners.Lock();
     ListenerList::Iterator it = this->listeners.GetIterator();
@@ -211,7 +211,7 @@ void vislib::net::SimpleMessageDispatcher::fireDispatcherExited(void) {
 /*
  * vislib::net::SimpleMessageDispatcher::fireDispatcherStarted
  */
-void vislib::net::SimpleMessageDispatcher::fireDispatcherStarted(void) {
+void vislib::net::SimpleMessageDispatcher::fireDispatcherStarted() {
 
     this->listeners.Lock();
     ListenerList::Iterator it = this->listeners.GetIterator();

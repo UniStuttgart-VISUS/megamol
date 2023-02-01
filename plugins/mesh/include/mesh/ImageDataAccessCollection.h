@@ -6,13 +6,11 @@
  */
 
 
-#ifndef IMAGE_DATA_ACCESS_COLLECTION_H_INCLUDED
-#define IMAGE_DATA_ACCESS_COLLECTION_H_INCLUDED
+#pragma once
 
 #include <vector>
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class ImageDataAccessCollection {
 public:
@@ -120,7 +118,4 @@ inline void ImageDataAccessCollection::addImage(
     m_images.emplace_back(std::move(img));
 }
 
-} // namespace mesh
-} // namespace megamol
-
-#endif // !IMAGE_DATA_ACCESS_COLLECTION_H_INCLUDED
+} // namespace megamol::mesh

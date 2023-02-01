@@ -78,7 +78,7 @@ double parseValue(const char* tokenStart, const char* tokenEnd) {
     return NAN;
 }
 
-CSVDataSource::CSVDataSource(void)
+CSVDataSource::CSVDataSource()
         : core::Module()
         , filenameSlot("filename", "Filename to read from")
         , skipPrefaceSlot("skipPreface", "Number of lines to skip before parsing")
@@ -130,21 +130,21 @@ CSVDataSource::CSVDataSource(void)
     this->MakeSlotAvailable(&this->getDataSlot);
 }
 
-CSVDataSource::~CSVDataSource(void) {
+CSVDataSource::~CSVDataSource() {
     this->Release();
 }
 
-bool CSVDataSource::create(void) {
+bool CSVDataSource::create() {
     // nothing to do
     return true;
 }
 
-void CSVDataSource::release(void) {
+void CSVDataSource::release() {
     this->columns.clear();
     this->values.clear();
 }
 
-void CSVDataSource::assertData(void) {
+void CSVDataSource::assertData() {
     if (!this->filenameSlot.IsDirty() && !this->skipPrefaceSlot.IsDirty() && !this->headerNamesSlot.IsDirty() &&
         !this->headerTypesSlot.IsDirty() && !this->commentPrefixSlot.IsDirty() && !this->colSepSlot.IsDirty() &&
         !this->decSepSlot.IsDirty()) {

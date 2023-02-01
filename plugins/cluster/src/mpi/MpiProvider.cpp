@@ -24,7 +24,7 @@
 /*
  * megamol::core::cluster::mpi::MpiProvider::IsAvailable
  */
-bool megamol::core::cluster::mpi::MpiProvider::IsAvailable(void) {
+bool megamol::core::cluster::mpi::MpiProvider::IsAvailable() {
 #ifdef MEGAMOL_USE_MPI
     return true;
 #else  /* MEGAMOL_USE_MPI */
@@ -36,7 +36,7 @@ bool megamol::core::cluster::mpi::MpiProvider::IsAvailable(void) {
 /*
  * megamol::core::cluster::mpi::MpiProvider::MpiProvider
  */
-megamol::core::cluster::mpi::MpiProvider::MpiProvider(void)
+megamol::core::cluster::mpi::MpiProvider::MpiProvider()
         : Base()
         , activeNodeColour(
 #ifdef MEGAMOL_USE_MPI
@@ -64,7 +64,7 @@ megamol::core::cluster::mpi::MpiProvider::MpiProvider(void)
 /*
  * megamol::core::cluster::mpi::MpiProvider::~MpiProvider
  */
-megamol::core::cluster::mpi::MpiProvider::~MpiProvider(void) {
+megamol::core::cluster::mpi::MpiProvider::~MpiProvider() {
     this->Release();
 }
 
@@ -72,7 +72,7 @@ megamol::core::cluster::mpi::MpiProvider::~MpiProvider(void) {
 /*
  * megamol::core::cluster::mpi::MpiProvider::create
  */
-bool megamol::core::cluster::mpi::MpiProvider::create(void) {
+bool megamol::core::cluster::mpi::MpiProvider::create() {
     ++MpiProvider::activeInstances;
     return true;
 }
@@ -111,7 +111,7 @@ bool megamol::core::cluster::mpi::MpiProvider::OnCallProvideMpi(Call& call) {
 /*
  * megamol::core::cluster::mpi::MpiProvider::release
  */
-void megamol::core::cluster::mpi::MpiProvider::release(void) {
+void megamol::core::cluster::mpi::MpiProvider::release() {
     using megamol::core::utility::log::Log;
 
     ASSERT(MpiProvider::activeInstances.load() > 0);
@@ -136,7 +136,7 @@ void megamol::core::cluster::mpi::MpiProvider::release(void) {
 /*
  * megamol::core::cluster::mpi::MpiProvider::getCommandLine
  */
-vislib::StringA megamol::core::cluster::mpi::MpiProvider::getCommandLine(void) {
+vislib::StringA megamol::core::cluster::mpi::MpiProvider::getCommandLine() {
     vislib::StringA retval;
 
 #ifdef _WIN32

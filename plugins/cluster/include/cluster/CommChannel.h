@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_COMMCHANNEL_H_INCLUDED
-#define MEGAMOLCORE_COMMCHANNEL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib/Listenable.h"
 #include "vislib/SmartRef.h"
@@ -22,9 +18,7 @@
 #include "vislib/sys/RunnableThread.h"
 
 
-namespace megamol {
-namespace core {
-namespace cluster {
+namespace megamol::core::cluster {
 
 /**
  * class for communication channel end points
@@ -38,10 +32,10 @@ public:
     class Listener : public vislib::Listenable<CommChannel>::Listener {
     public:
         /** Ctor */
-        Listener(void) {}
+        Listener() {}
 
         /** Dtor */
-        virtual ~Listener(void) {}
+        ~Listener() override {}
 
         /**
          * Informs that the control channel is now connected an can send and receive messages
@@ -69,7 +63,7 @@ public:
     /**
      * Ctor
      */
-    CommChannel(void);
+    CommChannel();
 
     /**
      * Copy ctor
@@ -83,19 +77,19 @@ public:
     /**
      * Dtor.
      */
-    virtual ~CommChannel(void);
+    ~CommChannel() override;
 
     /**
      * Closes the communication channel
      */
-    void Close(void);
+    void Close();
 
     /**
      * Answer the counterparts name
      *
      * @return The counterparts name
      */
-    inline const vislib::StringA& CounterpartName(void) const {
+    inline const vislib::StringA& CounterpartName() const {
         return this->counterpartName;
     }
 
@@ -104,7 +98,7 @@ public:
      *
      * @return True if the channel is open.
      */
-    bool IsOpen(void) const;
+    bool IsOpen() const;
 
     /**
      * Opens the control channel on the given already opened channel.
@@ -172,8 +166,8 @@ protected:
      *         receiving messages, false will cause the dispatcher to
      *         exit.
      */
-    virtual bool OnCommunicationError(
-        vislib::net::SimpleMessageDispatcher& src, const vislib::Exception& exception) throw();
+    bool OnCommunicationError(
+        vislib::net::SimpleMessageDispatcher& src, const vislib::Exception& exception) throw() override;
 
     /**
      * This method is called immediately after the message dispatcher loop
@@ -184,7 +178,7 @@ protected:
      *
      * @param src The SimpleMessageDispatcher that exited.
      */
-    virtual void OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw();
+    void OnDispatcherExited(vislib::net::SimpleMessageDispatcher& src) throw() override;
 
     /**
      * This method is called immediately before the message dispatcher loop
@@ -197,7 +191,7 @@ protected:
      *
      * @param src The SimpleMessageDispatcher that exited.
      */
-    virtual void OnDispatcherStarted(vislib::net::SimpleMessageDispatcher& src) throw();
+    void OnDispatcherStarted(vislib::net::SimpleMessageDispatcher& src) throw() override;
 
 
     /**
@@ -219,8 +213,8 @@ protected:
      *         receiving messages, false will cause the dispatcher to
      *         exit.
      */
-    virtual bool OnMessageReceived(
-        vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw();
+    bool OnMessageReceived(
+        vislib::net::SimpleMessageDispatcher& src, const vislib::net::AbstractSimpleMessage& msg) throw() override;
 
 private:
     /** The communication channel */
@@ -237,8 +231,4 @@ private:
 };
 
 
-} /* end namespace cluster */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_COMMCHANNEL_H_INCLUDED */
+} // namespace megamol::core::cluster

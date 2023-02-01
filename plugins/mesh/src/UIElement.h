@@ -5,16 +5,14 @@
  * All rights reserved.
  */
 
-#ifndef UI_ELEMENT_H_INCLUDED
-#define UI_ELEMENT_H_INCLUDED
+#pragma once
 
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class UIElement : public core::Module {
 public:
@@ -23,7 +21,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "UIElement";
     }
 
@@ -32,7 +30,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "UI element for 3d in viewport manipulation.";
     }
 
@@ -41,12 +39,12 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     UIElement();
-    ~UIElement();
+    ~UIElement() override;
 
 protected:
     /**
@@ -54,7 +52,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void);
+    bool create() override;
 
     /**
      * Gets the data from the source.
@@ -70,7 +68,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
 private:
     /** The gltf file name */
@@ -86,8 +84,4 @@ private:
     megamol::core::CallerSlot m_UIElement_callerSlot;
 };
 
-} // namespace mesh
-} // namespace megamol
-
-
-#endif // !UI_ELEMENT_H_INCLUDED
+} // namespace megamol::mesh

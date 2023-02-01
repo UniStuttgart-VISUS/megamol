@@ -5,11 +5,7 @@
  * Copyright (C) 2005 by Christoph Mueller (christoph.mueller@vis.uni-stuttgart.de). All rights reserved.
  */
 
-#ifndef VISLIB_SOCKETADDRESS_H_INCLUDED
-#define VISLIB_SOCKETADDRESS_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/net/IPAddress.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 /**
  * A wrapper for a socket address.
@@ -138,7 +133,7 @@ public:
     SocketAddress(const struct sockaddr_in& address);
 
     /** Default ctor. */
-    SocketAddress(void);
+    SocketAddress();
 
     /**
      * Copy ctor.
@@ -156,14 +151,14 @@ public:
     SocketAddress(const SocketAddress& address, const unsigned short newPort);
 
     /** Dtor. */
-    ~SocketAddress(void);
+    ~SocketAddress();
 
     /**
      * Answer the address family of the socket address.
      *
      * @return The address family.
      */
-    inline AddressFamily GetAddressFamily(void) const {
+    inline AddressFamily GetAddressFamily() const {
         return static_cast<AddressFamily>(this->genericAddress.sa_family);
     }
 
@@ -173,7 +168,7 @@ public:
      *
      * @return The IP address.
      */
-    inline IPAddress GetIPAddress(void) const {
+    inline IPAddress GetIPAddress() const {
         return this->inetAddress.sin_addr;
     }
 
@@ -184,7 +179,7 @@ public:
      *
      * @return The port number.
      */
-    inline unsigned short GetPort(void) const {
+    inline unsigned short GetPort() const {
         return ntohs(this->inetAddress.sin_port);
     }
 
@@ -218,14 +213,14 @@ public:
      *
      * @return The string representation of the socket address.
      */
-    StringA ToStringA(void) const;
+    StringA ToStringA() const;
 
     /**
      * Convert the socket address into dotted string colon port format.
      *
      * @return The string representation of the socket address.
      */
-    StringW ToStringW(void) const;
+    StringW ToStringW() const;
 
     /**
      * Assignment.
@@ -258,20 +253,20 @@ public:
         return !(*this == rhs);
     }
 
-    inline operator const struct sockaddr_in &(void) const {
+    inline operator const struct sockaddr_in &() const {
         return this->inetAddress;
     }
 
-    inline operator const struct sockaddr_in * const(void) const {
+    inline operator const struct sockaddr_in * const() const {
         return &this->inetAddress;
     }
 
-    inline operator const struct sockaddr &(void) const {
+    inline operator const struct sockaddr &() const {
         // We know, that the data are aligned in the same way.
         return this->genericAddress;
     }
 
-    inline operator const struct sockaddr * const(void) const {
+    inline operator const struct sockaddr * const() const {
         // We know, that the data are aligned in the same way.
         return &this->genericAddress;
     }
@@ -284,10 +279,8 @@ private:
     };
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SOCKETADDRESS_H_INCLUDED */

@@ -35,7 +35,7 @@ public:
     CalleeSlot(const vislib::StringA& name, const vislib::StringA& desc);
 
     /** Dtor. */
-    virtual ~CalleeSlot();
+    ~CalleeSlot() override;
 
     /**
      * Connects a call to this slot.
@@ -59,7 +59,7 @@ public:
     /**
      * Clears the cleanup mark for this and all dependent objects.
      */
-    virtual void ClearCleanupMark();
+    void ClearCleanupMark() override;
 
     /**
      * Answers whether a given call is compatible with this slot.
@@ -151,17 +151,6 @@ public:
         Callback* cb = new CallbackParentImpl<C>(callName, funcName, obj, func);
         this->callbacks.Add(cb);
     }
-
-    /**
-     * Answers whether the given parameter is relevant for this view.
-     *
-     * @param searched The already searched objects for cycle detection.
-     * @param param The parameter to test.
-     *
-     * @return 'true' if 'param' is relevant, 'false' otherwise.
-     */
-    bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const std::shared_ptr<param::AbstractParam>& param) const override;
 
     /**
      * Answer the number of registered callback with names
@@ -269,7 +258,7 @@ private:
         }
 
         /** Dtor. */
-        virtual ~CallbackImpl() {
+        ~CallbackImpl() override {
             // intentionally empty
         }
 
@@ -281,7 +270,7 @@ private:
          *
          * @return The return value of the function.
          */
-        virtual bool CallMe(Module* owner, Call& call) {
+        bool CallMe(Module* owner, Call& call) override {
             C* c = dynamic_cast<C*>(owner);
             if (c == NULL)
                 return false;
@@ -312,7 +301,7 @@ private:
         }
 
         /** Dtor. */
-        virtual ~CallbackParentImpl() {
+        ~CallbackParentImpl() override {
             // intentionally empty
         }
 
@@ -324,7 +313,7 @@ private:
          *
          * @return The return value of the function.
          */
-        virtual bool CallMe(Module* owner, Call& call) {
+        bool CallMe(Module* owner, Call& call) override {
             return (this->parent->*this->func)(call);
         }
 

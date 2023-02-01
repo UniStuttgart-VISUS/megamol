@@ -20,7 +20,7 @@ ModuleNamespace::ModuleNamespace(const vislib::StringA& name) : AbstractNamedObj
 /*
  * ModuleNamespace::~ModuleNamespace
  */
-ModuleNamespace::~ModuleNamespace(void) {
+ModuleNamespace::~ModuleNamespace() {
     // intentionally empty ATM
 }
 
@@ -28,7 +28,7 @@ ModuleNamespace::~ModuleNamespace(void) {
 /*
  * ModuleNamespace::ClearCleanupMark
  */
-void ModuleNamespace::ClearCleanupMark(void) {
+void ModuleNamespace::ClearCleanupMark() {
     if (!this->CleanupMark())
         return;
     AbstractNamedObject::ClearCleanupMark();

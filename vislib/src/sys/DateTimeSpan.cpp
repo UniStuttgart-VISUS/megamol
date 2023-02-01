@@ -137,7 +137,7 @@ vislib::sys::DateTimeSpan::DateTimeSpan(
 /*
  * vislib::sys::DateTimeSpan::~DateTimeSpan
  */
-vislib::sys::DateTimeSpan::~DateTimeSpan(void) {}
+vislib::sys::DateTimeSpan::~DateTimeSpan() {}
 
 
 /*
@@ -154,7 +154,7 @@ void vislib::sys::DateTimeSpan::Set(
 /*
  * vislib::sys::DateTimeSpan::ToStringA
  */
-vislib::StringA vislib::sys::DateTimeSpan::ToStringA(void) const {
+vislib::StringA vislib::sys::DateTimeSpan::ToStringA() const {
     StringA retval;
     retval.Format("%d:%02d:%02d:%02d.%04d", this->GetDays(), math::Abs(this->GetHours()), math::Abs(this->GetMinutes()),
         math::Abs(this->GetSeconds()), math::Abs(this->GetMilliseconds()));
@@ -165,7 +165,7 @@ vislib::StringA vislib::sys::DateTimeSpan::ToStringA(void) const {
 /*
  * vislib::sys::DateTimeSpan::ToStringW
  */
-vislib::StringW vislib::sys::DateTimeSpan::ToStringW(void) const {
+vislib::StringW vislib::sys::DateTimeSpan::ToStringW() const {
     StringW retval;
     retval.Format(L"%d:%02d:%02d:%02d.%04d", this->GetDays(), math::Abs(this->GetHours()),
         math::Abs(this->GetMinutes()), math::Abs(this->GetSeconds()), math::Abs(this->GetMilliseconds()));
@@ -192,7 +192,7 @@ vislib::sys::DateTimeSpan& vislib::sys::DateTimeSpan::operator-=(const DateTimeS
 /*
  * vislib::sys::DateTimeSpan::operator -
  */
-vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::operator-(void) const {
+vislib::sys::DateTimeSpan vislib::sys::DateTimeSpan::operator-() const {
     if (this->ticks == DateTimeSpan::MINIMUM) {
         // Minimum would overflow, because 0 belongs to positive range.
         throw IllegalStateException("DateTimeSpan::MINIMUM", __FILE__, __LINE__);

@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTPYRAMIDALFRUSTUM_H_INCLUDED
-#define VISLIB_ABSTRACTPYRAMIDALFRUSTUM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -25,8 +21,7 @@
 
 #include "vislib/MissingImplementationException.h"
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -63,7 +58,7 @@ public:
     static const UINT_PTR IDX_RIGHT_TOP_POINT;
 
     /** Dtor. */
-    virtual ~AbstractPyramidalFrustum(void);
+    virtual ~AbstractPyramidalFrustum();
 
     /**
      * Answer the points that form the bottom base of the frustum.
@@ -129,7 +124,7 @@ protected:
     /**
      * Disallow instances.
      */
-    inline AbstractPyramidalFrustum(void) {}
+    inline AbstractPyramidalFrustum() {}
 
     /**
      * Performs a sanity check whether the bottom and top base points can
@@ -181,7 +176,7 @@ const UINT_PTR AbstractPyramidalFrustum<T>::IDX_RIGHT_TOP_POINT = 2;
  * vislib::math::AbstractPyramidalFrustum<T>::~AbstractPyramidalFrustum
  */
 template<class T>
-AbstractPyramidalFrustum<T>::~AbstractPyramidalFrustum(void) {}
+AbstractPyramidalFrustum<T>::~AbstractPyramidalFrustum() {}
 
 
 /*
@@ -239,10 +234,8 @@ bool AbstractPyramidalFrustum<T>::checkSanity(
     return true;
 }
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTPYRAMIDALFRUSTUM_H_INCLUDED */

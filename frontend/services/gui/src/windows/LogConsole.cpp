@@ -17,8 +17,7 @@
 using namespace megamol::gui;
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
 
@@ -146,8 +145,7 @@ int Input_Text_Callback(ImGuiInputTextCallbackData* data) {
     return 0;
 }
 
-} // namespace gui
-} // namespace megamol
+} // namespace megamol::gui
 
 
 int megamol::gui::LogBuffer::sync() {

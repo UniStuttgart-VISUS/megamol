@@ -209,7 +209,7 @@ void vislib::net::IPCommEndPoint::Parse(const StringW& str, const ProtocolVersio
 /*
  * vislib::net::IPCommEndPoint::ToStringA
  */
-vislib::StringA vislib::net::IPCommEndPoint::ToStringA(void) const {
+vislib::StringA vislib::net::IPCommEndPoint::ToStringA() const {
     return this->endPoint.ToStringA();
 }
 
@@ -217,7 +217,7 @@ vislib::StringA vislib::net::IPCommEndPoint::ToStringA(void) const {
 /*
  * vislib::net::IPCommEndPoint::ToStringW
  */
-vislib::StringW vislib::net::IPCommEndPoint::ToStringW(void) const {
+vislib::StringW vislib::net::IPCommEndPoint::ToStringW() const {
     return this->endPoint.ToStringW();
 }
 
@@ -265,4 +265,4 @@ vislib::net::IPCommEndPoint::IPCommEndPoint(const IPEndPoint& endPoint) : Super(
 /*
  * vislib::net::IPCommEndPoint::~IPCommEndPoint
  */
-vislib::net::IPCommEndPoint::~IPCommEndPoint(void) {}
+vislib::net::IPCommEndPoint::~IPCommEndPoint() {}

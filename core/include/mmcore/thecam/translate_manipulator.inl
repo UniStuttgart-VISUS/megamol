@@ -41,7 +41,7 @@ megamol::core::thecam::translate_manipulator<T>::translate_manipulator(const wor
  * megamol::core::thecam::translate_manipulator<T>::~translate_manipulator
  */
 template<class T>
-megamol::core::thecam::translate_manipulator<T>::~translate_manipulator(void) {}
+megamol::core::thecam::translate_manipulator<T>::~translate_manipulator() {}
 
 
 /*

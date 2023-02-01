@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_UDPCOMMCHANNEL_H_INCLUDED
-#define VISLIB_UDPCOMMCHANNEL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -19,8 +15,7 @@
 #include "vislib/net/Socket.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -62,7 +57,7 @@ public:
      *
      * @throws SocketException In case the operation fails.
      */
-    virtual SmartRef<AbstractCommClientChannel> Accept(void);
+    SmartRef<AbstractCommClientChannel> Accept() override;
 
     /**
      * Binds the server to a specified end point address.
@@ -74,7 +69,7 @@ public:
      * @throws SocketException If the socket could not be bound to the
      *                         specified end point address.
      */
-    virtual void Bind(SmartRef<AbstractCommEndPoint> endPoint);
+    void Bind(SmartRef<AbstractCommEndPoint> endPoint) override;
 
     /**
      * Close the underlying socket and reset the communication channel to
@@ -82,7 +77,7 @@ public:
      *
      * @throws SocketException In case the operation fails.
      */
-    virtual void Close(void);
+    void Close() override;
 
     /**
      * Sets the default target address which to all datagram packets are
@@ -92,14 +87,14 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    virtual void Connect(SmartRef<AbstractCommEndPoint> endPoint);
+    void Connect(SmartRef<AbstractCommEndPoint> endPoint) override;
 
     /**
      * Get the underlying socket.
      *
      * @return The underlying socket.
      */
-    inline Socket& GetSocket(void) {
+    inline Socket& GetSocket() {
         return this->socket;
     }
 
@@ -115,7 +110,7 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    virtual SmartRef<AbstractCommEndPoint> GetLocalEndPoint(void) const;
+    SmartRef<AbstractCommEndPoint> GetLocalEndPoint() const override;
 
     /**
      * Answer the address the remote peer of this channel is using.
@@ -129,14 +124,14 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    virtual SmartRef<AbstractCommEndPoint> GetRemoteEndPoint(void) const;
+    SmartRef<AbstractCommEndPoint> GetRemoteEndPoint() const override;
 
     /**
      * Answer whether the channel is enabled for broadcast use.
      *
      * @return true if broadcast is enabled, false otherwise.
      */
-    inline bool IsSetBroadcast(void) const {
+    inline bool IsSetBroadcast() const {
         return ((this->flags & FLAG_BROADCAST) != 0);
     }
 
@@ -145,7 +140,7 @@ public:
      *
      * @return true if address reuse is enabled, false otherwise.
      */
-    inline bool IsSetReuseAddress(void) const {
+    inline bool IsSetReuseAddress() const {
         return ((this->flags & FLAG_REUSE_ADDRESS) != 0);
     }
 
@@ -160,7 +155,7 @@ public:
      *
      * @throws SocketException In case the operation fails.
      */
-    virtual void Listen(const int backlog = SOMAXCONN);
+    void Listen(const int backlog = SOMAXCONN) override;
 
     /**
      * Receives 'cntBytes' over the communication channel and saves them to
@@ -187,8 +182,8 @@ public:
      *                                   disconnect gracefully.
      * @throws SocketException In case the operation fails.
      */
-    virtual SIZE_T Receive(
-        void* outData, const SIZE_T cntBytes, const UINT timeout = TIMEOUT_INFINITE, const bool forceReceive = true);
+    SIZE_T Receive(void* outData, const SIZE_T cntBytes, const UINT timeout = TIMEOUT_INFINITE,
+        const bool forceReceive = true) override;
 
     /**
      * Send 'cntBytes' from the location designated by 'data' over the
@@ -213,8 +208,8 @@ public:
      *
      * @throws SocketException In case the operation fails.
      */
-    virtual SIZE_T Send(
-        const void* data, const SIZE_T cntBytes, const UINT timeout = TIMEOUT_INFINITE, const bool forceSend = true);
+    SIZE_T Send(const void* data, const SIZE_T cntBytes, const UINT timeout = TIMEOUT_INFINITE,
+        const bool forceSend = true) override;
 
 private:
     /** Superclass typedef. */
@@ -235,7 +230,7 @@ private:
     UdpCommChannel(Socket& socket, const UINT64 flags);
 
     /** Dtor. */
-    virtual ~UdpCommChannel(void);
+    ~UdpCommChannel() override;
 
     /**
      * Creates or re-creates the underlying socket.
@@ -258,10 +253,8 @@ private:
     Socket socket;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_UDPCOMMCHANNEL_H_INCLUDED */

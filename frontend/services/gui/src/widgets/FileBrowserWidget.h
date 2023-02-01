@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_FILEBROWSERPOPUP_INCLUDED
-#define MEGAMOL_GUI_FILEBROWSERPOPUP_INCLUDED
 #pragma once
 
 
@@ -18,8 +16,7 @@
 using namespace megamol::core::param;
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** ************************************************************************
@@ -116,7 +113,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_FileBrowserPopUp_INCLUDED
+} // namespace megamol::gui

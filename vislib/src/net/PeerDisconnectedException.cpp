@@ -51,4 +51,4 @@ vislib::net::PeerDisconnectedException::PeerDisconnectedException(const PeerDisc
 /*
  * vislib::net::PeerDisconnectedException::~PeerDisconnectedException
  */
-vislib::net::PeerDisconnectedException::~PeerDisconnectedException(void) {}
+vislib::net::PeerDisconnectedException::~PeerDisconnectedException() {}

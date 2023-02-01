@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_PAIR_H_INCLUDED
-#define VISLIB_PAIR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -29,7 +25,7 @@ public:
      * Create a new pair. This is only supported, if classes T and U have
      * an apropriate default constructor.
      */
-    inline Pair(void) {}
+    inline Pair() {}
 
     /**
      * Create and initialise a new pair.
@@ -47,14 +43,14 @@ public:
     inline Pair(const Pair& rhs);
 
     /** Dtor. */
-    ~Pair(void);
+    ~Pair();
 
     /**
      * Provides direct access to the first element.
      *
      * @return The first element.
      */
-    inline const T& First(void) const {
+    inline const T& First() const {
         return this->first;
     }
 
@@ -63,7 +59,7 @@ public:
      *
      * @return The first element.
      */
-    inline T& First(void) {
+    inline T& First() {
         return this->first;
     }
 
@@ -72,7 +68,7 @@ public:
      *
      * @return The first element.
      */
-    inline const T& GetFirst(void) const {
+    inline const T& GetFirst() const {
         return this->first;
     }
 
@@ -81,7 +77,7 @@ public:
      *
      * @return The second element.
      */
-    inline const U& GetSecond(void) const {
+    inline const U& GetSecond() const {
         return this->second;
     }
 
@@ -90,7 +86,7 @@ public:
      *
      * @return The first element.
      */
-    inline const T& Key(void) const {
+    inline const T& Key() const {
         return this->first;
     }
 
@@ -99,7 +95,7 @@ public:
      *
      * @return The second element.
      */
-    inline const U& Second(void) const {
+    inline const U& Second() const {
         return this->second;
     }
 
@@ -108,7 +104,7 @@ public:
      *
      * @return The second element.
      */
-    inline U& Second(void) {
+    inline U& Second() {
         return this->second;
     }
 
@@ -135,7 +131,7 @@ public:
      *
      * @return The second element.
      */
-    inline const U& Value(void) const {
+    inline const U& Value() const {
         return this->second;
     }
 
@@ -197,7 +193,7 @@ Pair<T, U>::Pair(const Pair& rhs) : first(rhs.first)
  * vislib::Pair<T, U>::~Pair
  */
 template<class T, class U>
-Pair<T, U>::~Pair(void) {}
+Pair<T, U>::~Pair() {}
 
 
 /*
@@ -227,4 +223,3 @@ Pair<T, U>& Pair<T, U>::operator=(const Pair& rhs) {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_PAIR_H_INCLUDED */

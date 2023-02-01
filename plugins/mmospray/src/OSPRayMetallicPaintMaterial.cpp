@@ -11,7 +11,7 @@
 using namespace megamol::ospray;
 
 
-OSPRayMetallicPaintMaterial::OSPRayMetallicPaintMaterial(void)
+OSPRayMetallicPaintMaterial::OSPRayMetallicPaintMaterial()
         : AbstractOSPRayMaterial()
         ,
         // METALLIC
@@ -31,7 +31,7 @@ OSPRayMetallicPaintMaterial::OSPRayMetallicPaintMaterial(void)
     this->MakeSlotAvailable(&this->metallicShadeColor);
 }
 
-OSPRayMetallicPaintMaterial::~OSPRayMetallicPaintMaterial(void) {
+OSPRayMetallicPaintMaterial::~OSPRayMetallicPaintMaterial() {
     this->Release();
 }
 

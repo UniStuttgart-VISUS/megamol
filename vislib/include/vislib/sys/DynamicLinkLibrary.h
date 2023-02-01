@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_DYNAMICLINKLIBRARY_H_INCLUDED
-#define VISLIB_DYNAMICLINKLIBRARY_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -22,8 +18,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * DLLException is thrown if a DynamicLinkLibrary load operation fails.
@@ -48,14 +43,14 @@ class DynamicLinkLibrary {
 
 public:
     /** Ctor. */
-    DynamicLinkLibrary(void);
+    DynamicLinkLibrary();
 
     /**
      * Dtor.
      *
      * If the library is still open, it is freed.
      */
-    ~DynamicLinkLibrary(void);
+    ~DynamicLinkLibrary();
 
     /**
      * Frees the current library, if there is one. It is safe to call
@@ -63,7 +58,7 @@ public:
      *
      * @throws DLLException If a library was loaded and cannot be released.
      */
-    void Free(void);
+    void Free();
 
     /**
      * Answer a function pointer to the function named 'procName'.
@@ -84,7 +79,7 @@ public:
      *
      * @return true, if a library is loaded, false otherwise.
      */
-    bool IsLoaded(void) const {
+    bool IsLoaded() const {
         return (this->hModule != NULL);
     }
 
@@ -94,7 +89,7 @@ public:
      *
      * @return A human-readable error message from the last call of 'Load'
      */
-    inline const vislib::StringA& LastLoadErrorMessage(void) const {
+    inline const vislib::StringA& LastLoadErrorMessage() const {
         return this->loadErrorMsg;
     }
 
@@ -178,10 +173,8 @@ private:
     vislib::StringA loadErrorMsg;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_DYNAMICLINKLIBRARY_H_INCLUDED */

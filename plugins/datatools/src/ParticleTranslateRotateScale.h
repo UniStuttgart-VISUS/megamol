@@ -11,8 +11,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module thinning the number of particles
@@ -22,25 +21,25 @@ namespace datatools {
 class ParticleTranslateRotateScale : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleTranslateRotateScale";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Rotates, translates and scales the data";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleTranslateRotateScale(void);
+    ParticleTranslateRotateScale();
 
     /** Dtor */
-    virtual ~ParticleTranslateRotateScale(void);
+    ~ParticleTranslateRotateScale() override;
     bool InterfaceIsDirty() const;
     void InterfaceResetDirty();
 
@@ -55,9 +54,8 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
-    virtual bool manipulateExtent(
-        geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
+    bool manipulateExtent(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     core::param::ParamSlot translateSlot;
@@ -71,5 +69,4 @@ private:
     vislib::math::Cuboid<float> _global_box;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

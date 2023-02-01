@@ -29,7 +29,7 @@ const UINT32 vislib::Serialiser::SERIALISER_REQUIRES_ORDER = 0x00000004;
 /*
  * vislib::Serialiser::~Serialiser
  */
-vislib::Serialiser::~Serialiser(void) {
+vislib::Serialiser::~Serialiser() {
     // Nothing to do.
 }
 

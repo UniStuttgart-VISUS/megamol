@@ -10,4 +10,4 @@
 /*
  * vislib::sys::SyncObject::~SyncObject
  */
-vislib::sys::SyncObject::~SyncObject(void) {}
+vislib::sys::SyncObject::~SyncObject() {}

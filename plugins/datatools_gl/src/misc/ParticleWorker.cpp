@@ -25,7 +25,7 @@ using namespace megamol::datatools_gl::misc;
 /*
  * ParticleWorker::ParticleWorker
  */
-ParticleWorker::ParticleWorker(void)
+ParticleWorker::ParticleWorker()
         : inParticlesDataSlot("inPartData", "Input for particle data")
         , outParticlesDataSlot("outPartData", "Output of particle data")
         , glClusterInfos(0)
@@ -45,7 +45,7 @@ ParticleWorker::ParticleWorker(void)
 /*
  * ParticleWorker::~ParticleWorker
  */
-ParticleWorker::~ParticleWorker(void) {
+ParticleWorker::~ParticleWorker() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -53,7 +53,7 @@ ParticleWorker::~ParticleWorker(void) {
 /*
  * ParticleWorker::create
  */
-bool ParticleWorker::create(void) {
+bool ParticleWorker::create() {
 
     using namespace megamol::core::utility::log;
 
@@ -82,7 +82,7 @@ bool ParticleWorker::create(void) {
 /*
  * ParticleWorker::release
  */
-void ParticleWorker::release(void) {
+void ParticleWorker::release() {
     glDeleteBuffersARB(static_cast<GLsizei>(glVB.Count()), glVB.PeekElements());
     glDeleteVertexArrays(static_cast<GLsizei>(glVAO.Count()), glVAO.PeekElements());
     this->shaderOnClusterComputation.reset();

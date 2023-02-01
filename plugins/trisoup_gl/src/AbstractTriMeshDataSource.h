@@ -6,11 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMTRISOUPPLG_ABSTRACTTRIMESHDATASOURCE_H_INCLUDED
-#define MMTRISOUPPLG_ABSTRACTTRIMESHDATASOURCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls/LinesDataCall.h"
 #include "geometry_calls_gl/CallTriMeshDataGL.h"
@@ -22,8 +18,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace trisoup_gl {
+namespace megamol::trisoup_gl {
 
 
 /**
@@ -32,10 +27,10 @@ namespace trisoup_gl {
 class AbstractTriMeshDataSource : public core::Module {
 public:
     /** Ctor */
-    AbstractTriMeshDataSource(void);
+    AbstractTriMeshDataSource();
 
     /** Dtor */
-    virtual ~AbstractTriMeshDataSource(void);
+    ~AbstractTriMeshDataSource() override;
 
 protected:
     /** Alias for mesh class */
@@ -52,7 +47,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Gets the data from the source.
@@ -75,10 +70,10 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /** Ensures that the data is loaded */
-    virtual void assertData(void) = 0;
+    virtual void assertData() = 0;
 
     /** The objects */
     vislib::Array<Mesh> objs;
@@ -103,7 +98,4 @@ private:
     core::CalleeSlot getLinesDataSlot;
 };
 
-} // namespace trisoup_gl
-} /* end namespace megamol */
-
-#endif /* MMTRISOUPPLG_ABSTRACTTRIMESHDATASOURCE_H_INCLUDED */
+} // namespace megamol::trisoup_gl

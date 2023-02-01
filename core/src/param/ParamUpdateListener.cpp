@@ -12,7 +12,7 @@ using namespace megamol::core::param;
 /*
  * ParamUpdateListener::ParamUpdateListener
  */
-ParamUpdateListener::ParamUpdateListener(void) {
+ParamUpdateListener::ParamUpdateListener() {
     // intentionally empty
 }
 
@@ -20,7 +20,7 @@ ParamUpdateListener::ParamUpdateListener(void) {
 /*
  * ParamUpdateListener::~ParamUpdateListener
  */
-ParamUpdateListener::~ParamUpdateListener(void) {
+ParamUpdateListener::~ParamUpdateListener() {
     // intentionally empty
 }
 

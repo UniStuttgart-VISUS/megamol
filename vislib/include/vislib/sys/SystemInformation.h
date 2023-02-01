@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SYSTEMINFORMATION_H_INCLUDED
-#define VISLIB_SYSTEMINFORMATION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -19,8 +15,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /**
@@ -53,7 +48,7 @@ public:
 #ifdef _WIN32
     static DWORD AllocationGranularity(void);
 #else  /* _WIN32 */
-    static inline DWORD AllocationGranularity(void) {
+    static inline DWORD AllocationGranularity() {
         return PageSize();
     }
 #endif /* _WIN32 */
@@ -66,7 +61,7 @@ public:
      *
      * @throws SystemException on failure.
      */
-    static UINT64 AvailableMemorySize(void);
+    static UINT64 AvailableMemorySize();
 
     /**
      * Returns an ansi string with the local computers name.
@@ -97,7 +92,7 @@ public:
      *
      * @throws SystemException on failure
      */
-    inline static StringA ComputerNameA(void) {
+    inline static StringA ComputerNameA() {
         StringA retval;
         SystemInformation::ComputerName(retval);
         return retval;
@@ -110,7 +105,7 @@ public:
      *
      * @throws SystemException on failure
      */
-    inline static StringW ComputerNameW(void) {
+    inline static StringW ComputerNameW() {
         StringW retval;
         SystemInformation::ComputerName(retval);
         return retval;
@@ -139,7 +134,7 @@ public:
      * @throws SystemException If the page size could not be retrieved
      *                         (Linux only).
      */
-    static DWORD PageSize(void);
+    static DWORD PageSize();
 
     /**
      * Return the size of physical memory in bytes.
@@ -148,7 +143,7 @@ public:
      *
      * @throws SystemException on failure.
      */
-    static UINT64 PhysicalMemorySize(void);
+    static UINT64 PhysicalMemorySize();
 
     /**
      * Answer the size and origin of the primary monitor.
@@ -161,7 +156,7 @@ public:
      * @throws Exception       On Linux, if the X11 display could not be
      *                         opened.
      */
-    static MonitorRect PrimaryMonitorRect(void);
+    static MonitorRect PrimaryMonitorRect();
 
     /**
      * Return the number of processors in the local machine.
@@ -170,7 +165,7 @@ public:
      *
      * @throws SystemException on failure.
      */
-    static unsigned int ProcessorCount(void);
+    static unsigned int ProcessorCount();
 
     /**
      * Returns the type of the operating system this vislib application is
@@ -179,7 +174,7 @@ public:
      *
      * @return The system type of the current vislib application.
      */
-    static OSType SelfSystemType(void);
+    static OSType SelfSystemType();
 
     /**
      * Returns the size of a word in bit of the current vislib
@@ -188,14 +183,14 @@ public:
      *
      * @return The word size of the current vislib application.
      */
-    static unsigned int SelfWordSize(void);
+    static unsigned int SelfWordSize();
 
     /**
      * Returns the endianness of the system running this vislib application.
      *
      * @return The endianness of the machine.
      */
-    inline static Endianness SystemEndianness(void) {
+    inline static Endianness SystemEndianness() {
         UINT32 endianTestInt = 0x12345678;
         UINT8 endianTestBytes[4];
         ::memcpy(endianTestBytes, &endianTestInt, 4);
@@ -222,7 +217,7 @@ public:
      *
      * @return The type of the operating system.
      */
-    static OSType SystemType(void);
+    static OSType SystemType();
 
     /**
      * Answer the version of the operating system.
@@ -241,7 +236,7 @@ public:
      *
      * @return The word size of the operating system.
      */
-    static unsigned int SystemWordSize(void);
+    static unsigned int SystemWordSize();
 
     /**
      * Returns an ansi string with the local user name running this vislib
@@ -275,7 +270,7 @@ public:
      *
      * @throws SystemException on failure
      */
-    inline static StringA UserNameA(void) {
+    inline static StringA UserNameA() {
         StringA retval;
         SystemInformation::UserName(retval);
         return retval;
@@ -289,7 +284,7 @@ public:
      *
      * @throws SystemException on failure
      */
-    inline static StringW UserNameW(void) {
+    inline static StringW UserNameW() {
         StringW retval;
         SystemInformation::UserName(retval);
         return retval;
@@ -305,7 +300,7 @@ public:
      *
      * @return The bounding rectangle of the virtual screen.
      */
-    static MonitorRect VirtualScreen(void);
+    static MonitorRect VirtualScreen();
 
 private:
 #ifdef _WIN32
@@ -354,19 +349,17 @@ private:
 #endif /* _WIN32 */
 
     /** forbidden Ctor. */
-    SystemInformation(void);
+    SystemInformation();
 
     /** forbidden copy Ctor. */
     SystemInformation(const SystemInformation& rhs);
 
     /** forbidden Dtor. */
-    ~SystemInformation(void);
+    ~SystemInformation();
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SYSTEMINFORMATION_H_INCLUDED */

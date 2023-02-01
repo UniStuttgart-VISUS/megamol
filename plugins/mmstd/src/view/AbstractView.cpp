@@ -136,23 +136,8 @@ view::AbstractView::AbstractView(ViewDimension dim)
 /*
  * view::AbstractView::~AbstractView
  */
-view::AbstractView::~AbstractView(void) {
+view::AbstractView::~AbstractView() {
     this->_hooks.Clear(); // DO NOT DELETE OBJECTS
-}
-
-
-/*
- * view::AbstractView::IsParamRelevant
- */
-bool view::AbstractView::IsParamRelevant(const std::shared_ptr<param::AbstractParam>& param) const {
-    const AbstractNamedObject* ano = dynamic_cast<const AbstractNamedObject*>(this);
-    if (ano == NULL)
-        return false;
-    if (param == nullptr)
-        return false;
-
-    vislib::SingleLinkedList<const AbstractNamedObject*> searched;
-    return ano->IsParamRelevant(searched, param);
 }
 
 void megamol::core::view::AbstractView::SetCamera(Camera camera, bool isMutable) {
@@ -505,7 +490,7 @@ bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
 /*
  * AbstractView::determineCameraFilePath
  */
-std::string view::AbstractView::determineCameraFilePath(void) const {
+std::string view::AbstractView::determineCameraFilePath() const {
     std::string path;
 
     const auto& paths = frontend_resources.get<megamol::frontend_resources::ScriptPaths>().lua_script_paths;

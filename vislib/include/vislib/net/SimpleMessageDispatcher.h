@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SIMPLEMESSAGEDISPATCHER_H_INCLUDED
-#define VISLIB_SIMPLEMESSAGEDISPATCHER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -26,8 +22,7 @@
 #include "vislib/sys/Runnable.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 /* Forward declarations. */
 class SimpleMessageDispatchListener;
@@ -51,7 +46,7 @@ public:
      * those it added by itself.
      */
     typedef struct Configuration_t {
-        inline Configuration_t(void) {}
+        inline Configuration_t() {}
         inline Configuration_t(SmartRef<AbstractCommClientChannel> channel) : Channel(channel) {}
         inline Configuration_t(SmartRef<TcpCommChannel> channel)
                 : Channel(channel.DynamicCast<AbstractCommClientChannel>()) {}
@@ -63,10 +58,10 @@ public:
     } Configuration;
 
     /** Ctor. */
-    SimpleMessageDispatcher(void);
+    SimpleMessageDispatcher();
 
     /** Dtor. */
-    ~SimpleMessageDispatcher(void);
+    ~SimpleMessageDispatcher() override;
 
     /**
      * Add a new SimpleMessageDispatchListener to be informed about events
@@ -91,7 +86,7 @@ public:
      * @return The channel used for receiving data. DO NOT RECEIVE DATA ON
      *         THIS CHANNEL OR MANIPULATE THE SETTINGS OF THE CHANNEL!
      */
-    inline SmartRef<AbstractCommClientChannel> GetChannel(void) {
+    inline SmartRef<AbstractCommClientChannel> GetChannel() {
         return this->configuration.Channel;
     }
 
@@ -103,7 +98,7 @@ public:
      *
      * @return The configuration of the dispatcher.
      */
-    inline const Configuration& GetConfiguration(void) const {
+    inline const Configuration& GetConfiguration() const {
         return this->configuration;
     }
 
@@ -114,7 +109,7 @@ public:
      * @param config A pointer to the Configuration, which specifies the
      *               settings of the dispatcher.
      */
-    virtual void OnThreadStarting(void* config);
+    void OnThreadStarting(void* config) override;
 
     /**
      * Removes, if registered, 'listener' from the list of objects informed
@@ -138,7 +133,7 @@ public:
      * @return The application dependent return code of the thread. This
      *         must not be STILL_ACTIVE (259).
      */
-    virtual DWORD Run(void* config);
+    DWORD Run(void* config) override;
 
     /**
      * Abort the work of the dispatcher by forcefully closing the underlying
@@ -146,7 +141,7 @@ public:
      *
      * @return true.
      */
-    virtual bool Terminate(void);
+    bool Terminate() override;
 
 private:
     /** A thread-safe list for the message listeners. */
@@ -168,14 +163,14 @@ private:
      *
      * This method is thread-safe.
      */
-    void fireDispatcherExited(void);
+    void fireDispatcherExited();
 
     /**
      * Inform all registered listener about that the listener is starting.
      *
      * This method is thread-safe.
      */
-    void fireDispatcherStarted(void);
+    void fireDispatcherStarted();
 
     /**
      * Inform all registered listener about a message that was received.
@@ -200,10 +195,8 @@ private:
     SimpleMessage msg;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SIMPLEMESSAGEDISPATCHER_H_INCLUDED */

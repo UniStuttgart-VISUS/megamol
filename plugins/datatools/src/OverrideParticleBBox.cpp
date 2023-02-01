@@ -36,7 +36,7 @@ typedef vislib::math::ShallowPoint<float, 3> (*posFromSomethingFunc)(void*, size
 /*
  * datatools::OverrideParticleBBox::OverrideParticleBBox
  */
-datatools::OverrideParticleBBox::OverrideParticleBBox(void)
+datatools::OverrideParticleBBox::OverrideParticleBBox()
         : AbstractParticleManipulator("outData", "indata")
         , overrideBBoxSlot("override", "Activates the overwrite of the bounding box")
         , overrideLBBoxSlot("overrideLocalBBox", "Activates the overwrite of the local bounding box")
@@ -84,7 +84,7 @@ datatools::OverrideParticleBBox::OverrideParticleBBox(void)
 /*
  * datatools::OverrideParticleBBox::~OverrideParticleBBox
  */
-datatools::OverrideParticleBBox::~OverrideParticleBBox(void) {
+datatools::OverrideParticleBBox::~OverrideParticleBBox() {
     this->Release();
 }
 

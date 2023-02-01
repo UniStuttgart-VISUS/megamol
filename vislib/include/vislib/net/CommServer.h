@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_COMMSERVER_H_INCLUDED
-#define VISLIB_COMMSERVER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -24,8 +20,7 @@
 #include "vislib/sys/Runnable.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -43,7 +38,7 @@ public:
      * not release any references except for those it added by itself.
      */
     typedef struct Configuration_t {
-        inline Configuration_t(void) {}
+        inline Configuration_t() {}
         inline Configuration_t(SmartRef<AbstractCommServerChannel> channel, SmartRef<AbstractCommEndPoint> endPoint)
                 : Channel(channel)
                 , EndPoint(endPoint) {}
@@ -59,10 +54,10 @@ public:
     } Configuration;
 
     /** Ctor. */
-    CommServer(void);
+    CommServer();
 
     /** Dtor. */
-    virtual ~CommServer(void);
+    ~CommServer() override;
 
     /**
      * Add a new CommServerListener to be informed about events of this
@@ -86,7 +81,7 @@ public:
      *
      * @return The server configuration.
      */
-    inline const Configuration& GetConfiguration(void) const {
+    inline const Configuration& GetConfiguration() const {
         return this->configuration;
     }
 
@@ -97,7 +92,7 @@ public:
      * @param config A pointer to the Configuration, which specifies the
      *               settings of the server.
      */
-    virtual void OnThreadStarting(void* config);
+    void OnThreadStarting(void* config) override;
 
     /**
      * Removes, if registered, 'listener' from the list of objects informed
@@ -121,7 +116,7 @@ public:
      * @return The application dependent return code of the thread. This
      *         must not be STILL_ACTIVE (259).
      */
-    virtual DWORD Run(void* config);
+    DWORD Run(void* config) override;
 
     /**
      * Abort the work of the server by forcefully closing the underlying
@@ -129,7 +124,7 @@ public:
      *
      * @return true.
      */
-    virtual bool Terminate(void);
+    bool Terminate() override;
 
 private:
     /** A thread-safe list for the message listeners. */
@@ -163,14 +158,14 @@ private:
      *
      * This method is thread-safe.
      */
-    void fireServerExited(void);
+    void fireServerExited();
 
     /**
      * Inform all registered listener about that the server is starting.
      *
      * This method is thread-safe.
      */
-    void fireServerStarted(void);
+    void fireServerStarted();
 
     /** The configuration of the server. */
     Configuration configuration;
@@ -185,10 +180,8 @@ private:
     ListenerList listeners;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_COMMSERVER_H_INCLUDED */

@@ -28,8 +28,7 @@
 #include <windows.h>
 #endif
 
-namespace megamol {
-namespace volume_gl {
+namespace megamol::volume_gl {
 
 #define VS_EPS 1.0e-8
 
@@ -43,8 +42,8 @@ namespace volume_gl {
 // class for view-aligned slicing of a volume
 class ViewSlicing {
 public:
-    ViewSlicing(void){};
-    ~ViewSlicing(void){};
+    ViewSlicing(){};
+    ~ViewSlicing(){};
 
     // setup slicing
     // needs the model view matrix (column oriented),
@@ -54,7 +53,7 @@ public:
     void drawSlice(int slice);
     void drawSlices(GLenum mode, int frontToBack, int maxSlices);
 
-    int getNumSlices(void) {
+    int getNumSlices() {
         return _numSlices;
     }
 
@@ -85,7 +84,6 @@ private:
     int _maxSlices;
 };
 
-} // namespace volume_gl
-} /* end namespace megamol */
+} // namespace megamol::volume_gl
 
 #endif // _SLICING_H_

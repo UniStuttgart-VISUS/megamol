@@ -28,7 +28,7 @@ public:
     /**
      * Destructor
      */
-    virtual ~AbstractTickJob();
+    ~AbstractTickJob() override;
 
 protected:
     /**
@@ -36,12 +36,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() = 0;
+    bool create() override = 0;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() = 0;
+    void release() override = 0;
 
     /**
      * Run this job.

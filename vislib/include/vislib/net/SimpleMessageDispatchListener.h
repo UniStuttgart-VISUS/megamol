@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SIMPLEMESSAGEDISPATCHLISTENER_H_INCLUDED
-#define VISLIB_SIMPLEMESSAGEDISPATCHLISTENER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -29,8 +25,7 @@ class SimpleMessageDispatcher;
 } /* end namespace net */
 } /* end namespace vislib */
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -41,10 +36,10 @@ class SimpleMessageDispatchListener {
 
 public:
     /** Ctor. */
-    SimpleMessageDispatchListener(void);
+    SimpleMessageDispatchListener();
 
     /** Dtor. */
-    virtual ~SimpleMessageDispatchListener(void);
+    virtual ~SimpleMessageDispatchListener();
 
     /**
      * This method is called once a communication error occurs.
@@ -216,10 +211,8 @@ public:
     virtual bool OnMessageReceived(SimpleMessageDispatcher& src, const AbstractSimpleMessage& msg) throw() = 0;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SIMPLEMESSAGEDISPATCHLISTENER_H_INCLUDED */

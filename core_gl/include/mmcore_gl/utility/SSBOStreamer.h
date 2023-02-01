@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_SSBOSTREAMER_H_INCLUDED
-#define MEGAMOLCORE_SSBOSTREAMER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 #include <algorithm>
@@ -19,9 +15,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 /// A class that helps you stream some memory to a persistently mapped
 /// buffer that can be used as a SSBO. Abstracts some micro-management
@@ -81,15 +75,15 @@ public:
     /// @returns the alignment-friendly (rounded) number of items per chunk
     GLuint GetNumItemsPerChunkAligned(GLuint numItemsPerChunk, bool up = false) const;
 
-    GLuint GetHandle(void) const {
+    GLuint GetHandle() const {
         return theSSBO;
     }
 
-    GLuint GetNumChunks(void) const {
+    GLuint GetNumChunks() const {
         return numChunks;
     }
 
-    GLuint GetMaxNumItemsPerChunk(void) const {
+    GLuint GetMaxNumItemsPerChunk() const {
         return numItemsPerChunk;
     }
 
@@ -117,8 +111,4 @@ private:
     int offsetAlignment = 0;
 };
 
-} /* end namespace utility */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_SSBOSTREAMER_H_INCLUDED */
+} // namespace megamol::core::utility

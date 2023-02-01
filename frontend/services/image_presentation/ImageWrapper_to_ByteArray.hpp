@@ -12,8 +12,7 @@
 
 #include <vector>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 struct byte_texture {
     std::vector<byte> texture;
@@ -33,5 +32,4 @@ private:
     void from_image(ImageWrapper const& image);
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SIMPLEMESSAGE_H_INCLUDED
-#define VISLIB_SIMPLEMESSAGE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -19,8 +15,7 @@
 #include "vislib/net/AbstractSimpleMessage.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -69,13 +64,13 @@ public:
     SimpleMessage(const AbstractSimpleMessage& rhs);
 
     /** Dtor. */
-    virtual ~SimpleMessage(void);
+    ~SimpleMessage() override;
 
     /**
      * Trim the storage of the message to hold the actual size of the
      * header and the current content.
      */
-    void Trim(void);
+    void Trim();
 
     /**
      * Assignment operator.
@@ -116,7 +111,7 @@ protected:
      *
      * @throws Exception or derived in case of an error.
      */
-    virtual bool assertStorage(void*& outStorage, const SIZE_T size);
+    bool assertStorage(void*& outStorage, const SIZE_T size) override;
 
 private:
     /** Superclass typedef. */
@@ -126,10 +121,8 @@ private:
     RawStorage storage;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SIMPLEMESSAGE_H_INCLUDED */

@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTCLUSTERNODE_H_INCLUDED
-#define VISLIB_ABSTRACTCLUSTERNODE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -22,9 +18,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace net {
-namespace cluster {
+namespace vislib::net::cluster {
 
 /** Forward declaration of an opaque, internal context structure. */
 typedef struct ReceiveMessagesCtx_t* PReceiveMessagesCtx;
@@ -61,7 +55,7 @@ public:
     static const SHORT DEFAULT_PORT;
 
     /** Dtor. */
-    virtual ~AbstractClusterNode(void);
+    virtual ~AbstractClusterNode();
 
     /**
      * Initialise the node.
@@ -105,7 +99,7 @@ public:
      *                               Calling this interface implementation
      *                               is a severe logic error.
      */
-    virtual DWORD Run(void) = 0;
+    virtual DWORD Run() = 0;
 
 protected:
     /**
@@ -143,7 +137,7 @@ protected:
     typedef enum { RECEIVE_COMMUNICATION_ERROR = 1, SEND_COMMUNICATION_ERROR } ComErrorSource;
 
     /** Ctor. */
-    AbstractClusterNode(void);
+    AbstractClusterNode();
 
     /**
      * Copy ctor.
@@ -157,7 +151,7 @@ protected:
      *
      * @return The number of known peer nodes.
      */
-    virtual SIZE_T countPeers(void) const = 0;
+    virtual SIZE_T countPeers() const = 0;
 
     /**
      * Call 'func' for each known peer node (socket).
@@ -363,11 +357,8 @@ private:
     friend DWORD ReceiveMessages(void* receiveMessagesCtx);
 };
 
-} /* end namespace cluster */
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net::cluster
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTCLUSTERNODE_H_INCLUDED */

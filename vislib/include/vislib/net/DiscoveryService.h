@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_CLUSTERDISCOVERYSERVICE_H_INCLUDED
-#define VISLIB_CLUSTERDISCOVERYSERVICE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -27,9 +23,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace net {
-namespace cluster {
+namespace vislib::net::cluster {
 
 /* Forward declarations. */
 class DiscoveryListener;
@@ -71,7 +65,7 @@ private:
          *
          * This is required for storing peer nodes in a VISlib array.
          */
-        PeerNode(void);
+        PeerNode();
 
         /**
          * Create new peer node.
@@ -114,7 +108,7 @@ private:
          * @return true if the counter did not yet reach zero,
          *         false if it is zero (after the decrement).
          */
-        bool decrementResponseChances(void);
+        bool decrementResponseChances();
 
         /**
          * Answer the discovery address of the peer node (if IPv4).
@@ -123,7 +117,7 @@ private:
          *
          * @throws IllegalStateException If the peer node is not IPv4.
          */
-        inline IPAddress getDiscoveryAddress4(void) const {
+        inline IPAddress getDiscoveryAddress4() const {
             return this->discoveryAddress.GetIPAddress4();
         }
 
@@ -132,20 +126,20 @@ private:
          *
          * @return The IPv6 address of the peer node.
          */
-        inline IPAddress6 getDiscoveryAddress6(void) const {
+        inline IPAddress6 getDiscoveryAddress6() const {
             return this->discoveryAddress.GetIPAddress6();
         }
 
-        inline const DiscoveryConfigEx& getDiscoverySource(void) const {
+        inline const DiscoveryConfigEx& getDiscoverySource() const {
             ASSERT(this->discoverySource != NULL);
             return *this->discoverySource;
         }
 
-        inline IPAddress getResponseAddress4(void) const {
+        inline IPAddress getResponseAddress4() const {
             return this->responseAddress.GetIPAddress4();
         }
 
-        inline IPAddress6 getResponseAddress6(void) const {
+        inline IPAddress6 getResponseAddress6() const {
             return this->responseAddress.GetIPAddress6();
         }
 
@@ -153,14 +147,14 @@ private:
          * Invalidate the peer node by destroying the user communication
          * address (ID).
          */
-        void invalidate(void);
+        void invalidate();
 
         /**
          * Check whether the peer node is valid.
          *
          * @return true if the peer node is valid, false otherwise.
          */
-        bool isValid(void) const;
+        bool isValid() const;
 
         /** Implicit disconnect detection counter. */
         UINT cntResponseChances;
@@ -191,7 +185,7 @@ public:
     class DiscoveryConfig {
 
     public:
-        DiscoveryConfig(void);
+        DiscoveryConfig();
 
         /**
          * Create a new configuration with all parameters manually
@@ -337,14 +331,14 @@ public:
         /**
          * Dtor.
          */
-        virtual ~DiscoveryConfig(void);
+        virtual ~DiscoveryConfig();
 
         /**
          * Answer the broadcast address that alive-messages will be sent to.
          *
          * @return The broadcast address.
          */
-        inline const IPEndPoint& GetBcastAddress(void) const {
+        inline const IPEndPoint& GetBcastAddress() const {
             return this->bcastAddress;
         }
 
@@ -354,7 +348,7 @@ public:
          *
          * @return The local socket end point.
          */
-        inline const IPEndPoint& GetBindAddress(void) const {
+        inline const IPEndPoint& GetBindAddress() const {
             return this->bindAddress;
         }
 
@@ -365,7 +359,7 @@ public:
          * @return The address family that is used for the local socket end
          *         point.
          */
-        inline IPEndPoint::AddressFamily GetAddressFamily(void) const {
+        inline IPEndPoint::AddressFamily GetAddressFamily() const {
             return this->bindAddress.GetAddressFamily();
         }
 
@@ -375,7 +369,7 @@ public:
          * @return The protocol family that is used for the local socket
          *         end point.
          */
-        inline Socket::ProtocolFamily GetProtocolFamily(void) const {
+        inline Socket::ProtocolFamily GetProtocolFamily() const {
             return static_cast<Socket::ProtocolFamily>(this->bindAddress.GetAddressFamily());
         }
 
@@ -384,7 +378,7 @@ public:
          *
          * @return The payload address.
          */
-        inline const IPEndPoint& GetResponseAddress(void) const {
+        inline const IPEndPoint& GetResponseAddress() const {
             return this->responseAddress;
         }
 
@@ -492,14 +486,14 @@ public:
     /**
      * Create a new instance.
      */
-    DiscoveryService(void);
+    DiscoveryService();
 
     /**
      * Dtor.
      *
      * Note that the dtor will terminate the discovery.
      */
-    virtual ~DiscoveryService(void);
+    virtual ~DiscoveryService();
 
     /**
      * Add a new ClusterDiscoveryListener to be informed about discovery
@@ -520,7 +514,7 @@ public:
      *
      * This method is thread-safe.
      */
-    inline void ClearPeers(void) {
+    inline void ClearPeers() {
         this->peerNodesCritSect.Lock();
         this->peerNodes.Clear();
         this->peerNodesCritSect.Unlock();
@@ -534,7 +528,7 @@ public:
      *
      * @return The number of known peer nodes.
      */
-    inline SIZE_T CountPeers(void) const {
+    inline SIZE_T CountPeers() const {
         this->peerNodesCritSect.Lock();
         SIZE_T retval = this->peerNodes.Count();
         this->peerNodesCritSect.Unlock();
@@ -557,7 +551,7 @@ public:
      *
      * @return The number of chances for a node to answer.
      */
-    inline UINT GetCntResponseChances(void) const {
+    inline UINT GetCntResponseChances() const {
         return this->cntResponseChances;
     }
 
@@ -594,7 +588,7 @@ public:
      *
      * @return The configuration flags of the discovery service.
      */
-    inline UINT32 GetFlags(void) const {
+    inline UINT32 GetFlags() const {
         return this->flags;
     }
 
@@ -603,7 +597,7 @@ public:
      *
      * @return The name.
      */
-    inline const StringA& GetName(void) const {
+    inline const StringA& GetName() const {
         return this->name;
     }
 
@@ -612,7 +606,7 @@ public:
      *
      * @return The interval between two discovery  requests in milliseconds.
      */
-    inline UINT GetRequestInterval(void) const {
+    inline UINT GetRequestInterval() const {
         return this->requestInterval;
     }
 
@@ -637,7 +631,7 @@ public:
      *
      * @return The state of the discovery service.
      */
-    State GetState(void) const;
+    State GetState() const;
 
     /**
      * Answer whether the discovery service will not send MSG_TYPE_IAMALIVE
@@ -646,7 +640,7 @@ public:
      * @return true if the node is only observing other ones, false if it
      *         sending alive messages.
      */
-    inline bool IsObserver(void) const {
+    inline bool IsObserver() const {
         return ((this->flags & FLAG_OBSERVE_ONLY) != 0);
     }
 
@@ -659,7 +653,7 @@ public:
      *
      * @return true, if the service is running, false otherwise.
      */
-    bool IsRunning(void) const;
+    bool IsRunning() const;
 
     /**
      * Answer whether the 'idx'th known peer node is this node.
@@ -682,7 +676,7 @@ public:
      *
      * @return true if the sharing flag is set, false otherwise.
      */
-    inline bool IsShareSockets(void) const {
+    inline bool IsShareSockets() const {
         return ((this->flags & FLAG_SHARE_SOCKETS) != 0);
     }
 
@@ -693,7 +687,7 @@ public:
      *
      * @return true, if the service is stopped, false otherwise.
      */
-    inline bool IsStopped(void) const {
+    inline bool IsStopped() const {
         return (this->GetState() == STATE_STOPPED);
     }
 
@@ -825,7 +819,7 @@ public:
      *
      * @return A string representation.
      */
-    inline StringA ToStringA(void) const {
+    inline StringA ToStringA() const {
         return this->GetName();
     }
 
@@ -846,7 +840,7 @@ public:
      *
      * @return A string representation.
      */
-    inline StringW ToStringW(void) const {
+    inline StringW ToStringW() const {
         return StringW(this->GetName());
     }
 
@@ -966,10 +960,10 @@ private:
 
     public:
         /** Create a new instance. */
-        Receiver(void);
+        Receiver();
 
         /** Dtor. */
-        virtual ~Receiver(void);
+        ~Receiver() override;
 
         /**
          * Answers the discovery requests.
@@ -981,14 +975,14 @@ private:
          * @return 0, if the work was successfully finished, an error code
          *         otherwise.
          */
-        virtual DWORD Run(void* dcfg);
+        DWORD Run(void* dcfg) override;
 
         /**
          * Ask the thread to terminate.
          *
          * @return true.
          */
-        virtual bool Terminate(void);
+        bool Terminate() override;
 
     private:
         /** Flag for terminating the thread safely. */
@@ -1009,24 +1003,24 @@ private:
     class DiscoveryConfigEx : public DiscoveryConfig {
 
     public:
-        DiscoveryConfigEx(void);
+        DiscoveryConfigEx();
 
         DiscoveryConfigEx(const DiscoveryConfig& config, DiscoveryService* cds);
 
         DiscoveryConfigEx(const DiscoveryConfigEx& rhs);
 
-        virtual ~DiscoveryConfigEx(void);
+        ~DiscoveryConfigEx() override;
 
-        inline DiscoveryService& GetDiscoveryService(void) {
+        inline DiscoveryService& GetDiscoveryService() {
             ASSERT(this->cds != NULL);
             return *(this->cds);
         }
 
-        inline sys::Thread& GetRecvThread(void) {
+        inline sys::Thread& GetRecvThread() {
             return this->recvThread;
         }
 
-        inline const sys::Thread& GetRecvThread(void) const {
+        inline const sys::Thread& GetRecvThread() const {
             return this->recvThread;
         }
 
@@ -1113,10 +1107,10 @@ private:
         /**
          * Create a new instance that is working for a discovery service.
          */
-        Sender(void);
+        Sender();
 
         /** Dtor. */
-        virtual ~Sender(void);
+        ~Sender() override;
 
         /**
          * Performs the discovery.
@@ -1128,7 +1122,7 @@ private:
          * @return 0, if the work was successfully finished, an error code
          *         otherwise.
          */
-        virtual DWORD Run(void* cds);
+        DWORD Run(void* cds) override;
 
         /**
          * Ask the thread to terminate.
@@ -1138,7 +1132,7 @@ private:
          *
          * @return true.
          */
-        virtual bool Terminate(void);
+        bool Terminate() override;
 
     private:
         /** Flag for terminating the thread safely. */
@@ -1253,7 +1247,7 @@ private:
      *
      * This method is thread-safe.
      */
-    void prepareRequest(void);
+    void prepareRequest();
 
     /**
      * This method prepares sending a user message.
@@ -1353,11 +1347,8 @@ private:
 };
 
 
-} /* end namespace cluster */
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net::cluster
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_CLUSTERDISCOVERYSERVICE_H_INCLUDED */

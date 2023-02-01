@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_COMMSERVERLISTENER_H_INCLUDED
-#define VISLIB_COMMSERVERLISTENER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -21,15 +17,12 @@
 namespace vislib {
 class Exception;
 }
-namespace vislib {
-namespace net {
+namespace vislib::net {
 class CommServer;
-}
-} // namespace vislib
+} // namespace vislib::net
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 /**
  * This is the listener class for CommServers. Classes interested in
@@ -40,7 +33,7 @@ class CommServerListener {
 
 public:
     /** Dtor. */
-    virtual ~CommServerListener(void);
+    virtual ~CommServerListener();
 
     /**
      * This method is called once a network error occurs.
@@ -115,13 +108,11 @@ public:
 
 protected:
     /** Ctor. */
-    CommServerListener(void);
+    CommServerListener();
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_COMMSERVERLISTENER_H_INCLUDED */

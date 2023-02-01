@@ -5,8 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_ARROWRENDERER_H_INCLUDED
-#define MEGAMOLCORE_ARROWRENDERER_H_INCLUDED
+#pragma once
 
 
 #include "OpenGL_Context.h"
@@ -26,9 +25,7 @@
 #include "vislib/assert.h"
 
 
-namespace megamol {
-namespace moldyn_gl {
-namespace rendering {
+namespace megamol::moldyn_gl::rendering {
 
 using namespace megamol::core;
 
@@ -43,7 +40,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ArrowRenderer";
     }
 
@@ -52,7 +49,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for arrow glyphs.";
     }
 
@@ -61,7 +58,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -73,10 +70,10 @@ public:
 #endif
 
     /** Ctor. */
-    ArrowRenderer(void);
+    ArrowRenderer();
 
     /** Dtor. */
-    virtual ~ArrowRenderer(void);
+    ~ArrowRenderer() override;
 
 protected:
     /**
@@ -84,7 +81,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -95,12 +92,12 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -109,7 +106,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
 #ifdef MEGAMOL_USE_PROFILING
@@ -145,8 +142,4 @@ private:
     param::ParamSlot length_filter_slot_;
 };
 
-} /* end namespace rendering */
-} // namespace moldyn_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_ARROWRENDERER_H_INCLUDED */
+} // namespace megamol::moldyn_gl::rendering

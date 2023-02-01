@@ -38,7 +38,7 @@ job::AbstractThreadedJob::~AbstractThreadedJob() {
 /*
  * job::AbstractThreadedJob::IsRunning
  */
-bool job::AbstractThreadedJob::IsRunning(void) const {
+bool job::AbstractThreadedJob::IsRunning() const {
     return !this->thread.IsNull() && this->thread->IsRunning();
 }
 
@@ -46,7 +46,7 @@ bool job::AbstractThreadedJob::IsRunning(void) const {
 /*
  * job::AbstractThreadedJob::Start
  */
-bool job::AbstractThreadedJob::Start(void) {
+bool job::AbstractThreadedJob::Start() {
     try {
         this->terminationRequest = false;
         this->thread = new vislib::sys::Thread(this);
@@ -62,7 +62,7 @@ bool job::AbstractThreadedJob::Start(void) {
 /*
  * job::AbstractThreadedJob::Terminate
  */
-bool job::AbstractThreadedJob::Terminate(void) {
+bool job::AbstractThreadedJob::Terminate() {
     this->terminationRequest = true;
     return true;
 }

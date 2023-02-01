@@ -16,7 +16,7 @@ using namespace megamol::core;
 /*
  * job::AbstractJob::AbstractJob
  */
-job::AbstractJob::AbstractJob(void) {
+job::AbstractJob::AbstractJob() {
     // intentionally empty
 }
 
@@ -24,30 +24,15 @@ job::AbstractJob::AbstractJob(void) {
 /*
  * job::AbstractJob::~AbstractJob
  */
-job::AbstractJob::~AbstractJob(void) {
+job::AbstractJob::~AbstractJob() {
     // intentionally empty
-}
-
-
-/*
- * job::AbstractJob::IsParamRelevant
- */
-bool job::AbstractJob::IsParamRelevant(const std::shared_ptr<param::AbstractParam>& param) const {
-    const AbstractNamedObject* ano = dynamic_cast<const AbstractNamedObject*>(this);
-    if (ano == NULL)
-        return false;
-    if (param == nullptr)
-        return false;
-
-    vislib::SingleLinkedList<const AbstractNamedObject*> searched;
-    return ano->IsParamRelevant(searched, param);
 }
 
 
 /*
  * job::AbstractJob::signalStart
  */
-void job::AbstractJob::signalStart(void) {
+void job::AbstractJob::signalStart() {
     vislib::StringA name("unknown");
     AbstractNamedObject* ano = dynamic_cast<AbstractNamedObject*>(this);
     if (ano != NULL) {

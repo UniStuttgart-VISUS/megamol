@@ -6,11 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTCOMMENDPOINT_H_INCLUDED
-#define VISLIB_ABSTRACTCOMMENDPOINT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -20,8 +16,7 @@
 #include "vislib/String.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -82,7 +77,7 @@ public:
      *
      * @return A string representation of the address.
      */
-    virtual StringA ToStringA(void) const = 0;
+    virtual StringA ToStringA() const = 0;
 
     /**
      * Answer a string representation of the address.
@@ -94,7 +89,7 @@ public:
      *
      * @return A string representation of the address.
      */
-    virtual StringW ToStringW(void) const = 0;
+    virtual StringW ToStringW() const = 0;
 
     /**
      * Test for equality.
@@ -148,7 +143,7 @@ protected:
     typedef ReferenceCounted Super;
 
     /** Ctor. */
-    AbstractCommEndPoint(void);
+    AbstractCommEndPoint();
 
     /**
      * Clone 'rhs'.
@@ -158,13 +153,11 @@ protected:
     AbstractCommEndPoint(const AbstractCommEndPoint& rhs);
 
     /** Dtor. */
-    virtual ~AbstractCommEndPoint(void);
+    ~AbstractCommEndPoint() override;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTCOMMENDPOINT_H_INCLUDED */

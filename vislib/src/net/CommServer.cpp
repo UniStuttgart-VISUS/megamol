@@ -20,13 +20,13 @@
 /*
  * vislib::net::CommServer::CommServer
  */
-vislib::net::CommServer::CommServer(void) {}
+vislib::net::CommServer::CommServer() {}
 
 
 /*
  * vislib::net::CommServer::~CommServer
  */
-vislib::net::CommServer::~CommServer(void) {}
+vislib::net::CommServer::~CommServer() {}
 
 
 /*
@@ -204,7 +204,7 @@ DWORD vislib::net::CommServer::Run(void* config) {
 /*
  * vislib::net::CommServer::Terminate
  */
-bool vislib::net::CommServer::Terminate(void) {
+bool vislib::net::CommServer::Terminate() {
     try {
         vislib::sys::Interlocked::Exchange(&this->doServe, static_cast<VL_INT32>(0));
         if (!this->configuration.Channel.IsNull()) {
@@ -268,7 +268,7 @@ bool vislib::net::CommServer::fireServerError(const vislib::Exception& exception
 /*
  * vislib::net::CommServer::fireServerExited
  */
-void vislib::net::CommServer::fireServerExited(void) {
+void vislib::net::CommServer::fireServerExited() {
     this->listeners.Lock();
     ListenerList::Iterator it = this->listeners.GetIterator();
     while (it.HasNext()) {
@@ -281,7 +281,7 @@ void vislib::net::CommServer::fireServerExited(void) {
 /*
  * vislib::net::CommServer::fireServerStarted
  */
-void vislib::net::CommServer::fireServerStarted(void) {
+void vislib::net::CommServer::fireServerStarted() {
     this->listeners.Lock();
     ListenerList::Iterator it = this->listeners.GetIterator();
     while (it.HasNext()) {

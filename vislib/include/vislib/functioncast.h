@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_FUNCTIONCAST_H_INCLUDED
-#define VISLIB_FUNCTIONCAST_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -59,7 +55,7 @@ public:
      *
      * @return The void pointer of this cast.
      */
-    void* VoidPtr(void) {
+    void* VoidPtr() {
         return value.voidPtr;
     }
 
@@ -68,7 +64,7 @@ public:
      *
      * @return The function pointer of this cast.
      */
-    operator T(void) {
+    operator T() {
         return value.typePtr;
     }
 
@@ -107,7 +103,7 @@ public:
      *
      * @return The void pointer of this cast.
      */
-    operator void*(void) {
+    operator void*() {
         return this->ptr;
     }
 
@@ -121,4 +117,3 @@ private:
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_FUNCTIONCAST_H_INCLUDED */

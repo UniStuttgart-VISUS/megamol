@@ -39,7 +39,7 @@ vislib::MissingImplementationException::MissingImplementationException(const Mis
 /*
  * vislib::MissingImplementationException::MissingImplementationException
  */
-vislib::MissingImplementationException::~MissingImplementationException(void) {}
+vislib::MissingImplementationException::~MissingImplementationException() {}
 
 
 /*

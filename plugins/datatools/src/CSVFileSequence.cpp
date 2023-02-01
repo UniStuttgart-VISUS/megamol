@@ -24,7 +24,7 @@ using namespace megamol;
 /*
  * CSVFileSequence::CSVFileSequence
  */
-datatools::CSVFileSequence::CSVFileSequence(void)
+datatools::CSVFileSequence::CSVFileSequence()
         : core::Module()
         , fileNameTemplateSlot("fileNameTemplate", "The file name template"
                                                    " example: D:\\data\\Kohler\\nial\\nialout50_*5{0..599+2}*.crist "
@@ -90,7 +90,7 @@ datatools::CSVFileSequence::CSVFileSequence(void)
 /*
  * CSVFileSequence::~CSVFileSequence
  */
-datatools::CSVFileSequence::~CSVFileSequence(void) {
+datatools::CSVFileSequence::~CSVFileSequence() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -98,7 +98,7 @@ datatools::CSVFileSequence::~CSVFileSequence(void) {
 /*
  * CSVFileSequence::create
  */
-bool datatools::CSVFileSequence::create(void) {
+bool datatools::CSVFileSequence::create() {
 
     return true;
 }
@@ -107,7 +107,7 @@ bool datatools::CSVFileSequence::create(void) {
 /*
  * CSVFileSequence::release
  */
-void datatools::CSVFileSequence::release(void) {}
+void datatools::CSVFileSequence::release() {}
 
 
 /*
@@ -233,7 +233,7 @@ bool datatools::CSVFileSequence::getExtentCallback(core::Call& caller) {
 /*
  * CSVFileSequence::checkParameters
  */
-void datatools::CSVFileSequence::checkParameters(void) {
+void datatools::CSVFileSequence::checkParameters() {
     if (this->fileNumberMinSlot.IsDirty()) {
         this->fileNumberMinSlot.ResetDirty();
         this->fileNumMin = static_cast<unsigned int>(
@@ -450,7 +450,7 @@ bool datatools::CSVFileSequence::onFileNameSlotNameChanged(core::param::ParamSlo
 /*
  * CSVFileSequence::findFileNameSlot
  */
-core::param::ParamSlot* datatools::CSVFileSequence::findFileNameSlot(void) {
+core::param::ParamSlot* datatools::CSVFileSequence::findFileNameSlot() {
     core::param::StringParam* P = this->fileNameSlotNameSlot.Param<core::param::StringParam>();
     if (P != NULL) {
         auto& megamolgraph = frontend_resources.get<megamol::core::MegaMolGraph>();
@@ -463,7 +463,7 @@ core::param::ParamSlot* datatools::CSVFileSequence::findFileNameSlot(void) {
 /*
  * CSVFileSequence::assertData
  */
-void datatools::CSVFileSequence::assertData(void) {
+void datatools::CSVFileSequence::assertData() {
     using megamol::core::utility::log::Log;
     if (!this->needDataUpdate)
         return;

@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_RECTANGULARPYRAMIDALFRUSTUM_H_INCLUDED
-#define VISLIB_RECTANGULARPYRAMIDALFRUSTUM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -19,8 +15,7 @@
 #include "vislib/math/AbstractRectangularPyramidalFrustum.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -31,7 +26,7 @@ class RectangularPyramidalFrustum : public AbstractRectangularPyramidalFrustum<T
 
 public:
     /** Ctor. */
-    inline RectangularPyramidalFrustum(void) : Super() {
+    inline RectangularPyramidalFrustum() : Super() {
         this->values[Super::IDX_BOTTOM] = static_cast<T>(0);
         this->values[Super::IDX_TOP] = static_cast<T>(0);
         this->values[Super::IDX_LEFT] = static_cast<T>(0);
@@ -56,7 +51,7 @@ public:
         const AbstractVector<T, 3, Sp3>& baseNormal, const AbstractVector<T, 3, Sp4>& baseUp);
 
     /** Dtor. */
-    virtual ~RectangularPyramidalFrustum(void);
+    virtual ~RectangularPyramidalFrustum();
 
 protected:
     /** Superclass typedef. */
@@ -81,12 +76,10 @@ RectangularPyramidalFrustum<T>::RectangularPyramidalFrustum(const AbstractViewFr
  * ...RectangularPyramidalFrustum<T>::~RectangularPyramidalFrustum
  */
 template<class T>
-RectangularPyramidalFrustum<T>::~RectangularPyramidalFrustum(void) {}
+RectangularPyramidalFrustum<T>::~RectangularPyramidalFrustum() {}
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_RECTANGULARPYRAMIDALFRUSTUM_H_INCLUDED */

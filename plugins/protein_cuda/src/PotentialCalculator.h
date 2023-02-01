@@ -8,11 +8,7 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_POTENTIALCALCULATOR_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_POTENTIALCALCULATOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif // (defined(_MSC_VER) && (_MSC_VER > 1000))
 
 #include "CudaDevArr.h"
 #include "HostArr.h"
@@ -73,15 +69,6 @@ public:
      */
     static bool IsAvailable(void) {
         return true;
-    }
-
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
     }
 
     /**
@@ -214,5 +201,3 @@ private:
 
 } // end namespace protein_cuda
 } // end namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_POTENTIALCALCULATOR_H_INCLUDED

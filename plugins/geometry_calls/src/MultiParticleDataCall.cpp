@@ -14,7 +14,7 @@ namespace megamol::geocalls {
 /*
  * MultiParticleDataCall::MultiParticleDataCall
  */
-MultiParticleDataCall::MultiParticleDataCall(void) : AbstractParticleDataCall<SimpleSphericalParticles>() {
+MultiParticleDataCall::MultiParticleDataCall() : AbstractParticleDataCall<SimpleSphericalParticles>() {
     // Intentionally empty
 }
 
@@ -22,7 +22,7 @@ MultiParticleDataCall::MultiParticleDataCall(void) : AbstractParticleDataCall<Si
 /*
  * MultiParticleDataCall::~MultiParticleDataCall
  */
-MultiParticleDataCall::~MultiParticleDataCall(void) {
+MultiParticleDataCall::~MultiParticleDataCall() {
     // Intentionally empty
 }
 

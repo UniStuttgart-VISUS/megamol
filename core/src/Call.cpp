@@ -22,13 +22,13 @@ using namespace megamol::core;
 /*
  * Call::Call
  */
-Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {}
+Call::Call() : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {}
 
 
 /*
  * Call::~Call
  */
-Call::~Call(void) {
+Call::~Call() {
     if (this->caller != nullptr) {
         CallerSlot* cr = this->caller;
         this->caller = nullptr; // DO NOT DELETE

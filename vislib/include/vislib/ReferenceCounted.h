@@ -6,11 +6,7 @@
  * Copyright (C) 2008 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_REFERENCECOUNTED_H_INCLUDED
-#define VISLIB_REFERENCECOUNTED_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -39,7 +35,7 @@ public:
      *
      * @return The new value of the reference counter.
      */
-    UINT32 AddRef(void);
+    UINT32 AddRef();
 
     /**
      * Decrement the reference count. If the reference count reaches zero,
@@ -47,11 +43,11 @@ public:
      *
      * @return The new value of the reference counter.
      */
-    UINT32 Release(void);
+    UINT32 Release();
 
 protected:
     /** Ctor. */
-    ReferenceCounted(void);
+    ReferenceCounted();
 
     /**
      * Copy ctor.
@@ -66,7 +62,7 @@ protected:
      * Making the dtor protected prevents explicit deletion of objects using
      * delete and creation of objects on the stack to a certain extent.
      */
-    virtual ~ReferenceCounted(void);
+    virtual ~ReferenceCounted();
 
     /**
      * Assignment.
@@ -90,4 +86,3 @@ private:
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_REFERENCECOUNTED_H_INCLUDED */

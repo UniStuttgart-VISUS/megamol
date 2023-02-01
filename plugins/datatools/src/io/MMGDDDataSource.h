@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_IO_MMGDDDATASOURCE_H_INCLUDED
-#define MEGAMOL_DATATOOLS_IO_MMGDDDATASOURCE_H_INCLUDED
 #pragma once
 
 #include "datatools/GraphDataCall.h"
@@ -18,9 +16,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace datatools {
-namespace io {
+namespace megamol::datatools::io {
 
 
 /**
@@ -28,24 +24,24 @@ namespace io {
  */
 class MMGDDDataSource : public core::view::AnimDataModule {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MMGDDDataSource";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for MegaMol GraphData Dump files.";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    MMGDDDataSource(void);
-    virtual ~MMGDDDataSource(void);
+    MMGDDDataSource();
+    ~MMGDDDataSource() override;
 
 protected:
-    virtual core::view::AnimDataModule::Frame* constructFrame(void) const;
-    virtual bool create(void);
-    virtual void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx);
-    virtual void release(void);
+    core::view::AnimDataModule::Frame* constructFrame() const override;
+    bool create() override;
+    void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) override;
+    void release() override;
 
     /** Nested class of frame data */
     class Frame : public core::view::AnimDataModule::Frame {
@@ -56,7 +52,7 @@ protected:
                 , edges() {
             // intentionally empty
         }
-        virtual ~Frame() {
+        ~Frame() override {
             // intentionally empty
         }
 
@@ -91,11 +87,11 @@ protected:
         Unlocker(Frame& frame) : GraphDataCall::Unlocker(), frame(&frame) {
             // intentionally empty
         }
-        virtual ~Unlocker(void) {
+        ~Unlocker() override {
             this->Unlock();
             ASSERT(this->frame == nullptr);
         }
-        virtual void Unlock(void) {
+        void Unlock() override {
             if (this->frame != nullptr) {
                 this->frame->Unlock();
                 this->frame = nullptr;
@@ -120,8 +116,4 @@ protected:
     size_t data_hash;
 };
 
-} /* end namespace io */
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_DATATOOLS_IO_MMGDDDATASOURCE_H_INCLUDED */
+} // namespace megamol::datatools::io

@@ -16,8 +16,7 @@
 #include "mmcore/utility/buildinfo/BuildInfo.h"
 #include "mmcore/utility/log/Log.h"
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 // make sure that all configuration parameters have sane and useful and EXPLICIT initialization values!
 struct RuntimeConfig {
@@ -159,5 +158,4 @@ struct RuntimeConfig {
     }
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

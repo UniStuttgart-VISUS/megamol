@@ -43,7 +43,8 @@ if (MEGAMOL_USE_CUESDK)
   target_link_libraries(${PROJECT_NAME} PRIVATE ${CUESDK_LIB})
 endif()
 if (MEGAMOL_USE_OPENGL_DEBUGGROUPS)
-  target_link_libraries(${PROJECT_NAME} PUBLIC glad)
+  find_package(glad REQUIRED)
+  target_link_libraries(${PROJECT_NAME} PUBLIC glad::glad)
 endif()
 
 # Grouping in Visual Studio

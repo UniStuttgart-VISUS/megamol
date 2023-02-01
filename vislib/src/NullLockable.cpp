@@ -11,7 +11,7 @@
 /*
  * vislib::NullLockable::NullLockable
  */
-vislib::NullLockable::NullLockable(void) {
+vislib::NullLockable::NullLockable() {
     // intentionally empty
 }
 
@@ -19,6 +19,6 @@ vislib::NullLockable::NullLockable(void) {
 /*
  * vislib::NullLockable::~NullLockable
  */
-vislib::NullLockable::~NullLockable(void) {
+vislib::NullLockable::~NullLockable() {
     // intentionally empty
 }

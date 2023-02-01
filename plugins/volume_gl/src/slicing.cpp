@@ -28,8 +28,7 @@
 #include <math.h>
 #include <stdio.h>
 
-namespace megamol {
-namespace volume_gl {
+namespace megamol::volume_gl {
 
 
 const char ViewSlicing::cubeEdges[12] = {VS_FACE_FRONT + VS_FACE_BOTTOM, VS_FACE_FRONT + VS_FACE_TOP,
@@ -488,5 +487,4 @@ inline bool ViewSlicing::pointCmp(float* p1, float* p2, float eps) {
         return false;
 }
 
-} // namespace volume_gl
-} /* end namespace megamol */
+} // namespace megamol::volume_gl

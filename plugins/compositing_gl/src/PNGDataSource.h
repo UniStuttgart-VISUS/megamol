@@ -28,11 +28,11 @@ public:
     }
 
     PNGDataSource();
-    virtual ~PNGDataSource();
+    ~PNGDataSource() override;
 
 protected:
-    virtual bool create();
-    virtual void release();
+    bool create() override;
+    void release() override;
 
 private:
     bool getDataCallback(core::Call& caller);

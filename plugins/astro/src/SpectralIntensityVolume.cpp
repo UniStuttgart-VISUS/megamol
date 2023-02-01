@@ -158,7 +158,7 @@ bool megamol::astro::SpectralIntensityVolume::create() {
 }
 
 
-void megamol::astro::SpectralIntensityVolume::release(void) {
+void megamol::astro::SpectralIntensityVolume::release() {
     delete[] this->metadata.MinValues;
     delete[] this->metadata.MaxValues;
     delete[] this->metadata.SliceDists[0];

@@ -20,7 +20,7 @@ using namespace megamol::protein_calls;
 /*
  * ProteinAligner::ProteinAligner
  */
-ProteinAligner::ProteinAligner(void)
+ProteinAligner::ProteinAligner()
         : core::Module()
         , dataOutSlot("dataOut", "Output protein slot")
         , inputProteinSlot("inputProtein", "Input protein that will be moved and rotated to match the reference")
@@ -49,14 +49,14 @@ ProteinAligner::ProteinAligner(void)
 /*
  * ProteinAligner::~ProteinAligner
  */
-ProteinAligner::~ProteinAligner(void) {
+ProteinAligner::~ProteinAligner() {
     this->Release();
 }
 
 /*
  * ProteinAligner::create
  */
-bool ProteinAligner::create(void) {
+bool ProteinAligner::create() {
     // intentionally empty
     return true;
 }
@@ -64,7 +64,7 @@ bool ProteinAligner::create(void) {
 /*
  * ProteinAligner::release
  */
-void ProteinAligner::release(void) {
+void ProteinAligner::release() {
     // intentionally empty
 }
 

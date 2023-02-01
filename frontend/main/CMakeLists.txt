@@ -60,6 +60,7 @@ if (MEGAMOL_SKIP_RESOURCE_INSTALL)
   # TODO do resources already support file lookup in multiple directories like the shader factory?
   message(FATAL_ERROR "MEGAMOL_SKIP_RESOURCE_INSTALL not implemented!")
 endif ()
+mark_as_advanced(FORCE MEGAMOL_SKIP_RESOURCE_INSTALL) # TODO remove if error above is fixed.
 configure_file(extra/megamol_config.lua.in ${CMAKE_BINARY_DIR}/megamol_config.lua @ONLY)
 configure_file(extra/install_megamol_config_lua.cmake.in ${CMAKE_BINARY_DIR}/install_megamol_config_lua.cmake @ONLY)
 

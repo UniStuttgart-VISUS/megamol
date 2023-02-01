@@ -14,8 +14,7 @@
 #include <array>
 #include <vector>
 
-namespace megamol {
-namespace volume {
+namespace megamol::volume {
 
 /**
  * Class generation buck ball informations
@@ -27,7 +26,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BuckyBall";
     }
 
@@ -36,7 +35,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Generates a dataset of an icosahedron inside a sphere.";
     }
 
@@ -45,15 +44,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    BuckyBall(void);
+    BuckyBall();
 
     /** Dtor */
-    virtual ~BuckyBall(void);
+    ~BuckyBall() override;
 
 protected:
     /**
@@ -61,12 +60,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -95,5 +94,4 @@ private:
     geocalls::VolumetricMetadata_t metaData;
 };
 
-} /* end namespace volume */
-} /* end namespace megamol */
+} // namespace megamol::volume

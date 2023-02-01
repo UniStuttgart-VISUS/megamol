@@ -9,8 +9,7 @@
 
 #include "SimpleRenderTarget.h"
 
-namespace megamol {
-namespace compositing_gl {
+namespace megamol::compositing_gl {
 
 class InteractionRenderTarget : public SimpleRenderTarget {
 public:
@@ -19,7 +18,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "InteractionRenderTarget";
     }
 
@@ -28,12 +27,12 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Binds a FBO with color, normal, depth and objectID render targets.";
     }
 
     InteractionRenderTarget();
-    ~InteractionRenderTarget() = default;
+    ~InteractionRenderTarget() override = default;
 
 protected:
     /**
@@ -41,7 +40,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * The render callback.
@@ -50,7 +49,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      *
@@ -66,5 +65,4 @@ private:
     core::CalleeSlot m_objId_render_target;
 };
 
-} // namespace compositing_gl
-} // namespace megamol
+} // namespace megamol::compositing_gl

@@ -8,11 +8,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTVIEWFRUSTUM_H_INCLUDED
-#define VISLIB_ABSTRACTVIEWFRUSTUM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -23,8 +19,7 @@
 #include "vislib/math/AbstractPyramidalFrustum.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -39,7 +34,7 @@ class AbstractViewFrustum : public AbstractPyramidalFrustum<T> {
 
 public:
     /** Dtor. */
-    virtual ~AbstractViewFrustum(void);
+    virtual ~AbstractViewFrustum();
 
     /**
      * Answer the points that form the bottom base of the frustum.
@@ -54,7 +49,7 @@ public:
      *
      * @return The bottom plane distance.
      */
-    inline T GetBottomDistance(void) const {
+    inline T GetBottomDistance() const {
         return this->offsets[IDX_BOTTOM];
     }
 
@@ -63,7 +58,7 @@ public:
      *
      * @return The far clipping plane distance.
      */
-    inline T GetFarDistance(void) const {
+    inline T GetFarDistance() const {
         return this->offsets[IDX_FAR];
     }
 
@@ -73,7 +68,7 @@ public:
      *
      * @return The left plane distance.
      */
-    inline T GetLeftDistance(void) const {
+    inline T GetLeftDistance() const {
         return this->offsets[IDX_LEFT];
     }
 
@@ -82,7 +77,7 @@ public:
      *
      * @return The near clipping plane distance.
      */
-    inline T GetNearDistance(void) const {
+    inline T GetNearDistance() const {
         return this->offsets[IDX_NEAR];
     }
 
@@ -92,7 +87,7 @@ public:
      *
      * @return The right plane distance.
      */
-    inline T GetRightDistance(void) const {
+    inline T GetRightDistance() const {
         return this->offsets[IDX_RIGHT];
     }
 
@@ -102,7 +97,7 @@ public:
      *
      * @return The top plane distance.
      */
-    inline T GetTopDistance(void) const {
+    inline T GetTopDistance() const {
         return this->offsets[IDX_TOP];
     }
 
@@ -308,7 +303,7 @@ protected:
     /**
      * Disallow instances of this class.
      */
-    inline AbstractViewFrustum(void) {}
+    inline AbstractViewFrustum() {}
 
     /**
      * The offsets defining the frustum. The semantics of the indices in
@@ -323,7 +318,7 @@ protected:
  * vislib::math::AbstractViewFrustum<T, S>::~AbstractViewFrustum
  */
 template<class T, class S>
-AbstractViewFrustum<T, S>::~AbstractViewFrustum(void) {
+AbstractViewFrustum<T, S>::~AbstractViewFrustum() {
     // Must not do anything about 'offsets' due to the Crowbar pattern(TM).
 }
 
@@ -487,10 +482,8 @@ const UINT_PTR AbstractViewFrustum<T, S>::IDX_RIGHT = 3;
 template<class T, class S>
 const UINT_PTR AbstractViewFrustum<T, S>::IDX_TOP = 1;
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTVIEWFRUSTUM_H_INCLUDED */

@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_MESSAGERECEIVER_H_INCLUDED
-#define VISLIB_MESSAGERECEIVER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
 #include "vislib/net/Socket.h"
@@ -17,9 +13,7 @@
 #include "vislib/sys/Event.h"
 
 
-namespace vislib {
-namespace net {
-namespace cluster {
+namespace vislib::net::cluster {
 
 
 /**
@@ -87,8 +81,4 @@ void FreeRecvMsgCtx(ReceiveMessagesCtx*& ctx);
  */
 DWORD ReceiveMessages(void* receiveMessagesCtx);
 
-} /* end namespace cluster */
-} /* end namespace net */
-} /* end namespace vislib */
-
-#endif /* VISLIB_MESSAGERECEIVER_H_INCLUDED */
+} // namespace vislib::net::cluster

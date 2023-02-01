@@ -15,7 +15,7 @@
 /*
  * vislib::ReferenceCounted::AddRef
  */
-UINT32 vislib::ReferenceCounted::AddRef(void) {
+UINT32 vislib::ReferenceCounted::AddRef() {
     VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
         "Add reference to 0x%p, "
         "reference count is now %u.\n",
@@ -26,7 +26,7 @@ UINT32 vislib::ReferenceCounted::AddRef(void) {
 /*
  * vislib::ReferenceCounted::Release
  */
-UINT32 vislib::ReferenceCounted::Release(void) {
+UINT32 vislib::ReferenceCounted::Release() {
     ASSERT(this->cntRefs > 0);
     UINT32 retval = --this->cntRefs;
     VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
@@ -43,7 +43,7 @@ UINT32 vislib::ReferenceCounted::Release(void) {
 /*
  * vislib::ReferenceCounted::ReferenceCounted
  */
-vislib::ReferenceCounted::ReferenceCounted(void) : cntRefs(1) {
+vislib::ReferenceCounted::ReferenceCounted() : cntRefs(1) {
     VLTRACE(Trace::LEVEL_VL_ANNOYINGLY_VERBOSE,
         "Object 0x%p initialised, "
         "reference count is now %u.\n",
@@ -60,7 +60,7 @@ vislib::ReferenceCounted::ReferenceCounted(const ReferenceCounted& rhs) : cntRef
 /*
  * vislib::ReferenceCounted::~ReferenceCounted
  */
-vislib::ReferenceCounted::~ReferenceCounted(void) {
+vislib::ReferenceCounted::~ReferenceCounted() {
     ASSERT(this->cntRefs == 0);
 }
 

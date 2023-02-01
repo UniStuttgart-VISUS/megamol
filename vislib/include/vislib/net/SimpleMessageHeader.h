@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SIMPLEMESSAGEHEADER_H_INCLUDED
-#define VISLIB_SIMPLEMESSAGEHEADER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/net/AbstractSimpleMessageHeader.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -30,7 +25,7 @@ class SimpleMessageHeader : public AbstractSimpleMessageHeader {
 
 public:
     /** Ctor. */
-    SimpleMessageHeader(void);
+    SimpleMessageHeader();
 
     /**
      * Clone 'rhs'.
@@ -62,21 +57,21 @@ public:
     explicit SimpleMessageHeader(const SimpleMessageHeaderData* data);
 
     /** Dtor. */
-    virtual ~SimpleMessageHeader(void);
+    ~SimpleMessageHeader() override;
 
     /**
      * Provides direct access to the underlying SimpleMessageHeaderData.
      *
      * @return A pointer to the message header data.
      */
-    virtual SimpleMessageHeaderData* PeekData(void);
+    SimpleMessageHeaderData* PeekData() override;
 
     /**
      * Provides direct access to the underlying SimpleMessageHeaderData.
      *
      * @return A pointer to the message header data.
      */
-    virtual const SimpleMessageHeaderData* PeekData(void) const;
+    const SimpleMessageHeaderData* PeekData() const override;
 
     /**
      * Assignment operator.
@@ -135,10 +130,8 @@ private:
 };
 
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SIMPLEMESSAGEHEADER_H_INCLUDED */

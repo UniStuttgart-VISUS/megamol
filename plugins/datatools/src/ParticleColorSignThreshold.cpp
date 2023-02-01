@@ -16,7 +16,7 @@ using namespace megamol;
 /*
  * datatools::ParticleColorSignThreshold::ParticleColorSignThreshold
  */
-datatools::ParticleColorSignThreshold::ParticleColorSignThreshold(void)
+datatools::ParticleColorSignThreshold::ParticleColorSignThreshold()
         : AbstractParticleManipulator("outData", "indata")
         , enableSlot("enable", "Enables the color manipulation")
         , negativeThresholdSlot("negativeThreshold", "Color values below this threshold will be mapped to -1")
@@ -39,7 +39,7 @@ datatools::ParticleColorSignThreshold::ParticleColorSignThreshold(void)
 /*
  * datatools::ParticleColorSignThreshold::~ParticleColorSignThreshold
  */
-datatools::ParticleColorSignThreshold::~ParticleColorSignThreshold(void) {
+datatools::ParticleColorSignThreshold::~ParticleColorSignThreshold() {
     this->Release();
 }
 

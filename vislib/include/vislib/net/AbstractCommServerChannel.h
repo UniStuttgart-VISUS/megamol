@@ -6,11 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTCOMMSERVERCHANNEL_H_INCLUDED
-#define VISLIB_ABSTRACTCOMMSERVERCHANNEL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -22,8 +18,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -55,7 +50,7 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    virtual SmartRef<AbstractCommClientChannel> Accept(void) = 0;
+    virtual SmartRef<AbstractCommClientChannel> Accept() = 0;
 
     /**
      * Binds the server to a specified end point address.
@@ -72,7 +67,7 @@ public:
      *
      * @throws Exception Or derived class in case of an error.
      */
-    virtual void Close(void) = 0;
+    virtual void Close() = 0;
 
     /**
      * Answer the address the channel is using locally.
@@ -86,7 +81,7 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    virtual SmartRef<AbstractCommEndPoint> GetLocalEndPoint(void) const = 0;
+    virtual SmartRef<AbstractCommEndPoint> GetLocalEndPoint() const = 0;
 
     /**
      * Bring the communication channel in a state in which it is listening
@@ -104,16 +99,14 @@ protected:
     typedef ReferenceCounted Super;
 
     /** Ctor. */
-    AbstractCommServerChannel(void);
+    AbstractCommServerChannel();
 
     /** Dtor. */
-    virtual ~AbstractCommServerChannel(void);
+    ~AbstractCommServerChannel() override;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTCOMMSERVERCHANNEL_H_INCLUDED */

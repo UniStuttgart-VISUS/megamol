@@ -5,16 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_EVENT_STORAGE_H_INCLUDED
-#define MEGAMOL_EVENT_STORAGE_H_INCLUDED
+#pragma once
 
 #include "FrameStatistics.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmstd/event/DoubleBufferedEventCollection.h"
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 class EventStorage : public core::Module {
 public:
@@ -28,7 +26,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "EventStorage";
     }
 
@@ -37,7 +35,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module representing a storage for generic events for event-based communication between modules";
     }
 
@@ -46,7 +44,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
@@ -55,7 +53,7 @@ public:
     EventStorage();
 
     /** Dtor. */
-    ~EventStorage();
+    ~EventStorage() override;
 
 protected:
     /**
@@ -63,12 +61,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -98,7 +96,4 @@ private:
     uint32_t m_version = 0;
 };
 
-} // namespace core
-} // namespace megamol
-
-#endif // !MEGAMOL_EVENT_STORAGE_H_INCLUDED
+} // namespace megamol::core

@@ -4,8 +4,7 @@
  * All rights reserved. Alle Rechte vorbehalten.
  */
 
-#ifndef MMCORE_SPECIAL_STUBMODULE_H_INCLUDED
-#define MMCORE_SPECIAL_STUBMODULE_H_INCLUDED
+#pragma once
 
 #include "PluginsResource.h"
 #include "mmcore/Call.h"
@@ -13,9 +12,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-namespace megamol {
-namespace core {
-namespace special {
+namespace megamol::core::special {
 
 /**
  * Simple module accepting all inbound and outbound call classes.
@@ -34,7 +31,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "StubModule";
     }
 
@@ -43,7 +40,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Stub module which accepts all ingoing (inSlot) and outgoing (outSlot) calls "
                "for debugging and test purposes.";
     }
@@ -53,15 +50,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    StubModule(void);
+    StubModule();
 
     /** dtor */
-    virtual ~StubModule(void);
+    ~StubModule() override;
 
 protected:
     /**
@@ -69,12 +66,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** Outbound connection */
@@ -94,8 +91,4 @@ private:
 
 }; /* end class StubModule */
 
-} /* end namespace special */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif // end ifndef MMCORE_SPECIAL_STUBMODULE_H_INCLUDED
+} // namespace megamol::core::special

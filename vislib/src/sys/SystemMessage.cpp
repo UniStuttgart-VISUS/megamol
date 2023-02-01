@@ -35,7 +35,7 @@ vislib::sys::SystemMessage::SystemMessage(const SystemMessage& rhs)
 /*
  * vislib::sys::SystemMessage::~SystemMessage
  */
-vislib::sys::SystemMessage::~SystemMessage(void) {
+vislib::sys::SystemMessage::~SystemMessage() {
 #ifdef _WIN32
     if (this->msg != NULL) {
         ::LocalFree(this->msg);
@@ -68,7 +68,7 @@ vislib::sys::SystemMessage& vislib::sys::SystemMessage::operator=(const SystemMe
 /*
  * vislib::sys::SystemMessage::operator const char *
  */
-vislib::sys::SystemMessage::operator const char*(void) const {
+vislib::sys::SystemMessage::operator const char*() const {
 
     if ((this->msg != NULL) && this->isMsgUnicode) {
 #ifdef _WIN32
@@ -132,7 +132,7 @@ vislib::sys::SystemMessage::operator const char*(void) const {
 /*
  * vislib::sys::SystemMessage::operator const wchar_t *
  */
-vislib::sys::SystemMessage::operator const wchar_t*(void) const {
+vislib::sys::SystemMessage::operator const wchar_t*() const {
 
     if ((this->msg != NULL) && !this->isMsgUnicode) {
 #ifdef _WIN32

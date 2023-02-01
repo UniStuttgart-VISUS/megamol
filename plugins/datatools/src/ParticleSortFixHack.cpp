@@ -20,7 +20,7 @@ using namespace megamol;
 /*
  * datatools::ParticleSortFixHack::ParticleSortFixHack
  */
-datatools::ParticleSortFixHack::ParticleSortFixHack(void)
+datatools::ParticleSortFixHack::ParticleSortFixHack()
         : AbstractParticleManipulator("outData", "indata")
         , data()
         , inDataTime(-1)
@@ -33,7 +33,7 @@ datatools::ParticleSortFixHack::ParticleSortFixHack(void)
 /*
  * datatools::ParticleSortFixHack::~ParticleSortFixHack
  */
-datatools::ParticleSortFixHack::~ParticleSortFixHack(void) {
+datatools::ParticleSortFixHack::~ParticleSortFixHack() {
     this->Release();
 }
 

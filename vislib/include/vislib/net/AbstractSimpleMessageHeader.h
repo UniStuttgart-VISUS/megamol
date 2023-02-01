@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTSIMPLEMESSAGEHEADER_H_INCLUDED
-#define VISLIB_ABSTRACTSIMPLEMESSAGEHEADER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/net/SimpleMessageHeaderData.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -34,14 +29,14 @@ class AbstractSimpleMessageHeader {
 
 public:
     /** Dtor. */
-    virtual ~AbstractSimpleMessageHeader(void);
+    virtual ~AbstractSimpleMessageHeader();
 
     /**
      * Answer the body size stored in the message header.
      *
      * @return The body size.
      */
-    inline SimpleMessageSize GetBodySize(void) const {
+    inline SimpleMessageSize GetBodySize() const {
         return this->PeekData()->BodySize;
     }
 
@@ -51,7 +46,7 @@ public:
      *
      * @return The size of the header data in bytes.
      */
-    inline SimpleMessageSize GetHeaderSize(void) const {
+    inline SimpleMessageSize GetHeaderSize() const {
         return sizeof(SimpleMessageHeaderData);
     }
 
@@ -60,7 +55,7 @@ public:
      *
      * @return The message ID.
      */
-    inline SimpleMessageID GetMessageID(void) const {
+    inline SimpleMessageID GetMessageID() const {
         return this->PeekData()->MessageID;
     }
 
@@ -69,7 +64,7 @@ public:
      *
      * @return true if the body size is larger than zero, false otherwise.
      */
-    inline bool HasBody(void) const {
+    inline bool HasBody() const {
         return (this->PeekData()->BodySize > 0);
     }
 
@@ -78,14 +73,14 @@ public:
      *
      * @return A pointer to the message header data.
      */
-    virtual SimpleMessageHeaderData* PeekData(void) = 0;
+    virtual SimpleMessageHeaderData* PeekData() = 0;
 
     /**
      * Provides direct access to the underlying SimpleMessageHeaderData.
      *
      * @return A pointer to the message header data.
      */
-    virtual const SimpleMessageHeaderData* PeekData(void) const = 0;
+    virtual const SimpleMessageHeaderData* PeekData() const = 0;
 
     /**
      * Set the body size.
@@ -157,13 +152,11 @@ public:
 
 protected:
     /** Ctor. */
-    AbstractSimpleMessageHeader(void);
+    AbstractSimpleMessageHeader();
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTSIMPLEMESSAGEHEADER_H_INCLUDED */

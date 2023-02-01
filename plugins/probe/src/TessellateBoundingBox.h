@@ -3,8 +3,7 @@
  * Copyright (C) 2020 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef TESSELLATE_BOUNDING_BOX_H_INCLUDED
-#define TESSELLATE_BOUNDING_BOX_H_INCLUDED
+#pragma once
 
 #include "mesh/AbstractMeshDataSource.h"
 #include "mesh/MeshCalls.h"
@@ -87,5 +86,3 @@ private:
 
 } // namespace probe
 } // namespace megamol
-
-#endif // !TESSELLATE_BOUNDING_BOX_H_INCLUDED

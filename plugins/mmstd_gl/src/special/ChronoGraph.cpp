@@ -32,7 +32,7 @@ special::ChronoGraph::~ChronoGraph() {
 /*
  * view::special::ChronoGraph::create
  */
-bool special::ChronoGraph::create(void) {
+bool special::ChronoGraph::create() {
     // intentionally empty
     return true;
 }
@@ -77,7 +77,7 @@ bool special::ChronoGraph::Render(mmstd_gl::CallRender2DGL& call) {
 /*
  * view::special::ChronoGraph::release
  */
-void special::ChronoGraph::release(void) {
+void special::ChronoGraph::release() {
     // intentionally empty
 }
 

@@ -55,7 +55,7 @@ vislib::RawStorageSerialiser::RawStorageSerialiser(const RawStorageSerialiser& s
 /*
  * vislib::RawStorageSerialiser::~RawStorageSerialiser
  */
-vislib::RawStorageSerialiser::~RawStorageSerialiser(void) {
+vislib::RawStorageSerialiser::~RawStorageSerialiser() {
     this->nakedStorage = NULL; // DO NOT DELETE!
     this->nakedStorageSize = 0;
     this->storage = NULL; // DO NOT DELETE!

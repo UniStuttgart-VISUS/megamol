@@ -2,9 +2,7 @@
 
 #include <string>
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 class DateTime {
 public:
@@ -19,6 +17,4 @@ public:
     static std::string CurrentDateTimeFormatted(const std::string& format = "%#c");
 };
 
-} // namespace utility
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::utility

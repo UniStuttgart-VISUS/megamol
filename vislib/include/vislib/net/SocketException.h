@@ -4,11 +4,7 @@
  * Copyright (C) 2006 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef SOCKETEXCEPTION_H_INCLUDED
-#define SOCKETEXCEPTION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -17,8 +13,7 @@
 #include "vislib/sys/SystemException.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 /**
  * This exception indicates a socket error.
@@ -68,7 +63,7 @@ public:
     SocketException(const SocketException& rhs);
 
     /** Dtor. */
-    virtual ~SocketException(void);
+    ~SocketException() override;
 
     /**
      * Assignment operator.
@@ -84,13 +79,11 @@ public:
      *
      * @return true, if the exception represents a timeout, false otherwise.
      */
-    bool IsTimeout(void) const;
+    bool IsTimeout() const;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* SOCKETEXCEPTION_H_INCLUDED */

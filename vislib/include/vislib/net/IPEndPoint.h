@@ -6,11 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_IPENDPOINT_H_INCLUDED
-#define VISLIB_IPENDPOINT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/net/IPAgnosticAddress.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 #ifdef _WIN32
 // Crowbar to work around windows naming conflict
@@ -164,14 +159,14 @@ public:
     IPEndPoint(const IPEndPoint& rhs);
 
     /** Dtor. */
-    ~IPEndPoint(void);
+    ~IPEndPoint();
 
     /**
      * Answer the address family of the IP end point.
      *
      * @retunr The address family of the IP end point.
      */
-    inline AddressFamily GetAddressFamily(void) const {
+    inline AddressFamily GetAddressFamily() const {
         return static_cast<AddressFamily>(this->address.ss_family);
     }
 
@@ -182,7 +177,7 @@ public:
      *
      * @throws IllegalStateException If the address familiy is illegal.
      */
-    IPAgnosticAddress GetIPAddress(void) const;
+    IPAgnosticAddress GetIPAddress() const;
 
     /**
      * Answer the IPv4 address of the IP end point. This might fail if the
@@ -192,7 +187,7 @@ public:
      *
      * @throws IllegalStateException If the address familiy is illegal.
      */
-    IPAddress GetIPAddress4(void) const;
+    IPAddress GetIPAddress4() const;
 
     /**
      * Answer the IPv6 address of the IP end point. If the end point is an
@@ -202,7 +197,7 @@ public:
      *
      * @throws IllegalStateException If the address familiy is illegal.
      */
-    IPAddress6 GetIPAddress6(void) const;
+    IPAddress6 GetIPAddress6() const;
 
     /**
      * Answer the port of the IP end point.
@@ -211,7 +206,7 @@ public:
      *
      * @throws IllegalStateException If the address familiy is illegal.
      */
-    unsigned short GetPort(void) const;
+    unsigned short GetPort() const;
 
     /**
      * Set a new IPv4 address. This will also change the address family.
@@ -264,14 +259,14 @@ public:
      *
      * @return The string representation of the IP address.
      */
-    StringA ToStringA(void) const;
+    StringA ToStringA() const;
 
     /**
      * Convert the socket address into a human readable format.
      *
      * @return The string representation of the IP address.
      */
-    StringW ToStringW(void) const {
+    StringW ToStringW() const {
         return StringW(this->ToStringA());
     }
 
@@ -336,7 +331,7 @@ public:
      *
      * @return Pointer to the sockaddr_storage used for the end point.
      */
-    inline operator const struct sockaddr * const(void) const {
+    inline operator const struct sockaddr * const() const {
         return reinterpret_cast<const sockaddr*>(&this->address);
     }
 
@@ -345,7 +340,7 @@ public:
      *
      * @return Pointer to the sockaddr_storage used for the end point.
      */
-    inline operator struct sockaddr *(void) {
+    inline operator struct sockaddr *() {
         return reinterpret_cast<sockaddr*>(&this->address);
     }
 
@@ -354,7 +349,7 @@ public:
      *
      * @return Reference to the sockaddr_storage used for the end point.
      */
-    inline operator const struct sockaddr_storage &(void) const {
+    inline operator const struct sockaddr_storage &() const {
         return this->address;
     }
 
@@ -363,7 +358,7 @@ public:
      *
      * @return Reference to the sockaddr_storage used for the end point.
      */
-    inline operator struct sockaddr_storage &(void) {
+    inline operator struct sockaddr_storage &() {
         return this->address;
     }
 
@@ -372,7 +367,7 @@ public:
      *
      * @return Pointer to the sockaddr_storage used for the end point.
      */
-    inline operator const struct sockaddr_storage * const(void) const {
+    inline operator const struct sockaddr_storage * const() const {
         return &this->address;
     }
 
@@ -381,7 +376,7 @@ public:
      *
      * @return Pointer to the sockaddr_storage used for the end point.
      */
-    inline operator struct sockaddr_storage *(void) {
+    inline operator struct sockaddr_storage *() {
         return &this->address;
     }
 
@@ -397,7 +392,7 @@ public:
      * @throws IllegalStateException If the end point cannot be converted
      *                               into an IPv4 SocketAddress.
      */
-    operator SocketAddress(void) const;
+    operator SocketAddress() const;
 
 private:
     /**
@@ -405,7 +400,7 @@ private:
      *
      * @return Reference to the address storage reinterpreted for IPv4.
      */
-    inline struct sockaddr_in& asV4(void) {
+    inline struct sockaddr_in& asV4() {
         return reinterpret_cast<struct sockaddr_in&>(this->address);
     }
 
@@ -414,7 +409,7 @@ private:
      *
      * @return Reference to the address storage reinterpreted for IPv4.
      */
-    inline const struct sockaddr_in& asV4(void) const {
+    inline const struct sockaddr_in& asV4() const {
         return reinterpret_cast<const struct sockaddr_in&>(this->address);
     }
 
@@ -423,7 +418,7 @@ private:
      *
      * @return Reference to the address storage reinterpreted for IPv6.
      */
-    inline struct sockaddr_in6& asV6(void) {
+    inline struct sockaddr_in6& asV6() {
         return reinterpret_cast<struct sockaddr_in6&>(this->address);
     }
 
@@ -432,7 +427,7 @@ private:
      *
      * @return Reference to the address storage reinterpreted for IPv6.
      */
-    inline const struct sockaddr_in6& asV6(void) const {
+    inline const struct sockaddr_in6& asV6() const {
         return reinterpret_cast<const struct sockaddr_in6&>(this->address);
     }
 
@@ -447,10 +442,8 @@ private:
 #endif /* _MSC_VER */
 #endif /* _WIN32 */
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_IPENDPOINT_H_INCLUDED */

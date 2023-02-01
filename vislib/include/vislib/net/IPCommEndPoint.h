@@ -6,11 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_IPCOMMENDPOINT_H_INCLUDED
-#define VISLIB_IPCOMMENDPOINT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -21,8 +17,7 @@
 #include "vislib/net/IPEndPoint.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -573,7 +568,7 @@ public:
      *
      * @return The IP address part of the end point address.
      */
-    inline IPAgnosticAddress GetIPAddress(void) const {
+    inline IPAgnosticAddress GetIPAddress() const {
         return this->endPoint.GetIPAddress();
     }
 
@@ -582,7 +577,7 @@ public:
      *
      * @return The port of the end point address.
      */
-    inline unsigned short GetPort(void) const {
+    inline unsigned short GetPort() const {
         return this->endPoint.GetPort();
     }
 
@@ -591,7 +586,7 @@ public:
      *
      * @return The protocol version of the end point address.
      */
-    inline ProtocolVersion GetProtocolVersion(void) const {
+    inline ProtocolVersion GetProtocolVersion() const {
         return static_cast<ProtocolVersion>(this->endPoint.GetAddressFamily());
     }
 
@@ -610,7 +605,7 @@ public:
      * @throws vislib::Exception Or derived in case that 'str' could not
      *                           be parsed as an end point address.
      */
-    virtual void Parse(const StringA& str);
+    void Parse(const StringA& str) override;
 
     /**
      * Parses a string as a end point address and sets the current
@@ -645,7 +640,7 @@ public:
      * @throws vislib::Exception Or derived in case that 'str' could not
      *                           be parsed as an end point address.
      */
-    virtual void Parse(const StringW& str);
+    void Parse(const StringW& str) override;
 
     /**
      * Parses a string as a end point address and sets the current
@@ -715,14 +710,14 @@ public:
      *
      * @return A string representation of the address.
      */
-    virtual StringA ToStringA(void) const;
+    StringA ToStringA() const override;
 
     /**
      * Answer a string representation of the address.
      *
      * @return A string representation of the address.
      */
-    virtual StringW ToStringW(void) const;
+    StringW ToStringW() const override;
 
     /**
      * Check for equality.
@@ -731,14 +726,14 @@ public:
      *
      * @return true if this object and 'rhs' are equal, false otherwise.
      */
-    virtual bool operator==(const AbstractCommEndPoint& rhs) const;
+    bool operator==(const AbstractCommEndPoint& rhs) const override;
 
     /**
      * Access the underlying IPEndPoint.
      *
      * @return Reference to the underlying IPEndPoint.
      */
-    inline operator const IPEndPoint&(void) const {
+    inline operator const IPEndPoint&() const {
         return this->endPoint;
     }
 
@@ -747,7 +742,7 @@ public:
      *
      * @return Reference to the underlying IPEndPoint.
      */
-    inline operator IPEndPoint&(void) {
+    inline operator IPEndPoint&() {
         return this->endPoint;
     }
 
@@ -776,16 +771,14 @@ private:
     IPCommEndPoint(const IPEndPoint& endPoint);
 
     /** Dtor. */
-    virtual ~IPCommEndPoint(void);
+    ~IPCommEndPoint() override;
 
     /** The actual IP end point address wrapped by this object. */
     IPEndPoint endPoint;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_IPCOMMENDPOINT_H_INCLUDED */

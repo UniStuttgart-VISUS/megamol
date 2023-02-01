@@ -95,7 +95,7 @@ VTIWriter::~VTIWriter() {
 /*
  * VTIWriter::IsRunning
  */
-bool VTIWriter::IsRunning(void) const {
+bool VTIWriter::IsRunning() const {
     return (!(this->jobDone));
 }
 
@@ -103,7 +103,7 @@ bool VTIWriter::IsRunning(void) const {
 /*
  * VTIWriter::Start
  */
-bool VTIWriter::Start(void) {
+bool VTIWriter::Start() {
 
     protein_calls::VTIDataCall* dc = this->dataCallerSlot.CallAs<protein_calls::VTIDataCall>();
     if (dc == NULL) {
@@ -180,7 +180,7 @@ bool VTIWriter::Start(void) {
 /*
  * VTIWriter::Terminate
  */
-bool VTIWriter::Terminate(void) {
+bool VTIWriter::Terminate() {
     return true;
 }
 
@@ -188,7 +188,7 @@ bool VTIWriter::Terminate(void) {
 /*
  * VTIWriter::create
  */
-bool VTIWriter::create(void) {
+bool VTIWriter::create() {
     return true;
 }
 
@@ -196,7 +196,7 @@ bool VTIWriter::create(void) {
 /*
  * VTIWriter::release
  */
-void VTIWriter::release(void) {
+void VTIWriter::release() {
     this->buffEn.Release();
     this->buffDec.Release();
 }

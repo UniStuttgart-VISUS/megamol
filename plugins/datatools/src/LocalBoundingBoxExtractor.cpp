@@ -3,8 +3,7 @@
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/math/Cuboid.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 
 LocalBoundingBoxExtractor::LocalBoundingBoxExtractor()
@@ -267,5 +266,4 @@ void LocalBoundingBoxExtractor::calcLocalBox(
     }
 }
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

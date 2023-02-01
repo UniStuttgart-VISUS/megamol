@@ -11,6 +11,7 @@ if(BUILD_FRONTEND_SERVICES)
 
   find_package(glm CONFIG REQUIRED)
   find_package(imgui CONFIG REQUIRED)
+  find_package(imgui_software_renderer CONFIG REQUIRED)
   find_package(imguizmoquat CONFIG REQUIRED)
   find_package(implot CONFIG REQUIRED)
   find_package(ZeroMQ REQUIRED)
@@ -130,10 +131,10 @@ if(BUILD_FRONTEND_SERVICES)
     target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()
   
-  # GLFW
   if (MEGAMOL_USE_OPENGL)
     find_package(glfw3 CONFIG REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+    find_package(glad REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE glfw PUBLIC glad::glad core_gl)
   endif()
 
   if (MEGAMOL_USE_VR_INTEROP)
@@ -167,10 +168,6 @@ if(BUILD_FRONTEND_SERVICES)
     endif ()
   endif ()
 
-  if (MEGAMOL_USE_OPENGL)
-    target_link_libraries(${PROJECT_NAME} PUBLIC core_gl glad)
-  endif()
-
   target_link_libraries(${PROJECT_NAME}
     PRIVATE
       ${VERSION_LIBRARY}
@@ -180,6 +177,7 @@ if(BUILD_FRONTEND_SERVICES)
       core
       glm::glm
       imgui::imgui
+      imgui_software_renderer::imgui_software_renderer
       imguizmoquat::imguizmoquat
       implot::implot
       libzmq

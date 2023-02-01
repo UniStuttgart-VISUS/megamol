@@ -38,7 +38,7 @@ const UINT64 vislib::net::TcpCommChannel::FLAG_REUSE_ADDRESS = 0x00000002;
 /*
  * vislib::net::TcpCommChannel::Accept
  */
-vislib::SmartRef<vislib::net::AbstractCommClientChannel> vislib::net::TcpCommChannel::Accept(void) {
+vislib::SmartRef<vislib::net::AbstractCommClientChannel> vislib::net::TcpCommChannel::Accept() {
     Socket socket = this->socket.Accept();
     // Ctor of TcpCommChannel will assign flags to actual socket.
 
@@ -64,7 +64,7 @@ void vislib::net::TcpCommChannel::Bind(SmartRef<AbstractCommEndPoint> endPoint) 
 /*
  * vislib::net::TcpCommChannel::Close
  */
-void vislib::net::TcpCommChannel::Close(void) {
+void vislib::net::TcpCommChannel::Close() {
     // TODO: Find out how shutdown can be safely used.
     //try {
     //    this->socket.Shutdown();
@@ -102,7 +102,7 @@ void vislib::net::TcpCommChannel::Connect(SmartRef<AbstractCommEndPoint> endPoin
 /*
  * vislib::net::TcpCommChannel::GetLocalEndPoint
  */
-vislib::SmartRef<vislib::net::AbstractCommEndPoint> vislib::net::TcpCommChannel::GetLocalEndPoint(void) const {
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> vislib::net::TcpCommChannel::GetLocalEndPoint() const {
     return IPCommEndPoint::Create(this->socket.GetLocalEndPoint());
 }
 
@@ -110,7 +110,7 @@ vislib::SmartRef<vislib::net::AbstractCommEndPoint> vislib::net::TcpCommChannel:
 /*
  * vislib::net::TcpCommChannel::GetRemoteEndPoint
  */
-vislib::SmartRef<vislib::net::AbstractCommEndPoint> vislib::net::TcpCommChannel::GetRemoteEndPoint(void) const {
+vislib::SmartRef<vislib::net::AbstractCommEndPoint> vislib::net::TcpCommChannel::GetRemoteEndPoint() const {
     return IPCommEndPoint::Create(this->socket.GetPeerEndPoint());
 }
 
@@ -185,7 +185,7 @@ vislib::net::TcpCommChannel::TcpCommChannel(const TcpCommChannel& rhs) {
 /*
  * vislib::net::TcpCommChannel::~TcpCommChannel
  */
-vislib::net::TcpCommChannel::~TcpCommChannel(void) {
+vislib::net::TcpCommChannel::~TcpCommChannel() {
 
     /* Ensure that the socket is closed. */
     try {

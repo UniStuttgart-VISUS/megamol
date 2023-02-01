@@ -18,7 +18,7 @@ using namespace megamol::protein_calls;
 /*
  * MolecularDataCall::Residue::Residue
  */
-MolecularDataCall::Residue::Residue(void)
+MolecularDataCall::Residue::Residue()
         : atomCnt(0)
         , firstAtomIdx(0)
         , boundingBox(0, 0, 0, 0, 0, 0)
@@ -64,7 +64,7 @@ MolecularDataCall::Residue::Residue(unsigned int firstAtomIdx, unsigned int atom
 /*
  * MolecularDataCall::Residue::~Residue
  */
-MolecularDataCall::Residue::~Residue(void) {
+MolecularDataCall::Residue::~Residue() {
     // intentionally empty
 }
 
@@ -107,7 +107,7 @@ bool MolecularDataCall::Residue::operator==(const MolecularDataCall::Residue& rh
 /*
  * MolecularDataCall::AminoAcid::AminoAcid
  */
-MolecularDataCall::AminoAcid::AminoAcid(void) : Residue(), cAlphaIdx(0), cCarbIdx(0), nIdx(0), oIdx(0) {
+MolecularDataCall::AminoAcid::AminoAcid() : Residue(), cAlphaIdx(0), cCarbIdx(0), nIdx(0), oIdx(0) {
     // intentionally empty
 }
 
@@ -143,7 +143,7 @@ MolecularDataCall::AminoAcid::AminoAcid(unsigned int firstAtomIdx, unsigned int 
 /*
  * MolecularDataCall::AminoAcid::~AminoAcid
  */
-MolecularDataCall::AminoAcid::~AminoAcid(void) {
+MolecularDataCall::AminoAcid::~AminoAcid() {
     // intentionally empty
 }
 
@@ -213,7 +213,7 @@ bool MolecularDataCall::AminoAcid::operator==(const MolecularDataCall::AminoAcid
 /*
  * MolecularDataCall::SecStructure::SecStructure
  */
-MolecularDataCall::SecStructure::SecStructure(void) : aminoAcidCnt(0), firstAminoAcidIdx(0), type(TYPE_COIL) {
+MolecularDataCall::SecStructure::SecStructure() : aminoAcidCnt(0), firstAminoAcidIdx(0), type(TYPE_COIL) {
     // intentionally empty
 }
 
@@ -232,7 +232,7 @@ MolecularDataCall::SecStructure::SecStructure(const MolecularDataCall::SecStruct
 /*
  * MolecularDataCall::SecStructure::~SecStructure
  */
-MolecularDataCall::SecStructure::~SecStructure(void) {
+MolecularDataCall::SecStructure::~SecStructure() {
     // intentionally empty
 }
 
@@ -279,7 +279,7 @@ bool MolecularDataCall::SecStructure::operator==(const MolecularDataCall::SecStr
 /*
  * MolecularDataCall::AtomType::AtomType
  */
-MolecularDataCall::AtomType::AtomType(void) : name(), rad(0.5f) {
+MolecularDataCall::AtomType::AtomType() : name(), rad(0.5f) {
     this->col[0] = this->col[1] = this->col[2] = 191;
 }
 
@@ -316,7 +316,7 @@ MolecularDataCall::AtomType::AtomType(const AtomType& src) {
 /*
  * MolecularDataCall::AtomType::~AtomType
  */
-MolecularDataCall::AtomType::~AtomType(void) {}
+MolecularDataCall::AtomType::~AtomType() {}
 
 
 /*
@@ -346,7 +346,7 @@ bool MolecularDataCall::AtomType::operator==(const MolecularDataCall::AtomType& 
 /*
  * MolecularDataCall::Molecule::Molecule
  */
-MolecularDataCall::Molecule::Molecule(void)
+MolecularDataCall::Molecule::Molecule()
         : firstResidueIndex(0)
         , residueCount(0)
         , firstSecStructIdx(0)
@@ -394,7 +394,7 @@ MolecularDataCall::Molecule::Molecule(unsigned int firstResIdx, unsigned int res
 /*
  * MolecularDataCall::Molecule::~Molecule
  */
-MolecularDataCall::Molecule::~Molecule(void) {
+MolecularDataCall::Molecule::~Molecule() {
     // intentionally empty
 }
 
@@ -430,7 +430,7 @@ bool MolecularDataCall::Molecule::operator==(const MolecularDataCall::Molecule& 
 /*
  * MolecularDataCall::Chain::Chain
  */
-MolecularDataCall::Chain::Chain(void) : firstMoleculeIndex(0), moleculeCount(0), type(UNSPECIFIC), filter(1) {
+MolecularDataCall::Chain::Chain() : firstMoleculeIndex(0), moleculeCount(0), type(UNSPECIFIC), filter(1) {
     // intentionally empty
 }
 
@@ -463,7 +463,7 @@ MolecularDataCall::Chain::Chain(unsigned int firstMolIdx, unsigned int molCnt, c
 /*
  * MolecularDataCall::Chain::~Chain
  */
-MolecularDataCall::Chain::~Chain(void) {
+MolecularDataCall::Chain::~Chain() {
     // intentionally empty
 }
 
@@ -506,7 +506,7 @@ const unsigned int MolecularDataCall::CallForGetExtent = 1;
 /*
  * MolecularDataCall::MolecularDataCall
  */
-MolecularDataCall::MolecularDataCall(void)
+MolecularDataCall::MolecularDataCall()
         : AbstractGetData3DCall()
         , atomCount(0)
         , atomPos(0)
@@ -534,7 +534,7 @@ MolecularDataCall::MolecularDataCall(void)
 /*
  * MolecularDataCall::~MolecularDataCall
  */
-MolecularDataCall::~MolecularDataCall(void) {}
+MolecularDataCall::~MolecularDataCall() {}
 
 
 /*

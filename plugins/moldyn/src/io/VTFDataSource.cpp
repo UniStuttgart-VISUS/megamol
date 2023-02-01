@@ -77,7 +77,7 @@ io::VTFDataSource::Frame::~Frame() {
 /*
  * io::VTFDataSource::Frame::Clear
  */
-void io::VTFDataSource::Frame::Clear(void) {
+void io::VTFDataSource::Frame::Clear() {
     for (unsigned int i = 0; i < this->typeCnt; i++) {
         this->pos[i].EnforceSize(0);
         this->col[i].EnforceSize(0);
@@ -205,7 +205,7 @@ void io::VTFDataSource::Frame::UpdatePartColor(
 /*
  * io::VTFDataSource::Frame::SizeOf
  */
-SIZE_T io::VTFDataSource::Frame::SizeOf(void) const {
+SIZE_T io::VTFDataSource::Frame::SizeOf() const {
     SIZE_T size = 0;
     for (unsigned int i = 0; i < this->typeCnt; i++) {
         size += this->pos[i].GetSize();
@@ -311,7 +311,7 @@ vislib::Array<int>& io::VTFDataSource::Frame::particleGridCell(unsigned int N1, 
 /*
  * io::VTFDataSource::VTFDataSource
  */
-io::VTFDataSource::VTFDataSource(void)
+io::VTFDataSource::VTFDataSource()
         : view::AnimDataModule()
         , filename("filename", "The path to the trisoup file to load.")
         , getData("getdata", "Slot to request data from this data source.")
@@ -340,7 +340,7 @@ io::VTFDataSource::VTFDataSource(void)
 /*
  * io::VTFDataSource::~VTFDataSource
  */
-io::VTFDataSource::~VTFDataSource(void) {
+io::VTFDataSource::~VTFDataSource() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -348,7 +348,7 @@ io::VTFDataSource::~VTFDataSource(void) {
 /*
  * io::VTFDataSource::constructFrame
  */
-view::AnimDataModule::Frame* io::VTFDataSource::constructFrame(void) const {
+view::AnimDataModule::Frame* io::VTFDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<io::VTFDataSource*>(this));
     f->SetTypeCount((unsigned int)this->types.Count());
     return f;
@@ -357,7 +357,7 @@ view::AnimDataModule::Frame* io::VTFDataSource::constructFrame(void) const {
 /*
  * io::VTFDataSource::create
  */
-bool io::VTFDataSource::create(void) {
+bool io::VTFDataSource::create() {
     return true;
 }
 
@@ -441,7 +441,7 @@ void io::VTFDataSource::preprocessFrame(Frame& frame) {
 /*
  * io::VTFDataSource::release
  */
-void io::VTFDataSource::release(void) {
+void io::VTFDataSource::release() {
     this->resetFrameCache();
     if (this->file != NULL) {
         vislib::sys::File* f = this->file;

@@ -38,7 +38,7 @@ Stride::Stride(MolecularDataCall* mol) : Successful(false) {
     PostProcessHBonds(mol);
 }
 
-Stride::~Stride(void) {
+Stride::~Stride() {
     // free variables
     int i;
     for (i = 0; i < ProteinChainCnt; ++i)

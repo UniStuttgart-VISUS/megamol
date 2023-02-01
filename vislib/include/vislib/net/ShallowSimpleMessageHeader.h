@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SHALLOWSIMPLEMESSAGEHEADER_H_INCLUDED
-#define VISLIB_SHALLOWSIMPLEMESSAGEHEADER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/net/AbstractSimpleMessageHeader.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -42,21 +37,21 @@ public:
     explicit ShallowSimpleMessageHeader(SimpleMessageHeaderData* data);
 
     /** Dtor. */
-    virtual ~ShallowSimpleMessageHeader(void);
+    ~ShallowSimpleMessageHeader() override;
 
     /**
      * Provides direct access to the underlying SimpleMessageHeaderData.
      *
      * @return A pointer to the message header data.
      */
-    virtual SimpleMessageHeaderData* PeekData(void);
+    SimpleMessageHeaderData* PeekData() override;
 
     /**
      * Provides direct access to the underlying SimpleMessageHeaderData.
      *
      * @return A pointer to the message header data.
      */
-    virtual const SimpleMessageHeaderData* PeekData(void) const;
+    const SimpleMessageHeaderData* PeekData() const override;
 
     /**
      * Set a new data pointer.
@@ -130,7 +125,7 @@ private:
      * ctor is only intended for vislib-internal use as it leaves illegal
      * instances.
      */
-    ShallowSimpleMessageHeader(void);
+    ShallowSimpleMessageHeader();
 
     /**
      * Pointer to the actual data. The object is not the owner of the memory
@@ -142,10 +137,8 @@ private:
     friend class AbstractSimpleMessage;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SHALLOWSIMPLEMESSAGEHEADER_H_INCLUDED */

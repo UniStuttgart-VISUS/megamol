@@ -38,7 +38,7 @@ class MMOSPRayPluginInstance : public megamol::core::factories::AbstractPluginIn
     REGISTERPLUGIN(MMOSPRayPluginInstance)
 
 public:
-    MMOSPRayPluginInstance(void) : megamol::core::factories::AbstractPluginInstance("mmospray", "CPU Raytracing"){};
+    MMOSPRayPluginInstance() : megamol::core::factories::AbstractPluginInstance("mmospray", "CPU Raytracing"){};
 
     ~MMOSPRayPluginInstance() override = default;
 

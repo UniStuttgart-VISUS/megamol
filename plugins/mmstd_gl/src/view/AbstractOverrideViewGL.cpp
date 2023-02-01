@@ -72,7 +72,7 @@ void view::AbstractOverrideViewGL::DeserialiseCamera(vislib::Serialiser& seriali
 /*
  * view::AbstractOverrideView::ResetView
  */
-void view::AbstractOverrideViewGL::ResetView(void) {
+void view::AbstractOverrideViewGL::ResetView() {
     // resets camera, not override values
     CallRenderViewGL* crv = this->getCallRenderView();
     if (crv != NULL) {
@@ -220,7 +220,7 @@ bool view::AbstractOverrideViewGL::OnMouseScroll(double dx, double dy) {
 /*
  * view::AbstractOverrideView::disconnectOutgoingRenderCall
  */
-void view::AbstractOverrideViewGL::disconnectOutgoingRenderCall(void) {
+void view::AbstractOverrideViewGL::disconnectOutgoingRenderCall() {
     this->renderViewSlot.ConnectCall(NULL);
 }
 
@@ -228,7 +228,7 @@ void view::AbstractOverrideViewGL::disconnectOutgoingRenderCall(void) {
 /*
  * view::AbstractOverrideView::getConnectedView
  */
-megamol::core::view::AbstractView* view::AbstractOverrideViewGL::getConnectedView(void) const {
+megamol::core::view::AbstractView* view::AbstractOverrideViewGL::getConnectedView() const {
     core::Call* c = const_cast<core::CallerSlot*>(&this->renderViewSlot)->CallAs<core::Call>();
     if ((c == NULL) || (c->PeekCalleeSlot() == NULL))
         return NULL;

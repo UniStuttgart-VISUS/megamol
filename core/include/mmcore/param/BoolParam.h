@@ -7,6 +7,7 @@
 #pragma once
 
 #include "GenericParam.h"
+#include "mmcore/utility/String.h"
 
 namespace megamol::core::param {
 
@@ -18,7 +19,7 @@ public:
 
     bool ParseValue(std::string const& v) override {
         try {
-            this->SetValue(vislib::TCharTraits::ParseBool(v.c_str()));
+            this->SetValue(utility::string::ParseBool(v));
             return true;
         } catch (...) {}
         return false;

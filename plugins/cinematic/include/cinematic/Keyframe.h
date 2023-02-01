@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
-#define MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
 #pragma once
 
 
@@ -15,8 +13,7 @@
 #include <glm/glm.hpp>
 
 
-namespace megamol {
-namespace cinematic {
+namespace megamol::cinematic {
 
 
 /**
@@ -25,12 +22,12 @@ namespace cinematic {
 class Keyframe {
 public:
     /** CTOR */
-    Keyframe(void);
+    Keyframe();
 
     Keyframe(float at, float st, core::view::Camera cam);
 
     /** DTOR */
-    ~Keyframe(void);
+    ~Keyframe();
 
     inline bool operator==(Keyframe const& rhs) {
         return ((this->camera_state == rhs.camera_state) && (this->anim_time == rhs.anim_time) &&
@@ -85,7 +82,4 @@ private:
     float anim_time;
 };
 
-} /* end namespace cinematic */
-} /* end namespace megamol */
-
-#endif // MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
+} // namespace megamol::cinematic

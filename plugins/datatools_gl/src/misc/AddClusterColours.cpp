@@ -30,7 +30,7 @@ AddClusterColours::Unlocker::Unlocker(geocalls::MultiParticleDataCall::Unlocker*
 /*
  * AddClusterColours::Unlocker::~Unlocker
  */
-AddClusterColours::Unlocker::~Unlocker(void) {
+AddClusterColours::Unlocker::~Unlocker() {
     this->Unlock();
 }
 
@@ -38,7 +38,7 @@ AddClusterColours::Unlocker::~Unlocker(void) {
 /*
  * AddClusterColours::Unlocker::Unlock
  */
-void AddClusterColours::Unlocker::Unlock(void) {
+void AddClusterColours::Unlocker::Unlock() {
     if (this->inner != NULL) {
         this->inner->Unlock();
         SAFE_DELETE(this->inner);
@@ -52,7 +52,7 @@ void AddClusterColours::Unlocker::Unlock(void) {
 /*
  * AddClusterColours::AddClusterColours
  */
-AddClusterColours::AddClusterColours(void)
+AddClusterColours::AddClusterColours()
         : Module()
         , putDataSlot("putdata", "Connects from the data consumer")
         , getDataSlot("getdata", "Connects to the data source")
@@ -80,7 +80,7 @@ AddClusterColours::AddClusterColours(void)
 /*
  * AddClusterColours::~AddClusterColours
  */
-AddClusterColours::~AddClusterColours(void) {
+AddClusterColours::~AddClusterColours() {
     this->Release();
 }
 
@@ -88,7 +88,7 @@ AddClusterColours::~AddClusterColours(void) {
 /*
  * AddClusterColours::create
  */
-bool AddClusterColours::create(void) {
+bool AddClusterColours::create() {
     return true;
 }
 
@@ -96,7 +96,7 @@ bool AddClusterColours::create(void) {
 /*
  * AddClusterColours::release
  */
-void AddClusterColours::release(void) {
+void AddClusterColours::release() {
     // intentionally empty ATM
 }
 

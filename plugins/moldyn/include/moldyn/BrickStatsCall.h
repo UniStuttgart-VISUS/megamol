@@ -13,8 +13,7 @@
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 
-namespace megamol {
-namespace moldyn {
+namespace megamol::moldyn {
 
 /**
  * Call transporting information about particle/point
@@ -64,7 +63,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "BrickStatsCall";
     }
 
@@ -73,7 +72,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get information about bricks of a particle/point dataset";
     }
 
@@ -82,7 +81,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return AbstractGetData3DCall::FunctionCount();
     }
 
@@ -113,8 +112,8 @@ public:
     //    this->selection = selection;
     //}
 
-    BrickStatsCall(void);
-    virtual ~BrickStatsCall(void);
+    BrickStatsCall();
+    ~BrickStatsCall() override;
 
 private:
     vislib::Array<BrickInfo>* bricks;
@@ -123,5 +122,4 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<BrickStatsCall> BrickStatsCallDescription;
 
-} /* end namespace moldyn */
-} /* end namespace megamol */
+} // namespace megamol::moldyn

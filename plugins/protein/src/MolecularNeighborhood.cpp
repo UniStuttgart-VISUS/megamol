@@ -25,7 +25,7 @@ using namespace megamol::protein_calls;
 /*
  * MolecularNeighborhood::MolecularNeighborhood
  */
-MolecularNeighborhood::MolecularNeighborhood(void)
+MolecularNeighborhood::MolecularNeighborhood()
         : Module()
         , getDataSlot("getData", "Calls molecular data")
         , dataOutSlot("dataOut", "Provides the molecular data with additional neighborhood information")
@@ -52,21 +52,21 @@ MolecularNeighborhood::MolecularNeighborhood(void)
 /*
  * MolecularNeighborhood::~MolecularNeighborhood
  */
-MolecularNeighborhood::~MolecularNeighborhood(void) {
+MolecularNeighborhood::~MolecularNeighborhood() {
     this->Release();
 }
 
 /*
  * MolecularNeighborhood::create
  */
-bool MolecularNeighborhood::create(void) {
+bool MolecularNeighborhood::create() {
     return true;
 }
 
 /*
  * MolecularNeighborhood::release
  */
-void MolecularNeighborhood::release(void) {}
+void MolecularNeighborhood::release() {}
 
 /*
  * MolecularNeighborhood::getData

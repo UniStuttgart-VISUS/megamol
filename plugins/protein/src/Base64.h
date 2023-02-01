@@ -8,16 +8,11 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_BASE64_H_INCLUDED
-#define MMPROTEINPLUGIN_BASE64_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include <cstddef>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class Base64 {
 
@@ -45,7 +40,4 @@ public:
     static void Decode(const char* input, char* output, size_t s);
 };
 
-} // end namespace protein
-} // end namespace megamol
-
-#endif // MMPROTEINPLUGIN_BASE64_H_INCLUDED
+} // namespace megamol::protein

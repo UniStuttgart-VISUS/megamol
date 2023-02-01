@@ -12,8 +12,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools_gl {
+namespace megamol::datatools_gl {
 
 /**
  * Module thinning the number of particles
@@ -23,25 +22,25 @@ namespace datatools_gl {
 class MeshTranslateRotateScale : public datatools::AbstractMeshManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MeshTranslateRotateScale";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Rotates, translates and scales the data";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    MeshTranslateRotateScale(void);
+    MeshTranslateRotateScale();
 
     /** Dtor */
-    virtual ~MeshTranslateRotateScale(void);
+    ~MeshTranslateRotateScale() override;
     bool InterfaceIsDirty() const;
     void InterfaceResetDirty();
 
@@ -56,8 +55,8 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(
-        megamol::geocalls_gl::CallTriMeshDataGL& outData, megamol::geocalls_gl::CallTriMeshDataGL& inData);
+    bool manipulateData(
+        megamol::geocalls_gl::CallTriMeshDataGL& outData, megamol::geocalls_gl::CallTriMeshDataGL& inData) override;
 
 private:
     core::param::ParamSlot translateSlot;
@@ -68,5 +67,4 @@ private:
     geocalls_gl::CallTriMeshDataGL::Mesh* mesh;
 };
 
-} // namespace datatools_gl
-} /* end namespace megamol */
+} // namespace megamol::datatools_gl

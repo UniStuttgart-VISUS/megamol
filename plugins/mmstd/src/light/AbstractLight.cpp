@@ -19,7 +19,7 @@ using namespace megamol::core::view::light;
 /*
  * megamol::core::view::light::AbstractLight::AbstractLight
  */
-AbstractLight::AbstractLight(void)
+AbstractLight::AbstractLight()
         : core::Module()
         , version(0)
         , lightsource(nullptr)
@@ -49,7 +49,7 @@ AbstractLight::AbstractLight(void)
 /*
  * megamol::core::view::light::AbstractLight::~AbstractLight
  */
-AbstractLight::~AbstractLight(void) {
+AbstractLight::~AbstractLight() {
     this->Release();
 }
 

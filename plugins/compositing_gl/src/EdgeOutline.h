@@ -48,7 +48,7 @@ public:
     }
 
     EdgeOutline();
-    ~EdgeOutline();
+    ~EdgeOutline() override;
 
 protected:
     /**
@@ -56,12 +56,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * TODO

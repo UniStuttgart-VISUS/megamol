@@ -52,15 +52,6 @@ public:
     static bool IsAvailable();
 
     /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart() {
-        return false;
-    }
-
-    /**
      * Ctor
      *
      * @param reducedParameters True: only show necessary parameters, false: all

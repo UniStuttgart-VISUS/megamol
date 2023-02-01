@@ -10,9 +10,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
-namespace megamol {
-namespace core {
-namespace cluster {
+namespace megamol::core::cluster {
 
 class SyncDataSourcesCall : public core::Call {
 public:
@@ -21,7 +19,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SyncDataSourcesCall";
     }
 
@@ -30,7 +28,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for sync data sources";
     }
 
@@ -39,7 +37,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 2;
     }
 
@@ -65,7 +63,7 @@ public:
     SyncDataSourcesCall();
 
     /** Dtor. */
-    virtual ~SyncDataSourcesCall(void);
+    ~SyncDataSourcesCall() override;
 
     bool getFilenameDirty() {
         return fnameDirty;
@@ -83,6 +81,4 @@ private:
 
 }; // end class SyncDataSourcesCall
 typedef core::factories::CallAutoDescription<SyncDataSourcesCall> SyncDataSourcesCallDescription;
-} // namespace cluster
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core::cluster

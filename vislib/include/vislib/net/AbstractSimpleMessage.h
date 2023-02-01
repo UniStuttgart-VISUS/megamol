@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTSIMPLEMESSAGE_H_INCLUDED
-#define VISLIB_ABSTRACTSIMPLEMESSAGE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -19,8 +15,7 @@
 #include "vislib/net/SimpleMessageHeader.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -37,7 +32,7 @@ class AbstractSimpleMessage {
 
 public:
     /** Dtor. */
-    virtual ~AbstractSimpleMessage(void);
+    virtual ~AbstractSimpleMessage();
 
     /**
      * Ensure that the message body is big enough to hold the number of
@@ -45,7 +40,7 @@ public:
      *
      * @throws Exception or derived in case of an error.
      */
-    void AssertBodySize(void) {
+    void AssertBodySize() {
         this->assertStorage(this->GetHeader().GetBodySize());
     }
 
@@ -55,7 +50,7 @@ public:
      *
      * @return A pointer to the message body.
      */
-    const void* GetBody(void) const;
+    const void* GetBody() const;
 
     /**
      * Get a pointer to the message body. The object remains owner of
@@ -63,7 +58,7 @@ public:
      *
      * @return A pointer to the message body.
      */
-    void* GetBody(void);
+    void* GetBody();
 
     /**
      * Answer the message body as pointer to T. The object remains
@@ -72,7 +67,7 @@ public:
      * @return The message body.
      */
     template<class T>
-    inline const T* GetBodyAs(void) const {
+    inline const T* GetBodyAs() const {
         return reinterpret_cast<const T*>(this->GetBody());
     }
 
@@ -83,7 +78,7 @@ public:
      * @return The message body.
      */
     template<class T>
-    inline T* GetBodyAs(void) {
+    inline T* GetBodyAs() {
         return reinterpret_cast<T*>(this->GetBody());
     }
 
@@ -120,7 +115,7 @@ public:
      * an alias, i. e. all changes to the header directly affect the
      * message.
      */
-    inline const ShallowSimpleMessageHeader& GetHeader(void) const {
+    inline const ShallowSimpleMessageHeader& GetHeader() const {
         return this->header;
     }
 
@@ -129,7 +124,7 @@ public:
      * an alias, i. e. all changes to the header directly affect the
      * message.
      */
-    inline ShallowSimpleMessageHeader& GetHeader(void) {
+    inline ShallowSimpleMessageHeader& GetHeader() {
         return this->header;
     }
 
@@ -138,7 +133,7 @@ public:
      *
      * @return The combined size of the header and message body.
      */
-    inline SIZE_T GetMessageSize(void) const {
+    inline SIZE_T GetMessageSize() const {
         return (this->GetHeader().GetHeaderSize() + this->GetHeader().GetBodySize());
     }
 
@@ -231,7 +226,7 @@ public:
      *
      * @return Pointer to the memory of the message (including header).
      */
-    operator const void*(void) const;
+    operator const void*() const;
 
     /**
      * Get the message data starting at the header. This is what you want to
@@ -241,11 +236,11 @@ public:
      *
      * @return Pointer to the memory of the message (including header).
      */
-    operator void*(void);
+    operator void*();
 
 protected:
     /** Ctor. */
-    AbstractSimpleMessage(void);
+    AbstractSimpleMessage();
 
     /**
      * Ensure that whatever type of storage is used has enough memory to
@@ -294,10 +289,8 @@ private:
     ShallowSimpleMessageHeader header;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTSIMPLEMESSAGE_H_INCLUDED */

@@ -5,11 +5,7 @@
  * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SHALLOWDIMENSION_H_INCLUDED
-#define VISLIB_SHALLOWDIMENSION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/math/AbstractDimension.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -52,7 +47,7 @@ public:
     }
 
     /** Dtor. */
-    ~ShallowDimension(void);
+    ~ShallowDimension();
 
     /**
      * Assigment operator. This operator never creates an alias, even for
@@ -94,13 +89,11 @@ public:
  * vislib::math::ShallowDimension<T, D>::~ShallowDimension
  */
 template<class T, unsigned int D>
-ShallowDimension<T, D>::~ShallowDimension(void) {}
+ShallowDimension<T, D>::~ShallowDimension() {}
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SHALLOWDIMENSION_H_INCLUDED */

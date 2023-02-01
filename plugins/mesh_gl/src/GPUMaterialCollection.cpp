@@ -10,8 +10,7 @@
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 void GPUMaterialCollection::addMaterial(megamol::frontend_resources::RuntimeConfig const& runtimeConf,
     std::string const& identifier, std::vector<std::filesystem::path> const& shader_filepaths,
@@ -103,5 +102,4 @@ GPUMaterialCollection::Material const& GPUMaterialCollection::getMaterial(std::s
     return Material();
 }
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl

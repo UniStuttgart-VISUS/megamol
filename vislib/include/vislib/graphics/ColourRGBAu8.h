@@ -5,18 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_COLOURRGBAU8_H_INCLUDED
-#define VISLIB_COLOURRGBAU8_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-namespace vislib {
-namespace graphics {
+namespace vislib::graphics {
 
 
 /**
@@ -36,7 +31,7 @@ public:
      * Sets all colour components to zero and alpha to one (255),
      * resulting in black.
      */
-    ColourRGBAu8(void);
+    ColourRGBAu8();
 
     /**
      * Ctor
@@ -56,14 +51,14 @@ public:
     ColourRGBAu8(const ColourRGBAu8& src);
 
     /** Dtor. */
-    ~ColourRGBAu8(void);
+    ~ColourRGBAu8();
 
     /**
      * Answer the alpha component
      *
      * @return The alpha component
      */
-    inline unsigned char A(void) const {
+    inline unsigned char A() const {
         return this->comp[3];
     }
 
@@ -72,7 +67,7 @@ public:
      *
      * @return The blue colour component
      */
-    inline unsigned char B(void) const {
+    inline unsigned char B() const {
         return this->comp[2];
     }
 
@@ -81,7 +76,7 @@ public:
      *
      * @return The green colour component
      */
-    inline unsigned char G(void) const {
+    inline unsigned char G() const {
         return this->comp[1];
     }
 
@@ -101,7 +96,7 @@ public:
      *
      * @return A pointer to all components
      */
-    inline const unsigned char* PeekComponents(void) const {
+    inline const unsigned char* PeekComponents() const {
         return this->comp;
     }
 
@@ -110,7 +105,7 @@ public:
      *
      * @return The red colour component
      */
-    inline unsigned char R(void) const {
+    inline unsigned char R() const {
         return this->comp[0];
     }
 
@@ -194,10 +189,8 @@ private:
     unsigned char comp[4];
 };
 
-} /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib::graphics
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_COLOURRGBAU8_H_INCLUDED */

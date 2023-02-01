@@ -15,8 +15,7 @@
 #include <iostream>
 #include <vector>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 struct FrontendResourcesLookup {
 
@@ -106,5 +105,4 @@ private:
     std::vector<frontend::FrontendResource> resources;
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

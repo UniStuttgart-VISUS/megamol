@@ -51,8 +51,7 @@ struct RecursionGuard {
 } // namespace
 
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 Lua_Service_Wrapper::Lua_Service_Wrapper() {
     // init members to default states
@@ -912,5 +911,4 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
 }
 
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

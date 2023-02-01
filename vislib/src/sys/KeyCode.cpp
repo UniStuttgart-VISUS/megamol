@@ -12,7 +12,7 @@
 /*
  * vislib::sys::KeyCode::KeyCode
  */
-vislib::sys::KeyCode::KeyCode(void) : key() {
+vislib::sys::KeyCode::KeyCode() : key() {
     this->normalise();
 }
 
@@ -36,7 +36,7 @@ vislib::sys::KeyCode::KeyCode(const vislib::sys::KeyCode& src) : key(src.key) {
 /*
  * vislib::sys::KeyCode::~KeyCode
  */
-vislib::sys::KeyCode::~KeyCode(void) {
+vislib::sys::KeyCode::~KeyCode() {
     // intentionally empty
 }
 
@@ -44,7 +44,7 @@ vislib::sys::KeyCode::~KeyCode(void) {
 /*
  * vislib::sys::KeyCode::ToStringA
  */
-vislib::StringA vislib::sys::KeyCode::ToStringA(void) const {
+vislib::StringA vislib::sys::KeyCode::ToStringA() const {
     vislib::StringA msg;
     if (this->IsShiftMod())
         msg += "Shift + ";
@@ -186,7 +186,7 @@ bool vislib::sys::KeyCode::operator==(const vislib::sys::KeyCode& rhs) const {
 /*
  * vislib::sys::KeyCode::operator WORD
  */
-vislib::sys::KeyCode::operator WORD(void) const {
+vislib::sys::KeyCode::operator WORD() const {
     return this->key;
 }
 
@@ -194,7 +194,7 @@ vislib::sys::KeyCode::operator WORD(void) const {
 /*
  * vislib::sys::KeyCode::normalise
  */
-void vislib::sys::KeyCode::normalise(void) {
+void vislib::sys::KeyCode::normalise() {
     // the idea of this method is to work around the KEY_MOD_SHIFT problem
     // If you do not understand that problem think of '$' + Shift vs. '$'
 

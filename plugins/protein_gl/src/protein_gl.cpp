@@ -38,7 +38,7 @@ class ProteinGLPluginInstance : public megamol::core::factories::AbstractPluginI
     REGISTERPLUGIN(ProteinGLPluginInstance)
 
 public:
-    ProteinGLPluginInstance(void)
+    ProteinGLPluginInstance()
             : megamol::core::factories::AbstractPluginInstance(
                   "protein_gl", "Plugin for protein rendering (SFB716 D4)"){};
 

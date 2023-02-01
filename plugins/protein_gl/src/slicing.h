@@ -30,8 +30,7 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 //#include "mmath.h"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 #define VS_EPS 1.0e-8
 
@@ -45,8 +44,8 @@ namespace protein_gl {
 // class for view-aligned slicing of a volume
 class ViewSlicing {
 public:
-    ViewSlicing(void){};
-    ~ViewSlicing(void){};
+    ViewSlicing(){};
+    ~ViewSlicing(){};
 
     // setup slicing
     // needs the model view matrix (column oriented),
@@ -56,7 +55,7 @@ public:
     void drawSlice(int slice);
     void drawSlices(GLenum mode, int frontToBack, int maxSlices);
 
-    int getNumSlices(void) {
+    int getNumSlices() {
         return _numSlices;
     }
 
@@ -87,7 +86,6 @@ private:
     int _maxSlices;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl
 
 #endif // _SLICING_H_

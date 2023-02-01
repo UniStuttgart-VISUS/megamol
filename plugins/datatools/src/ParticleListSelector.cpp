@@ -13,7 +13,7 @@ using namespace megamol;
 /*
  * datatools::ParticleListSelector::ParticleListSelector
  */
-datatools::ParticleListSelector::ParticleListSelector(void)
+datatools::ParticleListSelector::ParticleListSelector()
         : AbstractParticleManipulator("outData", "indata")
         , listIndexSlot("listIndex", "The thinning factor. Only each n-th particle will be kept.") {
     this->listIndexSlot.SetParameter(new core::param::IntParam(0, 0));
@@ -24,7 +24,7 @@ datatools::ParticleListSelector::ParticleListSelector(void)
 /*
  * datatools::ParticleListSelector::~ParticleListSelector
  */
-datatools::ParticleListSelector::~ParticleListSelector(void) {
+datatools::ParticleListSelector::~ParticleListSelector() {
     this->Release();
 }
 

@@ -29,7 +29,7 @@ uint32_t ImageLoader::loaded = 0;
 /*
  * ImageLoader::ImageLoader
  */
-ImageLoader::ImageLoader(void)
+ImageLoader::ImageLoader()
         : Module()
         , callRequestImage("requestImage", "Slot that provides the data of the loaded images")
         , filenameSlot("filepath",
@@ -74,14 +74,14 @@ ImageLoader::ImageLoader(void)
 /*
  * ImageLoader::~ImageLoader
  */
-ImageLoader::~ImageLoader(void) {
+ImageLoader::~ImageLoader() {
     this->Release();
 }
 
 /*
  * ImageLoader::create
  */
-bool ImageLoader::create(void) {
+bool ImageLoader::create() {
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::PngBitmapCodec());
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::JpegBitmapCodec());
     this->loadingThread = std::thread(&ImageLoader::loadingLoop, std::ref(*this)); // start loading thread
@@ -91,7 +91,7 @@ bool ImageLoader::create(void) {
 /*
  * ImageLoader::release
  */
-void ImageLoader::release(void) {
+void ImageLoader::release() {
     this->keepRunning = false;
     if (this->loadingThread.joinable()) {
         this->loadingThread.join();
@@ -278,7 +278,7 @@ bool ImageLoader::loadImage(const std::filesystem::path& path) {
 /*
  * ImageLoader::loadingLoop
  */
-void ImageLoader::loadingLoop(void) {
+void ImageLoader::loadingLoop() {
     while (this->keepRunning) {
         if (!this->imageLoadingQueue.empty()) {
             this->queueMutex.lock();

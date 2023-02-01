@@ -17,8 +17,7 @@
 //#include "vislib/Array.h"
 #include "vislib/math/Vector.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Processor for pore-mesh collection/generation/whatever
@@ -34,12 +33,12 @@ public:
     /**
      * Ctor
      */
-    PoreMeshProcessor(void);
+    PoreMeshProcessor();
 
     /**
      * Dtor
      */
-    ~PoreMeshProcessor(void);
+    ~PoreMeshProcessor() override;
 
     /**
      * Perform the work of a thread.
@@ -50,7 +49,7 @@ public:
      * @return The application dependent return code of the thread. This
      *         must not be STILL_ACTIVE (259).
      */
-    virtual DWORD Run(void* userData);
+    DWORD Run(void* userData) override;
 
     /**
      * The Runnable should abort its work as soon as possible. This method
@@ -63,7 +62,7 @@ public:
      * @return true to acknowledge that the Runnable will finish as soon
      *         as possible, false if termination is not possible.
      */
-    virtual bool Terminate(void);
+    bool Terminate() override;
 
     /**
      * Sets the input buffer pool
@@ -125,5 +124,4 @@ private:
     vislib::math::Vector<float, 3> axes[3];
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

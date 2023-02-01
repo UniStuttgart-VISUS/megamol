@@ -14,7 +14,7 @@ using namespace megamol::datatools_gl::misc;
 /*
  * ParticleListMergeModule::ParticleListMergeModule
  */
-ParticleListMergeModule::ParticleListMergeModule(void)
+ParticleListMergeModule::ParticleListMergeModule()
         : datatools::AbstractParticleManipulator("outData", "inData")
         , tfq()
         , dataHash(0)
@@ -28,7 +28,7 @@ ParticleListMergeModule::ParticleListMergeModule(void)
 /*
  * ParticleListMergeModule::~ParticleListMergeModule
  */
-ParticleListMergeModule::~ParticleListMergeModule(void) {
+ParticleListMergeModule::~ParticleListMergeModule() {
     this->Release(); // implicitly calls 'release'
 }
 

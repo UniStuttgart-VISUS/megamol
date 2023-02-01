@@ -15,7 +15,7 @@
 /*
  * vislib::net::CommServerListener::~CommServerListener
  */
-vislib::net::CommServerListener::~CommServerListener(void) {}
+vislib::net::CommServerListener::~CommServerListener() {}
 
 
 /*
@@ -41,4 +41,4 @@ void vislib::net::CommServerListener::OnServerStarted(const CommServer& src) thr
 /*
  * vislib::net::CommServerListener::CommServerListener
  */
-vislib::net::CommServerListener::CommServerListener(void) {}
+vislib::net::CommServerListener::CommServerListener() {}

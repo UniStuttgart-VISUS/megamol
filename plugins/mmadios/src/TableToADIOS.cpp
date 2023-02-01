@@ -15,10 +15,9 @@
 
 #include "vislib/StringConverter.h"
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
-TableToADIOS::TableToADIOS(void)
+TableToADIOS::TableToADIOS()
         : core::Module()
         , ftSlot("ftSlot", "Slot to request table data from")
         , adiosSlot("adiosSlot", "Slot to send ADIOS IO to") {
@@ -34,15 +33,15 @@ TableToADIOS::TableToADIOS(void)
     this->MakeSlotAvailable(&this->ftSlot);
 }
 
-TableToADIOS::~TableToADIOS(void) {
+TableToADIOS::~TableToADIOS() {
     this->Release();
 }
 
-bool TableToADIOS::create(void) {
+bool TableToADIOS::create() {
     return true;
 }
 
-void TableToADIOS::release(void) {}
+void TableToADIOS::release() {}
 
 bool TableToADIOS::getDataCallback(core::Call& call) {
     CallADIOSData* cad = dynamic_cast<CallADIOSData*>(&call);
@@ -126,5 +125,4 @@ std::string TableToADIOS::cleanUpColumnHeader(const vislib::TString& header) con
     return std::string(T2A(h.PeekBuffer()));
 }
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

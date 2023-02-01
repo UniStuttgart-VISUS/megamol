@@ -4,13 +4,11 @@
  * All rights reserved.
  */
 
-#ifndef DEFERRED_GLTF_RENDERER_H_INCLUDED
-#define DEFERRED_GLTF_RENDERER_H_INCLUDED
+#pragma once
 
 #include "BaseGltfRenderer.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class DeferredGltfRenderer : public BaseGltfRenderer {
 public:
@@ -22,7 +20,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DeferredGltfRenderer";
     }
     /**
@@ -30,7 +28,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for gltf files using shaders for deferred rendering.";
     }
 
@@ -48,7 +46,4 @@ protected:
     }
 };
 
-} // namespace mesh_gl
-} // namespace megamol
-
-#endif // !DEFERRED_GLTF_RENDERER_H_INCLUDED
+} // namespace megamol::mesh_gl

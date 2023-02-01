@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED
-#define MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED
 #pragma once
 
 
@@ -18,8 +16,7 @@
 #include "vislib/math/Cuboid.h"
 
 
-namespace megamol {
-namespace cinematic_gl {
+namespace megamol::cinematic_gl {
 
 /*
  * Replacement rendering.
@@ -31,7 +28,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ReplacementRenderer";
     }
 
@@ -40,7 +37,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers replacement rendering.";
     }
 
@@ -49,15 +46,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    ReplacementRenderer(void);
+    ReplacementRenderer();
 
     /** Dtor. */
-    virtual ~ReplacementRenderer(void);
+    ~ReplacementRenderer() override;
 
 protected:
     /**
@@ -65,12 +62,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -81,7 +78,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The Open GL Render callback.
@@ -89,7 +86,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /**********************************************************************
@@ -123,7 +120,4 @@ private:
     core::param::ParamSlot alphaParam;
 };
 
-} // namespace cinematic_gl
-} /* end namespace megamol */
-
-#endif // MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED
+} // namespace megamol::cinematic_gl

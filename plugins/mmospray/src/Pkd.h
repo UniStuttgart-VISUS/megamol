@@ -15,8 +15,7 @@
 
 #include "pkd/ParticleModel.h"
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 static __forceinline size_t leftChildOf(const size_t nodeID) {
     return 2 * nodeID + 1;
@@ -31,22 +30,22 @@ static __forceinline size_t parentOf(const size_t nodeID) {
 
 class PkdBuilder : public megamol::datatools::AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "PkdBuilder";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Converts MMPLD files to Pkd sorted MMPLD files.";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     PkdBuilder();
-    virtual ~PkdBuilder();
+    ~PkdBuilder() override;
 
 
 protected:
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     size_t inDataHash;
@@ -151,5 +150,4 @@ static void pkdBuildThread(void* arg) {
     delete job;
 }
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

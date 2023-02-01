@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_CINEMATIC_CALLKEYFRAMEKEEPER_H_INCLUDED
-#define MEGAMOL_CINEMATIC_CALLKEYFRAMEKEEPER_H_INCLUDED
 #pragma once
 
 
@@ -15,8 +13,7 @@
 #include "mmstd/data/AbstractGetDataCall.h"
 
 
-namespace megamol {
-namespace cinematic {
+namespace megamol::cinematic {
 
 /**
  * Call transporting keyframe data
@@ -45,7 +42,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallKeyframeKeeper";
     }
 
@@ -54,7 +51,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call keyframes and keyframe data";
     }
 
@@ -63,7 +60,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 9;
     }
 
@@ -100,10 +97,10 @@ public:
     }
 
     /** Ctor */
-    CallKeyframeKeeper(void);
+    CallKeyframeKeeper();
 
     /** Dtor */
-    virtual ~CallKeyframeKeeper(void);
+    ~CallKeyframeKeeper() override;
 
 
     /**********************************************************************
@@ -238,7 +235,4 @@ private:
 typedef core::factories::CallAutoDescription<CallKeyframeKeeper> CallKeyframeKeeperDescription;
 
 
-} /* end namespace cinematic */
-} /* end namespace megamol */
-
-#endif // MEGAMOL_CINEMATIC_CALLKEYFRAMEKEEPER_H_INCLUDED
+} // namespace megamol::cinematic

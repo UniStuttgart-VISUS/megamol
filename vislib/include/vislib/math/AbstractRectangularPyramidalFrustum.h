@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTRECTANGULARPYRAMIDALFRUSTUM_H_INCLUDED
-#define VISLIB_ABSTRACTRECTANGULARPYRAMIDALFRUSTUM_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -26,8 +22,7 @@
 #include "vislib/math/Vector.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -48,7 +43,7 @@ class AbstractRectangularPyramidalFrustum : public AbstractPyramidalFrustum<T> {
 
 public:
     /** Dtor. */
-    virtual ~AbstractRectangularPyramidalFrustum(void);
+    virtual ~AbstractRectangularPyramidalFrustum();
 
     /**
      * TODO: Documentation
@@ -59,7 +54,7 @@ public:
     /**
      * TODO: Documentation
      */
-    inline Point<T, 3> GetApex(void) const {
+    inline Point<T, 3> GetApex() const {
         return Point<T, 3>(this->values + IDX_APEX_X);
     }
 
@@ -74,21 +69,21 @@ public:
     /**
      * TODO: Documentation
      */
-    inline Vector<T, 3> GetBaseNormal(void) const {
+    inline Vector<T, 3> GetBaseNormal() const {
         return Vector<T, 3>(this->values + IDX_NORMAL_X);
     }
 
     /**
      * TODO: Documentation
      */
-    inline Vector<T, 3> GetBaseUp(void) const {
+    inline Vector<T, 3> GetBaseUp() const {
         return Vector<T, 3>(this->values + IDX_UP_X);
     }
 
     /**
      * TODO: Documentation
      */
-    inline const Plane<T>& GetBottomBase(void) const {
+    inline const Plane<T>& GetBottomBase() const {
         // Note: This is NOT a bug: The bottom base of the frustum is the
         // far clipping plane as seen from the apex.
         return this->fillPlaneCache(false)[IDX_FAR];
@@ -97,7 +92,7 @@ public:
     /**
      * TODO: Documentation
      */
-    inline const Plane<T>& GetBottomPlane(void) const {
+    inline const Plane<T>& GetBottomPlane() const {
         return this->fillPlaneCache(false)[IDX_BOTTOM];
     }
 
@@ -124,28 +119,28 @@ public:
     /**
      * TODO: Documentation
      */
-    inline const Plane<T>& GetFarPlane(void) const {
+    inline const Plane<T>& GetFarPlane() const {
         return this->fillPlaneCache(false)[IDX_FAR];
     }
 
     /**
      * TODO: Documentation
      */
-    inline const Plane<T>& GetLeftPlane(void) const {
+    inline const Plane<T>& GetLeftPlane() const {
         return this->fillPlaneCache(false)[IDX_LEFT];
     }
 
     /**
      * TODO: Documentation
      */
-    inline const Plane<T>& GetNearPlane(void) const {
+    inline const Plane<T>& GetNearPlane() const {
         return this->fillPlaneCache(false)[IDX_NEAR];
     }
 
     /**
      * TODO: Documentation
      */
-    inline const Plane<T>& GetRightPlane(void) const {
+    inline const Plane<T>& GetRightPlane() const {
         return this->fillPlaneCache(false)[IDX_RIGHT];
     }
 
@@ -154,7 +149,7 @@ public:
      *
      * @return The plane on top of the frustum.
      */
-    inline const Plane<T>& GetTopBase(void) const {
+    inline const Plane<T>& GetTopBase() const {
         // Note: This is NOT a bug: The bottom base of the frustum is the
         // near clipping plane as seen from the apex.
         return this->fillPlaneCache(false)[IDX_NEAR];
@@ -171,7 +166,7 @@ public:
     /**
      * TODO: Documentation
      */
-    inline const Plane<T>& GetTopPlane(void) const {
+    inline const Plane<T>& GetTopPlane() const {
         return this->fillPlaneCache(false)[IDX_TOP];
     }
 
@@ -320,12 +315,12 @@ protected:
     /**
      * Disallow instances.
      */
-    AbstractRectangularPyramidalFrustum(void);
+    AbstractRectangularPyramidalFrustum();
 
     /**
      * Clear all cached data.
      */
-    inline void invalidateCaches(void) {
+    inline void invalidateCaches() {
         //            ARY_SAFE_DELETE(this->cachePoints);
         ARY_SAFE_DELETE(this->cachePlanes);
         //            ASSERT(this->cachePoints == NULL);
@@ -364,7 +359,7 @@ private:
  * ...Frustum<T, S>::~AbstractRectangularPyramidalFrustum
  */
 template<class T, class S>
-AbstractRectangularPyramidalFrustum<T, S>::~AbstractRectangularPyramidalFrustum(void) {
+AbstractRectangularPyramidalFrustum<T, S>::~AbstractRectangularPyramidalFrustum() {
     // Must not do anything about 'values' due to the Crowbar pattern(TM).
     //ARY_SAFE_DELETE(this->cachePoints);
     ARY_SAFE_DELETE(this->cachePlanes);
@@ -631,7 +626,7 @@ const UINT_PTR AbstractRectangularPyramidalFrustum<T, S>::IDX_UP_Z = 14;
  * ...Frustum<T, S>::~AbstractRectangularPyramidalFrustum
  */
 template<class T, class S>
-AbstractRectangularPyramidalFrustum<T, S>::AbstractRectangularPyramidalFrustum(void)
+AbstractRectangularPyramidalFrustum<T, S>::AbstractRectangularPyramidalFrustum()
         : Super()
         , /*cachePoints(NULL), */ cachePlanes(NULL) {}
 
@@ -770,10 +765,8 @@ ShallowVector<T, 3>& AbstractRectangularPyramidalFrustum<T, S>::safeUpVector(Sha
     return inOutUp;
 }
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTRECTANGULARPYRAMIDALFRUSTUM_H_INCLUDED */

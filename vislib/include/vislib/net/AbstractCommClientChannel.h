@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ABSTRACTCOMMCLIENTCHANNEL_H_INCLUDED
-#define VISLIB_ABSTRACTCOMMCLIENTCHANNEL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -20,8 +16,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -61,7 +56,7 @@ public:
      *
      * @throws Exception Or derived class in case of an error.
      */
-    virtual void Close(void) = 0;
+    virtual void Close() = 0;
 
     /**
      * Connects the channel to the peer node at the specified end
@@ -85,7 +80,7 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    virtual SmartRef<AbstractCommEndPoint> GetLocalEndPoint(void) const = 0;
+    virtual SmartRef<AbstractCommEndPoint> GetLocalEndPoint() const = 0;
 
     /**
      * Answer the address the remote peer of this channel is using.
@@ -99,7 +94,7 @@ public:
      *
      * @throws Exception Or derived in case the operation fails.
      */
-    virtual SmartRef<AbstractCommEndPoint> GetRemoteEndPoint(void) const = 0;
+    virtual SmartRef<AbstractCommEndPoint> GetRemoteEndPoint() const = 0;
 
     /**
      * Receives 'cntBytes' over the communication channel and saves them to
@@ -154,16 +149,14 @@ protected:
     typedef ReferenceCounted Super;
 
     /** Ctor. */
-    AbstractCommClientChannel(void);
+    AbstractCommClientChannel();
 
     /** Dtor. */
-    virtual ~AbstractCommClientChannel(void);
+    ~AbstractCommClientChannel() override;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ABSTRACTCOMMCLIENTCHANNEL_H_INCLUDED */

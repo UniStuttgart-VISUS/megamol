@@ -4,11 +4,7 @@
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_FASTMAP_H_INCLUDED
-#define VISLIB_FASTMAP_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -23,8 +19,7 @@
     original paper suggests 5. */
 #define MAX_PIVOT_ITERATIONS 5
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 
 /**
@@ -131,7 +126,7 @@ private:
      * Executes the mapping from inData into outData. It calls
      * chooseDistant once per destination dimension.
      */
-    void compute(void);
+    void compute();
 
     /** Reference to source data */
     Array<TI>& inData;
@@ -200,7 +195,7 @@ void FastMap<TI, TO, D>::chooseDistant(unsigned int dim) {
  * vislib::math::FastMap<TI, TO, D>::compute
  */
 template<class TI, class TO, unsigned int D>
-void FastMap<TI, TO, D>::compute(void) {
+void FastMap<TI, TO, D>::compute() {
     unsigned int currDim;
     float xi;
 
@@ -224,11 +219,9 @@ void FastMap<TI, TO, D>::compute(void) {
     }
 }
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_FASTMAP_H_INCLUDED */
