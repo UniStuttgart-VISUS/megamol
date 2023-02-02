@@ -95,7 +95,7 @@ private:
 
     static double transformTimestamp(double timestamp, double min1, double max1, double min2, double max2);
 
-    std::shared_ptr<const AsyncImageData2D> fetchImage(core::CallerSlot& caller, double timestamp) const;
+    std::shared_ptr<const AsyncImageData2D<>> fetchImage(core::CallerSlot& caller, double timestamp) const;
 
     void updateTransformationMatrix();
 
@@ -120,9 +120,9 @@ private:
     glm::mat3x2 cachedTransformMatrix;
     bool suppressed = false;
 
-    util::LRUCache<AsyncImageData2D::Hash, AsyncImageData2D> imageCache;
+    util::LRUCache<typename AsyncImageData2D<>::Hash, AsyncImageData2D<>> imageCache;
 
-    std::unique_ptr<filter::AsyncFilterRunner> filterRunner;
+    std::unique_ptr<filter::AsyncFilterRunner<>> filterRunner;
 };
 
 } // namespace megamol::ImageSeries

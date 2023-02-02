@@ -20,7 +20,7 @@ namespace megamol::ImageSeries {
 ImageSeriesTimestampFilter::ImageSeriesTimestampFilter()
         : getDataCallee("getData", "Returns data from the image series for the requested timestamp.")
         , getInputCaller("requestInputImageSeries", "Requests image data from a series.")
-        , imageCache([](const AsyncImageData2D& imageData) { return imageData.getByteSize(); }) {
+        , imageCache([](const AsyncImageData2D<>& imageData) { return imageData.getByteSize(); }) {
 
     getInputCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getInputCaller);
@@ -41,7 +41,7 @@ ImageSeriesTimestampFilter::~ImageSeriesTimestampFilter() {
 }
 
 bool ImageSeriesTimestampFilter::create() {
-    filterRunner = std::make_unique<filter::AsyncFilterRunner>();
+    filterRunner = std::make_unique<filter::AsyncFilterRunner<>>();
     return true;
 }
 
@@ -56,7 +56,7 @@ bool ImageSeriesTimestampFilter::getDataCallback(core::Call& caller) {
 
         if (output.imageData) {
             // Retrieve cached image or run filter on input data
-            output.imageData = imageCache.findOrCreate(output.getHash(), [=](AsyncImageData2D::Hash) {
+            output.imageData = imageCache.findOrCreate(output.getHash(), [=](typename AsyncImageData2D<>::Hash) {
                 filter::IndexGenerationFilter::Input params;
                 for (std::size_t i = 0; i < output.imageCount; ++i) {
                     params.frameIndex = i;

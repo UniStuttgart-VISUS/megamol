@@ -20,8 +20,8 @@ struct GenericFilterImplementation {
     static constexpr T Tmin = std::numeric_limits<T>::min();
     static constexpr T Tmax = std::numeric_limits<T>::max();
 
-    GenericFilterImplementation(const AsyncImageData2D::BitmapImage& input1,
-        const AsyncImageData2D::BitmapImage& input2, AsyncImageData2D::BitmapImage& output) {
+    GenericFilterImplementation(const typename AsyncImageData2D<>::BitmapImage& input1,
+        const typename AsyncImageData2D<>::BitmapImage& input2, typename AsyncImageData2D<>::BitmapImage& output) {
         this->in1 = input1.PeekDataAs<T>();
         this->in2 = input2.PeekDataAs<T>();
         this->out = output.PeekDataAs<T>();
@@ -52,8 +52,9 @@ struct GenericFilterImplementation {
 
 template<typename T, typename P>
 struct GenericFilterRunner {
-    static void run(const AsyncImageData2D::BitmapImage& input1, const AsyncImageData2D::BitmapImage& input2,
-        AsyncImageData2D::BitmapImage& output, GenericFilter::Operation operation) {
+    static void run(const typename AsyncImageData2D<>::BitmapImage& input1,
+        const typename AsyncImageData2D<>::BitmapImage& input2, typename AsyncImageData2D<>::BitmapImage& output,
+        GenericFilter::Operation operation) {
         switch (input1.GetChannelCount()) {
         case 1:
             return GenericFilterImplementation<T, P, 1>(input1, input2, output).run(operation);
@@ -79,7 +80,7 @@ GenericFilter::GenericFilter(AsyncImagePtr image1, AsyncImagePtr image2, Operati
 }
 
 GenericFilter::ImagePtr GenericFilter::operator()() {
-    using Image = AsyncImageData2D::BitmapImage;
+    using Image = typename AsyncImageData2D<>::BitmapImage;
 
     // Wait for image data to be ready
     auto img1 = input.image1 ? input.image1->getImageData() : nullptr;

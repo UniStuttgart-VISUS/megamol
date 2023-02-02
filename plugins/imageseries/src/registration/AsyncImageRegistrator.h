@@ -10,7 +10,7 @@ namespace megamol::ImageSeries::registration {
 
 class AsyncImageRegistrator {
 public:
-    using AsyncImagePtr = std::shared_ptr<const AsyncImageData2D>;
+    using AsyncImagePtr = std::shared_ptr<const AsyncImageData2D<>>;
 
     AsyncImageRegistrator();
     ~AsyncImageRegistrator();

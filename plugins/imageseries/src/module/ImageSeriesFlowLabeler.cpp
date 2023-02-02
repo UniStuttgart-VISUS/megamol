@@ -1,5 +1,7 @@
 #include "ImageSeriesFlowLabeler.h"
 #include "imageseries/ImageSeries2DCall.h"
+#include "imageseries/graph/GraphData2DCall.h"
+#include "imageseries/util/AsyncData.h"
 
 #include "vislib/graphics/PngBitmapCodec.h"
 #include "mmcore/param/BoolParam.h"
@@ -17,13 +19,16 @@ using Presentation = megamol::core::param::AbstractParamPresentation::Presentati
 namespace megamol::ImageSeries {
 
 ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
-        : getDataCallee("getData", "Returns data from the image series for the requested timestamp.")
+        : getDataCallee("getData", "Returns data from the image series.")
+        , getGraphCallee("getGraph", "Returns the constructed graph from the image series.")
         , getTimeMapCaller("requestTimeMapImageSeries", "Requests timestamp data from an image series.")
         , timeThresholdParam("Time threshold", "Maximum allowed time offset between adjacent pixels, in frames.")
         , minTimestampParam("Min frame index", "Minimum frame index to start flood filling from.")
         , maxTimestampParam("Max frame index", "Maximum frame index to stop flood filling at.")
         , initThresholdParam("Initial area threshold", "Minimum required number of connected pixels to start filling.")
-        , imageCache([](const AsyncImageData2D& imageData) { return imageData.getByteSize(); }) {
+        , imageCache([](const AsyncImageData2D<filter::FlowTimeLabelFilter::Output>& imageData) {
+            return imageData.getByteSize();
+        }) {
 
     getTimeMapCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getTimeMapCaller);
@@ -34,6 +39,10 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
         ImageSeries2DCall::FunctionName(ImageSeries2DCall::CallGetMetaData),
         &ImageSeriesFlowLabeler::getMetaDataCallback);
     MakeSlotAvailable(&getDataCallee);
+
+    getGraphCallee.SetCallback(GraphData2DCall::ClassName(),
+        GraphData2DCall::FunctionName(GraphData2DCall::CallGetData), &ImageSeriesFlowLabeler::getDataCallback);
+    MakeSlotAvailable(&getGraphCallee);
 
     timeThresholdParam << new core::param::IntParam(20, 1, 50);
     timeThresholdParam.Parameter()->SetGUIPresentation(Presentation::Slider);
@@ -64,7 +73,7 @@ ImageSeriesFlowLabeler::~ImageSeriesFlowLabeler() {
 }
 
 bool ImageSeriesFlowLabeler::create() {
-    filterRunner = std::make_unique<filter::AsyncFilterRunner>();
+    filterRunner = std::make_unique<filter::AsyncFilterRunner<AsyncImageData2D<filter::FlowTimeLabelFilter::Output>>>();
     return true;
 }
 
@@ -80,23 +89,37 @@ bool ImageSeriesFlowLabeler::getDataCallback(core::Call& caller) {
             getTimeMap->SetInput(call->GetInput());
             if ((*getTimeMap)(ImageSeries::ImageSeries2DCall::CallGetData)) {
                 ImageSeries2DCall::Output timeMap = getTimeMap->GetOutput();
-                auto output = timeMap;
 
-                output.imageData = imageCache.findOrCreate(timeMap.getHash(), [=](AsyncImageData2D::Hash) {
-                    filter::FlowTimeLabelFilter::Input filterInput;
-                    filterInput.timeMap = timeMap.imageData;
-                    filterInput.timeThreshold = timeThresholdParam.Param<core::param::IntParam>()->Value();
-                    filterInput.minimumTimestamp = minTimestampParam.Param<core::param::IntParam>()->Value();
-                    filterInput.maximumTimestamp = maxTimestampParam.Param<core::param::IntParam>()->Value();
-                    filterInput.minBlobSize = initThresholdParam.Param<core::param::IntParam>()->Value();
+                filter::FlowTimeLabelFilter::Input filterInput;
+                filterInput.timeMap = timeMap.imageData;
+                filterInput.timeThreshold = timeThresholdParam.Param<core::param::IntParam>()->Value();
+                filterInput.minimumTimestamp = minTimestampParam.Param<core::param::IntParam>()->Value();
+                filterInput.maximumTimestamp = maxTimestampParam.Param<core::param::IntParam>()->Value();
+                filterInput.minBlobSize = initThresholdParam.Param<core::param::IntParam>()->Value();
+
+                auto output = imageCache.findOrCreate(
+                    timeMap.getHash(), [=](typename AsyncImageData2D<filter::FlowTimeLabelFilter::Output>::Hash) {
                     return filterRunner->run<filter::FlowTimeLabelFilter>(filterInput);
                 });
 
-                call->SetOutput(output);
+                auto intermediate =
+                    std::make_shared<AsyncImageData2D<>>([output]() { return output->getImageData()->image; },
+                        filter::FlowTimeLabelFilter(filterInput).getMetadata());
+
+                timeMap.imageData = intermediate;
+
+                call->SetOutput(timeMap);
                 return true;
             }
         }
+    } else if (auto* call = dynamic_cast<GraphData2DCall*>(&caller)) {
+        auto output = imageCache.find(getTimeMapCaller.CallAs<ImageSeries::ImageSeries2DCall>()->GetOutput().getHash());
+
+        auto intermediate = std::make_shared<graph::AsyncGraphData2D>([output]() { return output->getImageData()->graph; }, 0); // TODO: size of graph?
+
+        call->SetOutput(GraphData2DCall::Output{intermediate});
     }
+
     return false;
 }
 

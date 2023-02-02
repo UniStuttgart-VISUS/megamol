@@ -90,9 +90,9 @@ private:
     core::param::ParamSlot flowFrontParam;
     core::param::ParamSlot flowFrontOffsetParam;
 
-    util::LRUCache<AsyncImageData2D::Hash, AsyncImageData2D> imageCache;
+    util::LRUCache<typename AsyncImageData2D<>::Hash, AsyncImageData2D<>> imageCache;
 
-    std::unique_ptr<filter::AsyncFilterRunner> filterRunner;
+    std::unique_ptr<filter::AsyncFilterRunner<>> filterRunner;
 };
 
 } // namespace megamol::ImageSeries

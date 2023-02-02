@@ -19,7 +19,7 @@ ImageSeriesTimeDiffFilter::ImageSeriesTimeDiffFilter()
         , getInputCaller("requestInputImageSeries", "Requests image data from a series.")
         , getReferenceCaller("requestReferenceImageSeries", "Requests image data from a series.")
         , frameCountParam("Frame count", "Number of frames to sample forwards + backwards when computing differences.")
-        , imageCache([](const AsyncImageData2D& imageData) { return imageData.getByteSize(); }) {
+        , imageCache([](const AsyncImageData2D<>& imageData) { return imageData.getByteSize(); }) {
 
     getInputCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getInputCaller);
@@ -50,7 +50,7 @@ ImageSeriesTimeDiffFilter::~ImageSeriesTimeDiffFilter() {
 }
 
 bool ImageSeriesTimeDiffFilter::create() {
-    filterRunner = std::make_unique<filter::AsyncFilterRunner>();
+    filterRunner = std::make_unique<filter::AsyncFilterRunner<>>();
     return true;
 }
 
@@ -70,7 +70,7 @@ bool ImageSeriesTimeDiffFilter::getDataCallback(core::Call& caller) {
 
             // Retrieve cached image or run filter on input data
             auto hash = util::combineHash(input1.getHash(), input2.getHash());
-            input1.imageData = imageCache.findOrCreate(hash, [=](AsyncImageData2D::Hash) {
+            input1.imageData = imageCache.findOrCreate(hash, [=](typename AsyncImageData2D<>::Hash) {
                 filter::GenericFilter::Input filterParams;
                 filterParams.image1 = input1.imageData;
                 filterParams.image2 = input2.imageData;

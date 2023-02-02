@@ -7,7 +7,7 @@ namespace megamol::ImageSeries::filter {
 TimeOffsetFilter::TimeOffsetFilter(Input input) : input(std::move(input)) {}
 
 TimeOffsetFilter::ImagePtr TimeOffsetFilter::operator()() {
-    using Image = AsyncImageData2D::BitmapImage;
+    using Image = typename AsyncImageData2D<>::BitmapImage;
 
     // No frames -> no result.
     if (input.frames.empty()) {

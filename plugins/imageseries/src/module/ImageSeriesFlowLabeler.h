@@ -8,9 +8,14 @@
 
 #include "imageseries/AsyncImageData2D.h"
 #include "imageseries/ImageSeries2DCall.h"
+#include "imageseries/graph/GraphData2D.h"
 
 #include "../filter/AsyncFilterRunner.h"
+#include "../filter/FlowTimeLabelFilter.h"
 #include "../util/LRUCache.h"
+
+#include <memory>
+#include <tuple>
 
 namespace megamol::ImageSeries {
 
@@ -77,6 +82,7 @@ protected:
 
 private:
     core::CalleeSlot getDataCallee;
+    core::CalleeSlot getGraphCallee;
 
     core::CallerSlot getTimeMapCaller;
 
@@ -85,9 +91,12 @@ private:
     core::param::ParamSlot maxTimestampParam;
     core::param::ParamSlot initThresholdParam;
 
-    util::LRUCache<AsyncImageData2D::Hash, AsyncImageData2D> imageCache;
+    util::LRUCache<typename AsyncImageData2D<filter::FlowTimeLabelFilter::Output>::Hash,
+        AsyncImageData2D<filter::FlowTimeLabelFilter::Output>>
+        imageCache;
 
-    std::unique_ptr<filter::AsyncFilterRunner> filterRunner;
+    std::unique_ptr<filter::AsyncFilterRunner<AsyncImageData2D<filter::FlowTimeLabelFilter::Output>>>
+        filterRunner;
 };
 
 } // namespace megamol::ImageSeries

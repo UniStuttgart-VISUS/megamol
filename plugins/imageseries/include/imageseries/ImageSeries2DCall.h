@@ -104,10 +104,10 @@ public:
         std::string filename;
 
         // GetData: Holds the last requested image's pixels, once available.
-        std::shared_ptr<const AsyncImageData2D> imageData;
+        std::shared_ptr<const AsyncImageData2D<>> imageData;
 
         // GetData: Convenience function to get the hash without needing a null check for the image data.
-        AsyncImageData2D::Hash getHash() const {
+        AsyncImageData2D<>::Hash getHash() const {
             return imageData ? imageData->getHash() : 0;
         }
     };

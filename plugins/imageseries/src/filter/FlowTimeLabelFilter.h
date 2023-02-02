@@ -1,6 +1,10 @@
 #pragma once
 
 #include "imageseries/AsyncImageData2D.h"
+#include "imageseries/ImageSeries2DCall.h"
+#include "imageseries/graph/GraphData2D.h"
+#include "imageseries/graph/GraphData2DCall.h"
+#include "imageseries/util/ImageUtils.h"
 
 #include <memory>
 
@@ -8,8 +12,13 @@ namespace megamol::ImageSeries::filter {
 
 class FlowTimeLabelFilter {
 public:
-    using AsyncImagePtr = std::shared_ptr<const AsyncImageData2D>;
-    using ImagePtr = std::shared_ptr<const AsyncImageData2D::BitmapImage>;
+    using AsyncImagePtr = std::shared_ptr<const AsyncImageData2D<>>;
+    using ImagePtr = std::shared_ptr<const typename AsyncImageData2D<>::BitmapImage>;
+
+    struct Output {
+        std::shared_ptr<const vislib::graphics::BitmapImage> image;
+        std::shared_ptr<const graph::GraphData2D> graph;
+    };
 
     using Label = std::uint16_t;
 
@@ -54,7 +63,7 @@ public:
     };
 
     FlowTimeLabelFilter(Input input);
-    ImagePtr operator()();
+    std::shared_ptr<Output> operator()();
 
     ImageMetadata getMetadata() const;
 
@@ -63,3 +72,24 @@ private:
 };
 
 } // namespace megamol::ImageSeries::filter
+
+namespace std {
+template<>
+struct hash<std::shared_ptr<const megamol::ImageSeries::graph::GraphData2D>> {
+    std::size_t operator()(std::shared_ptr<const megamol::ImageSeries::graph::GraphData2D> graphData) const {
+        return graphData
+                   ? megamol::ImageSeries::util::computeHash(graphData->getNodes().size(), graphData->getEdges().size())
+                         : 0;
+    }
+};
+
+template<>
+struct hash<std::shared_ptr<const megamol::ImageSeries::filter::FlowTimeLabelFilter::Output>> {
+    std::size_t operator()(
+        std::shared_ptr<const megamol::ImageSeries::filter::FlowTimeLabelFilter::Output> data) const {
+        return data ? megamol::ImageSeries::util::combineHash(std::hash<decltype(data->image)>()(data->image),
+                          std::hash<decltype(data->graph)>()(data->graph))
+                    : 0;
+    }
+};
+} // namespace std

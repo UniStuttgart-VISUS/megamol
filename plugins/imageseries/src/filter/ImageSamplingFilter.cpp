@@ -12,7 +12,7 @@ ImageSamplingFilter::ImageSamplingFilter(Input input) : input(std::move(input)) 
 ImageSamplingFilter::ImageSamplingFilter(AsyncImagePtr indexMap) : input(Input{indexMap}) {}
 
 ImageSamplingFilter::ImagePtr ImageSamplingFilter::operator()() {
-    using Image = AsyncImageData2D::BitmapImage;
+    using Image = typename AsyncImageData2D<>::BitmapImage;
 
     // Wait for image data to be ready.
     auto map = input.indexMap ? input.indexMap->getImageData() : nullptr;

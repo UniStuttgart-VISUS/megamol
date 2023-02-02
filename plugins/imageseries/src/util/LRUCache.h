@@ -63,6 +63,20 @@ public:
         }
     }
 
+    std::shared_ptr<const Value> find(const Key& key) {
+        if (maximumSize == 0) {
+            throw std::runtime_error("Find function is not allowed if cache size is zero.");
+        }
+
+        auto result = entries.find(key);
+        if (result != entries.end()) {
+            result->second.lastAccess = accessCount++;
+            return result->second.value;
+        } else {
+            return nullptr;
+        }
+    }
+
     void setMaximumSize(std::size_t maximumSize) {
         if (this->maximumSize != maximumSize) {
             this->maximumSize = maximumSize;

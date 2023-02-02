@@ -9,15 +9,12 @@
 #include "imageseries/AsyncImageData2D.h"
 #include "imageseries/ImageSeries2DCall.h"
 
+#include "../filter/AsyncFilterRunner.h"
 #include "../util/LRUCache.h"
 
 #include <string>
 
 namespace megamol::ImageSeries {
-
-namespace filter {
-class AsyncFilterRunner;
-}
 
 /**
  * Data source for multiple 2D images, loaded from a directory in the local file system.
@@ -100,7 +97,7 @@ private:
 
     std::shared_ptr<vislib::graphics::BitmapImage> loadImageFile(const std::string& path) const;
 
-    std::unique_ptr<filter::AsyncFilterRunner> filterRunner;
+    std::unique_ptr<filter::AsyncFilterRunner<>> filterRunner;
 
     core::CalleeSlot getDataCallee;
 
@@ -113,7 +110,7 @@ private:
     std::vector<std::string> imageFilesUnfiltered;
     std::vector<std::string> imageFilesFiltered;
 
-    util::LRUCache<std::uint32_t, AsyncImageData2D> imageCache;
+    util::LRUCache<std::uint32_t, AsyncImageData2D<>> imageCache;
 
     ImageMetadata metadata;
     ImageSeries2DCall::Output outputPrototype;

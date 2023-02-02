@@ -92,7 +92,7 @@ protected:
 
 private:
     std::unique_ptr<ImageDisplay2D> display;
-    std::shared_ptr<const AsyncImageData2D> currentImage;
+    std::shared_ptr<const AsyncImageData2D<>> currentImage;
 
     core::CallerSlot getDataCaller;
 

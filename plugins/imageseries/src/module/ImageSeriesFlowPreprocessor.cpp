@@ -28,7 +28,7 @@ ImageSeriesFlowPreprocessor::ImageSeriesFlowPreprocessor()
         , segmentationEnabledParam("Enable segmentation", "Toggles the image segmentation step on/off.")
         , segmentationThresholdParam("Segmentation threshold", "Per-pixel threshold for image segmentation.")
         , segmentationNegationParam("Segmentation negation", "Negates the output of the segmentation filter.")
-        , imageCache([](const AsyncImageData2D& imageData) { return imageData.getByteSize(); }) {
+        , imageCache([](const AsyncImageData2D<>& imageData) { return imageData.getByteSize(); }) {
 
     getInputCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getInputCaller);
@@ -77,7 +77,7 @@ ImageSeriesFlowPreprocessor::~ImageSeriesFlowPreprocessor() {
 }
 
 bool ImageSeriesFlowPreprocessor::create() {
-    filterRunner = std::make_unique<filter::AsyncFilterRunner>();
+    filterRunner = std::make_unique<filter::AsyncFilterRunner<>>();
     return true;
 }
 
@@ -110,7 +110,7 @@ bool ImageSeriesFlowPreprocessor::getDataCallback(core::Call& caller) {
 
                 // Retrieve cached image or run filter on input data
                 auto hash = util::combineHash(output.getHash(), mask.getHash());
-                output.imageData = imageCache.findOrCreate(hash, [=](AsyncImageData2D::Hash) {
+                output.imageData = imageCache.findOrCreate(hash, [=](typename AsyncImageData2D<>::Hash) {
                     auto image = output.imageData;
                     if (mask.imageData) {
                         image = filterRunner->run<filter::MaskFilter>(image, mask.imageData);

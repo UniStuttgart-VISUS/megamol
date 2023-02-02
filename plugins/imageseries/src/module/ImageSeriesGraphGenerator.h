@@ -82,8 +82,8 @@ private:
 
     core::param::ParamSlot flowFrontParam;
 
-    AsyncImageData2D::Hash labelHash = 0;
-    AsyncImageData2D::Hash valueHash = 0;
+    typename AsyncImageData2D<>::Hash labelHash = 0;
+    typename AsyncImageData2D<>::Hash valueHash = 0;
 
     std::shared_ptr<blob::BlobGraphBuilder> graphBuilder;
     std::shared_ptr<const graph::AsyncGraphData2D> asyncGraph;

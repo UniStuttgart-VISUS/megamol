@@ -14,7 +14,7 @@ namespace megamol::ImageSeries::blob {
 
 class BlobGraphBuilder {
 public:
-    using AsyncImagePtr = std::shared_ptr<const AsyncImageData2D>;
+    using AsyncImagePtr = std::shared_ptr<const AsyncImageData2D<>>;
 
     BlobGraphBuilder();
 

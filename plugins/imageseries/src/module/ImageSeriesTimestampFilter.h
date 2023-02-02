@@ -84,9 +84,9 @@ private:
 
     core::CallerSlot getInputCaller;
 
-    std::unique_ptr<filter::AsyncFilterRunner> filterRunner;
+    std::unique_ptr<filter::AsyncFilterRunner<>> filterRunner;
 
-    util::LRUCache<AsyncImageData2D::Hash, AsyncImageData2D> imageCache;
+    util::LRUCache<typename AsyncImageData2D<>::Hash, AsyncImageData2D<>> imageCache;
 };
 
 } // namespace megamol::ImageSeries

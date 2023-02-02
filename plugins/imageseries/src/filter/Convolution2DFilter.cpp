@@ -11,7 +11,7 @@ namespace megamol::ImageSeries::filter {
 Convolution2DFilter::Convolution2DFilter(Input input) : input(std::move(input)) {}
 
 Convolution2DFilter::ImagePtr Convolution2DFilter::operator()() {
-    using Image = AsyncImageData2D::BitmapImage;
+    using Image = AsyncImageData2D<>::BitmapImage;
 
     // Wait for image data to be ready
     auto image = input.image ? input.image->getImageData() : nullptr;

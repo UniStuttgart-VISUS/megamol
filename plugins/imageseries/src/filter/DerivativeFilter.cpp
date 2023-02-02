@@ -13,7 +13,7 @@ DerivativeFilter::DerivativeFilter(AsyncImagePtr image) {
 }
 
 DerivativeFilter::ImagePtr DerivativeFilter::operator()() {
-    using Image = AsyncImageData2D::BitmapImage;
+    using Image = AsyncImageData2D<>::BitmapImage;
 
     // Wait for image data to be ready
     auto image = input.image ? input.image->getImageData() : nullptr;

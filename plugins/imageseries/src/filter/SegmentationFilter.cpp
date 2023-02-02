@@ -13,7 +13,7 @@ SegmentationFilter::SegmentationFilter(AsyncImagePtr image, double threshold, bo
 }
 
 SegmentationFilter::ImagePtr SegmentationFilter::operator()() {
-    using Image = AsyncImageData2D::BitmapImage;
+    using Image = typename AsyncImageData2D<>::BitmapImage;
 
     // Wait for image data to be ready
     auto image = input.image ? input.image->getImageData() : nullptr;

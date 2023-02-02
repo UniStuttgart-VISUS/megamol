@@ -15,7 +15,7 @@ IndexGenerationFilter::IndexGenerationFilter(AsyncImagePtr image, AsyncImagePtr 
 }
 
 IndexGenerationFilter::ImagePtr IndexGenerationFilter::operator()() {
-    using Image = AsyncImageData2D::BitmapImage;
+    using Image = typename AsyncImageData2D<>::BitmapImage;
 
     // Wait for image data to be ready.
     auto map = input.indexMap ? input.indexMap->getImageData() : nullptr;

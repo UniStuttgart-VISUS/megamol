@@ -29,7 +29,7 @@ ImageSeriesResampler::ImageSeriesResampler()
         , imageRegistrationAutoParam(
               "Auto image registration", "Auto-adjusts the affine transformation to match the reference series.")
         , cachedTransformMatrix(1, 0, 0, 1, 0, 0)
-        , imageCache([](const AsyncImageData2D& imageData) { return imageData.getByteSize(); }) {
+        , imageCache([](const AsyncImageData2D<>& imageData) { return imageData.getByteSize(); }) {
 
     getInputCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getInputCaller);
@@ -90,7 +90,7 @@ ImageSeriesResampler::~ImageSeriesResampler() {
 
 bool ImageSeriesResampler::create() {
     registrator = std::make_unique<registration::AsyncImageRegistrator>();
-    filterRunner = std::make_unique<filter::AsyncFilterRunner>();
+    filterRunner = std::make_unique<filter::AsyncFilterRunner<>>();
     return true;
 }
 
@@ -118,7 +118,8 @@ bool ImageSeriesResampler::getDataCallback(core::Call& caller) {
                     updateTransformationMatrix();
 
                     if (cachedTransformMatrix != glm::mat3x2(1, 0, 0, 1, 0, 0)) {
-                        output.imageData = imageCache.findOrCreate(output.getHash(), [&](AsyncImageData2D::Hash) {
+                        output.imageData =
+                            imageCache.findOrCreate(output.getHash(), [&](typename AsyncImageData2D<>::Hash) {
                             return filterRunner->run<filter::TransformationFilter>(
                                 output.imageData, cachedTransformMatrix);
                         });
@@ -192,7 +193,7 @@ double ImageSeriesResampler::transformTimestamp(double timestamp, double min1, d
     return (timestamp - min1) / (max1 - min1) * (max2 - min2) + min2;
 }
 
-std::shared_ptr<const AsyncImageData2D> ImageSeriesResampler::fetchImage(
+std::shared_ptr<const AsyncImageData2D<>> ImageSeriesResampler::fetchImage(
     core::CallerSlot& caller, double timestamp) const {
     if (auto* seriesCall = caller.CallAs<ImageSeries::ImageSeries2DCall>()) {
         ImageSeries2DCall::Input input;

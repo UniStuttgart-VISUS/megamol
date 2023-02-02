@@ -13,8 +13,8 @@ namespace megamol::ImageSeries::blob {
 
 class BlobAnalyzer {
 public:
-    using AsyncImagePtr = std::shared_ptr<const AsyncImageData2D>;
-    using ImagePtr = std::shared_ptr<const AsyncImageData2D::BitmapImage>;
+    using AsyncImagePtr = std::shared_ptr<const AsyncImageData2D<>>;
+    using ImagePtr = std::shared_ptr<const typename AsyncImageData2D<>::BitmapImage>;
     using Label = filter::BlobLabelFilter::Label;
 
     struct Blob {

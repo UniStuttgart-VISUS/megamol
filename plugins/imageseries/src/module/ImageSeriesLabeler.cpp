@@ -28,7 +28,7 @@ ImageSeriesLabeler::ImageSeriesLabeler()
         , negateThresholdParam("Negate value threshold", "Negates the value threshold for labeling.")
         , flowFrontParam("Split flow fronts", "Excludes pixels that are unchanged between frames.")
         , flowFrontOffsetParam("Flow front offset", "Frame offset for flow front comparison.")
-        , imageCache([](const AsyncImageData2D& imageData) { return imageData.getByteSize(); }) {
+        , imageCache([](const AsyncImageData2D<>& imageData) { return imageData.getByteSize(); }) {
 
     getInputCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getInputCaller);
@@ -91,7 +91,7 @@ ImageSeriesLabeler::~ImageSeriesLabeler() {
 }
 
 bool ImageSeriesLabeler::create() {
-    filterRunner = std::make_unique<filter::AsyncFilterRunner>();
+    filterRunner = std::make_unique<filter::AsyncFilterRunner<>>();
     return true;
 }
 
@@ -121,7 +121,7 @@ bool ImageSeriesLabeler::getDataCallback(core::Call& caller) {
 
                 // Retrieve cached image or run filter on input data
                 auto hash = util::combineHash(output.getHash(), mask.getHash());
-                output.imageData = imageCache.findOrCreate(hash, [=](AsyncImageData2D::Hash) {
+                output.imageData = imageCache.findOrCreate(hash, [=](typename AsyncImageData2D<>::Hash) {
                     filter::BlobLabelFilter::Input filterInput;
                     filterInput.image = output.imageData;
                     filterInput.mask = mask.imageData;

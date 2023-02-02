@@ -22,7 +22,7 @@ ImageSeriesLoader::ImageSeriesLoader()
         : getDataCallee("getData", "Returns data from the image series for the requested timestamp.")
         , pathParam("Path", "Directory from which image files should be loaded.")
         , patternParam("Filename pattern", "Regular expression to filter file names by.")
-        , imageCache([](const AsyncImageData2D& imageData) { return imageData.getByteSize(); }) {
+        , imageCache([](const AsyncImageData2D<>& imageData) { return imageData.getByteSize(); }) {
 
     getDataCallee.SetCallback(ImageSeries2DCall::ClassName(),
         ImageSeries2DCall::FunctionName(ImageSeries2DCall::CallGetData), &ImageSeriesLoader::getDataCallback);
@@ -47,7 +47,7 @@ ImageSeriesLoader::~ImageSeriesLoader() {
 }
 
 bool ImageSeriesLoader::create() {
-    filterRunner = std::make_unique<filter::AsyncFilterRunner>();
+    filterRunner = std::make_unique<filter::AsyncFilterRunner<>>();
     return true;
 }
 
