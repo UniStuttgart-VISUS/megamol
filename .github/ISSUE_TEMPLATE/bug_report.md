@@ -1,34 +1,33 @@
 ---
 name: Bug report
-about: Create a report to help us improve
-title: ''
+about: Create a bug report
 labels: bug
-assignees: ''
-
 ---
-
 **Describe the bug**
-A clear and concise description of what the bug is.
+<!--
+  A clear and concise description of what the bug is.
+-->
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+**Steps To Reproduce**
+<!--
+  Steps to reproduce the behavior:
+  1. Go to '...'
+  2. Click on '...'
+  3. See error
+-->
 
 **Expected behavior**
-A clear and concise description of what you expected to happen.
+<!--
+  A clear and concise description of what you expected to happen.
+-->
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
-
-**Log file**
-Create a log file appending the command line parameters `--logfile log.txt --loglevel 1000`
-
-**Environment**
- - OS
- - GPU vendor, model, driver
-
-**Additional context**
-Add any other context about the problem here.
+**Additional Context**
+- OS: <!-- Windows 10 / Windows 11 / Ubuntu 22.04 / Fedora 37 / ... -->
+- GPU: <!-- vendor, model, driver -->
+- MegaMol version: <!-- git tag of the used MegaMol version -->
+<!--
+  - Add screenshots of the problem, if applicable.
+  - Add a (minimal) project file reproducing the behavior, if applicable.
+  - Add the MegaMol logfile `megamol_log.txt`, if applicable.
+  - Add any other context about the problem here.
+-->
