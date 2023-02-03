@@ -7,12 +7,15 @@
 
 #include "vislib/graphics/BitmapImage.h"
 
+#include "imageseries/graph/GraphData2D.h"
+
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 #include "glowl/Mesh.hpp"
 #include "glowl/Texture2D.hpp"
 
 #include <memory>
+#include <vector>
 
 namespace megamol::core_gl::view {
 class CallRender2DGL;
@@ -32,8 +35,10 @@ public:
     };
 
     ImageDisplay2D(const msf::ShaderFactoryOptionsOpenGL& shaderFactoryOptions);
+    virtual ~ImageDisplay2D() noexcept;
 
     bool updateTexture(const vislib::graphics::BitmapImage& image);
+    bool updateGraph(const ImageSeries::graph::GraphData2D& graph);
 
     glm::vec2 getImageSize() const;
 
@@ -49,9 +54,16 @@ private:
     bool renderImpl(std::shared_ptr<glowl::FramebufferObject> framebuffer, const glm::mat4& matrix);
     static bool textureLayoutEquals(const glowl::TextureLayout& layout1, const glowl::TextureLayout& layout2);
 
-    std::shared_ptr<glowl::GLSLProgram> shader;
+    std::shared_ptr<glowl::GLSLProgram> shader, edge_shader, node_shader;
     std::unique_ptr<glowl::Texture2D> texture;
-    std::unique_ptr<glowl::Mesh> mesh;
+    std::unique_ptr<glowl::Mesh> mesh, edge_mesh, node_mesh;
+
+    std::vector<glm::vec2> graph_node_vertices;
+    std::vector<float> graph_node_radii;
+    std::vector<glm::vec4> graph_edge_lines;
+
+    GLuint node_radius_buffer;
+    GLint width, height;
 
     Mode mode = Mode::Auto;
 };

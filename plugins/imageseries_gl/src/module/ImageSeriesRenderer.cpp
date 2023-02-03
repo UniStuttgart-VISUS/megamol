@@ -4,6 +4,7 @@
 
 #include "imageseries/graph/GraphData2DCall.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <glowl/glowl.h>
 
@@ -14,7 +15,8 @@ namespace megamol::ImageSeries::GL {
 ImageSeriesRenderer::ImageSeriesRenderer()
         : getDataCaller("requestImageSeries", "Requests image data from a series.")
         , getGraphCaller("requestGraph", "Requests graph data to render on top of the image series.")
-        , displayModeParam("Display Mode", "Controls how the image should be presented.") {
+        , displayModeParam("Display Mode", "Controls how the image should be presented.")
+        , graph_hash(-7345) {
     getDataCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getDataCaller);
 
@@ -40,7 +42,15 @@ ImageSeriesRenderer::~ImageSeriesRenderer() {
 bool ImageSeriesRenderer::create() {
     auto const shader_options = core::utility::make_path_shader_options(
         frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
-    display = std::make_unique<ImageDisplay2D>(msf::ShaderFactoryOptionsOpenGL(shader_options));
+
+    try {
+        display = std::make_unique<ImageDisplay2D>(msf::ShaderFactoryOptionsOpenGL(shader_options));
+    }
+    catch (const std::exception& ex) {
+        core::utility::log::Log::DefaultLog.WriteError(ex.what());
+
+        return false;
+    }
 
     return true;
 }
@@ -50,7 +60,7 @@ bool ImageSeriesRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
 
     call.AccessBoundingBoxes().Clear();
     auto size = display ? display->getImageSize() : glm::vec2(1.f, 1.f);
-    call.AccessBoundingBoxes().SetBoundingBox(-size.x * .5f, -size.y * .5f, -.5f, size.x * .5f, size.y * .5f, .5f);
+    call.AccessBoundingBoxes().SetBoundingBox(0.0f, 0.0f, 0.0f, size.x, size.y, 0.0f);
 
     return true;
 }
@@ -98,7 +108,16 @@ bool ImageSeriesRenderer::Render(mmstd_gl::CallRender2DGL& call) {
     }
 
     if (currentImage && currentImage->isValid()) {
-        display->updateTexture(*currentImage->getImageData());
+        const auto& image = *currentImage->getImageData();
+
+        display->updateTexture(image);
+
+        if (auto* getData = getGraphCaller.CallAs<ImageSeries::GraphData2DCall>()) {
+            if ((*getData)(ImageSeries::GraphData2DCall::CallGetData) && getData->DataHash() != graph_hash) {
+                graph_hash = getData->DataHash();
+                display->updateGraph(*getData->GetOutput().graph->getData());
+            }
+        }
     }
 
     return display->render(call);

@@ -113,11 +113,19 @@ bool ImageSeriesFlowLabeler::getDataCallback(core::Call& caller) {
             }
         }
     } else if (auto* call = dynamic_cast<GraphData2DCall*>(&caller)) {
-        auto output = imageCache.find(getTimeMapCaller.CallAs<ImageSeries::ImageSeries2DCall>()->GetOutput().getHash());
+        const auto hash = getTimeMapCaller.CallAs<ImageSeries::ImageSeries2DCall>()->GetOutput().getHash();
 
-        auto intermediate = std::make_shared<graph::AsyncGraphData2D>([output]() { return output->getImageData()->graph; }, 0); // TODO: size of graph?
+        auto output = imageCache.find(hash);
 
-        call->SetOutput(GraphData2DCall::Output{intermediate});
+        if (output != nullptr) {
+            auto intermediate = std::make_shared<graph::AsyncGraphData2D>(
+                [output]() { return output->getImageData()->graph; }, 0); // TODO: size of graph?
+
+            call->SetOutput(GraphData2DCall::Output{intermediate});
+            call->SetDataHash(hash);
+        }
+
+        return true;
     }
 
     return false;

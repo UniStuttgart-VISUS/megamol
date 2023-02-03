@@ -102,6 +102,8 @@ private:
 
     ImageSeries2DCall::Output metadata;
 
+    SIZE_T graph_hash;
+
     bool initialReadAhead = false;
     float lastReadAhead = 0.f;
 };
