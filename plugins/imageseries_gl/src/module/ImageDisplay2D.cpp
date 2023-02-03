@@ -32,7 +32,8 @@ ImageDisplay2D::ImageDisplay2D(const msf::ShaderFactoryOptionsOpenGL& shaderFact
         // (2) Edges
         {
             edge_shader = core::utility::make_shared_glowl_shader("GraphEdgeRenderer", shaderFactoryOptions,
-                "imageseries_gl/GraphEdgeRenderer.vert.glsl", "imageseries_gl/GraphEdgeRenderer.frag.glsl");
+                "imageseries_gl/GraphEdgeRenderer.vert.glsl", "imageseries_gl/GraphEdgeRenderer.geom.glsl",
+                "imageseries_gl/GraphEdgeRenderer.frag.glsl");
         }
 
         // (3) Nodes
@@ -142,7 +143,8 @@ bool ImageDisplay2D::updateGraph(const ImageSeries::graph::GraphData2D& graph) {
 
         for (const auto& node : nodes) {
             graph_node_vertices.push_back(node.centerOfMass);
-            graph_node_radii.push_back(node.edgeCountIn * 0.5f * std::sqrt(2.0f) + 2.0f);
+            //graph_node_radii.push_back(node.edgeCountIn * 0.5f * std::sqrt(2.0f) + 2.0f);
+            graph_node_radii.push_back(1.0f);
         }
 
         std::vector<uint32_t> node_indices(graph_node_vertices.size());

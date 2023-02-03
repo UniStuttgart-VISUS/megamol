@@ -272,7 +272,9 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
                     past_time = it->first;
 
                     for (const auto index : it->second) {
-                        past_neighboring_flow_fronts.insert(dataOut[index]);
+                        if (dataOut[index] != LabelInvalid) {
+                            past_neighboring_flow_fronts.insert(dataOut[index]);
+                        }
                     }
 
                     break;
