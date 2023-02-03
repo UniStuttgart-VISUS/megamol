@@ -91,7 +91,12 @@ protected:
 
     bool initVolumeGenerator();
 
+    bool fillVAO(const geocalls::MultiParticleDataCall::Particles& parts, GLuint vert_buf, const void* vert_ptr,
+        bool create_buffer_data);
+
 private:
+
+
     ///**
     // * TODO: Document
     // *
@@ -118,6 +123,12 @@ private:
     void getClipData(glm::vec4& out_clip_dat, glm::vec4& out_clip_col);
 
     GLuint vertex_array_;
+
+    GLuint vbo_;
+
+    std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> shader_options_flags_;
+
+    std::shared_ptr<glowl::GLSLProgram> sphere_prgm_;
 };
 
 } // namespace rendering

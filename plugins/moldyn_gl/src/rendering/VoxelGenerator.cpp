@@ -13,7 +13,9 @@ VoxelGenerator::VoxelGenerator(void)
         , vol_size_slot_("volumeSize", "Longest volume edge")
         , texture_handle()
         , vol_gen_(nullptr)
-        , vertex_array_() {
+        , vertex_array_()
+        , shader_options_flags_(nullptr)
+        , sphere_prgm_() {
 
     // VolumetricDataCall slot
     this->generate_voxels_slot_.SetCallback(VolumetricDataCall::ClassName(),
@@ -47,6 +49,7 @@ VoxelGenerator::~VoxelGenerator(void) {
 bool VoxelGenerator::create(void) {
     this->vol_size_slot_.Param<core::param::IntParam>()->SetGUIVisible(true);
     glGenVertexArrays(1, &vertex_array_);
+    glGenBuffers(1, &vbo_);
 
     return initVolumeGenerator();
 
@@ -56,6 +59,7 @@ bool VoxelGenerator::create(void) {
 void VoxelGenerator::release(void) {
 
     glDeleteVertexArrays(1, &vertex_array_);
+    glDeleteBuffers(1, &vbo_);
 
     //TODO reset resources
     this->vol_size_slot_.Param<core::param::IntParam>()->SetGUIVisible(false);
@@ -177,6 +181,10 @@ bool VoxelGenerator::initVolumeGenerator() {
     vol_gen_ = new misc::MDAOVolumeGenerator();
     vol_gen_->SetShaderSourceFactory(&shader_options);
 
+    shader_options_flags_ = std::make_unique<msf::ShaderFactoryOptionsOpenGL>(shader_options);
+    sphere_prgm_ = core::utility::make_glowl_shader("sphere_mdao", *shader_options_flags_,
+            "moldyn_gl/sphere_renderer/sphere_mdao.vert.glsl", "moldyn_gl/sphere_renderer/sphere_mdao.frag.glsl");
+
     // Init volume generator
     if (!vol_gen_->Init(frontend_resources.get<frontend_resources::OpenGL_Context>())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -240,10 +248,15 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call, Volume
 
             // TODO one vertex array for each i?
             // 
-            //glBindVertexArray(vertex_array_);
-            //// TODO enableBufferData
-            //glBindVertexArray(0);
-            //// TODO disableBufferData
+            glBindVertexArray(vertex_array_);
+            
+            fillVAO(particles, vbo_, particles.GetVertexData(), true); // shpererenderer enableBuffersData()
+            glBindVertexArray(0);
+
+            //disable buffer data:
+            GLuint vert_attrib_loc = glGetAttribLocation(sphere_prgm_->getHandle(), "inPosition");
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glDisableVertexAttribArray(vert_attrib_loc);
 
             //// TODO enableShaderData
             //glBindVertexArray(vertex_array_);
@@ -252,7 +265,7 @@ bool VoxelGenerator::generateVoxels(MultiParticleDataCall* particle_call, Volume
             //// TODO disableShaderData
 
             vol_gen_->InsertParticles(
-                static_cast<unsigned int>(particles.GetCount()), global_radius, 3); // TODO, 3: handle for vertex array, SphereRenderer: this->gpu_data_[i].vertex_array
+                static_cast<unsigned int>(particles.GetCount()), global_radius, vertex_array_); // TODO, 3: handle for vertex array, SphereRenderer: this->gpu_data_[i].vertex_array
         }
 
         vol_gen_->EndInsertion();
@@ -276,4 +289,74 @@ void VoxelGenerator::getClipData(glm::vec4& out_clip_dat, glm::vec4& out_clip_co
     out_clip_dat[0] = out_clip_dat[1] = out_clip_dat[2] = out_clip_dat[3] = 0.0f;
     out_clip_col[0] = out_clip_col[1] = out_clip_col[2] = 0.75f;
     out_clip_col[3] = 1.0f;
+}
+
+
+// TODO resetResources gpu_data_.clear()
+// TODO rebuildWorkingData
+
+bool VoxelGenerator::fillVAO(const MultiParticleDataCall::Particles& parts, GLuint vert_buf, const void* vert_ptr, bool create_buffer_data) {
+
+    GLuint vert_attrib_loc = glGetAttribLocation(sphere_prgm_->getHandle(), "inPosition");
+    //GLuint col_attrib_loc = glGetAttribLocation(sphere_prgm_->getHandle(), "inColor");
+    //GLuint col_idx_attrib_loc = glGetAttribLocation(sphere_prgm_->getHandle(), "inColIdx");
+
+    //const void* color_ptr = col_ptr;
+    const void* vertex_ptr = vert_ptr;
+    if (create_buffer_data) {
+        //color_ptr = nullptr;
+        vertex_ptr = nullptr;
+    }
+
+    unsigned int part_count = static_cast<unsigned int>(parts.GetCount());
+
+    // TODO color?
+
+    // radius and position
+    glBindBuffer(GL_ARRAY_BUFFER, vert_buf); //VBO
+    switch (parts.GetVertexDataType()) {
+    case MultiParticleDataCall::Particles::VERTDATA_NONE:
+        break;
+    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ:
+        if (create_buffer_data) {
+            glBufferData(GL_ARRAY_BUFFER,
+                part_count * (std::max)(parts.GetVertexDataStride(), static_cast<unsigned int>(3 * sizeof(float))),
+                parts.GetVertexData(), GL_STATIC_DRAW);
+        }
+        glEnableVertexAttribArray(vert_attrib_loc);
+        glVertexAttribPointer(vert_attrib_loc, 3, GL_FLOAT, GL_FALSE, parts.GetVertexDataStride(), vertex_ptr);
+        break;
+    case MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZR:
+        if (create_buffer_data) {
+            glBufferData(GL_ARRAY_BUFFER,
+                part_count * (std::max)(parts.GetVertexDataStride(), static_cast<unsigned int>(4 * sizeof(float))),
+                parts.GetVertexData(), GL_STATIC_DRAW);
+        }
+        glEnableVertexAttribArray(vert_attrib_loc);
+        glVertexAttribPointer(vert_attrib_loc, 4, GL_FLOAT, GL_FALSE, parts.GetVertexDataStride(), vertex_ptr);
+        break;
+    case MultiParticleDataCall::Particles::VERTDATA_DOUBLE_XYZ:
+        if (create_buffer_data) {
+            glBufferData(GL_ARRAY_BUFFER,
+                part_count * (std::max)(parts.GetVertexDataStride(), static_cast<unsigned int>(3 * sizeof(double))),
+                parts.GetVertexData(), GL_STATIC_DRAW);
+        }
+        glEnableVertexAttribArray(vert_attrib_loc);
+        glVertexAttribPointer(vert_attrib_loc, 3, GL_DOUBLE, GL_FALSE, parts.GetVertexDataStride(), vertex_ptr);
+        break;
+    case MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ:
+        if (create_buffer_data) {
+            glBufferData(GL_ARRAY_BUFFER,
+                part_count * (std::max)(parts.GetVertexDataStride(), static_cast<unsigned int>(3 * sizeof(short))),
+                parts.GetVertexData(), GL_STATIC_DRAW);
+        }
+        glEnableVertexAttribArray(vert_attrib_loc);
+        glVertexAttribPointer(vert_attrib_loc, 3, GL_SHORT, GL_FALSE, parts.GetVertexDataStride(), vertex_ptr);
+        break;
+    default:
+        break;
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    return true;
 }
