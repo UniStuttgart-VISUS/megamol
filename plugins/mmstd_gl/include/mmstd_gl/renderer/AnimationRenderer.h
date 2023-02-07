@@ -110,9 +110,10 @@ private:
     std::unique_ptr<glowl::BufferObject> animation_orientations;
     GLuint line_vao, keys_vao, orientations_vao;
 
-    core::param::ParamSlot approximationSourceSlot;
     core::param::ParamSlot snapshotSlot;
     core::param::ParamSlot numberOfViewsSlot;
+    core::param::ParamSlot showLocalCoordSystems;
+
     core::BoundingBoxes_2 lastBBox;
 
     bool CheckObservedSlots(

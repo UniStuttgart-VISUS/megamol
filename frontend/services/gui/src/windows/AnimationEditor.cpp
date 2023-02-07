@@ -669,6 +669,8 @@ void AnimationEditor::DrawParams() {
     if (ImGui::Button("use as 3D position")) {
         auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
         animEditorData.pos_animation = &fva;
+        animEditorData.active_region.first = animation_bounds[0];
+        animEditorData.active_region.second = animation_bounds[1];
     }
     if (!have_pos) {
         ImGui::PopItemFlag();
@@ -680,6 +682,8 @@ void AnimationEditor::DrawParams() {
     if (ImGui::Button("use as orientation")) {
         auto& fva = std::get<animation::FloatVectorAnimation>(allAnimations[selectedAnimation]);
         animEditorData.orientation_animation = &fva;
+        animEditorData.active_region.first = animation_bounds[0];
+        animEditorData.active_region.second = animation_bounds[1];
     }
     if (!have_orient) {
         ImGui::PopItemFlag();
@@ -734,6 +738,8 @@ void AnimationEditor::DrawParams() {
     }
     if (ImGui::InputInt2("Active Region", animation_bounds, ImGuiInputTextFlags_EnterReturnsTrue)) {
         current_frame = std::clamp(current_frame, animation_bounds[0], animation_bounds[1]);
+        animEditorData.active_region.first = animation_bounds[0];
+        animEditorData.active_region.second = animation_bounds[1];
     }
     if (ImGui::SliderInt("Current Frame", &current_frame, animation_bounds[0], animation_bounds[1])) {
         WriteValuesToGraph();

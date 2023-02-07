@@ -10,15 +10,15 @@
 
 megamol::mmstd_gl::AnimationRenderer::AnimationRenderer()
         : Renderer3DModuleGL()
-        , approximationSourceSlot("approximation source", "renderer output to approximate as scene proxy")
         , snapshotSlot("make snapshot", "grab current representation of the source")
         , numberOfViewsSlot("number of Views", "how many snapshots are taken, using camera reset variants")
         , observedRendererSlot("observe", "Output that connects to the observed renderer")
         , observedRenderSlot("renderObservation", "Input from the camera view")
+        , showLocalCoordSystems("orientation whiskers", "show local coordinate systems at each frame")
         , tex_inspector_({"Color", "Depth"}) {
 
-    approximationSourceSlot.SetParameter(new core::param::StringParam(""));
-    MakeSlotAvailable(&approximationSourceSlot);
+    showLocalCoordSystems.SetParameter(new core::param::BoolParam(false));
+    MakeSlotAvailable(&showLocalCoordSystems);
 
     snapshotSlot.SetParameter(new core::param::ButtonParam());
     MakeSlotAvailable(&snapshotSlot);
@@ -82,25 +82,25 @@ bool megamol::mmstd_gl::AnimationRenderer::create() {
 
     glGenVertexArrays(1, &line_vao);
     glBindVertexArray(line_vao);
-    glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, animation_positions->getName());
+    glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     glGenVertexArrays(1, &keys_vao);
     glBindVertexArray(keys_vao);
-    glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, animation_positions->getName());
+    glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, animation_keys->getName());
 
     glGenVertexArrays(1, &orientations_vao);
     glBindVertexArray(orientations_vao);
-    glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, animation_positions->getName());
+    glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, animation_orientations->getName());
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     glBindVertexArray(0);
 
@@ -143,8 +143,8 @@ bool megamol::mmstd_gl::AnimationRenderer::create() {
     }
 
     try {
-        keys_program = core::utility::make_glowl_shader("orientation", shaderOptions,
-            "mmstd_gl/animation/orientation.vert.glsl", "mmstd_gl/animation/orientation.frag.glsl");
+        orientations_program = core::utility::make_glowl_shader("orientation", shaderOptions, "mmstd_gl/animation/orientation.vert.glsl",
+                "mmstd_gl/animation/orientation.geom.glsl", "mmstd_gl/animation/orientation.frag.glsl");
     } catch (std::exception& e) {
         core::utility::log::Log::DefaultLog.WriteError(
             ("AnimationRenderer: could not compile orientation rendering shader: " + std::string(e.what())).c_str());
@@ -255,12 +255,16 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
     glDrawArrays(GL_POINTS, 0, xres * yres * actual_snaps_to_take);
     glDisable(GL_CLIP_DISTANCE0);
 
+    auto anim_start = theAnimation->active_region.first;
+    auto anim_end = theAnimation->active_region.second;
+    auto anim_len = anim_end - anim_start + 1;
+
     if (theAnimation->pos_animation != nullptr) {
         auto anim = theAnimation->pos_animation;
         trajectory_vertices.clear();
-        trajectory_vertices.reserve(3 * anim->GetLength());
+        trajectory_vertices.reserve(3 * anim_len);
         glBindVertexArray(line_vao);
-        for (auto t = anim->GetStartTime(); t <= anim->GetEndTime(); ++t) {
+        for (auto t = anim_start; t <= anim_end; ++t) {
             auto v = anim->GetValue(t);
             trajectory_vertices.emplace_back(v[0]);
             trajectory_vertices.emplace_back(v[1]);
@@ -270,9 +274,8 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
 
         campath_program->use();
         campath_program->setUniform("mvp", mvp);
-        campath_program->setUniform("line_len", anim->GetLength());
-        glDrawArrays(GL_LINE_STRIP, 0, anim->GetLength());
-        //glBindVertexArray(0);
+        campath_program->setUniform("line_len", anim_len);
+        glDrawArrays(GL_LINE_STRIP, 0, anim_len);
 
         auto keys = anim->GetAllKeys();
         key_indices.clear();
@@ -291,12 +294,13 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
         glBindVertexArray(0);
     }
 
-    if (theAnimation->pos_animation != nullptr && theAnimation->orientation_animation != nullptr) {
+    if (theAnimation->pos_animation != nullptr && theAnimation->orientation_animation != nullptr &&
+        showLocalCoordSystems.Param<core::param::BoolParam>()->Value()) {
         auto anim = theAnimation->orientation_animation;
         trajectory_orientations.clear();
-        trajectory_orientations.reserve(4 * anim->GetLength());
+        trajectory_orientations.reserve(4 * anim_len);
         glBindVertexArray(orientations_vao);
-        for (auto t = anim->GetStartTime(); t <= anim->GetEndTime(); ++t) {
+        for (auto t = anim_start; t <= anim_end; ++t) {
             auto v = anim->GetValue(t);
             trajectory_orientations.emplace_back(v[0]);
             trajectory_orientations.emplace_back(v[1]);
@@ -307,9 +311,9 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
             trajectory_orientations.data(), trajectory_orientations.size() * sizeof(float));
 
         orientations_program->use();
-        campath_program->setUniform("mvp", mvp);
-        campath_program->setUniform("direction_len", 10.0f);
-        glDrawArrays(GL_POINTS, 0, anim->GetLength());
+        orientations_program->setUniform("mvp", mvp);
+        orientations_program->setUniform("direction_len", 0.5f);
+        glDrawArrays(GL_POINTS, 0, anim_len);
     }
 
     glUseProgram(0);
