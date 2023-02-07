@@ -78,8 +78,7 @@ bool megamol::mmstd_gl::AnimationRenderer::create() {
     the_points = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, size, GL_DYNAMIC_COPY);
     animation_positions = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
     animation_keys = std::make_unique<glowl::BufferObject>(GL_ELEMENT_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
-    animation_orientations =
-        std::make_unique<glowl::BufferObject>(GL_ELEMENT_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    animation_orientations = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
 
     glGenVertexArrays(1, &line_vao);
     glBindVertexArray(line_vao);
