@@ -78,6 +78,9 @@ bool megamol::mmstd_gl::AnimationRenderer::create() {
     the_points = std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, nullptr, size, GL_DYNAMIC_COPY);
     animation_positions = std::make_unique<glowl::BufferObject>(GL_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
     animation_keys = std::make_unique<glowl::BufferObject>(GL_ELEMENT_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+    animation_orientations =
+        std::make_unique<glowl::BufferObject>(GL_ELEMENT_ARRAY_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
+
     glGenVertexArrays(1, &line_vao);
     glBindVertexArray(line_vao);
     glEnableVertexAttribArray(0);
@@ -90,6 +93,15 @@ bool megamol::mmstd_gl::AnimationRenderer::create() {
     glBindBuffer(GL_ARRAY_BUFFER, animation_positions->getName());
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, animation_keys->getName());
+
+    glGenVertexArrays(1, &orientations_vao);
+    glBindVertexArray(orientations_vao);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, animation_positions->getName());
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, animation_orientations->getName());
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     glBindVertexArray(0);
 
@@ -128,6 +140,15 @@ bool megamol::mmstd_gl::AnimationRenderer::create() {
     } catch (std::exception& e) {
         core::utility::log::Log::DefaultLog.WriteError(
             ("AnimationRenderer: could not compile key rendering shader: " + std::string(e.what())).c_str());
+        return false;
+    }
+
+    try {
+        keys_program = core::utility::make_glowl_shader("orientation", shaderOptions,
+            "mmstd_gl/animation/orientation.vert.glsl", "mmstd_gl/animation/orientation.frag.glsl");
+    } catch (std::exception& e) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            ("AnimationRenderer: could not compile orientation rendering shader: " + std::string(e.what())).c_str());
         return false;
     }
 
@@ -269,6 +290,27 @@ bool megamol::mmstd_gl::AnimationRenderer::Render(mmstd_gl::CallRender3DGL& call
         glDrawElements(GL_POINTS, keys.size(), GL_UNSIGNED_INT, nullptr);
         glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
         glBindVertexArray(0);
+    }
+
+    if (theAnimation->pos_animation != nullptr && theAnimation->orientation_animation != nullptr) {
+        auto anim = theAnimation->orientation_animation;
+        trajectory_orientations.clear();
+        trajectory_orientations.reserve(4 * anim->GetLength());
+        glBindVertexArray(orientations_vao);
+        for (auto t = anim->GetStartTime(); t <= anim->GetEndTime(); ++t) {
+            auto v = anim->GetValue(t);
+            trajectory_orientations.emplace_back(v[0]);
+            trajectory_orientations.emplace_back(v[1]);
+            trajectory_orientations.emplace_back(v[2]);
+            trajectory_orientations.emplace_back(v[3]);
+        }
+        animation_orientations->rebuffer(
+            trajectory_orientations.data(), trajectory_orientations.size() * sizeof(float));
+
+        orientations_program->use();
+        campath_program->setUniform("mvp", mvp);
+        campath_program->setUniform("direction_len", 10.0f);
+        glDrawArrays(GL_POINTS, 0, anim->GetLength());
     }
 
     glUseProgram(0);
