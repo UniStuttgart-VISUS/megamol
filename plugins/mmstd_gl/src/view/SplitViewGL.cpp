@@ -113,18 +113,28 @@ core::view::ImageWrapper view::SplitViewGL::Render(double time, double instanceT
     }
 
     if (_enableTimeSyncSlot.Param<core::param::BoolParam>()->Value()) {
+        unsigned int fcount = 0;
+        bool insitu = false;
+        bool anything_connected = false;
         auto cr = render1();
-        (*cr)(CallRenderViewGL::CALL_EXTENTS);
-        auto fcount = cr->TimeFramesCount();
-        auto insitu = cr->IsInSituTime();
+        if (cr) {
+            (*cr)(CallRenderViewGL::CALL_EXTENTS);
+            fcount = cr->TimeFramesCount();
+            insitu = cr->IsInSituTime();
+            anything_connected = true;
+        }
         cr = render2();
-        (*cr)(CallRenderViewGL::CALL_EXTENTS);
-        fcount = std::min(fcount, cr->TimeFramesCount());
-        insitu = insitu && cr->IsInSituTime();
-
-        _timeCtrl.SetTimeExtend(fcount, insitu);
-        if (time > static_cast<float>(fcount)) {
-            time = static_cast<float>(fcount);
+        if (cr) {
+            (*cr)(CallRenderViewGL::CALL_EXTENTS);
+            fcount = std::max(fcount, cr->TimeFramesCount());
+            insitu = insitu && cr->IsInSituTime();
+            anything_connected = true;
+        }
+        if (anything_connected) {
+            _timeCtrl.SetTimeExtend(fcount, insitu);
+            if (time > static_cast<double>(fcount)) {
+                time = static_cast<double>(fcount);
+            }
         }
     }
 
@@ -237,23 +247,30 @@ core::view::ImageWrapper view::SplitViewGL::GetRenderingResult() const {
 
 bool view::SplitViewGL::GetExtents(core::Call& call) {
     if (_enableTimeSyncSlot.Param<core::param::BoolParam>()->Value()) {
+        unsigned int fcount = 1;
+        bool insitu = false;
+        bool anything_connected = false;
         auto cr = render1();
-        if (!(*cr)(CallRenderViewGL::CALL_EXTENTS))
-            return false;
-        auto time = cr->TimeFramesCount();
-        auto insitu = cr->IsInSituTime();
+        if (cr) {
+            anything_connected = (*cr)(CallRenderViewGL::CALL_EXTENTS);
+            fcount = cr->TimeFramesCount();
+            insitu = cr->IsInSituTime();
+        }
         cr = render2();
-        if (!(*cr)(CallRenderViewGL::CALL_EXTENTS))
-            return false;
-        time = std::min(time, cr->TimeFramesCount());
-        insitu = insitu && cr->IsInSituTime();
-
-        CallRenderViewGL* crv = dynamic_cast<CallRenderViewGL*>(&call);
-        if (crv == nullptr)
-            return false;
-        crv->SetTimeFramesCount(time);
-        crv->SetIsInSituTime(insitu);
+        if (cr) {
+            anything_connected = anything_connected || (*cr)(CallRenderViewGL::CALL_EXTENTS);
+            fcount = std::max(fcount, cr->TimeFramesCount());
+            insitu = insitu && cr->IsInSituTime();
+        }
+        if (anything_connected) {
+            auto* crv = dynamic_cast<CallRenderViewGL*>(&call);
+            if (crv == nullptr)
+                return false;
+            crv->SetTimeFramesCount(fcount);
+            crv->SetIsInSituTime(insitu);
+        }
     }
+
     return true;
 }
 
