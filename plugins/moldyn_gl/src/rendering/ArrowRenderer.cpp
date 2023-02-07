@@ -224,7 +224,7 @@ bool ArrowRenderer::Render(mmstd_gl::CallRender3DGL& call) {
         for (auto const& light : distant_lights) {
             auto use_eyedir = light.eye_direction;
             if (use_eyedir) {
-                cur_light_dir = glm::vec4(-cam_view, 1.0);
+                cur_light_dir = glm::vec4(cam_view, 1.0);
             } else {
                 auto light_dir = light.direction;
                 if (light_dir.size() == 3) {
