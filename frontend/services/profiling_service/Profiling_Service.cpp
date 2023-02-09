@@ -85,7 +85,8 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
             const auto frames_rendered = static_cast<int64_t>(_requestedResourcesReferences[4]
                                                                   .getResource<frontend_resources::FrameStatistics>()
                                                                   .rendered_frames_count);
-            log_file << frames_rendered - 1 << ";" << call_inst.callPtr->GetDescriptiveText() << ";;AddCall;0;;;"
+            log_file << frames_rendered - 1 << ";" << call_inst.callPtr->ClassName()
+                     << ";" << call_inst.callPtr->GetDescriptiveText() << ";AddCall;0;;GraphEvent;"
                      << std::endl;
         }
 
@@ -103,7 +104,7 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
             const auto frames_rendered = static_cast<int64_t>(_requestedResourcesReferences[4]
                                                                   .getResource<frontend_resources::FrameStatistics>()
                                                                   .rendered_frames_count);
-            log_file << frames_rendered - 1 << ";" << call_inst.callPtr->GetDescriptiveText() << ";;DeleteCall;0;;;"
+            log_file << frames_rendered - 1 << ";" << call_inst.callPtr->GetDescriptiveText() << ";;DeleteCall;0;;GraphEvent;"
                      << std::endl;
         }
 
@@ -115,7 +116,8 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
             const auto frames_rendered = static_cast<int64_t>(_requestedResourcesReferences[4]
                                                                   .getResource<frontend_resources::FrameStatistics>()
                                                                   .rendered_frames_count);
-            log_file << frames_rendered - 1 << ";" << mod_inst.modulePtr->FullName() << ";;AddModule;0;;;" << std::endl;
+            log_file << frames_rendered - 1 << ";" << mod_inst.modulePtr->ClassName()
+                     << ";" << mod_inst.modulePtr->FullName() << ";AddModule;0;;GraphEvent;" << std::endl;
         }
         return true;
     };
@@ -125,7 +127,7 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
             const auto frames_rendered = static_cast<int64_t>(_requestedResourcesReferences[4]
                                                                   .getResource<frontend_resources::FrameStatistics>()
                                                                   .rendered_frames_count);
-            log_file << frames_rendered - 1 << ";" << mod_inst.modulePtr->FullName() << ";;DeleteModule;0;;;"
+            log_file << frames_rendered - 1 << ";;" << mod_inst.modulePtr->FullName() << ";DeleteModule;0;;GraphEvent;"
                      << std::endl;
         }
         return true;
@@ -137,7 +139,7 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
             const auto frames_rendered = static_cast<int64_t>(_requestedResourcesReferences[4]
                                                                   .getResource<frontend_resources::FrameStatistics>()
                                                                   .rendered_frames_count);
-            log_file << frames_rendered - 1 << ";" << old_name << "->" << new_name << ";;RenameModule;0;;;"
+            log_file << frames_rendered - 1 << ";" << old_name << "->" << new_name << ";;RenameModule;0;;GraphEvent;"
                      << std::endl;
         }
         return true;
@@ -150,7 +152,7 @@ void Profiling_Service::setRequestedResources(std::vector<FrontendResource> reso
                                                                   .getResource<frontend_resources::FrameStatistics>()
                                                                   .rendered_frames_count);
             log_file << frames_rendered - 1 << ";" << param->Parent()->FullName() << ";" << param->Name()
-                     << ";\"ParamValueChanged=" << new_value << "\";0;;;" << std::endl;
+                     << ";'ParamValueChanged=" << new_value << "';0;;GraphEvent;" << std::endl;
         }
         return true;
     };
