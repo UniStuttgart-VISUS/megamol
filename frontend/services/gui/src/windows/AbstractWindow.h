@@ -46,6 +46,13 @@ public:
         WINDOW_ID_RENDERING_ENDPOINT = 8
     };
 
+    struct WindowType {
+        bool unique = true;
+        WindowConfigID id = WINDOW_ID_VOLATILE;
+        std::string name;
+        frontend_resources::KeyCode hotkey;
+    };
+
     struct BasicConfig {
         bool show = false;                          // [SAVED] show/hide window
         ImGuiWindowFlags flags = 0;                 // [SAVED] imgui window flags

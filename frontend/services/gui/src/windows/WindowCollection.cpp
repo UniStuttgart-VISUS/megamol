@@ -20,6 +20,76 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
+AbstractWindow::WindowType get_window_type(AbstractWindow::WindowConfigID id) {
+    switch (id) {
+    case AbstractWindow::WINDOW_ID_MAIN_PARAMETERS: {
+        PerformanceMonitor win("Performance Metrics");
+        AbstractWindow::WindowType wt;
+        wt.unique = true;
+        wt.hotkey = win.Config().hotkey;
+        wt.name = win.Name();
+        wt.id = AbstractWindow::WINDOW_ID_PERFORMANCE;
+        return wt;
+    } break;
+    case AbstractWindow::WINDOW_ID_PARAMETERS: {
+
+    } break;
+    case AbstractWindow::WINDOW_ID_PERFORMANCE: {
+        PerformanceMonitor win("Performance Metrics");
+        AbstractWindow::WindowType wt;
+        wt.unique = true;
+        wt.hotkey = win.Config().hotkey;
+        wt.name = win.Name();
+        wt.id = AbstractWindow::WINDOW_ID_PERFORMANCE;
+        return wt;
+    } break;
+    case AbstractWindow::WINDOW_ID_HOTKEYEDITOR: {
+        HotkeyEditor win("Hotkey Editor");
+        AbstractWindow::WindowType wt;
+        wt.unique = true;
+        wt.hotkey = win.Config().hotkey;
+        wt.name = win.Name();
+        wt.id = AbstractWindow::WINDOW_ID_HOTKEYEDITOR;
+        return wt;
+    } break;
+    case AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION: {
+        TransferFunctionEditor win("Transfer Function Editor", true);
+        AbstractWindow::WindowType wt;
+        wt.unique = true;
+        wt.hotkey = win.Config().hotkey;
+        wt.name = win.Name();
+        wt.id = AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION;
+        return wt;
+    } break;
+    case AbstractWindow::WINDOW_ID_CONFIGURATOR: {
+        auto tf = std::make_shared<TransferFunctionEditor>("Transfer Function Editor", true);
+        Configurator win("Configurator", tf);
+        AbstractWindow::WindowType wt;
+        wt.unique = true;
+        wt.hotkey = win.Config().hotkey;
+        wt.name = win.Name();
+        wt.id = AbstractWindow::WINDOW_ID_TRANSFER_FUNCTION;
+        return wt;
+    } break;
+    case AbstractWindow::WINDOW_ID_LOGCONSOLE: {
+        LogConsole win("Log Console");
+        AbstractWindow::WindowType wt;
+        wt.unique = true;
+        wt.hotkey = win.Config().hotkey;
+        wt.name = win.Name();
+        wt.id = AbstractWindow::WINDOW_ID_LOGCONSOLE;
+        return wt;
+    } break;
+    case AbstractWindow::WINDOW_ID_RENDERING_ENDPOINT: {
+        AbstractWindow::WindowType wt;
+        wt.unique = false;
+    } break;
+    default:
+        return AbstractWindow::WindowType{};
+    }
+}
+
+
 WindowCollection::WindowCollection() {
 
     this->avail_windows.push_back(std::make_shared<HotkeyEditor>("Hotkey Editor"));

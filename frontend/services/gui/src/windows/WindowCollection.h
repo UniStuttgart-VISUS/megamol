@@ -20,6 +20,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <set>
 
 
 namespace megamol {
@@ -100,6 +101,8 @@ public:
 
 private:
     // VARIABLES ------------------------------------------------------
+
+    std::set<frontend_resources::KeyCode, std::string> registered_windows;
 
     std::vector<std::shared_ptr<AbstractWindow>> avail_windows;
 
