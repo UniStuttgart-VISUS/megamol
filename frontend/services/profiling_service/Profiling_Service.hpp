@@ -21,6 +21,7 @@ public:
     struct Config {
         std::string log_file;
         bool autostart_profiling;
+        bool include_graph_events;
     };
 
     std::string serviceName() const override {
@@ -52,6 +53,7 @@ private:
 
     frontend_resources::PerformanceManager _perf_man;
     std::ofstream log_file;
+    bool include_graph_events = false;
     frontend_resources::ProfilingLoggingStatus profiling_logging;
 };
 

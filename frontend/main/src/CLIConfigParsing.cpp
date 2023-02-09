@@ -115,6 +115,7 @@ static std::string privacynote_option = "privacynote";
 static std::string versionnote_option = "versionnote";
 static std::string profile_log_option = "profiling-log";
 static std::string profile_log_no_autostart_option = "pause-profiling";
+static std::string profile_log_include_events_option = "profiling-include-events";
 static std::string param_option = "param";
 static std::string remote_head_option = "headnode";
 static std::string remote_render_option = "rendernode";
@@ -178,6 +179,11 @@ static void profile_log_handler(
 static void profile_log_autostart_handler(
     std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
     config.autostart_profiling = !parsed_options[option_name].as<bool>();
+}
+
+static void profile_log_include_events_handler(
+    std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config) {
+    config.include_graph_events = parsed_options[option_name].as<bool>();
 }
 
 static void remote_head_handler(
@@ -555,7 +561,10 @@ std::vector<OptionsListEntry> cli_options_list =
         {profile_log_option, "Enable performance counters and set output to file", cxxopts::value<std::string>(),
             profile_log_handler},
         {profile_log_no_autostart_option, "Do not automatically start writing the profiling log",
-            cxxopts::value<bool>(), profile_log_autostart_handler}
+            cxxopts::value<bool>(), profile_log_autostart_handler},
+        {profile_log_include_events_option, "Include graph events in the profiling log", cxxopts::value<bool>(),
+            profile_log_include_events_handler}
+
 #endif
         ,
         {param_option, "Set MegaMol Graph parameter to value: --param param=value",
