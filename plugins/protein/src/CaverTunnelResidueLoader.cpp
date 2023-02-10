@@ -26,7 +26,7 @@ using namespace megamol::protein_calls;
 /*
  * CaverTunnelResidueLoader::CaverTunnelResidueLoader
  */
-CaverTunnelResidueLoader::CaverTunnelResidueLoader(void)
+CaverTunnelResidueLoader::CaverTunnelResidueLoader()
         : Module()
         , getData("getData", "The slot providing the data loaded by this module.")
         , filenameSlot("filename", "The path to the residues.txt input file produced by caver.")
@@ -54,14 +54,14 @@ CaverTunnelResidueLoader::CaverTunnelResidueLoader(void)
 /*
  * CaverTunnelResidueLoader::~CaverTunnelResidueLoader
  */
-CaverTunnelResidueLoader::~CaverTunnelResidueLoader(void) {
+CaverTunnelResidueLoader::~CaverTunnelResidueLoader() {
     this->Release();
 }
 
 /*
  * CaverTunnelResidueLoader::create
  */
-bool CaverTunnelResidueLoader::create(void) {
+bool CaverTunnelResidueLoader::create() {
     // TODO
     return true;
 }
@@ -70,7 +70,7 @@ bool CaverTunnelResidueLoader::create(void) {
 /*
  * CaverTunnelResidueLoader::release
  */
-void CaverTunnelResidueLoader::release(void) {
+void CaverTunnelResidueLoader::release() {
     if (this->file != nullptr) {
         vislib::sys::File* f = this->file;
         this->file = nullptr;

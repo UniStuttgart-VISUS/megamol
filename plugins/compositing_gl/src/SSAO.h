@@ -20,8 +20,7 @@
 // SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef SSAO_H_INCLUDED
-#define SSAO_H_INCLUDED
+#pragma once
 
 #include <variant>
 
@@ -37,8 +36,7 @@
 
 #include <glm/glm.hpp>
 
-namespace megamol {
-namespace compositing_gl {
+namespace megamol::compositing_gl {
 
 typedef std::tuple<std::shared_ptr<glowl::Texture2D>, std::string, std::shared_ptr<glowl::Sampler>> TextureSamplerTuple;
 typedef std::tuple<std::shared_ptr<glowl::Texture2DView>, std::string, std::shared_ptr<glowl::Sampler>>
@@ -219,7 +217,7 @@ public:
 #endif
 
     SSAO();
-    ~SSAO();
+    ~SSAO() override;
 
 protected:
     /**
@@ -227,12 +225,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * TODO
@@ -571,7 +569,4 @@ void SSAO::fullscreenPassDraw(const std::unique_ptr<glowl::GLSLProgram>& prgm, c
     }
 }
 
-} // namespace compositing_gl
-} // namespace megamol
-
-#endif // !ASSAO_H_INCLUDED
+} // namespace megamol::compositing_gl

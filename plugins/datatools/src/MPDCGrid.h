@@ -12,8 +12,7 @@
 #include "vislib/math/Point.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class MPDCGrid : public core::Module {
 public:
@@ -44,7 +43,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MPDCGrid";
     }
 
@@ -53,7 +52,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Converts a MPDC in to a regular grid (cells exposed as individual particle list entries)";
     }
 
@@ -62,13 +61,13 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     MPDCGrid();
 
-    virtual ~MPDCGrid();
+    ~MPDCGrid() override;
 
 protected:
     bool create() override;
@@ -123,5 +122,4 @@ inline int arg_max(vislib::math::Vector<float, 3> const& vec) {
     }
 }
 
-} // namespace datatools
-} // namespace megamol
+} // namespace megamol::datatools

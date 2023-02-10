@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SERIALISER_H_INCLUDED
-#define VISLIB_SERIALISER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -61,7 +57,7 @@ public:
     static const UINT32 SERIALISER_REQUIRES_ORDER;
 
     /** Dtor. */
-    virtual ~Serialiser(void);
+    virtual ~Serialiser();
 
     /**
      * Deserialise the bool element with name 'name' into 'outValue'.
@@ -432,7 +428,7 @@ public:
      *
      * @return The properties bitmask of the serialiser.
      */
-    inline UINT32 GetProperties(void) const {
+    inline UINT32 GetProperties() const {
         return this->properties;
     }
 
@@ -852,4 +848,3 @@ private:
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SERIALISER_H_INCLUDED */

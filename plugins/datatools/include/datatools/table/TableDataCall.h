@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_TABLEDATACALL_H_INCLUDED
-#define MEGAMOL_DATATOOLS_TABLEDATACALL_H_INCLUDED
 #pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
@@ -16,9 +14,7 @@
 #include <string>
 #include <type_traits>
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /**
  * Call for passing around tabular data.
@@ -29,13 +25,13 @@ namespace table {
  */
 class TableDataCall : public core::AbstractGetDataCall {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TableDataCall";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data of a table of floats";
     }
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 2;
     }
     static const char* FunctionName(unsigned int idx) {
@@ -58,16 +54,16 @@ public:
         ColumnInfo& operator=(const ColumnInfo& rhs);
         bool operator==(const ColumnInfo& rhs) const;
 
-        inline const std::string& Name(void) const {
+        inline const std::string& Name() const {
             return name;
         }
-        inline ColumnType Type(void) const {
+        inline ColumnType Type() const {
             return type;
         }
-        inline float MinimumValue(void) const {
+        inline float MinimumValue() const {
             return minVal;
         }
-        inline float MaximumValue(void) const {
+        inline float MaximumValue() const {
             return maxVal;
         }
 
@@ -96,22 +92,22 @@ public:
         float maxVal;
     };
 
-    TableDataCall(void);
-    virtual ~TableDataCall(void);
+    TableDataCall();
+    ~TableDataCall() override;
 
-    inline size_t GetColumnsCount(void) const {
+    inline size_t GetColumnsCount() const {
         return columns_count;
     }
 
-    inline size_t GetRowsCount(void) const {
+    inline size_t GetRowsCount() const {
         return rows_count;
     }
 
-    inline const ColumnInfo* GetColumnsInfos(void) const {
+    inline const ColumnInfo* GetColumnsInfos() const {
         return columns;
     }
 
-    inline const float* GetData(void) const {
+    inline const float* GetData() const {
         return data;
     }
 
@@ -150,7 +146,7 @@ public:
         this->frameCount = frameCount;
     }
 
-    inline unsigned int GetFrameCount(void) const {
+    inline unsigned int GetFrameCount() const {
         return this->frameCount;
     }
 
@@ -158,7 +154,7 @@ public:
         this->frameID = frameID;
     }
 
-    inline unsigned int GetFrameID(void) const {
+    inline unsigned int GetFrameID() const {
         return this->frameID;
     }
 
@@ -184,8 +180,4 @@ private:
 
 typedef core::factories::CallAutoDescription<TableDataCall> TableDataCallDescription;
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif
+} // namespace megamol::datatools::table

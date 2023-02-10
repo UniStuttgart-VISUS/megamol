@@ -1,8 +1,4 @@
-#ifndef AOWT_PARTICLE_DENSITY_OPACITY_MODULE_H_INCLUDED
-#define AOWT_PARTICLE_DENSITY_OPACITY_MODULE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "datatools_gl/TransferFunctionQuery.h"
 #include "geometry_calls/MultiParticleDataCall.h"
@@ -15,28 +11,26 @@
 #include "vislib/memutils.h"
 
 
-namespace megamol {
-namespace moldyn {
+namespace megamol::moldyn {
 class MultiParticleDataCall;
-}
-} // namespace megamol
+} // namespace megamol::moldyn
 
 namespace megamol::datatools_gl::misc {
 
 
 class ParticleDensityOpacityModule : public megamol::core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleDensityOpacityModule";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Compute particle opacity based on local density.";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
-    ParticleDensityOpacityModule(void);
-    virtual ~ParticleDensityOpacityModule(void);
+    ParticleDensityOpacityModule();
+    ~ParticleDensityOpacityModule() override;
 
 private:
     class Unlocker : public geocalls::MultiParticleDataCall::Unlocker {
@@ -46,10 +40,10 @@ private:
                 , inner(inner) {
             // intentionally empty
         }
-        virtual ~Unlocker(void) {
+        ~Unlocker() override {
             this->Unlock();
         }
-        virtual void Unlock(void) {
+        void Unlock() override {
             if (this->inner != nullptr) {
                 this->inner->Unlock();
                 SAFE_DELETE(this->inner);
@@ -70,8 +64,8 @@ private:
         AlphaInvertOverwrite = 4,
     };
 
-    virtual bool create(void);
-    virtual void release(void);
+    bool create() override;
+    void release() override;
     bool getDataCallback(core::Call& caller);
     bool getExtentCallback(core::Call& caller);
 
@@ -105,5 +99,3 @@ private:
 };
 
 } // namespace megamol::datatools_gl::misc
-
-#endif /* AOWT_PARTICLE_DENSITY_OPACITY_MODULE_H_INCLUDED */

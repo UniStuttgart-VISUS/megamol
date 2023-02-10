@@ -5,19 +5,14 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_PARTICLEVISIBILITYFROMVOLUME_H_INCLUDED
-#define MEGAMOLCORE_PARTICLEVISIBILITYFROMVOLUME_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "datatools/AbstractParticleManipulator.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 // TODO: merge this with DirPartFilter!
 
@@ -29,25 +24,25 @@ namespace datatools {
 class ParticleVisibilityFromVolume : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleVisibilityFromVolume";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module filtering particles based on volumetric data (in the same place in world space)";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleVisibilityFromVolume(void);
+    ParticleVisibilityFromVolume();
 
     /** Dtor */
-    virtual ~ParticleVisibilityFromVolume(void);
+    ~ParticleVisibilityFromVolume() override;
 
 protected:
     /**
@@ -60,7 +55,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     /** What to do with the reference value (smaller, larger, epsilon-equal) */
@@ -99,7 +94,4 @@ private:
     SIZE_T lastVolumeHash = 0;
 };
 
-} /* end namespace datatools */
-} // namespace megamol
-
-#endif /* MEGAMOLCORE_PARTICLEVISIBILITYFROMVOLUME_H_INCLUDED */
+} // namespace megamol::datatools

@@ -10,8 +10,7 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 class OSPRayRenderer : public AbstractOSPRayRenderer {
 public:
@@ -20,7 +19,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "OSPRayRenderer";
     }
 
@@ -29,7 +28,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for OSPRay structures.";
     }
 
@@ -38,15 +37,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Dtor. */
-    virtual ~OSPRayRenderer(void);
+    ~OSPRayRenderer() override;
 
     /** Ctor. */
-    OSPRayRenderer(void);
+    OSPRayRenderer();
 
 protected:
     /**
@@ -54,12 +53,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -68,7 +67,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core::view::CallRender3D& call);
+    bool Render(megamol::core::view::CallRender3D& call) override;
 
 private:
     /**
@@ -80,7 +79,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core::view::CallRender3D& call);
+    bool GetExtents(megamol::core::view::CallRender3D& call) override;
 
     bool OnMouseButton(
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
@@ -127,5 +126,4 @@ private:
     float _mouse_y;
 };
 
-} /*end namespace ospray*/
-} /*end namespace megamol*/
+} // namespace megamol::ospray

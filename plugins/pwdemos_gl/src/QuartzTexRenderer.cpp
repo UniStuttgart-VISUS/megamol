@@ -23,13 +23,12 @@
 #include "vislib_gl/graphics/gl/glfunctions.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * QuartzTexRenderer::QuartzTexRenderer
  */
-QuartzTexRenderer::QuartzTexRenderer(void)
+QuartzTexRenderer::QuartzTexRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , AbstractTexQuartzRenderer()
         , cryShader()
@@ -54,7 +53,7 @@ QuartzTexRenderer::QuartzTexRenderer(void)
 /*
  * QuartzTexRenderer::~QuartzTexRenderer
  */
-QuartzTexRenderer::~QuartzTexRenderer(void) {
+QuartzTexRenderer::~QuartzTexRenderer() {
     this->Release();
 }
 
@@ -430,7 +429,7 @@ bool QuartzTexRenderer::Render(mmstd_gl::CallRender3DGL& call) {
 /*
  * QuartzTexRenderer::create
  */
-bool QuartzTexRenderer::create(void) {
+bool QuartzTexRenderer::create() {
     using megamol::core::utility::log::Log;
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
@@ -481,7 +480,7 @@ bool QuartzTexRenderer::create(void) {
 /*
  * QuartzTexRenderer::release
  */
-void QuartzTexRenderer::release(void) {
+void QuartzTexRenderer::release() {
     AbstractTexQuartzRenderer::releaseTypeTexture();
 
     ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -491,5 +490,4 @@ void QuartzTexRenderer::release(void) {
     ::glDeleteBuffers(1, &vbo);
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

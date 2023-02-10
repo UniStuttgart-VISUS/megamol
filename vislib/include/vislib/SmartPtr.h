@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SMARTPTR_H_INCLUDED
-#define VISLIB_SMARTPTR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -66,7 +62,7 @@ public:
     }
 
     /** Dtor. */
-    ~SmartPtr(void);
+    ~SmartPtr();
 
     /**
      * Returns a (non-smart) pointer to the object this pointer points to
@@ -78,7 +74,7 @@ public:
      * @return A (non-smart) pointer to the object.
      */
     template<class Tp>
-    Tp* DynamicCast(void) {
+    Tp* DynamicCast() {
         return (this->ptr == NULL) ? NULL : dynamic_cast<Tp*>(this->ptr->obj);
     }
 
@@ -92,7 +88,7 @@ public:
      * @return A (non-smart) pointer to the object.
      */
     template<class Tp>
-    const Tp* DynamicCast(void) const {
+    const Tp* DynamicCast() const {
         return (this->ptr == NULL) ? NULL : dynamic_cast<Tp*>(this->ptr->obj);
     }
 
@@ -101,7 +97,7 @@ public:
      *
      * @return true, if the pointer is a NULL pointer, false otherwise.
      */
-    inline bool IsNull(void) const {
+    inline bool IsNull() const {
         ASSERT((this->ptr == NULL) || (this->ptr->obj != NULL));
         return (this->ptr == NULL);
     }
@@ -162,7 +158,7 @@ public:
      *
      * @return A reference to the object designated by the pointer.
      */
-    inline T& operator*(void) {
+    inline T& operator*() {
         return *(this->ptr->obj);
     }
 
@@ -172,7 +168,7 @@ public:
      *
      * @return A reference to the object designated by the pointer.
      */
-    inline const T& operator*(void) const {
+    inline const T& operator*() const {
         return *(this->ptr->obj);
     }
 
@@ -181,7 +177,7 @@ public:
      *
      * @return A pointer to the object designated by the smart pointer.
      */
-    inline T* operator->(void) {
+    inline T* operator->() {
         return (this->ptr != NULL) ? this->ptr->obj : NULL;
     }
 
@@ -190,7 +186,7 @@ public:
      *
      * @return A pointer to the object designated by the smart pointer.
      */
-    inline const T* operator->(void) const {
+    inline const T* operator->() const {
         return (this->ptr != NULL) ? this->ptr->obj : NULL;
     }
 
@@ -241,7 +237,7 @@ SmartPtr<T, A>::SmartPtr(T* ptr) : ptr(NULL) {
  * vislib::SmartPtr<T, A>::~SmartPtr
  */
 template<class T, class A>
-SmartPtr<T, A>::~SmartPtr(void) {
+SmartPtr<T, A>::~SmartPtr() {
     *this = NULL;
 }
 
@@ -295,4 +291,3 @@ SmartPtr<T, A>& SmartPtr<T, A>::operator=(const SmartPtr& rhs) {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SMARTPTR_H_INCLUDED */

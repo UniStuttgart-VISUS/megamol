@@ -102,7 +102,7 @@ VTKLegacyDataLoaderUnstructuredGrid::~VTKLegacyDataLoaderUnstructuredGrid() {
 /*
  * VTKLegacyDataLoaderUnstructuredGrid::create
  */
-bool VTKLegacyDataLoaderUnstructuredGrid::create(void) {
+bool VTKLegacyDataLoaderUnstructuredGrid::create() {
     return true;
 }
 
@@ -110,7 +110,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::create(void) {
 /*
  * VTKLegacyDataLoaderUnstructuredGrid::release
  */
-void VTKLegacyDataLoaderUnstructuredGrid::release(void) {}
+void VTKLegacyDataLoaderUnstructuredGrid::release() {}
 
 
 /*
@@ -623,7 +623,7 @@ bool VTKLegacyDataLoaderUnstructuredGrid::loadFile(const vislib::StringA& filena
 /*
  * VTKLegacyDataLoaderUnstructuredGrid::constructFrame
  */
-core::view::AnimDataModule::Frame* VTKLegacyDataLoaderUnstructuredGrid::constructFrame(void) const {
+core::view::AnimDataModule::Frame* VTKLegacyDataLoaderUnstructuredGrid::constructFrame() const {
     Frame* f = new Frame(*const_cast<VTKLegacyDataLoaderUnstructuredGrid*>(this));
     return f;
 }
@@ -1162,4 +1162,4 @@ VTKLegacyDataLoaderUnstructuredGrid::Frame::Frame(megamol::core::view::AnimDataM
 /*
  * VTKLegacyDataLoaderUnstructuredGrid::Frame::~Frame
  */
-VTKLegacyDataLoaderUnstructuredGrid::Frame::~Frame(void) {}
+VTKLegacyDataLoaderUnstructuredGrid::Frame::~Frame() {}

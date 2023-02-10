@@ -62,7 +62,7 @@ public:
     CallGetTransferFunction() : AbstractCallGetTransferFunction() {}
 
     /** Dtor. */
-    virtual ~CallGetTransferFunction() {}
+    ~CallGetTransferFunction() override {}
 };
 
 

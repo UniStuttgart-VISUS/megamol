@@ -5,24 +5,19 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_BSPLINE_H_INCLUDED
-#define MEGAMOL_BSPLINE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "vislib/Array.h"
 #include "vislib/math/Matrix4.h"
 #include "vislib/math/Vector.h"
 #include <vector>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class BSpline {
 public:
-    BSpline(void);
-    virtual ~BSpline(void);
+    BSpline();
+    virtual ~BSpline();
 
     // set the coordinates for the geometry matrix G
     void setG(vislib::math::Vector<float, 3> v1, vislib::math::Vector<float, 3> v2, vislib::math::Vector<float, 3> v3,
@@ -55,10 +50,7 @@ protected:
 
 public:
     // compute the spline from the given backbone coordinates
-    bool computeSpline(void);
+    bool computeSpline();
 };
 
-} // namespace protein
-} // namespace megamol
-
-#endif /* MEGAMOL_BSPLINE_H_INCLUDED */
+} // namespace megamol::protein

@@ -32,8 +32,7 @@
 
 using megamol::core::utility::log::Log;
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 TriangleMeshRenderer3D::TriangleMeshRenderer3D()
         : triangle_mesh_slot("get_triangle_mesh", "Triangle mesh input")
@@ -429,5 +428,4 @@ bool TriangleMeshRenderer3D::get_input_extent() {
     return true;
 }
 
-} // namespace mesh_gl
-} // namespace megamol
+} // namespace megamol::mesh_gl

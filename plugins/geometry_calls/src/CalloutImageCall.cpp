@@ -56,7 +56,7 @@ int qr_id_value = -1;
 int width_value = 0;
 int height_value = 0;
 
-CalloutImageCall::CalloutImageCall(void)
+CalloutImageCall::CalloutImageCall()
         : qr_id(&qr_id_value)
         , qr_image(NULL)
         , qr_pointer(NULL)
@@ -64,7 +64,7 @@ CalloutImageCall::CalloutImageCall(void)
         , height(&height_value) {}
 
 
-CalloutImageCall::~CalloutImageCall(void) {
+CalloutImageCall::~CalloutImageCall() {
     qr_image = NULL;
     qr_pointer = NULL;
 }

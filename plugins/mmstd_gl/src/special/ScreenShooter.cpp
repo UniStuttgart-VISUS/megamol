@@ -183,7 +183,7 @@ using namespace megamol::mmstd_gl;
 /*
  * view::special::ScreenShooter::IsAvailable
  */
-bool special::ScreenShooter::IsAvailable(void) {
+bool special::ScreenShooter::IsAvailable() {
     return true;
     // required extensions must be tested lazy,
     //     because open gl can still be missing
@@ -300,7 +300,7 @@ special::ScreenShooter::~ScreenShooter() {
 /*
  * view::special::ScreenShooter::release
  */
-bool special::ScreenShooter::IsRunning(void) const {
+bool special::ScreenShooter::IsRunning() const {
     return this->running;
 }
 
@@ -308,7 +308,7 @@ bool special::ScreenShooter::IsRunning(void) const {
 /*
  * view::special::ScreenShooter::release
  */
-bool special::ScreenShooter::Start(void) {
+bool special::ScreenShooter::Start() {
     this->running = true;
     return true;
 }
@@ -317,7 +317,7 @@ bool special::ScreenShooter::Start(void) {
 /*
  * view::special::ScreenShooter::release
  */
-bool special::ScreenShooter::Terminate(void) {
+bool special::ScreenShooter::Terminate() {
     this->running = false;
     return true;
 }
@@ -326,7 +326,7 @@ bool special::ScreenShooter::Terminate(void) {
 /*
  * view::special::ScreenShooter::release
  */
-bool special::ScreenShooter::create(void) {
+bool special::ScreenShooter::create() {
     currentFbo = std::make_shared<glowl::FramebufferObject>(1, 1);
     return true;
 }
@@ -335,7 +335,7 @@ bool special::ScreenShooter::create(void) {
 /*
  * view::special::ScreenShooter::release
  */
-void special::ScreenShooter::release(void) {
+void special::ScreenShooter::release() {
     // intentionally empty.
 }
 

@@ -9,8 +9,7 @@
 
 #include <string>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 static std::string OpenGL_Helper_Req_Name = "OpenGL_Helper";
 
@@ -19,5 +18,4 @@ struct OpenGL_Helper {
     void PopDebugGroup();
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

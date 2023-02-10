@@ -36,7 +36,7 @@ using namespace megamol::moldyn_gl::rendering;
 
 //const uint32_t max_ssbo_size = 2 * 1024 * 1024 * 1024;
 
-GlyphRenderer::GlyphRenderer(void)
+GlyphRenderer::GlyphRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , get_data_slot_("getData", "The slot to fetch the data")
         , get_tf_slot_("getTF", "The slot for the transfer function")
@@ -120,12 +120,12 @@ GlyphRenderer::GlyphRenderer(void)
 }
 
 
-GlyphRenderer::~GlyphRenderer(void) {
+GlyphRenderer::~GlyphRenderer() {
     this->Release();
 }
 
 
-bool GlyphRenderer::create(void) {
+bool GlyphRenderer::create() {
     // profiling
 #ifdef MEGAMOL_USE_PROFILING
     perf_manager_ = const_cast<frontend_resources::PerformanceManager*>(
@@ -196,7 +196,7 @@ bool GlyphRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     return true;
 }
 
-void GlyphRenderer::release(void) {
+void GlyphRenderer::release() {
     glDeleteTextures(1, &this->grey_tf_);
 
 #ifdef MEGAMOL_USE_PROFILING

@@ -5,18 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_LOCKABLE_H_INCLUDED
-#define VISLIB_LOCKABLE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 
 /**
@@ -28,22 +23,22 @@ template<class T>
 class Lockable {
 public:
     /** Ctor. */
-    Lockable(void);
+    Lockable();
 
     /** Dtor. */
-    virtual ~Lockable(void);
+    virtual ~Lockable();
 
     /**
      * Aquires the lock of this lockable.
      * Details on the behaviour depend on the 'SyncObject' used.
      */
-    inline void Lock(void) const;
+    inline void Lock() const;
 
     /**
      * Releases the lock of this lockable.
      * Details on the behaviour depend on the 'SyncObject' used.
      */
-    inline void Unlock(void) const;
+    inline void Unlock() const;
 
 private:
     /** The syncObj used for locking */
@@ -55,7 +50,7 @@ private:
  * Lockable::Lockable
  */
 template<class T>
-Lockable<T>::Lockable(void) : syncObj() {
+Lockable<T>::Lockable() : syncObj() {
     // intentionally empty
 }
 
@@ -64,7 +59,7 @@ Lockable<T>::Lockable(void) : syncObj() {
  * Lockable::~Lockable
  */
 template<class T>
-Lockable<T>::~Lockable(void) {
+Lockable<T>::~Lockable() {
     // intentionally empty
 }
 
@@ -73,7 +68,7 @@ Lockable<T>::~Lockable(void) {
  * Lockable::Lock
  */
 template<class T>
-void Lockable<T>::Lock(void) const {
+void Lockable<T>::Lock() const {
     this->syncObj.Lock();
 }
 
@@ -82,15 +77,13 @@ void Lockable<T>::Lock(void) const {
  * Lockable::Unlock
  */
 template<class T>
-void Lockable<T>::Unlock(void) const {
+void Lockable<T>::Unlock() const {
     this->syncObj.Unlock();
 }
 
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_LOCKABLE_H_INCLUDED */

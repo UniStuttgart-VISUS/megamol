@@ -25,7 +25,7 @@ vislib::NoSuchElementException::NoSuchElementException(const NoSuchElementExcept
 /*
  * vislib::NoSuchElementException::~NoSuchElementException
  */
-vislib::NoSuchElementException::~NoSuchElementException(void) {}
+vislib::NoSuchElementException::~NoSuchElementException() {}
 
 
 /*

@@ -18,7 +18,7 @@ using namespace megamol::geocalls;
 /*
  * AstroParticleConverter::AstroParticleConverter
  */
-AstroParticleConverter::AstroParticleConverter(void)
+AstroParticleConverter::AstroParticleConverter()
         : Module()
         , sphereDataSlot("sphereData", "Output slot for the resulting sphere data")
         , sphereSpecialSlot(
@@ -106,14 +106,14 @@ AstroParticleConverter::AstroParticleConverter(void)
 /*
  * AstroParticleConverter::~AstroParticleConverter
  */
-AstroParticleConverter::~AstroParticleConverter(void) {
+AstroParticleConverter::~AstroParticleConverter() {
     this->Release();
 }
 
 /*
  * AstroParticleConverter::create
  */
-bool AstroParticleConverter::create(void) {
+bool AstroParticleConverter::create() {
     // intentionally empty
     return true;
 }
@@ -121,7 +121,7 @@ bool AstroParticleConverter::create(void) {
 /*
  * AstroParticleConverter::release
  */
-void AstroParticleConverter::release(void) {
+void AstroParticleConverter::release() {
     // intentionally empty
 }
 

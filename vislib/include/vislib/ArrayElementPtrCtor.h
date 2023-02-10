@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_ARRAYELEMENTPTRCTOR_H_INCLUDED
-#define VISLIB_ARRAYELEMENTPTRCTOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -52,13 +48,13 @@ public:
     }
 
     /** Dtor. */
-    ~ArrayElementPtrCtor(void);
+    ~ArrayElementPtrCtor();
 
 private:
     /**
      * Disallow instances.
      */
-    ArrayElementPtrCtor(void);
+    ArrayElementPtrCtor();
 };
 
 
@@ -66,7 +62,7 @@ private:
  * ArrayElementPtrCtor<T, A>::~ArrayElementPtrCtor
  */
 template<class T, class A>
-ArrayElementPtrCtor<T, A>::~ArrayElementPtrCtor(void) {
+ArrayElementPtrCtor<T, A>::~ArrayElementPtrCtor() {
     // Nothing to do.
 }
 
@@ -75,7 +71,7 @@ ArrayElementPtrCtor<T, A>::~ArrayElementPtrCtor(void) {
  * ArrayElementPtrCtor<T, A>::ArrayElementPtrCtor
  */
 template<class T, class A>
-ArrayElementPtrCtor<T, A>::ArrayElementPtrCtor(void) {
+ArrayElementPtrCtor<T, A>::ArrayElementPtrCtor() {
     // Nothing to do.
 }
 
@@ -84,4 +80,3 @@ ArrayElementPtrCtor<T, A>::ArrayElementPtrCtor(void) {
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_ARRAYELEMENTPTRCTOR_H_INCLUDED */

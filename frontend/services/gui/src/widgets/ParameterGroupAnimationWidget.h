@@ -5,16 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_PARAMETERGROUPANIMATIONWIDGET_INCLUDED
-#define MEGAMOL_GUI_PARAMETERGROUPANIMATIONWIDGET_INCLUDED
 #pragma once
 
 
 #include "AbstractParameterGroupWidget.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** ************************************************************************
@@ -43,7 +40,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_PARAMETERGROUPANIMATIONWIDGET_INCLUDED
+} // namespace megamol::gui

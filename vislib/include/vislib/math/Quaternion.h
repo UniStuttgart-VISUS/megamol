@@ -5,11 +5,7 @@
  */
 
 
-#ifndef VISLIB_QUATERNION_H_INCLUDED
-#define VISLIB_QUATERNION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/math/AbstractQuaternion.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * A quaternion.
@@ -31,7 +26,7 @@ public:
     /**
      * Create a new quaternion (<0, 0, 0>, 1).
      */
-    inline Quaternion(void) {
+    inline Quaternion() {
         this->components[Super::IDX_X] = this->components[Super::IDX_Y] = this->components[Super::IDX_Z] =
             static_cast<T>(0);
         this->components[Super::IDX_W] = static_cast<T>(1);
@@ -89,7 +84,7 @@ public:
     explicit Quaternion(const AbstractQuaternion<Tp, Sp>& rhs);
 
     /** Dtor. */
-    ~Quaternion(void);
+    ~Quaternion();
 
     /**
      * Assignment.
@@ -140,13 +135,11 @@ Quaternion<T>::Quaternion(const AbstractQuaternion<Tp, Sp>& rhs) {
  * vislib::math::Quaternion<T>::~Quaternion
  */
 template<class T>
-Quaternion<T>::~Quaternion(void) {}
+Quaternion<T>::~Quaternion() {}
 
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_QUATERNION_H_INCLUDED */

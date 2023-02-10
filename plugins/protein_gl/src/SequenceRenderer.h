@@ -6,11 +6,7 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED
-#define MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 //#define USE_SIMPLE_FONT
 
@@ -31,8 +27,7 @@
 #include "protein_calls/ResidueSelectionCall.h"
 #include <glowl/GLSLProgram.hpp>
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 class SequenceRenderer : public megamol::mmstd_gl::Renderer2DModuleGL {
 public:
@@ -41,7 +36,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SequenceRenderer";
     }
 
@@ -50,7 +45,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers sequence renderings.";
     }
 
@@ -59,15 +54,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    SequenceRenderer(void);
+    SequenceRenderer();
 
     /** dtor */
-    virtual ~SequenceRenderer(void) override;
+    ~SequenceRenderer() override;
 
 protected:
     /**
@@ -75,12 +70,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void) override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void) override;
+    void release() override;
 
     /**
      * Callback for mouse events (move, press, and release)
@@ -89,7 +84,7 @@ protected:
      * @param y The y coordinate of the mouse in world space
      * @param flags The mouse flags
      */
-    virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags) override;
+    bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags) override;
 
     /**
      * Prepares the data for rendering.
@@ -114,7 +109,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
+    bool GetExtents(mmstd_gl::CallRender2DGL& call) override;
 
     bool GetExtentsSequence(mmstd_gl::CallRender2DGL& call);
 
@@ -126,7 +121,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender2DGL& call) override;
+    bool Render(mmstd_gl::CallRender2DGL& call) override;
 
     bool RenderSequence(mmstd_gl::CallRender2DGL& call);
 
@@ -221,7 +216,4 @@ private:
     protein_calls::ResidueSelectionCall* resSelectionCall;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
-
-#endif // MEGAMOLPROTEIN_SEQUENCERENDERER_H_INCLUDED
+} // namespace megamol::protein_gl

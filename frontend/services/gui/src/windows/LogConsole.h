@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_LOGCONSOLE_H_INCLUDED
-#define MEGAMOL_GUI_LOGCONSOLE_H_INCLUDED
 #pragma once
 
 
@@ -16,8 +14,7 @@
 #include "widgets/PopUps.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /* ************************************************************************
@@ -112,7 +109,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_LOGCONSOLE_H_INCLUDED
+} // namespace megamol::gui

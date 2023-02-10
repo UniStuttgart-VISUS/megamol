@@ -3,11 +3,7 @@
  * Copyright (C) 2006-2016 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef MMMOLMAPPLG_OCTREE_H_INCLUDED
-#define MMMOLMAPPLG_OCTREE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "Types.h"
 #include <vector>
@@ -153,5 +149,3 @@ private:
 
 } /* end namespace molecularmaps */
 } /* end namespace megamol */
-
-#endif

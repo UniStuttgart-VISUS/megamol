@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
-#define MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
 #pragma once
 
 
@@ -21,8 +19,7 @@
 #include "cinematic/Keyframe.h"
 
 
-namespace megamol {
-namespace cinematic {
+namespace megamol::cinematic {
 static inline vislib::math::Vector<float, 3> glm_to_vislib_vector(glm::vec3 v) {
     return vislib::math::Vector<float, 3>(v.x, v.y, v.z);
 }
@@ -47,7 +44,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "KeyframeKeeper";
     }
 
@@ -56,29 +53,29 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Manages keyframes";
     }
 
     /** Ctor */
-    KeyframeKeeper(void);
+    KeyframeKeeper();
 
     /** Dtor */
-    virtual ~KeyframeKeeper(void);
+    ~KeyframeKeeper() override;
 
     /**
      *
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
 protected:
     /** create */
-    virtual bool create(void);
+    bool create() override;
 
     /** release */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**********************************************************************
@@ -181,15 +178,15 @@ private:
 
     bool deleteKeyframe(Keyframe kf, bool add_undo);
 
-    bool loadKeyframes(void);
+    bool loadKeyframes();
 
-    bool saveKeyframes(void);
+    bool saveKeyframes();
 
     void refreshInterpolCamPos(unsigned int s);
 
     void updateEditParameters(Keyframe kf);
 
-    void setSameSpeed(void);
+    void setSameSpeed();
 
     void linearizeSimTangent(Keyframe kf);
 
@@ -197,9 +194,9 @@ private:
 
     void snapKeyframe2SimFrame(Keyframe& inout_kf);
 
-    bool undoAction(void);
+    bool undoAction();
 
-    bool redoAction(void);
+    bool redoAction();
 
     bool addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf, Keyframe prev_kf, glm::vec3 first_controlpoint,
         glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint, glm::vec3 previous_last_controlpoint);
@@ -268,7 +265,4 @@ private:
 typedef core::factories::CallAutoDescription<KeyframeKeeper> KeyframeKeeperDescription;
 
 
-} /* end namespace cinematic */
-} /* end namespace megamol */
-
-#endif // MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
+} // namespace megamol::cinematic

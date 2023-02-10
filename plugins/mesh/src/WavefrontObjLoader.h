@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef WAVEFRONT_OBJ_LOADER_H_INCLUDED
-#define WAVEFRONT_OBJ_LOADER_H_INCLUDED
+#pragma once
 
 #include "mesh/AbstractMeshDataSource.h"
 #include "mesh/MeshCalls.h"
@@ -17,8 +16,7 @@
 
 #include "tiny_obj_loader.h"
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 
 class WavefrontObjLoader : public AbstractMeshDataSource {
 public:
@@ -27,7 +25,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "WavefrontObjLoader";
     }
 
@@ -36,7 +34,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source for simply loading a wavefront obj file from disk";
     }
 
@@ -45,12 +43,12 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     WavefrontObjLoader();
-    ~WavefrontObjLoader();
+    ~WavefrontObjLoader() override;
 
 protected:
     /**
@@ -58,7 +56,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create(void);
+    bool create() override;
 
     /**
      * Gets the data from the source.
@@ -67,14 +65,14 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool getMeshDataCallback(core::Call& caller);
+    bool getMeshDataCallback(core::Call& caller) override;
 
-    bool getMeshMetaDataCallback(core::Call& caller);
+    bool getMeshMetaDataCallback(core::Call& caller) override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
 private:
     struct TinyObjModel {
@@ -119,8 +117,4 @@ private:
     core::param::ParamSlot m_filename_slot;
 };
 
-} // namespace mesh
-} // namespace megamol
-
-
-#endif // !#ifndef WAVEFRONT_OBJ_LOADER_H_INCLUDED
+} // namespace megamol::mesh

@@ -9,21 +9,21 @@
 namespace megamol::datatools::clustering {
 class ParticleIColClustering : public AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleIColClustering";
     }
 
-    static const char* Description(void) {
+    static const char* Description() {
         return "Clusters particles according to position and ICol";
     }
 
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    ParticleIColClustering(void);
+    ParticleIColClustering();
 
-    virtual ~ParticleIColClustering(void);
+    ~ParticleIColClustering() override;
 
 protected:
     bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;

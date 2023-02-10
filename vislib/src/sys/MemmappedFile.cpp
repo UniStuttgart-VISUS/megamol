@@ -24,7 +24,7 @@
 /*
  * vislib::sys::MemmappedFile::MemmappedFile
  */
-vislib::sys::MemmappedFile::MemmappedFile(void)
+vislib::sys::MemmappedFile::MemmappedFile()
 #ifdef _WIN32
         : File()
         , viewStart(0)
@@ -40,7 +40,7 @@ vislib::sys::MemmappedFile::MemmappedFile(void)
 /*
  * vislib::sys::MemmappedFile::~MemmappedFile
  */
-vislib::sys::MemmappedFile::~MemmappedFile(void) {
+vislib::sys::MemmappedFile::~MemmappedFile() {
     this->Close(); // Close file here (vtable issue)
 }
 
@@ -189,7 +189,7 @@ inline vislib::sys::File::FileSize vislib::sys::MemmappedFile::AlignPosition(vis
 /*
  * vislib::sys::MemmappedFile::Close
  */
-void vislib::sys::MemmappedFile::Close(void) {
+void vislib::sys::MemmappedFile::Close() {
     this->Flush();
     this->SafeUnmapView();
 #ifdef _WIN32
@@ -220,7 +220,7 @@ void vislib::sys::MemmappedFile::Close(void) {
 /*
  * vislib::sys::MemmappedFile::Flush
  */
-void vislib::sys::MemmappedFile::Flush(void) {
+void vislib::sys::MemmappedFile::Flush() {
     if (this->mappedData != NULL && this->viewDirty) {
 #ifdef _WIN32
         if (FlushViewOfFile(this->mappedData, 0) == 0) {
@@ -242,7 +242,7 @@ void vislib::sys::MemmappedFile::Flush(void) {
 /*
  * vislib::sys::MemmappedFile::GetSize
  */
-vislib::sys::File::FileSize vislib::sys::MemmappedFile::GetSize(void) const {
+vislib::sys::File::FileSize vislib::sys::MemmappedFile::GetSize() const {
 #ifdef _WIN32
     if (this->handle != INVALID_HANDLE_VALUE) {
 #else  /* _WIN32 */
@@ -500,7 +500,7 @@ vislib::sys::File::FileSize vislib::sys::MemmappedFile::Seek(
 /*
  * vislib::sys::MemmappedFile::Tell
  */
-vislib::sys::File::FileSize vislib::sys::MemmappedFile::Tell(void) const {
+vislib::sys::File::FileSize vislib::sys::MemmappedFile::Tell() const {
 #ifdef _WIN32
     if (this->handle != INVALID_HANDLE_VALUE) {
 #else  /* _WIN32 */

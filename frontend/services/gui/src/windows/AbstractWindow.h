@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_ABSTRACTWINDOW_INCLUDED
-#define MEGAMOL_GUI_ABSTRACTWINDOW_INCLUDED
 #pragma once
 
 
@@ -24,8 +22,7 @@
 #include "FrontendResourcesMap.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 /** ************************************************************************
  * This class holds the configuration of a GUI window
@@ -154,7 +151,4 @@ private:
     VolatileDrawCallback_t volatile_draw_callback;
 };
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_ABSTRACTWINDOW_INCLUDED
+} // namespace megamol::gui

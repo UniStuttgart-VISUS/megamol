@@ -10,7 +10,7 @@
 
 using namespace megamol::ospray;
 
-OSPRayGeometryTest::OSPRayGeometryTest(void) : AbstractOSPRayStructure() {}
+OSPRayGeometryTest::OSPRayGeometryTest() : AbstractOSPRayStructure() {}
 
 
 bool OSPRayGeometryTest::readData(megamol::core::Call& call) {

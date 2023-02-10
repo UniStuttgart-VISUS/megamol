@@ -22,7 +22,7 @@ using namespace megamol::core;
 /*
  * MMPGDWriter::MMPGDWriter
  */
-MMPGDWriter::MMPGDWriter(void)
+MMPGDWriter::MMPGDWriter()
         : AbstractDataWriter()
         , filenameSlot("filename", "The path to the MMPGD file to be written")
         , dataSlot("data", "The slot requesting the data to be written") {
@@ -39,7 +39,7 @@ MMPGDWriter::MMPGDWriter(void)
 /*
  * MMPGDWriter::~MMPGDWriter
  */
-MMPGDWriter::~MMPGDWriter(void) {
+MMPGDWriter::~MMPGDWriter() {
     this->Release();
 }
 
@@ -47,7 +47,7 @@ MMPGDWriter::~MMPGDWriter(void) {
 /*
  * MMPGDWriter::create
  */
-bool MMPGDWriter::create(void) {
+bool MMPGDWriter::create() {
     return true;
 }
 
@@ -55,13 +55,13 @@ bool MMPGDWriter::create(void) {
 /*
  * MMPGDWriter::release
  */
-void MMPGDWriter::release(void) {}
+void MMPGDWriter::release() {}
 
 
 /*
  * MMPGDWriter::run
  */
-bool MMPGDWriter::run(void) {
+bool MMPGDWriter::run() {
     using megamol::core::utility::log::Log;
     auto filename = this->filenameSlot.Param<core::param::FilePathParam>()->Value();
     if (filename.empty()) {

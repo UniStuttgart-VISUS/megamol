@@ -7,11 +7,7 @@
  */
 
 
-#ifndef MEGAMOL_PROTEIN_CALL_DIAGRAMCALL_H_INCLUDED
-#define MEGAMOL_PROTEIN_CALL_DIAGRAMCALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -23,8 +19,7 @@
 #include "vislib/math/Vector.h"
 
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 /**
  * Base class for graph calls and data interfaces.
@@ -549,7 +544,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DiagramCall";
     }
 
@@ -558,7 +553,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to get diagram data";
     }
 
@@ -570,7 +565,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 1;
     }
 
@@ -586,10 +581,10 @@ public:
     }
 
     /** Ctor. */
-    DiagramCall(void);
+    DiagramCall();
 
     /** Dtor. */
-    virtual ~DiagramCall(void);
+    ~DiagramCall() override;
 
     /**
      * Add a guide to guides.
@@ -690,7 +685,4 @@ private:
 /** Description class typedef */
 typedef megamol::core::factories::CallAutoDescription<DiagramCall> DiagramCallDescription;
 
-} /* end namespace protein_calls */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_PROTEIN_CALL_DIAGRAMCALL_H_INCLUDED */
+} // namespace megamol::protein_calls

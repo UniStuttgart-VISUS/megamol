@@ -37,7 +37,7 @@ public:
     CallerSlot(const vislib::StringA& name, const vislib::StringA& desc);
 
     /** Dtor. */
-    virtual ~CallerSlot();
+    ~CallerSlot() override;
 
     /**
      * Calls the call function 'func'.
@@ -185,23 +185,12 @@ public:
     /**
      * Clears the cleanup mark for this and all dependent objects.
      */
-    virtual void ClearCleanupMark();
+    void ClearCleanupMark() override;
 
     /**
      * Disconnects calls from all slots which are marked for cleanup.
      */
-    virtual void DisconnectCalls();
-
-    /**
-     * Answers whether the given parameter is relevant for this view.
-     *
-     * @param searched The already searched objects for cycle detection.
-     * @param param The parameter to test.
-     *
-     * @return 'true' if 'param' is relevant, 'false' otherwise.
-     */
-    bool IsParamRelevant(vislib::SingleLinkedList<const AbstractNamedObject*>& searched,
-        const std::shared_ptr<param::AbstractParam>& param) const override;
+    void DisconnectCalls() override;
 
     /**
      * TODO: Document me

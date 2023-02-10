@@ -80,7 +80,7 @@ while read -r file; do
   fi
 
   # Check if file contains CRLF line endings
-  fileinfo=$(file "$file")
+  fileinfo=$(file -k "$file")
   if [[ $fileinfo == *"CRLF"* ]]; then
     if [[ $1 == "fix" ]]; then
       sed -i 's/\r$//' "$file"

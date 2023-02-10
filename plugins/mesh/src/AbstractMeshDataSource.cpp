@@ -18,7 +18,7 @@ megamol::mesh::AbstractMeshDataSource::~AbstractMeshDataSource() {
     this->Release();
 }
 
-bool megamol::mesh::AbstractMeshDataSource::create(void) {
+bool megamol::mesh::AbstractMeshDataSource::create() {
     // default empty collection
     m_mesh_access_collection.first = std::make_shared<MeshDataAccessCollection>();
     return true;

@@ -11,7 +11,7 @@
 /*
  * vislib::graphics::ColourRGBAu8::ColourRGBAu8
  */
-vislib::graphics::ColourRGBAu8::ColourRGBAu8(void) {
+vislib::graphics::ColourRGBAu8::ColourRGBAu8() {
     this->comp[0] = 0;
     this->comp[1] = 0;
     this->comp[2] = 0;
@@ -41,7 +41,7 @@ vislib::graphics::ColourRGBAu8::ColourRGBAu8(const vislib::graphics::ColourRGBAu
 /*
  * vislib::graphics::ColourRGBAu8::~ColourRGBAu8
  */
-vislib::graphics::ColourRGBAu8::~ColourRGBAu8(void) {
+vislib::graphics::ColourRGBAu8::~ColourRGBAu8() {
     // Intentionally empty
 }
 

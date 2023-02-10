@@ -18,7 +18,7 @@ using namespace megamol;
 /*
  * datatools::DataSetTimeRewriteModule::DataSetTimeRewriteModule
  */
-datatools::DataSetTimeRewriteModule::DataSetTimeRewriteModule(void)
+datatools::DataSetTimeRewriteModule::DataSetTimeRewriteModule()
         : core::Module()
         , outDataSlot("outData", "The slot for publishing data to the writer")
         , inDataSlot("inData", "The slot for requesting data from the source")
@@ -51,7 +51,7 @@ datatools::DataSetTimeRewriteModule::DataSetTimeRewriteModule(void)
 /*
  * datatools::DataSetTimeRewriteModule::~DataSetTimeRewriteModule
  */
-datatools::DataSetTimeRewriteModule::~DataSetTimeRewriteModule(void) {
+datatools::DataSetTimeRewriteModule::~DataSetTimeRewriteModule() {
     this->Release(); // implicitly calls 'release'
 }
 
@@ -59,7 +59,7 @@ datatools::DataSetTimeRewriteModule::~DataSetTimeRewriteModule(void) {
 /*
  * datatools::DataSetTimeRewriteModule::create
  */
-bool datatools::DataSetTimeRewriteModule::create(void) {
+bool datatools::DataSetTimeRewriteModule::create() {
     auto const& pluginsRes = frontend_resources.get<frontend_resources::PluginsResource>();
     for (auto cd : pluginsRes.all_call_descriptions) {
         if (IsCallDescriptionCompatible(cd)) {
@@ -77,7 +77,7 @@ bool datatools::DataSetTimeRewriteModule::create(void) {
 /*
  * datatools::DataSetTimeRewriteModule::release
  */
-void datatools::DataSetTimeRewriteModule::release(void) {}
+void datatools::DataSetTimeRewriteModule::release() {}
 
 
 /*

@@ -2,8 +2,7 @@
 
 #include <vector>
 
-namespace megamol {
-namespace remote {
+namespace megamol::remote {
 enum class MessageType : unsigned char { NULL_MSG = 0u, PRJ_FILE_MSG, CAM_UPD_MSG, PARAM_UPD_MSG, HEAD_DISC_MSG };
 
 using Message_t = std::vector<char>;
@@ -68,5 +67,4 @@ constexpr size_t MessageHeaderSize = MessageIDSize + MessageTypeSize + MessageSi
 //}
 
 
-} // end namespace remote
-} // end namespace megamol
+} // namespace megamol::remote

@@ -8,11 +8,7 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCALLPLUGIN_VTKIMAGEDATA_H_INCLUDED
-#define MMPROTEINCALLPLUGIN_VTKIMAGEDATA_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 //#include "vislib_vector_typedefs.h"
 #include "vislib/math/Cuboid.h"
@@ -26,8 +22,7 @@ typedef vislib::math::Vector<float, 3> Vec3f;
 
 typedef unsigned int uint;
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 class VTKImageData {
 
@@ -1289,7 +1284,4 @@ private:
     vislib::Array<Piece> pieces; ///> The array of pieces of this data set
 };
 
-} // namespace protein_calls
-} // namespace megamol
-
-#endif // MMPROTEINCALLPLUGIN_VTKIMAGEDATA_H_INCLUDED
+} // namespace megamol::protein_calls

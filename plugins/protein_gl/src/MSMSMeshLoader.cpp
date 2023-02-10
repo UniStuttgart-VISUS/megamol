@@ -33,7 +33,7 @@ using namespace megamol::protein_gl;
 /*
  * MSMSMeshLoader::MSMSMeshLoader
  */
-MSMSMeshLoader::MSMSMeshLoader(void)
+MSMSMeshLoader::MSMSMeshLoader()
         : core::Module()
         , bbox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
         , datahash(0)
@@ -131,7 +131,7 @@ MSMSMeshLoader::MSMSMeshLoader(void)
 /*
  * MSMSMeshLoader::~MSMSMeshLoader
  */
-MSMSMeshLoader::~MSMSMeshLoader(void) {
+MSMSMeshLoader::~MSMSMeshLoader() {
     this->Release();
 }
 
@@ -139,7 +139,7 @@ MSMSMeshLoader::~MSMSMeshLoader(void) {
 /*
  * MSMSMeshLoader::create
  */
-bool MSMSMeshLoader::create(void) {
+bool MSMSMeshLoader::create() {
     // intentionally empty
     return true;
 }
@@ -148,7 +148,7 @@ bool MSMSMeshLoader::create(void) {
 /*
  * MSMSMeshLoader::release
  */
-void MSMSMeshLoader::release(void) {
+void MSMSMeshLoader::release() {
     // TODO clear data
 }
 

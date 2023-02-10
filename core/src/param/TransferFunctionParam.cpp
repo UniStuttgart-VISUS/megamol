@@ -44,7 +44,7 @@ void TransferFunctionParam::SetValue(const std::string& v, bool setDirty) {
 }
 
 
-std::string TransferFunctionParam::ValueString(void) const {
+std::string TransferFunctionParam::ValueString() const {
     return this->val;
 }
 

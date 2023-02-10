@@ -21,7 +21,7 @@ namespace megamol::geocalls {
 /*
  * megamol::pcl::CallPcd::FunctionCount
  */
-unsigned int VolumetricDataCall::FunctionCount(void) {
+unsigned int VolumetricDataCall::FunctionCount() {
     return STATIC_ARRAY_COUNT(VolumetricDataCall::FUNCTIONS);
 }
 
@@ -113,7 +113,7 @@ const unsigned int VolumetricDataCall::IDX_TRY_GET_DATA = 5;
 /*
  * VolumetricDataCall::VolumetricDataCall
  */
-VolumetricDataCall::VolumetricDataCall(void) : data(nullptr), metadata(nullptr), vram_volume_name(0) {}
+VolumetricDataCall::VolumetricDataCall() : data(nullptr), metadata(nullptr), vram_volume_name(0) {}
 
 
 /*
@@ -130,13 +130,13 @@ VolumetricDataCall::VolumetricDataCall(const VolumetricDataCall& rhs)
 /*
  * VolumetricDataCall::~VolumetricDataCall
  */
-VolumetricDataCall::~VolumetricDataCall(void) {}
+VolumetricDataCall::~VolumetricDataCall() {}
 
 
 /*
  * VolumetricDataCall::GetComponents
  */
-size_t VolumetricDataCall::GetComponents(void) const {
+size_t VolumetricDataCall::GetComponents() const {
     return (this->metadata != nullptr) ? this->metadata->Components : 0;
 }
 
@@ -144,7 +144,7 @@ size_t VolumetricDataCall::GetComponents(void) const {
 /*
  * VolumetricDataCall::GetFrames
  */
-size_t VolumetricDataCall::GetFrames(void) const {
+size_t VolumetricDataCall::GetFrames() const {
     return (this->metadata != nullptr) ? this->metadata->NumberOfFrames : 0;
 }
 
@@ -152,7 +152,7 @@ size_t VolumetricDataCall::GetFrames(void) const {
 /*
  * VolumetricDataCall::GetGridType
  */
-VolumetricDataCall::GridType VolumetricDataCall::GetGridType(void) const {
+VolumetricDataCall::GridType VolumetricDataCall::GetGridType() const {
     return (this->metadata != nullptr) ? this->metadata->GridType : GridType::NONE;
 }
 
@@ -171,7 +171,7 @@ const size_t VolumetricDataCall::GetResolution(const int axis) const {
 /*
  * VolumetricDataCall::GetScalarLength
  */
-size_t VolumetricDataCall::GetScalarLength(void) const {
+size_t VolumetricDataCall::GetScalarLength() const {
     return (this->metadata != nullptr) ? this->metadata->ScalarLength : 0;
 }
 
@@ -179,7 +179,7 @@ size_t VolumetricDataCall::GetScalarLength(void) const {
 /*
  * VolumetricDataCall::GetScalarType
  */
-VolumetricDataCall::ScalarType VolumetricDataCall::GetScalarType(void) const {
+VolumetricDataCall::ScalarType VolumetricDataCall::GetScalarType() const {
     return (this->metadata != nullptr) ? this->metadata->ScalarType : ScalarType::UNKNOWN;
 }
 
@@ -198,7 +198,7 @@ const float* VolumetricDataCall::GetSliceDistances(const int axis) const {
 /*
  * VolumetricDataCall::GetVoxelsPerFrame
  */
-size_t VolumetricDataCall::GetVoxelsPerFrame(void) const {
+size_t VolumetricDataCall::GetVoxelsPerFrame() const {
     if (this->metadata == nullptr) {
         return 0;
     } else {

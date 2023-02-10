@@ -30,7 +30,7 @@ static vislib::graphics::BitmapCodecCollection __vl_bitmapcodeccollection_defcol
 /*
  * vislib::graphics::BitmapCodecCollection::BuildDefaultCollection
  */
-vislib::graphics::BitmapCodecCollection vislib::graphics::BitmapCodecCollection::BuildDefaultCollection(void) {
+vislib::graphics::BitmapCodecCollection vislib::graphics::BitmapCodecCollection::BuildDefaultCollection() {
     BitmapCodecCollection defCol;
 
     //
@@ -47,7 +47,7 @@ vislib::graphics::BitmapCodecCollection vislib::graphics::BitmapCodecCollection:
 /*
  * vislib::graphics::BitmapCodecCollection::DefaultCollection
  */
-vislib::graphics::BitmapCodecCollection& vislib::graphics::BitmapCodecCollection::DefaultCollection(void) {
+vislib::graphics::BitmapCodecCollection& vislib::graphics::BitmapCodecCollection::DefaultCollection() {
     return __vl_bitmapcodeccollection_defcol;
 }
 
@@ -55,7 +55,7 @@ vislib::graphics::BitmapCodecCollection& vislib::graphics::BitmapCodecCollection
 /*
  * vislib::graphics::BitmapCodecCollection::BitmapCodecCollection
  */
-vislib::graphics::BitmapCodecCollection::BitmapCodecCollection(void) : codecs() {
+vislib::graphics::BitmapCodecCollection::BitmapCodecCollection() : codecs() {
     // intentionally empty
 }
 
@@ -72,7 +72,7 @@ vislib::graphics::BitmapCodecCollection::BitmapCodecCollection(const vislib::gra
 /*
  * vislib::graphics::BitmapCodecCollection::~BitmapCodecCollection
  */
-vislib::graphics::BitmapCodecCollection::~BitmapCodecCollection(void) {
+vislib::graphics::BitmapCodecCollection::~BitmapCodecCollection() {
     this->codecs.Clear();
 }
 

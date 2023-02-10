@@ -50,7 +50,7 @@ public:
     ClipPlane();
 
     /** Dtor. */
-    virtual ~ClipPlane();
+    ~ClipPlane() override;
 
 private:
     /**
@@ -58,12 +58,12 @@ private:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release();
+    void release() override;
 
     /**
      * Callback called when the clipping plane is requested.

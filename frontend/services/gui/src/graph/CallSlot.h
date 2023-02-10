@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GRAPH_CALLSLOT_H_INCLUDED
-#define MEGAMOL_GUI_GRAPH_CALLSLOT_H_INCLUDED
 #pragma once
 
 
@@ -14,8 +12,7 @@
 #include "widgets/HoverToolTip.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 // Forward declarations
@@ -126,7 +123,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GRAPH_CALLSLOT_H_INCLUDED
+} // namespace megamol::gui

@@ -123,7 +123,7 @@ const vislib::net::IPAddress6& vislib::net::IPAgnosticAddress::NONE6 = vislib::n
 /*
  * vislib::net::IPAgnosticAddress::IPAgnosticAddress
  */
-vislib::net::IPAgnosticAddress::IPAgnosticAddress(void) : v4(NULL), v6(NULL) {
+vislib::net::IPAgnosticAddress::IPAgnosticAddress() : v4(NULL), v6(NULL) {
     // Nothing else to do.
 }
 
@@ -193,7 +193,7 @@ vislib::net::IPAgnosticAddress::IPAgnosticAddress(const IPAgnosticAddress& rhs) 
 /*
  * vislib::net::IPAgnosticAddress::~IPAgnosticAddress
  */
-vislib::net::IPAgnosticAddress::~IPAgnosticAddress(void) {
+vislib::net::IPAgnosticAddress::~IPAgnosticAddress() {
     SAFE_DELETE(this->v4);
     SAFE_DELETE(this->v6);
 }
@@ -202,7 +202,7 @@ vislib::net::IPAgnosticAddress::~IPAgnosticAddress(void) {
 /*
  * vislib::net::IPAgnosticAddress::GetAddressFamily
  */
-vislib::net::IPAgnosticAddress::AddressFamily vislib::net::IPAgnosticAddress::GetAddressFamily(void) const {
+vislib::net::IPAgnosticAddress::AddressFamily vislib::net::IPAgnosticAddress::GetAddressFamily() const {
 
     if (this->IsV4()) {
         return FAMILY_INET;
@@ -236,7 +236,7 @@ vislib::net::IPAgnosticAddress vislib::net::IPAgnosticAddress::GetPrefix(const U
 /*
  * vislib::net::IPAgnosticAddress::ToStringA
  */
-vislib::StringA vislib::net::IPAgnosticAddress::ToStringA(void) const {
+vislib::StringA vislib::net::IPAgnosticAddress::ToStringA() const {
 
     if (this->IsV4()) {
         return this->v4->ToStringA();
@@ -253,7 +253,7 @@ vislib::StringA vislib::net::IPAgnosticAddress::ToStringA(void) const {
 /*
  * vislib::net::IPAgnosticAddress::ToStringW
  */
-vislib::StringW vislib::net::IPAgnosticAddress::ToStringW(void) const {
+vislib::StringW vislib::net::IPAgnosticAddress::ToStringW() const {
 
     if (this->IsV4()) {
         return this->v4->ToStringW();
@@ -431,7 +431,7 @@ bool vislib::net::IPAgnosticAddress::operator==(const struct in6_addr& rhs) cons
 /*
  * vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress
  */
-vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress(void) const {
+vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress() const {
 
     if (this->IsV4()) {
         return *(this->v4);
@@ -450,7 +450,7 @@ vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress(void) const {
 /*
  * vislib::net::IPAgnosticAddress::operator const vislib::net::IPAddress *
  */
-vislib::net::IPAgnosticAddress::operator const vislib::net::IPAddress*(void) const {
+vislib::net::IPAgnosticAddress::operator const vislib::net::IPAddress*() const {
 
     if (this->IsV4()) {
         return this->v4;
@@ -465,7 +465,7 @@ vislib::net::IPAgnosticAddress::operator const vislib::net::IPAddress*(void) con
 /*
  * vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress *
  */
-vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress*(void) {
+vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress*() {
 
     if (this->IsV4()) {
         return this->v4;
@@ -480,7 +480,7 @@ vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress*(void) {
 /*
  * vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress6
  */
-vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress6(void) const {
+vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress6() const {
 
     if (this->IsV4()) {
         return IPAddress6(*(this->v4));
@@ -497,7 +497,7 @@ vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress6(void) const {
 /*
  * vislib::net::IPAgnosticAddress::operator const vislib::net::IPAddress6 *
  */
-vislib::net::IPAgnosticAddress::operator const vislib::net::IPAddress6*(void) const {
+vislib::net::IPAgnosticAddress::operator const vislib::net::IPAddress6*() const {
 
     if (this->IsV6()) {
         return this->v6;
@@ -512,7 +512,7 @@ vislib::net::IPAgnosticAddress::operator const vislib::net::IPAddress6*(void) co
 /*
  * vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress6 *
  */
-vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress6*(void) {
+vislib::net::IPAgnosticAddress::operator vislib::net::IPAddress6*() {
 
     if (this->IsV6()) {
         return this->v6;

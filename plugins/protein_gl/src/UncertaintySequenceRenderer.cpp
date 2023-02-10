@@ -62,7 +62,7 @@ using core::utility::log::Log;
 /*
  * UncertaintySequenceRenderer::UncertaintySequenceRenderer (CTOR)
  */
-UncertaintySequenceRenderer::UncertaintySequenceRenderer(void)
+UncertaintySequenceRenderer::UncertaintySequenceRenderer()
         : Renderer2DModuleGL()
         , uncertaintyDataSlot(
               "uncertaintyDataSlot", "Connects the sequence diagram rendering with uncertainty data storage.")
@@ -329,7 +329,7 @@ UncertaintySequenceRenderer::UncertaintySequenceRenderer(void)
 /*
  * UncertaintySequenceRenderer::~UncertaintySequenceRenderer (DTOR)
  */
-UncertaintySequenceRenderer::~UncertaintySequenceRenderer(void) {
+UncertaintySequenceRenderer::~UncertaintySequenceRenderer() {
     this->Release(); // DON'T change !
 }
 
@@ -461,7 +461,7 @@ void UncertaintySequenceRenderer::calculateGeometryVertices(int samples) {
 /*
  * UncertaintySequenceRenderer::LoadShader
  */
-bool UncertaintySequenceRenderer::LoadShader(void) {
+bool UncertaintySequenceRenderer::LoadShader() {
     auto const shader_options =
         core::utility::make_path_shader_options(frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
 

@@ -8,8 +8,7 @@
 #include "glad/gl.h"
 #endif
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 bool PerformanceManager::Itimer::start(frame_type frame) {
     auto new_frame = false;
@@ -285,5 +284,4 @@ void PerformanceManager::endFrame() {
         subscriber(this_frame);
     }
 }
-} // namespace frontend_resources
-} // namespace megamol
+} // namespace megamol::frontend_resources

@@ -5,8 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 void MeshDataCall::set_data(const std::string& name, std::shared_ptr<data_set> data) {
     if (this->data_sets.find(name) == this->data_sets.end() || data != nullptr) {
         this->data_sets[name] = data;
@@ -58,5 +57,4 @@ std::vector<std::string> MeshDataCall::get_masks() const {
 
     return masks;
 }
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh

@@ -38,7 +38,7 @@ using namespace std::chrono;
 /*
  * ProteinExploder::ProteinExploder
  */
-ProteinExploder::ProteinExploder(void)
+ProteinExploder::ProteinExploder()
         : Module()
         , getDataSlot("getData", "Calls molecular data")
         , dataOutSlot("dataOut", "Provides the exploded molecular data")
@@ -142,21 +142,21 @@ ProteinExploder::ProteinExploder(void)
 /*
  * ProteinExploder::~ProteinExploder
  */
-ProteinExploder::~ProteinExploder(void) {
+ProteinExploder::~ProteinExploder() {
     this->Release();
 }
 
 /*
  * ProteinExploder::create
  */
-bool ProteinExploder::create(void) {
+bool ProteinExploder::create() {
     return true;
 }
 
 /*
  * ProteinExploder::release
  */
-void ProteinExploder::release(void) {
+void ProteinExploder::release() {
     if (this->atomPositions != NULL) {
         delete[] this->atomPositions;
         this->atomPositions = NULL;

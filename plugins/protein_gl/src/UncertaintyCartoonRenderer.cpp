@@ -44,7 +44,7 @@ const GLuint SSBObindingPoint = 2;
 /*
  * UncertaintyCartoonRenderer::UncertaintyCartoonRenderer (CTOR)
  */
-UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void)
+UncertaintyCartoonRenderer::UncertaintyCartoonRenderer()
         : Renderer3DModuleGL()
         , getPdbDataSlot("getPdbData", "Connects to the pdb data source.")
         , uncertaintyDataSlot(
@@ -240,14 +240,14 @@ UncertaintyCartoonRenderer::UncertaintyCartoonRenderer(void)
 /*
  * UncertaintyCartoonRenderer::~UncertaintyCartoonRenderer (DTOR)
  */
-UncertaintyCartoonRenderer::~UncertaintyCartoonRenderer(void) {
+UncertaintyCartoonRenderer::~UncertaintyCartoonRenderer() {
     this->Release(); // DON'T change !
 }
 
 /*
  * UncertaintyCartoonRenderer::loadTubeShader
  */
-bool UncertaintyCartoonRenderer::loadTubeShader(void) {
+bool UncertaintyCartoonRenderer::loadTubeShader() {
     try {
         auto const shdr_options = core::utility::make_path_shader_options(
             frontend_resources.get<megamol::frontend_resources::RuntimeConfig>());
@@ -275,7 +275,7 @@ bool UncertaintyCartoonRenderer::loadTubeShader(void) {
 /*
  * UncertaintyCartoonRenderer::create
  */
-bool UncertaintyCartoonRenderer::create(void) {
+bool UncertaintyCartoonRenderer::create() {
     using namespace vislib::sys;
     using namespace vislib_gl::graphics::gl;
 
@@ -306,7 +306,7 @@ bool UncertaintyCartoonRenderer::create(void) {
 /*
  * UncertaintyCartoonRenderer::release
  */
-void UncertaintyCartoonRenderer::release(void) {
+void UncertaintyCartoonRenderer::release() {
 
     glUnmapNamedBufferEXT(this->theSingleBuffer);
     for (auto& x : this->fences) {

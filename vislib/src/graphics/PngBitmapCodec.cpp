@@ -14,9 +14,7 @@ using namespace sg::graphics;
 using namespace vislib::graphics;
 
 
-namespace sg {
-namespace graphics {
-namespace pngutil {
+namespace sg::graphics::pngutil {
 
 /**
  * Utility buffer to read a png from memory
@@ -94,15 +92,13 @@ void pngFlushData(png_structp png_ptr) {
 }
 
 
-} /* end namespace pngutil */
-} /* end namespace graphics */
-} /* end namespace sg */
+} // namespace sg::graphics::pngutil
 
 
 /*
  * PngBitmapCodec::PngBitmapCodec
  */
-PngBitmapCodec::PngBitmapCodec(void) : AbstractBitmapCodec() {
+PngBitmapCodec::PngBitmapCodec() : AbstractBitmapCodec() {
     // intentionally empty
 }
 
@@ -110,7 +106,7 @@ PngBitmapCodec::PngBitmapCodec(void) : AbstractBitmapCodec() {
 /*
  * PngBitmapCodec::~PngBitmapCodec
  */
-PngBitmapCodec::~PngBitmapCodec(void) {
+PngBitmapCodec::~PngBitmapCodec() {
     // intentionally empty
 }
 
@@ -135,7 +131,7 @@ int PngBitmapCodec::AutoDetect(const void* mem, SIZE_T size) const {
 /*
  * PngBitmapCodec::CanAutoDetect
  */
-bool PngBitmapCodec::CanAutoDetect(void) const {
+bool PngBitmapCodec::CanAutoDetect() const {
     return true;
 }
 
@@ -143,7 +139,7 @@ bool PngBitmapCodec::CanAutoDetect(void) const {
 /*
  * PngBitmapCodec::FileNameExtsA
  */
-const char* PngBitmapCodec::FileNameExtsA(void) const {
+const char* PngBitmapCodec::FileNameExtsA() const {
     return ".png";
 }
 
@@ -151,7 +147,7 @@ const char* PngBitmapCodec::FileNameExtsA(void) const {
 /*
  * PngBitmapCodec::FileNameExtsW
  */
-const wchar_t* PngBitmapCodec::FileNameExtsW(void) const {
+const wchar_t* PngBitmapCodec::FileNameExtsW() const {
     return L".png";
 }
 
@@ -159,7 +155,7 @@ const wchar_t* PngBitmapCodec::FileNameExtsW(void) const {
 /*
  * PngBitmapCodec::NameA
  */
-const char* PngBitmapCodec::NameA(void) const {
+const char* PngBitmapCodec::NameA() const {
     return "Portable Network Graphics";
 }
 
@@ -167,7 +163,7 @@ const char* PngBitmapCodec::NameA(void) const {
 /*
  * PngBitmapCodec::NameW
  */
-const wchar_t* PngBitmapCodec::NameW(void) const {
+const wchar_t* PngBitmapCodec::NameW() const {
     return L"Portable Network Graphics";
 }
 
@@ -262,7 +258,7 @@ bool PngBitmapCodec::loadFromMemory(const void* mem, SIZE_T size) {
 /*
  * PngBitmapCodec::loadFromMemoryImplemented
  */
-bool PngBitmapCodec::loadFromMemoryImplemented(void) const {
+bool PngBitmapCodec::loadFromMemoryImplemented() const {
     return true;
 }
 
@@ -328,6 +324,6 @@ bool PngBitmapCodec::saveToStream(vislib::sys::File& stream) const {
 /*
  * PngBitmapCodec::saveToStreamImplemented
  */
-bool PngBitmapCodec::saveToStreamImplemented(void) const {
+bool PngBitmapCodec::saveToStreamImplemented() const {
     return true;
 }

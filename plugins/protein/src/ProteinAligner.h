@@ -5,8 +5,7 @@
  * Author: Karsten Schatz
  * All rights reserved.
  */
-#ifndef MMPROTEINPLUGIN_PROTEINALIGNER_H_INCLUDED
-#define MMPROTEINPLUGIN_PROTEINALIGNER_H_INCLUDED
+#pragma once
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -18,8 +17,7 @@
 #include "vislib/math/Point.h"
 #include <glm/glm.hpp>
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class ProteinAligner : public core::Module {
 public:
@@ -28,7 +26,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ProteinAligner";
     }
 
@@ -37,7 +35,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Aligns two given proteins by performing a RMSD calculation. The input protein is aligned against a "
                "second reference protein";
     }
@@ -47,15 +45,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    ProteinAligner(void);
+    ProteinAligner();
 
     /** Dtor. */
-    virtual ~ProteinAligner(void);
+    ~ProteinAligner() override;
 
 protected:
     /**
@@ -63,12 +61,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Call for get data.
@@ -117,7 +115,4 @@ private:
     vislib::math::Cuboid<float> boundingBox;
 };
 
-} // namespace protein
-} // namespace megamol
-
-#endif /* MMPROTEINPLUGIN_PROTEINALIGNER_H_INCLUDED */
+} // namespace megamol::protein

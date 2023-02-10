@@ -15,26 +15,26 @@
 namespace megamol::trisoup_gl {
 class ModernTrisoupRenderer : public mmstd_gl::Renderer3DModuleGL {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ModernTrisoupRenderer";
     }
 
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for tri-mesh data";
     }
 
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    ModernTrisoupRenderer(void);
-    virtual ~ModernTrisoupRenderer(void);
+    ModernTrisoupRenderer();
+    ~ModernTrisoupRenderer() override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool create() override;
+    void release() override;
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     void updateLights(core::view::light::CallLight* lightCall, glm::vec3 camDir);

@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef FILTER_BY_PROBE_H_INCLUDED
-#define FILTER_BY_PROBE_H_INCLUDED
+#pragma once
 
 #include "mmcore/CallerSlot.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
@@ -125,5 +124,3 @@ private:
 
 } // namespace probe_gl
 } // namespace megamol
-
-#endif

@@ -120,7 +120,7 @@ typedef struct tagRGBQUAD {
 /*
  * vislib::graphics::BmpBitmapCodec::BmpBitmapCodec
  */
-vislib::graphics::BmpBitmapCodec::BmpBitmapCodec(void) : AbstractBitmapCodec() {
+vislib::graphics::BmpBitmapCodec::BmpBitmapCodec() : AbstractBitmapCodec() {
     // Intentionally empty
 }
 
@@ -128,7 +128,7 @@ vislib::graphics::BmpBitmapCodec::BmpBitmapCodec(void) : AbstractBitmapCodec() {
 /*
  * vislib::graphics::BmpBitmapCodec::~BmpBitmapCodec
  */
-vislib::graphics::BmpBitmapCodec::~BmpBitmapCodec(void) {
+vislib::graphics::BmpBitmapCodec::~BmpBitmapCodec() {
     // Intentionally empty
 }
 
@@ -149,7 +149,7 @@ int vislib::graphics::BmpBitmapCodec::AutoDetect(const void* mem, SIZE_T size) c
 /*
  * vislib::graphics::BmpBitmapCodec::CanAutoDetect
  */
-bool vislib::graphics::BmpBitmapCodec::CanAutoDetect(void) const {
+bool vislib::graphics::BmpBitmapCodec::CanAutoDetect() const {
     return true;
 }
 
@@ -157,7 +157,7 @@ bool vislib::graphics::BmpBitmapCodec::CanAutoDetect(void) const {
 /*
  * vislib::graphics::BmpBitmapCodec::FileNameExtsA
  */
-const char* vislib::graphics::BmpBitmapCodec::FileNameExtsA(void) const {
+const char* vislib::graphics::BmpBitmapCodec::FileNameExtsA() const {
     return ".bmp";
 }
 
@@ -165,7 +165,7 @@ const char* vislib::graphics::BmpBitmapCodec::FileNameExtsA(void) const {
 /*
  * vislib::graphics::BmpBitmapCodec::FileNameExtsW
  */
-const wchar_t* vislib::graphics::BmpBitmapCodec::FileNameExtsW(void) const {
+const wchar_t* vislib::graphics::BmpBitmapCodec::FileNameExtsW() const {
     return L".bmp";
 }
 
@@ -173,7 +173,7 @@ const wchar_t* vislib::graphics::BmpBitmapCodec::FileNameExtsW(void) const {
 /*
  * vislib::graphics::BmpBitmapCodec::NameA
  */
-const char* vislib::graphics::BmpBitmapCodec::NameA(void) const {
+const char* vislib::graphics::BmpBitmapCodec::NameA() const {
     return "Windows Bitmap";
 }
 
@@ -181,7 +181,7 @@ const char* vislib::graphics::BmpBitmapCodec::NameA(void) const {
 /*
  * vislib::graphics::PpmBitmapCodec::NameW
  */
-const wchar_t* vislib::graphics::BmpBitmapCodec::NameW(void) const {
+const wchar_t* vislib::graphics::BmpBitmapCodec::NameW() const {
     return L"Windows Bitmap";
 }
 
@@ -304,7 +304,7 @@ bool vislib::graphics::BmpBitmapCodec::loadFromMemory(const void* mem, SIZE_T si
 /*
  * vislib::graphics::BmpBitmapCodec::loadFromMemoryImplemented
  */
-bool vislib::graphics::BmpBitmapCodec::loadFromMemoryImplemented(void) const {
+bool vislib::graphics::BmpBitmapCodec::loadFromMemoryImplemented() const {
     return true;
 }
 
@@ -420,7 +420,7 @@ bool vislib::graphics::BmpBitmapCodec::saveToMemory(vislib::RawStorage& outmem) 
 /*
  * vislib::graphics::BmpBitmapCodec::saveToMemoryImplemented
  */
-bool vislib::graphics::BmpBitmapCodec::saveToMemoryImplemented(void) const {
+bool vislib::graphics::BmpBitmapCodec::saveToMemoryImplemented() const {
     return true;
 }
 

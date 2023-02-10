@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CLUSTERCONTROLLER_H_INCLUDED
-#define MEGAMOLCORE_CLUSTERCONTROLLER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
@@ -20,9 +16,7 @@
 #include "vislib/sys/CriticalSection.h"
 
 
-namespace megamol {
-namespace core {
-namespace cluster {
+namespace megamol::core::cluster {
 
 /** forward declaration */
 class ClusterControllerClient;
@@ -46,7 +40,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ClusterController";
     }
 
@@ -55,7 +49,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "The controller thread for cluster operation";
     }
 
@@ -64,17 +58,8 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
-    }
-
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
     }
 
     /**
@@ -85,7 +70,7 @@ public:
     /**
      * Dtor
      */
-    virtual ~ClusterController();
+    ~ClusterController() override;
 
     /**
      * Sends a message to all nodes in the cluster.
@@ -112,12 +97,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Perform the work of a thread.
@@ -128,7 +113,7 @@ protected:
      * @return The application dependent return code of the thread. This
      *         must not be STILL_ACTIVE (259).
      */
-    virtual DWORD Run(void* userData);
+    DWORD Run(void* userData) override;
 
     /**
      * This method will be called, if a new computer was found
@@ -142,8 +127,8 @@ protected:
      *              address associated with this handle can be retrieved
      *              via src[hPeer].
      */
-    virtual void OnNodeFound(vislib::net::cluster::DiscoveryService& src,
-        const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer) throw();
+    void OnNodeFound(vislib::net::cluster::DiscoveryService& src,
+        const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer) throw() override;
 
     /**
      * This method will be called, if a new computer disconnected from
@@ -159,9 +144,9 @@ protected:
      * @param hPeer  The handle of the peer that was removed.
      * @param reason The reason why the node was removed from the cluster.
      */
-    virtual void OnNodeLost(vislib::net::cluster::DiscoveryService& src,
+    void OnNodeLost(vislib::net::cluster::DiscoveryService& src,
         const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer,
-        const vislib::net::cluster::DiscoveryListener::NodeLostReason reason) throw();
+        const vislib::net::cluster::DiscoveryListener::NodeLostReason reason) throw() override;
     /**
      * This method is called once the discovery service receives a user
      * message (user defined payload).
@@ -191,9 +176,9 @@ protected:
      *                        by 'msgBody'. It is valid until the callback
      *                        is left.
      */
-    virtual void OnUserMessage(vislib::net::cluster::DiscoveryService& src,
+    void OnUserMessage(vislib::net::cluster::DiscoveryService& src,
         const vislib::net::cluster::DiscoveryService::PeerHandle& hPeer, const bool isClusterMember,
-        const UINT32 msgType, const BYTE* msgBody) throw();
+        const UINT32 msgType, const BYTE* msgBody) throw() override;
 
 private:
     /**
@@ -201,12 +186,12 @@ private:
      *
      * @return The default port
      */
-    UINT16 defaultPort(void);
+    UINT16 defaultPort();
 
     /**
      * Stops the discovery service.
      */
-    void stopDiscoveryService(void);
+    void stopDiscoveryService();
 
     /**
      * A module want's to register at the controller.
@@ -270,8 +255,4 @@ private:
 };
 
 
-} // namespace cluster
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_CLUSTERCONTROLLER_H_INCLUDED */
+} // namespace megamol::core::cluster

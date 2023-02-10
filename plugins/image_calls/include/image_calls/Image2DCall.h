@@ -8,8 +8,7 @@
 #include "mmstd/data/AbstractGetDataCall.h"
 #include "vislib/graphics/BitmapCodecCollection.h"
 
-namespace megamol {
-namespace image_calls {
+namespace megamol::image_calls {
 
 class Image2DCall : public megamol::core::AbstractGetDataCall {
 public:
@@ -35,7 +34,7 @@ public:
      *
      * @return The name of this call.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "Image2DCall";
     }
 
@@ -44,7 +43,7 @@ public:
      *
      * @return A human readable description of this call.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call to transport 2D image data";
     }
 
@@ -53,7 +52,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 5;
     }
 
@@ -87,7 +86,7 @@ public:
      *
      * @return The number of stored images
      */
-    size_t GetImageCount(void) const;
+    size_t GetImageCount() const;
 
     /**
      * Answer the count of available images.
@@ -95,7 +94,7 @@ public:
      *
      * @param The number of available images
      */
-    size_t GetAvailablePathsCount(void) const;
+    size_t GetAvailablePathsCount() const;
 
     /**
      * Sets the data pointer
@@ -109,7 +108,7 @@ public:
      *
      * @return Pointer to the vector storing the images
      */
-    const std::shared_ptr<ImageMap> GetImagePtr(void) const;
+    const std::shared_ptr<ImageMap> GetImagePtr() const;
 
     /**
      * Set the pointer to the field containing all paths to the available files.
@@ -123,7 +122,7 @@ public:
      *
      * @return All available image file paths.
      */
-    const std::shared_ptr<std::vector<std::string>> GetAvailablePathsPtr(void) const;
+    const std::shared_ptr<std::vector<std::string>> GetAvailablePathsPtr() const;
 
     /**
      * Sets the pointer to the wishlist, containing all indices of the desired images
@@ -138,13 +137,13 @@ public:
      *
      * @return Pointer to the wishlist
      */
-    const std::shared_ptr<std::vector<uint64_t>> GetWishlistPtr(void) const;
+    const std::shared_ptr<std::vector<uint64_t>> GetWishlistPtr() const;
 
     /** Ctor. */
     Image2DCall();
 
     /** Dtor. */
-    virtual ~Image2DCall() = default;
+    ~Image2DCall() override = default;
 
 private:
     /** Pointer to the stored data */
@@ -159,5 +158,4 @@ private:
 
 typedef megamol::core::factories::CallAutoDescription<Image2DCall> Image2DCallDescription;
 
-} // namespace image_calls
-} // namespace megamol
+} // namespace megamol::image_calls

@@ -19,9 +19,7 @@ using namespace sg::graphics;
 using namespace vislib::graphics;
 
 #ifndef _WIN32
-namespace sg {
-namespace graphics {
-namespace jpegutil {
+namespace sg::graphics::jpegutil {
 
 /**
  * Convert "exit" to "throw"
@@ -41,15 +39,13 @@ void jpeg_output_message_no(j_common_ptr cinfo) {
     // be silent!
 }
 
-} /* end namespace jpegutil */
-} /* end namespace graphics */
-} /* end namespace sg */
+} // namespace sg::graphics::jpegutil
 #endif
 
 /*
  * JpegBitmapCodec::JpegBitmapCodec
  */
-JpegBitmapCodec::JpegBitmapCodec(void) : AbstractBitmapCodec(), quality(75) {
+JpegBitmapCodec::JpegBitmapCodec() : AbstractBitmapCodec(), quality(75) {
 #ifdef _WIN32
     // Initialize COM.
     comOK = false;
@@ -76,7 +72,7 @@ JpegBitmapCodec::JpegBitmapCodec(void) : AbstractBitmapCodec(), quality(75) {
 /*
  * JpegBitmapCodec::~JpegBitmapCodec
  */
-JpegBitmapCodec::~JpegBitmapCodec(void) {
+JpegBitmapCodec::~JpegBitmapCodec() {
 
 #ifdef _WIN32
     if (piFactory)
@@ -103,7 +99,7 @@ int JpegBitmapCodec::AutoDetect(const void* mem, SIZE_T size) const {
 /*
  * JpegBitmapCodec::CanAutoDetect
  */
-bool JpegBitmapCodec::CanAutoDetect(void) const {
+bool JpegBitmapCodec::CanAutoDetect() const {
     return true;
 }
 
@@ -111,7 +107,7 @@ bool JpegBitmapCodec::CanAutoDetect(void) const {
 /*
  * JpegBitmapCodec::FileNameExtsA
  */
-const char* JpegBitmapCodec::FileNameExtsA(void) const {
+const char* JpegBitmapCodec::FileNameExtsA() const {
     return ".jpeg;.jpe;.jpg";
 }
 
@@ -119,7 +115,7 @@ const char* JpegBitmapCodec::FileNameExtsA(void) const {
 /*
  * JpegBitmapCodec::FileNameExtsW
  */
-const wchar_t* JpegBitmapCodec::FileNameExtsW(void) const {
+const wchar_t* JpegBitmapCodec::FileNameExtsW() const {
     return L".jpeg;.jpe;.jpg";
 }
 
@@ -127,7 +123,7 @@ const wchar_t* JpegBitmapCodec::FileNameExtsW(void) const {
 /*
  * JpegBitmapCodec::NameA
  */
-const char* JpegBitmapCodec::NameA(void) const {
+const char* JpegBitmapCodec::NameA() const {
     return "Joint Photographic Experts Group";
 }
 
@@ -135,7 +131,7 @@ const char* JpegBitmapCodec::NameA(void) const {
 /*
  * JpegBitmapCodec::NameW
  */
-const wchar_t* JpegBitmapCodec::NameW(void) const {
+const wchar_t* JpegBitmapCodec::NameW() const {
     return L"Joint Photographic Experts Group";
 }
 
@@ -143,7 +139,7 @@ const wchar_t* JpegBitmapCodec::NameW(void) const {
 /**
  * JpegBitmapCodec::OptimizeCompressionQuality
  */
-void JpegBitmapCodec::OptimizeCompressionQuality(void) {
+void JpegBitmapCodec::OptimizeCompressionQuality() {
     using vislib::RawStorage;
     using vislib::graphics::BitmapImage;
 
@@ -564,14 +560,14 @@ bool JpegBitmapCodec::saveToMemory(vislib::RawStorage& mem) const {
 /*
  * JpegBitmapCodec::loadFromMemoryImplemented
  */
-bool JpegBitmapCodec::loadFromMemoryImplemented(void) const {
+bool JpegBitmapCodec::loadFromMemoryImplemented() const {
     return true;
 }
 
 /*
  * JpegBitmapCodec::saveToMemoryImplemented
  */
-bool JpegBitmapCodec::saveToMemoryImplemented(void) const {
+bool JpegBitmapCodec::saveToMemoryImplemented() const {
     return true;
 }
 
@@ -582,6 +578,6 @@ bool JpegBitmapCodec::saveToStream(vislib::sys::File& stream) const {
     return count == mem.GetSize();
 }
 
-bool JpegBitmapCodec::saveToStreamImplemented(void) const {
+bool JpegBitmapCodec::saveToStreamImplemented() const {
     return true;
 }

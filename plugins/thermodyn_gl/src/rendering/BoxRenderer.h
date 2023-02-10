@@ -53,7 +53,7 @@ public:
     BoxRenderer();
 
     /** Dtor. */
-    virtual ~BoxRenderer();
+    ~BoxRenderer() override;
 
 protected:
     /**

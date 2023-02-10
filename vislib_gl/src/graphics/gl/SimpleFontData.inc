@@ -10,9 +10,7 @@
 #include "vislib/types.h"
 
 
-namespace vislib_gl {
-namespace graphics {
-namespace gl {
+namespace vislib_gl::graphics::gl {
 
 
 /**
@@ -5631,6 +5629,4 @@ static const BMPSimpleFontGlyphSizes bmpSimpleFontGlyphSize[256] = {
     {0.89453130f, 0.03125000f}, {0.95312500f, 0.03125000f} };
 
 
-} /* end namespace gl */
-} /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib_gl::graphics::gl

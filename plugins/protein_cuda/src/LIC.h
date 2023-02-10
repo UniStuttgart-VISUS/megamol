@@ -7,8 +7,7 @@
  * $Id$
  */
 
-#ifndef MMPROTEINCUDAPLUGIN_LIC_H
-#define MMPROTEINCUDAPLUGIN_LIC_H
+#pragma once
 
 #include "helper_cuda.h"
 #include "helper_math.h"
@@ -132,5 +131,3 @@ private:
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif /* MMPROTEINCUDAPLUGIN_LIC_H */

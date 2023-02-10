@@ -1,5 +1,4 @@
-#ifndef MEGAMOL_INFOVIS_DIAGRAMSERIES_H_INCLUDED
-#define MEGAMOL_INFOVIS_DIAGRAMSERIES_H_INCLUDED
+#pragma once
 
 #include <array>
 #include <vector>
@@ -14,8 +13,7 @@
 
 #include "DiagramSeriesCall.h"
 
-namespace megamol {
-namespace infovis {
+namespace megamol::infovis {
 
 /**
  * Module to select a specific column from a table as diagram series.
@@ -29,7 +27,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DiagramSeries";
     }
 
@@ -38,7 +36,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module to select a specific column from a table as diagram series";
     }
 
@@ -47,15 +45,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** ctor */
-    DiagramSeries(void);
+    DiagramSeries();
 
     /** dtor */
-    virtual ~DiagramSeries(void);
+    ~DiagramSeries() override;
 
 protected:
     /**
@@ -63,12 +61,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -87,12 +85,12 @@ private:
     /**
      * Checks if any parameter is dirty.
      */
-    bool isAnythingDirty(void) const;
+    bool isAnythingDirty() const;
 
     /**
      * Resets dirty flags of parameters.
      */
-    void resetDirtyFlags(void);
+    void resetDirtyFlags();
 
     /**
      * Finds column based on name.
@@ -137,7 +135,4 @@ private:
     size_t myHash;
 }; /* end class DiagramSeries */
 
-} /* end namespace infovis */
-} /* end namespace megamol */
-
-#endif /* end ifndef MEGAMOL_INFOVIS_DIAGRAMSERIES_H_INCLUDED */
+} // namespace megamol::infovis

@@ -48,9 +48,9 @@ mmSetLogFile("megamol_log.txt") -- CLI: --logfile=megamol_log.txt
 
 -- There is only one application directory
 -- Shader and Resource directory paths are added to a list of such directories
-mmSetAppDir(basePath .. "${MMPLG_DIR}")       -- CLI: --appdir=...
-${CONFIG_GL_COMMENT}mmAddShaderDir(basePath .. "share/shaders")   -- CLI: --shaderdir=...
-${CONFIG_GL_COMMENT}mmAddResourceDir(basePath .. "share/shaders") -- CLI: --resourcedir=...
+-- CLI: --appdir=... or --shaderdir=... or --resourcedir=...
+mmSetAppDir(basePath .. "@MMPLG_DIR@")
+@CONFIG_SHADER_PATHS@
 mmAddResourceDir(basePath .. "share/resources")
 
 computer = mmGetMachineName()
@@ -63,14 +63,15 @@ mmSetGlobalValue("MachineName", computer) -- CLI: -g MachineName:WhateverYourMac
 -- By default, boolean options are false. Providing an option sets it to true,
 -- e.g.   ./megamol.exe --fullscreen 
 -- equals ./megamol.exe --fullscreen=true
-mmSetCliOption("fullscreen",  "off")       -- CLI: --fullscreen=false
-mmSetCliOption("vsync",       "off")       -- CLI: --vsync=false
-mmSetCliOption("interactive", "off")       -- CLI: --interactive=false
-mmSetCliOption("window",      "1920x1080") -- CLI: --window 1920x1080
-mmSetCliOption("khrdebug",    "off")       -- CLI: --khrdebug=false
-mmSetCliOption("privacynote", "on")        -- CLI: --privacynote=true
-mmSetCliOption("versionnote", "off")       -- CLI: --versionnote=false
-mmSetGlobalValue("arcball",   "off")       -- CLI: -g arcball:off
+mmSetCliOption("fullscreen",  "off")                   -- CLI: --fullscreen=false
+mmSetCliOption("vsync",       "off")                   -- CLI: --vsync=false
+mmSetCliOption("interactive", "off")                   -- CLI: --interactive=false
+mmSetCliOption("window",      "1920x1080")             -- CLI: --window 1920x1080
+mmSetCliOption("khrdebug",    "off")                   -- CLI: --khrdebug=false
+mmSetCliOption("privacynote", "on")                    -- CLI: --privacynote=true
+mmSetCliOption("versionnote", "off")                   -- CLI: --versionnote=false
+mmSetCliOption("host",        "tcp://127.0.0.1:33333") -- CLI: --host="tcp://127.0.0.1:33333"
+mmSetGlobalValue("arcball",   "off")                   -- CLI: -g arcball:off
 
 
 -- You can queue Lua files (project files) for execution after MegaMol started

@@ -4,11 +4,7 @@
  * Copyright (C) 2007 by Universitaet Stuttgart (VIS). Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_MEMMAPPED_FILE_H_INCLUDED
-#define VISLIB_MEMMAPPED_FILE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -22,8 +18,7 @@
 #include <sys/mman.h>
 #endif /* _WIN32 */
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /**
  * Instances of this class repsesent a file based on vislib::sys::File but
@@ -37,15 +32,15 @@ namespace sys {
 class MemmappedFile : public File {
 public:
     /** Ctor. */
-    MemmappedFile(void);
+    MemmappedFile();
 
     /**
      * Dtor. If the file is still open, it is closed.
      */
-    virtual ~MemmappedFile(void);
+    ~MemmappedFile() override;
 
     /** Close the file, if open. Flush, if necessary. */
-    virtual void Close(void);
+    void Close() override;
 
     /**
      * behaves like File::Flush, except that it flushes only dirty buffers.
@@ -54,7 +49,7 @@ public:
      *                    could not be flushed to disk. GetLastError() will provide details (Windows).
      * @throws IOException with details (linux).
      */
-    virtual void Flush(void);
+    void Flush() override;
 
     /**
      * Returns the size of the current view in bytes.
@@ -62,7 +57,7 @@ public:
      *
      * @return number of bytes in view
      */
-    virtual inline File::FileSize GetViewSize(void) const {
+    virtual inline File::FileSize GetViewSize() const {
         return this->viewSize;
     }
 
@@ -71,7 +66,7 @@ public:
      *
      * @throws IllegalStateException if the file is not open
      */
-    virtual File::FileSize GetSize(void) const;
+    File::FileSize GetSize() const override;
 
     /**
      * behaves like File::Open except for WRITE_ONLY files. These are silently upgraded to READ_WRITE
@@ -80,8 +75,8 @@ public:
      *
      * @throws IOException
      */
-    virtual bool Open(const char* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
-        const File::CreationMode creationMode);
+    bool Open(const char* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
+        const File::CreationMode creationMode) override;
 
     /**
      * behaves like File::Open except for WRITE_ONLY files. These are silently upgraded to READ_WRITE
@@ -90,8 +85,8 @@ public:
      *
      * @throws IOException
      */
-    virtual bool Open(const wchar_t* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
-        const File::CreationMode creationMode);
+    bool Open(const wchar_t* filename, const File::AccessMode accessMode, const File::ShareMode shareMode,
+        const File::CreationMode creationMode) override;
 
     /**
      * behaves like File::Read
@@ -102,14 +97,14 @@ public:
      * @throws IOException on mapping failures. Use GetLastError().
      * @throws IllegalStateException if file is not open, or access mode unsuitable, for example
      */
-    virtual File::FileSize Read(void* outBuf, const File::FileSize bufSize);
+    File::FileSize Read(void* outBuf, const File::FileSize bufSize) override;
 
     /**
      * behaves like File::Seek
      * If the destination is beyond file extents, it is cropped.
      * No flush is performed since changing views already takes care of that.
      */
-    virtual File::FileSize Seek(const File::FileOffset offset, const File::SeekStartPoint from = File::BEGIN);
+    File::FileSize Seek(const File::FileOffset offset, const File::SeekStartPoint from = File::BEGIN) override;
 
     /**
      * Sets the size of the current view.
@@ -129,7 +124,7 @@ public:
      *
      * @throws IllegalStateException if the file is not open
      */
-    virtual File::FileSize Tell(void) const;
+    File::FileSize Tell() const override;
 
     /**
      * behaves like File::Write
@@ -140,7 +135,7 @@ public:
      * @throws IOException on mapping failures. Use GetLastError().
      * @throws IllegalStateException if file is not open, or access mode unsuitable, for example
      */
-    virtual File::FileSize Write(const void* buf, const File::FileSize bufSize);
+    File::FileSize Write(const void* buf, const File::FileSize bufSize) override;
 
 private:
     /**
@@ -284,10 +279,8 @@ private:
     bool viewDirty;
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_MEMMAPPED_FILE_H_INCLUDED */

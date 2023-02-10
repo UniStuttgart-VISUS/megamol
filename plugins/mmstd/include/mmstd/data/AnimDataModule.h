@@ -21,7 +21,7 @@ namespace megamol::core::view {
 class AnimDataModule : public Module {
 public:
     /** Dtor. */
-    virtual ~AnimDataModule();
+    ~AnimDataModule() override;
 
     /**
      * Answer the number of time frames of the dataset.

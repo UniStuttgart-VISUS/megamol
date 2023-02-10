@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_THREADPOOLLISTENER_H_INCLUDED
-#define VISLIB_THREADPOOLLISTENER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/sys/Runnable.h"
 
 
-namespace vislib {
-namespace sys {
+namespace vislib::sys {
 
 /* Forward declarations. */
 class ThreadPool;
@@ -37,7 +32,7 @@ class ThreadPoolListener {
 
 public:
     /** Dtor. */
-    virtual ~ThreadPoolListener(void);
+    virtual ~ThreadPoolListener();
 
     /**
      * The thread pool calls this method once a work item (Runnable) is
@@ -101,7 +96,7 @@ public:
 
 protected:
     /** Ctor. */
-    ThreadPoolListener(void);
+    ThreadPoolListener();
 
     /**
      * Clone rhs
@@ -120,10 +115,8 @@ protected:
     ThreadPoolListener& operator=(const ThreadPoolListener& rhs);
 };
 
-} /* end namespace sys */
-} /* end namespace vislib */
+} // namespace vislib::sys
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_THREADPOOLLISTENER_H_INCLUDED */

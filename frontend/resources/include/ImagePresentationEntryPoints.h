@@ -14,8 +14,7 @@
 #include <functional>
 #include <vector>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 using EntryPointRenderFunctions = std::tuple<
     // ptr to entry point object
@@ -45,5 +44,4 @@ struct ImagePresentationEntryPoints {
     std::function<optional<EntryPoint>(std::string const&)> get_entry_point;
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

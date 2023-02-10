@@ -8,11 +8,7 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCALLPLUGIN_VTIDATACALL_H_INCLUDED
-#define MMPROTEINCALLPLUGIN_VTIDATACALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "Interpol.h"
 #include "VTKImageData.h"
@@ -22,8 +18,7 @@
 #include "vislib/math/Vector.h"
 typedef vislib::math::Vector<int, 3> Vec3i;
 
-namespace megamol {
-namespace protein_calls {
+namespace megamol::protein_calls {
 
 class VTIDataCall : public core::AbstractGetData3DCall {
 
@@ -35,17 +30,17 @@ public:
     static const unsigned int CallForGetExtent;
 
     /** Ctor. */
-    VTIDataCall(void);
+    VTIDataCall();
 
     /** Dtor. */
-    virtual ~VTIDataCall(void);
+    ~VTIDataCall() override;
 
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "VTIDataCall";
     }
 
@@ -54,7 +49,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for VTK image data.";
     }
 
@@ -63,7 +58,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return core::AbstractGetData3DCall::FunctionCount();
     }
 
@@ -82,7 +77,7 @@ public:
      *
      * @return the call time
      */
-    float GetCalltime(void) const {
+    float GetCalltime() const {
         return this->calltime;
     }
 
@@ -374,7 +369,4 @@ private:
 /// Description class typedef
 typedef core::factories::CallAutoDescription<VTIDataCall> VTIDataCallDescription;
 
-} // end namespace protein_calls
-} // end namespace megamol
-
-#endif // MMPROTEINCALLPLUGIN_VTIDATACALL_H_INCLUDED
+} // namespace megamol::protein_calls

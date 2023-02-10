@@ -17,7 +17,7 @@
 using namespace megamol;
 using namespace megamol::protein_gl;
 
-DeferredRenderingProvider::DeferredRenderingProvider(void)
+DeferredRenderingProvider::DeferredRenderingProvider()
         : ambientColorParam("lighting::ambientColor", "Ambient color of the used lights")
         , diffuseColorParam("lighting::diffuseColor", "Diffuse color of the used lights")
         , specularColorParam("lighting::specularColor", "Specular color of the used lights")
@@ -50,7 +50,7 @@ DeferredRenderingProvider::DeferredRenderingProvider(void)
     enableShadingParam.SetParameter(new core::param::BoolParam(true));
 }
 
-DeferredRenderingProvider::~DeferredRenderingProvider(void) {
+DeferredRenderingProvider::~DeferredRenderingProvider() {
     // TODO
 }
 
@@ -177,7 +177,7 @@ void DeferredRenderingProvider::draw(
     glUseProgram(0);
 }
 
-void DeferredRenderingProvider::bindDeferredFramebufferToDraw(void) {
+void DeferredRenderingProvider::bindDeferredFramebufferToDraw() {
     // request old fbo state and set new fbo
     glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFBOid_);
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFBOid_);
@@ -196,13 +196,13 @@ void DeferredRenderingProvider::bindDeferredFramebufferToDraw(void) {
     glClearColor(cc.r, cc.g, cc.b, cc.a);
 }
 
-void DeferredRenderingProvider::resetToPreviousFramebuffer(void) {
+void DeferredRenderingProvider::resetToPreviousFramebuffer() {
     glBindFramebuffer(GL_FRAMEBUFFER, FBOid_);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFBOid_);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, readFBOid_);
 }
 
-std::vector<core::param::ParamSlot*> DeferredRenderingProvider::getUsedParamSlots(void) {
+std::vector<core::param::ParamSlot*> DeferredRenderingProvider::getUsedParamSlots() {
     std::vector<core::param::ParamSlot*> result = {&ambientColorParam, &diffuseColorParam, &specularColorParam,
         &ambientFactorParam, &diffuseFactorParam, &specularFactorParam, &specularExponentParam, &useLambertParam,
         &enableShadingParam};

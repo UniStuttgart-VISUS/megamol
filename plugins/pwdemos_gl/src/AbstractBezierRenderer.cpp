@@ -13,14 +13,13 @@
 #include "OpenGL_Context.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 
 /*
  * AbstractBezierRenderer::AbstractBezierRenderer
  */
-AbstractBezierRenderer::AbstractBezierRenderer(void)
+AbstractBezierRenderer::AbstractBezierRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , getDataSlot("getdata", "Connects to the data source")
         , objsHash(0)
@@ -32,7 +31,7 @@ AbstractBezierRenderer::AbstractBezierRenderer(void)
 /*
  * AbstractBezierRenderer::~AbstractBezierRenderer
  */
-AbstractBezierRenderer::~AbstractBezierRenderer(void) {
+AbstractBezierRenderer::~AbstractBezierRenderer() {
     this->Release();
 }
 
@@ -40,7 +39,7 @@ AbstractBezierRenderer::~AbstractBezierRenderer(void) {
 /*
  * AbstractBezierRenderer::create
  */
-bool AbstractBezierRenderer::create(void) {
+bool AbstractBezierRenderer::create() {
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
 
     return true;
@@ -68,7 +67,7 @@ bool AbstractBezierRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
 /*
  * AbstractBezierRenderer::release
  */
-void AbstractBezierRenderer::release(void) {
+void AbstractBezierRenderer::release() {
     this->shader = NULL; // Do not release or delete ...
 }
 
@@ -83,5 +82,4 @@ bool AbstractBezierRenderer::Render(mmstd_gl::CallRender3DGL& call) {
     return this->render(call);
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

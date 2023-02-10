@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_CINEMATIC_OVERLAYRENDERER_H_INCLUDED
-#define MEGAMOL_CINEMATIC_OVERLAYRENDERER_H_INCLUDED
 #pragma once
 
 
@@ -22,8 +20,7 @@
 #include <iomanip>
 
 
-namespace megamol {
-namespace cinematic_gl {
+namespace megamol::cinematic_gl {
 
 
 /** ************************************************************************
@@ -68,7 +65,7 @@ public:
     OverlayRenderer();
 
     /** Dtor. */
-    virtual ~OverlayRenderer();
+    ~OverlayRenderer() override;
 
 protected:
     /**
@@ -76,12 +73,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release();
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -92,7 +89,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -101,7 +98,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     struct Rectangle {
@@ -202,7 +199,4 @@ private:
 };
 
 
-} // namespace cinematic_gl
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_CINEMATIC_OVERLAYRENDERER_H_INCLUDED */
+} // namespace megamol::cinematic_gl

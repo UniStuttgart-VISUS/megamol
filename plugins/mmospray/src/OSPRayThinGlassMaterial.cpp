@@ -11,7 +11,7 @@
 using namespace megamol::ospray;
 
 
-OSPRayThinGlassMaterial::OSPRayThinGlassMaterial(void)
+OSPRayThinGlassMaterial::OSPRayThinGlassMaterial()
         : AbstractOSPRayMaterial()
         ,
         // THINGLASS
@@ -27,7 +27,7 @@ OSPRayThinGlassMaterial::OSPRayThinGlassMaterial(void)
     this->MakeSlotAvailable(&this->thinglassTransmission);
 }
 
-OSPRayThinGlassMaterial::~OSPRayThinGlassMaterial(void) {
+OSPRayThinGlassMaterial::~OSPRayThinGlassMaterial() {
     this->Release();
 }
 

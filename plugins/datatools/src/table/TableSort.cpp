@@ -20,7 +20,7 @@
 /*
  * megamol::datatools::table::TableSort::TableSort
  */
-megamol::datatools::table::TableSort::TableSort(void)
+megamol::datatools::table::TableSort::TableSort()
         : paramColumn("column", "The column to be filtered.")
         , paramIsDescending("descending", "Sort in descending instead of ascending order.")
         , paramIsStable("stableSort", "Use a stable sorting algorithm.") {
@@ -39,7 +39,7 @@ megamol::datatools::table::TableSort::TableSort(void)
 /*
  * megamol::datatools::table::TableSort::~TableSort
  */
-megamol::datatools::table::TableSort::~TableSort(void) {
+megamol::datatools::table::TableSort::~TableSort() {
     // TODO: this is toxic
     this->Release();
 }
@@ -48,7 +48,7 @@ megamol::datatools::table::TableSort::~TableSort(void) {
 /*
  * megamol::datatools::table::TableSort::create
  */
-bool megamol::datatools::table::TableSort::create(void) {
+bool megamol::datatools::table::TableSort::create() {
     return true;
 }
 
@@ -151,4 +151,4 @@ bool megamol::datatools::table::TableSort::prepareData(TableDataCall& src, const
 /*
  * megamol::datatools::table::TableSort::release
  */
-void megamol::datatools::table::TableSort::release(void) {}
+void megamol::datatools::table::TableSort::release() {}

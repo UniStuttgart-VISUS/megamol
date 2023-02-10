@@ -36,11 +36,11 @@ io::TclMolSelectionLoader::~TclMolSelectionLoader() {
     Release();
 }
 
-bool io::TclMolSelectionLoader::create(void) {
+bool io::TclMolSelectionLoader::create() {
     return true;
 }
 
-void io::TclMolSelectionLoader::release(void) {
+void io::TclMolSelectionLoader::release() {
     clear();
     hash = 0;
 }
@@ -61,13 +61,13 @@ bool io::TclMolSelectionLoader::getDataCallback(core::Call& caller) {
     return true;
 }
 
-void io::TclMolSelectionLoader::clear(void) {
+void io::TclMolSelectionLoader::clear() {
     hash++;
     cnt = 0;
     data.clear();
 }
 
-void io::TclMolSelectionLoader::load(void) {
+void io::TclMolSelectionLoader::load() {
     typedef geocalls::ParticleRelistCall::ListIDType ListIDType;
     filenameSlot.ResetDirty();
 

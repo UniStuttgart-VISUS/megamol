@@ -20,7 +20,7 @@
 /*
  * vislib_gl::graphics::gl::AbstractOpenGLTexture::RequiredExtensions
  */
-const char* vislib_gl::graphics::gl::AbstractOpenGLTexture::RequiredExtensions(void) {
+const char* vislib_gl::graphics::gl::AbstractOpenGLTexture::RequiredExtensions() {
     return " GL_VERSION_1_3 ";
 }
 
@@ -28,7 +28,7 @@ const char* vislib_gl::graphics::gl::AbstractOpenGLTexture::RequiredExtensions(v
 /*
  * vislib_gl::graphics::gl::AbstractOpenGLTexture::~AbstractOpenGLTexture
  */
-vislib_gl::graphics::gl::AbstractOpenGLTexture::~AbstractOpenGLTexture(void) {
+vislib_gl::graphics::gl::AbstractOpenGLTexture::~AbstractOpenGLTexture() {
     this->Release();
 }
 
@@ -58,7 +58,7 @@ GLenum vislib_gl::graphics::gl::AbstractOpenGLTexture::Bind(GLenum textureUnit, 
 /*
  * vislib_gl::graphics::gl::AbstractOpenGLTexture::IsValid
  */
-bool vislib_gl::graphics::gl::AbstractOpenGLTexture::IsValid(void) const throw() {
+bool vislib_gl::graphics::gl::AbstractOpenGLTexture::IsValid() const throw() {
     return (id != UINT_MAX) && (::glIsTexture(this->id) != GL_FALSE);
 }
 
@@ -66,7 +66,7 @@ bool vislib_gl::graphics::gl::AbstractOpenGLTexture::IsValid(void) const throw()
 /*
  * vislib_gl::graphics::gl::AbstractOpenGLTexture::Release
  */
-void vislib_gl::graphics::gl::AbstractOpenGLTexture::Release(void) {
+void vislib_gl::graphics::gl::AbstractOpenGLTexture::Release() {
     USES_GL_VERIFY;
 
     if (this->IsValid()) {
@@ -93,7 +93,7 @@ GLenum vislib_gl::graphics::gl::AbstractOpenGLTexture::setFilter(
 /*
  * vislib_gl::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture
  */
-vislib_gl::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture(void) : id(UINT_MAX) {}
+vislib_gl::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture() : id(UINT_MAX) {}
 
 
 /*
@@ -113,7 +113,7 @@ vislib_gl::graphics::gl::AbstractOpenGLTexture::AbstractOpenGLTexture(AbstractOp
 /*
  * vislib_gl::graphics::gl::AbstractOpenGLTexture::createId
  */
-GLuint vislib_gl::graphics::gl::AbstractOpenGLTexture::createId(void) {
+GLuint vislib_gl::graphics::gl::AbstractOpenGLTexture::createId() {
     USES_GL_VERIFY;
 
     GL_VERIFY_THROW(::glGenTextures(1, &this->id));

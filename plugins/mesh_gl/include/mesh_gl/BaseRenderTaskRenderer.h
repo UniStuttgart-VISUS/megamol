@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef BASE_RENDER_TASK_RENDERER_H_INCLUDED
-#define BASE_RENDER_TASK_RENDERER_H_INCLUDED
+#pragma once
 
 #include "mmstd_gl/renderer/Renderer3DModuleGL.h"
 
@@ -14,8 +13,7 @@
 #include "mesh_gl/GPUMeshCollection.h"
 #include "mesh_gl/GPURenderTaskCollection.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class BaseRenderTaskRenderer : public megamol::mmstd_gl::Renderer3DModuleGL {
 public:
@@ -24,12 +22,12 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     BaseRenderTaskRenderer() = default;
-    virtual ~BaseRenderTaskRenderer();
+    ~BaseRenderTaskRenderer() override;
 
 protected:
     /**
@@ -183,7 +181,4 @@ inline void BaseRenderTaskRenderer::updateRenderTaskCollection(mmstd_gl::CallRen
     // empty function that is conveniently used when no update is required after creation
 }
 
-} // namespace mesh_gl
-} // namespace megamol
-
-#endif // !BASE_RENDER_TASK_RENDERER_H_INCLUDED
+} // namespace megamol::mesh_gl

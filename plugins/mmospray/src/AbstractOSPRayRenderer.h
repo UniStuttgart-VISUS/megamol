@@ -16,8 +16,7 @@
 #include <map>
 #include <stdint.h>
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 template<typename tPair>
 struct second_t {
@@ -95,10 +94,10 @@ struct baseStructureData {
 class AbstractOSPRayRenderer : public core::view::Renderer3DModule {
 protected:
     // Ctor
-    AbstractOSPRayRenderer(void);
+    AbstractOSPRayRenderer();
 
     // Dtor
-    ~AbstractOSPRayRenderer(void);
+    ~AbstractOSPRayRenderer() override;
 
     /**
      * initializes OSPRay
@@ -217,5 +216,4 @@ protected:
     core::view::Camera::ProjectionType _currentProjectionType = core::view::Camera::ProjectionType::PERSPECTIVE;
 };
 
-} // end namespace ospray
-} // end namespace megamol
+} // namespace megamol::ospray

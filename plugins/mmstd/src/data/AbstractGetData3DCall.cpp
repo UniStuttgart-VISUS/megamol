@@ -13,7 +13,7 @@ using namespace megamol::core;
 /*
  * AbstractGetData3DCall::AbstractGetData3DCall
  */
-AbstractGetData3DCall::AbstractGetData3DCall(void)
+AbstractGetData3DCall::AbstractGetData3DCall()
         : AbstractGetDataCall()
         , forceFrame(false)
         , frameCnt(0)
@@ -26,7 +26,7 @@ AbstractGetData3DCall::AbstractGetData3DCall(void)
 /*
  * AbstractGetData3DCall::~AbstractGetData3DCall
  */
-AbstractGetData3DCall::~AbstractGetData3DCall(void) {
+AbstractGetData3DCall::~AbstractGetData3DCall() {
     this->Unlock();
 }
 

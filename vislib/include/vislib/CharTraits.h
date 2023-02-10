@@ -5,11 +5,7 @@
  * Copyright (C) 2005 - 2006 by Christoph Mueller. All rights reserved.
  */
 
-#ifndef VISLIB_CHARTRAITS_H_INCLUDED
-#define VISLIB_CHARTRAITS_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -78,7 +74,7 @@ public:
      *
      * @return The size of a single character in bytes.
      */
-    inline static Size CharSize(void) {
+    inline static Size CharSize() {
         return sizeof(T);
     }
 
@@ -99,7 +95,7 @@ public:
 
 protected:
     /** Forbidden Ctor. */
-    inline CharTraitsBase(void) {
+    inline CharTraitsBase() {
         throw UnsupportedOperationException("CharTraitsBase", __FILE__, __LINE__);
     }
 
@@ -246,7 +242,7 @@ class CharTraits : public CharTraitsBase<T> {
 
 protected:
     /** Forbidden Ctor. */
-    inline CharTraits(void) {
+    inline CharTraits() {
         throw UnsupportedOperationException("CharTraits", __FILE__, __LINE__);
     }
 }; /* end class CharTraits */
@@ -266,7 +262,7 @@ public:
      *
      * @return The type identifier.
      */
-    inline static vislib::CharType CharType(void) {
+    inline static vislib::CharType CharType() {
         return ANSI_CHAR;
     }
 
@@ -474,7 +470,7 @@ public:
 
 protected:
     /** Forbidden Ctor. */
-    inline CharTraits(void) {
+    inline CharTraits() {
         throw UnsupportedOperationException("CharTraits<char>", __FILE__, __LINE__);
     }
 
@@ -648,7 +644,7 @@ public:
      *
      * @return The type identifier.
      */
-    inline static vislib::CharType CharType(void) {
+    inline static vislib::CharType CharType() {
         return UNICODE_CHAR;
     }
 
@@ -851,7 +847,7 @@ public:
 
 protected:
     /** Forbidden Ctor. */
-    inline CharTraits(void) {
+    inline CharTraits() {
         throw UnsupportedOperationException("CharTraits<WCHAR>", __FILE__, __LINE__);
     }
 
@@ -1024,4 +1020,3 @@ typedef CharTraitsA TCharTraits;
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_CHARTRAITS_H_INCLUDED */

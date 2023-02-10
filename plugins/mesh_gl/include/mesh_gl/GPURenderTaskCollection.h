@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef GPU_RENDER_TASK_DATA_STORAGE_H_INCLUDED
-#define GPU_RENDER_TASK_DATA_STORAGE_H_INCLUDED
+#pragma once
 
 #include <functional>
 #include <memory>
@@ -18,8 +17,7 @@
 
 #include "GPUMaterialCollection.h"
 
-namespace megamol {
-namespace mesh_gl {
+namespace megamol::mesh_gl {
 
 class GPURenderTaskCollection;
 
@@ -311,7 +309,4 @@ inline void GPURenderTaskCollection::updatePerFrameDataBuffer(
     }
 }
 
-} // namespace mesh_gl
-} // namespace megamol
-
-#endif // !GPU_RENDER_TASK_DATA_STORAGE_H_INCLUDED
+} // namespace megamol::mesh_gl

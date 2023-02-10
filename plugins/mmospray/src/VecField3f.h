@@ -5,8 +5,7 @@
 // All rights reserved.
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_VECFIELD3D_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_VECFIELD3D_H_INCLUDED
+#pragma once
 
 #ifdef WITH_CUDA
 #include "CUDAFieldTopology.cuh"
@@ -26,8 +25,7 @@ typedef vislib::math::Vector<float, 3> Vec3f;
 typedef vislib::math::Vector<unsigned int, 3> Vec3u;
 #include "vislib/Array.h"
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 class VecField3f {
 
@@ -338,7 +336,4 @@ private:
     vislib::Array<CritPoint> critPoints;
 };
 
-} // namespace ospray
-} // end namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_VECFIELD3D_H_INCLUDED
+} // namespace megamol::ospray

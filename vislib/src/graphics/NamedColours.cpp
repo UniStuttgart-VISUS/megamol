@@ -1054,7 +1054,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::MegaMolBlue(
 /*
  * vislib::graphics::NamedColours::CountNamedColours
  */
-SIZE_T vislib::graphics::NamedColours::CountNamedColours(void) {
+SIZE_T vislib::graphics::NamedColours::CountNamedColours() {
     if (count == 0) {
         while (!index[count].name.IsEmpty())
             count++;
@@ -1203,7 +1203,7 @@ vislib::graphics::ColourRGBAu8 vislib::graphics::NamedColours::colFromHex(DWORD 
 /*
  * vislib::graphics::NamedColours::NamedColours
  */
-vislib::graphics::NamedColours::NamedColours(void) {
+vislib::graphics::NamedColours::NamedColours() {
     throw vislib::UnsupportedOperationException("NamedColours::Ctor", __FILE__, __LINE__);
 }
 
@@ -1211,6 +1211,6 @@ vislib::graphics::NamedColours::NamedColours(void) {
 /*
  * vislib::graphics::NamedColours::~NamedColours
  */
-vislib::graphics::NamedColours::~NamedColours(void) {
+vislib::graphics::NamedColours::~NamedColours() {
     throw vislib::UnsupportedOperationException("NamedColours::Dtor", __FILE__, __LINE__);
 }

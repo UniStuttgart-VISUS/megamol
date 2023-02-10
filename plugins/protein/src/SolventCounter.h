@@ -6,11 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMMOLMAPPLG_SOLVENTCOUNTER_H_INCLUDED
-#define MMMOLMAPPLG_SOLVENTCOUNTER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -20,8 +16,7 @@
 #include "vislib/Array.h"
 
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /**
  * Class for loading MSMS mesh data
@@ -33,7 +28,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SolventCounter";
     }
 
@@ -42,7 +37,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Finds solvent molecules within a given distance for each atom";
     }
 
@@ -51,23 +46,23 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    SolventCounter(void);
+    SolventCounter();
 
     /** Dtor */
-    virtual ~SolventCounter(void);
+    ~SolventCounter() override;
 
-    float GetMinValue(void) const {
+    float GetMinValue() const {
         return this->minValue;
     }
-    float GetMidValue(void) const {
+    float GetMidValue() const {
         return this->midValue;
     }
-    float GetMaxValue(void) const {
+    float GetMaxValue() const {
         return this->maxValue;
     }
 
@@ -77,12 +72,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -120,7 +115,4 @@ private:
     SIZE_T datahash;
 };
 
-} /* end namespace protein */
-} /* end namespace megamol */
-
-#endif /* MMMOLMAPPLG_SolventCounter_H_INCLUDED */
+} // namespace megamol::protein

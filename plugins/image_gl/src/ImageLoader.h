@@ -3,8 +3,7 @@
  * Copyright (c) 2019, MegaMol Dev Team
  * All rights reserved.
  */
-#ifndef MEGAMOLCORE_IMAGELOADER_H_INCLUDED
-#define MEGAMOLCORE_IMAGELOADER_H_INCLUDED
+#pragma once
 
 #include <atomic>
 #include <condition_variable>
@@ -23,8 +22,7 @@
 
 //#define LOADED_MESSAGE
 
-namespace megamol {
-namespace image_gl {
+namespace megamol::image_gl {
 
 class ImageLoader : public core::Module {
 public:
@@ -33,7 +31,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ImageLoader";
     }
 
@@ -42,7 +40,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "A module that loads images from disk";
     }
 
@@ -51,15 +49,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    ImageLoader(void);
+    ImageLoader();
 
     /** Dtor. */
-    virtual ~ImageLoader(void);
+    ~ImageLoader() override;
 
 protected:
     /**
@@ -67,12 +65,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The get data callback.
@@ -175,7 +173,7 @@ private:
     /**
      * Loop responsible for loading all images that are present in the imageLoadingQueue
      */
-    void loadingLoop(void);
+    void loadingLoop();
 
 #ifdef LOADED_MESSAGE
     static uint32_t loaded;
@@ -184,7 +182,4 @@ private:
     std::condition_variable condvar;
 };
 
-} // namespace image_gl
-} // namespace megamol
-
-#endif // !MEGAMOLCORE_IMAGELOADER_H_INCLUDED
+} // namespace megamol::image_gl

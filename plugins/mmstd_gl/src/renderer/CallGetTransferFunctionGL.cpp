@@ -12,14 +12,14 @@ using namespace megamol::mmstd_gl;
 /*
  * view::CallGetTransferFunctionGL::CallGetTransferFunctionGL
  */
-CallGetTransferFunctionGL::CallGetTransferFunctionGL(void) : AbstractCallGetTransferFunction(), texID(0) {
+CallGetTransferFunctionGL::CallGetTransferFunctionGL() : AbstractCallGetTransferFunction(), texID(0) {
     // intentionally empty
 }
 
 /*
  * view::CallGetTransferFunctionGL::~CallGetTransferFunctionGL
  */
-CallGetTransferFunctionGL::~CallGetTransferFunctionGL(void) {
+CallGetTransferFunctionGL::~CallGetTransferFunctionGL() {
     // intentionally empty
 }
 

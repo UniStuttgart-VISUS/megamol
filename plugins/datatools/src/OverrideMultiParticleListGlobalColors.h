@@ -5,34 +5,31 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_OVERRIDEMULTIPARTICLELISTGLOBALCOLORS_H_INCLUDED
-#define MEGAMOLCORE_OVERRIDEMULTIPARTICLELISTGLOBALCOLORS_H_INCLUDED
 #pragma once
 
 #include "datatools/AbstractParticleManipulator.h"
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module overriding global colors of multi particle lists
  */
 class OverrideMultiParticleListGlobalColors : public AbstractParticleManipulator {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "OverrideMultiParticleListGlobalColors";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module overriding global colors of multi particle lists";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    OverrideMultiParticleListGlobalColors(void);
-    virtual ~OverrideMultiParticleListGlobalColors(void);
+    OverrideMultiParticleListGlobalColors();
+    ~OverrideMultiParticleListGlobalColors() override;
 
 protected:
     /**
@@ -45,12 +42,9 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_OVERRIDEMULTIPARTICLELISTGLOBALCOLORS_H_INCLUDED */
+} // namespace megamol::datatools

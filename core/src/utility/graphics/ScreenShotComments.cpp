@@ -124,18 +124,3 @@ std::string mcu_graphics::ScreenShotComments::GetProjectFromPNG(const std::files
     }
     return content;
 }
-
-bool megamol::core::utility::graphics::ScreenShotComments::EndsWith(
-    const std::string& filename, const std::string& suffix) {
-    if (suffix.size() > filename.size())
-        return false;
-    return std::equal(suffix.rbegin(), suffix.rend(), filename.rbegin());
-}
-
-bool megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(
-    const std::string& filename, const std::string& suffix) {
-    if (suffix.size() > filename.size())
-        return false;
-    return std::equal(suffix.rbegin(), suffix.rend(), filename.rbegin(),
-        [](const char a, const char b) { return tolower(a) == tolower(b); });
-}

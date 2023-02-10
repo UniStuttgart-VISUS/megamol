@@ -52,7 +52,7 @@ vislib::net::SocketException::SocketException(const SocketException& rhs) : Syst
 /*
  * vislib::net::SocketException::~SocketException
  */
-vislib::net::SocketException::~SocketException(void) {}
+vislib::net::SocketException::~SocketException() {}
 
 
 /*
@@ -67,7 +67,7 @@ vislib::net::SocketException& vislib::net::SocketException::operator=(const Sock
 /*
  * vislib::net::SocketException::IsTimeout
  */
-bool vislib::net::SocketException::IsTimeout(void) const {
+bool vislib::net::SocketException::IsTimeout() const {
 #ifdef _WIN32
     return (this->GetErrorCode() == WSAETIMEDOUT);
 #else  /* _WIN32 */

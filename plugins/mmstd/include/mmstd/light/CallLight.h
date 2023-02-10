@@ -16,7 +16,7 @@ namespace megamol::core::view::light {
 class CallLight : public core::GenericVersionedCall<LightCollection, core::EmptyMetaData> {
 public:
     CallLight() = default;
-    ~CallLight() = default;
+    ~CallLight() override = default;
 
     static const char* ClassName() {
         return "CallLight";

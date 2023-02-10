@@ -4,8 +4,7 @@
  * All rights reserved.
  */
 
-#ifndef MEGAMOL_MEGAMOL101_CALLSPHERES_H
-#define MEGAMOL_MEGAMOL101_CALLSPHERES_H
+#pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmstd/data/AbstractGetData3DCall.h"
@@ -174,5 +173,3 @@ private:
 typedef megamol::core::factories::CallAutoDescription<CallSpheres> CallSpheresDescription;
 
 } // namespace megamol::megamol101_gl
-
-#endif // MEGAMOL_MEGAMOL101_CALLSPHERES_H

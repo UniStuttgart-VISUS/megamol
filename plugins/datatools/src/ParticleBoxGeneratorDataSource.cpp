@@ -29,7 +29,7 @@ enum MyColorType : int { COLOR_NONE = 0, COLOR_RGBu8, COLOR_RGBAu8, COLOR_If, CO
 /*
  * ParticleBoxGeneratorDataSource::ParticleBoxGeneratorDataSource
  */
-ParticleBoxGeneratorDataSource::ParticleBoxGeneratorDataSource(void)
+ParticleBoxGeneratorDataSource::ParticleBoxGeneratorDataSource()
         : core::Module()
         , dataSlot("data", "publishes the generated data")
         , randomSeedSlot("random::seed", "The random generator seed value")
@@ -93,7 +93,7 @@ ParticleBoxGeneratorDataSource::ParticleBoxGeneratorDataSource(void)
 /*
  * ParticleBoxGeneratorDataSource::~ParticleBoxGeneratorDataSource
  */
-ParticleBoxGeneratorDataSource::~ParticleBoxGeneratorDataSource(void) {
+ParticleBoxGeneratorDataSource::~ParticleBoxGeneratorDataSource() {
     this->Release();
 }
 
@@ -101,7 +101,7 @@ ParticleBoxGeneratorDataSource::~ParticleBoxGeneratorDataSource(void) {
 /*
  * ParticleBoxGeneratorDataSource::create
  */
-bool ParticleBoxGeneratorDataSource::create(void) {
+bool ParticleBoxGeneratorDataSource::create() {
     // intentionally empty
     return true;
 }
@@ -110,7 +110,7 @@ bool ParticleBoxGeneratorDataSource::create(void) {
 /*
  * ParticleBoxGeneratorDataSource::release
  */
-void ParticleBoxGeneratorDataSource::release(void) {
+void ParticleBoxGeneratorDataSource::release() {
     this->clear();
 }
 
@@ -186,7 +186,7 @@ bool ParticleBoxGeneratorDataSource::getExtentCallback(core::Call& caller) {
 /*
  * ParticleBoxGeneratorDataSource::clear
  */
-void ParticleBoxGeneratorDataSource::clear(void) {
+void ParticleBoxGeneratorDataSource::clear() {
     cnt = 0;
     data.EnforceSize(0);
     rad = 0.0f;
@@ -202,7 +202,7 @@ void ParticleBoxGeneratorDataSource::clear(void) {
 /*
  * ParticleBoxGeneratorDataSource::assertData
  */
-void ParticleBoxGeneratorDataSource::assertData(void) {
+void ParticleBoxGeneratorDataSource::assertData() {
     dataHash++;
 
     randomSeedSlot.ResetDirty();

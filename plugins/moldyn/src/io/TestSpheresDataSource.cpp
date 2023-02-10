@@ -22,7 +22,7 @@ namespace megamol::moldyn::io {
 /*
  * TestSpheresDataSource::TestSpheresDataSource
  */
-TestSpheresDataSource::TestSpheresDataSource(void)
+TestSpheresDataSource::TestSpheresDataSource()
         : AnimDataModule()
         , getDataSlot("getData", "Gets the data from the data source")
         , numSpheresSlot("numSpheres", "number of spheres to generate")
@@ -58,7 +58,7 @@ TestSpheresDataSource::TestSpheresDataSource(void)
 /*
  * TestSpheresDataSource::~TestSpheresDataSource
  */
-TestSpheresDataSource::~TestSpheresDataSource(void) {
+TestSpheresDataSource::~TestSpheresDataSource() {
     this->Release();
 }
 
@@ -66,7 +66,7 @@ TestSpheresDataSource::~TestSpheresDataSource(void) {
 /*
  * TestSpheresDataSource::constructFrame
  */
-core::view::AnimDataModule::Frame* TestSpheresDataSource::constructFrame(void) const {
+core::view::AnimDataModule::Frame* TestSpheresDataSource::constructFrame() const {
     return new Frame(const_cast<TestSpheresDataSource&>(*this));
 }
 
@@ -74,7 +74,7 @@ core::view::AnimDataModule::Frame* TestSpheresDataSource::constructFrame(void) c
 /*
  * BezierDataSource::create
  */
-bool TestSpheresDataSource::create(void) {
+bool TestSpheresDataSource::create() {
     auto f = this->numFramesSlot.Param<core::param::IntParam>()->Value();
     AnimDataModule::setFrameCount(f);
     AnimDataModule::initFrameCache(f);
@@ -182,7 +182,7 @@ void TestSpheresDataSource::loadFrame(AnimDataModule::Frame* frame, unsigned int
 /*
  * TestSpheresDataSource::release
  */
-void TestSpheresDataSource::release(void) {
+void TestSpheresDataSource::release() {
     // intentionally empty
 }
 

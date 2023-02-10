@@ -10,18 +10,25 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/utility/log/Log.h"
 
+#ifdef MEGAMOL_USE_TRACY
+#include "Tracy.hpp"
+#endif
+#if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS)
+#include "mmcore/Module.h"
+#endif
+
 using namespace megamol::core;
 
 /*
  * Call::Call
  */
-Call::Call(void) : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {}
+Call::Call() : callee(nullptr), caller(nullptr), className(nullptr), funcMap(nullptr) {}
 
 
 /*
  * Call::~Call
  */
-Call::~Call(void) {
+Call::~Call() {
     if (this->caller != nullptr) {
         CallerSlot* cr = this->caller;
         this->caller = nullptr; // DO NOT DELETE
@@ -42,13 +49,19 @@ Call::~Call(void) {
 bool Call::operator()(unsigned int func) {
     bool res = false;
     if (this->callee != nullptr) {
-#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
+#if defined(MEGAMOL_USE_TRACY) || defined(MEGAMOL_USE_OPENGL_DEBUGGROUPS)
         auto f = this->callee->GetCallbackFuncName(func);
         auto parent = callee->Parent().get();
+        std::string output = dynamic_cast<core::Module*>(parent)->ClassName();
+        output += "::";
+        output += f;
+#endif
+#ifdef MEGAMOL_USE_TRACY
+        ZoneScoped;
+        ZoneName(output.c_str(), output.size());
+#endif
+#ifdef MEGAMOL_USE_OPENGL_DEBUGGROUPS
         if (caps.OpenGLRequired()) {
-            std::string output = dynamic_cast<core::Module*>(parent)->ClassName();
-            output += "::";
-            output += f;
             // let some service do it!
             gl_helper->PushDebugGroup(1234, -1, output.c_str());
         }

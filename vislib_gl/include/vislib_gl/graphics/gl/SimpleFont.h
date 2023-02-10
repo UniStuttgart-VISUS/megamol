@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SIMPLEFONT_H_INCLUDED
-#define VISLIB_SIMPLEFONT_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -17,9 +13,7 @@
 #include "vislib/graphics/AbstractFont.h"
 
 
-namespace vislib_gl {
-namespace graphics {
-namespace gl {
+namespace vislib_gl::graphics::gl {
 
 
 /**
@@ -30,10 +24,10 @@ namespace gl {
 class SimpleFont : public vislib::graphics::AbstractFont {
 public:
     /** Ctor. */
-    SimpleFont(void);
+    SimpleFont();
 
     /** Dtor. */
-    virtual ~SimpleFont(void);
+    ~SimpleFont() override;
 
     /**
      * Calculates the height of a text block in number of lines, when
@@ -46,7 +40,7 @@ public:
      *
      * @return The height of the text block in number of lines.
      */
-    virtual unsigned int BlockLines(float maxWidth, float size, const char* txt) const;
+    unsigned int BlockLines(float maxWidth, float size, const char* txt) const override;
 
     /**
      * Calculates the height of a text block in number of lines, when
@@ -59,7 +53,7 @@ public:
      *
      * @return The height of the text block in number of lines.
      */
-    virtual unsigned int BlockLines(float maxWidth, float size, const wchar_t* txt) const;
+    unsigned int BlockLines(float maxWidth, float size, const wchar_t* txt) const override;
 
     /**
      * Draws a text at the specified position.
@@ -71,8 +65,8 @@ public:
      * @param txt The zero-terminated string to draw.
      * @param align The alignment of the text.
      */
-    virtual void DrawString(
-        float x, float y, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const;
+    void DrawString(
+        float x, float y, float size, bool flipY, const char* txt, Alignment align = ALIGN_LEFT_TOP) const override;
 
     /**
      * Draws a text into a specified rectangular area, and performs
@@ -87,8 +81,8 @@ public:
      * @param txt The zero-terminated string to draw.
      * @param align The alignment of the text inside the area.
      */
-    virtual void DrawString(float x, float y, float w, float h, float size, bool flipY, const char* txt,
-        Alignment align = ALIGN_LEFT_TOP) const;
+    void DrawString(float x, float y, float w, float h, float size, bool flipY, const char* txt,
+        Alignment align = ALIGN_LEFT_TOP) const override;
 
     /**
      * Draws a text at the specified position.
@@ -100,8 +94,8 @@ public:
      * @param txt The zero-terminated string to draw.
      * @param align The alignment of the text.
      */
-    virtual void DrawString(
-        float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const;
+    void DrawString(
+        float x, float y, float size, bool flipY, const wchar_t* txt, Alignment align = ALIGN_LEFT_TOP) const override;
 
     /**
      * Draws a text into a specified rectangular area, and performs
@@ -116,8 +110,8 @@ public:
      * @param txt The zero-terminated string to draw.
      * @param align The alignment of the text inside the area.
      */
-    virtual void DrawString(float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt,
-        Alignment align = ALIGN_LEFT_TOP) const;
+    void DrawString(float x, float y, float w, float h, float size, bool flipY, const wchar_t* txt,
+        Alignment align = ALIGN_LEFT_TOP) const override;
 
     /**
      * Draws a text at the specified position.
@@ -141,7 +135,7 @@ public:
      *
      * @return The width in the text in logical units.
      */
-    virtual float LineWidth(float size, const char* txt) const;
+    float LineWidth(float size, const char* txt) const override;
 
     /**
      * Answers the width of the line 'txt' in logical units.
@@ -151,7 +145,7 @@ public:
      *
      * @return The width in the text in logical units.
      */
-    virtual float LineWidth(float size, const wchar_t* txt) const;
+    float LineWidth(float size, const wchar_t* txt) const override;
 
 protected:
     /**
@@ -161,14 +155,14 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    virtual bool initialise(void);
+    bool initialise() override;
 
     /**
      * Deinitialises the object. You must not call this method directly.
      * Instead call 'Deinitialise'. Derived classes must call
      * 'Deinitialise' in EACH dtor.
      */
-    virtual void deinitialise(void);
+    void deinitialise() override;
 
 private:
     /**
@@ -205,7 +199,7 @@ private:
     /**
      * Enters text mode
      */
-    void enterTextMode(void) const;
+    void enterTextMode() const;
 
     /**
      * Layouts the text in separated lines.
@@ -222,7 +216,7 @@ private:
     /**
      * Leaves text mode
      */
-    void leaveTextMode(void) const;
+    void leaveTextMode() const;
 
     /** The open gl texture object id */
     unsigned int texId;
@@ -246,11 +240,8 @@ private:
     mutable bool depthEnabled;
 };
 
-} /* end namespace gl */
-} /* end namespace graphics */
-} // namespace vislib_gl
+} // namespace vislib_gl::graphics::gl
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SIMPLEFONT_H_INCLUDED */

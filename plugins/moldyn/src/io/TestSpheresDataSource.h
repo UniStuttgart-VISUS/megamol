@@ -26,7 +26,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TestSpheresDataSource";
     }
 
@@ -35,7 +35,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Test data source module providing generated spheres data";
     }
 
@@ -44,15 +44,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    TestSpheresDataSource(void);
+    TestSpheresDataSource();
 
     /** Dtor. */
-    virtual ~TestSpheresDataSource(void);
+    ~TestSpheresDataSource() override;
 
 protected:
     /**
@@ -61,14 +61,14 @@ protected:
      *
      * @return The newly created frame object.
      */
-    virtual Frame* constructFrame(void) const;
+    Frame* constructFrame() const override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Loads one frame of the data set into the given 'frame' object. This
@@ -79,12 +79,12 @@ protected:
      * @param frame The frame to be loaded.
      * @param idx The index of the frame to be loaded.
      */
-    virtual void loadFrame(Frame* frame, unsigned int idx);
+    void loadFrame(Frame* frame, unsigned int idx) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Gets the data from the source.
@@ -122,7 +122,7 @@ private:
         /**
          * Dtor
          */
-        virtual ~Frame(void) {
+        ~Frame() override {
             ARY_SAFE_DELETE(this->data);
         }
 
