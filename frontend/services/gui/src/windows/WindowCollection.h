@@ -41,7 +41,7 @@ public:
 
     bool AddWindow(const std::string& window_name, const std::function<void(AbstractWindow::BasicConfig&)>& callback);
 
-    template <typename T, typename... Args>
+    template<typename T, typename... Args>
     bool AddWindow(const std::string& window_name, Args... args) {
         if (window_name.empty()) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
