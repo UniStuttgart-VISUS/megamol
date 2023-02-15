@@ -308,7 +308,7 @@ bool PngBitmapCodec::saveToStream(vislib::sys::File& stream) const {
 
     png_byte** rows = new png_byte*[this->image().Height()];
     unsigned int stride = this->image().Width() * (hasAlpha ? 4 : 3);
-    png_byte* imgData = const_cast<png_byte*>(this->image().PeekDataAs<png_byte>());
+    png_byte* imgData = const_cast<png_byte*>(src->PeekDataAs<png_byte>());
     for (unsigned int y = 0; y < this->image().Height(); y++) {
         rows[y] = imgData;
         imgData += stride;
