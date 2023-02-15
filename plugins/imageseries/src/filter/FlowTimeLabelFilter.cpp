@@ -217,12 +217,14 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
                         }
                     }
 
-                    const auto targetInterface = static_cast<Timestamp>(interface_output);
-                    if (dataIn[index] <= targetInterface && dataIn[neighborIndex] > targetInterface) {
-                        interfaceFluidOut[neighborIndex] = interfaceOut[currentIndex] = 0;
-                    }
-                    if (dataIn[index] <= targetInterface && dataIn[neighborIndex] == LabelSolid) {
-                        interfaceSolidOut[neighborIndex] = interfaceOut[currentIndex] = 0;
+                    if (interface_output != interface_t::none) {
+                        const auto targetInterface = static_cast<Timestamp>(interface_output);
+                        if (dataIn[index] <= targetInterface && dataIn[neighborIndex] > targetInterface) {
+                            interfaceFluidOut[neighborIndex] = interfaceOut[currentIndex] = 0;
+                        }
+                        if (dataIn[index] <= targetInterface && dataIn[neighborIndex] == LabelSolid) {
+                            interfaceSolidOut[neighborIndex] = interfaceOut[currentIndex] = 0;
+                        }
                     }
                 }
             }
