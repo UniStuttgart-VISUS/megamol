@@ -4,8 +4,8 @@
 
 #include "imageseries/graph/GraphData2D.h"
 
-#include "vislib/graphics/PngBitmapCodec.h"
 #include "vislib/graphics/BitmapImage.h"
+#include "vislib/graphics/PngBitmapCodec.h"
 
 #include "../util/GraphCSVExporter.h"
 #include "../util/GraphLuaExporter.h"
@@ -17,6 +17,7 @@
 #include <cmath>
 #include <regex>
 #include <map>
+#include <sstream>
 #include <unordered_set>
 #include <vector>
 
@@ -53,7 +54,34 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     Index height = result->Height();
     Index size = width * height;
 
+    // Create interface images
+    const enum class interface_t : Timestamp {
+        none = -1,
+        full
+    } interface_output = interface_t::none; //static_cast<interface_t>(75); // TODO: parameter?!
 
+    std::shared_ptr<Image> interfaceFluidImage, interfaceSolidImage, interfaceImage;
+    uint16_t* interfaceFluidOut, * interfaceSolidOut, * interfaceOut = nullptr;
+    if (interface_output != interface_t::none) {
+        interfaceFluidImage =
+            std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_WORD);
+        interfaceFluidImage->SetChannelLabel(0, vislib::graphics::BitmapImage::ChannelLabel::CHANNEL_GRAY);
+        interfaceFluidOut = interfaceFluidImage->PeekDataAs<uint16_t>();
+
+        interfaceSolidImage =
+            std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_WORD);
+        interfaceSolidImage->SetChannelLabel(0, vislib::graphics::BitmapImage::ChannelLabel::CHANNEL_GRAY);
+        interfaceSolidOut = interfaceSolidImage->PeekDataAs<uint16_t>();
+
+        interfaceImage =
+            std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_WORD);
+        interfaceImage->SetChannelLabel(0, vislib::graphics::BitmapImage::ChannelLabel::CHANNEL_GRAY);
+        interfaceOut = interfaceImage->PeekDataAs<uint16_t>();
+
+        for (Index index = 0; index < size; ++index) {
+            interfaceFluidOut[index] = interfaceSolidOut[index] = interfaceOut[index] = -1;
+        }
+    }
 
     // Setup graph
     std::vector<std::vector<graph::GraphData2D::NodeID>> nodeIDs;
@@ -126,10 +154,12 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     std::map<Timestamp, std::vector<std::reference_wrapper<FlowFront>>> flow_fronts_by_time; // without solid
 
     for (Index index = 0; index < size; ++index) {
-        if (dataIn[index] == 0 || dataIn[index] == std::numeric_limits<Timestamp>::max()) {
+        if (dataIn[index] == 0) {
             dataOut[index] = LabelSolid;
 
             flow_fronts[LabelSolid].pixels.push_back(index);
+        } else if (dataIn[index] == std::numeric_limits<Timestamp>::max()) {
+            dataOut[index] = LabelEmpty;
         } else {
             dataOut[index] = LabelUnassigned;
         }
@@ -138,6 +168,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     std::vector<Index> floodQueue;
 
     auto floodFill = [&flow_fronts, &flow_fronts_by_time, &floodQueue, &width, &height, &dataIn, &dataOut,
+                         &interfaceFluidOut, &interfaceSolidOut, &interfaceOut, &interface_output,
                          &getOrCreateNodeID](
                          const Index index, const Label label) {
         floodQueue.clear();
@@ -170,12 +201,28 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
                     } else if (dataOut[neighborIndex] == LabelSolid) {
                         // Add current fluid index to interfaces, indicating a fluid-solid interface
                         current_region.interfaces[LabelSolid].insert(currentIndex);
+
+                        if (interface_output == interface_t::full) {
+                            interfaceSolidOut[currentIndex] = interfaceOut[currentIndex] = 0;
+                        }
                     } else if (dataIn[index] > dataIn[neighborIndex]) {
                         // Add neighboring fluid index to interfaces, indicating a past fluid-fluid interface
                         current_region.interfaces[dataIn[neighborIndex]].insert(neighborIndex);
                     } else if (dataIn[index] < dataIn[neighborIndex]) {
                         // Add current fluid index to interfaces, indicating a current fluid-fluid interface
                         current_region.interfaces[dataIn[neighborIndex]].insert(currentIndex);
+
+                        if (interface_output == interface_t::full) {
+                            interfaceFluidOut[neighborIndex] = interfaceOut[currentIndex] = current_region.time;
+                        }
+                    }
+
+                    const auto targetInterface = static_cast<Timestamp>(interface_output);
+                    if (dataIn[index] <= targetInterface && dataIn[neighborIndex] > targetInterface) {
+                        interfaceFluidOut[neighborIndex] = interfaceOut[currentIndex] = 0;
+                    }
+                    if (dataIn[index] <= targetInterface && dataIn[neighborIndex] == LabelSolid) {
+                        interfaceSolidOut[neighborIndex] = interfaceOut[currentIndex] = 0;
                     }
                 }
             }
@@ -326,6 +373,34 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     // Export to Lua file
     graph::util::exportToLua(*nodeGraph, "temp/CurrentGraph.lua", luaExportMeta);
 
+    // Output interface image to hard disk
+    if (interface_output != interface_t::none) {
+        std::stringstream value;
+        value << "_" << static_cast<Timestamp>(interface_output);
+
+        const std::string path = "T:\\temp\\adrian\\interface";
+
+        std::stringstream filenameFluid;
+        filenameFluid << path << "_fluid" << (interface_output == interface_t::full ? "" : value.str().c_str())
+                      << ".png";
+
+        std::stringstream filenameSolid;
+        filenameSolid << path << "_solid" << (interface_output == interface_t::full ? "" : value.str().c_str())
+                      << ".png";
+
+        std::stringstream filename;
+        filename << path << (interface_output == interface_t::full ? "" : value.str().c_str()) << ".png";
+
+        sg::graphics::PngBitmapCodec png_codec;
+        png_codec.Image() = interfaceFluidImage.get();
+        png_codec.Save(filenameFluid.str().c_str());
+        png_codec.Image() = interfaceSolidImage.get();
+        png_codec.Save(filenameSolid.str().c_str());
+        png_codec.Image() = interfaceImage.get();
+        png_codec.Save(filename.str().c_str());
+    }
+
+    // Set output
     auto output = std::make_shared<Output>();
     output->image = result;
     output->graph = nodeGraph;

@@ -31,7 +31,10 @@ public:
         LabelMinimum = 1,
 
         // Maximal label available
-        LabelMaximum = 65533,
+        LabelMaximum = 65532,
+
+        // Empty space
+        LabelEmpty = 65533,
 
         // Label for flow fronts that are "invalid" (e.g., too small)
         LabelInvalid = 65534,
