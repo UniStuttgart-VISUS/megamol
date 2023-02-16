@@ -59,10 +59,10 @@ private:
     std::unique_ptr<glowl::Mesh> mesh, edge_mesh, node_mesh;
 
     std::vector<glm::vec2> graph_node_vertices;
-    std::vector<float> graph_node_radii;
+    std::vector<float> graph_node_radii, graph_node_types;
     std::vector<glm::vec4> graph_edge_lines;
 
-    GLuint node_radius_buffer;
+    GLuint node_radius_buffer, node_type_buffer;
     GLint width, height;
 
     Mode mode = Mode::Auto;

@@ -43,6 +43,7 @@ ImageDisplay2D::ImageDisplay2D(const msf::ShaderFactoryOptionsOpenGL& shaderFact
                 "imageseries_gl/GraphNodeRenderer.frag.glsl");
 
             glGenBuffers(1, &node_radius_buffer);
+            glGenBuffers(1, &node_type_buffer);
         }
     } catch (glowl::GLSLProgramException const& ex) {
         std::stringstream ss;
@@ -55,6 +56,7 @@ ImageDisplay2D::ImageDisplay2D(const msf::ShaderFactoryOptionsOpenGL& shaderFact
 
 ImageDisplay2D::~ImageDisplay2D() {
     glDeleteBuffers(1, &node_radius_buffer);
+    glDeleteBuffers(1, &node_type_buffer);
 }
 
 bool ImageDisplay2D::updateTexture(const vislib::graphics::BitmapImage& image) {
@@ -137,14 +139,32 @@ bool ImageDisplay2D::updateGraph(const ImageSeries::graph::GraphData2D& graph) {
     if (!nodes.empty()) {
         graph_node_vertices.clear();
         graph_node_radii.clear();
+        graph_node_types.clear();
 
         graph_node_vertices.reserve(nodes.size());
         graph_node_radii.reserve(nodes.size());
+        graph_node_types.reserve(nodes.size());
 
         for (const auto& node : nodes) {
             graph_node_vertices.push_back(node.centerOfMass);
             //graph_node_radii.push_back(node.edgeCountIn * 0.5f * std::sqrt(2.0f) + 2.0f);
-            graph_node_radii.push_back(1.0f);
+            graph_node_radii.push_back(2.0f);
+
+            float type = 0.0f; // default
+            if (node.edgeCountIn == 0 && node.edgeCountOut == 0) {
+                type = 6.0f; // isolated
+            } else if (node.edgeCountIn > 1 && node.edgeCountOut > 1) {
+                type = 5.0f; // multi
+            } else if (node.edgeCountIn > 1 && node.edgeCountOut == 1) {
+                type = 4.0f; // merge
+            } else if (node.edgeCountIn == 1 && node.edgeCountOut > 1) {
+                type = 3.0f; // split
+            } else if (node.edgeCountOut == 0) {
+                type = 2.0f; // sink
+            } else if (node.edgeCountIn == 0) {
+                type = 1.0f; // source
+            }
+            graph_node_types.push_back(type);
         }
 
         std::vector<uint32_t> node_indices(graph_node_vertices.size());
@@ -166,10 +186,15 @@ bool ImageDisplay2D::updateGraph(const ImageSeries::graph::GraphData2D& graph) {
 
         glBindBuffer(GL_ARRAY_BUFFER, node_radius_buffer);
         glBufferData(GL_ARRAY_BUFFER, graph_node_radii.size() * sizeof(float), graph_node_radii.data(), GL_STATIC_DRAW);
-
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
 
+        glBindBuffer(GL_ARRAY_BUFFER, node_type_buffer);
+        glBufferData(GL_ARRAY_BUFFER, graph_node_types.size() * sizeof(float), graph_node_types.data(), GL_STATIC_DRAW);
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     } else {
         node_mesh = nullptr;
