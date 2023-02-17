@@ -100,7 +100,8 @@ WindowCollection::WindowCollection() {
     AddWindow<TransferFunctionEditor>("Transfer Function Editor", true);
     this->avail_windows.push_back(std::make_shared<PerformanceMonitor>("Performance Metrics"));
     AddWindow<PerformanceMonitor>("Performance Metrics");
-    this->avail_windows.push_back(std::make_shared<Configurator>("Configurator", this->GetWindow<TransferFunctionEditor>()));
+    this->avail_windows.push_back(
+        std::make_shared<Configurator>("Configurator", this->GetWindow<TransferFunctionEditor>()));
     AddWindow<Configurator>("Configurator", this->GetWindow<TransferFunctionEditor>());
     this->avail_windows.push_back(std::make_shared<RenderingEndPoint>("Rendering Endpoint"));
     // Requires Configurator and TFEditor to be added before
@@ -140,7 +141,7 @@ bool WindowCollection::AddWindow(
             }
         }
     } else {
-        this->created_windows[window_name]=(std::make_shared<AbstractWindow>(
+        this->created_windows[window_name] = (std::make_shared<AbstractWindow>(
             window_name, const_cast<std::function<void(AbstractWindow::BasicConfig&)>&>(callback)));
     }
     return true;
@@ -315,14 +316,14 @@ bool WindowCollection::DeleteWindow(size_t win_hash_id) {
 
 void megamol::gui::WindowCollection::setRequestedResources(
     std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources) {
-    for (auto& [key,win] : created_windows) {
+    for (auto& [key, win] : created_windows) {
         win->setRequestedResources(resources);
     }
 }
 
 
 void megamol::gui::WindowCollection::digestChangedRequestedResources() {
-    for (auto& [key,win] : created_windows) {
+    for (auto& [key, win] : created_windows) {
         win->digestChangedRequestedResources();
     }
 }
