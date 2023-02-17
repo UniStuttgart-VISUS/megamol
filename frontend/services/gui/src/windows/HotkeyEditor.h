@@ -17,12 +17,22 @@
 #include "widgets/HoverToolTip.h"
 #include "widgets/StringSearchWidget.h"
 
+#include "AbstractWindow2.h"
+
 
 namespace megamol {
 namespace gui {
 
-class HotkeyEditor : public AbstractWindow {
+class HotkeyEditor : public AbstractWindow2 {
 public:
+    static WindowType GetTypeInfo() {
+        WindowType wt;
+        wt.unique = true;
+        wt.name = "HotkeyEditor";
+        wt.hotkey = megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F6, core::view::Modifier::NONE);
+        return wt;
+    }
+
     explicit HotkeyEditor(const std::string& window_name);
     ~HotkeyEditor();
 

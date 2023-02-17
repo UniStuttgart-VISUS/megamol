@@ -14,13 +14,6 @@
 namespace megamol::gui {
 class WindowCollection2 {
 public:
-    struct WindowType {
-        bool unique = true;
-        //WindowConfigID id = WINDOW_ID_VOLATILE;
-        //std::string name;
-        frontend_resources::KeyCode hotkey;
-    };
-
     template<typename T>
     void RegisterWindowType() {
         registered_types_[std::type_index(typeid(T))] = T::GetTypeInfo();
@@ -35,9 +28,13 @@ public:
         std::for_each(windows_.begin(), windows_.end(), [&func](auto const& entry) { func(*entry.second); });
     }
 
-    template<typename T>
-    bool AddWindow(std::string const& name) {
-        windows_[name] = std::make_shared<T>(name);
+    bool EnumWindows(std::function<void(AbstractWindow2&)> const& func) {
+        std::for_each(windows_.begin(), windows_.end(), [&func](auto& entry) { func(*entry.second); });
+    }
+
+    template<typename T, typename ...Args>
+    void AddWindow(std::string const& name, Args... args) {
+        windows_[name] = std::make_shared<T>(name, std::forward<Args>(args)...);
     }
 
     void RemoveWindow(std::string const& name) {
@@ -45,9 +42,11 @@ public:
     }
 
     template<typename T>
-    std::shared_ptr<T> GetWindow(std::string const& name) const {
-        return windows_[name];
+    std::shared_ptr<T> GetWindow(std::string const& name) {
+        return std::dynamic_pointer_cast<T>(windows_[name]);
     }
+
+    void Update();
 
 private:
     std::unordered_map<std::type_index, WindowType> registered_types_;

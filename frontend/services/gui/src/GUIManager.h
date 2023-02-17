@@ -24,6 +24,8 @@
 #include "windows/LogConsole.h"
 #include "windows/WindowCollection.h"
 
+#include "windows/WindowCollection2.h"
+
 
 namespace megamol {
 namespace gui {
@@ -257,7 +259,7 @@ public:
     void RegisterHotkeys(megamol::core::view::CommandRegistry& cmdregistry, megamol::core::MegaMolGraph& megamol_graph);
 
     void SetLuaFunc(megamol::frontend_resources::common_types::lua_func_type* lua_func) {
-        auto cons = win_collection.GetWindow<LogConsole>();
+        auto cons = win_collection2.GetWindow<LogConsole>("LogConsole");
         if (cons) {
             cons->SetLuaFunc(lua_func);
         }
@@ -395,7 +397,9 @@ private:
     StateBuffer gui_state;
 
     /** GUI element collections. */
-    WindowCollection win_collection;
+    // WindowCollection win_collection;
+
+    WindowCollection2 win_collection2;
 
     /** Resource requests from the GUI windows. */
     std::vector<std::string> requested_resources;

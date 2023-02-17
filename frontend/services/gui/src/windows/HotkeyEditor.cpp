@@ -12,7 +12,7 @@ using namespace megamol::gui;
 
 
 megamol::gui::HotkeyEditor::HotkeyEditor(const std::string& window_name)
-        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_HOTKEYEDITOR)
+        : AbstractWindow2(window_name)
         , search_widget()
         , tooltip_widget()
         , pending_hotkey_assignment(0)
@@ -26,11 +26,10 @@ megamol::gui::HotkeyEditor::HotkeyEditor(const std::string& window_name)
         , parent_gui_window_hotkey_lambda() {
 
     // Configure HOTKEY EDITOR Window
-    this->win_config.size = ImVec2(0.0f * megamol::gui::gui_scaling.Get(), 0.0f * megamol::gui::gui_scaling.Get());
-    this->win_config.reset_size = this->win_config.size;
-    this->win_config.flags = ImGuiWindowFlags_NoNavInputs;
-    this->win_config.hotkey =
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F6, core::view::Modifier::NONE);
+    this->win_config_.size = ImVec2(0.0f * megamol::gui::gui_scaling.Get(), 0.0f * megamol::gui::gui_scaling.Get());
+    this->win_config_.reset_size = this->win_config_.size;
+    this->win_config_.flags = ImGuiWindowFlags_NoNavInputs;
+    this->win_config_.hotkey = GetTypeInfo().hotkey;
 }
 
 

@@ -15,6 +15,8 @@
 #include "widgets/HoverToolTip.h"
 #include "widgets/ImageWidget.h"
 
+#include "AbstractWindow2.h"
+
 using namespace megamol::core::param;
 
 
@@ -28,8 +30,16 @@ class Parameter;
 /** ************************************************************************
  * 1D Transfer Function Editor GUI window
  */
-class TransferFunctionEditor : public AbstractWindow {
+class TransferFunctionEditor : public AbstractWindow2 {
 public:
+    static WindowType GetTypeInfo() {
+        WindowType wt;
+        wt.unique = true;
+        wt.name = "TransferFunctionEditor";
+        wt.hotkey = megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F8, core::view::Modifier::NONE);
+        return wt;
+    }
+
     TransferFunctionEditor(const std::string& window_name, bool windowed);
     ~TransferFunctionEditor() = default;
 

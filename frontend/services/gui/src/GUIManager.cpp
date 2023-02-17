@@ -15,11 +15,20 @@
 #include "widgets/CorporateWhiteStyle.h"
 #include "widgets/DefaultStyle.h"
 #include "windows/HotkeyEditor.h"
+#include "windows/ParameterList.h"
 #include "windows/PerformanceMonitor.h"
 #include "windows/RenderingEndPoint.h"
 
 
 using namespace megamol::gui;
+
+
+#define LOGCONSOLE_NAME "LogConsole"
+#define HOTKEYEDITOR_NAME "HotkeyEditor"
+#define CONFIGURATOR_NAME "Configurator"
+#define TRANSFERFUNCTIONEDITOR_NAME "TransferFunctionEditor"
+#define PARAMLIST_NAME "ParameterList"
+#define PERFORMANCEMONITOR_NAME "PerformanceMonitor"
 
 
 GUIManager::GUIManager()
@@ -51,6 +60,26 @@ GUIManager::GUIManager()
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_L, core::view::Modifier::CTRL), false};
     this->gui_hotkeys[HOTKEY_GUI_SHOW_HIDE_GUI] = {"_hotkey_gui_show-hide",
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_G, core::view::Modifier::CTRL), false};
+
+    win_collection2.RegisterWindowType<TransferFunctionEditor>();
+    win_collection2.AddWindow<TransferFunctionEditor>(TRANSFERFUNCTIONEDITOR_NAME, true);
+    win_collection2.RegisterWindowType<PerformanceMonitor>();
+    win_collection2.AddWindow<PerformanceMonitor>(PERFORMANCEMONITOR_NAME);
+    win_collection2.RegisterWindowType<HotkeyEditor>();
+    win_collection2.AddWindow<HotkeyEditor>(HOTKEYEDITOR_NAME);
+    win_collection2.RegisterWindowType<LogConsole>();
+    win_collection2.AddWindow<LogConsole>(LOGCONSOLE_NAME);
+    win_collection2.RegisterWindowType<Configurator>();
+    win_collection2.AddWindow<Configurator>(
+        CONFIGURATOR_NAME, win_collection2.GetWindow<TransferFunctionEditor>(TRANSFERFUNCTIONEDITOR_NAME));
+    win_collection2.RegisterWindowType<ParameterList>();
+    ParameterList::RequestParamWindowCallback_t add_param_list_func = [&](std::string const& name, ImGuiID id) {
+        win_collection2.AddWindow<ParameterList>(name, id, win_collection2.GetWindow<Configurator>(CONFIGURATOR_NAME),
+            win_collection2.GetWindow<TransferFunctionEditor>(TRANSFERFUNCTIONEDITOR_NAME), add_param_list_func);
+    };
+    win_collection2.AddWindow<ParameterList>(PARAMLIST_NAME, GUI_INVALID_ID,
+        win_collection2.GetWindow<Configurator>(CONFIGURATOR_NAME),
+        win_collection2.GetWindow<TransferFunctionEditor>(TRANSFERFUNCTIONEDITOR_NAME), add_param_list_func);
 
     this->win_configurator_ptr = this->win_collection.GetWindow<Configurator>();
     assert(this->win_configurator_ptr != nullptr);
@@ -227,13 +256,13 @@ bool GUIManager::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
 
     // Propagate window specific data
-    if (auto win_perfmon_ptr = this->win_collection.GetWindow<PerformanceMonitor>()) {
+    if (auto win_perfmon_ptr = this->win_collection2.GetWindow<PerformanceMonitor>(PERFORMANCEMONITOR_NAME)) {
         win_perfmon_ptr->SetData(
             this->gui_state.stat_averaged_fps, this->gui_state.stat_averaged_ms, this->gui_state.stat_frame_count);
     }
 
     // Update windows
-    this->win_collection.Update();
+    this->win_collection2.Update();
 
     // Delete window
     if (this->gui_state.win_delete_hash_id != 0) {
@@ -312,7 +341,7 @@ bool GUIManager::PostDraw() {
                 this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
 
                 graph_ptr->DrawGlobalParameterWidgets(
-                    this->picking_buffer, this->win_collection.GetWindow<TransferFunctionEditor>());
+                    this->picking_buffer, this->win_collection2.GetWindow<TransferFunctionEditor>(TRANSFERFUNCTIONEDITOR_NAME));
 
                 this->picking_buffer.DisableInteraction();
             }
@@ -550,12 +579,12 @@ void megamol::gui::GUIManager::SetScale(float scale) {
         }
     }
     // Scale all windows
-    const auto size_func = [&](AbstractWindow& wc) {
+    const auto size_func = [&](AbstractWindow2& wc) {
         wc.Config().reset_size *= megamol::gui::gui_scaling.TransitionFactor();
         wc.Config().size *= megamol::gui::gui_scaling.TransitionFactor();
         wc.Config().reset_pos_size = true;
     };
-    this->win_collection.EnumCreatedWindows(size_func);
+    this->win_collection2.EnumWindows(size_func);
 }
 
 
@@ -835,30 +864,33 @@ void GUIManager::draw_menu() {
     if (ImGui::BeginMenu("Windows")) {
         ImGui::MenuItem(
             "Menu", this->gui_hotkeys[HOTKEY_GUI_MENU].keycode.ToString().c_str(), &this->gui_state.menu_visible);
-        const auto func = [&](AbstractWindow& wc) {
-            bool registered_window = (wc.Config().hotkey.key != core::view::Key::KEY_UNKNOWN);
-            if (registered_window) {
-                ImGui::MenuItem(wc.Name().c_str(), wc.Config().hotkey.ToString().c_str(), &wc.Config().show);
+        const auto func = [&](WindowType const& wc) {
+            //bool registered_window = (wc.hotkey.key != core::view::Key::KEY_UNKNOWN);
+            if (wc.unique) {
+                ImGui::MenuItem(wc.name.c_str(), wc.hotkey.ToString().c_str(), &wc.show);
             } else {
-                // Custom unregistered parameter window
-                if (ImGui::BeginMenu(wc.Name().c_str())) {
-                    std::string GUI_MENU_label = "Show";
-                    if (wc.Config().show)
-                        GUI_MENU_label = "Hide";
-                    if (ImGui::MenuItem(GUI_MENU_label.c_str(), wc.Config().hotkey.ToString().c_str(), nullptr)) {
-                        wc.Config().show = !wc.Config().show;
-                    }
-                    // Enable option to delete custom newly created parameter windows
-                    if (wc.WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
-                        if (ImGui::MenuItem("Delete Window")) {
-                            this->gui_state.win_delete_hash_id = wc.Hash();
-                        }
-                    }
-                    ImGui::EndMenu();
+                if (ImGui::MenuItem("Add", wc.hotkey.ToString().c_str(), nullptr)) {
+                    //win_collection2.AddWindow<
                 }
+                // Custom unregistered parameter window
+                //if (ImGui::BeginMenu(wc.name.c_str())) {
+                //    std::string GUI_MENU_label = "Show";
+                //    if (wc.Config().show)
+                //        GUI_MENU_label = "Hide";
+                //    if (ImGui::MenuItem(GUI_MENU_label.c_str(), wc.hotkey.ToString().c_str(), nullptr)) {
+                //        wc.Config().show = !wc.Config().show;
+                //    }
+                //    // Enable option to delete custom newly created parameter windows
+                //    /*if (wc.WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
+                //        if (ImGui::MenuItem("Delete Window")) {
+                //            this->gui_state.win_delete_hash_id = wc.Hash();
+                //        }
+                //    }*/
+                //    ImGui::EndMenu();
+                //}
             }
         };
-        this->win_collection.EnumCreatedWindows(func);
+        this->win_collection2.EnumRegisteredWindows(func);
 
         ImGui::Separator();
 
@@ -1548,7 +1580,7 @@ std::string GUIManager::extract_fontname(const std::string& imgui_fontname) cons
 void GUIManager::RegisterHotkeys(
     megamol::core::view::CommandRegistry& cmdregistry, megamol::core::MegaMolGraph& megamolgraph) {
 
-    if (auto win_hkeditor_ptr = this->win_collection.GetWindow<HotkeyEditor>()) {
+    if (auto win_hkeditor_ptr = this->win_collection2.GetWindow<HotkeyEditor>(HOTKEYEDITOR_NAME)) {
         win_hkeditor_ptr->RegisterHotkeys(&cmdregistry, &megamolgraph, &this->win_collection, &this->gui_hotkeys);
     }
 }

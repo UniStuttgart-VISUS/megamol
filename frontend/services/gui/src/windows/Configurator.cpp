@@ -14,7 +14,7 @@ using namespace megamol::gui;
 
 megamol::gui::Configurator::Configurator(
     const std::string& window_name, std::shared_ptr<TransferFunctionEditor> win_tfe_ptr)
-        : AbstractWindow(window_name, AbstractWindow::WINDOW_ID_CONFIGURATOR)
+        : AbstractWindow2(window_name)
         , graph_state()
         , graph_collection()
         , win_tfeditor_ptr(win_tfe_ptr)
@@ -35,13 +35,13 @@ megamol::gui::Configurator::Configurator(
     assert(this->win_tfeditor_ptr != nullptr);
 
     // init hotkeys
-    this->win_hotkeys[HOTKEY_CONFIGURATOR_MODULE_SEARCH] = {"_hotkey_gui_configurator_module_search",
+    this->win_hotkeys_[HOTKEY_CONFIGURATOR_MODULE_SEARCH] = {"_hotkey_gui_configurator_module_search",
         core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
-    this->win_hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH] = {"_hotkey_gui_configurator_param_search",
+    this->win_hotkeys_[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH] = {"_hotkey_gui_configurator_param_search",
         core::view::KeyCode(core::view::Key::KEY_P, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
-    this->win_hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM] = {
+    this->win_hotkeys_[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM] = {
         "_hotkey_gui_configurator_delete_graph_entry", core::view::KeyCode(core::view::Key::KEY_DELETE), false};
-    this->win_hotkeys[HOTKEY_CONFIGURATOR_SAVE_PROJECT] = {"_hotkey_gui_configurator_save_project",
+    this->win_hotkeys_[HOTKEY_CONFIGURATOR_SAVE_PROJECT] = {"_hotkey_gui_configurator_save_project",
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
         false};
 
@@ -56,11 +56,10 @@ megamol::gui::Configurator::Configurator(
     this->graph_state.new_running_graph_uid = GUI_INVALID_ID;
 
     // Configure CONFIGURATOR Window
-    this->win_config.size = ImVec2(750.0f * megamol::gui::gui_scaling.Get(), 500.0f * megamol::gui::gui_scaling.Get());
-    this->win_config.reset_size = this->win_config.size;
-    this->win_config.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs;
-    this->win_config.hotkey =
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F11, core::view::Modifier::NONE);
+    this->win_config_.size = ImVec2(750.0f * megamol::gui::gui_scaling.Get(), 500.0f * megamol::gui::gui_scaling.Get());
+    this->win_config_.reset_size = this->win_config_.size;
+    this->win_config_.flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs;
+    this->win_config_.hotkey = GetTypeInfo().hotkey;
 }
 
 
@@ -106,7 +105,7 @@ bool megamol::gui::Configurator::Draw() {
     }
 
     // Update state -------------------------------------------------------
-    this->graph_state.hotkeys = this->win_hotkeys;
+    this->graph_state.hotkeys = this->win_hotkeys_;
 
     // Process hotkeys
     /// HOTKEY_CONFIGURATOR_SAVE_PROJECT
@@ -155,7 +154,7 @@ bool megamol::gui::Configurator::Draw() {
     // Only reset 'externally' processed hotkeys
     this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_PARAMETER_SEARCH].is_pressed = false;
     this->graph_state.hotkeys[HOTKEY_CONFIGURATOR_DELETE_GRAPH_ITEM].is_pressed = false;
-    this->win_hotkeys = this->graph_state.hotkeys;
+    this->win_hotkeys_ = this->graph_state.hotkeys;
 
     return true;
 }
@@ -216,16 +215,16 @@ void megamol::gui::Configurator::PopUps() {
             ImGui::OpenPopup(pop_up_id.c_str(), ImGuiPopupFlags_None);
             this->search_widget.SetSearchFocus();
 
-            float diff_width = (this->win_config.position.x + this->win_config.size.x - this->module_list_popup_pos.x);
-            float diff_height = (this->win_config.position.y + this->win_config.size.y - this->module_list_popup_pos.y);
+            float diff_width = (this->win_config_.position.x + this->win_config_.size.x - this->module_list_popup_pos.x);
+            float diff_height = (this->win_config_.position.y + this->win_config_.size.y - this->module_list_popup_pos.y);
             if (diff_width < popup_width) {
                 this->module_list_popup_pos.x -= ((popup_width - diff_width) + offset_x);
             }
-            this->module_list_popup_pos.x = std::max(this->module_list_popup_pos.x, this->win_config.position.x);
+            this->module_list_popup_pos.x = std::max(this->module_list_popup_pos.x, this->win_config_.position.x);
             if (diff_height < popup_height) {
                 this->module_list_popup_pos.y -= ((popup_height - diff_height) + offset_y);
             }
-            this->module_list_popup_pos.y = std::max(this->module_list_popup_pos.y, this->win_config.position.y);
+            this->module_list_popup_pos.y = std::max(this->module_list_popup_pos.y, this->win_config_.position.y);
             ImGui::SetNextWindowPos(this->module_list_popup_pos);
             ImGui::SetNextWindowSize(ImVec2(10.0f, 10.0f));
         }

@@ -32,6 +32,14 @@ public:
     virtual void StateToJSON(nlohmann::json& inout_json) const = 0;
 };
 
+struct WindowType {
+    bool unique = true;
+    //WindowConfigID id = WINDOW_ID_VOLATILE;
+    std::string name;
+    frontend_resources::KeyCode hotkey;
+    bool show = false;
+};
+
 class AbstractWindow2 : public ResourceInterface, JSONSerializable {
 public:
     AbstractWindow2(std::string const& name);

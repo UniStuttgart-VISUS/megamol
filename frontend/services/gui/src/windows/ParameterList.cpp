@@ -14,10 +14,10 @@
 using namespace megamol::gui;
 
 
-ParameterList::ParameterList(const std::string& window_name, AbstractWindow::WindowConfigID win_id,
-    ImGuiID initial_module_uid, std::shared_ptr<Configurator> win_configurator,
-    std::shared_ptr<TransferFunctionEditor> win_tfeditor, const RequestParamWindowCallback_t& add_parameter_window)
-        : AbstractWindow(window_name, win_id)
+ParameterList::ParameterList(const std::string& window_name, ImGuiID initial_module_uid,
+    std::shared_ptr<Configurator> win_configurator, std::shared_ptr<TransferFunctionEditor> win_tfeditor,
+    const RequestParamWindowCallback_t& add_parameter_window)
+        : AbstractWindow2(window_name)
         , win_configurator_ptr(win_configurator)
         , win_tfeditor_ptr(win_tfeditor)
         , request_new_parameter_window_func(add_parameter_window)
@@ -26,18 +26,18 @@ ParameterList::ParameterList(const std::string& window_name, AbstractWindow::Win
         , search_widget()
         , tooltip() {
 
-    assert((this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) ||
-           (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS));
+    /*assert((this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) ||
+           (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS));*/
     assert(this->win_configurator_ptr != nullptr);
     assert(this->win_tfeditor_ptr != nullptr);
 
     // Configure PARAMETER LIST Window
-    this->win_config.show = true;
-    this->win_config.size = ImVec2(400.0f * megamol::gui::gui_scaling.Get(), 500.0f * megamol::gui::gui_scaling.Get());
-    this->win_config.reset_size = this->win_config.size;
-    this->win_config.flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs;
+    this->win_config_.show = true;
+    this->win_config_.size = ImVec2(400.0f * megamol::gui::gui_scaling.Get(), 500.0f * megamol::gui::gui_scaling.Get());
+    this->win_config_.reset_size = this->win_config_.size;
+    this->win_config_.flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoNavInputs;
 
-    if (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
+    /*if (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
         if (initial_module_uid != GUI_INVALID_ID) {
             this->win_modules_list.emplace_back(initial_module_uid);
         }
@@ -46,7 +46,10 @@ ParameterList::ParameterList(const std::string& window_name, AbstractWindow::Win
             megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false};
         this->win_config.hotkey =
             megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F10, core::view::Modifier::NONE);
-    }
+    }*/
+    this->win_hotkeys_[HOTKEY_GUI_PARAMETER_SEARCH] = {"_hotkey_gui_parameterlist_param_search",
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false};
+    this->win_config_.hotkey = GetTypeInfo().hotkey;
 }
 
 
@@ -86,12 +89,12 @@ bool ParameterList::Draw() {
     this->tooltip.ToolTip(param_help);
 
     // Parameter substring name filtering (only for main parameter view)
-    if (this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS) {
-        if (this->win_hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed) {
+    /*if (this->WindowID() == AbstractWindow::WINDOW_ID_MAIN_PARAMETERS)*/ {
+        if (this->win_hotkeys_[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed) {
             this->search_widget.SetSearchFocus();
-            this->win_hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed = false;
+            this->win_hotkeys_[HOTKEY_GUI_PARAMETER_SEARCH].is_pressed = false;
         }
-        std::string help_test = "[" + this->win_hotkeys[HOTKEY_GUI_PARAMETER_SEARCH].keycode.ToString() +
+        std::string help_test = "[" + this->win_hotkeys_[HOTKEY_GUI_PARAMETER_SEARCH].keycode.ToString() +
                                 "] Set keyboard focus to search input field.\n"
                                 "Case insensitive substring search in module and parameter names.";
         this->search_widget.Widget("guiwindow_parameter_search", help_test);
@@ -112,13 +115,13 @@ bool ParameterList::Draw() {
             bool skip = false;
             std::string module_label = module_ptr->FullName();
             // Consider always all modules for main parameter window
-            if (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
-                // Check if module should be considered.
-                if (std::find(this->win_modules_list.begin(), this->win_modules_list.end(), module_ptr->UID()) ==
-                    this->win_modules_list.end()) {
-                    skip = true;
-                }
-            }
+            //if (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
+            //    // Check if module should be considered.
+            //    if (std::find(this->win_modules_list.begin(), this->win_modules_list.end(), module_ptr->UID()) ==
+            //        this->win_modules_list.end()) {
+            //        skip = true;
+            //    }
+            //}
             if (!skip && !this->win_extended_mode) {
                 skip = !module_ptr->ParametersVisible();
             }
@@ -163,21 +166,20 @@ bool ParameterList::Draw() {
                         if (ImGui::MenuItem("Copy to new Window")) {
                             std::srand(std::time(nullptr));
                             std::string window_name = "Parameters###parameters_" + std::to_string(std::rand());
-                            this->request_new_parameter_window_func(
-                                window_name, AbstractWindow::WINDOW_ID_PARAMETERS, module_ptr->UID());
+                            this->request_new_parameter_window_func(window_name, module_ptr->UID());
                         }
 
                         // Deleting module's parameters is not available in main parameter window.
-                        if (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
-                            if (ImGui::MenuItem("Delete from List")) {
-                                auto find_iter = std::find(
-                                    this->win_modules_list.begin(), this->win_modules_list.end(), module_ptr->UID());
-                                // Break if module name is not contained in list
-                                if (find_iter != this->win_modules_list.end()) {
-                                    this->win_modules_list.erase(find_iter);
-                                }
-                            }
-                        }
+                        //if (this->WindowID() == AbstractWindow::WINDOW_ID_PARAMETERS) {
+                        //    if (ImGui::MenuItem("Delete from List")) {
+                        //        auto find_iter = std::find(
+                        //            this->win_modules_list.begin(), this->win_modules_list.end(), module_ptr->UID());
+                        //        // Break if module name is not contained in list
+                        //        if (find_iter != this->win_modules_list.end()) {
+                        //            this->win_modules_list.erase(find_iter);
+                        //        }
+                        //    }
+                        //}
                         ImGui::EndPopup();
                     }
 
