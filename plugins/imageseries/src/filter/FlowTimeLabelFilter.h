@@ -49,20 +49,27 @@ public:
         // Timestamp map within which to search for connected blobs.
         AsyncImagePtr timeMap;
 
-        // Maximum number of blobs to track (NYI)
-        std::size_t blobCountLimit = 250;
+        // Select output image
+        enum class image_t : int { simplified, invalid, original } outputImage;
 
-        // Minimum number of pixels required for a blob to be tracked
-        std::size_t minBlobSize = 50;
+        // Inflow area
+        enum class inflow_t : int { left, bottom, right, top } inflowArea;
+        int inflowMargin;
 
-        // Maximum number of frames by which a pixel may differ from its neighbor.
-        std::size_t timeThreshold = 20;
+        // Minimum obstacle size, used as parameter for graph simplification
+        int minObstacleSize;
 
-        // Maximum number of frames by which a pixel may differ from its neighbor.
-        std::size_t minimumTimestamp = 10;
-
-        // Maximum number of frames by which a pixel may differ from its neighbor.
-        std::size_t maximumTimestamp = 65535;
+        // Applied graph fixes/simplifications
+        enum class fixes_t : int {
+            nope = 0,
+            isolated = 1,
+            false_sources = 2,
+            false_sinks = 4,
+            unimportant_sinks = 8,
+            resolve_diamonds = 16,
+            combine_trivial = 32,
+            combine_tiny = 64
+        } fixes;
     };
 
     FlowTimeLabelFilter(Input input);
@@ -96,3 +103,14 @@ struct hash<std::shared_ptr<const megamol::ImageSeries::filter::FlowTimeLabelFil
     }
 };
 } // namespace std
+
+static auto operator&(megamol::ImageSeries::filter::FlowTimeLabelFilter::Input::fixes_t lhs,
+    megamol::ImageSeries::filter::FlowTimeLabelFilter::Input::fixes_t rhs) {
+    return static_cast<int>(lhs) & static_cast<int>(rhs);
+}
+
+static auto operator|(megamol::ImageSeries::filter::FlowTimeLabelFilter::Input::fixes_t lhs,
+    megamol::ImageSeries::filter::FlowTimeLabelFilter::Input::fixes_t rhs) {
+    return static_cast<megamol::ImageSeries::filter::FlowTimeLabelFilter::Input::fixes_t>(
+        static_cast<int>(lhs) | static_cast<int>(rhs));
+}

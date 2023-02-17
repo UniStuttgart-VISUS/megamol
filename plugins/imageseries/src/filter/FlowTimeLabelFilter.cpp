@@ -116,6 +116,9 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         nodeGraph->getNode(edge.from).edgeCountOut++;
         nodeGraph->getNode(edge.to).edgeCountIn++;
 
+        nodeGraph->getNode(edge.from).childNodes.insert(edge.to);
+        nodeGraph->getNode(edge.to).parentNodes.insert(edge.from);
+
         nodeGraph->addEdge(std::move(edge));
     };
 
@@ -146,8 +149,6 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         } bounding_rectangle{};
 
         std::map<Timestamp, std::unordered_set<Index>> interfaces;
-
-        bool valid = true;
     };
 
     std::vector<FlowFront> flow_fronts(1);
@@ -289,24 +290,6 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         flow_fronts_by_time[flow_fronts[i].time].push_back(flow_fronts[i]);
     }
 
-    // Filter or combine flow fronts
-    const bool remove = true; // TODO: user input
-    const auto min_size = 5; // TODO: user input
-
-    for (std::size_t i = 1; i < flow_fronts.size(); ++i) {
-        if (flow_fronts[i].area < min_size) {
-            flow_fronts[i].valid = !remove;
-
-            if (remove) {
-                for (const auto& pixel : flow_fronts[i].pixels) {
-                    dataOut[pixel] = LabelInvalid;
-                }
-            } else {
-                // TODO
-            }
-        }
-    }
-
     // Create graph by iterating over flow fronts with time monotonically increasing
     for (auto& flow_fronts : flow_fronts_by_time) {
         for (auto& flow_front_ref : flow_fronts.second) {
@@ -321,9 +304,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
                     past_time = it->first;
 
                     for (const auto index : it->second) {
-                        if (dataOut[index] != LabelInvalid) {
-                            past_neighboring_flow_fronts.insert(dataOut[index]);
-                        }
+                        past_neighboring_flow_fronts.insert(dataOut[index]);
                     }
 
                     break;
@@ -342,6 +323,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     // Copy flow front information into graph nodes
     for (std::size_t i = 1; i < flow_fronts.size(); ++i) {
         auto& node = nodeGraph->getNode(flow_fronts[i].node_id);
+        node.flowFrontIndex = i;
         node.frameIndex = flow_fronts[i].time;
         node.centerOfMass = glm::vec2{flow_fronts[i].center_of_mass.x, flow_fronts[i].center_of_mass.y};
         node.velocity = glm::vec2{flow_fronts[i].velocity.x, flow_fronts[i].velocity.y};
@@ -357,14 +339,153 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
             static_cast<int>(flow_fronts[i].bounding_rectangle.y_max)};
     }
 
-    // TODO: Simplify graph
+    // Set nodes to be invalid if they meet specific criteria
+    for (std::size_t i = 1; i < flow_fronts.size(); ++i) {
+        auto& node = nodeGraph->getNode(flow_fronts[i].node_id);
+
+        bool invalid = !node.valid;
+
+        // (+) Remove isolated nodes, i.e., nodes that do not have incoming and outgoing connections
+        if (input.fixes & Input::fixes_t::isolated) {
+            invalid |= node.edgeCountIn == 0 && node.edgeCountOut == 0;
+        }
+
+        // (+) Remove source nodes that are not in an area where sources are expected (per user input)
+        if (input.fixes & Input::fixes_t::false_sources) {
+            int inflowRef = 0;
+            switch (input.inflowArea) {
+            case Input::inflow_t::left:
+                inflowRef = node.boundingBox.x1;
+                break;
+            case Input::inflow_t::bottom:
+                inflowRef = node.boundingBox.y1;
+                break;
+            case Input::inflow_t::right:
+                inflowRef = node.boundingBox.x2 - input.timeMap->getMetadata().width;
+                break;
+            case Input::inflow_t::top:
+                inflowRef = node.boundingBox.y2 - input.timeMap->getMetadata().height;
+                break;
+            }
+
+            invalid |= node.edgeCountIn == 0 && std::abs(inflowRef) > input.inflowMargin;
+
+            // (+) Remove nodes that have incoming edges only from invalid nodes, as these were originally connected
+            //     to now removed sources, as per above directive
+            node.valid = !invalid;
+
+            std::list<graph::GraphData2D::NodeID> checkNodes(node.childNodes.begin(), node.childNodes.end());
+            for (auto it = checkNodes.begin(); it != checkNodes.end(); checkNodes.erase(it++)) {
+                auto& node = nodeGraph->getNode(*it);
+
+                bool is_valid = false;
+                for (const auto& parent : node.parentNodes) {
+                    is_valid |= nodeGraph->getNode(parent).valid;
+                }
+
+                if (!is_valid || !node.valid) {
+                    node.valid = false;
+                    checkNodes.insert(checkNodes.end(), node.childNodes.begin(), node.childNodes.end());
+                }
+            }
+        }
+
+        // (+) Remove sinks that have neighbors with larger time step value, as these cannot be real sinks
+        if (input.fixes & Input::fixes_t::false_sinks && node.edgeCountOut == 0) {
+            for (auto it = flow_fronts[i].interfaces.crbegin(); it != flow_fronts[i].interfaces.crend(); ++it) {
+                if (it->first != LabelSolid && it->first <= LabelMaximum && it->first > flow_fronts[i].time) {
+                    invalid |= true;
+
+                    break;
+                }
+            }
+        }
+
+        // (?) Remove sinks whose single parent is not a node with one incoming and one outgoing edge,
+        //     as this probably indicates an irrelevant sink
+        if (input.fixes & Input::fixes_t::unimportant_sinks) {
+            invalid |= node.edgeCountIn == 1 && node.edgeCountOut == 0 &&
+                       !(nodeGraph->getNode(*node.parentNodes.begin()).edgeCountIn == 1 &&
+                           nodeGraph->getNode(*node.parentNodes.begin()).edgeCountOut == 1);
+        }
+
+        // TODO
+
+        node.valid = !invalid;
+    }
+
+    // Mark pixels of invalid nodes as invalid
+    for (std::size_t i = 1; i < flow_fronts.size(); ++i) {
+        auto& node = nodeGraph->getNode(flow_fronts[i].node_id);
+
+        if (!node.valid && input.outputImage == Input::image_t::invalid) {
+            for (const auto& pixel : flow_fronts[i].pixels) {
+                dataOut[pixel] = LabelInvalid;
+            }
+        }
+    }
+
+    // Re-build graph with valid nodes only
+    std::vector<std::vector<graph::GraphData2D::NodeID>> oldNodeIDs;
+    auto oldNodeGraph = std::make_shared<graph::GraphData2D>();
+
+    std::swap(nodeIDs, oldNodeIDs);
+    std::swap(nodeGraph, oldNodeGraph);
+
+    std::unordered_map<graph::GraphData2D::NodeID, graph::GraphData2D::NodeID> nodeMap;
+
+    for (std::size_t i = 1; i < flow_fronts.size(); ++i) {
+        const auto oldNodeID = flow_fronts[i].node_id;
+        const auto& oldNode = oldNodeGraph->getNode(oldNodeID);
+
+        if (oldNode.valid) {
+            flow_fronts[i].node_id = getOrCreateNodeID(oldNode.frameIndex, flow_fronts[i].label);
+
+            auto& newNode = nodeGraph->getNode(flow_fronts[i].node_id);
+            newNode = oldNode;
+            newNode.edgeCountIn = 0;
+            newNode.edgeCountOut = 0;
+            newNode.childNodes.clear();
+            newNode.parentNodes.clear();
+
+            nodeMap[oldNodeID] = flow_fronts[i].node_id;
+        }
+    }
+
+    for (const auto& oldEdge : oldNodeGraph->getEdges()) {
+        const auto& oldNodeFrom = oldNodeGraph->getNode(oldEdge.from);
+        const auto& oldNodeTo = oldNodeGraph->getNode(oldEdge.to);
+
+        if (oldNodeFrom.valid && oldNodeTo.valid) {
+            addEdgeByID(nodeMap.at(oldEdge.from), nodeMap.at(oldEdge.to));
+        }
+    }
+
+    // Simplify graph by combining tiny areas that result most likely from very small local velocities
+    if (input.fixes & Input::fixes_t::combine_tiny) {
+
+    }
+
+    // Simplify graph by resolving diamond patterns into 1-to-1 connected nodes
+    // Idea:
+    // (1) combine subsequent 1-to-1 nodes into virtual nodes with length equal to the sum of node distances
+    // (2) resolve diamond patterns if and only if the (virtual) nodes involved are
+    //     below the user-defined threshold for minimum obstacle size
+    if (input.fixes & Input::fixes_t::resolve_diamonds) {
+
+    }
+
+    // Simplify graph by combining subsequent nodes of 1-to-1 connections
+    if (input.fixes & Input::fixes_t::combine_trivial) {
+
+    }
 
 
 
 
 
 
-
+    // Export to Lua file
     graph::util::LuaExportMeta luaExportMeta;
     luaExportMeta.path = input.timeMap->getMetadata().filename;
     luaExportMeta.minRange = 0.0f;
@@ -372,7 +493,6 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     luaExportMeta.imgW = input.timeMap->getMetadata().width;
     luaExportMeta.imgH = input.timeMap->getMetadata().height;
 
-    // Export to Lua file
     graph::util::exportToLua(*nodeGraph, "temp/CurrentGraph.lua", luaExportMeta);
 
     // Output interface image to hard disk
@@ -413,8 +533,8 @@ ImageMetadata FlowTimeLabelFilter::getMetadata() const {
     if (input.timeMap) {
         ImageMetadata metadata = input.timeMap->getMetadata();
         metadata.bytesPerChannel = 1;
-        metadata.hash = util::computeHash(input.timeMap, input.blobCountLimit, input.minBlobSize, input.timeThreshold,
-            input.minimumTimestamp, input.maximumTimestamp);
+        metadata.hash = util::computeHash(
+            input.timeMap, input.outputImage, input.inflowArea, input.inflowMargin, input.minObstacleSize, input.fixes);
         return metadata;
     } else {
         return {};

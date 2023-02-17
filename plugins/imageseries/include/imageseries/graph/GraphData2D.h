@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <limits>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace megamol::ImageSeries::graph {
@@ -30,6 +31,8 @@ public:
     };
 
     struct Node {
+        std::size_t flowFrontIndex = 0;
+
         std::uint32_t frameIndex = 0;
         glm::vec2 centerOfMass = {};
         glm::vec2 velocity = {};
@@ -38,10 +41,13 @@ public:
         float interfaceFluid = 0.f;
         float interfaceSolid = 0.f;
         float averageChordLength = 0.f;
-        std::uint8_t edgeCountIn = 0;
-        std::uint8_t edgeCountOut = 0;
         Rect boundingBox;
         std::uint8_t modified = 0;
+        bool valid = true;
+
+        std::uint8_t edgeCountIn = 0;
+        std::uint8_t edgeCountOut = 0;
+        std::unordered_set<NodeID> parentNodes, childNodes;
     };
 
     struct Edge {
