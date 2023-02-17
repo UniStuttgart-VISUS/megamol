@@ -3,7 +3,9 @@
 #include "OpenGL_Context.h"
 
 #include "imageseries/graph/GraphData2DCall.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/log/Log.h"
 
 #include <glowl/glowl.h>
@@ -16,6 +18,8 @@ ImageSeriesRenderer::ImageSeriesRenderer()
         : getDataCaller("requestImageSeries", "Requests image data from a series.")
         , getGraphCaller("requestGraph", "Requests graph data to render on top of the image series.")
         , displayModeParam("Display Mode", "Controls how the image should be presented.")
+        , renderGraphParam("Render Graph", "Render the input graph if there is one.")
+        , baseRadiusParam("Node base radius", "Minimum radius of the nodes.")
         , graph_hash(-7345) {
     getDataCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getDataCaller);
@@ -33,6 +37,12 @@ ImageSeriesRenderer::ImageSeriesRenderer()
     displayModeParam << displayMode;
     displayModeParam.SetUpdateCallback(&ImageSeriesRenderer::displayModeChangedCallback);
     MakeSlotAvailable(&displayModeParam);
+
+    renderGraphParam << new core::param::BoolParam(true);
+    MakeSlotAvailable(&renderGraphParam);
+
+    baseRadiusParam << new core::param::FloatParam(2.0);
+    MakeSlotAvailable(&baseRadiusParam);
 }
 
 ImageSeriesRenderer::~ImageSeriesRenderer() {
@@ -113,14 +123,20 @@ bool ImageSeriesRenderer::Render(mmstd_gl::CallRender2DGL& call) {
         display->updateTexture(image);
 
         if (auto* getData = getGraphCaller.CallAs<ImageSeries::GraphData2DCall>()) {
-            if ((*getData)(ImageSeries::GraphData2DCall::CallGetData) && getData->DataHash() != graph_hash) {
-                graph_hash = getData->DataHash();
-                display->updateGraph(*getData->GetOutput().graph->getData());
+            if ((*getData)(ImageSeries::GraphData2DCall::CallGetData)) {
+                auto input_hash = util::combineHash<util::Hash>(
+                    getData->DataHash(), util::computeHash(baseRadiusParam.Param<core::param::FloatParam>()->Value()));
+
+                if (input_hash != graph_hash) {
+                    graph_hash = input_hash;
+                    display->updateGraph(*getData->GetOutput().graph->getData(),
+                        baseRadiusParam.Param<core::param::FloatParam>()->Value());
+                }
             }
         }
     }
 
-    return display->render(call);
+    return display->render(call, renderGraphParam.Param<core::param::BoolParam>()->Value());
 }
 
 bool ImageSeriesRenderer::displayModeChangedCallback(core::param::ParamSlot& param) {

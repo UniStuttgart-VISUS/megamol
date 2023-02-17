@@ -10,5 +10,5 @@ layout(location = 1) out float type;
 void main() {
     radius = radiusIn;
     type = typeIn;
-    gl_Position = vec4(pos, 0.0, 1.0);
+    gl_Position = vec4(pos + vec2(0.5), 0.0, 1.0);
 }

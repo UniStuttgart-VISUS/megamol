@@ -12,14 +12,15 @@ bool is_approx(float ref, float val, float margin = 0.1) {
 void main() {
     float radius = sqrt(texCoord.x * texCoord.x + texCoord.y * texCoord.y);
 
-    float fadeout_region = 0.95;
+    float fadeout_region = 0.99;
 
     float alpha = 1.0;
     if (radius > 1.0) alpha = 0.0;
     else if (radius > fadeout_region) alpha = 1.0 - ((radius - fadeout_region) / (1.0 - fadeout_region));
 
     vec3 color = vec3(1.0, 1.0, 1.0);
-    if (is_approx(6.0, nodeType)) { // isolated
+    if (is_approx(6.0, nodeType)) { // isolated/invalid
+        alpha = 0.0;
         color = vec3(1.0, 1.0, 0.0);
     } else if (is_approx(5.0, nodeType)) { // multi
         color = vec3(0.784, 0.392, 0.784);

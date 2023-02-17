@@ -131,7 +131,7 @@ bool ImageDisplay2D::updateTexture(const vislib::graphics::BitmapImage& image) {
     return true;
 }
 
-bool ImageDisplay2D::updateGraph(const ImageSeries::graph::GraphData2D& graph) {
+bool ImageDisplay2D::updateGraph(const ImageSeries::graph::GraphData2D& graph, const float baseRadius) {
     const auto& nodes = graph.getNodes();
     const auto& edges = graph.getEdges();
 
@@ -147,11 +147,11 @@ bool ImageDisplay2D::updateGraph(const ImageSeries::graph::GraphData2D& graph) {
 
         for (const auto& node : nodes) {
             graph_node_vertices.push_back(node.centerOfMass);
-            //graph_node_radii.push_back(node.edgeCountIn * 0.5f * std::sqrt(2.0f) + 2.0f);
-            graph_node_radii.push_back(2.0f);
+            //graph_node_radii.push_back(node.edgeCountIn * 0.5f * std::sqrt(2.0f) + baseRadius);
+            graph_node_radii.push_back(baseRadius);
 
             float type = 0.0f; // default
-            if (node.edgeCountIn == 0 && node.edgeCountOut == 0) {
+            if ((node.edgeCountIn == 0 && node.edgeCountOut == 0) || !node.valid) {
                 type = 6.0f; // isolated
             } else if (node.edgeCountIn > 1 && node.edgeCountOut > 1) {
                 type = 5.0f; // multi
@@ -239,14 +239,14 @@ glm::vec2 ImageDisplay2D::getImageSize() const {
     return glm::vec2(width, height);
 }
 
-bool ImageDisplay2D::render(megamol::mmstd_gl::CallRender2DGL& call) {
+bool ImageDisplay2D::render(megamol::mmstd_gl::CallRender2DGL& call, const bool render_graph) {
     auto camera = call.GetCamera();
-    return renderImpl(call.GetFramebuffer(), camera.getProjectionMatrix() * camera.getViewMatrix());
+    return renderImpl(call.GetFramebuffer(), camera.getProjectionMatrix() * camera.getViewMatrix(), render_graph);
 }
 
-bool ImageDisplay2D::render(megamol::mmstd_gl::CallRender3DGL& call) {
+bool ImageDisplay2D::render(megamol::mmstd_gl::CallRender3DGL& call, const bool render_graph) {
     auto camera = call.GetCamera();
-    return renderImpl(call.GetFramebuffer(), camera.getProjectionMatrix() * camera.getViewMatrix());
+    return renderImpl(call.GetFramebuffer(), camera.getProjectionMatrix() * camera.getViewMatrix(), render_graph);
 }
 
 void ImageDisplay2D::setDisplayMode(Mode mode) {
@@ -265,7 +265,8 @@ ImageDisplay2D::Mode ImageDisplay2D::getEffectiveDisplayMode() const {
     }
 }
 
-bool ImageDisplay2D::renderImpl(std::shared_ptr<glowl::FramebufferObject> framebuffer, const glm::mat4& matrix) {
+bool ImageDisplay2D::renderImpl(
+    std::shared_ptr<glowl::FramebufferObject> framebuffer, const glm::mat4& matrix, const bool render_graph) {
     if (!framebuffer || !shader || !texture || !mesh) {
         return false;
     }
@@ -292,23 +293,27 @@ bool ImageDisplay2D::renderImpl(std::shared_ptr<glowl::FramebufferObject> frameb
     GLboolean revert_blend;
     glGetBooleanv(GL_BLEND, &revert_blend);
     glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // (2) Render edges
-    if (edge_mesh) {
-        edge_shader->use();
-        edge_shader->setUniform(
-            "matrix", glm::scale(glm::translate(matrix, glm::vec3(0.0, height, 0.0)), glm::vec3(1.0, -1.0, 1.0)));
+    if (render_graph) {
+        // (2) Render edges
+        if (edge_mesh) {
+            edge_shader->use();
+            edge_shader->setUniform(
+                "matrix", glm::scale(glm::translate(matrix, glm::vec3(0.0, height, 0.0)), glm::vec3(1.0, -1.0, 1.0)));
+            edge_shader->setUniform("width", 0.5f);
 
-        edge_mesh->draw();
-    }
+            edge_mesh->draw();
+        }
 
-    // (3) Render nodes
-    if (node_mesh) {
-        node_shader->use();
-        node_shader->setUniform(
-            "matrix", glm::scale(glm::translate(matrix, glm::vec3(0.0, height, 0.0)), glm::vec3(1.0, -1.0, 1.0)));
+        // (3) Render nodes
+        if (node_mesh) {
+            node_shader->use();
+            node_shader->setUniform(
+                "matrix", glm::scale(glm::translate(matrix, glm::vec3(0.0, height, 0.0)), glm::vec3(1.0, -1.0, 1.0)));
 
-        node_mesh->draw();
+            node_mesh->draw();
+        }
     }
 
     // Reset draw state

@@ -38,12 +38,12 @@ public:
     virtual ~ImageDisplay2D() noexcept;
 
     bool updateTexture(const vislib::graphics::BitmapImage& image);
-    bool updateGraph(const ImageSeries::graph::GraphData2D& graph);
+    bool updateGraph(const ImageSeries::graph::GraphData2D& graph, float baseRadius);
 
     glm::vec2 getImageSize() const;
 
-    bool render(megamol::mmstd_gl::CallRender2DGL& call);
-    bool render(megamol::mmstd_gl::CallRender3DGL& call);
+    bool render(megamol::mmstd_gl::CallRender2DGL& call, bool render_graph = true);
+    bool render(megamol::mmstd_gl::CallRender3DGL& call, bool render_graph = true);
 
     void setDisplayMode(Mode mode);
     Mode getDisplayMode() const;
@@ -51,7 +51,7 @@ public:
 private:
     Mode getEffectiveDisplayMode() const;
 
-    bool renderImpl(std::shared_ptr<glowl::FramebufferObject> framebuffer, const glm::mat4& matrix);
+    bool renderImpl(std::shared_ptr<glowl::FramebufferObject> framebuffer, const glm::mat4& matrix, bool render_graph);
     static bool textureLayoutEquals(const glowl::TextureLayout& layout1, const glowl::TextureLayout& layout2);
 
     std::shared_ptr<glowl::GLSLProgram> shader, edge_shader, node_shader;

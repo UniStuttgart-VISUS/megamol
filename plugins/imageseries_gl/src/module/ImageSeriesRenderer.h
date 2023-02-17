@@ -99,6 +99,8 @@ private:
     core::CallerSlot getGraphCaller;
 
     core::param::ParamSlot displayModeParam;
+    core::param::ParamSlot renderGraphParam;
+    core::param::ParamSlot baseRadiusParam;
 
     ImageSeries2DCall::Output metadata;
 
