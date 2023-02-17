@@ -30,6 +30,7 @@
 #include "vislib/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/File.h"
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
+#include <cmath>
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -551,40 +552,153 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
     auto oxygen = new Icosphere(0.5, subdivision_level, true); */
     auto ico = new Icosphere(1, subdivision_level, true);
     int vertex_counter = (int)(ico->getVertexCount() * mol->AtomCount());
-    auto* vertex = new float[vertex_counter * 3]{};
-    auto* normal = new float[vertex_counter * 3]{};
-    auto* color = new float[vertex_counter * 3]{};
+    std::vector<float> vertex; // = new float[vertex_counter * 3]{};
+    std::vector<float> normal; // = new float[vertex_counter * 3]{};
+    std::vector<float> color; // = new float[vertex_counter * 3]{};
+    std::vector<bool> muss_raus;
 
 
 
     for (auto i = 0; i < mol->AtomCount(); i++) {
-        for (int j = 0; j < ico->getVertexCount(); ++j) {
-            vertex[ico->getVertexCount() * 3 * i + 3 * j + 0] = ico->getVertices()[3 * j + 0] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() + mol->AtomPositions()[3 * i + 0];  // x
-            vertex[ico->getVertexCount() * 3 * i + 3 * j + 1] = ico->getVertices()[3 * j + 1] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() + mol->AtomPositions()[3 * i + 1];  // y
-            vertex[ico->getVertexCount() * 3 * i + 3 * j + 2] = ico->getVertices()[3 * j + 2] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() + mol->AtomPositions()[3 * i + 2];  // z
+        for (int j = 0; j < ico->getVertexCount(); j++) {
+            vertex.push_back(ico->getVertices()[3 * j + 0] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() + mol->AtomPositions()[3 * i + 0]);  // x
+            vertex.push_back(ico->getVertices()[3 * j + 1] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() + mol->AtomPositions()[3 * i + 1]);  // y
+            vertex.push_back(ico->getVertices()[3 * j + 2] * mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() + mol->AtomPositions()[3 * i + 2]);  // z
 
-            normal[ico->getVertexCount() * 3 * i + 3 * j + 0] = ico->getNormals()[3 * j + 0];
-            normal[ico->getVertexCount() * 3 * i + 3 * j + 1] = ico->getNormals()[3 * j + 1];
-            normal[ico->getVertexCount() * 3 * i + 3 * j + 2] = ico->getNormals()[3 * j + 2];
+            //normal[ico->getVertexCount() * 3 * i + 3 * j + 0] = ico->getNormals()[3 * j + 0];
+            normal.push_back(ico->getNormals()[3 * j + 0]);
+            normal.push_back(ico->getNormals()[3 * j + 1]);
+            normal.push_back(ico->getNormals()[3 * j + 2]);
 
-            color[ico->getVertexCount() * 3 * i + 3 * j + 0] = 0.6f;
-            color[ico->getVertexCount() * 3 * i + 3 * j + 1] = 0.6f;
-            color[ico->getVertexCount() * 3 * i + 3 * j + 2] = 0.6f;
+            color.push_back(0.6f);
+            color.push_back(0.6f);
+            color.push_back(0.6f);
         }
 
     }
+        //vertex_counter=126
+        //ico->getVertexCount=63
+
+        //MARK ALL Vertices that are in other atoms red
+      for (auto i = 0; i < mol->AtomCount(); i++) {
+        unsigned int lower_bound = vertex_counter/mol->AtomCount()*i;
+        unsigned int upper_bound = vertex_counter/mol->AtomCount() * (i+1);
+        float atom_x = mol->AtomPositions()[(3 * i) + 0];
+        float atom_y = mol->AtomPositions()[(3 * i) + 1];
+        float atom_z = mol->AtomPositions()[(3 * i) + 2];
+        for (int j = 0; j < vertex_counter; ++j) {
+            if (j >= lower_bound && j < upper_bound) {
+                continue;
+
+            }
+
+            if (std::sqrt( (atom_x - vertex[(j * 3) + 0]) * (atom_x - vertex[(j * 3) + 0]) +
+                     (atom_y - vertex[(j * 3) + 1]) * (atom_y - vertex[(j * 3) + 1]) +
+                     (atom_z - vertex[(j * 3) + 2]) * (atom_z - vertex[(j * 3) + 2])) <
+                mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius()) {
+                color.at(j*3) = 1.0f;
+                // Damit weiß ich, welche Vertices innerhalb eines Atoms liegen.
+
+                //Möglichkeit 1: Lookback auf letzte 3 und dann da die Sachen machen.
+
+                //Am Elegantesten wäre es, wenn ich beim Anlegen schon weiß welche Vertices ich brauche
+                //
+
+                // Kreis berechnen und dann
+            }
+        }
+    }
+
+
+    /*
+     * Ich weiß:
+     *  - Vertices des Atoms welches rot ist.
+     *    → in Liste welche die faces berechnet: wenn alle 3 "rot" sind → werfe alle 3 eckpunkte raus und vertice auch
+     *    → Wenn 2 rot sind: Berechne Schnittpunkte von Kreisumfang mit Schnittkante
+     *        → Verschiebe Vertices dorthin
+     *    -> Wenn 1 rot ist:
+     *        -> Berechne Schnittpunkte von Kreisumfang mit Schnittkante
+     */
+    /*
+     * vertex[3 * i + 0] = mol->AtomPositions()[3 * i];
+       vertex[3 * i + 1] = mol->AtomPositions()[3 * i + 1];
+       vertex[3 * i + 2] = mol->AtomPositions()[3 * i + 2];
+     */
+
+     /*
+    //Kostet 30fps
+    for (auto i = 0; i < mol->AtomCount(); i++) {
+        for (int j = i+1; j < mol->AtomCount(); ++j) {
+            // gehe alle atome durch und schaue, welche nah beieinander liegen; damit kann ich viele vertices aussschließen
+            if (std::sqrt( (mol->AtomPositions()[i + 0] - mol->AtomPositions()[j + 0]) * (mol->AtomPositions()[i + 0] - mol->AtomPositions()[j + 0]) +
+                               (mol->AtomPositions()[i + 1] - mol->AtomPositions()[j + 1]) * (mol->AtomPositions()[i + 1] - mol->AtomPositions()[j + 1]) +
+                               (mol->AtomPositions()[i + 2] - mol->AtomPositions()[j + 2]) * (mol->AtomPositions()[i + 2] - mol->AtomPositions()[j + 2])) >
+                          mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius() + mol->AtomTypes()[mol->AtomTypeIndices()[j]].Radius()) {
+                //printf("lolcat");
+            }
+        }
+    }*/
+
+
+    /*
+     * TODO: 1. Finde alle Vertices innerhalb anderer Spheres.
+     * Gehe jede Kugel durch
+     *   gehe jeden Eckpunkt durch und Markiere alle, die innerhalb des kugelradius liegen
+     *   Dazu dann: Wenn mehrere Punkte drin liegen schau, welche faces sie bilden; wie genau tbd
+     *
+     *   Wenn nur ein oder zwei Eckpunkte in Kugel sind berechne schnittkante mit mesh und versetze punkte
+     *   Oder verschiebe faces
+     *
+     * TODO: 2. Lösche diese und alle faces davon
+     * TODO: 3. Klassifiziere faces neu
+     * 
+     */
+
+
+    //tODO: 2. Wenn alle 3 Punkte rot sind: Rauswerfen
 
     int face_counter = (int)(ico->getIndexCount()*mol->AtomCount());
-    auto* face = new unsigned int[face_counter];
+    //auto* face = new unsigned int[face_counter];
+    std:std::vector<unsigned int> face;
 
     for (auto i = 0; i < mol->AtomCount(); i++) {
-        for (int j = 0; j < ico->getIndexCount(); ++j) {
-            face[ico->getIndexCount() * i + j] = ico->getVertexCount() * i + ico->getIndices()[j];
+        int redCounter = 0;
+        for (int j = 0; j < ico->getIndexCount(); j+=3) {
+            if (redCounter == 3){
+                continue;
+            }
+
+            // wenn indice rot ist: böse
+            //            face[ico->getIndexCount() * i + j] = ico->getVertexCount() * i + ico->getIndices()[j];
+            face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 0]);
+            face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 1]);
+            face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 2]);
+            // Wenn alle 3 Vertices rot sind zeichne dreieck nicht.
         }
     }
 
-    this->triaMesh[0]->SetVertexData( vertex_counter * 3, vertex, normal, color, nullptr, true);
-    this->triaMesh[0]->SetTriangleData((int)face_counter/3, face, true);
+
+    //TODO: Kann rausoptimiert werden.
+    auto* vertex2 = new float[vertex.size()]{};
+    for (int i = 0; i < vertex.size(); ++i) {
+        vertex2[i] = vertex.at(i);
+    }
+    auto* normal2 = new float[normal.size()]{};
+    for (int i = 0; i < normal.size(); ++i) {
+        normal2[i] = normal.at(i);
+    }
+    auto* color2 = new float[color.size()]{};
+    for (int i = 0; i < color.size(); ++i) {
+        color2[i] = color.at(i);
+    }
+    auto* face2 = new unsigned int[face.size()];
+    for (int i = 0; i < face.size(); ++i) {
+        face2[i] = face.at(i);
+    }
+
+
+    this->triaMesh[0]->SetVertexData( vertex.size(), vertex2, normal2, color2, nullptr, true);
+    this->triaMesh[0]->SetTriangleData(face.size()/3, face2, true);
     this->triaMesh[0]->SetMaterial(nullptr);
 
     // set triangle mesh to caller
