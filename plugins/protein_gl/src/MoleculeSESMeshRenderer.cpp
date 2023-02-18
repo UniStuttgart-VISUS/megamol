@@ -545,7 +545,7 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
     // fill the triangle mesh with data
     if (this->reducedSurface.empty())
         return false;
-    int subdivision_level = 1;
+    int subdivision_level = 2;
     /*auto carbon = new Icosphere(1.70000005, subdivision_level, true);
     auto nitrogen = new Icosphere(1.54999995, subdivision_level, true);
     auto sulfur = new Icosphere(1, subdivision_level, true);
@@ -607,8 +607,8 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
                 //Am Elegantesten wäre es, wenn ich beim Anlegen schon weiß welche Vertices ich brauche
                 //
 
-                // Schnittebene zwischen zwei Atomen berechnen.
-                // Dann alle die nicht reinkommen "löschen"
+                // TODO: Schnittebene zwischen zwei Atomen berechnen.
+                // Dann alle die nicht reinkommen "löschen": done
                 // Dann die nächsten auf der anderen seite finden und "markieren"
                 // Dann die markierten zusammenfügen
                 //
@@ -681,21 +681,22 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
     for (auto i = 0; i < mol->AtomCount(); i++) {
         int redCounter = 0;
         for (int j = 0; j < ico->getIndexCount(); j += 3) {
-            if (redCounter == 3) {
-                continue;
-            }
 
-            // wenn indice rot ist: böse
-            //            face[ico->getIndexCount() * i + j] = ico->getVertexCount() * i + ico->getIndices()[j];
             if (!(muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 0]) ||
                     muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 1]) ||
                     muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 2]))) {
-                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 0]);
-                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 1]);
-                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 2]);
+                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 0]); //Vertice 1 von face
+                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 1]); //Vertice 2 von face
+                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 2]); //Vertice 3 von face
             }
-            // Wenn alle 3 Vertices rot sind zeichne dreieck nicht.
         }
+    }
+
+
+    //TODO:
+    for (int i = 0; i < face.size(); ++i) {
+        //bla
+
     }
 
 
@@ -718,9 +719,11 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
     }
 
 
-    this->triaMesh[0]->SetVertexData( vertex.size(), vertex2, normal2, color2, nullptr, true);
+    this->triaMesh[0]->SetVertexData( vertex.size()/3, vertex2, normal2, color2, nullptr, true);
     this->triaMesh[0]->SetTriangleData(face.size()/3, face2, true);
     this->triaMesh[0]->SetMaterial(nullptr);
+
+    delete ico;
 
     // set triangle mesh to caller
     if (this->triaMesh[0]->GetVertexCount() > 0) {
