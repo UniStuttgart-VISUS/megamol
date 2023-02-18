@@ -573,6 +573,8 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
             color.push_back(0.6f);
             color.push_back(0.6f);
             color.push_back(0.6f);
+
+            muss_raus.push_back(false);
         }
 
     }
@@ -596,7 +598,8 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
                      (atom_y - vertex[(j * 3) + 1]) * (atom_y - vertex[(j * 3) + 1]) +
                      (atom_z - vertex[(j * 3) + 2]) * (atom_z - vertex[(j * 3) + 2])) <
                 mol->AtomTypes()[mol->AtomTypeIndices()[i]].Radius()) {
-                color.at(j*3) = 1.0f;
+                //color.at(j*3) = 1.0f;
+                muss_raus.at(j) = true;
                 // Damit weiß ich, welche Vertices innerhalb eines Atoms liegen.
 
                 //Möglichkeit 1: Lookback auf letzte 3 und dann da die Sachen machen.
@@ -604,7 +607,22 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
                 //Am Elegantesten wäre es, wenn ich beim Anlegen schon weiß welche Vertices ich brauche
                 //
 
-                // Kreis berechnen und dann
+                // Schnittebene zwischen zwei Atomen berechnen.
+                // Dann alle die nicht reinkommen "löschen"
+                // Dann die nächsten auf der anderen seite finden und "markieren"
+                // Dann die markierten zusammenfügen
+                //
+
+                /*
+                 * faces array: in place löschen von falschen dreiecken und dann am Ende einfügen von neuen
+                 *
+                 */
+
+                //1. wie schlimm sind die lücken
+                //2. zusammennähen von den
+                // kein Erzeugen von neuen Vertices
+                // nur die faces
+
             }
         }
     }
@@ -658,21 +676,24 @@ bool MoleculeSESMeshRenderer::getTriangleDataCallback(core::Call& caller) {
     //tODO: 2. Wenn alle 3 Punkte rot sind: Rauswerfen
 
     int face_counter = (int)(ico->getIndexCount()*mol->AtomCount());
-    //auto* face = new unsigned int[face_counter];
-    std:std::vector<unsigned int> face;
+    std::vector<unsigned int> face;
 
     for (auto i = 0; i < mol->AtomCount(); i++) {
         int redCounter = 0;
-        for (int j = 0; j < ico->getIndexCount(); j+=3) {
-            if (redCounter == 3){
+        for (int j = 0; j < ico->getIndexCount(); j += 3) {
+            if (redCounter == 3) {
                 continue;
             }
 
             // wenn indice rot ist: böse
             //            face[ico->getIndexCount() * i + j] = ico->getVertexCount() * i + ico->getIndices()[j];
-            face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 0]);
-            face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 1]);
-            face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 2]);
+            if (!(muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 0]) ||
+                    muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 1]) ||
+                    muss_raus.at(ico->getVertexCount() * i + ico->getIndices()[j + 2]))) {
+                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 0]);
+                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 1]);
+                face.push_back(ico->getVertexCount() * i + ico->getIndices()[j + 2]);
+            }
             // Wenn alle 3 Vertices rot sind zeichne dreieck nicht.
         }
     }
