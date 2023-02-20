@@ -8,14 +8,15 @@ using namespace megamol::geocalls;
 
 VoxelGenerator::VoxelGenerator(void)
         : mmstd_gl::ModuleGL()
-        , generate_voxels_slot_("GenerateVoxels", "Slot for requesting voxel generation.")
-        , get_data_slot_("GetParticleData", "Connects to the data source")
+        , generate_voxels_slot_("generateVoxels", "Slot for requesting voxel generation.")
+        , get_data_slot_("getParticleData", "Connects to the data source")
         , vol_size_slot_("volumeSize", "Longest volume edge")
         , texture_handle()
         , vol_gen_(nullptr)
         , vertex_array_()
         , shader_options_flags_(nullptr)
-        , sphere_prgm_() {
+        , sphere_prgm_()
+        , vbo_() {
 
     // VolumetricDataCall slot
     this->generate_voxels_slot_.SetCallback(VolumetricDataCall::ClassName(),
@@ -39,7 +40,8 @@ VoxelGenerator::VoxelGenerator(void)
     this->MakeSlotAvailable(&this->get_data_slot_);
 
     this->vol_size_slot_ << (new core::param::IntParam(256, 1, 1024));
-    this->MakeSlotAvailable(&this->vol_size_slot_);
+    this->MakeSlotAvailable(&this->vol_size_slot_
+    );
 }
 
 VoxelGenerator::~VoxelGenerator(void) {
@@ -52,8 +54,6 @@ bool VoxelGenerator::create(void) {
     glGenBuffers(1, &vbo_);
 
     return initVolumeGenerator();
-
-    //return true;
 }
 
 void VoxelGenerator::release(void) {
@@ -135,9 +135,18 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
 
 
         // set metadata
-        metadata.Components = 3; //? // is_vector ? 3 : 1;
+        
+
+        int vol_size = this->vol_size_slot_.Param<core::param::IntParam>()->Value();
+        metadata.Resolution[0] = vol_size; // TODO volsize is not resolution?
+        //metadata.Resolution[1] = vol_size;
+        //metadata.Resolution[2] = vol_size;
+
+		
+        // TODO set metadata correctly
+		metadata.Components = 3; //? // is_vector ? 3 : 1;
         metadata.GridType = GridType_t::CARTESIAN;
-        //metadata.Resolution[0] = xRes; // TODO set parameters in UI?
+		//metadata.Resolution[0] = xRes; // TODO set parameters in UI?
         //metadata.Resolution[1] = yRes;
         //metadata.Resolution[2] = zRes;
         metadata.ScalarType = ScalarType_t::FLOATING_POINT;
@@ -160,6 +169,8 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
         metadata.IsUniform[0] = true;
         metadata.IsUniform[1] = true;
         metadata.IsUniform[2] = true;
+
+
 
         metadata.MemLoc = MemoryLocation::VRAM;
 

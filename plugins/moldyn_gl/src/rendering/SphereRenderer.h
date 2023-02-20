@@ -360,12 +360,14 @@ private:
 
     megamol::core::param::ParamSlot enable_lighting_slot_;
     megamol::core::param::ParamSlot enable_geometry_shader_;
-    megamol::core::param::ParamSlot ao_vol_size_slot_;
+    megamol::core::param::ParamSlot ao_vol_size_slot_; //TODO remove?
     megamol::core::param::ParamSlot ao_cone_apex_slot_;
     megamol::core::param::ParamSlot ao_offset_slot_;
     megamol::core::param::ParamSlot ao_strength_slot_;
     megamol::core::param::ParamSlot ao_cone_length_slot_;
     megamol::core::param::ParamSlot use_hp_textures_slot_;
+
+    int vol_size_;
 
     // Affects only Outline rendering: --------------------------
 

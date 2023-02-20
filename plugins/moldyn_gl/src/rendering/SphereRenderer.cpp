@@ -87,6 +87,7 @@ SphereRenderer::SphereRenderer(void)
         , amb_cone_constants_()
         , vol_gen_(nullptr)
         , trigger_rebuild_g_buffer_(false)
+        , vol_size_(256)
 // , timer()
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
         /// This variant should not need the fence (?)
@@ -267,10 +268,13 @@ bool SphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
         if (!(*c_voxel)(VolumetricDataCall::IDX_GET_EXTENTS)) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("SphereRenderer: could not get all extents (VolumetricDataCall)");
         }
-        if (!(*c_voxel)(VolumetricDataCall::IDX_GET_METADATA)) {
+        if (!(*c_voxel)(VolumetricDataCall::IDX_GET_DATA)){//  IDX_GET_METADATA)) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "SphereRenderer: could not get metadata (VolumetricDataCall)");
         }
+        
+        // get volume size from metadata
+        vol_size_ = c_voxel->GetMetadata()->Resolution[0];    //TODO access correct value
     }
 
     return true;
@@ -399,7 +403,7 @@ bool SphereRenderer::resetResources(void) {
     // Ambient Occlusion
     this->enable_lighting_slot_.Param<param::BoolParam>()->SetGUIVisible(false);
     this->enable_geometry_shader_.Param<param::BoolParam>()->SetGUIVisible(false);
-    this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(false);
+    //this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(false);
     this->ao_cone_apex_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
     this->ao_offset_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
     this->ao_strength_slot_.Param<param::FloatParam>()->SetGUIVisible(false);
@@ -599,7 +603,7 @@ bool SphereRenderer::createResources() {
         case (RenderMode::AMBIENT_OCCLUSION): {
             this->enable_lighting_slot_.Param<param::BoolParam>()->SetGUIVisible(true);
             this->enable_geometry_shader_.Param<param::BoolParam>()->SetGUIVisible(true);
-            this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(true);
+            //this->ao_vol_size_slot_.Param<param::IntParam>()->SetGUIVisible(true);
             this->ao_cone_apex_slot_.Param<param::FloatParam>()->SetGUIVisible(true);
             this->ao_offset_slot_.Param<param::FloatParam>()->SetGUIVisible(true);
             this->ao_strength_slot_.Param<param::FloatParam>()->SetGUIVisible(true);
@@ -2446,23 +2450,23 @@ void SphereRenderer::rebuildWorkingData(
             break;
         }
     }
-    if ((vol_gen_ != nullptr) && (this->state_invalid_ || this->ao_vol_size_slot_.IsDirty() || !equal_clip_data)) {
-        this->ao_vol_size_slot_.ResetDirty();
+    if ((vol_gen_ != nullptr) && (this->state_invalid_ /* || this->ao_vol_size_slot_.IsDirty()*/ || !equal_clip_data)) {
+        //this->ao_vol_size_slot_.ResetDirty();
 
-        int vol_size = this->ao_vol_size_slot_.Param<param::IntParam>()->Value();
+        //int vol_size = this->ao_vol_size_slot_.Param<param::IntParam>()->Value();
 
         vislib::math::Dimension<float, 3> dims = this->cur_clip_box_.GetSize();
 
         // Calculate the extensions of the volume by using the specified number of voxels for the longest edge
         float longest_edge = this->cur_clip_box_.LongestEdge();
-        dims.Scale(static_cast<float>(vol_size) / longest_edge);
+        dims.Scale(static_cast<float>(vol_size_) / longest_edge);
 
         // The X size must be a multiple of 4, so we might have to correct that a little
         dims.SetWidth(ceil(dims.GetWidth() / 4.0f) * 4.0f);
         dims.SetHeight(ceil(dims.GetHeight()));
         dims.SetDepth(ceil(dims.GetDepth()));
         this->amb_cone_constants_[0] = std::min(dims.Width(), std::min(dims.Height(), dims.Depth()));
-        this->amb_cone_constants_[1] = ceil(std::log2(static_cast<float>(vol_size))) - 1.0f;
+        this->amb_cone_constants_[1] = ceil(std::log2(static_cast<float>(vol_size_))) - 1.0f;
 
     //    // Set resolution accordingly
     //    this->vol_gen_->SetResolution(dims.GetWidth(), dims.GetHeight(), dims.GetDepth());
