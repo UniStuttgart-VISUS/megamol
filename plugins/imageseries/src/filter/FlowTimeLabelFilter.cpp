@@ -83,86 +83,13 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         }
     }
 
-    // Setup graph
-    std::vector<std::vector<graph::GraphData2D::NodeID>> nodeIDs;
-    auto nodeGraph = std::make_shared<graph::GraphData2D>();
-
-    auto getOrCreateNodeID = [&](const Timestamp ts, const Label label) {
-        if (nodeIDs.size() <= ts) {
-            nodeIDs.resize(ts + 1uLL);
-        }
-        while (nodeIDs[ts].size() <= label) {
-            nodeIDs[ts].push_back(graph::GraphData2D::NodeIDNone);
-        }
-        auto nodeID = nodeIDs[ts][label];
-        if (nodeID == graph::GraphData2D::NodeIDNone) {
-            graph::GraphData2D::Node node;
-            node.frameIndex = ts;
-            nodeID = nodeGraph->addNode(std::move(node));
-            nodeIDs[ts][label] = nodeID;
-        }
-        return nodeID;
-    };
-
-    auto getOrCreateNode = [&](const Timestamp ts, const Label label) -> graph::GraphData2D::Node& {
-        return nodeGraph->getNode(getOrCreateNodeID(ts, label));
-    };
-
-    auto addEdgeByID = [&](const graph::GraphData2D::NodeID srcNode, const graph::GraphData2D::NodeID destNode) {
-        graph::GraphData2D::Edge edge;
-        edge.from = srcNode;
-        edge.to = destNode;
-
-        nodeGraph->getNode(edge.from).edgeCountOut++;
-        nodeGraph->getNode(edge.to).edgeCountIn++;
-
-        nodeGraph->getNode(edge.from).childNodes.insert(edge.to);
-        nodeGraph->getNode(edge.to).parentNodes.insert(edge.from);
-
-        nodeGraph->addEdge(std::move(edge));
-    };
-
-    auto addEdge = [&](const Timestamp srcTS, const Label srcLabel, const Timestamp destTS, const Label destLabel) {
-        return addEdgeByID(getOrCreateNodeID(srcTS, srcLabel), getOrCreateNodeID(destTS, destLabel));
-    };
-
-    auto combineNodes = [&](const std::vector<std::pair<Timestamp, Label>>& oldNodes) {
-
-    };
-
     // Assign unique labels to connected areas of same time
-    struct FlowFront {
-        graph::GraphData2D::NodeID node_id = -1;
-
-        Label label = 0;
-        Timestamp time = 0;
-        std::vector<Index> pixels;
-
-        float area = 0.0f;
-        float fluid_fluid_interface_length = 0.0f;
-        float fluid_solid_interface_length = 0.0f;
-        struct Vec2 {
-            float x;
-            float y;
-        } center_of_mass{}, velocity{};
-        struct Rect2 {
-            float x_min;
-            float y_min;
-            float x_max;
-            float y_max;
-        } bounding_rectangle{};
-
-        std::map<Timestamp, std::unordered_set<Index>> interfaces;
-    };
-
-    std::vector<FlowFront> flow_fronts(1);
-    std::map<Timestamp, std::vector<std::reference_wrapper<FlowFront>>> flow_fronts_by_time; // without solid
+    auto nodeGraph = std::make_shared<graph::GraphData2D>();
+    std::map<Timestamp, std::vector<std::reference_wrapper<graph::GraphData2D::Node>>> nodesByTime;
 
     for (Index index = 0; index < size; ++index) {
         if (dataIn[index] == 0) {
             dataOut[index] = LabelSolid;
-
-            flow_fronts[LabelSolid].pixels.push_back(index);
         } else if (dataIn[index] == std::numeric_limits<Timestamp>::max()) {
             dataOut[index] = LabelEmpty;
         } else {
@@ -172,17 +99,15 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
 
     std::vector<Index> floodQueue;
 
-    auto floodFill = [&flow_fronts, &flow_fronts_by_time, &floodQueue, &width, &height, &dataIn, &dataOut,
-                         &interfaceFluidOut, &interfaceSolidOut, &interfaceOut, &interface_output,
-                         &getOrCreateNodeID](
+    auto floodFill = [&nodeGraph, &floodQueue, &width, &height, &dataIn, &dataOut,
+                         &interfaceFluidOut, &interfaceSolidOut, &interfaceOut, &interface_output](
                          const Index index, const Label label) {
         floodQueue.clear();
         floodQueue.push_back(index);
 
-        auto& current_region = flow_fronts.emplace_back();
+        graph::GraphData2D::Node current_region;
         current_region.label = label;
-        current_region.node_id = getOrCreateNodeID(dataIn[index], label);
-        current_region.time = dataIn[index];
+        current_region.frameIndex = dataIn[index];
         current_region.pixels.push_back(index);
 
         dataOut[index] = label;
@@ -218,7 +143,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
                         current_region.interfaces[dataIn[neighborIndex]].insert(currentIndex);
 
                         if (interface_output == interface_t::full) {
-                            interfaceFluidOut[neighborIndex] = interfaceOut[currentIndex] = current_region.time;
+                            interfaceFluidOut[neighborIndex] = interfaceOut[currentIndex] = current_region.frameIndex;
                         }
                     }
 
@@ -235,14 +160,16 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
             }
         }
 
-        current_region.fluid_solid_interface_length = current_region.interfaces[LabelSolid].size();
-        current_region.fluid_fluid_interface_length = 0.0f;
+        current_region.interfaceSolid = current_region.interfaces[LabelSolid].size();
+        current_region.interfaceFluid = 0.0f;
 
         for (const auto& fluid_interface : current_region.interfaces) {
             if (fluid_interface.first != LabelSolid) {
-                current_region.fluid_fluid_interface_length += fluid_interface.second.size();
+                current_region.interfaceFluid += fluid_interface.second.size();
             }
         }
+
+        nodeGraph->addNode(current_region);
     };
 
     Label next_label = LabelMinimum;
@@ -258,53 +185,49 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     }
 
     // Calculate quantities for each flow front
-    for (std::size_t i = 1; i < flow_fronts.size(); ++i) {
-        const auto& pixels = flow_fronts[i].pixels;
+    for (auto& node : nodeGraph->getNodes()) {
+        const auto& pixels = node.pixels;
 
-        flow_fronts[i].area = static_cast<float>(pixels.size());
+        node.area = static_cast<float>(pixels.size());
 
         if (!pixels.empty()) {
-            const auto first_x = static_cast<float>(pixels[0] % width);
-            const auto first_y = static_cast<float>(pixels[0] / width);
+            const int first_x = pixels[0] % width;
+            const int first_y = pixels[0] / width;
 
-            flow_fronts[i].center_of_mass = FlowFront::Vec2{0, 0};
-            flow_fronts[i].bounding_rectangle = FlowFront::Rect2{first_x, first_y, first_x, first_y};
+            node.centerOfMass = glm::vec2{0, 0};
+            node.boundingBox = graph::GraphData2D::Rect{first_x, first_y, first_x, first_y};
 
             for (const auto& pixel : pixels) {
-                const auto x = static_cast<float>(pixel % width);
-                const auto y = static_cast<float>(pixel / width);
+                const int x = pixel % width;
+                const int y = pixel / width;
 
-                flow_fronts[i].center_of_mass.x += static_cast<float>(x);
-                flow_fronts[i].center_of_mass.y += static_cast<float>(y);
+                node.centerOfMass.x += static_cast<float>(x);
+                node.centerOfMass.y += static_cast<float>(y);
 
-                flow_fronts[i].bounding_rectangle.x_min =
-                    std::min(flow_fronts[i].bounding_rectangle.x_min, static_cast<float>(x));
-                flow_fronts[i].bounding_rectangle.x_max =
-                    std::max(flow_fronts[i].bounding_rectangle.x_max, static_cast<float>(x));
-                flow_fronts[i].bounding_rectangle.y_min =
-                    std::min(flow_fronts[i].bounding_rectangle.y_min, static_cast<float>(y));
-                flow_fronts[i].bounding_rectangle.y_max =
-                    std::max(flow_fronts[i].bounding_rectangle.y_max, static_cast<float>(y));
+                node.boundingBox.x1 = std::min(node.boundingBox.x1, x);
+                node.boundingBox.x2 = std::max(node.boundingBox.x2, x);
+                node.boundingBox.y1 = std::min(node.boundingBox.y1, y);
+                node.boundingBox.y2 = std::max(node.boundingBox.y2, y);
             }
 
-            flow_fronts[i].center_of_mass.x /= pixels.size();
-            flow_fronts[i].center_of_mass.y /= pixels.size();
+            node.centerOfMass.x /= pixels.size();
+            node.centerOfMass.y /= pixels.size();
         }
 
-        flow_fronts_by_time[flow_fronts[i].time].push_back(flow_fronts[i]);
+        nodesByTime[node.frameIndex].push_back(node);
     }
 
-    // Create graph by iterating over flow fronts with time monotonically increasing
-    for (auto& flow_fronts : flow_fronts_by_time) {
+    // Create edges by iterating over flow fronts with time monotonically increasing
+    for (auto& flow_fronts : nodesByTime) {
         for (auto& flow_front_ref : flow_fronts.second) {
-            FlowFront& flow_front = flow_front_ref;
+            graph::GraphData2D::Node& flow_front = flow_front_ref;
 
             // Find neighboring flow fronts and add edge if the neighboring front is (1) from the past and (2) the local maximum
             std::unordered_set<Label> past_neighboring_flow_fronts;
             Timestamp past_time{};
 
             for (auto it = flow_front.interfaces.crbegin(); it != flow_front.interfaces.crend(); ++it) {
-                if (it->first != LabelSolid && it->first < flow_front.time) {
+                if (it->first != LabelSolid && it->first < flow_front.frameIndex) {
                     past_time = it->first;
 
                     for (const auto index : it->second) {
@@ -315,38 +238,23 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
                 }
             }
 
+            const auto destNode = nodeGraph->findNode(flow_front.frameIndex, flow_front.label).first;
+
             for (const auto& past_flow_front : past_neighboring_flow_fronts) {
-                addEdge(past_time, past_flow_front, flow_front.time, flow_front.label);
+                graph::GraphData2D::Edge edge;
+                edge.from = nodeGraph->findNode(past_time, past_flow_front).first;
+                edge.to = destNode;
+
+                nodeGraph->addEdge(std::move(edge));
             }
 
             // TODO: Use flow fronts to calculate velocity
-            flow_front.velocity = FlowFront::Vec2{0, 0};
+            flow_front.velocity = glm::vec2{0, 0};
         }
     }
 
-    // Copy flow front information into graph nodes
-    for (std::size_t i = 1; i < flow_fronts.size(); ++i) {
-        auto& node = nodeGraph->getNode(flow_fronts[i].node_id);
-        node.flowFrontIndex = i;
-        node.frameIndex = flow_fronts[i].time;
-        node.centerOfMass = glm::vec2{flow_fronts[i].center_of_mass.x, flow_fronts[i].center_of_mass.y};
-        node.velocity = glm::vec2{flow_fronts[i].velocity.x, flow_fronts[i].velocity.y};
-        node.velocityMagnitude = std::sqrt(flow_fronts[i].velocity.x * flow_fronts[i].velocity.x +
-                                           flow_fronts[i].velocity.y * flow_fronts[i].velocity.y);
-        node.area = flow_fronts[i].area;
-        node.interfaceFluid = flow_fronts[i].fluid_fluid_interface_length;
-        node.interfaceSolid = flow_fronts[i].fluid_solid_interface_length;
-        node.boundingBox = graph::GraphData2D::Rect{
-            static_cast<int>(flow_fronts[i].bounding_rectangle.x_min),
-            static_cast<int>(flow_fronts[i].bounding_rectangle.y_min),
-            static_cast<int>(flow_fronts[i].bounding_rectangle.x_max),
-            static_cast<int>(flow_fronts[i].bounding_rectangle.y_max)};
-    }
-
     // Set nodes to be invalid if they meet specific criteria
-    for (std::size_t i = 1; i < flow_fronts.size(); ++i) {
-        auto& node = nodeGraph->getNode(flow_fronts[i].node_id);
-
+    for (auto& node : nodeGraph->getNodes()) {
         bool invalid = !node.valid;
 
         // (+) Remove isolated nodes, i.e., nodes that do not have incoming and outgoing connections
@@ -396,8 +304,8 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
 
         // (+) Remove sinks that have neighbors with larger time step value, as these cannot be real sinks
         if (input.fixes & Input::fixes_t::false_sinks && node.edgeCountOut == 0) {
-            for (auto it = flow_fronts[i].interfaces.crbegin(); it != flow_fronts[i].interfaces.crend(); ++it) {
-                if (it->first != LabelSolid && it->first <= LabelMaximum && it->first > flow_fronts[i].time) {
+            for (auto it = node.interfaces.crbegin(); it != node.interfaces.crend(); ++it) {
+                if (it->first != LabelSolid && it->first <= LabelMaximum && it->first > node.frameIndex) {
                     invalid |= true;
 
                     break;
@@ -420,11 +328,9 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
 
     // Mark pixels of invalid nodes as invalid
     if (input.outputImage == Input::image_t::invalid) {
-        for (std::size_t i = 1; i < flow_fronts.size(); ++i) {
-            auto& node = nodeGraph->getNode(flow_fronts[i].node_id);
-
+        for (auto& node : nodeGraph->getNodes()) {
             if (!node.valid) {
-                for (const auto& pixel : flow_fronts[i].pixels) {
+                for (const auto& pixel : node.pixels) {
                     dataOut[pixel] = LabelInvalid;
                 }
             }
@@ -432,29 +338,24 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     }
 
     // Re-build graph with valid nodes only
-    std::vector<std::vector<graph::GraphData2D::NodeID>> oldNodeIDs;
     auto oldNodeGraph = std::make_shared<graph::GraphData2D>();
-
-    std::swap(nodeIDs, oldNodeIDs);
     std::swap(nodeGraph, oldNodeGraph);
 
     std::unordered_map<graph::GraphData2D::NodeID, graph::GraphData2D::NodeID> nodeMap;
 
-    for (std::size_t i = 1; i < flow_fronts.size(); ++i) {
-        const auto oldNodeID = flow_fronts[i].node_id;
-        const auto& oldNode = oldNodeGraph->getNode(oldNodeID);
+    for (std::size_t i = 0; i < oldNodeGraph->getNodeCount(); ++i) {
+        const auto& oldNode = oldNodeGraph->getNode(i);
 
         if (oldNode.valid) {
-            flow_fronts[i].node_id = getOrCreateNodeID(oldNode.frameIndex, flow_fronts[i].label);
-
-            auto& newNode = nodeGraph->getNode(flow_fronts[i].node_id);
-            newNode = oldNode;
+            auto newNode = oldNode;
             newNode.edgeCountIn = 0;
             newNode.edgeCountOut = 0;
             newNode.childNodes.clear();
             newNode.parentNodes.clear();
 
-            nodeMap[oldNodeID] = flow_fronts[i].node_id;
+            const auto newNodeID = nodeGraph->addNode(newNode);
+
+            nodeMap[i] = newNodeID;
         }
     }
 
@@ -463,7 +364,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         const auto& oldNodeTo = oldNodeGraph->getNode(oldEdge.to);
 
         if (oldNodeFrom.valid && oldNodeTo.valid) {
-            addEdgeByID(nodeMap.at(oldEdge.from), nodeMap.at(oldEdge.to));
+            nodeGraph->addEdge(graph::GraphData2D::Edge{nodeMap.at(oldEdge.from), nodeMap.at(oldEdge.to)});
         }
     }
 
