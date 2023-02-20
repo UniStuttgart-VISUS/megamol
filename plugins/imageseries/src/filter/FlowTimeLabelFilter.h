@@ -20,7 +20,9 @@ public:
         std::shared_ptr<const graph::GraphData2D> graph;
     };
 
-    using Label = std::uint16_t;
+    using Index = graph::GraphData2D::Pixel;
+    using Timestamp = graph::GraphData2D::Timestamp;
+    using Label = graph::GraphData2D::Label;
 
     // Special labels
     enum LabelType : Label {

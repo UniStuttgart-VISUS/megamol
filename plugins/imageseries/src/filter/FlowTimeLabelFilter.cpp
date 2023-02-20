@@ -45,9 +45,6 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     // Create output image
     auto result = std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_WORD);
 
-    using Index = std::uint32_t;
-    using Timestamp = std::uint16_t;
-
     const auto* dataIn = image->PeekDataAs<Timestamp>();
     auto* dataOut = result->PeekDataAs<Label>();
     Index width = result->Width();
@@ -61,22 +58,22 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     } interface_output = interface_t::none; //static_cast<interface_t>(75); // TODO: parameter?!
 
     std::shared_ptr<Image> interfaceFluidImage, interfaceSolidImage, interfaceImage;
-    uint16_t *interfaceFluidOut, *interfaceSolidOut, *interfaceOut = nullptr;
+    std::uint16_t *interfaceFluidOut, *interfaceSolidOut, *interfaceOut = nullptr;
     if (interface_output != interface_t::none) {
         interfaceFluidImage =
             std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_WORD);
         interfaceFluidImage->SetChannelLabel(0, vislib::graphics::BitmapImage::ChannelLabel::CHANNEL_GRAY);
-        interfaceFluidOut = interfaceFluidImage->PeekDataAs<uint16_t>();
+        interfaceFluidOut = interfaceFluidImage->PeekDataAs<std::uint16_t>();
 
         interfaceSolidImage =
             std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_WORD);
         interfaceSolidImage->SetChannelLabel(0, vislib::graphics::BitmapImage::ChannelLabel::CHANNEL_GRAY);
-        interfaceSolidOut = interfaceSolidImage->PeekDataAs<uint16_t>();
+        interfaceSolidOut = interfaceSolidImage->PeekDataAs<std::uint16_t>();
 
         interfaceImage =
             std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_WORD);
         interfaceImage->SetChannelLabel(0, vislib::graphics::BitmapImage::ChannelLabel::CHANNEL_GRAY);
-        interfaceOut = interfaceImage->PeekDataAs<uint16_t>();
+        interfaceOut = interfaceImage->PeekDataAs<std::uint16_t>();
 
         for (Index index = 0; index < size; ++index) {
             interfaceFluidOut[index] = interfaceSolidOut[index] = interfaceOut[index] = -1;
@@ -238,12 +235,15 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
                 }
             }
 
-            const auto destNode = nodeGraph->findNode(flow_front.frameIndex, flow_front.label).first;
+            const auto destNode = nodeGraph->findNode(flow_front.frameIndex, flow_front.label);
 
             for (const auto& past_flow_front : past_neighboring_flow_fronts) {
+                const auto srcNode = nodeGraph->findNode(past_time, past_flow_front);
+
                 graph::GraphData2D::Edge edge;
-                edge.from = nodeGraph->findNode(past_time, past_flow_front).first;
-                edge.to = destNode;
+                edge.from = srcNode.first;
+                edge.to = destNode.first;
+                edge.weight = glm::distance(destNode.second.get().centerOfMass, srcNode.second.get().centerOfMass);
 
                 nodeGraph->addEdge(std::move(edge));
             }
@@ -347,7 +347,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         const auto& oldNode = oldNodeGraph->getNode(i);
 
         if (oldNode.valid) {
-            auto newNode = oldNode;
+            auto newNode(oldNode);
             newNode.edgeCountIn = 0;
             newNode.edgeCountOut = 0;
             newNode.childNodes.clear();
@@ -364,7 +364,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         const auto& oldNodeTo = oldNodeGraph->getNode(oldEdge.to);
 
         if (oldNodeFrom.valid && oldNodeTo.valid) {
-            nodeGraph->addEdge(graph::GraphData2D::Edge{nodeMap.at(oldEdge.from), nodeMap.at(oldEdge.to)});
+            nodeGraph->addEdge(graph::GraphData2D::Edge{nodeMap.at(oldEdge.from), nodeMap.at(oldEdge.to), oldEdge.weight});
         }
     }
 
@@ -375,17 +375,17 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
 
     }
 
-    // Simplify graph by resolving diamond patterns into 1-to-1 connected nodes
-    // Idea:
-    // (1) combine subsequent 1-to-1 nodes into virtual nodes with length equal to the sum of node distances
-    // (2) resolve diamond patterns if and only if the (virtual) nodes involved are
-    //     below the user-defined threshold for minimum obstacle size
-    if (input.fixes & Input::fixes_t::resolve_diamonds) {
+    // Simplify graph by combining subsequent nodes of 1-to-1 connections
+    if (input.fixes & Input::fixes_t::combine_trivial) {
 
     }
 
-    // Simplify graph by combining subsequent nodes of 1-to-1 connections
-    if (input.fixes & Input::fixes_t::combine_trivial) {
+    // Simplify graph by resolving diamond patterns into 1-to-1 connected nodes:
+    // Resolve diamond patterns if and only if the nodes involved are
+    // below the user-defined threshold for minimum obstacle size
+    const float diamond_threshold = input.minObstacleSize;
+
+    if (input.fixes & Input::fixes_t::resolve_diamonds) {
 
     }
 
@@ -393,6 +393,10 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     if (input.outputImage == Input::image_t::simplified) {
 
     }
+
+
+
+
 
 
 

@@ -82,8 +82,11 @@ public:
         inline bool operator==(const GraphData2D::Edge& other) {
             return this->from == other.from && this->to == other.to;
         }
+
         NodeID from = NodeIDNone;
         NodeID to = NodeIDNone;
+
+        float weight = 0.0;
     };
 
     GraphData2D() = default;
@@ -96,13 +99,17 @@ public:
     NodeID addNode(Node node);
     void addEdge(Edge edge);
 
+    Node removeNode(NodeID id, bool lazy = false);
+    void removeEdge(NodeID from, NodeID to);
+    void finalizeLazyRemoval();
+
     bool hasNode(NodeID id) const;
     NodeID getNodeCount() const;
     Node& getNode(NodeID id);
     const Node& getNode(NodeID id) const;
 
-    std::pair<std::size_t, std::reference_wrapper<Node>> findNode(Timestamp time, Label label);
-    std::pair<std::size_t, std::reference_wrapper<const Node>> findNode(Timestamp time, Label label) const;
+    std::pair<NodeID, std::reference_wrapper<Node>> findNode(Timestamp time, Label label);
+    std::pair<NodeID, std::reference_wrapper<const Node>> findNode(Timestamp time, Label label) const;
 
     std::vector<Node>& getNodes();
     const std::vector<Node>& getNodes() const;

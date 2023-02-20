@@ -91,17 +91,17 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
     unimportantSinksParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&unimportantSinksParam);
 
-    resolveDiamondsParam << new core::param::BoolParam(true);
-    resolveDiamondsParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
-    MakeSlotAvailable(&resolveDiamondsParam);
+    combineTinyParam << new core::param::BoolParam(false);
+    combineTinyParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&combineTinyParam);
 
-    combineTrivialParam << new core::param::BoolParam(true);
+    combineTrivialParam << new core::param::BoolParam(false);
     combineTrivialParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&combineTrivialParam);
 
-    combineTinyParam << new core::param::BoolParam(true);
-    combineTinyParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
-    MakeSlotAvailable(&combineTinyParam);
+    resolveDiamondsParam << new core::param::BoolParam(false);
+    resolveDiamondsParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&resolveDiamondsParam);
 
     // Set default image cache size to 512 MB
     imageCache.setMaximumSize(512 * 1024 * 1024);
