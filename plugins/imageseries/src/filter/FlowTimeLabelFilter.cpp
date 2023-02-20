@@ -61,7 +61,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     } interface_output = interface_t::none; //static_cast<interface_t>(75); // TODO: parameter?!
 
     std::shared_ptr<Image> interfaceFluidImage, interfaceSolidImage, interfaceImage;
-    uint16_t* interfaceFluidOut, * interfaceSolidOut, * interfaceOut = nullptr;
+    uint16_t *interfaceFluidOut, *interfaceSolidOut, *interfaceOut = nullptr;
     if (interface_output != interface_t::none) {
         interfaceFluidImage =
             std::make_shared<Image>(image->Width(), image->Height(), 1, Image::ChannelType::CHANNELTYPE_WORD);
@@ -124,6 +124,10 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
 
     auto addEdge = [&](const Timestamp srcTS, const Label srcLabel, const Timestamp destTS, const Label destLabel) {
         return addEdgeByID(getOrCreateNodeID(srcTS, srcLabel), getOrCreateNodeID(destTS, destLabel));
+    };
+
+    auto combineNodes = [&](const std::vector<std::pair<Timestamp, Label>>& oldNodes) {
+
     };
 
     // Assign unique labels to connected areas of same time
@@ -189,7 +193,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
             const auto x = currentIndex % width;
             const auto y = currentIndex / width;
 
-            // TODO: face-connected vs. kernel
+            // TODO: face-connected vs. kernel (now: kernel)
             for (auto j = ((y > 0) ? -1 : 0); j <= ((y < height - 1) ? 1 : 0); ++j) {
                 for (auto i = ((x > 0) ? -1 : 0); i <= ((x < width - 1) ? 1 : 0); ++i) {
                     const auto neighborIndex = (y + j) * width + (x + i);
@@ -409,18 +413,20 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
                            nodeGraph->getNode(*node.parentNodes.begin()).edgeCountOut == 1);
         }
 
-        // TODO
+        // TODO: further filters/heuristics?
 
         node.valid = !invalid;
     }
 
     // Mark pixels of invalid nodes as invalid
-    for (std::size_t i = 1; i < flow_fronts.size(); ++i) {
-        auto& node = nodeGraph->getNode(flow_fronts[i].node_id);
+    if (input.outputImage == Input::image_t::invalid) {
+        for (std::size_t i = 1; i < flow_fronts.size(); ++i) {
+            auto& node = nodeGraph->getNode(flow_fronts[i].node_id);
 
-        if (!node.valid && input.outputImage == Input::image_t::invalid) {
-            for (const auto& pixel : flow_fronts[i].pixels) {
-                dataOut[pixel] = LabelInvalid;
+            if (!node.valid) {
+                for (const auto& pixel : flow_fronts[i].pixels) {
+                    dataOut[pixel] = LabelInvalid;
+                }
             }
         }
     }
@@ -462,6 +468,8 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     }
 
     // Simplify graph by combining tiny areas that result most likely from very small local velocities
+    const auto tiny_area_threshold = 10u; // TODO: parameter
+
     if (input.fixes & Input::fixes_t::combine_tiny) {
 
     }
@@ -480,7 +488,10 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
 
     }
 
+    // Update pixels to match the resulting simplified graph
+    if (input.outputImage == Input::image_t::simplified) {
 
+    }
 
 
 
