@@ -25,6 +25,7 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
         , inflowMarginParam("Inflow margin", "Margin from the sides of the image for inflow detection.")
         , minObstacleSizeParam("Minimum obstacle size",
               "Minimum obstacle size, which can be used as parameter for graph simplification.")
+        , minAreaParam("Minimum area", "Minimum area, used for combining small areas.")
         , isolatedParam("Remove isolated nodes", "Remove isolated nodes, which result from noise.")
         , falseSourcesParam("Remove unexpected sources", "Remove false sources, which result from noise, as well as connected nodes.")
         , falseSinksParam("Remove false sinks", "Remove false sinks, where neighbors have a higher time value.")
@@ -70,10 +71,15 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
     inflowMarginParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&inflowMarginParam);
 
-    minObstacleSizeParam << new core::param::IntParam(10, 1, 1000);
+    minObstacleSizeParam << new core::param::IntParam(100, 1, 1000);
     minObstacleSizeParam.Parameter()->SetGUIPresentation(Presentation::Slider);
     minObstacleSizeParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&minObstacleSizeParam);
+
+    minAreaParam << new core::param::IntParam(10, 1, 1000);
+    minAreaParam.Parameter()->SetGUIPresentation(Presentation::Slider);
+    minAreaParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&minAreaParam);
 
     isolatedParam << new core::param::BoolParam(true);
     isolatedParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
@@ -137,6 +143,7 @@ bool ImageSeriesFlowLabeler::getDataCallback(core::Call& caller) {
                     inflowAreaParam.Param<core::param::EnumParam>()->Value());
                 filterInput.inflowMargin = inflowMarginParam.Param<core::param::IntParam>()->Value();
                 filterInput.minObstacleSize = minObstacleSizeParam.Param<core::param::IntParam>()->Value();
+                filterInput.minArea = minAreaParam.Param<core::param::IntParam>()->Value();
 
                 using bool_pt = core::param::BoolParam;
                 using fixes_t = filter::FlowTimeLabelFilter::Input ::fixes_t;

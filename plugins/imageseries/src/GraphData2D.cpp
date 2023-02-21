@@ -191,6 +191,16 @@ const GraphData2D::Node& GraphData2D::getNode(NodeID id) const {
     return id < nodes.size() ? nodes[id] : placeholderNode;
 }
 
+bool GraphData2D::hasEdge(NodeID from, NodeID to) const {
+    for (auto& edge : edges) {
+        if (edge.from == from && edge.to == to) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 GraphData2D::Edge& GraphData2D::getEdge(NodeID from, NodeID to) {
     for (auto& edge : edges) {
         if (edge.from == from && edge.to == to) {

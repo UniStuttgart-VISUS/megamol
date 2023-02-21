@@ -117,6 +117,7 @@ public:
     Node& getNode(NodeID id);
     const Node& getNode(NodeID id) const;
 
+    bool hasEdge(NodeID from, NodeID to) const;
     Edge& getEdge(NodeID from, NodeID to);
     const Edge& getEdge(NodeID from, NodeID to) const;
 

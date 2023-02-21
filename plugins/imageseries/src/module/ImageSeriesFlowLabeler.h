@@ -90,6 +90,7 @@ private:
     core::param::ParamSlot inflowAreaParam;
     core::param::ParamSlot inflowMarginParam;
     core::param::ParamSlot minObstacleSizeParam;
+    core::param::ParamSlot minAreaParam;
 
     core::param::ParamSlot isolatedParam;
     core::param::ParamSlot falseSourcesParam;

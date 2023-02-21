@@ -61,6 +61,9 @@ public:
         // Minimum obstacle size, used as parameter for graph simplification
         int minObstacleSize;
 
+        // Minimum area, used as parameter for combining small areas
+        int minArea;
+
         // Applied graph fixes/simplifications
         enum class fixes_t : int {
             nope = 0,
@@ -81,6 +84,15 @@ public:
 
 private:
     Input input;
+
+    graph::GraphData2D::Node combineNodes(
+        const std::vector<graph::GraphData2D::Node>& nodesToCombine, Label& nextLabel) const;
+    std::vector<graph::GraphData2D::Edge> combineEdges(const graph::GraphData2D& nodeGraph,
+        const std::vector<graph::GraphData2D::NodeID>& nodesToCombine, graph::GraphData2D::NodeID newNodeID) const;
+
+    bool combineSmallNodes(graph::GraphData2D& nodeGraph, Label& nextLabel, float tiny_area_threshold) const;
+    void combineTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel) const;
+    bool resolveDiamonds(graph::GraphData2D& nodeGraph, Label& nextLabel, float diamond_threshold) const;
 };
 
 } // namespace megamol::ImageSeries::filter
