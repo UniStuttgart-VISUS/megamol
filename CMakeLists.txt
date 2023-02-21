@@ -17,7 +17,7 @@ find_package(Git REQUIRED)
 
 FetchContent_Declare(vcpkg-download
   GIT_REPOSITORY https://github.com/microsoft/vcpkg.git
-  GIT_TAG 2022.10.19 # Update default-registry baseline in vcpkg-configuration.json when changing!
+  GIT_TAG 2023.02.24 # Update default-registry baseline in vcpkg-configuration.json when changing!
   GIT_SHALLOW TRUE)
 FetchContent_GetProperties(vcpkg-download)
 if (NOT vcpkg-download_POPULATED)

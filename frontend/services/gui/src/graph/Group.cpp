@@ -509,7 +509,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             }
             // Deselection
             else if (this->gui_selected &&
-                     ((mouse_clicked_anywhere && !hovered) || (active && ImGui::IsKeyPressed(ImGuiKey_ModShift)) ||
+                     ((mouse_clicked_anywhere && !hovered) || (active && ImGui::IsKeyPressed(ImGuiMod_Shift)) ||
                          (state.interact.group_selected_uid != this->uid))) {
                 this->gui_selected = false;
                 if (state.interact.group_selected_uid == this->uid) {
