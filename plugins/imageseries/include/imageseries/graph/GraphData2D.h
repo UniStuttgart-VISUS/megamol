@@ -50,6 +50,15 @@ public:
         bool valid() const {
             return x1 <= x2 && y1 <= y2;
         }
+
+        Rect& Union(const Rect& other) {
+            x1 = std::min(x1, other.x1);
+            y1 = std::min(y1, other.y1);
+            x2 = std::max(x2, other.x2);
+            y2 = std::max(y2, other.y2);
+
+            return *this;
+        }
     };
 
     struct Node {
@@ -107,6 +116,9 @@ public:
     NodeID getNodeCount() const;
     Node& getNode(NodeID id);
     const Node& getNode(NodeID id) const;
+
+    Edge& getEdge(NodeID from, NodeID to);
+    const Edge& getEdge(NodeID from, NodeID to) const;
 
     std::pair<NodeID, std::reference_wrapper<Node>> findNode(Timestamp time, Label label);
     std::pair<NodeID, std::reference_wrapper<const Node>> findNode(Timestamp time, Label label) const;

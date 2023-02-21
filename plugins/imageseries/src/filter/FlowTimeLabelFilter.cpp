@@ -14,6 +14,7 @@
 #include <array>
 #include <deque>
 #include <iostream>
+#include <list>
 #include <cmath>
 #include <regex>
 #include <map>
@@ -375,23 +376,196 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
 
     }
 
-    // Simplify graph by combining subsequent nodes of 1-to-1 connections
-    if (input.fixes & Input::fixes_t::combine_trivial) {
+    // Function to combine nodes
+    auto combineNodes = [](const std::vector<graph::GraphData2D::Node>& nodesToCombine) {
+        graph::GraphData2D::Node combinedNode;
 
-    }
+        for (const auto& node : nodesToCombine) {
+            combinedNode.area += node.area;
+            combinedNode.averageChordLength += node.averageChordLength;
+            combinedNode.boundingBox.Union(node.boundingBox);
+            combinedNode.centerOfMass += node.area * node.centerOfMass;
+            combinedNode.frameIndex += node.frameIndex;
+            combinedNode.pixels.insert(combinedNode.pixels.end(), node.pixels.begin(), node.pixels.end());
+            combinedNode.interfaceSolid += node.interfaceSolid;
 
-    // Simplify graph by resolving diamond patterns into 1-to-1 connected nodes:
-    // Resolve diamond patterns if and only if the nodes involved are
-    // below the user-defined threshold for minimum obstacle size
-    const float diamond_threshold = input.minObstacleSize;
+            for (const auto& fluid_interface : node.interfaces) {
+                combinedNode.interfaces[fluid_interface.first].insert(
+                    fluid_interface.second.begin(), fluid_interface.second.end());
+            }
+        }
 
-    if (input.fixes & Input::fixes_t::resolve_diamonds) {
+        combinedNode.centerOfMass /= combinedNode.area;
+        combinedNode.frameIndex /= nodesToCombine.size();
+        combinedNode.label = nodesToCombine.front().label;
 
-    }
+        for (const auto& node : nodesToCombine) {
+            combinedNode.interfaces.erase(node.label);
+        }
+
+        for (const auto& fluid_interface : combinedNode.interfaces) {
+            if (fluid_interface.first != LabelSolid) {
+                combinedNode.interfaceFluid += fluid_interface.second.size();
+            }
+        }
+
+        // TODO: update velocities
+        combinedNode.velocity;
+        combinedNode.velocityMagnitude;
+
+        return combinedNode;
+    };
+
+    bool has_changes = false;
+    do {
+        has_changes = false;
+
+        // Simplify graph by combining subsequent nodes of 1-to-1 connections
+        if (input.fixes & (Input::fixes_t::combine_trivial | Input::fixes_t::resolve_diamonds)) {
+            for (graph::GraphData2D::NodeID i = 0; i < nodeGraph->getNodeCount(); ++i) {
+                const auto& node = nodeGraph->getNode(i);
+
+                if (node.valid && node.edgeCountIn == 1 && node.edgeCountOut == 1) {
+                    std::list<graph::GraphData2D::NodeID> nodeIDsToCombine;
+                    nodeIDsToCombine.insert(nodeIDsToCombine.begin(), i);
+
+                    // Create list of subsequent 1-to-1 connected nodes
+                    auto parentID = *node.parentNodes.begin();
+                    do {
+                        const auto& parent = nodeGraph->getNode(parentID);
+                        if (parent.valid && parent.edgeCountIn == 1 && parent.edgeCountOut == 1) {
+                            nodeIDsToCombine.insert(nodeIDsToCombine.begin(), parentID);
+                            parentID = *parent.parentNodes.begin();
+                        } else {
+                            break;
+                        }
+                    } while (true);
+
+                    auto childID = *node.childNodes.begin();
+                    do {
+                        const auto& child = nodeGraph->getNode(childID);
+                        if (child.valid && child.edgeCountIn == 1 && child.edgeCountOut == 1) {
+                            nodeIDsToCombine.insert(nodeIDsToCombine.end(), childID);
+                            childID = *child.childNodes.begin();
+                        } else {
+                            break;
+                        }
+                    } while (true);
+
+                    // Combine nodes
+                    if (nodeIDsToCombine.size() > 1) {
+                        std::vector<graph::GraphData2D::Node> nodesToCombine;
+                        nodesToCombine.reserve(nodeIDsToCombine.size());
+
+                        for (const auto& nodeID : nodeIDsToCombine) {
+                            nodesToCombine.push_back(nodeGraph->removeNode(nodeID, true));
+                        }
+
+                        // Calculate sum of distances between nodes
+                        float distance = 0.0f;
+                        for (auto it = nodeIDsToCombine.begin(); it != std::prev(nodeIDsToCombine.end()); ++it) {
+                            distance += glm::distance(
+                                nodeGraph->getNode(*it).centerOfMass, nodeGraph->getNode(*std::next(it)).centerOfMass);
+                        }
+
+                        // Modify graph
+                        const auto newNodeID = nodeGraph->addNode(combineNodes(nodesToCombine));
+
+                        graph::GraphData2D::Edge inEdge, outEdge;
+                        inEdge.from = *nodesToCombine.front().parentNodes.begin();
+                        inEdge.to = newNodeID;
+                        inEdge.weight =
+                            nodeGraph->getEdge(inEdge.from, nodeIDsToCombine.front()).weight + distance / 2.0f;
+
+                        outEdge.from = newNodeID;
+                        outEdge.to = *nodesToCombine.back().childNodes.begin();
+                        outEdge.weight =
+                            nodeGraph->getEdge(nodeIDsToCombine.back(), outEdge.to).weight + distance / 2.0f;
+
+                        nodeGraph->addEdge(inEdge);
+                        nodeGraph->addEdge(outEdge);
+                    }
+                }
+            }
+
+            nodeGraph->finalizeLazyRemoval();
+        }
+
+        // Simplify graph by resolving diamond patterns by combining parallel 1-to-1 connected nodes.
+        // Resolve diamond patterns if and only if the edges between nodes involved are
+        // below the user-defined threshold for minimum obstacle size
+        const float diamond_threshold = input.minObstacleSize;
+
+        if (input.fixes & Input::fixes_t::resolve_diamonds) {
+            for (graph::GraphData2D::NodeID i = 0; i < nodeGraph->getNodeCount(); ++i) {
+                const auto& node = nodeGraph->getNode(i);
+
+                if (node.valid && node.edgeCountIn == 1 && node.edgeCountOut == 1) {
+                    const auto& edgeIn = nodeGraph->getEdge(*node.parentNodes.begin(), i);
+                    const auto& edgeOut = nodeGraph->getEdge(i, *node.childNodes.begin());
+
+                    if (edgeIn.weight + edgeOut.weight < diamond_threshold) {
+                        const auto& origin = nodeGraph->getNode(edgeIn.from);
+                        const auto& target = nodeGraph->getNode(edgeOut.to);
+
+                        std::vector<graph::GraphData2D::NodeID> nodeIDsToCombine;
+
+                        for (const auto& originChild : origin.childNodes) {
+                            if (target.parentNodes.find(originChild) != target.parentNodes.end()) {
+                                const auto& otherNode = nodeGraph->getNode(originChild);
+
+                                if (otherNode.valid && otherNode.edgeCountIn == 1 && otherNode.edgeCountOut == 1) {
+                                    nodeIDsToCombine.push_back(originChild);
+                                }
+                            }
+                        }
+
+                        // Combine nodes
+                        if (nodeIDsToCombine.size() > 1) {
+                            std::vector<graph::GraphData2D::Node> nodesToCombine;
+                            nodesToCombine.reserve(nodeIDsToCombine.size());
+
+                            float distance_in = 0.0f;
+                            float distance_out = 0.0f;
+
+                            for (const auto& nodeID : nodeIDsToCombine) {
+                                nodesToCombine.push_back(nodeGraph->removeNode(nodeID, true));
+
+                                distance_in += nodeGraph->getEdge(edgeIn.from, nodeID).weight;
+                                distance_out += nodeGraph->getEdge(nodeID, edgeOut.to).weight;
+                            }
+
+                            distance_in /= nodeIDsToCombine.size();
+                            distance_out /= nodeIDsToCombine.size();
+
+                            // Modify graph
+                            const auto newNodeID = nodeGraph->addNode(combineNodes(nodesToCombine));
+
+                            graph::GraphData2D::Edge inEdge, outEdge;
+                            inEdge.from = edgeIn.from;
+                            inEdge.to = newNodeID;
+                            inEdge.weight = distance_in;
+
+                            outEdge.from = newNodeID;
+                            outEdge.to = edgeOut.to;
+                            outEdge.weight = distance_out;
+
+                            nodeGraph->addEdge(inEdge);
+                            nodeGraph->addEdge(outEdge);
+
+                            has_changes = true;
+                        }
+                    }
+                }
+            }
+
+            nodeGraph->finalizeLazyRemoval();
+        }
+    } while (has_changes);
 
     // Update pixels to match the resulting simplified graph
     if (input.outputImage == Input::image_t::simplified) {
-
+        
     }
 
 
