@@ -339,7 +339,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     }
 
     // Mark pixels of invalid nodes as invalid
-    if (input.outputImage == Input::image_t::invalid) {
+    if (input.outputImage == Input::image_t::invalid || input.outputImage == Input::image_t::simplified) {
         for (auto& node : nodeGraph->getNodes()) {
             if (!node.valid) {
                 for (const auto& pixel : node.pixels) {
@@ -437,7 +437,11 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
 
     // Update pixels to match the resulting simplified graph
     if (input.outputImage == Input::image_t::simplified) {
-        
+        for (auto& node : nodeGraph->getNodes()) {
+            for (const auto& pixel : node.pixels) {
+                dataOut[pixel] = node.label;
+            }
+        }
     }
 
 
