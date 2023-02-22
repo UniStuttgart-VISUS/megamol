@@ -52,6 +52,13 @@ public:
         }
 
         Rect& Union(const Rect& other) {
+            if (!valid()) {
+                *this = other;
+                return *this;
+            } else if (!other.valid()) {
+                return *this;
+            }
+
             x1 = std::min(x1, other.x1);
             y1 = std::min(y1, other.y1);
             x2 = std::max(x2, other.x2);
@@ -76,7 +83,7 @@ public:
 
         using rect_t = Rect;
         Rect boundingBox;
-        std::map<Label, std::unordered_set<Pixel>> interfaces;
+        std::map<Timestamp, std::unordered_set<Pixel>> interfaces;
 
         float averageChordLength = 0.f;
         std::uint8_t modified = 0;

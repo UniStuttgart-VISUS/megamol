@@ -189,7 +189,7 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         core::utility::log::Log::DefaultLog.WriteInfo(
             "ID: %d\nLabel: %d\nFrame: %d\nNum pixels: %d\nArea: %.0f\nInterface fluid: "
             "%.0f\nInterface solid: %.0f\nCenter: (%.0f, %.0f)\nBbox: (%d, %d, %d, "
-            "%d)\nInterfaces: %d\nIncoming: %d\n\Outgoing: %d", id,
+            "%d)\nInterfaces: %d\nIncoming: %d\nOutgoing: %d", id,
             node.label, node.frameIndex, node.pixels.size(), node.area, node.interfaceFluid, node.interfaceSolid,
             node.centerOfMass.x, node.centerOfMass.y, node.boundingBox.x1, node.boundingBox.y1, node.boundingBox.x2,
             node.boundingBox.y2, node.interfaces.size(), node.edgeCountIn, node.edgeCountOut);
@@ -262,8 +262,16 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
                 nodeGraph->addEdge(std::move(edge));
             }
 
-            // TODO: Use flow fronts to calculate velocity
-            flow_front.velocity = glm::vec2{0, 0};
+            // Use flow fronts to calculate velocity
+            std::vector<graph::GraphData2D::Pixel> past, future;
+
+            for (const auto& interface : flow_front.interfaces) {
+                if (interface.first < flow_front.frameIndex) {
+                    past.insert(past.end(), interface.second.begin(), interface.second.end());
+                } else if (interface.first > flow_front.frameIndex) {
+                    future.insert(future.end(), interface.second.begin(), interface.second.end());
+                }
+            }
         }
     }
 
@@ -380,6 +388,32 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         }
     }
 
+    // Compute velocities
+    for (graph::GraphData2D::NodeID i = 0; i < nodeGraph->getNodeCount(); ++i) {
+        auto& node = nodeGraph->getNode(i);
+
+        node.velocity = glm::vec2{0, 0};
+
+        if (input.hausdorff) {
+            // TODO
+        } else {
+            for (const auto parentID : node.parentNodes) {
+                const auto& parent = nodeGraph->getNode(parentID);
+
+                node.velocity +=
+                    (node.centerOfMass - parent.centerOfMass) / static_cast<float>(node.frameIndex - parent.frameIndex);
+            }
+            for (const auto childID : node.childNodes) {
+                const auto& child = nodeGraph->getNode(childID);
+
+                node.velocity +=
+                    (node.centerOfMass - child.centerOfMass) / static_cast<float>(node.frameIndex - child.frameIndex);
+            }
+        }
+
+        node.velocityMagnitude = glm::length(node.velocity);
+    }
+
     // Combine tiny areas that result most likely from very small local velocities
     if (input.fixes & Input::fixes_t::combine_tiny) {
         while (combineSmallNodes(*nodeGraph, next_label, input.minArea)) {
@@ -444,13 +478,6 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
         }
     }
 
-
-
-
-
-
-
-
     // Export to Lua file
     graph::util::LuaExportMeta luaExportMeta;
     luaExportMeta.path = input.timeMap->getMetadata().filename;
@@ -500,7 +527,7 @@ ImageMetadata FlowTimeLabelFilter::getMetadata() const {
         ImageMetadata metadata = input.timeMap->getMetadata();
         metadata.bytesPerChannel = 1;
         metadata.hash = util::computeHash(input.timeMap, input.outputImage, input.inflowArea, input.inflowMargin,
-            input.minObstacleSize, input.minArea, input.fixes);
+            input.minObstacleSize, input.minArea, input.hausdorff, input.fixes);
         return metadata;
     } else {
         return {};
@@ -517,6 +544,7 @@ graph::GraphData2D::Node FlowTimeLabelFilter::combineNodes(
         combinedNode.averageChordLength += node.averageChordLength;
         combinedNode.boundingBox.Union(node.boundingBox);
         combinedNode.centerOfMass += node.area * node.centerOfMass;
+        combinedNode.velocity += node.area * node.velocity;
         combinedNode.frameIndex += node.frameIndex;
         combinedNode.pixels.insert(combinedNode.pixels.end(), node.pixels.begin(), node.pixels.end());
         combinedNode.interfaceSolid += node.interfaceSolid;
@@ -528,6 +556,8 @@ graph::GraphData2D::Node FlowTimeLabelFilter::combineNodes(
     }
 
     combinedNode.centerOfMass /= combinedNode.area;
+    combinedNode.velocity /= combinedNode.area;
+    combinedNode.velocityMagnitude = glm::length(combinedNode.velocity);
     combinedNode.frameIndex /= nodesToCombine.size();
     combinedNode.label = nextLabel++;
 
@@ -540,10 +570,6 @@ graph::GraphData2D::Node FlowTimeLabelFilter::combineNodes(
             combinedNode.interfaceFluid += fluid_interface.second.size();
         }
     }
-
-    // TODO: update velocities
-    combinedNode.velocity;
-    combinedNode.velocityMagnitude;
 
     return combinedNode;
 }

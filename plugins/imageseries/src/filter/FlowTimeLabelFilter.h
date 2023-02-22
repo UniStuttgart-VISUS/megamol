@@ -64,6 +64,9 @@ public:
         // Minimum area, used as parameter for combining small areas
         int minArea;
 
+        // Use Hausdorff distance or centers of mass for velocity calculation
+        bool hausdorff = false;
+
         // Applied graph fixes/simplifications
         enum class fixes_t : int {
             nope = 0,

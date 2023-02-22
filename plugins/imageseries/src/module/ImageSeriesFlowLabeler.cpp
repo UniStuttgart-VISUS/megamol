@@ -26,6 +26,7 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
         , minObstacleSizeParam("Minimum obstacle size",
               "Minimum obstacle size, which can be used as parameter for graph simplification.")
         , minAreaParam("Minimum area", "Minimum area, used for combining small areas.")
+        , velocityMethodParam("Velocity calculation", "Method used for calculating flow velocity.")
         , isolatedParam("Remove isolated nodes", "Remove isolated nodes, which result from noise.")
         , falseSourcesParam("Remove unexpected sources", "Remove false sources, which result from noise, as well as connected nodes.")
         , falseSinksParam("Remove false sinks", "Remove false sinks, where neighbors have a higher time value.")
@@ -80,6 +81,12 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
     minAreaParam.Parameter()->SetGUIPresentation(Presentation::Slider);
     minAreaParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&minAreaParam);
+
+    velocityMethodParam << new core::param::EnumParam(0);
+    velocityMethodParam.Param<core::param::EnumParam>()->SetTypePair(0, "Centers of mass");
+    velocityMethodParam.Param<core::param::EnumParam>()->SetTypePair(1, "Hausdorff distance");
+    velocityMethodParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
+    MakeSlotAvailable(&velocityMethodParam);
 
     isolatedParam << new core::param::BoolParam(true);
     isolatedParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
@@ -144,6 +151,7 @@ bool ImageSeriesFlowLabeler::getDataCallback(core::Call& caller) {
                 filterInput.inflowMargin = inflowMarginParam.Param<core::param::IntParam>()->Value();
                 filterInput.minObstacleSize = minObstacleSizeParam.Param<core::param::IntParam>()->Value();
                 filterInput.minArea = minAreaParam.Param<core::param::IntParam>()->Value();
+                filterInput.hausdorff = velocityMethodParam.Param<core::param::EnumParam>()->Value() == 1;
 
                 using bool_pt = core::param::BoolParam;
                 using fixes_t = filter::FlowTimeLabelFilter::Input ::fixes_t;
