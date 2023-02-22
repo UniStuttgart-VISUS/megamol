@@ -5,19 +5,66 @@
 using namespace megamol::ImageSeries::graph;
 
 GraphData2D::NodeID GraphData2D::addNode(Node node) {
-    const auto newNodeID = nodes.size();
+    const auto newNodeID = getNodeID(node.frameIndex, node.label);
 
-    nodeMap[std::make_pair(node.frameIndex, node.label)] = newNodeID;
-    nodes.push_back(std::move(node));
+    nodes.insert(std::make_pair(newNodeID, std::move(node)));
 
     return newNodeID;
 }
 
+std::size_t GraphData2D::getNodeCount() const {
+    return nodes.size();
+}
+
+bool GraphData2D::hasNode(const NodeID id) const {
+    return nodes.find(id) != nodes.end();
+}
+
+bool GraphData2D::hasNode(const Timestamp time, const Label label) const {
+    return hasNode(getNodeID(time, label));
+}
+
+GraphData2D::Node& GraphData2D::getNode(const NodeID id) {
+    return nodes.at(id);
+}
+
+GraphData2D::Node& GraphData2D::getNode(const Timestamp time, const Label label) {
+    return getNode(getNodeID(time, label));
+}
+
+const GraphData2D::Node& GraphData2D::getNode(const NodeID id) const {
+    return nodes.at(id);
+}
+
+const GraphData2D::Node& GraphData2D::getNode(const Timestamp time, const Label label) const {
+    return getNode(getNodeID(time, label));
+}
+
+GraphData2D::Node GraphData2D::removeNode(NodeID id, bool lazy) {
+    GraphData2D::Node toBeRemoved(nodes.at(id));
+
+    if (lazy) {
+        nodes.at(id).removed = true;
+    } else {
+        for (auto& parent : nodes.at(id).parentNodes) {
+            removeEdge(parent, id);
+        }
+        for (auto& child : nodes.at(id).childNodes) {
+            removeEdge(id, child);
+        }
+
+        nodes.erase(id);
+    }
+
+    return toBeRemoved;
+}
+
+GraphData2D::Node GraphData2D::removeNode(const Timestamp time, const Label label, bool lazy) {
+    return removeNode(getNodeID(time, label), lazy);
+}
+
 void GraphData2D::addEdge(Edge edge) {
     if (std::find(edges.begin(), edges.end(), edge) == edges.end()) {
-        getNode(edge.from).edgeCountOut++;
-        getNode(edge.to).edgeCountIn++;
-
         getNode(edge.from).childNodes.insert(edge.to);
         getNode(edge.to).parentNodes.insert(edge.from);
 
@@ -25,170 +72,8 @@ void GraphData2D::addEdge(Edge edge) {
     }
 }
 
-GraphData2D::Node GraphData2D::removeNode(NodeID id, bool lazy) {
-    GraphData2D::Node toBeRemoved(nodes[id]);
-
-    if (lazy) {
-        // Set placeholder instead of removing the node completely
-        nodes[id].valid = false;
-    } else {
-        // Remove edges connected to this node
-        for (auto& parent : nodes[id].parentNodes) {
-            removeEdge(parent, id);
-        }
-        for (auto& child : nodes[id].childNodes) {
-            removeEdge(id, child);
-        }
-
-        // Remove node
-        nodes.erase(nodes.begin() + id);
-
-        // Remove node from map; update indices of all other nodes and edges
-        std::TimeLabelPair toBeErased;
-        for (auto& entry : nodeMap) {
-            if (entry.second > id) {
-                --entry.second;
-            } else if (entry.second == id) {
-                toBeErased = entry.first;
-            }
-        }
-        nodeMap.erase(toBeErased);
-
-        for (auto& edge : edges) {
-            if (edge.from > id) {
-                --edge.from;
-            }
-            if (edge.to > id) {
-                --edge.to;
-            }
-        }
-
-        for (auto& node : nodes) {
-            std::unordered_set<NodeID> newParents, newChildren;
-            for (const auto parentID : node.parentNodes) {
-                if (parentID > id) {
-                    newParents.insert(parentID - 1);
-                } else {
-                    newParents.insert(parentID);
-                }
-            }
-            for (const auto childID : node.childNodes) {
-                if (childID > id) {
-                    newChildren.insert(childID - 1);
-                } else {
-                    newChildren.insert(childID);
-                }
-            }
-            std::swap(node.parentNodes, newParents);
-            std::swap(node.childNodes, newChildren);
-        }
-    }
-
-    return toBeRemoved;
-}
-
-void GraphData2D::removeEdge(NodeID from, NodeID to) {
-    --getNode(from).edgeCountOut;
-    --getNode(to).edgeCountIn;
-
-    getNode(from).childNodes.erase(to);
-    getNode(to).parentNodes.erase(from);
-
-    for (auto it = edges.begin(); it != edges.end(); ++it) {
-        if (it->from == from && it->to == to) {
-            edges.erase(it);
-            break;
-        }
-    }
-}
-
-void GraphData2D::finalizeLazyRemoval() {
-    // Remove invalidated edges and remove nodes from node map
-    for (NodeID id = 0; id < nodes.size(); ++id) {
-        const auto& node = nodes[id];
-
-        if (!node.valid) {
-            for (auto& parent : node.parentNodes) {
-                removeEdge(parent, id);
-            }
-            for (auto& child : node.childNodes) {
-                removeEdge(id, child);
-            }
-
-            for (auto& entry : nodeMap) {
-                if (entry.second == id) {
-                    nodeMap.erase(entry.first);
-                    break;
-                }
-            }
-        }
-    }
-
-    // Update node IDs in node map and edges
-    std::vector<NodeID> offsets;
-
-    for (std::size_t i = 0; i < nodes.size(); ++i) {
-        if (!nodes[i].valid) {
-            offsets.push_back(i);
-        }
-    }
-
-    auto getOffset = [&offsets](NodeID id) {
-        NodeID offset = 0;
-
-        for (std::size_t i = 0; i < offsets.size(); ++i) {
-            if (id > offsets[i]) {
-                offset = i + 1;
-            }
-        }
-
-        return offset;
-    };
-
-    for (auto& entry : nodeMap) {
-        entry.second -= getOffset(entry.second);
-    }
-
-    for (auto& edge : edges) {
-        edge.from -= getOffset(edge.from);
-        edge.to -= getOffset(edge.to);
-    }
-
-    for (auto& node : nodes) {
-        std::unordered_set<NodeID> newParents, newChildren;
-        for (const auto parentID : node.parentNodes) {
-            newParents.insert(parentID - getOffset(parentID));
-        }
-        for (const auto childID : node.childNodes) {
-            newChildren.insert(childID - getOffset(childID));
-        }
-        std::swap(node.parentNodes, newParents);
-        std::swap(node.childNodes, newChildren);
-    }
-
-    for (auto it = nodes.begin(); it != nodes.end();) {
-        if (!it->valid) {
-            it = nodes.erase(it);
-        } else {
-            ++it;
-        }
-    }
-}
-
-bool GraphData2D::hasNode(NodeID id) const {
-    return id < nodes.size();
-}
-
-GraphData2D::NodeID GraphData2D::getNodeCount() const {
-    return nodes.size();
-}
-
-GraphData2D::Node& GraphData2D::getNode(NodeID id) {
-    return id < nodes.size() ? nodes[id] : placeholderNode;
-}
-
-const GraphData2D::Node& GraphData2D::getNode(NodeID id) const {
-    return id < nodes.size() ? nodes[id] : placeholderNode;
+std::size_t GraphData2D::getEdgeCount() const {
+    return edges.size();
 }
 
 bool GraphData2D::hasEdge(NodeID from, NodeID to) const {
@@ -221,33 +106,41 @@ const GraphData2D::Edge& GraphData2D::getEdge(NodeID from, NodeID to) const {
     throw std::runtime_error("Edge not found for given nodes.");
 }
 
-std::pair<GraphData2D::NodeID, std::reference_wrapper<GraphData2D::Node>> GraphData2D::findNode(
-    Timestamp time, Label label) {
-    auto it = nodeMap.find(std::make_pair(time, label));
+void GraphData2D::removeEdge(NodeID from, NodeID to) {
+    getNode(from).childNodes.erase(to);
+    getNode(to).parentNodes.erase(from);
 
-    if (it == nodeMap.end()) {
-        throw std::runtime_error("Node not found for given time and label.");
+    for (auto it = edges.begin(); it != edges.end(); ++it) {
+        if (it->from == from && it->to == to) {
+            edges.erase(it);
+            break;
+        }
     }
-
-    return std::make_pair(static_cast<NodeID>(it->second), std::reference_wrapper<Node>(getNode(it->second)));
 }
 
-std::pair<GraphData2D::NodeID, std::reference_wrapper<const GraphData2D::Node>> GraphData2D::findNode(
-    Timestamp time, Label label) const {
-    auto it = nodeMap.find(std::make_pair(time, label));
+void GraphData2D::finalizeLazyRemoval() {
+    // Remove invalidated edges and remove nodes
+    for (auto it = nodes.begin(); it != nodes.end();) {
+        if (it->second.removed) {
+            for (auto& parent : it->second.parentNodes) {
+                removeEdge(parent, it->first);
+            }
+            for (auto& child : it->second.childNodes) {
+                removeEdge(it->first, child);
+            }
 
-    if (it == nodeMap.end()) {
-        throw std::runtime_error("Node not found for given time and label.");
+            it = nodes.erase(it);
+        } else {
+            ++it;
+        }
     }
-
-    return std::make_pair(static_cast<NodeID>(it->second), std::reference_wrapper<const Node>(getNode(it->second)));
 }
 
-std::vector<GraphData2D::Node>& GraphData2D::getNodes() {
+std::unordered_map<GraphData2D::NodeID, GraphData2D::Node>& GraphData2D::getNodes() {
     return nodes;
 }
 
-const std::vector<GraphData2D::Node>& GraphData2D::getNodes() const {
+const std::unordered_map<GraphData2D::NodeID, GraphData2D::Node>& GraphData2D::getNodes() const {
     return nodes;
 }
 
@@ -277,4 +170,9 @@ std::vector<std::vector<GraphData2D::NodeID>> GraphData2D::getInboundEdges() con
         }
     }
     return result;
+}
+
+GraphData2D::NodeID GraphData2D::getNodeID(Timestamp time, Label label) {
+    static std::hash<std::pair<Timestamp, Label>> hasher;
+    return hasher(std::make_pair(time, label));
 }

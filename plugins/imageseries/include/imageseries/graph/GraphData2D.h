@@ -25,7 +25,7 @@ using TimeLabelPair = std::pair<Timestamp_, Label_>;
 template<>
 struct hash<TimeLabelPair> {
     inline std::size_t operator()(const TimeLabelPair& val) const {
-        return megamol::ImageSeries::util::combineHash(val.first, val.second);
+        return megamol::ImageSeries::util::computeHash(val.first, val.second);
     }
 };
 } // namespace std
@@ -34,12 +34,10 @@ namespace megamol::ImageSeries::graph {
 
 class GraphData2D {
 public:
-    using NodeID = std::uint32_t;
+    using NodeID = std::size_t;
     using Pixel = std::uint32_t;
     using Label = Label_;
     using Timestamp = Timestamp_;
-
-    static constexpr NodeID NodeIDNone = std::numeric_limits<NodeID>::max();
 
     struct Rect {
         int x1 = 0;
@@ -69,13 +67,85 @@ public:
     };
 
     struct Node {
-        Label label = 0;
-        Timestamp frameIndex = 0;
-        std::vector<Pixel> pixels;
+        Node(const Timestamp frameIndex, const Label label)
+                : id(GraphData2D::getNodeID(frameIndex, label))
+                , frameIndex(frameIndex)
+                , label(label){};
+        Node(const Node& src)
+                : id(GraphData2D::getNodeID(src.frameIndex, src.label))
+                , frameIndex(src.frameIndex)
+                , label(src.label)
+                , parentNodes(src.parentNodes)
+                , childNodes(src.childNodes) {
 
+            pixels = src.pixels;
+            area = src.area;
+
+            centerOfMass = src.centerOfMass;
+            velocity = src.velocity;
+            velocityMagnitude = src.velocityMagnitude;
+
+            boundingBox = src.boundingBox;
+
+            interfaces = src.interfaces;
+            interfaceFluid = src.interfaceFluid;
+            interfaceSolid = src.interfaceSolid;
+
+            valid = src.valid;
+        }
+        Node(Node&& src) noexcept
+                : id(GraphData2D::getNodeID(src.frameIndex, src.label))
+                , frameIndex(src.frameIndex)
+                , label(src.label)
+                , parentNodes(std::move(src.parentNodes))
+                , childNodes(std::move(src.childNodes)) {
+
+            std::swap(pixels, src.pixels);
+            std::swap(area, src.area);
+
+            std::swap(centerOfMass, src.centerOfMass);
+            std::swap(velocity, src.velocity);
+            std::swap(velocityMagnitude, src.velocityMagnitude);
+
+            std::swap(boundingBox, src.boundingBox);
+
+            std::swap(interfaces, src.interfaces);
+            std::swap(interfaceFluid, src.interfaceFluid);
+            std::swap(interfaceSolid, src.interfaceSolid);
+
+            std::swap(valid, src.valid);
+        }
+
+        NodeID getID() const {
+            return id;
+        }
+        Label getLabel() const {
+            return label;
+        }
+        Timestamp getFrameIndex() const {
+            return frameIndex;
+        }
+
+        const std::unordered_set<NodeID>& getParentNodes() const {
+            return parentNodes;
+        }
+        const std::unordered_set<NodeID>& getChildNodes() const {
+            return childNodes;
+        }
+
+        std::size_t getEdgeCountIn() const {
+            return parentNodes.size();
+        }
+        std::size_t getEdgeCountOut() const {
+            return childNodes.size();
+        }
+
+        bool isRemoved() const {
+            return removed;
+        }
+
+        std::vector<Pixel> pixels;
         float area = 0.f;
-        float interfaceFluid = 0.f;
-        float interfaceSolid = 0.f;
 
         glm::vec2 centerOfMass = {};
         glm::vec2 velocity = {};
@@ -83,26 +153,34 @@ public:
 
         using rect_t = Rect;
         Rect boundingBox;
-        std::map<Timestamp, std::unordered_set<Pixel>> interfaces;
 
-        float averageChordLength = 0.f;
-        std::uint8_t modified = 0;
+        std::map<Timestamp, std::unordered_set<Pixel>> interfaces;
+        float interfaceFluid = 0.f;
+        float interfaceSolid = 0.f;
+
         bool valid = true;
 
-        std::uint8_t edgeCountIn = 0;
-        std::uint8_t edgeCountOut = 0;
+    private:
+        const NodeID id;
+
+        const Timestamp frameIndex;
+        const Label label;
+
         std::unordered_set<NodeID> parentNodes, childNodes;
+
+        bool removed = false;
+        friend class GraphData2D;
     };
 
     struct Edge {
+        Edge(NodeID from, NodeID to, float weight = 0.0f) : from(from), to(to), weight(weight) {}
+
         inline bool operator==(const GraphData2D::Edge& other) {
             return this->from == other.from && this->to == other.to;
         }
 
-        NodeID from = NodeIDNone;
-        NodeID to = NodeIDNone;
-
-        float weight = 0.0;
+        NodeID from, to;
+        float weight;
     };
 
     GraphData2D() = default;
@@ -112,27 +190,40 @@ public:
     GraphData2D& operator=(const GraphData2D&) = default;
     GraphData2D& operator=(GraphData2D&&) = default;
 
+    // Nodes
     NodeID addNode(Node node);
-    void addEdge(Edge edge);
 
-    Node removeNode(NodeID id, bool lazy = false);
-    void removeEdge(NodeID from, NodeID to);
-    void finalizeLazyRemoval();
+    std::size_t getNodeCount() const;
 
     bool hasNode(NodeID id) const;
-    NodeID getNodeCount() const;
+    bool hasNode(Timestamp time, Label label) const;
+
     Node& getNode(NodeID id);
+    Node& getNode(Timestamp time, Label label);
     const Node& getNode(NodeID id) const;
+    const Node& getNode(Timestamp time, Label label) const;
+
+    Node removeNode(NodeID id, bool lazy = false);
+    Node removeNode(Timestamp time, Label label, bool lazy = false);
+
+    // Edges
+    void addEdge(Edge edge);
+
+    std::size_t getEdgeCount() const;
 
     bool hasEdge(NodeID from, NodeID to) const;
+
     Edge& getEdge(NodeID from, NodeID to);
     const Edge& getEdge(NodeID from, NodeID to) const;
 
-    std::pair<NodeID, std::reference_wrapper<Node>> findNode(Timestamp time, Label label);
-    std::pair<NodeID, std::reference_wrapper<const Node>> findNode(Timestamp time, Label label) const;
+    void removeEdge(NodeID from, NodeID to);
 
-    std::vector<Node>& getNodes();
-    const std::vector<Node>& getNodes() const;
+    // Lazy removal
+    void finalizeLazyRemoval();
+
+    // Access functions
+    std::unordered_map<NodeID, Node>& getNodes();
+    const std::unordered_map<NodeID, Node>& getNodes() const;
     std::vector<Edge>& getEdges();
     const std::vector<Edge>& getEdges() const;
 
@@ -140,12 +231,11 @@ public:
     std::vector<std::vector<NodeID>> getInboundEdges() const;
 
 private:
-    std::vector<Node> nodes;
+    std::unordered_map<NodeID, Node> nodes;
     std::vector<Edge> edges;
 
-    std::unordered_map<std::pair<Timestamp, Label>, NodeID> nodeMap;
-
-    Node placeholderNode;
+    static NodeID getNodeID(Timestamp time, Label label);
+    friend class Node;
 };
 
 using AsyncGraphData2D = megamol::ImageSeries::util::AsyncData<const GraphData2D>;

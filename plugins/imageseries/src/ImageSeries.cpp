@@ -13,7 +13,6 @@
 
 #include "module/ImageSeriesFlowLabeler.h"
 #include "module/ImageSeriesFlowPreprocessor.h"
-#include "module/ImageSeriesGraphGenerator.h"
 #include "module/ImageSeriesLabeler.h"
 #include "module/ImageSeriesLoader.h"
 #include "module/ImageSeriesResampler.h"
@@ -51,7 +50,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesTimestampFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesLabeler>();
         this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesFlowLabeler>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ImageSeries::ImageSeriesGraphGenerator>();
     }
 };
 

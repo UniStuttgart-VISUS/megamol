@@ -9,7 +9,7 @@
 
 namespace megamol::ImageSeries::util {
 
-using Hash = std::uint32_t;
+using Hash = std::size_t;
 
 template<typename T>
 T combineHash(T a) {

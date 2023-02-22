@@ -26,25 +26,26 @@ bool exportToLua(const GraphData2D& graph, const std::string& outfileName, LuaEx
     }
 
     file << "graphData.Nodes = {\n";
-    for (std::size_t i = 0; i < graph.getNodes().size(); ++i) {
-        auto& node = graph.getNodes()[i];
-        file << "{" << node.frameIndex << ", " << i << ", " << node.centerOfMass.x << ", " << node.centerOfMass.y
-             << ", " << node.velocityMagnitude << ", " << int(node.modified) << ", " << int(node.area) << ", " << int(node.edgeCountIn)
-             << ", " << int(node.edgeCountOut) << "},\n";
+    std::size_t i = 0;
+    for (const auto& node_info : graph.getNodes()) {
+        auto& node = node_info.second;
+        file << "{" << node.getFrameIndex() << ", " << i++ << ", " << node.centerOfMass.x << ", " << node.centerOfMass.y
+             << ", " << node.velocityMagnitude << ", " << 0 << ", " << int(node.area) << ", "
+             << int(node.getEdgeCountIn()) << ", " << int(node.getEdgeCountOut()) << "},\n";
     }
     file << "}\n\n";
 
     file << "graphData.Rects = {\n";
-    for (std::size_t i = 0; i < graph.getNodes().size(); ++i) {
-        auto& node = graph.getNodes()[i];
+    for (const auto& node_info : graph.getNodes()) {
+        auto& node = node_info.second;
         file << "{" << node.boundingBox.x1 << ", " << node.boundingBox.y1 << ", " << node.boundingBox.x2 << ", "
              << node.boundingBox.y2 << "},\n";
     }
     file << "}\n\n";
 
     file << "graphData.Interfaces = {\n";
-    for (std::size_t i = 0; i < graph.getNodes().size(); ++i) {
-        auto& node = graph.getNodes()[i];
+    for (const auto& node_info : graph.getNodes()) {
+        auto& node = node_info.second;
         file << node.interfaceFluid << ", " << node.interfaceSolid << ",\n";
     }
     file << "}\n\n";

@@ -145,23 +145,25 @@ bool ImageDisplay2D::updateGraph(const ImageSeries::graph::GraphData2D& graph, c
         graph_node_radii.reserve(nodes.size());
         graph_node_types.reserve(nodes.size());
 
-        for (const auto& node : nodes) {
+        for (const auto& node_info : nodes) {
+            const auto& node = node_info.second;
+
             graph_node_vertices.push_back(node.centerOfMass);
             //graph_node_radii.push_back(node.edgeCountIn * 0.5f * std::sqrt(2.0f) + baseRadius);
             graph_node_radii.push_back(baseRadius);
 
             float type = 0.0f; // default
-            if ((node.edgeCountIn == 0 && node.edgeCountOut == 0) || !node.valid) {
+            if ((node.getEdgeCountIn() == 0 && node.getEdgeCountOut() == 0) || !node.valid) {
                 type = 6.0f; // isolated
-            } else if (node.edgeCountIn > 1 && node.edgeCountOut > 1) {
+            } else if (node.getEdgeCountIn() > 1 && node.getEdgeCountOut() > 1) {
                 type = 5.0f; // multi
-            } else if (node.edgeCountIn > 1 && node.edgeCountOut == 1) {
+            } else if (node.getEdgeCountIn() > 1 && node.getEdgeCountOut() == 1) {
                 type = 4.0f; // merge
-            } else if (node.edgeCountIn == 1 && node.edgeCountOut > 1) {
+            } else if (node.getEdgeCountIn() == 1 && node.getEdgeCountOut() > 1) {
                 type = 3.0f; // split
-            } else if (node.edgeCountOut == 0) {
+            } else if (node.getEdgeCountOut() == 0) {
                 type = 2.0f; // sink
-            } else if (node.edgeCountIn == 0) {
+            } else if (node.getEdgeCountIn() == 0) {
                 type = 1.0f; // source
             }
             graph_node_types.push_back(type);
@@ -207,8 +209,8 @@ bool ImageDisplay2D::updateGraph(const ImageSeries::graph::GraphData2D& graph, c
         graph_edge_lines.reserve(edges.size());
 
         for (const auto& edge : edges) {
-            const auto& from = nodes[edge.from];
-            const auto& to = nodes[edge.to];
+            const auto& from = graph.getNode(edge.from);
+            const auto& to = graph.getNode(edge.to);
 
             graph_edge_lines.push_back(glm::vec4(from.centerOfMass, to.centerOfMass));
         }
