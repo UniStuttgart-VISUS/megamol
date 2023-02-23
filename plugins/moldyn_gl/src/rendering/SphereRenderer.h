@@ -10,8 +10,6 @@
 #ifndef MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED
 #define MEGAMOL_MOLDYN_SPHERERENDERER_H_INCLUDED
 
-#include "misc/MDAOVolumeGenerator.h"
-
 #include "PerformanceManager.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "mmcore/Call.h"
@@ -307,7 +305,6 @@ private:
     unsigned int old_frame_id_;
     bool state_invalid_;
     glm::vec2 amb_cone_constants_;
-    misc::MDAOVolumeGenerator* vol_gen_;
     bool trigger_rebuild_g_buffer_;
 
 #ifdef MEGAMOL_USE_PROFILING
