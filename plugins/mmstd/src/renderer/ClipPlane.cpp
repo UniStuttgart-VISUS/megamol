@@ -22,7 +22,7 @@ using namespace megamol::core;
 /*
  * view::ClipPlane::ClipPlane
  */
-view::ClipPlane::ClipPlane(void)
+view::ClipPlane::ClipPlane()
         : Module()
         , getClipPlaneSlot("getclipplane", "Provides the clipping plane")
         , plane()
@@ -60,7 +60,7 @@ view::ClipPlane::ClipPlane(void)
 /*
  * view::ClipPlane::~ClipPlane
  */
-view::ClipPlane::~ClipPlane(void) {
+view::ClipPlane::~ClipPlane() {
     this->Release();
 }
 
@@ -68,7 +68,7 @@ view::ClipPlane::~ClipPlane(void) {
 /*
  * view::ClipPlane::create
  */
-bool view::ClipPlane::create(void) {
+bool view::ClipPlane::create() {
     // intentionally empty
     return true;
 }
@@ -77,7 +77,7 @@ bool view::ClipPlane::create(void) {
 /*
  * view::ClipPlane::release
  */
-void view::ClipPlane::release(void) {
+void view::ClipPlane::release() {
     // intentionally empty
 }
 

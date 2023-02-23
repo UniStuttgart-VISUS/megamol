@@ -29,8 +29,7 @@
 #include <math.h>
 #include <stdio.h>
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 const char ViewSlicing::cubeEdges[12] = {VS_FACE_FRONT + VS_FACE_BOTTOM, VS_FACE_FRONT + VS_FACE_TOP,
     VS_FACE_BACK + VS_FACE_BOTTOM, VS_FACE_BACK + VS_FACE_TOP, VS_FACE_FRONT + VS_FACE_LEFT,
@@ -488,5 +487,4 @@ inline bool ViewSlicing::pointCmp(float* p1, float* p2, float eps) {
         return false;
 }
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl

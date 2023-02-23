@@ -17,7 +17,7 @@ using namespace megamol::trisoup_gl;
 /*
  * CoordSysMarker::CoordSysMarker
  */
-CoordSysMarker::CoordSysMarker(void) : AbstractTriMeshDataSource() {
+CoordSysMarker::CoordSysMarker() : AbstractTriMeshDataSource() {
     // intentionally empty
 }
 
@@ -25,7 +25,7 @@ CoordSysMarker::CoordSysMarker(void) : AbstractTriMeshDataSource() {
 /*
  * CoordSysMarker::~CoordSysMarker
  */
-CoordSysMarker::~CoordSysMarker(void) {
+CoordSysMarker::~CoordSysMarker() {
     this->Release();
 }
 
@@ -33,7 +33,7 @@ CoordSysMarker::~CoordSysMarker(void) {
 /*
  * CoordSysMarker::assertData
  */
-void CoordSysMarker::assertData(void) {
+void CoordSysMarker::assertData() {
     typedef vislib::math::Point<float, 3> Point;
     typedef vislib::math::Vector<float, 3> Vector;
 

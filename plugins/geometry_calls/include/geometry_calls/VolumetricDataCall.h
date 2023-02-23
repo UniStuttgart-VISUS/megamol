@@ -35,7 +35,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "VolumetricDataCall";
     }
 
@@ -44,7 +44,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Transports volumetric data.";
     }
 
@@ -53,7 +53,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void);
+    static unsigned int FunctionCount();
 
     /**
      * Answer the name of the function used for this call.
@@ -98,7 +98,7 @@ public:
     /**
      * Initialises a new instance.
      */
-    VolumetricDataCall(void);
+    VolumetricDataCall();
 
     /**
      * Clone 'rhs'.
@@ -110,14 +110,14 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~VolumetricDataCall(void);
+    ~VolumetricDataCall() override;
 
     /**
      * Gets the number of frames starting at GetData().
      *
      * @return The number of frames loaded.
      */
-    inline size_t GetAvailableFrames(void) const {
+    inline size_t GetAvailableFrames() const {
         return this->FrameCount();
     }
 
@@ -126,14 +126,14 @@ public:
      *
      * @return The number of components per grid point.
      */
-    size_t GetComponents(void) const;
+    size_t GetComponents() const;
 
     /**
      * Gets the pointer to the raw data.
      *
      * @return The raw data.
      */
-    inline const void* GetData(void) const {
+    inline const void* GetData() const {
         if (metadata != nullptr && metadata->MemLoc == RAM) {
             return this->data;
         } else {
@@ -148,7 +148,7 @@ public:
      *
      * @return The raw data.
      */
-    inline void* GetData(void) {
+    inline void* GetData() {
         if (metadata != nullptr && metadata->MemLoc == RAM) {
             return this->data;
         } else {
@@ -158,7 +158,7 @@ public:
         }
     }
 
-    inline uint32_t GetVRAMData(void) const {
+    inline uint32_t GetVRAMData() const {
         if (metadata != nullptr && metadata->MemLoc == VRAM) {
             return vram_volume_name;
         } else {
@@ -173,14 +173,14 @@ public:
      *
      * @return The total number of frames.
      */
-    size_t GetFrames(void) const;
+    size_t GetFrames() const;
 
     /**
      * Gets the size of a single frame in bytes.
      *
      * @return The size of a single frame.
      */
-    inline size_t GetFrameSize(void) const {
+    inline size_t GetFrameSize() const {
         return this->GetVoxelSize() * this->GetVoxelsPerFrame();
     }
 
@@ -189,14 +189,14 @@ public:
      *
      * @return The type of the grid.
      */
-    GridType GetGridType(void) const;
+    GridType GetGridType() const;
 
     /**
      * Gets the metadata record.
      *
      * @return The metadata record if available.
      */
-    inline const Metadata* GetMetadata(void) const {
+    inline const Metadata* GetMetadata() const {
         return this->metadata;
     }
 
@@ -216,14 +216,14 @@ public:
      *
      * @return The length of a scalar.
      */
-    size_t GetScalarLength(void) const;
+    size_t GetScalarLength() const;
 
     /**
      * Gets the type of a scalar.
      *
      * @return The type of a scalar.
      */
-    ScalarType GetScalarType(void) const;
+    ScalarType GetScalarType() const;
 
     /**
      * Gets the distance between two slices in each of the dimensions.
@@ -235,14 +235,14 @@ public:
     /**
      * Gets the number of data points in a single frame.
      */
-    size_t GetVoxelsPerFrame(void) const;
+    size_t GetVoxelsPerFrame() const;
 
     /**
      * Gets the size of a single data point in bytes.
      *
      * @return The size of a single data point.
      */
-    inline size_t GetVoxelSize(void) const {
+    inline size_t GetVoxelSize() const {
         return this->GetScalarLength() * this->GetComponents();
     }
 

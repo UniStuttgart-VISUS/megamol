@@ -30,7 +30,7 @@ job::JobThread::~JobThread() {
 /*
  * job::JobThread::create
  */
-bool job::JobThread::create(void) {
+bool job::JobThread::create() {
     return true; // intentionally empty ATM
 }
 
@@ -38,7 +38,7 @@ bool job::JobThread::create(void) {
 /*
  * job::JobThread::release
  */
-void job::JobThread::release(void) {
+void job::JobThread::release() {
     // intentionally empty ATM
 }
 

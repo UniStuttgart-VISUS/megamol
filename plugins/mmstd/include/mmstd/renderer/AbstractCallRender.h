@@ -57,7 +57,7 @@ public:
     }
 
     /** Dtor. */
-    virtual ~AbstractCallRender() = default;
+    ~AbstractCallRender() override = default;
 
 
     /**
@@ -356,7 +356,7 @@ public:
     BaseCallRender() {}
 
     /** Dtor. */
-    ~BaseCallRender() {}
+    ~BaseCallRender() override {}
 
     /**
      * Assignment operator

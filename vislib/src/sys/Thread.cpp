@@ -52,7 +52,7 @@ void vislib::sys::Thread::Sleep(const DWORD millis) {
 /*
  * vislib::sys::Thread::Reschedule
  */
-void vislib::sys::Thread::Reschedule(void) {
+void vislib::sys::Thread::Reschedule() {
 #ifdef _WIN32
 #if (_WIN32_WINNT >= 0x0400)
     ::SwitchToThread();
@@ -117,7 +117,7 @@ vislib::sys::Thread::Thread(Runnable::Function runnableFunc) : id(0), runnable(N
 /*
  * vislib::sys::Thread::~Thread
  */
-vislib::sys::Thread::~Thread(void) {
+vislib::sys::Thread::~Thread() {
 #ifdef _WIN32
     if (this->handle != NULL) {
         ::CloseHandle(this->handle);
@@ -137,7 +137,7 @@ vislib::sys::Thread::~Thread(void) {
 /*
  * vislib::sys::Thread::GetExitCode
  */
-DWORD vislib::sys::Thread::GetExitCode(void) const {
+DWORD vislib::sys::Thread::GetExitCode() const {
 #ifdef _WIN32
     DWORD retval = 0;
     if (::GetExitCodeThread(this->handle, &retval) == FALSE) {
@@ -155,7 +155,7 @@ DWORD vislib::sys::Thread::GetExitCode(void) const {
 /*
  * vislib::sys::Thread::IsRunning
  */
-bool vislib::sys::Thread::IsRunning(void) const {
+bool vislib::sys::Thread::IsRunning() const {
     try {
 #ifdef _WIN32
         return ((this->handle != NULL)
@@ -172,7 +172,7 @@ bool vislib::sys::Thread::IsRunning(void) const {
 /*
  * vislib::sys::Thread::Join
  */
-void vislib::sys::Thread::Join(void) {
+void vislib::sys::Thread::Join() {
 #ifdef _WIN32
     if (this->handle != NULL) {
         if (::WaitForSingleObject(this->handle, INFINITE) == WAIT_FAILED) {

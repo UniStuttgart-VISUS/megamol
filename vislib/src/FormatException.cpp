@@ -31,7 +31,7 @@ vislib::FormatException::FormatException(const FormatException& rhs) : Exception
 /*
  * vislib::FormatException::~FormatException
  */
-vislib::FormatException::~FormatException(void) {}
+vislib::FormatException::~FormatException() {}
 
 
 /*

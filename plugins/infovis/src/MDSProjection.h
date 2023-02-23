@@ -1,5 +1,4 @@
-#ifndef MEGAMOL_INFOVIS_MDSPROJECTION_H_INCLUDED
-#define MEGAMOL_INFOVIS_MDSPROJECTION_H_INCLUDED
+#pragma once
 
 #include "datatools/table/TableDataCall.h"
 #include "mmcore/CalleeSlot.h"
@@ -10,34 +9,33 @@
 #include <Eigen/SVD>
 
 
-namespace megamol {
-namespace infovis {
+namespace megamol::infovis {
 
 using namespace megamol::core;
 
 class MDSProjection : public core::Module {
 public:
     /** Return module class name */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "MDSProjection";
     }
 
     /** Return module class description */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Multidimensional scaling, i.e., a non-linear dimensionality reduction technique, by preserving "
                "distances/dissimilarities approximately";
     }
 
     /** Module is always available */
-    static inline bool IsAvailable(void) {
+    static inline bool IsAvailable() {
         return true;
     }
 
     /** Constructor */
-    MDSProjection(void);
+    MDSProjection();
 
     /** Destructor */
-    virtual ~MDSProjection(void);
+    ~MDSProjection() override;
 
     static Eigen::MatrixXd euclideanDissimilarityMatrix(Eigen::MatrixXd dataMatrix);
 
@@ -54,10 +52,10 @@ public:
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create() override;
 
     /** Resource release */
-    virtual void release(void);
+    void release() override;
 
 private:
     static Eigen::MatrixXd bMatrix(Eigen::MatrixXd X, Eigen::MatrixXd W, Eigen::MatrixXd dissimilarityMatrix);
@@ -94,8 +92,4 @@ private:
     std::vector<float> data;
 };
 
-} // namespace infovis
-} // namespace megamol
-
-
-#endif
+} // namespace megamol::infovis

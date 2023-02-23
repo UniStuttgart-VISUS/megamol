@@ -48,21 +48,21 @@ public:
     /**
      * Add the lightsource of this module to a given collection
      */
-    void addLight(LightCollection& light_collection);
+    void addLight(LightCollection& light_collection) override;
 
     /** Ctor. */
     DistantLight();
 
     /** Dtor. */
-    virtual ~DistantLight();
+    ~DistantLight() override;
 
 private:
     core::param::ParamSlot angularDiameter;
     core::param::ParamSlot direction;
     core::param::ParamSlot eye_direction;
 
-    virtual bool InterfaceIsDirty();
-    virtual void readParams();
+    bool InterfaceIsDirty() override;
+    void readParams() override;
 };
 
 } // namespace megamol::core::view::light

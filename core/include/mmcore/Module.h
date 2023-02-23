@@ -11,6 +11,8 @@
 
 #include "FrontendResource.h"
 #include "FrontendResourcesMap.h"
+#include "GlobalValueStore.h"
+#include "ResourceRequest.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 
 
@@ -27,8 +29,8 @@ class ModuleDescription;
  */
 class Module : public AbstractNamedObjectContainer {
 public:
-    virtual std::vector<std::string> requested_lifetime_resources() {
-        return {"GlobalValueStore"};
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        req.require<frontend_resources::GlobalValueStore>();
     }
 
     friend class ::megamol::core::factories::ModuleDescription;
@@ -61,20 +63,6 @@ public:
     template<class T>
     inline static const_ptr_type dynamic_pointer_cast(std::shared_ptr<const T> p) {
         return std::dynamic_pointer_cast<const Module, const T>(p);
-    }
-
-    /**
-     * Answer whether or not this module supports being used in a
-     * quickstart. Overwrite if you don't want your module to be used in
-     * quickstarts.
-     *
-     * This default implementation returns 'true'
-     *
-     * @return Whether or not this module supports being used in a
-     *         quickstart.
-     */
-    static bool SupportQuickstart() {
-        return true;
     }
 
     /**

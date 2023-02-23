@@ -15,7 +15,7 @@ using namespace megamol;
 /*
  * datatools::SphereDataUnifier::SphereDataUnifier
  */
-datatools::SphereDataUnifier::SphereDataUnifier(void)
+datatools::SphereDataUnifier::SphereDataUnifier()
         : Module()
         , putDataSlot("putdata", "Connects from the data consumer")
         , getDataSlot("getdata", "Connects to the data source")
@@ -37,7 +37,7 @@ datatools::SphereDataUnifier::SphereDataUnifier(void)
 /*
  * datatools::SphereDataUnifier::~SphereDataUnifier
  */
-datatools::SphereDataUnifier::~SphereDataUnifier(void) {
+datatools::SphereDataUnifier::~SphereDataUnifier() {
     this->Release();
 }
 
@@ -45,7 +45,7 @@ datatools::SphereDataUnifier::~SphereDataUnifier(void) {
 /*
  * datatools::SphereDataUnifier::create
  */
-bool datatools::SphereDataUnifier::create(void) {
+bool datatools::SphereDataUnifier::create() {
     return true;
 }
 
@@ -53,7 +53,7 @@ bool datatools::SphereDataUnifier::create(void) {
 /*
  * datatools::SphereDataUnifier::release
  */
-void datatools::SphereDataUnifier::release(void) {
+void datatools::SphereDataUnifier::release() {
     // intentionally empty
 }
 

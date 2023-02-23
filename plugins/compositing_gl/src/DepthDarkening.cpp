@@ -215,7 +215,7 @@ void megamol::compositing_gl::DepthDarkening::fitTextures(std::shared_ptr<glowl:
     }
 }
 
-void megamol::compositing_gl::DepthDarkening::recalcKernel(void) {
+void megamol::compositing_gl::DepthDarkening::recalcKernel() {
     auto radius = kernelRadiusParam_.Param<core::param::IntParam>()->Value();
     auto length = 2 * radius - 1;
     std::vector<float> kernelVec(length, 0.0f);

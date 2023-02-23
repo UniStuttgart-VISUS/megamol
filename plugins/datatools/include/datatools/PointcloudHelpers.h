@@ -10,8 +10,7 @@
 #include "geometry_calls/MultiParticleDataCall.h"
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Class that implements the interface nanoflann needs for simple spherical particles.
@@ -226,5 +225,4 @@ private:
     std::array<T, DIM> _weights;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

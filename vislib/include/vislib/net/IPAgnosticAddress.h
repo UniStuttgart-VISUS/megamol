@@ -6,11 +6,7 @@
  * Copyright (C) 2009 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_IPAGNOSTICADDRESS_H_INCLUDED
-#define VISLIB_IPAGNOSTICADDRESS_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -20,8 +16,7 @@
 #include "vislib/net/SocketAddress.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -164,7 +159,7 @@ public:
     /**
      * Creates an unspecified, invalid address.
      */
-    IPAgnosticAddress(void);
+    IPAgnosticAddress();
 
     /**
      * Create an IPAgnosticAddress from an IPAddress.
@@ -238,12 +233,12 @@ public:
     IPAgnosticAddress(const IPAgnosticAddress& rhs);
 
     /** Dtor. */
-    virtual ~IPAgnosticAddress(void);
+    virtual ~IPAgnosticAddress();
 
     /**
      * Gets the address familiy of the IP address.
      */
-    AddressFamily GetAddressFamily(void) const;
+    AddressFamily GetAddressFamily() const;
 
     /**
      * Get the prefix of length 'prefixLength' bits of the address. The rest
@@ -260,7 +255,7 @@ public:
      *
      * @return true if the address represents "any" address, false otherwise.
      */
-    inline bool IsAny(void) const {
+    inline bool IsAny() const {
         return ((*this == ANY4) || (*this == ANY6));
     }
 
@@ -269,7 +264,7 @@ public:
      *
      * @return true if the address is v4, false otherwise.
      */
-    inline bool IsV4(void) const {
+    inline bool IsV4() const {
         return (this->v4 != NULL);
     }
 
@@ -278,7 +273,7 @@ public:
      *
      * @return true if the address is v6, false otherwise.
      */
-    inline bool IsV6(void) const {
+    inline bool IsV6() const {
         return (this->v6 != NULL);
     }
 
@@ -287,14 +282,14 @@ public:
      *
      * @return A string representation.
      */
-    StringA ToStringA(void) const;
+    StringA ToStringA() const;
 
     /**
      * Answer a string representation of the IP address.
      *
      * @return A string representation.
      */
-    StringW ToStringW(void) const;
+    StringW ToStringW() const;
 
     /**
      * Provides access to the single bytes of the IP address.
@@ -466,7 +461,7 @@ public:
      * @throws IllegalStateException If the address is neither IPv4 nor can
      *                               be casted to an IPv4 address.
      */
-    operator IPAddress(void) const;
+    operator IPAddress() const;
 
     /**
      * Cast to a pointer to an IPv4 address.
@@ -478,7 +473,7 @@ public:
      *
      * @throws IllegalStateException If the address is not IPv4.
      */
-    operator const IPAddress*(void) const;
+    operator const IPAddress*() const;
 
     /**
      * Cast to a pointer to an IPv4 address. This cast exposes the internal
@@ -492,7 +487,7 @@ public:
      *
      * @throws IllegalStateException If the address is not IPv4.
      */
-    operator IPAddress*(void);
+    operator IPAddress*();
 
     /**
      * Cast to an IPv6 address. This cast exposes the internal
@@ -507,7 +502,7 @@ public:
      * @throws IllegalStateException If the address is neither IPv6 nor can
      *                               be casted to an IPv6 address.
      */
-    operator IPAddress6(void) const;
+    operator IPAddress6() const;
 
     /**
      * Cast to a pointer to an IPv6 address. This cast exposes the internal
@@ -521,7 +516,7 @@ public:
      *
      * @throws IllegalStateException If the address is not IPv6.
      */
-    operator const IPAddress6*(void) const;
+    operator const IPAddress6*() const;
 
     /**
      * Cast to a pointer to an IPv6 address. This cast exposes the internal
@@ -535,7 +530,7 @@ public:
      *
      * @throws IllegalStateException If the address is not IPv6.
      */
-    operator IPAddress6*(void);
+    operator IPAddress6*();
 
 private:
     /** If the address is v4, it is stored here. */
@@ -545,10 +540,8 @@ private:
     IPAddress6* v6;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_IPAGNOSTICADDRESS_H_INCLUDED */

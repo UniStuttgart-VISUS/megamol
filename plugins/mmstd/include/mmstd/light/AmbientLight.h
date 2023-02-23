@@ -44,17 +44,17 @@ public:
     /**
      * Add the lightsource of this module to a given collection
      */
-    void addLight(LightCollection& light_collection);
+    void addLight(LightCollection& light_collection) override;
 
     /** Ctor. */
     AmbientLight();
 
     /** Dtor. */
-    virtual ~AmbientLight();
+    ~AmbientLight() override;
 
 private:
-    virtual bool InterfaceIsDirty();
-    virtual void readParams();
+    bool InterfaceIsDirty() override;
+    void readParams() override;
 };
 
 } // namespace megamol::core::view::light

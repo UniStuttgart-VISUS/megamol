@@ -18,7 +18,7 @@ void megamol::core::view::light::PointLight::addLight(LightCollection& light_col
 /*
  * megamol::core::view::light::PointLight::PointLight
  */
-PointLight::PointLight(void) : AbstractLight(), position("Position", ""), radius("Radius", "") {
+PointLight::PointLight() : AbstractLight(), position("Position", ""), radius("Radius", "") {
 
     // point light
     lightsource = std::make_shared<PointLightType>();
@@ -32,7 +32,7 @@ PointLight::PointLight(void) : AbstractLight(), position("Position", ""), radius
 /*
  * megamol::core::view::light::PointLight::~PointLight
  */
-PointLight::~PointLight(void) {
+PointLight::~PointLight() {
     this->Release();
 }
 

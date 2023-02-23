@@ -31,7 +31,7 @@ using namespace megamol::core::utility::log;
 /*
  * protein::CrystalStructureDataSource::CrystalStructureDataSource
  */
-protein::CrystalStructureDataSource::CrystalStructureDataSource(void)
+protein::CrystalStructureDataSource::CrystalStructureDataSource()
         : AnimDataModule()
         , dataOutSlot("dataout", "The slot providing the loaded data")
         , dataChkptCallerSlot("chkptData", "The caller slot to connect a chkpt-source.")
@@ -145,7 +145,7 @@ protein::CrystalStructureDataSource::CrystalStructureDataSource(void)
 /*
  * protein::CrystalStructureDataSource::~CrystalStructureDataSource
  */
-protein::CrystalStructureDataSource::~CrystalStructureDataSource(void) {
+protein::CrystalStructureDataSource::~CrystalStructureDataSource() {
     this->Release();
 }
 
@@ -153,7 +153,7 @@ protein::CrystalStructureDataSource::~CrystalStructureDataSource(void) {
 /*
  * protein::CrystalStructureDataSource::create
  */
-bool protein::CrystalStructureDataSource::create(void) {
+bool protein::CrystalStructureDataSource::create() {
     // intentionally empty
     return true;
 }
@@ -291,7 +291,7 @@ bool protein::CrystalStructureDataSource::getExtent(core::Call& call) {
 /*
  * protein::CrystalStructureDataSource::release
  */
-void protein::CrystalStructureDataSource::release(void) {
+void protein::CrystalStructureDataSource::release() {
     // Stop frame-loading thread
     this->resetFrameCache();
 }
@@ -433,7 +433,7 @@ T protein::CrystalStructureDataSource::convertStrTo(std::string str) {
 /*
  * protein::CrystalStructureDataSource::constructFrame
  */
-core::view::AnimDataModule::Frame* protein::CrystalStructureDataSource::constructFrame(void) const {
+core::view::AnimDataModule::Frame* protein::CrystalStructureDataSource::constructFrame() const {
     Frame* f = new Frame(*const_cast<CrystalStructureDataSource*>(this));
     f->AllocBufs(this->atomCnt, this->dipoleCnt);
     return f;
@@ -1028,7 +1028,7 @@ protein::CrystalStructureDataSource::Frame::Frame(core::view::AnimDataModule& ow
 /*
  * protein::CrystalStructureDataSource::Frame::~Frame
  */
-protein::CrystalStructureDataSource::Frame::~Frame(void) {
+protein::CrystalStructureDataSource::Frame::~Frame() {
     if (this->atomPos != NULL)
         delete[] this->atomPos;
     if (this->dipole != NULL)

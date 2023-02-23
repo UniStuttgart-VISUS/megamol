@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CLUSTER_MPI_MPIPROVIDER_H_INCLUDED
-#define MEGAMOLCORE_CLUSTER_MPI_MPIPROVIDER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #ifdef MEGAMOL_USE_MPI
 #include <mpi.h>
@@ -26,10 +22,7 @@
 #include "vislib/String.h"
 
 
-namespace megamol {
-namespace core {
-namespace cluster {
-namespace mpi {
+namespace megamol::core::cluster::mpi {
 
 /**
  * This module lazily initialises MPI and provides the communicator for the
@@ -43,7 +36,7 @@ public:
      *
      * @return The name of this module.
      */
-    static inline const char* ClassName(void) {
+    static inline const char* ClassName() {
         return "MpiProvider";
     }
 
@@ -52,7 +45,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static inline const char* Description(void) {
+    static inline const char* Description() {
         return "Initialises MPI on behalf of another module.";
     }
 
@@ -61,26 +54,17 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void);
-
-    /**
-     * Disallow usage in quickstarts.
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
-    }
+    static bool IsAvailable();
 
     /**
      * Initialises a new instance.
      */
-    MpiProvider(void);
+    MpiProvider();
 
     /**
      * Finalises the instance.
      */
-    virtual ~MpiProvider(void);
+    ~MpiProvider() override;
 
 protected:
     /**
@@ -88,7 +72,7 @@ protected:
      *
      * @return true unconditionally.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Lazily initialises MPI and returns the communicator.
@@ -102,7 +86,7 @@ protected:
     /**
      * Finalises the module and releases MPI.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** Super class. */
@@ -113,7 +97,7 @@ private:
      *
      * @return The command line string.
      */
-    static vislib::StringA getCommandLine(void);
+    static vislib::StringA getCommandLine();
 
     /**
      * Initialises MPI and performs node colouring.
@@ -168,9 +152,4 @@ private:
     // static bool isMpiOwner;
 };
 
-} /* end namespace mpi */
-} /* end namespace cluster */
-} /* end namespace core */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_CLUSTER_MPI_MPIPROVIDER_H_INCLUDED */
+} // namespace megamol::core::cluster::mpi

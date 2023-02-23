@@ -5,11 +5,7 @@
  * Copyright (C) 2005 by Christoph Mueller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_SHALLOWVECTOR_H_INCLUDED
-#define VISLIB_SHALLOWVECTOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -18,8 +14,7 @@
 #include "vislib/math/AbstractVector.h"
 
 
-namespace vislib {
-namespace math {
+namespace vislib::math {
 
 /**
  * This is the implementation of an AbstractVector that uses its a
@@ -60,7 +55,7 @@ public:
     }
 
     /** Dtor. */
-    ~ShallowVector(void);
+    ~ShallowVector();
 
     /**
      * Set a new component pointer. The vector uses from this point the
@@ -120,7 +115,7 @@ private:
      * Forbidden ctor. A default ctor would be inherently unsafe for
      * shallow vectors.
      */
-    inline ShallowVector(void) {}
+    inline ShallowVector() {}
 };
 
 
@@ -128,12 +123,10 @@ private:
  * ShallowVector<T, D>::~ShallowVector
  */
 template<class T, unsigned int D>
-ShallowVector<T, D>::~ShallowVector(void) {}
+ShallowVector<T, D>::~ShallowVector() {}
 
-} /* end namespace math */
-} /* end namespace vislib */
+} // namespace vislib::math
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_SHALLOWVECTOR_H_INCLUDED */

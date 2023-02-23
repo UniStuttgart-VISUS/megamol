@@ -5,12 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED
-#define MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED
 #pragma once
 
 
 #include "mmcore/CallerSlot.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 #include "mmstd_gl/renderer/CallRenderViewGL.h"
 #include "mmstd_gl/view/View3DGL.h"
@@ -26,8 +25,7 @@
 #include "vislib/sys/FastFile.h"
 
 
-namespace megamol {
-namespace cinematic_gl {
+namespace megamol::cinematic_gl {
 
 /**
  * Cinemtic View.
@@ -36,10 +34,9 @@ class CinematicView : public mmstd_gl::view::View3DGL {
 public:
     typedef mmstd_gl::view::View3DGL Base;
 
-    std::vector<std::string> requested_lifetime_resources() override {
-        auto lifetime_resources = Base::requested_lifetime_resources();
-        lifetime_resources.push_back("MegaMolGraph");
-        return lifetime_resources;
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Base::requested_lifetime_resources(req);
+        req.require<core::MegaMolGraph>();
     }
 
     /**
@@ -47,7 +44,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CinematicView";
     }
 
@@ -56,30 +53,21 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Screenshot View Module";
     }
 
-    /**
-     * Disallow usage in quickstarts
-     *
-     * @return false
-     */
-    static bool SupportQuickstart(void) {
-        return false;
-    }
-
     /** Ctor. */
-    CinematicView(void);
+    CinematicView();
 
     /** Dtor. */
-    virtual ~CinematicView(void);
+    ~CinematicView() override;
 
 protected:
     /**
      * Renders this View3DGL in the currently active OpenGL context.
      */
-    virtual ImageWrapper Render(double time, double instanceTime) override;
+    ImageWrapper Render(double time, double instanceTime) override;
 
 private:
     typedef std::chrono::system_clock::time_point TimePoint_t;
@@ -206,7 +194,4 @@ private:
     core::param::ParamSlot addSBSideToNameParam;
 };
 
-} // namespace cinematic_gl
-} /* end namespace megamol */
-
-#endif // MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED
+} // namespace megamol::cinematic_gl

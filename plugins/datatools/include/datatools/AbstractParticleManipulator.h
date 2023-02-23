@@ -9,10 +9,8 @@
 #include "datatools/AbstractManipulator.h"
 #include "geometry_calls/MultiParticleDataCall.h"
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 using AbstractParticleManipulator = AbstractManipulator<geocalls::MultiParticleDataCall>;
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

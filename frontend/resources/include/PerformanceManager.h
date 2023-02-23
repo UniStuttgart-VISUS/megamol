@@ -20,8 +20,13 @@ class Profiling_Service;
 } // namespace frontend
 } // namespace megamol
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
+
+static std::string Performance_Logging_Status_Req_Name = "ProfilingLoggingStatus";
+
+struct ProfilingLoggingStatus {
+    bool active = true;
+};
 
 static std::string PerformanceManager_Req_Name = "PerformanceManager";
 
@@ -235,5 +240,4 @@ private:
     std::vector<update_callback> subscribers;
 };
 
-} // namespace frontend_resources
-} // namespace megamol
+} // namespace megamol::frontend_resources

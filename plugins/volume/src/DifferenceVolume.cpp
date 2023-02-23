@@ -17,7 +17,7 @@
 /*
  * megamol::volume::DifferenceVolume::DifferenceVolume
  */
-megamol::volume::DifferenceVolume::DifferenceVolume(void)
+megamol::volume::DifferenceVolume::DifferenceVolume()
         : frameID((std::numeric_limits<unsigned int>::max)())
         , frameIdx(0)
         , hashData((std::numeric_limits<std::size_t>::max)())
@@ -53,7 +53,7 @@ megamol::volume::DifferenceVolume::DifferenceVolume(void)
 /*
  * megamol::volume::DifferenceVolume::~DifferenceVolume
  */
-megamol::volume::DifferenceVolume::~DifferenceVolume(void) {
+megamol::volume::DifferenceVolume::~DifferenceVolume() {
     this->Release();
 }
 
@@ -126,7 +126,7 @@ bool megamol::volume::DifferenceVolume::checkCompatibility(const geocalls::Volum
 /*
  * megamol::volume::DifferenceVolume::create
  */
-bool megamol::volume::DifferenceVolume::create(void) {
+bool megamol::volume::DifferenceVolume::create() {
     return true;
 }
 
@@ -482,7 +482,7 @@ bool megamol::volume::DifferenceVolume::onUnsupported(core::Call& call) {
 /*
  * megamol::volume::DifferenceVolume::release
  */
-void megamol::volume::DifferenceVolume::release(void) {
+void megamol::volume::DifferenceVolume::release() {
     for (auto& c : this->cache) {
         c.clear();
     }

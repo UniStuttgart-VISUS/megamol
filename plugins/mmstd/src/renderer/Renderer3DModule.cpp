@@ -14,7 +14,7 @@ namespace megamol::core::view {
 /*
  * Renderer3DModule::Renderer3DModule
  */
-Renderer3DModule::Renderer3DModule(void) : RendererModule<CallRender3D, Module>() {
+Renderer3DModule::Renderer3DModule() : RendererModule<CallRender3D, Module>() {
     // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->chainRenderSlot);
 
@@ -25,7 +25,7 @@ Renderer3DModule::Renderer3DModule(void) : RendererModule<CallRender3D, Module>(
 /*
  * Renderer3DModule::~Renderer3DModule
  */
-Renderer3DModule::~Renderer3DModule(void) {
+Renderer3DModule::~Renderer3DModule() {
     // intentionally empty
 }
 

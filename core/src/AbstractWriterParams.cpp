@@ -22,8 +22,7 @@
 #include <string>
 #include <utility>
 
-namespace megamol {
-namespace core {
+namespace megamol::core {
 
 AbstractWriterParams::AbstractWriterParams(std::function<void(AbstractSlot* slot)> makeSlotAvailable)
         : filePathSlot("outputFile", "Path to the file which should be written")
@@ -123,5 +122,4 @@ bool AbstractWriterParams::modeChanged(param::ParamSlot&) {
     return true;
 }
 
-} // namespace core
-} // namespace megamol
+} // namespace megamol::core

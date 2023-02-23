@@ -14,8 +14,7 @@
 #include "vislib/Array.h"
 
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /**
  * Module loading a quartz crystal definition file
@@ -27,7 +26,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "QuartzCrystalDataSource";
     }
 
@@ -36,7 +35,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Module loading a quartz crystal definition file";
     }
 
@@ -45,15 +44,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    CrystalDataSource(void);
+    CrystalDataSource();
 
     /** Dtor */
-    virtual ~CrystalDataSource(void);
+    ~CrystalDataSource() override;
 
 protected:
     /**
@@ -61,7 +60,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Call callback to get the data
@@ -75,7 +74,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
 private:
     /** The file name slot */
@@ -98,5 +97,4 @@ private:
     vislib::Array<CrystalDataCall::Crystal> crystals;
 };
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

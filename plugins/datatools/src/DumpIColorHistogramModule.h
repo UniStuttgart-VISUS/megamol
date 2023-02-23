@@ -11,24 +11,23 @@
 #include "mmcore/param/ParamSlot.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 class DumpIColorHistogramModule : public megamol::core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "DumpIColorHistogramModule";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Dump (DEBUG! DO NOT USE)";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
-    DumpIColorHistogramModule(void);
-    virtual ~DumpIColorHistogramModule(void);
-    virtual bool create(void);
-    virtual void release(void);
+    DumpIColorHistogramModule();
+    ~DumpIColorHistogramModule() override;
+    bool create() override;
+    void release() override;
 
 private:
     bool dump(::megamol::core::param::ParamSlot& param);
@@ -38,5 +37,4 @@ private:
 };
 
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

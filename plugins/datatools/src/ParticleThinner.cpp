@@ -13,7 +13,7 @@ using namespace megamol;
 /*
  * datatools::ParticleThinner::ParticleThinner
  */
-datatools::ParticleThinner::ParticleThinner(void)
+datatools::ParticleThinner::ParticleThinner()
         : AbstractParticleManipulator("outData", "indata")
         , thinningFactorSlot("thinningFactor", "The thinning factor. Only each n-th particle will be kept.") {
     this->thinningFactorSlot.SetParameter(new core::param::IntParam(100, 1));
@@ -24,7 +24,7 @@ datatools::ParticleThinner::ParticleThinner(void)
 /*
  * datatools::ParticleThinner::~ParticleThinner
  */
-datatools::ParticleThinner::~ParticleThinner(void) {
+datatools::ParticleThinner::~ParticleThinner() {
     this->Release();
 }
 

@@ -4,11 +4,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MMPROTEINPLUGIN_SOMBREROMESHRENDERER_H_INCLUDED
-#define MMPROTEINPLUGIN_SOMBREROMESHRENDERER_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
@@ -22,8 +18,7 @@
 
 #include "mmstd_gl/renderer/CallRender3DGL.h"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 /**
  * Renderer for tri-mesh data
@@ -35,7 +30,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "SombreroMeshRenderer";
     }
 
@@ -44,7 +39,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Renderer for sombrero tri-mesh data";
     }
 
@@ -53,15 +48,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    SombreroMeshRenderer(void);
+    SombreroMeshRenderer();
 
     /** Dtor. */
-    virtual ~SombreroMeshRenderer(void);
+    ~SombreroMeshRenderer() override;
 
 protected:
     /**
@@ -69,7 +64,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -80,12 +75,12 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -94,7 +89,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 #if 0
     /**
@@ -224,7 +219,4 @@ private:
 };
 
 
-} // namespace protein_gl
-} /* end namespace megamol */
-
-#endif /* MMPROTEINPLUGIN_SOMBREROMESHRENDERER_H_INCLUDED */
+} // namespace megamol::protein_gl

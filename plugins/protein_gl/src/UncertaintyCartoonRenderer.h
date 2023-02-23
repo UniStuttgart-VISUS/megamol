@@ -22,8 +22,7 @@
 #include "vislib_gl/graphics/gl/IncludeAllGL.h"
 
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 using namespace megamol::core;
 using namespace megamol::protein_calls;
@@ -39,7 +38,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "UncertaintyCartoonRenderer";
     }
 
@@ -48,7 +47,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers cartoon renderings for biomolecules (uses Tessellation Shaders).";
     }
 
@@ -57,15 +56,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    UncertaintyCartoonRenderer(void);
+    UncertaintyCartoonRenderer();
 
     /** Dtor. */
-    virtual ~UncertaintyCartoonRenderer(void);
+    ~UncertaintyCartoonRenderer() override;
 
 protected:
     /**
@@ -73,12 +72,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -89,7 +88,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * The ...
@@ -108,7 +107,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /**
@@ -168,7 +167,7 @@ private:
      *
      * @return The ... .
      */
-    bool loadTubeShader(void);
+    bool loadTubeShader();
 
     /**
      * Enumeration of secondary structure colorings
@@ -316,5 +315,4 @@ private:
     bool firstframe;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl

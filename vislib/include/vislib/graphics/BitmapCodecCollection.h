@@ -6,11 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_BITMAPCODECCOLLECTION_H_INCLUDED
-#define VISLIB_BITMAPCODECCOLLECTION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -24,8 +20,7 @@
 #include "vislib/sys/File.h"
 
 
-namespace vislib {
-namespace graphics {
+namespace vislib::graphics {
 
 
 /**
@@ -52,7 +47,7 @@ public:
     static BitmapCodecCollection& DefaultCollection();
 
     /** Ctor. */
-    BitmapCodecCollection(void);
+    BitmapCodecCollection();
 
     /**
      * Copy Ctor.
@@ -62,7 +57,7 @@ public:
     BitmapCodecCollection(const BitmapCodecCollection& src);
 
     /** Dtor. */
-    ~BitmapCodecCollection(void);
+    ~BitmapCodecCollection();
 
     /**
      * Adds a codec to the collection. If this codec already is in the
@@ -89,7 +84,7 @@ public:
     /**
      * Removes all codecs from the collection
      */
-    inline void Clear(void) {
+    inline void Clear() {
         this->codecs.Clear();
     }
 
@@ -120,7 +115,7 @@ public:
      *
      * @return The number of codecs in the collection
      */
-    inline SIZE_T Count(void) const {
+    inline SIZE_T Count() const {
         return this->codecs.Count();
     }
 
@@ -313,10 +308,8 @@ private:
     CodecArray codecs;
 };
 
-} /* end namespace graphics */
-} /* end namespace vislib */
+} // namespace vislib::graphics
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_BITMAPCODECCOLLECTION_H_INCLUDED */

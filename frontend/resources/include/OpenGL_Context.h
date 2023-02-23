@@ -10,8 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 static std::string OpenGL_Context_Req_Name = "OpenGL_Context";
 
@@ -24,5 +23,4 @@ struct OpenGL_Context {
     std::vector<std::string> ext_;
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

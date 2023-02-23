@@ -10,11 +10,10 @@
 #include "mmcore/param/Vector3fParam.h"
 
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 
-OSPRayTransform::OSPRayTransform(void)
+OSPRayTransform::OSPRayTransform()
         : _pos("pos", "")
         , _rot("rot", "")
         , _scale("scale", "")
@@ -35,7 +34,7 @@ OSPRayTransform::OSPRayTransform(void)
     this->MakeSlotAvailable(&this->_deployTransformationSlot);
 }
 
-OSPRayTransform::~OSPRayTransform(void) {
+OSPRayTransform::~OSPRayTransform() {
     this->Release();
 }
 
@@ -93,5 +92,4 @@ bool OSPRayTransform::InterfaceIsDirty() {
     }
 }
 
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

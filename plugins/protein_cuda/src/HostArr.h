@@ -8,8 +8,7 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_HOSTARR_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_HOSTARR_H_INCLUDED
+#pragma once
 
 #include <cstdlib>
 
@@ -115,5 +114,3 @@ private:
 
 } // namespace protein_cuda
 } // namespace megamol
-
-#endif // MMPROTEINCUDAPLUGIN_HOSTARR_H_INCLUDED

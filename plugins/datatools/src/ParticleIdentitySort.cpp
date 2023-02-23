@@ -2,11 +2,10 @@
 #include <numeric>
 
 
-megamol::datatools::ParticleIdentitySort::ParticleIdentitySort(void)
-        : AbstractParticleManipulator("outData", "indata") {}
+megamol::datatools::ParticleIdentitySort::ParticleIdentitySort() : AbstractParticleManipulator("outData", "indata") {}
 
 
-megamol::datatools::ParticleIdentitySort::~ParticleIdentitySort(void) {
+megamol::datatools::ParticleIdentitySort::~ParticleIdentitySort() {
     this->Release();
 };
 

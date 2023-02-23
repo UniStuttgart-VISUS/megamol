@@ -13,7 +13,7 @@ using namespace megamol::core;
 /*
  * view::CallTimeControl::CallTimeControl
  */
-view::CallTimeControl::CallTimeControl(void) : Call(), m(NULL) {
+view::CallTimeControl::CallTimeControl() : Call(), m(NULL) {
     // intentionally empty
 }
 
@@ -21,6 +21,6 @@ view::CallTimeControl::CallTimeControl(void) : Call(), m(NULL) {
 /*
  * view::CallTimeControl::~CallTimeControl
  */
-view::CallTimeControl::~CallTimeControl(void) {
+view::CallTimeControl::~CallTimeControl() {
     this->m = NULL; // do not delete
 }

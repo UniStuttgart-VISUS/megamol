@@ -14,8 +14,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
-namespace megamol {
-namespace adios {
+namespace megamol::adios {
 
 class ADIOSFlexVolume : public core::Module {
 
@@ -51,12 +50,12 @@ public:
     ADIOSFlexVolume();
 
     /** Dtor. */
-    virtual ~ADIOSFlexVolume();
+    ~ADIOSFlexVolume() override;
 
-    bool create();
+    bool create() override;
 
 protected:
-    void release();
+    void release() override;
     bool inquireDataVariables(CallADIOSData* cad);
     bool inquireMetaDataVariables(CallADIOSData* cad);
     bool assertData(geocalls::VolumetricDataCall* vdc, CallADIOSData* cad);
@@ -84,5 +83,4 @@ private:
     size_t currentFrame = -1;
 };
 
-} // end namespace adios
-} // end namespace megamol
+} // namespace megamol::adios

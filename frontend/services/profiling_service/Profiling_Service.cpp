@@ -9,21 +9,24 @@
 #include "LuaCallbacksCollection.h"
 #include "ModuleGraphSubscription.h"
 
-namespace megamol {
-namespace frontend {
+namespace megamol::frontend {
 
 bool Profiling_Service::init(void* configPtr) {
-    _providedResourceReferences = {
-        {"PerformanceManager", _perf_man},
-    };
-
 #ifdef MEGAMOL_USE_PROFILING
+    _providedResourceReferences = {{frontend_resources::PerformanceManager_Req_Name, _perf_man},
+        {frontend_resources::Performance_Logging_Status_Req_Name, profiling_logging}};
+
     const auto conf = static_cast<Config*>(configPtr);
+    profiling_logging.active = conf->autostart_profiling;
+
     if (conf != nullptr && !conf->log_file.empty()) {
         log_file = std::ofstream(conf->log_file, std::ofstream::trunc);
         // header
         log_file << "frame;parent;name;comment;frame_index;api;type;time (ms)" << std::endl;
         _perf_man.subscribe_to_updates([&](const frontend_resources::PerformanceManager::frame_info& fi) {
+            if (!profiling_logging.active) {
+                return;
+            }
             auto frame = fi.frame;
             if (frame > 0) {
                 auto& _frame_stats =
@@ -114,6 +117,11 @@ void Profiling_Service::fill_lua_callbacks() {
     auto& graph = const_cast<core::MegaMolGraph&>(_requestedResourcesReferences[1].getResource<core::MegaMolGraph>());
     auto& render_next_frame = _requestedResourcesReferences[2].getResource<std::function<bool()>>();
 
+    callbacks.add<frontend_resources::LuaCallbacksCollection::VoidResult, bool>(
+        "mmSetProfilingLogging", "(bool on)", {[&](bool on) -> frontend_resources::LuaCallbacksCollection::VoidResult {
+            this->profiling_logging.active = on;
+            return frontend_resources::LuaCallbacksCollection::VoidResult{};
+        }});
 
     callbacks.add<frontend_resources::LuaCallbacksCollection::StringResult, std::string, std::string, int>(
         "mmGenerateCameraScenes", "(string entrypoint, string camera_path_pattern, uint num_samples)",
@@ -193,5 +201,4 @@ void Profiling_Service::fill_lua_callbacks() {
     register_callbacks(callbacks);
 }
 
-} // namespace frontend
-} // namespace megamol
+} // namespace megamol::frontend

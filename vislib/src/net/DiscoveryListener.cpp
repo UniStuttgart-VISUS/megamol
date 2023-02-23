@@ -12,13 +12,13 @@
 /*
  * vislib::net::cluster::DiscoveryListener::DiscoveryListener
  */
-vislib::net::cluster::DiscoveryListener::DiscoveryListener(void) {}
+vislib::net::cluster::DiscoveryListener::DiscoveryListener() {}
 
 
 /*
  * vislib::net::cluster::DiscoveryListener::~DiscoveryListener
  */
-vislib::net::cluster::DiscoveryListener::~DiscoveryListener(void) {}
+vislib::net::cluster::DiscoveryListener::~DiscoveryListener() {}
 
 
 /*

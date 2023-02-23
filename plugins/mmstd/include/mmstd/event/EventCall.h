@@ -17,7 +17,7 @@ class CallEvent
         : public core::GenericVersionedCall<std::shared_ptr<DoubleBufferedEventCollection>, core::EmptyMetaData> {
 public:
     CallEvent() = default;
-    ~CallEvent() = default;
+    ~CallEvent() override = default;
 
     static const char* ClassName() {
         return "CallEvent";

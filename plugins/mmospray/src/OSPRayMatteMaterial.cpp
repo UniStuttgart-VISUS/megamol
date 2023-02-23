@@ -11,7 +11,7 @@
 using namespace megamol::ospray;
 
 
-OSPRayMatteMaterial::OSPRayMatteMaterial(void)
+OSPRayMatteMaterial::OSPRayMatteMaterial()
         : AbstractOSPRayMaterial()
         ,
         // MATTE
@@ -21,7 +21,7 @@ OSPRayMatteMaterial::OSPRayMatteMaterial(void)
     this->MakeSlotAvailable(&this->matteReflectance);
 }
 
-OSPRayMatteMaterial::~OSPRayMatteMaterial(void) {
+OSPRayMatteMaterial::~OSPRayMatteMaterial() {
     this->Release();
 }
 

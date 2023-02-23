@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_DATATOOLS_CSVDATASOURCE_H_INCLUDED
-#define MEGAMOL_DATATOOLS_CSVDATASOURCE_H_INCLUDED
 #pragma once
 
 #include "datatools/table/TableDataCall.h"
@@ -16,31 +14,29 @@
 #include "mmcore/param/ParamSlot.h"
 #include <vector>
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 class CSVDataSource : public core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CSVDataSource";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source for parsing tabular comma-separated values";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
-    CSVDataSource(void);
-    virtual ~CSVDataSource(void);
+    CSVDataSource();
+    ~CSVDataSource() override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    bool create() override;
+    void release() override;
 
 private:
-    inline void assertData(void);
+    inline void assertData();
     bool getDataCallback(core::Call& caller);
     bool getHashCallback(core::Call& caller);
 
@@ -65,8 +61,4 @@ private:
     std::vector<float> values;
 };
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_LSP_CSVDATASOURCE_H_INCLUDED */
+} // namespace megamol::datatools::table

@@ -9,8 +9,7 @@
 #include <sstream>
 
 #include "GenericParam.h"
-#include "vislib/Array.h"
-#include "vislib/StringTokeniser.h"
+#include "mmcore/utility/String.h"
 #include "vislib/math/Vector.h"
 
 namespace megamol::core::param {
@@ -30,14 +29,11 @@ public:
     ~Vector2fParam() override = default;
 
     bool ParseValue(std::string const& v) override {
-        vislib::Array<vislib::TString> comps = vislib::TStringTokeniser::Split(v.c_str(), _T(";"), true);
-        if (comps.Count() == 2) {
+        const auto& segments = utility::string::Split(v, ';');
+        if (segments.size() == 2) {
             try {
-                comps[0].TrimSpaces();
-                comps[1].TrimSpaces();
-                float x = static_cast<float>(vislib::TCharTraits::ParseDouble(comps[0]));
-                float y = static_cast<float>(vislib::TCharTraits::ParseDouble(comps[1]));
-
+                float x = std::stof(utility::string::TrimCopy(segments[0]));
+                float y = std::stof(utility::string::TrimCopy(segments[1]));
                 this->SetValue(vislib::math::Vector<float, 2>(x, y));
                 return true;
             } catch (...) {}

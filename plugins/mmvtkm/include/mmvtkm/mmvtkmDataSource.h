@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MMVTKM_VTKMDATASOURCE_H_INCLUDED
-#define MEGAMOL_MMVTKM_VTKMDATASOURCE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
 #include "mmcore/CalleeSlot.h"
@@ -20,8 +16,7 @@
 #include "mmvtkm/mmvtkmDataCall.h"
 
 
-namespace megamol {
-namespace mmvtkm {
+namespace megamol::mmvtkm {
 
 
 /**
@@ -34,7 +29,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "vtkmDataSource";
     }
 
@@ -43,7 +38,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data source module for vtkm files.";
     }
 
@@ -52,15 +47,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    mmvtkmDataSource(void);
+    mmvtkmDataSource();
 
     /** Dtor. */
-    virtual ~mmvtkmDataSource(void);
+    ~mmvtkmDataSource() override;
 
 protected:
     /**
@@ -69,14 +64,14 @@ protected:
      *
      * @return The newly created frame object.
      */
-    virtual core::view::AnimDataModule::Frame* constructFrame(void) const;
+    core::view::AnimDataModule::Frame* constructFrame() const override;
 
     /**
      * Implementation of 'Create'.
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Loads one frame of the data set into the given 'frame' object. This
@@ -87,12 +82,12 @@ protected:
      * @param frame The frame to be loaded.
      * @param idx The index of the frame to be loaded.
      */
-    virtual void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx);
+    void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Gets the data from the source.
@@ -134,7 +129,4 @@ private:
     std::string vtkmDataFile_;
 };
 
-} /* end namespace mmvtkm */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_MMVTKM_VTKMDATASOURCE_H_INCLUDED */
+} // namespace megamol::mmvtkm

@@ -5,12 +5,11 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_GUIMANAGER_H_INCLUDED
-#define MEGAMOL_GUI_GUIMANAGER_H_INCLUDED
 #pragma once
 
 
 #include "CommandRegistry.h"
+#include "FrontendResource.h"
 #include "PluginsResource.h"
 #include "gui_render_backend.h"
 #include "implot.h"
@@ -24,8 +23,7 @@
 #include "windows/WindowCollection.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** ************************************************************************
@@ -262,6 +260,12 @@ public:
     void SetPerformanceManager(frontend_resources::PerformanceManager* perf_manager) {
         this->win_configurator_ptr->GetGraphCollection().SetPerformanceManager(perf_manager);
     }
+
+    frontend_resources::ProfilingLoggingStatus* perf_logging;
+
+    void SetProfilingLoggingStatus(frontend_resources::ProfilingLoggingStatus* perf_logging_status) {
+        this->perf_logging = perf_logging_status;
+    }
     void AppendPerformanceData(const frontend_resources::PerformanceManager::frame_info& fi) {
         this->win_configurator_ptr->GetGraphCollection().AppendPerformanceData(fi);
     }
@@ -304,6 +308,12 @@ public:
     bool NotifyRunningGraph_DisableEntryPoint(core::ModuleInstance_t const& module_inst) {
         return this->win_configurator_ptr->GetGraphCollection().NotifyRunningGraph_DisableEntryPoint(module_inst);
     }
+
+    std::vector<std::string> requested_lifetime_resources() const {
+        return requested_resources;
+    }
+
+    void setRequestedResources(std::shared_ptr<frontend_resources::FrontendResourcesMap> const& resources);
 
     ///////////////////////////////////////////////////////////////////////
 
@@ -377,6 +387,9 @@ private:
     /** GUI element collections. */
     WindowCollection win_collection;
 
+    /** Resource requests from the GUI windows. */
+    std::vector<std::string> requested_resources;
+
     struct PopUpData {
         std::weak_ptr<bool> open_flag;
         std::function<void()> draw_callback;
@@ -430,7 +443,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_GUIMANAGER_H_INCLUDED
+} // namespace megamol::gui

@@ -37,7 +37,7 @@ using namespace megamol::core::utility::log;
 /*
  * VMDDXLoader::VMDDXLoader
  */
-VMDDXLoader::VMDDXLoader(void)
+VMDDXLoader::VMDDXLoader()
         : Module()
         , dataOutSlot("dataout", "The slot providing the loaded data")
         , filenameSlot("filename", "The path to the *.dx data file to be loaded")
@@ -67,7 +67,7 @@ VMDDXLoader::VMDDXLoader(void)
 /*
  * VMDDXLoader::~VMDDXLoader
  */
-VMDDXLoader::~VMDDXLoader(void) {
+VMDDXLoader::~VMDDXLoader() {
     this->Release();
 }
 
@@ -75,7 +75,7 @@ VMDDXLoader::~VMDDXLoader(void) {
 /*
  * VMDDXLoader::create
  */
-bool VMDDXLoader::create(void) {
+bool VMDDXLoader::create() {
     return true;
 }
 
@@ -83,7 +83,7 @@ bool VMDDXLoader::create(void) {
 /*
  * VMDDXLoader::release
  */
-void VMDDXLoader::release(void) {
+void VMDDXLoader::release() {
     this->data.Release();
 }
 

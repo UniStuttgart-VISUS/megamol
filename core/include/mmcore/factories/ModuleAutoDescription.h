@@ -60,6 +60,10 @@ public:
         return C::IsAvailable();
     }
 
+    void requested_lifetime_resources(frontend_resources::ResourceRequest& req) const override {
+        return C::requested_lifetime_resources(req);
+    }
+
     /**
      * Answers whether this description is describing the class of
      * 'module'.
@@ -78,15 +82,6 @@ public:
         // that this does not have any negative effects somewhere else in the
         // programme.
         return (typeid(C) == typeid(*module));
-    }
-
-    /**
-     * Answer whether or not this module can be used in a quickstart
-     *
-     * @return 'true' if the module can be used in a quickstart
-     */
-    bool IsVisibleForQuickstart() const override {
-        return C::SupportQuickstart();
     }
 
 protected:

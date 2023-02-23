@@ -43,7 +43,7 @@ bool TableDataCall::ColumnInfo::operator==(const ColumnInfo& rhs) const {
 }
 
 
-TableDataCall::TableDataCall(void)
+TableDataCall::TableDataCall()
         : core::AbstractGetDataCall()
         , columns_count(0)
         , rows_count(0)
@@ -54,7 +54,7 @@ TableDataCall::TableDataCall(void)
     // intentionally empty
 }
 
-TableDataCall::~TableDataCall(void) {
+TableDataCall::~TableDataCall() {
     columns_count = 0; // paranoia
     rows_count = 0;    // paranoia
     columns = nullptr; // do not delete, since we do not own the memory of the objects

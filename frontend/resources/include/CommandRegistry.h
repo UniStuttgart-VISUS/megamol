@@ -25,8 +25,7 @@ namespace megamol::core::param {
 class AbstractParam;
 }
 
-namespace megamol {
-namespace frontend_resources {
+namespace megamol::frontend_resources {
 
 static std::string CommandRegistry_Req_Name = "CommandRegistry";
 
@@ -121,5 +120,4 @@ private:
     Modifiers current_modifiers;
 };
 
-} /* end namespace frontend_resources */
-} /* end namespace megamol */
+} // namespace megamol::frontend_resources

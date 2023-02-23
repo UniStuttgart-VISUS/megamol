@@ -20,7 +20,7 @@
 /*
  * vislib::Trace::GetInstance
  */
-vislib::Trace& vislib::Trace::GetInstance(void) {
+vislib::Trace& vislib::Trace::GetInstance() {
     return *vislib::Trace::instance;
 }
 
@@ -103,7 +103,7 @@ const UINT vislib::Trace::LEVEL_WARN = 100;
 /*
  * vislib::Trace::~Trace
  */
-vislib::Trace::~Trace(void) {
+vislib::Trace::~Trace() {
     ARY_SAFE_DELETE(this->filename);
     this->SetPrefix(NULL);
 
@@ -234,7 +234,7 @@ vislib::Trace* vislib::Trace::instance(&__vl_trace_instance);
 /*
  * vislib::Trace::Trace
  */
-vislib::Trace::Trace(void) : filename(NULL), fp(NULL), prefix(NULL), level(LEVEL_ERROR), useDebugger(true) {
+vislib::Trace::Trace() : filename(NULL), fp(NULL), prefix(NULL), level(LEVEL_ERROR), useDebugger(true) {
 #if defined(DEBUG) || defined(_DEBUG)
     this->level = LEVEL_ALL;
 #endif /* defined(DEBUG) || defined(_DEBUG) */

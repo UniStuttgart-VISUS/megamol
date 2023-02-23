@@ -8,8 +8,7 @@
 //     Author: scharnkn
 //
 
-#ifndef MMPROTEINCUDAPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED
+#pragma once
 
 #include <cuda_runtime.h>
 
@@ -49,5 +48,3 @@ bool checkForCudaErrorSync(const char* file, const int line);
  * @return 'True' if the last error is cudaSuccess, 'false' otherwise
  */
 bool cudaSafeCall(cudaError err, const char* file, const int line);
-
-#endif // MMPROTEINCUDAPLUGIN_CUDA_ERROR_CHECK_H_INCLUDED

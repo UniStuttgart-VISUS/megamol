@@ -109,7 +109,7 @@ public:
         return Get<unsigned char>(idx);
     }
 
-    virtual ~Accessor_Impl() = default;
+    ~Accessor_Impl() override = default;
 
 private:
     char const* ptr_;
@@ -167,7 +167,7 @@ public:
         return Get<unsigned char>();
     }
 
-    virtual ~Accessor_Val() = default;
+    ~Accessor_Val() override = default;
 
 private:
     T val_;
@@ -213,7 +213,7 @@ public:
         return static_cast<unsigned char>(0);
     }
 
-    virtual ~Accessor_0() = default;
+    ~Accessor_0() override = default;
 
 private:
 };

@@ -51,7 +51,7 @@ public:
     ResolutionScaler2D() = default;
 
     /** dtor */
-    ~ResolutionScaler2D() {
+    ~ResolutionScaler2D() override {
         this->Release();
     };
 

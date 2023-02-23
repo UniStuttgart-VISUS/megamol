@@ -36,7 +36,7 @@ vislib::RawStorage::RawStorage(const RawStorage& rhs) : data(NULL), size(rhs.siz
 /*
  * vislib::RawStorage::~RawStorage
  */
-vislib::RawStorage::~RawStorage(void) {
+vislib::RawStorage::~RawStorage() {
     SAFE_FREE(this->data);
 }
 
@@ -103,7 +103,7 @@ void vislib::RawStorage::EnforceSize(const SIZE_T size, const bool keepContent) 
 /*
  * vislib::RawStorage::ZeroAll
  */
-void vislib::RawStorage::ZeroAll(void) {
+void vislib::RawStorage::ZeroAll() {
     if (this->data != NULL) {
         ::ZeroMemory(this->data, this->size);
     }

@@ -13,7 +13,7 @@ const unsigned int RamachandranDataCall::CallForGetData = 0;
 /*
  * RamachandranDataCall::RamachandranDataCall
  */
-RamachandranDataCall::RamachandranDataCall(void)
+RamachandranDataCall::RamachandranDataCall()
         : core::Call()
         , selectedAminoAcid(-1)
         , angleVector(nullptr)
@@ -24,4 +24,4 @@ RamachandranDataCall::RamachandranDataCall(void)
 /*
  * RamachandranDataCall::~RamachandranDataCall
  */
-RamachandranDataCall::~RamachandranDataCall(void) {}
+RamachandranDataCall::~RamachandranDataCall() {}

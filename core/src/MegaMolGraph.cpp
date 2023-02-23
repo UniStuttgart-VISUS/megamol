@@ -1,8 +1,4 @@
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore/AbstractSlot.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/view/AbstractView_EventConsumption.h"
 
 #include <algorithm>
 #include <cctype>
@@ -11,6 +7,12 @@
 #include <string>
 #include <type_traits>
 
+#include "ResourceRequest.h"
+#include "mmcore/AbstractSlot.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/utility/String.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/view/AbstractView_EventConsumption.h"
 
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
 static std::vector<std::string> splitPathName(std::string const& path) {
@@ -25,13 +27,6 @@ static std::vector<std::string> splitPathName(std::string const& path) {
     }
 
     return result;
-}
-
-// modules search and compare slot names case insensitive (legacy behaviour)
-// std::string operator== is case sensitive. so when looking for slots, we lower them first.
-static std::string tolower(std::string s) {
-    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
-    return s;
 }
 
 // AbstractNamedObject::FullName() prepends extra :: to module names which leads to
@@ -517,8 +512,9 @@ megamol::core::CallList_t::iterator megamol::core::MegaMolGraph::find_call(
     std::string const& from, std::string const& to) {
     auto it =
         std::find_if(this->call_list_.begin(), this->call_list_.end(), [&](megamol::core::CallInstance_t const& el) {
-            // tolower emulates case insensitive comparison in Module::FindSlot() during add_call
-            return tolower(el.request.from) == tolower(from) && tolower(el.request.to) == tolower(to);
+            // Case-insensitive comparison in Module::FindSlot() during add_call
+            return utility::string::EqualAsciiCaseInsensitive(el.request.from, from) &&
+                   utility::string::EqualAsciiCaseInsensitive(el.request.to, to);
         });
 
     return it;
@@ -529,8 +525,9 @@ megamol::core::CallList_t::const_iterator megamol::core::MegaMolGraph::find_call
 
     auto it =
         std::find_if(this->call_list_.cbegin(), this->call_list_.cend(), [&](megamol::core::CallInstance_t const& el) {
-            // tolower emulates case insensitive comparison in Module::FindSlot() during add_call
-            return tolower(el.request.from) == tolower(from) && tolower(el.request.to) == tolower(to);
+            // Case-insensitive comparison in Module::FindSlot() during add_call
+            return utility::string::EqualAsciiCaseInsensitive(el.request.from, from) &&
+                   utility::string::EqualAsciiCaseInsensitive(el.request.to, to);
         });
 
     return it;
@@ -544,24 +541,21 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         return false;
     }
 
-    Module::ptr_type module_ptr = module_description->CreateModule(request.id);
-    if (!module_ptr) {
-        log_error("error. could not instantiate module from module description: " + request.className);
-        return false;
-    }
-
-    auto module_lifetime_resource_request = module_ptr->requested_lifetime_resources();
+    frontend_resources::ResourceRequest module_resource_request;
+    module_description->requested_lifetime_resources(module_resource_request);
 
     auto [success, module_lifetime_dependencies] =
-        provided_resources_lookup.get_requested_resources(module_lifetime_resource_request);
+        provided_resources_lookup.get_requested_resources(module_resource_request);
 
     if (!success) {
         std::string requested_deps = "";
         std::string found_deps = "";
-        for (auto& req : module_lifetime_resource_request)
-            requested_deps += " " + req;
-        for (auto& dep : module_lifetime_dependencies)
+        for (auto& res : module_resource_request.getResources()) {
+            requested_deps += " " + res.TypeName();
+        }
+        for (auto& dep : module_lifetime_dependencies) {
             found_deps += " " + dep.getIdentifier();
+        }
         log_error("error. could not create module " + request.className + "(" + request.id +
                   "), not all requested resources available: ");
         log_error("requested: " + requested_deps);
@@ -570,8 +564,13 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         return false;
     }
 
-    this->module_list_.push_front(
-        {module_ptr, request, false, module_lifetime_resource_request, module_lifetime_dependencies});
+    Module::ptr_type module_ptr = module_description->CreateModule(request.id);
+    if (!module_ptr) {
+        log_error("error. could not instantiate module from module description: " + request.className);
+        return false;
+    }
+
+    this->module_list_.push_front({module_ptr, request, false, module_resource_request, module_lifetime_dependencies});
 
     module_ptr->setParent(this->dummy_namespace);
 

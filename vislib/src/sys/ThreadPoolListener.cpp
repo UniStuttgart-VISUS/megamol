@@ -11,7 +11,7 @@
 /*
  * vislib::sys::ThreadPoolListener::~ThreadPoolListener
  */
-vislib::sys::ThreadPoolListener::~ThreadPoolListener(void) {
+vislib::sys::ThreadPoolListener::~ThreadPoolListener() {
     // Nothing to do
 }
 
@@ -19,7 +19,7 @@ vislib::sys::ThreadPoolListener::~ThreadPoolListener(void) {
 /*
  * vislib::sys::ThreadPoolListener::ThreadPoolListener
  */
-vislib::sys::ThreadPoolListener::ThreadPoolListener(void) {
+vislib::sys::ThreadPoolListener::ThreadPoolListener() {
     // Nothing to do
 }
 

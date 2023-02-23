@@ -6,11 +6,7 @@
  * Copyright (C) 2008 by Christoph Müller. Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_IPADDRESS6_H_INCLUDED
-#define VISLIB_IPADDRESS6_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -25,8 +21,7 @@
 #include "vislib/net/IPAddress.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -122,7 +117,7 @@ public:
     /**
      * Create a new loopback IPAddress6.
      */
-    IPAddress6(void);
+    IPAddress6();
 
     /**
      * Create an IPAddress6 that represents the specified struct in6_addr.
@@ -179,7 +174,7 @@ public:
     IPAddress6(const IPAddress6& rhs);
 
     /** Dtor. */
-    ~IPAddress6(void);
+    ~IPAddress6();
 
     /**
      * Get the prefix of length 'prefixLength' bits of the address. The rest
@@ -196,7 +191,7 @@ public:
      *
      * @return true if the address is a link local address, false otherwise.
      */
-    inline bool IsLinkLocal(void) const {
+    inline bool IsLinkLocal() const {
         return (IN6_IS_ADDR_LINKLOCAL(&this->address) != 0);
     }
 
@@ -205,7 +200,7 @@ public:
      *
      * @return true if the address is the loopback address, false otherwise.
      */
-    inline bool IsLoopback(void) const {
+    inline bool IsLoopback() const {
         return (IN6_IS_ADDR_LOOPBACK(&this->address) != 0);
     }
 
@@ -215,7 +210,7 @@ public:
      * @return true if the IP address is multicast global address,
      *         false otherwise.
      */
-    inline bool IsMulticast(void) const {
+    inline bool IsMulticast() const {
         return (IN6_IS_ADDR_MULTICAST(&this->address) != 0);
     }
 
@@ -224,7 +219,7 @@ public:
      *
      * @return true if the address is a site local address, false otherwise.
      */
-    inline bool IsSiteLocal(void) const {
+    inline bool IsSiteLocal() const {
         return (IN6_IS_ADDR_SITELOCAL(&this->address) != 0);
     }
 
@@ -233,7 +228,7 @@ public:
      *
      * @return true if the address is unspecified, false otherwise.
      */
-    inline bool IsUnspecified(void) const {
+    inline bool IsUnspecified() const {
         return (IN6_IS_ADDR_UNSPECIFIED(&this->address) != 0);
     }
 
@@ -248,7 +243,7 @@ public:
      * @return true if the IPv6 address is an IPv4-compatible address,
      *         false otherwise.
      */
-    inline bool IsV4Compatible(void) const {
+    inline bool IsV4Compatible() const {
         return (IN6_IS_ADDR_V4COMPAT(&this->address) != 0);
     }
 
@@ -258,7 +253,7 @@ public:
      * @return true if the IPv6 address is an IPv4-mapped address,
      *         false otherwise.
      */
-    inline bool IsV4Mapped(void) const {
+    inline bool IsV4Mapped() const {
         return (IN6_IS_ADDR_V4MAPPED(&this->address) != 0);
     }
 
@@ -283,14 +278,14 @@ public:
      *
      * @return The string representation of the IP address.
      */
-    StringA ToStringA(void) const;
+    StringA ToStringA() const;
 
     /**
      * Convert the IP address into a human readable format.
      *
      * @return The string representation of the IP address.
      */
-    inline StringW ToStringW(void) const {
+    inline StringW ToStringW() const {
         return StringW(this->ToStringA());
     }
 
@@ -304,7 +299,7 @@ public:
      * @throws IllegalStateException If this address is not a mapped IPv4
      *                               address.
      */
-    IPAddress UnmapV4Address(void) const;
+    IPAddress UnmapV4Address() const;
 
     /**
      * Provides access to the single bytes of the IP address.
@@ -397,7 +392,7 @@ public:
      *
      * @return The in6_addr that is represented by this object.
      */
-    inline operator struct in6_addr(void) const {
+    inline operator struct in6_addr() const {
         return this->address;
     }
 
@@ -407,7 +402,7 @@ public:
      *
      * @return The in6_addr that is represented by this object.
      */
-    inline operator struct in6_addr &(void) {
+    inline operator struct in6_addr &() {
         return this->address;
     }
 
@@ -418,7 +413,7 @@ public:
      * @return Pointer to the internal in6_addr that is represented by this
      *         object.
      */
-    inline operator const struct in6_addr *(void) const {
+    inline operator const struct in6_addr *() const {
         return &this->address;
     }
 
@@ -429,7 +424,7 @@ public:
      * @return Pointer to the internal in6_addr that is represented by this
      *         object.
      */
-    inline operator struct in6_addr *(void) {
+    inline operator struct in6_addr *() {
         return &this->address;
     }
 
@@ -445,17 +440,15 @@ public:
      * @throws IllegalStateException If the IPv6 address is neither an IPv4
      *                               mapped address nor IPv4 compatible.
      */
-    operator IPAddress(void) const;
+    operator IPAddress() const;
 
 private:
     /** The actual IPv6 address. */
     struct in6_addr address;
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_IPADDRESS6_H_INCLUDED */

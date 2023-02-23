@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MMVTKM_VTKMDATACALL_H_INCLUDED
-#define MEGAMOL_MMVTKM_VTKMDATACALL_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
 #include "mmcore/factories/CallAutoDescription.h"
@@ -20,8 +16,7 @@
 #include "vtkm/cont/DataSet.h"
 
 
-namespace megamol {
-namespace mmvtkm {
+namespace megamol::mmvtkm {
 
 struct VtkmData {
     /** Vtkm dataset storage */
@@ -37,12 +32,12 @@ struct VtkmMetaData {
 class mmvtkmDataCall : public core::GenericVersionedCall<std::shared_ptr<VtkmData>, VtkmMetaData> {
 public:
     inline mmvtkmDataCall() : GenericVersionedCall<std::shared_ptr<VtkmData>, VtkmMetaData>() {}
-    ~mmvtkmDataCall() = default;
+    ~mmvtkmDataCall() override = default;
 
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "vtkmDataCall";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Transports vtkm data.";
     }
 };
@@ -174,7 +169,4 @@ public:
 typedef core::factories::CallAutoDescription<mmvtkmDataCall> vtkmDataCallDescription;
 
 
-} /* end namespace mmvtkm */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_MMVTKM_VTKMDATACALL_H_INCLUDED */
+} // namespace megamol::mmvtkm

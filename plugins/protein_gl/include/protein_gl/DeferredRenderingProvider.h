@@ -18,14 +18,14 @@ namespace megamol::protein_gl {
 
 class DeferredRenderingProvider {
 public:
-    DeferredRenderingProvider(void);
-    virtual ~DeferredRenderingProvider(void);
+    DeferredRenderingProvider();
+    virtual ~DeferredRenderingProvider();
     void setup(megamol::frontend_resources::RuntimeConfig const& runtimeConf);
     void draw(mmstd_gl::CallRender3DGL& call, core::view::light::CallLight* lightCall, bool noShading = false);
     void setFramebufferExtents(uint32_t width, uint32_t height);
-    void bindDeferredFramebufferToDraw(void);
-    void resetToPreviousFramebuffer(void);
-    std::vector<core::param::ParamSlot*> getUsedParamSlots(void);
+    void bindDeferredFramebufferToDraw();
+    void resetToPreviousFramebuffer();
+    std::vector<core::param::ParamSlot*> getUsedParamSlots();
 
     struct LightParams {
         float x, y, z, intensity;

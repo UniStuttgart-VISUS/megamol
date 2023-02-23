@@ -11,7 +11,7 @@
 using namespace megamol::ospray;
 
 
-OSPRayMetalMaterial::OSPRayMetalMaterial(void)
+OSPRayMetalMaterial::OSPRayMetalMaterial()
         : AbstractOSPRayMaterial()
         ,
         // METAL
@@ -33,7 +33,7 @@ OSPRayMetalMaterial::OSPRayMetalMaterial(void)
     this->MakeSlotAvailable(&this->metalRoughness);
 }
 
-OSPRayMetalMaterial::~OSPRayMetalMaterial(void) {
+OSPRayMetalMaterial::~OSPRayMetalMaterial() {
     this->Release();
 }
 

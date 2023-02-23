@@ -49,7 +49,7 @@ using namespace megamol::core::utility::log;
 /*
  * protein::GLSLVolumeRenderer::GLSLVolumeRenderer (CTOR)
  */
-protein_gl::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
+protein_gl::GLSLVolumeRenderer::GLSLVolumeRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , protDataCallerSlot("getData", "Connects the volume rendering with data storage")
         , protRendererCallerSlot("renderProtein", "Connects the volume rendering with a protein renderer")
@@ -192,7 +192,7 @@ protein_gl::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
 /*
  * protein::GLSLVolumeRenderer::~GLSLVolumeRenderer (DTOR)
  */
-protein_gl::GLSLVolumeRenderer::~GLSLVolumeRenderer(void) {
+protein_gl::GLSLVolumeRenderer::~GLSLVolumeRenderer() {
     this->Release();
 }
 
@@ -200,13 +200,13 @@ protein_gl::GLSLVolumeRenderer::~GLSLVolumeRenderer(void) {
 /*
  * protein::GLSLVolumeRenderer::release
  */
-void protein_gl::GLSLVolumeRenderer::release(void) {}
+void protein_gl::GLSLVolumeRenderer::release() {}
 
 
 /*
  * protein::GLSLVolumeRenderer::create
  */
-bool protein_gl::GLSLVolumeRenderer::create(void) {
+bool protein_gl::GLSLVolumeRenderer::create() {
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);

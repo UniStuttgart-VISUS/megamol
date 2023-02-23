@@ -12,8 +12,7 @@
 #include "mmcore/Module.h"
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 
 /**
@@ -32,14 +31,14 @@ public:
     AbstractVolumeManipulator(const char* outSlotName, const char* inSlotName);
 
     /** Dtor */
-    virtual ~AbstractVolumeManipulator(void);
+    ~AbstractVolumeManipulator() override;
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create() override;
 
     /** Resource release */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Manipulates the particle data
@@ -101,5 +100,4 @@ private:
     megamol::core::CallerSlot inDataSlot;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

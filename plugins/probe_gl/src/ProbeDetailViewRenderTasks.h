@@ -5,8 +5,7 @@
  * All rights reserved.
  */
 
-#ifndef PROBE_DETAIL_VIEW_RENDER_TASK_H_INCLUDED
-#define PROBE_DETAIL_VIEW_RENDER_TASK_H_INCLUDED
+#pragma once
 
 #include "mesh_gl/AbstractGPURenderTaskDataSource.h"
 
@@ -117,6 +116,3 @@ private:
 
 } // namespace probe_gl
 } // namespace megamol
-
-
-#endif // !PROBE_BILLBOARD_GLYPH_RENDER_TASK_H_INCLUDED

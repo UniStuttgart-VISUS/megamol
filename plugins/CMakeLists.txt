@@ -109,11 +109,21 @@ function(megamol_plugin PLUGIN_NAME)
 
     # Install shaders
     if (EXISTS "${MMPLUGIN_ARGS_DIR}/shaders")
-      install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/shaders/ DESTINATION "share/shaders")
+      if (MEGAMOL_SKIP_SHADER_INSTALL)
+        list(APPEND plugins_src_shader_paths "${MMPLUGIN_ARGS_DIR}/shaders")
+        set(plugins_src_shader_paths ${plugins_src_shader_paths} CACHE INTERNAL "")
+      else ()
+        install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/shaders/ DESTINATION "share/shaders")
+      endif ()
     endif ()
     # Install resources
     if (EXISTS "${MMPLUGIN_ARGS_DIR}/resources")
-      install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/resources/ DESTINATION "share/resources")
+      if (MEGAMOL_SKIP_RESOURCE_INSTALL)
+        list(APPEND plugins_src_resource_paths "${MMPLUGIN_ARGS_DIR}/resources")
+        set(plugins_src_resource_paths ${plugins_src_resource_paths} CACHE INTERNAL "")
+      else ()
+        install(DIRECTORY ${MMPLUGIN_ARGS_DIR}/resources/ DESTINATION "share/resources")
+      endif ()
     endif ()
 
     # Grouping in Visual Studio
@@ -140,6 +150,12 @@ endfunction()
 # Instead, for now, define an extra 'plugins' target. This target will contain all plugin objects. Frontends can just
 # link 'core' and 'plugins' targets and have not to deal with individual plugins.
 add_library(plugins INTERFACE)
+
+# Plugin shader/resource settings
+option(MEGAMOL_SKIP_SHADER_INSTALL "Skip shader installation and use shader paths from source directory." OFF)
+option(MEGAMOL_SKIP_RESOURCE_INSTALL "Skip resource installation and use resource paths from source directory." OFF)
+set(plugins_src_shader_paths "" CACHE INTERNAL "")
+set(plugins_src_resource_paths "" CACHE INTERNAL "")
 
 # Global list of required plugins
 set(required_plugins_list "" CACHE INTERNAL "")

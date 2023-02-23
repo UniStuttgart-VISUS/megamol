@@ -22,8 +22,7 @@
 #include <limits>
 #include <vector>
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module computing a density volume from particles.
@@ -33,32 +32,32 @@ namespace datatools {
 class ParticlesToDensity : public megamol::core::Module {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticlesToDensity";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Computes a density volume from particles";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticlesToDensity(void);
+    ParticlesToDensity();
 
     /** Dtor */
-    virtual ~ParticlesToDensity(void);
+    ~ParticlesToDensity() override;
 
 protected:
     /** Lazy initialization of the module */
-    virtual bool create(void);
+    bool create() override;
 
     /** Resource release */
-    virtual void release(void);
+    void release() override;
 
 private:
     /**
@@ -145,5 +144,4 @@ private:
     geocalls::VolumetricDataCall::Metadata metadata;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools

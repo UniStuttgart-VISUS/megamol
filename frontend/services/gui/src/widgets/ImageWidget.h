@@ -5,8 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED
-#define MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED
 #pragma once
 
 #ifdef MEGAMOL_USE_OPENGL
@@ -15,8 +13,7 @@
 #include "widgets/HoverToolTip.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 template<typename T>
 struct CPUTexture2D {
@@ -131,7 +128,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED
+} // namespace megamol::gui

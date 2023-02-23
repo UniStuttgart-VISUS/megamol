@@ -5,8 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_FILEUTILS_INCLUDED
-#define MEGAMOL_GUI_FILEUTILS_INCLUDED
+#pragma once
 
 
 #include "mmcore/utility/log/Log.h"
@@ -21,9 +20,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 // #### Utility string conversion functions ############################ //
 
@@ -219,8 +216,4 @@ std::string megamol::core::utility::FileUtils::SearchFileRecursive(const T& sear
 }
 
 
-} // namespace utility
-} // namespace core
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_FILEUTILS_INCLUDED
+} // namespace megamol::core::utility

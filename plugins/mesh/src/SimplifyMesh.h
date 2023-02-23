@@ -19,8 +19,7 @@
 #include <memory>
 #include <vector>
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 /**
  * Module for simplifying a mesh.
  *
@@ -77,7 +76,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~SimplifyMesh();
+    ~SimplifyMesh() override;
 #endif
 
 protected:
@@ -86,12 +85,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create() override;
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release() override;
+    void release() override;
 
 private:
 #ifdef MEGAMOL_USE_CGAL
@@ -131,5 +130,4 @@ private:
     } output;
 #endif
 };
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh

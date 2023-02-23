@@ -14,8 +14,7 @@
 #include <string>
 #include <vector>
 
-namespace megamol {
-namespace mesh {
+namespace megamol::mesh {
 STLWriter::STLWriter()
         : mesh_rhs_slot("mesh_rhs_slot", "Input surface mesh.")
         , filename("filename", "Name for the output STL file.")
@@ -239,5 +238,4 @@ bool STLWriter::write(const std::string& filename, const std::vector<float>& ver
 
     return true;
 }
-} // namespace mesh
-} // namespace megamol
+} // namespace megamol::mesh

@@ -23,7 +23,7 @@ using namespace megamol::moldyn::io;
 /*
  * SIFFWriter::SIFFWriter
  */
-SIFFWriter::SIFFWriter(void)
+SIFFWriter::SIFFWriter()
         : AbstractDataWriter()
         , filenameSlot("filename", "The path to the MMPLD file to be written")
         , asciiSlot("ascii", "Set to true to write ASCII-versions of SIFF")
@@ -51,7 +51,7 @@ SIFFWriter::SIFFWriter(void)
 /*
  * SIFFWriter::~SIFFWriter
  */
-SIFFWriter::~SIFFWriter(void) {
+SIFFWriter::~SIFFWriter() {
     this->Release();
 }
 
@@ -59,7 +59,7 @@ SIFFWriter::~SIFFWriter(void) {
 /*
  * SIFFWriter::create
  */
-bool SIFFWriter::create(void) {
+bool SIFFWriter::create() {
     // intentionally empty
     return true;
 }
@@ -68,7 +68,7 @@ bool SIFFWriter::create(void) {
 /*
  * SIFFWriter::release
  */
-void SIFFWriter::release(void) {
+void SIFFWriter::release() {
     // intentionally empty
 }
 
@@ -76,7 +76,7 @@ void SIFFWriter::release(void) {
 /*
  * SIFFWriter::run
  */
-bool SIFFWriter::run(void) {
+bool SIFFWriter::run() {
     using megamol::core::utility::log::Log;
     using vislib::Exception;
 

@@ -16,8 +16,7 @@
 #include <map>
 #include <vector>
 
-namespace megamol {
-namespace ospray {
+namespace megamol::ospray {
 
 enum structureTypeEnum { UNINITIALIZED, GEOMETRY, VOLUME, OSPRAY_API_STRUCTURES };
 
@@ -134,7 +133,7 @@ public:
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "CallOSPRayStructure";
     }
 
@@ -143,7 +142,7 @@ public:
      *
      * @return A human readable description of the module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Call for an OSPRay structure";
     }
 
@@ -152,7 +151,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) {
+    static unsigned int FunctionCount() {
         return 2;
     }
 
@@ -178,7 +177,7 @@ public:
     CallOSPRayStructure();
 
     /** Dtor. */
-    virtual ~CallOSPRayStructure(void);
+    ~CallOSPRayStructure() override;
 
     /**
      * Assignment operator
@@ -216,5 +215,4 @@ private:
     uint32_t p_id = -1;
 };
 typedef core::factories::CallAutoDescription<CallOSPRayStructure> CallOSPRayStructureDescription;
-} // namespace ospray
-} // namespace megamol
+} // namespace megamol::ospray

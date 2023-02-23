@@ -100,15 +100,14 @@ public:
     }
 
 #ifdef MEGAMOL_USE_PROFILING
-    std::vector<std::string> requested_lifetime_resources() override {
-        std::vector<std::string> resources = Module::requested_lifetime_resources();
-        resources.emplace_back(frontend_resources::PerformanceManager_Req_Name);
-        return resources;
+    static void requested_lifetime_resources(frontend_resources::ResourceRequest& req) {
+        Module::requested_lifetime_resources(req);
+        req.require<frontend_resources::PerformanceManager>();
     }
 #endif
 
     AntiAliasing();
-    ~AntiAliasing();
+    ~AntiAliasing() override;
 
 protected:
     /**
@@ -116,12 +115,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
     /**
      * TODO

@@ -29,7 +29,7 @@ using namespace megamol::trisoup_gl;
 /*
  * WavefrontObjDataSource::WavefrontObjDataSource
  */
-WavefrontObjDataSource::WavefrontObjDataSource(void) : AbstractTriMeshLoader() {
+WavefrontObjDataSource::WavefrontObjDataSource() : AbstractTriMeshLoader() {
     lineVerts.AssertCapacity(1000);
     lineVerts.SetCapacityIncrement(1000);
 }
@@ -38,7 +38,7 @@ WavefrontObjDataSource::WavefrontObjDataSource(void) : AbstractTriMeshLoader() {
 /*
  * WavefrontObjDataSource::~WavefrontObjDataSource
  */
-WavefrontObjDataSource::~WavefrontObjDataSource(void) {
+WavefrontObjDataSource::~WavefrontObjDataSource() {
     this->Release();
 }
 

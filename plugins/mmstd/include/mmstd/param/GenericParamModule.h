@@ -12,7 +12,7 @@ class GenericParamModule : public core::Module {
 public:
     GenericParamModule();
 
-    virtual ~GenericParamModule();
+    ~GenericParamModule() override;
 
     /**
      * Answers whether this module is available on the current system.

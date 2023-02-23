@@ -1,8 +1,4 @@
-#ifndef MMPROTEINPLUGIN_PDBINTERPOLATOR_H_INCLUDED
-#define MMPROTEINPLUGIN_PDBINTERPOLATOR_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -10,8 +6,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "protein_calls/MolecularDataCall.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 class PDBInterpolator : public megamol::core::Module {
 public:
@@ -20,7 +15,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "PDBInterpolator";
     }
 
@@ -29,7 +24,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Interpolates the pdb data.";
     }
 
@@ -38,12 +33,12 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     PDBInterpolator();
-    ~PDBInterpolator();
+    ~PDBInterpolator() override;
 
 protected:
     /**
@@ -51,12 +46,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Call for get data.
@@ -74,7 +69,4 @@ private:
     megamol::core::CalleeSlot dataOutSlot;
 };
 
-} // namespace protein
-} // namespace megamol
-
-#endif // MMPROTEINPLUGIN_PDBINTERPOLATOR_H_INCLUDED
+} // namespace megamol::protein

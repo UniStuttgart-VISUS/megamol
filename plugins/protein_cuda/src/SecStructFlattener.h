@@ -5,8 +5,7 @@
  * All rights reserved
  */
 
-#ifndef MMPROTEINCUDAPLUGIN_SECSTRUCTFLATTENER_H_INCLUDED
-#define MMPROTEINCUDAPLUGIN_SECSTRUCTFLATTENER_H_INCLUDED
+#pragma once
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -292,5 +291,3 @@ private:
 
 } /* end namespace protein_cuda */
 } /* end namespace megamol */
-
-#endif // MMPROTEINCUDAPLUGIN_SECSTRUCTFLATTENER_H_INCLUDED

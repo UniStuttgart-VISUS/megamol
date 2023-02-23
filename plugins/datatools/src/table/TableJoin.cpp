@@ -20,7 +20,7 @@ size_t hash_combine(size_t lhs, size_t rhs) {
     return lhs;
 }
 
-TableJoin::TableJoin(void)
+TableJoin::TableJoin()
         : core::Module()
         , firstTableInSlot("firstTableIn", "First input")
         , secondTableInSlot("secondTableIn", "Second input")
@@ -39,15 +39,15 @@ TableJoin::TableJoin(void)
     this->MakeSlotAvailable(&this->dataOutSlot);
 }
 
-TableJoin::~TableJoin(void) {
+TableJoin::~TableJoin() {
     this->Release();
 }
 
-bool TableJoin::create(void) {
+bool TableJoin::create() {
     return true;
 }
 
-void TableJoin::release(void) {}
+void TableJoin::release() {}
 
 bool TableJoin::processData(core::Call& c) {
     try {

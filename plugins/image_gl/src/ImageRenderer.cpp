@@ -39,7 +39,7 @@ const unsigned int TILE_SIZE = 2 * 1024;
 /*
  * misc::ImageRenderer::ImageRenderer
  */
-image_gl::ImageRenderer::ImageRenderer(void)
+image_gl::ImageRenderer::ImageRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , leftFilenameSlot("leftImg", "The image file name")
         , rightFilenameSlot("rightImg", "The image file name")
@@ -126,11 +126,11 @@ image_gl::ImageRenderer::ImageRenderer(void)
     this->MakeSlotAvailable(&this->callRequestImage);
 }
 
-ImageRenderer::~ImageRenderer(void) {
+ImageRenderer::~ImageRenderer() {
     this->Release();
 }
 
-bool ImageRenderer::create(void) {
+bool ImageRenderer::create() {
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::PngBitmapCodec());
     vislib::graphics::BitmapCodecCollection::DefaultCollection().AddCodec(new sg::graphics::JpegBitmapCodec());
 
@@ -187,7 +187,7 @@ bool ImageRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
     return true;
 }
 
-void ImageRenderer::release(void) {
+void ImageRenderer::release() {
     //    this->image.Release();
     glDeleteBuffers(1, &theVertBuffer);
     glDeleteBuffers(1, &theTexCoordBuffer);

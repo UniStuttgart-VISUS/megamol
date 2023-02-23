@@ -15,13 +15,12 @@
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/math/Vector.h"
 
-namespace megamol {
-namespace demos_gl {
+namespace megamol::demos_gl {
 
 /*
  * QuartzPlaneTexRenderer::QuartzPlaneTexRenderer
  */
-QuartzPlaneTexRenderer::QuartzPlaneTexRenderer(void)
+QuartzPlaneTexRenderer::QuartzPlaneTexRenderer()
         : mmstd_gl::Renderer2DModuleGL()
         , AbstractTexQuartzRenderer()
         , useClipColSlot("useClipCol", "Use clipping plane or grain colour for grains")
@@ -42,7 +41,7 @@ QuartzPlaneTexRenderer::QuartzPlaneTexRenderer(void)
 /*
  * QuartzPlaneTexRenderer::~QuartzPlaneTexRenderer
  */
-QuartzPlaneTexRenderer::~QuartzPlaneTexRenderer(void) {
+QuartzPlaneTexRenderer::~QuartzPlaneTexRenderer() {
     this->Release();
 }
 
@@ -50,7 +49,7 @@ QuartzPlaneTexRenderer::~QuartzPlaneTexRenderer(void) {
 /*
  * QuartzPlaneTexRenderer::create
  */
-bool QuartzPlaneTexRenderer::create(void) {
+bool QuartzPlaneTexRenderer::create() {
     using megamol::core::utility::log::Log;
 
     auto const& ogl_ctx = frontend_resources.get<frontend_resources::OpenGL_Context>();
@@ -198,7 +197,7 @@ bool QuartzPlaneTexRenderer::GetExtents(mmstd_gl::CallRender2DGL& call) {
 /*
  * QuartzPlaneTexRenderer::release
  */
-void QuartzPlaneTexRenderer::release(void) {
+void QuartzPlaneTexRenderer::release() {
     AbstractTexQuartzRenderer::releaseTypeTexture();
     this->cryShader.reset();
 }
@@ -456,5 +455,4 @@ bool QuartzPlaneTexRenderer::Render(mmstd_gl::CallRender2DGL& call) {
     return true;
 }
 
-} // namespace demos_gl
-} /* end namespace megamol */
+} // namespace megamol::demos_gl

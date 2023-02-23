@@ -14,7 +14,7 @@ using namespace megamol::infovis;
 using namespace Eigen;
 
 
-PCAProjection::PCAProjection(void)
+PCAProjection::PCAProjection()
         : megamol::core::Module()
         , dataOutSlot("dataOut", "Ouput")
         , dataInSlot("dataIn", "Input")
@@ -45,15 +45,15 @@ PCAProjection::PCAProjection(void)
 }
 
 
-PCAProjection::~PCAProjection(void) {
+PCAProjection::~PCAProjection() {
     this->Release();
 }
 
-bool PCAProjection::create(void) {
+bool PCAProjection::create() {
     return true;
 }
 
-void PCAProjection::release(void) {}
+void PCAProjection::release() {}
 
 bool PCAProjection::getDataCallback(core::Call& c) {
 

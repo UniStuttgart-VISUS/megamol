@@ -4,8 +4,6 @@
  * Copyright (C) 2015 by MegaMol Team (TU Dresden)
  * Alle Rechte vorbehalten.
  */
-#ifndef MEGAMOL_STDMOLDYN_TCLMOLSELECTIONLOADER_H_INCLUDED
-#define MEGAMOL_STDMOLDYN_TCLMOLSELECTIONLOADER_H_INCLUDED
 #pragma once
 
 #include "geometry_calls/ParticleRelistCall.h"
@@ -14,9 +12,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include <vector>
 
-namespace megamol {
-namespace moldyn {
-namespace io {
+namespace megamol::moldyn::io {
 
 /**
  * Data loader for tcl files containing mol commands for selection serials:
@@ -27,28 +23,28 @@ namespace io {
  */
 class TclMolSelectionLoader : public core::Module {
 public:
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "TclMolSelectionLoader";
     }
-    static const char* Description(void) {
+    static const char* Description() {
         return "Data loader for tcl files containing mol commands for selection serials";
     }
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     TclMolSelectionLoader();
-    virtual ~TclMolSelectionLoader();
+    ~TclMolSelectionLoader() override;
 
 protected:
-    virtual bool create(void);
-    virtual void release(void);
+    bool create() override;
+    void release() override;
 
 private:
     bool getDataCallback(core::Call& caller);
 
-    void clear(void);
-    void load(void);
+    void clear();
+    void load();
 
     core::CalleeSlot getDataSlot;
 
@@ -59,8 +55,4 @@ private:
     std::vector<geocalls::ParticleRelistCall::ListIDType> data;
 };
 
-} /* end namespace io */
-} /* end namespace moldyn */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_STDMOLDYN_TCLMOLSELECTIONLOADER_H_INCLUDED */
+} // namespace megamol::moldyn::io

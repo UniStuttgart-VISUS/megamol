@@ -16,9 +16,7 @@
 #include "datatools/table/TableDataCall.h"
 
 
-namespace megamol {
-namespace datatools {
-namespace table {
+namespace megamol::datatools::table {
 
 /**
  * A base class for modules processing table data.
@@ -29,7 +27,7 @@ public:
     /**
      * Finalises an instance.
      */
-    virtual ~TableProcessorBase(void) = default;
+    ~TableProcessorBase() override = default;
 
 protected:
     typedef megamol::datatools::table::TableDataCall::ColumnInfo ColumnInfo;
@@ -37,7 +35,7 @@ protected:
     /**
      * Initialises a new instance.
      */
-    TableProcessorBase(void);
+    TableProcessorBase();
 
     /**
      * Computes the combined hash from the hash of the local state and the
@@ -45,7 +43,7 @@ protected:
      *
      * @return The hash of the data currently stored in the module.
      */
-    inline std::size_t getHash(void) {
+    inline std::size_t getHash() {
         auto retval = this->inputHash;
         retval ^= this->localHash + 0x9e3779b9 + (retval << 6) + (retval >> 2);
         return retval;
@@ -88,6 +86,4 @@ private:
     bool getHash(core::Call& call);
 };
 
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace megamol */
+} // namespace megamol::datatools::table

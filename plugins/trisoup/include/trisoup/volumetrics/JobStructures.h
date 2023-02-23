@@ -1,8 +1,4 @@
-#ifndef MEGAMOLCORE_JOBSTRUCTURES_INCLUDED
-#define MEGAMOLCORE_JOBSTRUCTURES_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "geometry_calls/MultiParticleDataCall.h"
 #include "trisoup/trisoupVolumetricDataCall.h"
@@ -20,9 +16,7 @@ namespace megamol::trisoup_gl::volumetrics {
 class VoluMetricJob;
 }
 
-namespace megamol {
-namespace trisoup {
-namespace volumetrics {
+namespace megamol::trisoup::volumetrics {
 
 /** typdef steering the arithmetic precision of the voxelizer. */
 typedef /*float*/ double VoxelizerFloat;
@@ -118,11 +112,11 @@ public:
  */
 class BorderVoxel {
 public:
-    inline BorderVoxel(void) {
+    inline BorderVoxel() {
         // intentionally empy
     }
 
-    inline ~BorderVoxel(void) {
+    inline ~BorderVoxel() {
         this->triangles.Clear();
     }
 
@@ -288,7 +282,7 @@ public:
     inline bool operator==(const BoundingBox<T>& o) const {
         return (initialized == o.initialized) && (box == o.box);
     }
-    inline bool IsInitialized(void) const {
+    inline bool IsInitialized() const {
         return this->initialized;
     }
 
@@ -317,9 +311,9 @@ public:
  */
 class Surface {
 public:
-    Surface(void) : border(new BorderVoxelArray()) {}
+    Surface() : border(new BorderVoxelArray()) {}
 
-    ~Surface(void) {
+    ~Surface() {
         this->border = NULL;
     }
 
@@ -383,7 +377,7 @@ struct SubJobResult {
     bool done;
 
     /** ctor (yuck). mostly sets done to false just to be sure */
-    SubJobResult(void) : done(false) {}
+    SubJobResult() : done(false) {}
 };
 
 /**
@@ -465,8 +459,4 @@ struct SubJobData {
 };
 
 
-} /* end namespace volumetrics */
-} /* end namespace trisoup */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_JOBSTRUCTURES_INCLUDED */
+} // namespace megamol::trisoup::volumetrics

@@ -5,16 +5,13 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_MINIMALPOPUP_INCLUDED
-#define MEGAMOL_GUI_MINIMALPOPUP_INCLUDED
 #pragma once
 
 
 #include "HoverToolTip.h"
 
 
-namespace megamol {
-namespace gui {
+namespace megamol::gui {
 
 
 /** ************************************************************************
@@ -54,7 +51,4 @@ private:
 };
 
 
-} // namespace gui
-} // namespace megamol
-
-#endif // MEGAMOL_GUI_MINIMALPOPUP_INCLUDED
+} // namespace megamol::gui

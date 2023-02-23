@@ -5,8 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_UTILITY_JSONHELPER_INCLUDED
-#define MEGAMOL_UTILITY_JSONHELPER_INCLUDED
+#pragma once
 
 #include <string>
 
@@ -14,9 +13,7 @@
 
 #include "mmcore/utility/log/Log.h"
 
-namespace megamol {
-namespace core {
-namespace utility {
+namespace megamol::core::utility {
 
 /**
  * Read value from given JSON node
@@ -149,8 +146,4 @@ bool get_json_value(
     }
 }
 
-} /* namespace utility */
-} /* namespace core */
-} /* namespace megamol */
-
-#endif // MEGAMOL_UTILITY_JSONHELPER_INCLUDED
+} // namespace megamol::core::utility

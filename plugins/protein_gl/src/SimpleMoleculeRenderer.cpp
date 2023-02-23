@@ -43,7 +43,7 @@ using namespace megamol::core::utility::log;
 /*
  * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
  */
-SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
+SimpleMoleculeRenderer::SimpleMoleculeRenderer()
         : mmstd_gl::Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
@@ -190,19 +190,19 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
 /*
  * protein::SimpleMoleculeRenderer::~SimpleMoleculeRenderer (DTOR)
  */
-SimpleMoleculeRenderer::~SimpleMoleculeRenderer(void) {
+SimpleMoleculeRenderer::~SimpleMoleculeRenderer() {
     this->Release();
 }
 
 /*
  * protein::SimpleMoleculeRenderer::release
  */
-void SimpleMoleculeRenderer::release(void) {}
+void SimpleMoleculeRenderer::release() {}
 
 /*
  * protein::SimpleMoleculeRenderer::create
  */
-bool SimpleMoleculeRenderer::create(void) {
+bool SimpleMoleculeRenderer::create() {
 
     glEnable(GL_DEPTH_TEST);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);

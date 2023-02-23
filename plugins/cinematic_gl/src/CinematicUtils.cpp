@@ -13,7 +13,7 @@
 using namespace megamol::cinematic_gl;
 
 
-CinematicUtils::CinematicUtils(void)
+CinematicUtils::CinematicUtils()
         : core_gl::utility::RenderUtils()
         , font(megamol::core::utility::SDFFont::PRESET_ROBOTO_SANS)
         , init_once(false)
@@ -23,7 +23,7 @@ CinematicUtils::CinematicUtils(void)
         , hotkey_window_setup_once(true) {}
 
 
-CinematicUtils::~CinematicUtils(void) {}
+CinematicUtils::~CinematicUtils() {}
 
 
 bool CinematicUtils::Initialise(frontend_resources::RuntimeConfig const& runtimeConf) {
@@ -264,7 +264,7 @@ void CinematicUtils::DrawAll(const glm::mat4& mvp, glm::vec2 dim_vp) {
 }
 
 
-float CinematicUtils::GetTextLineHeight(void) {
+float CinematicUtils::GetTextLineHeight() {
 
     this->gui_update();
     return this->font.LineHeight(this->menu_font_size);
@@ -283,7 +283,7 @@ void CinematicUtils::SetTextRotation(float a, glm::vec3 vec) {
     this->font.SetRotation(a, vec);
 }
 
-void CinematicUtils::ResetTextRotation(void) {
+void CinematicUtils::ResetTextRotation() {
 
     this->font.ResetRotation();
 }
@@ -297,7 +297,7 @@ const float CinematicUtils::lightness(glm::vec4 background) const {
 }
 
 
-void CinematicUtils::gui_update(void) {
+void CinematicUtils::gui_update() {
 
     this->menu_font_size = ImGui::GetFontSize() * 1.5f;
     if (this->menu_font_size == 0.0f) {

@@ -16,7 +16,7 @@ using namespace megamol::core;
 /*
  * AbstractDataWriter::AbstractDataWriter
  */
-AbstractDataWriter::AbstractDataWriter(void)
+AbstractDataWriter::AbstractDataWriter()
         : Module()
         , controlSlot("control", "Slot for incoming control commands")
         , manualRunSlot("manualRun", "Slot fopr manual triggering of the run method.") {
@@ -39,7 +39,7 @@ AbstractDataWriter::AbstractDataWriter(void)
 /*
  * AbstractDataWriter::~AbstractDataWriter
  */
-AbstractDataWriter::~AbstractDataWriter(void) {
+AbstractDataWriter::~AbstractDataWriter() {
     // intentionally empty
 }
 
@@ -47,7 +47,7 @@ AbstractDataWriter::~AbstractDataWriter(void) {
 /*
  * AbstractDataWriter::abort
  */
-bool AbstractDataWriter::abort(void) {
+bool AbstractDataWriter::abort() {
     return false; //abort not implemented unless this function is overwritten.
 }
 

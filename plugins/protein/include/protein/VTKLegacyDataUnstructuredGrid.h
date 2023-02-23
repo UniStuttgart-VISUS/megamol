@@ -8,17 +8,12 @@
 // Author     : scharnkn
 //
 
-#ifndef MMPROTEINPLUGIN_VTKLEGACYDATAUNSTRUCTUREDGRID_H_INCLUDED
-#define MMPROTEINPLUGIN_VTKLEGACYDATAUNSTRUCTUREDGRID_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "protein/AbstractVTKLegacyData.h"
 #include "vislib/Array.h"
 
-namespace megamol {
-namespace protein {
+namespace megamol::protein {
 
 /*
  * A class representing one frame of data given in the VTK legacy file format.
@@ -51,7 +46,7 @@ public:
     VTKLegacyDataUnstructuredGrid();
 
     /** DTor */
-    virtual ~VTKLegacyDataUnstructuredGrid();
+    ~VTKLegacyDataUnstructuredGrid() override;
 
     /**
      * Answers the pointer to a point data attribute array specified by a name.
@@ -248,7 +243,4 @@ private:
     vislib::Array<AbstractVTKLegacyData::AttributeArray> cellData;
 };
 
-} // namespace protein
-} // namespace megamol
-
-#endif // MMPROTEINPLUGIN_VTKLEGACYDATAUNSTRUCTUREDGRID_H_INCLUDED
+} // namespace megamol::protein

@@ -55,7 +55,7 @@ public:
     /**
      * Dtor
      */
-    ~TexInspectModule();
+    ~TexInspectModule() override;
 
 protected:
     /**
@@ -63,7 +63,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool create();
+    bool create() override;
 
     /**
      * Sets the extents (animation and bounding box) into the call object
@@ -86,7 +86,7 @@ protected:
     /**
      * Implementation of 'Release'.
      */
-    void release();
+    void release() override;
 
 private:
     mmstd_gl::special::TextureInspector tex_inspector_;

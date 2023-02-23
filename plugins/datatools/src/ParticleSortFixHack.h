@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_PARTICLESORTFIXHACK_H_INCLUDED
-#define MEGAMOLCORE_PARTICLESORTFIXHACK_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "datatools/AbstractParticleManipulator.h"
 #include "vislib/RawStorage.h"
@@ -17,8 +13,7 @@
 #include <vector>
 
 
-namespace megamol {
-namespace datatools {
+namespace megamol::datatools {
 
 /**
  * Module overriding global attributes of particles
@@ -26,25 +21,25 @@ namespace datatools {
 class ParticleSortFixHack : public AbstractParticleManipulator {
 public:
     /** Return module class name */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ParticleSortFixHack";
     }
 
     /** Return module class description */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Uses heuristics in an atempt to fixe particle sorting (implicit ids)";
     }
 
     /** Module is always available */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor */
-    ParticleSortFixHack(void);
+    ParticleSortFixHack();
 
     /** Dtor */
-    virtual ~ParticleSortFixHack(void);
+    ~ParticleSortFixHack() override;
 
 protected:
     /**
@@ -57,7 +52,7 @@ protected:
      *
      * @return True on success
      */
-    virtual bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData);
+    bool manipulateData(geocalls::MultiParticleDataCall& outData, geocalls::MultiParticleDataCall& inData) override;
 
 private:
     class particle_data {
@@ -90,7 +85,4 @@ private:
     size_t outDataHash;
 };
 
-} /* end namespace datatools */
-} /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_PARTICLESORTFIXHACK_H_INCLUDED */
+} // namespace megamol::datatools

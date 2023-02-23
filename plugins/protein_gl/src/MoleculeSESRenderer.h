@@ -28,8 +28,7 @@
 #include "vislib/math/Quaternion.h"
 #include "vislib_gl/graphics/gl/SimpleFont.h"
 
-namespace megamol {
-namespace protein_gl {
+namespace megamol::protein_gl {
 
 /**
  * Molecular Surface Renderer class.
@@ -51,7 +50,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "MoleculeSESRenderer";
     }
 
@@ -60,7 +59,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "Offers protein surface renderings.";
     }
 
@@ -69,16 +68,16 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         // return true;
         return true;
     }
 
     /** ctor */
-    MoleculeSESRenderer(void);
+    MoleculeSESRenderer();
 
     /** dtor */
-    virtual ~MoleculeSESRenderer(void);
+    ~MoleculeSESRenderer() override;
 
     /**********************************************************************
      * 'get'-functions
@@ -104,12 +103,12 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * Implementation of 'release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * Compute all vertex, attribute and color arrays used for ray casting
@@ -183,7 +182,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Open GL Render call.
@@ -191,13 +190,13 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Deinitialises this renderer. This is only called if there was a
      * successful call to "initialise" before.
      */
-    virtual void deinitialise(void);
+    virtual void deinitialise();
 
     /**********************************************************************
      * variables
@@ -372,5 +371,4 @@ private:
     DeferredRenderingProvider deferredProvider_;
 };
 
-} // namespace protein_gl
-} /* end namespace megamol */
+} // namespace megamol::protein_gl

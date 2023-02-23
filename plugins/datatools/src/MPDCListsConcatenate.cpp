@@ -31,12 +31,12 @@ megamol::datatools::MPDCListsConcatenate::~MPDCListsConcatenate() {
 }
 
 
-bool megamol::datatools::MPDCListsConcatenate::create(void) {
+bool megamol::datatools::MPDCListsConcatenate::create() {
     return true;
 }
 
 
-void megamol::datatools::MPDCListsConcatenate::release(void) {}
+void megamol::datatools::MPDCListsConcatenate::release() {}
 
 
 bool megamol::datatools::MPDCListsConcatenate::getExtent(megamol::core::Call& c) {

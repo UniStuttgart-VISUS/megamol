@@ -6,11 +6,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef VISLIB_DNS_H_INCLUDED
-#define VISLIB_DNS_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
@@ -22,8 +18,7 @@
 #include "vislib/net/IPHostEntry.h"
 
 
-namespace vislib {
-namespace net {
+namespace vislib::net {
 
 
 /**
@@ -264,7 +259,7 @@ public:
     static void GetHostEntry(IPHostEntryW& outEntry, const IPAddress6& address);
 
     /** Dtor. */
-    ~DNS(void);
+    ~DNS();
 
 private:
     /**
@@ -312,7 +307,7 @@ private:
     /**
      * Disallow instances.
      */
-    DNS(void);
+    DNS();
 
     /**
      * Forbidden copy ctor.
@@ -335,10 +330,8 @@ private:
     DNS& operator=(const DNS& rhs);
 };
 
-} /* end namespace net */
-} /* end namespace vislib */
+} // namespace vislib::net
 
 #if defined(_WIN32) && defined(_MANAGED)
 #pragma managed(pop)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
-#endif /* VISLIB_DNS_H_INCLUDED */

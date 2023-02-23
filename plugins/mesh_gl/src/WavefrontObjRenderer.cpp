@@ -130,7 +130,10 @@ void megamol::mesh_gl::WavefrontObjRenderer::updateRenderTaskCollection(
                 int point_light_cnt;
                 int directional_light_cnt;
             };
-            std::array<LightMetaInfo, 1> light_meta_info{point_lights_data.size(), distant_lights_data.size()};
+            std::array<LightMetaInfo, 1> light_meta_info{
+                static_cast<int>(point_lights_data.size()),
+                static_cast<int>(distant_lights_data.size()),
+            };
             render_task_collection_->deletePerFrameDataBuffer(1);
             render_task_collection_->addPerFrameDataBuffer("light_meta_info", light_meta_info, 1);
 

@@ -21,7 +21,7 @@ void megamol::core::view::light::DistantLight::addLight(LightCollection& light_c
 /*
  * megamol::core::view::light::DistantLight::DistantLight
  */
-DistantLight::DistantLight(void)
+DistantLight::DistantLight()
         : AbstractLight()
         , direction("Direction", "Direction of the Light")
         , angularDiameter("AngularDiameter", "If greater than zero results in soft shadows")
@@ -43,7 +43,7 @@ DistantLight::DistantLight(void)
 /*
  * megamol::core::view::light::DistantLight::~DistantLight
  */
-DistantLight::~DistantLight(void) {
+DistantLight::~DistantLight() {
     this->Release();
 }
 

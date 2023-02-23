@@ -11,6 +11,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/utility/String.h"
 #include <array>
 #include <fstream>
 #include <sstream>
@@ -20,50 +21,6 @@ using namespace megamol;
 using namespace megamol::geocalls_gl;
 using namespace megamol::datatools_gl;
 using namespace megamol::core;
-
-/*
- * Checks whether two chars are equal, regardless of their case.
- *
- * @param a The first char.
- * @param b The second char.
- * @return True if the two chars are equal, false otherwise.
- */
-bool icompare_pred(unsigned char a, unsigned char b) {
-    return std::tolower(a) == std::tolower(b);
-}
-
-/*
- * Checks two strings for equality, regardless of the letters case.
- *
- * @param a The first string.
- * @param b The second string.
- * @return True if the two strings are equal, false otherwise.
- */
-bool icompare(std::string const& a, std::string const& b) {
-    if (a.length() == b.length()) {
-        return std::equal(b.begin(), b.end(), a.begin(), icompare_pred);
-    } else {
-        return false;
-    }
-}
-
-/**
- * Splits a string by a certain char delimiter.
- *
- * @param s The input string.
- * @param delim The delimiter char.
- * @return Vector containing all parts of the string.
- */
-std::vector<std::string> isplit(std::string const& s, char delim = ' ') {
-    // TODO do this more intelligent
-    std::vector<std::string> result;
-    std::stringstream ss(s);
-    std::string line;
-    while (std::getline(ss, line, delim)) {
-        result.push_back(line);
-    }
-    return result;
-}
 
 /**
  * Returns the size in bytes of the given tinyply data type.
@@ -133,7 +90,7 @@ const char theUndef[] = "undef";
 /*
  * io::PLYDataSource::PLYDataSource
  */
-io::PLYDataSource::PLYDataSource(void)
+io::PLYDataSource::PLYDataSource()
         : core::Module()
         , filename("filename", "The path to the PLY file to load.")
         , vertElemSlot("vertex element", "which element to get the vertex info from")
@@ -213,14 +170,14 @@ io::PLYDataSource::PLYDataSource(void)
 /*
  * io::PLYDataSource::~PLYDataSource
  */
-io::PLYDataSource::~PLYDataSource(void) {
+io::PLYDataSource::~PLYDataSource() {
     this->Release();
 }
 
 /*
  * io::PLYDataSource::create
  */
-bool io::PLYDataSource::create(void) {
+bool io::PLYDataSource::create() {
     // intentionally empty
     return true;
 }
@@ -228,7 +185,7 @@ bool io::PLYDataSource::create(void) {
 /*
  * io::PLYDataSource::release
  */
-void io::PLYDataSource::release(void) {
+void io::PLYDataSource::release() {
     // intentionally empty
 }
 
@@ -559,10 +516,10 @@ bool io::PLYDataSource::assertData() {
         std::string line;
         for (size_t elm = 0; elm < this->elementCount.size(); elm++) {
             // parse vertices
-            if (icompare(elementNames[elm], selectedVertices)) {
+            if (utility::string::EqualAsciiCaseInsensitive(elementNames[elm], selectedVertices)) {
                 for (size_t i = 0; i < vertexCount; i++) {
                     if (std::getline(instream, line)) {
-                        auto split = isplit(line);
+                        auto split = utility::string::Split(line, ' ');
                         for (size_t j = 0; j < selectedPos.size(); j++) {
                             if (elementIndexMap.count(selectedPos[j]) > 0) {
                                 auto idx = elementIndexMap[selectedPos[j]];
@@ -614,10 +571,10 @@ bool io::PLYDataSource::assertData() {
                 }
             }
             // parse faces
-            if (icompare(elementNames[elm], selectedFaces)) {
+            if (utility::string::EqualAsciiCaseInsensitive(elementNames[elm], selectedFaces)) {
                 for (size_t i = 0; i < faceCount; i++) {
                     if (std::getline(instream, line)) {
-                        auto split = isplit(line);
+                        auto split = utility::string::Split(line, ' ');
                         if (elementIndexMap.count(selectedIndices)) {
                             uint64_t faceSize = static_cast<uint64_t>(std::stoul(split[0]));
                             if (faceSize != 3) {
@@ -727,10 +684,10 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
     for (auto e : plf.get_elements()) {
         this->vertElemSlot.Param<core::param::FlexEnumParam>()->AddValue(e.name);
         this->faceElemSlot.Param<core::param::FlexEnumParam>()->AddValue(e.name);
-        if (icompare(e.name, "vertex")) {
+        if (utility::string::EqualAsciiCaseInsensitive(e.name, "vertex")) {
             guessedVertices = e.name;
         }
-        if (icompare(e.name, "face")) {
+        if (utility::string::EqualAsciiCaseInsensitive(e.name, "face")) {
             guessedFaces = e.name;
         }
         this->elementCount.push_back(static_cast<uint64_t>(e.size));
@@ -760,34 +717,42 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
             this->iPropSlot.Param<core::param::FlexEnumParam>()->AddValue(p.name);
             this->indexPropSlot.Param<core::param::FlexEnumParam>()->AddValue(p.name);
 
-            if (icompare(p.name, "x")) {
+            if (utility::string::EqualAsciiCaseInsensitive(p.name, "x")) {
                 guessedPos[0] = p.name;
             }
-            if (icompare(p.name, "y")) {
+            if (utility::string::EqualAsciiCaseInsensitive(p.name, "y")) {
                 guessedPos[1] = p.name;
             }
-            if (icompare(p.name, "z")) {
+            if (utility::string::EqualAsciiCaseInsensitive(p.name, "z")) {
                 guessedPos[2] = p.name;
             }
-            if (icompare(p.name, "nx")) {
+            if (utility::string::EqualAsciiCaseInsensitive(p.name, "nx")) {
                 guessedNormal[0] = p.name;
             }
-            if (icompare(p.name, "ny")) {
+            if (utility::string::EqualAsciiCaseInsensitive(p.name, "ny")) {
                 guessedNormal[1] = p.name;
             }
-            if (icompare(p.name, "nz")) {
+            if (utility::string::EqualAsciiCaseInsensitive(p.name, "nz")) {
                 guessedNormal[2] = p.name;
             }
-            if (icompare(p.name, "r") || icompare(p.name, "red") || icompare(p.name, "diffuse_red")) {
+            if (utility::string::EqualAsciiCaseInsensitive(p.name, "r") ||
+                utility::string::EqualAsciiCaseInsensitive(p.name, "red") ||
+                utility::string::EqualAsciiCaseInsensitive(p.name, "diffuse_red")) {
                 guessedColor[0] = p.name;
             }
-            if (icompare(p.name, "g") || icompare(p.name, "green") || icompare(p.name, "diffuse_green")) {
+            if (utility::string::EqualAsciiCaseInsensitive(p.name, "g") ||
+                utility::string::EqualAsciiCaseInsensitive(p.name, "green") ||
+                utility::string::EqualAsciiCaseInsensitive(p.name, "diffuse_green")) {
                 guessedColor[1] = p.name;
             }
-            if (icompare(p.name, "b") || icompare(p.name, "blue") || icompare(p.name, "diffuse_blue")) {
+            if (utility::string::EqualAsciiCaseInsensitive(p.name, "b") ||
+                utility::string::EqualAsciiCaseInsensitive(p.name, "blue") ||
+                utility::string::EqualAsciiCaseInsensitive(p.name, "diffuse_blue")) {
                 guessedColor[2] = p.name;
             }
-            if (icompare(p.name, "indices") || icompare(p.name, "vertex_indices") || icompare(p.name, "vertex_index")) {
+            if (utility::string::EqualAsciiCaseInsensitive(p.name, "indices") ||
+                utility::string::EqualAsciiCaseInsensitive(p.name, "vertex_indices") ||
+                utility::string::EqualAsciiCaseInsensitive(p.name, "vertex_index")) {
                 guessedIndices = p.name;
             }
             elementIndexMap[p.name] = std::make_pair(element_index, property_index);
@@ -842,14 +807,14 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
     std::string line;
     bool done = false;
     while (std::getline(instream, line) && !done) {
-        if (icompare(line.substr(0, 6), "format")) {
-            if (icompare(line.substr(7, 3), "asc")) {
+        if (utility::string::EqualAsciiCaseInsensitive(line.substr(0, 6), "format")) {
+            if (utility::string::EqualAsciiCaseInsensitive(line.substr(7, 3), "asc")) {
                 this->hasBinaryFormat = false;
-            } else if (icompare(line.substr(7, 3), "bin")) {
+            } else if (utility::string::EqualAsciiCaseInsensitive(line.substr(7, 3), "bin")) {
                 this->hasBinaryFormat = true;
-                if (icompare(line.substr(14, 3), "lit")) {
+                if (utility::string::EqualAsciiCaseInsensitive(line.substr(14, 3), "lit")) {
                     this->isLittleEndian = true;
-                } else if (icompare(line.substr(14, 3), "big")) {
+                } else if (utility::string::EqualAsciiCaseInsensitive(line.substr(14, 3), "big")) {
                     this->isLittleEndian = false;
                 } else {
                     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -862,7 +827,7 @@ bool io::PLYDataSource::filenameChanged(core::param::ParamSlot& slot) {
                 this->hasBinaryFormat = false;
             }
         }
-        if (icompare(line.substr(0, 10), "end_header")) {
+        if (utility::string::EqualAsciiCaseInsensitive(line.substr(0, 10), "end_header")) {
             this->data_offset = static_cast<size_t>(instream.tellg());
             done = true;
         }
@@ -1168,7 +1133,7 @@ bool io::PLYDataSource::getMeshExtentCallback(core::Call& caller) {
 /*
  * io::PLYDataSource::clearAllFields
  */
-void io::PLYDataSource::clearAllFields(void) {
+void io::PLYDataSource::clearAllFields() {
     if (posPointers.pos_float != nullptr) {
         delete[] posPointers.pos_float;
         posPointers.pos_float = nullptr;
@@ -1216,7 +1181,7 @@ void io::PLYDataSource::clearAllFields(void) {
 /*
  * io::PLYDataSource::checkParameterDirtyness
  */
-bool io::PLYDataSource::checkParameterDirtyness(void) {
+bool io::PLYDataSource::checkParameterDirtyness() {
     bool isDirty = false;
 
     isDirty = isDirty || this->vertElemSlot.IsDirty();
@@ -1241,7 +1206,7 @@ bool io::PLYDataSource::checkParameterDirtyness(void) {
 /*
  * io::PLYDataSource::resetParameterDirtyness
  */
-void io::PLYDataSource::resetParameterDirtyness(void) {
+void io::PLYDataSource::resetParameterDirtyness() {
     this->vertElemSlot.ResetDirty();
     this->faceElemSlot.ResetDirty();
     this->xPropSlot.ResetDirty();

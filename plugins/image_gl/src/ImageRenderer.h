@@ -28,8 +28,7 @@
 #include "vislib/RawStorage.h"
 #include "vislib/graphics/AbstractBitmapCodec.h"
 
-namespace megamol {
-namespace image_gl {
+namespace megamol::image_gl {
 
 /**
  * Mesh-based renderer for bezier curve tubes
@@ -41,7 +40,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) {
+    static const char* ClassName() {
         return "ImageRenderer";
     }
 
@@ -50,7 +49,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) {
+    static const char* Description() {
         return "A litte less simple Image Renderer";
     }
 
@@ -59,15 +58,15 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable(void) {
+    static bool IsAvailable() {
         return true;
     }
 
     /** Ctor. */
-    ImageRenderer(void);
+    ImageRenderer();
 
     /** Dtor. */
-    virtual ~ImageRenderer(void);
+    ~ImageRenderer() override;
 
 protected:
     /**
@@ -75,7 +74,7 @@ protected:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    virtual bool create(void);
+    bool create() override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -86,12 +85,12 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(mmstd_gl::CallRender3DGL& call);
+    bool GetExtents(mmstd_gl::CallRender3DGL& call) override;
 
     /**
      * Implementation of 'Release'.
      */
-    virtual void release(void);
+    void release() override;
 
     /**
      * The render callback.
@@ -100,7 +99,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(mmstd_gl::CallRender3DGL& call);
+    bool Render(mmstd_gl::CallRender3DGL& call) override;
 
 private:
     /**
@@ -256,5 +255,4 @@ private:
     bool new_tiles_;
 };
 
-} // namespace image_gl
-} /* end namespace megamol */
+} // namespace megamol::image_gl

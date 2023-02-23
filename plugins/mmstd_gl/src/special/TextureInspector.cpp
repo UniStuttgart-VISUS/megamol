@@ -20,10 +20,10 @@ TextureInspector::TextureInspector(const std::vector<std::string>& textures)
         , flip_x_(false)
         , flip_y_(true)
         , initiated_(false) {
-    auto bp = new core::param::BoolParam(true);
+    auto bp = new core::param::BoolParam(false);
     show_inspector_.SetParameter(bp);
 
-    auto ep = new core::param::EnumParam(2);
+    auto ep = new core::param::EnumParam(0);
     for (int i = 0; i < textures.size(); i++) {
         ep->SetTypePair(i, textures[i].c_str());
     }
@@ -38,10 +38,10 @@ TextureInspector::TextureInspector()
         , flip_x_(false)
         , flip_y_(true)
         , initiated_(false) {
-    auto bp = new core::param::BoolParam(true);
+    auto bp = new core::param::BoolParam(false);
     show_inspector_.SetParameter(bp);
 
-    auto ep = new core::param::EnumParam(1);
+    auto ep = new core::param::EnumParam(0);
     ep->SetTypePair(0, "Default");
     select_texture_.SetParameter(ep);
 }
