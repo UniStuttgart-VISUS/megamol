@@ -23,7 +23,7 @@
 #endif
 
 #define SCALE 0.0001f
-#define __SRTEST_CON_RAS__
+//#define __SRTEST_CON_RAS__
 //#define __SRTEST_CAM_ALIGNED__
 
 megamol::moldyn_gl::rendering::SRTest::SRTest()
@@ -320,7 +320,7 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
     nv::perf::InitializeNvPerf();
     nvperf.InitializeReportGenerator();
     nvperf.SetFrameLevelRangeName("Frame");
-    nvperf.SetNumNestingLevels(2);
+    nvperf.SetNumNestingLevels(3);
     nvperf.outputOptions.directoryName = ".\\nvperf";
     clockStatus = nv::perf::OpenGLGetDeviceClockState();
     nv::perf::OpenGLSetDeviceClockState(NVPW_DEVICE_CLOCK_SETTING_LOCK_TO_RATED_TDP);
@@ -447,6 +447,11 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
 
     if (method_slot_.IsDirty()) {
         new_data = true;
+        /*#ifdef USE_NVPERF
+        nvperf.SetFrameLevelRangeName((method_strings[static_cast<method_ut>(method)] + std::string(" ") +
+                                       upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())])
+                                          .c_str());
+        #endif*/
         method_slot_.ResetDirty();
     }
 
@@ -538,9 +543,9 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
     #endif
 
     // data_.pl_data.clip_distance = clip_thres_slot_.Param<core::param::FloatParam>()->Value();
-//#ifdef USE_NVPERF
-//    nvperf.PushRange("Draw_Full");
-//#endif
+#ifdef USE_NVPERF
+    nvperf.PushRange("Draw_Full");
+#endif
     cr_fbo->bind();
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -596,7 +601,9 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
     glStencilOp(GL_KEEP, GL_INCR, GL_INCR);*/
 
 #ifdef USE_NVPERF
-    nvperf.PushRange("Draw");
+    nvperf.PushRange((method_strings[static_cast<method_ut>(method)] + std::string(" ") +
+                      upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())])
+                         .c_str());
 #endif
 
     rt->render(ubo_);
@@ -631,9 +638,9 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-//#ifdef USE_NVPERF
-//    nvperf.PopRange();
-//#endif
+#ifdef USE_NVPERF
+    nvperf.PopRange();
+#endif
 
     //blit_fbo(cr_fbo, cr_fbo_org);
 
@@ -641,6 +648,9 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
         "[SRTest] Upload time: %d Render time: %d", midTime - startTime, stopTime - midTime);*/
 
 #ifdef USE_NVPERF
+    if (!nvperf.IsCollectingReport())
+        std::exit(0);
+
     nvperf.OnFrameEnd();
 #endif
 
