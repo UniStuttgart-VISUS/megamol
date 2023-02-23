@@ -34,6 +34,8 @@ ImageDisplay2D::ImageDisplay2D(const msf::ShaderFactoryOptionsOpenGL& shaderFact
             edge_shader = core::utility::make_shared_glowl_shader("GraphEdgeRenderer", shaderFactoryOptions,
                 "imageseries_gl/GraphEdgeRenderer.vert.glsl", "imageseries_gl/GraphEdgeRenderer.geom.glsl",
                 "imageseries_gl/GraphEdgeRenderer.frag.glsl");
+
+            glGenBuffers(1, &edge_weight_buffer);
         }
 
         // (3) Nodes
@@ -57,6 +59,7 @@ ImageDisplay2D::ImageDisplay2D(const msf::ShaderFactoryOptionsOpenGL& shaderFact
 ImageDisplay2D::~ImageDisplay2D() {
     glDeleteBuffers(1, &node_radius_buffer);
     glDeleteBuffers(1, &node_type_buffer);
+    glDeleteBuffers(1, &edge_weight_buffer);
 }
 
 bool ImageDisplay2D::updateTexture(const vislib::graphics::BitmapImage& image) {
@@ -131,7 +134,7 @@ bool ImageDisplay2D::updateTexture(const vislib::graphics::BitmapImage& image) {
     return true;
 }
 
-bool ImageDisplay2D::updateGraph(const ImageSeries::graph::GraphData2D& graph, const float baseRadius) {
+bool ImageDisplay2D::updateGraph(const ImageSeries::graph::GraphData2D& graph, const float baseRadius, const float edgeWidth) {
     const auto& nodes = graph.getNodes();
     const auto& edges = graph.getEdges();
 
@@ -205,14 +208,19 @@ bool ImageDisplay2D::updateGraph(const ImageSeries::graph::GraphData2D& graph, c
     // Edges
     if (!edges.empty()) {
         graph_edge_lines.clear();
+        graph_edge_weights.clear();
 
         graph_edge_lines.reserve(edges.size());
+        graph_edge_weights.reserve(2 * edges.size());
 
         for (const auto& edge : edges) {
             const auto& from = graph.getNode(edge.from);
             const auto& to = graph.getNode(edge.to);
 
             graph_edge_lines.push_back(glm::vec4(from.centerOfMass, to.centerOfMass));
+
+            graph_edge_weights.push_back(edge.weight);
+            graph_edge_weights.push_back(edge.weight);
         }
 
         std::vector<uint32_t> edge_indices(graph_edge_lines.size() * 2);
@@ -230,6 +238,19 @@ bool ImageDisplay2D::updateGraph(const ImageSeries::graph::GraphData2D& graph, c
             core::utility::log::Log::DefaultLog.WriteError(
                 "ImageDisplay2D - Error creating buffer for edge vertices:\n%s", ex.what());
         }
+
+        edge_mesh->bindVertexArray();
+
+        glBindBuffer(GL_ARRAY_BUFFER, edge_weight_buffer);
+        glBufferData(
+            GL_ARRAY_BUFFER, graph_edge_weights.size() * sizeof(float), graph_edge_weights.data(), GL_STATIC_DRAW);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+
+        this->edgeWidth = edgeWidth;
     } else {
         edge_mesh = nullptr;
     }
@@ -303,7 +324,7 @@ bool ImageDisplay2D::renderImpl(
             edge_shader->use();
             edge_shader->setUniform(
                 "matrix", glm::scale(glm::translate(matrix, glm::vec3(0.0, height, 0.0)), glm::vec3(1.0, -1.0, 1.0)));
-            edge_shader->setUniform("width", 0.5f);
+            edge_shader->setUniform("width", edgeWidth);
 
             edge_mesh->draw();
         }

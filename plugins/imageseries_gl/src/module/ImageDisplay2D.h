@@ -38,7 +38,7 @@ public:
     virtual ~ImageDisplay2D() noexcept;
 
     bool updateTexture(const vislib::graphics::BitmapImage& image);
-    bool updateGraph(const ImageSeries::graph::GraphData2D& graph, float baseRadius);
+    bool updateGraph(const ImageSeries::graph::GraphData2D& graph, float baseRadius, float edgeWidth);
 
     glm::vec2 getImageSize() const;
 
@@ -60,9 +60,12 @@ private:
 
     std::vector<glm::vec2> graph_node_vertices;
     std::vector<float> graph_node_radii, graph_node_types;
-    std::vector<glm::vec4> graph_edge_lines;
 
-    GLuint node_radius_buffer, node_type_buffer;
+    std::vector<glm::vec4> graph_edge_lines;
+    std::vector<float> graph_edge_weights;
+    float edgeWidth;
+
+    GLuint node_radius_buffer, node_type_buffer, edge_weight_buffer;
     GLint width, height;
 
     Mode mode = Mode::Auto;

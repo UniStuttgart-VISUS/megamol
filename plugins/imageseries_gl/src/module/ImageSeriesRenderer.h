@@ -101,6 +101,7 @@ private:
     core::param::ParamSlot displayModeParam;
     core::param::ParamSlot renderGraphParam;
     core::param::ParamSlot baseRadiusParam;
+    core::param::ParamSlot edgeWidthParam;
 
     ImageSeries2DCall::Output metadata;
 

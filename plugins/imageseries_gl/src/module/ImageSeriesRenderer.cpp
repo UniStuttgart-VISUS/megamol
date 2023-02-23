@@ -19,7 +19,8 @@ ImageSeriesRenderer::ImageSeriesRenderer()
         , getGraphCaller("requestGraph", "Requests graph data to render on top of the image series.")
         , displayModeParam("Display Mode", "Controls how the image should be presented.")
         , renderGraphParam("Render Graph", "Render the input graph if there is one.")
-        , baseRadiusParam("Node base radius", "Minimum radius of the nodes.")
+        , baseRadiusParam("Node radius", "Radius of the nodes.")
+        , edgeWidthParam("Edge width", "Width of the edges.")
         , graph_hash(-7345) {
     getDataCaller.SetCompatibleCall<typename ImageSeries::ImageSeries2DCall::CallDescription>();
     MakeSlotAvailable(&getDataCaller);
@@ -43,6 +44,9 @@ ImageSeriesRenderer::ImageSeriesRenderer()
 
     baseRadiusParam << new core::param::FloatParam(2.0);
     MakeSlotAvailable(&baseRadiusParam);
+
+    edgeWidthParam << new core::param::FloatParam(2.0);
+    MakeSlotAvailable(&edgeWidthParam);
 }
 
 ImageSeriesRenderer::~ImageSeriesRenderer() {
@@ -125,12 +129,14 @@ bool ImageSeriesRenderer::Render(mmstd_gl::CallRender2DGL& call) {
         if (auto* getData = getGraphCaller.CallAs<ImageSeries::GraphData2DCall>()) {
             if ((*getData)(ImageSeries::GraphData2DCall::CallGetData)) {
                 auto input_hash = util::combineHash<util::Hash>(
-                    getData->DataHash(), util::computeHash(baseRadiusParam.Param<core::param::FloatParam>()->Value()));
+                    getData->DataHash(), util::computeHash(baseRadiusParam.Param<core::param::FloatParam>()->Value(),
+                                             edgeWidthParam.Param<core::param::FloatParam>()->Value()));
 
                 if (input_hash != graph_hash) {
                     graph_hash = input_hash;
                     display->updateGraph(*getData->GetOutput().graph->getData(),
-                        baseRadiusParam.Param<core::param::FloatParam>()->Value());
+                        baseRadiusParam.Param<core::param::FloatParam>()->Value(),
+                        edgeWidthParam.Param<core::param::FloatParam>()->Value());
                 }
             }
         }
