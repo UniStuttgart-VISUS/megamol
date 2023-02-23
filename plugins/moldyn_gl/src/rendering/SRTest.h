@@ -16,6 +16,12 @@
 #include "srtest/rendering_task.h"
 #include "srtest/ssbo_shader_task.h"
 
+#ifdef USE_NVPERF
+//#include<nvperf_host_impl.h>
+#include <nvperf_host.h>
+#include <NvPerfReportGeneratorOpenGL.h>
+#endif
+
 namespace megamol::moldyn_gl::rendering {
 
 class vao_rt : public rendering_task {
@@ -370,6 +376,12 @@ private:
 
 #ifdef MEGAMOL_USE_PROFILING
     frontend_resources::PerformanceManager::handle_vector timing_handles_;
+#endif
+
+#ifdef USE_NVPERF
+    nv::perf::profiler::ReportGeneratorOpenGL nvperf;
+    double nvperfWarmupTime = 0.5;
+    NVPW_Device_ClockStatus clockStatus = NVPW_DEVICE_CLOCK_STATUS_UNKNOWN;
 #endif
 };
 } // namespace megamol::moldyn_gl::rendering

@@ -14,6 +14,14 @@
 
 #include "stb/stb_image_write.h"
 
+#ifdef USE_NVPERF
+#define RYML_SINGLE_HDR_DEFINE_NOW
+#include <ryml_all.hpp>
+
+//#include <nvperf_host_impl.h>
+//#include <NvPerfReportGeneratorOpenGL.h>
+#endif
+
 #define SCALE 0.0001f
 #define __SRTEST_CON_RAS__
 //#define __SRTEST_CAM_ALIGNED__
@@ -308,11 +316,27 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
 
     core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] Max SSBO Size %d;", max_ssbo_size);
 
+#ifdef USE_NVPERF
+    nv::perf::InitializeNvPerf();
+    nvperf.InitializeReportGenerator();
+    nvperf.SetFrameLevelRangeName("Frame");
+    nvperf.SetNumNestingLevels(2);
+    nvperf.outputOptions.directoryName = ".\\nvperf";
+    clockStatus = nv::perf::OpenGLGetDeviceClockState();
+    nv::perf::OpenGLSetDeviceClockState(NVPW_DEVICE_CLOCK_SETTING_LOCK_TO_RATED_TDP);
+    nvperf.StartCollectionOnNextFrame();
+#endif
+
     return true;
 }
 
 
 void megamol::moldyn_gl::rendering::SRTest::release() {
+#ifdef USE_NVPERF
+    nvperf.Reset();
+    nv::perf::OpenGLSetDeviceClockState(clockStatus);
+#endif
+
     glDeleteBuffers(1, &ubo_);
 }
 
@@ -339,6 +363,10 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
 #ifdef MEGAMOL_USE_PROFILING
     auto& pm = const_cast<frontend_resources::PerformanceManager&>(
         frontend_resources.get<frontend_resources::PerformanceManager>());
+#endif
+
+#ifdef USE_NVPERF
+    nvperf.OnFrameStart();
 #endif
 
     // Camera
@@ -510,7 +538,9 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
     #endif
 
     // data_.pl_data.clip_distance = clip_thres_slot_.Param<core::param::FloatParam>()->Value();
-
+//#ifdef USE_NVPERF
+//    nvperf.PushRange("Draw_Full");
+//#endif
     cr_fbo->bind();
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -526,6 +556,9 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
                                     upload_mode_string[static_cast<upload_mode_ut>(rt->get_mode())]);
         pm.start_timer(timing_handles_[0]);
 #endif
+//#ifdef USE_NVPERF
+//        nvperf.PushRange("Upload");
+//#endif
         if (method == method_e::COPY) {
             std::dynamic_pointer_cast<copy_rt>(rt)->upload(data_, pm, timing_handles_[2]);
         } else if (method == method_e::COPY_VERT) {
@@ -534,6 +567,9 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
             rt->upload(data_);
         }
 
+//#ifdef USE_NVPERF
+//        nvperf.PopRange();
+//#endif
 #ifdef MEGAMOL_USE_PROFILING
         pm.stop_timer(timing_handles_[0]);
 #endif
@@ -558,7 +594,17 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilMask(0xFF);
     glStencilOp(GL_KEEP, GL_INCR, GL_INCR);*/
+
+#ifdef USE_NVPERF
+    nvperf.PushRange("Draw");
+#endif
+
     rt->render(ubo_);
+
+#ifdef USE_NVPERF
+    nvperf.PopRange();
+#endif
+
     /*glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     glDisable(GL_STENCIL_TEST);*/
 #ifdef MEGAMOL_USE_PROFILING
@@ -585,10 +631,18 @@ bool megamol::moldyn_gl::rendering::SRTest::Render(megamol::mmstd_gl::CallRender
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+//#ifdef USE_NVPERF
+//    nvperf.PopRange();
+//#endif
+
     //blit_fbo(cr_fbo, cr_fbo_org);
 
     /*core::utility::log::Log::DefaultLog.WriteInfo(
         "[SRTest] Upload time: %d Render time: %d", midTime - startTime, stopTime - midTime);*/
+
+#ifdef USE_NVPERF
+    nvperf.OnFrameEnd();
+#endif
 
     in_call->Unlock();
 
