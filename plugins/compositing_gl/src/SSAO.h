@@ -26,9 +26,10 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore_gl/utility/ShaderFactory.h"
+
+#include "mmstd_gl/ModuleGL.h"
 
 #include "glowl/Sampler.hpp"
 #include "glowl/Texture2DView.hpp"
@@ -180,7 +181,7 @@ struct ASSAO_Constants {
 #endif
 };
 
-class SSAO : public core::Module {
+class SSAO : public mmstd_gl::ModuleGL {
 public:
     /**
      * Answer the name of this module.

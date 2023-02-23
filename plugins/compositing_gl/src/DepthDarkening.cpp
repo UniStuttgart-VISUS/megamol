@@ -14,7 +14,7 @@
 #include "mmcore_gl/utility/ShaderFactory.h"
 
 megamol::compositing_gl::DepthDarkening::DepthDarkening()
-        : core::Module()
+        : mmstd_gl::ModuleGL()
         , outputTexSlot_("OutputTexture", "Gives access to the resulting output texture")
         , inputColorSlot_("ColorTexture", "Connects the color render target texture")
         , inputDepthSlot_("DepthTexture", "Connects the depth render target texture")

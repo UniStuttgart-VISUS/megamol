@@ -12,12 +12,11 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmstd_gl/renderer/CallRender3DGL.h"
-#include "mmstd_gl/renderer/Renderer3DModuleGL.h"
+#include "mmstd_gl/ModuleGL.h"
 
 namespace megamol::compositing_gl {
 
-class LocalLighting : public core::Module {
+class LocalLighting : public mmstd_gl::ModuleGL {
 public:
     struct LightParams {
         float x, y, z, intensity;
