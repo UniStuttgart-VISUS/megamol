@@ -317,11 +317,15 @@ bool megamol::moldyn_gl::rendering::SRTest::create() {
     core::utility::log::Log::DefaultLog.WriteInfo("[SRTest] Max SSBO Size %d;", max_ssbo_size);
 
 #ifdef USE_NVPERF
+    std::filesystem::path profile_output =
+        frontend_resources.get<frontend_resources::RuntimeConfig>().profiling_output_file;
+    auto profile_path = profile_output.remove_filename();
     nv::perf::InitializeNvPerf();
     nvperf.InitializeReportGenerator();
     nvperf.SetFrameLevelRangeName("Frame");
     nvperf.SetNumNestingLevels(3);
-    nvperf.outputOptions.directoryName = ".\\nvperf";
+    //nvperf.outputOptions.directoryName = ".\\nvperf";
+    nvperf.outputOptions.directoryName = profile_path.string();
     clockStatus = nv::perf::OpenGLGetDeviceClockState();
     nv::perf::OpenGLSetDeviceClockState(NVPW_DEVICE_CLOCK_SETTING_LOCK_TO_RATED_TDP);
     nvperf.StartCollectionOnNextFrame();
