@@ -24,7 +24,7 @@ VoxelGenerator::VoxelGenerator(void)
     this->generate_voxels_slot_.SetCallback(VolumetricDataCall::ClassName(),
         VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_EXTENTS), &VoxelGenerator::getExtentCallback);
     this->generate_voxels_slot_.SetCallback(VolumetricDataCall::ClassName(),
-        VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_METADATA), &VoxelGenerator::getExtentCallback);
+        VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_METADATA), &VoxelGenerator::getMetadataCallback);
     this->generate_voxels_slot_.SetCallback(VolumetricDataCall::ClassName(),
         VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_START_ASYNC), &VoxelGenerator::dummyCallback);
     this->generate_voxels_slot_.SetCallback(VolumetricDataCall::ClassName(),
@@ -100,6 +100,58 @@ bool VoxelGenerator::getExtentCallback(core::Call& call) {
     return true;
 }
 
+
+
+bool VoxelGenerator::getMetadataCallback(core::Call& call) {
+
+    VolumetricDataCall* volume_call = dynamic_cast<VolumetricDataCall*>(&call);
+    MultiParticleDataCall* particle_call = this->get_data_slot_.CallAs<MultiParticleDataCall>();
+    if (particle_call == nullptr)
+        return false;
+
+    if (volume_call != nullptr) {
+        // set metadata
+        metadata.MemLoc = MemoryLocation::VRAM;
+
+
+        int vol_size = this->vol_size_slot_.Param<core::param::IntParam>()->Value();
+        metadata.Resolution[0] = vol_size; // TODO volsize is not resolution?
+                                           //metadata.Resolution[1] = vol_size;
+                                           //metadata.Resolution[2] = vol_size;
+
+
+        // TODO set metadata correctly
+        metadata.Components = 3; //? // is_vector ? 3 : 1;
+        metadata.GridType = GridType_t::CARTESIAN;
+        //metadata.Resolution[0] = xRes; // TODO set parameters in UI?
+        //metadata.Resolution[1] = yRes;
+        //metadata.Resolution[2] = zRes;
+        metadata.ScalarType = ScalarType_t::FLOATING_POINT;
+        metadata.ScalarLength = sizeof(float);
+        //TODO metadata.MinValues and metadata.MaxValues
+        auto bbox = particle_call->AccessBoundingBoxes().ObjectSpaceBBox();
+        metadata.Extents[0] = bbox.Width();
+        metadata.Extents[1] = bbox.Height();
+        metadata.Extents[2] = bbox.Depth();
+        metadata.NumberOfFrames = 1;
+        metadata.SliceDists[0] = new float[1];
+        metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0] - 1);
+        metadata.SliceDists[1] = new float[1];
+        metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1] - 1);
+        metadata.SliceDists[2] = new float[1];
+        metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2] - 1);
+        metadata.Origin[0] = bbox.Left();
+        metadata.Origin[1] = bbox.Bottom();
+        metadata.Origin[2] = bbox.Back();
+        metadata.IsUniform[0] = true;
+        metadata.IsUniform[1] = true;
+        metadata.IsUniform[2] = true;
+
+        volume_call->SetMetadata(&metadata);
+    }
+}
+
+
 bool VoxelGenerator::getDataCallback(core::Call& call) {
 
     MultiParticleDataCall* particle_call = this->get_data_slot_.CallAs<MultiParticleDataCall>();
@@ -130,56 +182,11 @@ bool VoxelGenerator::getDataCallback(core::Call& call) {
             return false;
         auto time = particle_call->FrameID();
 
-        // TODO create volume and metadata somewhere else!!
-        std::vector<std::vector<float>> vol; // TODO
-
-
-        // set metadata
-        
-
-        int vol_size = this->vol_size_slot_.Param<core::param::IntParam>()->Value();
-        metadata.Resolution[0] = vol_size; // TODO volsize is not resolution?
-        //metadata.Resolution[1] = vol_size;
-        //metadata.Resolution[2] = vol_size;
-
-		
-        // TODO set metadata correctly
-		metadata.Components = 3; //? // is_vector ? 3 : 1;
-        metadata.GridType = GridType_t::CARTESIAN;
-		//metadata.Resolution[0] = xRes; // TODO set parameters in UI?
-        //metadata.Resolution[1] = yRes;
-        //metadata.Resolution[2] = zRes;
-        metadata.ScalarType = ScalarType_t::FLOATING_POINT;
-        metadata.ScalarLength = sizeof(float);
-        //TODO metadata.MinValues and metadata.MaxValues
-        auto bbox = particle_call->AccessBoundingBoxes().ObjectSpaceBBox();
-        metadata.Extents[0] = bbox.Width();
-        metadata.Extents[1] = bbox.Height();
-        metadata.Extents[2] = bbox.Depth();
-        metadata.NumberOfFrames = 1;
-        metadata.SliceDists[0] = new float[1];
-        metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0] - 1);
-        metadata.SliceDists[1] = new float[1];
-        metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1] - 1);
-        metadata.SliceDists[2] = new float[1];
-        metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2] - 1);
-        metadata.Origin[0] = bbox.Left();
-        metadata.Origin[1] = bbox.Bottom();
-        metadata.Origin[2] = bbox.Back();
-        metadata.IsUniform[0] = true;
-        metadata.IsUniform[1] = true;
-        metadata.IsUniform[2] = true;
-
-
-
-        metadata.MemLoc = MemoryLocation::VRAM;
 
         // set volume call data
         volume_call->SetFrameID(time);
         //volume_call->SetData(vol[0].data());
-        volume_call->SetMetadata(&metadata);
         //volume_call->SetDataHash(this->datahash); // TODO
-
         volume_call->SetData(texture_handle);
     }
 

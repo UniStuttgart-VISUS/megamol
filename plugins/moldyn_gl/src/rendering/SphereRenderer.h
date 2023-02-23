@@ -368,6 +368,7 @@ private:
     megamol::core::param::ParamSlot use_hp_textures_slot_;
 
     int vol_size_;
+    bool vol_size_changed_;
 
     // Affects only Outline rendering: --------------------------
 

@@ -85,14 +85,9 @@ protected:
 
     bool getExtentCallback(core::Call& call);
 
+    bool getMetadataCallback(core::Call& call);
+
     bool dummyCallback(core::Call& call);
-
-    bool generateVoxels(geocalls::MultiParticleDataCall* particle_call, geocalls::VolumetricDataCall* volume_call);
-
-    bool initVolumeGenerator();
-
-    bool fillVAO(const geocalls::MultiParticleDataCall::Particles& parts, GLuint vert_buf, const void* vert_ptr,
-        bool create_buffer_data);
 
 private:
 
@@ -129,6 +124,13 @@ private:
     std::unique_ptr<msf::ShaderFactoryOptionsOpenGL> shader_options_flags_;
 
     std::shared_ptr<glowl::GLSLProgram> sphere_prgm_;
+
+    bool generateVoxels(geocalls::MultiParticleDataCall* particle_call, geocalls::VolumetricDataCall* volume_call);
+
+    bool initVolumeGenerator();
+
+    bool fillVAO(const geocalls::MultiParticleDataCall::Particles& parts, GLuint vert_buf, const void* vert_ptr,
+        bool create_buffer_data);
 };
 
 } // namespace rendering

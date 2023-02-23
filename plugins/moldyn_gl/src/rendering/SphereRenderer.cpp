@@ -88,6 +88,7 @@ SphereRenderer::SphereRenderer(void)
         , vol_gen_(nullptr)
         , trigger_rebuild_g_buffer_(false)
         , vol_size_(256)
+        , vol_size_changed_(false)
 // , timer()
 #if defined(SPHERE_MIN_OGL_BUFFER_ARRAY) || defined(SPHERE_MIN_OGL_SPLAT)
         /// This variant should not need the fence (?)
@@ -268,13 +269,10 @@ bool SphereRenderer::GetExtents(mmstd_gl::CallRender3DGL& call) {
         if (!(*c_voxel)(VolumetricDataCall::IDX_GET_EXTENTS)) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("SphereRenderer: could not get all extents (VolumetricDataCall)");
         }
-        if (!(*c_voxel)(VolumetricDataCall::IDX_GET_DATA)){//  IDX_GET_METADATA)) {
+        if (!(*c_voxel)(VolumetricDataCall::IDX_GET_METADATA)) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "SphereRenderer: could not get metadata (VolumetricDataCall)");
         }
-        
-        // get volume size from metadata
-        vol_size_ = c_voxel->GetMetadata()->Resolution[0];    //TODO access correct value
     }
 
     return true;
@@ -2428,19 +2426,14 @@ void SphereRenderer::rebuildWorkingData(
     }
 
 
-    
-    // TODO
-    bool test = updateVolumeData(call.Time());
-
-
     auto const shader_options = msf::ShaderFactoryOptionsOpenGL(this->GetCoreInstance()->GetShaderPaths());
     // Check if voxelization is even needed
-    if (this->vol_gen_ == nullptr) {
+   /* if (this->vol_gen_ == nullptr) {
         this->vol_gen_ = new misc::MDAOVolumeGenerator();
         auto so = shader_options;
         this->vol_gen_->SetShaderSourceFactory(&so);
         this->vol_gen_->Init(frontend_resources.get<frontend_resources::OpenGL_Context>());
-    }
+    }*/
 
     // Recreate the volume if neccessary
     bool equal_clip_data = true;
@@ -2450,7 +2443,8 @@ void SphereRenderer::rebuildWorkingData(
             break;
         }
     }
-    if ((vol_gen_ != nullptr) && (this->state_invalid_ /* || this->ao_vol_size_slot_.IsDirty()*/ || !equal_clip_data)) {
+    if (/* (vol_gen_ != nullptr) && */ (this->state_invalid_ || vol_size_changed_ /* || this->ao_vol_size_slot_.IsDirty()*/ || !equal_clip_data)) {
+        vol_size_changed_ = false;
         //this->ao_vol_size_slot_.ResetDirty();
 
         //int vol_size = this->ao_vol_size_slot_.Param<param::IntParam>()->Value();
@@ -2487,6 +2481,9 @@ void SphereRenderer::rebuildWorkingData(
     //    this->vol_gen_->EndInsertion();
 
     //    this->vol_gen_->RecreateMipmap();
+
+        // TODO
+        updateVolumeData(call.Time());
     }
 }
 
@@ -2639,11 +2636,12 @@ bool SphereRenderer::updateVolumeData(const unsigned int frameID) {
 
         // TODO get datahash and frameId
 
-        auto const metadata = c_voxel->GetMetadata();
-
-        auto test = c_voxel->GetVRAMData();
-
-        int i = 0;
+        // get volume size from metadata
+        int new_vol_size = c_voxel->GetMetadata()->Resolution[0]; //TODO access correct value
+        if (new_vol_size != vol_size_) {
+            vol_size_ = new_vol_size;
+            vol_size_changed_ = true;
+        }
     }
 
     return true;
