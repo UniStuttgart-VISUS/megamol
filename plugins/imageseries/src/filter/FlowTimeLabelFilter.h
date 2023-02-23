@@ -58,9 +58,6 @@ public:
         enum class inflow_t : int { left, bottom, right, top } inflowArea;
         int inflowMargin;
 
-        // Minimum obstacle size, used as parameter for graph simplification
-        int minObstacleSize;
-
         // Minimum area, used as parameter for combining small areas
         int minArea;
 
@@ -95,7 +92,7 @@ private:
 
     bool combineSmallNodes(graph::GraphData2D& nodeGraph, Label& nextLabel, float tiny_area_threshold) const;
     void combineTrivialNodes(graph::GraphData2D& nodeGraph, Label& nextLabel) const;
-    bool resolveDiamonds(graph::GraphData2D& nodeGraph, Label& nextLabel, float diamond_threshold) const;
+    bool resolveDiamonds(graph::GraphData2D& nodeGraph, Label& nextLabel) const;
 };
 
 } // namespace megamol::ImageSeries::filter

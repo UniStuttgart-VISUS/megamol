@@ -424,11 +424,17 @@ std::shared_ptr<FlowTimeLabelFilter::Output> FlowTimeLabelFilter::operator()() {
     }
 
     // Iteratively improve graph
-    if (input.fixes & (Input::fixes_t::combine_trivial | Input::fixes_t::resolve_diamonds)) {
+    if (input.fixes & Input::fixes_t::combine_trivial) {
         combineTrivialNodes(*nodeGraph, next_label);
+    }
 
-        if (input.fixes & Input::fixes_t::resolve_diamonds) {
-            while (resolveDiamonds(*nodeGraph, next_label, input.minObstacleSize)) {
+    if (input.fixes & Input::fixes_t::resolve_diamonds) {
+        if (input.fixes & Input::fixes_t::combine_trivial) {
+            combineTrivialNodes(*nodeGraph, next_label);
+        }
+
+        while (resolveDiamonds(*nodeGraph, next_label)) {
+            if (input.fixes & Input::fixes_t::combine_trivial) {
                 combineTrivialNodes(*nodeGraph, next_label);
             }
         }
@@ -494,7 +500,7 @@ ImageMetadata FlowTimeLabelFilter::getMetadata() const {
         ImageMetadata metadata = input.timeMap->getMetadata();
         metadata.bytesPerChannel = 1;
         metadata.hash = util::computeHash(input.timeMap, input.outputImage, input.inflowArea, input.inflowMargin,
-            input.minObstacleSize, input.minArea, input.hausdorff, input.fixes);
+            input.minArea, input.hausdorff, input.fixes);
         return metadata;
     } else {
         return {};
@@ -548,6 +554,8 @@ std::vector<graph::GraphData2D::Edge> FlowTimeLabelFilter::combineEdges(const gr
 
     std::vector<graph::GraphData2D::Edge> newEdges;
 
+    const auto& newNode = nodeGraph.getNode(newNodeID);
+
     for (const auto nodeID : nodesToCombine) {
         const auto& node = nodeGraph.getNode(nodeID);
 
@@ -556,7 +564,7 @@ std::vector<graph::GraphData2D::Edge> FlowTimeLabelFilter::combineEdges(const gr
 
             if (!neighbor.isRemoved()) {
                 graph::GraphData2D::Edge inEdge(parentID, newNodeID);
-                inEdge.weight = glm::distance(node.centerOfMass, neighbor.centerOfMass);
+                inEdge.weight = glm::distance(newNode.centerOfMass, neighbor.centerOfMass);
 
                 newEdges.push_back(inEdge);
             }
@@ -567,7 +575,7 @@ std::vector<graph::GraphData2D::Edge> FlowTimeLabelFilter::combineEdges(const gr
 
             if (!neighbor.isRemoved()) {
                 graph::GraphData2D::Edge outEdge(newNodeID, childID);
-                outEdge.weight = glm::distance(node.centerOfMass, neighbor.centerOfMass);
+                outEdge.weight = glm::distance(newNode.centerOfMass, neighbor.centerOfMass);
 
                 newEdges.push_back(outEdge);
             }
@@ -711,7 +719,7 @@ void FlowTimeLabelFilter::combineTrivialNodes(graph::GraphData2D& nodeGraph, Lab
 }
 
 bool FlowTimeLabelFilter::resolveDiamonds(
-    graph::GraphData2D& nodeGraph, Label& nextLabel, float diamond_threshold) const {
+    graph::GraphData2D& nodeGraph, Label& nextLabel) const {
 
     bool has_changes = false;
 
@@ -722,58 +730,76 @@ bool FlowTimeLabelFilter::resolveDiamonds(
         const auto nodeID = node_info.first;
         const auto& node = node_info.second;
 
+        if (!node.isRemoved() && node.getEdgeCountIn() >= 1 && node.getEdgeCountOut() >= 1) {
+            const auto& nodesIn = node.getParentNodes();
+            const auto& nodesOut = node.getChildNodes();
+
+            for (auto nodeIn : nodesIn) {
+                for (auto nodeOut : nodesOut) {
+                    if (nodeGraph.hasEdge(nodeIn, nodeID) && nodeGraph.hasEdge(nodeID, nodeOut)) {
+                        const auto& edgeIn = nodeGraph.getEdge(nodeIn, nodeID);
+                        const auto& edgeOut = nodeGraph.getEdge(nodeID, nodeOut);
+
+                        if (nodeGraph.hasEdge(nodeIn, nodeOut)) {
+                            const auto& directEdge = nodeGraph.getEdge(nodeIn, nodeOut);
+
+                            if (edgeOut.weight > directEdge.weight && node.getEdgeCountOut() > 1) {
+                                nodeGraph.removeEdge(edgeOut);
+                            } else {
+                                nodeGraph.removeEdge(directEdge);
+                            }
+
+                            has_changes = true;
+                        }
+                    }
+                }
+            }
+        }
+
         if (!node.isRemoved() && node.getEdgeCountIn() == 1 && node.getEdgeCountOut() == 1) {
             const auto& edgeIn = nodeGraph.getEdge(*node.getParentNodes().begin(), nodeID);
             const auto& edgeOut = nodeGraph.getEdge(nodeID, *node.getChildNodes().begin());
 
-            if (edgeIn.weight + edgeOut.weight < diamond_threshold) {
-                const auto& origin = nodeGraph.getNode(edgeIn.from);
-                const auto& target = nodeGraph.getNode(edgeOut.to);
+            const auto& origin = nodeGraph.getNode(edgeIn.from);
+            const auto& target = nodeGraph.getNode(edgeOut.to);
 
-                if (nodeGraph.hasEdge(edgeIn.from, edgeOut.to)) {
-                    nodeGraph.removeEdge(edgeIn.from, edgeOut.to);
+            std::vector<graph::GraphData2D::NodeID> nodeIDsToCombine;
 
-                    has_changes = true;
-                }
+            for (const auto& originChild : origin.getChildNodes()) {
+                if (target.getParentNodes().find(originChild) != target.getParentNodes().end()) {
+                    const auto& otherNode = nodeGraph.getNode(originChild);
 
-                std::vector<graph::GraphData2D::NodeID> nodeIDsToCombine;
-
-                for (const auto& originChild : origin.getChildNodes()) {
-                    if (target.getParentNodes().find(originChild) != target.getParentNodes().end()) {
-                        const auto& otherNode = nodeGraph.getNode(originChild);
-
-                        if (!otherNode.isRemoved() && otherNode.getEdgeCountIn() == 1 && otherNode.getEdgeCountOut() == 1) {
-                            nodeIDsToCombine.push_back(originChild);
-                        }
+                    if (!otherNode.isRemoved() && otherNode.getEdgeCountIn() == 1 && otherNode.getEdgeCountOut() == 1) {
+                        nodeIDsToCombine.push_back(originChild);
                     }
                 }
+            }
 
-                // Combine nodes
-                if (nodeIDsToCombine.size() > 1) {
-                    std::vector<graph::GraphData2D::Node> nodesToCombine;
-                    nodesToCombine.reserve(nodeIDsToCombine.size());
+            // Combine nodes
+            if (nodeIDsToCombine.size() > 1) {
+                std::vector<graph::GraphData2D::Node> nodesToCombine;
+                nodesToCombine.reserve(nodeIDsToCombine.size());
 
-                    float distance_in = 0.0f;
-                    float distance_out = 0.0f;
+                float distance_in = 0.0f;
+                float distance_out = 0.0f;
 
-                    for (const auto& nodeID : nodeIDsToCombine) {
-                        nodesToCombine.push_back(nodeGraph.removeNode(nodeID, true));
+                for (const auto& nodeID : nodeIDsToCombine) {
+                    nodesToCombine.push_back(nodeGraph.removeNode(nodeID, true));
 
-                        distance_in += nodeGraph.getEdge(edgeIn.from, nodeID).weight;
-                        distance_out += nodeGraph.getEdge(nodeID, edgeOut.to).weight;
-                    }
-
-                    distance_in /= nodeIDsToCombine.size();
-                    distance_out /= nodeIDsToCombine.size();
-
-                    // Modify graph
-                    const auto newNodeID = nodeGraph.addNode(combineNodes(nodesToCombine, nextLabel));
-
-                    nodeGraph.addEdge(graph::GraphData2D::Edge(edgeIn.from, newNodeID, distance_in));
-                    nodeGraph.addEdge(graph::GraphData2D::Edge(newNodeID, edgeOut.to, distance_out));
-
-                    has_changes = true;
+                    distance_in += nodeGraph.getEdge(edgeIn.from, nodeID).weight;
+                    distance_out += nodeGraph.getEdge(nodeID, edgeOut.to).weight;
                 }
+
+                distance_in /= nodeIDsToCombine.size();
+                distance_out /= nodeIDsToCombine.size();
+
+                // Modify graph
+                const auto newNodeID = nodeGraph.addNode(combineNodes(nodesToCombine, nextLabel));
+
+                nodeGraph.addEdge(graph::GraphData2D::Edge(edgeIn.from, newNodeID, distance_in));
+                nodeGraph.addEdge(graph::GraphData2D::Edge(newNodeID, edgeOut.to, distance_out));
+
+                has_changes = true;
             }
         }
     }

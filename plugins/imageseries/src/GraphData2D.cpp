@@ -118,6 +118,10 @@ void GraphData2D::removeEdge(NodeID from, NodeID to) {
     }
 }
 
+void GraphData2D::removeEdge(const Edge& edge) {
+    removeEdge(edge.from, edge.to);
+}
+
 void GraphData2D::finalizeLazyRemoval() {
     // Remove invalidated edges and remove nodes
     for (auto it = nodes.begin(); it != nodes.end();) {

@@ -23,8 +23,6 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
         , outputImageParam("Image output", "Select output image.")
         , inflowAreaParam("Inflow area", "Set border where inflow is expected.")
         , inflowMarginParam("Inflow margin", "Margin from the sides of the image for inflow detection.")
-        , minObstacleSizeParam("Minimum obstacle size",
-              "Minimum obstacle size, which can be used as parameter for graph simplification.")
         , minAreaParam("Minimum area", "Minimum area, used for combining small areas.")
         , velocityMethodParam("Velocity calculation", "Method used for calculating flow velocity.")
         , isolatedParam("Remove isolated nodes", "Remove isolated nodes, which result from noise.")
@@ -71,11 +69,6 @@ ImageSeriesFlowLabeler::ImageSeriesFlowLabeler()
     inflowMarginParam.Parameter()->SetGUIPresentation(Presentation::Slider);
     inflowMarginParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
     MakeSlotAvailable(&inflowMarginParam);
-
-    minObstacleSizeParam << new core::param::IntParam(100, 1, 1000);
-    minObstacleSizeParam.Parameter()->SetGUIPresentation(Presentation::Slider);
-    minObstacleSizeParam.SetUpdateCallback(&ImageSeriesFlowLabeler::filterParametersChangedCallback);
-    MakeSlotAvailable(&minObstacleSizeParam);
 
     minAreaParam << new core::param::IntParam(10, 1, 1000);
     minAreaParam.Parameter()->SetGUIPresentation(Presentation::Slider);
@@ -149,7 +142,6 @@ bool ImageSeriesFlowLabeler::getDataCallback(core::Call& caller) {
                 filterInput.inflowArea = static_cast<filter::FlowTimeLabelFilter::Input::inflow_t>(
                     inflowAreaParam.Param<core::param::EnumParam>()->Value());
                 filterInput.inflowMargin = inflowMarginParam.Param<core::param::IntParam>()->Value();
-                filterInput.minObstacleSize = minObstacleSizeParam.Param<core::param::IntParam>()->Value();
                 filterInput.minArea = minAreaParam.Param<core::param::IntParam>()->Value();
                 filterInput.hausdorff = velocityMethodParam.Param<core::param::EnumParam>()->Value() == 1;
 

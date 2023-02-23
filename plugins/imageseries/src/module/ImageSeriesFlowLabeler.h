@@ -89,7 +89,6 @@ private:
     core::param::ParamSlot outputImageParam;
     core::param::ParamSlot inflowAreaParam;
     core::param::ParamSlot inflowMarginParam;
-    core::param::ParamSlot minObstacleSizeParam;
     core::param::ParamSlot minAreaParam;
     core::param::ParamSlot velocityMethodParam;
 
